@@ -1,0 +1,112 @@
+// PostgreSQL schema for lasce.
+//
+// This file is the single source of truth for the relational schema. Prisma owns
+// the migrations; the Python worker reads and writes the same tables through
+// SQLAlchemy (see apps/worker/app/db/models.py) but never migrates them.
+//
+// After changing a model: `pnpm db:migrate` and update the SQLAlchemy mirror.
+//
+// Two deliberate choices that exist because a second language writes here:
+//   - ids default to `gen_random_uuid()` in PostgreSQL rather than Prisma's
+//     `cuid()`, which is generated client-side and would leave the worker with
+//     no way to insert a row.
+//   - `@updatedAt` is also client-side, so every column using it carries a
+//     `@default(now())` and the worker sets it explicitly when it updates a row.
+//   - timestamps are `timestamptz`, not Prisma's default `timestamp`, so both
+//     languages exchange timezone-aware values instead of ambiguous naive ones.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma 7 no longer accepts `url` here: the migration engine reads it from
+  // prisma.config.ts, and PrismaClient gets it through the driver adapter in
+  // src/index.ts.
+}
+
+/// A physical device emitting time-series readings. The readings themselves live
+/// in InfluxDB; PostgreSQL only keeps the metadata and the aggregates.
+model Device {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  externalId String   @unique @map("external_id")
+  name       String
+  location   String?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  rollups DailyRollup[]
+
+  @@map("devices")
+}
+
+/// One row per device per day, written by the `daily-rollup` cron job after it
+/// aggregates the raw readings stored in InfluxDB.
+model DailyRollup {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deviceId String   @map("device_id") @db.Uuid
+  date     DateTime @db.Date
+  count    Int
+  avgValue Float    @map("avg_value")
+  minValue Float    @map("min_value")
+  maxValue Float    @map("max_value")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, date])
+  @@index([date])
+  @@map("daily_rollups")
+}
+
+/// Bookkeeping for a file stored in MinIO and processed by the `process-file` job.
+model FileArtifact {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  objectKey   String             @unique @map("object_key")
+  contentType String             @map("content_type")
+  sizeBytes   Int?               @map("size_bytes")
+  rowCount    Int?               @map("row_count")
+  status      FileArtifactStatus @default(PENDING)
+  error       String?
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime           @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  @@map("file_artifacts")
+}
+
+enum FileArtifactStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+
+  @@map("file_artifact_status")
+}
+
+/// An audit trail of queue executions, written by the worker. Handy for showing
+/// history in the UI without querying Redis, which only keeps recent jobs.
+model JobRun {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// The BullMQ job id.
+  jobId      String    @unique @map("job_id")
+  name       String
+  status     JobStatus @default(RUNNING)
+  startedAt  DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  finishedAt DateTime? @map("finished_at") @db.Timestamptz(3)
+  durationMs Int?      @map("duration_ms")
+  error      String?
+
+  @@index([name, startedAt])
+  @@map("job_runs")
+}
+
+enum JobStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+
+  @@map("job_status")
+}
