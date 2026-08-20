@@ -1,0 +1,51 @@
+[project]
+name = "lasce-worker"
+version = "0.1.0"
+description = "Background worker: consumes the BullMQ queue and runs scheduled processing"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "bullmq>=2.24.0",
+    "influxdb3-python>=0.20.0",
+    "minio>=7.2.20",
+    "sqlalchemy>=2.0.52",
+    "psycopg[binary]>=3.3.4",
+    "pydantic>=2.12.0",
+    "pydantic-settings>=2.15.0",
+    "structlog>=26.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "jsonschema>=4.25.0",
+    "mypy>=1.18.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.16.4",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unused_ignores = true
+# The InfluxDB and MinIO clients ship no type information.
+[[tool.mypy.overrides]]
+module = ["influxdb_client_3.*", "minio.*", "bullmq.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
