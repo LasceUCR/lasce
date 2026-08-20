@@ -1,0 +1,22 @@
+{
+  "$id": "https://lasce.local/schema/jobs/process-file.json",
+  "title": "process-file",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "objectKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contentType": {
+      "default": "application/octet-stream",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "objectKey",
+    "contentType"
+  ],
+  "additionalProperties": false
+}

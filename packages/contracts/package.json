@@ -1,0 +1,28 @@
+{
+  "name": "@lasce/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "export-schema": "tsx scripts/export-schema.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts",
+    "clean": "rm -rf .turbo node_modules"
+  },
+  "dependencies": {
+    "@lasce/types": "workspace:*",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@lasce/config": "workspace:*",
+    "@lasce/eslint-config": "workspace:*",
+    "@types/node": "^22.15.0",
+    "eslint": "^9.39.0",
+    "tsx": "^4.20.6",
+    "typescript": "5.9.3"
+  }
+}
