@@ -1,0 +1,4 @@
+{
+  "extends": "@lasce/config/tsconfig/library.json",
+  "include": ["src/**/*.ts"]
+}

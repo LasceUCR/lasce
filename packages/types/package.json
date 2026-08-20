@@ -1,0 +1,20 @@
+{
+  "name": "@lasce/types",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo node_modules"
+  },
+  "devDependencies": {
+    "@lasce/config": "workspace:*",
+    "@lasce/eslint-config": "workspace:*",
+    "eslint": "^9.39.0",
+    "typescript": "5.9.3"
+  }
+}
