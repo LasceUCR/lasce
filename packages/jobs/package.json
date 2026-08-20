@@ -1,0 +1,30 @@
+{
+  "name": "@lasce/jobs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "register": "tsx --env-file-if-exists=../../.env scripts/register-schedules.ts",
+    "schedules": "tsx --env-file-if-exists=../../.env scripts/list-schedules.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo node_modules"
+  },
+  "dependencies": {
+    "@lasce/contracts": "workspace:*",
+    "@lasce/config": "workspace:*",
+    "@lasce/types": "workspace:*",
+    "bullmq": "6.1.2",
+    "ioredis": "^6.0.0"
+  },
+  "devDependencies": {
+    "@lasce/eslint-config": "workspace:*",
+    "@types/node": "^22.15.0",
+    "eslint": "^9.39.0",
+    "tsx": "^4.23.12",
+    "typescript": "5.9.3"
+  }
+}
