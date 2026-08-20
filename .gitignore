@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+.next/
+out/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# generated code
+packages/db/generated/
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# misc
+.DS_Store
+*.log
+coverage/
