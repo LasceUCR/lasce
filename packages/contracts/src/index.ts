@@ -5,4 +5,4 @@
  * so the worker can verify its own models against it.
  */
 
-export * from './jobs.js'
+export * from './jobs'

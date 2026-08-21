@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { JOB_NAMES, isJobName, jobPayloads } from './jobs.js'
+import { JOB_NAMES, isJobName, jobPayloads } from './jobs'
 
 test('every job name has a payload schema', () => {
   for (const name of Object.values(JOB_NAMES)) {

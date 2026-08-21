@@ -1,8 +1,8 @@
 import { PrismaPg } from '@prisma/adapter-pg'
 
-import { PrismaClient } from '../generated/client/client.js'
+import { PrismaClient } from '../generated/client/client'
 
-export * from '../generated/client/client.js'
+export * from '../generated/client/client'
 
 /**
  * A single PrismaClient for the process.

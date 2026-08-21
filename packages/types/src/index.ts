@@ -5,5 +5,5 @@
  * this package must stay import-free so it can be used from any environment.
  */
 
-export * from './job.js'
-export * from './pagination.js'
+export * from './job'
+export * from './pagination'

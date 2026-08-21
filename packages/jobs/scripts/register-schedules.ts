@@ -12,8 +12,8 @@
  * If you drive your cron from outside instead (Vercel Cron, GitHub Actions,
  * a Kubernetes CronJob hitting /api/jobs/[name]/trigger), you never run this.
  */
-import { getQueue } from '../src/queue.js'
-import { schedules } from '../src/schedules.js'
+import { getQueue } from '../src/queue'
+import { schedules } from '../src/schedules'
 
 const queue = getQueue()
 

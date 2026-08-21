@@ -3,7 +3,7 @@
  * declarative schedule list. The consumer lives in `apps/worker` (Python).
  */
 
-export { getRedisConnection } from './connection.js'
-export { defaultJobOptions, getJobStatus, getQueue } from './queue.js'
-export { enqueue } from './enqueue.js'
-export { schedules, type Schedule } from './schedules.js'
+export { getRedisConnection } from './connection'
+export { defaultJobOptions, getJobStatus, getQueue } from './queue'
+export { enqueue } from './enqueue'
+export { schedules, type Schedule } from './schedules'

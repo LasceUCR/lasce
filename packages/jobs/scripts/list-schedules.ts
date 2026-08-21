@@ -4,7 +4,7 @@
  *
  *   pnpm --filter @lasce/jobs schedules
  */
-import { getQueue } from '../src/queue.js'
+import { getQueue } from '../src/queue'
 
 const queue = getQueue()
 const schedulers = await queue.getJobSchedulers()

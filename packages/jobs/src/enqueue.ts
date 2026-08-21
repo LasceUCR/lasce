@@ -2,7 +2,7 @@ import type { JobName, JobPayload } from '@lasce/contracts'
 import { jobPayloads } from '@lasce/contracts'
 import type { JobsOptions } from 'bullmq'
 
-import { getQueue } from './queue.js'
+import { getQueue } from './queue'
 
 /**
  * The only supported way to put a job on the queue.

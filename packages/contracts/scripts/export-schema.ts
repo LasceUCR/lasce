@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
 
-import { jobPayloads } from '../src/jobs.js'
+import { jobPayloads } from '../src/jobs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const outputDir = join(here, '..', 'schema')

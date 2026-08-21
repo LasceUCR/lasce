@@ -1,4 +1,50 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+
 import type { NextConfig } from 'next'
+
+const repoRoot = new URL('../../', import.meta.url)
+
+/**
+ * Loads the repository-root `.env` into `process.env`.
+ *
+ * The whole stack — this app, the Python worker and Docker Compose — reads one
+ * `.env` at the root, but Next only looks for env files inside its own project
+ * directory (`apps/web`). Without this the server starts and then fails on the
+ * first request with `DATABASE_URL is not set`. The CLI scripts under
+ * `packages/jobs` solve the same problem with `node --env-file-if-exists`.
+ *
+ * Variables already present in the environment win, so Docker Compose's
+ * `env_file` and any real deployment environment are never overridden.
+ */
+function loadRootEnv(): void {
+  let contents: string
+  try {
+    contents = readFileSync(new URL('.env', repoRoot), 'utf8')
+  } catch {
+    return // No .env checked out: leave process.env as it is.
+  }
+
+  // Split on CRLF as well as LF: the file is edited on Windows as often as not.
+  for (const line of contents.split(/\r?\n/)) {
+    const match = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line)
+    if (!match) continue
+
+    // Both groups always participate in a match; the defaults are only here to
+    // satisfy `noUncheckedIndexedAccess`.
+    const [, key = '', rawValue = ''] = match
+    if (process.env[key] !== undefined) continue
+
+    const value = rawValue.trim()
+    const quote = value[0]
+    process.env[key] =
+      (quote === '"' || quote === "'") && value.endsWith(quote) && value.length > 1
+        ? value.slice(1, -1)
+        : value
+  }
+}
+
+loadRootEnv()
 
 const nextConfig: NextConfig = {
   // Workspace packages ship TypeScript source rather than a build output, which
@@ -15,7 +61,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
 
   // The repository root, so file tracing follows imports across the workspace.
-  outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
+  // `fileURLToPath`, not `URL.pathname`: the latter yields `/C:/...` on Windows,
+  // which Turbopack cannot canonicalize.
+  outputFileTracingRoot: fileURLToPath(repoRoot),
 
   // ioredis, BullMQ and the Prisma client are required at runtime instead of
   // being bundled — they carry native or dynamic requires that do not survive it.

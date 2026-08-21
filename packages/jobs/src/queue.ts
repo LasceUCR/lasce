@@ -2,7 +2,7 @@ import { serverEnv } from '@lasce/config/env'
 import type { JobState, JobStatus } from '@lasce/types'
 import { Job, Queue } from 'bullmq'
 
-import { getRedisConnection } from './connection.js'
+import { getRedisConnection } from './connection'
 
 /**
  * Defaults applied to every job. Deliberately conservative: three attempts with

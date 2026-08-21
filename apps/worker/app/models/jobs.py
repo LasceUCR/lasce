@@ -6,7 +6,8 @@ dict, and ``tests/test_contracts.py`` validates them against the JSON Schema
 exported from Zod — that test is what catches the two sides drifting apart.
 """
 
-from datetime import date, datetime
+from datetime import date as date_
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -35,4 +36,4 @@ class ProcessFilePayload(JobPayload):
 class DailyRollupPayload(JobPayload):
     """Aggregate one day of readings from InfluxDB into PostgreSQL."""
 
-    date: date | None = None
+    date: date_ | None = None

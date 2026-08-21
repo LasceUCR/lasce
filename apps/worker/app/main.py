@@ -124,7 +124,11 @@ async def main() -> None:
     shutdown = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, shutdown.set)
+        try:
+            loop.add_signal_handler(sig, shutdown.set)
+        except NotImplementedError:
+            # Windows' event loop doesn't support add_signal_handler.
+            signal.signal(sig, lambda *_args: shutdown.set())
 
     await shutdown.wait()
 
