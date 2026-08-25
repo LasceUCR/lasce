@@ -90,3 +90,10 @@ The BullMQ worker runs on asyncio. PostgreSQL access is async throughout (SQLAlc
 psycopg 3). The InfluxDB and MinIO SDKs are synchronous, so the wrappers in `apps/worker/app/clients/`
 push their calls onto threads — otherwise a slow write would stall every other job the process is
 handling concurrently.
+
+## Testing
+
+`apps/web` UI components follow the structure in
+[`docs/tests/component_testing.md`](tests/component_testing.md): Vitest + React Testing Library,
+tests colocated with the component, and the Server Action / `fetch` boundary mocked while
+`@lasce/contracts` is exercised for real.
