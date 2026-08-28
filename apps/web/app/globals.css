@@ -37,8 +37,23 @@ a {
   margin-inline: auto;
 }
 
-.public-route {
+.public-shell {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.public-shell-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.public-shell-content > main {
+  flex: 1;
+}
+
+.public-route {
   padding: 64px 32px;
   display: grid;
   place-items: center;
