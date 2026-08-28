@@ -37,6 +37,67 @@ a {
   margin-inline: auto;
 }
 
+.public-route {
+  min-height: 100vh;
+  padding: 64px 32px;
+  display: grid;
+  place-items: center;
+  background: #000918;
+  color: var(--white);
+}
+
+.public-route-content {
+  width: min(100%, 760px);
+}
+
+.public-route-kicker {
+  color: #72cce3;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.public-route h1 {
+  margin: 12px 0 20px;
+  font-size: 52px;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.public-route p {
+  max-width: 680px;
+  margin: 0;
+  color: #dce8ef;
+  font-size: 19px;
+  line-height: 1.65;
+}
+
+.public-route-status {
+  margin-top: 24px;
+  display: block;
+  color: #91a9b8;
+  font-size: 13px;
+}
+
+.public-route-back {
+  min-height: 44px;
+  margin-top: 38px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #416174;
+  border-radius: 7px;
+  color: var(--white);
+  font-weight: 700;
+}
+
+.public-route-back:hover,
+.public-route-back:focus-visible {
+  border-color: #72cce3;
+  background: #102b3d;
+}
+
 .site-header {
   position: relative;
   z-index: 20;
@@ -506,6 +567,18 @@ a {
 }
 
 @media (max-width: 760px) {
+  .public-route {
+    padding: 48px 20px;
+  }
+
+  .public-route h1 {
+    font-size: 38px;
+  }
+
+  .public-route p {
+    font-size: 16px;
+  }
+
   .page-width {
     width: min(100% - 32px, 1332px);
   }
