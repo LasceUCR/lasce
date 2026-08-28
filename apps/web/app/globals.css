@@ -119,7 +119,7 @@ a {
   min-height: 70px;
   padding: 7px 24px;
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto minmax(110px, 1fr);
+  grid-template-columns: minmax(260px, 1fr) auto;
   align-items: center;
   gap: 28px;
   background: var(--white);
@@ -159,6 +159,7 @@ a {
   height: 63px;
   display: flex;
   align-items: stretch;
+  justify-self: end;
   gap: 28px;
 }
 
@@ -186,26 +187,6 @@ a {
   height: 3px;
   border-radius: 2px;
   background: var(--cyan);
-}
-
-.login-link {
-  justify-self: end;
-  min-width: 100px;
-  min-height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--blue-dark);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.login-link:hover,
-.login-link:focus-visible {
-  border-color: var(--blue);
-  background: #f4fafd;
 }
 
 .mobile-menu {
@@ -451,11 +432,6 @@ a {
   font-weight: 700;
 }
 
-.anchor-target {
-  display: block;
-  scroll-margin-top: 80px;
-}
-
 .site-footer {
   padding: 10px 0;
   background: var(--navy-deep);
@@ -524,7 +500,7 @@ a {
 
 @media (max-width: 1120px) {
   .site-header {
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto;
   }
 
   .desktop-nav {
@@ -571,7 +547,8 @@ a {
   }
 
   .mobile-menu nav a:hover,
-  .mobile-menu nav a:focus-visible {
+  .mobile-menu nav a:focus-visible,
+  .mobile-menu nav a.active {
     background: #edf7fb;
     color: var(--blue-dark);
   }
@@ -617,10 +594,6 @@ a {
 
   .brand-divider {
     height: 38px;
-  }
-
-  .login-link {
-    display: none;
   }
 
   .hero,

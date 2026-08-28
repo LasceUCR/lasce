@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { BookOpen, ChartNoAxesCombined, Orbit, RadioTower, Sun, Telescope } from 'lucide-react'
 
 const indicators = [
@@ -13,32 +14,32 @@ const areas = [
     icon: Sun,
     title: 'Física solar',
     description: 'Actividad y observaciones',
-    href: '#investigacion',
+    href: '/investigacion',
   },
   {
     icon: Orbit,
     title: 'Clima espacial',
     description: 'Indicadores y monitoreo',
-    href: '#datos',
+    href: '/datos',
   },
-  { icon: RadioTower, title: 'Radioastronomía', description: 'Datos ROSAC', href: '#investigacion' },
+  { icon: RadioTower, title: 'Radioastronomía', description: 'Datos ROSAC', href: '/investigacion' },
   {
     icon: Telescope,
     title: 'Instrumentación',
     description: 'Instrumentos y citación',
-    href: '#instrumentacion',
+    href: '/instrumentacion',
   },
   {
     icon: ChartNoAxesCombined,
     title: 'Datos y análisis',
     description: 'Consulta y descargas',
-    href: '#datos',
+    href: '/datos',
   },
   {
     icon: BookOpen,
     title: 'Divulgación',
     description: 'Noticias y recursos',
-    href: '#divulgacion',
+    href: '/noticias',
   },
 ]
 
@@ -64,9 +65,9 @@ export default function HomePage() {
             mediante observaciones, instrumentación, análisis de datos y desarrollo científico.
           </p>
           <div className="hero-actions">
-            <a className="button button-primary" href="#nosotros">
+            <Link className="button button-primary" href="/nosotros">
               Conoce más sobre LASCE
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -97,7 +98,7 @@ export default function HomePage() {
               const AreaIcon = area.icon
 
               return (
-                <a className="area-card" href={area.href} key={area.title}>
+                <Link className="area-card" href={area.href} key={area.title}>
                   <span className="area-icon" aria-hidden="true">
                     <AreaIcon size={25} strokeWidth={1.7} />
                   </span>
@@ -108,16 +109,11 @@ export default function HomePage() {
                       Ver sección <span aria-hidden="true">→</span>
                     </span>
                   </span>
-                </a>
+                </Link>
               )
             })}
           </div>
         </section>
-
-        <span id="nosotros" className="anchor-target" />
-        <span id="instrumentacion" className="anchor-target" />
-        <span id="divulgacion" className="anchor-target" />
-        <span id="noticias" className="anchor-target" />
       </div>
     </main>
   )

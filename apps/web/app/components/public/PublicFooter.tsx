@@ -14,9 +14,7 @@ export function PublicFooter() {
           </div>
         </div>
         <nav className="footer-links" aria-label="Enlaces del pie de página">
-          <Link href="/#contacto">Contacto</Link>
-          <Link href="/#inicio">Políticas</Link>
-          <Link href="/#inicio">Accesibilidad</Link>
+          <Link href="/contacto">Contacto</Link>
           <a href="https://www.instagram.com/lasce_ucr/" target="_blank" rel="noreferrer">
             Instagram
           </a>
