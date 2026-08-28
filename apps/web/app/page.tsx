@@ -7,7 +7,6 @@ const navigation = [
   { label: 'Investigación', href: '#investigacion' },
   { label: 'Instrumentación', href: '#instrumentacion' },
   { label: 'Datos', href: '#datos' },
-  { label: 'Divulgación', href: '#divulgacion' },
   { label: 'Noticias', href: '#noticias' },
   { label: 'Contacto', href: '#contacto' },
 ]
