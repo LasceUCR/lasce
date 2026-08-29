@@ -27,6 +27,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@lasce/eslint-config": "workspace:*",
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.15.0",

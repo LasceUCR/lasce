@@ -6,8 +6,13 @@ import { PublicHeader } from '@/app/components/public/PublicHeader'
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="public-shell">
+      <a className="skip-link" href="#main-content">
+        Saltar al contenido principal
+      </a>
       <PublicHeader />
-      <div className="public-shell-content">{children}</div>
+      <main className="public-shell-content" id="main-content" tabIndex={-1}>
+        {children}
+      </main>
       <PublicFooter />
     </div>
   )

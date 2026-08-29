@@ -48,6 +48,10 @@ export function PublicHeader() {
         })}
       </nav>
 
+      <Link className="login-link" href="/login">
+        Ingresar
+      </Link>
+
       <details className="mobile-menu" ref={mobileMenu}>
         <summary aria-label="Abrir navegación">
           <Menu aria-hidden="true" size={25} strokeWidth={1.8} />

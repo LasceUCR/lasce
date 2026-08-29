@@ -29,7 +29,7 @@ test('loads the public landing page without authentication', async ({ page }) =>
       name: 'Exploramos el Sol para comprender el clima espacial',
     }),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
   expect(new URL(page.url()).pathname).toBe('/')
 })
 

@@ -70,7 +70,7 @@ export default async function PublicSectionPage({ params }: PublicSectionPagePro
   }
 
   return (
-    <main className="public-route">
+    <div className="public-route">
       <div className="public-route-content">
         <span className="public-route-kicker">Portal público LASCE</span>
         <h1>{content.title}</h1>
@@ -81,6 +81,6 @@ export default async function PublicSectionPage({ params }: PublicSectionPagePro
           Volver al inicio
         </Link>
       </div>
-    </main>
+    </div>
   )
 }

@@ -5,7 +5,7 @@
   --cyan: #1db7d8;
   --teal: #2e9b8a;
   --ink: #17324a;
-  --muted: #708395;
+  --muted: #536a7c;
   --border: #d6e1e8;
   --page: #eef4f7;
   --white: #ffffff;
@@ -32,6 +32,29 @@ a {
   text-decoration: none;
 }
 
+:focus-visible {
+  outline: 3px solid #056da8;
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  left: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--navy-deep);
+  font-weight: 700;
+  transform: translateY(calc(-100% - 20px));
+  transition: transform 150ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 .page-width {
   width: min(100% - 64px, 1332px);
   margin-inline: auto;
@@ -47,10 +70,6 @@ a {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-.public-shell-content > main {
-  flex: 1;
 }
 
 .public-route {
@@ -119,7 +138,7 @@ a {
   min-height: 70px;
   padding: 7px 24px;
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto;
+  grid-template-columns: minmax(260px, 1fr) auto minmax(110px, 1fr);
   align-items: center;
   gap: 28px;
   background: var(--white);
@@ -187,6 +206,26 @@ a {
   height: 3px;
   border-radius: 2px;
   background: var(--cyan);
+}
+
+.login-link {
+  justify-self: end;
+  min-width: 100px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--blue-dark);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.login-link:hover,
+.login-link:focus-visible {
+  border-color: var(--blue);
+  background: #f4fafd;
 }
 
 .mobile-menu {
@@ -500,7 +539,7 @@ a {
 
 @media (max-width: 1120px) {
   .site-header {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
   }
 
   .desktop-nav {
@@ -594,6 +633,10 @@ a {
 
   .brand-divider {
     height: 38px;
+  }
+
+  .login-link {
+    display: none;
   }
 
   .hero,

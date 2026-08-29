@@ -45,7 +45,7 @@ const areas = [
 
 export default function HomePage() {
   return (
-    <main>
+    <>
       <section className="hero" id="inicio">
         <div className="hero-visual" aria-hidden="true">
           <Image
@@ -115,6 +115,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-    </main>
+    </>
   )
 }
