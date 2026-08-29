@@ -24,9 +24,11 @@ for (const route of publicRoutes) {
 
   test(`${route.path} is explicitly indexable`, async ({ page }) => {
     const response = await page.goto(route.path)
+    const favicon = page.locator('link[rel="icon"]')
     const robots = page.locator('meta[name="robots"]')
 
     expect(response?.status()).toBe(200)
+    await expect(favicon).toHaveAttribute('href', '/brand/ucr-favicon-square.png')
     await expect(robots).toHaveAttribute('content', /index/i)
     await expect(robots).not.toHaveAttribute('content', /noindex/i)
   })

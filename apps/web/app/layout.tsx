@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   title: 'LASCE | Universidad de Costa Rica',
   description:
     'Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica: observación solar, radioastronomía, instrumentación y clima espacial.',
+  icons: {
+    icon: {
+      url: '/brand/ucr-favicon-square.png',
+      type: 'image/png',
+    },
+  },
   robots: {
     index: true,
     follow: true,
