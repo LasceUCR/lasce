@@ -31,3 +31,6 @@ __pycache__/
 .DS_Store
 *.log
 coverage/
+playwright-report/
+test-results/
+blob-report/

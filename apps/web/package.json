@@ -9,6 +9,9 @@
     "start": "next start --port 3000",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "playwright test",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "clean": "rm -rf .next .turbo node_modules"
   },
   "dependencies": {
@@ -24,7 +27,9 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@lasce/eslint-config": "workspace:*",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.15.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
