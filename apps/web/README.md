@@ -53,7 +53,6 @@ corepack pnpm --filter @lasce/web build
 
 Production deployment uses the standalone Next.js bundle through
 [`infra/docker/web.Dockerfile`](../../infra/docker/web.Dockerfile).
-
 ## Public Routes
 
 | Route                | Purpose                                                        |
@@ -61,7 +60,7 @@ Production deployment uses the standalone Next.js bundle through
 | `/`                  | Institutional landing page and access to the main public areas |
 | `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
 | `/fisica-solar`      | Solar physics work area                                        |
-| `/clima-espacial`    | Space weather work area                                        |
+| `/clima-espacial`    | Space weather information page                                 |
 | `/radioastronomia`   | Radio astronomy work area                                      |
 | `/nosotros`          | General information about LASCE                                |
 | `/investigacion`     | Research areas and activities                                  |
@@ -94,6 +93,7 @@ The route group `app/(public)` organizes the public portal without adding a segm
 app/
 |-- (public)/
 |   |-- [section]/page.tsx
+|   |-- clima-espacial/page.tsx
 |   |-- layout.tsx
 |   `-- page.tsx
 |-- components/public/
@@ -101,9 +101,12 @@ app/
 |   |-- PublicFooter.tsx
 |   |-- PublicHeader.tsx
 |   |-- WorkAreaCard.tsx
-|   `-- WorkAreasSection.tsx
+|   |-- WorkAreasSection.tsx
+|   |-- space-weather/
+|   `-- topic/
 |-- lib/
 |   |-- site.ts
+|   |-- space-weather.ts
 |   `-- work-areas.ts
 |-- globals.css
 |-- layout.tsx
@@ -121,6 +124,8 @@ playwright.config.ts
 - `Brand` centralizes the institutional logo variants used by the header and footer.
 - `app/lib/site.ts` defines the canonical site origin and public route list used by SEO metadata.
 - `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
+- `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy, mock indicators, and event data live in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
+- `app/components/public/topic/` holds reusable topic-page primitives (`TopicHero`, `TopicSection`, `InfoCard`, `MetricCard`, `ConceptFlow`, `LineChart`, and related layout pieces) so other work area pages can reuse the same structure without duplicating markup.
 - `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`.
 
 ## Accessibility and SEO
@@ -155,6 +160,7 @@ The Playwright configuration starts the web development server automatically whe
 
 - Loading the landing page without authentication
 - Direct access to all public routes, including the three work area pages
+- Space weather content, mock scientific sections, and the return link to the work areas
 - Absence of redirects to login
 - Desktop and mobile navigation
 - Active links through `aria-current`
