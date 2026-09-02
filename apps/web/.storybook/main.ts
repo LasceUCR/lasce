@@ -20,8 +20,6 @@ const config: StorybookConfig = {
     getAbsolutePath('@storybook/addon-mcp')
   ],
   "framework": getAbsolutePath('@storybook/nextjs-vite'),
-  "staticDirs": [
-    "..\\public"
-  ]
+  staticDirs: ['../public'],
 };
 export default config;

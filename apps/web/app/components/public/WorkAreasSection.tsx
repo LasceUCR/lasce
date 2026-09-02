@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 
 import { WorkAreaCard } from './WorkAreaCard'
 
@@ -17,10 +17,13 @@ export interface WorkAreasSectionProps {
 }
 
 export function WorkAreasSection({ id, title, subtitle, areas }: WorkAreasSectionProps) {
+  const fallbackTitleId = useId()
+  const titleId = id ? `${id}-title` : fallbackTitleId
+
   return (
-    <section className="areas page-width" id={id} aria-labelledby="areas-title">
+    <section className="areas page-width" id={id} aria-labelledby={titleId}>
       <div className="section-heading">
-        <h2 id="areas-title">{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         <p>{subtitle}</p>
       </div>
       <div className="area-grid">
@@ -29,7 +32,7 @@ export function WorkAreasSection({ id, title, subtitle, areas }: WorkAreasSectio
             description={area.description}
             href={area.href}
             icon={area.icon}
-            key={area.title}
+            key={area.href}
             title={area.title}
           />
         ))}
