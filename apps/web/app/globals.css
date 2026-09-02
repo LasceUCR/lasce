@@ -399,6 +399,7 @@ a {
 
 .areas {
   margin-top: 8px;
+  scroll-margin-top: 24px;
 }
 
 .section-heading p {

@@ -1,9 +1,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { BookOpen, ChartNoAxesCombined, Orbit, RadioTower, Sun, Telescope } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
+import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
+import {
+  getHomeAreaCards,
+  workAreasSectionId,
+  type AreaCardDefinition,
+} from '@/app/lib/work-areas'
 
 const indicators = [
   { label: 'Índice Kp', value: '2 · Tranquilo', tone: 'teal' },
@@ -12,44 +17,18 @@ const indicators = [
   { label: 'Índice Ap', value: '7 · Tranquilo', tone: 'teal' },
 ]
 
-const areas: {
-  icon: LucideIcon
-  title: string
-  description: string
-  href: string
-}[] = [
-  {
-    icon: Sun,
-    title: 'Física solar',
-    description: 'Actividad y observaciones',
-    href: '/investigacion',
-  },
-  {
-    icon: Orbit,
-    title: 'Clima espacial',
-    description: 'Indicadores y monitoreo',
-    href: '/datos',
-  },
-  { icon: RadioTower, title: 'Radioastronomía', description: 'Datos ROSAC', href: '/investigacion' },
-  {
-    icon: Telescope,
-    title: 'Instrumentación',
-    description: 'Instrumentos y citación',
-    href: '/instrumentacion',
-  },
-  {
-    icon: ChartNoAxesCombined,
-    title: 'Datos y análisis',
-    description: 'Consulta y descargas',
-    href: '/datos',
-  },
-  {
-    icon: BookOpen,
-    title: 'Divulgación',
-    description: 'Noticias y recursos',
-    href: '/noticias',
-  },
-]
+function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
+  return areas.map((area) => {
+    const AreaIcon: LucideIcon = area.icon
+
+    return {
+      title: area.title,
+      description: area.description,
+      href: area.href,
+      icon: <AreaIcon size={25} strokeWidth={1.7} />,
+    }
+  })
+}
 
 export default function HomePage() {
   return (
@@ -97,19 +76,10 @@ export default function HomePage() {
         </section>
 
         <WorkAreasSection
-          id="investigacion"
+          id={workAreasSectionId}
           title="Áreas y accesos principales"
           subtitle="Investigar, observar, analizar y compartir."
-          areas={areas.map((area) => {
-            const AreaIcon = area.icon
-
-            return {
-              title: area.title,
-              description: area.description,
-              href: area.href,
-              icon: <AreaIcon size={25} strokeWidth={1.7} />,
-            }
-          })}
+          areas={toWorkAreaItems(getHomeAreaCards())}
         />
       </div>
     </>

@@ -11,12 +11,18 @@ const publicRoutes = [
 ] as const
 
 const areaCards = [
-  { name: 'Física solar', path: '/investigacion' },
-  { name: 'Clima espacial', path: '/datos' },
-  { name: 'Radioastronomía', path: '/investigacion' },
+  { name: 'Física solar', path: '/fisica-solar' },
+  { name: 'Clima espacial', path: '/clima-espacial' },
+  { name: 'Radioastronomía', path: '/radioastronomia' },
   { name: 'Instrumentación', path: '/instrumentacion' },
   { name: 'Datos y análisis', path: '/datos' },
   { name: 'Divulgación', path: '/noticias' },
+] as const
+
+const workAreaRoutes = [
+  { path: '/fisica-solar', heading: 'Física solar' },
+  { path: '/clima-espacial', heading: 'Clima espacial' },
+  { path: '/radioastronomia', heading: 'Radioastronomía' },
 ] as const
 
 test('loads the public landing page without authentication', async ({ page }) => {
@@ -32,6 +38,17 @@ test('loads the public landing page without authentication', async ({ page }) =>
   await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
   expect(new URL(page.url()).pathname).toBe('/')
 })
+
+for (const route of workAreaRoutes) {
+  test(`opens ${route.path} directly without a login redirect`, async ({ page }) => {
+    const response = await page.goto(route.path)
+
+    expect(response?.status()).toBe(200)
+    expect(new URL(page.url()).pathname).toBe(route.path)
+    expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+    await expect(page.getByRole('heading', { level: 1, name: route.heading })).toBeVisible()
+  })
+}
 
 for (const route of publicRoutes) {
   test(`opens ${route.path} directly without a login redirect`, async ({ page }) => {
