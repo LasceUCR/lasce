@@ -13,13 +13,12 @@ export const spaceWeatherHero = {
     src: '/images/decorative/Solar-Flare.png',
     alt: 'Fulguración solar en el disco del Sol, un evento que libera radiación y material hacia el medio interplanetario.',
   },
-  mockNotice: 'Los indicadores y la gráfica de esta página son datos simulados para ilustrar la estructura del portal.',
 } as const
 
 export const spaceWeatherComponents = {
   title: '¿Qué compone el clima espacial?',
   intro:
-    'El clima espacial no es un solo fenómeno: es una cadena que empieza en el Sol y termina en la Tierra. Cada eslabón modifica al siguiente.',
+    'No es un solo fenómeno: es una cadena que empieza en el Sol y termina en la Tierra. Cada eslabón modifica al siguiente.',
   items: [
     {
       title: 'Actividad solar',
@@ -29,7 +28,7 @@ export const spaceWeatherComponents = {
     {
       title: 'Viento solar',
       description:
-        'Es un flujo continuo de plasma que sale de la corona solar. Su velocidad y densidad cambian según la actividad del Sol y arrastran el campo magnético interplanetario.',
+        'Es un flujo continuo de plasma que sale de la corona solar. Su velocidad, densidad y campo magnético cambian según lo que ocurra en el Sol.',
     },
     {
       title: 'Magnetosfera',
@@ -39,7 +38,17 @@ export const spaceWeatherComponents = {
     {
       title: 'Ionosfera',
       description:
-        'Es la capa alta de la atmósfera, ionizada por la radiación solar. Las fulguraciones y las tormentas geomagnéticas alteran su densidad y afectan radio, GPS y comunicaciones.',
+        'Es la capa alta de la atmósfera, ionizada por la radiación solar. Los cambios en esa capa afectan radio, GPS y otras comunicaciones.',
+    },
+    {
+      title: 'Tormentas geomagnéticas',
+      description:
+        'Surgen cuando el viento solar y el campo magnético interplanetario perturban con fuerza la magnetosfera. Pueden durar horas o días.',
+    },
+    {
+      title: 'Radiación de partículas',
+      description:
+        'El Sol también puede enviar protones y otras partículas energéticas. Ese flujo es distinto del viento solar cotidiano y puede afectar satélites y vuelos polares.',
     },
   ],
   flow: {
@@ -50,107 +59,75 @@ export const spaceWeatherComponents = {
   },
 } as const
 
-export const spaceWeatherIndicators = {
-  title: 'Indicadores actuales',
-  mockLabel: 'Datos simulados',
-  updatedAt: '2 de septiembre de 2026, 12:00 UTC',
+export const spaceWeatherSolarActivity = {
+  title: 'El Sol y el clima espacial',
+  intro:
+    'Casi todo el clima espacial nace en el Sol. La actividad de su atmósfera y de su campo magnético determina qué tan perturbado llega el entorno espacial hasta la Tierra.',
+  figure: {
+    src: '/images/decorative/Solar-Flare.png',
+    alt: 'Región activa en el Sol, con material brillante expulsado desde la corona durante una fulguración.',
+    caption:
+      'Las fulguraciones son uno de los modos en que el Sol libera energía hacia el medio interplanetario.',
+  },
   items: [
     {
-      label: 'Índice Kp',
-      value: '3',
-      status: 'Inquieto',
-      detail: 'Mide la perturbación geomagnética global (0 a 9). Un valor 3 indica inquietud, todavía por debajo de una tormenta (Kp 5).',
-      tone: 'teal',
+      title: 'Manchas solares',
+      description:
+        'Son regiones más frías y con campo magnético intenso. Cuando hay muchas, el Sol suele estar más activo y aumentan las fulguraciones y las eyecciones.',
     },
     {
-      label: 'Viento solar',
-      value: '420 km/s',
-      status: 'Normal',
-      detail: 'La velocidad típica del viento solar lento ronda 350–450 km/s. 420 km/s es un flujo habitual, no un evento extremo.',
-      tone: 'cyan',
+      title: 'Fulguraciones',
+      description:
+        'Son estallidos de radiación en la atmósfera solar. Llegan a la Tierra en minutos y pueden alterar la ionosfera del lado diurno.',
     },
     {
-      label: 'Rayos X',
-      value: 'C2.4',
-      status: 'Moderado',
-      detail: 'Clase C: fulguración moderada. Es más intensa que una clase B (baja) y mucho menor que una M o X, asociadas a impactos mayores.',
-      tone: 'blue',
-    },
-    {
-      label: 'Protones',
-      value: '1.2 pfu',
-      status: 'Bajo',
-      detail: 'Flujo de protones energéticos cerca del fondo. No hay tormenta de radiación solar (esas suelen superar 10 pfu).',
-      tone: 'teal',
+      title: 'Eyecciones de masa coronal',
+      description:
+        'Lanzan grandes nubes de plasma y campo magnético al espacio. Si apuntan hacia la Tierra, pueden provocar tormentas geomagnéticas al llegar, días después.',
     },
   ],
-} as const
-
-export type SpaceWeatherIndicator = (typeof spaceWeatherIndicators.items)[number]
-
-export const spaceWeatherChart = {
-  title: 'Actividad geomagnética (últimas 24 h)',
-  description:
-    'El índice Kp se mantuvo entre 1 y 2 durante la madrugada y subió hasta 3 hacia el mediodía UTC, en coherencia con un viento solar que pasó de unos 365 km/s a 420 km/s tras la fulguración C2.4. El umbral de tormenta menor (Kp 5) no se alcanzó.',
-  yLabel: 'Índice Kp',
-  stormThreshold: 5,
-  stormThresholdLabel: 'Umbral de tormenta menor (Kp 5)',
-  points: [
-    { hour: '00:00', kp: 1.3, wind: 365 },
-    { hour: '03:00', kp: 1.6, wind: 372 },
-    { hour: '06:00', kp: 1.8, wind: 381 },
-    { hour: '09:00', kp: 2.4, wind: 398 },
-    { hour: '12:00', kp: 3.0, wind: 420 },
-    { hour: '15:00', kp: 2.7, wind: 414 },
-    { hour: '18:00', kp: 2.2, wind: 405 },
-    { hour: '21:00', kp: 1.9, wind: 392 },
-  ],
-} as const
-
-export type SpaceWeatherChartPoint = (typeof spaceWeatherChart.points)[number]
-
-export const spaceWeatherStatus = {
-  title: 'Estado actual y alertas',
-  level: 'Vigilancia',
-  levelDescription: 'Condiciones inquietas, sin tormenta',
-  summary:
-    'Hay una fulguración moderada clase C y un Kp inquieto. El conjunto es coherente: el Sol está activo a un nivel cotidiano, el viento solar es normal y la magnetosfera apenas se ha perturbado.',
-  alerts: [
-    'Sin alerta de tormenta geomagnética (G1 o superior).',
-    'Fulguración C2.4 observada; no hay aumento relevante de protones.',
-  ],
-  forecast:
-    'Se espera que el Kp se mantenga entre 2 y 4 en las próximas 24 horas. No se anticipa una tormenta geomagnética ni un evento de radiación.',
 } as const
 
 export const spaceWeatherImpacts = {
   title: 'Impactos en la Tierra',
   intro:
-    'Con los valores simulados de hoy el impacto práctico es bajo. Las tarjetas describen qué suele ocurrir cuando cada eslabón de la cadena se intensifica.',
+    'Cuando la cadena solar se intensifica, los efectos se notan sobre todo en tecnologías que dependen de la ionosfera, de órbitas o de redes eléctricas extensas. También hay un fenómeno visible: las auroras.',
   items: [
     {
       title: 'Telecomunicaciones',
       summary:
-        'La ionosfera refracta y absorbe ondas de radio. Una fulguración C puede causar desvanecimientos breves en HF del lado diurno; no suele interrumpir redes móviles.',
-      more: 'Durante tormentas fuertes, las comunicaciones HF de aviación y emergencia se degradan. En el escenario actual (C2.4 y protones bajos) el efecto esperado es local y temporal.',
+        'La ionosfera refracta y absorbe ondas de radio. Las fulguraciones pueden causar desvanecimientos en HF del lado diurno; las tormentas más intensas degradan comunicaciones de aviación y emergencia.',
+      more: 'Las redes móviles cotidianas suelen ser menos sensibles que los sistemas HF de larga distancia, que sí dependen de la ionosfera.',
     },
     {
       title: 'Satélites',
       summary:
-        'El viento solar y las partículas energéticas cargan superficies, calientan la atmósfera alta y aumentan el arrastre sobre órbitas bajas.',
-      more: 'Con 420 km/s y 1.2 pfu el ambiente es cercano al promedio. El riesgo crece con eyecciones de masa coronal y tormentas de protones, no con una fulguración C aislada.',
+        'El viento solar y las partículas energéticas pueden cargar superficies, calentar la atmósfera alta y aumentar el arrastre sobre órbitas bajas.',
+      more: 'El riesgo crece con eyecciones de masa coronal y eventos de protones, no con cualquier variación cotidiana del viento solar.',
     },
     {
       title: 'GPS y navegación',
       summary:
-        'Los retardos en la ionosfera introducen errores de posicionamiento. Un Kp 3 puede aumentar el centelleo, sobre todo en latitudes altas.',
-      more: 'Los receptores de precisión (agricultura, aviación) son más sensibles. En Costa Rica, a baja latitud, un Kp 3 rara vez produce fallos evidentes en navegación cotidiana.',
+        'Los retardos y el centelleo en la ionosfera introducen errores de posicionamiento. Los receptores de precisión son más sensibles que la navegación cotidiana.',
+      more: 'En latitudes bajas, como Costa Rica, los efectos suelen ser menores que en latitudes altas, aunque una tormenta intensa puede notarse también aquí.',
     },
     {
       title: 'Redes eléctricas',
       summary:
-        'Las tormentas geomagnéticas inducen corrientes en líneas largas. Eso ocurre sobre todo con Kp 5 o más, no con el nivel inquieto de este escenario.',
-      more: 'Las redes de latitudes medias y altas son las más expuestas. El caso simulado permanece por debajo del umbral operativo habitual de alerta.',
+        'Las tormentas geomagnéticas inducen corrientes en líneas largas. Las redes de latitudes medias y altas son las más expuestas.',
+      more: 'Estos efectos aparecen sobre todo en perturbaciones fuertes de la magnetosfera, no en el viento solar habitual.',
+    },
+    {
+      title: 'Auroras',
+      summary:
+        'Cuando partículas solares entran por las regiones polares, excitan la atmósfera y producen auroras. Son la cara visible del clima espacial.',
+      more: 'En tormentas muy intensas las auroras pueden verse más lejos de los polos. Son un efecto natural, no un daño por sí mismas.',
+    },
+    {
+      title: 'Aviación y radiación',
+      summary:
+        'A gran altitud, sobre todo en rutas polares, aumenta la exposición a partículas energéticas durante algunos eventos solares.',
+      more: 'Por eso el clima espacial también interesa a la aviación de larga distancia, además de a satélites y comunicaciones.',
     },
   ],
 } as const
@@ -159,7 +136,7 @@ export const spaceWeatherLasce = {
   title: 'El trabajo de LASCE',
   paragraphs: [
     'El Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica estudia el Sol y el entorno espacial para entender cómo la actividad solar se traduce en clima espacial.',
-    'El trabajo combina observación, instrumentación y análisis: se sigue la actividad solar, se interpretan indicadores del medio interplanetario y se explora cómo esos cambios llegan a la magnetosfera y la ionosfera.',
+    'El trabajo combina observación, instrumentación y análisis: se sigue la actividad solar y se explora cómo esos cambios llegan a la magnetosfera y la ionosfera.',
     'Esta página ofrece un panorama general. Los proyectos, publicaciones, conjuntos de datos y herramientas de monitoreo se publicarán en sus propias secciones del portal.',
   ],
 } as const

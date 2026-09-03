@@ -124,8 +124,8 @@ playwright.config.ts
 - `Brand` centralizes the institutional logo variants used by the header and footer.
 - `app/lib/site.ts` defines the canonical site origin and public route list used by SEO metadata.
 - `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
-- `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy, mock indicators, and event data live in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
-- `app/components/public/topic/` holds reusable topic-page primitives (`TopicHero`, `TopicSection`, `InfoCard`, `MetricCard`, `ConceptFlow`, `LineChart`, and related layout pieces) so other work area pages can reuse the same structure without duplicating markup.
+- `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy lives in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
+- `app/components/public/topic/` holds reusable topic-page primitives (`TopicHero`, `TopicSection`, `InfoCard`, `ConceptFlow`, `TopicFigure`, and related layout pieces) so other work area pages can reuse the same structure without duplicating markup.
 - `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`.
 
 ## Accessibility and SEO
@@ -160,7 +160,7 @@ The Playwright configuration starts the web development server automatically whe
 
 - Loading the landing page without authentication
 - Direct access to all public routes, including the three work area pages
-- Space weather content, mock scientific sections, and the return link to the work areas
+- Space weather informational content and the return link to the work areas
 - Absence of redirects to login
 - Desktop and mobile navigation
 - Active links through `aria-current`

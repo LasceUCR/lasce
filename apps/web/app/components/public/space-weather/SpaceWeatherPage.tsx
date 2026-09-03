@@ -1,37 +1,37 @@
 import {
   Magnet,
   Navigation,
+  Orbit,
+  Plane,
   Power,
   Radio,
   Satellite,
+  Sparkles,
   Sun,
   Wind,
+  Zap,
   type LucideIcon,
 } from 'lucide-react'
 
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ConceptFlow } from '@/app/components/public/topic/ConceptFlow'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
-import { LineChart } from '@/app/components/public/topic/LineChart'
-import { MetricCard } from '@/app/components/public/topic/MetricCard'
-import { SplitPanel } from '@/app/components/public/topic/SplitPanel'
-import { StatusPanel } from '@/app/components/public/topic/StatusPanel'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
+import { TopicFigure } from '@/app/components/public/topic/TopicFigure'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import {
   spaceWeatherBackLink,
-  spaceWeatherChart,
   spaceWeatherComponents,
   spaceWeatherHero,
   spaceWeatherImpacts,
-  spaceWeatherIndicators,
   spaceWeatherLasce,
-  spaceWeatherStatus,
+  spaceWeatherSolarActivity,
 } from '@/app/lib/space-weather'
 
-const componentIcons: LucideIcon[] = [Sun, Wind, Magnet, Radio]
-const impactIcons: LucideIcon[] = [Radio, Satellite, Navigation, Power]
+const componentIcons: LucideIcon[] = [Sun, Wind, Magnet, Radio, Zap, Sparkles]
+const solarActivityIcons: LucideIcon[] = [Sun, Zap, Orbit]
+const impactIcons: LucideIcon[] = [Radio, Satellite, Navigation, Power, Sparkles, Plane]
 
 export function SpaceWeatherPage() {
   return (
@@ -40,7 +40,6 @@ export function SpaceWeatherPage() {
         image={spaceWeatherHero.image}
         kicker={spaceWeatherHero.kicker}
         lead={spaceWeatherHero.introduction}
-        notice={spaceWeatherHero.mockNotice}
         title={spaceWeatherHero.title}
       />
 
@@ -50,7 +49,7 @@ export function SpaceWeatherPage() {
         title={spaceWeatherComponents.title}
         titleId="sw-components-title"
       >
-        <CardGrid>
+        <CardGrid columns={3} equalHeight>
           {spaceWeatherComponents.items.map((item, index) => {
             const Icon = componentIcons[index] ?? Sun
 
@@ -72,61 +71,39 @@ export function SpaceWeatherPage() {
       </TopicSection>
 
       <TopicSection
-        badge={spaceWeatherIndicators.mockLabel}
         index="2"
-        title={spaceWeatherIndicators.title}
-        titleId="sw-indicators-title"
+        intro={spaceWeatherSolarActivity.intro}
+        title={spaceWeatherSolarActivity.title}
+        titleId="sw-solar-title"
       >
-        <CardGrid>
-          {spaceWeatherIndicators.items.map((item) => (
-            <MetricCard
-              detail={item.detail}
-              key={item.label}
-              label={item.label}
-              status={item.status}
-              tone={item.tone}
-              updatedAt={spaceWeatherIndicators.updatedAt}
-              value={item.value}
-            />
-          ))}
+        <TopicFigure
+          alt={spaceWeatherSolarActivity.figure.alt}
+          caption={spaceWeatherSolarActivity.figure.caption}
+          src={spaceWeatherSolarActivity.figure.src}
+        />
+        <CardGrid columns={3} equalHeight tone="teal">
+          {spaceWeatherSolarActivity.items.map((item, index) => {
+            const Icon = solarActivityIcons[index] ?? Sun
+
+            return (
+              <InfoCard
+                description={item.description}
+                icon={<Icon size={22} strokeWidth={1.8} />}
+                key={item.title}
+                title={item.title}
+              />
+            )
+          })}
         </CardGrid>
       </TopicSection>
 
-      <TopicSection index="3" title="Visualización y estado actual" titleId="sw-status-title">
-        <SplitPanel>
-          <LineChart
-            description={spaceWeatherChart.description}
-            points={spaceWeatherChart.points.map((point) => ({
-              label: point.hour,
-              value: point.kp,
-            }))}
-            threshold={{
-              label: spaceWeatherChart.stormThresholdLabel,
-              value: spaceWeatherChart.stormThreshold,
-            }}
-            title={spaceWeatherChart.title}
-            yLabel={spaceWeatherChart.yLabel}
-            yMax={9}
-            yTicks={[0, 3, 5, 7, 9]}
-          />
-          <StatusPanel
-            alerts={spaceWeatherStatus.alerts}
-            forecast={spaceWeatherStatus.forecast}
-            level={spaceWeatherStatus.level}
-            levelDescription={spaceWeatherStatus.levelDescription}
-            summary={spaceWeatherStatus.summary}
-            title={spaceWeatherStatus.title}
-          />
-        </SplitPanel>
-      </TopicSection>
-
       <TopicSection
-        index="4"
+        index="3"
         intro={spaceWeatherImpacts.intro}
         title={spaceWeatherImpacts.title}
         titleId="sw-impacts-title"
       >
-        <CardGrid>
+        <CardGrid columns={3} expandable>
           {spaceWeatherImpacts.items.map((item, index) => {
             const Icon = impactIcons[index] ?? Radio
 
@@ -143,7 +120,12 @@ export function SpaceWeatherPage() {
         </CardGrid>
       </TopicSection>
 
-      <TopicSection className="topic-section-end" title={spaceWeatherLasce.title} titleId="sw-lasce-title">
+      <TopicSection
+        className="topic-section-end"
+        featured
+        title={spaceWeatherLasce.title}
+        titleId="sw-lasce-title"
+      >
         {spaceWeatherLasce.paragraphs.map((paragraph) => (
           <p className="topic-intro" key={paragraph}>
             {paragraph}

@@ -29,7 +29,7 @@ export const workAreas = {
   },
   'clima-espacial': {
     title: 'Clima espacial',
-    description: 'Indicadores y monitoreo',
+    description: 'Fenómenos solares y sus efectos',
     icon: Orbit,
   },
   radioastronomia: {
