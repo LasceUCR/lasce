@@ -17,7 +17,7 @@ const overviewIcons: LucideIcon[] = [Sun, Magnet, Layers, Activity]
 
 export function SolarAstrophysicsPage() {
   return (
-    <article className="topic-page">
+    <article className="topic-page solar-topic-page">
       <TopicHero
         image={solarAstrophysicsHero.image}
         kicker={solarAstrophysicsHero.kicker}
@@ -54,14 +54,23 @@ export function SolarAstrophysicsPage() {
 
       <TopicSection
         className="topic-section-end"
+        badge="Texto temporal"
         title={solarAstrophysicsLasce.title}
         titleId="solar-lasce-title"
       >
-        {solarAstrophysicsLasce.paragraphs.map((paragraph) => (
-          <p className="topic-intro" key={paragraph}>
-            {paragraph}
-          </p>
-        ))}
+        <div className="solar-lasce-panel surface-card">
+          <div className="solar-lasce-copy">
+            {solarAstrophysicsLasce.paragraphs.map((paragraph) => (
+              <p className="topic-intro" key={paragraph}>
+                {paragraph}
+              </p>
+            ))}
+          </div>
+          <aside className="solar-content-note" aria-label="Nota de contenido">
+            <strong>Contenido temporal</strong>
+            <p>{solarAstrophysicsLasce.note}</p>
+          </aside>
+        </div>
         <TopicBackLink
           href={solarAstrophysicsBackLink.href}
           label={solarAstrophysicsBackLink.label}

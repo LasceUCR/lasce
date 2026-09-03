@@ -1094,6 +1094,55 @@ a {
   margin-top: 12px;
 }
 
+.solar-topic-page .topic-section-end {
+  padding-top: 36px;
+}
+
+.solar-lasce-panel {
+  margin-top: 18px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.6fr);
+  gap: 0;
+  align-items: stretch;
+  overflow: hidden;
+  border-color: #d4e2ea;
+  box-shadow: 0 14px 30px rgba(21, 52, 76, 0.08);
+}
+
+.solar-lasce-copy {
+  padding: 24px 26px;
+}
+
+.solar-lasce-panel .topic-intro {
+  max-width: none;
+  margin-top: 0;
+}
+
+.solar-content-note {
+  padding: 22px;
+  border-left: 4px solid var(--blue);
+  background: #eef7fc;
+}
+
+.solar-content-note strong {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--navy-deep);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.solar-content-note p {
+  margin: 0;
+  color: #3d5566;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .topic-back {
   min-height: 44px;
   margin-top: 28px;
@@ -1130,8 +1179,14 @@ a {
   }
 
   .topic-split,
+  .solar-lasce-panel,
   .card-grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .solar-content-note {
+    border-left: 0;
+    border-top: 4px solid var(--blue);
   }
 }
 

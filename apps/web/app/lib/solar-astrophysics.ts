@@ -51,6 +51,8 @@ export const solarAstrophysicsOverview = {
 
 export const solarAstrophysicsLasce = {
   title: 'El trabajo de LASCE en física solar',
+  note:
+    'Contenido temporal pendiente de textos oficiales y validación por parte de LASCE.',
   paragraphs: [
     'LASCE estudia la actividad del Sol mediante observación, instrumentación y análisis de datos científicos.',
     'El laboratorio relaciona las señales solares con procesos físicos que ayudan a explicar el origen de fenómenos relevantes para el clima espacial.',
