@@ -94,8 +94,35 @@ test('displays space weather information without authentication', async ({ page 
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /clima espacial/i)
 })
 
+test('displays solar astrophysics information without authentication', async ({ page }) => {
+  const response = await page.goto('/fisica-solar')
+
+  expect(response?.status()).toBe(200)
+  expect(new URL(page.url()).pathname).toBe('/fisica-solar')
+  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Física solar' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Qué estudia la física solar/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'El trabajo de LASCE en física solar' })).toBeVisible()
+  await expect(page.getByRole('img', { name: /Fulguración solar/ })).toBeVisible()
+  await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /física solar/i)
+})
+
 test('returns to the work areas section from space weather', async ({ page }) => {
   await page.goto('/clima-espacial')
+
+  await page.getByRole('link', { name: 'Volver a las áreas de trabajo' }).click()
+
+  await expect(page).toHaveURL(/\/#areas-de-trabajo/)
+  await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
+  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+})
+
+test('returns to the work areas section from solar astrophysics', async ({ page }) => {
+  await page.goto('/fisica-solar')
 
   await page.getByRole('link', { name: 'Volver a las áreas de trabajo' }).click()
 
