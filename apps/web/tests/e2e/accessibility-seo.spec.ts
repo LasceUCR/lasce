@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
+import { publicPaths } from '@/app/lib/site'
+
 const publicRoutes = [
   { label: 'Inicio', path: '/' },
   { label: 'Nosotros', path: '/nosotros' },
@@ -11,7 +13,14 @@ const publicRoutes = [
   { label: 'Contacto', path: '/contacto' },
 ] as const
 
-for (const route of publicRoutes) {
+const indexableRoutes = [
+  ...publicRoutes,
+  { label: 'Física solar', path: '/fisica-solar' },
+  { label: 'Clima espacial', path: '/clima-espacial' },
+  { label: 'Radioastronomía', path: '/radioastronomia' },
+] as const
+
+for (const route of indexableRoutes) {
   test(`${route.path} meets WCAG A and AA automated checks`, async ({ page }) => {
     await page.goto(route.path)
 
@@ -102,8 +111,8 @@ test('robots and sitemap expose only indexable public routes', async ({ request 
   const sitemap = await sitemapResponse.text()
 
   expect(sitemapResponse.status()).toBe(200)
-  for (const route of publicRoutes) {
-    expect(sitemap).toContain(`<loc>http://localhost:3000${route.path}</loc>`)
+  for (const path of publicPaths) {
+    expect(sitemap).toContain(`<loc>http://localhost:3000${path}</loc>`)
   }
   expect(sitemap).not.toContain('/api/')
 })
