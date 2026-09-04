@@ -54,8 +54,43 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: ./.github/actions/setup
-      # @lasce/web's `test` script is Playwright; it has its own job below.
-      - run: pnpm turbo run test --filter=@lasce/contracts
+
+      # `test` is the unit suite in every workspace and writes coverage/, the
+      # output turbo.json already declares. It starts no browser: Playwright
+      # lives behind `test:e2e` and has its own job below. Thresholds are set
+      # per workspace in vitest.config.ts, so a drop fails here.
+      - run: pnpm turbo run test --filter='!@lasce/worker'
+
+      - name: Coverage summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### Coverage'
+            echo
+            echo '| Workspace | Lines | Statements | Functions | Branches |'
+            echo '| --- | ---: | ---: | ---: | ---: |'
+          } >> "$GITHUB_STEP_SUMMARY"
+          for f in $(find . -path ./node_modules -prune -o -name coverage-summary.json -print); do
+            node -e '
+              const fs = require("fs")
+              const [file] = process.argv.slice(1)
+              const total = JSON.parse(fs.readFileSync(file, "utf8")).total
+              // ./apps/web/coverage/coverage-summary.json -> apps/web
+              const name = file.split("/").slice(1, -2).join("/")
+              const pct = (k) => `${total[k].pct}% (${total[k].covered}/${total[k].total})`
+              console.log(`| ${name} | ${pct("lines")} | ${pct("statements")} | ${pct("functions")} | ${pct("branches")} |`)
+            ' "$f" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: coverage-typescript
+          path: |
+            apps/*/coverage
+            packages/*/coverage
+          retention-days: 7
 
   build:
     name: build
@@ -82,9 +117,31 @@ jobs:
       - name: mypy
         working-directory: apps/worker
         run: uv run mypy app
+      # pyproject.toml's addopts add --cov and --cov-fail-under, so a coverage
+      # drop fails this job the same way a failing test does.
       - name: pytest
         working-directory: apps/worker
         run: uv run pytest
+
+      - name: Coverage summary
+        if: always()
+        working-directory: apps/worker
+        shell: bash
+        run: |
+          {
+            echo '### Worker coverage'
+            echo
+            echo '```'
+            uv run coverage report || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: coverage-worker
+          path: apps/worker/coverage.xml
+          retention-days: 7
 
   e2e:
     name: e2e

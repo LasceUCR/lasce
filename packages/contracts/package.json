@@ -10,7 +10,8 @@
     "export-schema": "tsx scripts/export-schema.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/*.test.ts",
+    "test": "vitest run --coverage",
+    "test:unit": "vitest run",
     "clean": "rm -rf .turbo node_modules"
   },
   "dependencies": {
@@ -21,8 +22,10 @@
     "@lasce/config": "workspace:*",
     "@lasce/eslint-config": "workspace:*",
     "@types/node": "^22.15.0",
+    "@vitest/coverage-v8": "4.1.11",
     "eslint": "^9.39.0",
     "tsx": "^4.20.6",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
   }
 }
