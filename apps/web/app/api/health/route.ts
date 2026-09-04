@@ -27,7 +27,10 @@ export async function GET(): Promise<NextResponse> {
 
   const healthy = Object.values(checks).every((value) => value === 'ok')
 
-  return NextResponse.json({ status: healthy ? 'ok' : 'degraded', checks }, {
-    status: healthy ? 200 : 503,
-  })
+  return NextResponse.json(
+    { status: healthy ? 'ok' : 'degraded', checks },
+    {
+      status: healthy ? 200 : 503,
+    },
+  )
 }

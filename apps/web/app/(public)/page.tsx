@@ -4,11 +4,7 @@ import type { LucideIcon } from 'lucide-react'
 
 import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
 import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
-import {
-  getHomeAreaCards,
-  workAreasSectionId,
-  type AreaCardDefinition,
-} from '@/app/lib/work-areas'
+import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@/app/lib/work-areas'
 
 const indicators = [
   { label: 'Índice Kp', value: '2 · Tranquilo', tone: 'teal' },

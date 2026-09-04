@@ -33,18 +33,18 @@ two sides agreed on — it is literally the same data structures and the same at
 is what makes a TypeScript producer and a Python consumer viable without a translation service in
 between.
 
-What is *not* automatic is the shape of a payload, which is why
+What is _not_ automatic is the shape of a payload, which is why
 [`packages/contracts`](../packages/contracts) exists and exports JSON Schema for the Python side to
 check itself against.
 
 ## Who owns what
 
-| Store | Written by | Read by | Schema owner |
-| --- | --- | --- | --- |
-| PostgreSQL | `apps/web` (Prisma), `apps/worker` (SQLAlchemy) | both | **Prisma** — the only migration source |
-| InfluxDB | `apps/worker` | `apps/worker` | schema-on-write |
-| MinIO | `apps/worker` | `apps/worker` | — |
-| Redis | `apps/web` enqueues, `apps/worker` consumes | both | BullMQ |
+| Store      | Written by                                      | Read by       | Schema owner                           |
+| ---------- | ----------------------------------------------- | ------------- | -------------------------------------- |
+| PostgreSQL | `apps/web` (Prisma), `apps/worker` (SQLAlchemy) | both          | **Prisma** — the only migration source |
+| InfluxDB   | `apps/worker`                                   | `apps/worker` | schema-on-write                        |
+| MinIO      | `apps/worker`                                   | `apps/worker` | —                                      |
+| Redis      | `apps/web` enqueues, `apps/worker` consumes     | both          | BullMQ                                 |
 
 One owner per schema is deliberate. The worker reads and writes the same PostgreSQL tables through
 SQLAlchemy but never migrates them, so there is only ever one migration history.
@@ -69,7 +69,7 @@ All three end up in `enqueue()` from `@lasce/jobs`, which validates against the 
 anything reaches Redis. The worker cannot tell them apart, and does not need to.
 
 The scheduling mechanism was left deliberately swappable because the deployment target is not
-settled yet: schedules are *declared* in `packages/jobs/src/schedules.ts` regardless, and only the
+settled yet: schedules are _declared_ in `packages/jobs/src/schedules.ts` regardless, and only the
 mechanism that reads that list changes.
 
 ## Request path of a job

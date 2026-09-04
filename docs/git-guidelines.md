@@ -13,9 +13,9 @@ This guide defines the minimum conventions required to keep the team's work orga
 
 ## 2. Main Branches
 
-| Branch | Purpose |
-| --- | --- |
-| `main` | Stable and release-ready version |
+| Branch    | Purpose                           |
+| --------- | --------------------------------- |
+| `main`    | Stable and release-ready version  |
 | `develop` | Integration of the team's changes |
 
 Working branches are created from `develop` and merged back into `develop` through a Pull Request. `hotfix` branches are created from `main`.
@@ -38,15 +38,15 @@ docs-g01-api-guide
 
 ### Allowed Types
 
-| Type | Purpose |
-| --- | --- |
-| `feature` | New functionality |
-| `fix` | Bug fix or correction |
-| `hotfix` | Urgent fix for `main` |
+| Type       | Purpose                                          |
+| ---------- | ------------------------------------------------ |
+| `feature`  | New functionality                                |
+| `fix`      | Bug fix or correction                            |
+| `hotfix`   | Urgent fix for `main`                            |
 | `refactor` | Code restructuring without changing its behavior |
-| `docs` | Documentation |
-| `test` | Tests |
-| `chore` | Configuration or maintenance |
+| `docs`     | Documentation                                    |
+| `test`     | Tests                                            |
+| `chore`    | Configuration or maintenance                     |
 
 ### Rules
 
