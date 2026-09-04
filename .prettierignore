@@ -1,0 +1,8 @@
+# Generated files. Formatting these would fight with the tool that writes them
+# and break `pnpm format:check` the next time they are regenerated.
+
+# Written by `pnpm contracts:export` (JSON.stringify, not Prettier).
+packages/contracts/schema/
+
+# Written by Next.js on every dev/build run.
+apps/web/next-env.d.ts
