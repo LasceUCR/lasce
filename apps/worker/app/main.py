@@ -36,9 +36,7 @@ async def _record_run(
     Bookkeeping must never sink the job it is describing, so a database problem
     here is logged and swallowed rather than raised.
     """
-    duration_ms = (
-        int((finished_at - started_at).total_seconds() * 1000) if finished_at else None
-    )
+    duration_ms = int((finished_at - started_at).total_seconds() * 1000) if finished_at else None
 
     statement = (
         insert(JobRun)
@@ -65,7 +63,7 @@ async def _record_run(
     try:
         async with session_scope() as session:
             await session.execute(statement)
-    except Exception as db_error:  # noqa: BLE001
+    except Exception as db_error:
         log.warning("could not record job run", job_id=job.id, error=str(db_error))
 
 

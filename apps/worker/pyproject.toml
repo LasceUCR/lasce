@@ -41,7 +41,11 @@ known-first-party = ["app"]
 python_version = "3.13"
 strict = true
 warn_unused_ignores = true
-# The InfluxDB and MinIO clients ship no type information.
+# The InfluxDB, MinIO and BullMQ clients ship no type information, so strict
+# mode would otherwise reject every call into them as `no-untyped-call`. Their
+# own signatures stay unchecked; our code around them does not.
+untyped_calls_exclude = ["influxdb_client_3", "minio", "bullmq"]
+
 [[tool.mypy.overrides]]
 module = ["influxdb_client_3.*", "minio.*", "bullmq.*"]
 ignore_missing_imports = true
