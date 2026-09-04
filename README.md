@@ -29,8 +29,10 @@ lasce/
 | InfluxDB 3 Core | Time-series readings, written by the worker                                        |
 | MinIO           | File storage (S3-compatible)                                                       |
 
-Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together, and
-[`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue.
+Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together,
+[`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue, and
+[`docs/tests/component_testing.md`](docs/tests/component_testing.md) for how UI component tests
+should be structured.
 
 ## Requirements
 
