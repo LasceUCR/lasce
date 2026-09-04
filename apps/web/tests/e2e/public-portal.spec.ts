@@ -84,6 +84,8 @@ test('displays space weather information without authentication', async ({ page 
   expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Clima espacial' })).toBeVisible()
+  await expect(page.getByRole('complementary', { name: 'Información provisional' })).toBeVisible()
+  await expect(page.getByText(/contenido de esta página es preliminar/i)).toBeVisible()
   await expect(page.getByRole('heading', { name: /Qué compone el clima espacial/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Viento solar', exact: true })).toBeVisible()

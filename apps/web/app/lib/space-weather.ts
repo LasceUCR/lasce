@@ -141,6 +141,12 @@ export const spaceWeatherLasce = {
   ],
 } as const
 
+export const spaceWeatherContentFlag = {
+  label: 'Información provisional',
+  message:
+    'El contenido de esta página es preliminar y está sujeto a revisión. Puede cambiar cuando LASCE valide la información científica.',
+} as const
+
 export const spaceWeatherBackLink = {
   href: '/#areas-de-trabajo',
   label: 'Volver a las áreas de trabajo',

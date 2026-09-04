@@ -16,6 +16,7 @@ import {
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ConceptFlow } from '@/app/components/public/topic/ConceptFlow'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
+import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicFigure } from '@/app/components/public/topic/TopicFigure'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
@@ -23,6 +24,7 @@ import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import {
   spaceWeatherBackLink,
   spaceWeatherComponents,
+  spaceWeatherContentFlag,
   spaceWeatherHero,
   spaceWeatherImpacts,
   spaceWeatherLasce,
@@ -36,6 +38,7 @@ const impactIcons: LucideIcon[] = [Radio, Satellite, Navigation, Power, Sparkles
 export function SpaceWeatherPage() {
   return (
     <article className="topic-page">
+      <ContentFlag label={spaceWeatherContentFlag.label} message={spaceWeatherContentFlag.message} />
       <TopicHero
         image={spaceWeatherHero.image}
         kicker={spaceWeatherHero.kicker}
