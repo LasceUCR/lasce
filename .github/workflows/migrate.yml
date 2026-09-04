@@ -1,0 +1,82 @@
+name: Migrate database
+
+# Migrations normally run as the Railway pre-deploy command: inside the
+# deployment, against the service's own private DATABASE_URL, aborting the
+# release if they fail. This workflow is the manual counterpart, for applying a
+# migration without shipping code or recovering when a release stopped part way.
+#
+# A GitHub runner cannot reach `*.railway.internal`, so this connects over
+# Railway's public proxy. Set the DATABASE_URL secret in each GitHub Environment
+# to the Postgres service's DATABASE_PUBLIC_URL, not its DATABASE_URL.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        required: true
+      mode:
+        description: status reports what is pending; deploy applies it
+        type: choice
+        options: [status, deploy]
+        default: status
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  # Two migrations against one database must never overlap.
+  group: migrate-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: migrate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # `production` carries required reviewers, so applying there needs approval.
+    environment: ${{ inputs.environment }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
+
+      # The setup action writes a .env from .env.example, but dotenv does not
+      # override an existing variable, so the secret above still wins. Fail
+      # loudly if it is missing rather than silently migrating localhost.
+      - name: Check the connection string is configured
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::No DATABASE_URL secret in the '${{ inputs.environment }}' environment."
+            exit 1
+          fi
+          case "$DATABASE_URL" in
+            *railway.internal*)
+              echo "::error::DATABASE_URL points at the private network, which this"\
+                   "runner cannot reach. Use the DATABASE_PUBLIC_URL value instead."
+              exit 1
+              ;;
+            *localhost*|*127.0.0.1*)
+              echo "::error::DATABASE_URL points at localhost. The secret is not set."
+              exit 1
+              ;;
+          esac
+
+      # Informational only. `migrate status` signals "migrations are pending"
+      # through a non-zero exit, which is the answer we asked for rather than a
+      # failure, so it must not stop the run. `migrate deploy` below is the step
+      # that decides the outcome.
+      - name: Report pending migrations
+        continue-on-error: true
+        run: pnpm --filter @lasce/db exec prisma migrate status
+
+      - name: Apply migrations
+        if: inputs.mode == 'deploy'
+        run: pnpm db:migrate:deploy
+
+      - name: Confirm the database is up to date
+        if: inputs.mode == 'deploy'
+        run: pnpm --filter @lasce/db exec prisma migrate status

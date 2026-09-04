@@ -96,6 +96,20 @@ The web image carries a `migrator` stage for this: a flat, npm-installed Prisma
 CLI plus a verbatim copy of `packages/db/prisma.config.ts` and the migrations
 directory. `migrate deploy` does not need the generated client.
 
+### Running migrations by hand
+
+`.github/workflows/migrate.yml` is the manual counterpart, for applying a
+migration without shipping code or recovering when a release stopped part way.
+Run it from the Actions tab, choosing an environment and either `status` (report
+what is pending) or `deploy` (apply it). Against `production` it waits for the
+same reviewers as a deployment.
+
+It needs a **`DATABASE_URL` secret in each GitHub Environment**, set to the
+Postgres service's **`DATABASE_PUBLIC_URL`**, not its `DATABASE_URL`. A GitHub
+runner cannot reach `*.railway.internal`, so the private address will not work;
+the workflow rejects it, and a localhost value, rather than migrating the wrong
+database.
+
 **If the migration fails, the release aborts and the previous version stays
 live.** That is the intended behaviour, and it is why this runs as a pre-deploy
 step rather than as a separate CI step, which could not abort atomically.
