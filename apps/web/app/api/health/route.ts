@@ -49,6 +49,19 @@ export async function GET(): Promise<NextResponse> {
   const checks: Record<string, 'ok' | string> = { postgres, redis }
   const healthy = Object.values(checks).every((value) => value === 'ok')
 
+  if (!healthy) {
+    // A platform healthcheck only ever sees the status code, so without this a
+    // failing deployment reports "503" and nothing about which dependency is
+    // down. Put the reason where `railway logs` will show it.
+    console.error(
+      'health check degraded:',
+      Object.entries(checks)
+        .filter(([, value]) => value !== 'ok')
+        .map(([name, value]) => `${name}: ${value}`)
+        .join(' | '),
+    )
+  }
+
   return NextResponse.json(
     { status: healthy ? 'ok' : 'degraded', checks },
     { status: healthy ? 200 : 503 },
