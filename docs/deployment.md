@@ -183,7 +183,14 @@ trigger would race with GitHub Actions.
 
 ## 8. Operations
 
-**Health.** `GET /api/health` returns `200` with
+**Health.** Railway's private network is **IPv6 only**. Any client that resolves
+IPv4 only cannot reach `*.railway.internal`, which surfaces as a healthcheck
+that never passes rather than as an obvious error. `packages/jobs/src/connection.ts`
+sets `family: 0` on the Redis connection for exactly this reason; ioredis
+defaults to IPv4. Postgres is unaffected because `@prisma/adapter-pg` lets DNS
+choose. `HOSTNAME=::` in the web image covers the inbound side.
+
+`GET /api/health` returns `200` with
 `{"status":"ok","checks":{"postgres":"ok","redis":"ok"}}` only when both
 dependencies answer, and `503` with `"status":"degraded"` otherwise. It is the
 service healthcheck and the smoke test at the end of every deploy. A Redis error
