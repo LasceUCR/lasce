@@ -11,6 +11,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:unit": "vitest run",
     "clean": "rm -rf .turbo node_modules"
   },
   "dependencies": {
@@ -18,6 +20,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "typescript": "5.9.3"
+    "@vitest/coverage-v8": "4.1.11",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
   }
 }
