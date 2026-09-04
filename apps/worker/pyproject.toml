@@ -21,6 +21,7 @@ dev = [
     "mypy>=1.18.0",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.0.0",
     "ruff>=0.16.4",
 ]
 
@@ -53,3 +54,17 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# Coverage runs by default so `uv run pytest` locally reports the same number
+# the pipeline gates on. The floor is a measured starting point, raised over
+# time; it is deliberately not a target.
+addopts = "--cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=45"
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+# Entry points and client wiring reach out to Influx, MinIO and Redis, so they
+# are covered by running the worker rather than by unit tests.
+exclude_also = ["if __name__ == .__main__.:", "if TYPE_CHECKING:"]
