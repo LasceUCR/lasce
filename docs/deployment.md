@@ -127,6 +127,10 @@ CI: it would grant write access to every project.
 | Variable | `APP_URL_STAGING`, `APP_URL_PRODUCTION`         | `cd.yml` (`context` job, which runs before the approval gate) and `cron-jobs.yml` |
 | Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION` | `cron-jobs.yml`                                                                   |
 
+Domains are **not** declared in `.railway/railway.ts`. Railway rejects domain
+registration from configuration, so generate or attach the domain in the
+dashboard, then set these variables to whatever Railway actually assigned.
+
 Both `APP_URL_*` values **must include the scheme**, for example
 `https://lasce-staging.up.railway.app` and not `lasce-staging.up.railway.app`.
 The value becomes `NEXT_PUBLIC_APP_URL`, which `app/lib/site.ts` passes to
