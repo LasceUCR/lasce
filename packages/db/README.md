@@ -8,13 +8,13 @@ one owner for the schema avoids two migration histories fighting over the same d
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `pnpm db:generate` | Regenerates the client into `generated/client` |
-| `pnpm db:migrate` | Creates and applies a migration in development |
-| `pnpm --filter @lasce/db migrate:deploy` | Applies pending migrations (production) |
-| `pnpm --filter @lasce/db seed` | Inserts the demo devices |
-| `pnpm db:studio` | Opens Prisma Studio |
+| Command                                  | What it does                                   |
+| ---------------------------------------- | ---------------------------------------------- |
+| `pnpm db:generate`                       | Regenerates the client into `generated/client` |
+| `pnpm db:migrate`                        | Creates and applies a migration in development |
+| `pnpm --filter @lasce/db migrate:deploy` | Applies pending migrations (production)        |
+| `pnpm --filter @lasce/db seed`           | Inserts the demo devices                       |
+| `pnpm db:studio`                         | Opens Prisma Studio                            |
 
 ## Usage
 

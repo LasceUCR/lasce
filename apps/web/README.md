@@ -56,19 +56,19 @@ Production deployment uses the standalone Next.js bundle through
 
 ## Public Routes
 
-| Route | Purpose |
-| --- | --- |
-| `/` | Institutional landing page and access to the main public areas |
-| `/#areas-de-trabajo` | Work areas and main portal access cards on the home page |
-| `/fisica-solar` | Solar physics work area |
-| `/clima-espacial` | Space weather work area |
-| `/radioastronomia` | Radio astronomy work area |
-| `/nosotros` | General information about LASCE |
-| `/investigacion` | Research areas and activities |
-| `/instrumentacion` | Scientific instruments and observatories |
-| `/datos` | Public data and analysis resources |
-| `/noticias` | Institutional news |
-| `/contacto` | Contact information |
+| Route                | Purpose                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `/`                  | Institutional landing page and access to the main public areas |
+| `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
+| `/fisica-solar`      | Solar physics work area                                        |
+| `/clima-espacial`    | Space weather work area                                        |
+| `/radioastronomia`   | Radio astronomy work area                                      |
+| `/nosotros`          | General information about LASCE                                |
+| `/investigacion`     | Research areas and activities                                  |
+| `/instrumentacion`   | Scientific instruments and observatories                       |
+| `/datos`             | Public data and analysis resources                             |
+| `/noticias`          | Institutional news                                             |
+| `/contacto`          | Contact information                                            |
 
 Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page.
 
@@ -76,10 +76,10 @@ Unknown routes return the standard Next.js `404` response. Public routes do not 
 
 The three LASCE research work areas are defined once in `app/lib/work-areas.ts`. That module owns their slugs, titles, descriptions, icons, and route helpers. The home page renders every card through `WorkAreasSection`, using the shared `getHomeAreaCards()` helper.
 
-| Slug | Route | Card on home |
-| --- | --- | --- |
-| `fisica-solar` | `/fisica-solar` | Física solar |
-| `clima-espacial` | `/clima-espacial` | Clima espacial |
+| Slug              | Route              | Card on home    |
+| ----------------- | ------------------ | --------------- |
+| `fisica-solar`    | `/fisica-solar`    | Física solar    |
+| `clima-espacial`  | `/clima-espacial`  | Clima espacial  |
 | `radioastronomia` | `/radioastronomia` | Radioastronomía |
 
 The home section anchor is `/#areas-de-trabajo`. The same module also lists the three portal access cards that link to existing top-level routes (`/instrumentacion`, `/datos`, `/noticias`).

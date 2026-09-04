@@ -1,0 +1,65 @@
+name: Set up the LASCE toolchain
+description: Installs pnpm + Node (and optionally uv), then installs workspace dependencies.
+
+inputs:
+  python:
+    description: Also install uv and sync the Python worker's environment.
+    required: false
+    default: 'false'
+  turbo-cache:
+    description: Restore/save the local Turborepo cache.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    # pnpm before setup-node: setup-node's `cache: pnpm` shells out to
+    # `pnpm store path`, which needs pnpm already on PATH.
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6.0.10
+      with:
+        run_install: false # version comes from packageManager in package.json
+
+    - name: Install Node
+      uses: actions/setup-node@v7.0.0
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+
+    # CI-safe environment bootstrap. Every committed value is a placeholder
+    # (localhost URLs, CRON_SECRET=dev-secret-change-me, which clears the 8-char
+    # minimum in packages/config/src/env.ts). No secret lives in this file.
+    # next.config.ts, prisma.config.ts and the worker all read the root .env.
+    - name: Bootstrap .env
+      shell: bash
+      run: cp .env.example .env
+
+    - name: Install workspace dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Install uv
+      if: inputs.python == 'true'
+      uses: astral-sh/setup-uv@v10.0.1
+      with:
+        enable-cache: true
+        cache-dependency-glob: apps/worker/uv.lock
+
+    # Materialise .venv here rather than letting turbo do it, so a Python
+    # install failure is visible as its own step.
+    - name: Sync worker dependencies
+      if: inputs.python == 'true'
+      shell: bash
+      working-directory: apps/worker
+      run: uv sync --frozen
+
+    - name: Turborepo cache
+      if: inputs.turbo-cache == 'true'
+      uses: actions/cache@v6.1.0
+      with:
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ github.job }}-
+          turbo-${{ runner.os }}-
