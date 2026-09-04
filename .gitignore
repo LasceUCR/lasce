@@ -31,6 +31,19 @@ __pycache__/
 .DS_Store
 *.log
 coverage/
+# pytest-cov writes these next to apps/worker rather than into coverage/.
+.coverage
+coverage.xml
+playwright-report/
+test-results/
+blob-report/
+
+*storybook.log
+storybook-static
+
+# Railway CLI link state (project ids), written by `railway link`.
+.railway/*
+!.railway/railway.ts
 
 # local IDE files
 .vscode/

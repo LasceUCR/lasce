@@ -1,0 +1,89 @@
+name: Migrate database
+
+# Migrations normally run as the Railway pre-deploy command: inside the
+# deployment, against the service's own private DATABASE_URL, aborting the
+# release if they fail. This workflow is the manual counterpart, for applying a
+# migration without shipping code or recovering when a release stopped part way.
+#
+# It reaches the database through the Railway CLI rather than a connection
+# string stored here, so the only secret it needs is the RAILWAY_TOKEN the
+# deploy job already uses. `railway run` injects the Postgres service's own
+# variables into the command, and we pick the public proxy address out of them:
+# a GitHub runner cannot reach `*.railway.internal`, which is what the private
+# DATABASE_URL points at.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        required: true
+      mode:
+        description: status reports what is pending; deploy applies it
+        type: choice
+        options: [status, deploy]
+        default: status
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  # Two migrations against one database must never overlap.
+  group: migrate-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: migrate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # `production` carries required reviewers, so applying there needs approval.
+    environment: ${{ inputs.environment }}
+    env:
+      # Scoped to one project and one environment, so the token alone decides
+      # which database is touched. Same secret the deploy job uses.
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
+
+      - name: Install the Railway CLI
+        run: npm install -g @railway/cli@5.49.0
+
+      - name: Check the token is configured
+        run: |
+          if [ -z "${RAILWAY_TOKEN:-}" ]; then
+            echo "::error::No RAILWAY_TOKEN secret in the '${{ inputs.environment }}'"\
+                 "environment. Add the Railway project token scoped to it."
+            exit 1
+          fi
+
+      # `:?` fails the shell with that message when Railway did not supply a
+      # public address, which means the Postgres service has no TCP proxy
+      # enabled. The setup action wrote a .env from .env.example, but dotenv
+      # never overrides an already-set variable, so this assignment wins.
+      - name: Report pending migrations
+        continue-on-error: true
+        run: |
+          railway run --service postgres -- sh -c '
+            DATABASE_URL="${DATABASE_PUBLIC_URL:?Postgres has no public proxy; enable TCP Proxy on the service}" \
+              pnpm --filter @lasce/db exec prisma migrate status
+          '
+
+      - name: Apply migrations
+        if: inputs.mode == 'deploy'
+        run: |
+          railway run --service postgres -- sh -c '
+            DATABASE_URL="${DATABASE_PUBLIC_URL:?Postgres has no public proxy; enable TCP Proxy on the service}" \
+              pnpm db:migrate:deploy
+          '
+
+      - name: Confirm the database is up to date
+        if: inputs.mode == 'deploy'
+        run: |
+          railway run --service postgres -- sh -c '
+            DATABASE_URL="${DATABASE_PUBLIC_URL:?Postgres has no public proxy; enable TCP Proxy on the service}" \
+              pnpm --filter @lasce/db exec prisma migrate status
+          '

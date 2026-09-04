@@ -10,12 +10,12 @@ pnpm services:logs
 pnpm services:down
 ```
 
-| Service | Port | Notes |
-| --- | --- | --- |
-| PostgreSQL | 5432 | Schema owned by Prisma (`pnpm db:migrate`) |
-| Redis | 6379 | Transport for the BullMQ queue |
-| InfluxDB 3 Core | 8181 | Databases are created on first write |
-| MinIO | 9000 (API), 9001 (console) | The bucket is created by the worker on first use |
+| Service         | Port                       | Notes                                            |
+| --------------- | -------------------------- | ------------------------------------------------ |
+| PostgreSQL      | 5432                       | Schema owned by Prisma (`pnpm db:migrate`)       |
+| Redis           | 6379                       | Transport for the BullMQ queue                   |
+| InfluxDB 3 Core | 8181                       | Databases are created on first write             |
+| MinIO           | 9000 (API), 9001 (console) | The bucket is created by the worker on first use |
 
 The default `up` starts **only** these four. The usual loop is to run the app and the worker on the
 host (`pnpm dev`, `pnpm worker:dev`) against them, which keeps hot reload fast.

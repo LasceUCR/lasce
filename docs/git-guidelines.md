@@ -1,34 +1,34 @@
-# Estándar de trabajo con Git
+# Git Workflow Standards
 
-Esta guía define las convenciones mínimas para mantener el trabajo del equipo ordenado y fácil de revisar.
+This guide defines the minimum conventions required to keep the team's work organized and easy to review.
 
-## 1. Reglas generales
+## 1. General Rules
 
-- Todo cambio debe relacionarse con una tarea o issue.
-- No se realizan cambios directos en `main` ni `develop`.
-- Cada rama debe atender un solo objetivo.
-- Todo cambio debe ingresar mediante un Pull Request.
-- No se deben subir credenciales, archivos `.env` ni datos sensibles.
-- El código debe compilar y superar las pruebas antes del merge.
+- Every change must be linked to a task or issue.
+- Direct changes to `main` or `development` are not allowed; both branches reject pushes.
+- Each branch must address a single objective.
+- Every change must be submitted through a Pull Request.
+- Credentials, `.env` files, and sensitive information must not be committed.
+- The code must compile and pass all tests before being merged.
 
-## 2. Ramas principales
+## 2. Main Branches
 
-| Rama | Uso |
-| --- | --- |
-| `main` | Versión estable y entregable |
-| `develop` | Integración de los cambios del equipo |
+| Branch        | Purpose                           |
+| ------------- | --------------------------------- |
+| `main`        | Stable and release-ready version  |
+| `development` | Integration of the team's changes |
 
-Las ramas de trabajo se crean desde `develop` y regresan a `develop` mediante Pull Request. Los `hotfix` se crean desde `main`.
+Working branches are created from `development` and merged back into `development` through a Pull Request. `hotfix` branches are created from `main`.
 
-## 3. Nombres de ramas
+## 3. Branch Names
 
-### Formato
+### Format
 
 ```text
-<tipo>-<grupo>-<descripcion>
+<type>-<group>-<description>
 ```
 
-Ejemplos:
+Examples:
 
 ```text
 feature-g01-user-login
@@ -36,35 +36,35 @@ fix-g02-email-validation
 docs-g01-api-guide
 ```
 
-### Tipos permitidos
+### Allowed Types
 
-| Tipo | Uso |
-| --- | --- |
-| `feature` | Nueva funcionalidad |
-| `fix` | Corrección |
-| `hotfix` | Corrección urgente en `main` |
-| `refactor` | Reestructuración sin cambiar el comportamiento |
-| `docs` | Documentación |
-| `test` | Pruebas |
-| `chore` | Configuración o mantenimiento |
+| Type       | Purpose                                          |
+| ---------- | ------------------------------------------------ |
+| `feature`  | New functionality                                |
+| `fix`      | Bug fix or correction                            |
+| `hotfix`   | Urgent fix for `main`                            |
+| `refactor` | Code restructuring without changing its behavior |
+| `docs`     | Documentation                                    |
+| `test`     | Tests                                            |
+| `chore`    | Configuration or maintenance                     |
 
-### Reglas
+### Rules
 
-- Usar minúsculas.
-- Separar las palabras con guiones.
-- No usar espacios, tildes ni caracteres especiales.
-- Usar el identificador acordado para el grupo, por ejemplo `g01`.
-- Mantener la descripción breve y clara.
+- Use lowercase letters.
+- Separate words with hyphens.
+- Do not use spaces, accent marks, or special characters.
+- Use the agreed group identifier, such as `g01`.
+- Keep the description short and clear.
 
 ## 4. Commits
 
-### Formato
+### Format
 
 ```text
-<tipo>(<modulo>): <descripcion>
+<type>(<module>): <description>
 ```
 
-Ejemplos:
+Examples:
 
 ```text
 feat(auth): add user login
@@ -73,79 +73,41 @@ docs(api): update endpoint documentation
 test(auth): add login validation tests
 ```
 
-Tipos principales:
+Main types:
 
-- `feat`: nueva funcionalidad.
-- `fix`: corrección.
-- `docs`: documentación.
-- `refactor`: reorganización del código.
-- `test`: pruebas.
-- `chore`: configuración o mantenimiento.
+- `feat`: new functionality.
+- `fix`: bug fix or correction.
+- `docs`: documentation.
+- `refactor`: code restructuring.
+- `test`: tests.
+- `chore`: configuration or maintenance.
 
-La descripción debe comenzar con un verbo, escribirse en minúscula y no terminar con punto. Cada commit debe representar un cambio lógico.
+The description must begin with a verb, use lowercase letters, and not end with a period. Each commit should represent a logical unit of work.
 
 ## 5. Pull Requests
 
-### Título
+### Title
 
 ```text
-<tipo>(<modulo>): <descripcion> [<grupo>]
+<type>(<module>): <description> [<group>]
 ```
 
-Ejemplo:
+Example:
 
 ```text
 feat(auth): implement user login [g01]
 ```
 
-### Plantilla
+### Template
 
-Este contenido puede copiarse en `.github/PULL_REQUEST_TEMPLATE.md`:
+The template lives at [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md) and GitHub fills it into the description of every new Pull Request automatically. It asks for a description, the related issue and group, the type of change, what was done, how it was tested, and a short checklist.
 
-```markdown
-## Description
+Fill in every section. Delete nothing: if a section does not apply, write `None`.
 
-Describa brevemente el propósito del Pull Request.
-
-## Related Issue
-
-- Issue ID:
-- Group ID:
-
-## Type of Change
-
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Refactor
-- [ ] Tests
-- [ ] Configuration
-
-## What Was Done?
-
--
--
-
-## Testing
-
-Indique brevemente cómo se verificaron los cambios.
-
-## Additional Notes
-
-Agregue riesgos, limitaciones o trabajo pendiente. Escriba `None` si no aplica.
-
-## Checklist
-
-- [ ] El cambio cumple los criterios de aceptación.
-- [ ] El proyecto compila y las pruebas pasan.
-- [ ] Revisé mis propios cambios.
-- [ ] No incluí credenciales ni información sensible.
-```
-
-## 6. Formato breve para tareas o issues
+## 6. Short Task or Issue Template
 
 ```markdown
-# Título de la tarea
+# Task Title
 
 ## Group
 
@@ -153,7 +115,7 @@ g01
 
 ## Objective
 
-Describa el resultado esperado.
+Describe the expected outcome.
 
 ## Acceptance Criteria
 
@@ -162,33 +124,91 @@ Describa el resultado esperado.
 
 ## Dependencies
 
-Indique dependencias o escriba `None`.
+List any dependencies or write `None`.
 ```
 
-## 7. Flujo de trabajo
+## 7. Workflow
 
-1. Crear o asignarse una tarea.
-2. Crear una rama desde `develop`.
-3. Implementar el cambio y realizar commits claros.
-4. Ejecutar las pruebas.
-5. Abrir un Pull Request hacia `develop`.
-6. Atender la revisión y obtener al menos una aprobación.
-7. Integrar mediante **Squash and merge** y eliminar la rama.
+1. Create or assign a task.
+2. Create a branch from `development`.
+3. Implement the change and create clear commits.
+4. Run the tests.
+5. Open a Pull Request into `development`.
+6. Address the review and obtain the required approvals: one for `development`, three for `main`.
+7. Merge using **Squash and merge**. The branch is deleted automatically; `main` and `development` never are.
 
-## 8. Requisitos para realizar el merge
+## 8. Merge Requirements
 
-- El Pull Request está completo.
-- Se cumplen los criterios de aceptación.
-- El proyecto compila y las pruebas pasan.
-- No existen conversaciones pendientes.
-- Hay al menos una aprobación.
-- La rama está actualizada con la rama de destino.
+- The Pull Request is complete and the acceptance criteria are met.
+- All eight pipeline checks pass.
+- There are no unresolved review conversations.
+- The approvals below have been received. An author cannot approve their own Pull Request, so every merge is reviewed by somebody else.
 
-### Ejemplo completo
+  | Target branch | Approvals |
+  | ------------- | --------- |
+  | `development` | 1         |
+  | `main`        | 3         |
+
+- At least one approval comes from a code owner, listed in [`.github/CODEOWNERS`](../.github/CODEOWNERS).
+- For `development`, the branch is up to date with the target branch.
+- There are no merge conflicts.
+
+### Complete Example
 
 ```text
 Branch: feature-g01-user-login
 Commit: feat(auth): add user login
 PR:     feat(auth): implement user login [g01]
-Target: develop
+Target: development
 ```
+
+## 9. Enforced Rules
+
+Sections 1 to 8 used to be conventions that nothing checked. They are now enforced by two repository rulesets, committed as [`.github/rulesets/`](../.github/rulesets/). The rules apply to **everyone, including repository administrators**. Nobody is on the bypass list.
+
+### What is blocked
+
+| Attempt                                     | Result                                                     |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| `git push` straight to `main`/`development` | Rejected: _"Changes must be made through a pull request."_ |
+| `git push --force` to either branch         | Rejected: non-fast-forward pushes are not allowed.         |
+| Deleting either branch                      | Rejected.                                                  |
+| Merging with a failing or missing check     | Merge button disabled; the check is named on the PR.       |
+| Merging without the required approvals      | Merge button disabled.                                     |
+| Merging with unresolved conversations       | Merge button disabled until every thread is resolved.      |
+| Merging a conflicted Pull Request           | Blocked by GitHub; rebase or merge the target in.          |
+| Merge commit or rebase merge                | Not offered. Squash is the only method.                    |
+
+Pushing a new commit **dismisses existing approvals**, so they have to be given again. This is deliberate: an approval applies to the code that was reviewed, not to the branch name.
+
+### The required checks
+
+All eight come from [`ci.yml`](../.github/workflows/ci.yml) and must pass:
+
+```
+lint  typecheck  test  build  worker  e2e  docker (web)  docker (worker)
+```
+
+If one of these sits at _"Expected"_ and never starts, the check did not run rather than failing. That usually means the pipeline was renamed without updating the ruleset, so raise it rather than waiting.
+
+### Why a push was rejected
+
+The error names the rule. `GH013` with _"Changes must be made through a pull request"_ means exactly that: commit to a branch, push the branch, open a Pull Request.
+
+```
+remote: error: GH013: Repository rule violations found for refs/heads/development.
+remote: - Changes must be made through a pull request.
+```
+
+If you have already committed to `main` or `development` locally:
+
+```bash
+git branch feature-g01-my-change      # keep the work
+git reset --hard origin/development   # restore the local branch
+git checkout feature-g01-my-change
+git push -u origin feature-g01-my-change
+```
+
+### Changing the rules
+
+The rulesets are configuration under review like anything else. Open a Pull Request against `.github/rulesets/` explaining what should change and why; an administrator applies it once the change is approved. Editing a ruleset directly in the GitHub UI makes the committed files stale and will be reverted the next time they are applied.

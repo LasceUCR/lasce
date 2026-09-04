@@ -48,7 +48,7 @@ Co-locate a `.stories.tsx` file next to the component:
 `apps/web/app/components/Button.stories.tsx`:
 
 ```tsx
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Button } from './Button'
 
 const meta: Meta<typeof Button> = { component: Button }
@@ -60,36 +60,43 @@ export const Default: StoryObj<typeof Button> = { args: { label: 'Save' } }
 Add one story per meaningfully different state the component can be in
 (default, disabled, empty, error, ...) rather than just the happy path.
 
-## Setting up Storybook (first time only)
-
-Storybook is not installed in this repo yet. The first person to add a story
-needs to bootstrap it once, from `apps/web`:
-
-```bash
-pnpm --filter @lasce/web dlx storybook@latest init
-```
-
-Accept the Next.js + TypeScript framework detection when prompted. After
-that, everyone runs it locally with:
+Storybook is already configured (`apps/web/.storybook`, framework
+`@storybook/nextjs-vite`). Run it with:
 
 ```bash
 pnpm --filter @lasce/web storybook
 ```
 
-Subsequent contributors just add `.stories.tsx` files next to their
-components — the setup step does not need to be repeated.
+## 4. Add a test
+
+Co-locate a `.test.tsx` beside the component and reuse the story's `args` as
+the fixture, so the documented states and the asserted ones cannot drift:
+
+`apps/web/app/components/Button.test.tsx`:
+
+```tsx
+import { render, screen } from '@testing-library/react'
+import { expect, test } from 'vitest'
+
+import { Button, type ButtonProps } from './Button'
+import { Default } from './Button.stories'
+
+test('renders the label it was given', () => {
+  render(<Button {...(Default.args as ButtonProps)} />)
+  expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+})
+```
+
+Assert roles and user-visible text rather than CSS classes. See
+[docs/tests/component_testing.md](tests/component_testing.md) for the full
+conventions, including what to mock and the coverage thresholds.
 
 ## Verify
 
-Run Storybook and confirm the new story renders with no console errors
-before opening a PR:
+Confirm the story renders with no console errors, then run the checks:
 
 ```bash
 pnpm --filter @lasce/web storybook
-```
-
-Then run the usual checks:
-
-```bash
-pnpm turbo lint typecheck
+pnpm --filter @lasce/web test
+pnpm turbo run lint typecheck
 ```

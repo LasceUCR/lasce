@@ -11,12 +11,17 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:unit": "vitest run",
     "clean": "rm -rf .turbo node_modules"
   },
   "dependencies": {
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "typescript": "5.9.3"
+    "@types/node": "^22.15.0",
+    "@vitest/coverage-v8": "4.1.11",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
   }
 }

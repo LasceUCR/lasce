@@ -24,9 +24,7 @@ SAMPLE_INTERVAL = timedelta(minutes=1)
 MAX_POINTS = 5_000
 
 
-def _fetch_readings(
-    device_id: str, start: datetime, end: datetime
-) -> list[tuple[datetime, float]]:
+def _fetch_readings(device_id: str, start: datetime, end: datetime) -> list[tuple[datetime, float]]:
     """Stand-in for the real data source: a smooth wave plus a slow drift."""
     readings: list[tuple[datetime, float]] = []
     timestamp = start

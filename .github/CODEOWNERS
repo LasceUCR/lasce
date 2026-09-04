@@ -1,0 +1,16 @@
+# Code owners for LasceUCR/lasce
+#
+# Every pull request into `main` or `development` needs an approving review
+# from at least one of the people listed here. This is enforced by the branch
+# rulesets in .github/rulesets/ (`require_code_owner_review`), not by this
+# file on its own.
+#
+# GitHub reads CODEOWNERS from the BASE branch of a pull request, so this file
+# must exist on both `main` and `development` to have any effect on either.
+#
+# The LasceUCR organisation has no teams, so owners are listed individually.
+# Anyone added here must have write access to the repository, or GitHub marks
+# the file as invalid and the review requirement can never be satisfied.
+# Check with: gh api repos/LasceUCR/lasce/codeowners/errors
+
+*  @sebasbose @Santaval @tatsparamo @GabrielSerranoUCR

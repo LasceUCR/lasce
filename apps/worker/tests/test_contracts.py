@@ -9,11 +9,11 @@ Regenerate the schemas with `pnpm contracts:export`.
 
 import json
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 import pytest
 from jsonschema import Draft202012Validator
+from pydantic import ValidationError
 
 from app.models.jobs import JobPayload
 from app.registry import REGISTRY
@@ -79,5 +79,5 @@ def test_model_rejects_unknown_fields(job_name: str) -> None:
     model: type[JobPayload] = REGISTRY[job_name].payload_model
     payload = {**EXAMPLES[job_name], "unexpectedField": True}
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         model.model_validate(payload)

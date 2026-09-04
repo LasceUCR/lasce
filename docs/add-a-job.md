@@ -114,7 +114,12 @@ Add it to `packages/jobs/src/schedules.ts`:
 ```ts
 export const schedules: Schedule[] = [
   // …
-  { id: 'export-report-weekly', name: JOB_NAMES.exportReport, cron: '0 6 * * 1', data: { deviceId: 'device-001' } },
+  {
+    id: 'export-report-weekly',
+    name: JOB_NAMES.exportReport,
+    cron: '0 6 * * 1',
+    data: { deviceId: 'device-001' },
+  },
 ]
 ```
 
