@@ -22,7 +22,6 @@ import { defineRailway, image, postgres, preserve, project, redis, service } fro
 export default defineRailway((ctx) => {
   const staging = ctx.isEnvironment('staging')
   const tag = staging ? 'staging' : 'production'
-  const appDomain = staging ? 'lasce-staging.up.railway.app' : 'lasce.up.railway.app'
 
   const db = postgres('postgres')
   const cache = redis('redis')
@@ -56,7 +55,10 @@ export default defineRailway((ctx) => {
     // 200 only when both Postgres and Redis answer.
     healthcheck: '/api/health',
     healthcheckTimeout: 300,
-    domains: [{ domain: appDomain, port: 3000 }],
+    // No `domains` key: Railway rejects domain registration from configuration
+    // ("Custom-domain registration is not supported"). Generate or attach the
+    // domain in the dashboard instead, then set the APP_URL_STAGING and
+    // APP_URL_PRODUCTION repository variables to match it, scheme included.
     replicas: 1,
   })
 
