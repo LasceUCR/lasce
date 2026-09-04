@@ -104,11 +104,17 @@ Run it from the Actions tab, choosing an environment and either `status` (report
 what is pending) or `deploy` (apply it). Against `production` it waits for the
 same reviewers as a deployment.
 
-It needs a **`DATABASE_URL` secret in each GitHub Environment**, set to the
-Postgres service's **`DATABASE_PUBLIC_URL`**, not its `DATABASE_URL`. A GitHub
-runner cannot reach `*.railway.internal`, so the private address will not work;
-the workflow rejects it, and a localhost value, rather than migrating the wrong
-database.
+It needs **no connection string of its own**. It reaches the database through
+the Railway CLI with the same `RAILWAY_TOKEN` the deploy job uses, so Railway
+stays the only place the credentials live. `railway run --service postgres`
+injects that service's variables into the command, and the workflow uses
+`DATABASE_PUBLIC_URL` from them: a GitHub runner cannot reach
+`*.railway.internal`, which is what the private `DATABASE_URL` points at.
+
+That means the Postgres service **must have TCP Proxy enabled** (Settings →
+Networking → TCP Proxy), which is what produces `DATABASE_PUBLIC_URL`. Without
+it the workflow stops with `Postgres has no public proxy` rather than appearing
+to succeed while migrating nothing.
 
 **If the migration fails, the release aborts and the previous version stays
 live.** That is the intended behaviour, and it is why this runs as a pre-deploy
