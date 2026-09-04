@@ -23,7 +23,7 @@ and CI genuinely runs on pushes, not only on PRs.
 ### CI jobs
 
 All eight run in parallel. The names are stable so a branch ruleset can require
-them (LASCE-INF-001-003).
+them (LASCE-INF-001-016).
 
 | Job               | Proves                                                                                   |
 | ----------------- | ---------------------------------------------------------------------------------------- |
@@ -253,5 +253,5 @@ reconciles them, **pushing to `main` would build and deploy the older app**, so
 only the staging path is live.
 
 **Branch rulesets are not configured** by this ticket. That is
-LASCE-INF-001-003. The eight CI job names above are stable and ready to be
+LASCE-INF-001-016. The eight CI job names above are stable and ready to be
 required.
