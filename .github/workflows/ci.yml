@@ -196,7 +196,11 @@ jobs:
           retention-days: 7
 
   docker:
-    name: docker
+    # The display name is pinned to the matrix name alone. Left implicit,
+    # GitHub joins every matrix value into the check name, producing
+    # `docker (web, infra/docker/web.Dockerfile)` — a required status check
+    # that silently stops matching the moment a Dockerfile is moved.
+    name: docker (${{ matrix.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
