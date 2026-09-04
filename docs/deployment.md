@@ -127,6 +127,13 @@ CI: it would grant write access to every project.
 | Variable | `APP_URL_STAGING`, `APP_URL_PRODUCTION`         | `cd.yml` (`context` job, which runs before the approval gate) and `cron-jobs.yml` |
 | Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION` | `cron-jobs.yml`                                                                   |
 
+Both `APP_URL_*` values **must include the scheme**, for example
+`https://lasce-staging.up.railway.app` and not `lasce-staging.up.railway.app`.
+The value becomes `NEXT_PUBLIC_APP_URL`, which `app/lib/site.ts` passes to
+`new URL()`; a bare hostname throws `TypeError: Invalid URL` and fails
+`next build` while collecting `sitemap.xml`. The `context` job rejects a
+schemeless value up front so the failure is immediate and explicit.
+
 The `CRON_SECRET_*` values duplicate the `CRON_SECRET` set on each Railway web
 service. **Rotating one without the other yields silent 401s.**
 

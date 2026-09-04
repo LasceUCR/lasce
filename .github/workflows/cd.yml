@@ -58,9 +58,23 @@ jobs:
           fi
 
           if [ -z "$url" ]; then
-            echo "::error::No APP_URL variable configured for '$target'."
+            echo "::error::No APP_URL variable configured for '$target'. Set the"\
+                 "repository variable APP_URL_STAGING or APP_URL_PRODUCTION."
             exit 1
           fi
+
+          # This value becomes NEXT_PUBLIC_APP_URL, which app/lib/site.ts feeds
+          # to metadataBase and sitemap.ts via new URL(). A bare hostname throws
+          # "TypeError: Invalid URL" and fails next build, so reject it here
+          # rather than 20 seconds into a Docker build.
+          case "$url" in
+            https://*|http://*) ;;
+            *)
+              echo "::error::APP_URL for '$target' must include a scheme."\
+                   "Got '$url'; expected something like 'https://$url'."
+              exit 1
+              ;;
+          esac
 
           # GHCR paths must be lowercase; the organisation is "LasceUCR".
           echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
