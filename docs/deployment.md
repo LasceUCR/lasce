@@ -36,6 +36,13 @@ them (LASCE-INF-001-016).
 | `docker (web)`    | `infra/docker/web.Dockerfile` builds. Not pushed.                                        |
 | `docker (worker)` | `infra/docker/worker.Dockerfile` builds. Not pushed.                                     |
 
+These are the display names GitHub reports on a pull request, and all eight are
+required by the branch rulesets. The `docker` job pins `name:` to the matrix
+name for that reason; left implicit, GitHub would append the Dockerfile path to
+the check name. On a push, `cd.yml` calls this workflow as a reusable one, so
+the same jobs report prefixed as `ci / lint` and so on. Those are a different set
+of names and are not the ones required.
+
 Shared setup lives in `.github/actions/setup`, which pins pnpm, Node (from
 `.nvmrc`) and uv, restores the pnpm/uv/Turborepo caches, and bootstraps a CI
 `.env` by copying `.env.example`. Every value in that file is a placeholder;
@@ -284,12 +291,8 @@ container service from `influxdb:3-core` with a volume. Give it a real admin
 token; do not carry over `INFLUXDB3_WITHOUT_AUTH`, which the Compose file marks
 development-only.
 
-**`main` and `development` have diverged.** `development` is the source of truth
-and holds all application code; `main` additionally holds issue templates and
-docs that `development` lacks. Until a `development → main` release PR
-reconciles them, **pushing to `main` would build and deploy the older app**, so
-only the staging path is live.
-
-**Branch rulesets are not configured** by this ticket. That is
-LASCE-INF-001-016. The eight CI job names above are stable and ready to be
-required.
+**Branch rulesets are configured.** See
+[`.github/rulesets/`](../.github/rulesets/) for the committed payloads and
+[`git-guidelines.md`](git-guidelines.md) for what they enforce. The eight CI job
+names above are the required status checks, so renaming a job means updating
+those files in the same change.
