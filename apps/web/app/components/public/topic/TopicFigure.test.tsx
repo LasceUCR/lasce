@@ -10,7 +10,10 @@ describe('TopicFigure', () => {
   test('renders the image with the provided alternative text and caption', () => {
     render(<TopicFigure {...defaultArgs} />)
 
-    expect(screen.getByRole('img', { name: defaultArgs.alt })).toHaveAttribute('src', defaultArgs.src)
+    expect(screen.getByRole('img', { name: defaultArgs.alt })).toHaveAttribute(
+      'src',
+      defaultArgs.src,
+    )
     expect(screen.getByText(defaultArgs.caption ?? '')).toBeInTheDocument()
   })
 

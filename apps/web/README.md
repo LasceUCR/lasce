@@ -53,6 +53,7 @@ corepack pnpm --filter @lasce/web build
 
 Production deployment uses the standalone Next.js bundle through
 [`infra/docker/web.Dockerfile`](../../infra/docker/web.Dockerfile).
+
 ## Public Routes
 
 | Route                | Purpose                                                        |

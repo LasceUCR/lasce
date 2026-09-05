@@ -11,7 +11,12 @@ describe('CardGrid', () => {
       </CardGrid>,
     )
 
-    expect(container.firstChild).toHaveClass('card-grid', 'card-grid-3', 'card-grid-equal', 'card-grid-tone-teal')
+    expect(container.firstChild).toHaveClass(
+      'card-grid',
+      'card-grid-3',
+      'card-grid-equal',
+      'card-grid-tone-teal',
+    )
   })
 
   test('defaults to four columns without equal-height or tone modifiers', () => {
@@ -55,9 +60,9 @@ describe('CardGrid', () => {
       )
 
       expect(container.firstChild).toHaveClass('card-grid-expandable')
-      expect((container.firstChild as HTMLElement).style.getPropertyValue('--card-min-height')).toBe(
-        '80px',
-      )
+      expect(
+        (container.firstChild as HTMLElement).style.getPropertyValue('--card-min-height'),
+      ).toBe('80px')
     } finally {
       if (previous) {
         Object.defineProperty(HTMLElement.prototype, 'offsetHeight', previous)

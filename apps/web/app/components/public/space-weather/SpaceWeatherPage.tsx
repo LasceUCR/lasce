@@ -1,13 +1,4 @@
-import {
-  Magnet,
-  Orbit,
-  Radio,
-  Sparkles,
-  Sun,
-  Wind,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react'
+import { Magnet, Orbit, Radio, Sparkles, Sun, Wind, Zap, type LucideIcon } from 'lucide-react'
 
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ConceptFlow } from '@/app/components/public/topic/ConceptFlow'
@@ -84,11 +75,7 @@ export function SpaceWeatherPage() {
         />
       </TopicSection>
 
-      <TopicSection
-        featured
-        title={spaceWeatherCostaRica.title}
-        titleId="sw-costa-rica-title"
-      >
+      <TopicSection featured title={spaceWeatherCostaRica.title} titleId="sw-costa-rica-title">
         {spaceWeatherCostaRica.paragraphs.map((paragraph) => (
           <p className="topic-intro" key={paragraph}>
             {paragraph}

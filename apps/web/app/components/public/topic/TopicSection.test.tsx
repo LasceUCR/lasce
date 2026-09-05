@@ -6,7 +6,11 @@ import { TopicSection } from './TopicSection'
 describe('TopicSection', () => {
   test('labels the section with its heading', () => {
     render(
-      <TopicSection intro="Introducción de la sección." title="El Sol y el clima espacial" titleId="sw-solar-title">
+      <TopicSection
+        intro="Introducción de la sección."
+        title="El Sol y el clima espacial"
+        titleId="sw-solar-title"
+      >
         <p>Cuerpo</p>
       </TopicSection>,
     )

@@ -22,9 +22,7 @@ describe('work-areas', () => {
     const workAreaCards = getWorkAreaCards()
     const homeCards = getHomeAreaCards()
 
-    expect(workAreaCards.map((card) => card.href)).toEqual(
-      workAreaSlugs.map((slug) => `/${slug}`),
-    )
+    expect(workAreaCards.map((card) => card.href)).toEqual(workAreaSlugs.map((slug) => `/${slug}`))
     expect(homeCards).toHaveLength(workAreaCards.length + 3)
     expect(homeCards.map((card) => card.href)).toContain('/clima-espacial')
   })

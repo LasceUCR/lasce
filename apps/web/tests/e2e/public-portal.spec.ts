@@ -87,7 +87,9 @@ test('displays space weather information without authentication', async ({ page 
   await expect(page.getByRole('heading', { name: /Qué es el clima espacial/ })).toBeVisible()
   await expect(page.getByText(/No es el clima atmosférico cotidiano/)).toBeVisible()
   await expect(page.getByRole('heading', { name: /Del Sol a la Tierra/ })).toBeVisible()
-  await expect(page.getByRole('heading', { name: /Por qué estudiarlo desde Costa Rica/ })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: /Por qué estudiarlo desde Costa Rica/ }),
+  ).toBeVisible()
   await expect(page.getByRole('heading', { name: /Qué compone el clima espacial/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Viento solar', exact: true })).toBeVisible()
@@ -97,7 +99,10 @@ test('displays space weather information without authentication', async ({ page 
   await expect(page.getByText('Datos simulados')).toHaveCount(0)
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /clima espacial/i)
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /clima espacial/i,
+  )
 })
 
 test('returns to the work areas section from space weather', async ({ page }) => {

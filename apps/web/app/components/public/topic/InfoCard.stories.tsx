@@ -17,7 +17,8 @@ type Story = StoryObj<typeof InfoCard>
 export const Default: Story = {
   args: {
     title: 'Actividad solar',
-    description: 'Las manchas, fulguraciones y eyecciones de masa coronal liberan energía al espacio.',
+    description:
+      'Las manchas, fulguraciones y eyecciones de masa coronal liberan energía al espacio.',
     icon: <Sun size={22} strokeWidth={1.8} />,
   },
 }

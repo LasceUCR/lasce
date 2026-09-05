@@ -23,7 +23,9 @@ describe('ConceptFlow', () => {
   test('keeps the arrows between steps decorative', () => {
     const { container } = render(<ConceptFlow {...defaultArgs} />)
 
-    expect(container.querySelectorAll('.concept-flow-arrow')).toHaveLength(defaultArgs.steps.length - 1)
+    expect(container.querySelectorAll('.concept-flow-arrow')).toHaveLength(
+      defaultArgs.steps.length - 1,
+    )
     container.querySelectorAll('.concept-flow-arrow').forEach((arrow) => {
       expect(arrow).toHaveAttribute('aria-hidden', 'true')
     })
