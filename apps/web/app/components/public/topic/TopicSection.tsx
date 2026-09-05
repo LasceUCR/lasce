@@ -9,6 +9,7 @@ export interface TopicSectionProps {
   intro?: string
   className?: string
   featured?: boolean
+  wide?: boolean
   children?: ReactNode
 }
 
@@ -21,11 +22,14 @@ export function TopicSection({
   intro,
   className,
   featured = false,
+  wide = false,
   children,
 }: TopicSectionProps) {
   const generatedTitleId = useId()
   const headingId = titleId ?? generatedTitleId
-  const classes = ['topic-section', 'page-width', className].filter(Boolean).join(' ')
+  const classes = ['topic-section', 'page-width', wide ? 'topic-section-lede' : '', className]
+    .filter(Boolean)
+    .join(' ')
 
   const content = (
     <>

@@ -3,7 +3,7 @@ import Image from 'next/image'
 export interface TopicHeroProps {
   kicker: string
   title: string
-  lead: string
+  lead?: string
   notice?: string
   image?: {
     src: string
@@ -17,7 +17,7 @@ export function TopicHero({ kicker, title, lead, notice, image }: TopicHeroProps
       <div className="topic-hero-copy">
         <p className="topic-kicker">{kicker}</p>
         <h1>{title}</h1>
-        <p className="topic-lead">{lead}</p>
+        {lead ? <p className="topic-lead">{lead}</p> : null}
         {notice ? <p className="topic-notice">{notice}</p> : null}
       </div>
       {image ? (

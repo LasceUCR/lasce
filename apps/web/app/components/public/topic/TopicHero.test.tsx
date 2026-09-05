@@ -23,6 +23,13 @@ describe('TopicHero', () => {
     expect(screen.getByRole('img', { name: hero.image.alt })).toHaveAttribute('src', hero.image.src)
   })
 
+  test('renders without a lead when none is given', () => {
+    render(<TopicHero kicker={hero.kicker} title={hero.title} />)
+
+    expect(screen.getByRole('heading', { level: 1, name: hero.title })).toBeInTheDocument()
+    expect(screen.queryByText(hero.lead)).not.toBeInTheDocument()
+  })
+
   test('renders without an image when none is given', () => {
     const { container } = render(
       <TopicHero kicker={hero.kicker} lead={hero.lead} title={hero.title} />,

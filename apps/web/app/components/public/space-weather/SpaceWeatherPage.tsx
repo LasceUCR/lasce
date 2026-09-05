@@ -1,11 +1,7 @@
 import {
   Magnet,
-  Navigation,
   Orbit,
-  Plane,
-  Power,
   Radio,
-  Satellite,
   Sparkles,
   Sun,
   Wind,
@@ -16,38 +12,53 @@ import {
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ConceptFlow } from '@/app/components/public/topic/ConceptFlow'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
-import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
-import { TopicFigure } from '@/app/components/public/topic/TopicFigure'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import {
   spaceWeatherBackLink,
   spaceWeatherComponents,
-  spaceWeatherContentFlag,
+  spaceWeatherCostaRica,
+  spaceWeatherDefinition,
   spaceWeatherHero,
-  spaceWeatherImpacts,
-  spaceWeatherLasce,
-  spaceWeatherSolarActivity,
+  spaceWeatherSunToEarth,
 } from '@/app/lib/space-weather'
 
+const sunToEarthIcons: LucideIcon[] = [Sun, Orbit, Magnet, Radio]
 const componentIcons: LucideIcon[] = [Sun, Wind, Magnet, Radio, Zap, Sparkles]
-const solarActivityIcons: LucideIcon[] = [Sun, Zap, Orbit]
-const impactIcons: LucideIcon[] = [Radio, Satellite, Navigation, Power, Sparkles, Plane]
 
 export function SpaceWeatherPage() {
   return (
     <article className="topic-page">
-      <ContentFlag label={spaceWeatherContentFlag.label} message={spaceWeatherContentFlag.message} />
-      <TopicHero
-        image={spaceWeatherHero.image}
-        kicker={spaceWeatherHero.kicker}
-        lead={spaceWeatherHero.introduction}
-        title={spaceWeatherHero.title}
-      />
+      <TopicHero kicker={spaceWeatherHero.kicker} title={spaceWeatherHero.title} />
+
+      <TopicSection title={spaceWeatherDefinition.title} titleId="sw-definition-title" wide>
+        {spaceWeatherDefinition.paragraphs.map((paragraph) => (
+          <p className="topic-intro" key={paragraph}>
+            {paragraph}
+          </p>
+        ))}
+      </TopicSection>
+
+      <TopicSection index="1" title={spaceWeatherSunToEarth.title} titleId="sw-sun-to-earth-title">
+        <CardGrid columns={2} equalHeight>
+          {spaceWeatherSunToEarth.items.map((item, index) => {
+            const Icon = sunToEarthIcons[index] ?? Sun
+
+            return (
+              <InfoCard
+                description={item.description}
+                icon={<Icon size={22} strokeWidth={1.8} />}
+                key={item.title}
+                title={`${index + 1}. ${item.title}`}
+              />
+            )
+          })}
+        </CardGrid>
+      </TopicSection>
 
       <TopicSection
-        index="1"
+        index="2"
         intro={spaceWeatherComponents.intro}
         title={spaceWeatherComponents.title}
         titleId="sw-components-title"
@@ -74,68 +85,20 @@ export function SpaceWeatherPage() {
       </TopicSection>
 
       <TopicSection
-        index="2"
-        intro={spaceWeatherSolarActivity.intro}
-        title={spaceWeatherSolarActivity.title}
-        titleId="sw-solar-title"
-      >
-        <TopicFigure
-          alt={spaceWeatherSolarActivity.figure.alt}
-          caption={spaceWeatherSolarActivity.figure.caption}
-          src={spaceWeatherSolarActivity.figure.src}
-        />
-        <CardGrid columns={3} equalHeight tone="teal">
-          {spaceWeatherSolarActivity.items.map((item, index) => {
-            const Icon = solarActivityIcons[index] ?? Sun
-
-            return (
-              <InfoCard
-                description={item.description}
-                icon={<Icon size={22} strokeWidth={1.8} />}
-                key={item.title}
-                title={item.title}
-              />
-            )
-          })}
-        </CardGrid>
-      </TopicSection>
-
-      <TopicSection
-        index="3"
-        intro={spaceWeatherImpacts.intro}
-        title={spaceWeatherImpacts.title}
-        titleId="sw-impacts-title"
-      >
-        <CardGrid columns={3} expandable>
-          {spaceWeatherImpacts.items.map((item, index) => {
-            const Icon = impactIcons[index] ?? Radio
-
-            return (
-              <InfoCard
-                description={item.summary}
-                icon={<Icon size={22} strokeWidth={1.8} />}
-                key={item.title}
-                more={item.more}
-                title={item.title}
-              />
-            )
-          })}
-        </CardGrid>
-      </TopicSection>
-
-      <TopicSection
-        className="topic-section-end"
         featured
-        title={spaceWeatherLasce.title}
-        titleId="sw-lasce-title"
+        title={spaceWeatherCostaRica.title}
+        titleId="sw-costa-rica-title"
       >
-        {spaceWeatherLasce.paragraphs.map((paragraph) => (
+        {spaceWeatherCostaRica.paragraphs.map((paragraph) => (
           <p className="topic-intro" key={paragraph}>
             {paragraph}
           </p>
         ))}
-        <TopicBackLink href={spaceWeatherBackLink.href} label={spaceWeatherBackLink.label} />
       </TopicSection>
+
+      <div className="topic-page-footer page-width">
+        <TopicBackLink href={spaceWeatherBackLink.href} label={spaceWeatherBackLink.label} />
+      </div>
     </article>
   )
 }

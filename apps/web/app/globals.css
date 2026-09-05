@@ -297,12 +297,17 @@ a {
   gap: 14px;
 }
 
+.hero-actions .button {
+  min-width: 280px;
+}
+
 .button {
   min-height: 43px;
   padding: 0 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 9px;
   border: 1px solid transparent;
   border-radius: 7px;
   font-size: 14px;
@@ -310,7 +315,6 @@ a {
 }
 
 .button-primary {
-  min-width: 280px;
   background: #2f6ced;
   color: var(--white);
 }
@@ -318,6 +322,18 @@ a {
 .button-primary:hover,
 .button-primary:focus-visible {
   background: #2256c8;
+}
+
+.button-secondary {
+  border-color: #8aa3b3;
+  background: var(--white);
+  color: var(--navy-deep);
+}
+
+.button-secondary:hover,
+.button-secondary:focus-visible {
+  border-color: var(--blue);
+  background: #f4fafd;
 }
 
 .home-content {
@@ -866,6 +882,10 @@ a {
   line-height: 1.6;
 }
 
+.topic-section-lede .topic-intro {
+  max-width: none;
+}
+
 .card-grid {
   margin-top: 20px;
   display: grid;
@@ -1063,28 +1083,12 @@ a {
   padding-bottom: 48px;
 }
 
-.topic-section-end .topic-intro + .topic-intro {
+.topic-page-footer {
+  padding: 8px 0 48px;
+}
+
+.topic-intro + .topic-intro {
   margin-top: 14px;
-}
-
-.topic-back {
-  min-height: 44px;
-  margin-top: 28px;
-  padding: 0 18px;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  border: 1px solid #8aa3b3;
-  border-radius: 7px;
-  color: var(--navy-deep);
-  font-weight: 700;
-  background: var(--white);
-}
-
-.topic-back:hover,
-.topic-back:focus-visible {
-  border-color: var(--blue);
-  background: #f4fafd;
 }
 
 @media (max-width: 1120px) {

@@ -27,6 +27,14 @@ describe('TopicSection', () => {
     expect(screen.getByText('Resumen')).toBeInTheDocument()
   })
 
+  test('spans the full layout width when marked wide', () => {
+    const { container } = render(<TopicSection title="¿Qué es el clima espacial?" wide />)
+    const region = container.querySelector('section')
+
+    expect(region).toHaveClass('topic-section-lede')
+    expect(region).toHaveClass('page-width')
+  })
+
   test('wraps featured content and falls back to a generated heading id', () => {
     const { container } = render(
       <TopicSection className="topic-section-end" featured title="El trabajo de LASCE" />,
