@@ -846,6 +846,13 @@ a {
   padding: 28px 0 8px;
 }
 
+.topic-section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
 .topic-section-heading {
   display: flex;
   align-items: baseline;
