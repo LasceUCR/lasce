@@ -1,0 +1,231 @@
+name: "Product Backlog Item (PBI)"
+description: "Create a User Story / PBI following the LASCE Product Backlog structure."
+title: "LASCE-[MODULE]-[EPIC]-[PBI] Short Description"
+labels: ["PBI", "needs-refinement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for a single Product Backlog Item (User Story).
+        Follow the naming convention `LASCE-[MODULE]-[EPIC]-[PBI] Short Description` in the issue title (see title field above).
+        Module codes: PUB (Public Portal), SEC (Security and Access), DAT (Data Management), CON (Content Management), ADM (Administration), INF (Infrastructure), INT (Integrations).
+
+  - type: input
+    id: epic-id
+    attributes:
+      label: Epic ID
+      placeholder: "LASCE-[MODULE]-[EPIC]"
+    validations:
+      required: true
+
+  - type: input
+    id: user-story-id
+    attributes:
+      label: User Story ID
+      placeholder: "US-05"
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: Name
+    validations:
+      required: true
+
+  - type: input
+    id: related-requirement
+    attributes:
+      label: Related Requirement
+      placeholder: "RF-02"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Highest
+        - High
+        - Medium
+        - Low
+        - Lowest
+    validations:
+      required: true
+
+  - type: dropdown
+    id: story-points
+    attributes:
+      label: Story Points
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "5"
+        - "8"
+        - "13"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk-level
+    attributes:
+      label: Risk Level
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: false
+
+  - type: dropdown
+    id: business-value
+    attributes:
+      label: Business Value
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: false
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      options:
+        - New
+        - Assigned
+        - Not Started
+        - In Progress
+        - Ready for Test
+        - In Review
+        - Done
+        - Blocked
+        - Canceled
+    validations:
+      required: true
+
+  - type: dropdown
+    id: sprint
+    attributes:
+      label: Sprint
+      options:
+        - "Backlog / Unassigned"
+        - "Sprint 1 (Aug 25 – Sep 8)"
+        - "Sprint 2 (Sep 8 – Sep 22)"
+        - "Sprint 3 (Sep 22 – Oct 6)"
+        - "Sprint 4 (Oct 6 – Oct 20)"
+        - "Sprint 5 (Oct 20 – Nov 3)"
+        - "Sprint 6 (Nov 3 – Nov 17)"
+        - "Sprint 7 (Nov 17 – Dec 1)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: "Other PBIs (or external factors) this item depends on."
+      placeholder: "LASCE-PUB-001-003 — View LASCE Work Areas"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: "What is this PBI about? What functionality does it deliver? Note anything explicitly out of scope."
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story
+      description: "Use the Gherkin Feature/As a/I want to/So that format."
+      value: |
+        ```gherkin
+        Feature: [Feature Name]
+
+        As a [type of user]
+        I want to [perform an action]
+        So that [specific goal or benefit]
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: "Use Given/When/Then scenarios. Add as many scenarios as needed (successful, alternative, error, edge cases)."
+      value: |
+        ```gherkin
+        Scenario: [Scenario Name]
+
+        Given [initial condition]
+        When [action performed by the user]
+        Then [expected result]
+        And [additional expected result]
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: non-functional-requirements
+    attributes:
+      label: Non-Functional Requirements
+      description: "List applicable NFRs (Performance, Security, Availability, Scalability, Usability, Maintainability, Reliability, Portability, Compatibility, Integration) and the requirement they trace to."
+      value: |
+        | Category | Related Requirement | Requirement |
+        |----------|----------------------|-------------|
+        |          |                      |             |
+    validations:
+      required: false
+
+  - type: textarea
+    id: technical-tasks
+    attributes:
+      label: Technical Tasks
+      description: "Break the PBI down into technical tasks with estimates, and total them."
+      value: |
+        | Task | Estimate |
+        |------|---------:|
+        | Requirements refinement and validation | |
+        | Solution design | |
+        | Frontend implementation | |
+        | Backend implementation | |
+        | Database implementation or integration | |
+        | Unit testing | |
+        | Integration testing | |
+        | Documentation | |
+        | Pull Request and Code Review | |
+        | **Total estimated time** | |
+    validations:
+      required: false
+
+  - type: textarea
+    id: definition-of-done
+    attributes:
+      label: Definition of Done
+      description: "This PBI must comply with the general LASCE Definition of Done. List any additional, PBI-specific conditions here."
+      value: |
+        This PBI must comply with the **general LASCE Definition of Done**. Additionally:
+
+        -
+        -
+    validations:
+      required: true
+
+  - type: textarea
+    id: assumptions
+    attributes:
+      label: Assumptions
+      description: "Any assumptions this PBI relies on (dependencies, access, environments, external services, prior refinement, content ownership, scope exclusions, etc.)."
+      value: |
+        -
+        -
+    validations:
+      required: false

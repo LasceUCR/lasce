@@ -56,17 +56,35 @@ Production deployment uses the standalone Next.js bundle through
 
 ## Public Routes
 
-| Route | Purpose |
-| --- | --- |
-| `/` | Institutional landing page and access to the main public areas |
-| `/nosotros` | General information about LASCE |
-| `/investigacion` | Research areas and activities |
-| `/instrumentacion` | Scientific instruments and observatories |
-| `/datos` | Public data and analysis resources |
-| `/noticias` | Institutional news |
-| `/contacto` | Contact information |
+| Route                | Purpose                                                        |
+| -------------------- | -------------------------------------------------------------- |
+| `/`                  | Institutional landing page and access to the main public areas |
+| `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
+| `/fisica-solar`      | Solar physics work area                                        |
+| `/clima-espacial`    | Space weather information page                                 |
+| `/radioastronomia`   | Radio astronomy work area                                      |
+| `/nosotros`          | General information about LASCE                                |
+| `/investigacion`     | Research areas and activities                                  |
+| `/instrumentacion`   | Scientific instruments and observatories                       |
+| `/datos`             | Public data and analysis resources                             |
+| `/noticias`          | Institutional news                                             |
+| `/contacto`          | Contact information                                            |
 
 Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page.
+
+## Work Areas
+
+The three LASCE research work areas are defined once in `app/lib/work-areas.ts`. That module owns their slugs, titles, descriptions, icons, and route helpers. The home page renders every card through `WorkAreasSection`, using the shared `getHomeAreaCards()` helper.
+
+| Slug              | Route              | Card on home    |
+| ----------------- | ------------------ | --------------- |
+| `fisica-solar`    | `/fisica-solar`    | Física solar    |
+| `clima-espacial`  | `/clima-espacial`  | Clima espacial  |
+| `radioastronomia` | `/radioastronomia` | Radioastronomía |
+
+The home section anchor is `/#areas-de-trabajo`. The same module also lists the three portal access cards that link to existing top-level routes (`/instrumentacion`, `/datos`, `/noticias`).
+
+Reusable UI for this section lives in `app/components/public/WorkAreaCard.tsx` and `WorkAreasSection.tsx`, with Storybook stories co-located beside each component.
 
 ## Shared Public Layout
 
@@ -76,13 +94,21 @@ The route group `app/(public)` organizes the public portal without adding a segm
 app/
 |-- (public)/
 |   |-- [section]/page.tsx
+|   |-- clima-espacial/page.tsx
 |   |-- layout.tsx
 |   `-- page.tsx
 |-- components/public/
 |   |-- Brand.tsx
 |   |-- PublicFooter.tsx
-|   `-- PublicHeader.tsx
-|-- lib/site.ts
+|   |-- PublicHeader.tsx
+|   |-- WorkAreaCard.tsx
+|   |-- WorkAreasSection.tsx
+|   |-- space-weather/
+|   `-- topic/
+|-- lib/
+|   |-- site.ts
+|   |-- space-weather.ts
+|   `-- work-areas.ts
 |-- globals.css
 |-- layout.tsx
 |-- robots.ts
@@ -98,6 +124,9 @@ playwright.config.ts
 - `PublicFooter` contains institutional information and the LASCE Instagram link.
 - `Brand` centralizes the institutional logo variants used by the header and footer.
 - `app/lib/site.ts` defines the canonical site origin and public route list used by SEO metadata.
+- `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
+- `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy lives in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
+- `app/components/public/topic/` holds reusable topic-page primitives (`TopicHero`, `TopicSection`, `InfoCard`, `ConceptFlow`, `TopicFigure`, and related layout pieces) so other work area pages can reuse the same structure without duplicating markup.
 - `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`.
 
 ## Accessibility and SEO
@@ -131,7 +160,8 @@ corepack pnpm --filter @lasce/web test:e2e:headed
 The Playwright configuration starts the web development server automatically when one is not already running. The suite covers:
 
 - Loading the landing page without authentication
-- Direct access to all seven public routes
+- Direct access to all public routes, including the three work area pages
+- Space weather informational content and the return link to the work areas
 - Absence of redirects to login
 - Desktop and mobile navigation
 - Active links through `aria-current`

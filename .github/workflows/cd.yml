@@ -1,0 +1,182 @@
+name: CD
+
+on:
+  push:
+    branches: [development, main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        required: true
+
+# Least privilege at the top; jobs widen only what they need.
+permissions:
+  contents: read
+
+concurrency:
+  # Never cancel a delivery mid-flight: the pre-deploy migration may already be
+  # running against a real database.
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  context:
+    name: resolve target
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      environment: ${{ steps.pick.outputs.environment }}
+      tag: ${{ steps.pick.outputs.tag }}
+      app_url: ${{ steps.pick.outputs.app_url }}
+      registry: ${{ steps.pick.outputs.registry }}
+    steps:
+      # These are repo-level variables rather than environment ones because
+      # this job runs before the production approval gate.
+      - id: pick
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          MANUAL: ${{ inputs.environment }}
+          URL_STAGING: ${{ vars.APP_URL_STAGING }}
+          URL_PRODUCTION: ${{ vars.APP_URL_PRODUCTION }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            target="$MANUAL"
+          elif [ "$REF_NAME" = "main" ]; then
+            target="production"
+          else
+            target="staging"
+          fi
+
+          if [ "$target" = "production" ]; then
+            url="$URL_PRODUCTION"
+          else
+            url="$URL_STAGING"
+          fi
+
+          if [ -z "$url" ]; then
+            echo "::error::No APP_URL variable configured for '$target'. Set the"\
+                 "repository variable APP_URL_STAGING or APP_URL_PRODUCTION."
+            exit 1
+          fi
+
+          # This value becomes NEXT_PUBLIC_APP_URL, which app/lib/site.ts feeds
+          # to metadataBase and sitemap.ts via new URL(). A bare hostname throws
+          # "TypeError: Invalid URL" and fails next build, so reject it here
+          # rather than 20 seconds into a Docker build.
+          case "$url" in
+            https://*|http://*) ;;
+            *)
+              echo "::error::APP_URL for '$target' must include a scheme."\
+                   "Got '$url'; expected something like 'https://$url'."
+              exit 1
+              ;;
+          esac
+
+          # GHCR paths must be lowercase; the organisation is "LasceUCR".
+          echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+          echo "environment=$target" >> "$GITHUB_OUTPUT"
+          echo "tag=$target" >> "$GITHUB_OUTPUT"
+          echo "app_url=$url" >> "$GITHUB_OUTPUT"
+          echo "Target: $target ($url)"
+
+  # Delivery is gated on exactly the same jobs that gate a pull request.
+  ci:
+    name: ci
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  images:
+    name: image
+    needs: [context, ci]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write # GITHUB_TOKEN pushes to GHCR, so no PAT in CI.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: web
+            dockerfile: infra/docker/web.Dockerfile
+          - name: worker
+            dockerfile: infra/docker/worker.Dockerfile
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: docker/setup-buildx-action@v4.3.0
+
+      - uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # NEXT_PUBLIC_* is inlined at compile time, so the web image is built per
+      # target and cannot be promoted between environments. The worker image
+      # ignores this arg and is environment-agnostic.
+      - uses: docker/build-push-action@v7.3.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ needs.context.outputs.app_url }}
+          tags: |
+            ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}
+            ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}-${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  deploy:
+    name: deploy
+    needs: [context, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      deployments: write
+    # `production` has required reviewers, so this job pauses here for approval.
+    environment:
+      name: ${{ needs.context.outputs.environment }}
+      url: ${{ needs.context.outputs.app_url }}
+    env:
+      # Railway project tokens are scoped to one project AND one environment, so
+      # this secret is defined separately in each GitHub Environment, and the token
+      # alone determines which Railway environment is touched.
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      APP_URL: ${{ needs.context.outputs.app_url }}
+    steps:
+      - name: Install the Railway CLI
+        run: npm install -g @railway/cli@5.49.0
+
+      # The CLI cannot change a service's image tag, so the images job pushed
+      # over the mutable tag and this re-pulls it. Web first: its pre-deploy
+      # applies the migration before the worker (same schema) restarts.
+      - name: Redeploy web
+        run: railway redeploy --service web --yes
+
+      - name: Redeploy worker
+        run: railway redeploy --service worker --yes
+
+      # `railway redeploy` returns once the deployment is queued, so poll until
+      # the new version is actually serving. /api/health is 200 only when both
+      # Postgres and Redis answer, and it returns no connection strings.
+      - name: Smoke test
+        run: |
+          for attempt in $(seq 1 30); do
+            code=$(curl -sS -o /tmp/health.json -w '%{http_code}' "$APP_URL/api/health" || echo 000)
+            echo "attempt $attempt -> HTTP $code"
+            if [ "$code" = "200" ]; then
+              cat /tmp/health.json
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::/api/health never returned 200 after 5 minutes."
+          cat /tmp/health.json || true
+          exit 1

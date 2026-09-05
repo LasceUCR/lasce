@@ -22,15 +22,18 @@ lasce/
 └── pnpm-workspace.yaml
 ```
 
-| Store | Purpose |
-| --- | --- |
-| PostgreSQL | Relational data. Schema owned by Prisma; the worker reads/writes it via SQLAlchemy |
-| Redis | Transport for the BullMQ queue shared by both runtimes |
-| InfluxDB 3 Core | Time-series readings, written by the worker |
-| MinIO | File storage (S3-compatible) |
+| Store           | Purpose                                                                            |
+| --------------- | ---------------------------------------------------------------------------------- |
+| PostgreSQL      | Relational data. Schema owned by Prisma; the worker reads/writes it via SQLAlchemy |
+| Redis           | Transport for the BullMQ queue shared by both runtimes                             |
+| InfluxDB 3 Core | Time-series readings, written by the worker                                        |
+| MinIO           | File storage (S3-compatible)                                                       |
 
-Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together, and
-[`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue.
+Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together,
+[`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue,
+[`docs/testing.md`](docs/testing.md) for where tests go and what gates them, and
+[`docs/tests/component_testing.md`](docs/tests/component_testing.md) for how UI component tests
+should be structured.
 
 ## Requirements
 
@@ -60,16 +63,16 @@ PostgreSQL — the page shows the status changing as it happens.
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `pnpm dev` | Next.js dev server |
-| `pnpm worker:dev` | Python worker |
-| `pnpm build` | Build every package |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test` | Across TypeScript **and** Python |
-| `pnpm db:migrate` / `pnpm db:studio` | Prisma migrations / Prisma Studio |
-| `pnpm contracts:export` | Regenerate the JSON Schema the worker validates against |
-| `pnpm jobs:register` | Sync the declared schedules into BullMQ |
-| `pnpm services:up` / `:down` / `:logs` / `:reset` | Docker Compose stack |
+| Command                                           | What it does                                            |
+| ------------------------------------------------- | ------------------------------------------------------- |
+| `pnpm dev`                                        | Next.js dev server                                      |
+| `pnpm worker:dev`                                 | Python worker                                           |
+| `pnpm build`                                      | Build every package                                     |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test`      | Across TypeScript **and** Python                        |
+| `pnpm db:migrate` / `pnpm db:studio`              | Prisma migrations / Prisma Studio                       |
+| `pnpm contracts:export`                           | Regenerate the JSON Schema the worker validates against |
+| `pnpm jobs:register`                              | Sync the declared schedules into BullMQ                 |
+| `pnpm services:up` / `:down` / `:logs` / `:reset` | Docker Compose stack                                    |
 
 The worker is wired into Turborepo through a thin `package.json` that shells out to `uv`, so
 `pnpm lint typecheck test` covers `ruff`, `mypy` and `pytest` as well.
@@ -84,10 +87,10 @@ instead of failing at 3 a.m.
 Recurring jobs are **declared** in `packages/jobs/src/schedules.ts`. How they fire is a separate,
 still-open decision, and both options are wired up:
 
-| Mechanism | How | Fits |
-| --- | --- | --- |
-| BullMQ scheduler | `pnpm jobs:register` writes the repeatable entries into Redis | A long-running deployment |
-| External cron | `POST /api/jobs/[name]/trigger` with `Authorization: Bearer $CRON_SECRET` | Vercel Cron, GitHub Actions, Kubernetes CronJob |
+| Mechanism        | How                                                                       | Fits                                            |
+| ---------------- | ------------------------------------------------------------------------- | ----------------------------------------------- |
+| BullMQ scheduler | `pnpm jobs:register` writes the repeatable entries into Redis             | A long-running deployment                       |
+| External cron    | `POST /api/jobs/[name]/trigger` with `Authorization: Bearer $CRON_SECRET` | Vercel Cron, GitHub Actions, Kubernetes CronJob |
 
 Switching between them changes nothing in the processors.
 

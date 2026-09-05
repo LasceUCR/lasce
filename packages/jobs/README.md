@@ -22,13 +22,13 @@ fails where you can still see the error rather than inside a Python processor.
 
 ## Scheduling
 
-Recurring jobs are declared once in `src/schedules.ts`. How they *fire* is a separate decision, and
+Recurring jobs are declared once in `src/schedules.ts`. How they _fire_ is a separate decision, and
 the scaffold supports both options without touching a processor:
 
-| Mechanism | How | Fits |
-| --- | --- | --- |
-| BullMQ scheduler | `pnpm jobs:register` writes the entries into Redis | A deployment with a long-running process |
-| External cron | `POST /api/jobs/[name]/trigger` with `Authorization: Bearer $CRON_SECRET` | Vercel Cron, GitHub Actions, Kubernetes CronJob, serverless |
+| Mechanism        | How                                                                       | Fits                                                        |
+| ---------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| BullMQ scheduler | `pnpm jobs:register` writes the entries into Redis                        | A deployment with a long-running process                    |
+| External cron    | `POST /api/jobs/[name]/trigger` with `Authorization: Bearer $CRON_SECRET` | Vercel Cron, GitHub Actions, Kubernetes CronJob, serverless |
 
 ```bash
 pnpm jobs:register                      # sync src/schedules.ts into Redis (idempotent)
