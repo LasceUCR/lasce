@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import './globals.css'
 import { siteUrl } from './lib/site'
 import { AnnotateWidget } from './components/utils/AnnotateWidget'
-import { PRODUCTION_ENV_VALUES } from './lib/const'
+import isProduction from './lib/helpers/isProduction'
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
@@ -24,10 +24,9 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const isProduction = PRODUCTION_ENV_VALUES.includes(process.env.NODE_ENV?.toLocaleUpperCase())
   return (
     <html lang="es" data-scroll-behavior="smooth">
-      {!isProduction && <AnnotateWidget />}
+      {!isProduction() && <AnnotateWidget />}
       <body>{children}</body>
     </html>
   )
