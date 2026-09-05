@@ -14,7 +14,9 @@ if (schedulers.length === 0) {
 } else {
   for (const scheduler of schedulers) {
     const next = scheduler.next ? new Date(scheduler.next).toISOString() : 'unknown'
-    console.log(`${scheduler.key ?? scheduler.id}\t${scheduler.name}\t${scheduler.pattern}\tnext: ${next}`)
+    console.log(
+      `${scheduler.key ?? scheduler.id}\t${scheduler.name}\t${scheduler.pattern}\tnext: ${next}`,
+    )
   }
 }
 

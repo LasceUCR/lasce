@@ -13,9 +13,11 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
-    "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "db:generate": "pnpm --filter @lasce/db generate",
     "db:migrate": "pnpm --filter @lasce/db migrate",
+    "db:migrate:deploy": "pnpm --filter @lasce/db migrate:deploy",
     "db:studio": "pnpm --filter @lasce/db studio",
     "contracts:export": "pnpm --filter @lasce/contracts export-schema",
     "jobs:register": "pnpm --filter @lasce/jobs register",
@@ -24,10 +26,13 @@
     "services:up": "docker compose --env-file .env -f infra/docker/docker-compose.yml up -d",
     "services:down": "docker compose --env-file .env -f infra/docker/docker-compose.yml down",
     "services:logs": "docker compose --env-file .env -f infra/docker/docker-compose.yml logs -f",
-    "services:reset": "docker compose --env-file .env -f infra/docker/docker-compose.yml down -v"
+    "services:reset": "docker compose --env-file .env -f infra/docker/docker-compose.yml down -v",
+    "railway:plan": "railway config plan",
+    "railway:apply": "railway config apply"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
+    "railway": "3.11.0",
     "turbo": "2.10.11",
     "typescript": "5.9.3"
   }

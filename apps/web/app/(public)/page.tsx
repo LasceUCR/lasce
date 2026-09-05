@@ -1,14 +1,10 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
 
+import { Button } from '@/app/components/public/Button'
 import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
 import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
-import {
-  getHomeAreaCards,
-  workAreasSectionId,
-  type AreaCardDefinition,
-} from '@/app/lib/work-areas'
+import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@/app/lib/work-areas'
 
 const indicators = [
   { label: 'Índice Kp', value: '2 · Tranquilo', tone: 'teal' },
@@ -52,9 +48,7 @@ export default function HomePage() {
             mediante observaciones, instrumentación, análisis de datos y desarrollo científico.
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" href="/nosotros">
-              Conoce más sobre LASCE
-            </Link>
+            <Button href="/nosotros">Conoce más sobre LASCE</Button>
           </div>
         </div>
       </section>

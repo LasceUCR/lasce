@@ -68,6 +68,17 @@ const nextConfig: NextConfig = {
   // ioredis, BullMQ and the Prisma client are required at runtime instead of
   // being bundled — they carry native or dynamic requires that do not survive it.
   serverExternalPackages: ['ioredis', 'bullmq', '@prisma/client'],
+
+  // Next's runtime require-hook loads @swc/helpers' ESM variants through a
+  // dynamic require the file tracer cannot see, so standalone output shipped
+  // only the two CJS files the tracer resolved statically. The container then
+  // died on boot with MODULE_NOT_FOUND for esm/_interop_require_default.js and
+  // never bound a port, which read as a healthcheck timeout. Pull the whole
+  // package in. pnpm's isolated layout keeps it under .pnpm rather than a
+  // hoisted node_modules, and the glob avoids pinning the version.
+  outputFileTracingIncludes: {
+    '/**': ['../../node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**/*'],
+  },
 }
 
 export default nextConfig

@@ -1,0 +1,50 @@
+name: Scheduled jobs
+
+# Replaces `pnpm jobs:register`: rather than registering BullMQ's internal
+# scheduler on every deploy, the schedule lives here and enqueues through the
+# app's own trigger route. See docs/deployment.md.
+on:
+  schedule:
+    # 03:00 UTC daily. Mirrors `daily-rollup-03am` in packages/jobs/src/schedules.ts.
+    # GitHub's scheduler can run late; the rollup is not latency-sensitive.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment to enqueue against
+        type: choice
+        options: [production, staging]
+        default: production
+      job:
+        description: Job name (see JOB_NAMES in packages/contracts/src/jobs.ts)
+        type: string
+        default: daily-rollup
+      payload:
+        description: JSON body
+        type: string
+        default: '{}'
+
+permissions:
+  contents: read
+
+jobs:
+  trigger:
+    name: trigger
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Enqueue the job
+        env:
+          # Repo-level secrets/variables on purpose: the `production` GitHub
+          # Environment has required reviewers, and a nightly cron must not sit
+          # waiting for a human to click approve.
+          APP_URL: ${{ inputs.target == 'staging' && vars.APP_URL_STAGING || vars.APP_URL_PRODUCTION }}
+          CRON_SECRET: ${{ inputs.target == 'staging' && secrets.CRON_SECRET_STAGING || secrets.CRON_SECRET_PRODUCTION }}
+          JOB: ${{ inputs.job || 'daily-rollup' }}
+          PAYLOAD: ${{ inputs.payload || '{}' }}
+        run: |
+          curl -sS --fail-with-body -X POST \
+            "$APP_URL/api/jobs/$JOB/trigger" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H 'Content-Type: application/json' \
+            -d "$PAYLOAD"

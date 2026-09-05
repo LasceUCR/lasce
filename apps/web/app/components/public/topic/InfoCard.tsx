@@ -8,7 +8,13 @@ export interface InfoCardProps {
   moreLabel?: string
 }
 
-export function InfoCard({ title, description, icon, more, moreLabel = 'Más información' }: InfoCardProps) {
+export function InfoCard({
+  title,
+  description,
+  icon,
+  more,
+  moreLabel = 'Más información',
+}: InfoCardProps) {
   return (
     <article className="surface-card info-card">
       <span className="info-card-icon" aria-hidden="true">

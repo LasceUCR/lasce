@@ -15,7 +15,12 @@ export function ConceptFlow({ title, steps, caption }: ConceptFlowProps) {
           <li key={step}>
             <span>{step}</span>
             {index < steps.length - 1 ? (
-              <ArrowRight aria-hidden="true" className="concept-flow-arrow" size={18} strokeWidth={2} />
+              <ArrowRight
+                aria-hidden="true"
+                className="concept-flow-arrow"
+                size={18}
+                strokeWidth={2}
+              />
             ) : null}
           </li>
         ))}

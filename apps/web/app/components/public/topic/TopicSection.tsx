@@ -8,6 +8,8 @@ export interface TopicSectionProps {
   badge?: string
   intro?: string
   className?: string
+  featured?: boolean
+  wide?: boolean
   children?: ReactNode
 }
 
@@ -19,14 +21,18 @@ export function TopicSection({
   badge,
   intro,
   className,
+  featured = false,
+  wide = false,
   children,
 }: TopicSectionProps) {
   const generatedTitleId = useId()
   const headingId = titleId ?? generatedTitleId
-  const classes = ['topic-section', 'page-width', className].filter(Boolean).join(' ')
+  const classes = ['topic-section', 'page-width', wide ? 'topic-section-lede' : '', className]
+    .filter(Boolean)
+    .join(' ')
 
-  return (
-    <section aria-labelledby={headingId} className={classes} id={id}>
+  const content = (
+    <>
       <div className="topic-section-heading">
         <h2 id={headingId}>
           {index ? <span className="topic-section-index">{index}.</span> : null} {title}
@@ -35,6 +41,12 @@ export function TopicSection({
       </div>
       {intro ? <p className="topic-intro">{intro}</p> : null}
       {children}
+    </>
+  )
+
+  return (
+    <section aria-labelledby={headingId} className={classes} id={id}>
+      {featured ? <div className="topic-highlight">{content}</div> : content}
     </section>
   )
 }

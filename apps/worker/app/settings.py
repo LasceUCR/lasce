@@ -10,8 +10,11 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# apps/worker/app/settings.py -> repository root
-REPO_ROOT = Path(__file__).resolve().parents[3]
+# apps/worker/app/settings.py -> repository root. Container images that copy the
+# package to a shallower path have fewer parents, so fall back to the topmost
+# one rather than raising IndexError at import time.
+_PARENTS = Path(__file__).resolve().parents
+REPO_ROOT = _PARENTS[min(3, len(_PARENTS) - 1)]
 
 
 class Settings(BaseSettings):

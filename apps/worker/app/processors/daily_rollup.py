@@ -39,6 +39,9 @@ async def run(payload: DailyRollupPayload, job: Any) -> dict[str, Any]:
         log.warning("no devices registered; nothing to roll up")
         return {"date": day.isoformat(), "devices": 0, "rowsWritten": 0}
 
+    # Interpolated rather than parameterised because the Influx client takes raw
+    # SQL; both values are timestamps derived from an already-validated payload,
+    # so they cannot carry user-controlled text.
     sql = f"""
         SELECT device_id,
                count(value) AS count,
@@ -48,11 +51,11 @@ async def run(payload: DailyRollupPayload, job: Any) -> dict[str, Any]:
         FROM readings
         WHERE time >= '{start.isoformat()}' AND time < '{end.isoformat()}'
         GROUP BY device_id
-    """  # noqa: S608 - values are timestamps derived from a validated payload
+    """
 
     try:
         rows = await get_influx_client().query(sql)
-    except Exception as error:  # noqa: BLE001
+    except Exception as error:
         # An empty database has no `readings` table yet, which the engine reports
         # as a query error rather than an empty result.
         log.warning("influx query failed; assuming no data", error=str(error))

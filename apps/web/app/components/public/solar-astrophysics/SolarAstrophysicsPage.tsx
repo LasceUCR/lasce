@@ -2,6 +2,7 @@ import { Activity, Layers, Magnet, Sun, type LucideIcon } from 'lucide-react'
 
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ConceptFlow } from '@/app/components/public/topic/ConceptFlow'
+import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
@@ -17,7 +18,7 @@ const overviewIcons: LucideIcon[] = [Sun, Magnet, Layers, Activity]
 
 export function SolarAstrophysicsPage() {
   return (
-    <article className="topic-page solar-topic-page">
+    <article className="topic-page">
       <TopicHero
         image={solarAstrophysicsHero.image}
         kicker={solarAstrophysicsHero.kicker}
@@ -25,13 +26,15 @@ export function SolarAstrophysicsPage() {
         title={solarAstrophysicsHero.title}
       />
 
+      <ContentFlag label="Contenido temporal" message={solarAstrophysicsLasce.note} />
+
       <TopicSection
         index="1"
         intro={solarAstrophysicsOverview.intro}
         title={solarAstrophysicsOverview.title}
         titleId="solar-overview-title"
       >
-        <CardGrid>
+        <CardGrid equalHeight>
           {solarAstrophysicsOverview.items.map((item, index) => {
             const Icon = overviewIcons[index] ?? Sun
 
@@ -53,29 +56,24 @@ export function SolarAstrophysicsPage() {
       </TopicSection>
 
       <TopicSection
+        featured
         className="topic-section-end"
-        badge="Texto temporal"
         title={solarAstrophysicsLasce.title}
         titleId="solar-lasce-title"
       >
-        <div className="solar-lasce-panel surface-card">
-          <div className="solar-lasce-copy">
-            {solarAstrophysicsLasce.paragraphs.map((paragraph) => (
-              <p className="topic-intro" key={paragraph}>
-                {paragraph}
-              </p>
-            ))}
-          </div>
-          <aside className="solar-content-note" aria-label="Nota de contenido">
-            <strong>Contenido temporal</strong>
-            <p>{solarAstrophysicsLasce.note}</p>
-          </aside>
-        </div>
+        {solarAstrophysicsLasce.paragraphs.map((paragraph) => (
+          <p className="topic-intro" key={paragraph}>
+            {paragraph}
+          </p>
+        ))}
+      </TopicSection>
+
+      <div className="topic-page-footer page-width">
         <TopicBackLink
           href={solarAstrophysicsBackLink.href}
           label={solarAstrophysicsBackLink.label}
         />
-      </TopicSection>
+      </div>
     </article>
   )
 }

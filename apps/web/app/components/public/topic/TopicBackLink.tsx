@@ -1,5 +1,6 @@
-import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+
+import { Button } from '@/app/components/public/Button'
 
 export interface TopicBackLinkProps {
   href: string
@@ -8,9 +9,12 @@ export interface TopicBackLinkProps {
 
 export function TopicBackLink({ href, label }: TopicBackLinkProps) {
   return (
-    <Link className="topic-back" href={href}>
-      <ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
+    <Button
+      href={href}
+      icon={<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />}
+      variant="secondary"
+    >
       {label}
-    </Link>
+    </Button>
   )
 }

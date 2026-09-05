@@ -31,9 +31,27 @@ __pycache__/
 .DS_Store
 *.log
 coverage/
+# pytest-cov writes these next to apps/worker rather than into coverage/.
+.coverage
+coverage.xml
 playwright-report/
 test-results/
 blob-report/
 
 *storybook.log
 storybook-static
+
+# Railway CLI link state (project ids), written by `railway link`.
+.railway/*
+!.railway/railway.ts
+
+# local IDE files
+# `.vscode/*` rather than `.vscode/`, because git cannot re-include a file
+# whose parent directory is excluded, and settings.json is shared below.
+.vscode/*
+.idea/
+
+# Shared editor settings are the one exception: they declare `main` and
+# `development` as protected so VS Code shows the padlock and keeps stray
+# commits off them.
+!.vscode/settings.json

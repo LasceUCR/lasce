@@ -8,26 +8,62 @@ import { NextResponse } from 'next/server'
  */
 export const dynamic = 'force-dynamic'
 
+/**
+ * How long a single dependency probe may take before it is called a failure.
+ *
+ * The Redis connection sets `maxRetriesPerRequest: null` because BullMQ needs
+ * it, which means `ping()` against an unreachable server retries forever rather
+ * than rejecting. Without a bound this route hangs and a platform healthcheck
+ * reports a timeout instead of reading a clean 503.
+ */
+const PROBE_TIMEOUT_MS = 5_000
+
+async function probe(run: () => Promise<unknown>): Promise<'ok' | string> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  try {
+    await Promise.race([
+      run(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`timed out after ${PROBE_TIMEOUT_MS}ms`)),
+          PROBE_TIMEOUT_MS,
+        )
+      }),
+    ])
+    return 'ok'
+  } catch (error) {
+    return error instanceof Error ? error.message : 'unreachable'
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export async function GET(): Promise<NextResponse> {
-  const checks: Record<string, 'ok' | string> = {}
+  // In parallel: a slow dependency should not add to a slow one beside it.
+  const [postgres, redis] = await Promise.all([
+    probe(() => prisma.$queryRaw`SELECT 1`),
+    probe(() => getRedisConnection().ping()),
+  ])
 
-  try {
-    await prisma.$queryRaw`SELECT 1`
-    checks.postgres = 'ok'
-  } catch (error) {
-    checks.postgres = error instanceof Error ? error.message : 'unreachable'
-  }
-
-  try {
-    await getRedisConnection().ping()
-    checks.redis = 'ok'
-  } catch (error) {
-    checks.redis = error instanceof Error ? error.message : 'unreachable'
-  }
-
+  const checks: Record<string, 'ok' | string> = { postgres, redis }
   const healthy = Object.values(checks).every((value) => value === 'ok')
 
-  return NextResponse.json({ status: healthy ? 'ok' : 'degraded', checks }, {
-    status: healthy ? 200 : 503,
-  })
+  if (!healthy) {
+    // A platform healthcheck only ever sees the status code, so without this a
+    // failing deployment reports "503" and nothing about which dependency is
+    // down. Put the reason where `railway logs` will show it.
+    console.error(
+      'health check degraded:',
+      Object.entries(checks)
+        .filter(([, value]) => value !== 'ok')
+        .map(([name, value]) => `${name}: ${value}`)
+        .join(' | '),
+    )
+  }
+
+  return NextResponse.json(
+    { status: healthy ? 'ok' : 'degraded', checks },
+    { status: healthy ? 200 : 503 },
+  )
 }
