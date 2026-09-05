@@ -1,62 +1,56 @@
 export const solarAstrophysicsMeta = {
-  title: 'Física solar | LASCE',
+  title: 'Astrofísica solar | LASCE',
   description:
-    'Conozca qué estudia la física solar y cómo LASCE observa la actividad del Sol desde la Universidad de Costa Rica.',
+    'Conozca cómo LASCE estudia la actividad solar, la relación Sol-Tierra y sus efectos sobre el entorno espacial desde Costa Rica.',
 } as const
 
 export const solarAstrophysicsHero = {
   kicker: 'Área de trabajo LASCE',
-  title: 'Física solar',
+  title: 'Astrofísica solar',
   introduction:
-    'La física solar estudia el Sol como una estrella activa: su atmósfera, sus campos magnéticos, sus manchas, sus fulguraciones y los procesos que liberan energía hacia el medio interplanetario.',
-  image: {
-    src: '/images/decorative/Solar-Flare.png',
-    alt: 'Fulguración solar visible sobre la superficie del Sol.',
-  },
+    'La actividad solar no termina en el Sol. Sus campos magnéticos, su radiación y el flujo de partículas que libera se extienden por el Sistema Solar y pueden modificar el entorno espacial de la Tierra.',
 } as const
 
 export const solarAstrophysicsOverview = {
-  title: '¿Qué estudia la física solar?',
+  title: '¿Qué estudia la astrofísica solar?',
   intro:
-    'Esta área ayuda a entender cómo se comporta el Sol y por qué su actividad cambia con el tiempo. El objetivo es explicar fenómenos solares con lenguaje claro y conectar esas observaciones con el trabajo científico del laboratorio.',
+    'Esta área busca comprender los procesos físicos que originan la actividad del Sol y explicar cómo esas variaciones se conectan con el medio interplanetario y el entorno terrestre.',
   items: [
     {
       title: 'Actividad solar',
       description:
-        'Analiza señales visibles de actividad, como manchas solares, regiones activas y fulguraciones que aparecen en la atmósfera solar.',
+        'Analiza fenómenos eruptivos como fulguraciones, eyecciones de masa coronal y emisiones solares de radio.',
     },
     {
       title: 'Campo magnético',
       description:
-        'Estudia cómo el magnetismo solar organiza la corona, almacena energía y participa en eventos eruptivos.',
+        'Estudia cómo los campos magnéticos almacenan energía, estructuran la atmósfera solar y participan en eventos eruptivos.',
     },
     {
-      title: 'Atmósfera solar',
+      title: 'Relación Sol-Tierra',
       description:
-        'Observa capas como la fotosfera, cromosfera y corona para comprender cómo se transporta energía en el Sol.',
+        'Relaciona perturbaciones solares con el viento solar, el campo magnético interplanetario y la ionosfera.',
     },
     {
-      title: 'Eventos solares',
+      title: 'Análisis científico',
       description:
-        'Relaciona fulguraciones y eyecciones de masa coronal con cambios que pueden propagarse por el espacio.',
+        'Integra observaciones, datos de satélites, estaciones terrestres y herramientas computacionales de procesamiento.',
     },
   ],
   flow: {
-    title: 'Relación de observación',
-    steps: ['Sol', 'Actividad solar', 'Observación', 'Análisis LASCE'] as const,
+    title: 'Cadena de estudio',
+    steps: ['Sol', 'Perturbación solar', 'Entorno terrestre', 'Análisis LASCE'] as const,
     caption:
-      'LASCE observa manifestaciones de la actividad solar y las analiza para apoyar la comprensión científica del entorno espacial.',
+      'LASCE conecta datos, modelos y métodos de análisis para estudiar la actividad solar y sus posibles efectos sobre la Tierra y la tecnología.',
   },
 } as const
 
 export const solarAstrophysicsLasce = {
-  title: 'El trabajo de LASCE en física solar',
-  note:
-    'Contenido temporal pendiente de textos oficiales y validación por parte de LASCE.',
+  title: 'El trabajo de LASCE en astrofísica solar',
   paragraphs: [
-    'LASCE estudia la actividad del Sol mediante observación, instrumentación y análisis de datos científicos.',
-    'El laboratorio relaciona las señales solares con procesos físicos que ayudan a explicar el origen de fenómenos relevantes para el clima espacial.',
-    'Esta página presenta una introducción general. Los proyectos, publicaciones, datos científicos y herramientas especializadas se publicarán en sus secciones correspondientes.',
+    'El Laboratorio de Astrofísica Solar y Clima Espacial reúne investigación en astrofísica solar, observaciones astronómicas y desarrollo computacional para estudiar la actividad solar y su interacción con el entorno terrestre.',
+    'Su trabajo integra datos de diferentes instrumentos, longitudes de onda y plataformas para observar distintos eslabones de una misma cadena: desde el origen magnético de una erupción solar hasta sus manifestaciones cerca de la Tierra.',
+    'Desde la Universidad de Costa Rica, LASCE busca fortalecer capacidades científicas nacionales para analizar la relación Sol-Tierra, formar talento e impulsar colaboraciones en el estudio del clima espacial.',
   ],
 } as const
 

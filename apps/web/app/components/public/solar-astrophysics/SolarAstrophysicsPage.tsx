@@ -2,7 +2,6 @@ import { Activity, Layers, Magnet, Sun, type LucideIcon } from 'lucide-react'
 
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ConceptFlow } from '@/app/components/public/topic/ConceptFlow'
-import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
@@ -20,13 +19,10 @@ export function SolarAstrophysicsPage() {
   return (
     <article className="topic-page">
       <TopicHero
-        image={solarAstrophysicsHero.image}
         kicker={solarAstrophysicsHero.kicker}
         lead={solarAstrophysicsHero.introduction}
         title={solarAstrophysicsHero.title}
       />
-
-      <ContentFlag label="Contenido temporal" message={solarAstrophysicsLasce.note} />
 
       <TopicSection
         index="1"
