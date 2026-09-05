@@ -20,7 +20,7 @@ const areaCards = [
 ] as const
 
 const workAreaRoutes = [
-  { path: '/fisica-solar', heading: 'Física solar' },
+  { path: '/fisica-solar', heading: 'Astrofísica solar' },
   { path: '/clima-espacial', heading: 'Clima espacial' },
   { path: '/radioastronomia', heading: 'Radioastronomía' },
 ] as const
@@ -105,8 +105,40 @@ test('displays space weather information without authentication', async ({ page 
   )
 })
 
+test('displays solar astrophysics information without authentication', async ({ page }) => {
+  const response = await page.goto('/fisica-solar')
+
+  expect(response?.status()).toBe(200)
+  expect(new URL(page.url()).pathname).toBe('/fisica-solar')
+  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Astrofísica solar' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Qué estudia la astrofísica solar/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Relación Sol-Tierra' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'El trabajo de LASCE en astrofísica solar' })).toBeVisible()
+  await expect(page.getByText(/Laboratorio de Astrofísica Solar y Clima Espacial/)).toBeVisible()
+  await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
+  await expect(page.getByText('Contenido temporal')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /actividad solar/i,
+  )
+})
+
 test('returns to the work areas section from space weather', async ({ page }) => {
   await page.goto('/clima-espacial')
+
+  await page.getByRole('link', { name: 'Volver a las áreas de trabajo' }).click()
+
+  await expect(page).toHaveURL(/\/#areas-de-trabajo/)
+  await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
+  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+})
+
+test('returns to the work areas section from solar astrophysics', async ({ page }) => {
+  await page.goto('/fisica-solar')
 
   await page.getByRole('link', { name: 'Volver a las áreas de trabajo' }).click()
 
