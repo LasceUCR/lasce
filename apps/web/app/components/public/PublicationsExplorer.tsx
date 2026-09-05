@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 
 import { PublicationCard } from './PublicationCard'
-import { PublicationSearchBar } from './PublicationSearchBar'
+import { SearchBar } from './SearchBar'
 import type { Publication } from '@/app/lib/publications'
 
 export interface PublicationsExplorerProps {
@@ -32,7 +32,12 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
 
   return (
     <section aria-labelledby="publications-title" className="publications page-width">
-      <PublicationSearchBar onQueryChange={setQuery} query={query} />
+      <SearchBar
+        label="Buscar publicaciones"
+        onQueryChange={setQuery}
+        placeholder="Buscar por título, autor o palabra clave..."
+        query={query}
+      />
 
       <h2 id="publications-title">Publicaciones recientes</h2>
 
