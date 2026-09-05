@@ -1,5 +1,4 @@
 import BaseError from '@/app/errors/BaseError'
-import { MAX_ASSET_BYTES } from '..'
 
 export default class InvalidFileTypeError extends BaseError {
   constructor(filename: string, contentType: string) {
