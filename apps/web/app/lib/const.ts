@@ -1,0 +1,1 @@
+export const PRODUCTION_ENV_VALUES = ["PROD","PRODUCTION"];
