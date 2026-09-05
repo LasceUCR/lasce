@@ -1,3 +1,20 @@
+export const investigacionMeta = {
+  title: 'Investigación | LASCE',
+  description:
+    'Publicaciones y colaboración científica del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
+} as const
+
+export const investigacionHero = {
+  kicker: 'Portal público LASCE',
+  title: 'Investigación y publicaciones',
+  lead: 'Publicaciones y colaboración científica del LASCE.',
+} as const
+
+export const investigacionBackLink = {
+  href: '/',
+  label: 'Volver al inicio',
+} as const
+
 export type Publication = {
   slug: string
   title: string
