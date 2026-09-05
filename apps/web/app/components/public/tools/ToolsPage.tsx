@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { ExternalLink, Info } from 'lucide-react'
 
-const SWAPRO_URL = 'https://swaat.up.railway.app'
+const SWAPRO_URL = process.env.NEXT_PUBLIC_SWAPRO_URL ?? 'https://swaat.up.railway.app'
 
 export function ToolsPage() {
   return (
@@ -18,7 +18,7 @@ export function ToolsPage() {
 
             <div className="tool-feature-media">
               <Image
-                src="/images/tools/SWAAT-sun.png"
+                src="/images/tools/SWAAT-sun.webp"
                 alt="Llamarada solar con ecuaciones de flujo de rayos X, densidad de plasma y velocidad de CME"
                 fill
                 sizes="(max-width: 640px) 100vw, 320px"
