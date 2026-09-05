@@ -38,6 +38,33 @@ describe('serverEnv', () => {
     expect(env.QUEUE_NAME).toBe('lasce')
   })
 
+  test('applies the MinIO defaults when nothing is set', () => {
+    const env = serverEnv()
+
+    expect(env.MINIO_ENDPOINT).toBe('localhost:9000')
+    expect(env.MINIO_BUCKET).toBe('lasce-files')
+    expect(env.MINIO_USE_SSL).toBe(false)
+    expect(env.MINIO_ACCESS_KEY).toBeUndefined()
+    expect(env.MINIO_SECRET_KEY).toBeUndefined()
+  })
+
+  test('reads MINIO_USE_SSL="false" as false and "true" as true', () => {
+    // z.stringbool() is the point of this test: z.coerce.boolean() would read
+    // the literal string "false" as true, since any non-empty string is truthy.
+    process.env.MINIO_USE_SSL = 'false'
+    expect(serverEnv().MINIO_USE_SSL).toBe(false)
+
+    resetServerEnv()
+    process.env.MINIO_USE_SSL = 'true'
+    expect(serverEnv().MINIO_USE_SSL).toBe(true)
+  })
+
+  test('rejects an empty MINIO_ENDPOINT', () => {
+    process.env.MINIO_ENDPOINT = ''
+
+    expect(() => serverEnv()).toThrowError(/MINIO_ENDPOINT/)
+  })
+
   test('memoises so later mutations of process.env are ignored', () => {
     expect(serverEnv().QUEUE_NAME).toBe('lasce')
     process.env.QUEUE_NAME = 'changed'
