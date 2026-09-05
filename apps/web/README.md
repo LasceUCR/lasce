@@ -60,7 +60,7 @@ Production deployment uses the standalone Next.js bundle through
 | -------------------- | -------------------------------------------------------------- |
 | `/`                  | Institutional landing page and access to the main public areas |
 | `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
-| `/fisica-solar`      | Solar astrophysics information page based on LASCE content      |
+| `/fisica-solar`      | Solar astrophysics information page based on LASCE content     |
 | `/clima-espacial`    | Space weather information page                                 |
 | `/radioastronomia`   | Radio astronomy work area                                      |
 | `/nosotros`          | General information about LASCE                                |

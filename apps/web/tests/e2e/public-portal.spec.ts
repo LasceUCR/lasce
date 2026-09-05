@@ -113,10 +113,14 @@ test('displays solar astrophysics information without authentication', async ({ 
   expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Astrofísica solar' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: /Qué estudia la astrofísica solar/ })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: /Qué estudia la astrofísica solar/ }),
+  ).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Relación Sol-Tierra' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'El trabajo de LASCE en astrofísica solar' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'El trabajo de LASCE en astrofísica solar' }),
+  ).toBeVisible()
   await expect(page.getByText(/Laboratorio de Astrofísica Solar y Clima Espacial/)).toBeVisible()
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
   await expect(page.getByText('Contenido temporal')).toHaveCount(0)
