@@ -39,12 +39,19 @@ check itself against.
 
 ## Who owns what
 
-| Store      | Written by                                      | Read by       | Schema owner                           |
-| ---------- | ----------------------------------------------- | ------------- | -------------------------------------- |
-| PostgreSQL | `apps/web` (Prisma), `apps/worker` (SQLAlchemy) | both          | **Prisma** — the only migration source |
-| InfluxDB   | `apps/worker`                                   | `apps/worker` | schema-on-write                        |
-| MinIO      | `apps/worker`                                   | `apps/worker` | —                                      |
-| Redis      | `apps/web` enqueues, `apps/worker` consumes     | both          | BullMQ                                 |
+| Store      | Written by                                      | Read by                   | Schema owner                           |
+| ---------- | ----------------------------------------------- | ------------------------- | -------------------------------------- |
+| PostgreSQL | `apps/web` (Prisma), `apps/worker` (SQLAlchemy) | both                      | **Prisma** — the only migration source |
+| InfluxDB   | `apps/worker`                                   | `apps/worker`             | schema-on-write                        |
+| MinIO      | `apps/worker`, `apps/web`                       | `apps/worker`, `apps/web` | —                                      |
+| Redis      | `apps/web` enqueues, `apps/worker` consumes     | both                      | BullMQ                                 |
+
+The worker owns `readings/<deviceId>/<date>.csv` and its derived `.summary.json` siblings.
+`apps/web`'s side (`apps/web/app/services/storage`) is a **service layer with no caller yet**, and
+is not finished: it writes keys of the form `<timestamp>_<filename>` at the bucket root, with no
+`assets/` prefix and no guard keeping it out of `readings/`. Its uploads are ordinary server-side
+`putObject` calls, so the file passes through Next rather than going browser → MinIO directly.
+See [manage-assets.md](manage-assets.md#known-gaps) before building on it.
 
 One owner per schema is deliberate. The worker reads and writes the same PostgreSQL tables through
 SQLAlchemy but never migrates them, so there is only ever one migration history.
@@ -93,7 +100,9 @@ handling concurrently.
 
 ## Testing
 
-`apps/web` UI components follow the structure in
-[`docs/tests/component_testing.md`](tests/component_testing.md): Vitest + React Testing Library,
-tests colocated with the component, and the Server Action / `fetch` boundary mocked while
-`@lasce/contracts` is exercised for real.
+`apps/web` runs Vitest with React Testing Library and jsdom; see
+[`docs/tests/component_testing.md`](tests/component_testing.md). UI component tests sit beside
+their component and mock the Server Action / `fetch` boundary while exercising `@lasce/contracts`
+for real. Service-layer tests sit under `apps/web/tests/unit/` instead, mocking the SDK at the
+module boundary — `tests/unit/services/storage/MinioAssetStorage.test.ts` mocks `minio` that way.
+Playwright owns `apps/web/tests/e2e` and runs separately under `test:e2e`.

@@ -1,9 +1,13 @@
-# Testing UI components
+# Testing components and services
 
 `apps/web` runs its unit tests on **Vitest with React Testing Library and jsdom**, configured in
-`apps/web/vitest.config.ts`. Component tests exist for `WorkAreaCard` and `WorkAreasSection`;
-`JobLauncher.tsx` is the largest component still without one, and is the next thing worth testing.
-Follow the structure below so tests stay consistent across the app.
+`apps/web/vitest.config.ts`. Component tests exist for `WorkAreaCard` and `WorkAreasSection`, and
+the MinIO storage service is covered by `tests/unit/services/storage/MinioAssetStorage.test.ts`.
+`JobLauncher.tsx` is the largest module still without a test, and is the next thing worth writing —
+it is also what currently holds coverage below its floor.
+
+Most of this page is about component tests. [Service tests](#service-tests) covers the differences
+for non-UI code.
 
 ## Setup
 
@@ -12,13 +16,17 @@ Follow the structure below so tests stay consistent across the app.
   box; Testing Library over shallow rendering because what matters is what the user sees and can
   click, not internal state. Vitest is pinned to 4.x to stay compatible with Storybook 10.
 - **JSX**: the Next tsconfig sets `jsx: "preserve"`, so `vitest.config.ts` sets
-  `oxc: { jsx: 'react-jsx' }`. Without it Vite 8 leaves the JSX in place and the test files fail
-  to parse.
-- **Location**: colocated, same folder as the component — `app/components/JobLauncher.tsx` →
-  `app/components/JobLauncher.test.tsx`. No `__tests__` folder: touching the component and
-  forgetting the test should be one `git status` glance apart.
+  `oxc: { jsx: { runtime: 'automatic' } }`. Without it Vite 8 leaves the JSX in place and the test
+  files fail to parse.
+- **Location**: components are **colocated**, same folder as the component —
+  `app/components/JobLauncher.tsx` → `app/components/JobLauncher.test.tsx`. No `__tests__` folder:
+  touching the component and forgetting the test should be one `git status` glance apart. Non-UI
+  code under `app/services/**` goes under `tests/unit/` instead — see
+  [Service tests](#service-tests). Both are in the Vitest `include`.
 - **Naming**: `<Component>.test.tsx`, one file per component. Test names read as behaviour, not
   implementation — `'shows an error when the device list is empty'`, not `'renders correctly'`.
+- **Style**: `describe` blocks with flat `test()` calls, never `it()`, and named imports from
+  `vitest`.
 
 ## What to mock, what not to
 
@@ -87,6 +95,45 @@ Storybook's own Vite plugin to resolve its internal `sb-original` aliases, which
 does not load. Rendering with the args needs none of that, and `next/link` works under jsdom
 without any Next mocks.
 
+## Service tests
+
+Non-UI code under `app/services/**` is tested from `apps/web/tests/unit/`, mirroring the source
+path — `app/services/storage/implementations/MinioAsssetStorage.ts` →
+`tests/unit/services/storage/MinioAssetStorage.test.ts`. These have no component to colocate with,
+and grouping them keeps the service suite readable as a whole.
+
+The boundary to mock is the **SDK**, not the service. `MinioAssetStorage` builds its own
+`Minio.Client` in a no-argument constructor, so there is no injection seam; mock the module and
+hold the stubs at module scope so every instance shares them:
+
+```ts
+const putObject = vi.fn()
+const bucketExists = vi.fn()
+
+vi.mock('minio', () => ({
+  Client: class {
+    putObject = putObject
+    bucketExists = bucketExists
+  },
+}))
+```
+
+Two habits that matter for services reading `process.env` directly:
+
+- **Know when each variable is read.** `MinioAssetStorage` captures the endpoint and credentials
+  at construction but reads bucket names per call, so stub with `vi.stubEnv` _before_ constructing,
+  and `vi.unstubAllEnvs()` in `afterEach`.
+- **Never let ambient environment decide a result.** Stub the variable explicitly even when
+  asserting a fallback, so the test means the same thing on a machine with a populated `.env`.
+
+Assert the calls made into the mocked SDK and the value returned — and, where the point of the code
+is that something _doesn't_ happen, assert the absence: the upload tests check that an invalid file
+leaves `bucketExists` and `putObject` uncalled, which is the whole guarantee of validating first.
+
+Tests pin **current** behaviour. Where the implementation and its own doc comment disagree, the
+test follows the implementation and the gap is recorded in
+[manage-assets.md](../manage-assets.md#known-gaps) rather than quietly fixed in a test change.
+
 ## Accessibility
 
 Prefer `getByRole` and `toHaveAccessibleName` over `getByTestId` or class selectors: role queries
@@ -107,8 +154,9 @@ pnpm turbo run test                  # every workspace
 
 `test` is the unit suite in every workspace and never starts a browser or a dev server.
 Playwright lives behind `test:e2e` and is confined to `apps/web/tests/e2e` by
-`playwright.config.ts`; the Vitest `include` only matches `app/**/*.test.{ts,tsx}`, so the two
-cannot pick up each other's files.
+`playwright.config.ts`. The Vitest `include` matches `app/**/*.test.{ts,tsx}` and
+`tests/unit/**/*.test.{ts,tsx}`; Playwright's specs are named `*.spec.ts`, so even though Vitest
+now looks inside `tests/`, the two suites cannot pick up each other's files.
 
 ## Coverage thresholds
 
@@ -117,13 +165,21 @@ Python worker in `apps/worker/pyproject.toml` (`--cov-fail-under`). They are **s
 just below what the suite measured when it was written, not targets**. They exist to catch a drop,
 so raise them as coverage grows rather than leaving them where they are.
 
-| Workspace            | Floor (lines) | Measured when set |
-| -------------------- | ------------: | ----------------: |
-| `apps/web`           |           15% |             17.9% |
-| `packages/config`    |           90% |              100% |
-| `packages/contracts` |           90% |              100% |
-| `packages/jobs`      |           80% |             85.7% |
-| `apps/worker`        |           45% |               50% |
+| Workspace            | Floor (lines) |                    Measured |
+| -------------------- | ------------: | --------------------------: |
+| `apps/web`           |           50% | **38.5% — under the floor** |
+| `packages/config`    |           90% |                        100% |
+| `packages/contracts` |           90% |                        100% |
+| `packages/jobs`      |           80% |                       85.7% |
+| `apps/worker`        |           45% |                         50% |
+
+> **`apps/web` does not currently meet its own floor**, so
+> `pnpm --filter @lasce/web test` fails on `coverage.thresholds` while `test:unit` passes. The
+> floor was raised to 50% and `app/services/**` was added to the coverage scope in the same change
+> that introduced the storage service, ahead of the tests for it. The storage tests took the
+> workspace from 11.0% to 38.5% lines; the rest of the gap is `JobLauncher.tsx` (0%, and the
+> largest untested file), `PublicHeader.tsx`, `CreateWidget.tsx`, `Brand.tsx`, `PublicFooter.tsx`,
+> `site.ts` and `container.ts`. Close it by testing those, not by lowering the floor.
 
 ### What is deliberately not measured
 
@@ -131,7 +187,7 @@ Counting code that this suite is not meant to cover would make the percentage me
 these are excluded and gated elsewhere:
 
 - **`apps/web` routes, pages and Server Actions** — the I/O boundary, gated by the Playwright
-  `e2e` job. Coverage is scoped to `app/components/**` and `app/lib/**`.
+  `e2e` job. Coverage is scoped to `app/components/**`, `app/lib/**` and `app/services/**`.
 - **`packages/jobs` `connection.ts` and `queue.ts`** — construct the ioredis and BullMQ clients
   and cannot run without a live Redis.
 - **`packages/db`** — builds a PrismaClient at module scope and needs a real database.
