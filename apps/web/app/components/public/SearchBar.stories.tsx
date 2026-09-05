@@ -30,12 +30,11 @@ export const WithQuery: Story = {
   },
 }
 
-export const CustomSubmitLabel: Story = {
+export const CustomCopy: Story = {
   args: {
     query: '',
     label: 'Buscar noticias y recursos',
     placeholder: 'Buscar por título o palabra clave...',
-    submitLabel: 'Filtrar',
     onQueryChange: () => {},
   },
 }

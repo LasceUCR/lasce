@@ -1,12 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { SearchBar, type SearchBarProps } from './SearchBar'
-import { CustomSubmitLabel, Default } from './SearchBar.stories'
+import { Default } from './SearchBar.stories'
 
 const defaultArgs = Default.args as SearchBarProps
-const customSubmitArgs = CustomSubmitLabel.args as SearchBarProps
 
 describe('SearchBar', () => {
   test('shows the query it was given, under the label it was given', () => {
@@ -26,24 +25,17 @@ describe('SearchBar', () => {
     expect(onQueryChange).toHaveBeenLastCalledWith('l')
   })
 
-  test('defaults the submit button label to "Buscar"', () => {
+  test('does not render a submit button, since the list filters live', () => {
     render(<SearchBar {...defaultArgs} />)
 
-    expect(screen.getByRole('button', { name: 'Buscar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  test('lets a caller override the submit button label', () => {
-    render(<SearchBar {...customSubmitArgs} />)
-
-    expect(screen.getByRole('button', { name: 'Filtrar' })).toBeInTheDocument()
-  })
-
-  test('calls onSubmit and prevents navigation when submitted', async () => {
-    const user = userEvent.setup()
+  test('calls onSubmit and prevents navigation when the form is submitted', () => {
     const onSubmit = vi.fn()
     render(<SearchBar {...defaultArgs} onSubmit={onSubmit} />)
 
-    await user.click(screen.getByRole('button', { name: 'Buscar' }))
+    fireEvent.submit(screen.getByRole('search'))
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
     // jsdom would report the form navigating if preventDefault() were missing.
