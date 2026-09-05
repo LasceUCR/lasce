@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import type { NextConfig } from 'next'
+import createNextIntlPlugin from 'next-intl/plugin'
 
 const repoRoot = new URL('../../', import.meta.url)
 
@@ -81,4 +82,9 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+// The explicit path is required: the plugin defaults to `./i18n/request.ts` or
+// `./src/i18n/request.ts`, and this app keeps its request config alongside the
+// rest of `app/` instead.
+const withNextIntl = createNextIntlPlugin('./app/i18n/request.ts')
+
+export default withNextIntl(nextConfig)

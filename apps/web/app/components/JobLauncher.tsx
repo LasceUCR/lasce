@@ -2,6 +2,7 @@
 
 import { JOB_NAMES } from '@lasce/contracts'
 import type { JobStatus } from '@lasce/types'
+import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 
 import { enqueueJob } from '../actions'
@@ -16,6 +17,7 @@ interface Props {
  * Redis, the Python worker picks it up, and the state reported here changes.
  */
 export function JobLauncher({ devices }: Props) {
+  const t = useTranslations('jobLauncher')
   const [deviceId, setDeviceId] = useState(devices[0]?.externalId ?? '')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -76,11 +78,7 @@ export function JobLauncher({ devices }: Props) {
   }, [jobId])
 
   if (devices.length === 0) {
-    return (
-      <p className="empty">
-        No devices yet. Run <code>pnpm --filter @lasce/db seed</code> to insert the demo ones.
-      </p>
-    )
+    return <p className="empty">{t.rich('empty', { code: (chunks) => <code>{chunks}</code> })}</p>
   }
 
   return (
@@ -94,7 +92,7 @@ export function JobLauncher({ devices }: Props) {
           ))}
         </select>
         <button onClick={submit} disabled={pending}>
-          {pending ? 'Enqueueing…' : 'Enqueue ingest-readings'}
+          {pending ? t('enqueueing') : t('enqueue')}
         </button>
       </div>
 
@@ -102,9 +100,9 @@ export function JobLauncher({ devices }: Props) {
 
       {jobId ? (
         <p className="muted">
-          Job <code>{jobId}</code> —{' '}
+          {t('job', { jobId })} —{' '}
           <strong className={status ? `state-${status.state}` : undefined}>
-            {status?.state ?? 'waiting for the worker…'}
+            {status?.state ?? t('waiting')}
           </strong>
           {status?.failedReason ? ` — ${status.failedReason}` : null}
         </p>
