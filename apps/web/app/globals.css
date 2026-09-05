@@ -1342,3 +1342,127 @@ a {
     min-width: 0;
   }
 }
+
+/* --- Scientific tools (/datos) --- */
+
+.section-heading h1 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.button-outline {
+  border-color: var(--border);
+  color: var(--blue-dark);
+  background: transparent;
+}
+
+.button-outline:hover,
+.button-outline:focus-visible {
+  border-color: var(--blue);
+  background: #f4fafd;
+}
+
+.tool-feature-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
+}
+
+.tool-feature-body {
+  padding: 24px 32px;
+}
+
+.tool-feature-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 320px) 1fr;
+  column-gap: 24px;
+  row-gap: 12px;
+}
+
+.tool-feature-title {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: 18px;
+  text-align: center;
+}
+
+.tool-feature-media {
+  grid-column: 1;
+  grid-row: 2;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tool-feature-media img {
+  object-fit: cover;
+}
+
+.tool-feature-text-col {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-feature-text p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tool-feature-text p:last-child {
+  margin-bottom: 0;
+}
+
+.tool-feature-cta {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.tool-footnote {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .tool-feature-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-feature-title {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .tool-feature-media {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .tool-feature-text-col {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .tool-feature-body {
+    padding: 20px;
+  }
+}
+
+.tools-page-alt {
+  max-width: 960px;
+  margin-inline: auto;
+  padding-top: 40px;
+  padding-bottom: 48px;
+}
