@@ -55,7 +55,9 @@ describe('CardGrid', () => {
       )
 
       expect(container.firstChild).toHaveClass('card-grid-expandable')
-      expect(container.firstChild).toHaveStyle({ '--card-min-height': '80px' })
+      expect((container.firstChild as HTMLElement).style.getPropertyValue('--card-min-height')).toBe(
+        '80px',
+      )
     } finally {
       if (previous) {
         Object.defineProperty(HTMLElement.prototype, 'offsetHeight', previous)
