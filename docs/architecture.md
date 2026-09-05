@@ -93,7 +93,13 @@ handling concurrently.
 
 ## Testing
 
-`apps/web` UI components follow the structure in
+Three suites, each a required check on every Pull Request: Vitest for TypeScript units,
+Playwright for end-to-end, and pytest for the Python worker. TypeScript tests are colocated with
+the code they cover; Playwright and pytest live in their own `tests/` directory.
+[`docs/testing.md`](testing.md) has the placement rules, the coverage floors and what each CI job
+runs.
+
+`apps/web` UI components additionally follow the structure in
 [`docs/tests/component_testing.md`](tests/component_testing.md): Vitest + React Testing Library,
 tests colocated with the component, and the Server Action / `fetch` boundary mocked while
 `@lasce/contracts` is exercised for real.

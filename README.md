@@ -30,7 +30,8 @@ lasce/
 | MinIO           | File storage (S3-compatible)                                                       |
 
 Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together,
-[`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue, and
+[`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue,
+[`docs/testing.md`](docs/testing.md) for where tests go and what gates them, and
 [`docs/tests/component_testing.md`](docs/tests/component_testing.md) for how UI component tests
 should be structured.
 
