@@ -343,7 +343,8 @@ a {
 }
 
 .indicators h2,
-.areas h2 {
+.areas h2,
+.publications h2 {
   margin: 0;
   font-size: 25px;
   line-height: 1.2;
@@ -554,6 +555,130 @@ a {
   color: #8399a7;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.page-intro {
+  padding: 44px 0 8px;
+}
+
+.page-intro h1 {
+  margin: 0 0 10px;
+  font-size: 34px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.page-intro p {
+  margin: 0;
+  max-width: 640px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.search-filter-bar {
+  margin-top: 0;
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
+}
+
+.search-filter-field {
+  position: relative;
+  flex: 0 1 420px;
+  display: flex;
+  align-items: center;
+}
+
+.search-filter-field svg {
+  position: absolute;
+  left: 14px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-filter-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px 0 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.publications {
+  margin-top: 8px;
+  padding-bottom: 56px;
+}
+
+.publications h2 {
+  margin-top: 28px;
+}
+
+.content-empty {
+  margin: 24px 0 0;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.publication-list {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.publication-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.publication-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.publication-abstract {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.publication-card .area-link {
+  margin-top: 12px;
+}
+
 @media (max-width: 1120px) {
   .site-header {
     grid-template-columns: 1fr auto auto;
@@ -629,6 +754,18 @@ a {
 
   .page-width {
     width: min(100% - 32px, 1332px);
+  }
+
+  .page-intro {
+    padding: 32px 0 4px;
+  }
+
+  .page-intro h1 {
+    font-size: 26px;
+  }
+
+  .search-filter-bar {
+    padding: 16px;
   }
 
   .site-header {
@@ -1208,4 +1345,128 @@ a {
     width: 100%;
     min-width: 0;
   }
+}
+
+/* --- Scientific tools (/datos) --- */
+
+.section-heading h1 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.button-outline {
+  border-color: var(--border);
+  color: var(--blue-dark);
+  background: transparent;
+}
+
+.button-outline:hover,
+.button-outline:focus-visible {
+  border-color: var(--blue);
+  background: #f4fafd;
+}
+
+.tool-feature-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
+}
+
+.tool-feature-body {
+  padding: 24px 32px;
+}
+
+.tool-feature-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 320px) 1fr;
+  column-gap: 24px;
+  row-gap: 12px;
+}
+
+.tool-feature-title {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: 18px;
+  text-align: center;
+}
+
+.tool-feature-media {
+  grid-column: 1;
+  grid-row: 2;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tool-feature-media img {
+  object-fit: cover;
+}
+
+.tool-feature-text-col {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-feature-text p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tool-feature-text p:last-child {
+  margin-bottom: 0;
+}
+
+.tool-feature-cta {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.tool-footnote {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .tool-feature-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-feature-title {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .tool-feature-media {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .tool-feature-text-col {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .tool-feature-body {
+    padding: 20px;
+  }
+}
+
+.tools-page-alt {
+  max-width: 960px;
+  margin-inline: auto;
+  padding-top: 40px;
+  padding-bottom: 48px;
 }

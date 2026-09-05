@@ -5,7 +5,7 @@ const publicRoutes = [
   { label: 'Nosotros', path: '/nosotros', heading: 'Nosotros' },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
   { label: 'Instrumentación', path: '/instrumentacion', heading: 'Instrumentación' },
-  { label: 'Datos', path: '/datos', heading: 'Datos' },
+  { label: 'Datos', path: '/datos', heading: 'Herramientas científicas' },
   { label: 'Noticias', path: '/noticias', heading: 'Noticias' },
   { label: 'Contacto', path: '/contacto', heading: 'Contacto' },
 ] as const
