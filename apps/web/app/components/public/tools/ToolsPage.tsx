@@ -29,9 +29,9 @@ export function ToolsPage() {
               <div className="tool-feature-text">
                 <p>
                   Análisis automatizado de eventos solares orientado a señales de rayos X suaves
-                  GOES/XRS-B (Soft X-Ray), permitiendo visualizar la evolución temporal de la
-                  curva XRS. Además, se compara dicha evolución temporal de la curva de XRS con la
-                  de microondas RSTN a 8800 MHz.
+                  GOES/XRS-B (Soft X-Ray), permitiendo visualizar la evolución temporal de la curva
+                  XRS. Además, se compara dicha evolución temporal de la curva de XRS con la de
+                  microondas RSTN a 8800 MHz.
                 </p>
                 <p>
                   La herramienta genera una gráfica estática y una versión interactiva. En eventos
