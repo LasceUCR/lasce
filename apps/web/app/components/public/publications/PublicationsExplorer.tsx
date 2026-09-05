@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 
 import { PublicationCard } from './PublicationCard'
-import { SearchBar } from './SearchBar'
+import { SearchBar } from '@/app/components/public/SearchBar'
 import type { Publication } from '@/app/lib/publications'
 
 export interface PublicationsExplorerProps {

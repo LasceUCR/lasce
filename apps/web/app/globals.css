@@ -625,11 +625,6 @@ a {
   font-size: 14px;
 }
 
-.button-compact {
-  min-width: 0;
-  gap: 8px;
-}
-
 .publications {
   margin-top: 8px;
   padding-bottom: 56px;
@@ -650,14 +645,6 @@ a {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.publication-card {
-  padding: 20px 22px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--white);
-  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
 }
 
 .publication-card h3 {
@@ -775,14 +762,6 @@ a {
 
   .search-filter-bar {
     padding: 16px;
-  }
-
-  .button-compact {
-    width: 100%;
-  }
-
-  .publication-card {
-    padding: 16px 18px;
   }
 
   .site-header {

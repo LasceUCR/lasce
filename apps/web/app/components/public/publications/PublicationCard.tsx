@@ -9,7 +9,7 @@ export interface PublicationCardProps {
 
 export function PublicationCard({ title, authors, venue, year, abstract, href }: PublicationCardProps) {
   return (
-    <article className="publication-card">
+    <article className="surface-card publication-card">
       <h3>{title}</h3>
       <p className="publication-meta">
         {authors} · {venue} · {year}
