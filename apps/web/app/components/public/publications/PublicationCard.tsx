@@ -7,7 +7,14 @@ export interface PublicationCardProps {
   href: string
 }
 
-export function PublicationCard({ title, authors, venue, year, abstract, href }: PublicationCardProps) {
+export function PublicationCard({
+  title,
+  authors,
+  venue,
+  year,
+  abstract,
+  href,
+}: PublicationCardProps) {
   return (
     <article className="surface-card publication-card">
       <h3>{title}</h3>

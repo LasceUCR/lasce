@@ -24,7 +24,9 @@ describe('PublicationsExplorer', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'ROSAC')
 
     expect(
-      screen.getByRole('heading', { name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)' }),
+      screen.getByRole('heading', {
+        name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)',
+      }),
     ).toBeInTheDocument()
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
   })
@@ -36,7 +38,9 @@ describe('PublicationsExplorer', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'LASCE')
 
     expect(
-      screen.getByRole('heading', { name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)' }),
+      screen.getByRole('heading', {
+        name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)',
+      }),
     ).toBeInTheDocument()
   })
 

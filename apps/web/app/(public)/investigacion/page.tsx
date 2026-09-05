@@ -4,7 +4,12 @@ import { PublicationsExplorer } from '@/app/components/public/publications/Publi
 import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
-import { investigacionBackLink, investigacionHero, investigacionMeta, publications } from '@/app/lib/publications'
+import {
+  investigacionBackLink,
+  investigacionHero,
+  investigacionMeta,
+  publications,
+} from '@/app/lib/publications'
 
 export const metadata: Metadata = {
   title: investigacionMeta.title,
@@ -14,7 +19,11 @@ export const metadata: Metadata = {
 export default function InvestigacionPage() {
   return (
     <article className="topic-page">
-      <TopicHero kicker={investigacionHero.kicker} lead={investigacionHero.lead} title={investigacionHero.title} />
+      <TopicHero
+        kicker={investigacionHero.kicker}
+        lead={investigacionHero.lead}
+        title={investigacionHero.title}
+      />
 
       <ContentFlag
         label="Información provisional"

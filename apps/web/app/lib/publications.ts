@@ -46,7 +46,8 @@ export const publications: Publication[] = [
   },
   {
     slug: 'statistical-relationship-cme-speed-soft-xray',
-    title: 'On the Statistical Relationship Between CME Speed and Soft X-Ray Flux and Fluence of the Associated Flare',
+    title:
+      'On the Statistical Relationship Between CME Speed and Soft X-Ray Flux and Fluence of the Associated Flare',
     authors: 'C. Salas-Matamoros, L. Klein',
     venue: 'Solar Physics',
     year: '2015',
@@ -56,7 +57,8 @@ export const publications: Publication[] = [
   },
   {
     slug: 'geometrical-description-interplanetary-propagation-cmes',
-    title: 'A geometrical description for interplanetary propagation of Earth-directed CMEs based on radiative proxies',
+    title:
+      'A geometrical description for interplanetary propagation of Earth-directed CMEs based on radiative proxies',
     authors: 'C. Salas-Matamoros, J. Sánchez-Guevara',
     venue: 'Monthly Notices of the Royal Astronomical Society',
     year: '2021',
