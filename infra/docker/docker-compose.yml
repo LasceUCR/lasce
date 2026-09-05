@@ -90,12 +90,19 @@ services:
       REDIS_URL: redis://redis:6379
       QUEUE_NAME: ${QUEUE_NAME:-lasce}
       CRON_SECRET: ${CRON_SECRET:-dev-secret-change-me}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-lasce}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-lasce-secret}
+      MINIO_BUCKET: ${MINIO_BUCKET:-lasce-files}
+      MINIO_USE_SSL: "false"
     ports:
       - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   worker:
