@@ -46,5 +46,12 @@ storybook-static
 !.railway/railway.ts
 
 # local IDE files
-.vscode/
+# `.vscode/*` rather than `.vscode/`, because git cannot re-include a file
+# whose parent directory is excluded, and settings.json is shared below.
+.vscode/*
 .idea/
+
+# Shared editor settings are the one exception: they declare `main` and
+# `development` as protected so VS Code shows the padlock and keeps stray
+# commits off them.
+!.vscode/settings.json

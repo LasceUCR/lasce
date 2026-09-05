@@ -106,3 +106,13 @@ their component and mock the Server Action / `fetch` boundary while exercising `
 for real. Service-layer tests sit under `apps/web/tests/unit/` instead, mocking the SDK at the
 module boundary — `tests/unit/services/storage/MinioAssetStorage.test.ts` mocks `minio` that way.
 Playwright owns `apps/web/tests/e2e` and runs separately under `test:e2e`.
+Three suites, each a required check on every Pull Request: Vitest for TypeScript units,
+Playwright for end-to-end, and pytest for the Python worker. TypeScript tests are colocated with
+the code they cover; Playwright and pytest live in their own `tests/` directory.
+[`docs/testing.md`](testing.md) has the placement rules, the coverage floors and what each CI job
+runs.
+
+`apps/web` UI components additionally follow the structure in
+[`docs/tests/component_testing.md`](tests/component_testing.md): Vitest + React Testing Library,
+tests colocated with the component, and the Server Action / `fetch` boundary mocked while
+`@lasce/contracts` is exercised for real.

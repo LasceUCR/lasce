@@ -73,7 +73,9 @@ export const dynamicParams = false
 export function generateStaticParams() {
   return [
     ...Object.keys(publicSections).map((section) => ({ section })),
-    ...workAreaSlugs.map((section) => ({ section })),
+    ...workAreaSlugs
+      .filter((section) => section !== 'clima-espacial')
+      .map((section) => ({ section })),
   ]
 }
 

@@ -1,13 +1,11 @@
 # Testing components and services
 
 `apps/web` runs its unit tests on **Vitest with React Testing Library and jsdom**, configured in
-`apps/web/vitest.config.ts`. Component tests exist for `WorkAreaCard` and `WorkAreasSection`, and
-the MinIO storage service is covered by `tests/unit/services/storage/MinioAssetStorage.test.ts`.
-`JobLauncher.tsx` is the largest module still without a test, and is the next thing worth writing —
-it is also what currently holds coverage below its floor.
-
-Most of this page is about component tests. [Service tests](#service-tests) covers the differences
-for non-UI code.
+`apps/web/vitest.config.ts`. This page is about UI components; for where a test file belongs in
+any other workspace, and for the Playwright and pytest suites, see
+[`docs/testing.md`](../testing.md). Component tests exist for `WorkAreaCard` and `WorkAreasSection`;
+`JobLauncher.tsx` is the largest component still without one, and is the next thing worth testing.
+Follow the structure below so tests stay consistent across the app.
 
 ## Setup
 
@@ -16,13 +14,11 @@ for non-UI code.
   box; Testing Library over shallow rendering because what matters is what the user sees and can
   click, not internal state. Vitest is pinned to 4.x to stay compatible with Storybook 10.
 - **JSX**: the Next tsconfig sets `jsx: "preserve"`, so `vitest.config.ts` sets
-  `oxc: { jsx: { runtime: 'automatic' } }`. Without it Vite 8 leaves the JSX in place and the test
-  files fail to parse.
-- **Location**: components are **colocated**, same folder as the component —
-  `app/components/JobLauncher.tsx` → `app/components/JobLauncher.test.tsx`. No `__tests__` folder:
-  touching the component and forgetting the test should be one `git status` glance apart. Non-UI
-  code under `app/services/**` goes under `tests/unit/` instead — see
-  [Service tests](#service-tests). Both are in the Vitest `include`.
+  `oxc: { jsx: { runtime: 'automatic' } }`. Without it Vite 8 leaves the JSX in place and the
+  test files fail to parse.
+- **Location**: colocated, same folder as the component — `app/components/JobLauncher.tsx` →
+  `app/components/JobLauncher.test.tsx`. No `__tests__` folder: touching the component and
+  forgetting the test should be one `git status` glance apart.
 - **Naming**: `<Component>.test.tsx`, one file per component. Test names read as behaviour, not
   implementation — `'shows an error when the device list is empty'`, not `'renders correctly'`.
 - **Style**: `describe` blocks with flat `test()` calls, never `it()`, and named imports from
@@ -160,35 +156,10 @@ now looks inside `tests/`, the two suites cannot pick up each other's files.
 
 ## Coverage thresholds
 
-Thresholds are recorded per workspace in `vitest.config.ts` (`coverage.thresholds`), and for the
-Python worker in `apps/worker/pyproject.toml` (`--cov-fail-under`). They are **starting floors set
-just below what the suite measured when it was written, not targets**. They exist to catch a drop,
-so raise them as coverage grows rather than leaving them where they are.
+`apps/web` gates 15% lines, 15% statements and 25% functions, measured over
+`app/components/**` and `app/lib/**` only. Routes, pages and Server Actions are the I/O boundary
+and are gated by the Playwright `e2e` job instead, so counting them here would measure that
+suite's work as a gap in this one.
 
-| Workspace            | Floor (lines) |                    Measured |
-| -------------------- | ------------: | --------------------------: |
-| `apps/web`           |           50% | **38.5% — under the floor** |
-| `packages/config`    |           90% |                        100% |
-| `packages/contracts` |           90% |                        100% |
-| `packages/jobs`      |           80% |                       85.7% |
-| `apps/worker`        |           45% |                         50% |
-
-> **`apps/web` does not currently meet its own floor**, so
-> `pnpm --filter @lasce/web test` fails on `coverage.thresholds` while `test:unit` passes. The
-> floor was raised to 50% and `app/services/**` was added to the coverage scope in the same change
-> that introduced the storage service, ahead of the tests for it. The storage tests took the
-> workspace from 11.0% to 38.5% lines; the rest of the gap is `JobLauncher.tsx` (0%, and the
-> largest untested file), `PublicHeader.tsx`, `CreateWidget.tsx`, `Brand.tsx`, `PublicFooter.tsx`,
-> `site.ts` and `container.ts`. Close it by testing those, not by lowering the floor.
-
-### What is deliberately not measured
-
-Counting code that this suite is not meant to cover would make the percentage meaningless, so
-these are excluded and gated elsewhere:
-
-- **`apps/web` routes, pages and Server Actions** — the I/O boundary, gated by the Playwright
-  `e2e` job. Coverage is scoped to `app/components/**`, `app/lib/**` and `app/services/**`.
-- **`packages/jobs` `connection.ts` and `queue.ts`** — construct the ioredis and BullMQ clients
-  and cannot run without a live Redis.
-- **`packages/db`** — builds a PrismaClient at module scope and needs a real database.
-- **`packages/types`** — types only, with no runtime code to execute.
+The floors for every workspace, including the function and branch thresholds that the line
+percentage does not tell you about, are in [`docs/testing.md`](../testing.md).
