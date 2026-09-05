@@ -19,6 +19,20 @@ const serverEnvSchema = z.object({
 
   // Protects POST /api/jobs/[name]/trigger so only your cron caller can enqueue.
   CRON_SECRET: z.string().min(8),
+
+  // MinIO — S3-compatible object storage, shared with the Python worker, which
+  // validates the same variables in apps/worker/app/settings.py.
+  //
+  // The two credentials are optional rather than required because MinIO is not
+  // provisioned in every environment (docs/deployment.md, "Known gaps"). Making
+  // them required here would stop the whole web app from booting over a feature
+  // most requests never touch; instead MinioAssetStorage.fromEnv() throws,
+  // naming the missing variable, the first time storage is actually used.
+  MINIO_ENDPOINT: z.string().min(1).default('localhost:9000'),
+  MINIO_ACCESS_KEY: z.string().min(1).optional(),
+  MINIO_SECRET_KEY: z.string().min(1).optional(),
+  MINIO_BUCKET: z.string().min(1).default('lasce-files'),
+  MINIO_USE_SSL: z.stringbool().default(false),
 })
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>
