@@ -11,11 +11,6 @@ const publicSections = {
     description:
       'Conozca la misión, el equipo y el trabajo del Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica.',
   },
-  investigacion: {
-    title: 'Investigación',
-    description:
-      'Explore las líneas de investigación sobre física solar, clima espacial y radioastronomía desarrolladas por LASCE.',
-  },
   instrumentacion: {
     title: 'Instrumentación',
     description:
