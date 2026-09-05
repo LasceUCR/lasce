@@ -55,6 +55,21 @@ test('skip link moves keyboard focus to the shared main content', async ({ page 
   await expect(mainContent).toBeFocused()
 })
 
+test('renders in Spanish by default', async ({ page }) => {
+  await page.goto('/')
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es')
+  await expect(page).toHaveTitle('LASCE | Universidad de Costa Rica')
+})
+
+test('renders in English once the locale cookie is set', async ({ page, context }) => {
+  await context.addCookies([{ name: 'NEXT_LOCALE', value: 'en', url: 'http://localhost:3000' }])
+  await page.goto('/')
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeVisible()
+})
+
 test('all desktop navigation options are reachable by keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')

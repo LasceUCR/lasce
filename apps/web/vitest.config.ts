@@ -15,6 +15,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
+    // next-intl imports from `next/navigation` without file extensions, which
+    // Vite's default externalization for `node_modules` doesn't resolve under
+    // Vitest. Inlining it processes those imports through the same resolver
+    // as the rest of the test.
+    server: { deps: { inline: ['next-intl'] } },
     // Playwright owns tests/e2e (see playwright.config.ts `testDir`). Confining
     // the unit suite to app/ is what keeps `turbo run test` from starting a
     // browser or a dev server.
@@ -23,9 +28,9 @@ export default defineConfig({
       provider: 'v8',
       // Measured at 18% statements / 18% lines when these floors were set. A
       // starting floor that ratchets upward, not a target: it exists to catch a
-      // drop, so raise it as coverage grows. Branches are not gated yet because
-      // JobLauncher.tsx is 39 of the 67 measured lines and has no test, which
-      // makes the branch figure noise. Testing it is the next ratchet step.
+      // drop, so raise it as coverage grows. The suite now clears these floors
+      // by a wide margin — JobLauncher.tsx and app/lib/i18n.ts both have tests —
+      // so the next ratchet is a deliberate bump, not a side effect of this one.
       thresholds: { lines: 15, statements: 15, functions: 25 },
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       reportsDirectory: './coverage',
