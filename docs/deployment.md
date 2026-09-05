@@ -29,7 +29,7 @@ them (LASCE-INF-001-016).
 | ----------------- | ---------------------------------------------------------------------------------------- |
 | `lint`            | Prettier formatting is clean and ESLint passes on every Node workspace.                  |
 | `typecheck`       | `tsc --noEmit` passes. Depends on `^build`, so the Prisma client is generated first.     |
-| `test`            | The `@lasce/contracts` suite passes (`node:test` via tsx).                               |
+| `test`            | `turbo run test` across every TypeScript workspace, with coverage floors enforced.       |
 | `build`           | `turbo run build`: `prisma generate` then `next build`.                                  |
 | `worker`          | ruff (lint + format check), mypy `--strict`, and pytest, on Python 3.13.                 |
 | `e2e`             | Playwright/Chromium against `next dev`, with real Postgres and Redis service containers. |
