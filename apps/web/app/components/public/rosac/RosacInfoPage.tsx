@@ -20,6 +20,8 @@ import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 
+import styles from './RosacInfoPage.module.css'
+
 const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
   location: MapPin,
@@ -110,15 +112,16 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
         title={content.scientificConsultation.title}
         titleId="rosac-science-title"
         intro={content.scientificConsultation.description}
-        actions={
+      >
+        <div className={styles.scientificAction}>
           <Button
             variant="secondary"
             icon={<ChartNoAxesCombined aria-hidden="true" size={20} strokeWidth={1.8} />}
           >
             {content.scientificConsultation.buttonLabel}
           </Button>
-        }
-      />
+        </div>
+      </TopicSection>
 
       <div className="topic-page-footer page-width">
         <TopicBackLink {...content.backLink} />
