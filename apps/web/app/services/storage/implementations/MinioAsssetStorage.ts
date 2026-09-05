@@ -1,17 +1,19 @@
-import * as Minio from "minio";
+import * as Minio from 'minio'
 import type { IAssetStorage } from '../interfaces/IAssetStorage'
-import { ALLOWED_ASSET_CONTENT_TYPES, DOWNLOAD_EXPIRY_SECONDS, MAX_ASSET_BYTES } from "../const/storageConfig";
-import InvalidFileSizeError from "../errors/InvalidFileSizeError";
-import InvalidFileTypeError from "../errors/InvalidFileTypeError";
-
+import {
+  ALLOWED_ASSET_CONTENT_TYPES,
+  DOWNLOAD_EXPIRY_SECONDS,
+  MAX_ASSET_BYTES,
+} from '../const/storageConfig'
+import InvalidFileSizeError from '../errors/InvalidFileSizeError'
+import InvalidFileTypeError from '../errors/InvalidFileTypeError'
 
 /**
  * MinIO-backed implementation of `IAssetStorage`: presigned POST-policy
  * uploads and deletes for `apps/web`.
  */
 export class MinioAssetStorage implements IAssetStorage {
-  
-  private readonly client: Minio.Client;
+  private readonly client: Minio.Client
 
   constructor() {
     this.client = new Minio.Client({
@@ -38,27 +40,19 @@ export class MinioAssetStorage implements IAssetStorage {
    * `presignedPutObject` would silently drop that enforcement.
    */
   async createUpload(file: File, bucket?: string): Promise<string> {
-    this.verifyAsset(file); // this throws if the file is invalid, preventing any further processing
+    this.verifyAsset(file) // this throws if the file is invalid, preventing any further processing
     const bucketToUse = bucket || process.env.MINIO_DEFAULT_BUCKET || 'default'
-    await this.ensureBucket(bucketToUse);
+    await this.ensureBucket(bucketToUse)
 
-    const filepath = new Date().getTime() + "_" + file.name;
-    const buffer = await file.arrayBuffer();
+    const filepath = new Date().getTime() + '_' + file.name
+    const buffer = await file.arrayBuffer()
 
-    await this.client.putObject(
-      bucketToUse,
-      filepath,
-      Buffer.from(buffer),
-      file.size,
-      {
-        'Content-Type': file.type,
-        'Content-Length': file.size.toString(),
-      }
-    )
+    await this.client.putObject(bucketToUse, filepath, Buffer.from(buffer), file.size, {
+      'Content-Type': file.type,
+      'Content-Length': file.size.toString(),
+    })
 
-
-    return filepath;
-
+    return filepath
   }
 
   /**
@@ -68,36 +62,34 @@ export class MinioAssetStorage implements IAssetStorage {
    * objects this service does not own.
    */
   async delete(objectKey: string): Promise<void> {
-    await this.client.removeObject(process.env.MINIO_BUCKET || '', objectKey);
+    await this.client.removeObject(process.env.MINIO_BUCKET || '', objectKey)
   }
 
   /** Checks if a bucket exists. */
   async bucketExists(bucket: string): Promise<boolean> {
-    return this.client.bucketExists(bucket);
+    return this.client.bucketExists(bucket)
   }
 
   /** Ensures the configured bucket exists, creating it if it does not. */
   async ensureBucket(bucket: string): Promise<void> {
-    const exists = await this.bucketExists(bucket);
+    const exists = await this.bucketExists(bucket)
     if (!exists) {
-      await this.client.makeBucket(bucket, '');
+      await this.client.makeBucket(bucket, '')
     }
   }
 
-
   async createDownloadUrl(objectKey: string, expiresInSeconds?: number): Promise<string> {
-    const bucket = process.env.MINIO_BUCKET || '';
-    const expiry = expiresInSeconds || DOWNLOAD_EXPIRY_SECONDS; // default to configured expiry
-    return this.client.presignedGetObject(bucket, objectKey, expiry);
+    const bucket = process.env.MINIO_BUCKET || ''
+    const expiry = expiresInSeconds || DOWNLOAD_EXPIRY_SECONDS // default to configured expiry
+    return this.client.presignedGetObject(bucket, objectKey, expiry)
   }
-
 
   verifyAsset(file: File): void {
-    const sizeBytes = file.size;
-    const contentType = file.type;
-    if(sizeBytes > MAX_ASSET_BYTES) throw new InvalidFileSizeError(file.name, sizeBytes);
-    if(!ALLOWED_ASSET_CONTENT_TYPES.some((t) => t === contentType)) throw new InvalidFileTypeError(file.name, contentType);
-    return 
+    const sizeBytes = file.size
+    const contentType = file.type
+    if (sizeBytes > MAX_ASSET_BYTES) throw new InvalidFileSizeError(file.name, sizeBytes)
+    if (!ALLOWED_ASSET_CONTENT_TYPES.some((t) => t === contentType))
+      throw new InvalidFileTypeError(file.name, contentType)
+    return
   }
-
 }

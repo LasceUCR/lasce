@@ -20,10 +20,7 @@ export default defineConfig({
     // tests live either alongside their source under app/ or under
     // tests/unit/ for cases (like the storage module) that don't have a
     // colocated home; both are covered below.
-    include: [
-      'app/**/*.test.{ts,tsx}',
-      'tests/unit/**/*.test.{ts,tsx}',
-    ],
+    include: ['app/**/*.test.{ts,tsx}', 'tests/unit/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       // Ratcheted from 15%/15%/25% now that app/services/storage has real,

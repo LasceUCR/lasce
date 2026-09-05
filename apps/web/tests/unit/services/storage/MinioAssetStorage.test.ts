@@ -52,9 +52,7 @@ describe('MinioAssetStorage', () => {
     test('accepts a file of exactly the size cap', () => {
       const storage = new MinioAssetStorage()
 
-      expect(() =>
-        storage.verifyAsset(fileOf('a.png', 'image/png', MAX_ASSET_BYTES)),
-      ).not.toThrow()
+      expect(() => storage.verifyAsset(fileOf('a.png', 'image/png', MAX_ASSET_BYTES))).not.toThrow()
     })
 
     test('throws InvalidFileSizeError above the size cap', () => {
@@ -102,13 +100,10 @@ describe('MinioAssetStorage', () => {
       const key = await storage.createUpload(file, 'my-bucket')
 
       expect(key).toBe(`${new Date('2026-01-01T00:00:00.000Z').getTime()}_report.csv`)
-      expect(putObject).toHaveBeenCalledWith(
-        'my-bucket',
-        key,
-        expect.any(Buffer),
-        file.size,
-        { 'Content-Type': 'text/csv', 'Content-Length': file.size.toString() },
-      )
+      expect(putObject).toHaveBeenCalledWith('my-bucket', key, expect.any(Buffer), file.size, {
+        'Content-Type': 'text/csv',
+        'Content-Length': file.size.toString(),
+      })
     })
 
     test('prefers the explicit bucket argument over MINIO_DEFAULT_BUCKET', async () => {

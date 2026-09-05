@@ -1,4 +1,3 @@
-
 /**
  * Contract for an asset storage backend.
  *
@@ -35,5 +34,4 @@ export interface IAssetStorage {
 
   /** Verify the integrity of an asset. */
   verifyAsset(file: File): void
-
 }

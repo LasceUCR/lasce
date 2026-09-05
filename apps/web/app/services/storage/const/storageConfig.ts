@@ -17,7 +17,6 @@ export const ALLOWED_ASSET_CONTENT_TYPES = [
 
 export type AllowedAssetContentType = (typeof ALLOWED_ASSET_CONTENT_TYPES)[number]
 
-
 // Default validity for createDownloadUrl — generous enough for a browser
 // tab left open, without leaving a link usable indefinitely.
 export const DOWNLOAD_EXPIRY_SECONDS = 60 * 60
