@@ -21,11 +21,6 @@ const publicSections = {
     description:
       'Acceda a indicadores, observaciones y productos científicos publicados por las distintas áreas de LASCE.',
   },
-  noticias: {
-    title: 'Noticias',
-    description:
-      'Encuentre novedades, actividades y resultados recientes del Laboratorio de Ciencias Espaciales.',
-  },
   contacto: {
     title: 'Contacto',
     description:
