@@ -64,7 +64,7 @@ export function generateStaticParams() {
   return [
     ...Object.keys(publicSections).map((section) => ({ section })),
     ...workAreaSlugs
-      .filter((section) => section !== 'clima-espacial')
+      .filter((section) => !['clima-espacial', 'fisica-solar'].includes(section))
       .map((section) => ({ section })),
   ]
 }

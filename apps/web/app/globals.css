@@ -936,6 +936,10 @@ a {
   grid-template-columns: 1fr;
 }
 
+.topic-hero-copy-only .topic-lead {
+  max-width: none;
+}
+
 .topic-kicker {
   margin: 0 0 10px;
   color: var(--blue-dark);
