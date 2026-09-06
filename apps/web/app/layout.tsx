@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { IntlProvider } from './components/i18n/IntlProvider'
 import './globals.css'
 import { siteUrl } from './lib/site'
+import { AnnotateWidget } from './components/utils/AnnotateWidget'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('metadata')
@@ -32,11 +33,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang={locale} data-scroll-behavior="smooth">
-      <body>
-        <IntlProvider locale={locale} messages={messages}>
+      <IntlProvider locale={locale} messages={messages}>
+        <body>
+          <AnnotateWidget />
           {children}
-        </IntlProvider>
-      </body>
+        </body>
+      </IntlProvider>
     </html>
   )
 }

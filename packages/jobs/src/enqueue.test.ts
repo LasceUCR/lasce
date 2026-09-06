@@ -12,15 +12,11 @@ vi.mock('./queue', () => ({ getQueue: vi.fn() }))
 
 const add = vi.fn()
 
-const processFile: JobPayload<'process-file'> = {
-  objectKey: 'uploads/a.csv',
-  contentType: 'text/csv',
+const ingestReadings: JobPayload<'ingest-readings'> = {
+  deviceId: 'device-1',
+  from: '2026-01-01T00:00:00Z',
+  to: '2026-01-02T00:00:00Z',
 }
-
-// enqueue() is typed on the schema's *output*, where contentType is already
-// defaulted, so omitting it is valid input but not valid TypeScript. The cast
-// is what lets the test prove the runtime default is still applied.
-const withoutContentType = { objectKey: 'uploads/a.csv' } as JobPayload<'process-file'>
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -30,29 +26,25 @@ beforeEach(() => {
 
 describe('enqueue', () => {
   test('returns the id BullMQ assigned', async () => {
-    const id = await enqueue(JOB_NAMES.processFile, processFile)
+    const id = await enqueue(JOB_NAMES.ingestReadings, ingestReadings)
 
     expect(id).toBe('job-123')
   })
 
-  test('passes the parsed payload, so contract defaults reach the worker', async () => {
-    await enqueue(JOB_NAMES.processFile, withoutContentType)
+  test('passes the parsed payload through to the queue', async () => {
+    await enqueue(JOB_NAMES.ingestReadings, ingestReadings)
 
     expect(add).toHaveBeenCalledWith(
-      JOB_NAMES.processFile,
-      // contentType is defaulted by the contract, not supplied above.
-      expect.objectContaining({
-        objectKey: 'uploads/a.csv',
-        contentType: 'application/octet-stream',
-      }),
+      JOB_NAMES.ingestReadings,
+      expect.objectContaining({ deviceId: 'device-1' }),
       undefined,
     )
   })
 
   test('forwards job options untouched', async () => {
-    await enqueue(JOB_NAMES.processFile, processFile, { delay: 5_000 })
+    await enqueue(JOB_NAMES.ingestReadings, ingestReadings, { delay: 5_000 })
 
-    expect(add).toHaveBeenCalledWith(JOB_NAMES.processFile, expect.anything(), { delay: 5_000 })
+    expect(add).toHaveBeenCalledWith(JOB_NAMES.ingestReadings, expect.anything(), { delay: 5_000 })
   })
 
   test('rejects a malformed payload before it reaches the queue', async () => {
@@ -71,8 +63,8 @@ describe('enqueue', () => {
   test('fails loudly when BullMQ returns a job without an id', async () => {
     add.mockResolvedValue({ id: undefined })
 
-    await expect(enqueue(JOB_NAMES.processFile, processFile)).rejects.toThrow(
-      /no id for job "process-file"/,
+    await expect(enqueue(JOB_NAMES.ingestReadings, ingestReadings)).rejects.toThrow(
+      /no id for job "ingest-readings"/,
     )
   })
 })

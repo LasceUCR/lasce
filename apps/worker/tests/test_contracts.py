@@ -29,13 +29,6 @@ EXAMPLES: dict[str, dict[str, Any]] = {
         "from": datetime(2026, 8, 19, tzinfo=UTC).isoformat(),
         "to": datetime(2026, 8, 20, tzinfo=UTC).isoformat(),
     },
-    "process-file": {
-        "objectKey": "readings/device-001/2026-08-19.csv",
-        "contentType": "text/csv",
-    },
-    "daily-rollup": {
-        "date": "2026-08-19",
-    },
 }
 
 

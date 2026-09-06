@@ -13,6 +13,11 @@ build/
 # generated code
 packages/db/generated/
 
+# Next.js rewrites this on every `next dev` run to steer AI coding agents;
+# it is local tooling noise, not something the team tracks.
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
+
 # python
 .venv/
 __pycache__/
