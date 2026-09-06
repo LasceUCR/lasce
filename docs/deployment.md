@@ -81,10 +81,8 @@ Two consequences worth knowing:
   is inlined by the Next compiler, and `app/lib/site.ts` feeds `NEXT_PUBLIC_APP_URL`
   into `metadataBase`, `robots.ts` and `sitemap.ts`, all evaluated during
   `next build`. The URL is baked into the image, so `cd.yml` builds the web image
-  per target with the right `--build-arg`. The same applies to the
-  `NEXT_PUBLIC_WEBDOTS_*` values behind the QA annotation widget, which is why a
-  staging image can never be promoted to production. The worker image has no
-  build-time configuration and is environment-agnostic.
+  per target with the right `--build-arg`. The worker image has no build-time
+  configuration and is environment-agnostic.
 
 Authentication uses the workflow's own `GITHUB_TOKEN` with `packages: write`.
 No personal access token is stored in CI.
@@ -154,9 +152,9 @@ CI: it would grant write access to every project.
 | Kind     | Name                                            | Used by                                                                           |
 | -------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
 | Variable | `APP_URL_STAGING`, `APP_URL_PRODUCTION`         | `cd.yml` (`context` job, which runs before the approval gate) and `cron-jobs.yml` |
-| Variable | `WEBDOTS_API_URL`                               | `cd.yml` (`images` job), staging builds only                                      |
+| Variable | `WEBDOTS_API_URL`                               | `cd.yml` (`images` job). Unset means the annotation widget is off everywhere.     |
 | Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION` | `cron-jobs.yml`                                                                   |
-| Secret   | `WEBDOTS_API_KEY`                               | `cd.yml` (`images` job), staging builds only                                      |
+| Secret   | `WEBDOTS_API_KEY`                               | `cd.yml` (`images` job). Public in the client bundle once set.                    |
 
 Domains are **not** declared in `.railway/railway.ts`. Railway rejects domain
 registration from configuration, so generate or attach the domain in the
@@ -172,7 +170,7 @@ schemeless value up front so the failure is immediate and explicit.
 The `CRON_SECRET_*` values duplicate the `CRON_SECRET` set on each Railway web
 service. **Rotating one without the other yields silent 401s.**
 
-### The annotation widget is staging only
+### The annotation widget
 
 `AnnotateWidget` mounts the WebDots QA overlay. It is a client component, so the
 package and its configuration are compiled into the browser bundle. **Setting
@@ -181,24 +179,32 @@ direction: it cannot switch the widget on, and it cannot switch it off once an
 image was built with it. The values have to reach `next build` as build args, so
 `web.Dockerfile` declares one `ARG` per variable, all defaulting to empty.
 
-`cd.yml` gates them on the resolved target. Production gets no URL and no key,
-and is additionally sent `NEXT_PUBLIC_WEBDOTS_DISABLED=true`, so it is guarded
-twice: `AnnotateWidget` bails out on either condition alone. Leaving
-`WEBDOTS_API_URL` unset simply keeps the widget off everywhere, which is the
-safe default and does not fail the build.
+**The widget is enabled by configuration alone, in every environment including
+production.** `cd.yml` passes the values unconditionally, and there is exactly
+one way to switch the widget off: leave `WEBDOTS_API_URL` unset, which is the
+default and does not fail the build.
+
+The app also honours `NEXT_PUBLIC_WEBDOTS_DISABLED`, but the pipeline does not
+set it. It exists for builds you run yourself and for the Playwright suite,
+which sets it on the dev server in `playwright.config.ts` so the widget does not
+inject a third-party overlay into pages the axe sweep is about to scan. It is
+deliberately not wired to a repository variable: that would be a second way to
+express what an unset `WEBDOTS_API_URL` already says.
+
+Because the values are inlined rather than read at runtime, turning the widget
+off does not merely hide it. The guard folds to a constant, `init()` becomes
+unreachable and the library is tree-shaken out, so the image ships neither the
+configuration nor the package. Verified for both off states: an unconfigured
+build, and a build with `NEXT_PUBLIC_WEBDOTS_DISABLED=true`. In the second case
+the API key is dropped from the bundle as well, so disabling the widget by hand
+also removes the public exposure described below rather than leaving a dormant
+key in place.
 
 `WEBDOTS_API_KEY` is inlined into the client bundle and is therefore **readable
-by anyone who opens the staging site**. That is inherent to the `NEXT_PUBLIC_`
-prefix, not something the pipeline can prevent. Keep the key scoped to
-annotation submission and rotate it independently of anything else.
-
-### Railway side (dashboard only)
-
-- `CRON_SECRET` on each web service. Generate it with `openssl rand -hex 32`. It
-  is `preserve()` in the IaC file precisely so it never enters git.
-- **Registry credentials** on each service: Settings → Source → Registry
-  Credentials → a GitHub PAT with `read:packages`. Railway supplies the GHCR
-  username itself. This cannot be set through the CLI or IaC.
+by anyone who opens the site, production included**. That is inherent to the
+`NEXT_PUBLIC_` prefix, not something the pipeline can prevent. One key covers
+both environments, so rotating it affects both. Keep it scoped to annotation
+submission.
 
 ## 6. Infrastructure as code
 
