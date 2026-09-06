@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { AlbumPage } from '@/app/components/public/gallery/AlbumPage'
-import { albumSlugs, getAlbum } from '@/app/lib/gallery'
+import { albumMeta, albumSlugs, getAlbum } from '@/app/lib/gallery'
 
 type AlbumRouteProps = {
   params: Promise<{ slug: string }>
@@ -36,5 +36,14 @@ export default async function AlbumRoute({ params }: AlbumRouteProps) {
     notFound()
   }
 
-  return <AlbumPage album={album} />
+  return (
+    <AlbumPage
+      description={album.description}
+      media={album.media}
+      meta={albumMeta(album)}
+      parentSlug={album.slug}
+      subAlbums={album.subAlbums}
+      title={album.title}
+    />
+  )
 }
