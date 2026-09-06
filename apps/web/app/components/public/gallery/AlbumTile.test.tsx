@@ -29,7 +29,7 @@ describe('AlbumTile', () => {
   test('announces the sub-album file count', () => {
     render(<AlbumTile {...subArgs} />)
 
-    expect(screen.getByText('18 archivos')).toBeInTheDocument()
-    expect(screen.getByText('Portada del subálbum')).toBeInTheDocument()
+    expect(screen.getByText('8 archivos')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: subArgs.title })).toBeInTheDocument()
   })
 })

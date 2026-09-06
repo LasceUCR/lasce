@@ -87,9 +87,17 @@ describe('MediaLightbox', () => {
     expect(close).toHaveFocus()
   })
 
-  test('describes a video placeholder as video', () => {
+  test('shows the still and the details of a video entry', () => {
     renderLightbox({ item: videoArgs.item })
 
+    expect(screen.getByRole('img', { name: videoArgs.item.title })).toBeInTheDocument()
+    expect(screen.getByText('Formato: MP4')).toBeInTheDocument()
+  })
+
+  test('falls back to a caption when the file has no image yet', () => {
+    renderLightbox({ item: { ...videoArgs.item, src: undefined } })
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
     expect(screen.getByText('Video: Ensamblaje del reflector parabólico')).toBeInTheDocument()
   })
 })

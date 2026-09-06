@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { galleryAlbumList, galleryAlbums } from '@/app/lib/gallery'
+
 const publicRoutes = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
   { label: 'Nosotros', path: '/nosotros', heading: 'Nosotros' },
@@ -187,31 +189,56 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   ).toHaveAttribute('aria-current', 'page')
 })
 
-test('opens the ROSAC album from the gallery index', async ({ page }) => {
-  await page.goto('/galeria')
+for (const album of galleryAlbumList) {
+  test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
+    await page.goto('/galeria')
 
-  await expect(
-    page.getByRole('heading', { level: 2, name: 'Construcción del ROSAC' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { level: 2, name: 'Eclipse solar del 8 de abril' }),
-  ).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: album.title })).toBeVisible()
+    await page.getByRole('link', { name: new RegExp(album.title) }).click()
 
-  await page.getByRole('link', { name: /Construcción del ROSAC/ }).click()
+    await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
+    await expect(page.getByRole('heading', { level: 1, name: album.title })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /^Ver a tama\u00f1o completo:/ }).first(),
+    ).toBeVisible()
+  })
 
-  await expect(page).toHaveURL(/\/galeria\/rosac$/)
-  await expect(
-    page.getByRole('heading', { level: 1, name: 'Construcción del ROSAC' }),
-  ).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Subálbumes' })).toBeVisible()
-  await expect(page.getByText('13 archivos en este álbum')).toBeVisible()
+  for (const subAlbum of album.subAlbums) {
+    test(`opens the ${album.slug}/${subAlbum.slug} sub-album and returns to its album`, async ({
+      page,
+    }) => {
+      await page.goto(`/galeria/${album.slug}`)
+
+      await page.getByRole('link', { name: new RegExp(subAlbum.title) }).click()
+
+      await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}/${subAlbum.slug}$`))
+      await expect(page.getByRole('heading', { level: 1, name: subAlbum.title })).toBeVisible()
+      await expect(
+        page.getByText(`${subAlbum.media.length} archivos en este \u00e1lbum`),
+      ).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Sub\u00e1lbumes' })).toHaveCount(0)
+
+      await page.getByRole('link', { name: `Volver a ${album.title}` }).click()
+
+      await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
+    })
+  }
+}
+
+test('shows real photographs rather than placeholder frames', async ({ page }) => {
+  await page.goto('/galeria/rosac')
+
+  const images = page.locator('.media-grid img')
+
+  await expect(images.first()).toBeVisible()
+  expect(await images.count()).toBe(galleryAlbums.rosac.media.length)
 })
 
 test('opens and closes the album lightbox with the keyboard', async ({ page }) => {
   await page.goto('/galeria/rosac')
 
   const tile = page.getByRole('button', {
-    name: 'Ver a tamaño completo: Llegada de los componentes del ROSAC',
+    name: 'Ver a tama\u00f1o completo: Llegada de los componentes del ROSAC',
   })
   await tile.click()
 
@@ -220,7 +247,7 @@ test('opens and closes the album lightbox with the keyboard', async ({ page }) =
   await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
     'Llegada de los componentes del ROSAC',
   )
-  await expect(lightbox.getByText('Subido por: Andrés Solano')).toBeVisible()
+  await expect(lightbox.getByText('Subido por: Andr\u00e9s Solano')).toBeVisible()
 
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
@@ -231,14 +258,16 @@ test('walks through the album lightbox with the next control', async ({ page }) 
   await page.goto('/galeria/rosac')
 
   await page
-    .getByRole('button', { name: 'Ver a tamaño completo: Llegada de los componentes del ROSAC' })
+    .getByRole('button', {
+      name: 'Ver a tama\u00f1o completo: Llegada de los componentes del ROSAC',
+    })
     .click()
 
   const lightbox = page.getByRole('dialog')
   await lightbox.getByRole('button', { name: 'Siguiente' }).click()
 
   await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
-    'Ensamblaje del reflector parabólico',
+    'Ensamblaje del reflector parab\u00f3lico',
   )
   await expect(lightbox.getByText('Formato: MP4')).toBeVisible()
 
@@ -250,6 +279,12 @@ test('walks through the album lightbox with the next control', async ({ page }) 
 
 test('returns 404 for an album that does not exist', async ({ page }) => {
   const response = await page.goto('/galeria/album-inexistente')
+
+  expect(response?.status()).toBe(404)
+})
+
+test('returns 404 for a sub-album that does not exist', async ({ page }) => {
+  const response = await page.goto('/galeria/rosac/subalbum-inexistente')
 
   expect(response?.status()).toBe(404)
 })

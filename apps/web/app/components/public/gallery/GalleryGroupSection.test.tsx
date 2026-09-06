@@ -2,39 +2,56 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import { GalleryGroupSection, type GalleryGroupSectionProps } from './GalleryGroupSection'
-import { WithAlbumPage, WithoutSubAlbums } from './GalleryGroupSection.stories'
+import { WithoutSubAlbums, WithSubAlbums } from './GalleryGroupSection.stories'
+import { albumMeta } from '@/app/lib/gallery'
 
-const groupArgs = WithAlbumPage.args as GalleryGroupSectionProps
-const emptyArgs = WithoutSubAlbums.args as GalleryGroupSectionProps
+const withSubAlbums = WithSubAlbums.args as GalleryGroupSectionProps
+const withoutSubAlbums = WithoutSubAlbums.args as GalleryGroupSectionProps
 
 describe('GalleryGroupSection', () => {
-  test('names the group and summarises what it holds', () => {
-    render(<GalleryGroupSection {...groupArgs} />)
+  test('names the album and summarises what it holds', () => {
+    const { album } = withSubAlbums
+    render(<GalleryGroupSection {...withSubAlbums} />)
 
-    expect(
-      screen.getByRole('heading', { level: 2, name: groupArgs.group.title }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(groupArgs.group.description)).toBeInTheDocument()
-    expect(screen.getAllByText(groupArgs.group.meta).length).toBeGreaterThan(0)
+    expect(screen.getByRole('heading', { level: 2, name: album.title })).toBeInTheDocument()
+    expect(screen.getByText(album.description)).toBeInTheDocument()
+    expect(screen.getAllByText(albumMeta(album)).length).toBeGreaterThan(0)
   })
 
-  test('shows one tile per sub-album alongside the cover', () => {
-    render(<GalleryGroupSection {...groupArgs} />)
+  test('links the cover to the album and every sub-album to its own page', () => {
+    const { album } = withSubAlbums
+    render(<GalleryGroupSection {...withSubAlbums} />)
 
-    expect(screen.getByText('Cimentación e instalación de la antena')).toBeInTheDocument()
-    expect(screen.getByText('Pruebas del receptor')).toBeInTheDocument()
-    expect(screen.getByText('Alineación y calibración')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Construcción del ROSAC/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: new RegExp(album.title) })).toHaveAttribute(
       'href',
       '/galeria/rosac',
     )
+
+    for (const subAlbum of album.subAlbums) {
+      expect(screen.getByRole('link', { name: new RegExp(subAlbum.title) })).toHaveAttribute(
+        'href',
+        `/galeria/rosac/${subAlbum.slug}`,
+      )
+    }
   })
 
-  test('renders the cover on its own when the group has no sub-albums', () => {
-    render(<GalleryGroupSection {...emptyArgs} />)
+  test('counts each sub-album from the files it actually holds', () => {
+    const { album } = withSubAlbums
+    render(<GalleryGroupSection {...withSubAlbums} />)
 
-    expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    expect(screen.getByText('Portada del álbum')).toBeInTheDocument()
-    expect(screen.queryByText('Portada del subálbum')).not.toBeInTheDocument()
+    // Two sub-albums hold the same number of files, so match on the tile
+    // rather than on the count alone.
+    for (const subAlbum of album.subAlbums) {
+      const tile = screen.getByRole('link', { name: new RegExp(subAlbum.title) })
+
+      expect(tile).toHaveTextContent(`${subAlbum.media.length} archivos`)
+    }
+  })
+
+  test('renders the cover on its own when the album has no sub-albums', () => {
+    render(<GalleryGroupSection {...withoutSubAlbums} />)
+
+    expect(screen.getAllByRole('link')).toHaveLength(1)
+    expect(screen.queryByText(/^\d+ archivos$/)).not.toBeInTheDocument()
   })
 })
