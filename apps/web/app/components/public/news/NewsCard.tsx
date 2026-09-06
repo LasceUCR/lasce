@@ -23,7 +23,7 @@ export function NewsCard({
     <article className="surface-card news-card">
       <div className="news-card-image">
         <Image
-          alt=""
+          alt={title}
           fill
           sizes="(max-width: 768px) 100vw, 320px"
           src={imageUrl}
