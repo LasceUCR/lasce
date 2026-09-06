@@ -6,7 +6,6 @@ dict, and ``tests/test_contracts.py`` validates them against the JSON Schema
 exported from Zod — that test is what catches the two sides drifting apart.
 """
 
-from datetime import date as date_
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -24,16 +23,3 @@ class IngestReadingsPayload(JobPayload):
     device_id: str = Field(min_length=1, alias="deviceId")
     from_: datetime = Field(alias="from")
     to: datetime
-
-
-class ProcessFilePayload(JobPayload):
-    """Read an object from MinIO, process it, write the result back."""
-
-    object_key: str = Field(min_length=1, alias="objectKey")
-    content_type: str = Field(alias="contentType")
-
-
-class DailyRollupPayload(JobPayload):
-    """Aggregate one day of readings from InfluxDB into PostgreSQL."""
-
-    date: date_ | None = None

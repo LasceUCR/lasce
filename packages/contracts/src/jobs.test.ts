@@ -9,13 +9,8 @@ test('every job name has a payload schema', () => {
 })
 
 test('isJobName rejects unknown names', () => {
-  expect(isJobName(JOB_NAMES.dailyRollup)).toBe(true)
+  expect(isJobName(JOB_NAMES.ingestReadings)).toBe(true)
   expect(isJobName('not-a-job')).toBe(false)
-})
-
-test('process-file applies its content type default', () => {
-  const parsed = jobPayloads[JOB_NAMES.processFile].parse({ objectKey: 'uploads/a.csv' })
-  expect(parsed.contentType).toBe('application/octet-stream')
 })
 
 test('ingest-readings requires ISO timestamps', () => {
