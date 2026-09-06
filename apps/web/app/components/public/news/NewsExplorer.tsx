@@ -44,7 +44,7 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
 
       {filtered.length === 0 ? (
         <p className="content-empty" role="status">
-          No se encontraron noticias para “{query}”.
+          {query.trim() === '' ? 'No hay noticias publicadas todavía.' : <>No se encontraron noticias para “{query}”.</>}
         </p>
       ) : (
         <div className="news-list">

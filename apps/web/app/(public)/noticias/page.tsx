@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description: noticiasMeta.description,
 }
 
-export default function NoticiasPage() {
+export default function NewsPage() {
   return (
     <article className="topic-page">
       <TopicHero
