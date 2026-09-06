@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_WEBDOTS_API_URL as string | undefined
 const API_KEY = process.env.NEXT_PUBLIC_WEBDOTS_API_KEY as string | undefined
+const IS_DISABLED = process.env.NEXT_PUBLIC_WEBDOTS_DISABLED === 'true'
 
 /**
  * Monta el widget de anotación visual de Webdots. Sin NEXT_PUBLIC_WEBDOTS_API_URL el
@@ -24,7 +25,7 @@ export function AnnotateWidget() {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (!API_URL) return
+    if (!API_URL || IS_DISABLED) return
 
     const widget = init({
       apiUrl: API_URL,

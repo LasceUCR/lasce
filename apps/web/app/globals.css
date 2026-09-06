@@ -409,7 +409,7 @@ a {
 
 .button-primary {
   background: #fb8500;
-  color: var(--white);
+  color: var(--navy-deep);
 }
 
 .button-primary:hover,
