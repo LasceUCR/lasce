@@ -39,5 +39,6 @@ working through Claude Code.
 | Pipelines, environments, secrets, rollback  | [`docs/deployment.md`](docs/deployment.md)                           |
 | File uploads and their known defects        | [`docs/manage-assets.md`](docs/manage-assets.md)                     |
 | Running the stack without Docker            | [`infra/docker/README.md`](infra/docker/README.md)                   |
+| What tables exist and how do they relate?   | [`docs/database-definition.md`](docs/database-definition.md)         |
 
 When a change makes one of these wrong, update it in the same PR.
