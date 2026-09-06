@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface WorkAreaCardProps {
@@ -17,9 +18,9 @@ export function WorkAreaCard({ title, description, href, icon }: WorkAreaCardPro
       <span className="area-copy">
         <strong>{title}</strong>
         <small>{description}</small>
-        <span className="area-link">
-          Ver sección <span aria-hidden="true">→</span>
-        </span>
+      </span>
+      <span className="area-arrow" aria-hidden="true">
+        <ArrowRight size={20} strokeWidth={2} />
       </span>
     </Link>
   )

@@ -36,7 +36,8 @@ describe('WorkAreaCard', () => {
     // Neither carries meaning the title does not already convey, so an
     // `aria-hidden` subtree is excluded from the computed accessible name.
     expect(container.querySelector('.area-icon')).toHaveAttribute('aria-hidden', 'true')
-    expect(link).toHaveAccessibleName(/Ver sección/)
+    expect(container.querySelector('.area-arrow')).toHaveAttribute('aria-hidden', 'true')
+    expect(link).toHaveAccessibleName(`${defaultArgs.title}${defaultArgs.description}`)
     expect(link).not.toHaveAccessibleName(/→/)
   })
 })

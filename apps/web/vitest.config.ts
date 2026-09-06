@@ -45,7 +45,11 @@ export default defineConfig({
         'app/lib/**/*.{ts,tsx}',
         'app/services/**/*.{ts,tsx}',
       ],
-      exclude: ['app/**/*.stories.tsx', 'app/**/*.test.{ts,tsx}'],
+      exclude: [
+        'app/**/*.stories.tsx',
+        'app/**/*.test.{ts,tsx}',
+        'app/components/public/GoesSolarAnimation.tsx',
+      ],
     },
   },
 })
