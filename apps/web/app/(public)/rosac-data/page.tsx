@@ -1,15 +1,8 @@
-import type { Metadata } from 'next'
-
 import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { RosacDataView } from '@/app/components/public/rosac-data/RosacDataView'
 
-import {
-  rosacDataHero,
-  rosacMockData
-} from '@/app/lib/rosac-data'
-
-
+import { rosacDataHero, rosacMockData } from '@/app/lib/rosac-data'
 
 export default function RosacDataPage() {
   return (
@@ -26,7 +19,13 @@ export default function RosacDataPage() {
       />
 
       <div className="topic-page-footer page-width">
-        <RosacDataView label={rosacMockData.label} times={rosacMockData.times} frequencies={rosacMockData.frequencies} intensity={rosacMockData.intensity} />
+        <RosacDataView
+          labelX={rosacMockData.labelX}
+          labelY={rosacMockData.labelY}
+          times={rosacMockData.times}
+          frequencies={rosacMockData.frequencies}
+          intensity={rosacMockData.intensity}
+        />
       </div>
     </article>
   )
