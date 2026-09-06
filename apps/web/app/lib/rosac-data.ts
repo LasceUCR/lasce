@@ -8,7 +8,7 @@ export const rosacDataHero = {
   lead: 'Consulta del instrumento',
 } as const
 
-export const rosacTestData = {
+export const rosacMockData = {
     label: "label",
     times: ["19:00", "19:01", "19:02", "19:03", "19:04"],
     frequencies: [10, 20, 30, 40, 50],

@@ -6,7 +6,7 @@ import { RosacDataView } from '@/app/components/public/rosac-data/RosacDataView'
 
 import {
   rosacDataHero,
-  rosacTestData
+  rosacMockData
 } from '@/app/lib/rosac-data'
 
 
@@ -26,7 +26,7 @@ export default function RosacDataPage() {
       />
 
       <div className="topic-page-footer page-width">
-        <RosacDataView label={rosacTestData.label} times={rosacTestData.times} frequencies={rosacTestData.frequencies} intensity={rosacTestData.intensity} />
+        <RosacDataView label={rosacMockData.label} times={rosacMockData.times} frequencies={rosacMockData.frequencies} intensity={rosacMockData.intensity} />
       </div>
     </article>
   )
