@@ -17,15 +17,24 @@ describe('TeamGallery', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(defaultArgs.people.length)
   })
 
-  test('renders the card content as real text rather than leaving it in the image', () => {
+  test('shows the role and name of every person', () => {
     render(<TeamGallery {...defaultArgs} />)
 
-    // The source graphics bake all of this into the picture, where it cannot be read by a
-    // screen reader, searched or reflowed. Transcribing it is the whole point of the component.
     for (const person of defaultArgs.people) {
       expect(screen.getByText(person.name)).toBeInTheDocument()
-      expect(screen.getByText(person.affiliation)).toBeInTheDocument()
-      expect(screen.getByText(person.description)).toBeInTheDocument()
+    }
+  })
+
+  test('keeps the affiliation and the description in the document for screen readers', () => {
+    render(<TeamGallery {...defaultArgs} />)
+
+    // Not shown, because the card image already carries them for sighted readers, but they must
+    // stay in the DOM: inside the image they are unreadable to a screen reader and unindexable.
+    for (const person of defaultArgs.people) {
+      const hidden = screen.getByText(`${person.affiliation}. ${person.description}`)
+
+      expect(hidden).toBeInTheDocument()
+      expect(hidden).toHaveClass('sr-only')
     }
   })
 

@@ -19,9 +19,14 @@ export interface TeamGalleryProps {
  *
  * The source graphics carry the name, role, affiliation and description as text baked into the
  * image. That text is invisible to a screen reader, unsearchable and does not reflow, so it is
- * transcribed into `app/lib/nosotros.ts` and rendered as real HTML here. The card itself is kept
- * as the designed artefact with empty alternative text, because repeating the same words in `alt`
- * would make a screen reader announce every person twice.
+ * transcribed into `app/lib/nosotros.ts` and rendered as real HTML here.
+ *
+ * Only the role and the name are shown. The affiliation and the description stay in the document
+ * as visually hidden text rather than in `alt`, for two reasons: the caption follows the image in
+ * the DOM, so an `alt` carrying the description would be announced before the reader knows whose
+ * it is, and repeating the name inside `alt` to fix that would announce every person twice.
+ * Hidden text keeps one natural reading order, role then name then affiliation then description,
+ * and stays indexable. Sighted readers lose nothing, because all of it is legible in the card.
  */
 export function TeamGallery({ label, people }: TeamGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null)
@@ -60,8 +65,9 @@ export function TeamGallery({ label, people }: TeamGalleryProps) {
               <figcaption>
                 <span className="team-gallery-role">{person.role}</span>
                 <span className="team-gallery-name">{person.name}</span>
-                <span className="team-gallery-affiliation">{person.affiliation}</span>
-                <span className="team-gallery-description">{person.description}</span>
+                <span className="sr-only">
+                  {person.affiliation}. {person.description}
+                </span>
               </figcaption>
             </figure>
           </li>

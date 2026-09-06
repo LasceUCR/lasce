@@ -1667,6 +1667,7 @@ a {
 }
 
 .team-gallery-slide {
+  position: relative;
   flex: 0 0 auto;
   width: 300px;
   scroll-snap-align: start;
@@ -1712,19 +1713,6 @@ a {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-}
-
-.team-gallery-affiliation {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.team-gallery-description {
-  margin-top: 4px;
-  color: #3d5566;
-  font-size: 13px;
-  line-height: 1.5;
 }
 
 .team-gallery-controls {

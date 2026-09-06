@@ -49,10 +49,16 @@ test('presents the team as real text rather than only inside the card images', a
   await expect(track.getByRole('listitem')).toHaveCount(14)
   await expect(team.getByText('Dra. Carolina Salas Matamoros')).toBeVisible()
   await expect(team.getByText('Investigadora principal')).toBeVisible()
-  await expect(team.getByText(/Responsable de la planificación estratégica/)).toBeVisible()
 
-  // The source graphics bake this text into the image, where it is neither indexable nor
-  // readable by a screen reader. It has to exist in the DOM as well.
+  // The affiliation and the description are deliberately not shown, because the card image
+  // already carries them for sighted readers. They still have to be in the DOM, since inside
+  // the image they are unreadable to a screen reader and unindexable.
+  // Playwright counts a clipped 1px element as visible, so assert the marker class rather than
+  // visibility. What matters is that the text is in the document and not shown to sighted users.
+  const detail = team.getByText(/Responsable de la planificación estratégica/)
+  await expect(detail).toHaveCount(1)
+  await expect(detail).toHaveClass(/sr-only/)
+
   await expect(track).toHaveAttribute('tabindex', '0')
   for (const image of await team.locator('img').all()) {
     await expect(image).toHaveAttribute('alt', '')
