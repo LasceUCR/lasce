@@ -13,10 +13,10 @@ const publicSections = {
     description:
       'Consulte los instrumentos, observatorios y capacidades técnicas que respaldan la investigación del laboratorio.',
   },
-  noticias: {
-    title: 'Noticias',
+  data: {
+    title: 'Datos',
     description:
-      'Encuentre novedades, actividades y resultados recientes del Laboratorio de Ciencias Espaciales.',
+      'Acceda a indicadores, observaciones y productos científicos publicados por las distintas áreas de LASCE.',
   },
   contacto: {
     title: 'Contacto',
