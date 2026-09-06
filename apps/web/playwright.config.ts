@@ -21,6 +21,9 @@ export default defineConfig({
   ],
   webServer: {
     command: 'node ./node_modules/next/dist/bin/next dev',
+    env: {
+      NEXT_PUBLIC_WEBDOTS_DISABLED: 'true',
+    },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
