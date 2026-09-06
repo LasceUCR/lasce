@@ -14,18 +14,17 @@ export function ToolsPage() {
       <div className="tool-feature-card">
         <div className="tool-feature-body">
           <div className="tool-feature-row">
-            <h2 className="tool-feature-title">SWAAT</h2>
-
             <div className="tool-feature-media">
               <Image
                 src="/images/tools/SWAAT-sun.webp"
                 alt="Llamarada solar con ecuaciones de flujo de rayos X, densidad de plasma y velocidad de CME"
                 fill
-                sizes="(max-width: 640px) 100vw, 320px"
+                sizes="140px"
               />
             </div>
 
             <div className="tool-feature-text-col">
+              <h2>SWAAT</h2>
               <div className="tool-feature-text">
                 <p>
                   Análisis automatizado de eventos solares orientado a señales de rayos X suaves
@@ -40,17 +39,17 @@ export function ToolsPage() {
                   predicción del tiempo de tránsito, TT.
                 </p>
               </div>
-
-              <a
-                className="button button-primary tool-feature-cta"
-                href={SWAPRO_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />
-                Acceder a SWAPRO
-              </a>
             </div>
+
+            <a
+              className="button button-primary tool-feature-cta"
+              href={SWAPRO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />
+              Acceder a SWAAT
+            </a>
           </div>
         </div>
       </div>
