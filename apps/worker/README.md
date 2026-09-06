@@ -32,8 +32,8 @@ app/
 ## Jobs
 
 | Job               | What it does                                                                                      |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| `ingest-readings` | Pulls a window of readings for a device, writes points to InfluxDB, archives the raw CSV to MinIO  |
+| ----------------- | ------------------------------------------------------------------------------------------------- |
+| `ingest-readings` | Pulls a window of readings for a device, writes points to InfluxDB, archives the raw CSV to MinIO |
 
 `ingest-readings` synthesises its data — there is no upstream system in the scaffold. Replace
 `_fetch_readings` in `app/processors/ingest_readings.py` with the real source; everything around it
