@@ -412,6 +412,11 @@ a {
   color: var(--navy-deep);
 }
 
+.button-primary-white-text {
+  background: #fb8500;
+  color: var(--white);
+}
+
 .button-primary:hover,
 .button-primary:focus-visible {
   background: #e67600;
