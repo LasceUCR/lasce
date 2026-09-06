@@ -821,7 +821,7 @@ a {
   gap: 16px;
 }
 
-.news-card {
+.surface-card.news-card {
   width: 100%;
   display: grid;
   grid-template-columns: 280px 1fr;
