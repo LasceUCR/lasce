@@ -1598,6 +1598,13 @@ a {
   flex: 0 0 auto;
   min-height: 50px;
   font-weight: 600;
+  background: #2f6ced;
+  color: var(--white);
+}
+
+.tool-feature-cta:hover,
+.tool-feature-cta:focus-visible {
+  background: #2256c8;
 }
 
 .tool-footnote {
