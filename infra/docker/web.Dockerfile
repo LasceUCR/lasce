@@ -43,8 +43,12 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 #
 # NEXT_PUBLIC_WEBDOTS_API_KEY is therefore readable by anyone who opens the site,
 # production included, because that is what NEXT_PUBLIC_ means. Keep it scoped to
-# annotation submission. To switch the widget off without dropping the
-# credentials, build with NEXT_PUBLIC_WEBDOTS_DISABLED=true.
+# annotation submission.
+#
+# NEXT_PUBLIC_WEBDOTS_DISABLED is honoured by the app but is never set by cd.yml:
+# leaving NEXT_PUBLIC_WEBDOTS_API_URL unset is the one way the pipeline turns the
+# widget off. The arg is here for builds you run yourself, and for the Playwright
+# suite, which sets it on the dev server.
 ARG NEXT_PUBLIC_WEBDOTS_API_URL=
 ENV NEXT_PUBLIC_WEBDOTS_API_URL=$NEXT_PUBLIC_WEBDOTS_API_URL
 ARG NEXT_PUBLIC_WEBDOTS_API_KEY=

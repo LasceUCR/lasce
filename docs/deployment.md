@@ -155,7 +155,6 @@ CI: it would grant write access to every project.
 | Variable | `WEBDOTS_API_URL`                               | `cd.yml` (`images` job). Unset means the annotation widget is off everywhere.     |
 | Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION` | `cron-jobs.yml`                                                                   |
 | Secret   | `WEBDOTS_API_KEY`                               | `cd.yml` (`images` job). Public in the client bundle once set.                    |
-| Variable | `WEBDOTS_DISABLED`                              | `cd.yml` (`images` job). Optional. `true` forces the widget off.                  |
 
 Domains are **not** declared in `.railway/railway.ts`. Railway rejects domain
 registration from configuration, so generate or attach the domain in the
@@ -181,18 +180,25 @@ image was built with it. The values have to reach `next build` as build args, so
 `web.Dockerfile` declares one `ARG` per variable, all defaulting to empty.
 
 **The widget is enabled by configuration alone, in every environment including
-production.** `cd.yml` passes the values unconditionally; the only thing that
-keeps the widget out of a build is `WEBDOTS_API_URL` being unset, which is the
-default and does not fail the build. To switch it off while keeping the
-credentials, set the `WEBDOTS_DISABLED` variable to `true`.
+production.** `cd.yml` passes the values unconditionally, and there is exactly
+one way to switch the widget off: leave `WEBDOTS_API_URL` unset, which is the
+default and does not fail the build.
+
+The app also honours `NEXT_PUBLIC_WEBDOTS_DISABLED`, but the pipeline does not
+set it. It exists for builds you run yourself and for the Playwright suite,
+which sets it on the dev server in `playwright.config.ts` so the widget does not
+inject a third-party overlay into pages the axe sweep is about to scan. It is
+deliberately not wired to a repository variable: that would be a second way to
+express what an unset `WEBDOTS_API_URL` already says.
 
 Because the values are inlined rather than read at runtime, turning the widget
 off does not merely hide it. The guard folds to a constant, `init()` becomes
 unreachable and the library is tree-shaken out, so the image ships neither the
 configuration nor the package. Verified for both off states: an unconfigured
-build, and a build with `WEBDOTS_DISABLED=true`. In the second case the API key
-is dropped from the bundle as well, so the kill switch also removes the public
-exposure described below rather than leaving a dormant key in place.
+build, and a build with `NEXT_PUBLIC_WEBDOTS_DISABLED=true`. In the second case
+the API key is dropped from the bundle as well, so disabling the widget by hand
+also removes the public exposure described below rather than leaving a dormant
+key in place.
 
 `WEBDOTS_API_KEY` is inlined into the client bundle and is therefore **readable
 by anyone who opens the site, production included**. That is inherent to the

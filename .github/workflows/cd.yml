@@ -132,7 +132,6 @@ jobs:
             NEXT_PUBLIC_APP_URL=${{ needs.context.outputs.app_url }}
             NEXT_PUBLIC_WEBDOTS_API_URL=${{ vars.WEBDOTS_API_URL }}
             NEXT_PUBLIC_WEBDOTS_API_KEY=${{ secrets.WEBDOTS_API_KEY }}
-            NEXT_PUBLIC_WEBDOTS_DISABLED=${{ vars.WEBDOTS_DISABLED }}
           tags: |
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}-${{ github.sha }}
