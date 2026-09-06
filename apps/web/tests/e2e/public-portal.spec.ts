@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 const publicRoutes = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
-  { label: 'Nosotros', path: '/nosotros', heading: 'Nosotros' },
+  { label: 'Nosotros', path: '/nosotros', heading: 'Quiénes somos' },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
   { label: 'Instrumentación', path: '/instrumentacion', heading: 'Instrumentación' },
   { label: 'Datos', path: '/datos', heading: 'Herramientas científicas' },
