@@ -17,9 +17,11 @@ export interface TeamGalleryProps {
  * management to get wrong. `/nosotros` is in the zero tolerance axe sweep and index carousels are
  * the usual source of violations there.
  *
- * Names are visible captions, not alt text. That keeps them selectable, translatable and
- * indexable, and it stops a screen reader announcing each person twice, so the portrait beside
- * the caption is decorative.
+ * The source graphics carry the name, role, affiliation and description as text baked into the
+ * image. That text is invisible to a screen reader, unsearchable and does not reflow, so it is
+ * transcribed into `app/lib/nosotros.ts` and rendered as real HTML here. The card itself is kept
+ * as the designed artefact with empty alternative text, because repeating the same words in `alt`
+ * would make a screen reader announce every person twice.
  */
 export function TeamGallery({ label, people }: TeamGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null)
@@ -51,13 +53,15 @@ export function TeamGallery({ label, people }: TeamGalleryProps) {
                   alt=""
                   className="team-gallery-photo"
                   fill
-                  sizes="(max-width: 760px) 60vw, 240px"
+                  sizes="(max-width: 760px) 78vw, 300px"
                   src={person.src}
                 />
               </span>
               <figcaption>
+                <span className="team-gallery-role">{person.role}</span>
                 <span className="team-gallery-name">{person.name}</span>
-                {person.role ? <span className="team-gallery-role">{person.role}</span> : null}
+                <span className="team-gallery-affiliation">{person.affiliation}</span>
+                <span className="team-gallery-description">{person.description}</span>
               </figcaption>
             </figure>
           </li>

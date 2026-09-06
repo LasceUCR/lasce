@@ -1668,7 +1668,7 @@ a {
 
 .team-gallery-slide {
   flex: 0 0 auto;
-  width: 216px;
+  width: 300px;
   scroll-snap-align: start;
 }
 
@@ -1706,11 +1706,25 @@ a {
 }
 
 .team-gallery-role {
+  order: -1;
   color: var(--blue-dark);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.team-gallery-affiliation {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.team-gallery-description {
+  margin-top: 4px;
+  color: #3d5566;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .team-gallery-controls {
@@ -1739,6 +1753,6 @@ a {
 
 @media (max-width: 760px) {
   .team-gallery-slide {
-    width: 60vw;
+    width: 78vw;
   }
 }

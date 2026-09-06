@@ -81,11 +81,15 @@ describe('NosotrosPage', () => {
     expect(screen.getByRole('region', { name: 'Nuestro propósito' })).toBeInTheDocument()
   })
 
-  test('keeps the team section readable before the portraits arrive', () => {
+  test('introduces every member of the team', () => {
     render(<NosotrosPage {...defaultArgs} />)
 
     const team = screen.getByRole('region', { name: /El equipo/ })
-    expect(team).toHaveTextContent(/distintas disciplinas/)
-    expect(within(team).queryByRole('list')).not.toBeInTheDocument()
+    const track = within(team).getByRole('list', { name: defaultArgs.content.team.title })
+
+    expect(within(track).getAllByRole('listitem')).toHaveLength(
+      defaultArgs.content.team.people.length,
+    )
+    expect(within(team).getByText('Dra. Carolina Salas Matamoros')).toBeInTheDocument()
   })
 })

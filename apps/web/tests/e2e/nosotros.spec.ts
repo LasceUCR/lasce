@@ -34,6 +34,25 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
 })
 
+test('presents the team as real text rather than only inside the card images', async ({ page }) => {
+  await page.goto('/nosotros')
+
+  const team = page.getByRole('region', { name: /El equipo/ })
+  const track = team.getByRole('list', { name: 'El equipo' })
+
+  await expect(track.getByRole('listitem')).toHaveCount(14)
+  await expect(team.getByText('Dra. Carolina Salas Matamoros')).toBeVisible()
+  await expect(team.getByText('Investigadora principal')).toBeVisible()
+  await expect(team.getByText(/Responsable de la planificación estratégica/)).toBeVisible()
+
+  // The source graphics bake this text into the image, where it is neither indexable nor
+  // readable by a screen reader. It has to exist in the DOM as well.
+  await expect(track).toHaveAttribute('tabindex', '0')
+  for (const image of await team.locator('img').all()) {
+    await expect(image).toHaveAttribute('alt', '')
+  }
+})
+
 test('exposes indexable metadata for the general information page', async ({ page }) => {
   await page.goto('/nosotros')
 

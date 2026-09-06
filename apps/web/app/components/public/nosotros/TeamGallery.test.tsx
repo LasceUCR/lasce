@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { TeamGallery, type TeamGalleryProps } from './TeamGallery'
-import { Default, Empty } from './TeamGallery.stories'
+import { Default, Empty, PlainName } from './TeamGallery.stories'
 
 const defaultArgs = Default.args as TeamGalleryProps
 const emptyArgs = Empty.args as TeamGalleryProps
+const plainNameArgs = PlainName.args as TeamGalleryProps
 
 describe('TeamGallery', () => {
   test('renders one slide per person', () => {
@@ -16,27 +17,36 @@ describe('TeamGallery', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(defaultArgs.people.length)
   })
 
-  test('shows each name as visible text', () => {
+  test('renders the card content as real text rather than leaving it in the image', () => {
     render(<TeamGallery {...defaultArgs} />)
 
+    // The source graphics bake all of this into the picture, where it cannot be read by a
+    // screen reader, searched or reflowed. Transcribing it is the whole point of the component.
     for (const person of defaultArgs.people) {
       expect(screen.getByText(person.name)).toBeInTheDocument()
+      expect(screen.getByText(person.affiliation)).toBeInTheDocument()
+      expect(screen.getByText(person.description)).toBeInTheDocument()
     }
   })
 
-  test('shows a role only for the people who have one', () => {
+  test('shows the role each person holds', () => {
     render(<TeamGallery {...defaultArgs} />)
 
-    expect(screen.getByText('Coordinación')).toBeInTheDocument()
-    // The third person has no role, so nothing should stand in for it.
-    expect(screen.getAllByRole('figure')).toHaveLength(defaultArgs.people.length)
+    expect(screen.getByText('Investigadora principal')).toBeInTheDocument()
   })
 
-  test('keeps the portraits out of the accessibility tree so names are announced once', () => {
+  test('renders a person who has no academic title', () => {
+    render(<TeamGallery {...plainNameArgs} />)
+
+    expect(screen.getByText('Jelmuth Rojas')).toBeInTheDocument()
+    expect(screen.getByText('Colaborador externo')).toBeInTheDocument()
+  })
+
+  test('keeps the cards out of the accessibility tree so nothing is announced twice', () => {
     const { container } = render(<TeamGallery {...defaultArgs} />)
 
-    // The name is already visible in the figcaption beside the portrait, so alt text would
-    // make a screen reader read every person twice.
+    // Every word in the card is already rendered as text beside it, so alt text would repeat
+    // each person in full.
     const images = container.querySelectorAll('img')
     expect(images).toHaveLength(defaultArgs.people.length)
     for (const image of images) {
