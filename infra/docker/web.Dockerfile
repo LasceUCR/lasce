@@ -31,18 +31,24 @@ FROM base AS builder
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 
-# The WebDots annotation widget is a QA tool and must never ship to production.
+# The WebDots annotation widget is enabled by configuration alone, in every
+# environment. AnnotateWidget bails out when NEXT_PUBLIC_WEBDOTS_API_URL is
+# unset, and all three default to empty here, so an image built without them has
+# the widget off. That absence is the only gate; there is no environment check.
+#
 # It is a client component, so the package is compiled into the browser bundle
-# and these values are inlined with it; setting them on the running service is
-# too late to have any effect, and too late to remove them again.
+# and these values are inlined with it. Setting them on the running service does
+# nothing in either direction: too late to switch the widget on, and too late to
+# switch it off once an image was built with them.
 #
-# All three default to empty, so an image built without them has the widget off:
-# AnnotateWidget bails out when NEXT_PUBLIC_WEBDOTS_API_URL is unset. cd.yml
-# passes real values for staging only, and additionally sets DISABLED=true for
-# production, so production is guarded twice over.
+# NEXT_PUBLIC_WEBDOTS_API_KEY is therefore readable by anyone who opens the site,
+# production included, because that is what NEXT_PUBLIC_ means. Keep it scoped to
+# annotation submission.
 #
-# NEXT_PUBLIC_WEBDOTS_API_KEY is readable by anyone who opens the site, because
-# that is what NEXT_PUBLIC_ means. Keep it scoped to annotation submission.
+# NEXT_PUBLIC_WEBDOTS_DISABLED is honoured by the app but is never set by cd.yml:
+# leaving NEXT_PUBLIC_WEBDOTS_API_URL unset is the one way the pipeline turns the
+# widget off. The arg is here for builds you run yourself, and for the Playwright
+# suite, which sets it on the dev server.
 ARG NEXT_PUBLIC_WEBDOTS_API_URL=
 ENV NEXT_PUBLIC_WEBDOTS_API_URL=$NEXT_PUBLIC_WEBDOTS_API_URL
 ARG NEXT_PUBLIC_WEBDOTS_API_KEY=

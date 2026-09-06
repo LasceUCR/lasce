@@ -37,8 +37,10 @@ describe('AnnotateWidget', () => {
 
     await renderWidget()
 
-    // This is what keeps the QA widget out of production: the image is built
-    // without the URL, so there is nothing to turn on afterwards.
+    // Configuration is the only gate the widget has, in every environment, so
+    // this is the assertion the whole feature rests on. The values are inlined
+    // at build time, which is why an unconfigured image cannot be switched on
+    // afterwards.
     expect(init).not.toHaveBeenCalled()
   })
 
