@@ -1,4 +1,4 @@
-# Testing UI components
+# Testing components and services
 
 `apps/web` runs its unit tests on **Vitest with React Testing Library and jsdom**, configured in
 `apps/web/vitest.config.ts`. This page is about UI components; for where a test file belongs in
@@ -21,6 +21,8 @@ Follow the structure below so tests stay consistent across the app.
   forgetting the test should be one `git status` glance apart.
 - **Naming**: `<Component>.test.tsx`, one file per component. Test names read as behaviour, not
   implementation — `'shows an error when the device list is empty'`, not `'renders correctly'`.
+- **Style**: `describe` blocks with flat `test()` calls, never `it()`, and named imports from
+  `vitest`.
 
 ## What to mock, what not to
 
@@ -89,6 +91,45 @@ Storybook's own Vite plugin to resolve its internal `sb-original` aliases, which
 does not load. Rendering with the args needs none of that, and `next/link` works under jsdom
 without any Next mocks.
 
+## Service tests
+
+Non-UI code under `app/services/**` is tested from `apps/web/tests/unit/`, mirroring the source
+path — `app/services/storage/implementations/MinioAsssetStorage.ts` →
+`tests/unit/services/storage/MinioAssetStorage.test.ts`. These have no component to colocate with,
+and grouping them keeps the service suite readable as a whole.
+
+The boundary to mock is the **SDK**, not the service. `MinioAssetStorage` builds its own
+`Minio.Client` in a no-argument constructor, so there is no injection seam; mock the module and
+hold the stubs at module scope so every instance shares them:
+
+```ts
+const putObject = vi.fn()
+const bucketExists = vi.fn()
+
+vi.mock('minio', () => ({
+  Client: class {
+    putObject = putObject
+    bucketExists = bucketExists
+  },
+}))
+```
+
+Two habits that matter for services reading `process.env` directly:
+
+- **Know when each variable is read.** `MinioAssetStorage` captures the endpoint and credentials
+  at construction but reads bucket names per call, so stub with `vi.stubEnv` _before_ constructing,
+  and `vi.unstubAllEnvs()` in `afterEach`.
+- **Never let ambient environment decide a result.** Stub the variable explicitly even when
+  asserting a fallback, so the test means the same thing on a machine with a populated `.env`.
+
+Assert the calls made into the mocked SDK and the value returned — and, where the point of the code
+is that something _doesn't_ happen, assert the absence: the upload tests check that an invalid file
+leaves `bucketExists` and `putObject` uncalled, which is the whole guarantee of validating first.
+
+Tests pin **current** behaviour. Where the implementation and its own doc comment disagree, the
+test follows the implementation and the gap is recorded in
+[manage-assets.md](../manage-assets.md#known-gaps) rather than quietly fixed in a test change.
+
 ## Accessibility
 
 Prefer `getByRole` and `toHaveAccessibleName` over `getByTestId` or class selectors: role queries
@@ -109,8 +150,9 @@ pnpm turbo run test                  # every workspace
 
 `test` is the unit suite in every workspace and never starts a browser or a dev server.
 Playwright lives behind `test:e2e` and is confined to `apps/web/tests/e2e` by
-`playwright.config.ts`; the Vitest `include` only matches `app/**/*.test.{ts,tsx}`, so the two
-cannot pick up each other's files.
+`playwright.config.ts`. The Vitest `include` matches `app/**/*.test.{ts,tsx}` and
+`tests/unit/**/*.test.{ts,tsx}`; Playwright's specs are named `*.spec.ts`, so even though Vitest
+now looks inside `tests/`, the two suites cannot pick up each other's files.
 
 ## Coverage thresholds
 

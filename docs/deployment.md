@@ -277,19 +277,31 @@ starting the web container, and repoint the `deploy` job in `cd.yml` from
 both are deferred to a follow-up. Concretely, with the worker's defaults pointing
 at `localhost`:
 
-| Job               | Status                                                                                                                                                |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `daily-rollup`    | **Works.** `processors/daily_rollup.py` returns early on an empty `Device` table, before touching InfluxDB. It will start failing once devices exist. |
-| `ingest-readings` | Fails on the InfluxDB write, is retried by BullMQ, ends `FAILED` in `job_runs`.                                                                       |
-| `process-file`    | Fails on `ensure_bucket()`.                                                                                                                           |
-| `apps/web`        | **Unaffected.** Nothing in the web app reads either store, so the deployed public portal is complete.                                                 |
+| Job               | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `daily-rollup`    | **Works.** `processors/daily_rollup.py` returns early on an empty `Device` table, before touching InfluxDB. It will start failing once devices exist.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `ingest-readings` | Fails on the InfluxDB write, is retried by BullMQ, ends `FAILED` in `job_runs`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `process-file`    | Fails on `ensure_bucket()`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `apps/web`        | **Boots fine, but asset storage does not work.** `app/services/storage` (server-side upload/delete via the `assetStorage` instance in `app/services/container.ts`) is a service layer only — no route or UI calls it yet — and `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` are optional in `packages/config/src/env.ts` precisely so a missing MinIO does not stop the app from starting. The deployed public portal does not depend on it. Note the container instantiates the client **eagerly at module scope**, so the first import of `container.ts` is what surfaces a bad endpoint — see the caveat below. |
 
-When this is picked up: MinIO maps onto Railway Buckets (the Python MinIO SDK is
-a plain S3 client, so verify SigV4 region negotiation, since
-`clients/storage.py` builds `Minio(...)` with no `region=`), and InfluxDB needs a
-container service from `influxdb:3-core` with a volume. Give it a real admin
-token; do not carry over `INFLUXDB3_WITHOUT_AUTH`, which the Compose file marks
-development-only.
+When this is picked up: MinIO maps onto Railway Buckets. Both MinIO SDKs are plain
+S3 clients, so verify SigV4 region negotiation — neither side pins a region:
+`apps/worker/app/clients/storage.py` builds `Minio(...)` with no `region=`, and
+`apps/web/app/services/storage/implementations/MinioAsssetStorage.ts` likewise
+passes none, and creates buckets with `makeBucket(bucket, '')`.
+
+**The web client will not construct against the documented endpoint.** It passes
+`MINIO_ENDPOINT` straight to MinIO's `endPoint`, which rejects a `host:port`
+string with `InvalidEndpointError: Invalid endPoint : localhost:9000` — the value
+`.env.example` ships and `packages/config` defaults to. Provisioning MinIO means
+fixing that first; the port has to be split out, or the variable has to carry a
+bare host. It also reads `MINIO_PORT` and `MINIO_DEFAULT_BUCKET`, neither of which
+is in the `packages/config` schema. See
+[manage-assets.md](manage-assets.md#known-gaps).
+
+InfluxDB needs a container service from `influxdb:3-core` with a volume. Give it a
+real admin token; do not carry over `INFLUXDB3_WITHOUT_AUTH`, which the Compose
+file marks development-only.
 
 **Branch rulesets are configured.** See
 [`.github/rulesets/`](../.github/rulesets/) for the committed payloads and
