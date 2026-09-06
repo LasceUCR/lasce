@@ -127,6 +127,7 @@ Vitest — it needs a Next.js request scope that doesn't exist in a unit test.
 
 Assert the rendered Spanish text (`es` is the default locale), not the translation key — the point
 of the test is that the real copy reaches the screen.
+
 ## Service tests
 
 Non-UI code under `app/services/**` is tested from `apps/web/tests/unit/`, mirroring the source
