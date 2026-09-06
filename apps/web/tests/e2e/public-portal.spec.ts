@@ -6,6 +6,7 @@ const publicRoutes = [
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
   { label: 'Instrumentación', path: '/instrumentacion', heading: 'Instrumentación' },
   { label: 'Datos', path: '/datos', heading: 'Herramientas científicas' },
+  { label: 'Galería', path: '/galeria', heading: 'Galería' },
   { label: 'Noticias', path: '/noticias', heading: 'Noticias' },
   { label: 'Contacto', path: '/contacto', heading: 'Contacto' },
 ] as const
@@ -184,6 +185,73 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
       .getByRole('navigation', { name: 'Navegación móvil' })
       .getByRole('link', { name: 'Noticias', exact: true }),
   ).toHaveAttribute('aria-current', 'page')
+})
+
+test('opens the ROSAC album from the gallery index', async ({ page }) => {
+  await page.goto('/galeria')
+
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Construcción del ROSAC' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Eclipse solar del 8 de abril' }),
+  ).toBeVisible()
+
+  await page.getByRole('link', { name: /Construcción del ROSAC/ }).click()
+
+  await expect(page).toHaveURL(/\/galeria\/rosac$/)
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Construcción del ROSAC' }),
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Subálbumes' })).toBeVisible()
+  await expect(page.getByText('13 archivos en este álbum')).toBeVisible()
+})
+
+test('opens and closes the album lightbox with the keyboard', async ({ page }) => {
+  await page.goto('/galeria/rosac')
+
+  const tile = page.getByRole('button', {
+    name: 'Ver a tamaño completo: Llegada de los componentes del ROSAC',
+  })
+  await tile.click()
+
+  const lightbox = page.getByRole('dialog')
+  await expect(lightbox).toBeVisible()
+  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+    'Llegada de los componentes del ROSAC',
+  )
+  await expect(lightbox.getByText('Subido por: Andrés Solano')).toBeVisible()
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(tile).toBeFocused()
+})
+
+test('walks through the album lightbox with the next control', async ({ page }) => {
+  await page.goto('/galeria/rosac')
+
+  await page
+    .getByRole('button', { name: 'Ver a tamaño completo: Llegada de los componentes del ROSAC' })
+    .click()
+
+  const lightbox = page.getByRole('dialog')
+  await lightbox.getByRole('button', { name: 'Siguiente' }).click()
+
+  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+    'Ensamblaje del reflector parabólico',
+  )
+  await expect(lightbox.getByText('Formato: MP4')).toBeVisible()
+
+  await lightbox.getByRole('button', { name: 'Anterior' }).click()
+  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+    'Llegada de los componentes del ROSAC',
+  )
+})
+
+test('returns 404 for an album that does not exist', async ({ page }) => {
+  const response = await page.goto('/galeria/album-inexistente')
+
+  expect(response?.status()).toBe(404)
 })
 
 test('returns 404 for an unknown public route', async ({ page }) => {

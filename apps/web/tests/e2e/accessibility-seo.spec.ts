@@ -9,6 +9,7 @@ const publicRoutes = [
   { label: 'Investigación', path: '/investigacion' },
   { label: 'Instrumentación', path: '/instrumentacion' },
   { label: 'Datos', path: '/datos' },
+  { label: 'Galería', path: '/galeria' },
   { label: 'Noticias', path: '/noticias' },
   { label: 'Contacto', path: '/contacto' },
 ] as const
@@ -18,6 +19,7 @@ const indexableRoutes = [
   { label: 'Física solar', path: '/fisica-solar' },
   { label: 'Clima espacial', path: '/clima-espacial' },
   { label: 'Radioastronomía', path: '/radioastronomia' },
+  { label: 'Construcción del ROSAC', path: '/galeria/rosac' },
 ] as const
 
 for (const route of indexableRoutes) {
