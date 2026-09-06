@@ -21,9 +21,10 @@ type Story = StoryObj<typeof AlbumTile>
 export const Cover: Story = {
   args: {
     title: 'Construcción del ROSAC',
-    meta: '3 subálbumes · 42 archivos · 2025–2026',
+    meta: '3 subálbumes · 33 archivos · 2025–2026',
     variant: 'cover',
     href: '/galeria/rosac',
+    src: '/images/galeria/antena-goldstone-complejo.jpg',
   },
 }
 
@@ -39,6 +40,7 @@ export const CoverWithoutLink: Story = {
 export const SubAlbum: Story = {
   args: {
     title: 'Cimentación e instalación de la antena',
-    meta: '18 archivos',
+    meta: '8 archivos',
+    src: '/images/galeria/cimentacion-obra-01.jpg',
   },
 }

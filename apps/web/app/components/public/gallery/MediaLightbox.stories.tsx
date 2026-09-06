@@ -24,6 +24,7 @@ export const Photograph: Story = {
       isVideo: false,
       colSpan: 2,
       rowSpan: 2,
+      src: '/images/galeria/antena-nueva-en-espera.jpg',
     },
     onClose: () => {},
     onPrevious: () => {},
@@ -44,6 +45,7 @@ export const Video: Story = {
       isVideo: true,
       colSpan: 2,
       rowSpan: 1,
+      src: '/images/galeria/antena-grua-plato.jpg',
     },
   },
 }

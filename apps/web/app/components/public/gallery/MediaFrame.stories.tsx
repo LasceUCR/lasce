@@ -20,9 +20,9 @@ type Story = StoryObj<typeof MediaFrame>
 
 export const WithImage: Story = {
   args: {
-    src: '/images/decorative/Solar-Flare.png',
-    alt: 'Fulguración solar registrada por el laboratorio',
-    placeholder: 'Foto: Fulguración solar',
+    src: '/images/galeria/antena-grua-plato.jpg',
+    alt: 'Grúa colocando el reflector principal sobre el pedestal',
+    placeholder: 'Foto: Ensamblaje del reflector parabólico',
   },
 }
 

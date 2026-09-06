@@ -18,6 +18,7 @@ const media: GalleryMedia[] = [
     isVideo: false,
     colSpan: 2,
     rowSpan: 2,
+    src: '/images/galeria/antena-nueva-en-espera.jpg',
   },
   {
     id: 'm2',
@@ -29,6 +30,7 @@ const media: GalleryMedia[] = [
     isVideo: true,
     colSpan: 2,
     rowSpan: 1,
+    src: '/images/galeria/antena-grua-plato.jpg',
   },
   {
     id: 'm3',
@@ -40,6 +42,7 @@ const media: GalleryMedia[] = [
     isVideo: false,
     colSpan: 1,
     rowSpan: 2,
+    src: '/images/galeria/cimentacion-obra-01.jpg',
   },
   {
     id: 'm4',
@@ -51,6 +54,7 @@ const media: GalleryMedia[] = [
     isVideo: false,
     colSpan: 1,
     rowSpan: 1,
+    src: '/images/galeria/antena-cuadripode.jpg',
   },
 ]
 
