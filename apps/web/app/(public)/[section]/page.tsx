@@ -5,6 +5,8 @@ import { ArrowLeft } from 'lucide-react'
 
 import { isWorkAreaSlug, workAreaSlugs, workAreas } from '@/app/lib/work-areas'
 
+const excludedDynamicWorkAreaSlugs = new Set(['clima-espacial', 'fisica-solar', 'radioastronomia'])
+
 const publicSections = {
   nosotros: {
     title: 'Nosotros',
@@ -62,11 +64,9 @@ export const dynamicParams = false
 
 export function generateStaticParams() {
   return [
-    ...Object.keys(publicSections).map((section) => ({ section })),
-    ...workAreaSlugs
-      .filter((section) => section !== 'clima-espacial' && section !== 'radioastronomia')
-      .map((section) => ({ section })),
-  ]
+    ...Object.keys(publicSections),
+    ...workAreaSlugs.filter((section) => !excludedDynamicWorkAreaSlugs.has(section)),
+  ].map((section) => ({ section }))
 }
 
 export async function generateMetadata({ params }: PublicSectionPageProps): Promise<Metadata> {
