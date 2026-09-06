@@ -41,7 +41,7 @@ describe('NewsExplorer', () => {
     const user = userEvent.setup()
     render(<NewsExplorer {...defaultArgs} />)
 
-    const article = defaultArgs.news[0]
+    const article = defaultArgs.news[0]!
 
     await user.type(
       screen.getByRole('searchbox', { name: 'Buscar noticias' }),
