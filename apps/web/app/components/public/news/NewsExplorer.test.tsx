@@ -77,8 +77,26 @@ describe('NewsExplorer', () => {
     ).toBeInTheDocument()
   })
 
-  test('shows an empty state when nothing matches, without losing the heading', () => {
+  test('shows an empty state when there are no news items', () => {
     render(<NewsExplorer {...emptyArgs} />)
+
+    expect(screen.getByRole('heading', { name: 'Noticias recientes' })).toBeInTheDocument()
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No hay noticias publicadas todavía.',
+    )
+
+    expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+  })
+
+  test('shows an empty state when nothing matches the search query, without losing the heading', async () => {
+    const user = userEvent.setup()
+    render(<NewsExplorer {...defaultArgs} />)
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Buscar noticias' }),
+      'xyz-no-existe-esta-noticia',
+    )
 
     expect(screen.getByRole('heading', { name: 'Noticias recientes' })).toBeInTheDocument()
 
