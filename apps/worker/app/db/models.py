@@ -9,28 +9,9 @@ import uuid
 from datetime import date as date_type
 from datetime import datetime
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, Text, text
-from sqlalchemy.dialects.postgresql import ENUM, UUID
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, Text, text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-# The PostgreSQL enum types are created by Prisma's migrations, so SQLAlchemy
-# must never try to create them itself.
-file_artifact_status = ENUM(
-    "PENDING",
-    "PROCESSING",
-    "READY",
-    "FAILED",
-    name="file_artifact_status",
-    create_type=False,
-)
-
-job_status = ENUM(
-    "RUNNING",
-    "COMPLETED",
-    "FAILED",
-    name="job_status",
-    create_type=False,
-)
 
 
 class Base(DeclarativeBase):
@@ -45,54 +26,67 @@ def _uuid_pk() -> Mapped[uuid.UUID]:
     )
 
 
-class Device(Base):
-    __tablename__ = "devices"
+class Publisher(Base):
+    """A journal, conference, or institutional outlet a research record was
+    published through. Lives in the ``research`` Postgres schema, not ``public``.
+    """
+
+    __tablename__ = "publishers"
+    __table_args__ = {"schema": "research"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
 
     id: Mapped[uuid.UUID] = _uuid_pk()
-    external_id: Mapped[str] = mapped_column(Text, unique=True)
-    name: Mapped[str] = mapped_column(Text)
-    location: Mapped[str | None] = mapped_column(Text, nullable=True)
+    name: Mapped[str] = mapped_column(Text, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
-class DailyRollup(Base):
-    __tablename__ = "daily_rollups"
+class Research(Base):
+    """A public research record shown on `/investigacion`. Mapped to
+    ``research_records`` (not ``research``) to avoid a `research.research`
+    stutter under the ``research`` Postgres schema.
+    """
+
+    __tablename__ = "research_records"
+    __table_args__ = {"schema": "research"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
 
     id: Mapped[uuid.UUID] = _uuid_pk()
-    device_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE")
+    title: Mapped[str] = mapped_column(Text)
+    publication_date: Mapped[date_type] = mapped_column(Date)
+    publisher_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("research.publishers.id", ondelete="RESTRICT")
     )
-    date: Mapped[date_type] = mapped_column(Date)
-    count: Mapped[int] = mapped_column(Integer)
-    avg_value: Mapped[float] = mapped_column(Float)
-    min_value: Mapped[float] = mapped_column(Float)
-    max_value: Mapped[float] = mapped_column(Float)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-
-
-class FileArtifact(Base):
-    __tablename__ = "file_artifacts"
-
-    id: Mapped[uuid.UUID] = _uuid_pk()
-    object_key: Mapped[str] = mapped_column(Text, unique=True)
-    content_type: Mapped[str] = mapped_column(Text)
-    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    status: Mapped[str] = mapped_column(file_artifact_status)
-    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    abstract: Mapped[str] = mapped_column(Text)
+    external_url: Mapped[str] = mapped_column(Text, unique=True)
+    doi: Mapped[str | None] = mapped_column(Text, unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
-class JobRun(Base):
-    __tablename__ = "job_runs"
+class ResearchAuthor(Base):
+    """A person credited as an author on one or more research records."""
+
+    __tablename__ = "research_authors"
+    __table_args__ = {"schema": "research"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
 
     id: Mapped[uuid.UUID] = _uuid_pk()
-    job_id: Mapped[str] = mapped_column(Text, unique=True)
     name: Mapped[str] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(job_status)
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ResearchCrossAuthor(Base):
+    """Many-to-many join between `Research` and `ResearchAuthor`. Keeps
+    ``position`` so a record's citation author order can be reproduced.
+    """
+
+    __tablename__ = "research_cross_authors"
+    __table_args__ = {"schema": "research"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    research_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("research.research_records.id", ondelete="CASCADE")
+    )
+    research_author_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("research.research_authors.id", ondelete="CASCADE")
+    )
+    position: Mapped[int] = mapped_column(Integer)

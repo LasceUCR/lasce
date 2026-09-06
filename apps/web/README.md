@@ -60,7 +60,7 @@ Production deployment uses the standalone Next.js bundle through
 | -------------------- | -------------------------------------------------------------- |
 | `/`                  | Institutional landing page and access to the main public areas |
 | `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
-| `/fisica-solar`      | Solar physics work area                                        |
+| `/fisica-solar`      | Solar astrophysics information page based on LASCE content     |
 | `/clima-espacial`    | Space weather information page                                 |
 | `/radioastronomia`   | Radio astronomy work area                                      |
 | `/nosotros`          | General information about LASCE                                |
@@ -95,6 +95,7 @@ app/
 |-- (public)/
 |   |-- [section]/page.tsx
 |   |-- clima-espacial/page.tsx
+|   |-- fisica-solar/page.tsx
 |   |-- layout.tsx
 |   `-- page.tsx
 |-- components/public/
@@ -103,10 +104,12 @@ app/
 |   |-- PublicHeader.tsx
 |   |-- WorkAreaCard.tsx
 |   |-- WorkAreasSection.tsx
+|   |-- solar-astrophysics/
 |   |-- space-weather/
 |   `-- topic/
 |-- lib/
 |   |-- site.ts
+|   |-- solar-astrophysics.ts
 |   |-- space-weather.ts
 |   `-- work-areas.ts
 |-- globals.css
@@ -125,6 +128,7 @@ playwright.config.ts
 - `Brand` centralizes the institutional logo variants used by the header and footer.
 - `app/lib/site.ts` defines the canonical site origin and public route list used by SEO metadata.
 - `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
+- `app/(public)/fisica-solar/page.tsx` renders the solar astrophysics information page. Copy adapted from LASCE-provided material and page metadata live in `app/lib/solar-astrophysics.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
 - `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy lives in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
 - `app/components/public/topic/` holds reusable topic-page primitives (`TopicHero`, `TopicSection`, `InfoCard`, `ConceptFlow`, `TopicFigure`, and related layout pieces) so other work area pages can reuse the same structure without duplicating markup.
 - `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`.
@@ -161,6 +165,7 @@ The Playwright configuration starts the web development server automatically whe
 
 - Loading the landing page without authentication
 - Direct access to all public routes, including the three work area pages
+- Solar astrophysics informational content and the return link to the work areas
 - Space weather informational content and the return link to the work areas
 - Absence of redirects to login
 - Desktop and mobile navigation

@@ -31,6 +31,25 @@ FROM base AS builder
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 
+# The WebDots annotation widget is a QA tool and must never ship to production.
+# It is a client component, so the package is compiled into the browser bundle
+# and these values are inlined with it; setting them on the running service is
+# too late to have any effect, and too late to remove them again.
+#
+# All three default to empty, so an image built without them has the widget off:
+# AnnotateWidget bails out when NEXT_PUBLIC_WEBDOTS_API_URL is unset. cd.yml
+# passes real values for staging only, and additionally sets DISABLED=true for
+# production, so production is guarded twice over.
+#
+# NEXT_PUBLIC_WEBDOTS_API_KEY is readable by anyone who opens the site, because
+# that is what NEXT_PUBLIC_ means. Keep it scoped to annotation submission.
+ARG NEXT_PUBLIC_WEBDOTS_API_URL=
+ENV NEXT_PUBLIC_WEBDOTS_API_URL=$NEXT_PUBLIC_WEBDOTS_API_URL
+ARG NEXT_PUBLIC_WEBDOTS_API_KEY=
+ENV NEXT_PUBLIC_WEBDOTS_API_KEY=$NEXT_PUBLIC_WEBDOTS_API_KEY
+ARG NEXT_PUBLIC_WEBDOTS_DISABLED=
+ENV NEXT_PUBLIC_WEBDOTS_DISABLED=$NEXT_PUBLIC_WEBDOTS_DISABLED
+
 # packages/db constructs its PrismaClient at module scope, and `next build`
 # imports every route module to read its segment config, so these have to be
 # present and parseable. Nothing ever connects to them.

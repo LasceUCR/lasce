@@ -4,10 +4,6 @@ name: Scheduled jobs
 # scheduler on every deploy, the schedule lives here and enqueues through the
 # app's own trigger route. See docs/deployment.md.
 on:
-  schedule:
-    # 03:00 UTC daily. Mirrors `daily-rollup-03am` in packages/jobs/src/schedules.ts.
-    # GitHub's scheduler can run late; the rollup is not latency-sensitive.
-    - cron: '0 3 * * *'
   workflow_dispatch:
     inputs:
       target:
@@ -18,7 +14,7 @@ on:
       job:
         description: Job name (see JOB_NAMES in packages/contracts/src/jobs.ts)
         type: string
-        default: daily-rollup
+        default: ingest-readings
       payload:
         description: JSON body
         type: string
@@ -40,7 +36,7 @@ jobs:
           # waiting for a human to click approve.
           APP_URL: ${{ inputs.target == 'staging' && vars.APP_URL_STAGING || vars.APP_URL_PRODUCTION }}
           CRON_SECRET: ${{ inputs.target == 'staging' && secrets.CRON_SECRET_STAGING || secrets.CRON_SECRET_PRODUCTION }}
-          JOB: ${{ inputs.job || 'daily-rollup' }}
+          JOB: ${{ inputs.job || 'ingest-readings' }}
           PAYLOAD: ${{ inputs.payload || '{}' }}
         run: |
           curl -sS --fail-with-body -X POST \

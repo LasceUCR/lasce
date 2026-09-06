@@ -63,4 +63,4 @@ Both expect the **repository root** as the build context.
 Nothing here is required. If you would rather not install Docker, point the URLs in `.env` at a
 PostgreSQL and a Redis you already have — those two are enough for the app and for any job that
 does not touch time series or files. Add InfluxDB and MinIO (or any S3-compatible endpoint, which
-is all the MinIO client needs) when you want `ingest-readings` and `process-file` to work.
+is all the MinIO client needs) when you want `ingest-readings` to work.

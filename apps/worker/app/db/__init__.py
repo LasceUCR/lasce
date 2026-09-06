@@ -1,3 +1,3 @@
-from app.db.models import Base, DailyRollup, Device, FileArtifact, JobRun
+from app.db.models import Base, Publisher, Research, ResearchAuthor, ResearchCrossAuthor
 
-__all__ = ["Base", "DailyRollup", "Device", "FileArtifact", "JobRun"]
+__all__ = ["Base", "Publisher", "Research", "ResearchAuthor", "ResearchCrossAuthor"]

@@ -96,7 +96,7 @@ still-open decision, and both options are wired up:
 Switching between them changes nothing in the processors.
 
 ```bash
-curl -X POST http://localhost:3000/api/jobs/daily-rollup/trigger \
+curl -X POST http://localhost:3000/api/jobs/ingest-readings/trigger \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
 

@@ -6,25 +6,25 @@ import { usePathname } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_WEBDOTS_API_URL as string | undefined
 const API_KEY = process.env.NEXT_PUBLIC_WEBDOTS_API_KEY as string | undefined
+const IS_DISABLED = process.env.NEXT_PUBLIC_WEBDOTS_DISABLED === 'true'
 
 /**
- * Monta el widget de anotación visual de Webdots. Sin NEXT_PUBLIC_WEBDOTS_API_URL el
- * componente no hace nada, así que producción queda limpia por defecto.
+ * Mounts the Webdots annotation widget in the app. If NEXT_PUBLIC_WEBDOTS_API_URL is not set, the component does nothing, so production is clean by default.
+
+ * The widget resolves its `pageKey` only once, in `init()`, against the current
+ * `location`; that's why we remount it on every route change instead of calling
+ * `refresh()`.
  *
- * El widget resuelve su `pageKey` una sola vez, en `init()`, contra el
- * `location` actual; por eso lo remontamos en cada cambio de ruta en lugar de
- * llamar a `refresh()`.
- *
- * Ojo: la limpieza usa el `destroy()` del módulo, no `widget.destroy()`. El
- * método de instancia no libera el singleton interno de la librería, así que
- * el siguiente `init()` (por ejemplo el doble efecto de StrictMode) devolvería
- * la instancia ya destruida y el widget no volvería a aparecer.
+ * Note: cleanup uses the module's `destroy()`, not `widget.destroy()`. The
+ * instance method does not free the library's internal singleton, so the next
+ * `init()` (for example the double effect of StrictMode) would return the
+ * already destroyed instance and the widget would not reappear.
  */
 export function AnnotateWidget() {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (!API_URL) return
+    if (!API_URL || IS_DISABLED) return
 
     const widget = init({
       apiUrl: API_URL,

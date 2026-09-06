@@ -31,6 +31,7 @@ jobs:
       tag: ${{ steps.pick.outputs.tag }}
       app_url: ${{ steps.pick.outputs.app_url }}
       registry: ${{ steps.pick.outputs.registry }}
+      webdots: ${{ steps.pick.outputs.webdots }}
     steps:
       # These are repo-level variables rather than environment ones because
       # this job runs before the production approval gate.
@@ -76,12 +77,22 @@ jobs:
               ;;
           esac
 
+          # The WebDots annotation widget is a QA tool and never ships to
+          # production. Decided here, next to the target, so the rule is visible
+          # in one place and appears in the job log.
+          if [ "$target" = "production" ]; then
+            webdots="false"
+          else
+            webdots="true"
+          fi
+
           # GHCR paths must be lowercase; the organisation is "LasceUCR".
           echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
           echo "environment=$target" >> "$GITHUB_OUTPUT"
           echo "tag=$target" >> "$GITHUB_OUTPUT"
           echo "app_url=$url" >> "$GITHUB_OUTPUT"
-          echo "Target: $target ($url)"
+          echo "webdots=$webdots" >> "$GITHUB_OUTPUT"
+          echo "Target: $target ($url), annotation widget: $webdots"
 
   # Delivery is gated on exactly the same jobs that gate a pull request.
   ci:
@@ -124,8 +135,14 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          # `flag && value || ''` rather than the usual ternary order: an empty
+          # string is falsy in a GitHub expression, so `cond && '' || value`
+          # would fall through and leak the value into production.
           build-args: |
             NEXT_PUBLIC_APP_URL=${{ needs.context.outputs.app_url }}
+            NEXT_PUBLIC_WEBDOTS_API_URL=${{ needs.context.outputs.webdots == 'true' && vars.WEBDOTS_API_URL || '' }}
+            NEXT_PUBLIC_WEBDOTS_API_KEY=${{ needs.context.outputs.webdots == 'true' && secrets.WEBDOTS_API_KEY || '' }}
+            NEXT_PUBLIC_WEBDOTS_DISABLED=${{ needs.context.outputs.webdots == 'true' && 'false' || 'true' }}
           tags: |
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}-${{ github.sha }}

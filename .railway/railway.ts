@@ -84,12 +84,11 @@ export default defineRailway((ctx) => {
       WORKER_CONCURRENCY: staging ? '2' : '4',
       LOG_LEVEL: staging ? 'debug' : 'info',
       // INFLUXDB_* / MINIO_* are intentionally unset: neither has a Railway
-      // plugin and both are deferred. `daily-rollup` still succeeds while the
-      // Device table is empty; `ingest-readings` and `process-file` will fail
-      // until these are provisioned. See docs/deployment.md. The `web`
-      // service above carries the same MINIO_* keys via preserve(), for the
-      // same reason — apps/web/app/services/storage writes to the same bucket now
-      // too, and is deferred exactly like this service is.
+      // plugin and both are deferred. `ingest-readings` will fail until these
+      // are provisioned. See docs/deployment.md. The `web` service above
+      // carries the same MINIO_* keys via preserve(), for the same reason —
+      // apps/web/app/services/storage writes to the same bucket now too, and
+      // is deferred exactly like this service is.
     },
     // No HTTP listener, so no healthcheck and no domain.
     replicas: 1,
