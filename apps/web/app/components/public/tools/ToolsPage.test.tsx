@@ -18,7 +18,7 @@ describe('ToolsPage', () => {
   test('links to the external SWAPRO service safely in a new tab', () => {
     render(<ToolsPage />)
 
-    const link = screen.getByRole('link', { name: /Acceder a SWAPRO/ })
+    const link = screen.getByRole('link', { name: /Acceder a SWAAT/ })
     expect(link).toHaveAttribute('href', 'https://swaat.up.railway.app')
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
