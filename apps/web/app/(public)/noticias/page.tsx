@@ -4,12 +4,7 @@ import { NewsExplorer } from '@/app/components/public/news/NewsExplorer'
 import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
-import {
-  noticiasBackLink,
-  noticiasHero,
-  noticiasMeta,
-  news,
-} from '@/app/lib/news'
+import { noticiasBackLink, noticiasHero, noticiasMeta, news } from '@/app/lib/news'
 
 export const metadata: Metadata = {
   title: noticiasMeta.title,
@@ -19,11 +14,7 @@ export const metadata: Metadata = {
 export default function NewsPage() {
   return (
     <article className="topic-page">
-      <TopicHero
-        kicker={noticiasHero.kicker}
-        lead={noticiasHero.lead}
-        title={noticiasHero.title}
-      />
+      <TopicHero kicker={noticiasHero.kicker} lead={noticiasHero.lead} title={noticiasHero.title} />
 
       <ContentFlag
         label="Información provisional"

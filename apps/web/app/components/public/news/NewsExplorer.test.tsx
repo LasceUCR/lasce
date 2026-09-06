@@ -12,9 +12,7 @@ describe('NewsExplorer', () => {
   test('renders one card per news article it is given', () => {
     render(<NewsExplorer {...defaultArgs} />)
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      defaultArgs.news.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(defaultArgs.news.length)
   })
 
   test('narrows the list to news matching the search query', async () => {
@@ -23,10 +21,7 @@ describe('NewsExplorer', () => {
 
     const article = defaultArgs.news[0]!
 
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar noticias' }),
-      article.title,
-    )
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), article.title)
 
     expect(
       screen.getByRole('heading', {
@@ -43,10 +38,7 @@ describe('NewsExplorer', () => {
 
     const article = defaultArgs.news[0]!
 
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar noticias' }),
-      article.source,
-    )
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), article.source)
 
     expect(
       screen.getByRole('heading', {
@@ -65,10 +57,7 @@ describe('NewsExplorer', () => {
       throw new Error('Expected at least one news article with an author')
     }
 
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar noticias' }),
-      article.authors,
-    )
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), article.authors)
 
     expect(
       screen.getByRole('heading', {
@@ -82,9 +71,7 @@ describe('NewsExplorer', () => {
 
     expect(screen.getByRole('heading', { name: 'Noticias recientes' })).toBeInTheDocument()
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'No hay noticias publicadas todavía.',
-    )
+    expect(screen.getByRole('status')).toHaveTextContent('No hay noticias publicadas todavía.')
 
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
   })

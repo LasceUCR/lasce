@@ -13,9 +13,7 @@ describe('NewsCard', () => {
     expect(screen.getByRole('heading', { name: defaultArgs.title })).toBeInTheDocument()
 
     expect(
-      screen.getByText(
-        `${defaultArgs.authors} · ${defaultArgs.source} · ${defaultArgs.date}`,
-      ),
+      screen.getByText(`${defaultArgs.authors} · ${defaultArgs.source} · ${defaultArgs.date}`),
     ).toBeInTheDocument()
   })
 
