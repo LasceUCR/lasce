@@ -11,8 +11,6 @@ import { z } from 'zod'
  */
 export const JOB_NAMES = {
   ingestReadings: 'ingest-readings',
-  processFile: 'process-file',
-  dailyRollup: 'daily-rollup',
 } as const
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES]
@@ -26,23 +24,9 @@ export const ingestReadingsPayload = z.object({
   to: z.iso.datetime({ offset: true }),
 })
 
-/** Reads an object from MinIO, processes it, and writes the result back. */
-export const processFilePayload = z.object({
-  objectKey: z.string().min(1),
-  contentType: z.string().min(1).default('application/octet-stream'),
-})
-
-/** Cron job: aggregates yesterday's readings from InfluxDB into PostgreSQL. */
-export const dailyRollupPayload = z.object({
-  /** Day to aggregate, `YYYY-MM-DD`. Defaults to the previous day in the worker. */
-  date: z.iso.date().optional(),
-})
-
 /** Lookup table used by `enqueue()` and by the HTTP trigger route to validate input. */
 export const jobPayloads = {
   [JOB_NAMES.ingestReadings]: ingestReadingsPayload,
-  [JOB_NAMES.processFile]: processFilePayload,
-  [JOB_NAMES.dailyRollup]: dailyRollupPayload,
 } as const satisfies Record<JobName, z.ZodType>
 
 export type JobPayloads = {

@@ -20,22 +20,20 @@ It reads the `.env` at the repository root, the same file the Next.js app uses.
 
 ```
 app/
-├── main.py             # entry point: BullMQ Worker, dispatch, audit trail, graceful shutdown
+├── main.py             # entry point: BullMQ Worker, dispatch, graceful shutdown
 ├── registry.py         # job name -> (payload model, processor)
 ├── settings.py         # pydantic-settings over the root .env
 ├── models/jobs.py      # Pydantic mirrors of packages/contracts
 ├── clients/            # influx.py, storage.py (MinIO), db.py (SQLAlchemy)
-├── db/models.py        # SQLAlchemy mirror of the Prisma schema
+├── db/models.py        # SQLAlchemy mirror of the Prisma schema (currently empty)
 └── processors/         # one module per job
 ```
 
 ## Jobs
 
-| Job               | What it does                                                                                       |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| `ingest-readings` | Pulls a window of readings for a device, writes points to InfluxDB, archives the raw CSV to MinIO  |
-| `process-file`    | Reads an object from MinIO, summarises it, writes the summary back and records a row in PostgreSQL |
-| `daily-rollup`    | Scheduled: aggregates a day of readings from InfluxDB into `daily_rollups` in PostgreSQL           |
+| Job               | What it does                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------- |
+| `ingest-readings` | Pulls a window of readings for a device, writes points to InfluxDB, archives the raw CSV to MinIO |
 
 `ingest-readings` synthesises its data — there is no upstream system in the scaffold. Replace
 `_fetch_readings` in `app/processors/ingest_readings.py` with the real source; everything around it

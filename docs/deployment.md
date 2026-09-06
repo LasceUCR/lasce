@@ -226,16 +226,15 @@ here usually means a private-networking or `HOSTNAME` bind problem.
 **Triggering a job by hand.**
 
 ```bash
-curl -X POST "$APP_URL/api/jobs/daily-rollup/trigger" \
+curl -X POST "$APP_URL/api/jobs/ingest-readings/trigger" \
   -H "Authorization: Bearer $CRON_SECRET" \
   -H 'Content-Type: application/json' -d '{}'
 ```
 
-Valid job names are in `JOB_NAMES` (`packages/contracts/src/jobs.ts`):
-`ingest-readings`, `process-file`, `daily-rollup`. Poll the returned id at
-`GET /api/jobs/status/<id>`, or read the `job_runs` table.
+Valid job names are in `JOB_NAMES` (`packages/contracts/src/jobs.ts`): `ingest-readings`.
+Poll the returned id at `GET /api/jobs/status/<id>`.
 
-Or through the pipeline: `gh workflow run cron-jobs.yml -f target=staging -f job=daily-rollup`.
+Or through the pipeline: `gh workflow run cron-jobs.yml -f target=staging -f job=ingest-readings`.
 
 **Logs.** `railway logs --service worker`. A healthy worker logs a `worker ready`
 line with its queue name and concurrency on boot.
@@ -279,9 +278,7 @@ at `localhost`:
 
 | Job               | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `daily-rollup`    | **Works.** `processors/daily_rollup.py` returns early on an empty `Device` table, before touching InfluxDB. It will start failing once devices exist.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `ingest-readings` | Fails on the InfluxDB write, is retried by BullMQ, ends `FAILED` in `job_runs`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `process-file`    | Fails on `ensure_bucket()`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `ingest-readings` | Fails on the InfluxDB write, is retried by BullMQ, and logged as `FAILED`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `apps/web`        | **Boots fine, but asset storage does not work.** `app/services/storage` (server-side upload/delete via the `assetStorage` instance in `app/services/container.ts`) is a service layer only — no route or UI calls it yet — and `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` are optional in `packages/config/src/env.ts` precisely so a missing MinIO does not stop the app from starting. The deployed public portal does not depend on it. Note the container instantiates the client **eagerly at module scope**, so the first import of `container.ts` is what surfaces a bad endpoint — see the caveat below. |
 
 When this is picked up: MinIO maps onto Railway Buckets. Both MinIO SDKs are plain

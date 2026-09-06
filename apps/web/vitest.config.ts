@@ -30,9 +30,8 @@ export default defineConfig({
       // free-function service was restructured into app/services (see
       // docs/manage-assets.md). A starting floor that ratchets upward, not a
       // target: it exists to catch a drop, so raise it as coverage grows.
-      // Branches are still not gated because JobLauncher.tsx is untested and
-      // dominates the branch count, which makes that figure noise. Testing
-      // it is the next ratchet step.
+      // Branches are still not gated; add that floor once enough of the app
+      // is covered that the figure stops being noise.
       thresholds: { lines: 50, statements: 50, functions: 45 },
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       reportsDirectory: './coverage',
