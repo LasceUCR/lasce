@@ -25,4 +25,83 @@ datasource db {
   // Prisma 7 no longer accepts `url` here: the migration engine reads it from
   // prisma.config.ts, and PrismaClient gets it through the driver adapter in
   // src/index.ts.
+
+  // `public` stays declared for whatever non-research table comes next; only
+  // `research` is populated today. Prisma creates both schemas via migrations.
+  schemas = ["public", "research"]
+}
+
+/// A journal, conference, or institutional outlet a research record was
+/// published through — the "venue" shown on the public research page.
+model Publisher {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  researchRecords Research[]
+
+  @@map("publishers")
+  @@schema("research")
+}
+
+/// A public research record shown on `/investigacion`: a paper, article, or
+/// institutional note, linked to its original source rather than a hosted
+/// copy. Mapped to `research_records` rather than `research` to avoid the
+/// `research.research` stutter under the `research` Postgres schema.
+model Research {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  publicationDate DateTime @map("publication_date") @db.Date
+  publisherId     String   @map("publisher_id") @db.Uuid
+  abstract        String   @db.Text
+  /// Link to the original source. Unique so the same paper can't be listed twice.
+  externalUrl     String   @unique @map("external_url")
+  /// Digital Object Identifier, e.g. "10.1007/s11207-015-0677-0". Optional —
+  /// not every record (institutional notes) has one — but unique when present.
+  doi             String?  @unique
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  publisher Publisher             @relation(fields: [publisherId], references: [id], onDelete: Restrict)
+  authors   ResearchCrossAuthor[]
+
+  @@index([publicationDate])
+  @@map("research_records")
+  @@schema("research")
+}
+
+/// A person credited as an author on one or more research records.
+model ResearchAuthor {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Unique so the same person is reused across records rather than duplicated.
+  /// Two distinct people who happen to share a citation form (e.g. two
+  /// "J. García"s) would collide under this — acceptable at today's scale, but
+  /// worth revisiting (an external id, ORCID, ...) if it becomes a real problem.
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  researchRecords ResearchCrossAuthor[]
+
+  @@map("research_authors")
+  @@schema("research")
+}
+
+/// Many-to-many join between `Research` and `ResearchAuthor`. Keeps `position`
+/// so a record's citation order (first author, second author, ...) can be
+/// reproduced on the public page instead of coming back in arbitrary order.
+model ResearchCrossAuthor {
+  id               String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  researchId       String @map("research_id") @db.Uuid
+  researchAuthorId String @map("research_author_id") @db.Uuid
+  position         Int
+
+  research       Research       @relation(fields: [researchId], references: [id], onDelete: Cascade)
+  researchAuthor ResearchAuthor @relation(fields: [researchAuthorId], references: [id], onDelete: Cascade)
+
+  @@unique([researchId, researchAuthorId])
+  @@index([researchId, position])
+  @@map("research_cross_authors")
+  @@schema("research")
 }
