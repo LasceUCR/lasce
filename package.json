@@ -35,5 +35,9 @@
     "railway": "3.11.0",
     "turbo": "2.10.11",
     "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "plotly.js": "^4.0.0",
+    "react-plotly.js": "^4.1.0"
   }
 }
