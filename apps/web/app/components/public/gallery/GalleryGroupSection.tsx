@@ -1,5 +1,3 @@
-import type { CSSProperties } from 'react'
-
 import { AlbumTile } from './AlbumTile'
 import { albumMeta, albumPath, subAlbumPath, type GalleryAlbum } from '@/app/lib/gallery'
 
@@ -8,13 +6,13 @@ export interface GalleryGroupSectionProps {
 }
 
 /**
- * One block of the gallery index: a cover tile spanning two rows next to the
- * album's sub-albums. The grid holds one column per tile, so an album without
- * sub-albums renders the cover full width.
+ * One block of the gallery index: the album's cover tile followed by its
+ * sub-albums. Every tile is the same size and the grid wraps, so the number of
+ * sub-albums changes how many rows a block occupies, never how wide its cards
+ * are. Card sizing lives entirely in `.gallery-grid`; nothing here measures.
  */
 export function GalleryGroupSection({ album }: GalleryGroupSectionProps) {
   const headingId = `galeria-${album.slug}`
-  const columns = { '--gallery-columns': album.subAlbums.length + 1 } as CSSProperties
 
   return (
     <section aria-labelledby={headingId} className="gallery-group">
@@ -24,7 +22,7 @@ export function GalleryGroupSection({ album }: GalleryGroupSectionProps) {
       </div>
       <p className="gallery-group-description">{album.description}</p>
 
-      <div className="gallery-grid" style={columns}>
+      <div className="gallery-grid">
         <AlbumTile
           href={albumPath(album.slug)}
           meta={albumMeta(album)}

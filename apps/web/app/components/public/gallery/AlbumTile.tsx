@@ -30,6 +30,9 @@ export function AlbumTile({ title, meta, variant = 'sub', href, src }: AlbumTile
         alt={title}
         className="gallery-tile-media"
         placeholder={placeholders[variant]}
+        // The grid track is a fixed 260px, so the default 33vw hint would have
+        // the browser fetch a much larger candidate than the card can show.
+        sizes="(max-width: 600px) 100vw, 260px"
         src={src}
       />
       <div className="gallery-tile-body">
