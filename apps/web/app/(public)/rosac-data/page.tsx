@@ -1,15 +1,8 @@
 import type { Metadata } from 'next'
 
 import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
-import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { RosacDataView } from '@/app/components/public/rosac-data/RosacDataView'
-import {
-  investigacionBackLink,
-  investigacionHero,
-  investigacionMeta,
-  publications,
-} from '@/app/lib/publications'
 
 import {
   rosacDataHero,
@@ -18,7 +11,7 @@ import {
 
 
 
-export default function InvestigacionPage() {
+export default function RosacDataPage() {
   return (
     <article className="topic-page">
       <TopicHero
