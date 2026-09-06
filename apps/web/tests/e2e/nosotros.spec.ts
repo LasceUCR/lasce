@@ -20,15 +20,21 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
   await page.goto('/nosotros')
 
   await expect(page.getByRole('heading', { level: 1, name: 'Quiénes somos' })).toBeVisible()
-  await expect(page.getByRole('region', { name: '¿Qué es LASCE?' })).toContainText(
-    /dedicado al estudio del Sol/,
+  await expect(page.getByRole('region', { name: '¿Quiénes somos?' })).toContainText(
+    /iniciativa científica vinculada al Centro de Investigaciones Espaciales/,
   )
-  await expect(page.getByRole('region', { name: 'Nuestro propósito' })).toContainText(
-    /Generar conocimiento sobre la actividad solar/,
+  await expect(page.getByRole('region', { name: /Qué hacemos/ })).toContainText(
+    /Analizamos fenómenos solares eruptivos/,
   )
-  await expect(
-    page.getByRole('region', { name: 'LASCE y la Universidad de Costa Rica' }),
-  ).toContainText(/forma parte de la Universidad de Costa Rica/)
+  await expect(page.getByRole('region', { name: 'Aporte distintivo' })).toContainText(
+    /no sea únicamente usuaria de información internacional/,
+  )
+  await expect(page.getByRole('region', { name: 'Nuestra visión' })).toContainText(
+    /referente regional para la observación del Sol/,
+  )
+
+  // The copy is approved, so the provisional banner must not be on the page.
+  await expect(page.getByRole('complementary', { name: 'Información provisional' })).toHaveCount(0)
 
   // The catch-all placeholder must no longer serve this route.
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)

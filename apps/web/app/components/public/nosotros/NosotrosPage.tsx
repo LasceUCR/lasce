@@ -1,4 +1,4 @@
-import { Antenna, GraduationCap, Radio, Settings, Sun, type LucideIcon } from 'lucide-react'
+import { Code, GraduationCap, Satellite, Sun, Users, Waves, type LucideIcon } from 'lucide-react'
 
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
@@ -12,9 +12,10 @@ import { TeamGallery } from './TeamGallery'
 
 const icons: Record<NosotrosCardIcon, LucideIcon> = {
   sun: Sun,
-  radio: Radio,
-  instruments: Settings,
-  analysis: Antenna,
+  waves: Waves,
+  satellite: Satellite,
+  code: Code,
+  collaboration: Users,
   education: GraduationCap,
 }
 
@@ -37,22 +38,9 @@ export function NosotrosPage({ content }: NosotrosPageProps) {
         ))}
       </TopicSection>
 
-      <TopicSection title={content.purpose.title} titleId="nosotros-purpose-title" wide>
-        {content.purpose.paragraphs.map((paragraph) => (
-          <p className="topic-intro" key={paragraph}>
-            {paragraph}
-          </p>
-        ))}
-      </TopicSection>
-
-      <TopicSection
-        title={content.focusAreas.title}
-        titleId="nosotros-focus-title"
-        intro={content.focusAreas.intro}
-        index="1"
-      >
+      <TopicSection title={content.activities.title} titleId="nosotros-activities-title" index="1">
         <CardGrid columns={3} equalHeight>
-          {content.focusAreas.items.map((item) => {
+          {content.activities.items.map((item) => {
             const Icon = icons[item.icon]
             return (
               <InfoCard
@@ -67,20 +55,32 @@ export function NosotrosPage({ content }: NosotrosPageProps) {
       </TopicSection>
 
       <TopicSection
+        title={content.contribution.title}
+        titleId="nosotros-contribution-title"
+        featured
+      >
+        {content.contribution.paragraphs.map((paragraph) => (
+          <p className="topic-intro" key={paragraph}>
+            {paragraph}
+          </p>
+        ))}
+      </TopicSection>
+
+      <TopicSection title={content.vision.title} titleId="nosotros-vision-title" wide>
+        {content.vision.paragraphs.map((paragraph) => (
+          <p className="topic-intro" key={paragraph}>
+            {paragraph}
+          </p>
+        ))}
+      </TopicSection>
+
+      <TopicSection
         title={content.team.title}
         titleId="nosotros-team-title"
         intro={content.team.intro}
         index="2"
       >
         <TeamGallery label={content.team.title} people={content.team.people} />
-      </TopicSection>
-
-      <TopicSection title={content.institution.title} titleId="nosotros-institution-title" featured>
-        {content.institution.paragraphs.map((paragraph) => (
-          <p className="topic-intro" key={paragraph}>
-            {paragraph}
-          </p>
-        ))}
       </TopicSection>
 
       <div className="topic-page-footer page-width">

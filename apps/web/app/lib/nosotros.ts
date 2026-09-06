@@ -1,25 +1,27 @@
 /**
- * Editorial source: PROVISIONAL copy pending LASCE approval (LASCE-PUB-001-002).
- * Institutional overview and purpose only. Work areas, solar astrophysics and space weather
- * each have their own page, so keep this module to what the laboratory is and what it is for.
+ * Editorial source: institutional text supplied by LASCE, transcribed verbatim except where
+ * noted. Institutional overview and purpose only. Work areas, solar astrophysics and space
+ * weather each have their own page.
  *
- * Two expansions of the LASCE acronym are in use across the site: "Laboratorio de Ciencias
- * Espaciales" and "Laboratorio de Astrofísica Solar y Clima Espacial". This module uses the
- * second, which matches the acronym. LASCE should settle which one is official.
+ * One correction to the source: the "¿Qué hacemos?" bullet on computational tools read
+ * "predicción del clima especial", which is a typo for "clima espacial". Corrected here;
+ * confirm with LASCE.
  *
- * Delete the `flag` key once the copy is approved; the banner disappears on its own.
+ * The short card titles in `activities` are editorial. The source is a plain bulleted list and
+ * the card layout needs a heading, so each title is drawn from that bullet's own wording. The
+ * bullet text itself is verbatim.
  *
  * `team.people` is transcribed from the ROSAC cards in `public/images/equipo/`. Those graphics
  * carry the name, role, affiliation and description as text baked into the image, which is
- * unreadable to a screen reader, unsearchable, and does not reflow (WCAG 1.4.5). The transcription
- * here is the accessible copy and the source of truth; the card is shown alongside it as the
- * designed artefact, with empty alternative text so nothing is announced twice.
+ * unreadable to a screen reader, unsearchable, and does not reflow (WCAG 1.4.5). The
+ * transcription here is the accessible copy and the source of truth; the card is shown alongside
+ * it as the designed artefact, with empty alternative text so nothing is announced twice.
  *
  * NOTE for LASCE: cards 6 and 7 (Gustavo Lara and Andrés Fallas) carry identical descriptions in
  * the source graphics. Transcribed verbatim; confirm whether that is intended.
  *
- * `team.people[].src` must be a local path under `apps/web/public`. `next.config.ts` declares
- * no `images` config, so a remote URL throws at render time.
+ * `team.people[].src` must be a local path under `apps/web/public`. `next.config.ts` declares no
+ * `images` config, so a remote URL throws at render time.
  *
  * The team list is hand maintained here on purpose. If it ever needs to be editable without a
  * deploy, move it to Prisma and fetch it in the route, the way `investigacion` does. The page
@@ -28,10 +30,11 @@
 export const nosotrosMeta = {
   title: 'Quiénes somos | LASCE',
   description:
-    'Conozca el Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica: qué es, cuál es su propósito y quiénes lo integran.',
+    'El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE), vinculado al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica: qué es, qué investiga y quiénes lo integran.',
 } as const
 
-export type NosotrosCardIcon = 'sun' | 'radio' | 'instruments' | 'analysis' | 'education'
+export type NosotrosCardIcon =
+  'sun' | 'waves' | 'satellite' | 'code' | 'collaboration' | 'education'
 
 interface NosotrosTextSection {
   title: string
@@ -51,13 +54,11 @@ export interface TeamMember {
 
 export interface NosotrosContent {
   hero: { kicker: string; title: string; lead: string }
-  /** Provisional copy banner. Remove this key when the text is approved. */
+  /** Provisional copy banner. Absent now that LASCE has supplied the approved text. */
   flag?: { label: string; message: string }
   overview: NosotrosTextSection
-  purpose: NosotrosTextSection
-  focusAreas: {
+  activities: {
     title: string
-    intro: string
     items: readonly {
       id: string
       icon: NosotrosCardIcon
@@ -65,12 +66,13 @@ export interface NosotrosContent {
       description: string
     }[]
   }
+  contribution: NosotrosTextSection
+  vision: NosotrosTextSection
   team: {
     title: string
     intro: string
     people: readonly TeamMember[]
   }
-  institution: NosotrosTextSection
   backLink: { href: string; label: string }
 }
 
@@ -78,74 +80,72 @@ export const nosotrosContent = {
   hero: {
     kicker: 'Portal público LASCE',
     title: 'Quiénes somos',
-    lead: 'Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-  },
-  flag: {
-    label: 'Información provisional',
-    message:
-      'El contenido de esta página es preliminar y está pendiente de revisión por parte del laboratorio.',
+    lead: 'Laboratorio de Astrofísica Solar y Clima Espacial, vinculado al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica.',
   },
   overview: {
-    title: '¿Qué es LASCE?',
+    title: '¿Quiénes somos?',
     paragraphs: [
-      'El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE) es un laboratorio de la Universidad de Costa Rica dedicado al estudio del Sol y de su influencia sobre el entorno terrestre. Reúne investigación en astrofísica solar, desarrollo instrumental y análisis de datos en un mismo grupo de trabajo.',
-      'El laboratorio observa la actividad solar, desarrolla la infraestructura necesaria para registrarla y convierte esas observaciones en información que puede consultarse y reutilizarse.',
+      'El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE) es una iniciativa científica vinculada al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica. Reúne investigación en astrofísica solar, observaciones astronómicas y desarrollo computacional para estudiar la actividad solar, su interacción con el medio interplanetario y el entorno terrestre.',
+      'LASCE parte de una idea sencilla pero poderosa: para comprender el clima espacial se necesita observar distintos eslabones de una misma cadena, desde el origen magnético de una erupción solar hasta sus manifestaciones en el espacio cercano a la Tierra. Por ello, en el LASCE se realiza investigación científica integrando datos de diferentes instrumentos, longitudes de onda y plataformas.',
     ],
   },
-  purpose: {
-    title: 'Nuestro propósito',
-    paragraphs: [
-      'Generar conocimiento sobre la actividad solar y el clima espacial desde Costa Rica, y poner ese conocimiento a disposición de la comunidad científica, la academia y el público general.',
-      'El propósito del laboratorio combina tres compromisos: sostener investigación de calidad, formar personas en ciencia y tecnología espacial, y comunicar los resultados de forma comprensible y accesible.',
-    ],
-  },
-  focusAreas: {
-    title: 'En qué trabajamos',
-    intro:
-      'El trabajo del laboratorio se organiza en áreas que se apoyan entre sí. Cada una cuenta con su propia sección en este portal.',
+  activities: {
+    title: '¿Qué hacemos?',
     items: [
       {
-        id: 'solar-astrophysics',
+        id: 'eruptive-phenomena',
         icon: 'sun',
-        title: 'Astrofísica solar',
+        title: 'Fenómenos solares eruptivos',
         description:
-          'Estudio de la actividad del Sol y de los fenómenos que la originan, a partir de observaciones y modelos.',
+          "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
       },
       {
-        id: 'space-weather',
-        icon: 'analysis',
-        title: 'Clima espacial',
+        id: 'solar-terrestrial',
+        icon: 'waves',
+        title: 'Perturbaciones y relación Sol-Tierra',
         description:
-          'Seguimiento de las condiciones del Sol y del viento solar que pueden afectar sistemas tecnológicos en la Tierra.',
+          'Estudiamos la evolución de perturbaciones solares y su relación con el viento solar, el campo magnético interplanetario y local, y la ionosfera.',
       },
       {
-        id: 'radio-astronomy',
-        icon: 'radio',
-        title: 'Radioastronomía',
+        id: 'observations',
+        icon: 'satellite',
+        title: 'Integración de observaciones',
         description:
-          'Observación en frecuencias de radio, incluido el desarrollo del Radio Observatorio de Santa Cruz.',
+          'Integramos mediciones propias con imágenes y datos de satélites, estaciones terrestres y observatorios internacionales.',
       },
       {
-        id: 'instrumentation',
-        icon: 'instruments',
-        title: 'Instrumentación',
+        id: 'computational-tools',
+        icon: 'code',
+        title: 'Herramientas computacionales',
         description:
-          'Diseño, construcción y mantenimiento de los instrumentos y sistemas que hacen posible la observación.',
+          'Implementamos y desarrollamos herramientas computacionales para procesar datos, reconocer patrones y apoyar a la investigación en la predicción del clima espacial y su impacto en nuestro país.',
       },
       {
-        id: 'data',
-        icon: 'analysis',
-        title: 'Datos y análisis',
+        id: 'collaboration',
+        icon: 'collaboration',
+        title: 'Colaboración interdisciplinaria',
         description:
-          'Procesamiento, resguardo y publicación de los datos científicos que produce el laboratorio.',
+          'Promovemos proyectos interdisciplinarios y colaboraciones nacionales e internacionales.',
       },
       {
-        id: 'outreach',
+        id: 'training',
         icon: 'education',
-        title: 'Docencia y divulgación',
+        title: 'Formación de estudiantes',
         description:
-          'Formación de estudiantes y comunicación de la ciencia espacial a públicos no especializados.',
+          'Creamos oportunidades de formación práctica para estudiantes mediante investigación, instrumentación, programación y análisis de datos.',
       },
+    ],
+  },
+  contribution: {
+    title: 'Aporte distintivo',
+    paragraphs: [
+      'LASCE busca que Costa Rica no sea únicamente usuaria de información internacional, sino también productora de datos, conocimiento y soluciones adaptadas a su ubicación y sus necesidades.',
+    ],
+  },
+  vision: {
+    title: 'Nuestra visión',
+    paragraphs: [
+      'Consolidar en Costa Rica un referente regional para la observación del Sol, el estudio de la relación Sol-Tierra y el desarrollo de herramientas de monitoreo y predicción del clima espacial. Esta visión combina excelencia científica, tecnología desarrollada con participación nacional, cooperación internacional, formación de talento y comunicación pública de la ciencia.',
     ],
   },
   team: {
@@ -264,12 +264,6 @@ export const nosotrosContent = {
         description:
           'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
       },
-    ],
-  },
-  institution: {
-    title: 'LASCE y la Universidad de Costa Rica',
-    paragraphs: [
-      'El laboratorio forma parte de la Universidad de Costa Rica y trabaja dentro de su misión de investigación, docencia y acción social. Esa pertenencia define cómo se produce el conocimiento y a quién se dirige: los resultados son públicos y están al servicio del país.',
     ],
   },
   backLink: {

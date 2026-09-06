@@ -17,9 +17,20 @@ export const Default: Story = {
   args: { content: nosotrosContent },
 }
 
-/** What the page looks like once LASCE approves the copy and the `flag` key is removed. */
-export const ApprovedCopy: Story = {
-  args: { content: { ...nosotrosContent, flag: undefined } },
+/**
+ * The banner the page carried while the copy was provisional. LASCE has approved the text, so
+ * `nosotrosContent` no longer sets `flag`; this keeps the branch exercised for the next revision.
+ */
+export const ProvisionalCopy: Story = {
+  args: {
+    content: {
+      ...nosotrosContent,
+      flag: {
+        label: 'Información provisional',
+        message: 'El contenido de esta página está pendiente de revisión.',
+      },
+    },
+  },
 }
 
 export const Mobile: Story = {
