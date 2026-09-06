@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_WEBDOTS_API_URL as string | undefined
 const API_KEY = process.env.NEXT_PUBLIC_WEBDOTS_API_KEY as string | undefined
+const IS_DISABLED = process.env.NEXT_PUBLIC_WEBDOTS_DISABLED === 'true'
 
 /**
  * Mounts the Webdots annotation widget in the app. If NEXT_PUBLIC_WEBDOTS_API_URL is not set, the component does nothing, so production is clean by default.
@@ -23,7 +24,7 @@ export function AnnotateWidget() {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (!API_URL) return
+    if (!API_URL || IS_DISABLED) return
 
     const widget = init({
       apiUrl: API_URL,
