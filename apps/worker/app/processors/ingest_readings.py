@@ -64,8 +64,7 @@ async def run(payload: IngestReadingsPayload, job: Any) -> dict[str, Any]:
     await get_influx_client().write(points)
     await job.updateProgress(60)
 
-    # Archive the raw window so `process-file` has something real to work on and
-    # the ingest is reproducible without querying InfluxDB.
+    # Archive the raw window so the ingest is reproducible without querying InfluxDB.
     object_key = f"readings/{payload.device_id}/{payload.from_.date().isoformat()}.csv"
     await get_object_storage().put_object(
         object_key,

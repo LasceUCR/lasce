@@ -3,8 +3,7 @@
 `apps/web` runs its unit tests on **Vitest with React Testing Library and jsdom**, configured in
 `apps/web/vitest.config.ts`. This page is about UI components; for where a test file belongs in
 any other workspace, and for the Playwright and pytest suites, see
-[`docs/testing.md`](../testing.md). Component tests exist for `WorkAreaCard` and `WorkAreasSection`;
-`JobLauncher.tsx` is the largest component still without one, and is the next thing worth testing.
+[`docs/testing.md`](../testing.md). Component tests exist for `WorkAreaCard` and `WorkAreasSection`.
 Follow the structure below so tests stay consistent across the app.
 
 ## Setup
@@ -16,11 +15,11 @@ Follow the structure below so tests stay consistent across the app.
 - **JSX**: the Next tsconfig sets `jsx: "preserve"`, so `vitest.config.ts` sets
   `oxc: { jsx: { runtime: 'automatic' } }`. Without it Vite 8 leaves the JSX in place and the
   test files fail to parse.
-- **Location**: colocated, same folder as the component — `app/components/JobLauncher.tsx` →
-  `app/components/JobLauncher.test.tsx`. No `__tests__` folder: touching the component and
+- **Location**: colocated, same folder as the component — `app/components/public/WorkAreaCard.tsx` →
+  `app/components/public/WorkAreaCard.test.tsx`. No `__tests__` folder: touching the component and
   forgetting the test should be one `git status` glance apart.
 - **Naming**: `<Component>.test.tsx`, one file per component. Test names read as behaviour, not
-  implementation — `'shows an error when the device list is empty'`, not `'renders correctly'`.
+  implementation — `'shows an error when the list is empty'`, not `'renders correctly'`.
 - **Style**: `describe` blocks with flat `test()` calls, never `it()`, and named imports from
   `vitest`.
 
@@ -43,6 +42,10 @@ Follow the structure below so tests stay consistent across the app.
 
 ## Example
 
+This is the pattern for a component whose I/O boundary is a Server Action plus a polling
+`fetch`, illustrated with a stand-in `JobLauncher` component (mock the action import and `fetch`,
+never `@lasce/contracts`):
+
 ```tsx
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -53,23 +56,20 @@ import * as actions from '../actions'
 
 afterEach(() => vi.restoreAllMocks())
 
-test('renders the empty state when there are no devices', () => {
-  render(<JobLauncher devices={[]} />)
-  expect(screen.getByText(/no devices yet/i)).toBeInTheDocument()
+test('renders the empty state when there is nothing to launch', () => {
+  render(<JobLauncher items={[]} />)
+  expect(screen.getByText(/nothing to launch yet/i)).toBeInTheDocument()
 })
 
-test('enqueues ingest-readings for the selected device and shows the job id', async () => {
+test('enqueues the job for the selected item and shows the job id', async () => {
   vi.spyOn(actions, 'enqueueJob').mockResolvedValue({ ok: true, jobId: 'job-123' })
   const user = userEvent.setup()
 
-  render(<JobLauncher devices={[{ id: '1', externalId: 'device-001', name: 'Device 1' }]} />)
+  render(<JobLauncher items={[{ id: '1', name: 'Item 1' }]} />)
   await user.click(screen.getByRole('button', { name: /enqueue/i }))
 
   await waitFor(() => expect(screen.getByText('job-123')).toBeInTheDocument())
-  expect(actions.enqueueJob).toHaveBeenCalledWith(
-    'ingest-readings',
-    expect.objectContaining({ deviceId: 'device-001' }),
-  )
+  expect(actions.enqueueJob).toHaveBeenCalledWith('some-job', expect.objectContaining({ id: '1' }))
 })
 ```
 

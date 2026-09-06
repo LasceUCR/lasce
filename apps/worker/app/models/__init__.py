@@ -1,13 +1,6 @@
-from app.models.jobs import (
-    DailyRollupPayload,
-    IngestReadingsPayload,
-    JobPayload,
-    ProcessFilePayload,
-)
+from app.models.jobs import IngestReadingsPayload, JobPayload
 
 __all__ = [
-    "DailyRollupPayload",
     "IngestReadingsPayload",
     "JobPayload",
-    "ProcessFilePayload",
 ]
