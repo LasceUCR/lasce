@@ -1,5 +1,4 @@
 import type { JobName, JobPayloads } from '@lasce/contracts'
-import { JOB_NAMES } from '@lasce/contracts'
 
 export interface Schedule<K extends JobName = JobName> {
   /** Stable identifier for the scheduler entry. Renaming it creates a new one. */
@@ -26,12 +25,4 @@ export interface Schedule<K extends JobName = JobName> {
  *
  * Switching between the two does not touch a single processor.
  */
-export const schedules: Schedule[] = [
-  {
-    id: 'daily-rollup-03am',
-    name: JOB_NAMES.dailyRollup,
-    cron: '0 3 * * *',
-    timezone: 'UTC',
-    data: {},
-  },
-]
+export const schedules: Schedule[] = []

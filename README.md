@@ -30,7 +30,9 @@ lasce/
 | MinIO           | File storage (S3-compatible)                                                       |
 
 Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together,
-[`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue, and
+[`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue,
+[`docs/manage-assets.md`](docs/manage-assets.md) to upload or delete files in MinIO, and
+[`docs/testing.md`](docs/testing.md) for where tests go and what gates them, and
 [`docs/tests/component_testing.md`](docs/tests/component_testing.md) for how UI component tests
 should be structured.
 
@@ -94,7 +96,7 @@ still-open decision, and both options are wired up:
 Switching between them changes nothing in the processors.
 
 ```bash
-curl -X POST http://localhost:3000/api/jobs/daily-rollup/trigger \
+curl -X POST http://localhost:3000/api/jobs/ingest-readings/trigger \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
 

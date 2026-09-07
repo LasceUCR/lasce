@@ -124,8 +124,14 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          # The annotation widget is enabled by configuration alone, in every
+          # environment. An unset variable or secret is an empty string, which
+          # is exactly the off state, so no condition is needed here: absence of
+          # WEBDOTS_API_URL is what keeps the widget out of a build.
           build-args: |
             NEXT_PUBLIC_APP_URL=${{ needs.context.outputs.app_url }}
+            NEXT_PUBLIC_WEBDOTS_API_URL=${{ vars.WEBDOTS_API_URL }}
+            NEXT_PUBLIC_WEBDOTS_API_KEY=${{ secrets.WEBDOTS_API_KEY }}
           tags: |
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}-${{ github.sha }}

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 import './globals.css'
 import { siteUrl } from './lib/site'
+import { AnnotateWidget } from './components/utils/AnnotateWidget'
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" data-scroll-behavior="smooth">
+      <AnnotateWidget />
       <body>{children}</body>
     </html>
   )

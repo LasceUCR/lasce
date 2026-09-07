@@ -65,9 +65,10 @@ const nextConfig: NextConfig = {
   // which Turbopack cannot canonicalize.
   outputFileTracingRoot: fileURLToPath(repoRoot),
 
-  // ioredis, BullMQ and the Prisma client are required at runtime instead of
-  // being bundled — they carry native or dynamic requires that do not survive it.
-  serverExternalPackages: ['ioredis', 'bullmq', '@prisma/client'],
+  // ioredis, BullMQ, the Prisma client and the MinIO SDK are required at
+  // runtime instead of being bundled — they carry native or dynamic requires
+  // that do not survive it.
+  serverExternalPackages: ['ioredis', 'bullmq', '@prisma/client', 'minio'],
 
   // Next's runtime require-hook loads @swc/helpers' ESM variants through a
   // dynamic require the file tracer cannot see, so standalone output shipped

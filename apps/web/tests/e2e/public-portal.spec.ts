@@ -1,11 +1,14 @@
 import { expect, test } from '@playwright/test'
 
+import { galleryAlbumList, galleryAlbums } from '@/app/lib/gallery'
+
 const publicRoutes = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
-  { label: 'Nosotros', path: '/nosotros', heading: 'Nosotros' },
+  { label: 'Nosotros', path: '/nosotros', heading: 'Quiénes somos' },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
   { label: 'Instrumentación', path: '/instrumentacion', heading: 'Instrumentación' },
-  { label: 'Datos', path: '/datos', heading: 'Datos' },
+  { label: 'Datos', path: '/datos', heading: 'Herramientas científicas' },
+  { label: 'Galería', path: '/galeria', heading: 'Galería' },
   { label: 'Noticias', path: '/noticias', heading: 'Noticias' },
   { label: 'Contacto', path: '/contacto', heading: 'Contacto' },
 ] as const
@@ -20,7 +23,7 @@ const areaCards = [
 ] as const
 
 const workAreaRoutes = [
-  { path: '/fisica-solar', heading: 'Física solar' },
+  { path: '/fisica-solar', heading: 'Astrofísica solar' },
   { path: '/clima-espacial', heading: 'Clima espacial' },
   { path: '/radioastronomia', heading: 'Radioastronomía' },
 ] as const
@@ -76,6 +79,81 @@ test('navigates through every public option and exposes the active page', async 
   }
 })
 
+test('displays space weather information without authentication', async ({ page }) => {
+  const response = await page.goto('/clima-espacial')
+
+  expect(response?.status()).toBe(200)
+  expect(new URL(page.url()).pathname).toBe('/clima-espacial')
+  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Clima espacial' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Qué es el clima espacial/ })).toBeVisible()
+  await expect(page.getByText(/No es el clima atmosférico cotidiano/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Del Sol a la Tierra/ })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: /Por qué estudiarlo desde Costa Rica/ }),
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Qué compone el clima espacial/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Viento solar', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'El Sol y el clima espacial' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'El trabajo de LASCE' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Indicadores actuales' })).toHaveCount(0)
+  await expect(page.getByText('Datos simulados')).toHaveCount(0)
+  await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /clima espacial/i,
+  )
+})
+
+test('displays solar astrophysics information without authentication', async ({ page }) => {
+  const response = await page.goto('/fisica-solar')
+
+  expect(response?.status()).toBe(200)
+  expect(new URL(page.url()).pathname).toBe('/fisica-solar')
+  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Astrofísica solar' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: /Qué estudia la astrofísica solar/ }),
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Relación Sol-Tierra' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'El trabajo de LASCE en astrofísica solar' }),
+  ).toBeVisible()
+  await expect(page.getByText(/Laboratorio de Astrofísica Solar y Clima Espacial/)).toBeVisible()
+  await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
+  await expect(page.getByText('Contenido temporal')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /actividad solar/i,
+  )
+})
+
+test('returns to the work areas section from space weather', async ({ page }) => {
+  await page.goto('/clima-espacial')
+
+  await page.getByRole('link', { name: 'Volver a las áreas de trabajo' }).click()
+
+  await expect(page).toHaveURL(/\/#areas-de-trabajo/)
+  await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
+  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+})
+
+test('returns to the work areas section from solar astrophysics', async ({ page }) => {
+  await page.goto('/fisica-solar')
+
+  await page.getByRole('link', { name: 'Volver a las áreas de trabajo' }).click()
+
+  await expect(page).toHaveURL(/\/#areas-de-trabajo/)
+  await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
+  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+})
+
 for (const card of areaCards) {
   test(`opens the public route from the ${card.name} card`, async ({ page }) => {
     await page.goto('/')
@@ -109,6 +187,106 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
       .getByRole('navigation', { name: 'Navegación móvil' })
       .getByRole('link', { name: 'Noticias', exact: true }),
   ).toHaveAttribute('aria-current', 'page')
+})
+
+for (const album of galleryAlbumList) {
+  test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
+    await page.goto('/galeria')
+
+    await expect(page.getByRole('heading', { level: 2, name: album.title })).toBeVisible()
+    await page.getByRole('link', { name: new RegExp(album.title) }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
+    await expect(page.getByRole('heading', { level: 1, name: album.title })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /^Ver a tama\u00f1o completo:/ }).first(),
+    ).toBeVisible()
+  })
+
+  for (const subAlbum of album.subAlbums) {
+    test(`opens the ${album.slug}/${subAlbum.slug} sub-album and returns to its album`, async ({
+      page,
+    }) => {
+      await page.goto(`/galeria/${album.slug}`)
+
+      await page.getByRole('link', { name: new RegExp(subAlbum.title) }).click()
+
+      await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}/${subAlbum.slug}$`))
+      await expect(page.getByRole('heading', { level: 1, name: subAlbum.title })).toBeVisible()
+      await expect(
+        page.getByText(`${subAlbum.media.length} archivos en este \u00e1lbum`),
+      ).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Sub\u00e1lbumes' })).toHaveCount(0)
+
+      await page.getByRole('link', { name: `Volver a ${album.title}` }).click()
+
+      await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
+    })
+  }
+}
+
+test('shows real photographs rather than placeholder frames', async ({ page }) => {
+  await page.goto('/galeria/rosac')
+
+  const images = page.locator('.media-grid img')
+
+  await expect(images.first()).toBeVisible()
+  expect(await images.count()).toBe(galleryAlbums.rosac.media.length)
+})
+
+test('opens and closes the album lightbox with the keyboard', async ({ page }) => {
+  await page.goto('/galeria/rosac')
+
+  const tile = page.getByRole('button', {
+    name: 'Ver a tama\u00f1o completo: Llegada de los componentes del ROSAC',
+  })
+  await tile.click()
+
+  const lightbox = page.getByRole('dialog')
+  await expect(lightbox).toBeVisible()
+  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+    'Llegada de los componentes del ROSAC',
+  )
+  await expect(lightbox.getByText('Subido por: Andr\u00e9s Solano')).toBeVisible()
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(tile).toBeFocused()
+})
+
+test('walks through the album lightbox with the next control', async ({ page }) => {
+  await page.goto('/galeria/rosac')
+
+  await page
+    .getByRole('button', {
+      name: 'Ver a tama\u00f1o completo: Llegada de los componentes del ROSAC',
+    })
+    .click()
+
+  const lightbox = page.getByRole('dialog')
+  await lightbox.getByRole('button', { name: 'Siguiente' }).click()
+
+  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+    'Ensamblaje del reflector parab\u00f3lico',
+  )
+  await expect(lightbox.getByText('Formato: MP4')).toBeVisible()
+
+  await lightbox.getByRole('button', { name: 'Anterior' }).click()
+  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+    'Llegada de los componentes del ROSAC',
+  )
+})
+
+test('returns 404 for an album that does not exist', async ({ page }) => {
+  const response = await page.goto('/galeria/album-inexistente')
+
+  expect(response?.status()).toBe(404)
+})
+
+test('returns 404 for a sub-album that does not exist', async ({ page }) => {
+  const response = await page.goto('/galeria/rosac/subalbum-inexistente')
+
+  expect(response?.status()).toBe(404)
 })
 
 test('returns 404 for an unknown public route', async ({ page }) => {

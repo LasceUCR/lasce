@@ -60,10 +60,10 @@ Production deployment uses the standalone Next.js bundle through
 | -------------------- | -------------------------------------------------------------- |
 | `/`                  | Institutional landing page and access to the main public areas |
 | `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
-| `/fisica-solar`      | Solar physics work area                                        |
-| `/clima-espacial`    | Space weather work area                                        |
+| `/fisica-solar`      | Solar astrophysics information page based on LASCE content     |
+| `/clima-espacial`    | Space weather information page                                 |
 | `/radioastronomia`   | Radio astronomy work area                                      |
-| `/nosotros`          | General information about LASCE                                |
+| `/nosotros`          | General information about LASCE (_Quiénes somos_)              |
 | `/investigacion`     | Research areas and activities                                  |
 | `/instrumentacion`   | Scientific instruments and observatories                       |
 | `/datos`             | Public data and analysis resources                             |
@@ -94,6 +94,9 @@ The route group `app/(public)` organizes the public portal without adding a segm
 app/
 |-- (public)/
 |   |-- [section]/page.tsx
+|   |-- clima-espacial/page.tsx
+|   |-- fisica-solar/page.tsx
+|   |-- nosotros/page.tsx
 |   |-- layout.tsx
 |   `-- page.tsx
 |-- components/public/
@@ -101,9 +104,14 @@ app/
 |   |-- PublicFooter.tsx
 |   |-- PublicHeader.tsx
 |   |-- WorkAreaCard.tsx
-|   `-- WorkAreasSection.tsx
+|   |-- WorkAreasSection.tsx
+|   |-- solar-astrophysics/
+|   |-- space-weather/
+|   `-- topic/
 |-- lib/
 |   |-- site.ts
+|   |-- solar-astrophysics.ts
+|   |-- space-weather.ts
 |   `-- work-areas.ts
 |-- globals.css
 |-- layout.tsx
@@ -121,6 +129,10 @@ playwright.config.ts
 - `Brand` centralizes the institutional logo variants used by the header and footer.
 - `app/lib/site.ts` defines the canonical site origin and public route list used by SEO metadata.
 - `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
+- `app/(public)/fisica-solar/page.tsx` renders the solar astrophysics information page. Copy adapted from LASCE-provided material and page metadata live in `app/lib/solar-astrophysics.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
+- `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy lives in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
+- `app/(public)/nosotros/page.tsx` renders the general information page (_Quiénes somos_). Copy and page metadata live in `app/lib/nosotros.ts`. The page is public, includes a return link to `/`, and does not require authentication. Its team gallery is a scroll-snap track rather than an index carousel, so every portrait stays in the DOM and keyboard scrolling works natively; names are visible captions and the portraits are decorative.
+- `app/components/public/topic/` holds reusable topic-page primitives (`TopicHero`, `TopicSection`, `InfoCard`, `ConceptFlow`, `TopicFigure`, and related layout pieces) so other work area pages can reuse the same structure without duplicating markup.
 - `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`.
 
 ## Accessibility and SEO
@@ -155,6 +167,8 @@ The Playwright configuration starts the web development server automatically whe
 
 - Loading the landing page without authentication
 - Direct access to all public routes, including the three work area pages
+- Solar astrophysics informational content and the return link to the work areas
+- Space weather informational content and the return link to the work areas
 - Absence of redirects to login
 - Desktop and mobile navigation
 - Active links through `aria-current`

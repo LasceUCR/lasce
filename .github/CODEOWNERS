@@ -13,4 +13,4 @@
 # the file as invalid and the review requirement can never be satisfied.
 # Check with: gh api repos/LasceUCR/lasce/codeowners/errors
 
-*  @sebasbose @Santaval @tatsparamo @GabrielSerranoUCR
+*  @sebasbose @Santaval @tatsparamo @GabrielSerranoUCR @andresMurillo23 @isabellarodriguezs

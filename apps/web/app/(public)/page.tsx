@@ -1,7 +1,7 @@
-import Image from 'next/image'
-import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
 
+import { Button } from '@/app/components/public/Button'
+import { GoesSolarAnimation } from '@/app/components/public/GoesSolarAnimation'
 import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
 import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
 import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@/app/lib/work-areas'
@@ -31,14 +31,7 @@ export default function HomePage() {
     <>
       <section className="hero" id="inicio">
         <div className="hero-visual" aria-hidden="true">
-          <Image
-            className="hero-image"
-            src="/images/decorative/Solar-Flare.png"
-            alt=""
-            fill
-            priority
-            sizes="(max-width: 760px) 100vw, 62vw"
-          />
+          <GoesSolarAnimation />
         </div>
         <div className="hero-content page-width">
           <h1>Exploramos el Sol para comprender el clima espacial</h1>
@@ -48,9 +41,9 @@ export default function HomePage() {
             mediante observaciones, instrumentación, análisis de datos y desarrollo científico.
           </p>
           <div className="hero-actions">
-            <Link className="button button-primary" href="/nosotros">
+            <Button className="button-primary-white-text" href="/nosotros">
               Conoce más sobre LASCE
-            </Link>
+            </Button>
           </div>
         </div>
       </section>

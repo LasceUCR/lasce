@@ -1,0 +1,12 @@
+{
+  // `main` and `development` are protected by the repository rulesets in
+  // .github/rulesets/. GitHub rejects a direct push to either one, but VS Code
+  // has no knowledge of those rules, so it is declared here as well.
+  //
+  // The padlock next to the branch name in the Status Bar comes from the first
+  // setting. The second is the useful half: a commit made while one of these
+  // branches is checked out is moved to a new branch automatically, instead of
+  // failing at push time with GH013.
+  "git.branchProtection": ["main", "development"],
+  "git.branchProtectionPrompt": "alwaysCommitToNewBranch"
+}

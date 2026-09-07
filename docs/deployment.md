@@ -29,7 +29,7 @@ them (LASCE-INF-001-016).
 | ----------------- | ---------------------------------------------------------------------------------------- |
 | `lint`            | Prettier formatting is clean and ESLint passes on every Node workspace.                  |
 | `typecheck`       | `tsc --noEmit` passes. Depends on `^build`, so the Prisma client is generated first.     |
-| `test`            | The `@lasce/contracts` suite passes (`node:test` via tsx).                               |
+| `test`            | `turbo run test` across every TypeScript workspace, with coverage floors enforced.       |
 | `build`           | `turbo run build`: `prisma generate` then `next build`.                                  |
 | `worker`          | ruff (lint + format check), mypy `--strict`, and pytest, on Python 3.13.                 |
 | `e2e`             | Playwright/Chromium against `next dev`, with real Postgres and Redis service containers. |
@@ -152,7 +152,9 @@ CI: it would grant write access to every project.
 | Kind     | Name                                            | Used by                                                                           |
 | -------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
 | Variable | `APP_URL_STAGING`, `APP_URL_PRODUCTION`         | `cd.yml` (`context` job, which runs before the approval gate) and `cron-jobs.yml` |
+| Variable | `WEBDOTS_API_URL`                               | `cd.yml` (`images` job). Unset means the annotation widget is off everywhere.     |
 | Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION` | `cron-jobs.yml`                                                                   |
+| Secret   | `WEBDOTS_API_KEY`                               | `cd.yml` (`images` job). Public in the client bundle once set.                    |
 
 Domains are **not** declared in `.railway/railway.ts`. Railway rejects domain
 registration from configuration, so generate or attach the domain in the
@@ -168,13 +170,41 @@ schemeless value up front so the failure is immediate and explicit.
 The `CRON_SECRET_*` values duplicate the `CRON_SECRET` set on each Railway web
 service. **Rotating one without the other yields silent 401s.**
 
-### Railway side (dashboard only)
+### The annotation widget
 
-- `CRON_SECRET` on each web service. Generate it with `openssl rand -hex 32`. It
-  is `preserve()` in the IaC file precisely so it never enters git.
-- **Registry credentials** on each service: Settings → Source → Registry
-  Credentials → a GitHub PAT with `read:packages`. Railway supplies the GHCR
-  username itself. This cannot be set through the CLI or IaC.
+`AnnotateWidget` mounts the WebDots QA overlay. It is a client component, so the
+package and its configuration are compiled into the browser bundle. **Setting
+`NEXT_PUBLIC_WEBDOTS_*` on the running Railway service does nothing**, in either
+direction: it cannot switch the widget on, and it cannot switch it off once an
+image was built with it. The values have to reach `next build` as build args, so
+`web.Dockerfile` declares one `ARG` per variable, all defaulting to empty.
+
+**The widget is enabled by configuration alone, in every environment including
+production.** `cd.yml` passes the values unconditionally, and there is exactly
+one way to switch the widget off: leave `WEBDOTS_API_URL` unset, which is the
+default and does not fail the build.
+
+The app also honours `NEXT_PUBLIC_WEBDOTS_DISABLED`, but the pipeline does not
+set it. It exists for builds you run yourself and for the Playwright suite,
+which sets it on the dev server in `playwright.config.ts` so the widget does not
+inject a third-party overlay into pages the axe sweep is about to scan. It is
+deliberately not wired to a repository variable: that would be a second way to
+express what an unset `WEBDOTS_API_URL` already says.
+
+Because the values are inlined rather than read at runtime, turning the widget
+off does not merely hide it. The guard folds to a constant, `init()` becomes
+unreachable and the library is tree-shaken out, so the image ships neither the
+configuration nor the package. Verified for both off states: an unconfigured
+build, and a build with `NEXT_PUBLIC_WEBDOTS_DISABLED=true`. In the second case
+the API key is dropped from the bundle as well, so disabling the widget by hand
+also removes the public exposure described below rather than leaving a dormant
+key in place.
+
+`WEBDOTS_API_KEY` is inlined into the client bundle and is therefore **readable
+by anyone who opens the site, production included**. That is inherent to the
+`NEXT_PUBLIC_` prefix, not something the pipeline can prevent. One key covers
+both environments, so rotating it affects both. Keep it scoped to annotation
+submission.
 
 ## 6. Infrastructure as code
 
@@ -226,16 +256,15 @@ here usually means a private-networking or `HOSTNAME` bind problem.
 **Triggering a job by hand.**
 
 ```bash
-curl -X POST "$APP_URL/api/jobs/daily-rollup/trigger" \
+curl -X POST "$APP_URL/api/jobs/ingest-readings/trigger" \
   -H "Authorization: Bearer $CRON_SECRET" \
   -H 'Content-Type: application/json' -d '{}'
 ```
 
-Valid job names are in `JOB_NAMES` (`packages/contracts/src/jobs.ts`):
-`ingest-readings`, `process-file`, `daily-rollup`. Poll the returned id at
-`GET /api/jobs/status/<id>`, or read the `job_runs` table.
+Valid job names are in `JOB_NAMES` (`packages/contracts/src/jobs.ts`): `ingest-readings`.
+Poll the returned id at `GET /api/jobs/status/<id>`.
 
-Or through the pipeline: `gh workflow run cron-jobs.yml -f target=staging -f job=daily-rollup`.
+Or through the pipeline: `gh workflow run cron-jobs.yml -f target=staging -f job=ingest-readings`.
 
 **Logs.** `railway logs --service worker`. A healthy worker logs a `worker ready`
 line with its queue name and concurrency on boot.
@@ -277,19 +306,29 @@ starting the web container, and repoint the `deploy` job in `cd.yml` from
 both are deferred to a follow-up. Concretely, with the worker's defaults pointing
 at `localhost`:
 
-| Job               | Status                                                                                                                                                |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `daily-rollup`    | **Works.** `processors/daily_rollup.py` returns early on an empty `Device` table, before touching InfluxDB. It will start failing once devices exist. |
-| `ingest-readings` | Fails on the InfluxDB write, is retried by BullMQ, ends `FAILED` in `job_runs`.                                                                       |
-| `process-file`    | Fails on `ensure_bucket()`.                                                                                                                           |
-| `apps/web`        | **Unaffected.** Nothing in the web app reads either store, so the deployed public portal is complete.                                                 |
+| Job               | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ingest-readings` | Fails on the InfluxDB write, is retried by BullMQ, and logged as `FAILED`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `apps/web`        | **Boots fine, but asset storage does not work.** `app/services/storage` (server-side upload/delete via the `assetStorage` instance in `app/services/container.ts`) is a service layer only — no route or UI calls it yet — and `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` are optional in `packages/config/src/env.ts` precisely so a missing MinIO does not stop the app from starting. The deployed public portal does not depend on it. Note the container instantiates the client **eagerly at module scope**, so the first import of `container.ts` is what surfaces a bad endpoint — see the caveat below. |
 
-When this is picked up: MinIO maps onto Railway Buckets (the Python MinIO SDK is
-a plain S3 client, so verify SigV4 region negotiation, since
-`clients/storage.py` builds `Minio(...)` with no `region=`), and InfluxDB needs a
-container service from `influxdb:3-core` with a volume. Give it a real admin
-token; do not carry over `INFLUXDB3_WITHOUT_AUTH`, which the Compose file marks
-development-only.
+When this is picked up: MinIO maps onto Railway Buckets. Both MinIO SDKs are plain
+S3 clients, so verify SigV4 region negotiation — neither side pins a region:
+`apps/worker/app/clients/storage.py` builds `Minio(...)` with no `region=`, and
+`apps/web/app/services/storage/implementations/MinioAsssetStorage.ts` likewise
+passes none, and creates buckets with `makeBucket(bucket, '')`.
+
+**The web client will not construct against the documented endpoint.** It passes
+`MINIO_ENDPOINT` straight to MinIO's `endPoint`, which rejects a `host:port`
+string with `InvalidEndpointError: Invalid endPoint : localhost:9000` — the value
+`.env.example` ships and `packages/config` defaults to. Provisioning MinIO means
+fixing that first; the port has to be split out, or the variable has to carry a
+bare host. It also reads `MINIO_PORT` and `MINIO_DEFAULT_BUCKET`, neither of which
+is in the `packages/config` schema. See
+[manage-assets.md](manage-assets.md#known-gaps).
+
+InfluxDB needs a container service from `influxdb:3-core` with a volume. Give it a
+real admin token; do not carry over `INFLUXDB3_WITHOUT_AUTH`, which the Compose
+file marks development-only.
 
 **Branch rulesets are configured.** See
 [`.github/rulesets/`](../.github/rulesets/) for the committed payloads and
