@@ -23,3 +23,13 @@ export const Default: Story = {
     ],
   },
 }
+
+export const Empty: Story = {
+  args: {
+    labelX: '',
+    labelY: '',
+    times: [],
+    frequencies: [],
+    intensity: [],
+  },
+}
