@@ -1642,3 +1642,33 @@ a {
   padding-top: 40px;
   padding-bottom: 48px;
 }
+
+.rosac-data-section {
+  margin-top: 8px;
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
+}
+
+.rosac-data-section input{
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px 0 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.rosac-data-section button{
+  align-self: flex-end;
+  border: 1px solid var(--border);
+}

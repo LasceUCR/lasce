@@ -5,7 +5,7 @@
 export const rosacDataHero = {
   kicker: 'Portal de consulta ROSAC',
   title: 'Radio monitoreo',
-  lead: '',
+  lead: 'Acceso a mediciones del Radio Observatorio de Santa Cruz',
 } as const
 
 export const rosacMockData = {
@@ -21,3 +21,8 @@ export const rosacMockData = {
     [0.1, 0.2, 0.1, 0.3, 0.8],
   ],
 }
+
+export const rosacDataBackLink = {
+  href: '/',
+  label: 'Volver al inicio',
+} as const
