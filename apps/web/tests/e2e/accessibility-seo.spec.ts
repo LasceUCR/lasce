@@ -1,7 +1,17 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
+import { galleryAlbumList } from '@/app/lib/gallery'
 import { publicPaths } from '@/app/lib/site'
+
+// Every album and sub-album, derived so a new one is covered automatically.
+const galleryRoutes = galleryAlbumList.flatMap((album) => [
+  { label: album.title, path: `/galeria/${album.slug}` },
+  ...album.subAlbums.map((subAlbum) => ({
+    label: subAlbum.title,
+    path: `/galeria/${album.slug}/${subAlbum.slug}`,
+  })),
+])
 
 const publicRoutes = [
   { label: 'Inicio', path: '/' },
@@ -9,6 +19,7 @@ const publicRoutes = [
   { label: 'Investigación', path: '/investigacion' },
   { label: 'Instrumentación', path: '/instrumentacion' },
   { label: 'Datos', path: '/datos' },
+  { label: 'Galería', path: '/galeria' },
   { label: 'Noticias', path: '/noticias' },
   { label: 'Contacto', path: '/contacto' },
 ] as const
@@ -18,6 +29,7 @@ const indexableRoutes = [
   { label: 'Física solar', path: '/fisica-solar' },
   { label: 'Clima espacial', path: '/clima-espacial' },
   { label: 'Radioastronomía', path: '/radioastronomia' },
+  ...galleryRoutes,
 ] as const
 
 for (const route of indexableRoutes) {

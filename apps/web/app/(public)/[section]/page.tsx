@@ -8,11 +8,6 @@ import { isWorkAreaSlug, workAreaSlugs, workAreas } from '@/app/lib/work-areas'
 const excludedDynamicWorkAreaSlugs = new Set(['clima-espacial', 'fisica-solar', 'radioastronomia'])
 
 const publicSections = {
-  nosotros: {
-    title: 'Nosotros',
-    description:
-      'Conozca la misión, el equipo y el trabajo del Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica.',
-  },
   instrumentacion: {
     title: 'Instrumentación',
     description:
