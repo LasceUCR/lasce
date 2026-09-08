@@ -90,3 +90,64 @@ class ResearchCrossAuthor(Base):
         UUID(as_uuid=True), ForeignKey("research.research_authors.id", ondelete="CASCADE")
     )
     position: Mapped[int] = mapped_column(Integer)
+
+
+class NewsSource(Base):
+    """An outlet where a news item was published. Lives in the ``news`` Postgres schema."""
+
+    __tablename__ = "news_sources"
+    __table_args__ = {"schema": "news"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(Text, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class News(Base):
+    """A public news item shown on `/noticias`."""
+
+    __tablename__ = "news_records"
+    __table_args__ = {"schema": "news"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    title: Mapped[str] = mapped_column(Text)
+    published_at: Mapped[date_type] = mapped_column(Date)
+    source_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("news.news_sources.id", ondelete="RESTRICT")
+    )
+    abstract: Mapped[str] = mapped_column(Text)
+    external_url: Mapped[str] = mapped_column(Text, unique=True)
+    image_url: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class NewsAuthor(Base):
+    """A person credited as an author on one or more news items."""
+
+    __tablename__ = "news_authors"
+    __table_args__ = {"schema": "news"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(Text, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class NewsCrossAuthor(Base):
+    """Many-to-many join between `News` and `NewsAuthor`. Keeps ``position`` so
+    a record's citation order can be reproduced.
+    """
+
+    __tablename__ = "news_cross_authors"
+    __table_args__ = {"schema": "news"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    news_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("news.news_records.id", ondelete="CASCADE")
+    )
+    news_author_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("news.news_authors.id", ondelete="CASCADE")
+    )
+    position: Mapped[int] = mapped_column(Integer)
