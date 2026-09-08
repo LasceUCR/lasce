@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
 import { NewsExplorer } from '@/app/components/public/news/NewsExplorer'
-import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { getNews, noticiasBackLink, noticiasHero, noticiasMeta } from '@/app/lib/news'
