@@ -3,10 +3,37 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
 import { NewsExplorer, type NewsExplorerProps } from './NewsExplorer'
-import { Default, Empty } from './NewsExplorer.stories'
 
-const defaultArgs = Default.args as NewsExplorerProps
-const emptyArgs = Empty.args as NewsExplorerProps
+const defaultArgs: NewsExplorerProps = {
+  news: [
+    {
+      slug: 'ucr-radiotelescopio-investigar-sol',
+      title: 'UCR pone en funcionamiento radiotelescopio para investigar el Sol',
+      authors: 'Gerardo Quesada A.',
+      source: 'El Norte Hoy',
+      date: '2023',
+      abstract:
+        'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
+      href: 'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
+      imageUrl: '/images/news/el-norte-hoy-1.png',
+    },
+    {
+      slug: 'ucr-contara-con-radiotelescopio-explorar-cosmos',
+      title: 'UCR contará con su propio radiotelescopio para explorar el cosmos',
+      authors: 'Manrique Vindas Segura',
+      source: 'Universidad de Costa Rica (UCR)',
+      date: '2017',
+      abstract:
+        'Un proyecto de investigación de la UCR estudia la transformación de una gran antena instalada en la Finca Experimental de Santa Cruz en un radiotelescopio para estudiar los astros.',
+      href: 'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
+      imageUrl: '/images/news/ucr-3.png',
+    },
+  ],
+}
+
+const emptyArgs: NewsExplorerProps = {
+  news: [],
+}
 
 describe('NewsExplorer', () => {
   test('renders one card per news article it is given', () => {
@@ -51,11 +78,7 @@ describe('NewsExplorer', () => {
     const user = userEvent.setup()
     render(<NewsExplorer {...defaultArgs} />)
 
-    const article = defaultArgs.news.find((item) => item.authors.trim() !== '')
-
-    if (!article) {
-      throw new Error('Expected at least one news article with an author')
-    }
+    const article = defaultArgs.news[0]!
 
     await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), article.authors)
 
