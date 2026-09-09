@@ -1,25 +1,26 @@
 'use client'
 
-import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
 import { useRef } from 'react'
 
-import type { TeamMember } from '@/app/lib/nosotros'
+import type { TeamMember } from '@/app/lib/rosac'
 
 export interface TeamGalleryProps {
   label: string
+  emptyMessage: string
   people: readonly TeamMember[]
 }
 
 /**
  * A scroll-snap track rather than an index driven carousel: every portrait stays in the DOM,
  * keyboard and touch scrolling work natively, and there is no slide state, live region or focus
- * management to get wrong. `/nosotros` is in the zero tolerance axe sweep and index carousels are
- * the usual source of violations there.
+ * management to get wrong. `/radioastronomia` is in the zero tolerance axe sweep and index
+ * carousels are the usual source of violations there.
  *
  * The source graphics carry the name, role, affiliation and description as text baked into the
  * image. That text is invisible to a screen reader, unsearchable and does not reflow, so it is
- * transcribed into `app/lib/nosotros.ts` and rendered as real HTML here.
+ * transcribed into `app/lib/rosac.ts` and rendered as real HTML here.
  *
  * Only the role and the name are shown. The affiliation and the description stay in the document
  * as visually hidden text rather than in `alt`, for two reasons: the caption follows the image in
@@ -28,7 +29,7 @@ export interface TeamGalleryProps {
  * Hidden text keeps one natural reading order, role then name then affiliation then description,
  * and stays indexable. Sighted readers lose nothing, because all of it is legible in the card.
  */
-export function TeamGallery({ label, people }: TeamGalleryProps) {
+export function TeamGallery({ label, emptyMessage, people }: TeamGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null)
 
   function scrollByCards(direction: 1 | -1) {
@@ -43,7 +44,11 @@ export function TeamGallery({ label, people }: TeamGalleryProps) {
   }
 
   if (people.length === 0) {
-    return null
+    return (
+      <p className="content-empty" role="status">
+        {emptyMessage}
+      </p>
+    )
   }
 
   return (

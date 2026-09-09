@@ -95,9 +95,10 @@ describe('TeamGallery', () => {
     expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: -360 })
   })
 
-  test('renders nothing while there are no portraits yet', () => {
-    const { container } = render(<TeamGallery {...emptyArgs} />)
+  test('explains when no researcher information is available', () => {
+    render(<TeamGallery {...emptyArgs} />)
 
-    expect(container).toBeEmptyDOMElement()
+    expect(screen.getByRole('status')).toHaveTextContent(emptyArgs.emptyMessage)
+    expect(screen.queryByRole('list')).not.toBeInTheDocument()
   })
 })
