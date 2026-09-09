@@ -16,6 +16,7 @@ const navigation = [
   { label: 'Galería', href: '/galeria' },
   { label: 'Noticias', href: '/noticias' },
   { label: 'Contacto', href: '/contacto' },
+  { label: 'Administración', href: '/administracion' },
 ]
 
 export function PublicHeader() {
@@ -77,7 +78,7 @@ export function PublicHeader() {
 
       <nav className="desktop-nav" aria-label="Navegación principal">
         {navigation.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
           return (
             <Link
@@ -111,7 +112,7 @@ export function PublicHeader() {
         </summary>
         <nav aria-label="Navegación móvil">
           {navigation.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
             return (
               <Link
