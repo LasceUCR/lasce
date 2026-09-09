@@ -6,6 +6,6 @@ Files in this directory are served by Next.js from the site root.
 - `images/decorative/`: decorative backgrounds, textures, and illustrations.
 - `images/galeria/`: placeholder photography for the public gallery. Temporary, and
   documented in that directory's own README.
-- `images/equipo/`: ROSAC researcher portraits for the gallery on `/radioastronomia`, cropped to 4:5. Each file is referenced from `app/lib/rosac.ts`; the person's name is rendered as a visible caption, so the images carry empty alternative text.
+- `images/equipo/`: ROSAC researcher portraits for the gallery on `/radioastronomia`, cropped to 4:5. Each file is referenced from `app/lib/rosac.ts` and rendered by `ResearcherCard`; the person's name, role, email, institution and description are visible text, so the images carry empty alternative text.
 
 For example, `public/brand/logo.svg` is available to the app as `/brand/logo.svg`.

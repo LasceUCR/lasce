@@ -17,24 +17,29 @@ describe('TeamGallery', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(defaultArgs.people.length)
   })
 
-  test('shows the role and name of every person', () => {
+  test('shows the role, name, institution and description of every person', () => {
     render(<TeamGallery {...defaultArgs} />)
 
+    const track = screen.getByRole('list', { name: defaultArgs.label })
     for (const person of defaultArgs.people) {
-      expect(screen.getByText(person.name)).toBeInTheDocument()
+      expect(within(track).getByText(person.name)).toBeInTheDocument()
+      expect(within(track).getByText(person.description)).toBeInTheDocument()
     }
+    expect(within(track).getAllByText('Institución: Física')).toHaveLength(defaultArgs.people.length)
   })
 
-  test('keeps the affiliation and the description in the document for screen readers', () => {
+  test('links public emails when they were supplied', () => {
     render(<TeamGallery {...defaultArgs} />)
 
-    // Not shown, because the card image already carries them for sighted readers, but they must
-    // stay in the DOM: inside the image they are unreadable to a screen reader and unindexable.
     for (const person of defaultArgs.people) {
-      const hidden = screen.getByText(`${person.affiliation}. ${person.description}`)
+      if (!person.email) {
+        continue
+      }
 
-      expect(hidden).toBeInTheDocument()
-      expect(hidden).toHaveClass('sr-only')
+      expect(screen.getByRole('link', { name: person.email })).toHaveAttribute(
+        'href',
+        `mailto:${person.email}`,
+      )
     }
   })
 
