@@ -17,6 +17,15 @@ export const Default: Story = {
   args: { content: rosacInfoContent },
 }
 
+export const EmptyResearchers: Story = {
+  args: {
+    content: {
+      ...rosacInfoContent,
+      team: { ...rosacInfoContent.team, people: [] },
+    },
+  },
+}
+
 export const Mobile: Story = {
   args: Default.args,
   globals: { viewport: { value: 'rosacMobile', isRotated: false } },

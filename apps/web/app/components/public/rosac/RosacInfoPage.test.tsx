@@ -62,4 +62,34 @@ describe('RosacInfoPage', () => {
     expect(overview).toHaveTextContent('Descripción actualizada.')
     expect(screen.getByRole('region', { name: 'ROSAC y LASCE' })).toBeInTheDocument()
   })
+
+  test('introduces every ROSAC researcher', () => {
+    render(<RosacInfoPage {...defaultArgs} />)
+
+    const team = screen.getByRole('region', { name: /Investigadores/ })
+    const track = within(team).getByRole('list', { name: defaultArgs.content.team.title })
+
+    expect(within(track).getAllByRole('listitem')).toHaveLength(
+      defaultArgs.content.team.people.length,
+    )
+    expect(within(team).getByText('Dra. Carolina Salas Matamoros')).toBeInTheDocument()
+    expect(within(team).getByText('Investigadora principal')).toBeInTheDocument()
+  })
+
+  test('explains when no ROSAC researchers are available', () => {
+    render(
+      <RosacInfoPage
+        content={{
+          ...defaultArgs.content,
+          team: { ...defaultArgs.content.team, people: [] },
+        }}
+      />,
+    )
+
+    const team = screen.getByRole('region', { name: /Investigadores/ })
+    expect(within(team).getByRole('status')).toHaveTextContent(
+      defaultArgs.content.team.emptyMessage,
+    )
+    expect(within(team).queryByRole('list')).not.toBeInTheDocument()
+  })
 })

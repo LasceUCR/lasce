@@ -48,8 +48,38 @@ test('serves the general information and LASCE relationship directly without aut
   await expect(page.getByRole('region', { name: 'ROSAC y LASCE' })).toContainText(
     'LASCE convierte observaciones en conocimiento',
   )
+  await expect(page.getByRole('region', { name: /Investigadores/ })).toContainText(
+    'Dra. Carolina Salas Matamoros',
+  )
   await expect(page).toHaveTitle('Radioastronomía y ROSAC | LASCE')
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/radioastronomia$/)
+})
+
+test('presents the ROSAC researchers as real text rather than only inside the card images', async ({
+  page,
+}) => {
+  await page.goto('/radioastronomia')
+
+  const team = page.getByRole('region', { name: /Investigadores/ })
+  const track = team.getByRole('list', { name: 'Investigadores' })
+
+  await expect(track.getByRole('listitem')).toHaveCount(14)
+  await expect(team.getByText('Dra. Carolina Salas Matamoros')).toBeVisible()
+  await expect(team.getByText('Investigadora principal')).toBeVisible()
+
+  // The affiliation and the description are deliberately not shown, because the card image
+  // already carries them for sighted readers. They still have to be in the DOM, since inside
+  // the image they are unreadable to a screen reader and unindexable.
+  // Playwright counts a clipped 1px element as visible, so assert the marker class rather than
+  // visibility. What matters is that the text is in the document and not shown to sighted users.
+  const detail = team.getByText(/Responsable de la planificación estratégica/)
+  await expect(detail).toHaveCount(1)
+  await expect(detail).toHaveClass(/sr-only/)
+
+  await expect(track).toHaveAttribute('tabindex', '0')
+  for (const image of await team.locator('img').all()) {
+    await expect(image).toHaveAttribute('alt', '')
+  }
 })
 
 test('keeps the scientific consultation button enabled and without a destination', async ({

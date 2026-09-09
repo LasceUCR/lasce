@@ -62,7 +62,7 @@ Production deployment uses the standalone Next.js bundle through
 | `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
 | `/fisica-solar`      | Solar astrophysics information page based on LASCE content     |
 | `/clima-espacial`    | Space weather information page                                 |
-| `/radioastronomia`   | Radio astronomy work area                                      |
+| `/radioastronomia`   | Radio astronomy work area and ROSAC researchers                |
 | `/nosotros`          | General information about LASCE (_Quiénes somos_)              |
 | `/investigacion`     | Research areas and activities                                  |
 | `/instrumentacion`   | Scientific instruments and observatories                       |
@@ -97,6 +97,7 @@ app/
 |   |-- clima-espacial/page.tsx
 |   |-- fisica-solar/page.tsx
 |   |-- nosotros/page.tsx
+|   |-- radioastronomia/page.tsx
 |   |-- layout.tsx
 |   `-- page.tsx
 |-- components/public/
@@ -105,6 +106,7 @@ app/
 |   |-- PublicHeader.tsx
 |   |-- WorkAreaCard.tsx
 |   |-- WorkAreasSection.tsx
+|   |-- rosac/
 |   |-- solar-astrophysics/
 |   |-- space-weather/
 |   `-- topic/
@@ -112,6 +114,7 @@ app/
 |   |-- site.ts
 |   |-- solar-astrophysics.ts
 |   |-- space-weather.ts
+|   |-- rosac.ts
 |   `-- work-areas.ts
 |-- globals.css
 |-- layout.tsx
@@ -131,7 +134,8 @@ playwright.config.ts
 - `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
 - `app/(public)/fisica-solar/page.tsx` renders the solar astrophysics information page. Copy adapted from LASCE-provided material and page metadata live in `app/lib/solar-astrophysics.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
 - `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy lives in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
-- `app/(public)/nosotros/page.tsx` renders the general information page (_Quiénes somos_). Copy and page metadata live in `app/lib/nosotros.ts`. The page is public, includes a return link to `/`, and does not require authentication. Its team gallery is a scroll-snap track rather than an index carousel, so every portrait stays in the DOM and keyboard scrolling works natively; names are visible captions and the portraits are decorative.
+- `app/(public)/nosotros/page.tsx` renders the general information page (_Quiénes somos_). Copy and page metadata live in `app/lib/nosotros.ts`. The page is public, includes a return link to `/`, and does not require authentication.
+- `app/(public)/radioastronomia/page.tsx` renders the ROSAC information page. Copy and page metadata live in `app/lib/rosac.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication. Its researchers gallery is a scroll-snap track rather than an index carousel, so every portrait stays in the DOM and keyboard scrolling works natively; names are visible captions and the portraits are decorative. An empty list shows an informative message instead of the gallery.
 - `app/components/public/topic/` holds reusable topic-page primitives (`TopicHero`, `TopicSection`, `InfoCard`, `ConceptFlow`, `TopicFigure`, and related layout pieces) so other work area pages can reuse the same structure without duplicating markup.
 - `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`.
 

@@ -38,31 +38,8 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
 
   // The catch-all placeholder must no longer serve this route.
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
-})
-
-test('presents the team as real text rather than only inside the card images', async ({ page }) => {
-  await page.goto('/nosotros')
-
-  const team = page.getByRole('region', { name: /El equipo/ })
-  const track = team.getByRole('list', { name: 'El equipo' })
-
-  await expect(track.getByRole('listitem')).toHaveCount(14)
-  await expect(team.getByText('Dra. Carolina Salas Matamoros')).toBeVisible()
-  await expect(team.getByText('Investigadora principal')).toBeVisible()
-
-  // The affiliation and the description are deliberately not shown, because the card image
-  // already carries them for sighted readers. They still have to be in the DOM, since inside
-  // the image they are unreadable to a screen reader and unindexable.
-  // Playwright counts a clipped 1px element as visible, so assert the marker class rather than
-  // visibility. What matters is that the text is in the document and not shown to sighted users.
-  const detail = team.getByText(/Responsable de la planificación estratégica/)
-  await expect(detail).toHaveCount(1)
-  await expect(detail).toHaveClass(/sr-only/)
-
-  await expect(track).toHaveAttribute('tabindex', '0')
-  for (const image of await team.locator('img').all()) {
-    await expect(image).toHaveAttribute('alt', '')
-  }
+  await expect(page.getByRole('region', { name: /Investigadores/ })).toHaveCount(0)
+  await expect(page.getByText('Dra. Carolina Salas Matamoros')).toHaveCount(0)
 })
 
 test('exposes indexable metadata for the general information page', async ({ page }) => {
@@ -132,7 +109,6 @@ for (const viewport of viewports) {
 
     await expect(page.getByRole('heading', { level: 1, name: 'Quiénes somos' })).toBeVisible()
 
-    // The gallery track scrolls internally; the page itself must not.
     const fits = await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
     )
