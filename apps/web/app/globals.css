@@ -2178,6 +2178,7 @@ a.gallery-tile:focus-visible {
 
 .team-gallery-track {
   display: flex;
+  align-items: stretch;
   gap: 16px;
   margin: 0;
   padding: 4px 4px 12px;
@@ -2194,51 +2195,89 @@ a.gallery-tile:focus-visible {
 
 .team-gallery-slide {
   position: relative;
+  display: flex;
   flex: 0 0 auto;
-  width: 300px;
+  width: 440px;
   scroll-snap-align: start;
 }
 
-.team-gallery-slide figure {
-  margin: 0;
+.researcher-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+  height: 100%;
+  padding: 14px;
 }
 
-.team-gallery-frame {
+.researcher-card-photo {
   position: relative;
-  display: block;
-  aspect-ratio: 4 / 5;
+  flex: 0 0 auto;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  aspect-ratio: 1 / 1.15;
+  border-radius: 8px;
   background: #e8f6fc;
 }
 
-.team-gallery-photo {
+.researcher-card-photo img {
   object-fit: cover;
-  object-position: center;
 }
 
-.team-gallery-slide figcaption {
+.researcher-card-body {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: 2px;
-  margin-top: 10px;
+  gap: 6px;
 }
 
-.team-gallery-name {
-  color: var(--ink);
-  font-size: 15px;
+.researcher-card-role,
+.researcher-card-name,
+.researcher-card-institution,
+.researcher-card-description {
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+.researcher-card-role {
+  color: var(--blue-dark);
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.3;
 }
 
-.team-gallery-role {
-  order: -1;
-  color: var(--blue-dark);
-  font-size: 12px;
+.researcher-card-name {
+  color: var(--ink);
+  font-size: 16px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  line-height: 1.3;
+}
+
+.researcher-card-email,
+.researcher-card-email-empty {
+  display: block;
+  min-height: 1.4em;
+  color: var(--blue-dark);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.researcher-card-email:hover,
+.researcher-card-email:focus-visible {
+  color: var(--cyan);
+}
+
+.researcher-card-institution {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.researcher-card-description {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .team-gallery-controls {
@@ -2267,7 +2306,7 @@ a.gallery-tile:focus-visible {
 
 @media (max-width: 760px) {
   .team-gallery-slide {
-    width: 78vw;
+    width: 86vw;
   }
 }
 
