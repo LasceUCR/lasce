@@ -23,8 +23,8 @@ describe('SpaceWeatherPage', () => {
       screen.getByRole('heading', { name: /Por qué estudiarlo desde Costa Rica/ }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: /Qué compone el clima espacial/ }),
-    ).toBeInTheDocument()
+      screen.getByRole('region', { name: /Qué compone el clima espacial/ }),
+    ).toHaveClass('topic-section-lede')
     expect(screen.queryByRole('heading', { name: /El trabajo de LASCE/ })).not.toBeInTheDocument()
   })
 
