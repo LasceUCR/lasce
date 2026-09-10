@@ -18,6 +18,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/client"
+  previewFeatures = ["orderByNulls"]
 }
 
 datasource db {
@@ -122,15 +123,15 @@ model NewsSource {
 /// A public news item shown on `/noticias`: a media article, institutional note,
 /// or external coverage item linked to its source.
 model News {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
-  publishedAt DateTime @map("published_at") @db.Date
-  sourceId    String   @map("source_id") @db.Uuid
-  abstract    String   @db.Text
-  externalUrl String   @unique @map("external_url")
-  imageUrl    String   @map("image_url")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  publishedAt DateTime?  @map("published_at") @db.Date
+  sourceId    String     @map("source_id") @db.Uuid
+  abstract    String     @db.Text
+  externalUrl String     @unique @map("external_url")
+  imageUrl    String     @map("image_url")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
 
   source      NewsSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   authors     NewsCrossAuthor[]

@@ -80,7 +80,7 @@ for (const record of researchRecords) {
  */
 type SeedNews = {
   title: string
-  publishedAt: Date
+  publishedAt: Date | null
   source: string
   authors: string[]
   abstract: string
@@ -164,7 +164,7 @@ const newsRecords: SeedNews[] = [
       'Prysmian dona $36.000 en cables de energía y telecomunicaciones para el desarrollo del único radio telescopio solar de su tipo en Centroamérica',
     authors: ['Prysmian'],
     source: 'Prysmian Pro',
-    publishedAt: new Date('2023-01-01'),
+    publishedAt: null,
     abstract:
       'Prysmian donó cerca de tres kilómetros de cables de energía y telecomunicaciones para apoyar el desarrollo y puesta en funcionamiento del radiotelescopio solar ROSAC.',
     externalUrl:
@@ -172,21 +172,10 @@ const newsRecords: SeedNews[] = [
     imageUrl: '/images/decorative/Solar-Flare.png',
   },
   {
-    title: 'Informe de Actividades 2023 – Acciones destacadas',
-    authors: ['Prysmian'],
-    source: 'Prysmian – Informe de Actividades LATAM',
-    publishedAt: new Date('2023-01-01'),
-    abstract:
-      'Informe de Prysmian que destaca a ROSAC entre las alianzas estratégicas e iniciativas de impacto social de la compañía.',
-    externalUrl:
-      'https://br.prysmian.com/sites/br.prysmian.com/files/2024-07/Prysmian_RA23_ES-02-00_0.pdf',
-    imageUrl: '/images/decorative/Solar-Flare.png',
-  },
-  {
     title: 'El impacto social de Prysmian en la era de la transición energética',
     authors: ['Prysmian'],
     source: 'Prysmian Pro',
-    publishedAt: new Date('2023-01-01'),
+    publishedAt: null,
     abstract:
       'Artículo sobre el impacto social y educativo de Prysmian que menciona al proyecto del radiotelescopio solar ROSAC como una iniciativa de educación, inclusión y sostenibilidad.',
     externalUrl: 'https://prysmianpro.com/el-impacto-social-de-prysmian-en-la-era-de-la-transicion-energetica/',

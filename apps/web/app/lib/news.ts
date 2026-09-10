@@ -37,7 +37,12 @@ export type NewsArticle = {
  */
 export async function getNews(): Promise<NewsArticle[]> {
   const records = await prisma.news.findMany({
-    orderBy: { publishedAt: 'desc' },
+    orderBy: {
+      publishedAt: {
+        sort: 'desc',
+        nulls: 'last',
+      },
+    },
     include: {
       source: true,
       authors: {
@@ -52,7 +57,13 @@ export async function getNews(): Promise<NewsArticle[]> {
     title: record.title,
     authors: record.authors.map((author) => author.newsAuthor.name).join(', '),
     source: record.source.name,
-    date: String(record.publishedAt.getUTCFullYear()),
+    date: record.publishedAt
+      ? new Intl.DateTimeFormat('es-CR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }).format(record.publishedAt)
+      : 'Sin fecha',
     abstract: record.abstract,
     href: record.externalUrl,
     imageUrl: record.imageUrl,
