@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "title": "LASCE | Universidad de Costa Rica",
+    "description": "Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica: observación solar, radioastronomía, instrumentación y clima espacial."
+  },
+  "layout": {
+    "skipToContent": "Saltar al contenido principal"
+  },
+  "jobLauncher": {
+    "empty": "Todavía no hay dispositivos. Ejecute <code>pnpm --filter @lasce/db seed</code> para insertar los de demostración.",
+    "enqueue": "Encolar ingest-readings",
+    "enqueueing": "Encolando…",
+    "job": "Tarea {jobId}",
+    "waiting": "esperando al worker…"
+  }
+}

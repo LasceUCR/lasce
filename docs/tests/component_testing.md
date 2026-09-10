@@ -91,6 +91,43 @@ Storybook's own Vite plugin to resolve its internal `sb-original` aliases, which
 does not load. Rendering with the args needs none of that, and `next/link` works under jsdom
 without any Next mocks.
 
+## Translated components
+
+See ["Where a string goes"](../add-a-component.md#where-a-string-goes) for which components read
+from the message catalogue versus taking copy through props. Testing the two sides of the
+server/client boundary differs because there's no official recipe for `getTranslations` under
+Vitest — it needs a Next.js request scope that doesn't exist in a unit test.
+
+- **Server Components** (`getTranslations`, e.g. `SkipLink.test.tsx`): mock `next-intl/server` with
+  a real translator built from the actual catalogue, so the assertion stays honest about the key
+  existing rather than testing a stand-in string:
+
+  ```tsx
+  vi.mock('next-intl/server', () => ({
+    getTranslations: async (namespace: NamespaceKeys<Messages, NestedKeyOf<Messages>>) =>
+      createTranslator({ locale: 'es', messages: es, namespace }),
+  }))
+  ```
+
+  `createTranslator`'s `Namespace` generic rejects a bare `string`, so the mock has to name the
+  type next-intl uses for it — `NamespaceKeys`, `NestedKeyOf` and `Messages` all come from
+  `next-intl`.
+
+- **Client Components** (`useTranslations`, e.g. `JobLauncher.test.tsx`): wrap the render in
+  `NextIntlClientProvider` with the real `es` catalogue — no mocking needed, since the provider is
+  a real (if minimal) implementation:
+
+  ```tsx
+  render(
+    <NextIntlClientProvider locale="es" messages={es}>
+      <JobLauncher devices={[]} />
+    </NextIntlClientProvider>,
+  )
+  ```
+
+Assert the rendered Spanish text (`es` is the default locale), not the translation key — the point
+of the test is that the real copy reaches the screen.
+
 ## Service tests
 
 Non-UI code under `app/services/**` is tested from `apps/web/tests/unit/`, mirroring the source
