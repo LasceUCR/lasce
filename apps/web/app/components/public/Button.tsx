@@ -7,6 +7,7 @@ export interface ButtonProps {
   children: ReactNode
   variant?: ButtonVariant
   href?: string
+  external?: boolean
   icon?: ReactNode
   className?: string
   type?: 'button' | 'submit'
@@ -18,6 +19,7 @@ export function Button({
   children,
   variant = 'primary',
   href,
+  external = false,
   icon,
   className,
   type = 'button',
@@ -33,6 +35,14 @@ export function Button({
   )
 
   if (href) {
+    if (external) {
+      return (
+        <a className={classes} href={href} rel="noopener noreferrer" target="_blank">
+          {content}
+        </a>
+      )
+    }
+
     return (
       <Link className={classes} href={href}>
         {content}

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 
 import { Button } from './Button'
 
@@ -27,5 +27,30 @@ export const Secondary: Story = {
     href: '/#areas-de-trabajo',
     variant: 'secondary',
     icon: <ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />,
+  },
+}
+
+export const PrimaryOnDarkSurface: Story = {
+  args: Primary.args,
+  decorators: [
+    (Story) => (
+      <div className="action-surface-dark" style={{ background: 'var(--navy-deep)', padding: 24 }}>
+        <Story />
+      </div>
+    ),
+  ],
+}
+
+export const SecondaryOnDarkSurface: Story = {
+  args: Secondary.args,
+  decorators: PrimaryOnDarkSurface.decorators,
+}
+
+export const External: Story = {
+  args: {
+    children: 'Acceder a SWAAT',
+    href: 'https://swaat.up.railway.app/',
+    external: true,
+    icon: <ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />,
   },
 }

@@ -11,7 +11,7 @@ const navigation = [
   { label: 'Inicio', href: '/' },
   { label: 'Nosotros', href: '/nosotros' },
   { label: 'Investigación', href: '/investigacion' },
-  { label: 'Instrumentación', href: '/instrumentacion' },
+  { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
   { label: 'Datos', href: '/datos' },
   { label: 'Galería', href: '/galeria' },
   { label: 'Noticias', href: '/noticias' },

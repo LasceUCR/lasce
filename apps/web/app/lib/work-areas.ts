@@ -4,7 +4,7 @@ import {
   Orbit,
   RadioTower,
   Sun,
-  Telescope,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -44,10 +44,10 @@ export const workAreas = {
 
 export const portalAccessAreas = [
   {
-    icon: Telescope,
-    title: 'Instrumentación',
-    description: 'Instrumentos y citación',
-    href: '/instrumentacion',
+    icon: Wrench,
+    title: 'Herramientas científicas',
+    description: 'Análisis y visualización de eventos solares',
+    href: '/herramientas-cientificas',
   },
   {
     icon: ChartNoAxesCombined,
