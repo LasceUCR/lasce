@@ -2723,3 +2723,10 @@ a.gallery-tile:focus-visible {
   padding: 0 6px;
   margin: 0 -6px;
 }
+
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
