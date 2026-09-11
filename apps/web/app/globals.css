@@ -2671,3 +2671,55 @@ a.gallery-tile:focus-visible {
   font-family: inherit;
   font-size: 14px;
 }
+
+.modal {
+  /* Scales with the viewport rather than sitting at one fixed width: most of
+     a phone screen, most of a desktop window too, up to a cap so it doesn't
+     stretch absurdly wide on an ultrawide monitor. */
+  width: min(92vw, 1040px);
+  max-height: calc(100vh - 64px);
+  padding: 32px 40px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.12);
+}
+
+.modal::backdrop {
+  background: rgba(13, 39, 55, 0.45);
+}
+
+.modal h2 {
+  flex-shrink: 0;
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+/* Scrolls on its own once the form/content grows past the dialog's
+   max-height, while the title above stays put rather than scrolling away
+   with it. `flex: 1` is the part that actually makes that possible — without
+   it this sized to its own content instead of the space left inside `.modal`,
+   so it never had a bounded height for `overflow-y` to kick in against, and
+   the excess (past `max-height`) just spilled out past the dialog's own
+   bottom edge uncontrolled instead of scrolling. */
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Reserves the scrollbar's own width up front, so content doesn't sit
+     flush against it (or get nudged/clipped) only once scrolling kicks in. */
+  scrollbar-gutter: stable;
+  /* `.modal`'s own padding sits outside this scroll container, so it does
+     nothing for what happens at *this* box's edges. A full-width field's
+     focus outline paints a couple pixels past its own border — with zero
+     clearance here, that outline ran past this box's edge and got clipped by
+     its scroll/overflow boundary instead of rendering in full. The negative
+     margin cancels the padding back out so the fields still line up exactly
+     with the title/actions above and below, which don't scroll and don't
+     need it. */
+  padding: 0 6px;
+  margin: 0 -6px;
+}
