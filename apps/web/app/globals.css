@@ -2532,3 +2532,38 @@ a.gallery-tile:focus-visible {
   background: var(--white);
   transform: translateX(18px);
 }
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--white);
+  color: var(--ink);
+}
+
+.icon-button:hover,
+.icon-button:focus-visible {
+  border-color: var(--blue);
+  background: #f4fafd;
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.icon-button-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.icon-button-danger:hover,
+.icon-button-danger:focus-visible {
+  background: var(--danger);
+  color: var(--white);
+  border-color: var(--danger-dark);
+}
