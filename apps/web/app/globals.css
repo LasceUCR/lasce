@@ -1,14 +1,26 @@
 :root {
-  --navy-deep: #0d2737;
-  --blue: #087fbd;
-  --blue-dark: #0069a7;
-  --cyan: #1db7d8;
+  /* Brand palette. Usage and supporting colors: docs/color-palette.md. */
+  --deep-space-blue: #0d2737ff;
+  --deep-space-blue-2: #023047ff;
+  --bright-teal-blue: #087fbdff;
+  --blue-green: #219ebcff;
+  --amber-glow: #f99d08ff;
+  --amber-flame: #ffb703ff;
+  --alice-blue: #eef4f7ff;
+  --white: #ffffffff;
+
+  /* Existing UI aliases keep components connected to the brand palette. */
+  --navy-deep: var(--deep-space-blue);
+  --blue: var(--bright-teal-blue);
+  --blue-dark: var(--deep-space-blue-2);
+  --cyan: var(--blue-green);
+  --ink: var(--deep-space-blue);
+  --page: var(--alice-blue);
+
+  /* Supporting colors for status, secondary text, and subtle borders. */
   --teal: #2e9b8a;
-  --ink: #17324a;
   --muted: #536a7c;
   --border: #d6e1e8;
-  --page: #eef4f7;
-  --white: #ffffff;
 
   /* Dark scene, shared by the hero visual and the gallery lightbox. These were
      repeated literals across this file until the gallery needed them too. */
@@ -42,7 +54,7 @@ a {
 }
 
 :focus-visible {
-  outline: 3px solid #056da8;
+  outline: 3px solid var(--blue);
   outline-offset: 3px;
 }
 
@@ -383,7 +395,7 @@ a {
   width: 66px;
   height: 4px;
   margin-top: 28px;
-  background: #5fa2ff;
+  background: var(--blue-green);
 }
 
 .hero p {
@@ -417,18 +429,13 @@ a {
 }
 
 .button-primary {
-  background: #fb8500;
+  background: var(--amber-glow);
   color: var(--navy-deep);
-}
-
-.button-primary-white-text {
-  background: #fb8500;
-  color: var(--white);
 }
 
 .button-primary:hover,
 .button-primary:focus-visible {
-  background: #e67600;
+  background: var(--amber-flame);
 }
 
 .button-secondary {
@@ -485,9 +492,9 @@ a {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border: 1px solid #023047;
+  border: 1px solid var(--deep-space-blue-2);
   border-radius: 8px;
-  background: #023047;
+  background: var(--deep-space-blue-2);
   color: var(--white);
   box-shadow: 0 8px 18px rgba(2, 48, 71, 0.16);
 }
@@ -547,9 +554,9 @@ a {
   display: flex;
   align-items: center;
   gap: 16px;
-  border: 1px solid #023047;
+  border: 1px solid var(--deep-space-blue-2);
   border-radius: 8px;
-  background: #023047;
+  background: var(--deep-space-blue-2);
   color: var(--white);
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(2, 48, 71, 0.16);
@@ -562,14 +569,14 @@ a {
 
 .area-card:hover,
 .area-card:focus-visible {
-  border-color: #fb8500;
-  background: #05283a;
+  border-color: var(--amber-glow);
+  background: var(--deep-space-blue);
   box-shadow: 0 10px 24px rgba(2, 48, 71, 0.2);
   transform: translateY(-2px);
 }
 
 .area-card:focus-visible {
-  outline: 3px solid rgba(251, 133, 0, 0.42);
+  outline: 3px solid color-mix(in srgb, var(--amber-glow) 42%, transparent);
   outline-offset: 3px;
 }
 
@@ -580,8 +587,8 @@ a {
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: #ffffff;
-  color: #023047;
+  background: var(--white);
+  color: var(--deep-space-blue-2);
 }
 
 .area-icon svg {
@@ -1700,13 +1707,6 @@ a {
   flex: 0 0 auto;
   min-height: 50px;
   font-weight: 600;
-  background: #2f6ced;
-  color: var(--white);
-}
-
-.tool-feature-cta:hover,
-.tool-feature-cta:focus-visible {
-  background: #2256c8;
 }
 
 .tool-footnote {
@@ -1918,7 +1918,7 @@ a.gallery-tile:focus-visible {
 }
 
 .media-tile-button:focus-visible {
-  outline: 3px solid #056da8;
+  outline: 3px solid var(--blue);
   outline-offset: -3px;
 }
 
@@ -2339,7 +2339,7 @@ a.gallery-tile:focus-visible {
 }
 
 .indicator-orange::before {
-  background: #fb8500;
+  background: var(--amber-glow);
 }
 
 .admin-panel {

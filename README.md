@@ -36,6 +36,9 @@ Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit toget
 [`docs/tests/component_testing.md`](docs/tests/component_testing.md) for how UI component tests
 should be structured.
 
+See [`docs/color-palette.md`](docs/color-palette.md) for the shared brand colors, CSS variables,
+and usage guidelines.
+
 ## Requirements
 
 - Node.js 22+ and pnpm 10
