@@ -178,7 +178,8 @@ const newsRecords: SeedNews[] = [
     publishedAt: null,
     abstract:
       'Artículo sobre el impacto social y educativo de Prysmian que menciona al proyecto del radiotelescopio solar ROSAC como una iniciativa de educación, inclusión y sostenibilidad.',
-    externalUrl: 'https://prysmianpro.com/el-impacto-social-de-prysmian-en-la-era-de-la-transicion-energetica/',
+    externalUrl:
+      'https://prysmianpro.com/el-impacto-social-de-prysmian-en-la-era-de-la-transicion-energetica/',
     imageUrl: '/images/decorative/Solar-Flare.png',
   },
   {

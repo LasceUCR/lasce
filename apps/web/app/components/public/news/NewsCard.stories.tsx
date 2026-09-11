@@ -16,7 +16,8 @@ type Story = StoryObj<typeof NewsCard>
 
 const mockNews: NewsArticle = {
   slug: 'mock-slug',
-  title: '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
+  title:
+    '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
   authors: 'Jorge Arturo Mora',
   source: 'La Nación – Revista Dominical',
   date: '24 de mayo de 2026',
