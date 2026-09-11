@@ -9,6 +9,8 @@
   --border: #d6e1e8;
   --page: #eef4f7;
   --white: #ffffff;
+  --danger: #dc2626;
+  --danger-dark: #b91c1c;
 
   /* Dark scene, shared by the hero visual and the gallery lightbox. These were
      repeated literals across this file until the gallery needed them too. */
@@ -441,6 +443,16 @@ a {
 .button-secondary:focus-visible {
   border-color: var(--blue);
   background: #f4fafd;
+}
+
+.button-danger {
+  background: var(--danger);
+  color: var(--white);
+}
+
+.button-danger:hover,
+.button-danger:focus-visible {
+  background: var(--danger-dark);
 }
 
 .home-content {

@@ -29,3 +29,10 @@ export const Secondary: Story = {
     icon: <ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />,
   },
 }
+
+export const Danger: Story = {
+  args: {
+    children: 'Eliminar',
+    variant: 'danger',
+  },
+}
