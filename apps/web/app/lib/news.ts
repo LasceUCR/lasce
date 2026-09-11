@@ -62,6 +62,7 @@ export async function getNews(): Promise<NewsArticle[]> {
           day: 'numeric',
           month: 'long',
           year: 'numeric',
+          timeZone: 'UTC',
         }).format(record.publishedAt)
       : 'Sin fecha',
     abstract: record.abstract,

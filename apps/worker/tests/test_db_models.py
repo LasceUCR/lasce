@@ -4,7 +4,16 @@ Even though the worker doesn't have a job using this yet, the convention is to
 replicate everything here.
 """
 
-from app.db import Publisher, Research, ResearchAuthor, ResearchCrossAuthor
+from app.db import (
+    News,
+    NewsAuthor,
+    NewsCrossAuthor,
+    NewsSource,
+    Publisher,
+    Research,
+    ResearchAuthor,
+    ResearchCrossAuthor,
+)
 
 
 def test_research_tables_live_in_the_research_schema() -> None:
@@ -50,8 +59,6 @@ def test_research_belongs_to_a_publisher() -> None:
 Even though the worker doesn't have a job using this yet, the convention is to
 replicate everything here.
 """
-
-from app.db import News, NewsAuthor, NewsCrossAuthor, NewsSource
 
 
 def test_news_tables_live_in_the_news_schema() -> None:
