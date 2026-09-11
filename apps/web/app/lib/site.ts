@@ -12,7 +12,7 @@ export const publicPaths = [
   '/',
   '/nosotros',
   '/investigacion',
-  '/instrumentacion',
+  '/herramientas-cientificas',
   '/datos',
   '/galeria',
   '/noticias',
