@@ -2693,6 +2693,36 @@ a.gallery-tile:focus-visible {
   font-size: 14px;
 }
 
+.news-article-form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pairs of fields sit side by side once there's room for both — on a
+   narrower modal (small screens) each still wraps onto its own full-width
+   row, same as an unpaired field. */
+.news-article-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.news-article-form-row .form-field {
+  /* Flex items default to `min-width: auto`, which floors their shrinking at
+     the input's content size — on a narrower modal that pushed the pair
+     wider than the row and clipped the overflow. This lets them actually
+     shrink (or wrap fully) inside the available width instead. */
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.news-article-form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .add-item-card {
   width: 100%;
   min-height: 120px;
