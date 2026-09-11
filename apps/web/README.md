@@ -84,7 +84,6 @@ The three LASCE research work areas are defined once in `app/lib/work-areas.ts`.
 
 The home section anchor is `/#areas-de-trabajo`. The same module also lists the three portal access cards that link to existing top-level routes (`/herramientas-cientificas`, `/datos`, `/noticias`).
 
-
 Reusable UI for this section lives in `app/components/public/WorkAreaCard.tsx` and `WorkAreasSection.tsx`, with Storybook stories co-located beside each component.
 
 ## Shared Public Layout

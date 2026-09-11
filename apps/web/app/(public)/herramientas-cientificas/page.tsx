@@ -30,12 +30,7 @@ export default function ScientificToolsRoute() {
               title={title}
               description={description}
               icon={
-                <Image
-                  src="/images/tools/scientific-pattern.webp"
-                  alt=""
-                  width={160}
-                  height={96}
-                />
+                <Image src="/images/tools/scientific-pattern.webp" alt="" width={160} height={96} />
               }
               headingLevel={2}
               layout="horizontal"
