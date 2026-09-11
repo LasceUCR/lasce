@@ -16,15 +16,15 @@ rolling JSON services under `https://services.swpc.noaa.gov`. These are real obs
 currently designated primary GOES satellite; they are not generated or replaced with fallback
 samples when NOAA is unavailable.
 
-| Course code    | Visualization                          | NOAA operational source                               |
-| -------------- | -------------------------------------- | ----------------------------------------------------- |
-| `SFXR`         | Time series by X-ray band              | `xrays-7-day.json`                                    |
-| `SFEU`         | Time series by EUV line                | `euvs-7-day.json`                                     |
-| `GEOF`         | Time series by magnetic component      | `magnetometers-7-day.json`                            |
-| `MPSH`         | Time series by electron/proton channel | Differential electron/proton 7-day JSON               |
-| `SGPS`         | Time series by proton threshold        | `integral-protons-7-day.json`                         |
-| SUVI bands     | Observed image sequence                | NOAA's primary SUVI animation indexes                 |
-| `EHIS`, `MPSL` | Not enabled                            | Requires scientific NetCDF integration and validation |
+| Course code    | Visualization                            | NOAA operational source                               |
+| -------------- | ---------------------------------------- | ----------------------------------------------------- |
+| `SFXR`         | Time series by X-ray band                | `xrays-7-day.json`                                    |
+| `SFEU`         | Time series by EUV line                  | `euvs-7-day.json`                                     |
+| `GEOF`         | Time series by magnetic component        | `magnetometers-7-day.json`                            |
+| `MPSH`         | Time series by electron channel          | `differential-electrons-7-day.json`                   |
+| `SGPS`         | Proton threshold or differential channel | Integral/differential proton 7-day JSON               |
+| SUVI bands     | Observed image sequence                  | NOAA's primary SUVI animation indexes                 |
+| `EHIS`, `MPSL` | Not enabled                              | Requires scientific NetCDF integration and validation |
 
 The rolling time-series feeds cover seven days. The SUVI animation indexes cover approximately the
 latest 24 hours. The date field communicates those limits, and a valid range with no observations
@@ -36,6 +36,12 @@ NOAA also publishes daily science-quality NetCDF-4 files through NCEI. Supportin
 rolling window, plus `EHIS` and `MPSL`, requires a separate ingestion/parser path for those files.
 Do not map a merely similar operational feed to either course product without confirmation from
 the scientific team.
+
+MPSH's operational integration currently covers electrons only. NOAA's differential proton feed
+belongs to SGPS, whose differential flux unit is protons/(cm² s sr keV), even when channel energy
+ranges are expressed in MeV. MPSH proton data still require a separate archive integration. See
+[NOAA SEISS instrument definitions](https://www.ncei.noaa.gov/products/goes-r-space-environment-in-situ)
+and [NOAA proton flux documentation](https://www.spaceweather.gov/products/goes-proton-flux).
 
 References:
 
@@ -84,6 +90,23 @@ same Zod schema used by the browser. Results use a discriminated union:
 
 NOAA transport or schema failures return `502`; invalid criteria return `400`. Responses use
 `Cache-Control: no-store` so a stale observation is not presented as a new query result.
+
+## Reusable presentation
+
+The data page uses `TopicHero` with `variant="compact"`. This opt-in variant is available to other
+interactive pages; default headers retain their original dimensions. There are no page-specific
+or explorer CSS files. Styles follow the repository's existing `globals.css` pattern with scoped
+component class names and tokens documented in `color-palette.md`.
+
+- `Notice` exposes information, warning and error tones with an explicit accessible role.
+- `DataTable` provides a collapsible, keyboard-scrollable table with a visible caption.
+- `ScientificDataChart` accepts values, labels and units through props; the time axis uses actual
+  timestamps rather than evenly spacing irregular observations.
+- `DynamicSpectrumChart` receives its title, caption and frequency unit from the caller, without
+  assuming a source or whether the observations are simulated.
+
+Charts have a bounded desktop width and a focusable horizontal viewport on small screens so axis
+labels are not shrunk into illegible text. The document itself stays within the viewport.
 
 ## Verification
 

@@ -8,16 +8,16 @@ Storybook preview import this stylesheet, so components share the same colors in
 
 The values use eight-digit hexadecimal notation (`#RRGGBBAA`). The final `ff` means fully opaque.
 
-| Color             | CSS custom property   | Hex         | Usage                                                                       |
-| ----------------- | --------------------- | ----------- | --------------------------------------------------------------------------- |
-| Deep space blue   | `--deep-space-blue`   | `#0d2737ff` | Main text, footer, sidebar, and dark hover backgrounds                      |
-| Deep space blue 2 | `--deep-space-blue-2` | `#023047ff` | Dark cards, links, and icons on light surfaces                              |
-| Bright teal blue  | `--bright-teal-blue`  | `#087fbdff` | Focus outlines, interactive borders, and indicator accents                  |
-| Blue green        | `--blue-green`        | `#219ebcff` | Header stripe, active navigation underline, and decorative accents          |
-| Amber glow        | `--amber-glow`        | `#f99d08ff` | Primary button backgrounds, card interaction borders, and indicator accents |
-| Amber flame       | `--amber-flame`       | `#ffb703ff` | Primary button backgrounds on hover and keyboard focus                      |
-| Alice blue        | `--alice-blue`        | `#eef4f7ff` | Page background                                                             |
-| White             | `--white`             | `#ffffffff` | Light surfaces and text on dark backgrounds                                 |
+| Color             | CSS custom property   | Hex         | Usage                                                              |
+| ----------------- | --------------------- | ----------- | ------------------------------------------------------------------ |
+| Deep space blue   | `--deep-space-blue`   | `#0d2737ff` | Main text, footer, sidebar, and dark hover backgrounds             |
+| Deep space blue 2 | `--deep-space-blue-2` | `#023047ff` | Dark cards, links, and icons on light surfaces                     |
+| Bright teal blue  | `--bright-teal-blue`  | `#087fbdff` | Scientific curves and supporting brand accents                     |
+| Blue green        | `--blue-green`        | `#219ebcff` | Header stripe, active navigation underline, and decorative accents |
+| Amber glow        | `--amber-glow`        | `#f99d08ff` | Actions on dark surfaces and semantic warning accents              |
+| Amber flame       | `--amber-flame`       | `#ffb703ff` | Hover and keyboard-focus accents for actions on dark surfaces      |
+| Alice blue        | `--alice-blue`        | `#eef4f7ff` | Page background                                                    |
+| White             | `--white`             | `#ffffffff` | Light surfaces and text on dark backgrounds                        |
 
 ## Existing aliases
 
@@ -28,7 +28,7 @@ palette instead of repeating hexadecimal values:
 | ------------- | --------------------- | --------------------------------------- |
 | `--navy-deep` | `--deep-space-blue`   | Dark surfaces and text on amber buttons |
 | `--ink`       | `--deep-space-blue`   | Main text on light surfaces             |
-| `--blue`      | `--bright-teal-blue`  | Interactive borders and focus outlines  |
+| `--blue`      | `--bright-teal-blue`  | Supporting brand accents                |
 | `--blue-dark` | `--deep-space-blue-2` | Links and icons on light surfaces       |
 | `--cyan`      | `--blue-green`        | Decorative accent                       |
 | `--page`      | `--alice-blue`        | Page background                         |
@@ -47,13 +47,38 @@ its hex value in component styles or inline styles.
 
 ## Buttons and text contrast
 
-- Primary action buttons use the orange amber glow background with deep space blue text. Hover and
-  keyboard focus use amber flame with the same text color.
-- The home page and scientific tool actions share the `Button` component and `.button-primary` colors. Keep action button
-  colors in that shared rule so component-specific styles do not override them.
-- Use dark text on orange action buttons; white text has low contrast on these backgrounds.
-- Keep bright teal blue, blue green, and amber as accents on light surfaces. Use `--ink` or
-  `--blue-dark` for small text on those surfaces.
+- Actions on light surfaces use dark blue, with white text on filled primary buttons.
+- Actions on dark surfaces use orange, with deep space blue text on filled primary buttons.
+- Secondary and outline buttons inherit the same action accent for their text and border. Focus
+  rings, interactive card borders and navigation feedback follow the surrounding surface too.
+- Warning/status accents and scientific imagery retain their separate semantic colors; they do not
+  indicate an action.
+
+The shared styles expose three inherited tokens:
+
+| Token            | Light surface (default) | Dark surface        |
+| ---------------- | ----------------------- | ------------------- |
+| `--action`       | `--deep-space-blue-2`   | `--amber-glow`      |
+| `--action-hover` | `--deep-space-blue`     | `--amber-flame`     |
+| `--on-action`    | `--white`               | `--deep-space-blue` |
+
+Existing dark surfaces (the home hero, dark route placeholders, footer, area cards, media tiles,
+lightbox and admin sidebar) set these tokens centrally in `globals.css`. Reusable containers can
+declare `action-surface-dark` or `action-surface-light`; use the light class on a light panel nested
+inside a dark section. Surface classes choose action colors only, so the container still owns its
+background. Do not guess the theme from route names or override individual buttons.
+
+```tsx
+<section className="action-surface-dark">
+  <Button href="/nosotros">Conoce más sobre LASCE</Button>
+  <div className="action-surface-light">
+    <Button href="/datos">Consultar datos</Button>
+  </div>
+</section>
+```
+
+The home page and scientific tools share `Button` and `.button-primary`. Storybook includes
+primary and secondary examples on both light and dark backgrounds.
 
 For reference, deep space blue text has a contrast ratio of approximately 7.23:1 on amber glow and
 8.83:1 on amber flame. Check the actual foreground and background when adding a new combination,
@@ -71,3 +96,14 @@ The eight brand colors are not a replacement for every color in the site. The st
 
 Keep these roles separate from brand accents. Status indicators should retain visible labels, and
 scientific imagery should retain its own colors.
+
+### Shared data components
+
+`Notice` uses the existing blue accent for information and amber for provisional data. Its error
+tone uses `--feedback-error` (`#9c302b`), a semantic dark red; notice text remains `--ink` on a 7%
+tint of the accent. This token is the only extra color introduced for scientific queries.
+
+`ScientificDataChart` uses the blue and neutral tokens for curves, axes, and labels.
+`DynamicSpectrumChart` interpolates from `--alice-blue` to `--blue-dark` for both cells and its
+legend. It also provides numeric descriptions and an accompanying `DataTable`, so users do not
+need to distinguish colors to access the values. Observed SUVI images retain NOAA's colors.
