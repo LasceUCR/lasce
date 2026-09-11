@@ -2693,6 +2693,30 @@ a.gallery-tile:focus-visible {
   font-size: 14px;
 }
 
+.add-item-card {
+  width: 100%;
+  min-height: 120px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-item-card:hover,
+.add-item-card:focus-visible {
+  border-color: var(--blue);
+  color: var(--blue-dark);
+}
+
 .modal {
   /* Scales with the viewport rather than sitting at one fixed width: most of
      a phone screen, most of a desktop window too, up to a cap so it doesn't
