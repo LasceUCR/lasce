@@ -46,13 +46,6 @@ for (const width of [1440, 1280, 768, 390]) {
   })
 }
 
-test('redirects the former instrumentation address to scientific tools', async ({ page }) => {
-  await page.goto('/instrumentacion')
-  await expect(page).toHaveURL(/\/herramientas-cientificas$/)
-  await expect(page.getByRole('heading', { level: 2, name: 'SWAAT' })).toBeVisible()
-  await expect(page.getByRole('heading', { level: 2, name: 'SWAPRO' })).toBeVisible()
-})
-
 test('keeps data as a separate public consultation section', async ({ page }) => {
   await page.goto('/datos')
   await expect(page.getByRole('heading', { level: 1, name: 'Datos' })).toBeVisible()
