@@ -2567,3 +2567,83 @@ a.gallery-tile:focus-visible {
   color: var(--white);
   border-color: var(--danger-dark);
 }
+
+.file-drop-field {
+  margin: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* A short, wide row — a thumbnail/icon on the left, the prompt and helper
+   text filling the rest of the width to its right — rather than a tall
+   stack, so it earns its place in a modal that already has plenty of width
+   to spare. */
+.file-drop {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--page);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-drop-active {
+  border-color: var(--blue);
+  background: #f4fafd;
+}
+
+.file-drop-icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--white);
+}
+
+.file-drop-preview-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.file-drop-preview {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.file-drop-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  box-shadow: 0 2px 6px rgba(13, 39, 55, 0.35);
+}
+
+.file-drop-copy {
+  min-width: 0;
+}
+
+.file-drop-copy p {
+  margin: 0;
+}
+
+.file-drop-copy p + p {
+  margin-top: 4px;
+}
+
+.file-drop-helper {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
