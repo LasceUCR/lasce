@@ -65,13 +65,15 @@ test('keeps the scientific consultation button enabled and without a destination
   await expect(consultation.getByRole('link')).toHaveCount(0)
 })
 
-test('keeps ROSAC access out of the shared navigation and instrumentation', async ({ page }) => {
+test('keeps ROSAC access out of the shared navigation and scientific tools', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('banner').getByRole('link', { name: /ROSAC/ })).toHaveCount(0)
   await expect(page.getByRole('contentinfo').getByRole('link', { name: /ROSAC/ })).toHaveCount(0)
 
-  await page.goto('/instrumentacion')
-  await expect(page.getByRole('heading', { level: 1, name: 'Instrumentación' })).toBeVisible()
+  await page.goto('/herramientas-cientificas')
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Herramientas científicas' }),
+  ).toBeVisible()
   await expect(page.getByRole('link', { name: /ROSAC/ })).toHaveCount(0)
 })
 
