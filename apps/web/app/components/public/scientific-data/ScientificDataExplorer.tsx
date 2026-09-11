@@ -1,7 +1,7 @@
 'use client'
 
 import { ChartNoAxesCombined, Images, Search } from 'lucide-react'
-import { useMemo, useRef, useState, type FormEvent } from 'react'
+import { useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react'
 
 import { DataTable } from '@/app/components/public/DataTable'
 import { Notice } from '@/app/components/public/Notice'
@@ -30,6 +30,10 @@ export interface ScientificDataExplorerProps {
 }
 
 type RequestState = 'idle' | 'loading' | 'success' | 'error'
+
+const subscribeToHydration = () => () => undefined
+const getClientSnapshot = () => true
+const getServerSnapshot = () => false
 
 const dateFormatter = new Intl.DateTimeFormat('es-CR', {
   dateStyle: 'long',
@@ -60,11 +64,14 @@ export function ScientificDataExplorer({
   initialResult,
   goesDateRange,
 }: ScientificDataExplorerProps) {
+  // Server-rendered controls must wait for React's handlers before accepting input.
+  const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
   const [query, setQuery] = useState(initialQuery)
   const [result, setResult] = useState<ScientificDataResult | null>(initialResult ?? null)
   const [requestState, setRequestState] = useState<RequestState>(initialResult ? 'success' : 'idle')
   const [message, setMessage] = useState<string | null>(null)
   const resultsHeading = useRef<HTMLHeadingElement>(null)
+  const controlsDisabled = !hydrated || requestState === 'loading'
 
   const selectedSource = sources.find((source) => source.code === query.source)!
   const selected = useMemo(
@@ -201,7 +208,7 @@ export function ScientificDataExplorer({
         <div className="data-field">
           <label htmlFor="scientific-source">Fuente de datos</label>
           <select
-            disabled={requestState === 'loading'}
+            disabled={controlsDisabled}
             id="scientific-source"
             onChange={(event) => selectSource(event.target.value as ScientificSourceCode)}
             value={query.source}
@@ -218,7 +225,7 @@ export function ScientificDataExplorer({
         <div className="data-field">
           <label htmlFor="scientific-product">Producto científico</label>
           <select
-            disabled={requestState === 'loading'}
+            disabled={controlsDisabled}
             id="scientific-product"
             onChange={(event) => selectProduct(event.target.value as ScientificProductCode)}
             required
@@ -245,7 +252,7 @@ export function ScientificDataExplorer({
         <div className="data-field">
           <label htmlFor="scientific-parameter">Canal o parámetro</label>
           <select
-            disabled={requestState === 'loading'}
+            disabled={controlsDisabled}
             id="scientific-parameter"
             onChange={(event) => updateQuery('parameter', event.target.value)}
             value={query.parameter}
@@ -261,7 +268,7 @@ export function ScientificDataExplorer({
         <div className="data-field">
           <label htmlFor="scientific-date">Fecha</label>
           <input
-            disabled={requestState === 'loading'}
+            disabled={controlsDisabled}
             id="scientific-date"
             max={query.source === 'GOES' ? goesDateRange.max : undefined}
             min={query.source === 'GOES' ? goesDateRange.min : undefined}
@@ -283,7 +290,7 @@ export function ScientificDataExplorer({
             <div className="data-field">
               <label htmlFor="scientific-start-time">Hora de inicio</label>
               <input
-                disabled={requestState === 'loading'}
+                disabled={controlsDisabled}
                 aria-describedby={message ? 'scientific-query-message' : undefined}
                 aria-invalid={message && invalidRange ? true : undefined}
                 id="scientific-start-time"
@@ -296,7 +303,7 @@ export function ScientificDataExplorer({
             <div className="data-field">
               <label htmlFor="scientific-end-time">Hora de fin</label>
               <input
-                disabled={requestState === 'loading'}
+                disabled={controlsDisabled}
                 aria-describedby={message ? 'scientific-query-message' : undefined}
                 aria-invalid={message && invalidRange ? true : undefined}
                 id="scientific-end-time"
@@ -311,7 +318,7 @@ export function ScientificDataExplorer({
 
         <div className="data-query-submit">
           <Button
-            disabled={requestState === 'loading'}
+            disabled={controlsDisabled}
             icon={<Search aria-hidden="true" size={18} strokeWidth={1.8} />}
             type="submit"
           >

@@ -38,6 +38,43 @@ async function mockObservedXrays(page: Page, points = true) {
   })
 }
 
+test('keeps query controls disabled until the client can preserve input', async ({ page }) => {
+  let releaseScripts!: () => void
+  const scriptsReady = new Promise<void>((resolve) => {
+    releaseScripts = resolve
+  })
+  await page.route(/\/_next\/.*\.js(?:\?.*)?$/, async (route) => {
+    await scriptsReady
+    await route.continue()
+  })
+  await mockObservedXrays(page)
+
+  const controls = [
+    page.getByRole('combobox', { name: 'Fuente de datos' }),
+    page.getByRole('combobox', { name: 'Producto científico' }),
+    page.getByRole('combobox', { name: 'Canal o parámetro' }),
+    page.getByLabel('Fecha', { exact: true }),
+    page.getByLabel('Hora de inicio'),
+    page.getByLabel('Hora de fin'),
+    page.getByRole('button', { name: 'Consultar datos' }),
+  ]
+
+  try {
+    await page.goto('/datos', { waitUntil: 'commit' })
+    for (const control of controls) await expect(control).toBeDisabled()
+  } finally {
+    releaseScripts()
+  }
+
+  for (const control of controls) await expect(control).toBeEnabled()
+  await page.getByLabel('Hora de inicio').fill('08:00')
+  await page.getByLabel('Hora de fin').fill('09:00')
+  await page.getByRole('button', { name: 'Consultar datos' }).click()
+
+  const results = page.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+  await expect(results.getByText('08:00–09:00 UTC')).toBeVisible()
+})
+
 test('queries and visualizes observed GOES data publicly', async ({ page }) => {
   await mockObservedXrays(page)
   const response = await page.goto('/datos')
