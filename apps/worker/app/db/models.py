@@ -112,7 +112,7 @@ class News(Base):
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     title: Mapped[str] = mapped_column(Text)
-    published_at: Mapped[date_type] = mapped_column(Date)
+    published_at: Mapped[date_type | None] = mapped_column(Date, nullable=True)
     source_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("news.news_sources.id", ondelete="RESTRICT")
     )

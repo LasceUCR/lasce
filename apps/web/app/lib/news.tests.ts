@@ -19,9 +19,7 @@ function newsRow(overrides: Partial<Record<string, unknown>> = {}) {
       'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
     imageUrl: '/images/news/el-norte-hoy-1.png',
     source: { name: 'El Norte Hoy' },
-    authors: [
-      { newsAuthor: { name: 'Gerardo Quesada A.' } },
-    ],
+    authors: [{ newsAuthor: { name: 'Gerardo Quesada A.' } }],
     ...overrides,
   }
 }
@@ -42,26 +40,41 @@ describe('getNews', () => {
         title: 'UCR pone en funcionamiento radiotelescopio para investigar el Sol',
         authors: 'Gerardo Quesada A.',
         source: 'El Norte Hoy',
-        date: '2023',
+        date: '2 de octubre de 2023',
         abstract:
           'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
-        href:
-          'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
+        href: 'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
         imageUrl: '/images/news/el-norte-hoy-1.png',
       },
     ])
   })
 
-  test('orders newest first and authors by citation position', async () => {
+  test('shows "Sin fecha" when a record has no published date', async () => {
+    findMany.mockResolvedValue([newsRow({ publishedAt: null })])
+
+    const [article] = await getNews()
+
+    expect(article?.date).toBe('Sin fecha')
+  })
+
+  test('orders newest first with undated records last, and authors by citation position', async () => {
     findMany.mockResolvedValue([])
 
     await getNews()
 
     expect(findMany).toHaveBeenCalledWith({
-      orderBy: { publishedAt: 'desc' },
+      orderBy: {
+        publishedAt: {
+          sort: 'desc',
+          nulls: 'last',
+        },
+      },
       include: {
         source: true,
-        authors: { orderBy: { position: 'asc' }, include: { newsAuthor: true } },
+        authors: {
+          orderBy: { position: 'asc' },
+          include: { newsAuthor: true },
+        },
       },
     })
   })
