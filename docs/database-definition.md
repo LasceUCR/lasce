@@ -114,17 +114,17 @@ coverage item, linked to its original source rather than a hosted copy. The Pris
 `news.news` stutter under the `news` Postgres schema — the same convention `research_records`
 follows under `research`.
 
-| Column          | Prisma type | Postgres type    | Constraints                                            |
-| --------------- | ----------- | ---------------- | ------------------------------------------------------ |
-| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                |
-| `title`         | `String`    | `text`           | not null                                               |
-| `published_at`  | `DateTime?` | `date`           | nullable — not every item has a known date; indexed    |
-| `source_id`     | `String`    | `uuid`           | FK → `news_sources.id`, `ON DELETE RESTRICT`, not null |
-| `abstract`      | `String`    | `text`           | not null                                               |
-| `external_url`  | `String`    | `text`           | `UNIQUE`, not null — link to the original source       |
-| `image_url`     | `String`    | `text`           | not null                                               |
-| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                              |
-| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                 |
+| Column         | Prisma type | Postgres type    | Constraints                                            |
+| -------------- | ----------- | ---------------- | ------------------------------------------------------ |
+| `id`           | `String`    | `uuid`           | PK, `gen_random_uuid()`                                |
+| `title`        | `String`    | `text`           | not null                                               |
+| `published_at` | `DateTime?` | `date`           | nullable — not every item has a known date; indexed    |
+| `source_id`    | `String`    | `uuid`           | FK → `news_sources.id`, `ON DELETE RESTRICT`, not null |
+| `abstract`     | `String`    | `text`           | not null                                               |
+| `external_url` | `String`    | `text`           | `UNIQUE`, not null — link to the original source       |
+| `image_url`    | `String`    | `text`           | not null                                               |
+| `created_at`   | `DateTime`  | `timestamptz(3)` | not null, default `now()`                              |
+| `updated_at`   | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                 |
 
 > `published_at` is nullable rather than defaulted to a sentinel date: some coverage (e.g.
 > corporate blog posts) doesn't carry a publish date at all. `getNews()` renders these as
@@ -157,12 +157,12 @@ The many-to-many join between `news_records` and `news_authors`. Keeps `position
 citation author order (first author, second author, ...) can be reproduced on the public page
 instead of coming back in whatever order the join returns rows.
 
-| Column            | Prisma type | Postgres type  | Constraints                                            |
-| ----------------- | ----------- | -------------- | ------------------------------------------------------ |
-| `id`              | `String`    | `uuid`         | PK, `gen_random_uuid()`                                |
-| `news_id`         | `String`    | `uuid`         | FK → `news_records.id`, `ON DELETE CASCADE`, not null  |
-| `news_author_id`  | `String`    | `uuid`         | FK → `news_authors.id`, `ON DELETE CASCADE`, not null  |
-| `position`        | `Int`       | `integer`      | not null — 0-based order within the item's author list |
+| Column           | Prisma type | Postgres type | Constraints                                            |
+| ---------------- | ----------- | ------------- | ------------------------------------------------------ |
+| `id`             | `String`    | `uuid`        | PK, `gen_random_uuid()`                                |
+| `news_id`        | `String`    | `uuid`        | FK → `news_records.id`, `ON DELETE CASCADE`, not null  |
+| `news_author_id` | `String`    | `uuid`        | FK → `news_authors.id`, `ON DELETE CASCADE`, not null  |
+| `position`       | `Int`       | `integer`     | not null — 0-based order within the item's author list |
 
 Constraints: `UNIQUE (news_id, news_author_id)` (an author can't be credited twice on the same
 item); indexed on `(news_id, position)` for ordered author lookups.
