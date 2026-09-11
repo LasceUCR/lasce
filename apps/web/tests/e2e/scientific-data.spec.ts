@@ -86,9 +86,11 @@ test('rejects an invalid time range without calling the public endpoint', async 
   await page.getByLabel('Hora de fin').fill('08:00')
   await page.getByRole('button', { name: 'Consultar datos' }).click()
 
-  await expect(page.getByRole('alert')).toContainText(
-    'La hora de inicio debe ser anterior a la hora de fin.',
-  )
+  await expect(
+    page
+      .getByRole('alert')
+      .filter({ hasText: 'La hora de inicio debe ser anterior a la hora de fin.' }),
+  ).toBeVisible()
   expect(requests).toBe(0)
 })
 
