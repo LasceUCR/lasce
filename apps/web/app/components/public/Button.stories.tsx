@@ -30,6 +30,22 @@ export const Secondary: Story = {
   },
 }
 
+export const PrimaryOnDarkSurface: Story = {
+  args: Primary.args,
+  decorators: [
+    (Story) => (
+      <div className="action-surface-dark" style={{ background: 'var(--navy-deep)', padding: 24 }}>
+        <Story />
+      </div>
+    ),
+  ],
+}
+
+export const SecondaryOnDarkSurface: Story = {
+  args: Secondary.args,
+  decorators: PrimaryOnDarkSurface.decorators,
+}
+
 export const External: Story = {
   args: {
     children: 'Acceder a SWAAT',
