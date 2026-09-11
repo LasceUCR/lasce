@@ -2576,6 +2576,19 @@ a.gallery-tile:focus-visible {
   border-color: var(--danger-dark);
 }
 
+.editable {
+  position: relative;
+}
+
+.editable-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+}
+
 .file-drop-field {
   margin: 14px 0;
   display: flex;

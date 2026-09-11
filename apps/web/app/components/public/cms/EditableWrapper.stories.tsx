@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ArrowLeft } from 'lucide-react'
 
 import { EditableWrapper } from './EditableWrapper'
 
@@ -12,22 +11,16 @@ const meta: Meta<typeof EditableWrapper> = {
 
 export default meta
 
-const mockOnEdit = (contentId: string, contentType: string) => {
-  window.alert(
-    `Opening editor\n\nType: ${contentType}\nID: ${contentId}`,
-  )
-}
-
 type Story = StoryObj<typeof EditableWrapper>
-export const Tittle: Story = {
+
+export const Default: Story = {
   args: {
     children: (
       <div style={{ padding: '32px' }}>
-        <h2>Welcome to our website</h2>
+        <h2>Bienvenidos al laboratorio</h2>
       </div>
     ),
-    onEdit: () => mockOnEdit("Titulo", "0"),
-    editable: true
+    onDelete: () => {},
+    onEdit: () => {},
   },
 }
-
