@@ -8,11 +8,6 @@ import { isWorkAreaSlug, workAreaSlugs, workAreas } from '@/app/lib/work-areas'
 const excludedDynamicWorkAreaSlugs = new Set(['clima-espacial', 'fisica-solar', 'radioastronomia'])
 
 const publicSections = {
-  datos: {
-    title: 'Datos',
-    description:
-      'Espacio para la consulta y descarga de observaciones, indicadores y productos científicos de LASCE.',
-  },
   contacto: {
     title: 'Contacto',
     description:

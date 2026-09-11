@@ -53,9 +53,10 @@ test('redirects the former instrumentation address to scientific tools', async (
   await expect(page.getByRole('heading', { level: 2, name: 'SWAPRO' })).toBeVisible()
 })
 
-test('keeps data as a separate section in preparation', async ({ page }) => {
+test('keeps data as a separate public consultation section', async ({ page }) => {
   await page.goto('/datos')
   await expect(page.getByRole('heading', { level: 1, name: 'Datos' })).toBeVisible()
-  await expect(page.getByText('Contenido en preparación')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Consultar datos' })).toBeVisible()
+  await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
   await expect(page.getByRole('link', { name: /Acceder a SW/ })).toHaveCount(0)
 })
