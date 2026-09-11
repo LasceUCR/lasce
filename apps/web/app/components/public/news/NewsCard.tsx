@@ -35,7 +35,7 @@ export function NewsCard({
         {abstract ? <p className="news-abstract">{abstract}</p> : null}
 
         {href ? (
-          <a className="area-link" href={href} rel="noopener noreferrer" target="_blank">
+          <a className="area-link link-stroke" href={href} rel="noopener noreferrer" target="_blank">
             Abrir fuente <span aria-hidden="true">→</span>
           </a>
         ) : null}

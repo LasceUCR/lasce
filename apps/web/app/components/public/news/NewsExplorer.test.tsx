@@ -114,4 +114,25 @@ describe('NewsExplorer', () => {
 
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
   })
+
+  test('renders "Sin fecha" for articles without a published date', () => {
+    render(
+      <NewsExplorer
+        news={[
+          {
+            slug: 'sin-fecha',
+            title: 'Artículo sin fecha',
+            authors: 'Autor X',
+            source: 'Fuente Y',
+            date: 'Sin fecha',
+            abstract: 'Resumen.',
+            href: 'https://example.com',
+            imageUrl: '/images/decorative/Solar-Flare.png',
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText(/Sin fecha/)).toBeInTheDocument()
+  })
 })
