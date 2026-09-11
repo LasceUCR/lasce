@@ -47,6 +47,16 @@ function loadRootEnv(): void {
 loadRootEnv()
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'services.swpc.noaa.gov',
+        pathname: '/images/animations/suvi/**',
+      },
+    ],
+  },
+
   // Workspace packages ship TypeScript source rather than a build output, which
   // keeps the monorepo free of an extra build step. Next compiles them for us.
   transpilePackages: [
