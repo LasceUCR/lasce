@@ -23,6 +23,8 @@
   --border: #d6e1e8;
   /* Same hue as --bright-teal-blue, dark enough for 16px text on white (WCAG AA 4.5:1). */
   --blue-accent-text: #0775ae;
+  --danger: #dc2626;
+  --danger-dark: #b91c1c;
 
   /* Dark scene, shared by the hero visual and the gallery lightbox. These were
      repeated literals across this file until the gallery needed them too. */
@@ -574,6 +576,16 @@ a {
 .button-external:hover,
 .button-external:focus-visible {
   background: #2256c8;
+}
+
+.button-danger {
+  background: var(--danger);
+  color: var(--white);
+}
+
+.button-danger:hover,
+.button-danger:focus-visible {
+  background: var(--danger-dark);
 }
 
 .home-content {
