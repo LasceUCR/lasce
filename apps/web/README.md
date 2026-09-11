@@ -56,19 +56,19 @@ Production deployment uses the standalone Next.js bundle through
 
 ## Public Routes
 
-| Route                | Purpose                                                        |
-| -------------------- | -------------------------------------------------------------- |
-| `/`                  | Institutional landing page and access to the main public areas |
-| `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
-| `/fisica-solar`      | Solar astrophysics information page based on LASCE content     |
-| `/clima-espacial`    | Space weather information page                                 |
-| `/radioastronomia`   | Radio astronomy work area                                      |
-| `/nosotros`          | General information about LASCE (_Quiénes somos_)              |
-| `/investigacion`     | Research areas and activities                                  |
-| `/instrumentacion`   | Scientific instruments and observatories                       |
-| `/datos`             | Public data and analysis resources                             |
-| `/noticias`          | Institutional news                                             |
-| `/contacto`          | Contact information                                            |
+| Route                       | Purpose                                                        |
+| --------------------------- | -------------------------------------------------------------- |
+| `/`                         | Institutional landing page and access to the main public areas |
+| `/#areas-de-trabajo`        | Work areas and main portal access cards on the home page       |
+| `/fisica-solar`             | Solar astrophysics information page based on LASCE content     |
+| `/clima-espacial`           | Space weather information page                                 |
+| `/radioastronomia`          | Radio astronomy work area                                      |
+| `/nosotros`                 | General information about LASCE (_Quiénes somos_)              |
+| `/investigacion`            | Research areas and activities                                  |
+| `/herramientas-cientificas` | Scientific tools: SWAAT and SWAPRO                             |
+| `/datos`                    | Public data and analysis resources                             |
+| `/noticias`                 | Institutional news                                             |
+| `/contacto`                 | Contact information                                            |
 
 Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page.
 
@@ -82,7 +82,8 @@ The three LASCE research work areas are defined once in `app/lib/work-areas.ts`.
 | `clima-espacial`  | `/clima-espacial`  | Clima espacial  |
 | `radioastronomia` | `/radioastronomia` | Radioastronomía |
 
-The home section anchor is `/#areas-de-trabajo`. The same module also lists the three portal access cards that link to existing top-level routes (`/instrumentacion`, `/datos`, `/noticias`).
+The home section anchor is `/#areas-de-trabajo`. The same module also lists the three portal access cards that link to existing top-level routes (`/herramientas-cientificas`, `/datos`, `/noticias`).
+
 
 Reusable UI for this section lives in `app/components/public/WorkAreaCard.tsx` and `WorkAreasSection.tsx`, with Storybook stories co-located beside each component.
 

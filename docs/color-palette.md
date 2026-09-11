@@ -49,7 +49,7 @@ its hex value in component styles or inline styles.
 
 - Primary action buttons use the orange amber glow background with deep space blue text. Hover and
   keyboard focus use amber flame with the same text color.
-- The home page action and `.tool-feature-cta` share `.button-primary` colors. Keep action button
+- The home page and scientific tool actions share the `Button` component and `.button-primary` colors. Keep action button
   colors in that shared rule so component-specific styles do not override them.
 - Use dark text on orange action buttons; white text has low contrast on these backgrounds.
 - Keep bright teal blue, blue green, and amber as accents on light surfaces. Use `--ink` or
