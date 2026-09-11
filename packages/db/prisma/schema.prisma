@@ -27,8 +27,9 @@ datasource db {
   // prisma.config.ts, and PrismaClient gets it through the driver adapter in
   // src/index.ts.
 
-  // `public` stays declared for whatever non-research table comes next; only
-  // `research` is populated today. Prisma creates both schemas via migrations.
+  // `public` stays declared for whatever non-domain-specific table comes next.
+  // `research` and `news` are populated today; each domain gets its own schema
+  // rather than being added here. Prisma creates all three via migrations.
   schemas = ["public", "research", "news"]
 }
 
