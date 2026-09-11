@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 
 export interface InfoCardProps {
   title: string
@@ -6,6 +6,9 @@ export interface InfoCardProps {
   icon: ReactNode
   more?: string
   moreLabel?: string
+  layout?: 'vertical' | 'horizontal'
+  headingLevel?: 2 | 3
+  action?: ReactNode
 }
 
 export function InfoCard({
@@ -14,20 +17,29 @@ export function InfoCard({
   icon,
   more,
   moreLabel = 'Más información',
+  layout = 'vertical',
+  headingLevel = 3,
+  action,
 }: InfoCardProps) {
+  const titleId = useId()
+  const Heading = headingLevel === 2 ? 'h2' : 'h3'
+
   return (
-    <article className="surface-card info-card">
+    <article aria-labelledby={titleId} className={`surface-card info-card info-card-${layout}`}>
       <span className="info-card-icon" aria-hidden="true">
         {icon}
       </span>
-      <h3>{title}</h3>
-      <p>{description}</p>
-      {more ? (
-        <details className="info-card-more">
-          <summary>{moreLabel}</summary>
-          <p>{more}</p>
-        </details>
-      ) : null}
+      <div className="info-card-content">
+        <Heading id={titleId}>{title}</Heading>
+        <p>{description}</p>
+        {more ? (
+          <details className="info-card-more">
+            <summary>{moreLabel}</summary>
+            <p>{more}</p>
+          </details>
+        ) : null}
+      </div>
+      {action ? <div className="info-card-action">{action}</div> : null}
     </article>
   )
 }

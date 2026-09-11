@@ -5,7 +5,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode }
 export type CardGridTone = 'default' | 'teal'
 
 export interface CardGridProps {
-  columns?: 2 | 3 | 4
+  columns?: 1 | 2 | 3 | 4
   equalHeight?: boolean
   expandable?: boolean
   tone?: CardGridTone

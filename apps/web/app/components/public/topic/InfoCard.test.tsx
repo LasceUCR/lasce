@@ -3,12 +3,25 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
 import { InfoCard, type InfoCardProps } from './InfoCard'
-import { Default, WithMoreInformation } from './InfoCard.stories'
+import { Default, HorizontalWithAction, WithMoreInformation } from './InfoCard.stories'
 
 const defaultArgs = Default.args as InfoCardProps
 const moreArgs = WithMoreInformation.args as InfoCardProps
 
 describe('InfoCard', () => {
+  test('presents a named resource with a section heading and an external action', () => {
+    const args = HorizontalWithAction.args as InfoCardProps
+    render(<InfoCard {...args} />)
+
+    expect(screen.getByRole('article', { name: args.title })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: args.title })).toBeInTheDocument()
+    expect(screen.getByText(args.description)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Acceder a SWAAT' })).toHaveAttribute(
+      'href',
+      'https://swaat.up.railway.app/',
+    )
+  })
+
   test('shows the title and description it was given', () => {
     render(<InfoCard {...defaultArgs} />)
 
