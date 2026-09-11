@@ -4,6 +4,9 @@ import { usePathname } from 'next/navigation'
 import { Download, LayoutDashboard, Server, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { Toggle } from '@/app/components/public/Toggle'
+import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+
 import { AdminSidebar, type AdminSidebarItem } from './AdminSidebar'
 
 const adminNavigation: AdminSidebarItem[] = [
@@ -35,12 +38,21 @@ export interface AdminShellProps {
 
 export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname()
+  const { editMode, setEditMode } = useEditMode()
 
   return (
     <div className="admin-shell">
       <AdminSidebar activePathname={pathname} items={adminNavigation} />
       <div className="admin-content">
-        <p className="topic-kicker">Panel de administración</p>
+        <div className="admin-header">
+          <p className="topic-kicker">Panel de administración</p>
+          <Toggle
+            checked={editMode}
+            id="edit-mode-toggle"
+            label="Modo edición"
+            onChange={setEditMode}
+          />
+        </div>
         {children}
       </div>
     </div>
