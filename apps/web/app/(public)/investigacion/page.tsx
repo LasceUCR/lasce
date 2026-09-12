@@ -36,11 +36,6 @@ export default async function InvestigacionPage() {
         title={investigacionHero.title}
       />
 
-      <ContentFlag
-        label="Información provisional"
-        message="El contenido de esta página es preliminar y está sujeto a revisión."
-      />
-
       <PublicationsExplorer publications={publications} />
 
       <div className="topic-page-footer page-width">
