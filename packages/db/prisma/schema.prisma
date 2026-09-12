@@ -45,6 +45,13 @@ model Publisher {
   @@schema("research")
 }
 
+enum ResearchGroup {
+  LASCE
+  ROSAC
+
+  @@schema("research")
+}
+
 /// A public research record shown on `/investigacion`: a paper, article, or
 /// institutional note, linked to its original source rather than a hosted
 /// copy. Mapped to `research_records` rather than `research` to avoid the
@@ -54,6 +61,7 @@ model Research {
   title           String
   publicationDate DateTime @map("publication_date") @db.Date
   publisherId     String   @map("publisher_id") @db.Uuid
+  researchGroup ResearchGroup @map("research_group")
   abstract        String   @db.Text
   /// Link to the original source. Unique so the same paper can't be listed twice.
   externalUrl     String   @unique @map("external_url")
@@ -67,6 +75,7 @@ model Research {
   authors   ResearchCrossAuthor[]
 
   @@index([publicationDate])
+  @@index([researchGroup])
   @@map("research_records")
   @@schema("research")
 }
