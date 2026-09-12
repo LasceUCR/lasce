@@ -13,6 +13,7 @@ function researchRow(overrides: Partial<Record<string, unknown>> = {}) {
     id: 'research-1',
     title: 'A geometrical description for interplanetary propagation of Earth-directed CMEs',
     publicationDate: new Date('2021-06-15T00:00:00.000Z'),
+    researchGroup: 'LASCE',
     abstract: 'We present a 3D geometrical model...',
     externalUrl: 'https://doi.org/10.1093/mnras/stab1232',
     publisher: { name: 'Monthly Notices of the Royal Astronomical Society' },
@@ -43,6 +44,7 @@ describe('getPublications', () => {
         year: '2021',
         abstract: 'We present a 3D geometrical model...',
         href: 'https://doi.org/10.1093/mnras/stab1232',
+        researchGroup: 'LASCE',
       },
     ])
   })
