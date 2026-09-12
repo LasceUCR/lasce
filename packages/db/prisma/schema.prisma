@@ -18,7 +18,6 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/client"
-  previewFeatures = ["orderByNulls"]
 }
 
 datasource db {
