@@ -58,21 +58,21 @@ enum ResearchGroup {
 /// copy. Mapped to `research_records` rather than `research` to avoid the
 /// `research.research` stutter under the `research` Postgres schema.
 model Research {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title           String
-  publicationDate DateTime @map("publication_date") @db.Date
-  publisherId     String   @map("publisher_id") @db.Uuid
-  researchGroup ResearchGroup @map("research_group")
-  abstract        String   @db.Text
+  publicationDate DateTime      @map("publication_date") @db.Date
+  publisherId     String        @map("publisher_id") @db.Uuid
+  researchGroup   ResearchGroup @map("research_group")
+  abstract        String        @db.Text
   /// Link to the original source. Unique so the same paper can't be listed twice.
-  externalUrl     String   @unique @map("external_url")
+  externalUrl     String        @unique @map("external_url")
   /// Digital Object Identifier, e.g. "10.1007/s11207-015-0677-0". Optional —
   /// not every record (institutional notes) has one — but unique when present.
-  doi             String?  @unique
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  doi             String?       @unique
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
 
-  publisher Publisher             @relation(fields: [publisherId], references: [id], onDelete: Restrict)
+  publisher Publisher           @relation(fields: [publisherId], references: [id], onDelete: Restrict)
   authors   ResearchCrossAuthor[]
 
   @@index([publicationDate])

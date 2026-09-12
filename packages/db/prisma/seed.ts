@@ -15,6 +15,7 @@ type SeedResearch = {
   title: string
   publicationDate: Date
   publisher: string
+  researchGroup: 'LASCE' | 'ROSAC'
   authors: string[]
   abstract: string
   externalUrl: string
@@ -27,6 +28,7 @@ const researchRecords: SeedResearch[] = [
       'The Santa Cruz Radio Observatory (ROSAC): the first radio astronomy facility in Costa Rica',
     publicationDate: new Date('2026-07-05'),
     publisher: 'Proceedings of SPIE, Vol. 14151',
+    researchGroup: 'ROSAC',
     authors: [
       'David M. Gale',
       'Carolina Salas-Matamoros',
@@ -59,6 +61,7 @@ for (const record of researchRecords) {
       title: record.title,
       publicationDate: record.publicationDate,
       publisherId: publisher.id,
+      researchGroup: record.researchGroup,
       abstract: record.abstract,
       externalUrl: record.externalUrl,
       doi: record.doi,
