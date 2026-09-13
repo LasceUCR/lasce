@@ -4,10 +4,12 @@ import { expect, test, type Page } from '@playwright/test'
 import { accountMenuCopy, cuentaIntro } from '@/app/lib/auth/account'
 import {
   ACCESS_PATH,
+  LOGIN_CARD_ID,
   LOGIN_LABELS,
   REGISTRATION_CARD_ID,
   REGISTRATION_HREF,
   accesoIntro,
+  accessTabsCopy,
   loginCardHeading,
   loginFormCopy,
   loginMessages,
@@ -59,7 +61,7 @@ test.beforeAll(async ({ browser }) => {
   const field = (name: RegistrationFieldName) =>
     card.getByLabel(REGISTRATION_LABELS[name], { exact: true })
 
-  await page.goto(ACCESS_PATH)
+  await page.goto(REGISTRATION_HREF)
   await field('fullName').fill(account.fullName)
   await field('email').fill(account.email)
   await field('institution').fill(account.institution)
@@ -71,20 +73,34 @@ test.beforeAll(async ({ browser }) => {
   await page.close()
 })
 
-test('shows the login and registration cards and offers sign-in from every menu', async ({
+test('opens on the login tab and switches to registration without leaving the page', async ({
   page,
 }) => {
   await page.goto(ACCESS_PATH)
 
   await expect(page.getByRole('heading', { level: 1, name: accesoIntro.title })).toBeVisible()
   await expect(page.getByText(accesoIntro.lead)).toBeVisible()
+  const loginTab = page.getByRole('tab', { name: accessTabsCopy.tabs.login })
+  const registerTab = page.getByRole('tab', { name: accessTabsCopy.tabs.register })
+  await expect(loginTab).toHaveAttribute('aria-selected', 'true')
   await expect(
     loginCard(page).getByRole('heading', { level: 2, name: loginCardHeading.title }),
   ).toBeVisible()
   await expect(loginButton(page)).toBeVisible()
+  await expect(page.locator(`#${REGISTRATION_CARD_ID}`)).toBeHidden()
+
+  await registerTab.click()
+  await expect(registerTab).toHaveAttribute('aria-selected', 'true')
   await expect(
     page.getByRole('heading', { level: 2, name: registrationCardHeading.title }),
   ).toBeVisible()
+  await expect(loginCard(page)).toBeHidden()
+  await expect(page).toHaveURL(/\?tab=crear-cuenta$/)
+
+  await registerTab.press('ArrowLeft')
+  await expect(loginTab).toBeFocused()
+  await expect(loginCard(page)).toBeVisible()
+  await expect(page.locator(`#${LOGIN_CARD_ID}`)).toBeVisible()
   await expect(
     loginCard(page).getByRole('link', { name: loginFormCopy.noAccountLink }),
   ).toHaveAttribute('href', REGISTRATION_HREF)
@@ -242,8 +258,9 @@ test('the old sign-in and sign-up routes redirect to the access page, query incl
   await expect(loginCard(page).getByRole('status')).toHaveText(loginMessages.authRequired)
 
   await page.goto('/registro')
-  await expect(page).toHaveURL(new RegExp(`${ACCESS_PATH}$`))
+  await expect(page).toHaveURL(/\/acceso\?tab=crear-cuenta$/)
   await expect(
     page.getByRole('heading', { level: 2, name: registrationCardHeading.title }),
   ).toBeVisible()
+  await expect(loginCard(page)).toBeHidden()
 })
