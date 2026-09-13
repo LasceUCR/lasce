@@ -2642,6 +2642,65 @@ a.gallery-tile:focus-visible {
   gap: 48px;
 }
 
+/* --- Access page background ------------------------------------------------ */
+
+/* The access page sits on a dark space scene with the sun on the right, so
+   its intro and tabs switch to the light hero tokens; the white card and the
+   back button already hold their own on dark. */
+.access-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--space-black);
+  color: var(--space-body);
+}
+
+.access-page-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.access-page-bg img {
+  object-fit: cover;
+  object-position: right center;
+}
+
+/* Darkens the left half so the heading, lead and tabs keep their contrast. */
+.access-page-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 9, 24, 0.82) 0%,
+    rgba(0, 9, 24, 0.55) 45%,
+    rgba(0, 9, 24, 0.15) 100%
+  );
+}
+
+.access-page .page-intro h1 {
+  color: var(--white);
+}
+
+.access-page .page-intro p {
+  color: var(--space-body);
+}
+
+.access-page .access-tab {
+  color: var(--space-meta);
+}
+
+.access-page .access-tab:hover,
+.access-page .access-tab:focus-visible {
+  color: var(--white);
+}
+
+.access-page .access-tab[aria-selected='true'] {
+  color: var(--white);
+  border-bottom-color: var(--cyan);
+}
+
 /* --- Access tabs ----------------------------------------------------------- */
 
 /* Left-aligned above the card, styled like the header's active-link underline. */

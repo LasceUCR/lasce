@@ -126,6 +126,10 @@ test('opens on the login tab and switches to registration without leaving the pa
   await expect(loginTab).toBeFocused()
   await expect(loginCard(page)).toBeVisible()
   await expect(page.locator(`#${LOGIN_CARD_ID}`)).toBeVisible()
+
+  // The decorative background sits behind everything and stays out of the tree.
+  await expect(page.locator('.access-page-bg img')).toBeVisible()
+  await expect(page.locator('.access-page-bg')).toHaveAttribute('aria-hidden', 'true')
   await expect(
     loginCard(page).getByRole('link', { name: loginFormCopy.noAccountLink }),
   ).toHaveAttribute('href', REGISTRATION_HREF)
