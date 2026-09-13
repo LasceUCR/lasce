@@ -76,7 +76,6 @@ export function notifyAccountChanged(): void {
 
 export const accountMenuCopy = {
   signIn: 'Ingresar',
-  register: 'Crear cuenta',
   account: 'Mi cuenta',
   greeting: (fullName: string) => `Hola, ${shortName(fullName)}`,
   signOut: 'Cerrar sesión',

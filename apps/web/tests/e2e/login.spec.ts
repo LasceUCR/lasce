@@ -113,7 +113,8 @@ test('opens on the login tab and switches to registration without leaving the pa
   await page.locator('.mobile-menu summary').click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   const names = await menu.getByRole('link').allTextContents()
-  expect(names.slice(-2)).toEqual([accountMenuCopy.signIn, accountMenuCopy.register])
+  expect(names.slice(-1)).toEqual([accountMenuCopy.signIn])
+  await expect(menu.getByRole('link', { name: 'Crear cuenta' })).toHaveCount(0)
   await expect(menu.getByRole('link', { name: accountMenuCopy.signIn })).toHaveAttribute(
     'href',
     ACCESS_PATH,

@@ -20,16 +20,12 @@ const signedOutMobileArgs = SignedOutMobile.args as AccountLinksProps
 const signedInMobileArgs = SignedInMobile.args as AccountLinksProps
 
 describe('AccountLinks', () => {
-  test('offers sign-in before registration when signed out', () => {
+  test('offers sign-in only when signed out', () => {
     render(<AccountLinks {...signedOutHeaderArgs} />)
 
     const links = screen.getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual([
-      accountMenuCopy.signIn,
-      accountMenuCopy.register,
-    ])
+    expect(links.map((link) => link.textContent)).toEqual([accountMenuCopy.signIn])
     expect(links[0]).toHaveAttribute('href', '/acceso')
-    expect(links[1]).toHaveAttribute('href', '/acceso?tab=crear-cuenta')
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
@@ -61,9 +57,7 @@ describe('AccountLinks', () => {
 
     const signIn = screen.getByRole('link', { name: accountMenuCopy.signIn })
     expect(signIn).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: accountMenuCopy.register })).not.toHaveAttribute(
-      'aria-current',
-    )
+    expect(signIn).toHaveClass('active')
 
     await user.click(signIn)
 

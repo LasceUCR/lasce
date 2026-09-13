@@ -71,17 +71,16 @@ async function fillRegistration(page: Page, values: Record<RegistrationFieldName
   await field(page, 'passwordConfirmation').fill(values.passwordConfirmation)
 }
 
-test('the header links to the registration page on desktop and the mobile menu offers it', async ({
-  page,
-}) => {
+test('registration is reached through the access page tab, not the header', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
 
-  const registerLink = page.getByRole('link', { name: 'Crear cuenta' })
-  await expect(registerLink).toHaveAttribute('href', REGISTRATION_HREF)
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', ACCESS_PATH)
+  const header = page.locator('.header-actions')
+  await expect(header.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', ACCESS_PATH)
+  await expect(header.getByRole('link', { name: 'Crear cuenta' })).toHaveCount(0)
 
-  await registerLink.click()
+  await header.getByRole('link', { name: 'Ingresar' }).click()
+  await page.getByRole('tab', { name: accessTabsCopy.tabs.register }).click()
   await expect(page).toHaveURL(registrationUrl())
   await expect(page.getByRole('tab', { name: accessTabsCopy.tabs.register })).toHaveAttribute(
     'aria-selected',
@@ -98,11 +97,9 @@ test('the header links to the registration page on desktop and the mobile menu o
   await page.goto('/')
   await expect(page.locator('.header-actions')).toBeHidden()
   await page.locator('.mobile-menu summary').click()
-  await expect(
-    page
-      .getByRole('navigation', { name: 'Navegación móvil' })
-      .getByRole('link', { name: 'Crear cuenta' }),
-  ).toHaveAttribute('href', REGISTRATION_HREF)
+  const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
+  await expect(menu.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', ACCESS_PATH)
+  await expect(menu.getByRole('link', { name: 'Crear cuenta' })).toHaveCount(0)
 })
 
 test('shows the six fields in the agreed order and states that all are required', async ({
