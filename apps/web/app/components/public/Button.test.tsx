@@ -3,10 +3,11 @@ import { ArrowLeft } from 'lucide-react'
 import { describe, expect, test } from 'vitest'
 
 import { Button, type ButtonProps } from './Button'
-import { Primary, Secondary } from './Button.stories'
+import { Brand, Primary, Secondary } from './Button.stories'
 
 const primaryArgs = Primary.args as ButtonProps
 const secondaryArgs = Secondary.args as ButtonProps
+const brandArgs = Brand.args as ButtonProps
 
 describe('Button', () => {
   test('renders a primary link with the given label', () => {
@@ -39,5 +40,14 @@ describe('Button', () => {
     render(<Button variant="secondary">Guardar</Button>)
 
     expect(screen.getByRole('button', { name: 'Guardar' })).toHaveAttribute('type', 'button')
+  })
+
+  test('renders the brand variant as a solid submit button', () => {
+    render(<Button {...brandArgs} />)
+
+    const button = screen.getByRole('button', { name: String(brandArgs.children) })
+
+    expect(button).toHaveClass('button-brand')
+    expect(button).toHaveAttribute('type', 'submit')
   })
 })
