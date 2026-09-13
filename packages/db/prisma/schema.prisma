@@ -26,9 +26,10 @@ datasource db {
   // prisma.config.ts, and PrismaClient gets it through the driver adapter in
   // src/index.ts.
 
-  // `public` stays declared for whatever non-research table comes next; only
-  // `research` is populated today. Prisma creates both schemas via migrations.
-  schemas = ["public", "research"]
+  // `public` stays declared for whatever non-domain-specific table comes next.
+  // `research` and `news` are populated today; each domain gets its own schema
+  // rather than being added here. Prisma creates all three via migrations.
+  schemas = ["public", "research", "news"]
 }
 
 /// A journal, conference, or institutional outlet a research record was
@@ -45,28 +46,37 @@ model Publisher {
   @@schema("research")
 }
 
+enum ResearchGroup {
+  LASCE
+  ROSAC
+
+  @@schema("research")
+}
+
 /// A public research record shown on `/investigacion`: a paper, article, or
 /// institutional note, linked to its original source rather than a hosted
 /// copy. Mapped to `research_records` rather than `research` to avoid the
 /// `research.research` stutter under the `research` Postgres schema.
 model Research {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title           String
-  publicationDate DateTime @map("publication_date") @db.Date
-  publisherId     String   @map("publisher_id") @db.Uuid
-  abstract        String   @db.Text
+  publicationDate DateTime      @map("publication_date") @db.Date
+  publisherId     String        @map("publisher_id") @db.Uuid
+  researchGroup   ResearchGroup @map("research_group")
+  abstract        String        @db.Text
   /// Link to the original source. Unique so the same paper can't be listed twice.
-  externalUrl     String   @unique @map("external_url")
+  externalUrl     String        @unique @map("external_url")
   /// Digital Object Identifier, e.g. "10.1007/s11207-015-0677-0". Optional —
   /// not every record (institutional notes) has one — but unique when present.
-  doi             String?  @unique
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  doi             String?       @unique
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
 
-  publisher Publisher             @relation(fields: [publisherId], references: [id], onDelete: Restrict)
+  publisher Publisher           @relation(fields: [publisherId], references: [id], onDelete: Restrict)
   authors   ResearchCrossAuthor[]
 
   @@index([publicationDate])
+  @@index([researchGroup])
   @@map("research_records")
   @@schema("research")
 }
@@ -104,4 +114,68 @@ model ResearchCrossAuthor {
   @@index([researchId, position])
   @@map("research_cross_authors")
   @@schema("research")
+}
+
+/// An outlet where a news item was published.
+model NewsSource {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  newsRecords News[]
+
+  @@map("news_sources")
+  @@schema("news")
+}
+
+/// A public news item shown on `/noticias`: a media article, institutional note,
+/// or external coverage item linked to its source.
+model News {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  publishedAt DateTime?  @map("published_at") @db.Date
+  sourceId    String     @map("source_id") @db.Uuid
+  abstract    String     @db.Text
+  externalUrl String     @unique @map("external_url")
+  imageUrl    String     @map("image_url")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  source      NewsSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  authors     NewsCrossAuthor[]
+
+  @@index([publishedAt])
+  @@map("news_records")
+  @@schema("news")
+}
+
+/// A person credited as an author on one or more news items.
+model NewsAuthor {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  newsRecords NewsCrossAuthor[]
+
+  @@map("news_authors")
+  @@schema("news")
+}
+
+/// Many-to-many join between `News` and `NewsAuthor`. Keeps `position` so a
+/// record's citation order can be reproduced on the public page.
+model NewsCrossAuthor {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  newsId       String     @map("news_id") @db.Uuid
+  newsAuthorId String     @map("news_author_id") @db.Uuid
+  position     Int
+
+  news         News       @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  newsAuthor   NewsAuthor @relation(fields: [newsAuthorId], references: [id], onDelete: Cascade)
+
+  @@unique([newsId, newsAuthorId])
+  @@index([newsId, position])
+  @@map("news_cross_authors")
+  @@schema("news")
 }
