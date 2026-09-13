@@ -2543,3 +2543,96 @@ a.gallery-tile:focus-visible {
 .form-field-error {
   color: #b42318;
 }
+
+/* --- Registration card and page ------------------------------------------- */
+
+.registration-page {
+  padding-bottom: 64px;
+}
+
+/* One column today; the login card (#72) makes this two columns on desktop. */
+.registration-layout {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: minmax(0, 720px);
+  justify-content: center;
+  gap: 48px;
+}
+
+.registration-card {
+  min-width: 0;
+  padding: 44px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: 0 8px 24px rgba(21, 52, 76, 0.06);
+}
+
+.registration-heading {
+  margin-bottom: 28px;
+}
+
+.registration-heading h2 {
+  margin: 0 0 8px;
+  color: var(--navy-deep);
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.registration-description,
+.form-required-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.registration-form {
+  display: grid;
+  gap: 22px;
+}
+
+.form-alert {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #f1c4bd;
+  border-left: 6px solid #b42318;
+  border-radius: 10px;
+  background: #fff4f2;
+  color: #7a1b12;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.form-actions {
+  margin-top: 18px;
+}
+
+.form-success {
+  text-align: center;
+}
+
+.form-success h2 {
+  margin: 0 0 12px;
+  color: var(--navy-deep);
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.form-success p {
+  margin: 0 0 28px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .registration-layout {
+    margin-top: 20px;
+  }
+
+  .registration-card {
+    padding: 24px;
+    border-radius: 12px;
+  }
+}
