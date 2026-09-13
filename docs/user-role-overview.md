@@ -5,6 +5,11 @@ It is a prototype using fictional users and assignments, explicitly labelled on 
 The agreed role labels are Visitante, Asistente and Administrador. They are fixtures,
 not a persisted role catalogue or a permissions policy.
 
+The subsequent [role assignment mock UI](user-role-assignment.md) now supplies an optional save
+callback through `UserRoleAssignmentDemo` at the route boundary. The consultation behaviour
+described below remains available when no save callback is supplied. Current route interaction
+and verification are documented in that follow-up; real-data and authorization dependencies remain.
+
 ## Supported behaviour
 
 - Display user names, emails and one column per supplied role, using stable role IDs.
