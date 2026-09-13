@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { AdminPlaceholder } from '@/app/components/administracion/AdminPlaceholder'
+import { UsersOverviewPage } from '@/app/components/administracion/UsersOverviewPage'
+import { demoRoles, demoUsers } from '@/app/lib/user-overview-demo'
 
 const administracionSections = {
   descargas: {
@@ -10,7 +12,7 @@ const administracionSections = {
   },
   usuarios: {
     title: 'Usuarios',
-    description: 'Gestión de cuentas y permisos de usuarios del laboratorio.',
+    description: 'Consulta los usuarios registrados y sus roles actuales.',
   },
   infraestructura: {
     title: 'Infraestructura',
@@ -62,6 +64,18 @@ export default async function AdministracionSectionPage({
 
   if (!content) {
     notFound()
+  }
+
+  if (section === 'usuarios') {
+    return (
+      <UsersOverviewPage
+        description={content.description}
+        title={content.title}
+        users={demoUsers}
+        roles={demoRoles}
+        isDemo
+      />
+    )
   }
 
   return <AdminPlaceholder description={content.description} title={content.title} />
