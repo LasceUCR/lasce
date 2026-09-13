@@ -21,8 +21,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
 
   const filtered = useMemo(() => {
     return publications.filter((publication) => {
-      const matchesGroup =
-        selectedGroup === null || publication.researchGroup === selectedGroup
+      const matchesGroup = selectedGroup === null || publication.researchGroup === selectedGroup
 
       const matchesSearch =
         query.trim() === '' ||
@@ -68,9 +67,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
         >
           <button
             aria-pressed={selectedGroup === 'LASCE'}
-            onClick={() =>
-              setSelectedGroup(selectedGroup === 'LASCE' ? null : 'LASCE')
-            }
+            onClick={() => setSelectedGroup(selectedGroup === 'LASCE' ? null : 'LASCE')}
             type="button"
           >
             LASCE
@@ -78,9 +75,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
 
           <button
             aria-pressed={selectedGroup === 'ROSAC'}
-            onClick={() =>
-              setSelectedGroup(selectedGroup === 'ROSAC' ? null : 'ROSAC')
-            }
+            onClick={() => setSelectedGroup(selectedGroup === 'ROSAC' ? null : 'ROSAC')}
             type="button"
           >
             ROSAC

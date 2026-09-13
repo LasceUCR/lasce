@@ -90,9 +90,7 @@ describe('PublicationsExplorer', () => {
 
     await user.click(screen.getByRole('button', { name: 'LASCE' }))
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      lascePublications.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(lascePublications.length)
 
     for (const publication of lascePublications) {
       expect(screen.getByRole('heading', { name: publication.title })).toBeInTheDocument()
@@ -110,9 +108,7 @@ describe('PublicationsExplorer', () => {
 
     await user.click(screen.getByRole('button', { name: 'ROSAC' }))
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      rosacPublications.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(rosacPublications.length)
 
     for (const publication of rosacPublications) {
       expect(screen.getByRole('heading', { name: publication.title })).toBeInTheDocument()
@@ -132,15 +128,11 @@ describe('PublicationsExplorer', () => {
 
     await user.click(lasceButton)
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      lascePublications.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(lascePublications.length)
 
     await user.click(lasceButton)
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      filterPublications.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(filterPublications.length)
   })
 
   test('combines the group filter with the search query', async () => {
@@ -149,16 +141,11 @@ describe('PublicationsExplorer', () => {
     render(<PublicationsExplorer publications={filterPublications} />)
 
     await user.click(screen.getByRole('button', { name: 'LASCE' }))
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar publicaciones' }),
-      'Solar',
-    )
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'Solar')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
 
-    expect(
-      screen.getByRole('heading', { name: 'LASCE Solar Research' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'LASCE Solar Research' })).toBeInTheDocument()
 
     expect(
       screen.queryByRole('heading', {
@@ -174,11 +161,7 @@ describe('PublicationsExplorer', () => {
       (publication) => publication.researchGroup === 'ROSAC',
     )
 
-    render(
-      <PublicationsExplorer
-        publications={otherGroupPublications}
-      />,
-    )
+    render(<PublicationsExplorer publications={otherGroupPublications} />)
 
     await user.click(screen.getByRole('button', { name: 'LASCE' }))
 
