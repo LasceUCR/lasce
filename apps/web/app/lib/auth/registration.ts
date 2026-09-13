@@ -174,6 +174,35 @@ export type RegistrationAction = (
   formData: FormData,
 ) => Promise<RegistrationState>
 
+/** Visible labels, in the order the mockup and the ticket require. */
+export const REGISTRATION_LABELS: Record<RegistrationFieldName, string> = {
+  fullName: 'Nombre completo',
+  email: 'Correo electrónico',
+  institution: 'Institución',
+  countryCode: 'País',
+  password: 'Contraseña',
+  passwordConfirmation: 'Repetir contraseña',
+}
+
+export const REGISTRATION_PLACEHOLDERS: Partial<Record<RegistrationFieldName, string>> = {
+  fullName: 'Nombre y apellidos',
+  email: 'correo@ejemplo.com',
+  institution: 'Universidad / Centro de investigación',
+  countryCode: 'Selecciona un país',
+}
+
+/** Copy owned by the registration card itself. */
+export const registrationFormCopy = {
+  requiredNote: 'Todos los campos son obligatorios.',
+  passwordHint: `Mínimo ${PASSWORD_MIN_LENGTH} caracteres.`,
+  submit: 'Crear cuenta',
+  submitting: 'Creando cuenta...',
+  successTitle: 'Cuenta creada',
+  successBody:
+    'Tu cuenta quedó registrada. Podrás iniciar sesión cuando el acceso esté habilitado.',
+  successLink: 'Volver al inicio',
+} as const
+
 export const registroMeta = {
   title: 'Crear cuenta | LASCE',
   description:

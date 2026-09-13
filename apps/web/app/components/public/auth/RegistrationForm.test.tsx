@@ -4,17 +4,14 @@ import { describe, expect, test, vi } from 'vitest'
 
 import {
   REGISTRATION_FIELDS,
+  REGISTRATION_LABELS,
   initialRegistrationState,
+  registrationFormCopy,
   registrationMessages,
   type RegistrationState,
 } from '@/app/lib/auth/registration'
 
-import {
-  REGISTRATION_LABELS,
-  RegistrationForm,
-  registrationFormCopy,
-  type RegistrationFormProps,
-} from './RegistrationForm'
+import { RegistrationForm, type RegistrationFormProps } from './RegistrationForm'
 import {
   Default,
   DuplicateEmail,

@@ -4,42 +4,16 @@ import { useActionState, useEffect, useRef } from 'react'
 
 import type { CountryOption } from '@/app/lib/auth/countries'
 import {
+  REGISTRATION_LABELS,
+  REGISTRATION_PLACEHOLDERS,
   initialRegistrationState,
+  registrationFormCopy,
   type RegistrationAction,
-  type RegistrationFieldName,
   type RegistrationState,
 } from '@/app/lib/auth/registration'
 
 import { Button } from '../Button'
 import { FormField } from './FormField'
-
-/** Visible labels, in the order the mockup and the ticket require. */
-export const REGISTRATION_LABELS: Record<RegistrationFieldName, string> = {
-  fullName: 'Nombre completo',
-  email: 'Correo electrónico',
-  institution: 'Institución',
-  countryCode: 'País',
-  password: 'Contraseña',
-  passwordConfirmation: 'Repetir contraseña',
-}
-
-export const REGISTRATION_PLACEHOLDERS: Partial<Record<RegistrationFieldName, string>> = {
-  fullName: 'Nombre y apellidos',
-  email: 'correo@ejemplo.com',
-  institution: 'Universidad / Centro de investigación',
-  countryCode: 'Selecciona un país',
-}
-
-export const registrationFormCopy = {
-  requiredNote: 'Todos los campos son obligatorios.',
-  passwordHint: 'Mínimo 8 caracteres.',
-  submit: 'Crear cuenta',
-  submitting: 'Creando cuenta...',
-  successTitle: 'Cuenta creada',
-  successBody:
-    'Tu cuenta quedó registrada. Podrás iniciar sesión cuando el acceso esté habilitado.',
-  successLink: 'Volver al inicio',
-} as const
 
 export interface RegistrationFormHeading {
   title: string
