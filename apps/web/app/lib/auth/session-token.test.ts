@@ -113,17 +113,17 @@ describe('safeReturnPath', () => {
     }
   })
 
-  test('never sends the browser back to the login page', () => {
-    expect(safeReturnPath('/login')).toBe(DEFAULT_RETURN_PATH)
-    expect(safeReturnPath('/login?next=%2Fcuenta')).toBe(DEFAULT_RETURN_PATH)
-    expect(safeReturnPath('/login/')).toBe(DEFAULT_RETURN_PATH)
-    expect(safeReturnPath('/loginextra')).toBe('/loginextra')
+  test('never sends the browser back to the access page', () => {
+    expect(safeReturnPath('/acceso')).toBe(DEFAULT_RETURN_PATH)
+    expect(safeReturnPath('/acceso?next=%2Fcuenta')).toBe(DEFAULT_RETURN_PATH)
+    expect(safeReturnPath('/acceso/')).toBe(DEFAULT_RETURN_PATH)
+    expect(safeReturnPath('/accesorios')).toBe('/accesorios')
   })
 })
 
 describe('loginRedirectPath', () => {
   test('encodes the return path and marks the reason', () => {
-    expect(loginRedirectPath('/cuenta')).toBe('/login?next=%2Fcuenta&reason=auth')
-    expect(loginRedirectPath('/datos?x=1')).toBe('/login?next=%2Fdatos%3Fx%3D1&reason=auth')
+    expect(loginRedirectPath('/cuenta')).toBe('/acceso?next=%2Fcuenta&reason=auth')
+    expect(loginRedirectPath('/datos?x=1')).toBe('/acceso?next=%2Fdatos%3Fx%3D1&reason=auth')
   })
 })

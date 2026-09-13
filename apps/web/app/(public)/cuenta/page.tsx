@@ -25,7 +25,7 @@ const memberSince = new Intl.DateTimeFormat('es-CR', {
 
 /**
  * The first protected page (LASCE-SEC-008-072): a visitor without a live
- * session is sent to `/login` with the way back. Later tickets protect their
+ * session is sent to `/acceso` with the way back. Later tickets protect their
  * pages the same way, with `requireUser` (and, for roles, #73's helpers).
  */
 export default async function CuentaPage() {

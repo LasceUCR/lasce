@@ -169,7 +169,7 @@ describe('requireUser', () => {
 
   test('sends an anonymous visitor to the login page with the return path', async () => {
     await expect(requireUser('/cuenta')).rejects.toThrow(
-      'NEXT_REDIRECT:/login?next=%2Fcuenta&reason=auth',
+      'NEXT_REDIRECT:/acceso?next=%2Fcuenta&reason=auth',
     )
 
     expect(redirect).toHaveBeenCalledTimes(1)

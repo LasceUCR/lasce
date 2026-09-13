@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest'
 
 import {
   LOGIN_LABELS,
+  REGISTRATION_HREF,
   initialLoginState,
   loginFormCopy,
   loginMessages,
@@ -47,7 +48,7 @@ describe('LoginForm', () => {
     expect(submitButton()).toHaveAttribute('type', 'submit')
     expect(screen.getByRole('link', { name: loginFormCopy.noAccountLink })).toHaveAttribute(
       'href',
-      '/registro',
+      REGISTRATION_HREF,
     )
     expect(screen.getByText(loginFormCopy.footnote)).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()

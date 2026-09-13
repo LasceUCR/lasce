@@ -7,6 +7,7 @@ import {
   LOGIN_LABELS,
   LOGIN_PLACEHOLDERS,
   NEXT_FIELD,
+  REGISTRATION_HREF,
   initialLoginState,
   loginFormCopy,
   type LoginAction,
@@ -28,10 +29,12 @@ export interface LoginFormProps {
   next?: string
   /** Informational message, for instance when a protected page sent the visitor here. */
   notice?: string
-  /** Where "Crear cuenta" points. */
+  /** Where "Crear cuenta" points; the registration card on the same page by default. */
   registerHref?: string
   /** Card heading for pages that show this card beside others. */
   heading?: LoginFormHeading
+  /** Element id, so links can target the card on a page that shows several. */
+  id?: string
   /** Starting state. Stories and tests use it to render each state directly. */
   initialState?: LoginState
 }
@@ -46,8 +49,9 @@ export function LoginForm({
   action,
   next,
   notice,
-  registerHref = '/registro',
+  registerHref = REGISTRATION_HREF,
   heading,
+  id,
   initialState,
 }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState ?? initialLoginState)
@@ -60,7 +64,7 @@ export function LoginForm({
   }, [state])
 
   return (
-    <section className="registration-card login-card">
+    <section className="registration-card login-card" id={id}>
       {heading ? (
         <div className="registration-heading">
           <h2>{heading.title}</h2>

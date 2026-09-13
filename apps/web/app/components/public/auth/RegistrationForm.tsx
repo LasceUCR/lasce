@@ -24,8 +24,10 @@ export interface RegistrationFormProps {
   /** The Server Action. It arrives as a prop so the component stays presentational. */
   action: RegistrationAction
   countries: CountryOption[]
-  /** Card heading for pages that show this card beside others (the login card, later). */
+  /** Card heading for pages that show this card beside others (the login card). */
   heading?: RegistrationFormHeading
+  /** Element id, so links can target the card on a page that shows several. */
+  id?: string
   /** Starting state. Stories and tests use it to render each state directly. */
   initialState?: RegistrationState
 }
@@ -40,6 +42,7 @@ export function RegistrationForm({
   action,
   countries,
   heading,
+  id,
   initialState,
 }: RegistrationFormProps) {
   const [state, formAction, isPending] = useActionState(
@@ -67,7 +70,7 @@ export function RegistrationForm({
 
   if (state.status === 'success') {
     return (
-      <section className="registration-card form-success" role="status">
+      <section className="registration-card form-success" id={id} role="status">
         {headingBlock}
         <h2 ref={successRef} tabIndex={-1}>
           {registrationFormCopy.successTitle}
@@ -86,7 +89,7 @@ export function RegistrationForm({
   }))
 
   return (
-    <section className="registration-card">
+    <section className="registration-card" id={id}>
       {headingBlock}
       <form action={formAction} aria-busy={isPending} className="registration-form" noValidate>
         <p className="form-required-note">{registrationFormCopy.requiredNote}</p>

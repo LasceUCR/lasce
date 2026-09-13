@@ -11,7 +11,7 @@ import { createHash, randomBytes } from 'node:crypto'
 export const SESSION_COOKIE = 'lasce_session'
 /** Absolute lifetime of a session, from login. There is no sliding renewal. */
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000
-export const LOGIN_PATH = '/login'
+export const LOGIN_PATH = '/acceso'
 export const DEFAULT_RETURN_PATH = '/cuenta'
 
 export interface SessionCookieOptions {
@@ -71,7 +71,7 @@ const RETURN_PATH_PATTERN = /^\/(?![/\\])[!-~]*$/
 
 /**
  * Validates a `next` parameter or hidden input so login can only ever send the
- * browser to a path on this site. Anything else, including the login page
+ * browser to a path on this site. Anything else, including the access page
  * itself, falls back to the account page.
  */
 export function safeReturnPath(value: unknown): string {

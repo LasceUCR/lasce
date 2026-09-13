@@ -6,21 +6,23 @@ import { RegistrationForm } from '@/app/components/public/auth/RegistrationForm'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { listCountries } from '@/app/lib/auth/countries'
 import {
-  loginBackLink,
-  loginIntro,
+  LOGIN_CARD_ID,
+  REGISTRATION_CARD_ID,
+  accesoBackLink,
+  accesoIntro,
+  accesoMeta,
+  loginCardHeading,
   loginMessages,
-  loginMeta,
-  loginRegistrationHeading,
+  registrationCardHeading,
 } from '@/app/lib/auth/login'
 import { getSessionUser } from '@/app/lib/auth/session'
 import { safeReturnPath } from '@/app/lib/auth/session-token'
 
-import { registerUser } from '../registro/actions'
-import { loginUser } from './actions'
+import { loginUser, registerUser } from './actions'
 
 export const metadata: Metadata = {
-  title: loginMeta.title,
-  description: loginMeta.description,
+  title: accesoMeta.title,
+  description: accesoMeta.description,
 }
 
 /**
@@ -30,16 +32,17 @@ export const metadata: Metadata = {
  */
 export const dynamic = 'force-dynamic'
 
-interface LoginPageProps {
+interface AccesoPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 /**
- * The access page from the mockup (LASCE-SEC-008-072): the login card beside
- * the registration card. `next` is where a successful login goes, validated to
- * a path on this site; `reason=auth` marks a visit forced by a protected page.
+ * The access page from the mockup: the login card (LASCE-SEC-008-072) beside
+ * the registration card (LASCE-SEC-008-071). `/login` and `/registro` redirect
+ * here. `next` is where a successful login goes, validated to a path on this
+ * site; `reason=auth` marks a visit forced by a protected page.
  */
-export default async function LoginPage({ searchParams }: LoginPageProps) {
+export default async function AccesoPage({ searchParams }: AccesoPageProps) {
   const { next, reason } = await searchParams
   const returnTo = safeReturnPath(next)
 
@@ -50,25 +53,28 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <article className="registration-page">
       <header className="page-intro page-width">
-        <h1>{loginIntro.title}</h1>
-        <p>{loginIntro.lead}</p>
+        <h1>{accesoIntro.title}</h1>
+        <p>{accesoIntro.lead}</p>
       </header>
 
       <section className="registration-layout registration-layout-two page-width">
         <LoginForm
           action={loginUser}
+          heading={loginCardHeading}
+          id={LOGIN_CARD_ID}
           next={returnTo}
           notice={reason === 'auth' ? loginMessages.authRequired : undefined}
         />
         <RegistrationForm
           action={registerUser}
           countries={listCountries()}
-          heading={loginRegistrationHeading}
+          heading={registrationCardHeading}
+          id={REGISTRATION_CARD_ID}
         />
       </section>
 
       <div className="topic-page-footer page-width">
-        <TopicBackLink href={loginBackLink.href} label={loginBackLink.label} />
+        <TopicBackLink href={accesoBackLink.href} label={accesoBackLink.label} />
       </div>
     </article>
   )

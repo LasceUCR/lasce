@@ -49,7 +49,7 @@ export const SignedOutMobile: Story = {
   args: {
     ...SignedOutHeader.args,
     variant: 'mobile',
-    pathname: '/login',
+    pathname: '/acceso',
     onNavigate: () => {},
   },
 }

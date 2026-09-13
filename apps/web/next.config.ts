@@ -80,6 +80,16 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/**': ['../../node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**/*'],
   },
+
+  // Sign-in and sign-up share one page. `/registro` shipped briefly as its own
+  // route and the header linked to `/login` before it existed, so both keep
+  // working; the query string (`next`, `reason`) travels along.
+  async redirects() {
+    return [
+      { source: '/login', destination: '/acceso', permanent: true },
+      { source: '/registro', destination: '/acceso', permanent: true },
+    ]
+  },
 }
 
 export default nextConfig

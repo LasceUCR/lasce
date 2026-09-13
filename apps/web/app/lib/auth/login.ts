@@ -124,24 +124,37 @@ export const loginFormCopy = {
   footnote: 'La descarga queda asociada a tu cuenta para fines de trazabilidad y uso científico.',
 } as const
 
-export const loginMeta = {
-  title: 'Iniciar sesión | LASCE',
+/** The one page that signs visitors in and up: `/acceso`. */
+export const ACCESS_PATH = '/acceso'
+/** In-page anchors of the two cards, used by the header and the cards' own links. */
+export const LOGIN_CARD_ID = 'iniciar-sesion'
+export const REGISTRATION_CARD_ID = 'crear-cuenta'
+export const REGISTRATION_HREF = `${ACCESS_PATH}#${REGISTRATION_CARD_ID}`
+
+export const accesoMeta = {
+  title: 'Acceso al portal | LASCE',
   description:
-    'Accede al portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
+    'Inicia sesión o crea una cuenta en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
 } as const
 
-export const loginIntro = {
+export const accesoIntro = {
+  title: 'Acceso al portal',
+  lead: 'Inicia sesión o crea una cuenta para descargar productos científicos y revisar tu actividad.',
+} as const
+
+/** Heading of the login card. */
+export const loginCardHeading = {
   title: 'Iniciar sesión',
-  lead: 'Accede para descargar productos científicos y revisar tu actividad.',
+  description: 'Accede para descargar productos científicos y revisar tu actividad.',
 } as const
 
-/** Heading of the registration card when it sits next to the login card. */
-export const loginRegistrationHeading = {
+/** Heading of the registration card, beside the login card. */
+export const registrationCardHeading = {
   title: registroIntro.title,
   description: registroIntro.lead,
 } as const
 
-export const loginBackLink = {
+export const accesoBackLink = {
   href: '/',
   label: 'Volver al inicio',
 } as const
