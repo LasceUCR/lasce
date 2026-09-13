@@ -131,30 +131,23 @@ const euvParameters: ScientificParameter[] = [
 ]
 
 const magneticParameters: ScientificParameter[] = [
-  { code: 'Hp', label: 'Componente Hp', unit: 'nT' },
-  { code: 'He', label: 'Componente He', unit: 'nT' },
-  { code: 'Hn', label: 'Componente Hn', unit: 'nT' },
+  { code: 'EPN-x', label: 'Componente x (marco EPN)', unit: 'nT' },
+  { code: 'EPN-y', label: 'Componente y (marco EPN)', unit: 'nT' },
+  { code: 'EPN-z', label: 'Componente z (marco EPN)', unit: 'nT' },
   { code: 'total', label: 'Magnitud total', unit: 'nT' },
 ]
 
-const electronParameters = [
-  '79',
-  '134',
-  '186',
-  '271',
-  '378',
-  '548',
-  '865',
-  '1509',
-  '2205',
-  '2894',
-].map((energy) => ({
-  code: `electron:${energy} keV`,
-  label: `Electrones: ${energy} keV`,
-  unit: 'partículas/(cm²·s·sr·keV)',
-}))
+const mpshParameters: ScientificParameter[] = ['electron', 'proton'].flatMap((species) =>
+  Array.from({ length: 5 }, (_, telescope) =>
+    Array.from({ length: species === 'electron' ? 10 : 11 }, (_, band) => ({
+      code: `${species}:T${telescope + 1}:E${band + 1}`,
+      label: `${species === 'electron' ? 'Electrones' : 'Protones'}: telescopio ${telescope + 1}, banda ${band + 1}`,
+      unit: 'partículas/(cm²·s·sr·keV)',
+    })),
+  ).flat(),
+)
 
-const protonParameters: ScientificParameter[] = [
+const sgpsChannels = [
   'P1',
   'P2A',
   'P2B',
@@ -163,25 +156,23 @@ const protonParameters: ScientificParameter[] = [
   'P5',
   'P6',
   'P7',
-  'P8A',
-  'P8B',
-  'P8C',
-  'P9',
+  'P8AF',
+  'P8BF',
+  'P8CF',
+  'P9F',
   'P10',
-].map((channel) => ({
-  code: `proton:${channel}`,
-  label: `Protones: canal ${channel} (diferencial)`,
-  unit: 'protones/(cm²·s·sr·keV)',
-}))
+]
 
-const integralProtonParameters = ['1', '5', '10', '30', '50', '60', '100', '500'].map((energy) => ({
-  code: `>=${energy} MeV`,
-  label: `Energía ≥ ${energy} MeV`,
-  unit: 'pfu',
-}))
+const sgpsParameters: ScientificParameter[] = ['minus', 'plus'].flatMap((sensor) =>
+  [...sgpsChannels, 'P11'].map((channel) => ({
+    code: `${sensor}:${channel}`,
+    label: `SGPS${sensor === 'minus' ? '−' : '+'}X: ${channel === 'P11' ? '> 500 MeV (integral)' : `${channel} (diferencial)`}`,
+    unit: channel === 'P11' ? 'pfu' : 'protones/(cm²·s·sr·keV)',
+  })),
+)
 
 const unavailableFromRollingApi =
-  'Este producto requiere integrar y validar los archivos científicos NetCDF de NOAA.'
+  'El archivo de CITIC incluye este producto; su lector y sus canales aún están pendientes de integración.'
 
 export const goesInstruments: ScientificInstrument[] = [
   {
@@ -243,15 +234,17 @@ export const goesInstruments: ScientificInstrument[] = [
         visualization: 'time-series',
         available: true,
         availabilityNote:
-          'Esta consulta ofrece los canales de electrones. Los protones MPS-HI requieren integrar el archivo científico.',
-        parameters: electronParameters,
+          'Seleccione el telescopio y la banda del archivo nivel 1b. Cada telescopio conserva su dirección de observación.',
+        parameters: mpshParameters,
       },
       {
         code: 'SGPS',
         name: 'Protones solares y galácticos',
         visualization: 'time-series',
         available: true,
-        parameters: [...integralProtonParameters, ...protonParameters],
+        availabilityNote:
+          'Seleccione la unidad SGPS−X o SGPS+X. El archivo nivel 1b incluye canales diferenciales y el integral > 500 MeV.',
+        parameters: sgpsParameters,
       },
     ],
   },
@@ -320,7 +313,7 @@ export const scientificSources: ScientificSource[] = [
   {
     code: 'GOES',
     name: 'GOES — NOAA',
-    description: 'Observaciones públicas de los satélites operativos de NOAA.',
+    description: 'Series históricas GOES del archivo de CITIC-UCR e imágenes SUVI de NOAA.',
     dataKind: 'observed',
     instruments: goesInstruments,
   },
