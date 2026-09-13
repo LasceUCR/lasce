@@ -88,8 +88,8 @@ pass render the signed-out links, then React re-renders with the client value. T
 re-renders on every navigation, so the cookie set by a login redirect is picked up without wiring.
 Signing out clears the client cookie first (so the menu flips even when the redirect lands on the
 current page), runs the action, and puts the cookie back if the action fails. `AccountLinks`
-renders "Ingresar" and "Crear cuenta", or "Hola, <nombre>" (to `/cuenta`) and "Cerrar sesión", in
-the desktop header and in the mobile menu.
+renders "Ingresar", or "Hola, <nombre>" (to `/cuenta`) and "Cerrar sesión", in the desktop header
+and in the mobile menu; registration is reached through the access page's own tab.
 
 Known lag: another open tab keeps showing the signed-in menu until it navigates. Its protected
 pages still redirect correctly, because the server checks the session row, not the cookie.

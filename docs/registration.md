@@ -96,8 +96,8 @@ each role may do is #73.
 
 ## Entry points
 
-- The public header shows "Crear cuenta" next to "Ingresar" on desktop and hides both under
-  760px; the mobile menu lists "Crear cuenta" after the navigation items.
+- The public header offers "Ingresar" only (hidden under 760px, where the mobile menu lists it);
+  registration is the "Crear cuenta" tab of the access page and the login card links to it.
 - `/acceso` is in `publicPaths` (`apps/web/app/lib/site.ts`), so it is in the sitemap and in the
   routes the accessibility spec scans; `/registro` and `/login` redirect to it.
 - `/acceso` shows this card behind the "Crear cuenta" tab (`?tab=crear-cuenta`), next to the login

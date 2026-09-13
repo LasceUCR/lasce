@@ -2,7 +2,7 @@
 
 Public institutional portal for LASCE, built with Next.js and TypeScript inside the LASCE Turborepo.
 
-The public pages are available without authentication. The header includes **Ingresar** and **Crear cuenta** links to `/acceso`; the authentication flow is described in [`docs/sessions.md`](../../docs/sessions.md) and protected areas are implemented separately from this public portal.
+The public pages are available without authentication. The header includes an **Ingresar** link to `/acceso`, whose tabs cover sign-in and sign-up; the authentication flow is described in [`docs/sessions.md`](../../docs/sessions.md) and protected areas are implemented separately from this public portal.
 
 ## Requirements
 
