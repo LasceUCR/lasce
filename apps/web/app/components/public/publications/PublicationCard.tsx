@@ -22,7 +22,13 @@ export function PublicationCard({
         {authors} · {venue} · {year}
       </p>
       <p className="publication-abstract">{abstract}</p>
-      <a className="area-link link-stroke" href={href} rel="noreferrer" target="_blank">
+      <a
+        aria-label={`DOI / Enlace externo: ${title}`}
+        className="area-link link-stroke"
+        href={href}
+        rel="noreferrer"
+        target="_blank"
+      >
         DOI / Enlace externo <span aria-hidden="true">→</span>
       </a>
     </article>

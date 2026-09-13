@@ -22,7 +22,7 @@ export function NewsCard({
   return (
     <article className="surface-card news-card">
       <div className="news-card-image">
-        <Image alt={title} fill sizes="(max-width: 768px) 100vw, 320px" src={imageUrl} />
+        <Image alt="" fill sizes="(max-width: 768px) 100vw, 320px" src={imageUrl} />
       </div>
 
       <div className="news-card-content">
@@ -36,6 +36,7 @@ export function NewsCard({
 
         {href ? (
           <a
+            aria-label={`Abrir fuente: ${source}`}
             className="area-link link-stroke"
             href={href}
             rel="noopener noreferrer"

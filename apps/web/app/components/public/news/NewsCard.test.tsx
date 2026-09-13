@@ -31,17 +31,18 @@ describe('NewsCard', () => {
     expect(screen.getByText(defaultArgs.abstract)).toBeInTheDocument()
   })
 
-  test('shows the news image', () => {
+  test('uses an empty alt for decorative news images', () => {
     render(<NewsCard {...defaultArgs} />)
 
-    expect(screen.getByRole('img')).toHaveAttribute('alt', defaultArgs.title)
-    expect(screen.getByRole('img')).toHaveAttribute('src')
+    expect(screen.getByAltText('')).toHaveAttribute('src')
   })
 
   test('links out through the external source action', () => {
     render(<NewsCard {...defaultArgs} />)
 
-    const link = screen.getByRole('link', { name: /Abrir fuente/i })
+    const link = screen.getByRole('link', {
+      name: `Abrir fuente: ${defaultArgs.source}`,
+    })
 
     expect(link).toHaveAttribute('href', defaultArgs.href)
     expect(link).toHaveAttribute('target', '_blank')
