@@ -5,12 +5,13 @@ migrations are written. These classes just let the worker read and write the
 same tables. Whenever you change a Prisma model, change the matching class here.
 """
 
+import enum
 import uuid
 from datetime import date as date_type
 from datetime import datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import CHAR, Date, DateTime, ForeignKey, Integer, Text, text
+from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -90,3 +91,45 @@ class ResearchCrossAuthor(Base):
         UUID(as_uuid=True), ForeignKey("research.research_authors.id", ondelete="CASCADE")
     )
     position: Mapped[int] = mapped_column(Integer)
+
+
+class UserRole(enum.StrEnum):
+    """Access level of a portal account. Mirrors the Prisma ``UserRole`` enum, whose
+    database values are the lower-case strings below (``@map`` in the schema).
+    """
+
+    VISITOR = "visitor"
+    ASSISTANT = "assistant"
+    ADMIN = "admin"
+
+
+class User(Base):
+    """A portal account created by the public ``/registro`` form. Lives in the
+    ``auth`` Postgres schema. No job touches it yet; it is mirrored by convention.
+    Never log ``password_hash``.
+    """
+
+    __tablename__ = "users"
+    __table_args__ = {"schema": "auth"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    full_name: Mapped[str] = mapped_column(Text)
+    email: Mapped[str] = mapped_column(Text, unique=True)
+    institution: Mapped[str] = mapped_column(Text)
+    country_code: Mapped[str] = mapped_column(CHAR(2))
+    password_hash: Mapped[str] = mapped_column(Text)
+    # The Postgres-specific ENUM is used on purpose: the generic `sqlalchemy.Enum`
+    # silently drops `create_type`. Prisma owns the `auth.user_role` type and
+    # creates it in the migration, so SQLAlchemy must never emit CREATE TYPE.
+    role: Mapped[UserRole] = mapped_column(
+        ENUM(
+            UserRole,
+            name="user_role",
+            schema="auth",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        ),
+        server_default=text("'visitor'"),
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

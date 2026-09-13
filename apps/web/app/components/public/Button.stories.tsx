@@ -54,3 +54,10 @@ export const External: Story = {
     icon: <ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />,
   },
 }
+export const Brand: Story = {
+  args: {
+    children: 'Crear cuenta',
+    variant: 'brand',
+    type: 'submit',
+  },
+}
