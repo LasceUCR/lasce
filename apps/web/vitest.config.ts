@@ -28,11 +28,14 @@ export default defineConfig({
       // statements / 53.1% functions when these floors were raised, then
       // 63.3% lines / 62.8% statements / 63.4% functions after the
       // free-function service was restructured into app/services (see
-      // docs/manage-assets.md). A starting floor that ratchets upward, not a
-      // target: it exists to catch a drop, so raise it as coverage grows.
-      // Branches are still not gated; add that floor once enough of the app
-      // is covered that the figure stops being noise.
-      thresholds: { lines: 50, statements: 50, functions: 45 },
+      // docs/manage-assets.md), and raised again to 75%/75%/75% at 86.2% lines
+      // / 86.0% statements / 87.1% functions once the registration modules
+      // under app/lib/auth and app/components/public/auth landed with tests.
+      // A starting floor that ratchets upward, not a target: it exists to
+      // catch a drop, so raise it as coverage grows. Branches are still not
+      // gated; add that floor once enough of the app is covered that the
+      // figure stops being noise.
+      thresholds: { lines: 75, statements: 75, functions: 75 },
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       reportsDirectory: './coverage',
       // Components and helpers only. Route handlers, pages and Server Actions

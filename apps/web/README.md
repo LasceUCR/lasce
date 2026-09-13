@@ -69,6 +69,7 @@ Production deployment uses the standalone Next.js bundle through
 | `/datos`             | Public data and analysis resources                             |
 | `/noticias`          | Institutional news                                             |
 | `/contacto`          | Contact information                                            |
+| `/registro`          | Account registration form (_Crear cuenta_)                     |
 
 Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page.
 

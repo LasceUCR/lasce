@@ -277,6 +277,43 @@ a {
   background: #f4fafd;
 }
 
+/* Both account links share the header's last grid cell. */
+.header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Compact text-style variant: the cell is too narrow for two pills. */
+.register-link {
+  min-width: 0;
+  padding: 0 8px;
+  border-color: transparent;
+  color: var(--blue-dark);
+  white-space: nowrap;
+}
+
+/* Between the mobile breakpoint and about 1380px the nine navigation items
+   leave little room for the account links, so tighten the gaps only there. */
+@media (min-width: 1121px) and (max-width: 1380px) {
+  .site-header {
+    gap: 16px;
+  }
+
+  .desktop-nav {
+    gap: 16px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .register-link {
+    padding: 0 4px;
+  }
+}
+
 .mobile-menu {
   display: none;
 }
@@ -441,6 +478,31 @@ a {
 .button-secondary:focus-visible {
   border-color: var(--blue);
   background: #f4fafd;
+}
+
+/* Solid UCR blue call to action, used by forms. `primary` stays the orange
+   site button. */
+.button-brand {
+  background: var(--blue-dark);
+  color: var(--white);
+}
+
+.button-brand:hover,
+.button-brand:focus-visible {
+  background: var(--navy-deep);
+}
+
+.button-brand:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* Full-width form button, sized like the inputs it follows. */
+.button-block {
+  width: 100%;
+  min-height: 56px;
+  border-radius: 10px;
+  font-size: 17px;
 }
 
 .home-content {
@@ -1047,7 +1109,8 @@ a {
     height: 34px;
   }
 
-  .login-link {
+  .login-link,
+  .header-actions {
     display: none;
   }
 
@@ -2467,5 +2530,147 @@ a.gallery-tile:focus-visible {
 @media (max-width: 760px) {
   .admin-content {
     padding: 20px;
+  }
+}
+
+/* --- Form fields (registration) ------------------------------------------ */
+
+.form-field {
+  display: grid;
+  gap: 8px;
+}
+
+.form-field label {
+  color: #4a6070;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.form-field input,
+.form-field select {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+}
+
+.form-field input::placeholder {
+  color: #6b7f8f;
+}
+
+.form-field [aria-invalid='true'] {
+  border-color: #b42318;
+}
+
+.form-field-hint,
+.form-field-error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.form-field-hint {
+  color: var(--muted);
+}
+
+.form-field-error {
+  color: #b42318;
+}
+
+/* --- Registration card and page ------------------------------------------- */
+
+.registration-page {
+  padding-bottom: 64px;
+}
+
+/* One column today; the login card (#72) makes this two columns on desktop. */
+.registration-layout {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: minmax(0, 720px);
+  justify-content: center;
+  gap: 48px;
+}
+
+.registration-card {
+  min-width: 0;
+  padding: 44px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: 0 8px 24px rgba(21, 52, 76, 0.06);
+}
+
+.registration-heading {
+  margin-bottom: 28px;
+}
+
+.registration-heading h2 {
+  margin: 0 0 8px;
+  color: var(--navy-deep);
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.registration-description,
+.form-required-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.registration-form {
+  display: grid;
+  gap: 22px;
+}
+
+.form-alert {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #f1c4bd;
+  border-left: 6px solid #b42318;
+  border-radius: 10px;
+  background: #fff4f2;
+  color: #7a1b12;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.form-actions {
+  margin-top: 18px;
+}
+
+.form-success {
+  text-align: center;
+}
+
+.form-success h2 {
+  margin: 0 0 12px;
+  color: var(--navy-deep);
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.form-success p {
+  margin: 0 0 28px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .registration-layout {
+    margin-top: 20px;
+  }
+
+  .registration-card {
+    padding: 24px;
+    border-radius: 12px;
   }
 }

@@ -29,6 +29,7 @@ const indexableRoutes = [
   { label: 'Física solar', path: '/fisica-solar' },
   { label: 'Clima espacial', path: '/clima-espacial' },
   { label: 'Radioastronomía', path: '/radioastronomia' },
+  { label: 'Crear cuenta', path: '/registro' },
   ...galleryRoutes,
 ] as const
 
