@@ -1,0 +1,65 @@
+.scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.scroll:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 4px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: 16px;
+  border-bottom: 1px solid #dce5ed;
+  min-width: 130px;
+  overflow-wrap: anywhere;
+}
+
+.table thead {
+  background: #f2f7fb;
+  color: #244359;
+}
+
+.table tr > * + * {
+  border-left: 1px solid #dce5ed;
+}
+
+.table tbody th {
+  font-weight: 600;
+}
+
+.assignment {
+  text-align: center;
+}
+
+.assignment input {
+  display: block;
+  margin: 0 auto;
+  width: 18px;
+  height: 18px;
+}
+.userName {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  min-height: 44px;
+  color: var(--blue-dark);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.userName:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 3px;
+}
