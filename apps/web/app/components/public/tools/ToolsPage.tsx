@@ -1,6 +1,8 @@
 import Image from 'next/image'
 import { ExternalLink, Info } from 'lucide-react'
 
+import { Button } from '@/app/components/public/Button'
+
 const SWAPRO_URL = process.env.NEXT_PUBLIC_SWAPRO_URL ?? 'https://swaat.up.railway.app'
 
 export function ToolsPage() {
@@ -11,7 +13,7 @@ export function ToolsPage() {
         <p>Acceso a servicios especializados integrados o enlazados desde LASCE.</p>
       </div>
 
-      <div className="tool-feature-card">
+      <article className="tool-feature-card">
         <div className="tool-feature-body">
           <div className="tool-feature-row">
             <div className="tool-feature-media">
@@ -41,18 +43,18 @@ export function ToolsPage() {
               </div>
             </div>
 
-            <a
-              className="button button-primary tool-feature-cta"
+            <Button
+              className="tool-feature-cta"
               href={SWAPRO_URL}
-              target="_blank"
+              icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
               rel="noopener noreferrer"
+              target="_blank"
             >
-              <ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />
               Acceder a SWAAT
-            </a>
+            </Button>
           </div>
         </div>
-      </div>
+      </article>
 
       <p className="tool-footnote">
         <Info aria-hidden="true" size={14} strokeWidth={1.8} />

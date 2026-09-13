@@ -7,6 +7,12 @@ export interface ButtonProps {
   children: ReactNode
   variant?: ButtonVariant
   href?: string
+  /** Forwarded to the underlying anchor. Set to `_blank` for an external `href`. */
+  target?: string
+  /** Forwarded to the underlying anchor. Pair with `target="_blank"` on an external
+   * `href` — `noopener noreferrer` prevents the opened page from reaching back into
+   * this one through `window.opener`. */
+  rel?: string
   icon?: ReactNode
   className?: string
   type?: 'button' | 'submit'
@@ -18,6 +24,8 @@ export function Button({
   children,
   variant = 'primary',
   href,
+  target,
+  rel,
   icon,
   className,
   type = 'button',
@@ -34,7 +42,7 @@ export function Button({
 
   if (href) {
     return (
-      <Link className={classes} href={href}>
+      <Link className={classes} href={href} rel={rel} target={target}>
         {content}
       </Link>
     )
