@@ -63,3 +63,17 @@
   outline: 2px solid var(--blue-dark);
   outline-offset: 3px;
 }
+.checkboxTarget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.feedback {
+  margin: 12px 0 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}

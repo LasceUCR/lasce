@@ -2,9 +2,22 @@ import type { OverviewRole, OverviewUser } from './user-overview'
 
 // Fictional users and assignments with the agreed role names for the overview prototype.
 export const demoRoles: OverviewRole[] = [
-  { id: 'demo-visitor', name: 'Visitante' },
-  { id: 'demo-assistant', name: 'Asistente' },
-  { id: 'demo-admin', name: 'Administrador' },
+  {
+    id: 'demo-visitor',
+    name: 'Visitante',
+    description: 'Puede visitar la página y descargar contenido.',
+  },
+  {
+    id: 'demo-assistant',
+    name: 'Asistente',
+    description: 'Puede editar el contenido de la página.',
+  },
+  {
+    id: 'demo-admin',
+    name: 'Administrador',
+    description:
+      'Tiene acceso a todas las funciones del panel administrativo, incluida la asignación y revocación de roles y la edición de contenido.',
+  },
 ]
 
 export const demoUsers: OverviewUser[] = [
@@ -14,7 +27,7 @@ export const demoUsers: OverviewUser[] = [
     email: 'ana@example.com',
     institution: 'Universidad de Costa Rica',
     country: 'Costa Rica',
-    roleIds: ['demo-admin', 'demo-assistant'],
+    roleIds: ['demo-admin'],
   },
   {
     id: 'demo-2',

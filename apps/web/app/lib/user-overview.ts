@@ -1,6 +1,7 @@
 export interface OverviewRole {
   id: string
   name: string
+  description?: string
 }
 
 export interface OverviewUser {
