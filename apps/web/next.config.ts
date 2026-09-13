@@ -87,7 +87,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: '/login', destination: '/acceso', permanent: true },
-      { source: '/registro', destination: '/acceso', permanent: true },
+      { source: '/registro', destination: '/acceso?tab=crear-cuenta', permanent: true },
     ]
   },
 }

@@ -29,7 +29,7 @@ describe('AccountLinks', () => {
       accountMenuCopy.register,
     ])
     expect(links[0]).toHaveAttribute('href', '/acceso')
-    expect(links[1]).toHaveAttribute('href', '/acceso#crear-cuenta')
+    expect(links[1]).toHaveAttribute('href', '/acceso?tab=crear-cuenta')
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 

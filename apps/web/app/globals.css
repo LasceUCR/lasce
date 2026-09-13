@@ -2633,7 +2633,6 @@ a.gallery-tile:focus-visible {
   padding-bottom: 64px;
 }
 
-/* One column by default; /login adds the modifier for two cards side by side. */
 .registration-layout {
   margin-top: 32px;
   display: grid;
@@ -2642,11 +2641,36 @@ a.gallery-tile:focus-visible {
   gap: 48px;
 }
 
-@media (min-width: 1121px) {
-  .registration-layout-two {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
+/* --- Access tabs ----------------------------------------------------------- */
+
+/* Right-aligned above the card, styled like the header's active-link underline. */
+.access-tabs {
+  margin: 0 0 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.access-tab {
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.access-tab:hover,
+.access-tab:focus-visible {
+  color: var(--blue-dark);
+}
+
+.access-tab[aria-selected='true'] {
+  color: var(--navy-deep);
+  border-bottom-color: var(--blue);
 }
 
 .registration-card {

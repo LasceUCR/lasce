@@ -1,16 +1,19 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
+import { AccessTabs } from '@/app/components/public/auth/AccessTabs'
 import { LoginForm } from '@/app/components/public/auth/LoginForm'
 import { RegistrationForm } from '@/app/components/public/auth/RegistrationForm'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { listCountries } from '@/app/lib/auth/countries'
 import {
+  ACCESS_TAB_PARAM,
   LOGIN_CARD_ID,
   REGISTRATION_CARD_ID,
   accesoBackLink,
   accesoIntro,
   accesoMeta,
+  accessTabFromParam,
   loginCardHeading,
   loginMessages,
   registrationCardHeading,
@@ -37,14 +40,15 @@ interface AccesoPageProps {
 }
 
 /**
- * The access page from the mockup: the login card (LASCE-SEC-008-072) beside
- * the registration card (LASCE-SEC-008-071). `/login` and `/registro` redirect
- * here. `next` is where a successful login goes, validated to a path on this
- * site; `reason=auth` marks a visit forced by a protected page.
+ * The access page: the login card (LASCE-SEC-008-072) and the registration
+ * card (LASCE-SEC-008-071) behind a tab selector, one visible at a time.
+ * `/login` and `/registro` redirect here. `tab` picks the card, `next` is where
+ * a successful login goes (validated to a path on this site) and `reason=auth`
+ * marks a visit forced by a protected page.
  */
 export default async function AccesoPage({ searchParams }: AccesoPageProps) {
-  const { next, reason } = await searchParams
-  const returnTo = safeReturnPath(next)
+  const params = await searchParams
+  const returnTo = safeReturnPath(params.next)
 
   if (await getSessionUser()) {
     redirect(returnTo)
@@ -57,19 +61,26 @@ export default async function AccesoPage({ searchParams }: AccesoPageProps) {
         <p>{accesoIntro.lead}</p>
       </header>
 
-      <section className="registration-layout registration-layout-two page-width">
-        <LoginForm
-          action={loginUser}
-          heading={loginCardHeading}
-          id={LOGIN_CARD_ID}
-          next={returnTo}
-          notice={reason === 'auth' ? loginMessages.authRequired : undefined}
-        />
-        <RegistrationForm
-          action={registerUser}
-          countries={listCountries()}
-          heading={registrationCardHeading}
-          id={REGISTRATION_CARD_ID}
+      <section className="registration-layout page-width">
+        <AccessTabs
+          initialTab={accessTabFromParam(params[ACCESS_TAB_PARAM])}
+          login={
+            <LoginForm
+              action={loginUser}
+              heading={loginCardHeading}
+              id={LOGIN_CARD_ID}
+              next={returnTo}
+              notice={params.reason === 'auth' ? loginMessages.authRequired : undefined}
+            />
+          }
+          register={
+            <RegistrationForm
+              action={registerUser}
+              countries={listCountries()}
+              heading={registrationCardHeading}
+              id={REGISTRATION_CARD_ID}
+            />
+          }
         />
       </section>
 

@@ -126,10 +126,30 @@ export const loginFormCopy = {
 
 /** The one page that signs visitors in and up: `/acceso`. */
 export const ACCESS_PATH = '/acceso'
-/** In-page anchors of the two cards, used by the header and the cards' own links. */
+/** Element ids of the two cards, so specs and links can target one of them. */
 export const LOGIN_CARD_ID = 'iniciar-sesion'
 export const REGISTRATION_CARD_ID = 'crear-cuenta'
-export const REGISTRATION_HREF = `${ACCESS_PATH}#${REGISTRATION_CARD_ID}`
+
+/** The page shows one card at a time; the query string says which. */
+export type AccessTab = 'login' | 'register'
+export const ACCESS_TAB_PARAM = 'tab'
+export const ACCESS_TAB_VALUES: Record<AccessTab, string> = {
+  login: LOGIN_CARD_ID,
+  register: REGISTRATION_CARD_ID,
+}
+export const ACCESS_TAB_ORDER: readonly AccessTab[] = ['login', 'register']
+
+/** Reads the `tab` query parameter; anything but the registration value means login. */
+export function accessTabFromParam(value: unknown): AccessTab {
+  return value === ACCESS_TAB_VALUES.register ? 'register' : 'login'
+}
+
+export function accessTabHref(tab: AccessTab): string {
+  return `${ACCESS_PATH}?${ACCESS_TAB_PARAM}=${ACCESS_TAB_VALUES[tab]}`
+}
+
+/** Where "Crear cuenta" links point: the access page with the registration tab open. */
+export const REGISTRATION_HREF = accessTabHref('register')
 
 export const accesoMeta = {
   title: 'Acceso al portal | LASCE',
@@ -152,6 +172,11 @@ export const loginCardHeading = {
 export const registrationCardHeading = {
   title: registroIntro.title,
   description: registroIntro.lead,
+} as const
+
+export const accessTabsCopy = {
+  label: 'Acceso',
+  tabs: { login: 'Iniciar sesión', register: 'Crear cuenta' } as Record<AccessTab, string>,
 } as const
 
 export const accesoBackLink = {
