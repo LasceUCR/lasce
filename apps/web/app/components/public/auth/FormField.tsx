@@ -64,7 +64,9 @@ export function FormField({
         // React applies a select's defaultValue only on mount, so when the
         // echoed value changes after a submission the element is remounted;
         // inputs need no such help because React updates their defaultValue.
-        <select {...shared} defaultValue={defaultValue ?? ''} key={defaultValue ?? ''}>
+        // `key` goes before the spread: after it, the JSX transform has to fall
+        // back to a call that makes React treat the options as a dynamic list.
+        <select key={defaultValue ?? ''} {...shared} defaultValue={defaultValue ?? ''}>
           <option value="">{placeholder ?? 'Selecciona una opción'}</option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
