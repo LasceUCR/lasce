@@ -6,23 +6,24 @@ covered in [registration.md](registration.md).
 
 ## The pieces
 
-| Piece                                 | File                                                                                     | Covered by                              |
-| ------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------- |
-| Access page (login and registration)  | `apps/web/app/(public)/acceso/page.tsx`                                                  | Playwright (`tests/e2e/login.spec.ts`)  |
-| Login and registration actions        | `apps/web/app/(public)/acceso/actions.ts`                                                | Playwright                              |
-| Account page ("Mi cuenta")            | `apps/web/app/(public)/cuenta/page.tsx`                                                  | Playwright                              |
-| Logout action                         | `apps/web/app/(public)/cuenta/actions.ts`                                                | Playwright                              |
-| Login rules, messages, state          | `apps/web/app/lib/auth/login.ts`                                                         | Vitest, colocated                       |
-| Tokens, cookie flags, return paths    | `apps/web/app/lib/auth/session-token.ts`                                                 | Vitest, colocated, no mocks             |
-| Session store                         | `apps/web/app/lib/auth/session.ts`                                                       | Vitest, `@lasce/db` and `next/*` mocked |
-| Display-name cookie and account copy  | `apps/web/app/lib/auth/account.ts`                                                       | Vitest, colocated                       |
-| Login card, account links, hook, card | `apps/web/app/components/public/auth/{LoginForm,AccountLinks,useAccount,AccountSummary}` | Vitest, stories as fixtures             |
-| Table                                 | `auth.sessions`, see `database-definition.md`                                            | Prisma migration, worker model test     |
+| Piece                                                       | File                                                                                                | Covered by                              |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Access page (login and registration)                        | `apps/web/app/(public)/acceso/page.tsx`                                                             | Playwright (`tests/e2e/login.spec.ts`)  |
+| Login and registration actions                              | `apps/web/app/(public)/acceso/actions.ts`                                                           | Playwright                              |
+| Account page ("Mi cuenta")                                  | `apps/web/app/(public)/cuenta/page.tsx`                                                             | Playwright                              |
+| Logout action                                               | `apps/web/app/(public)/cuenta/actions.ts`                                                           | Playwright                              |
+| Login rules, messages, state                                | `apps/web/app/lib/auth/login.ts`                                                                    | Vitest, colocated                       |
+| Tokens, cookie flags, return paths                          | `apps/web/app/lib/auth/session-token.ts`                                                            | Vitest, colocated, no mocks             |
+| Session store                                               | `apps/web/app/lib/auth/session.ts`                                                                  | Vitest, `@lasce/db` and `next/*` mocked |
+| Display-name cookie and account copy                        | `apps/web/app/lib/auth/account.ts`                                                                  | Vitest, colocated                       |
+| Tab selector, login card, account links, hook, account card | `apps/web/app/components/public/auth/{AccessTabs,LoginForm,AccountLinks,useAccount,AccountSummary}` | Vitest, stories as fixtures             |
+| Table                                                       | `auth.sessions`, see `database-definition.md`                                                       | Prisma migration, worker model test     |
 
 `/acceso` and `/cuenta` are the only dynamic pages besides `/investigacion`: they read the request's
 cookies (and `/acceso` its query string), so they render per request and never at build time.
-`/login` and `/registro` are permanent redirects to `/acceso` (`next.config.ts`), query string
-included. Every
+The page shows one card at a time behind a tab selector; `?tab=crear-cuenta` opens the registration
+card and anything else the login card. `/login` and `/registro` are permanent redirects to `/acceso`
+(`next.config.ts`), query string included, `/registro` landing on the registration tab. Every
 other public page stays static; `getSessionUser` must never be called from the shared layout.
 
 ## Cookies
@@ -125,5 +126,4 @@ correctness; the admin panel gate (#83) may add one for a faster redirect.
 - No rate limiting or lockout on login; the placeholder hash only evens out the KDF time.
 - No "log out everywhere", no sliding renewal, no cleanup of expired rows.
 - The display-name cookie can lag in other tabs (see above).
-- The registration card's success link scrolls to the login card on the same page rather than
-  prefilling it.
+- The registration card's success link reloads the page on the login tab rather than prefilling it.

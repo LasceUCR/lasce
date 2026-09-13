@@ -100,15 +100,16 @@ each role may do is #73.
   760px; the mobile menu lists "Crear cuenta" after the navigation items.
 - `/acceso` is in `publicPaths` (`apps/web/app/lib/site.ts`), so it is in the sitemap and in the
   routes the accessibility spec scans; `/registro` and `/login` redirect to it.
-- `/acceso` shows this card beside the login card; the confirmation panel links to the login card
-  once the account exists. Signing in is covered in [sessions.md](sessions.md).
+- `/acceso` shows this card behind the "Crear cuenta" tab (`?tab=crear-cuenta`), next to the login
+  tab; the confirmation panel links to the login tab once the account exists. Signing in is covered
+  in [sessions.md](sessions.md).
 
 ## What login uses from here
 
 - `verifyPassword` from `password.ts`, against `auth.users.password_hash`, and
   `UNKNOWN_USER_PASSWORD_HASH` for unknown addresses.
 - `findUserByEmail` in `users.ts`, which lower-cases before `findUnique`.
-- `RegistrationForm` with its `heading` prop, rendered next to the login card on `/acceso`.
+- `RegistrationForm` with its `heading` prop, rendered behind its tab on `/acceso`.
 - Sessions live in `auth.sessions`, not in columns on `users`; see [sessions.md](sessions.md).
 
 ## Known gaps
