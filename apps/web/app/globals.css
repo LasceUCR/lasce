@@ -277,6 +277,43 @@ a {
   background: #f4fafd;
 }
 
+/* Both account links share the header's last grid cell. */
+.header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Compact text-style variant: the cell is too narrow for two pills. */
+.register-link {
+  min-width: 0;
+  padding: 0 8px;
+  border-color: transparent;
+  color: var(--blue-dark);
+  white-space: nowrap;
+}
+
+/* Between the mobile breakpoint and about 1380px the nine navigation items
+   leave little room for the account links, so tighten the gaps only there. */
+@media (min-width: 1121px) and (max-width: 1380px) {
+  .site-header {
+    gap: 16px;
+  }
+
+  .desktop-nav {
+    gap: 16px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .register-link {
+    padding: 0 4px;
+  }
+}
+
 .mobile-menu {
   display: none;
 }
@@ -1072,7 +1109,8 @@ a {
     height: 34px;
   }
 
-  .login-link {
+  .login-link,
+  .header-actions {
     display: none;
   }
 
