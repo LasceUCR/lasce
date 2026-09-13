@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
 import { PublicationsExplorer } from '@/app/components/public/publications/PublicationsExplorer'
-import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import {
