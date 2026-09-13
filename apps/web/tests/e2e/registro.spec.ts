@@ -2,6 +2,12 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
 import {
+  ACCESS_PATH,
+  REGISTRATION_CARD_ID,
+  REGISTRATION_HREF,
+  accesoIntro,
+} from '@/app/lib/auth/login'
+import {
   REGISTRATION_FIELDS,
   REGISTRATION_LABELS,
   registrationFormCopy,
@@ -32,15 +38,20 @@ const requiredMessages: Record<RegistrationFieldName, string> = {
   passwordConfirmation: registrationMessages.confirmationRequired,
 }
 
-const field = (page: Page, name: RegistrationFieldName) =>
-  page.getByLabel(REGISTRATION_LABELS[name], { exact: true })
+// The login card on the same page shares two labels, so every field lookup
+// starts from the registration card.
+const registrationCard = (page: Page) => page.locator(`#${REGISTRATION_CARD_ID}`)
 
-const submitButton = (page: Page) => page.getByRole('button', { name: registrationFormCopy.submit })
+const field = (page: Page, name: RegistrationFieldName) =>
+  registrationCard(page).getByLabel(REGISTRATION_LABELS[name], { exact: true })
+
+const submitButton = (page: Page) =>
+  registrationCard(page).getByRole('button', { name: registrationFormCopy.submit })
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // Scoped to the card: Next's route announcer is also a `role="alert"` element.
-const formAlert = (page: Page) => page.locator('.registration-card').getByRole('alert')
+const formAlert = (page: Page) => registrationCard(page).getByRole('alert')
 
 // Accessible descriptions concatenate the hint and the error, so match on the
 // message rather than the whole string.
@@ -62,13 +73,16 @@ test('the header links to the registration page on desktop and the mobile menu o
   await page.goto('/')
 
   const registerLink = page.getByRole('link', { name: 'Crear cuenta' })
-  await expect(registerLink).toHaveAttribute('href', '/registro')
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(registerLink).toHaveAttribute('href', REGISTRATION_HREF)
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', ACCESS_PATH)
 
   await registerLink.click()
-  await expect(page).toHaveURL(/\/registro$/)
-  await expect(page.getByRole('heading', { level: 1, name: registroIntro.title })).toBeVisible()
-  await expect(page.getByText(registroIntro.lead)).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`${ACCESS_PATH}#${REGISTRATION_CARD_ID}$`))
+  await expect(page.getByRole('heading', { level: 1, name: accesoIntro.title })).toBeVisible()
+  await expect(
+    registrationCard(page).getByRole('heading', { level: 2, name: registroIntro.title }),
+  ).toBeVisible()
+  await expect(registrationCard(page).getByText(registroIntro.lead)).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -78,15 +92,15 @@ test('the header links to the registration page on desktop and the mobile menu o
     page
       .getByRole('navigation', { name: 'Navegación móvil' })
       .getByRole('link', { name: 'Crear cuenta' }),
-  ).toHaveAttribute('href', '/registro')
+  ).toHaveAttribute('href', REGISTRATION_HREF)
 })
 
 test('shows the six fields in the agreed order and states that all are required', async ({
   page,
 }) => {
-  await page.goto('/registro')
+  await page.goto(ACCESS_PATH)
 
-  const labels = await page.locator('.registration-form label').allTextContents()
+  const labels = await registrationCard(page).locator('label').allTextContents()
   expect(labels).toEqual(REGISTRATION_FIELDS.map((name) => REGISTRATION_LABELS[name]))
   await expect(page.getByText(registrationFormCopy.requiredNote)).toBeVisible()
   await expect(
@@ -95,7 +109,7 @@ test('shows the six fields in the agreed order and states that all are required'
 })
 
 test('creates an account with valid data', async ({ page }) => {
-  await page.goto('/registro')
+  await page.goto(ACCESS_PATH)
 
   await fillRegistration(page, { ...validValues, email: uniqueEmail('valid') })
   await submitButton(page).click()
@@ -106,13 +120,13 @@ test('creates an account with valid data', async ({ page }) => {
   ).toBeVisible()
   await expect(
     status.getByRole('link', { name: registrationFormCopy.successLink }),
-  ).toHaveAttribute('href', '/login')
-  await expect(page).toHaveURL(/\/registro$/)
+  ).toHaveAttribute('href', registrationFormCopy.successHref)
+  await expect(page).toHaveURL(new RegExp(`${ACCESS_PATH}$`))
   await expect(submitButton(page)).toHaveCount(0)
 })
 
 test('refuses an empty submission and names every missing field', async ({ page }) => {
-  await page.goto('/registro')
+  await page.goto(ACCESS_PATH)
 
   await submitButton(page).click()
 
@@ -125,7 +139,7 @@ test('refuses an empty submission and names every missing field', async ({ page 
     await expect(page.getByText(requiredMessages[name], { exact: true })).toBeVisible()
   }
   await expect(page.getByRole('status')).toHaveCount(0)
-  await expect(page).toHaveURL(/\/registro$/)
+  await expect(page).toHaveURL(new RegExp(`${ACCESS_PATH}$`))
 
   // The error state is the one axe never sees on a clean load.
   const results = await new AxeBuilder({ page })
@@ -135,7 +149,7 @@ test('refuses an empty submission and names every missing field', async ({ page 
 })
 
 test('rejects invalid formats and keeps the values that were fine', async ({ page }) => {
-  await page.goto('/registro')
+  await page.goto(ACCESS_PATH)
 
   await fillRegistration(page, {
     ...validValues,
@@ -169,14 +183,14 @@ test('does not create a second account for an email that is already registered',
 }) => {
   const email = uniqueEmail('dup')
 
-  await page.goto('/registro')
+  await page.goto(ACCESS_PATH)
   await fillRegistration(page, { ...validValues, email })
   await submitButton(page).click()
   await expect(page.getByRole('status')).toBeVisible()
 
   // Same address in a different case: the application lower-cases before the
   // unique index sees it, so this must collide.
-  await page.goto('/registro')
+  await page.goto(ACCESS_PATH)
   await fillRegistration(page, { ...validValues, email: email.toUpperCase() })
   await submitButton(page).click()
 
@@ -189,16 +203,18 @@ test('does not create a second account for an email that is already registered',
 })
 
 test('ignores a role smuggled into the request', async ({ page }) => {
-  await page.goto('/registro')
+  await page.goto(ACCESS_PATH)
 
   await fillRegistration(page, { ...validValues, email: uniqueEmail('role') })
-  await page.locator('.registration-form').evaluate((form) => {
-    const input = document.createElement('input')
-    input.type = 'hidden'
-    input.name = 'role'
-    input.value = 'admin'
-    form.append(input)
-  })
+  await registrationCard(page)
+    .locator('form')
+    .evaluate((form) => {
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = 'role'
+      input.value = 'admin'
+      form.append(input)
+    })
   await submitButton(page).click()
 
   // The action only forwards the validated fields, so the extra entry is

@@ -3,11 +3,15 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { accountMenuCopy, cuentaIntro } from '@/app/lib/auth/account'
 import {
+  ACCESS_PATH,
   LOGIN_LABELS,
+  REGISTRATION_CARD_ID,
+  REGISTRATION_HREF,
+  accesoIntro,
+  loginCardHeading,
   loginFormCopy,
-  loginIntro,
   loginMessages,
-  loginRegistrationHeading,
+  registrationCardHeading,
   type LoginFieldName,
 } from '@/app/lib/auth/login'
 import {
@@ -40,9 +44,9 @@ const headerActions = (page: Page) => page.locator('.header-actions')
 const signOutButton = (page: Page) =>
   headerActions(page).getByRole('button', { name: accountMenuCopy.signOut })
 
-const LOGIN_REDIRECT = /\/login\?next=%2Fcuenta&reason=auth$/
+const LOGIN_REDIRECT = /\/acceso\?next=%2Fcuenta&reason=auth$/
 
-async function signIn(page: Page, path = '/login', email = account.email) {
+async function signIn(page: Page, path = ACCESS_PATH, email = account.email) {
   await page.goto(path)
   await loginField(page, 'email').fill(email)
   await loginField(page, 'password').fill(account.password)
@@ -51,17 +55,18 @@ async function signIn(page: Page, path = '/login', email = account.email) {
 
 test.beforeAll(async ({ browser }) => {
   const page = await browser.newPage()
+  const card = page.locator(`#${REGISTRATION_CARD_ID}`)
   const field = (name: RegistrationFieldName) =>
-    page.getByLabel(REGISTRATION_LABELS[name], { exact: true })
+    card.getByLabel(REGISTRATION_LABELS[name], { exact: true })
 
-  await page.goto('/registro')
+  await page.goto(ACCESS_PATH)
   await field('fullName').fill(account.fullName)
   await field('email').fill(account.email)
   await field('institution').fill(account.institution)
   await field('countryCode').selectOption(account.countryCode)
   await field('password').fill(account.password)
   await field('passwordConfirmation').fill(account.password)
-  await page.getByRole('button', { name: registrationFormCopy.submit }).click()
+  await card.getByRole('button', { name: registrationFormCopy.submit }).click()
   await expect(page.getByRole('status')).toContainText(registrationFormCopy.successTitle)
   await page.close()
 })
@@ -69,20 +74,23 @@ test.beforeAll(async ({ browser }) => {
 test('shows the login and registration cards and offers sign-in from every menu', async ({
   page,
 }) => {
-  await page.goto('/login')
+  await page.goto(ACCESS_PATH)
 
-  await expect(page.getByRole('heading', { level: 1, name: loginIntro.title })).toBeVisible()
-  await expect(page.getByText(loginIntro.lead)).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: accesoIntro.title })).toBeVisible()
+  await expect(page.getByText(accesoIntro.lead)).toBeVisible()
+  await expect(
+    loginCard(page).getByRole('heading', { level: 2, name: loginCardHeading.title }),
+  ).toBeVisible()
   await expect(loginButton(page)).toBeVisible()
   await expect(
-    page.getByRole('heading', { level: 2, name: loginRegistrationHeading.title }),
+    page.getByRole('heading', { level: 2, name: registrationCardHeading.title }),
   ).toBeVisible()
   await expect(
     loginCard(page).getByRole('link', { name: loginFormCopy.noAccountLink }),
-  ).toHaveAttribute('href', '/registro')
+  ).toHaveAttribute('href', REGISTRATION_HREF)
   await expect(
     headerActions(page).getByRole('link', { name: accountMenuCopy.signIn }),
-  ).toHaveAttribute('href', '/login')
+  ).toHaveAttribute('href', ACCESS_PATH)
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -92,18 +100,18 @@ test('shows the login and registration cards and offers sign-in from every menu'
   expect(names.slice(-2)).toEqual([accountMenuCopy.signIn, accountMenuCopy.register])
   await expect(menu.getByRole('link', { name: accountMenuCopy.signIn })).toHaveAttribute(
     'href',
-    '/login',
+    ACCESS_PATH,
   )
 })
 
 test('rejects a wrong password and an unknown address with the same message', async ({ page }) => {
-  await page.goto('/login')
+  await page.goto(ACCESS_PATH)
   await loginField(page, 'email').fill(account.email)
   await loginField(page, 'password').fill('otra contraseña')
   await loginButton(page).click()
 
   await expect(loginAlert(page)).toHaveText(loginMessages.invalidCredentials)
-  await expect(page).toHaveURL(/\/login$/)
+  await expect(page).toHaveURL(/\/acceso$/)
   await expect(loginField(page, 'email')).not.toHaveAttribute('aria-invalid', 'true')
   await expect(loginField(page, 'email')).toHaveValue(account.email)
   await expect(loginField(page, 'password')).toHaveValue('')
@@ -118,7 +126,7 @@ test('rejects a wrong password and an unknown address with the same message', as
 test('names both missing fields and passes the accessibility scan in that state', async ({
   page,
 }) => {
-  await page.goto('/login')
+  await page.goto(ACCESS_PATH)
 
   await loginButton(page).click()
 
@@ -160,13 +168,13 @@ test('signs in and lands on the account page', async ({ page }) => {
 })
 
 test('returns to a safe path after login and ignores an off-site one', async ({ page }) => {
-  await signIn(page, '/login?next=%2Fdatos')
+  await signIn(page, `${ACCESS_PATH}?next=%2Fdatos`)
   await expect(page).toHaveURL(/\/datos$/)
 
   await signOutButton(page).click()
   await expect(page).toHaveURL(/\/$/)
 
-  await signIn(page, '/login?next=https%3A%2F%2Fevil.example')
+  await signIn(page, `${ACCESS_PATH}?next=https%3A%2F%2Fevil.example`)
   await expect(page).toHaveURL(/\/cuenta$/)
 })
 
@@ -221,7 +229,21 @@ test('sends a signed-in visitor from the login page to the account page', async 
   await signIn(page)
   await expect(page).toHaveURL(/\/cuenta$/)
 
-  await page.goto('/login')
+  await page.goto(ACCESS_PATH)
 
   await expect(page).toHaveURL(/\/cuenta$/)
+})
+
+test('the old sign-in and sign-up routes redirect to the access page, query included', async ({
+  page,
+}) => {
+  await page.goto('/login?next=%2Fcuenta&reason=auth')
+  await expect(page).toHaveURL(LOGIN_REDIRECT)
+  await expect(loginCard(page).getByRole('status')).toHaveText(loginMessages.authRequired)
+
+  await page.goto('/registro')
+  await expect(page).toHaveURL(new RegExp(`${ACCESS_PATH}$`))
+  await expect(
+    page.getByRole('heading', { level: 2, name: registrationCardHeading.title }),
+  ).toBeVisible()
 })

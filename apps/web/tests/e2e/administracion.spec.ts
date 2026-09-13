@@ -5,11 +5,11 @@ test('opens the administration page directly, like every other public route', as
 
   expect(response?.status()).toBe(200)
   expect(new URL(page.url()).pathname).toBe('/administracion')
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
   await expect(page.getByRole('main')).toHaveCount(1)
   await expect(page.getByRole('heading', { level: 1, name: 'Resumen' })).toBeVisible()
   await expect(page.getByText('Panel de administración')).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
   await expect(page.getByRole('complementary', { name: 'Información provisional' })).toBeVisible()
 })
 
