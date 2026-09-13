@@ -93,9 +93,18 @@ export function PublicHeader() {
         })}
       </nav>
 
-      <Link className="login-link" href="/login">
-        Ingresar
-      </Link>
+      <div className="header-actions">
+        <Link className="login-link" href="/login">
+          Ingresar
+        </Link>
+        <Link
+          aria-current={pathname === '/registro' ? 'page' : undefined}
+          className="login-link register-link"
+          href="/registro"
+        >
+          Crear cuenta
+        </Link>
+      </div>
 
       {isMobileMenuOpen ? (
         <button
@@ -126,6 +135,14 @@ export function PublicHeader() {
               </Link>
             )
           })}
+          <Link
+            aria-current={pathname === '/registro' ? 'page' : undefined}
+            className={pathname === '/registro' ? 'active' : undefined}
+            href="/registro"
+            onClick={closeMobileMenu}
+          >
+            Crear cuenta
+          </Link>
         </nav>
       </details>
     </header>
