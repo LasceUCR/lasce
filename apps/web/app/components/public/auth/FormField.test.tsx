@@ -62,4 +62,13 @@ describe('FormField', () => {
 
     expect(screen.getByRole('combobox', { name: selectArgs.label })).toHaveValue('CR')
   })
+
+  test('follows a changed default in a select, as after an echoed submission', () => {
+    const { rerender } = render(<FormField {...selectArgs} />)
+    expect(screen.getByRole('combobox', { name: selectArgs.label })).toHaveValue('')
+
+    rerender(<FormField {...selectArgs} defaultValue="CR" />)
+
+    expect(screen.getByRole('combobox', { name: selectArgs.label })).toHaveValue('CR')
+  })
 })

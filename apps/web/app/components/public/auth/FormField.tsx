@@ -61,7 +61,10 @@ export function FormField({
     <div className="form-field">
       <label htmlFor={controlId}>{label}</label>
       {options ? (
-        <select {...shared} defaultValue={defaultValue ?? ''}>
+        // React applies a select's defaultValue only on mount, so when the
+        // echoed value changes after a submission the element is remounted;
+        // inputs need no such help because React updates their defaultValue.
+        <select {...shared} defaultValue={defaultValue ?? ''} key={defaultValue ?? ''}>
           <option value="">{placeholder ?? 'Selecciona una opción'}</option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
