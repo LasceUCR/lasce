@@ -2642,12 +2642,12 @@ a.gallery-tile:focus-visible {
   gap: 48px;
 }
 
-/* --- Access page background ------------------------------------------------ */
+/* --- Space backdrop (access and account pages) ----------------------------- */
 
-/* The access page sits on a dark space scene with the sun on the right, so
-   its intro and tabs switch to the light hero tokens; the white card and the
-   back button already hold their own on dark. */
-.access-page {
+/* These pages sit on a dark space scene with the sun on the right, so their
+   intro and tabs switch to the light hero tokens; the white cards and the back
+   button already hold their own on dark. */
+.space-page {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -2655,19 +2655,19 @@ a.gallery-tile:focus-visible {
   color: var(--space-body);
 }
 
-.access-page-bg {
+.space-page-bg {
   position: absolute;
   inset: 0;
   z-index: -1;
 }
 
-.access-page-bg img {
+.space-page-bg img {
   object-fit: cover;
   object-position: right center;
 }
 
 /* Darkens the left half so the heading, lead and tabs keep their contrast. */
-.access-page-bg::after {
+.space-page-bg::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -2679,24 +2679,24 @@ a.gallery-tile:focus-visible {
   );
 }
 
-.access-page .page-intro h1 {
+.space-page .page-intro h1 {
   color: var(--white);
 }
 
-.access-page .page-intro p {
+.space-page .page-intro p {
   color: var(--space-body);
 }
 
-.access-page .access-tab {
+.space-page .access-tab {
   color: var(--space-meta);
 }
 
-.access-page .access-tab:hover,
-.access-page .access-tab:focus-visible {
+.space-page .access-tab:hover,
+.space-page .access-tab:focus-visible {
   color: var(--white);
 }
 
-.access-page .access-tab[aria-selected='true'] {
+.space-page .access-tab[aria-selected='true'] {
   color: var(--white);
   border-bottom-color: var(--cyan);
 }

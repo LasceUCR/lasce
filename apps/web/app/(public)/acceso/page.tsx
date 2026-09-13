@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { redirect } from 'next/navigation'
 
 import { AccessTabs } from '@/app/components/public/auth/AccessTabs'
 import { LoginForm } from '@/app/components/public/auth/LoginForm'
 import { RegistrationForm } from '@/app/components/public/auth/RegistrationForm'
+import { SpaceBackdrop } from '@/app/components/public/auth/SpaceBackdrop'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { listCountries } from '@/app/lib/auth/countries'
 import {
@@ -56,12 +56,8 @@ export default async function AccesoPage({ searchParams }: AccesoPageProps) {
   }
 
   return (
-    <article className="registration-page access-page">
-      {/* Decorative full-bleed background; the gradient in CSS keeps the text
-          on the left readable over the starfield. */}
-      <div aria-hidden="true" className="access-page-bg">
-        <Image alt="" fill priority sizes="100vw" src="/images/decorative/acceso-bg.jpg" />
-      </div>
+    <article className="registration-page space-page">
+      <SpaceBackdrop />
 
       <header className="page-intro page-width">
         <h1>{accesoIntro.title}</h1>

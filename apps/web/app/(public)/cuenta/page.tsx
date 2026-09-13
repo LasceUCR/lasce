@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { AccountSummary } from '@/app/components/public/auth/AccountSummary'
+import { SpaceBackdrop } from '@/app/components/public/auth/SpaceBackdrop'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { ROLE_LABELS, cuentaBackLink, cuentaIntro, cuentaMeta } from '@/app/lib/auth/account'
 import { countryName } from '@/app/lib/auth/countries'
@@ -41,7 +42,9 @@ export default async function CuentaPage() {
   }
 
   return (
-    <article className="registration-page">
+    <article className="registration-page space-page">
+      <SpaceBackdrop />
+
       <header className="page-intro page-width">
         <h1>{cuentaIntro.title}</h1>
         <p>{cuentaIntro.lead}</p>
