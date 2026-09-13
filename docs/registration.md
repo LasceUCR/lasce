@@ -100,15 +100,16 @@ each role may do is #73.
   760px; the mobile menu lists "Crear cuenta" after the navigation items.
 - `/registro` is in `publicPaths` (`apps/web/app/lib/site.ts`), so it is in the sitemap and in the
   routes the accessibility spec scans.
-- "Ingresar" still points at `/login`, which does not exist until #72.
+- `/login` shows this same card beside the login card, and the confirmation panel links to
+  `/login` once the account exists. Signing in is covered in [sessions.md](sessions.md).
 
-## What #72 builds on
+## What login uses from here
 
-- `verifyPassword` from `password.ts`, against `auth.users.password_hash`.
-- Lower-casing the submitted email before `findUnique`.
-- `RegistrationForm` accepts an optional `heading` and `registration-layout` is already a grid, so
-  the two-card access page from the mockup (login left, registration right) needs no restyling.
-- Sessions belong in a new table in the `auth` schema, not in columns on `users`.
+- `verifyPassword` from `password.ts`, against `auth.users.password_hash`, and
+  `UNKNOWN_USER_PASSWORD_HASH` for unknown addresses.
+- `findUserByEmail` in `users.ts`, which lower-cases before `findUnique`.
+- `RegistrationForm` with its `heading` prop, rendered next to the login card on `/login`.
+- Sessions live in `auth.sessions`, not in columns on `users`; see [sessions.md](sessions.md).
 
 ## Known gaps
 

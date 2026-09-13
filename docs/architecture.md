@@ -57,8 +57,9 @@ One owner per schema is deliberate. The worker reads and writes the same Postgre
 SQLAlchemy but never migrates them, so there is only ever one migration history.
 
 PostgreSQL is split into one schema per domain: `research` for the public publications and `auth`
-for portal accounts. Only `apps/web` writes `auth.users`, through the `/registro` Server Action;
-see [registration.md](registration.md).
+for portal accounts. Only `apps/web` writes `auth.users` and `auth.sessions`, through the
+`/registro`, `/login` and `/cuenta` Server Actions; see [registration.md](registration.md) and
+[sessions.md](sessions.md).
 
 Two consequences of that split are worth knowing before you touch the schema:
 

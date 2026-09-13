@@ -70,8 +70,10 @@ Production deployment uses the standalone Next.js bundle through
 | `/noticias`          | Institutional news                                             |
 | `/contacto`          | Contact information                                            |
 | `/registro`          | Account registration form (_Crear cuenta_)                     |
+| `/login`             | Sign-in page, with the registration card beside it             |
+| `/cuenta`            | The signed-in user's profile and sign-out; requires a session  |
 
-Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page.
+Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page; `/cuenta` is the one route that requires a session (see [`docs/sessions.md`](../../docs/sessions.md)).
 
 ## Work Areas
 
