@@ -59,6 +59,27 @@ describe('NewsExplorer', () => {
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
   })
 
+  test('announces the number of matching results', async () => {
+    const user = userEvent.setup()
+    render(<NewsExplorer {...defaultArgs} />)
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Buscar noticias' }),
+      'UCR pone en funcionamiento',
+    )
+
+    expect(screen.getByText('Se encontró 1 noticia.')).toBeInTheDocument()
+  })
+
+  test('announces multiple matching results', async () => {
+    const user = userEvent.setup()
+    render(<NewsExplorer {...defaultArgs} />)
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), 'UCR')
+
+    expect(screen.getByText('Se encontraron 2 noticias.')).toBeInTheDocument()
+  })
+
   test('matches by source as well as by title', async () => {
     const user = userEvent.setup()
     render(<NewsExplorer {...defaultArgs} />)
