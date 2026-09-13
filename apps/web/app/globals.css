@@ -2633,21 +2633,22 @@ a.gallery-tile:focus-visible {
   padding-bottom: 64px;
 }
 
+/* One card, up to 720px wide, flush with the left edge of the intro above it. */
 .registration-layout {
   margin-top: 32px;
   display: grid;
   grid-template-columns: minmax(0, 720px);
-  justify-content: center;
+  justify-content: start;
   gap: 48px;
 }
 
 /* --- Access tabs ----------------------------------------------------------- */
 
-/* Right-aligned above the card, styled like the header's active-link underline. */
+/* Left-aligned above the card, styled like the header's active-link underline. */
 .access-tabs {
   margin: 0 0 14px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 4px;
 }
 
@@ -2676,6 +2677,7 @@ a.gallery-tile:focus-visible {
 .registration-card {
   min-width: 0;
   padding: 44px;
+  margin-bottom: 24px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--white);
