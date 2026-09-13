@@ -9,6 +9,7 @@ import {
   readAccountName,
   shortName,
   subscribeAccount,
+  writeAccountCookie,
 } from './account'
 
 describe('readAccountName', () => {
@@ -54,6 +55,13 @@ describe('clearAccountCookie', () => {
     clearAccountCookie()
 
     expect(readAccountName(document.cookie)).toBeNull()
+  })
+
+  test('writeAccountCookie puts an encoded name back', () => {
+    writeAccountCookie('Ana Pérez')
+
+    expect(document.cookie).toContain(`${ACCOUNT_COOKIE}=Ana%20P%C3%A9rez`)
+    expect(readAccountName(document.cookie)).toBe('Ana Pérez')
   })
 })
 

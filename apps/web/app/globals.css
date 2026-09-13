@@ -294,6 +294,26 @@ a {
   white-space: nowrap;
 }
 
+/* The sign-out control is a button styled like the login pill. */
+.header-actions button.login-link {
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.header-actions .login-link:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* The greeting shows the first name; a very long one is clipped, not wrapped. */
+.account-link {
+  max-width: 180px;
+  overflow: hidden;
+}
+
 /* Between the mobile breakpoint and about 1380px the nine navigation items
    leave little room for the account links, so tighten the gaps only there. */
 @media (min-width: 1121px) and (max-width: 1380px) {
@@ -1032,6 +1052,31 @@ a {
   .mobile-menu nav a.active {
     background: #edf7fb;
     color: var(--blue-dark);
+  }
+
+  /* The sign-out button sits among the links and must read like one. */
+  .mobile-menu nav button {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-menu nav button:hover,
+  .mobile-menu nav button:focus-visible {
+    background: #edf7fb;
+    color: var(--blue-dark);
+  }
+
+  .mobile-menu nav button:disabled {
+    cursor: progress;
+    opacity: 0.6;
   }
 
   .indicator-grid {

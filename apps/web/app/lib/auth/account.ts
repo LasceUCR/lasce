@@ -48,6 +48,17 @@ export function clearAccountCookie(): void {
   document.cookie = `${ACCOUNT_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax${secure}`
 }
 
+/**
+ * Re-creates the display-name cookie on the client, for the rare case where the
+ * logout action fails after the menu already flipped. Session-scoped: the next
+ * server response replaces it either way.
+ */
+export function writeAccountCookie(fullName: string): void {
+  if (typeof document === 'undefined') return
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(fullName)}; Path=/; SameSite=Lax${secure}`
+}
+
 const listeners = new Set<() => void>()
 
 /** Subscription half of the `useSyncExternalStore` pair behind `useAccount`. */

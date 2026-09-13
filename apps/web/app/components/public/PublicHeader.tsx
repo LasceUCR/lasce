@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { Brand } from './Brand'
+import { AccountLinks } from './auth/AccountLinks'
+import { useAccount } from './auth/useAccount'
 
 const navigation = [
   { label: 'Inicio', href: '/' },
@@ -19,8 +21,14 @@ const navigation = [
   { label: 'Administración', href: '/administracion' },
 ]
 
-export function PublicHeader() {
+export interface PublicHeaderProps {
+  /** The logout Server Action, passed down by the layout so the header stays presentational. */
+  logoutAction: () => Promise<void>
+}
+
+export function PublicHeader({ logoutAction }: PublicHeaderProps) {
   const pathname = usePathname()
+  const { account, isSigningOut, signOut } = useAccount(logoutAction)
   const headerRef = useRef<HTMLElement>(null)
   const mobileMenu = useRef<HTMLDetailsElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -94,16 +102,13 @@ export function PublicHeader() {
       </nav>
 
       <div className="header-actions">
-        <Link className="login-link" href="/login">
-          Ingresar
-        </Link>
-        <Link
-          aria-current={pathname === '/registro' ? 'page' : undefined}
-          className="login-link register-link"
-          href="/registro"
-        >
-          Crear cuenta
-        </Link>
+        <AccountLinks
+          account={account}
+          isSigningOut={isSigningOut}
+          onSignOut={signOut}
+          pathname={pathname}
+          variant="header"
+        />
       </div>
 
       {isMobileMenuOpen ? (
@@ -135,14 +140,14 @@ export function PublicHeader() {
               </Link>
             )
           })}
-          <Link
-            aria-current={pathname === '/registro' ? 'page' : undefined}
-            className={pathname === '/registro' ? 'active' : undefined}
-            href="/registro"
-            onClick={closeMobileMenu}
-          >
-            Crear cuenta
-          </Link>
+          <AccountLinks
+            account={account}
+            isSigningOut={isSigningOut}
+            onNavigate={closeMobileMenu}
+            onSignOut={signOut}
+            pathname={pathname}
+            variant="mobile"
+          />
         </nav>
       </details>
     </header>
