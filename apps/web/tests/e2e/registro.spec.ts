@@ -106,7 +106,7 @@ test('creates an account with valid data', async ({ page }) => {
   ).toBeVisible()
   await expect(
     status.getByRole('link', { name: registrationFormCopy.successLink }),
-  ).toHaveAttribute('href', '/')
+  ).toHaveAttribute('href', '/login')
   await expect(page).toHaveURL(/\/registro$/)
   await expect(submitButton(page)).toHaveCount(0)
 })

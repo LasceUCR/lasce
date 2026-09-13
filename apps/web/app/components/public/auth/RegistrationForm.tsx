@@ -73,7 +73,7 @@ export function RegistrationForm({
           {registrationFormCopy.successTitle}
         </h2>
         <p>{registrationFormCopy.successBody}</p>
-        <Button href="/" variant="brand">
+        <Button href={registrationFormCopy.successHref} variant="brand">
           {registrationFormCopy.successLink}
         </Button>
       </section>

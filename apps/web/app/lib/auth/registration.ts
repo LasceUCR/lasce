@@ -198,9 +198,9 @@ export const registrationFormCopy = {
   submit: 'Crear cuenta',
   submitting: 'Creando cuenta...',
   successTitle: 'Cuenta creada',
-  successBody:
-    'Tu cuenta quedó registrada. Podrás iniciar sesión cuando el acceso esté habilitado.',
-  successLink: 'Volver al inicio',
+  successBody: 'Tu cuenta quedó registrada. Ya puedes iniciar sesión.',
+  successLink: 'Iniciar sesión',
+  successHref: '/login',
 } as const
 
 export const registroMeta = {
