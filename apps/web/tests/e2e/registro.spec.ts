@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect as baseExpect, test, type Page } from '@playwright/test'
 
 import {
   ACCESS_PATH,
@@ -20,6 +20,11 @@ import {
 
 // The local database persists between runs and CI starts from an empty one, so
 // every account created here gets an address no earlier run could have used.
+// Submissions here hash a password, hit the database and then navigate to a
+// route the dev server may still have to compile, so assertions get three
+// times the default window. Real failures still surface, just later.
+const expect = baseExpect.configure({ timeout: 15_000 })
+
 const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 const uniqueEmail = (tag: string) => `registro-${tag}-${runId}@example.com`
 
@@ -54,6 +59,25 @@ const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\
 
 // Scoped to the card: Next's route announcer is also a `role="alert"` element.
 const formAlert = (page: Page) => registrationCard(page).getByRole('alert')
+
+// Typing before React has attached to the form loses the values when hydration
+// lands, which happens late on a busy dev server. React marks hydrated nodes
+// with a `__reactFiber` key, so wait for it on the form before interacting.
+async function waitForHydration(page: Page, selector: string) {
+  await page.waitForFunction(
+    (target) => {
+      const element = document.querySelector(target)
+      return element !== null && Object.keys(element).some((key) => key.startsWith('__reactFiber'))
+    },
+    selector,
+    { timeout: 30_000 },
+  )
+}
+
+async function openRegistration(page: Page) {
+  await page.goto(REGISTRATION_HREF)
+  await waitForHydration(page, `#${REGISTRATION_CARD_ID} form`)
+}
 
 // The registration tab's own URL, as the page leaves it after a submission.
 const registrationUrl = () => new RegExp(`${escapeRegExp(REGISTRATION_HREF)}$`)
@@ -105,7 +129,7 @@ test('registration is reached through the access page tab, not the header', asyn
 test('shows the six fields in the agreed order and states that all are required', async ({
   page,
 }) => {
-  await page.goto(REGISTRATION_HREF)
+  await openRegistration(page)
 
   const labels = await registrationCard(page).locator('label').allTextContents()
   expect(labels).toEqual(REGISTRATION_FIELDS.map((name) => REGISTRATION_LABELS[name]))
@@ -116,7 +140,7 @@ test('shows the six fields in the agreed order and states that all are required'
 })
 
 test('creates an account with valid data', async ({ page }) => {
-  await page.goto(REGISTRATION_HREF)
+  await openRegistration(page)
 
   await fillRegistration(page, { ...validValues, email: uniqueEmail('valid') })
   await submitButton(page).click()
@@ -133,7 +157,7 @@ test('creates an account with valid data', async ({ page }) => {
 })
 
 test('refuses an empty submission and names every missing field', async ({ page }) => {
-  await page.goto(REGISTRATION_HREF)
+  await openRegistration(page)
 
   await submitButton(page).click()
 
@@ -156,7 +180,7 @@ test('refuses an empty submission and names every missing field', async ({ page 
 })
 
 test('rejects invalid formats and keeps the values that were fine', async ({ page }) => {
-  await page.goto(REGISTRATION_HREF)
+  await openRegistration(page)
 
   await fillRegistration(page, {
     ...validValues,
@@ -190,14 +214,14 @@ test('does not create a second account for an email that is already registered',
 }) => {
   const email = uniqueEmail('dup')
 
-  await page.goto(REGISTRATION_HREF)
+  await openRegistration(page)
   await fillRegistration(page, { ...validValues, email })
   await submitButton(page).click()
   await expect(page.getByRole('status')).toBeVisible()
 
   // Same address in a different case: the application lower-cases before the
   // unique index sees it, so this must collide.
-  await page.goto(REGISTRATION_HREF)
+  await openRegistration(page)
   await fillRegistration(page, { ...validValues, email: email.toUpperCase() })
   await submitButton(page).click()
 
@@ -210,7 +234,7 @@ test('does not create a second account for an email that is already registered',
 })
 
 test('ignores a role smuggled into the request', async ({ page }) => {
-  await page.goto(REGISTRATION_HREF)
+  await openRegistration(page)
 
   await fillRegistration(page, { ...validValues, email: uniqueEmail('role') })
   await registrationCard(page)

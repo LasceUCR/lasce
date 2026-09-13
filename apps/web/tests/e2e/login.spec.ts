@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect as baseExpect, test, type Page } from '@playwright/test'
 
 import { accountMenuCopy, cuentaIntro } from '@/app/lib/auth/account'
 import {
@@ -24,6 +24,11 @@ import {
 
 // The local database persists between runs and CI starts from an empty one, so
 // the account registered below gets an address no earlier run could have used.
+// Submissions here hash a password, hit the database and then navigate to a
+// route the dev server may still have to compile, so assertions get three
+// times the default window. Real failures still surface, just later.
+const expect = baseExpect.configure({ timeout: 15_000 })
+
 const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 
 const account = {
@@ -46,10 +51,29 @@ const headerActions = (page: Page) => page.locator('.header-actions')
 const signOutButton = (page: Page) =>
   headerActions(page).getByRole('button', { name: accountMenuCopy.signOut })
 
+// Typing before React has attached to the form loses the values when hydration
+// lands, which happens late on a busy dev server. React marks hydrated nodes
+// with a `__reactFiber` key, so wait for it on the form before interacting.
+async function waitForHydration(page: Page, selector: string) {
+  await page.waitForFunction(
+    (target) => {
+      const element = document.querySelector(target)
+      return element !== null && Object.keys(element).some((key) => key.startsWith('__reactFiber'))
+    },
+    selector,
+    { timeout: 30_000 },
+  )
+}
+
+async function openAccess(page: Page, path = ACCESS_PATH) {
+  await page.goto(path)
+  await waitForHydration(page, '.login-card form')
+}
+
 const LOGIN_REDIRECT = /\/acceso\?next=%2Fcuenta&reason=auth$/
 
 async function signIn(page: Page, path = ACCESS_PATH, email = account.email) {
-  await page.goto(path)
+  await openAccess(page, path)
   await loginField(page, 'email').fill(email)
   await loginField(page, 'password').fill(account.password)
   await loginButton(page).click()
@@ -62,6 +86,7 @@ test.beforeAll(async ({ browser }) => {
     card.getByLabel(REGISTRATION_LABELS[name], { exact: true })
 
   await page.goto(REGISTRATION_HREF)
+  await waitForHydration(page, `#${REGISTRATION_CARD_ID} form`)
   await field('fullName').fill(account.fullName)
   await field('email').fill(account.email)
   await field('institution').fill(account.institution)
@@ -76,7 +101,7 @@ test.beforeAll(async ({ browser }) => {
 test('opens on the login tab and switches to registration without leaving the page', async ({
   page,
 }) => {
-  await page.goto(ACCESS_PATH)
+  await openAccess(page)
 
   await expect(page.getByRole('heading', { level: 1, name: accesoIntro.title })).toBeVisible()
   await expect(page.getByText(accesoIntro.lead)).toBeVisible()
@@ -122,7 +147,7 @@ test('opens on the login tab and switches to registration without leaving the pa
 })
 
 test('rejects a wrong password and an unknown address with the same message', async ({ page }) => {
-  await page.goto(ACCESS_PATH)
+  await openAccess(page)
   await loginField(page, 'email').fill(account.email)
   await loginField(page, 'password').fill('otra contraseña')
   await loginButton(page).click()
@@ -143,7 +168,7 @@ test('rejects a wrong password and an unknown address with the same message', as
 test('names both missing fields and passes the accessibility scan in that state', async ({
   page,
 }) => {
-  await page.goto(ACCESS_PATH)
+  await openAccess(page)
 
   await loginButton(page).click()
 
@@ -246,6 +271,7 @@ test('sends a signed-in visitor from the login page to the account page', async 
   await signIn(page)
   await expect(page).toHaveURL(/\/cuenta$/)
 
+  // A plain navigation: a signed-in visitor never sees the login card here.
   await page.goto(ACCESS_PATH)
 
   await expect(page).toHaveURL(/\/cuenta$/)
