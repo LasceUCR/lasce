@@ -1,0 +1,147 @@
+import { z } from 'zod'
+
+import { PASSWORD_MAX_LENGTH, registroIntro } from './registration'
+
+/**
+ * The login rules, in one place: field names, validation, user-facing messages
+ * and the state the form and its Server Action exchange. Mirrors
+ * `registration.ts` and, like it, is imported by the client-side form, so it
+ * must stay free of `node:*` and database imports.
+ */
+
+export const LOGIN_FIELDS = ['email', 'password'] as const
+
+export type LoginFieldName = (typeof LOGIN_FIELDS)[number]
+
+/** Hidden input carrying the validated return path through the form. */
+export const NEXT_FIELD = 'next'
+
+/** One raw string per field plus the return path, exactly as read from the request. */
+export type LoginInput = Record<LoginFieldName, string> & { next: string }
+
+export type LoginFieldErrors = Partial<Record<LoginFieldName, string>>
+
+export const loginMessages = {
+  emailRequired: 'Ingresa tu correo electrónico.',
+  emailInvalid: 'Ingresa un correo electrónico válido.',
+  passwordRequired: 'Ingresa tu contraseña.',
+  reviewFields: 'Revisa los campos marcados para continuar.',
+  /** Deliberately the same for a wrong password and an unknown address. */
+  invalidCredentials: 'Correo o contraseña incorrectos.',
+  unexpected: 'No pudimos iniciar sesión. Inténtalo de nuevo en unos minutos.',
+  /** Shown on /login when a protected page sent the visitor here. */
+  authRequired: 'Debes iniciar sesión para continuar.',
+} as const
+
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(254, { error: loginMessages.emailInvalid })
+    .pipe(
+      z.email({
+        error: (issue) =>
+          issue.input === '' ? loginMessages.emailRequired : loginMessages.emailInvalid,
+      }),
+    ),
+  // Not trimmed: a leading or trailing space is a legitimate character. No
+  // minimum either; a short password is simply wrong, and registration already
+  // enforces the length rules.
+  password: z
+    .string()
+    .min(1, { error: loginMessages.passwordRequired })
+    .max(PASSWORD_MAX_LENGTH, { error: loginMessages.invalidCredentials }),
+})
+
+export type LoginData = z.infer<typeof loginSchema>
+
+/** Reads the two fields and the return path as strings ("" when missing or not a string). */
+export function readLoginInput(formData: FormData): LoginInput {
+  const read = (name: string) => {
+    const value = formData.get(name)
+    return typeof value === 'string' ? value : ''
+  }
+  return { email: read('email'), password: read('password'), next: read(NEXT_FIELD) }
+}
+
+export type LoginValidation =
+  { ok: true; data: LoginData } | { ok: false; fieldErrors: LoginFieldErrors }
+
+export function validateLogin(input: LoginInput): LoginValidation {
+  const result = loginSchema.safeParse({ email: input.email, password: input.password })
+  if (result.success) {
+    return { ok: true, data: result.data }
+  }
+
+  const flattened = z.flattenError(result.error).fieldErrors
+  const fieldErrors: LoginFieldErrors = {}
+  for (const field of LOGIN_FIELDS) {
+    const message = flattened[field]?.[0]
+    if (message) {
+      fieldErrors[field] = message
+    }
+  }
+  return { ok: false, fieldErrors }
+}
+
+/**
+ * What the Server Action returns and the form renders. There is no success
+ * status: a successful login redirects, so the state never comes back.
+ */
+export interface LoginState {
+  status: 'idle' | 'error'
+  values: { email: string }
+  fieldErrors: LoginFieldErrors
+  /** Summary for the alert region: validation summary, bad credentials or failure. */
+  formError: string | null
+}
+
+export const initialLoginState: LoginState = {
+  status: 'idle',
+  values: { email: '' },
+  fieldErrors: {},
+  formError: null,
+}
+
+/** Signature of the Server Action, in the shape React's `useActionState` expects. */
+export type LoginAction = (state: LoginState, formData: FormData) => Promise<LoginState>
+
+export const LOGIN_LABELS: Record<LoginFieldName, string> = {
+  email: 'Correo electrónico',
+  password: 'Contraseña',
+}
+
+export const LOGIN_PLACEHOLDERS: Partial<Record<LoginFieldName, string>> = {
+  email: 'correo@ejemplo.com',
+}
+
+export const loginFormCopy = {
+  submit: 'Ingresar',
+  submitting: 'Ingresando...',
+  noAccountPrompt: '¿No tienes cuenta?',
+  noAccountLink: 'Crear cuenta',
+  footnote: 'La descarga queda asociada a tu cuenta para fines de trazabilidad y uso científico.',
+} as const
+
+export const loginMeta = {
+  title: 'Iniciar sesión | LASCE',
+  description:
+    'Accede al portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
+} as const
+
+export const loginIntro = {
+  title: 'Iniciar sesión',
+  lead: 'Accede para descargar productos científicos y revisar tu actividad.',
+} as const
+
+/** Heading of the registration card when it sits next to the login card. */
+export const loginRegistrationHeading = {
+  title: registroIntro.title,
+  description: registroIntro.lead,
+} as const
+
+export const loginBackLink = {
+  href: '/',
+  label: 'Volver al inicio',
+} as const
