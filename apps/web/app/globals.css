@@ -803,7 +803,7 @@ a {
 
 .search-filter-field {
   position: relative;
-  flex: 0 1 420px;
+  flex: 1 1 420px;
   display: flex;
   align-items: center;
 }
