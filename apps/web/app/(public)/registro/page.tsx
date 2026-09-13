@@ -17,9 +17,8 @@ export const metadata: Metadata = {
  * country list is computed on the server at build time and the only dynamic
  * work happens inside the `registerUser` Server Action.
  *
- * The layout follows the access-page mockup, which places this card beside a
- * login card. That card is LASCE-SEC-008-072; `registration-layout` is already
- * a grid so it can be dropped in without restyling.
+ * The layout follows the access-page mockup; `/login` shows this same card
+ * beside the login card.
  */
 export default function RegistroPage() {
   return (

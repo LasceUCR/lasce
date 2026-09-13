@@ -18,6 +18,7 @@ export const publicPaths = [
   '/noticias',
   '/contacto',
   '/registro',
+  '/login',
   ...workAreaSlugs.map((slug) => workAreaPath(slug)),
   ...galleryPaths,
 ] as const
