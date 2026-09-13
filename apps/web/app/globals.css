@@ -2588,13 +2588,20 @@ a.gallery-tile:focus-visible {
   padding-bottom: 64px;
 }
 
-/* One column today; the login card (#72) makes this two columns on desktop. */
+/* One column by default; /login adds the modifier for two cards side by side. */
 .registration-layout {
   margin-top: 32px;
   display: grid;
   grid-template-columns: minmax(0, 720px);
   justify-content: center;
   gap: 48px;
+}
+
+@media (min-width: 1121px) {
+  .registration-layout-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
 }
 
 .registration-card {
@@ -2673,4 +2680,71 @@ a.gallery-tile:focus-visible {
     padding: 24px;
     border-radius: 12px;
   }
+}
+
+/* --- Login card ------------------------------------------------------------ */
+
+/* Informational sibling of .form-alert, for "sign in to continue" notices. */
+.form-notice {
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border: 1px solid #bcd9ea;
+  border-left: 6px solid var(--blue);
+  border-radius: 10px;
+  background: #eef7fc;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.login-alt {
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.login-alt a {
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.login-footnote {
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* --- Account page ---------------------------------------------------------- */
+
+.account-details {
+  margin: 0 0 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.account-detail {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-detail dt {
+  color: #4a6070;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-detail dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.account-card .form-actions {
+  margin-top: 0;
 }
