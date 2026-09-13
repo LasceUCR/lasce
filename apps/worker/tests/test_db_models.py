@@ -99,6 +99,8 @@ def test_news_cross_author_links_news_and_authors() -> None:
 def test_news_belongs_to_a_source() -> None:
     (source_fk,) = News.__table__.columns["source_id"].foreign_keys
     assert source_fk.target_fullname == "news.news_sources.id"
+
+
 def test_users_live_in_the_auth_schema() -> None:
     assert User.__table__.schema == "auth"
 

@@ -152,6 +152,8 @@ class NewsCrossAuthor(Base):
         UUID(as_uuid=True), ForeignKey("news.news_authors.id", ondelete="CASCADE")
     )
     position: Mapped[int] = mapped_column(Integer)
+
+
 class UserRole(enum.StrEnum):
     """Access level of a portal account. Mirrors the Prisma ``UserRole`` enum, whose
     database values are the lower-case strings below (``@map`` in the schema).
