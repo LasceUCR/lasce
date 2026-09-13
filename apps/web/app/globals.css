@@ -2744,7 +2744,7 @@ a.gallery-tile:focus-visible {
   align-items: center;
   gap: 10px;
   border-radius: 8px;
-  color: var(--action);
+  color: var(--white);
   font-size: 14px;
   font-weight: 600;
 }
@@ -2752,12 +2752,12 @@ a.gallery-tile:focus-visible {
 .admin-sidebar a:hover,
 .admin-sidebar a:focus-visible {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--action-hover);
+  color: var(--on-hover);
 }
 
 .admin-sidebar a.active {
   background: var(--blue-dark);
-  color: var(--action-hover);
+  color: var(--on-hover);
 }
 
 .admin-content {
