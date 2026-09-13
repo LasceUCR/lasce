@@ -1,7 +1,8 @@
 'use client'
 
 import { ChartNoAxesCombined, Images, Search } from 'lucide-react'
-import { useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react'
+import { z } from 'zod'
 
 import { DataTable } from '@/app/components/public/DataTable'
 import { Notice } from '@/app/components/public/Notice'
@@ -26,7 +27,7 @@ export interface ScientificDataExplorerProps {
   sources: ScientificSource[]
   initialQuery: ScientificDataQuery
   initialResult?: ScientificDataResult
-  goesDateRange: { min: string; max: string }
+  goesDateRange: { max: string }
 }
 
 type RequestState = 'idle' | 'loading' | 'success' | 'error'
@@ -71,6 +72,9 @@ export function ScientificDataExplorer({
   const [requestState, setRequestState] = useState<RequestState>(initialResult ? 'success' : 'idle')
   const [message, setMessage] = useState<string | null>(null)
   const resultsHeading = useRef<HTMLHeadingElement>(null)
+  const activeRequest = useRef<AbortController | null>(null)
+  const [progress, setProgress] = useState(0)
+  useEffect(() => () => activeRequest.current?.abort(), [])
   const controlsDisabled = !hydrated || requestState === 'loading'
 
   const selectedSource = sources.find((source) => source.code === query.source)!
@@ -97,9 +101,7 @@ export function ScientificDataExplorer({
   function selectSource(sourceCode: ScientificSourceCode) {
     const source = sources.find((candidate) => candidate.code === sourceCode)!
     const requestedDate =
-      sourceCode === 'GOES' && (query.date < goesDateRange.min || query.date > goesDateRange.max)
-        ? goesDateRange.max
-        : query.date
+      sourceCode === 'GOES' && query.date > goesDateRange.max ? goesDateRange.max : query.date
 
     setQuery(getDefaultQueryForSource(source, requestedDate))
     resetResults()
@@ -125,16 +127,16 @@ export function ScientificDataExplorer({
       return
     }
 
-    if (
-      query.source === 'GOES' &&
-      (query.date < goesDateRange.min || query.date > goesDateRange.max)
-    ) {
-      setMessage('Seleccione una fecha dentro de la ventana disponible de NOAA.')
+    if (query.source === 'GOES' && query.date > goesDateRange.max) {
+      setMessage('Seleccione una fecha que no sea posterior a hoy.')
       return
     }
 
     setRequestState('loading')
     setMessage(null)
+    setProgress(0)
+    const controller = new AbortController()
+    activeRequest.current = controller
 
     try {
       const parameters = new URLSearchParams({
@@ -145,21 +147,43 @@ export function ScientificDataExplorer({
         startTime: query.startTime,
         endTime: query.endTime,
       })
-      const response = await fetch(`/api/scientific-data?${parameters.toString()}`)
+      let response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
+        signal: controller.signal,
+      })
+      const deadline = Date.now() + 30 * 60_000
+      while (response.status === 202) {
+        const pending = z
+          .object({
+            state: z.literal('pending'),
+            jobId: z.string().min(1),
+            progress: z.number().min(0).max(100),
+          })
+          .parse(await response.json())
+        setProgress(pending.progress)
+        if (Date.now() > deadline) throw new Error('Historical query timed out')
+        await new Promise<void>((resolve) => setTimeout(resolve, 2000))
+        controller.signal.throwIfAborted()
+        parameters.set('jobId', pending.jobId)
+        response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
+          signal: controller.signal,
+        })
+      }
       if (!response.ok) throw new Error('Scientific data request failed')
 
       const parsed = scientificDataResultSchema.safeParse(await response.json())
       if (!parsed.success) throw new Error('Scientific data response is invalid')
+      controller.signal.throwIfAborted()
 
       setResult(parsed.data)
       setRequestState('success')
       requestAnimationFrame(() => resultsHeading.current?.focus())
     } catch {
+      if (controller.signal.aborted) return
       setResult(null)
       setRequestState('error')
       setMessage(
         query.source === 'GOES'
-          ? 'No fue posible consultar NOAA en este momento. Inténtelo nuevamente más tarde.'
+          ? 'No fue posible consultar la fuente GOES en este momento. Inténtelo nuevamente más tarde.'
           : 'No fue posible consultar los datos. Inténtelo nuevamente.',
       )
     }
@@ -192,9 +216,10 @@ export function ScientificDataExplorer({
       <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
         {query.source === 'GOES' ? (
           <>
-            GOES usa observaciones del servicio público de NOAA. Las series cubren los últimos siete
-            días y las imágenes SUVI aproximadamente las últimas 24 horas. EHIS y MPSL requieren
-            integrar y validar el archivo científico NetCDF antes de habilitarlos.
+            Las series GOES se consultan en el archivo histórico de CITIC-UCR. La disponibilidad
+            depende del producto y la fecha; la lectura puede tardar varios minutos. Las imágenes
+            SUVI se mantienen en NOAA y cubren aproximadamente las últimas 24 horas. EHIS y MPSL
+            están pendientes de integración.
           </>
         ) : (
           <>
@@ -203,6 +228,25 @@ export function ScientificDataExplorer({
           </>
         )}
       </Notice>
+      {requestState === 'loading' && (
+        <div>
+          <p role="status">
+            {query.source === 'GOES' && selected?.product.visualization === 'time-series'
+              ? `Consultando el archivo histórico… ${progress}%`
+              : 'Consultando datos…'}
+          </p>
+          <Button
+            type="button"
+            onClick={() => {
+              activeRequest.current?.abort()
+              setRequestState('idle')
+              setMessage(null)
+            }}
+          >
+            Cancelar consulta
+          </Button>
+        </div>
+      )}
 
       <form className="data-query-form" noValidate onSubmit={submitQuery}>
         <div className="data-field">
@@ -271,7 +315,6 @@ export function ScientificDataExplorer({
             disabled={controlsDisabled}
             id="scientific-date"
             max={query.source === 'GOES' ? goesDateRange.max : undefined}
-            min={query.source === 'GOES' ? goesDateRange.min : undefined}
             onChange={(event) => updateQuery('date', event.target.value)}
             required
             type="date"
@@ -279,7 +322,9 @@ export function ScientificDataExplorer({
           />
           {query.source === 'GOES' ? (
             <span className="data-field-hint">
-              Disponible del {goesDateRange.min} al {goesDateRange.max}.
+              {selected?.product.visualization === 'image-sequence'
+                ? 'SUVI: aproximadamente las últimas 24 horas.'
+                : 'Consulta histórica por fecha. Los días sin observaciones se muestran sin datos.'}
             </span>
           ) : null}
         </div>
@@ -331,10 +376,6 @@ export function ScientificDataExplorer({
         <Notice id="scientific-query-message" tone="error" role="alert">
           {message}
         </Notice>
-      ) : null}
-
-      {requestState === 'loading' ? (
-        <Notice role="status">Consultando las observaciones disponibles…</Notice>
       ) : null}
 
       {requestState === 'success' && result ? (
