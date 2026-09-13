@@ -82,6 +82,14 @@ export const accountMenuCopy = {
   signingOut: 'Cerrando sesión...',
 } as const
 
+/** The confirmation asked before a session is ended. */
+export const signOutDialogCopy = {
+  title: '¿Cerrar sesión?',
+  body: 'Tu sesión en este navegador terminará y tendrás que volver a ingresar.',
+  confirm: 'Cerrar sesión',
+  cancel: 'Cancelar',
+} as const
+
 export const ROLE_LABELS: Record<UserRole, string> = {
   VISITOR: 'Visitante',
   ASSISTANT: 'Asistente',

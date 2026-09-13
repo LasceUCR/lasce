@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
-import { accountMenuCopy } from '@/app/lib/auth/account'
+import { accountMenuCopy, signOutDialogCopy } from '@/app/lib/auth/account'
 
 import { AccountLinks, type AccountLinksProps } from './AccountLinks'
 import {
@@ -29,7 +29,7 @@ describe('AccountLinks', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  test('greets the signed-in user, links to the account page and offers sign-out', async () => {
+  test('greets the signed-in user, links to the account page and signs out after confirming', async () => {
     const user = userEvent.setup()
     const onSignOut = vi.fn()
     render(<AccountLinks {...signedInHeaderArgs} onSignOut={onSignOut} />)
@@ -40,6 +40,10 @@ describe('AccountLinks', () => {
     expect(screen.queryByRole('link', { name: accountMenuCopy.signIn })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: accountMenuCopy.signOut }))
+    expect(onSignOut).not.toHaveBeenCalled()
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: signOutDialogCopy.confirm }),
+    )
 
     expect(onSignOut).toHaveBeenCalledTimes(1)
   })

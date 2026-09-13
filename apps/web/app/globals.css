@@ -2701,6 +2701,43 @@ a.gallery-tile:focus-visible {
   border-bottom-color: var(--cyan);
 }
 
+/* --- Sign-out confirmation ------------------------------------------------- */
+
+.confirm-dialog {
+  width: min(100% - 32px, 440px);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 18px 48px rgba(10, 35, 50, 0.24);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 9, 24, 0.55);
+}
+
+.confirm-dialog h2 {
+  margin: 0 0 10px;
+  color: var(--navy-deep);
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.confirm-dialog p {
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 /* --- Access tabs ----------------------------------------------------------- */
 
 /* Left-aligned above the card, styled like the header's active-link underline. */

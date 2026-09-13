@@ -6,18 +6,18 @@ covered in [registration.md](registration.md).
 
 ## The pieces
 
-| Piece                                                       | File                                                                                                | Covered by                              |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| Access page (login and registration)                        | `apps/web/app/(public)/acceso/page.tsx`                                                             | Playwright (`tests/e2e/login.spec.ts`)  |
-| Login and registration actions                              | `apps/web/app/(public)/acceso/actions.ts`                                                           | Playwright                              |
-| Account page ("Mi cuenta")                                  | `apps/web/app/(public)/cuenta/page.tsx`                                                             | Playwright                              |
-| Logout action                                               | `apps/web/app/(public)/cuenta/actions.ts`                                                           | Playwright                              |
-| Login rules, messages, state                                | `apps/web/app/lib/auth/login.ts`                                                                    | Vitest, colocated                       |
-| Tokens, cookie flags, return paths                          | `apps/web/app/lib/auth/session-token.ts`                                                            | Vitest, colocated, no mocks             |
-| Session store                                               | `apps/web/app/lib/auth/session.ts`                                                                  | Vitest, `@lasce/db` and `next/*` mocked |
-| Display-name cookie and account copy                        | `apps/web/app/lib/auth/account.ts`                                                                  | Vitest, colocated                       |
-| Tab selector, login card, account links, hook, account card | `apps/web/app/components/public/auth/{AccessTabs,LoginForm,AccountLinks,useAccount,AccountSummary}` | Vitest, stories as fixtures             |
-| Table                                                       | `auth.sessions`, see `database-definition.md`                                                       | Prisma migration, worker model test     |
+| Piece                                                                        | File                                                                                                              | Covered by                              |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Access page (login and registration)                                         | `apps/web/app/(public)/acceso/page.tsx`                                                                           | Playwright (`tests/e2e/login.spec.ts`)  |
+| Login and registration actions                                               | `apps/web/app/(public)/acceso/actions.ts`                                                                         | Playwright                              |
+| Account page ("Mi cuenta")                                                   | `apps/web/app/(public)/cuenta/page.tsx`                                                                           | Playwright                              |
+| Logout action                                                                | `apps/web/app/(public)/cuenta/actions.ts`                                                                         | Playwright                              |
+| Login rules, messages, state                                                 | `apps/web/app/lib/auth/login.ts`                                                                                  | Vitest, colocated                       |
+| Tokens, cookie flags, return paths                                           | `apps/web/app/lib/auth/session-token.ts`                                                                          | Vitest, colocated, no mocks             |
+| Session store                                                                | `apps/web/app/lib/auth/session.ts`                                                                                | Vitest, `@lasce/db` and `next/*` mocked |
+| Display-name cookie and account copy                                         | `apps/web/app/lib/auth/account.ts`                                                                                | Vitest, colocated                       |
+| Tab selector, login card, account links, sign-out dialog, hook, account card | `apps/web/app/components/public/auth/{AccessTabs,LoginForm,AccountLinks,SignOutButton,useAccount,AccountSummary}` | Vitest, stories as fixtures             |
+| Table                                                                        | `auth.sessions`, see `database-definition.md`                                                                     | Prisma migration, worker model test     |
 
 `/acceso` and `/cuenta` are the only dynamic pages besides `/investigacion`: they read the request's
 cookies (and `/acceso` its query string), so they render per request and never at build time.
@@ -76,8 +76,11 @@ yields nothing a browser could present.
 
 ## Logout
 
-`logoutUser` calls `deleteCurrentSession` (delete the row by hash, delete both cookies, even when
-no row is found) and then `redirect('/')`. The redirect lives in the action on purpose: an action
+Every "Cerrar sesión" control (the header, the mobile menu and the account page) asks for
+confirmation first through `SignOutButton`, a native modal dialog; on the account page confirming
+submits the form, and without JavaScript the button submits directly. `logoutUser` then calls
+`deleteCurrentSession` (delete the row by hash, delete both cookies, even when no row is found)
+and `redirect('/')`. The redirect lives in the action on purpose: an action
 that only cleared cookies would make Next re-render the current route, and on `/cuenta` that
 re-render would run `requireUser` and bounce the visitor who just signed out to the login notice.
 The same export serves the form on `/cuenta`, which works without JavaScript, and the header's

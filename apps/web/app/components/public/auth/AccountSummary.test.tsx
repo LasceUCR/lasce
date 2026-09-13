@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
-import { accountMenuCopy, accountSummaryCopy } from '@/app/lib/auth/account'
+import { accountMenuCopy, accountSummaryCopy, signOutDialogCopy } from '@/app/lib/auth/account'
 
 import { AccountSummary, type AccountSummaryProps } from './AccountSummary'
 import { Admin, Visitor } from './AccountSummary.stories'
@@ -41,12 +41,16 @@ describe('AccountSummary', () => {
     expect(screen.getByText(adminArgs.profile.roleLabel)).toBeInTheDocument()
   })
 
-  test('submits the sign-out form to the logout action', async () => {
+  test('submits the sign-out form to the logout action once confirmed', async () => {
     const user = userEvent.setup()
     const logoutAction = vi.fn().mockResolvedValue(undefined)
     render(<AccountSummary {...visitorArgs} logoutAction={logoutAction} />)
 
     await user.click(screen.getByRole('button', { name: accountMenuCopy.signOut }))
+    expect(logoutAction).not.toHaveBeenCalled()
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: signOutDialogCopy.confirm }),
+    )
 
     await waitFor(() => expect(logoutAction).toHaveBeenCalledTimes(1))
   })

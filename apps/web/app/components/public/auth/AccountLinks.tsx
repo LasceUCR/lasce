@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { accountMenuCopy } from '@/app/lib/auth/account'
 import { ACCESS_PATH } from '@/app/lib/auth/login'
 
+import { SignOutButton } from './SignOutButton'
+
 export interface AccountLinksProps {
   /** `header` renders the pill links of the desktop header; `mobile` plain menu links. */
   variant: 'header' | 'mobile'
@@ -17,7 +19,8 @@ export interface AccountLinksProps {
 
 /**
  * The account corner of the header. Signed out it offers "Ingresar"; signed
- * in, a greeting that leads to the account page and a sign-out button. Presentational: the state and the sign-out transition come
+ * in, a greeting that leads to the account page and a sign-out button that
+ * asks for confirmation first. Presentational: the state and the sign-out transition come
  * from `useAccount` in the header.
  */
 export function AccountLinks({
@@ -51,14 +54,11 @@ export function AccountLinks({
       <Link {...linkProps('/cuenta', 'login-link register-link account-link')} title={account}>
         {isHeader ? accountMenuCopy.greeting(account) : accountMenuCopy.account}
       </Link>
-      <button
+      <SignOutButton
         className={isHeader ? 'login-link' : undefined}
-        disabled={isSigningOut}
-        onClick={onSignOut}
-        type="button"
-      >
-        {isSigningOut ? accountMenuCopy.signingOut : accountMenuCopy.signOut}
-      </button>
+        isSigningOut={isSigningOut}
+        onSignOut={onSignOut}
+      />
     </>
   )
 }

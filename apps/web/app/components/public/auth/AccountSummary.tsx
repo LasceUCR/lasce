@@ -1,6 +1,6 @@
-import { accountMenuCopy, accountSummaryCopy } from '@/app/lib/auth/account'
+import { accountSummaryCopy } from '@/app/lib/auth/account'
 
-import { Button } from '../Button'
+import { SignOutButton } from './SignOutButton'
 
 /** Display-ready profile: names and labels resolved, dates already formatted. */
 export interface AccountProfile {
@@ -20,8 +20,9 @@ export interface AccountSummaryProps {
 
 /**
  * The "Mi cuenta" card: the signed-in user's profile as a definition list and
- * the sign-out button. Presentational and server-safe: the page resolves the
- * country name, the role label and the date before rendering it.
+ * the sign-out button, which asks for confirmation before submitting the
+ * form. Presentational and server-safe: the page resolves the country name,
+ * the role label and the date before rendering it.
  */
 export function AccountSummary({ profile, logoutAction }: AccountSummaryProps) {
   const rows: Array<[string, string]> = [
@@ -44,9 +45,7 @@ export function AccountSummary({ profile, logoutAction }: AccountSummaryProps) {
         ))}
       </dl>
       <form action={logoutAction} className="form-actions">
-        <Button type="submit" variant="secondary">
-          {accountMenuCopy.signOut}
-        </Button>
+        <SignOutButton className="button button-secondary" submitsForm />
       </form>
     </section>
   )

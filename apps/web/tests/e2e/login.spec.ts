@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect as baseExpect, test, type Page } from '@playwright/test'
 
-import { accountMenuCopy, cuentaIntro } from '@/app/lib/auth/account'
+import { accountMenuCopy, cuentaIntro, signOutDialogCopy } from '@/app/lib/auth/account'
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
@@ -50,6 +50,12 @@ const loginAlert = (page: Page) => loginCard(page).getByRole('alert')
 const headerActions = (page: Page) => page.locator('.header-actions')
 const signOutButton = (page: Page) =>
   headerActions(page).getByRole('button', { name: accountMenuCopy.signOut })
+const signOutDialog = (page: Page) => page.getByRole('dialog', { name: signOutDialogCopy.title })
+
+// Every sign-out control asks first; this answers yes.
+async function confirmSignOut(page: Page) {
+  await signOutDialog(page).getByRole('button', { name: signOutDialogCopy.confirm }).click()
+}
 
 // Typing before React has attached to the form loses the values when hydration
 // lands, which happens late on a busy dev server. React marks hydrated nodes
@@ -249,6 +255,7 @@ test('returns to a safe path after login and ignores an off-site one', async ({ 
   await expect(page).toHaveURL(/\/datos$/)
 
   await signOutButton(page).click()
+  await confirmSignOut(page)
   await expect(page).toHaveURL(/\/$/)
 
   await signIn(page, `${ACCESS_PATH}?next=https%3A%2F%2Fevil.example`)
@@ -275,6 +282,7 @@ test('signs out from the header and loses access to the account page', async ({ 
   await expect(page).toHaveURL(/\/noticias$/)
 
   await signOutButton(page).click()
+  await confirmSignOut(page)
 
   await expect(page).toHaveURL(/\/$/)
   await expect(
@@ -286,6 +294,25 @@ test('signs out from the header and loses access to the account page', async ({ 
   await expect(page).toHaveURL(LOGIN_REDIRECT)
 })
 
+test('asks before signing out and keeps the session when cancelled', async ({ page }) => {
+  await signIn(page)
+  await expect(signOutButton(page)).toBeVisible()
+
+  await signOutButton(page).click()
+  await expect(signOutDialog(page)).toBeVisible()
+  await expect(signOutDialog(page).getByText(signOutDialogCopy.body)).toBeVisible()
+
+  await signOutDialog(page).getByRole('button', { name: signOutDialogCopy.cancel }).click()
+  await expect(signOutDialog(page)).toHaveCount(0)
+  await expect(signOutButton(page)).toBeVisible()
+
+  await signOutButton(page).click()
+  await page.keyboard.press('Escape')
+  await expect(signOutDialog(page)).toHaveCount(0)
+  await page.goto('/cuenta')
+  await expect(page).toHaveURL(/\/cuenta$/)
+})
+
 test('a revoked session cookie no longer opens the account page', async ({ page, context }) => {
   await signIn(page)
   await page.goto('/cuenta')
@@ -295,6 +322,7 @@ test('a revoked session cookie no longer opens the account page', async ({ page,
 
   // The form on the page itself, which works without JavaScript.
   await page.getByRole('main').getByRole('button', { name: accountMenuCopy.signOut }).click()
+  await confirmSignOut(page)
   await expect(page).toHaveURL(/\/$/)
 
   await context.addCookies([session!])
