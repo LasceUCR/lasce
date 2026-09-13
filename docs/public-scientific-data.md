@@ -11,44 +11,33 @@ the values are `observed` or `simulated`; these states must never be inferred fr
 
 ### GOES
 
-GOES queries are performed server-side against NOAA Space Weather Prediction Center's public
-rolling JSON services under `https://services.swpc.noaa.gov`. These are real observations from the
-currently designated primary GOES satellite; they are not generated or replaced with fallback
-samples when NOAA is unavailable.
+GOES time series are read from the [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo). SUVI images continue to use NOAA SWPC, as the shared archive has no SUVI directory. Neither adapter substitutes simulated observations on failure.
 
-| Course code    | Visualization                            | NOAA operational source                               |
-| -------------- | ---------------------------------------- | ----------------------------------------------------- |
-| `SFXR`         | Time series by X-ray band                | `xrays-7-day.json`                                    |
-| `SFEU`         | Time series by EUV line                  | `euvs-7-day.json`                                     |
-| `GEOF`         | Time series by magnetic component        | `magnetometers-7-day.json`                            |
-| `MPSH`         | Time series by electron channel          | `differential-electrons-7-day.json`                   |
-| `SGPS`         | Proton threshold or differential channel | Integral/differential proton 7-day JSON               |
-| SUVI bands     | Observed image sequence                  | NOAA's primary SUVI animation indexes                 |
-| `EHIS`, `MPSL` | Not enabled                              | Requires scientific NetCDF integration and validation |
+The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
-The rolling time-series feeds cover seven days. The SUVI animation indexes cover approximately the
-latest 24 hours. The date field communicates those limits, and a valid range with no observations
-returns an empty result rather than invented values. Up to 360 real time-series observations are
-selected at evenly distributed positions for browser rendering; this is sampling, not
-interpolation, and the response notice says when it happened.
+| Product    | Archive path                   | Selection                                                                          |
+| ---------- | ------------------------------ | ---------------------------------------------------------------------------------- |
+| SFXR       | EXIS/SFXR                      | XRS-A or XRS-B, using each report's primary detector flag                          |
+| SFEU       | EXIS/SFEU                      | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio             |
+| GEOF       | MAG/GEOF                       | Ambient EPN x/y/z or total ACRF magnitude                                          |
+| MPSH       | SEIS/MPSH                      | Electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5              |
+| SGPS       | SEIS/SGPS                      | Explicit SGPS−X or SGPS+X sensor; differential channels or integral P11 (>500 MeV) |
+| SUVI bands | NOAA primary animation indexes | Images from approximately the last 24 hours                                        |
+| EHIS, MPSL | Present under SEIS             | Reader and channel catalog remain pending                                          |
 
-NOAA also publishes daily science-quality NetCDF-4 files through NCEI. Supporting dates outside the
-rolling window, plus `EHIS` and `MPSL`, requires a separate ingestion/parser path for those files.
-Do not map a merely similar operational feed to either course product without confirmation from
-the scientific team.
+Operational SWPC channels are not interchangeable with L1b selectors. The former MPSH nominal energies are replaced with archive band/telescope identifiers. SGPS L1b does not supply the previous integral thresholds below 500 MeV. EPN components retain their native axis names; no undocumented coordinate transform or directional averaging is applied. Flux units are checked against NetCDF metadata.
 
-MPSH's operational integration currently covers electrons only. NOAA's differential proton feed
-belongs to SGPS, whose differential flux unit is protons/(cm² s sr keV), even when channel energy
-ranges are expressed in MeV. MPSH proton data still require a separate archive integration. See
-[NOAA SEISS instrument definitions](https://www.ncei.noaa.gov/products/goes-r-space-environment-in-situ)
-and [NOAA proton flux documentation](https://www.spaceweather.gov/products/goes-proton-flux).
+The web enqueues `query-goes-archive`; only the Python worker downloads and decodes NetCDF. The endpoint responds with `202` and `{ state: 'pending', jobId, progress }` during processing. The browser polls the same criteria with `jobId` every two seconds. Completed work returns the existing time-series response with CITIC provenance. Identical requests share a deterministic job identifier; current-day requests refresh in ten-minute buckets. BullMQ retains completed results for up to 24 hours, subject to its count cap. A new submission can retry failed work; polling never retries or re-enqueues expired jobs.
 
-References:
+Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. No new environment variables or database migrations are needed. SUVI and provisional ROSAC remain synchronous.
 
-- [NOAA SWPC data access](https://www.spaceweather.gov/content/data-access)
-- [NOAA GOES primary JSON directory](https://services.swpc.noaa.gov/json/goes/primary/)
-- [NCEI GOES-R Level 1b archive](https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes16/l1b/)
-- [NCEI EXIS X-ray Flux metadata](https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncei.swx:exis-l1b-sfxr-goesr)
+Processing uses CF time units and calendars, preserves subsecond timestamps, and includes the entire selected end minute. Fill values, non-finite values, negative irradiance/particle flux, and degraded or invalid data-quality flags are excluded. MAG's valid correction flag is accepted according to its good-quality bit mask. No values are interpolated. At most 360 observations are sampled uniformly by position after filtering and sorting; the notice identifies sampling. Conflicting timestamps and mixed-satellite intervals fail explicitly.
+
+The worker lists only the requested day, selects overlapping granules by filename, and downloads at most four files concurrently. NetCDF/HDF5 decoding runs off the asyncio loop with a process-wide lock because its C library is not thread safe. Compressed days are spooled to a temporary file and read without extracting paths. Limits are 6,000 granules, 8 MiB per granule, 1 GiB compressed and 4 GiB expanded per day, and 30 minutes per processing attempt. Browser cancellation stops polling; shared background work may finish for other visitors.
+
+There is no rolling seven-day restriction on historical date selection. Availability varies by product and day. Confirmed missing directories and compressed files produce an empty result; timeouts, invalid formats, and transport errors fail the query.
+
+On 2026-09-13 the reader was checked against real G18 L1b samples dated 2025-01-05 for all five enabled historical products. Synthetic NetCDF fixtures exercise detector selection, fill values, quality flags, sensor dimensions, time bounds, and compressed archives without depending on the remote service.
 
 ### ROSAC
 
@@ -88,7 +77,7 @@ same Zod schema used by the browser. Results use a discriminated union:
 - `image-sequence` with NOAA image URLs and capture timestamps;
 - `dynamic-spectrum` with `timestamps`, `frequencies`, and `cells`.
 
-NOAA transport or schema failures return `502`; invalid criteria return `400`. Responses use
+Source or worker failures return `502`; invalid criteria return `400`. Responses use
 `Cache-Control: no-store` so a stale observation is not presented as a new query result.
 
 ## Reusable presentation
@@ -110,8 +99,7 @@ labels are not shrunk into illegible text. The document itself stays within the 
 
 ## Verification
 
-Unit tests cover catalog validation, source isolation, NOAA payload parsing and filtering, all
-enabled operational feeds, SUVI filename timestamps, sampling without interpolation, ROSAC series
+Unit tests cover catalog validation, source isolation, historical job contracts, NetCDF decoding and filtering, archive transport, SUVI filename timestamps, sampling without interpolation, ROSAC series
 and spectrum generation, request errors, accessible chart descriptions, source switching and the
 absence of downloads. Playwright covers the public GOES flow with an API-boundary fixture, ROSAC's
 dynamic spectrum, invalid ranges, empty results and mobile overflow. `/datos` remains part of the
