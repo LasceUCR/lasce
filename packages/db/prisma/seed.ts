@@ -227,11 +227,6 @@ const newsRecords: SeedNews[] = [
   },
 ]
 
-await prisma.newsCrossAuthor.deleteMany()
-await prisma.news.deleteMany()
-await prisma.newsAuthor.deleteMany()
-await prisma.newsSource.deleteMany()
-
 for (const record of newsRecords) {
   const source = await prisma.newsSource.upsert({
     where: {
@@ -243,8 +238,18 @@ for (const record of newsRecords) {
     },
   })
 
-  const news = await prisma.news.create({
-    data: {
+  const news = await prisma.news.upsert({
+    where: {
+      externalUrl: record.externalUrl,
+    },
+    update: {
+      title: record.title,
+      publishedAt: record.publishedAt,
+      sourceId: source.id,
+      abstract: record.abstract,
+      imageUrl: record.imageUrl,
+    },
+    create: {
       title: record.title,
       publishedAt: record.publishedAt,
       sourceId: source.id,
@@ -261,8 +266,21 @@ for (const record of newsRecords) {
       create: { name },
     })
 
-    await prisma.newsCrossAuthor.create({
-      data: { newsId: news.id, newsAuthorId: author.id, position: index },
+    await prisma.newsCrossAuthor.upsert({
+      where: {
+        newsId_newsAuthorId: {
+          newsId: news.id,
+          newsAuthorId: author.id,
+        },
+      },
+      update: {
+        position: index,
+      },
+      create: {
+        newsId: news.id,
+        newsAuthorId: author.id,
+        position: index,
+      },
     })
   }
 }
