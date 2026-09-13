@@ -144,8 +144,11 @@ export function accessTabFromParam(value: unknown): AccessTab {
   return value === ACCESS_TAB_VALUES.register ? 'register' : 'login'
 }
 
-export function accessTabHref(tab: AccessTab): string {
-  return `${ACCESS_PATH}?${ACCESS_TAB_PARAM}=${ACCESS_TAB_VALUES[tab]}`
+/** Link to one tab of the access page, keeping the return path when there is one. */
+export function accessTabHref(tab: AccessTab, next?: string): string {
+  const params = new URLSearchParams({ [ACCESS_TAB_PARAM]: ACCESS_TAB_VALUES[tab] })
+  if (next) params.set(NEXT_FIELD, next)
+  return `${ACCESS_PATH}?${params}`
 }
 
 /** Where "Crear cuenta" links point: the access page with the registration tab open. */

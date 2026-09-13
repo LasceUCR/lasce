@@ -41,7 +41,9 @@ name is stored raw and decoded once on the client.
 
 ## Login
 
-1. `/acceso` validates `next` with `safeReturnPath` and shows the notice "Debes iniciar sesión para
+1. `/acceso` decides where a successful login returns: the `next` parameter when a protected page
+   set it, otherwise the same-host page the visitor came from (the Referer of the navigation),
+   otherwise the home page; every value passes `safeReturnPath`. It shows the notice "Debes iniciar sesión para
    continuar." when `reason=auth`. A visitor who is already signed in is redirected to `next`.
 2. The card posts to `loginUser`: input is validated (`login.ts`), the address is lower-cased and
    looked up (`findUserByEmail`), and the password is checked with `verifyPassword`. When the
@@ -54,7 +56,8 @@ name is stored raw and decoded once on the client.
    message, never the input.
 
 `safeReturnPath` accepts a single-slash, printable-ASCII path on this site and rejects everything
-else, including `//host`, schemes and `/acceso` itself (which would loop); the fallback is `/cuenta`.
+else, including `//host`, schemes and `/acceso` itself (which would loop); the fallback is the home
+page.
 `loginRedirectPath(returnTo)` builds `/acceso?next=<encoded>&reason=auth` for protected pages.
 
 ## Sessions

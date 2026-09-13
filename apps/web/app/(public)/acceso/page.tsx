@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { AccessTabs } from '@/app/components/public/auth/AccessTabs'
@@ -10,6 +11,8 @@ import { listCountries } from '@/app/lib/auth/countries'
 import {
   ACCESS_TAB_PARAM,
   LOGIN_CARD_ID,
+  NEXT_FIELD,
+  accessTabHref,
   REGISTRATION_CARD_ID,
   accesoBackLink,
   accesoIntro,
@@ -20,7 +23,11 @@ import {
   registrationCardHeading,
 } from '@/app/lib/auth/login'
 import { getSessionUser } from '@/app/lib/auth/session'
-import { safeReturnPath } from '@/app/lib/auth/session-token'
+import {
+  DEFAULT_RETURN_PATH,
+  returnPathFromReferer,
+  safeReturnPath,
+} from '@/app/lib/auth/session-token'
 
 import { loginUser, registerUser } from './actions'
 
@@ -43,13 +50,24 @@ interface AccesoPageProps {
 /**
  * The access page: the login card (LASCE-SEC-008-072) and the registration
  * card (LASCE-SEC-008-071) behind a tab selector, one visible at a time.
- * `/login` and `/registro` redirect here. `tab` picks the card, `next` is where
- * a successful login goes (validated to a path on this site) and `reason=auth`
- * marks a visit forced by a protected page.
+ * `/login` and `/registro` redirect here. `tab` picks the card and
+ * `reason=auth` marks a visit forced by a protected page.
+ *
+ * A successful login returns the visitor to where they were: the `next`
+ * parameter when a protected page set it, otherwise the same-site page they
+ * came from (the Referer of the navigation), otherwise the home page. Every
+ * value is validated to a path on this site.
  */
 export default async function AccesoPage({ searchParams }: AccesoPageProps) {
   const params = await searchParams
-  const returnTo = safeReturnPath(params.next)
+  const requestHeaders = await headers()
+  const returnTo =
+    params[NEXT_FIELD] !== undefined
+      ? safeReturnPath(params[NEXT_FIELD])
+      : (returnPathFromReferer(
+          requestHeaders.get('referer'),
+          requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host'),
+        ) ?? DEFAULT_RETURN_PATH)
 
   if (await getSessionUser()) {
     redirect(returnTo)
@@ -74,6 +92,10 @@ export default async function AccesoPage({ searchParams }: AccesoPageProps) {
               id={LOGIN_CARD_ID}
               next={returnTo}
               notice={params.reason === 'auth' ? loginMessages.authRequired : undefined}
+              registerHref={accessTabHref(
+                'register',
+                returnTo === DEFAULT_RETURN_PATH ? undefined : returnTo,
+              )}
             />
           }
           register={

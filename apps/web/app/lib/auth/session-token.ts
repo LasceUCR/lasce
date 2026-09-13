@@ -12,7 +12,8 @@ export const SESSION_COOKIE = 'lasce_session'
 /** Absolute lifetime of a session, from login. There is no sliding renewal. */
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000
 export const LOGIN_PATH = '/acceso'
-export const DEFAULT_RETURN_PATH = '/cuenta'
+/** Where login lands when nothing says where the visitor came from. */
+export const DEFAULT_RETURN_PATH = '/'
 
 export interface SessionCookieOptions {
   httpOnly: boolean
@@ -72,7 +73,7 @@ const RETURN_PATH_PATTERN = /^\/(?![/\\])[!-~]*$/
 /**
  * Validates a `next` parameter or hidden input so login can only ever send the
  * browser to a path on this site. Anything else, including the access page
- * itself, falls back to the account page.
+ * itself, falls back to the home page.
  */
 export function safeReturnPath(value: unknown): string {
   if (typeof value !== 'string' || value.length > MAX_RETURN_PATH_LENGTH) {
@@ -92,4 +93,26 @@ export function safeReturnPath(value: unknown): string {
 /** Where an anonymous visitor is sent from a protected page. */
 export function loginRedirectPath(returnTo: string): string {
   return `${LOGIN_PATH}?${new URLSearchParams({ next: returnTo, reason: 'auth' })}`
+}
+
+/**
+ * The page the visitor was on before reaching the access page, taken from the
+ * Referer header of a same-host navigation (the header link, the card links
+ * and the old routes' redirects all carry it). `null` when there is no usable
+ * referer, so the caller falls back to `DEFAULT_RETURN_PATH`.
+ */
+export function returnPathFromReferer(referer: string | null, host: string | null): string | null {
+  if (!referer || !host) return null
+
+  let url: URL
+  try {
+    url = new URL(referer)
+  } catch {
+    return null
+  }
+  if (url.host !== host) return null
+
+  const path = `${url.pathname}${url.search}`
+  const safe = safeReturnPath(path)
+  return safe === path ? safe : null
 }

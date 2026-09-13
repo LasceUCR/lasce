@@ -72,11 +72,26 @@ async function openAccess(page: Page, path = ACCESS_PATH) {
 
 const LOGIN_REDIRECT = /\/acceso\?next=%2Fcuenta&reason=auth$/
 
+// Reaches the access page the way a visitor does, through the header link,
+// so the navigation carries the page they came from.
+async function signInFromHeader(page: Page, originPath: string) {
+  await page.goto(originPath)
+  await headerActions(page).getByRole('link', { name: accountMenuCopy.signIn }).click()
+  await waitForHydration(page, '.login-card form')
+  await loginField(page, 'email').fill(account.email)
+  await loginField(page, 'password').fill(account.password)
+  await loginButton(page).click()
+  await page.waitForURL((url) => url.pathname !== ACCESS_PATH)
+}
+
+// Signs in with a direct visit to the access page and waits for the landing
+// page, so the session cookie is in place before the next step.
 async function signIn(page: Page, path = ACCESS_PATH, email = account.email) {
   await openAccess(page, path)
   await loginField(page, 'email').fill(email)
   await loginField(page, 'password').fill(account.password)
   await loginButton(page).click()
+  await page.waitForURL((url) => url.pathname !== ACCESS_PATH)
 }
 
 test.beforeAll(async ({ browser }) => {
@@ -187,8 +202,23 @@ test('names both missing fields and passes the accessibility scan in that state'
   expect(results.violations).toEqual([])
 })
 
-test('signs in and lands on the account page', async ({ page }) => {
+test('signs in and returns to the page the visitor came from', async ({ page }) => {
+  await signInFromHeader(page, '/noticias')
+
+  await expect(page).toHaveURL(/\/noticias$/)
+  await expect(signOutButton(page)).toBeVisible()
+})
+
+test('lands on the home page when nothing says where the visitor came from', async ({ page }) => {
   await signIn(page)
+
+  await expect(page).toHaveURL(/\/$/)
+  await expect(signOutButton(page)).toBeVisible()
+})
+
+test('shows the profile on the account page once signed in', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/cuenta')
 
   await expect(page).toHaveURL(/\/cuenta$/)
   await expect(page.getByRole('heading', { level: 1, name: cuentaIntro.title })).toBeVisible()
@@ -222,7 +252,7 @@ test('returns to a safe path after login and ignores an off-site one', async ({ 
   await expect(page).toHaveURL(/\/$/)
 
   await signIn(page, `${ACCESS_PATH}?next=https%3A%2F%2Fevil.example`)
-  await expect(page).toHaveURL(/\/cuenta$/)
+  await expect(page).toHaveURL(/\/$/)
 })
 
 test('explains why a protected page sent the visitor to log in, then takes them back', async ({
@@ -241,8 +271,8 @@ test('explains why a protected page sent the visitor to log in, then takes them 
 })
 
 test('signs out from the header and loses access to the account page', async ({ page }) => {
-  await signIn(page)
-  await expect(page).toHaveURL(/\/cuenta$/)
+  await signInFromHeader(page, '/noticias')
+  await expect(page).toHaveURL(/\/noticias$/)
 
   await signOutButton(page).click()
 
@@ -258,6 +288,7 @@ test('signs out from the header and loses access to the account page', async ({ 
 
 test('a revoked session cookie no longer opens the account page', async ({ page, context }) => {
   await signIn(page)
+  await page.goto('/cuenta')
   await expect(page).toHaveURL(/\/cuenta$/)
   const session = (await context.cookies()).find((cookie) => cookie.name === 'lasce_session')
   expect(session).toBeDefined()
@@ -272,14 +303,17 @@ test('a revoked session cookie no longer opens the account page', async ({ page,
   await expect(page).toHaveURL(LOGIN_REDIRECT)
 })
 
-test('sends a signed-in visitor from the login page to the account page', async ({ page }) => {
+test('sends a signed-in visitor away from the login page', async ({ page }) => {
   await signIn(page)
-  await expect(page).toHaveURL(/\/cuenta$/)
+  await expect(page).toHaveURL(/\/$/)
 
-  // A plain navigation: a signed-in visitor never sees the login card here.
+  // A plain navigation with nowhere to return to lands on the home page, and
+  // one that says where it came from returns there.
   await page.goto(ACCESS_PATH)
+  await expect(page).toHaveURL(/\/$/)
 
-  await expect(page).toHaveURL(/\/cuenta$/)
+  await page.goto(`${ACCESS_PATH}?next=%2Fdatos`)
+  await expect(page).toHaveURL(/\/datos$/)
 })
 
 test('the old sign-in and sign-up routes redirect to the access page, query included', async ({

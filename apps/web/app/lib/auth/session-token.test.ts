@@ -10,6 +10,7 @@ import {
   hashSessionToken,
   isSessionToken,
   loginRedirectPath,
+  returnPathFromReferer,
   safeReturnPath,
   sessionCookieOptions,
   sessionExpiry,
@@ -95,7 +96,7 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath('/administracion/usuarios')).toBe('/administracion/usuarios')
   })
 
-  test('falls back to the account page for anything that could leave the site', () => {
+  test('falls back to the home page for anything that could leave the site', () => {
     for (const value of [
       '//evil.example',
       '/\\evil.example',
@@ -118,6 +119,29 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath('/acceso?next=%2Fcuenta')).toBe(DEFAULT_RETURN_PATH)
     expect(safeReturnPath('/acceso/')).toBe(DEFAULT_RETURN_PATH)
     expect(safeReturnPath('/accesorios')).toBe('/accesorios')
+  })
+})
+
+describe('returnPathFromReferer', () => {
+  test('keeps the path and query of a same-host referer', () => {
+    expect(returnPathFromReferer('http://localhost:3000/noticias', 'localhost:3000')).toBe(
+      '/noticias',
+    )
+    expect(
+      returnPathFromReferer('http://localhost:3000/galeria/rosac?foto=3', 'localhost:3000'),
+    ).toBe('/galeria/rosac?foto=3')
+  })
+
+  test('ignores another host, the access page itself and unusable values', () => {
+    expect(returnPathFromReferer('https://evil.example/noticias', 'localhost:3000')).toBeNull()
+    expect(returnPathFromReferer('http://localhost:3000/acceso?tab=x', 'localhost:3000')).toBeNull()
+    expect(returnPathFromReferer('not a url', 'localhost:3000')).toBeNull()
+    expect(returnPathFromReferer(null, 'localhost:3000')).toBeNull()
+    expect(returnPathFromReferer('http://localhost:3000/noticias', null)).toBeNull()
+  })
+
+  test('defaults to the home page', () => {
+    expect(DEFAULT_RETURN_PATH).toBe('/')
   })
 })
 
