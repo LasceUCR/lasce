@@ -7,6 +7,7 @@ import { SearchBar } from '@/app/components/public/SearchBar'
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
 
 import { UsersRolesTable } from './UsersRolesTable'
+import type { UserRolesRowProps } from './UserRolesRow'
 import { UserDetailsDialog } from './UserDetailsDialog'
 import styles from './UsersOverviewPage.module.css'
 
@@ -16,6 +17,7 @@ export interface UsersOverviewPageProps {
   users: OverviewUser[]
   roles: OverviewRole[]
   isDemo?: boolean
+  onSaveRoles?: UserRolesRowProps['onSaveRoles']
 }
 
 export function UsersOverviewPage({
@@ -24,6 +26,7 @@ export function UsersOverviewPage({
   users,
   roles,
   isDemo = false,
+  onSaveRoles,
 }: UsersOverviewPageProps) {
   const [query, setQuery] = useState('')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
@@ -48,8 +51,15 @@ export function UsersOverviewPage({
           </p>
         )}
         <p id="users-overview-help" className={styles.help}>
-          Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.
+          {onSaveRoles
+            ? 'Cada usuario puede tener un solo rol. Selecciona otro para cambiarlo o pulsa el rol actual para retirarlo. Se pedirá confirmación antes de aplicar el cambio.'
+            : 'Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.'}
         </p>
+        {isDemo && onSaveRoles && (
+          <p className={styles.help}>
+            Los cambios son de prueba y se pierden al recargar la página.
+          </p>
+        )}
         {roles.length === 0 && <p>No hay roles disponibles para mostrar.</p>}
         <div className={styles.searchControls}>
           <SearchBar
@@ -64,18 +74,21 @@ export function UsersOverviewPage({
             </button>
           )}
         </div>
-        {users.length === 0 ? (
-          <p className="content-empty">No hay usuarios para mostrar.</p>
-        ) : filteredUsers.length === 0 ? (
+        {users.length > 0 && filteredUsers.length === 0 && (
           <p className="content-empty" role="status">
             No se encontraron usuarios para “{query.trim()}”.
           </p>
+        )}
+        {users.length === 0 ? (
+          <p className="content-empty">No hay usuarios para mostrar.</p>
         ) : (
           <UsersRolesTable
-            users={filteredUsers}
+            users={onSaveRoles ? users : filteredUsers}
+            visibleUserIds={onSaveRoles ? filteredUsers.map((user) => user.id) : undefined}
             roles={roles}
             describedBy="users-overview-help"
             onUserSelect={(user) => setSelectedUserId(user.id)}
+            onSaveRoles={onSaveRoles}
           />
         )}
       </section>

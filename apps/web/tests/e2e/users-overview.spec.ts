@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
 for (const width of [390, 1440]) {
-  test(`searches users and preserves read-only roles at ${width}px`, async ({ page }) => {
+  test(`searches users and preserves role indicators at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     const response = await page.goto('/administracion/usuarios')
     expect(response?.status()).toBe(200)
@@ -17,7 +17,7 @@ for (const width of [390, 1440]) {
       name: 'Administrador: Ana Ejemplo (ana@example.com)',
     })
     await expect(admin).toBeChecked()
-    await expect(admin).toBeDisabled()
+    await expect(admin).toBeEnabled()
     const userName = table.getByRole('button', { name: 'Ana Ejemplo' })
     await userName.click()
     const dialog = page.getByRole('dialog', { name: 'Información del usuario' })
@@ -42,7 +42,7 @@ for (const width of [390, 1440]) {
     await expect(table.getByRole('row')).toHaveCount(2)
     for (const checkbox of await table.getByRole('checkbox').all()) {
       await expect(checkbox).not.toBeChecked()
-      await expect(checkbox).toBeDisabled()
+      await expect(checkbox).toBeEnabled()
     }
     await search.fill('inexistente')
     await expect(page.getByRole('status')).toHaveText(

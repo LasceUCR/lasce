@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { AdminPlaceholder } from '@/app/components/administracion/AdminPlaceholder'
-import { UsersOverviewPage } from '@/app/components/administracion/UsersOverviewPage'
-import { demoRoles, demoUsers } from '@/app/lib/user-overview-demo'
+import { UserRoleAssignmentDemo } from '@/app/components/administracion/UserRoleAssignmentDemo'
 
 const administracionSections = {
   descargas: {
@@ -67,15 +66,7 @@ export default async function AdministracionSectionPage({
   }
 
   if (section === 'usuarios') {
-    return (
-      <UsersOverviewPage
-        description={content.description}
-        title={content.title}
-        users={demoUsers}
-        roles={demoRoles}
-        isDemo
-      />
-    )
+    return <UserRoleAssignmentDemo description={content.description} title={content.title} />
   }
 
   return <AdminPlaceholder description={content.description} title={content.title} />
