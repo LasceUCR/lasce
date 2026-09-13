@@ -8,6 +8,8 @@ from app.db.models import (
     Research,
     ResearchAuthor,
     ResearchCrossAuthor,
+    User,
+    UserRole,
 )
 
 __all__ = [
@@ -20,4 +22,6 @@ __all__ = [
     "Research",
     "ResearchAuthor",
     "ResearchCrossAuthor",
+    "User",
+    "UserRole",
 ]

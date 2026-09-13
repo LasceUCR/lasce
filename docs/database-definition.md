@@ -12,11 +12,13 @@ migration source; the worker mirrors these tables in SQLAlchemy
 | `public`        | Default, for anything not domain-specific              | No tables yet   |
 | `research`      | Public research/publications shown on `/investigacion` | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`        | Yes             |
+| `auth`          | Portal accounts created through `/registro`            | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
-`@@schema("research")` and every model in `news` is tagged `@@schema("news")`; a future domain
-unrelated to either should get its own schema the same way rather than being added to these.
+`@@schema("research")`, every model in `news` is tagged `@@schema("news")`, and every model in
+`auth` is tagged `@@schema("auth")`; a future domain unrelated to these should get its own schema
+the same way rather than being added to one of them.
 
 ## `research` schema
 
@@ -167,7 +169,50 @@ instead of coming back in whatever order the join returns rows.
 Constraints: `UNIQUE (news_id, news_author_id)` (an author can't be credited twice on the same
 item); indexed on `(news_id, position)` for ordered author lookups.
 
-## Where this is read
+## `auth` schema
+
+### `user_role` (enum)
+
+Access level of a portal account. Stored as a Postgres enum type so the default can live in the
+database and the worker could insert a row without knowing the application's constants.
+
+| Value       | Meaning                                                                   |
+| ----------- | ------------------------------------------------------------------------- |
+| `visitor`   | Default for every self-registered account (`/registro`)                   |
+| `assistant` | Granted by an administrator; permissions are defined by LASCE-SEC-008-073 |
+| `admin`     | Granted by an administrator; manages users, roles and permissions         |
+
+The Prisma enum is `UserRole` with members `VISITOR`, `ASSISTANT`, `ADMIN` mapped to the
+lower-case database values above.
+
+### `users`
+
+A portal account created through the public registration form (LASCE-SEC-008-071). Sessions
+(LASCE-SEC-008-072) are not modelled yet and belong in a separate table in this schema.
+
+| Column          | Prisma type | Postgres type    | Constraints                                                |
+| --------------- | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `full_name`     | `String`    | `text`           | not null                                                   |
+| `email`         | `String`    | `text`           | `UNIQUE`, not null; stored trimmed and lower-cased         |
+| `institution`   | `String`    | `text`           | not null                                                   |
+| `country_code`  | `String`    | `char(2)`        | not null; ISO 3166-1 alpha-2, e.g. `CR`                    |
+| `password_hash` | `String`    | `text`           | not null; `scrypt$<N>$<r>$<p>$<salt>$<hash>`, never logged |
+| `role`          | `UserRole`  | `auth.user_role` | not null, default `visitor`                                |
+| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+> The unique index on `email` is on the raw column. Case-insensitivity comes from the application
+> lower-casing the address before every write and lookup (see `docs/registration.md`), which is
+> cheaper than a `citext` extension and keeps the worker's mirror plain. Anything that reads users
+> by email must lower-case its input first.
+
+> `role` is never taken from the registration request. The database default is the only way a
+> self-registered account gets its role; changing it is LASCE-ADM #80.
+
+Relationships: none yet.
+
+## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` (newest
 `publication_date` first, authors ordered by `position`) and maps each row to the `Publication`
@@ -177,8 +222,12 @@ shape `/investigacion` renders.
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
 `/noticias` renders.
 
-`packages/db/prisma/seed.ts` clears and repopulates all tables in both schemas from fixed, real
-LASCE research and news records so local/dev environments aren't empty.
+`apps/web/app/lib/auth/users.ts`'s `createUser()` is the only writer of `auth.users`: it inserts
+the row the `/registro` Server Action validated and maps a unique-violation on `email` to a
+`DuplicateEmailError`. Nothing reads users yet; login (LASCE-SEC-008-072) will.
+
+`packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
+fixed, real LASCE research and news records so local/dev environments aren't empty.
 
 ## Keeping this current
 
@@ -186,4 +235,4 @@ Whenever `packages/db/prisma/schema.prisma` changes:
 
 1. Update this file in the same PR.
 2. Mirror the change in `apps/worker/app/db/models.py` (see `AGENTS.md`).
-3. Run `pnpm db:migrate` and commit the generated migration.
+3. Run `pnpm db:migrate --name <change>` and commit the generated migration.
