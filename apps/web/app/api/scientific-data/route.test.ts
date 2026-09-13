@@ -4,6 +4,7 @@ import type * as NoaaSource from '@/app/services/scientific-data/noaaScientificD
 const mocks = vi.hoisted(() => ({
   queryMockScientificData: vi.fn(),
   queryNoaaScientificData: vi.fn(),
+  queryCiticScientificData: vi.fn(),
 }))
 
 vi.mock('@/app/services/scientific-data/mockScientificDataSource', () => ({
@@ -14,6 +15,10 @@ vi.mock('@/app/services/scientific-data/noaaScientificDataSource', async (import
   const original = await importOriginal<typeof NoaaSource>()
   return { ...original, queryNoaaScientificData: mocks.queryNoaaScientificData }
 })
+
+vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
+  queryCiticScientificData: mocks.queryCiticScientificData,
+}))
 
 import { GET } from './route'
 
@@ -35,16 +40,37 @@ afterEach(() => {
 })
 
 describe('GET /api/scientific-data', () => {
-  test('routes a valid GOES query to the observed NOAA adapter', async () => {
+  test('keeps SUVI on the NOAA image source', async () => {
+    mocks.queryNoaaScientificData.mockResolvedValue({ visualization: 'image-sequence', images: [] })
+    const suvi = { ...validGoesQuery, product: 'Fe171', parameter: 'image' }
+    const response = await GET(request(suvi))
+    expect(response.status).toBe(200)
+    expect(mocks.queryNoaaScientificData).toHaveBeenCalledWith(suvi)
+    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+  })
+
+  test('returns pending progress and forwards the poll identifier to CITIC', async () => {
+    mocks.queryCiticScientificData.mockResolvedValue({
+      state: 'pending',
+      jobId: 'goes-1',
+      progress: 20,
+    })
+    const response = await GET(request({ ...validGoesQuery, jobId: 'goes-1' }))
+    expect(response.status).toBe(202)
+    expect(await response.json()).toMatchObject({ state: 'pending', progress: 20 })
+    expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, 'goes-1')
+  })
+  test('routes a valid GOES query to the CITIC historical adapter', async () => {
     const expected = { visualization: 'time-series', points: [] }
-    mocks.queryNoaaScientificData.mockResolvedValue(expected)
+    mocks.queryCiticScientificData.mockResolvedValue(expected)
 
     const response = await GET(request(validGoesQuery))
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual(expected)
-    expect(mocks.queryNoaaScientificData).toHaveBeenCalledWith(validGoesQuery)
+    expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, undefined)
+    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
 
@@ -80,14 +106,16 @@ describe('GET /api/scientific-data', () => {
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
 
-  test('returns a stable gateway error when NOAA is unavailable', async () => {
+  test('returns a stable gateway error when CITIC is unavailable', async () => {
     const { ScientificDataUpstreamError } =
       await import('@/app/services/scientific-data/noaaScientificDataSource')
-    mocks.queryNoaaScientificData.mockRejectedValue(new ScientificDataUpstreamError('offline'))
+    mocks.queryCiticScientificData.mockRejectedValue(new ScientificDataUpstreamError('offline'))
 
     const response = await GET(request(validGoesQuery))
 
     expect(response.status).toBe(502)
-    expect(await response.json()).toMatchObject({ error: expect.stringMatching(/NOAA/) })
+    expect(await response.json()).toMatchObject({
+      error: expect.stringMatching(/fuente científica/),
+    })
   })
 })
