@@ -92,7 +92,7 @@ worker in `pyproject.toml` under `--cov-fail-under`:
 
 | Workspace            | Lines | Statements | Functions | Branches | Measured when set |
 | -------------------- | ----: | ---------: | --------: | -------: | ----------------: |
-| `apps/web`           |   50% |        50% |       45% |        . |             63.3% |
+| `apps/web`           |   75% |        75% |       75% |        . |             86.2% |
 | `packages/config`    |   90% |        90% |       90% |      75% |              100% |
 | `packages/contracts` |   90% |        90% |       90% |        . |              100% |
 | `packages/jobs`      |   80% |        80% |       90% |      90% |             85.7% |

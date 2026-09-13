@@ -156,7 +156,7 @@ now looks inside `tests/`, the two suites cannot pick up each other's files.
 
 ## Coverage thresholds
 
-`apps/web` gates 50% lines, 50% statements and 45% functions, measured over
+`apps/web` gates 75% lines, 75% statements and 75% functions, measured over
 `app/components/**`, `app/lib/**` and `app/services/**` only. Routes, pages and Server Actions are the I/O boundary
 and are gated by the Playwright `e2e` job instead, so counting them here would measure that
 suite's work as a gap in this one.
