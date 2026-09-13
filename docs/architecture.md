@@ -56,6 +56,10 @@ See [manage-assets.md](manage-assets.md#known-gaps) before building on it.
 One owner per schema is deliberate. The worker reads and writes the same PostgreSQL tables through
 SQLAlchemy but never migrates them, so there is only ever one migration history.
 
+PostgreSQL is split into one schema per domain: `research` for the public publications and `auth`
+for portal accounts. Only `apps/web` writes `auth.users`, through the `/registro` Server Action;
+see [registration.md](registration.md).
+
 Two consequences of that split are worth knowing before you touch the schema:
 
 - Ids default to `gen_random_uuid()` in PostgreSQL rather than Prisma's `cuid()`, which is generated

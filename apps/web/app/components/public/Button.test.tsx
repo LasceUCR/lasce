@@ -3,10 +3,11 @@ import { ArrowLeft } from 'lucide-react'
 import { describe, expect, test } from 'vitest'
 
 import { Button, type ButtonProps } from './Button'
-import { External, Primary, Secondary } from './Button.stories'
+import { External, Brand, Primary, Secondary } from './Button.stories'
 
 const primaryArgs = Primary.args as ButtonProps
 const secondaryArgs = Secondary.args as ButtonProps
+const brandArgs = Brand.args as ButtonProps
 
 describe('Button', () => {
   test('opens an external resource safely in a new tab', () => {
@@ -49,5 +50,14 @@ describe('Button', () => {
     render(<Button variant="secondary">Guardar</Button>)
 
     expect(screen.getByRole('button', { name: 'Guardar' })).toHaveAttribute('type', 'button')
+  })
+
+  test('renders the brand variant as a solid submit button', () => {
+    render(<Button {...brandArgs} />)
+
+    const button = screen.getByRole('button', { name: String(brandArgs.children) })
+
+    expect(button).toHaveClass('button-brand')
+    expect(button).toHaveAttribute('type', 'submit')
   })
 })
