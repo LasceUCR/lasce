@@ -13,8 +13,9 @@ from app.db import (
     Research,
     ResearchAuthor,
     ResearchCrossAuthor,
+    User,
+    UserRole,
 )
-from app.db import Publisher, Research, ResearchAuthor, ResearchCrossAuthor, User, UserRole
 
 
 def test_research_tables_live_in_the_research_schema() -> None:
