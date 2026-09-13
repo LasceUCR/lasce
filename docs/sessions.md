@@ -1,14 +1,15 @@
 # Sessions
 
 How a registered user signs in, what a session is, how a page requires one and how logout revokes
-it (LASCE-SEC-008-072). Creating the account is covered in [registration.md](registration.md).
+it (LASCE-SEC-008-072). Sign-in and sign-up share one page, `/acceso`; creating the account is
+covered in [registration.md](registration.md).
 
 ## The pieces
 
 | Piece                                 | File                                                                                     | Covered by                              |
 | ------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------- |
-| Login page (login and registration)   | `apps/web/app/(public)/login/page.tsx`                                                   | Playwright (`tests/e2e/login.spec.ts`)  |
-| Login action                          | `apps/web/app/(public)/login/actions.ts`                                                 | Playwright                              |
+| Access page (login and registration)  | `apps/web/app/(public)/acceso/page.tsx`                                                  | Playwright (`tests/e2e/login.spec.ts`)  |
+| Login and registration actions        | `apps/web/app/(public)/acceso/actions.ts`                                                | Playwright                              |
 | Account page ("Mi cuenta")            | `apps/web/app/(public)/cuenta/page.tsx`                                                  | Playwright                              |
 | Logout action                         | `apps/web/app/(public)/cuenta/actions.ts`                                                | Playwright                              |
 | Login rules, messages, state          | `apps/web/app/lib/auth/login.ts`                                                         | Vitest, colocated                       |
@@ -18,8 +19,10 @@ it (LASCE-SEC-008-072). Creating the account is covered in [registration.md](reg
 | Login card, account links, hook, card | `apps/web/app/components/public/auth/{LoginForm,AccountLinks,useAccount,AccountSummary}` | Vitest, stories as fixtures             |
 | Table                                 | `auth.sessions`, see `database-definition.md`                                            | Prisma migration, worker model test     |
 
-`/login` and `/cuenta` are the only dynamic pages besides `/investigacion`: they read the request's
-cookies (and `/login` its query string), so they render per request and never at build time. Every
+`/acceso` and `/cuenta` are the only dynamic pages besides `/investigacion`: they read the request's
+cookies (and `/acceso` its query string), so they render per request and never at build time.
+`/login` and `/registro` are permanent redirects to `/acceso` (`next.config.ts`), query string
+included. Every
 other public page stays static; `getSessionUser` must never be called from the shared layout.
 
 ## Cookies
@@ -37,7 +40,7 @@ name is stored raw and decoded once on the client.
 
 ## Login
 
-1. `/login` validates `next` with `safeReturnPath` and shows the notice "Debes iniciar sesión para
+1. `/acceso` validates `next` with `safeReturnPath` and shows the notice "Debes iniciar sesión para
    continuar." when `reason=auth`. A visitor who is already signed in is redirected to `next`.
 2. The card posts to `loginUser`: input is validated (`login.ts`), the address is lower-cased and
    looked up (`findUserByEmail`), and the password is checked with `verifyPassword`. When the
@@ -50,8 +53,8 @@ name is stored raw and decoded once on the client.
    message, never the input.
 
 `safeReturnPath` accepts a single-slash, printable-ASCII path on this site and rejects everything
-else, including `//host`, schemes and `/login` itself (which would loop); the fallback is `/cuenta`.
-`loginRedirectPath(returnTo)` builds `/login?next=<encoded>&reason=auth` for protected pages.
+else, including `//host`, schemes and `/acceso` itself (which would loop); the fallback is `/cuenta`.
+`loginRedirectPath(returnTo)` builds `/acceso?next=<encoded>&reason=auth` for protected pages.
 
 ## Sessions
 
@@ -122,4 +125,5 @@ correctness; the admin panel gate (#83) may add one for a faster redirect.
 - No rate limiting or lockout on login; the placeholder hash only evens out the KDF time.
 - No "log out everywhere", no sliding renewal, no cleanup of expired rows.
 - The display-name cookie can lag in other tabs (see above).
-- On `/login`, the registration card's success link reloads the same page.
+- The registration card's success link scrolls to the login card on the same page rather than
+  prefilling it.

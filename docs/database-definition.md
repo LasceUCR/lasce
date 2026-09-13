@@ -11,7 +11,7 @@ migration source; the worker mirrors these tables in SQLAlchemy
 | --------------- | ------------------------------------------------------ | --------------- |
 | `public`        | Default, for anything not domain-specific              | No tables yet   |
 | `research`      | Public research/publications shown on `/investigacion` | Yes             |
-| `auth`          | Portal accounts created through `/registro`            | Yes             |
+| `auth`          | Portal accounts created through `/acceso`              | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
@@ -99,7 +99,7 @@ database and the worker could insert a row without knowing the application's con
 
 | Value       | Meaning                                                                   |
 | ----------- | ------------------------------------------------------------------------- |
-| `visitor`   | Default for every self-registered account (`/registro`)                   |
+| `visitor`   | Default for every self-registered account (`/acceso`)                     |
 | `assistant` | Granted by an administrator; permissions are defined by LASCE-SEC-008-073 |
 | `admin`     | Granted by an administrator; manages users, roles and permissions         |
 
@@ -158,9 +158,9 @@ schema today: it queries `research_records` (newest `publication_date` first, au
 `packages/db/prisma/seed.ts` clears and repopulates all four research tables from a fixed, real
 LASCE publication record so local/dev environments aren't empty.
 
-`apps/web/app/lib/auth/users.ts` writes `auth.users` through `createUser()` (the `/registro`
-Server Action, mapping a unique violation on `email` to a `DuplicateEmailError`) and reads it
-through `findUserByEmail()` (the `/login` Server Action). `apps/web/app/lib/auth/session.ts`
+`apps/web/app/lib/auth/users.ts` writes `auth.users` through `createUser()` (the `/acceso`
+registration Server Action, mapping a unique violation on `email` to a `DuplicateEmailError`) and reads it
+through `findUserByEmail()` (the `/acceso` login Server Action). `apps/web/app/lib/auth/session.ts`
 owns `auth.sessions`: `createSession()` inserts a row at login, `getSessionUser()` reads the row
 behind the cookie together with its user, and `deleteCurrentSession()` deletes it at logout.
 
