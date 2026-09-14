@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest'
 
-import { PASSWORD_HASH_PARAMS, hashPassword, hashPasswordWith, verifyPassword } from './password'
+import {
+  PASSWORD_HASH_PARAMS,
+  UNKNOWN_USER_PASSWORD_HASH,
+  hashPassword,
+  hashPasswordWith,
+  verifyPassword,
+} from './password'
 
 // Cheap parameters for the tests that only care about format and agility; the
 // production parameters are exercised once so their cost stays visible.
@@ -78,6 +84,20 @@ describe('verifyPassword', () => {
 
     for (const value of malformed) {
       expect(await verifyPassword('agile', value)).toBe(false)
+    }
+  })
+})
+
+describe('UNKNOWN_USER_PASSWORD_HASH', () => {
+  test('is a production-strength hash that no password matches', async () => {
+    const [algorithm, N, r, p] = UNKNOWN_USER_PASSWORD_HASH.split('$')
+
+    expect(algorithm).toBe('scrypt')
+    expect(Number(N)).toBe(PASSWORD_HASH_PARAMS.N)
+    expect(Number(r)).toBe(PASSWORD_HASH_PARAMS.r)
+    expect(Number(p)).toBe(PASSWORD_HASH_PARAMS.p)
+    for (const guess of ['', 'password', 'contraseña', UNKNOWN_USER_PASSWORD_HASH]) {
+      expect(await verifyPassword(guess, UNKNOWN_USER_PASSWORD_HASH)).toBe(false)
     }
   })
 })

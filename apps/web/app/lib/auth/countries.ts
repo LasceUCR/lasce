@@ -72,3 +72,8 @@ export function listCountries(): CountryOption[] {
 
   return cached
 }
+
+/** Spanish display name for a code, or the code itself when it is unknown. */
+export function countryName(code: string): string {
+  return listCountries().find((country) => country.code === code)?.name ?? code
+}

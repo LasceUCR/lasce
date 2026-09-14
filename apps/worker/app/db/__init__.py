@@ -10,6 +10,7 @@ from app.db.models import (
     ResearchCrossAuthor,
     User,
     UserRole,
+    UserSession,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "ResearchCrossAuthor",
     "User",
     "UserRole",
+    "UserSession",
 ]

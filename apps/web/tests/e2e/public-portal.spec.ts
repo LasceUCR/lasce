@@ -38,7 +38,7 @@ test('loads the public landing page without authentication', async ({ page }) =>
       name: 'Exploramos el Sol para comprender el clima espacial',
     }),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
   expect(new URL(page.url()).pathname).toBe('/')
 })
 
@@ -48,7 +48,7 @@ for (const route of workAreaRoutes) {
 
     expect(response?.status()).toBe(200)
     expect(new URL(page.url()).pathname).toBe(route.path)
-    expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+    expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
     await expect(page.getByRole('heading', { level: 1, name: route.heading })).toBeVisible()
   })
 }
@@ -59,7 +59,7 @@ for (const route of publicRoutes) {
 
     expect(response?.status()).toBe(200)
     expect(new URL(page.url()).pathname).toBe(route.path)
-    expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+    expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
     await expect(page.getByRole('heading', { level: 1, name: route.heading })).toBeVisible()
   })
 }
@@ -84,7 +84,7 @@ test('displays space weather information without authentication', async ({ page 
 
   expect(response?.status()).toBe(200)
   expect(new URL(page.url()).pathname).toBe('/clima-espacial')
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Clima espacial' })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Qué es el clima espacial/ })).toBeVisible()
@@ -101,7 +101,7 @@ test('displays space weather information without authentication', async ({ page 
   await expect(page.getByRole('heading', { name: 'Indicadores actuales' })).toHaveCount(0)
   await expect(page.getByText('Datos simulados')).toHaveCount(0)
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     'content',
     /clima espacial/i,
@@ -113,7 +113,7 @@ test('displays solar astrophysics information without authentication', async ({ 
 
   expect(response?.status()).toBe(200)
   expect(new URL(page.url()).pathname).toBe('/fisica-solar')
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Astrofísica solar' })).toBeVisible()
   await expect(
@@ -127,7 +127,7 @@ test('displays solar astrophysics information without authentication', async ({ 
   await expect(page.getByText(/Laboratorio de Astrofísica Solar y Clima Espacial/)).toBeVisible()
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
   await expect(page.getByText('Contenido temporal')).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     'content',
     /actividad solar/i,
@@ -141,7 +141,7 @@ test('returns to the work areas section from space weather', async ({ page }) =>
 
   await expect(page).toHaveURL(/\/#areas-de-trabajo/)
   await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 })
 
 test('returns to the work areas section from solar astrophysics', async ({ page }) => {
@@ -151,7 +151,7 @@ test('returns to the work areas section from solar astrophysics', async ({ page 
 
   await expect(page).toHaveURL(/\/#areas-de-trabajo/)
   await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 })
 
 for (const card of areaCards) {

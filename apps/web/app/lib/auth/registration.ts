@@ -198,23 +198,13 @@ export const registrationFormCopy = {
   submit: 'Crear cuenta',
   submitting: 'Creando cuenta...',
   successTitle: 'Cuenta creada',
-  successBody:
-    'Tu cuenta quedó registrada. Podrás iniciar sesión cuando el acceso esté habilitado.',
-  successLink: 'Volver al inicio',
+  successBody: 'Tu cuenta quedó registrada. Ya puedes iniciar sesión.',
+  successLink: 'Iniciar sesión',
+  successHref: '/acceso',
 } as const
 
-export const registroMeta = {
-  title: 'Crear cuenta | LASCE',
-  description:
-    'Crea una cuenta en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-} as const
-
+/** Heading of the registration card on the access page. */
 export const registroIntro = {
   title: 'Crear cuenta',
   lead: 'Se aceptan correos personales o institucionales.',
-} as const
-
-export const registroBackLink = {
-  href: '/',
-  label: 'Volver al inicio',
 } as const

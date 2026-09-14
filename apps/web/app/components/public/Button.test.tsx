@@ -3,11 +3,12 @@ import { ArrowLeft } from 'lucide-react'
 import { describe, expect, test } from 'vitest'
 
 import { Button, type ButtonProps } from './Button'
-import { Brand, Primary, Secondary } from './Button.stories'
+import { Brand, ExternalLink as ExternalLinkStory, Primary, Secondary } from './Button.stories'
 
 const primaryArgs = Primary.args as ButtonProps
 const secondaryArgs = Secondary.args as ButtonProps
 const brandArgs = Brand.args as ButtonProps
+const externalLinkArgs = ExternalLinkStory.args as ButtonProps
 
 describe('Button', () => {
   test('renders a primary link with the given label', () => {
@@ -49,5 +50,15 @@ describe('Button', () => {
 
     expect(button).toHaveClass('button-brand')
     expect(button).toHaveAttribute('type', 'submit')
+  })
+
+  test('forwards target and rel to an external link', () => {
+    render(<Button {...externalLinkArgs} />)
+
+    const link = screen.getByRole('link', { name: String(externalLinkArgs.children) })
+
+    expect(link).toHaveAttribute('href', externalLinkArgs.href)
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 })

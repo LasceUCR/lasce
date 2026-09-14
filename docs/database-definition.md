@@ -12,7 +12,7 @@ migration source; the worker mirrors these tables in SQLAlchemy
 | `public`        | Default, for anything not domain-specific              | No tables yet   |
 | `research`      | Public research/publications shown on `/investigacion` | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`        | Yes             |
-| `auth`          | Portal accounts created through `/registro`            | Yes             |
+| `auth`          | Portal accounts created through `/acceso`              | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
@@ -178,7 +178,7 @@ database and the worker could insert a row without knowing the application's con
 
 | Value       | Meaning                                                                   |
 | ----------- | ------------------------------------------------------------------------- |
-| `visitor`   | Default for every self-registered account (`/registro`)                   |
+| `visitor`   | Default for every self-registered account (`/acceso`)                     |
 | `assistant` | Granted by an administrator; permissions are defined by LASCE-SEC-008-073 |
 | `admin`     | Granted by an administrator; manages users, roles and permissions         |
 
@@ -187,8 +187,8 @@ lower-case database values above.
 
 ### `users`
 
-A portal account created through the public registration form (LASCE-SEC-008-071). Sessions
-(LASCE-SEC-008-072) are not modelled yet and belong in a separate table in this schema.
+A portal account created through the public registration form (LASCE-SEC-008-071). Browser
+sessions live in `sessions` below, never in columns here.
 
 | Column          | Prisma type | Postgres type    | Constraints                                                |
 | --------------- | ----------- | ---------------- | ---------------------------------------------------------- |
@@ -210,7 +210,24 @@ A portal account created through the public registration form (LASCE-SEC-008-071
 > `role` is never taken from the registration request. The database default is the only way a
 > self-registered account gets its role; changing it is LASCE-ADM #80.
 
-Relationships: none yet.
+Relationships: has many `sessions` (deleted with the account).
+
+### `sessions`
+
+A browser session for a portal account (LASCE-SEC-008-072). The `lasce_session` cookie carries a
+random 32-byte token; only its SHA-256 is stored, so reading this table yields nothing a browser
+could present. Deleting the row revokes the session immediately; expiry is absolute, 30 days from
+login, with no sliding renewal. The worker never writes here. See `docs/sessions.md`.
+
+| Column       | Prisma type | Postgres type    | Constraints                                               |
+| ------------ | ----------- | ---------------- | --------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                   |
+| `user_id`    | `String`    | `uuid`           | FK → `users.id`, `ON DELETE CASCADE`, not null; indexed   |
+| `token_hash` | `String`    | `text`           | `UNIQUE`, not null; base64url SHA-256 of the cookie token |
+| `expires_at` | `DateTime`  | `timestamptz(3)` | not null                                                  |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+
+Relationships: belongs to one `users` row.
 
 ## Where this is read and written
 
@@ -222,9 +239,11 @@ shape `/investigacion` renders.
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
 `/noticias` renders.
 
-`apps/web/app/lib/auth/users.ts`'s `createUser()` is the only writer of `auth.users`: it inserts
-the row the `/registro` Server Action validated and maps a unique-violation on `email` to a
-`DuplicateEmailError`. Nothing reads users yet; login (LASCE-SEC-008-072) will.
+`apps/web/app/lib/auth/users.ts` writes `auth.users` through `createUser()` (the `/acceso`
+registration Server Action, mapping a unique violation on `email` to a `DuplicateEmailError`) and reads it
+through `findUserByEmail()` (the `/acceso` login Server Action). `apps/web/app/lib/auth/session.ts`
+owns `auth.sessions`: `createSession()` inserts a row at login, `getSessionUser()` reads the row
+behind the cookie together with its user, and `deleteCurrentSession()` deletes it at logout.
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.
