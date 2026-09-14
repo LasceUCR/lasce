@@ -54,7 +54,7 @@
 .action-surface-dark {
   --action: var(--amber-glow);
   --action-hover: var(--amber-flame);
-  --on-action: var(--deep-space-blue);
+  --on-action: var(--white);
 }
 
 * {
