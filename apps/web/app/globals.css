@@ -1784,6 +1784,22 @@ a {
   grid-template-columns: 1fr;
 }
 
+.topic-hero-with-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 40px 0 25px;
+}
+
+.topic-hero-mark-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: center;
+  gap: 64px;
+  max-width: 95rem;
+}
+
 .topic-hero-copy-only .topic-lead {
   max-width: none;
 }
@@ -1846,6 +1862,27 @@ a {
 .topic-hero-image {
   object-fit: contain;
   object-position: center;
+}
+
+.topic-hero-mark {
+  display: flex;
+  justify-content: center;
+}
+
+.topic-hero-mark-image {
+  display: block;
+  width: 260px;
+  max-width: 100%;
+  height: auto;
+  transform: translateY(-25px);
+}
+
+.topic-hero-with-mark h1 {
+  margin: 0;
+}
+
+.topic-hero-with-mark .topic-lead {
+  margin: 10px 0 0;
 }
 
 .topic-section {
@@ -2200,6 +2237,16 @@ a {
 
   .topic-hero h1 {
     font-size: 36px;
+  }
+
+  .topic-hero-mark-body {
+    grid-template-columns: 1fr;
+    gap: 90px;
+    max-width: none;
+  }
+
+  .topic-hero-mark-image {
+    width: min(260px, 80%);
   }
 
   .topic-lead {

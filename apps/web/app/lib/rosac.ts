@@ -63,7 +63,18 @@ interface RosacCardSection {
 }
 
 export interface RosacInfoContent {
-  hero: { kicker: string; title: string; lead: string }
+  hero: {
+    kicker: string
+    title: string
+    lead: string
+    image: {
+      src: string
+      alt: string
+      presentation: 'mark'
+      width: number
+      height: number
+    }
+  }
   overview: RosacTextSection
   characteristics: RosacCardSection
   activities: RosacCardSection
@@ -88,6 +99,13 @@ export const rosacInfoContent = {
     kicker: 'Área de trabajo LASCE',
     title: 'Radioastronomía',
     lead: 'Radio Observatorio de Santa Cruz (ROSAC)',
+    image: {
+      src: '/images/ROSAC/ROSAC-AMARILLO.png',
+      alt: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)',
+      presentation: 'mark',
+      width: 1209,
+      height: 615,
+    },
   },
   overview: {
     title: '¿Qué es ROSAC?',

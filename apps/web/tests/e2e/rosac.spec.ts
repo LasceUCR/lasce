@@ -20,6 +20,9 @@ for (const viewport of [
 
     await expect(page).toHaveURL(/\/radioastronomia$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeVisible()
+    await expect(
+      page.getByRole('img', { name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)' }),
+    ).toBeVisible()
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
@@ -39,6 +42,9 @@ test('serves the general information and LASCE relationship directly without aut
   await expect(page).toHaveURL(/\/radioastronomia$/)
   await expect(page.getByRole('main')).toHaveCount(1)
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+  await expect(
+    page.getByRole('img', { name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)' }),
+  ).toBeVisible()
   await expect(page.getByRole('region', { name: '¿Qué es ROSAC?' })).toContainText(
     'observar el Sol y otras fuentes celestes',
   )

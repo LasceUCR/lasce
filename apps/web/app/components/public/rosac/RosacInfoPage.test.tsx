@@ -12,6 +12,10 @@ describe('RosacInfoPage', () => {
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: defaultArgs.content.hero.image.alt })).toHaveAttribute(
+      'src',
+      defaultArgs.content.hero.image.src,
+    )
     expect(screen.getByRole('region', { name: '¿Qué es ROSAC?' })).toHaveTextContent(
       /observar el Sol y otras fuentes celestes/,
     )
