@@ -22,29 +22,6 @@ afterEach(() => {
 })
 
 describe('ScientificDataExplorer', () => {
-  test('accepts historical dates and lets visitors stop waiting for a pending query', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 202,
-      json: async () => ({ state: 'pending', jobId: 'goes-test', progress: 25 }),
-    })
-    vi.stubGlobal('fetch', fetchMock)
-    const user = userEvent.setup()
-    render(
-      <ScientificDataExplorer
-        {...defaultArgs}
-        initialQuery={{ ...defaultArgs.initialQuery, date: '2025-01-05' }}
-      />,
-    )
-    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Consultando el archivo histórico… 25%',
-    )
-    expect(fetchMock.mock.calls[0]![0]).toContain('date=2025-01-05')
-    await user.click(screen.getByRole('button', { name: 'Cancelar consulta' }))
-    expect(screen.getByRole('button', { name: 'Consultar datos' })).toBeEnabled()
-    expect(fetchMock.mock.calls[0]![1].signal.aborted).toBe(true)
-  })
   test('offers observed GOES products and identifies products not yet integrated', () => {
     render(<ScientificDataExplorer {...defaultArgs} />)
 
@@ -57,7 +34,7 @@ describe('ScientificDataExplorer', () => {
     ).toBeDisabled()
     expect(within(product).getByRole('option', { name: /baja energía/ })).toBeDisabled()
     expect(screen.getByRole('combobox', { name: 'Canal o parámetro' })).toHaveValue('0.1-0.8nm')
-    expect(screen.getByLabelText('Fecha')).not.toHaveAttribute('min')
+    expect(screen.getByLabelText('Fecha')).toHaveAttribute('min', '2026-09-04')
     expect(screen.getByText('Datos observados')).toBeInTheDocument()
     expect(screen.getByText(/Instrumento: EXIS/)).toBeInTheDocument()
   })
@@ -90,11 +67,10 @@ describe('ScientificDataExplorer', () => {
     const results = await screen.findByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/scientific-data?source=GOES&product=SFXR&parameter=0.1-0.8nm&date=2026-09-10&startTime=08%3A00&endTime=09%3A00',
-      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     )
     expect(within(results).getByRole('img', { name: /Gráfica de Flujo solar/ })).toBeInTheDocument()
     expect(within(results).getByText('08:00–09:00 UTC')).toBeInTheDocument()
-    expect(within(results).getByText(/Observaciones históricas/)).toBeInTheDocument()
+    expect(within(results).getByText(/Datos observados del servicio público/)).toBeInTheDocument()
     expect(within(results).queryByRole('link')).not.toBeInTheDocument()
   })
 
@@ -128,7 +104,7 @@ describe('ScientificDataExplorer', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  test('keeps the form available when CITIC has no matching data', () => {
+  test('keeps the form available when NOAA has no matching data', () => {
     render(<ScientificDataExplorer {...withoutResultsArgs} />)
 
     expect(screen.getByRole('status')).toHaveTextContent('No hay datos disponibles')
@@ -137,7 +113,7 @@ describe('ScientificDataExplorer', () => {
     expect(screen.queryByRole('img', { name: /Gráfica/ })).not.toBeInTheDocument()
   })
 
-  test('shows a GOES-specific error when the observed source fails', async () => {
+  test('shows a NOAA-specific error when the observed source fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
     const user = userEvent.setup()
     render(<ScientificDataExplorer {...defaultArgs} />)
@@ -145,7 +121,7 @@ describe('ScientificDataExplorer', () => {
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'No fue posible consultar la fuente GOES en este momento.',
+      'No fue posible consultar NOAA en este momento.',
     )
   })
 

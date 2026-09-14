@@ -54,7 +54,7 @@
 .action-surface-dark {
   --action: var(--amber-glow);
   --action-hover: var(--amber-flame);
-  --on-action: var(--deep-space-blue);
+  --on-action: var(--white);
 }
 
 * {
@@ -332,6 +332,26 @@ a {
   white-space: nowrap;
 }
 
+/* The sign-out control is a button styled like the login pill. */
+.header-actions button.login-link {
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.header-actions .login-link:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* The greeting shows the first name; a very long one is clipped, not wrapped. */
+.account-link {
+  max-width: 180px;
+  overflow: hidden;
+}
+
 /* Between the mobile breakpoint and about 1380px the nine navigation items
    leave little room for the account links, so tighten the gaps only there. */
 @media (min-width: 1121px) and (max-width: 1380px) {
@@ -537,6 +557,16 @@ a {
   min-height: 56px;
   border-radius: 10px;
   font-size: 17px;
+}
+
+.button-external {
+  background: #2f6ced;
+  color: var(--white);
+}
+
+.button-external:hover,
+.button-external:focus-visible {
+  background: #2256c8;
 }
 
 .home-content {
@@ -837,7 +867,7 @@ a {
 
 .search-filter-field {
   position: relative;
-  flex: 0 1 420px;
+  flex: 1 1 420px;
   display: flex;
   align-items: center;
 }
@@ -859,6 +889,70 @@ a {
   color: var(--ink);
   font-family: inherit;
   font-size: 14px;
+}
+
+.publications-toolbar {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin-bottom: 28px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
+}
+
+.publications-toolbar .publications-search {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.publications-search .search-filter-field {
+  flex: 1 1 auto;
+}
+
+.publications-group-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.publications-group-filters button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.publications-group-filters button[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+
+@media (max-width: 760px) {
+  .publications-toolbar {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .publications-group-filters {
+    width: 100%;
+  }
+
+  .publications-group-filters button {
+    flex: 1;
+  }
 }
 
 .publications {
@@ -1255,7 +1349,8 @@ a {
   -webkit-line-clamp: 2;
 }
 
-.publication-card .area-link {
+.publication-card .button,
+.news-card .button {
   margin-top: 12px;
 }
 
@@ -1297,6 +1392,11 @@ a {
   object-fit: cover;
 }
 
+.news-card-image.news-card-image-decorative img {
+  object-fit: contain;
+  object-position: center;
+}
+
 .news-card-content {
   padding: 20px 22px;
 }
@@ -1325,11 +1425,6 @@ a {
   -webkit-line-clamp: 2;
 }
 
-.news-card .area-link {
-  display: inline-block;
-  margin-top: 12px;
-}
-
 @media (max-width: 1120px) {
   .news-card-content {
     padding: 16px 18px;
@@ -1337,8 +1432,12 @@ a {
 }
 
 @media (max-width: 700px) {
-  .news-card {
+  .surface-card.news-card {
     grid-template-columns: 1fr;
+  }
+
+  .news-card-content {
+    min-width: 0;
   }
 
   .news-card-image {
@@ -1410,6 +1509,31 @@ a {
   .mobile-menu nav a.active {
     background: #edf7fb;
     color: var(--blue-dark);
+  }
+
+  /* The sign-out button sits among the links and must read like one. */
+  .mobile-menu nav button {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-menu nav button:hover,
+  .mobile-menu nav button:focus-visible {
+    background: #edf7fb;
+    color: var(--blue-dark);
+  }
+
+  .mobile-menu nav button:disabled {
+    cursor: progress;
+    opacity: 0.6;
   }
 
   .indicator-grid {
@@ -2744,7 +2868,7 @@ a.gallery-tile:focus-visible {
   align-items: center;
   gap: 10px;
   border-radius: 8px;
-  color: var(--action);
+  color: var(--white);
   font-size: 14px;
   font-weight: 600;
 }
@@ -2752,12 +2876,12 @@ a.gallery-tile:focus-visible {
 .admin-sidebar a:hover,
 .admin-sidebar a:focus-visible {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--action-hover);
+  color: var(--on-hover);
 }
 
 .admin-sidebar a.active {
   background: var(--blue-dark);
-  color: var(--action-hover);
+  color: var(--on-hover);
 }
 
 .admin-content {
@@ -2968,18 +3092,147 @@ a.gallery-tile:focus-visible {
   padding-bottom: 64px;
 }
 
-/* One column today; the login card (#72) makes this two columns on desktop. */
+/* One card, up to 720px wide, flush with the left edge of the intro above it. */
 .registration-layout {
   margin-top: 32px;
   display: grid;
   grid-template-columns: minmax(0, 720px);
-  justify-content: center;
+  justify-content: start;
   gap: 48px;
+}
+
+/* --- Space backdrop (access and account pages) ----------------------------- */
+
+/* These pages sit on a dark space scene with the sun on the right, so their
+   intro and tabs switch to the light hero tokens; the white cards and the back
+   button already hold their own on dark. */
+.space-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--space-black);
+  color: var(--space-body);
+}
+
+.space-page-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.space-page-bg img {
+  object-fit: cover;
+  object-position: right center;
+}
+
+/* Darkens the left half so the heading, lead and tabs keep their contrast. */
+.space-page-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 9, 24, 0.82) 0%,
+    rgba(0, 9, 24, 0.55) 45%,
+    rgba(0, 9, 24, 0.15) 100%
+  );
+}
+
+.space-page .page-intro h1 {
+  color: var(--white);
+}
+
+.space-page .page-intro p {
+  color: var(--space-body);
+}
+
+.space-page .access-tab {
+  color: var(--space-meta);
+}
+
+.space-page .access-tab:hover,
+.space-page .access-tab:focus-visible {
+  color: var(--white);
+}
+
+.space-page .access-tab[aria-selected='true'] {
+  color: var(--white);
+  border-bottom-color: var(--cyan);
+}
+
+/* --- Sign-out confirmation ------------------------------------------------- */
+
+.confirm-dialog {
+  width: min(100% - 32px, 440px);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 18px 48px rgba(10, 35, 50, 0.24);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 9, 24, 0.55);
+}
+
+.confirm-dialog h2 {
+  margin: 0 0 10px;
+  color: var(--navy-deep);
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.confirm-dialog p {
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* --- Access tabs ----------------------------------------------------------- */
+
+/* Left-aligned above the card, styled like the header's active-link underline. */
+.access-tabs {
+  margin: 0 0 14px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.access-tab {
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.access-tab:hover,
+.access-tab:focus-visible {
+  color: var(--blue-dark);
+}
+
+.access-tab[aria-selected='true'] {
+  color: var(--navy-deep);
+  border-bottom-color: var(--blue);
 }
 
 .registration-card {
   min-width: 0;
   padding: 44px;
+  margin-bottom: 24px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--white);
@@ -3053,4 +3306,71 @@ a.gallery-tile:focus-visible {
     padding: 24px;
     border-radius: 12px;
   }
+}
+
+/* --- Login card ------------------------------------------------------------ */
+
+/* Informational sibling of .form-alert, for "sign in to continue" notices. */
+.form-notice {
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border: 1px solid #bcd9ea;
+  border-left: 6px solid var(--blue);
+  border-radius: 10px;
+  background: #eef7fc;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.login-alt {
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.login-alt a {
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.login-footnote {
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* --- Account page ---------------------------------------------------------- */
+
+.account-details {
+  margin: 0 0 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.account-detail {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-detail dt {
+  color: #4a6070;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-detail dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.account-card .form-actions {
+  margin-top: 0;
 }

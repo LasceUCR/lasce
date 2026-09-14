@@ -2,7 +2,7 @@
 
 Public institutional portal for LASCE, built with Next.js and TypeScript inside the LASCE Turborepo.
 
-The public pages are available without authentication. The header includes an **Ingresar** link to `/login`; the authentication flow and protected areas are implemented separately from this public portal.
+The public pages are available without authentication. The header includes an **Ingresar** link to `/acceso`, whose tabs cover sign-in and sign-up; the authentication flow is described in [`docs/sessions.md`](../../docs/sessions.md) and protected areas are implemented separately from this public portal.
 
 ## Requirements
 
@@ -56,22 +56,24 @@ Production deployment uses the standalone Next.js bundle through
 
 ## Public Routes
 
-| Route                       | Purpose                                                        |
-| --------------------------- | -------------------------------------------------------------- |
-| `/`                         | Institutional landing page and access to the main public areas |
-| `/#areas-de-trabajo`        | Work areas and main portal access cards on the home page       |
-| `/fisica-solar`             | Solar astrophysics information page based on LASCE content     |
-| `/clima-espacial`           | Space weather information page                                 |
-| `/radioastronomia`          | Radio astronomy work area                                      |
-| `/nosotros`                 | General information about LASCE (_Quiénes somos_)              |
-| `/investigacion`            | Research areas and activities                                  |
-| `/herramientas-cientificas` | Scientific tools: SWAAT and SWAPRO                             |
-| `/datos`                    | Public data and analysis resources                             |
-| `/noticias`                 | Institutional news                                             |
-| `/contacto`                 | Contact information                                            |
-| `/registro`          | Account registration form (_Crear cuenta_)                     |
+| Route                       | Purpose                                                                            |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| `/`                         | Institutional landing page and access to the main public areas                     |
+| `/#areas-de-trabajo`        | Work areas and main portal access cards on the home page                           |
+| `/fisica-solar`             | Solar astrophysics information page based on LASCE content                         |
+| `/clima-espacial`           | Space weather information page                                                     |
+| `/radioastronomia`          | Radio astronomy work area                                                          |
+| `/nosotros`                 | General information about LASCE (_Quiénes somos_)                                  |
+| `/investigacion`            | Research areas and activities                                                      |
+| `/instrumentacion`          | Scientific instruments and observatories                                           |
+| `/herramientas-cientificas` | Scientific tools: SWAAT and SWAPRO                                                 |
+| `/datos`                    | Public data and analysis resources                                                 |
+| `/noticias`                 | Institutional news                                                                 |
+| `/contacto`                 | Contact information                                                                |
+| `/acceso`                   | Sign-in and sign-up cards behind a tab selector (_Iniciar sesión_, _Crear cuenta_) |
+| `/cuenta`                   | The signed-in user's profile and sign-out; requires a session                      |
 
-Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page.
+Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page; `/login` and `/registro` redirect to `/acceso`; `/cuenta` is the one route that requires a session (see [`docs/sessions.md`](../../docs/sessions.md)).
 
 ## Work Areas
 

@@ -26,8 +26,8 @@ const resultFixture: TimeSeriesDataResult = {
   parameter: { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
   origin: {
     kind: 'observed',
-    provider: 'CITIC-UCR — archivo histórico GOES de NOAA',
-    notice: 'Observaciones históricas del archivo GOES nivel 1b de CITIC-UCR.',
+    provider: 'NOAA Space Weather Prediction Center',
+    notice: 'Datos observados del servicio público GOES primario de NOAA.',
     satellite: 18,
   },
   visualization: 'time-series',
@@ -116,7 +116,7 @@ export const Default: Story = {
   args: {
     sources: scientificSources,
     initialQuery,
-    goesDateRange: { max: '2026-09-10' },
+    goesDateRange: { min: '2026-09-04', max: '2026-09-10' },
   },
 }
 

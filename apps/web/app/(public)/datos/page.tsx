@@ -17,7 +17,10 @@ export const dynamic = 'force-dynamic'
 
 export default function ScientificDataRoute() {
   const today = new Date()
+  const oldestGoesDate = new Date(today)
+  oldestGoesDate.setUTCDate(today.getUTCDate() - 6)
   const maxDate = today.toISOString().slice(0, 10)
+  const minDate = oldestGoesDate.toISOString().slice(0, 10)
 
   return (
     <article className="topic-page">
@@ -28,7 +31,7 @@ export default function ScientificDataRoute() {
         variant="compact"
       />
       <ScientificDataExplorer
-        goesDateRange={{ max: maxDate }}
+        goesDateRange={{ min: minDate, max: maxDate }}
         initialQuery={{
           source: 'GOES',
           product: 'SFXR',

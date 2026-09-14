@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 
 import { PublicationsExplorer } from '@/app/components/public/publications/PublicationsExplorer'
-import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
+import { ResearchAreasSection } from '@/app/components/public/research/ResearchAreasSection'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
+import { researchAreas } from '@/app/lib/research-areas'
 import {
   getPublications,
   investigacionBackLink,
@@ -36,9 +37,11 @@ export default async function InvestigacionPage() {
         title={investigacionHero.title}
       />
 
-      <ContentFlag
-        label="Información provisional"
-        message="El contenido de esta página es preliminar y está sujeto a revisión."
+      <ResearchAreasSection
+        areas={researchAreas}
+        id="research-areas"
+        subtitle="Principales temas de investigación desarrollados por el LASCE."
+        title="Áreas de investigación"
       />
 
       <PublicationsExplorer publications={publications} />

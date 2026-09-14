@@ -83,6 +83,15 @@ export function hashPassword(password: string): Promise<string> {
   return hashPasswordWith(password, PASSWORD_HASH_PARAMS)
 }
 
+/**
+ * A well-formed hash that no password matches: the hash of a 32-byte random
+ * secret that was discarded right after hashing. Login verifies unknown emails
+ * against it so a wrong address costs the same scrypt time as a wrong password,
+ * and the response time does not reveal whether an account exists.
+ */
+export const UNKNOWN_USER_PASSWORD_HASH =
+  'scrypt$32768$8$3$TPkSsPwib6wZJH9ldDofuw==$0qYXeu1PzONJVFvfqX6nsBSwDrkCAdcwZ7Q0az2MZWVcvo4O90Jra1fobA0QsXNpivpSF6ZSss6PFG8gWmVVdg=='
+
 function parsePositiveInteger(value: string | undefined, max: number): number | null {
   if (value === undefined || !/^\d+$/.test(value)) return null
   const parsed = Number(value)

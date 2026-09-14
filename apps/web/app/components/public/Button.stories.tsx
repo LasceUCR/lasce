@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { ArrowLeft, ExternalLink as ExternalLinkIcon } from 'lucide-react'
 
 import { Button } from './Button'
 
@@ -46,14 +46,16 @@ export const SecondaryOnDarkSurface: Story = {
   decorators: PrimaryOnDarkSurface.decorators,
 }
 
-export const External: Story = {
+export const ExternalLink: Story = {
   args: {
     children: 'Acceder a SWAAT',
-    href: 'https://swaat.up.railway.app/',
-    external: true,
-    icon: <ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />,
+    href: 'https://swaat.up.railway.app',
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    icon: <ExternalLinkIcon aria-hidden="true" size={16} strokeWidth={1.8} />,
   },
 }
+
 export const Brand: Story = {
   args: {
     children: 'Crear cuenta',
