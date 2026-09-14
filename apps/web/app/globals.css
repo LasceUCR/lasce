@@ -1014,6 +1014,11 @@ a {
   object-fit: cover;
 }
 
+.news-card-image.news-card-image-decorative img {
+  object-fit: contain;
+  object-position: center;
+}
+
 .news-card-content {
   padding: 20px 22px;
 }
@@ -1049,8 +1054,12 @@ a {
 }
 
 @media (max-width: 700px) {
-  .news-card {
+  .surface-card.news-card {
     grid-template-columns: 1fr;
+  }
+
+  .news-card-content {
+    min-width: 0;
   }
 
   .news-card-image {

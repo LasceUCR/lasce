@@ -26,7 +26,7 @@ export function NewsCard({
 }: NewsCardProps) {
   return (
     <article className="surface-card news-card">
-      <div className="news-card-image">
+      <div className={`news-card-image${imageAlt === '' ? ' news-card-image-decorative' : ''}`}>
         <Image
           alt={imageAlt}
           fill
