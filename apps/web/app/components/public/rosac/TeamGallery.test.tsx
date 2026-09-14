@@ -24,8 +24,8 @@ describe('TeamGallery', () => {
     for (const person of defaultArgs.people) {
       expect(within(track).getByText(person.name)).toBeInTheDocument()
       expect(within(track).getByText(person.description)).toBeInTheDocument()
+      expect(within(track).getByText(`Institución: ${person.institution}`)).toBeInTheDocument()
     }
-    expect(within(track).getAllByText('Institución: Física')).toHaveLength(defaultArgs.people.length)
   })
 
   test('links public emails when they were supplied', () => {
@@ -63,9 +63,10 @@ describe('TeamGallery', () => {
     // each person in full.
     const images = container.querySelectorAll('img')
     expect(images).toHaveLength(defaultArgs.people.length)
-    for (const image of images) {
-      expect(image).toHaveAttribute('alt', '')
-    }
+    defaultArgs.people.forEach((person, index) => {
+      expect(images[index]).toHaveAttribute('alt', '')
+      expect(images[index]).toHaveAttribute('src', person.src)
+    })
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 

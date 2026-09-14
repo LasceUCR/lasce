@@ -72,13 +72,13 @@ describe('RosacInfoPage', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(
       defaultArgs.content.team.people.length,
     )
-    expect(
-      within(team).getByRole('heading', { name: 'Dra. Carolina Salas Matamoros' }),
-    ).toBeInTheDocument()
     expect(within(team).getByText('Investigadora principal')).toBeInTheDocument()
-    expect(within(team).getAllByText('Institución: Física')).toHaveLength(
-      defaultArgs.content.team.people.length,
-    )
+    for (const person of defaultArgs.content.team.people) {
+      expect(within(team).getByRole('heading', { name: person.name })).toBeInTheDocument()
+      expect(within(team).getAllByText(`Institución: ${person.institution}`).length).toBeGreaterThan(
+        0,
+      )
+    }
   })
 
   test('explains when no ROSAC researchers are available', () => {

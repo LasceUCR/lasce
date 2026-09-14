@@ -37,6 +37,7 @@ describe('ResearcherCard', () => {
 
     const image = container.querySelector('img')
     expect(image).toHaveAttribute('alt', '')
+    expect(image).toHaveAttribute('src', defaultArgs.src)
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 })

@@ -2789,6 +2789,7 @@ a.gallery-tile:focus-visible {
 
 .researcher-card-photo img {
   object-fit: cover;
+  object-position: top;
 }
 
 .researcher-card-body {

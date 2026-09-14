@@ -68,9 +68,13 @@ test('presents each ROSAC researcher card with public information', async ({ pag
     'href',
     'mailto:carolina.salas_mata@ucr.ac.cr',
   )
-  await expect(team.getByText('Institución: Física').first()).toBeVisible()
   await expect(
-    team.getByText('Lidera la planificación, el montaje y el análisis de datos del radiotelescopio ROSAC.'),
+    team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR').first(),
+  ).toBeVisible()
+  await expect(
+    team.getByText(
+      'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
+    ),
   ).toBeVisible()
 
   await expect(track).toHaveAttribute('tabindex', '0')
