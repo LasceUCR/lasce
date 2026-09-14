@@ -277,6 +277,63 @@ a {
   background: #f4fafd;
 }
 
+/* Both account links share the header's last grid cell. */
+.header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Compact text-style variant: the cell is too narrow for two pills. */
+.register-link {
+  min-width: 0;
+  padding: 0 8px;
+  border-color: transparent;
+  color: var(--blue-dark);
+  white-space: nowrap;
+}
+
+/* The sign-out control is a button styled like the login pill. */
+.header-actions button.login-link {
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.header-actions .login-link:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* The greeting shows the first name; a very long one is clipped, not wrapped. */
+.account-link {
+  max-width: 180px;
+  overflow: hidden;
+}
+
+/* Between the mobile breakpoint and about 1380px the nine navigation items
+   leave little room for the account links, so tighten the gaps only there. */
+@media (min-width: 1121px) and (max-width: 1380px) {
+  .site-header {
+    gap: 16px;
+  }
+
+  .desktop-nav {
+    gap: 16px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .register-link {
+    padding: 0 4px;
+  }
+}
+
 .mobile-menu {
   display: none;
 }
@@ -441,6 +498,31 @@ a {
 .button-secondary:focus-visible {
   border-color: var(--blue);
   background: #f4fafd;
+}
+
+/* Solid UCR blue call to action, used by forms. `primary` stays the orange
+   site button. */
+.button-brand {
+  background: var(--blue-dark);
+  color: var(--white);
+}
+
+.button-brand:hover,
+.button-brand:focus-visible {
+  background: var(--navy-deep);
+}
+
+.button-brand:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* Full-width form button, sized like the inputs it follows. */
+.button-block {
+  width: 100%;
+  min-height: 56px;
+  border-radius: 10px;
+  font-size: 17px;
 }
 
 .home-content {
@@ -972,6 +1054,31 @@ a {
     color: var(--blue-dark);
   }
 
+  /* The sign-out button sits among the links and must read like one. */
+  .mobile-menu nav button {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mobile-menu nav button:hover,
+  .mobile-menu nav button:focus-visible {
+    background: #edf7fb;
+    color: var(--blue-dark);
+  }
+
+  .mobile-menu nav button:disabled {
+    cursor: progress;
+    opacity: 0.6;
+  }
+
   .indicator-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1047,7 +1154,8 @@ a {
     height: 34px;
   }
 
-  .login-link {
+  .login-link,
+  .header-actions {
     display: none;
   }
 
@@ -2468,4 +2576,342 @@ a.gallery-tile:focus-visible {
   .admin-content {
     padding: 20px;
   }
+}
+
+/* --- Form fields (registration) ------------------------------------------ */
+
+.form-field {
+  display: grid;
+  gap: 8px;
+}
+
+.form-field label {
+  color: #4a6070;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.form-field input,
+.form-field select {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 17px;
+}
+
+.form-field input::placeholder {
+  color: #6b7f8f;
+}
+
+.form-field [aria-invalid='true'] {
+  border-color: #b42318;
+}
+
+.form-field-hint,
+.form-field-error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.form-field-hint {
+  color: var(--muted);
+}
+
+.form-field-error {
+  color: #b42318;
+}
+
+/* --- Registration card and page ------------------------------------------- */
+
+.registration-page {
+  padding-bottom: 64px;
+}
+
+/* One card, up to 720px wide, flush with the left edge of the intro above it. */
+.registration-layout {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: minmax(0, 720px);
+  justify-content: start;
+  gap: 48px;
+}
+
+/* --- Space backdrop (access and account pages) ----------------------------- */
+
+/* These pages sit on a dark space scene with the sun on the right, so their
+   intro and tabs switch to the light hero tokens; the white cards and the back
+   button already hold their own on dark. */
+.space-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--space-black);
+  color: var(--space-body);
+}
+
+.space-page-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.space-page-bg img {
+  object-fit: cover;
+  object-position: right center;
+}
+
+/* Darkens the left half so the heading, lead and tabs keep their contrast. */
+.space-page-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 9, 24, 0.82) 0%,
+    rgba(0, 9, 24, 0.55) 45%,
+    rgba(0, 9, 24, 0.15) 100%
+  );
+}
+
+.space-page .page-intro h1 {
+  color: var(--white);
+}
+
+.space-page .page-intro p {
+  color: var(--space-body);
+}
+
+.space-page .access-tab {
+  color: var(--space-meta);
+}
+
+.space-page .access-tab:hover,
+.space-page .access-tab:focus-visible {
+  color: var(--white);
+}
+
+.space-page .access-tab[aria-selected='true'] {
+  color: var(--white);
+  border-bottom-color: var(--cyan);
+}
+
+/* --- Sign-out confirmation ------------------------------------------------- */
+
+.confirm-dialog {
+  width: min(100% - 32px, 440px);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 18px 48px rgba(10, 35, 50, 0.24);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 9, 24, 0.55);
+}
+
+.confirm-dialog h2 {
+  margin: 0 0 10px;
+  color: var(--navy-deep);
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.confirm-dialog p {
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* --- Access tabs ----------------------------------------------------------- */
+
+/* Left-aligned above the card, styled like the header's active-link underline. */
+.access-tabs {
+  margin: 0 0 14px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.access-tab {
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.access-tab:hover,
+.access-tab:focus-visible {
+  color: var(--blue-dark);
+}
+
+.access-tab[aria-selected='true'] {
+  color: var(--navy-deep);
+  border-bottom-color: var(--blue);
+}
+
+.registration-card {
+  min-width: 0;
+  padding: 44px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: 0 8px 24px rgba(21, 52, 76, 0.06);
+}
+
+.registration-heading {
+  margin-bottom: 28px;
+}
+
+.registration-heading h2 {
+  margin: 0 0 8px;
+  color: var(--navy-deep);
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.registration-description,
+.form-required-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.registration-form {
+  display: grid;
+  gap: 22px;
+}
+
+.form-alert {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #f1c4bd;
+  border-left: 6px solid #b42318;
+  border-radius: 10px;
+  background: #fff4f2;
+  color: #7a1b12;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.form-actions {
+  margin-top: 18px;
+}
+
+.form-success {
+  text-align: center;
+}
+
+.form-success h2 {
+  margin: 0 0 12px;
+  color: var(--navy-deep);
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.form-success p {
+  margin: 0 0 28px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .registration-layout {
+    margin-top: 20px;
+  }
+
+  .registration-card {
+    padding: 24px;
+    border-radius: 12px;
+  }
+}
+
+/* --- Login card ------------------------------------------------------------ */
+
+/* Informational sibling of .form-alert, for "sign in to continue" notices. */
+.form-notice {
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border: 1px solid #bcd9ea;
+  border-left: 6px solid var(--blue);
+  border-radius: 10px;
+  background: #eef7fc;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.login-alt {
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.login-alt a {
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.login-footnote {
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* --- Account page ---------------------------------------------------------- */
+
+.account-details {
+  margin: 0 0 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.account-detail {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-detail dt {
+  color: #4a6070;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-detail dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.account-card .form-actions {
+  margin-top: 0;
 }

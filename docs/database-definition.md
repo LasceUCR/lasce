@@ -11,11 +11,12 @@ migration source; the worker mirrors these tables in SQLAlchemy
 | --------------- | ------------------------------------------------------ | --------------- |
 | `public`        | Default, for anything not domain-specific              | No tables yet   |
 | `research`      | Public research/publications shown on `/investigacion` | Yes             |
+| `auth`          | Portal accounts created through `/acceso`              | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
-`@@schema("research")`; a future domain unrelated to research should get its own schema the same
-way rather than being added here.
+`@@schema("research")` and every model in `auth` is tagged `@@schema("auth")`; a future domain
+unrelated to either should get its own schema the same way rather than being added to one of them.
 
 ## `research` schema
 
@@ -89,13 +90,79 @@ page instead of coming back in whatever order the join returns rows.
 Constraints: `UNIQUE (research_id, research_author_id)` (an author can't be credited twice on the
 same record); indexed on `(research_id, position)` for ordered author lookups.
 
+## `auth` schema
+
+### `user_role` (enum)
+
+Access level of a portal account. Stored as a Postgres enum type so the default can live in the
+database and the worker could insert a row without knowing the application's constants.
+
+| Value       | Meaning                                                                   |
+| ----------- | ------------------------------------------------------------------------- |
+| `visitor`   | Default for every self-registered account (`/acceso`)                     |
+| `assistant` | Granted by an administrator; permissions are defined by LASCE-SEC-008-073 |
+| `admin`     | Granted by an administrator; manages users, roles and permissions         |
+
+The Prisma enum is `UserRole` with members `VISITOR`, `ASSISTANT`, `ADMIN` mapped to the
+lower-case database values above.
+
+### `users`
+
+A portal account created through the public registration form (LASCE-SEC-008-071). Browser
+sessions live in `sessions` below, never in columns here.
+
+| Column          | Prisma type | Postgres type    | Constraints                                                |
+| --------------- | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `full_name`     | `String`    | `text`           | not null                                                   |
+| `email`         | `String`    | `text`           | `UNIQUE`, not null; stored trimmed and lower-cased         |
+| `institution`   | `String`    | `text`           | not null                                                   |
+| `country_code`  | `String`    | `char(2)`        | not null; ISO 3166-1 alpha-2, e.g. `CR`                    |
+| `password_hash` | `String`    | `text`           | not null; `scrypt$<N>$<r>$<p>$<salt>$<hash>`, never logged |
+| `role`          | `UserRole`  | `auth.user_role` | not null, default `visitor`                                |
+| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+> The unique index on `email` is on the raw column. Case-insensitivity comes from the application
+> lower-casing the address before every write and lookup (see `docs/registration.md`), which is
+> cheaper than a `citext` extension and keeps the worker's mirror plain. Anything that reads users
+> by email must lower-case its input first.
+
+> `role` is never taken from the registration request. The database default is the only way a
+> self-registered account gets its role; changing it is LASCE-ADM #80.
+
+Relationships: has many `sessions` (deleted with the account).
+
+### `sessions`
+
+A browser session for a portal account (LASCE-SEC-008-072). The `lasce_session` cookie carries a
+random 32-byte token; only its SHA-256 is stored, so reading this table yields nothing a browser
+could present. Deleting the row revokes the session immediately; expiry is absolute, 30 days from
+login, with no sliding renewal. The worker never writes here. See `docs/sessions.md`.
+
+| Column       | Prisma type | Postgres type    | Constraints                                               |
+| ------------ | ----------- | ---------------- | --------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                   |
+| `user_id`    | `String`    | `uuid`           | FK → `users.id`, `ON DELETE CASCADE`, not null; indexed   |
+| `token_hash` | `String`    | `text`           | `UNIQUE`, not null; base64url SHA-256 of the cookie token |
+| `expires_at` | `DateTime`  | `timestamptz(3)` | not null                                                  |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+
+Relationships: belongs to one `users` row.
+
 ## Where this is read
 
-`apps/web/app/lib/publications.ts`'s `getPublications()` is the only reader today: it queries
-`research_records` (newest `publication_date` first, authors ordered by `position`) and maps each
-row to the `Publication` shape `/investigacion` renders. `packages/db/prisma/seed.ts` clears and
-repopulates all four tables from a fixed, real LASCE publication record so local/dev environments
-aren't empty.
+`apps/web/app/lib/publications.ts`'s `getPublications()` is the only reader of the `research`
+schema today: it queries `research_records` (newest `publication_date` first, authors ordered by
+`position`) and maps each row to the `Publication` shape `/investigacion` renders.
+`packages/db/prisma/seed.ts` clears and repopulates all four research tables from a fixed, real
+LASCE publication record so local/dev environments aren't empty.
+
+`apps/web/app/lib/auth/users.ts` writes `auth.users` through `createUser()` (the `/acceso`
+registration Server Action, mapping a unique violation on `email` to a `DuplicateEmailError`) and reads it
+through `findUserByEmail()` (the `/acceso` login Server Action). `apps/web/app/lib/auth/session.ts`
+owns `auth.sessions`: `createSession()` inserts a row at login, `getSessionUser()` reads the row
+behind the cookie together with its user, and `deleteCurrentSession()` deletes it at logout.
 
 ## Keeping this current
 
@@ -103,4 +170,4 @@ Whenever `packages/db/prisma/schema.prisma` changes:
 
 1. Update this file in the same PR.
 2. Mirror the change in `apps/worker/app/db/models.py` (see `AGENTS.md`).
-3. Run `pnpm db:migrate` and commit the generated migration.
+3. Run `pnpm db:migrate --name <change>` and commit the generated migration.

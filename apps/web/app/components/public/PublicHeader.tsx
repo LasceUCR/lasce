@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { Brand } from './Brand'
+import { AccountLinks } from './auth/AccountLinks'
+import { useAccount } from './auth/useAccount'
 
 const navigation = [
   { label: 'Inicio', href: '/' },
@@ -19,8 +21,14 @@ const navigation = [
   { label: 'Administración', href: '/administracion' },
 ]
 
-export function PublicHeader() {
+export interface PublicHeaderProps {
+  /** The logout Server Action, passed down by the layout so the header stays presentational. */
+  logoutAction: () => Promise<void>
+}
+
+export function PublicHeader({ logoutAction }: PublicHeaderProps) {
   const pathname = usePathname()
+  const { account, isSigningOut, signOut } = useAccount(logoutAction)
   const headerRef = useRef<HTMLElement>(null)
   const mobileMenu = useRef<HTMLDetailsElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -93,9 +101,15 @@ export function PublicHeader() {
         })}
       </nav>
 
-      <Link className="login-link" href="/login">
-        Ingresar
-      </Link>
+      <div className="header-actions">
+        <AccountLinks
+          account={account}
+          isSigningOut={isSigningOut}
+          onSignOut={signOut}
+          pathname={pathname}
+          variant="header"
+        />
+      </div>
 
       {isMobileMenuOpen ? (
         <button
@@ -126,6 +140,14 @@ export function PublicHeader() {
               </Link>
             )
           })}
+          <AccountLinks
+            account={account}
+            isSigningOut={isSigningOut}
+            onNavigate={closeMobileMenu}
+            onSignOut={signOut}
+            pathname={pathname}
+            variant="mobile"
+          />
         </nav>
       </details>
     </header>

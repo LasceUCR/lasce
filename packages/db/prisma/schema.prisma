@@ -26,9 +26,67 @@ datasource db {
   // prisma.config.ts, and PrismaClient gets it through the driver adapter in
   // src/index.ts.
 
-  // `public` stays declared for whatever non-research table comes next; only
-  // `research` is populated today. Prisma creates both schemas via migrations.
-  schemas = ["public", "research"]
+  // One Postgres schema per domain: `research` holds the public publications,
+  // `auth` holds portal accounts. `public` stays declared for whatever comes
+  // next. Prisma creates every schema listed here via migrations.
+  schemas = ["public", "research", "auth"]
+}
+
+/// Access level of a portal account. Self-registration always yields `visitor`;
+/// `assistant` and `admin` are granted by an administrator (LASCE-ADM #80). What
+/// each role may do is LASCE-SEC-008-073's concern, not this enum's.
+enum UserRole {
+  VISITOR   @map("visitor")
+  ASSISTANT @map("assistant")
+  ADMIN     @map("admin")
+
+  @@map("user_role")
+  @@schema("auth")
+}
+
+/// A portal account created through the public registration form at `/registro`
+/// (LASCE-SEC-008-071). Browser sessions live in `Session`, never in columns here.
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName     String   @map("full_name")
+  /// Trimmed and lower-cased by the application before every write and lookup,
+  /// so the unique index is case-insensitive without a citext extension.
+  email        String   @unique
+  institution  String
+  /// ISO 3166-1 alpha-2 code, e.g. "CR". Display names are derived at render time.
+  countryCode  String   @map("country_code") @db.Char(2)
+  /// Self-describing KDF string, `scrypt$<N>$<r>$<p>$<salt>$<hash>`. Produced and
+  /// verified by apps/web/app/lib/auth/password.ts.
+  passwordHash String   @map("password_hash")
+  /// Never set from the registration request; the database default is the only
+  /// path today.
+  role         UserRole @default(VISITOR)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  sessions Session[]
+
+  @@map("users")
+  @@schema("auth")
+}
+
+/// A browser session for a portal account (LASCE-SEC-008-072). The cookie holds a
+/// random token and only its SHA-256 is stored, so reading this table yields
+/// nothing a browser could present. Deleting the row revokes the session at once;
+/// expiry is absolute (30 days from login). The worker never writes here.
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// base64url SHA-256 of the `lasce_session` cookie value. Never the token itself.
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+  @@schema("auth")
 }
 
 /// A journal, conference, or institutional outlet a research record was
