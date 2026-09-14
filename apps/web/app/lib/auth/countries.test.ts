@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { COUNTRY_CODES, isCountryCode, listCountries } from './countries'
+import { COUNTRY_CODES, countryName, isCountryCode, listCountries } from './countries'
 
 describe('COUNTRY_CODES', () => {
   test('lists the 249 officially assigned ISO 3166-1 alpha-2 codes once each', () => {
@@ -42,5 +42,12 @@ describe('listCountries', () => {
 
   test('returns the same memoized list on every call', () => {
     expect(listCountries()).toBe(listCountries())
+  })
+})
+
+describe('countryName', () => {
+  test('names a known code in Spanish and echoes an unknown one', () => {
+    expect(countryName('CR')).toBe('Costa Rica')
+    expect(countryName('XX')).toBe('XX')
   })
 })
