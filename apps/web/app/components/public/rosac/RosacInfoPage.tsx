@@ -115,6 +115,7 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
         intro={content.team.intro}
         title={content.team.title}
         titleId="rosac-team-title"
+        wide
       >
         <TeamGallery
           emptyMessage={content.team.emptyMessage}
@@ -127,6 +128,7 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
         title={content.scientificConsultation.title}
         titleId="rosac-science-title"
         intro={content.scientificConsultation.description}
+        wide
       >
         <div className={styles.scientificAction}>
           <Button
