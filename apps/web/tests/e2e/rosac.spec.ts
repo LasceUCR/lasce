@@ -24,7 +24,7 @@ for (const viewport of [
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
 
-    await page.getByRole('link', { name: 'Volver a las áreas y accesos principales' }).click()
+    await page.getByRole('link', { name: 'Volver a las áreas' }).click()
     await expect(page).toHaveURL(/\/#areas-de-trabajo$/)
     await expect(areas).toBeInViewport()
   })

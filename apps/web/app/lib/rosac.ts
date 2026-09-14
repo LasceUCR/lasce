@@ -324,6 +324,6 @@ export const rosacInfoContent = {
   },
   backLink: {
     href: '/#areas-de-trabajo',
-    label: 'Volver a las áreas y accesos principales',
+    label: 'Volver a las áreas',
   },
 } as const satisfies RosacInfoContent
