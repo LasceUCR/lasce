@@ -8,6 +8,7 @@ export interface NewsCardProps {
   abstract: string
   href: string
   imageUrl: string
+  imageAlt: string
 }
 
 export function NewsCard({
@@ -18,11 +19,17 @@ export function NewsCard({
   abstract,
   href,
   imageUrl,
+  imageAlt,
 }: NewsCardProps) {
   return (
     <article className="surface-card news-card">
       <div className="news-card-image">
-        <Image alt="" fill sizes="(max-width: 768px) 100vw, 320px" src={imageUrl} />
+        <Image
+          alt={imageAlt}
+          fill
+          sizes="(max-width: 768px) 100vw, 320px"
+          src={imageUrl}
+        />
       </div>
 
       <div className="news-card-content">

@@ -12,6 +12,7 @@ const defaultArgs: NewsCardProps = {
     'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
   href: 'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
   imageUrl: '/images/news/el-norte-hoy-1.png',
+  imageAlt: 'Radiotelescopio ROSAC.'
 }
 
 describe('NewsCard', () => {
@@ -31,12 +32,6 @@ describe('NewsCard', () => {
     expect(screen.getByText(defaultArgs.abstract)).toBeInTheDocument()
   })
 
-  test('uses an empty alt for decorative news images', () => {
-    render(<NewsCard {...defaultArgs} />)
-
-    expect(screen.getByAltText('')).toHaveAttribute('src')
-  })
-
   test('links out through the external source action', () => {
     render(<NewsCard {...defaultArgs} />)
 
@@ -53,5 +48,22 @@ describe('NewsCard', () => {
     render(<NewsCard {...defaultArgs} />)
 
     expect(screen.getByText(defaultArgs.abstract)).toHaveClass('news-abstract')
+  })
+
+  test('uses the provided alt text for informative news images', () => {
+    render(<NewsCard {...defaultArgs} />)
+
+    expect(screen.getByAltText(defaultArgs.imageAlt)).toBeInTheDocument()
+  })
+
+  test('uses an empty alt for decorative news images', () => {
+    render(
+      <NewsCard
+        {...defaultArgs}
+        imageAlt=""
+      />,
+    )
+
+    expect(screen.getByAltText('')).toHaveAttribute('src')
   })
 })

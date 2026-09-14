@@ -71,6 +71,7 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
               key={article.slug}
               source={article.source}
               title={article.title}
+              imageAlt={article.imageAlt}
             />
           ))}
         </div>
