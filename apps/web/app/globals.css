@@ -869,7 +869,7 @@ a {
   box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
 }
 
-.publications-search {
+.publications-toolbar .publications-search {
   flex: 1 1 auto;
   margin: 0;
   padding: 0;
