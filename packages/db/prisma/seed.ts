@@ -89,6 +89,7 @@ type SeedNews = {
   abstract: string
   externalUrl: string
   imageUrl: string
+  imageAlt: string
 }
 
 const newsRecords: SeedNews[] = [
