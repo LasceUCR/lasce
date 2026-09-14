@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const create = vi.fn()
+const findUnique = vi.fn()
 
 vi.mock('@lasce/db', () => ({
-  prisma: { user: { create } },
+  prisma: { user: { create, findUnique } },
 }))
 
-const { createUser } = await import('./users')
+const { createUser, findUserByEmail } = await import('./users')
 const { default: DuplicateEmailError } = await import('./errors/DuplicateEmailError')
 
 const newUser = {
@@ -68,5 +69,25 @@ describe('createUser', () => {
     create.mockRejectedValue(connectionError)
 
     await expect(createUser(newUser)).rejects.toBe(connectionError)
+  })
+})
+
+describe('findUserByEmail', () => {
+  test('looks the address up lower-cased and trimmed, selecting only what login needs', async () => {
+    const credentials = { id: 'user-1', fullName: 'Ana Pérez Rojas', passwordHash: 'scrypt$...' }
+    findUnique.mockResolvedValue(credentials)
+
+    await expect(findUserByEmail('  Ana.Perez@UCR.ac.cr ')).resolves.toEqual(credentials)
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { email: 'ana.perez@ucr.ac.cr' },
+      select: { id: true, fullName: true, passwordHash: true },
+    })
+  })
+
+  test('returns null for an unknown address', async () => {
+    findUnique.mockResolvedValue(null)
+
+    await expect(findUserByEmail('nadie@example.com')).resolves.toBeNull()
   })
 })

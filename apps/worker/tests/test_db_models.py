@@ -15,6 +15,7 @@ from app.db import (
     ResearchCrossAuthor,
     User,
     UserRole,
+    UserSession,
 )
 
 
@@ -135,3 +136,23 @@ def test_user_role_mirrors_the_prisma_enum() -> None:
     assert role.type.create_type is False
     assert role.server_default is not None
     assert str(role.server_default.arg) == "'visitor'"
+
+
+def test_sessions_live_in_the_auth_schema() -> None:
+    assert UserSession.__table__.schema == "auth"
+
+
+def test_session_matches_the_prisma_columns() -> None:
+    columns = UserSession.__table__.columns
+
+    assert set(columns.keys()) == {"id", "user_id", "token_hash", "expires_at", "created_at"}
+    assert columns["token_hash"].unique
+    assert not columns["user_id"].nullable
+    assert not columns["expires_at"].nullable
+
+
+def test_session_belongs_to_a_user_and_dies_with_it() -> None:
+    (user_fk,) = UserSession.__table__.columns["user_id"].foreign_keys
+
+    assert user_fk.target_fullname == "auth.users.id"
+    assert user_fk.ondelete == "CASCADE"
