@@ -10,10 +10,10 @@ test('opens the general information page directly without a login redirect', asy
 
   expect(response?.status()).toBe(200)
   expect(new URL(page.url()).pathname).toBe('/nosotros')
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
   await expect(page.getByRole('main')).toHaveCount(1)
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
 })
 
 test('explains what LASCE is and what its purpose is', async ({ page }) => {
@@ -113,7 +113,7 @@ test('returns to the public landing page and stays unauthenticated', async ({ pa
       name: 'Exploramos el Sol para comprender el clima espacial',
     }),
   ).toBeVisible()
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 })
 
 test('moves keyboard focus to the main content through the skip link', async ({ page }) => {

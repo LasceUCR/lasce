@@ -44,8 +44,7 @@ enum UserRole {
 }
 
 /// A portal account created through the public registration form at `/registro`
-/// (LASCE-SEC-008-071). Sessions (#72) are not modelled yet; add them as a
-/// separate table in this schema rather than as columns here.
+/// (LASCE-SEC-008-071). Browser sessions live in `Session`, never in columns here.
 model User {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   fullName     String   @map("full_name")
@@ -64,7 +63,28 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
 
+  sessions Session[]
+
   @@map("users")
+  @@schema("auth")
+}
+
+/// A browser session for a portal account (LASCE-SEC-008-072). The cookie holds a
+/// random token and only its SHA-256 is stored, so reading this table yields
+/// nothing a browser could present. Deleting the row revokes the session at once;
+/// expiry is absolute (30 days from login). The worker never writes here.
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// base64url SHA-256 of the `lasce_session` cookie value. Never the token itself.
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
   @@schema("auth")
 }
 
