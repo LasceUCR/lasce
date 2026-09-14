@@ -17,6 +17,8 @@ export const investigacionBackLink = {
   label: 'Volver al inicio',
 } as const
 
+export type ResearchGroup = 'LASCE' | 'ROSAC'
+
 export type Publication = {
   slug: string
   title: string
@@ -25,6 +27,7 @@ export type Publication = {
   year: string
   abstract: string
   href: string
+  researchGroup: ResearchGroup
 }
 
 /**
@@ -55,5 +58,6 @@ export async function getPublications(): Promise<Publication[]> {
     year: String(record.publicationDate.getUTCFullYear()),
     abstract: record.abstract,
     href: record.externalUrl,
+    researchGroup: record.researchGroup,
   }))
 }

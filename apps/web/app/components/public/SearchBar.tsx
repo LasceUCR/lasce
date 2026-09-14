@@ -8,19 +8,28 @@ export interface SearchBarProps {
   label: string
   placeholder: string
   onSubmit?: () => void
+  className?: string
 }
 
-export function SearchBar({ query, onQueryChange, label, placeholder, onSubmit }: SearchBarProps) {
-  // The list filters live as the field changes, so there is no submit
-  // button. This only stops Enter from triggering a real page navigation,
-  // and still calls onSubmit for a caller that wants that hook.
+export function SearchBar({
+  query,
+  onQueryChange,
+  label,
+  placeholder,
+  onSubmit,
+  className,
+}: SearchBarProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     onSubmit?.()
   }
 
   return (
-    <form className="search-filter-bar" onSubmit={handleSubmit} role="search">
+    <form
+      className={className ? `search-filter-bar ${className}` : 'search-filter-bar'}
+      onSubmit={handleSubmit}
+      role="search"
+    >
       <label className="search-filter-field">
         <span className="sr-only">{label}</span>
         <Search aria-hidden="true" size={18} strokeWidth={1.8} />

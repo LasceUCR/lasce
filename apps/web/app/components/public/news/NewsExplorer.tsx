@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from 'react'
 
-import { NewsCard } from './NewsCard'
 import { SearchBar } from '@/app/components/public/SearchBar'
 import type { NewsArticle } from '@/app/lib/news'
+
+import { NewsCard } from './NewsCard'
 
 export interface NewsExplorerProps {
   news: NewsArticle[]
@@ -31,6 +32,8 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
     )
   }, [news, query])
 
+  const hasQuery = query.trim() !== ''
+
   return (
     <section aria-labelledby="news-title" className="news page-width">
       <SearchBar
@@ -42,13 +45,19 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
 
       <h2 id="news-title">Noticias recientes</h2>
 
+      {hasQuery ? (
+        <p aria-live="polite" className="sr-only">
+          {filtered.length === 1
+            ? 'Se encontró 1 noticia.'
+            : `Se encontraron ${filtered.length} noticias.`}
+        </p>
+      ) : null}
+
       {filtered.length === 0 ? (
         <p className="content-empty" role="status">
-          {query.trim() === '' ? (
-            'No hay noticias publicadas todavía.'
-          ) : (
-            <>No se encontraron noticias para “{query}”.</>
-          )}
+          {hasQuery
+            ? `No se encontraron noticias para “${query}”.`
+            : 'No hay noticias publicadas todavía.'}
         </p>
       ) : (
         <div className="news-list">
@@ -62,6 +71,7 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
               key={article.slug}
               source={article.source}
               title={article.title}
+              imageAlt={article.imageAlt}
             />
           ))}
         </div>
