@@ -26,6 +26,7 @@ export type NewsArticle = {
   abstract: string
   href: string
   imageUrl: string
+  imageAlt: string
 }
 
 /**
@@ -68,5 +69,6 @@ export async function getNews(): Promise<NewsArticle[]> {
     abstract: record.abstract,
     href: record.externalUrl,
     imageUrl: record.imageUrl,
+    imageAlt: record.imageAlt,
   }))
 }
