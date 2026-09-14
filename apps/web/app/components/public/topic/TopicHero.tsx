@@ -5,15 +5,32 @@ export interface TopicHeroProps {
   title: string
   lead?: string
   notice?: string
+  /** Compact framing for pages whose primary content is an interactive tool. */
+  variant?: 'default' | 'compact'
   image?: {
     src: string
     alt: string
   }
 }
 
-export function TopicHero({ kicker, title, lead, notice, image }: TopicHeroProps) {
+export function TopicHero({
+  kicker,
+  title,
+  lead,
+  notice,
+  image,
+  variant = 'default',
+}: TopicHeroProps) {
   return (
-    <header className={image ? 'topic-hero' : 'topic-hero topic-hero-copy-only'}>
+    <header
+      className={[
+        'topic-hero',
+        !image && 'topic-hero-copy-only',
+        variant === 'compact' && 'topic-hero-compact',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className="topic-hero-copy">
         <p className="topic-kicker">{kicker}</p>
         <h1>{title}</h1>

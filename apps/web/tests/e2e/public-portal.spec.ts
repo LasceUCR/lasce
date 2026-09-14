@@ -6,8 +6,12 @@ const publicRoutes = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
   { label: 'Nosotros', path: '/nosotros', heading: 'Quiénes somos' },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
-  { label: 'Instrumentación', path: '/instrumentacion', heading: 'Instrumentación' },
-  { label: 'Datos', path: '/datos', heading: 'Herramientas científicas' },
+  {
+    label: 'Herramientas científicas',
+    path: '/herramientas-cientificas',
+    heading: 'Herramientas científicas',
+  },
+  { label: 'Datos', path: '/datos', heading: 'Datos' },
   { label: 'Galería', path: '/galeria', heading: 'Galería' },
   { label: 'Noticias', path: '/noticias', heading: 'Noticias' },
   { label: 'Contacto', path: '/contacto', heading: 'Contacto' },
@@ -17,7 +21,7 @@ const areaCards = [
   { name: 'Física solar', path: '/fisica-solar' },
   { name: 'Clima espacial', path: '/clima-espacial' },
   { name: 'Radioastronomía', path: '/radioastronomia' },
-  { name: 'Instrumentación', path: '/instrumentacion' },
+  { name: 'Herramientas científicas', path: '/herramientas-cientificas' },
   { name: 'Datos y análisis', path: '/datos' },
   { name: 'Divulgación', path: '/noticias' },
 ] as const
