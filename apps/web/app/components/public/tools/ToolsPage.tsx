@@ -3,7 +3,7 @@ import { ExternalLink, Info } from 'lucide-react'
 
 import { Button } from '@/app/components/public/Button'
 
-const SWAAT_URL = process.env.NEXT_PUBLIC_SWAPRO_URL ?? 'https://swaat.up.railway.app'
+const SWAAT_URL = process.env.NEXT_PUBLIC_SWAAT_URL ?? 'https://swaat.up.railway.app'
 
 export function ToolsPage() {
   return (
