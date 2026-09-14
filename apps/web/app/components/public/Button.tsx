@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'brand'
+export type ButtonVariant = 'primary' | 'secondary' | 'brand' | 'external'
 
 export interface ButtonProps {
   children: ReactNode

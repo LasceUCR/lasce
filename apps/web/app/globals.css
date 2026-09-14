@@ -525,6 +525,16 @@ a {
   font-size: 17px;
 }
 
+.button-external {
+  background: #2f6ced;
+  color: var(--white);
+}
+
+.button-external:hover,
+.button-external:focus-visible {
+  background: #2256c8;
+}
+
 .home-content {
   min-height: 438px;
   padding: 22px 0 34px;
@@ -897,29 +907,8 @@ a {
   -webkit-line-clamp: 2;
 }
 
-.link-stroke {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid currentColor;
-  border-radius: 6px;
-  color: inherit;
-  text-decoration: none;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.link-stroke:hover {
-  color: #2563eb;
-  border-color: #2563eb;
-  background-color: #eff6ff;
-}
-
-.publication-card .area-link,
-.news-card .area-link {
+.publication-card .button,
+.news-card .button {
   margin-top: 12px;
 }
 
