@@ -24,6 +24,13 @@ export interface CreatedUser {
   role: UserRole
 }
 
+/** What login needs to check a password and open a session: nothing more. */
+export interface UserCredentials {
+  id: string
+  fullName: string
+  passwordHash: string
+}
+
 /**
  * Prisma reports a unique-constraint failure as a `PrismaClientKnownRequestError`
  * with `code` "P2002". Matching on the code rather than the class keeps this
@@ -62,4 +69,16 @@ export async function createUser(user: NewUser): Promise<CreatedUser> {
     }
     throw error
   }
+}
+
+/**
+ * Finds the account behind an email address for login. The address is
+ * lower-cased and trimmed before the lookup because that is how `createUser`
+ * stored it; the unique index itself is case-sensitive.
+ */
+export async function findUserByEmail(email: string): Promise<UserCredentials | null> {
+  return prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() },
+    select: { id: true, fullName: true, passwordHash: true },
+  })
 }
