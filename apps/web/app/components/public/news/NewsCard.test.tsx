@@ -36,7 +36,7 @@ describe('NewsCard', () => {
     render(<NewsCard {...defaultArgs} />)
 
     const link = screen.getByRole('link', {
-      name: `Abrir fuente: ${defaultArgs.source}`,
+      name: `Abrir fuente`,
     })
 
     expect(link).toHaveAttribute('href', defaultArgs.href)
