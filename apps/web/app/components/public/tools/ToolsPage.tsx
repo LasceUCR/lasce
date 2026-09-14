@@ -3,7 +3,7 @@ import { ExternalLink, Info } from 'lucide-react'
 
 import { Button } from '@/app/components/public/Button'
 
-const SWAPRO_URL = process.env.NEXT_PUBLIC_SWAPRO_URL ?? 'https://swaat.up.railway.app'
+const SWAAT_URL = process.env.NEXT_PUBLIC_SWAPRO_URL ?? 'https://swaat.up.railway.app'
 
 export function ToolsPage() {
   return (
@@ -45,7 +45,7 @@ export function ToolsPage() {
 
             <Button
               className="tool-feature-cta"
-              href={SWAPRO_URL}
+              href={SWAAT_URL}
               icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
               rel="noopener noreferrer"
               target="_blank"
