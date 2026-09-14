@@ -90,6 +90,8 @@ The eight brand colors are not a replacement for every color in the site. The st
 
 - `--muted`, `--border`, and `--card-border-hover` for secondary text and subtle borders.
 - `--teal` and the existing green and orange status styles for status indicators and themed cards.
+- `--blue-accent-text` for 16px teal labels on white; `--bright-teal-blue` does not meet WCAG AA
+  contrast on white at that size.
 - `--space-black`, `--space-kicker`, `--space-body`, `--space-meta`, and `--space-border` for dark
   imagery and the gallery lightbox.
 - Existing surface tints, shadows, and image overlays that support those styles.

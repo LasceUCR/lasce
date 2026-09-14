@@ -21,6 +21,8 @@
   --teal: #2e9b8a;
   --muted: #536a7c;
   --border: #d6e1e8;
+  /* Same hue as --bright-teal-blue, dark enough for 16px text on white (WCAG AA 4.5:1). */
+  --blue-accent-text: #0775ae;
 
   /* Dark scene, shared by the hero visual and the gallery lightbox. These were
      repeated literals across this file until the gallery needed them too. */
@@ -2814,7 +2816,7 @@ a.gallery-tile:focus-visible {
 }
 
 .researcher-card-role {
-  color: var(--blue);
+  color: var(--blue-accent-text);
   font-size: 16px;
   margin-bottom: 10px;
   margin-top: 8px;

@@ -55,13 +55,14 @@ Production deployment uses the standalone Next.js bundle through
 [`infra/docker/web.Dockerfile`](../../infra/docker/web.Dockerfile).
 
 ## Public Routes
+
 | Route                       | Purpose                                                                            |
 | --------------------------- | ---------------------------------------------------------------------------------- |
 | `/`                         | Institutional landing page and access to the main public areas                     |
 | `/#areas-de-trabajo`        | Work areas and main portal access cards on the home page                           |
 | `/fisica-solar`             | Solar astrophysics information page based on LASCE content                         |
 | `/clima-espacial`           | Space weather information page                                                     |
-| `/radioastronomia`          | Radio astronomy work area and ROSAC researchers                                   |
+| `/radioastronomia`          | Radio astronomy work area and ROSAC researchers                                    |
 | `/nosotros`                 | General information about LASCE (_Quiénes somos_)                                  |
 | `/investigacion`            | Research areas and activities                                                      |
 | `/instrumentacion`          | Scientific instruments and observatories                                           |
@@ -71,7 +72,6 @@ Production deployment uses the standalone Next.js bundle through
 | `/contacto`                 | Contact information                                                                |
 | `/acceso`                   | Sign-in and sign-up cards behind a tab selector (_Iniciar sesión_, _Crear cuenta_) |
 | `/cuenta`                   | The signed-in user's profile and sign-out; requires a session                      |
-
 
 Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page; `/login` and `/registro` redirect to `/acceso`; `/cuenta` is the one route that requires a session (see [`docs/sessions.md`](../../docs/sessions.md)).
 
