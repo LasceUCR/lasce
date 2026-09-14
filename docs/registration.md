@@ -1,7 +1,7 @@
 # Registration
 
-How a visitor creates a portal account (LASCE-SEC-008-071), what stores it, and what the next
-tickets in the epic can rely on. Login and sessions are LASCE-SEC-008-072; roles and permissions
+How a visitor creates a portal account (LASCE-SEC-008-071) on the shared access page `/acceso`,
+what stores it, and what the next tickets in the epic can rely on. Login and sessions are LASCE-SEC-008-072; roles and permissions
 are LASCE-SEC-008-073 and the ADM tickets that follow.
 
 ## The flow
@@ -16,16 +16,16 @@ are LASCE-SEC-008-073 and the ADM tickets that follow.
                                                     └─ P2002 → DuplicateEmailError → "Ya existe..."
 ```
 
-| Piece                  | File                                        | Covered by                                |
-| ---------------------- | ------------------------------------------- | ----------------------------------------- |
-| Page                   | `apps/web/app/(public)/registro/page.tsx`   | Playwright (`tests/e2e/registro.spec.ts`) |
-| Server Action          | `apps/web/app/(public)/registro/actions.ts` | Playwright                                |
-| Rules, messages, state | `apps/web/app/lib/auth/registration.ts`     | Vitest, colocated                         |
-| Password hashing       | `apps/web/app/lib/auth/password.ts`         | Vitest, colocated                         |
-| Countries              | `apps/web/app/lib/auth/countries.ts`        | Vitest, colocated                         |
-| Persistence            | `apps/web/app/lib/auth/users.ts`            | Vitest, colocated (`@lasce/db` mocked)    |
-| Card and fields        | `apps/web/app/components/public/auth/*.tsx` | Vitest, colocated, stories as fixtures    |
-| Table                  | `auth.users`, see `database-definition.md`  | Prisma migration, worker model test       |
+| Piece                    | File                                        | Covered by                                |
+| ------------------------ | ------------------------------------------- | ----------------------------------------- |
+| Page (shared with login) | `apps/web/app/(public)/acceso/page.tsx`     | Playwright (`tests/e2e/registro.spec.ts`) |
+| Server Action            | `apps/web/app/(public)/acceso/actions.ts`   | Playwright                                |
+| Rules, messages, state   | `apps/web/app/lib/auth/registration.ts`     | Vitest, colocated                         |
+| Password hashing         | `apps/web/app/lib/auth/password.ts`         | Vitest, colocated                         |
+| Countries                | `apps/web/app/lib/auth/countries.ts`        | Vitest, colocated                         |
+| Persistence              | `apps/web/app/lib/auth/users.ts`            | Vitest, colocated (`@lasce/db` mocked)    |
+| Card and fields          | `apps/web/app/components/public/auth/*.tsx` | Vitest, colocated, stories as fixtures    |
+| Table                    | `auth.users`, see `database-definition.md`  | Prisma migration, worker model test       |
 
 The page is static. Nothing reads the database at render time; the country list is computed on
 the server with `Intl.DisplayNames` and passed to the client as props, so the browser never has to
@@ -96,19 +96,21 @@ each role may do is #73.
 
 ## Entry points
 
-- The public header shows "Crear cuenta" next to "Ingresar" on desktop and hides both under
-  760px; the mobile menu lists "Crear cuenta" after the navigation items.
-- `/registro` is in `publicPaths` (`apps/web/app/lib/site.ts`), so it is in the sitemap and in the
-  routes the accessibility spec scans.
-- "Ingresar" still points at `/login`, which does not exist until #72.
+- The public header offers "Ingresar" only (hidden under 760px, where the mobile menu lists it);
+  registration is the "Crear cuenta" tab of the access page and the login card links to it.
+- `/acceso` is in `publicPaths` (`apps/web/app/lib/site.ts`), so it is in the sitemap and in the
+  routes the accessibility spec scans; `/registro` and `/login` redirect to it.
+- `/acceso` shows this card behind the "Crear cuenta" tab (`?tab=crear-cuenta`), next to the login
+  tab; the confirmation panel links to the login tab once the account exists. Signing in is covered
+  in [sessions.md](sessions.md).
 
-## What #72 builds on
+## What login uses from here
 
-- `verifyPassword` from `password.ts`, against `auth.users.password_hash`.
-- Lower-casing the submitted email before `findUnique`.
-- `RegistrationForm` accepts an optional `heading` and `registration-layout` is already a grid, so
-  the two-card access page from the mockup (login left, registration right) needs no restyling.
-- Sessions belong in a new table in the `auth` schema, not in columns on `users`.
+- `verifyPassword` from `password.ts`, against `auth.users.password_hash`, and
+  `UNKNOWN_USER_PASSWORD_HASH` for unknown addresses.
+- `findUserByEmail` in `users.ts`, which lower-cases before `findUnique`.
+- `RegistrationForm` with its `heading` prop, rendered behind its tab on `/acceso`.
+- Sessions live in `auth.sessions`, not in columns on `users`; see [sessions.md](sessions.md).
 
 ## Known gaps
 

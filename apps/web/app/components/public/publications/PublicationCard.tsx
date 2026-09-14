@@ -1,3 +1,7 @@
+import { ExternalLink } from 'lucide-react'
+
+import { Button } from '@/app/components/public/Button'
+
 export interface PublicationCardProps {
   title: string
   authors: string
@@ -18,13 +22,22 @@ export function PublicationCard({
   return (
     <article className="surface-card publication-card">
       <h3>{title}</h3>
+
       <p className="publication-meta">
         {authors} · {venue} · {year}
       </p>
+
       <p className="publication-abstract">{abstract}</p>
-      <a className="area-link" href={href} rel="noreferrer" target="_blank">
-        DOI / Enlace externo <span aria-hidden="true">→</span>
-      </a>
+
+      <Button
+        href={href}
+        icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
+        rel="noopener noreferrer"
+        target="_blank"
+        variant="external"
+      >
+        DOI / Enlace externo
+      </Button>
     </article>
   )
 }

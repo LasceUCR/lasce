@@ -45,8 +45,9 @@ export const HorizontalWithAction: Story = {
     action: (
       <Button
         href="https://swaat.up.railway.app/"
-        external
         icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
+        rel="noopener noreferrer"
+        target="_blank"
       >
         Acceder a SWAAT
       </Button>

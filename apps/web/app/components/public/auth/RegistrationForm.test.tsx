@@ -177,7 +177,7 @@ describe('RegistrationForm', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: registrationFormCopy.successLink })).toHaveAttribute(
       'href',
-      '/',
+      registrationFormCopy.successHref,
     )
     expect(
       screen.queryByRole('button', { name: registrationFormCopy.submit }),

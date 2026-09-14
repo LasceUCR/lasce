@@ -1,13 +1,18 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'brand'
+export type ButtonVariant = 'primary' | 'secondary' | 'brand' | 'external'
 
 export interface ButtonProps {
   children: ReactNode
   variant?: ButtonVariant
   href?: string
-  external?: boolean
+  /** Forwarded to the underlying anchor. Set to `_blank` for an external `href`. */
+  target?: string
+  /** Forwarded to the underlying anchor. Pair with `target="_blank"` on an external
+   * `href` — `noopener noreferrer` prevents the opened page from reaching back into
+   * this one through `window.opener`. */
+  rel?: string
   icon?: ReactNode
   className?: string
   type?: 'button' | 'submit'
@@ -19,7 +24,8 @@ export function Button({
   children,
   variant = 'primary',
   href,
-  external = false,
+  target,
+  rel,
   icon,
   className,
   type = 'button',
@@ -35,16 +41,8 @@ export function Button({
   )
 
   if (href) {
-    if (external) {
-      return (
-        <a className={classes} href={href} rel="noopener noreferrer" target="_blank">
-          {content}
-        </a>
-      )
-    }
-
     return (
-      <Link className={classes} href={href}>
+      <Link className={classes} href={href} rel={rel} target={target}>
         {content}
       </Link>
     )

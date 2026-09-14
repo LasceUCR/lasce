@@ -4,7 +4,19 @@ Even though the worker doesn't have a job using these tables yet, the convention
 is to replicate everything here so the two languages never disagree about a column.
 """
 
-from app.db import Publisher, Research, ResearchAuthor, ResearchCrossAuthor, User, UserRole
+from app.db import (
+    News,
+    NewsAuthor,
+    NewsCrossAuthor,
+    NewsSource,
+    Publisher,
+    Research,
+    ResearchAuthor,
+    ResearchCrossAuthor,
+    User,
+    UserRole,
+    UserSession,
+)
 
 
 def test_research_tables_live_in_the_research_schema() -> None:
@@ -45,6 +57,51 @@ def test_research_belongs_to_a_publisher() -> None:
     assert publisher_fk.target_fullname == "research.publishers.id"
 
 
+"""Sanity checks for the SQLAlchemy mirror of the Prisma `news` schema.
+
+Even though the worker doesn't have a job using this yet, the convention is to
+replicate everything here.
+"""
+
+
+def test_news_tables_live_in_the_news_schema() -> None:
+    for model in (NewsSource, News, NewsAuthor, NewsCrossAuthor):
+        assert model.__table__.schema == "news"
+
+
+def test_news_record_matches_the_prisma_columns() -> None:
+    columns = News.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "title",
+        "published_at",
+        "source_id",
+        "abstract",
+        "external_url",
+        "image_url",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["external_url"].unique
+    assert columns["published_at"].nullable
+    assert not columns["title"].nullable
+
+
+def test_news_cross_author_links_news_and_authors() -> None:
+    columns = NewsCrossAuthor.__table__.columns
+    (news_fk,) = columns["news_id"].foreign_keys
+    (author_fk,) = columns["news_author_id"].foreign_keys
+
+    assert news_fk.target_fullname == "news.news_records.id"
+    assert author_fk.target_fullname == "news.news_authors.id"
+
+
+def test_news_belongs_to_a_source() -> None:
+    (source_fk,) = News.__table__.columns["source_id"].foreign_keys
+    assert source_fk.target_fullname == "news.news_sources.id"
+
+
 def test_users_live_in_the_auth_schema() -> None:
     assert User.__table__.schema == "auth"
 
@@ -79,3 +136,23 @@ def test_user_role_mirrors_the_prisma_enum() -> None:
     assert role.type.create_type is False
     assert role.server_default is not None
     assert str(role.server_default.arg) == "'visitor'"
+
+
+def test_sessions_live_in_the_auth_schema() -> None:
+    assert UserSession.__table__.schema == "auth"
+
+
+def test_session_matches_the_prisma_columns() -> None:
+    columns = UserSession.__table__.columns
+
+    assert set(columns.keys()) == {"id", "user_id", "token_hash", "expires_at", "created_at"}
+    assert columns["token_hash"].unique
+    assert not columns["user_id"].nullable
+    assert not columns["expires_at"].nullable
+
+
+def test_session_belongs_to_a_user_and_dies_with_it() -> None:
+    (user_fk,) = UserSession.__table__.columns["user_id"].foreign_keys
+
+    assert user_fk.target_fullname == "auth.users.id"
+    assert user_fk.ondelete == "CASCADE"

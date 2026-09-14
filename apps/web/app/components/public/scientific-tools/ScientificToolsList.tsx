@@ -40,8 +40,9 @@ export function ScientificToolsList({ tools }: ScientificToolsListProps) {
             action={
               <Button
                 href={href}
-                external
                 icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
+                rel="noopener noreferrer"
+                target="_blank"
               >
                 Acceder a {title}
               </Button>
