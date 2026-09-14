@@ -16,6 +16,7 @@ const defaultArgs: NewsExplorerProps = {
         'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
       href: 'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
       imageUrl: '/images/news/el-norte-hoy-1.png',
+      imageAlt: 'Radiotelescopio ROSAC.',
     },
     {
       slug: 'ucr-contara-con-radiotelescopio-explorar-cosmos',
@@ -27,6 +28,7 @@ const defaultArgs: NewsExplorerProps = {
         'Un proyecto de investigación de la UCR estudia la transformación de una gran antena instalada en la Finca Experimental de Santa Cruz en un radiotelescopio para estudiar los astros.',
       href: 'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
       imageUrl: '/images/news/ucr-3.png',
+      imageAlt: 'Antena instalada en la Finca Experimental de Santa Cruz (FESC) de la Universidad de Costa Rica.',
     },
   ],
 }
@@ -149,6 +151,7 @@ describe('NewsExplorer', () => {
             abstract: 'Resumen.',
             href: 'https://example.com',
             imageUrl: '/images/decorative/Solar-Flare.png',
+            imageAlt: '',
           },
         ]}
       />,

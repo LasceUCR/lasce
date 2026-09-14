@@ -104,7 +104,8 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
     imageUrl: '/images/news/la-nacion-1.png',
-    imageAlt: 'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
+    imageAlt:
+      'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
   },
   {
     title: '¿Vale la pena invertir en ciencia? Estos proyectos costarricenses son la respuesta',
@@ -239,7 +240,8 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
     imageUrl: '/images/news/ucr-3.png',
-    imageAlt: 'Antena instalada en la Finca Experimental de Santa Cruz (FESC) de la Universidad de Costa Rica.',
+    imageAlt:
+      'Antena instalada en la Finca Experimental de Santa Cruz (FESC) de la Universidad de Costa Rica.',
   },
 ]
 

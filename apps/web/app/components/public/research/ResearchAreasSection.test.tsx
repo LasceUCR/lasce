@@ -1,10 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
-import {
-  ResearchAreasSection,
-  type ResearchAreasSectionProps,
-} from './ResearchAreasSection'
+import { ResearchAreasSection, type ResearchAreasSectionProps } from './ResearchAreasSection'
 import { Default, Empty } from './ResearchAreasSection.stories'
 
 const defaultArgs = Default.args as ResearchAreasSectionProps
@@ -32,9 +29,10 @@ describe('ResearchAreasSection', () => {
     render(<ResearchAreasSection {...defaultArgs} />)
 
     for (const area of defaultArgs.areas) {
-      expect(
-        screen.getByRole('link', { name: new RegExp(area.title) }),
-      ).toHaveAttribute('href', `/investigacion/areas/${area.slug}`)
+      expect(screen.getByRole('link', { name: new RegExp(area.title) })).toHaveAttribute(
+        'href',
+        `/investigacion/areas/${area.slug}`,
+      )
     }
   })
 

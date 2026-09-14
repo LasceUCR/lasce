@@ -16,12 +16,7 @@ export interface ResearchAreasSectionProps {
   areas: ResearchArea[]
 }
 
-export function ResearchAreasSection({
-  id,
-  title,
-  subtitle,
-  areas,
-}: ResearchAreasSectionProps) {
+export function ResearchAreasSection({ id, title, subtitle, areas }: ResearchAreasSectionProps) {
   const fallbackTitleId = useId()
   const titleId = id ? `${id}-title` : fallbackTitleId
 
