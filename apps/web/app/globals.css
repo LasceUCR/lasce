@@ -359,9 +359,9 @@ a {
   overflow: hidden;
 }
 
-/* Between the mobile breakpoint and about 1380px the nine navigation items
+/* Between the mobile breakpoint and 1440px the navigation items
    leave little room for the account links, so tighten the gaps only there. */
-@media (min-width: 1121px) and (max-width: 1380px) {
+@media (min-width: 1121px) and (max-width: 1440px) {
   .site-header {
     gap: 16px;
   }
