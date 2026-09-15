@@ -134,8 +134,8 @@ test('the gallery lightbox can be opened, paged and dismissed with the keyboard'
 }) => {
   await page.goto('/galeria/rosac')
 
-  const firstTile = page.getByRole('button', { name: /^Ver a tamaño completo:/ }).first()
-  await firstTile.focus()
+  const tiles = page.getByRole('button', { name: /^Ver a tamaño completo:/ })
+  await tiles.first().focus()
   await page.keyboard.press('Enter')
 
   const dialog = page.getByRole('dialog')
@@ -154,7 +154,9 @@ test('the gallery lightbox can be opened, paged and dismissed with the keyboard'
 
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
-  await expect(firstTile).toBeFocused()
+  // Focus lands on the file that was open, not the one it was opened from, so
+  // paging and then dismissing leaves the visitor where they were looking.
+  await expect(tiles.nth(1)).toBeFocused()
 })
 
 test('robots and sitemap expose only indexable public routes', async ({ request }) => {
