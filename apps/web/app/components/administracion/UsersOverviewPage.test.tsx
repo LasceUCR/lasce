@@ -57,7 +57,8 @@ describe('UsersOverviewPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent('No se encontraron usuarios')
     await user.click(screen.getByRole('button', { name: 'Limpiar búsqueda' }))
     expect(screen.getByRole('searchbox')).toHaveValue('')
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+    expect(screen.getByRole('searchbox')).toHaveFocus()
     for (const fixture of args.users) expect(screen.getByText(fixture.email)).toBeInTheDocument()
   })
   test('explains when there are no users to display', () => {

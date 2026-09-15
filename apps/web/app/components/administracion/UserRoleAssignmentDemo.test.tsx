@@ -63,7 +63,7 @@ describe('UserRoleAssignmentDemo', () => {
     })
     await user.click(visitor)
     await user.click(screen.getByRole('button', { name: 'Sí, cambiar rol' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('El rol anterior se mantiene')
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos confirmar el cambio')
     expect(admin).toBeChecked()
     expect(visitor).not.toBeChecked()
     await user.click(screen.getByRole('button', { name: 'No, cancelar' }))

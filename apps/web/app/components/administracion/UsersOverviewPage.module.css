@@ -11,9 +11,17 @@
 }
 
 .searchControls {
+  min-width: 0;
   display: grid;
   gap: 12px;
   margin-bottom: 24px;
+}
+
+.searchControls form,
+.searchControls label,
+.searchControls input {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .clearSearch {

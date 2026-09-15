@@ -6,6 +6,7 @@ import { UserRoleChangeDialog } from './UserRoleChangeDialog'
 import styles from './UsersRolesTable.module.css'
 
 export interface UserRolesRowProps {
+  isCurrentUser?: boolean
   user: OverviewUser
   roles: OverviewRole[]
   onUserSelect?: (user: OverviewUser) => void
@@ -19,6 +20,7 @@ export function UserRolesRow({
   onUserSelect,
   onSaveRoles,
   hidden,
+  isCurrentUser,
 }: UserRolesRowProps) {
   // Undefined means closed; null means confirmation to remove the current role.
   const [pendingRole, setPendingRole] = useState<OverviewRole | null | undefined>(undefined)
@@ -57,6 +59,7 @@ export function UserRolesRow({
         )}
         {pendingRole !== undefined && (
           <UserRoleChangeDialog
+            isCurrentUser={isCurrentUser}
             user={user}
             currentRoles={roles.filter((role) => user.roleIds.includes(role.id))}
             role={pendingRole}

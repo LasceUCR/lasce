@@ -1,4 +1,6 @@
 .dialog {
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
   width: min(520px, calc(100% - 32px));
   max-height: calc(100dvh - 32px);
   overflow: auto;
@@ -64,4 +66,25 @@
 }
 .error {
   color: #9f2424;
+}
+
+.error:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .dialog {
+    padding: 16px;
+  }
+  .dialog h2 {
+    font-size: 21px;
+  }
+  .actions {
+    flex-direction: column;
+  }
+  .actions button {
+    width: 100%;
+    white-space: normal;
+  }
 }

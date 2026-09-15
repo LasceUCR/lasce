@@ -24,7 +24,7 @@ describe('UserRoleChangeDialog', () => {
     expect(close).toHaveBeenCalledOnce()
   })
 
-  test('prevents repeated confirmation and dismissal during saving, then allows retry after failure', async () => {
+  test('prevents repeated confirmation and dismissal during saving, then requires verification after failure', async () => {
     const user = userEvent.setup()
     let rejectSave!: (error: Error) => void
     const confirm = vi.fn(
@@ -42,10 +42,12 @@ describe('UserRoleChangeDialog', () => {
     fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }))
     expect(close).not.toHaveBeenCalled()
     await act(async () => rejectSave(new Error('Unavailable')))
-    expect(screen.getByRole('alert')).toHaveTextContent('El rol anterior se mantiene')
+    expect(screen.getByRole('alert')).toHaveTextContent(/Recarga la/)
+    expect(screen.getByRole('alert')).toHaveFocus()
     confirm.mockResolvedValueOnce()
     await user.click(screen.getByRole('button', { name: 'Sí, cambiar rol' }))
-    expect(confirm).toHaveBeenCalledTimes(2)
+    expect(confirm).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: /Recargar/ })).toBeEnabled()
   })
 
   test('explains removal without promising an automatic replacement role', () => {

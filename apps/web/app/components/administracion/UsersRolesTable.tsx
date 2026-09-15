@@ -5,6 +5,7 @@ import { UserRolesRow } from './UserRolesRow'
 import type { UserRolesRowProps } from './UserRolesRow'
 
 export interface UsersRolesTableProps {
+  currentUserId?: string
   users: OverviewUser[]
   roles: OverviewRole[]
   describedBy?: string
@@ -20,6 +21,7 @@ export function UsersRolesTable({
   onUserSelect,
   onSaveRoles,
   visibleUserIds,
+  currentUserId,
 }: UsersRolesTableProps) {
   return (
     <div
@@ -44,6 +46,7 @@ export function UsersRolesTable({
         <tbody>
           {users.map((user) => (
             <UserRolesRow
+              isCurrentUser={currentUserId === user.id}
               key={user.id}
               user={user}
               roles={roles}

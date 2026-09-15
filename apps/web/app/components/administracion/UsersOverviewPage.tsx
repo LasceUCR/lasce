@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { SearchBar } from '@/app/components/public/SearchBar'
 
@@ -12,6 +12,7 @@ import { UserDetailsDialog } from './UserDetailsDialog'
 import styles from './UsersOverviewPage.module.css'
 
 export interface UsersOverviewPageProps {
+  currentUserId?: string
   title: string
   description: string
   users: OverviewUser[]
@@ -27,7 +28,9 @@ export function UsersOverviewPage({
   roles,
   isDemo = false,
   onSaveRoles,
+  currentUserId,
 }: UsersOverviewPageProps) {
+  const searchRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const selectedUser = users.find((user) => user.id === selectedUserId)
@@ -61,7 +64,7 @@ export function UsersOverviewPage({
           </p>
         )}
         {roles.length === 0 && <p>No hay roles disponibles para mostrar.</p>}
-        <div className={styles.searchControls}>
+        <div ref={searchRef} className={styles.searchControls}>
           <SearchBar
             label="Buscar usuarios"
             placeholder="Buscar por nombre o correo electrónico..."
@@ -69,20 +72,30 @@ export function UsersOverviewPage({
             onQueryChange={setQuery}
           />
           {query !== '' && (
-            <button className={styles.clearSearch} type="button" onClick={() => setQuery('')}>
+            <button
+              className={styles.clearSearch}
+              type="button"
+              onClick={() => {
+                setQuery('')
+                searchRef.current?.querySelector('input')?.focus()
+              }}
+            >
               Limpiar búsqueda
             </button>
           )}
         </div>
-        {users.length > 0 && filteredUsers.length === 0 && (
-          <p className="content-empty" role="status">
-            No se encontraron usuarios para “{query.trim()}”.
-          </p>
-        )}
+        <p className={query.trim() ? 'content-empty' : 'sr-only'} role="status" aria-atomic="true">
+          {users.length > 0 && query.trim() !== ''
+            ? filteredUsers.length === 0
+              ? `No se encontraron usuarios para “${query.trim()}”.`
+              : `${filteredUsers.length} ${filteredUsers.length === 1 ? 'usuario encontrado' : 'usuarios encontrados'}.`
+            : ''}
+        </p>
         {users.length === 0 ? (
           <p className="content-empty">No hay usuarios para mostrar.</p>
         ) : (
           <UsersRolesTable
+            currentUserId={currentUserId}
             users={onSaveRoles ? users : filteredUsers}
             visibleUserIds={onSaveRoles ? filteredUsers.map((user) => user.id) : undefined}
             roles={roles}
