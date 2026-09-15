@@ -1354,6 +1354,10 @@ a {
   margin-top: 12px;
 }
 
+.publication-group {
+  font-weight: 700;
+}
+
 .news {
   margin-top: 8px;
   padding-bottom: 56px;

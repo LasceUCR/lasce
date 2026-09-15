@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react'
 
+import type { ResearchGroup } from '@/app/lib/publications'
 import { Button } from '@/app/components/public/Button'
 
 export interface PublicationCardProps {
@@ -7,6 +8,7 @@ export interface PublicationCardProps {
   authors: string
   venue: string
   year: string
+  researchGroup: ResearchGroup
   abstract: string
   href: string
 }
@@ -16,6 +18,7 @@ export function PublicationCard({
   authors,
   venue,
   year,
+  researchGroup,
   abstract,
   href,
 }: PublicationCardProps) {
@@ -24,7 +27,8 @@ export function PublicationCard({
       <h3>{title}</h3>
 
       <p className="publication-meta">
-        {authors} · {venue} · {year}
+        {authors} · {venue} · {year} ·{' '}
+        <strong className="publication-group">{researchGroup}</strong>
       </p>
 
       <p className="publication-abstract">{abstract}</p>

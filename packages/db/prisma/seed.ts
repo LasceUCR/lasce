@@ -25,6 +25,25 @@ type SeedResearch = {
 const researchRecords: SeedResearch[] = [
   {
     title:
+      'Improving Space Weather Forecasting with GESD: A Generative-Evolutionary Synthetic Data Approach',
+    publicationDate: new Date('2024-11-27'),
+    publisher: '2024 IEEE 42nd Central America and Panama Convention (CONCAPAN XLII)',
+    researchGroup: 'LASCE',
+    authors: [
+      'Felipe Meza-Obando',
+      'Jeaustin Calderón-Quesada',
+      'Jorge Ruiz-Murillo',
+      'Carolina Salas-Matamoros',
+      'Juan Luis Crespo-Mariño',
+    ],
+    abstract:
+      'Accurate predictions with low error rates are crucial in the domain of space weather forecasting, particularly for predicting the transit time of Coronal Mass Ejections (CMEs). This study demonstrates the effectiveness of using a simple, essential dataset comprising only two variables, to achieve high predictive accuracy. An absolute mean error (MAE) of 9.32 was obtained, showcasing the efficiency of the proposed method. The architecture was a generative-evolutionary model, which optimized generative and polynomial parameters through an evolutionary algorithm, ensuring the lowest possible error. This approach highlights the potential of combining essential datasets with common techniques to achieve robust and precise predictions for space weather events.',
+    externalUrl:
+      'https://ieeexplore.ieee.org/abstract/document/10933895',
+    doi: '10.1109/CONCAPAN63470.2024.10933895',
+  },
+  {
+    title:
       'The Santa Cruz Radio Observatory (ROSAC): the first radio astronomy facility in Costa Rica',
     publicationDate: new Date('2026-07-05'),
     publisher: 'Proceedings of SPIE, Vol. 14151',
@@ -48,16 +67,30 @@ const researchRecords: SeedResearch[] = [
   },
 ]
 
-await prisma.researchCrossAuthor.deleteMany()
-await prisma.research.deleteMany()
-await prisma.researchAuthor.deleteMany()
-await prisma.publisher.deleteMany()
-
 for (const record of researchRecords) {
-  const publisher = await prisma.publisher.create({ data: { name: record.publisher } })
+  const publisher = await prisma.publisher.upsert({
+    where: {
+      name: record.publisher,
+    },
+    update: {},
+    create: {
+      name: record.publisher,
+    },
+  })
 
-  const research = await prisma.research.create({
-    data: {
+  const research = await prisma.research.upsert({
+    where: {
+      externalUrl: record.externalUrl,
+    },
+    update: {
+      title: record.title,
+      publicationDate: record.publicationDate,
+      publisherId: publisher.id,
+      researchGroup: record.researchGroup,
+      abstract: record.abstract,
+      doi: record.doi,
+    },
+    create: {
       title: record.title,
       publicationDate: record.publicationDate,
       publisherId: publisher.id,
@@ -69,13 +102,32 @@ for (const record of researchRecords) {
   })
 
   for (const [index, name] of record.authors.entries()) {
-    const author = await prisma.researchAuthor.create({ data: { name } })
+    const author = await prisma.researchAuthor.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    })
 
-    await prisma.researchCrossAuthor.create({
-      data: { researchId: research.id, researchAuthorId: author.id, position: index },
+    await prisma.researchCrossAuthor.upsert({
+      where: {
+        researchId_researchAuthorId: {
+          researchId: research.id,
+          researchAuthorId: author.id,
+        },
+      },
+      update: {
+        position: index,
+      },
+      create: {
+        researchId: research.id,
+        researchAuthorId: author.id,
+        position: index,
+      },
     })
   }
 }
+
+await prisma.$disconnect()
 
 /**
  * Initial data for the news tables.
