@@ -21,6 +21,8 @@
   --teal: #2e9b8a;
   --muted: #536a7c;
   --border: #d6e1e8;
+  /* Same hue as --bright-teal-blue, dark enough for 16px text on white (WCAG AA 4.5:1). */
+  --blue-accent-text: #0775ae;
 
   /* Dark scene, shared by the hero visual and the gallery lightbox. These were
      repeated literals across this file until the gallery needed them too. */
@@ -71,6 +73,11 @@ body {
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
   line-height: 1.45;
+}
+
+/* Body copy on the public site. Headings, navigation and buttons stay start-aligned. */
+.public-shell-content p {
+  text-align: justify;
 }
 
 a {
@@ -1792,6 +1799,22 @@ a {
   grid-template-columns: 1fr;
 }
 
+.topic-hero-with-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 40px 0 25px;
+}
+
+.topic-hero-mark-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: center;
+  gap: 64px;
+  max-width: 95rem;
+}
+
 .topic-hero-copy-only .topic-lead {
   max-width: none;
 }
@@ -1854,6 +1877,27 @@ a {
 .topic-hero-image {
   object-fit: contain;
   object-position: center;
+}
+
+.topic-hero-mark {
+  display: flex;
+  justify-content: center;
+}
+
+.topic-hero-mark-image {
+  display: block;
+  width: 260px;
+  max-width: 100%;
+  height: auto;
+  transform: translateY(-25px);
+}
+
+.topic-hero-with-mark h1 {
+  margin: 0;
+}
+
+.topic-hero-with-mark .topic-lead {
+  margin: 10px 0 0;
 }
 
 .topic-section {
@@ -2208,6 +2252,16 @@ a {
 
   .topic-hero h1 {
     font-size: 36px;
+  }
+
+  .topic-hero-mark-body {
+    grid-template-columns: 1fr;
+    gap: 90px;
+    max-width: none;
+  }
+
+  .topic-hero-mark-image {
+    width: min(260px, 80%);
   }
 
   .topic-lead {
@@ -2752,7 +2806,7 @@ a.gallery-tile:focus-visible {
   }
 }
 
-/* --- Quiénes somos (/nosotros) --- */
+/* --- ROSAC researchers (/radioastronomia#investigadores) --- */
 
 .team-gallery {
   margin-top: 20px;
@@ -2760,6 +2814,7 @@ a.gallery-tile:focus-visible {
 
 .team-gallery-track {
   display: flex;
+  align-items: stretch;
   gap: 16px;
   margin: 0;
   padding: 4px 4px 12px;
@@ -2776,51 +2831,94 @@ a.gallery-tile:focus-visible {
 
 .team-gallery-slide {
   position: relative;
+  display: flex;
   flex: 0 0 auto;
-  width: 300px;
+  width: 440px;
   scroll-snap-align: start;
 }
 
-.team-gallery-slide figure {
-  margin: 0;
+.researcher-card {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+  height: 100%;
+  padding: 14px;
 }
 
-.team-gallery-frame {
+.researcher-card-photo {
   position: relative;
-  display: block;
-  aspect-ratio: 4 / 5;
+  flex: 0 0 auto;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  aspect-ratio: 1 / 1.15;
+  border-radius: 8px;
   background: #e8f6fc;
 }
 
-.team-gallery-photo {
+.researcher-card-photo img {
   object-fit: cover;
-  object-position: center;
+  object-position: top;
 }
 
-.team-gallery-slide figcaption {
+.researcher-card-body {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: 2px;
-  margin-top: 10px;
+  gap: 6px;
+  text-align: justify;
 }
 
-.team-gallery-name {
-  color: var(--ink);
-  font-size: 15px;
+.researcher-card-role,
+.researcher-card-name,
+.researcher-card-institution,
+.researcher-card-description {
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+.researcher-card-role {
+  color: var(--blue-accent-text);
+  font-size: 16px;
+  margin-bottom: 10px;
+  margin-top: 8px;
   font-weight: 700;
   line-height: 1.3;
 }
 
-.team-gallery-role {
-  order: -1;
-  color: var(--blue-dark);
-  font-size: 12px;
+.researcher-card-name {
+  color: var(--ink);
+  font-size: 16px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  line-height: 1.3;
+}
+
+.researcher-card-email,
+.researcher-card-email-empty {
+  display: block;
+  min-height: 1.4em;
+  margin-bottom: 10px;
+  color: var(--blue-dark);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.researcher-card-email:hover,
+.researcher-card-email:focus-visible {
+  color: var(--cyan);
+}
+
+.researcher-card-institution {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.researcher-card-description {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .team-gallery-controls {
@@ -2849,7 +2947,7 @@ a.gallery-tile:focus-visible {
 
 @media (max-width: 760px) {
   .team-gallery-slide {
-    width: 78vw;
+    width: 86vw;
   }
 }
 
@@ -3295,6 +3393,10 @@ a.gallery-tile:focus-visible {
 }
 
 .form-success {
+  text-align: center;
+}
+
+.form-success p {
   text-align: center;
 }
 

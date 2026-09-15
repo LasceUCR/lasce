@@ -20,11 +20,14 @@ for (const viewport of [
 
     await expect(page).toHaveURL(/\/radioastronomia$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeVisible()
+    await expect(
+      page.getByRole('img', { name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)' }),
+    ).toBeVisible()
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
 
-    await page.getByRole('link', { name: 'Volver a las áreas y accesos principales' }).click()
+    await page.getByRole('link', { name: 'Volver a las áreas' }).click()
     await expect(page).toHaveURL(/\/#areas-de-trabajo$/)
     await expect(areas).toBeInViewport()
   })
@@ -39,6 +42,9 @@ test('serves the general information and LASCE relationship directly without aut
   await expect(page).toHaveURL(/\/radioastronomia$/)
   await expect(page.getByRole('main')).toHaveCount(1)
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+  await expect(
+    page.getByRole('img', { name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)' }),
+  ).toBeVisible()
   await expect(page.getByRole('region', { name: '¿Qué es ROSAC?' })).toContainText(
     'observar el Sol y otras fuentes celestes',
   )
@@ -48,8 +54,39 @@ test('serves the general information and LASCE relationship directly without aut
   await expect(page.getByRole('region', { name: 'ROSAC y LASCE' })).toContainText(
     'LASCE convierte observaciones en conocimiento',
   )
+  await expect(page.getByRole('region', { name: /Investigadores/ })).toContainText(
+    'Dra. Carolina Salas Matamoros',
+  )
   await expect(page).toHaveTitle('Radioastronomía y ROSAC | LASCE')
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/radioastronomia$/)
+})
+
+test('presents each ROSAC researcher card with public information', async ({ page }) => {
+  await page.goto('/radioastronomia')
+
+  const team = page.getByRole('region', { name: /Investigadores/ })
+  const track = team.getByRole('list', { name: 'Investigadores' })
+
+  await expect(track.getByRole('listitem')).toHaveCount(14)
+  await expect(team.getByRole('heading', { name: 'Dra. Carolina Salas Matamoros' })).toBeVisible()
+  await expect(team.getByText('Investigadora principal')).toBeVisible()
+  await expect(team.getByRole('link', { name: 'carolina.salas_mata@ucr.ac.cr' })).toHaveAttribute(
+    'href',
+    'mailto:carolina.salas_mata@ucr.ac.cr',
+  )
+  await expect(
+    team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR').first(),
+  ).toBeVisible()
+  await expect(
+    team.getByText(
+      'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
+    ),
+  ).toBeVisible()
+
+  await expect(track).toHaveAttribute('tabindex', '0')
+  for (const image of await team.locator('img').all()) {
+    await expect(image).toHaveAttribute('alt', '')
+  }
 })
 
 test('keeps the scientific consultation button enabled and without a destination', async ({

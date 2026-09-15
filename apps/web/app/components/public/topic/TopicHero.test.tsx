@@ -39,6 +39,27 @@ describe('TopicHero', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
+  test('places a transparent mark on the page without the photograph frame', () => {
+    render(
+      <TopicHero
+        kicker={hero.kicker}
+        title={hero.title}
+        image={{
+          src: '/images/ROSAC/logo/ROSAC-YELLOW.png',
+          alt: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)',
+          presentation: 'mark',
+          width: 1209,
+          height: 615,
+        }}
+      />,
+    )
+
+    const mark = screen.getByRole('img', {
+      name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)',
+    })
+    expect(mark).toHaveAttribute('src', '/images/ROSAC/logo/ROSAC-YELLOW.png')
+  })
+
   test('shows an optional notice under the lead', () => {
     render(<TopicHero {...hero} notice="Contenido sujeto a revisión." />)
 

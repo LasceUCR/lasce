@@ -21,6 +21,7 @@ import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 
 import styles from './RosacInfoPage.module.css'
+import { TeamGallery } from './TeamGallery'
 
 const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
@@ -109,9 +110,25 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
       </TopicSection>
 
       <TopicSection
+        id="investigadores"
+        index="4"
+        intro={content.team.intro}
+        title={content.team.title}
+        titleId="rosac-team-title"
+        wide
+      >
+        <TeamGallery
+          emptyMessage={content.team.emptyMessage}
+          label={content.team.title}
+          people={content.team.people}
+        />
+      </TopicSection>
+
+      <TopicSection
         title={content.scientificConsultation.title}
         titleId="rosac-science-title"
         intro={content.scientificConsultation.description}
+        wide
       >
         <div className={styles.scientificAction}>
           <Button

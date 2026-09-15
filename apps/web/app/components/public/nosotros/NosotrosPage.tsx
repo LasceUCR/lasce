@@ -8,8 +8,6 @@ import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
 
-import { TeamGallery } from './TeamGallery'
-
 const icons: Record<NosotrosCardIcon, LucideIcon> = {
   sun: Sun,
   waves: Waves,
@@ -72,15 +70,6 @@ export function NosotrosPage({ content }: NosotrosPageProps) {
             {paragraph}
           </p>
         ))}
-      </TopicSection>
-
-      <TopicSection
-        title={content.team.title}
-        titleId="nosotros-team-title"
-        intro={content.team.intro}
-        index="2"
-      >
-        <TeamGallery label={content.team.title} people={content.team.people} />
       </TopicSection>
 
       <div className="topic-page-footer page-width">

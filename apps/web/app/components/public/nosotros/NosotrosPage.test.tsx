@@ -86,15 +86,10 @@ describe('NosotrosPage', () => {
     expect(screen.getByRole('region', { name: 'Nuestra visión' })).toBeInTheDocument()
   })
 
-  test('introduces every member of the team', () => {
+  test('does not list the ROSAC researchers', () => {
     render(<NosotrosPage {...defaultArgs} />)
 
-    const team = screen.getByRole('region', { name: /El equipo/ })
-    const track = within(team).getByRole('list', { name: defaultArgs.content.team.title })
-
-    expect(within(track).getAllByRole('listitem')).toHaveLength(
-      defaultArgs.content.team.people.length,
-    )
-    expect(within(team).getByText('Dra. Carolina Salas Matamoros')).toBeInTheDocument()
+    expect(screen.queryByText('Dra. Carolina Salas Matamoros')).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: /Investigadores/ })).not.toBeInTheDocument()
   })
 })
