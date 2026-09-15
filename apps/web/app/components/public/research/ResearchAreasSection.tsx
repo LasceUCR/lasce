@@ -30,6 +30,7 @@ export function ResearchAreasSection({ id, title, subtitle, areas }: ResearchAre
       <div className="gallery-grid">
         {areas.map((area) => (
           <AlbumTile
+            /* href={`/investigacion/areas/${area.slug}`} */
             key={area.slug}
             meta={area.description}
             src={area.src}
