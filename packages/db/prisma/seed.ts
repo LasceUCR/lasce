@@ -38,8 +38,7 @@ const researchRecords: SeedResearch[] = [
     ],
     abstract:
       'Accurate predictions with low error rates are crucial in the domain of space weather forecasting, particularly for predicting the transit time of Coronal Mass Ejections (CMEs). This study demonstrates the effectiveness of using a simple, essential dataset comprising only two variables, to achieve high predictive accuracy. An absolute mean error (MAE) of 9.32 was obtained, showcasing the efficiency of the proposed method. The architecture was a generative-evolutionary model, which optimized generative and polynomial parameters through an evolutionary algorithm, ensuring the lowest possible error. This approach highlights the potential of combining essential datasets with common techniques to achieve robust and precise predictions for space weather events.',
-    externalUrl:
-      'https://ieeexplore.ieee.org/abstract/document/10933895',
+    externalUrl: 'https://ieeexplore.ieee.org/abstract/document/10933895',
     doi: '10.1109/CONCAPAN63470.2024.10933895',
   },
   {

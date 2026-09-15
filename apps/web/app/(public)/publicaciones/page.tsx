@@ -31,10 +31,7 @@ export default async function PublicacionesPage() {
       <PublicationsExplorer publications={publications} />
 
       <div className="topic-page-footer page-width">
-        <TopicBackLink
-          href={publicacionesBackLink.href}
-          label={publicacionesBackLink.label}
-        />
+        <TopicBackLink href={publicacionesBackLink.href} label={publicacionesBackLink.label} />
       </div>
     </article>
   )
