@@ -26,8 +26,8 @@ export function FormField({
   }
 
   return (
-    <label className="form-field" htmlFor={id}>
-      <span className="form-field-label">{label}</span>
+    <label className="cms-form-field" htmlFor={id}>
+      <span className="cms-form-field-label">{label}</span>
       {multiline ? (
         <textarea
           id={id}

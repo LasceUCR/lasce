@@ -3655,21 +3655,21 @@ a.gallery-tile:focus-visible {
   font-size: 12px;
 }
 
-.form-field {
+.cms-form-field {
   margin: 14px 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.form-field-label {
+.cms-form-field-label {
   color: var(--ink);
   font-size: 13px;
   font-weight: 600;
 }
 
-.form-field input,
-.form-field textarea {
+.cms-form-field input,
+.cms-form-field textarea {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;

@@ -72,7 +72,7 @@ export function FileDropInput({
 
   return (
     <div className="file-drop-field">
-      <span className="form-field-label" id={`${inputId}-label`}>
+      <span className="cms-form-field-label" id={`${inputId}-label`}>
         {label}
       </span>
 
