@@ -110,6 +110,53 @@ test('mobile navigation can be opened and used with the keyboard', async ({ page
   await expect(menu).not.toHaveAttribute('open', '')
 })
 
+// The sweep above only ever sees the gallery closed, and the lightbox is where
+// most of the gallery's interaction lives.
+test('the gallery lightbox meets WCAG A and AA automated checks while open', async ({ page }) => {
+  await page.goto('/galeria/rosac')
+  await page
+    .getByRole('button', { name: /^Ver a tamaño completo:/ })
+    .first()
+    .click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+
+  expect(results.violations).toEqual([])
+})
+
+// Focus containment is a property of the native top layer, so this is the only
+// place it can honestly be verified — jsdom does not implement it.
+test('the gallery lightbox can be opened, paged and dismissed with the keyboard', async ({
+  page,
+}) => {
+  await page.goto('/galeria/rosac')
+
+  const firstTile = page.getByRole('button', { name: /^Ver a tamaño completo:/ }).first()
+  await firstTile.focus()
+  await page.keyboard.press('Enter')
+
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Cerrar' })).toBeFocused()
+  await expect(dialog.getByText(/^Archivo 1 de d+$/)).toBeAttached()
+
+  await page.keyboard.press('ArrowRight')
+  await expect(dialog.getByText(/^Archivo 2 de d+$/)).toBeAttached()
+
+  // Tab cannot leave a modal dialog, however many times it is pressed.
+  for (let press = 0; press < 5; press += 1) {
+    await page.keyboard.press('Tab')
+  }
+  await expect(dialog.locator(':focus')).toHaveCount(1)
+
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(firstTile).toBeFocused()
+})
+
 test('robots and sitemap expose only indexable public routes', async ({ request }) => {
   const robotsResponse = await request.get('/robots.txt')
   const robots = await robotsResponse.text()

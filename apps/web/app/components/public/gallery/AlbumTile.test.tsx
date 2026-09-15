@@ -12,10 +12,11 @@ describe('AlbumTile', () => {
   test('links to the album when it has a page of its own', () => {
     render(<AlbumTile {...coverArgs} />)
 
-    expect(screen.getByRole('link', { name: /Construcción del ROSAC/ })).toHaveAttribute(
-      'href',
-      '/galeria/rosac',
-    )
+    const link = screen.getByRole('link', {
+      name: `${coverArgs.title} ${coverArgs.meta}`,
+    })
+
+    expect(link).toHaveAttribute('href', '/galeria/rosac')
     expect(screen.getByText(coverArgs.meta)).toBeInTheDocument()
   })
 
@@ -30,6 +31,19 @@ describe('AlbumTile', () => {
     render(<AlbumTile {...subArgs} />)
 
     expect(screen.getByText('8 archivos')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: subArgs.title })).toBeInTheDocument()
+  })
+
+  test('titles the tile as a heading below the album it sits under', () => {
+    render(<AlbumTile {...coverArgs} />)
+
+    expect(screen.getByRole('heading', { level: 3, name: coverArgs.title })).toBeInTheDocument()
+  })
+
+  // The link already carries the title and the meta line, so describing the
+  // cover as well would only repeat them.
+  test('keeps the cover out of the accessibility tree', () => {
+    render(<AlbumTile {...subArgs} />)
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 })

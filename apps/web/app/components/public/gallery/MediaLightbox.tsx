@@ -1,7 +1,8 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 
 import { MediaFrame } from './MediaFrame'
 import { mediaPlaceholder, type GalleryMedia } from '@/app/lib/gallery'
@@ -9,108 +10,139 @@ import { mediaPlaceholder, type GalleryMedia } from '@/app/lib/gallery'
 export interface MediaLightboxProps {
   albumTitle: string
   item: GalleryMedia
+  /** One-based place of `item` in the album, ready to display. */
+  position: number
+  /** Files the arrows page through, for the "N de M" indicator. */
+  total: number
   onClose: () => void
   onPrevious: () => void
   onNext: () => void
 }
 
-const focusableSelector = 'button:not([tabindex="-1"])'
-
 /**
- * Full-screen view of a single file. Mounted only while open, so the escape and
- * arrow-key handlers live for exactly as long as the dialog does.
+ * Full-screen view of a single file, as a native modal dialog. `showModal()`
+ * provides the focus trap, Escape, and an inert background, so none of that is
+ * hand-rolled here; only the arrow-key paging is ours. Mounted just while open,
+ * so the listeners live for exactly as long as the dialog does.
  */
 export function MediaLightbox({
   albumTitle,
   item,
+  position,
+  total,
   onClose,
   onPrevious,
   onNext,
 }: MediaLightboxProps) {
-  const titleId = useId()
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const closeRef = useRef<HTMLButtonElement>(null)
+  const id = useId()
+  const titleId = `${id}-title`
+  const descriptionId = `${id}-description`
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const [announcement, setAnnouncement] = useState('')
+  const hasPaged = useRef(false)
+
+  // `onClose` changes identity as the open index moves, so hold it in a ref and
+  // keep the setup below to mount and unmount.
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
   useEffect(() => {
-    closeRef.current?.focus()
-  }, [])
+    const dialog = dialogRef.current
+    if (!dialog) return
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose()
-        return
-      }
-
-      if (event.key === 'ArrowLeft') {
-        onPrevious()
-        return
-      }
-
-      if (event.key === 'ArrowRight') {
-        onNext()
-        return
-      }
-
-      if (event.key !== 'Tab') {
-        return
-      }
-
-      // Keep focus inside the dialog: the page behind it is inert to the reader
-      // because of `aria-modal`, so it must be inert to the keyboard too.
-      const focusable = Array.from(
-        dialogRef.current?.querySelectorAll<HTMLElement>(focusableSelector) ?? [],
-      )
-      if (focusable.length === 0) {
-        return
-      }
-
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      if (!first || !last) {
-        return
-      }
-
-      const active = document.activeElement
-
-      if (event.shiftKey && active === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault()
-        first.focus()
-      }
+    if (typeof dialog.showModal === 'function') {
+      if (!dialog.open) dialog.showModal()
+    } else {
+      // jsdom, and anything without the top layer: the dialog still renders and
+      // still closes, it just is not modal.
+      dialog.setAttribute('open', '')
     }
 
-    document.addEventListener('keydown', handleKeyDown)
+    // `showModal()` blocks scrolling on its own, but the fallback above does
+    // not, so lock it explicitly and release it on unmount.
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
 
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose, onNext, onPrevious])
+    const handleClose = () => onCloseRef.current()
+    dialog.addEventListener('close', handleClose)
+
+    return () => {
+      dialog.removeEventListener('close', handleClose)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
+
+  // A live region announces its content on mount as well as on change, and this
+  // dialog mounts only when it opens — so staying empty until the file actually
+  // changes keeps it from talking over the dialog's own name and description.
+  useEffect(() => {
+    if (!hasPaged.current) {
+      hasPaged.current = true
+      return
+    }
+
+    setAnnouncement(`Archivo ${position} de ${total}: ${item.title}.`)
+  }, [item.title, position, total])
+
+  function closeDialog() {
+    const dialog = dialogRef.current
+
+    // Closing natively restores focus to the tile that opened this, and fires
+    // the `close` event the effect above listens for. jsdom implements neither
+    // `showModal` nor `close`, so fall back to reporting it upwards.
+    if (dialog?.open && typeof dialog.close === 'function') {
+      dialog.close()
+      return
+    }
+
+    onClose()
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDialogElement>) {
+    if (event.key === 'ArrowLeft') {
+      onPrevious()
+      return
+    }
+
+    if (event.key === 'ArrowRight') {
+      onNext()
+      return
+    }
+
+    // Escape closes a modal dialog natively; this covers the fallback path.
+    if (event.key === 'Escape') {
+      closeDialog()
+    }
+  }
+
+  function handleClick(event: MouseEvent<HTMLDialogElement>) {
+    // Click outside to close: the backdrop is painted by `::backdrop`, so a
+    // click that lands on the dialog itself is a click beside the content.
+    if (event.target === dialogRef.current) {
+      closeDialog()
+    }
+  }
 
   return (
-    <div
+    <dialog
+      aria-describedby={descriptionId}
       aria-labelledby={titleId}
-      aria-modal="true"
       className="lightbox"
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
       ref={dialogRef}
-      role="dialog"
     >
-      {/* Click-outside-to-close. Hidden from assistive tech and skipped by the
-          keyboard, which reaches the same action through the close button. */}
-      <button
-        aria-hidden="true"
-        className="lightbox-backdrop"
-        onClick={onClose}
-        tabIndex={-1}
-        type="button"
-      />
-
       <div className="lightbox-toolbar">
+        <p className="lightbox-position">
+          <span aria-hidden="true">{`${position} / ${total}`}</span>
+          <span className="sr-only">{`Archivo ${position} de ${total}`}</span>
+        </p>
+
         <button
           aria-label="Cerrar"
+          autoFocus
           className="lightbox-close"
-          onClick={onClose}
-          ref={closeRef}
+          onClick={closeDialog}
           type="button"
         >
           <span aria-hidden="true">✕</span>
@@ -122,31 +154,36 @@ export function MediaLightbox({
           <ChevronLeft aria-hidden="true" size={20} strokeWidth={1.8} />
         </button>
 
-        <div className="lightbox-stage">
+        <figure className="lightbox-stage">
           <MediaFrame
-            alt={item.title}
+            alt={item.alt}
             className="lightbox-media"
             placeholder={mediaPlaceholder(item)}
             sizes="(max-width: 1120px) 100vw, 900px"
             src={item.src}
           />
 
-          <div className="lightbox-meta">
+          <figcaption className="lightbox-meta">
             <span className="lightbox-kicker">{albumTitle}</span>
-            <h3 id={titleId}>{item.title}</h3>
-            <p>{item.description}</p>
+            <h2 id={titleId}>{item.title}</h2>
+            <p id={descriptionId}>{item.description}</p>
             <div className="lightbox-facts">
               <span>{`Fecha de captura: ${item.date}`}</span>
               <span>{`Formato: ${item.format}`}</span>
               <span>{`Subido por: ${item.uploader}`}</span>
             </div>
-          </div>
-        </div>
+          </figcaption>
+        </figure>
 
         <button aria-label="Siguiente" className="lightbox-nav" onClick={onNext} type="button">
           <ChevronRight aria-hidden="true" size={20} strokeWidth={1.8} />
         </button>
       </div>
-    </div>
+
+      {/* Outside the figure, so it can never leak into its accessible name. */}
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
+    </dialog>
   )
 }
