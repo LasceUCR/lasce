@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { AlbumMediaGrid, type AlbumMediaGridProps } from './AlbumMediaGrid'
 import { Default, SingleFile } from './AlbumMediaGrid.stories'
@@ -26,7 +26,51 @@ function openTile(title: string) {
   return screen.getByRole('button', { name: `Ver a tamaño completo: ${title}` })
 }
 
+// jsdom does not implement `showModal`, so stub it to exercise the same path
+// a browser takes.
+beforeEach(() => {
+  HTMLDialogElement.prototype.showModal = vi.fn(function showModal(this: HTMLDialogElement) {
+    this.setAttribute('open', '')
+  })
+})
+
 describe('AlbumMediaGrid', () => {
+  test('presents the files of the album as one list', () => {
+    render(<AlbumMediaGrid {...defaultArgs} />)
+
+    expect(screen.getByRole('list')).toBeInTheDocument()
+    expect(screen.getAllByRole('listitem')).toHaveLength(defaultArgs.media.length)
+  })
+
+  // Each tile already has a control that names the file, so a described image
+  // beside it would make a reader say the same thing twice.
+  test('leaves the tile images out of the accessibility tree', () => {
+    render(<AlbumMediaGrid {...defaultArgs} />)
+
+    expect(screen.queryAllByRole('img')).toHaveLength(0)
+  })
+
+  test('tells the visitor which file of the album is open', async () => {
+    const user = userEvent.setup()
+    render(<AlbumMediaGrid {...defaultArgs} />)
+
+    await user.click(openTile(second.title))
+
+    const dialog = screen.getByRole('dialog')
+    const total = defaultArgs.media.length
+    expect(within(dialog).getByText(`2 / ${total}`)).toBeInTheDocument()
+    expect(within(dialog).getByText(`Archivo 2 de ${total}`)).toBeInTheDocument()
+  })
+
+  test('describes the open file with its own alternative text', async () => {
+    const user = userEvent.setup()
+    render(<AlbumMediaGrid {...defaultArgs} />)
+
+    await user.click(openTile(second.title))
+
+    expect(screen.getByRole('img', { name: second.alt })).toBeInTheDocument()
+  })
+
   test('offers one full-size control per file, named after it', () => {
     render(<AlbumMediaGrid {...defaultArgs} />)
 
@@ -50,7 +94,7 @@ describe('AlbumMediaGrid', () => {
 
     const dialog = screen.getByRole('dialog')
     expect(
-      within(dialog).getByRole('heading', { level: 3, name: second.title }),
+      within(dialog).getByRole('heading', { level: 2, name: second.title }),
     ).toBeInTheDocument()
     expect(within(dialog).getByText(`Formato: ${second.format}`)).toBeInTheDocument()
     expect(within(dialog).getByText(`Subido por: ${second.uploader}`)).toBeInTheDocument()
@@ -63,11 +107,11 @@ describe('AlbumMediaGrid', () => {
     await user.click(openTile(first.title))
     await user.click(screen.getByRole('button', { name: 'Anterior' }))
 
-    expect(screen.getByRole('heading', { level: 3, name: last.title })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: last.title })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
 
-    expect(screen.getByRole('heading', { level: 3, name: first.title })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: first.title })).toBeInTheDocument()
   })
 
   test('closes on Escape and returns focus to the tile that opened it', async () => {
@@ -88,6 +132,6 @@ describe('AlbumMediaGrid', () => {
     await user.click(openTile(first.title))
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
 
-    expect(screen.getByRole('heading', { level: 3, name: first.title })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: first.title })).toBeInTheDocument()
   })
 })

@@ -22,24 +22,29 @@ export function GalleryGroupSection({ album }: GalleryGroupSectionProps) {
       </div>
       <p className="gallery-group-description">{album.description}</p>
 
-      <div className="gallery-grid">
-        <AlbumTile
-          href={albumPath(album.slug)}
-          meta={albumMeta(album)}
-          src={album.src}
-          title={album.title}
-          variant="cover"
-        />
-        {album.subAlbums.map((subAlbum) => (
+      {/* A list, so a reader can be told how many albums this block holds
+          and can step through them. The grid still owns the layout. */}
+      <ul className="gallery-grid tile-list">
+        <li>
           <AlbumTile
-            href={subAlbumPath(album.slug, subAlbum.slug)}
-            key={subAlbum.slug}
-            meta={`${subAlbum.media.length} archivos`}
-            src={subAlbum.src}
-            title={subAlbum.title}
+            href={albumPath(album.slug)}
+            meta={albumMeta(album)}
+            src={album.src}
+            title={album.title}
+            variant="cover"
           />
+        </li>
+        {album.subAlbums.map((subAlbum) => (
+          <li key={subAlbum.slug}>
+            <AlbumTile
+              href={subAlbumPath(album.slug, subAlbum.slug)}
+              meta={`${subAlbum.media.length} archivos`}
+              src={subAlbum.src}
+              title={subAlbum.title}
+            />
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   )
 }
