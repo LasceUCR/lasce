@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 
+import { Button } from '@/app/components/public/Button'
 import { SearchBar } from '@/app/components/public/SearchBar'
 
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
@@ -72,7 +73,8 @@ export function UsersOverviewPage({
             onQueryChange={setQuery}
           />
           {query !== '' && (
-            <button
+            <Button
+              variant="secondary"
               className={styles.clearSearch}
               type="button"
               onClick={() => {
@@ -81,7 +83,7 @@ export function UsersOverviewPage({
               }}
             >
               Limpiar búsqueda
-            </button>
+            </Button>
           )}
         </div>
         <p className={query.trim() ? 'content-empty' : 'sr-only'} role="status" aria-atomic="true">

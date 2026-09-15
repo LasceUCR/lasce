@@ -52,10 +52,10 @@ export function UserRolesRow({
         ) : (
           user.name
         )}
-        {feedback && (
-          <p role="status" className={styles.feedback}>
+        {onSaveRoles && (
+          <span role="status" aria-atomic="true" className="sr-only">
             {feedback}
-          </p>
+          </span>
         )}
         {pendingRole !== undefined && (
           <UserRoleChangeDialog
