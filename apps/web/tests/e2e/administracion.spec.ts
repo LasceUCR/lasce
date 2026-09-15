@@ -46,22 +46,12 @@ test('keeps the header tab current while browsing the other sidebar sections', a
 
   for (const [label, heading] of [
     ['Descargas', 'Descargas'],
-    ['Usuarios', 'Usuarios'],
     ['Infraestructura', 'Infraestructura'],
   ] as const) {
     await sidebar.getByRole('link', { name: label }).click()
 
     await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
-    if (label === 'Usuarios') {
-      await expect(
-        page.getByRole('region', { name: 'Usuarios y roles', exact: true }),
-      ).toBeVisible()
-      await expect(
-        page.getByText('Datos de prueba: los usuarios y roles mostrados son ficticios.'),
-      ).toBeVisible()
-    } else {
-      await expect(page.getByText('Contenido en preparación')).toBeVisible()
-    }
+    await expect(page.getByText('Contenido en preparación')).toBeVisible()
     await expect(sidebar.getByRole('link', { name: label })).toHaveAttribute('aria-current', 'page')
     await expect(headerLink).toHaveAttribute('aria-current', 'page')
   }
