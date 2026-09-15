@@ -285,7 +285,7 @@ export const rosacInfoContent = {
           'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
       },
       {
-        src: '/images/ROSAC/team/EduardoIbarra.png',
+        src: '/images/ROSAC/team/EduardoIbarra.jpg',
         name: 'Dr. Eduardo Ibarra',
         role: 'Colaborador externo',
         institution:
