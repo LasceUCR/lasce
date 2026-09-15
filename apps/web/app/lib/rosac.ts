@@ -5,12 +5,12 @@
  * This module describes the public information page only; scientific consultation is separate.
  *
  * `team.people` is the accessible source of truth for the ROSAC researchers gallery. Portraits
- * live in `public/images/equipo/`; names, roles, emails, institution and descriptions are rendered as
+ * live in `public/images/ROSAC/team/`; names, roles, emails, institution and descriptions are rendered as
  * HTML in `ResearcherCard`. `team.people[].src` must be a local path under `apps/web/public`.
  * `next.config.ts` declares no `images` config, so a remote URL throws at render time.
  *
  * `institution` is the affiliation shown as `Institución: {institution}`. `email` is only set when
- * LASCE supplied a public address. Portraits are the named files in `public/images/equipo/`.
+ * LASCE supplied a public address. Portraits are the named files in `public/images/ROSAC/team/`.
  *
  * The team list is hand maintained here on purpose. If it ever needs to be editable without a
  * deploy, move it to Prisma and fetch it in the route, the way `investigacion` does. The page
@@ -100,7 +100,7 @@ export const rosacInfoContent = {
     title: 'Radioastronomía',
     lead: 'Radio Observatorio de Santa Cruz (ROSAC)',
     image: {
-      src: '/images/ROSAC/ROSAC-AMARILLO.png',
+      src: '/images/ROSAC/logo/ROSAC-YELLOW.png',
       alt: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)',
       presentation: 'mark',
       width: 1209,
@@ -214,7 +214,7 @@ export const rosacInfoContent = {
     emptyMessage: 'No hay información de investigadores disponible en este momento.',
     people: [
       {
-        src: '/images/equipo/CarolinaSalas.jpg',
+        src: '/images/ROSAC/team/CarolinaSalas.jpg',
         name: 'Dra. Carolina Salas Matamoros',
         role: 'Investigadora principal',
         email: 'carolina.salas_mata@ucr.ac.cr',
@@ -223,7 +223,7 @@ export const rosacInfoContent = {
           'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
       },
       {
-        src: '/images/equipo/MiguelVelazquez.jpg',
+        src: '/images/ROSAC/team/MiguelVelazquez.jpg',
         name: 'Dr. Miguel Velázquez',
         role: 'Investigador',
         email: 'miguel.velazquez@ucr.ac.cr',
@@ -231,7 +231,7 @@ export const rosacInfoContent = {
         description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
       },
       {
-        src: '/images/equipo/DavidGale.jpg',
+        src: '/images/ROSAC/team/DavidGale.jpg',
         name: 'Dr. David Gale',
         role: 'Investigador',
         email: 'david.gale@ucr.ac.cr',
@@ -241,7 +241,7 @@ export const rosacInfoContent = {
           'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
       },
       {
-        src: '/images/equipo/OscarNunez.jpg',
+        src: '/images/ROSAC/team/OscarNunez.jpg',
         name: 'Dr. Óscar Núñez',
         role: 'Investigador',
         email: 'oscar.nunezmata@ucr.ac.cr',
@@ -249,7 +249,7 @@ export const rosacInfoContent = {
         description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
       },
       {
-        src: '/images/equipo/FedericoRuiz.png',
+        src: '/images/ROSAC/team/FedericoRuiz.png',
         name: 'Dr. Federico Ruiz',
         role: 'Investigador',
         email: 'federico.ruizugalde@ucr.ac.cr',
@@ -258,7 +258,7 @@ export const rosacInfoContent = {
           'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
       },
       {
-        src: '/images/equipo/GustavoLara.jpg',
+        src: '/images/ROSAC/team/GustavoLara.jpg',
         name: 'MSc. Gustavo Lara',
         role: 'Investigador',
         email: 'gustavo.lara@ucr.ac.cr',
@@ -267,7 +267,7 @@ export const rosacInfoContent = {
           'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
       },
       {
-        src: '/images/equipo/AndresFallas.jpg',
+        src: '/images/ROSAC/team/AndresFallas.jpg',
         name: 'Ing. Andrés Fallas',
         role: 'Investigador',
         email: 'andres.fallas@ucr.ac.cr',
@@ -276,7 +276,7 @@ export const rosacInfoContent = {
           'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
       },
       {
-        src: '/images/equipo/WagnerMejias.jpg',
+        src: '/images/ROSAC/team/WagnerMejias.jpg',
         name: 'MSc. Wagner Mejías',
         role: 'Investigador',
         email: 'wagner.mejias@ucr.ac.cr',
@@ -285,7 +285,7 @@ export const rosacInfoContent = {
           'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
       },
       {
-        src: '/images/equipo/EduardoIbarra.png',
+        src: '/images/ROSAC/team/EduardoIbarra.png',
         name: 'Dr. Eduardo Ibarra',
         role: 'Colaborador externo',
         institution:
@@ -294,7 +294,7 @@ export const rosacInfoContent = {
           'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
       },
       {
-        src: '/images/equipo/AndresCorrales.jpg',
+        src: '/images/ROSAC/team/AndresCorrales.jpg',
         name: 'Ing. Andrés Corrales',
         role: 'Colaborador externo',
         institution: 'Hewlett Packard Enterprise, Costa Rica',
@@ -302,7 +302,7 @@ export const rosacInfoContent = {
           'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
       },
       {
-        src: '/images/equipo/AndresGamboa.jpg',
+        src: '/images/ROSAC/team/AndresGamboa.jpg',
         name: 'Ing. Andrés Gamboa',
         role: 'Colaborador externo',
         institution: 'Cirtec Medical Enterprise',
@@ -310,14 +310,14 @@ export const rosacInfoContent = {
           'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
       },
       {
-        src: '/images/equipo/JelmutRojas.jpg',
+        src: '/images/ROSAC/team/JelmutRojas.jpg',
         name: 'Jelmuth Rojas',
         role: 'Colaborador externo',
         institution: 'INDI CR',
         description: 'Apoyo en tareas de nivelación de la estructura.',
       },
       {
-        src: '/images/equipo/BarnaldBocker-2.jpg',
+        src: '/images/ROSAC/team/BarnaldBocker-2.jpg',
         name: 'Barnald Bocker',
         role: 'Asistente',
         institution: 'Estudiante de la Escuela de Física, UCR',
@@ -325,7 +325,7 @@ export const rosacInfoContent = {
           'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
       },
       {
-        src: '/images/equipo/FabianChaverri.jpg',
+        src: '/images/ROSAC/team/FabianChaverri.jpg',
         name: 'MSc. Fabián Chaverri',
         role: 'Futuro estudiante de doctorado',
         institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
