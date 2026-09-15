@@ -1358,6 +1358,17 @@ a {
   font-weight: 700;
 }
 
+.section-heading .research-areas-description {
+  max-width: 680px;
+  color: var(--muted);
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
 .news {
   margin-top: 8px;
   padding-bottom: 56px;
