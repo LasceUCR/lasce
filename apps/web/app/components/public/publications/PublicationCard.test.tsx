@@ -8,13 +8,17 @@ const defaultArgs = Default.args as PublicationCardProps
 const institutionalArgs = InstitutionalReport.args as PublicationCardProps
 
 describe('PublicationCard', () => {
-  test('shows the title, authors, venue and year it was given', () => {
-    render(<PublicationCard {...defaultArgs} />)
+  test('shows the title, authors, venue, year and research group it was given', () => {
+    const { container } = render(<PublicationCard {...defaultArgs} />)
 
     expect(screen.getByRole('heading', { name: defaultArgs.title })).toBeInTheDocument()
-    expect(
-      screen.getByText(`${defaultArgs.authors} · ${defaultArgs.venue} · ${defaultArgs.year}`),
-    ).toBeInTheDocument()
+
+    const metadata = container.querySelector('.publication-meta')
+
+    expect(metadata).toHaveTextContent(defaultArgs.authors)
+    expect(metadata).toHaveTextContent(defaultArgs.venue)
+    expect(metadata).toHaveTextContent(defaultArgs.year)
+    expect(metadata).toHaveTextContent(defaultArgs.researchGroup)
   })
 
   test('shows the abstract, clamped so it cannot grow past two lines', () => {
