@@ -58,8 +58,9 @@ SQLAlchemy but never migrates them, so there is only ever one migration history.
 
 PostgreSQL is split into one schema per domain: `research` for the public publications and `auth`
 for portal accounts. Only `apps/web` writes `auth.users` and `auth.sessions`, through the
-`/acceso` and `/cuenta` Server Actions; see [registration.md](registration.md) and
-[sessions.md](sessions.md).
+`/acceso`, `/cuenta` and user-administration Server Actions; see
+[registration.md](registration.md), [sessions.md](sessions.md) and
+[user-administration.md](user-administration.md).
 
 Two consequences of that split are worth knowing before you touch the schema:
 
