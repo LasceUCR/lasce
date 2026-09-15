@@ -79,6 +79,7 @@ def test_user_matches_the_prisma_columns() -> None:
 
 def test_user_role_mirrors_the_prisma_enum() -> None:
     role = User.__table__.columns["role"]
+    assert role.nullable  # Removing an assignment does not delete the account.
 
     assert [member.value for member in UserRole] == ["visitor", "assistant", "admin"]
     assert role.type.enums == ["visitor", "assistant", "admin"]

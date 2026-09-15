@@ -58,9 +58,8 @@ model User {
   /// Self-describing KDF string, `scrypt$<N>$<r>$<p>$<salt>$<hash>`. Produced and
   /// verified by apps/web/app/lib/auth/password.ts.
   passwordHash String   @map("password_hash")
-  /// Never set from the registration request; the database default is the only
-  /// path today.
-  role         UserRole @default(VISITOR)
+  /// Registration uses the default; administrators can replace or remove the assignment.
+  role         UserRole? @default(VISITOR)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
 

@@ -37,7 +37,7 @@ export default async function CuentaPage() {
     email: user.email,
     institution: user.institution,
     countryName: countryName(user.countryCode),
-    roleLabel: ROLE_LABELS[user.role],
+    roleLabel: user.role ? ROLE_LABELS[user.role] : 'Sin rol asignado',
     memberSince: memberSince.format(user.createdAt),
   }
 
