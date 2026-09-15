@@ -141,10 +141,10 @@ test('the gallery lightbox can be opened, paged and dismissed with the keyboard'
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Cerrar' })).toBeFocused()
-  await expect(dialog.getByText(/^Archivo 1 de d+$/)).toBeAttached()
+  await expect(dialog.getByText(/^Archivo 1 de \d+$/)).toBeAttached()
 
   await page.keyboard.press('ArrowRight')
-  await expect(dialog.getByText(/^Archivo 2 de d+$/)).toBeAttached()
+  await expect(dialog.getByText(/^Archivo 2 de \d+$/)).toBeAttached()
 
   // Tab cannot leave a modal dialog, however many times it is pressed.
   for (let press = 0; press < 5; press += 1) {
