@@ -1,5 +1,9 @@
 from app.db.models import (
     Base,
+    News,
+    NewsAuthor,
+    NewsCrossAuthor,
+    NewsSource,
     Publisher,
     Research,
     ResearchAuthor,
@@ -11,6 +15,10 @@ from app.db.models import (
 
 __all__ = [
     "Base",
+    "News",
+    "NewsAuthor",
+    "NewsCrossAuthor",
+    "NewsSource",
     "Publisher",
     "Research",
     "ResearchAuthor",

@@ -41,9 +41,7 @@ export default function HomePage() {
             mediante observaciones, instrumentación, análisis de datos y desarrollo científico.
           </p>
           <div className="hero-actions">
-            <Button className="button-primary-white-text" href="/nosotros">
-              Conoce más sobre LASCE
-            </Button>
+            <Button href="/nosotros">Conoce más sobre LASCE</Button>
           </div>
         </div>
       </section>

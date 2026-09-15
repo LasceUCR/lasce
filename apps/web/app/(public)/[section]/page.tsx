@@ -8,16 +8,6 @@ import { isWorkAreaSlug, workAreaSlugs, workAreas } from '@/app/lib/work-areas'
 const excludedDynamicWorkAreaSlugs = new Set(['clima-espacial', 'fisica-solar', 'radioastronomia'])
 
 const publicSections = {
-  instrumentacion: {
-    title: 'Instrumentación',
-    description:
-      'Consulte los instrumentos, observatorios y capacidades técnicas que respaldan la investigación del laboratorio.',
-  },
-  data: {
-    title: 'Datos',
-    description:
-      'Acceda a indicadores, observaciones y productos científicos publicados por las distintas áreas de LASCE.',
-  },
   contacto: {
     title: 'Contacto',
     description:
@@ -75,6 +65,7 @@ export async function generateMetadata({ params }: PublicSectionPageProps): Prom
   return {
     title: `${content.title} | LASCE`,
     description: content.description,
+    alternates: { canonical: `/${section}` },
   }
 }
 
