@@ -14,7 +14,9 @@ test('supports narrow screens, long names, keyboard recovery and conflicting cha
     await page.goto('/administracion/usuarios')
     const search = page.getByRole('searchbox', { name: 'Buscar usuarios' })
     await search.fill(fixture.target.email)
-    await expect(page.getByRole('status')).toContainText('1 usuario encontrado')
+    await expect(
+      page.getByRole('status').filter({ hasText: '1 usuario encontrado.' }),
+    ).toBeVisible()
     await page.getByRole('button', { name: 'Limpiar búsqueda' }).click()
     await expect(search).toBeFocused()
     const row = page.getByRole('row', { name: new RegExp(fixture.target.email) })
