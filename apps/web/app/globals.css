@@ -1362,6 +1362,16 @@ a {
   font-size: 14px;
 }
 
+.research-areas {
+  margin-top: 0;
+  padding-top: 24px;
+  padding-bottom: 56px;
+}
+
+.research-area-content {
+  padding-bottom: 56px;
+}
+
 .research-area-list {
   max-width: 760px;
   margin: 12px 0 0;
