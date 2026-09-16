@@ -50,4 +50,5 @@ describe('FormField', () => {
 
     expect(onChange).toHaveBeenCalledWith('waves')
   })
+
 })
