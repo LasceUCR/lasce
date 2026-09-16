@@ -24,11 +24,12 @@ export interface CreatedUser {
   role: UserRole | null
 }
 
-/** What login needs to check a password and open a session: nothing more. */
+/** What login needs to check a password and open a session. */
 export interface UserCredentials {
   id: string
   fullName: string
   passwordHash: string
+  role: UserRole | null
 }
 
 /**
@@ -79,6 +80,6 @@ export async function createUser(user: NewUser): Promise<CreatedUser> {
 export async function findUserByEmail(email: string): Promise<UserCredentials | null> {
   return prisma.user.findUnique({
     where: { email: email.trim().toLowerCase() },
-    select: { id: true, fullName: true, passwordHash: true },
+    select: { id: true, fullName: true, passwordHash: true, role: true },
   })
 }
