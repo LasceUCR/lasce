@@ -21,6 +21,7 @@ vi.mock('@lasce/db', () => ({
 vi.mock('./auth/session', () => ({ getSessionUser }))
 vi.mock('./auth/permission-store', () => ({ getPermissionsForRole }))
 
+import { PERMISSIONS } from './auth/permissions'
 import { getPermissionMatrix, updateRolePermissions } from './role-permissions'
 
 beforeEach(() => {
@@ -80,12 +81,19 @@ describe('role permission matrix', () => {
     expect(transaction).not.toHaveBeenCalled()
   })
 
-  test('refuses to strip permission management from the administrator role', async () => {
+  test('refuses any write to the administrator role', async () => {
     expect(
       await updateRolePermissions({
         role: 'ADMIN',
         permissions: ['download_resources'],
         previousPermissions: ['manage_permissions', 'download_resources'],
+      }),
+    ).toEqual({ ok: false, reason: 'locked' })
+    expect(
+      await updateRolePermissions({
+        role: 'ADMIN',
+        permissions: [...PERMISSIONS],
+        previousPermissions: [...PERMISSIONS],
       }),
     ).toEqual({ ok: false, reason: 'locked' })
     expect(transaction).not.toHaveBeenCalled()

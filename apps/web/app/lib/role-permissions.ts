@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { getPermissionsForRole } from './auth/permission-store'
 import {
   isPermission,
-  lockedPermissionsForRole,
+  isRolePermissionsLocked,
   PERMISSIONS,
   sortPermissions,
   type Permission,
@@ -61,8 +61,7 @@ export async function updateRolePermissions(input: unknown): Promise<PermissionC
   const role = parsed.data.role
   const permissions = sortPermissions([...new Set(parsed.data.permissions)])
   const previousPermissions = sortPermissions([...new Set(parsed.data.previousPermissions)])
-  const locked = lockedPermissionsForRole(role)
-  if (locked.some((permission) => !permissions.includes(permission))) {
+  if (isRolePermissionsLocked(role)) {
     return { ok: false, reason: 'locked' }
   }
 

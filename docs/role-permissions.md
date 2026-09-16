@@ -18,8 +18,11 @@ Laboratory **resources** are a separate concern: downloading them (`download_res
 The component-management grants are in the catalogue so later editors can call
 `requirePermission` without a new role model. There is no Componentes screen yet.
 
-`manage_permissions` cannot be removed from `ADMIN`. That is the only locked grant: it is what
-keeps the matrix itself configurable.
+The administrator matrix is read-only: the management table shows it, but none of those
+checkboxes can be changed, and `updateRolePermissions` refuses writes to `ADMIN`. Visitor and
+assistant grants can be edited. Saving asks for confirmation (`UserRoleChangeDialog`)
+before writing, the same pattern as changing a user's role. That keeps the matrix itself
+configurable without letting an administrator lock themselves out.
 
 ## The pieces
 

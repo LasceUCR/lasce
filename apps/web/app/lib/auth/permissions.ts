@@ -66,8 +66,13 @@ export function isPermission(value: string): value is Permission {
   return (PERMISSIONS as readonly string[]).includes(value)
 }
 
+/** The administrator matrix is read-only in the management UI and on write. */
+export function isRolePermissionsLocked(role: UserRole): boolean {
+  return role === 'ADMIN'
+}
+
 export function lockedPermissionsForRole(role: UserRole): readonly Permission[] {
-  return role === 'ADMIN' ? ['manage_permissions'] : []
+  return isRolePermissionsLocked(role) ? PERMISSIONS : []
 }
 
 export function sortPermissions(permissions: readonly Permission[]): Permission[] {

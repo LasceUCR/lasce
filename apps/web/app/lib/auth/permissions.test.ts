@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
   DEFAULT_ROLE_PERMISSIONS,
   isPermission,
+  isRolePermissionsLocked,
   lockedPermissionsForRole,
   PERMISSIONS,
   sortPermissions,
@@ -33,8 +34,11 @@ describe('permission catalogue', () => {
     expect(DEFAULT_ROLE_PERMISSIONS.VISITOR).toEqual(['download_resources'])
   })
 
-  test('keeps permission management locked on the administrator role', () => {
-    expect(lockedPermissionsForRole('ADMIN')).toEqual(['manage_permissions'])
+  test('keeps the entire administrator matrix locked', () => {
+    expect(isRolePermissionsLocked('ADMIN')).toBe(true)
+    expect(isRolePermissionsLocked('ASSISTANT')).toBe(false)
+    expect(isRolePermissionsLocked('VISITOR')).toBe(false)
+    expect(lockedPermissionsForRole('ADMIN')).toEqual(PERMISSIONS)
     expect(lockedPermissionsForRole('ASSISTANT')).toEqual([])
     expect(lockedPermissionsForRole('VISITOR')).toEqual([])
   })

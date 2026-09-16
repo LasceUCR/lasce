@@ -39,21 +39,30 @@ test('shows the current matrix and applies a saved change to access control', as
   try {
     await page.goto('/administracion/permisos')
     await expect(page.getByRole('heading', { level: 1, name: 'Permisos' })).toBeVisible()
-    await expect(page.getByRole('radio', { name: 'Persona administradora' })).toBeChecked()
-    await expect(page.getByRole('checkbox', { name: /Crear componentes/ })).toBeChecked()
-    await expect(page.getByRole('checkbox', { name: /Eliminar componentes/ })).toBeChecked()
-    await expect(page.getByRole('checkbox', { name: /Descargar recursos/ })).toBeChecked()
-    await expect(page.getByRole('checkbox', { name: /Configurar permisos/ })).toBeDisabled()
+    await expect(page.getByRole('table', { name: 'Permisos por rol' })).toBeVisible()
+    await expect(
+      page.getByRole('checkbox', { name: 'Crear componentes: Persona administradora' }),
+    ).toBeChecked()
+    await expect(
+      page.getByRole('checkbox', { name: 'Crear componentes: Persona administradora' }),
+    ).toBeDisabled()
+    await expect(
+      page.getByRole('checkbox', { name: 'Configurar permisos: Persona administradora' }),
+    ).toBeDisabled()
+    await expect(
+      page.getByRole('checkbox', { name: 'Descargar recursos: Asistente' }),
+    ).toBeChecked()
 
     await assistantPage.goto('/administracion/descargas')
     await expect(assistantPage.getByRole('heading', { level: 1, name: 'Descargas' })).toBeVisible()
     await assistantPage.goto('/administracion/usuarios')
     await expect(assistantPage.getByRole('heading', { name: 'Acceso denegado' })).toBeVisible()
 
-    await page.getByRole('radio', { name: 'Asistente' }).click()
-    await expect(page.getByRole('checkbox', { name: /Descargar recursos/ })).toBeChecked()
-    await page.getByRole('checkbox', { name: /Descargar recursos/ }).uncheck()
+    await page.getByRole('checkbox', { name: 'Descargar recursos: Asistente' }).uncheck()
     await page.getByRole('button', { name: 'Guardar cambios' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Confirmar cambio de permisos' })
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole('button', { name: 'Sí, guardar permisos' }).click()
     await expect(page.getByRole('status')).toContainText('Permisos actualizados para Asistente.')
 
     await assistantPage.goto('/administracion/descargas')
