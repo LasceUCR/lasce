@@ -33,10 +33,12 @@ function renderPage(props: NosotrosPageProps = defaultArgs) {
   )
 }
 
-function renderPageInEditMode(props: NosotrosPageProps = defaultArgs) {
+const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
+
+function renderPageInEditMode(props: Partial<NosotrosPageProps> = {}) {
   return render(
     <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
-      <NosotrosPage {...props} />
+      <NosotrosPage {...defaultArgs} {...adminGrants} {...props} />
     </EditModeContext.Provider>,
   )
 }
@@ -141,6 +143,24 @@ describe('NosotrosPage', () => {
     const activityCount = defaultArgs.content.activities.items.length
     expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(activityCount)
     expect(screen.getAllByRole('button', { name: 'Eliminar' })).toHaveLength(activityCount)
+    expect(screen.getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
+  })
+
+  test('lets an assistant edit cards without create or delete', () => {
+    renderPageInEditMode({ canCreate: false, canDelete: false, canEdit: true })
+
+    const activityCount = defaultArgs.content.activities.items.length
+    expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(activityCount)
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
+  })
+
+  test('hides every editor when edit mode is on but the account has no grants', () => {
+    renderPageInEditMode({ canCreate: false, canDelete: false, canEdit: false })
+
+    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
   })
 
   test('opens the edit modal for the activity being edited', async () => {
@@ -238,6 +258,23 @@ describe('NosotrosPage', () => {
     expect(
       screen.queryByText('Haga clic en "Añadir" para agregar alguna actividad.'),
     ).not.toBeInTheDocument()
+  })
+
+  test('hides the empty-activities hint from an assistant who cannot create', () => {
+    renderPageInEditMode({
+      canCreate: false,
+      canDelete: false,
+      canEdit: true,
+      content: {
+        ...defaultArgs.content,
+        activities: { ...defaultArgs.content.activities, items: [] },
+      },
+    })
+
+    expect(
+      screen.queryByText('Haga clic en "Añadir" para agregar alguna actividad.'),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
   })
 
   test('creates a new activity through "Añadir" and refreshes on success', async () => {

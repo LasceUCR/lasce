@@ -24,3 +24,10 @@ export const Default: Story = {
     onEdit: () => {},
   },
 }
+
+export const EditOnly: Story = {
+  args: {
+    children: Default.args?.children,
+    onEdit: () => {},
+  },
+}

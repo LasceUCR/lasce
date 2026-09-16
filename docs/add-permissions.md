@@ -69,8 +69,10 @@ did. The component only reads the props:
 {canDelete ? <button type="button" aria-label="Eliminar">…</button> : null}
 ```
 
-When a real save exists, the Server Action must repeat the same permission check (step 3).
-Hiding the button is not enough.
+`/nosotros` is the live case: the route looks up `create_components`, `edit_components` and
+`delete_components`, and `NosotrosPage` only shows Añadir / pencil / trash when Modo edición
+is on **and** the matching grant is true. The POST / PATCH / DELETE handlers call
+`requireApiPermission` with the same names — hiding the button is not enough.
 
 ### Admin page that must not be public
 
@@ -118,7 +120,8 @@ delete stay hidden because those flags are false.
 ## 3. Check again on every write
 
 Hiding the trash is not authorization. Each Server Action asks for the grant that matches the
-verb:
+verb. JSON route handlers use `requireApiPermission` from `apiGuard.ts` instead — it returns
+401/403 JSON rather than a redirect, which `fetch` can read.
 
 ```tsx
 'use server'

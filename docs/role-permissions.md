@@ -15,8 +15,9 @@ Laboratory **resources** are a separate concern: downloading them (`download_res
 | Asistente     | `edit_components`, `download_resources`                                                                                 |
 | Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `manage_users`, `manage_permissions` |
 
-The component-management grants are in the catalogue so later editors can call
-`requirePermission` without a new role model. There is no Componentes screen yet.
+The component-management grants gate the "¿Qué hacemos?" cards on `/nosotros`
+when Modo edición is on. Assistants may edit; administrators may also create
+and delete. There is no separate Componentes screen.
 
 The administrator matrix is read-only: the management table shows it, but none of those
 checkboxes can be changed, and `updateRolePermissions` refuses writes to `ADMIN`. Visitor and
@@ -34,6 +35,8 @@ configurable without letting an administrator lock themselves out.
 | Save action                                   | `apps/web/app/(public)/administracion/permission-actions.ts`                  |
 | Management UI                                 | `apps/web/app/components/administracion/RolePermissions{Page,Editor}.tsx`     |
 | Access-denied copy                            | `apps/web/app/components/administracion/AccessDenied.tsx`                     |
+| JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                  |
+| Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)     |
 | Resource downloads                            | `/administracion/descargas` (`download_resources`)                            |
 | Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md) |
 
