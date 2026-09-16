@@ -45,7 +45,7 @@ export function NewsCard({
             icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
             rel="noopener noreferrer"
             target="_blank"
-            variant="external"
+            variant="primary"
           >
             Abrir fuente
           </Button>
