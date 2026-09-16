@@ -1,5 +1,22 @@
 import type { ResearchArea } from '@/app/components/public/research/ResearchAreasSection'
 
+export const investigacionMeta = {
+  title: 'Investigación | LASCE',
+  description:
+    'Áreas de investigación del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
+} as const
+
+export const investigacionHero = {
+  kicker: 'Portal público LASCE',
+  title: 'Áreas de investigación',
+  lead: 'Principales temas de investigación desarrollados por el LASCE.',
+} as const
+
+export const investigacionBackLink = {
+  href: '/',
+  label: 'Volver al inicio',
+} as const
+
 export const researchAreas: ResearchArea[] = [
   {
     slug: 'area-uno',

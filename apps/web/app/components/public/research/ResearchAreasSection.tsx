@@ -24,13 +24,13 @@ export function ResearchAreasSection({ id, title, subtitle, areas }: ResearchAre
     <section className="research-areas page-width" id={id} aria-labelledby={titleId}>
       <div className="section-heading">
         <h2 id={titleId}>{title}</h2>
-        <p>{subtitle}</p>
+        <p className="research-areas-description">{subtitle}</p>
       </div>
 
       <div className="gallery-grid">
         {areas.map((area) => (
           <AlbumTile
-            href={`/investigacion/areas/${area.slug}`}
+            /* href={`/investigacion/areas/${area.slug}`} */
             key={area.slug}
             meta={area.description}
             src={area.src}

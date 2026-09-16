@@ -17,6 +17,7 @@ const publicRoutes = [
   { label: 'Inicio', path: '/' },
   { label: 'Nosotros', path: '/nosotros' },
   { label: 'Investigación', path: '/investigacion' },
+  { label: 'Publicaciones', path: '/publicaciones' },
   { label: 'Herramientas científicas', path: '/herramientas-cientificas' },
   { label: 'Datos', path: '/datos' },
   { label: 'Galería', path: '/galeria' },

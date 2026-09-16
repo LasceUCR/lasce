@@ -359,9 +359,9 @@ a {
   overflow: hidden;
 }
 
-/* Between the mobile breakpoint and about 1380px the nine navigation items
+/* Between the mobile breakpoint and 1440px the navigation items
    leave little room for the account links, so tighten the gaps only there. */
-@media (min-width: 1121px) and (max-width: 1380px) {
+@media (min-width: 1121px) and (max-width: 1440px) {
   .site-header {
     gap: 16px;
   }
@@ -1359,6 +1359,21 @@ a {
 .publication-card .button,
 .news-card .button {
   margin-top: 12px;
+}
+
+.publication-group {
+  font-weight: 700;
+}
+
+.section-heading .research-areas-description {
+  max-width: 680px;
+  color: var(--muted);
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+.section-heading h2 {
+  margin: 0;
 }
 
 .news {

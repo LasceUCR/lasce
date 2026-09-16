@@ -97,6 +97,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
               authors={publication.authors}
               href={publication.href}
               key={publication.slug}
+              researchGroup={publication.researchGroup}
               title={publication.title}
               venue={publication.venue}
               year={publication.year}
