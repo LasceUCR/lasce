@@ -41,13 +41,19 @@ test('shows the current matrix and applies a saved change to access control', as
     await expect(page.getByRole('heading', { level: 1, name: 'Permisos' })).toBeVisible()
     await expect(page.getByRole('table', { name: 'Permisos por rol' })).toBeVisible()
     await expect(
-      page.getByRole('checkbox', { name: 'Crear componentes: Persona administradora' }),
+      page.getByRole('checkbox', {
+        name: 'Crear componentes: Persona administradora (no se puede cambiar)',
+      }),
     ).toBeChecked()
     await expect(
-      page.getByRole('checkbox', { name: 'Crear componentes: Persona administradora' }),
+      page.getByRole('checkbox', {
+        name: 'Crear componentes: Persona administradora (no se puede cambiar)',
+      }),
     ).toBeDisabled()
     await expect(
-      page.getByRole('checkbox', { name: 'Configurar permisos: Persona administradora' }),
+      page.getByRole('checkbox', {
+        name: 'Configurar permisos: Persona administradora (no se puede cambiar)',
+      }),
     ).toBeDisabled()
     await expect(
       page.getByRole('checkbox', { name: 'Descargar recursos: Asistente' }),

@@ -55,6 +55,7 @@ export function RolePermissionsPage({
       </div>
 
       <form
+        aria-busy={saving || undefined}
         className={`surface-card admin-panel ${styles.form}`}
         onSubmit={(event) => {
           event.preventDefault()
@@ -109,7 +110,11 @@ export function RolePermissionsPage({
                               type="checkbox"
                               checked={granted[role.id]?.includes(permission.id) ?? false}
                               disabled={locked || saving}
-                              aria-label={`${permission.label}: ${role.name}`}
+                              aria-label={
+                                locked
+                                  ? `${permission.label}: ${role.name} (no se puede cambiar)`
+                                  : `${permission.label}: ${role.name}`
+                              }
                               onChange={() => onTogglePermission(role.id, permission.id)}
                             />
                           </label>

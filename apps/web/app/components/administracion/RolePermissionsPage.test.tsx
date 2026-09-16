@@ -16,10 +16,14 @@ describe('RolePermissionsPage', () => {
     expect(screen.getByRole('checkbox', { name: 'Crear componentes: Asistente' })).not.toBeChecked()
     expect(screen.getByRole('checkbox', { name: 'Descargar recursos: Visitante' })).toBeChecked()
     expect(
-      screen.getByRole('checkbox', { name: 'Crear componentes: Persona administradora' }),
+      screen.getByRole('checkbox', {
+        name: 'Crear componentes: Persona administradora (no se puede cambiar)',
+      }),
     ).toBeDisabled()
     expect(
-      screen.getByRole('checkbox', { name: 'Configurar permisos: Persona administradora' }),
+      screen.getByRole('checkbox', {
+        name: 'Configurar permisos: Persona administradora (no se puede cambiar)',
+      }),
     ).toBeDisabled()
     expect(
       screen.getByRole('checkbox', { name: 'Descargar recursos: Visitante' }),

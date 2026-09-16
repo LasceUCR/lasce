@@ -60,4 +60,21 @@ describe('EditableWrapper', () => {
     expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
   })
+
+  test('uses the card title in the action names when they are provided', () => {
+    render(
+      <EditableWrapper
+        {...defaultArgs}
+        deleteLabel="Eliminar Fenómenos solares eruptivos"
+        editLabel="Editar Fenómenos solares eruptivos"
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Editar Fenómenos solares eruptivos' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Eliminar Fenómenos solares eruptivos' }),
+    ).toBeInTheDocument()
+  })
 })

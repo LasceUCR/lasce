@@ -10,6 +10,8 @@ export interface EditableWrapperProps {
   children: ReactNode
   onEdit?: () => void
   onDelete?: () => void
+  editLabel?: string
+  deleteLabel?: string
   deleteConfirmTitle?: string
   deleteConfirmMessage?: string
   className?: string
@@ -25,6 +27,8 @@ export function EditableWrapper({
   children,
   onEdit,
   onDelete,
+  editLabel = 'Editar',
+  deleteLabel = 'Eliminar',
   deleteConfirmTitle = 'Eliminar elemento',
   deleteConfirmMessage = '¿Desea eliminar este elemento? Esta acción no se puede deshacer.',
   className,
@@ -41,14 +45,14 @@ export function EditableWrapper({
         {onEdit ? (
           <IconButton
             icon={<Pencil size={16} strokeWidth={1.8} />}
-            label="Editar"
+            label={editLabel}
             onClick={onEdit}
           />
         ) : null}
         {onDelete ? (
           <IconButton
             icon={<Trash2 size={16} strokeWidth={1.8} />}
-            label="Eliminar"
+            label={deleteLabel}
             onClick={() => setConfirmOpen(true)}
             variant="danger"
           />

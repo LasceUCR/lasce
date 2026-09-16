@@ -151,7 +151,11 @@ export function NosotrosPage({
       </TopicSection>
 
       <TopicSection title={content.activities.title} titleId="nosotros-activities-title" index="1">
-        {listError ? <p className="form-alert">{listError}</p> : null}
+        {listError ? (
+          <p className="form-alert" role="alert">
+            {listError}
+          </p>
+        ) : null}
 
         {editMode && canCreate && content.activities.items.length === 0 ? (
           <p className="topic-intro">
@@ -181,6 +185,8 @@ export function NosotrosPage({
                 key={item.id}
                 deleteConfirmMessage={`¿Desea eliminar "${item.title}"? Esta acción no se puede deshacer.`}
                 deleteConfirmTitle="Eliminar actividad"
+                deleteLabel={`Eliminar ${item.title}`}
+                editLabel={`Editar ${item.title}`}
                 onDelete={canDelete ? () => handleDeleteActivity(item.id) : undefined}
                 onEdit={canEdit ? () => openEditor(item.id) : undefined}
               >
@@ -193,7 +199,11 @@ export function NosotrosPage({
             <AddItemCard label="Añadir">
               {({ close }) => (
                 <>
-                  {createError ? <p className="form-alert">{createError}</p> : null}
+                  {createError ? (
+                    <p className="form-alert" role="alert">
+                      {createError}
+                    </p>
+                  ) : null}
                   <NosotrosActivityForm
                     activity={blankActivity}
                     confirmMessage="¿Desea agregar esta actividad?"
@@ -242,7 +252,11 @@ export function NosotrosPage({
       >
         {editingActivity ? (
           <>
-            {saveError ? <p className="form-alert">{saveError}</p> : null}
+            {saveError ? (
+              <p className="form-alert" role="alert">
+                {saveError}
+              </p>
+            ) : null}
             <NosotrosActivityForm
               activity={editingActivity}
               onCancel={closeEditor}

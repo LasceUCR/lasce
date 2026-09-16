@@ -141,16 +141,23 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
 
     const activityCount = defaultArgs.content.activities.items.length
-    expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(activityCount)
-    expect(screen.getAllByRole('button', { name: 'Eliminar' })).toHaveLength(activityCount)
+    expect(screen.getAllByRole('button', { name: /^Editar / })).toHaveLength(activityCount)
+    expect(screen.getAllByRole('button', { name: /^Eliminar / })).toHaveLength(activityCount)
     expect(screen.getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
+    const [firstActivity] = defaultArgs.content.activities.items
+    expect(
+      screen.getByRole('button', { name: `Editar ${firstActivity?.title}` }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: `Eliminar ${firstActivity?.title}` }),
+    ).toBeInTheDocument()
   })
 
   test('lets an assistant edit cards without create or delete', () => {
     renderPageInEditMode({ canCreate: false, canDelete: false, canEdit: true })
 
     const activityCount = defaultArgs.content.activities.items.length
-    expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(activityCount)
+    expect(screen.getAllByRole('button', { name: /^Editar / })).toHaveLength(activityCount)
     expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
   })
@@ -168,7 +175,7 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
     const [firstActivity] = defaultArgs.content.activities.items
 
-    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
     await user.click(firstEditButton as HTMLElement)
 
     const dialog = screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` })
@@ -182,7 +189,7 @@ describe('NosotrosPage', () => {
     const user = userEvent.setup()
     renderPageInEditMode()
 
-    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar / })
     await user.click(firstDeleteButton as HTMLElement)
 
     expect(screen.getByRole('dialog', { name: 'Eliminar actividad' })).toBeInTheDocument()
@@ -194,7 +201,7 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
     const [firstActivity] = defaultArgs.content.activities.items
 
-    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
     await user.click(firstEditButton as HTMLElement)
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
@@ -219,15 +226,15 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
     const [firstActivity] = defaultArgs.content.activities.items
 
-    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
     await user.click(firstEditButton as HTMLElement)
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(
-      await screen.findByText('No tiene permisos para modificar este contenido.'),
-    ).toBeInTheDocument()
+      await screen.findByRole('alert'),
+    ).toHaveTextContent('No tiene permisos para modificar este contenido.')
     expect(
       screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` }),
     ).toBeInTheDocument()
@@ -322,7 +329,7 @@ describe('NosotrosPage', () => {
     const confirmDialog = screen.getByRole('dialog', { name: 'Agregar actividad' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByText('No se pudo crear la actividad.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo crear la actividad.')
     expect(screen.getByRole('dialog', { name: 'Añadir' })).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
@@ -333,7 +340,7 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
     const [firstActivity] = defaultArgs.content.activities.items
 
-    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar / })
     await user.click(firstDeleteButton as HTMLElement)
     const confirmDialog = screen.getByRole('dialog', { name: 'Eliminar actividad' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
@@ -353,12 +360,12 @@ describe('NosotrosPage', () => {
     })
     renderPageInEditMode()
 
-    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar / })
     await user.click(firstDeleteButton as HTMLElement)
     const confirmDialog = screen.getByRole('dialog', { name: 'Eliminar actividad' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByText('No se pudo eliminar la actividad.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo eliminar la actividad.')
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
@@ -49,13 +49,14 @@ export function NosotrosActivityForm({
   const [title, setTitle] = useState(activity.title)
   const [description, setDescription] = useState(activity.description)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const formId = useId()
 
   const canSave = title.trim() !== '' && description.trim() !== ''
 
   return (
     <div className="nosotros-activity-form">
       <FormField
-        id="nosotros-activity-icon"
+        id={`${formId}-icon`}
         label="Ícono"
         onChange={(value) => setIcon(value as NosotrosCardIcon)}
         options={iconOptions}
@@ -63,7 +64,7 @@ export function NosotrosActivityForm({
       />
 
       <FormField
-        id="nosotros-activity-title"
+        id={`${formId}-title`}
         label="Título"
         onChange={setTitle}
         required
@@ -71,7 +72,7 @@ export function NosotrosActivityForm({
       />
 
       <FormField
-        id="nosotros-activity-description"
+        id={`${formId}-description`}
         label="Texto"
         multiline
         onChange={setDescription}

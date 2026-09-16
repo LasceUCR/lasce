@@ -128,7 +128,9 @@ describe('persisted role permissions', () => {
     )
 
     expect(
-      screen.getByRole('checkbox', { name: 'Crear componentes: Persona administradora' }),
+      screen.getByRole('checkbox', {
+        name: 'Crear componentes: Persona administradora (no se puede cambiar)',
+      }),
     ).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled()
     expect(saveAction).not.toHaveBeenCalled()
