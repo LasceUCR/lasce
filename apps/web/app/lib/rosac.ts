@@ -16,6 +16,8 @@
  * deploy, move it to Prisma and fetch it in the route, the way `investigacion` does. The page
  * component takes its content as a prop precisely so that migration touches only the route.
  */
+import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
+
 export const rosacInfoMeta = {
   title: 'Radioastronomía y ROSAC | LASCE',
   description:
@@ -78,6 +80,7 @@ export interface RosacInfoContent {
   overview: RosacTextSection
   characteristics: RosacCardSection
   activities: RosacCardSection
+  construction: ConstructionContent
   radioObservation: RosacTextSection
   relationship: RosacTextSection
   team: {
@@ -95,6 +98,7 @@ export interface RosacInfoContent {
 }
 
 export const rosacInfoContent = {
+  construction: rosacConstructionContent,
   hero: {
     kicker: 'Área de trabajo LASCE',
     title: 'Radioastronomía',
