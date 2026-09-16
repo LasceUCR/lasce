@@ -63,13 +63,7 @@ export function NosotrosActivityForm({
         value={icon}
       />
 
-      <FormField
-        id={`${formId}-title`}
-        label="Título"
-        onChange={setTitle}
-        required
-        value={title}
-      />
+      <FormField id={`${formId}-title`} label="Título" onChange={setTitle} required value={title} />
 
       <FormField
         id={`${formId}-description`}

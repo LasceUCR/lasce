@@ -232,9 +232,9 @@ describe('NosotrosPage', () => {
     const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(
-      await screen.findByRole('alert'),
-    ).toHaveTextContent('No tiene permisos para modificar este contenido.')
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No tiene permisos para modificar este contenido.',
+    )
     expect(
       screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` }),
     ).toBeInTheDocument()

@@ -19,9 +19,7 @@ describe('PublicHeader', () => {
   test('hides Administración when nobody is signed in', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
-    expect(
-      screen.queryByRole('link', { name: /^Administración$/ }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
     expect(
       within(screen.getByRole('navigation', { name: 'Navegación principal' })).getByRole('link', {
         name: /^Contacto$/,
@@ -33,25 +31,19 @@ describe('PublicHeader', () => {
     setAccountCookie('Ana Pérez Rojas', 'VISITOR')
     render(<PublicHeader logoutAction={async () => undefined} />)
 
-    expect(
-      screen.queryByRole('link', { name: /^Administración$/ }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
   })
 
   test('shows Administración to an assistant and an administrator', () => {
     setAccountCookie('Carlos Solís', 'ASSISTANT')
     const { unmount } = render(<PublicHeader logoutAction={async () => undefined} />)
 
-    expect(
-      screen.getAllByRole('link', { name: /^Administración$/ }).length,
-    ).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: /^Administración$/ }).length).toBeGreaterThan(0)
     unmount()
 
     setAccountCookie('Ana Pérez Rojas', 'ADMIN')
     render(<PublicHeader logoutAction={async () => undefined} />)
 
-    expect(
-      screen.getAllByRole('link', { name: /^Administración$/ }).length,
-    ).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: /^Administración$/ }).length).toBeGreaterThan(0)
   })
 })

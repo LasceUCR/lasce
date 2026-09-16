@@ -4,8 +4,7 @@ import { getPermissionsForRole } from './permission-store'
 import type { Permission } from './permissions'
 import { getSessionUser, type SessionUser } from './session'
 
-export type ApiGuardResult =
-  { ok: true; user: SessionUser } | { ok: false; response: NextResponse }
+export type ApiGuardResult = { ok: true; user: SessionUser } | { ok: false; response: NextResponse }
 
 /**
  * Route Handler guard for JSON endpoints: 401 with no session, 403 when the

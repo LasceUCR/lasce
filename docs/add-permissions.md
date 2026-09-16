@@ -65,8 +65,20 @@ export default async function ArticlePage() {
 did. The component only reads the props:
 
 ```tsx
-{canEdit ? <button type="button" aria-label="Editar">…</button> : null}
-{canDelete ? <button type="button" aria-label="Eliminar">…</button> : null}
+{
+  canEdit ? (
+    <button type="button" aria-label="Editar">
+      …
+    </button>
+  ) : null
+}
+{
+  canDelete ? (
+    <button type="button" aria-label="Eliminar">
+      …
+    </button>
+  ) : null
+}
 ```
 
 `/nosotros` is the live case: the route looks up `create_components`, `edit_components` and
