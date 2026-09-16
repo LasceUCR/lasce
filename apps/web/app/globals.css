@@ -1362,6 +1362,19 @@ a {
   font-size: 14px;
 }
 
+.research-area-list {
+  max-width: 760px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: #355066;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.research-area-list li+li {
+  margin-top: 8px;
+}
+
 .section-heading h2 {
   margin: 0;
 }
