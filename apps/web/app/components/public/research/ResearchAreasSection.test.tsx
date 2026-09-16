@@ -13,7 +13,7 @@ describe('ResearchAreasSection', () => {
 
     const region = screen.getByRole('region', { name: defaultArgs.title })
 
-    expect(within(region).getAllByRole('article')).toHaveLength(defaultArgs.areas.length)
+    expect(within(region).getAllByRole('link')).toHaveLength(defaultArgs.areas.length)
   })
 
   test('renders each research area title and description', () => {
@@ -24,7 +24,7 @@ describe('ResearchAreasSection', () => {
       expect(screen.getByText(area.description)).toBeInTheDocument()
     }
   })
-  /*
+
   test('links each research area to its own detail page', () => {
     render(<ResearchAreasSection {...defaultArgs} />)
 
@@ -35,7 +35,7 @@ describe('ResearchAreasSection', () => {
       )
     }
   })
-*/
+
   test('still renders its heading when there are no research areas', () => {
     render(<ResearchAreasSection {...emptyArgs} />)
 

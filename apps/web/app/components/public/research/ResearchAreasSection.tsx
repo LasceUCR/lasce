@@ -7,6 +7,10 @@ export interface ResearchArea {
   title: string
   description: string
   src?: string
+  lead?: string
+  objectives?: string[]
+  scope?: string
+  topics?: string[]
 }
 
 export interface ResearchAreasSectionProps {
@@ -30,7 +34,7 @@ export function ResearchAreasSection({ id, title, subtitle, areas }: ResearchAre
       <div className="gallery-grid">
         {areas.map((area) => (
           <AlbumTile
-            /* href={`/investigacion/areas/${area.slug}`} */
+            href={`/investigacion/areas/${area.slug}`}
             key={area.slug}
             meta={area.description}
             src={area.src}
