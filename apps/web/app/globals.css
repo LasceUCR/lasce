@@ -3185,7 +3185,14 @@ a.gallery-tile:focus-visible {
 }
 
 .admin-sidebar {
+  position: fixed;
+  top: 78px;
+  left: 0;
+  bottom: 0;
+  z-index: 15;
+  width: 240px;
   padding: 28px 14px;
+  overflow-y: auto;
   background: var(--navy-deep);
   color: var(--white);
 }
@@ -3223,6 +3230,7 @@ a.gallery-tile:focus-visible {
 }
 
 .admin-content {
+  grid-column: 2;
   padding: 32px;
   background: var(--page);
   min-width: 0;
@@ -3360,12 +3368,22 @@ a.gallery-tile:focus-visible {
   }
 
   .admin-sidebar {
+    position: sticky;
+    top: 78px;
+    left: auto;
+    bottom: auto;
+    width: auto;
+    height: auto;
     padding: 12px 14px;
     overflow-x: auto;
   }
 
   .admin-sidebar ul {
     flex-direction: row;
+  }
+
+  .admin-content {
+    grid-column: auto;
   }
 }
 
