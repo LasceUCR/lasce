@@ -60,26 +60,24 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
           query={query}
         />
 
-        <div
-          aria-label="Filtrar por grupo de investigación"
-          className="publications-group-filters"
-          role="group"
-        >
-          <button
-            aria-pressed={selectedGroup === 'LASCE'}
-            onClick={() => setSelectedGroup(selectedGroup === 'LASCE' ? null : 'LASCE')}
-            type="button"
-          >
-            LASCE
-          </button>
+        <div className="publications-group-filter">
+          <label className="sr-only" htmlFor="publication-research-group">
+            Grupo de investigación
+          </label>
 
-          <button
-            aria-pressed={selectedGroup === 'ROSAC'}
-            onClick={() => setSelectedGroup(selectedGroup === 'ROSAC' ? null : 'ROSAC')}
-            type="button"
+          <select
+            id="publication-research-group"
+            onChange={(event) =>
+              setSelectedGroup(
+                event.target.value === '' ? null : (event.target.value as ResearchGroup),
+              )
+            }
+            value={selectedGroup ?? ''}
           >
-            ROSAC
-          </button>
+            <option value="">Todas las publicaciones</option>
+            <option value="LASCE">LASCE</option>
+            <option value="ROSAC">ROSAC</option>
+          </select>
         </div>
       </div>
 
