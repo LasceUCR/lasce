@@ -20,12 +20,11 @@ describe('PublicHeader', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
     expect(
-      screen.queryByRole('link', { name: 'Administración', exact: true }),
+      screen.queryByRole('link', { name: /^Administración$/ }),
     ).not.toBeInTheDocument()
     expect(
       within(screen.getByRole('navigation', { name: 'Navegación principal' })).getByRole('link', {
-        name: 'Contacto',
-        exact: true,
+        name: /^Contacto$/,
       }),
     ).toBeInTheDocument()
   })
@@ -35,7 +34,7 @@ describe('PublicHeader', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
     expect(
-      screen.queryByRole('link', { name: 'Administración', exact: true }),
+      screen.queryByRole('link', { name: /^Administración$/ }),
     ).not.toBeInTheDocument()
   })
 
@@ -44,7 +43,7 @@ describe('PublicHeader', () => {
     const { unmount } = render(<PublicHeader logoutAction={async () => undefined} />)
 
     expect(
-      screen.getAllByRole('link', { name: 'Administración', exact: true }).length,
+      screen.getAllByRole('link', { name: /^Administración$/ }).length,
     ).toBeGreaterThan(0)
     unmount()
 
@@ -52,7 +51,7 @@ describe('PublicHeader', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
     expect(
-      screen.getAllByRole('link', { name: 'Administración', exact: true }).length,
+      screen.getAllByRole('link', { name: /^Administración$/ }).length,
     ).toBeGreaterThan(0)
   })
 })
