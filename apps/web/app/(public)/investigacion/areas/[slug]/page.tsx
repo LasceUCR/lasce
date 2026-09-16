@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: ResearchAreaRouteProps): Prom
 
   return {
     title: `${area.title} | Investigación | LASCE`,
-    description: area.lead ?? area.description,
+    description: area.description,
   }
 }
 
