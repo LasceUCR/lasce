@@ -7,70 +7,76 @@
   color: #355066;
 }
 
-.roles,
-.permissions {
-  margin: 0 0 20px;
-  padding: 16px 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--white);
-}
-
-.roles legend,
-.permissions legend {
-  padding: 0 6px;
-  font-weight: 600;
-}
-
-.roleList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-}
-
-.roleOption,
-.permission {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  min-height: 44px;
-  cursor: pointer;
-}
-
-.roleOption input,
-.permission input {
-  width: 18px;
-  height: 18px;
-  margin: 13px 0 0;
-  flex: 0 0 auto;
-}
-
-.permissionList {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.permissionLabel {
-  display: block;
-  font-weight: 600;
-}
-
-.permissionHelp {
-  display: block;
-  color: #355066;
-  font-size: 14px;
-}
-
 .error {
-  margin: 0 0 16px;
+  margin: 16px 0;
   color: #8a1f1f;
 }
 
 .status {
-  margin: 0 0 16px;
+  margin: 0;
   color: #244359;
+}
+
+.permissionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dirtyRow {
+  background: #eef6fb;
+}
+
+.dirtyMark,
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--blue);
+  flex-shrink: 0;
+}
+
+.form table tbody tr:last-child th,
+.form table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #dce5ed;
+}
+
+.pending {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: min(100%, 240px);
+}
+
+.dot {
+  margin-top: 7px;
+}
+
+.pendingTitle {
+  margin: 0;
+  color: var(--navy-deep);
+  font-weight: 600;
+}
+
+.pendingHelp {
+  margin: 4px 0 0;
+  color: #355066;
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-left: auto;
 }

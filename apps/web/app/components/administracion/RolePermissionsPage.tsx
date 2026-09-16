@@ -3,24 +3,27 @@ import type { OverviewRole } from '@/app/lib/user-overview'
 import { Button } from '@/app/components/public/Button'
 
 import styles from './RolePermissionsPage.module.css'
+import tableStyles from './UsersRolesTable.module.css'
+
+export interface RolePermissionRow {
+  id: Permission
+  label: string
+}
 
 export interface RolePermissionsPageProps {
   title: string
   description: string
   roles: OverviewRole[]
-  selectedRoleId: string
-  onSelectRole: (roleId: string) => void
-  permissions: Array<{
-    id: Permission
-    label: string
-    description: string
-    checked: boolean
-    locked: boolean
-  }>
-  onTogglePermission: (permission: Permission) => void
+  permissions: RolePermissionRow[]
+  granted: Record<string, readonly Permission[]>
+  lockedRoleIds: readonly string[]
+  onTogglePermission: (roleId: string, permission: Permission) => void
   onSave: () => Promise<void>
+  onDiscard?: () => void
   saving?: boolean
   canSave?: boolean
+  pendingChanges?: number
+  dirtyPermissionIds?: readonly Permission[]
   error?: string
   status?: string
 }
@@ -29,16 +32,21 @@ export function RolePermissionsPage({
   title,
   description,
   roles,
-  selectedRoleId,
-  onSelectRole,
   permissions,
+  granted,
+  lockedRoleIds,
   onTogglePermission,
   onSave,
+  onDiscard,
   saving = false,
   canSave = true,
+  pendingChanges = 0,
+  dirtyPermissionIds = [],
   error,
   status,
 }: RolePermissionsPageProps) {
+  const pendingCopy =
+    pendingChanges === 1 ? '1 cambio sin guardar' : `${pendingChanges} cambios sin guardar`
   return (
     <div>
       <div className="section-heading">
@@ -55,66 +63,104 @@ export function RolePermissionsPage({
       >
         <h2 id="role-permissions-title">Permisos por rol</h2>
         <p id="role-permissions-help" className={styles.help}>
-          Selecciona un rol para ver sus permisos actuales. Los cambios se aplican a los controles
-          de acceso en la siguiente solicitud, sin volver a iniciar sesión.
+          Cada casilla indica si el rol puede hacer esa acción. Los permisos de la persona
+          administradora no se pueden cambiar. Guardar cambios pide confirmación antes de
+          aplicarlos.
         </p>
-        <fieldset className={styles.roles} aria-describedby="role-permissions-help">
-          <legend>Rol</legend>
-          <div role="radiogroup" aria-label="Rol" className={styles.roleList}>
-            {roles.map((role) => (
-              <label key={role.id} className={styles.roleOption}>
-                <input
-                  type="radio"
-                  name="role"
-                  value={role.id}
-                  checked={selectedRoleId === role.id}
-                  onChange={() => onSelectRole(role.id)}
-                />
-                {role.name}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <fieldset className={styles.permissions} disabled={saving}>
-          <legend>Permisos asociados</legend>
-          <ul className={styles.permissionList}>
-            {permissions.map((permission) => (
-              <li key={permission.id}>
-                <label className={styles.permission}>
-                  <input
-                    type="checkbox"
-                    checked={permission.checked}
-                    disabled={permission.locked}
-                    aria-describedby={`${permission.id}-description${permission.locked ? ` ${permission.id}-locked` : ''}`}
-                    onChange={() => onTogglePermission(permission.id)}
-                  />
-                  <span>
-                    <span className={styles.permissionLabel}>{permission.label}</span>
-                    <span id={`${permission.id}-description`} className={styles.permissionHelp}>
-                      {permission.description}
-                    </span>
-                    {permission.locked ? (
-                      <span id={`${permission.id}-locked`} className={styles.permissionHelp}>
-                        Obligatorio para este rol.
+        <div
+          className={tableStyles.scroll}
+          role="region"
+          aria-label="Tabla de permisos por rol"
+          tabIndex={0}
+        >
+          <table
+            className={tableStyles.table}
+            aria-labelledby="role-permissions-title"
+            aria-describedby="role-permissions-help"
+          >
+            <thead>
+              <tr>
+                <th scope="col">Permiso</th>
+                {roles.map((role) => (
+                  <th scope="col" key={role.id} className={tableStyles.assignment}>
+                    {role.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {permissions.map((permission) => {
+                const dirty = dirtyPermissionIds.includes(permission.id)
+                return (
+                  <tr key={permission.id} className={dirty ? styles.dirtyRow : undefined}>
+                    <th scope="row">
+                      <span className={styles.permissionLabel}>
+                        {dirty ? <span className={styles.dirtyMark} aria-hidden="true" /> : null}
+                        {permission.label}
+                        {dirty ? <span className="sr-only">, sin guardar</span> : null}
                       </span>
-                    ) : null}
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </fieldset>
+                    </th>
+                    {roles.map((role) => {
+                      const locked = lockedRoleIds.includes(role.id)
+                      return (
+                        <td key={role.id} className={tableStyles.assignment}>
+                          <label className={tableStyles.checkboxTarget}>
+                            <input
+                              type="checkbox"
+                              checked={granted[role.id]?.includes(permission.id) ?? false}
+                              disabled={locked || saving}
+                              aria-label={`${permission.label}: ${role.name}`}
+                              onChange={() => onTogglePermission(role.id, permission.id)}
+                            />
+                          </label>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
         {error ? (
           <p className={styles.error} role="alert">
             {error}
           </p>
         ) : null}
-        <p className={status ? styles.status : 'sr-only'} role="status" aria-atomic="true">
-          {status ?? ''}
-        </p>
-        <Button type="submit" disabled={saving || !canSave}>
-          {saving ? 'Guardando...' : 'Guardar cambios'}
-        </Button>
+        <div className={styles.footer}>
+          <div className={styles.pending}>
+            {pendingChanges > 0 ? (
+              <>
+                <span className={styles.dot} aria-hidden="true" />
+                <div>
+                  <p className={styles.pendingTitle} role="status" aria-atomic="true">
+                    {pendingCopy}
+                  </p>
+                  <p className={styles.pendingHelp}>
+                    Tienes cambios pendientes de guardar en los permisos.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className={status ? styles.status : 'sr-only'} role="status" aria-atomic="true">
+                {status ?? ''}
+              </p>
+            )}
+          </div>
+          <div className={styles.actions}>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={saving || pendingChanges === 0}
+              onClick={onDiscard}
+            >
+              Descartar
+            </Button>
+            <Button type="submit" disabled={saving || !canSave}>
+              {saving ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </div>
+        </div>
       </form>
     </div>
   )
