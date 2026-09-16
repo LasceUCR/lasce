@@ -45,6 +45,19 @@ export const Multiline: Story = {
   render: (args) => <InteractiveFormField {...args} />,
 }
 
+export const Select: Story = {
+  args: {
+    label: 'Ícono',
+    value: 'sun',
+    options: [
+      { value: 'sun', label: 'Sol' },
+      { value: 'waves', label: 'Ondas' },
+      { value: 'satellite', label: 'Satélite' },
+    ],
+  },
+  render: (args) => <InteractiveFormField {...args} />,
+}
+
 export const Empty: Story = {
   args: {
     label: 'Título',

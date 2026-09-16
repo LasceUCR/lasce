@@ -305,4 +305,80 @@ for (const record of newsRecords) {
   }
 }
 
+/**
+ * Initial data for the Nosotros activity flashcards ("¿Qué hacemos?"). This is
+ * editorial content LASCE supplied before the CMS existed, so there is no
+ * real admin account to credit as `modifiedBy` (required, not nullable, on
+ * `NosotrosActivity`). `seedContentAuthor` stands in for one: `passwordHash`
+ * reuses the well-formed, unmatchable hash from
+ * `apps/web/app/lib/auth/password.ts` (`UNKNOWN_USER_PASSWORD_HASH`), so this
+ * account can never authenticate.
+ */
+const seedContentAuthor = await prisma.user.upsert({
+  where: { email: 'contenido@lasce.cinespa.ucr.ac.cr' },
+  update: {},
+  create: {
+    fullName: 'Contenido institucional LASCE',
+    email: 'contenido@lasce.cinespa.ucr.ac.cr',
+    institution: 'CINESPA, Universidad de Costa Rica',
+    countryCode: 'CR',
+    passwordHash:
+      'scrypt$32768$8$3$TPkSsPwib6wZJH9ldDofuw==$0qYXeu1PzONJVFvfqX6nsBSwDrkCAdcwZ7Q0az2MZWVcvo4O90Jra1fobA0QsXNpivpSF6ZSss6PFG8gWmVVdg==',
+    role: 'ADMIN',
+  },
+})
+
+type SeedNosotrosActivity = {
+  icon: 'SUN' | 'WAVES' | 'SATELLITE' | 'CODE' | 'COLLABORATION' | 'EDUCATION'
+  title: string
+  paragraph: string
+}
+
+const nosotrosActivities: SeedNosotrosActivity[] = [
+  {
+    icon: 'SUN',
+    title: 'Fenómenos solares eruptivos',
+    paragraph:
+      "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
+  },
+  {
+    icon: 'WAVES',
+    title: 'Perturbaciones y relación Sol-Tierra',
+    paragraph:
+      'Estudiamos la evolución de perturbaciones solares y su relación con el viento solar, el campo magnético interplanetario y local, y la ionosfera.',
+  },
+  {
+    icon: 'SATELLITE',
+    title: 'Integración de observaciones',
+    paragraph:
+      'Integramos mediciones propias con imágenes y datos de satélites, estaciones terrestres y observatorios internacionales.',
+  },
+  {
+    icon: 'CODE',
+    title: 'Herramientas computacionales',
+    paragraph:
+      'Implementamos y desarrollamos herramientas computacionales para procesar datos, reconocer patrones y apoyar a la investigación en la predicción del clima espacial y su impacto en nuestro país.',
+  },
+  {
+    icon: 'COLLABORATION',
+    title: 'Colaboración interdisciplinaria',
+    paragraph:
+      'Promovemos proyectos interdisciplinarios y colaboraciones nacionales e internacionales.',
+  },
+  {
+    icon: 'EDUCATION',
+    title: 'Formación de estudiantes',
+    paragraph:
+      'Creamos oportunidades de formación práctica para estudiantes mediante investigación, instrumentación, programación y análisis de datos.',
+  },
+]
+
+await prisma.nosotrosActivity.deleteMany()
+
+for (const activity of nosotrosActivities) {
+  await prisma.nosotrosActivity.create({
+    data: { ...activity, modifiedBy: seedContentAuthor.id },
+  })
+}
+
 await prisma.$disconnect()

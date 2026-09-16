@@ -12,6 +12,13 @@ export interface ModalProps {
 export function Modal({ open, title, onClose, children }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
+  // Tracks whether the current press-drag-release started on the backdrop
+  // itself, not just where it ended. Selecting text inside `.modal-body` and
+  // releasing the mouse past its edge (still inside the dialog's own box)
+  // fires `click` with the dialog as its target too — identical to a real
+  // backdrop click — so target alone can't tell them apart. Requiring the
+  // press to have started on the backdrop as well does.
+  const pressStartedOnBackdrop = useRef(false)
 
   // The dialog only exists in the DOM while `open` is true (see the early
   // return below), so the `<dialog>` ref is only ever non-null right after
@@ -52,12 +59,16 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
       }}
       onClick={(event) => {
         // A click on the backdrop fires with the dialog itself as the
-        // target, since the backdrop sits outside the dialog's own box.
-        if (event.target === dialogRef.current) {
+        // target, since the backdrop sits outside the dialog's own box. Only
+        // close when the press also started there — see `pressStartedOnBackdrop`.
+        if (event.target === dialogRef.current && pressStartedOnBackdrop.current) {
           onClose()
         }
       }}
       onClose={onClose}
+      onPointerDown={(event) => {
+        pressStartedOnBackdrop.current = event.target === dialogRef.current
+      }}
       ref={dialogRef}
     >
       <h2 id={titleId}>{title}</h2>

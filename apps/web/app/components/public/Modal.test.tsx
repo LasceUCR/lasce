@@ -50,4 +50,33 @@ describe('Modal', () => {
 
     expect(onClose).not.toHaveBeenCalled()
   })
+
+  test('closes when the press and the click both land on the backdrop', () => {
+    const onClose = vi.fn()
+    render(<Modal {...openArgs} onClose={onClose} />)
+    const dialog = screen.getByRole('dialog')
+
+    dialog.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  test('does not close when a text selection started inside the content ends past its edge', () => {
+    const onClose = vi.fn()
+    render(<Modal {...openArgs} onClose={onClose} />)
+    const dialog = screen.getByRole('dialog')
+    const body = dialog.querySelector('.modal-body')
+    if (!body) throw new Error('Modal body not found')
+
+    // The drag starts inside the content...
+    body.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    // ...but the browser still fires `click` with the dialog as its target,
+    // because the mouse was released past the content's edge while still
+    // inside the dialog's own box — indistinguishable from a real backdrop
+    // click by target alone.
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+
+    expect(onClose).not.toHaveBeenCalled()
+  })
 })

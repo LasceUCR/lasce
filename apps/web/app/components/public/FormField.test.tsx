@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { FormField, type FormFieldProps } from './FormField'
-import { Multiline, Text } from './FormField.stories'
+import { Multiline, Select, Text } from './FormField.stories'
 
 const textArgs = Text.args as FormFieldProps
 const multilineArgs = Multiline.args as FormFieldProps
+const selectArgs = Select.args as FormFieldProps
 
 describe('FormField', () => {
   test('renders a text box with the given label and value', () => {
@@ -30,5 +31,23 @@ describe('FormField', () => {
 
     const field = screen.getByRole('textbox', { name: multilineArgs.label })
     expect(field.tagName).toBe('TEXTAREA')
+  })
+
+  test('renders a select with one option per entry when options are given', () => {
+    render(<FormField {...selectArgs} />)
+
+    const select = screen.getByRole('combobox', { name: selectArgs.label })
+    expect(select).toHaveValue(selectArgs.value)
+    expect(screen.getAllByRole('option')).toHaveLength(selectArgs.options?.length ?? 0)
+  })
+
+  test('calls onChange when a different option is selected', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<FormField {...selectArgs} onChange={onChange} />)
+
+    await user.selectOptions(screen.getByRole('combobox', { name: selectArgs.label }), 'waves')
+
+    expect(onChange).toHaveBeenCalledWith('waves')
   })
 })

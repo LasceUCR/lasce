@@ -3690,7 +3690,8 @@ a.gallery-tile:focus-visible {
 }
 
 .cms-form-field input,
-.cms-form-field textarea {
+.cms-form-field textarea,
+.cms-form-field select {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -3698,6 +3699,18 @@ a.gallery-tile:focus-visible {
   color: var(--ink);
   font-family: inherit;
   font-size: 14px;
+}
+
+.nosotros-activity-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.nosotros-activity-form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .add-item-card {

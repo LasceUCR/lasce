@@ -1,22 +1,60 @@
 import { render, screen, within } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+
+import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+
+// `NosotrosPage.stories` pulls in `nosotrosContent` from `@/app/lib/nosotros`,
+// which imports `prisma` at module scope — this stubs it out so loading that
+// module for its static content doesn't also require a real DATABASE_URL.
+vi.mock('@lasce/db', () => ({ prisma: {} }))
+
+const mocks = vi.hoisted(() => ({
+  refresh: vi.fn(),
+}))
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: mocks.refresh }),
+}))
 
 import { NosotrosPage, type NosotrosPageProps } from './NosotrosPage'
 import { Default, ProvisionalCopy } from './NosotrosPage.stories'
 
 const defaultArgs = Default.args as NosotrosPageProps
 const provisionalArgs = ProvisionalCopy.args as NosotrosPageProps
+const fetchMock = vi.fn()
+vi.stubGlobal('fetch', fetchMock)
+
+function renderPage(props: NosotrosPageProps = defaultArgs) {
+  return render(
+    <EditModeProvider>
+      <NosotrosPage {...props} />
+    </EditModeProvider>,
+  )
+}
+
+function renderPageInEditMode(props: NosotrosPageProps = defaultArgs) {
+  return render(
+    <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+      <NosotrosPage {...props} />
+    </EditModeContext.Provider>,
+  )
+}
+
+afterEach(() => {
+  vi.clearAllMocks()
+})
 
 describe('NosotrosPage', () => {
   test('presents the laboratory under a single first-level heading', () => {
-    render(<NosotrosPage {...defaultArgs} />)
+    renderPage()
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Quiénes somos' })).toBeInTheDocument()
   })
 
   test('explains what LASCE is and what it is for', () => {
-    render(<NosotrosPage {...defaultArgs} />)
+    renderPage()
 
     expect(screen.getByRole('region', { name: '¿Quiénes somos?' })).toHaveTextContent(
       /iniciativa científica vinculada al Centro de Investigaciones Espaciales/,
@@ -30,7 +68,7 @@ describe('NosotrosPage', () => {
   })
 
   test('lists everything the laboratory does', () => {
-    render(<NosotrosPage {...defaultArgs} />)
+    renderPage()
 
     const activities = screen.getByRole('region', { name: /Qué hacemos/ })
     expect(within(activities).getAllByRole('heading', { level: 3 })).toHaveLength(
@@ -42,7 +80,7 @@ describe('NosotrosPage', () => {
   })
 
   test('names the university the laboratory belongs to', () => {
-    render(<NosotrosPage {...defaultArgs} />)
+    renderPage()
 
     expect(screen.getByRole('region', { name: '¿Quiénes somos?' })).toHaveTextContent(
       /Universidad de Costa Rica/,
@@ -50,13 +88,13 @@ describe('NosotrosPage', () => {
   })
 
   test('shows no provisional banner now that the copy is approved', () => {
-    render(<NosotrosPage {...defaultArgs} />)
+    renderPage()
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
   })
 
   test('flags the copy when a revision is pending approval', () => {
-    render(<NosotrosPage {...provisionalArgs} />)
+    renderPage(provisionalArgs)
 
     // The banner branch stays covered so the next editorial revision can use it.
     expect(
@@ -65,20 +103,18 @@ describe('NosotrosPage', () => {
   })
 
   test('returns to the public landing page', () => {
-    render(<NosotrosPage {...defaultArgs} />)
+    renderPage()
 
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
   })
 
   test('accepts revised editorial content through props', () => {
-    render(
-      <NosotrosPage
-        content={{
-          ...defaultArgs.content,
-          overview: { title: 'Acerca del laboratorio', paragraphs: ['Descripción actualizada.'] },
-        }}
-      />,
-    )
+    renderPage({
+      content: {
+        ...defaultArgs.content,
+        overview: { title: 'Acerca del laboratorio', paragraphs: ['Descripción actualizada.'] },
+      },
+    })
 
     expect(screen.getByRole('region', { name: 'Acerca del laboratorio' })).toHaveTextContent(
       'Descripción actualizada.',
@@ -87,9 +123,205 @@ describe('NosotrosPage', () => {
   })
 
   test('does not list the ROSAC researchers', () => {
-    render(<NosotrosPage {...defaultArgs} />)
+    renderPage()
 
     expect(screen.queryByText('Dra. Carolina Salas Matamoros')).not.toBeInTheDocument()
     expect(screen.queryByRole('region', { name: /Investigadores/ })).not.toBeInTheDocument()
+  })
+
+  test('hides the edit affordances when edit mode is off', () => {
+    renderPage()
+
+    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+  })
+
+  test('offers editing each activity card when edit mode is on', () => {
+    renderPageInEditMode()
+
+    const activityCount = defaultArgs.content.activities.items.length
+    expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(activityCount)
+    expect(screen.getAllByRole('button', { name: 'Eliminar' })).toHaveLength(activityCount)
+  })
+
+  test('opens the edit modal for the activity being edited', async () => {
+    const user = userEvent.setup()
+    renderPageInEditMode()
+    const [firstActivity] = defaultArgs.content.activities.items
+
+    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    await user.click(firstEditButton as HTMLElement)
+
+    const dialog = screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` })
+    expect(within(dialog).getByRole('textbox', { name: 'Título' })).toHaveValue(
+      firstActivity?.title,
+    )
+    expect(within(dialog).getByRole('combobox', { name: 'Ícono' })).toHaveValue(firstActivity?.icon)
+  })
+
+  test('asks for confirmation before deleting an activity card', async () => {
+    const user = userEvent.setup()
+    renderPageInEditMode()
+
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    await user.click(firstDeleteButton as HTMLElement)
+
+    expect(screen.getByRole('dialog', { name: 'Eliminar actividad' })).toBeInTheDocument()
+  })
+
+  test('PATCHes the activity and refreshes the page once saving succeeds', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ activity: {} }) })
+    renderPageInEditMode()
+    const [firstActivity] = defaultArgs.content.activities.items
+
+    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    await user.click(firstEditButton as HTMLElement)
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/nosotros/activities/${firstActivity?.id}`,
+      expect.objectContaining({ method: 'PATCH' }),
+    )
+    expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(
+      screen.queryByRole('dialog', { name: `Editar "${firstActivity?.title}"` }),
+    ).not.toBeInTheDocument()
+  })
+
+  test('shows the server error and keeps the modal open when saving fails', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'No tiene permisos para modificar este contenido.' }),
+    })
+    renderPageInEditMode()
+    const [firstActivity] = defaultArgs.content.activities.items
+
+    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    await user.click(firstEditButton as HTMLElement)
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await screen.findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` }),
+    ).toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('shows a hint to use "Añadir" when there are no activities yet', () => {
+    renderPageInEditMode({
+      content: {
+        ...defaultArgs.content,
+        activities: { ...defaultArgs.content.activities, items: [] },
+      },
+    })
+
+    expect(
+      screen.getByText('Haga clic en "Añadir" para agregar alguna actividad.'),
+    ).toBeInTheDocument()
+  })
+
+  test('does not show the empty-activities hint outside edit mode', () => {
+    renderPage({
+      content: {
+        ...defaultArgs.content,
+        activities: { ...defaultArgs.content.activities, items: [] },
+      },
+    })
+
+    expect(
+      screen.queryByText('Haga clic en "Añadir" para agregar alguna actividad.'),
+    ).not.toBeInTheDocument()
+  })
+
+  test('creates a new activity through "Añadir" and refreshes on success', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ activity: {} }) })
+    renderPageInEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir' })
+    await user.type(within(addDialog).getByRole('textbox', { name: 'Título' }), 'Actividad nueva')
+    await user.type(within(addDialog).getByRole('textbox', { name: 'Texto' }), 'Texto de prueba')
+    await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
+
+    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar actividad' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/nosotros/activities',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          icon: 'sun',
+          title: 'Actividad nueva',
+          description: 'Texto de prueba',
+        }),
+      }),
+    )
+    expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog', { name: 'Añadir' })).not.toBeInTheDocument()
+  })
+
+  test('shows the server error inside "Añadir" and keeps it open when creating fails', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'No se pudo crear la actividad.' }),
+    })
+    renderPageInEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir' })
+    await user.type(within(addDialog).getByRole('textbox', { name: 'Título' }), 'Actividad nueva')
+    await user.type(within(addDialog).getByRole('textbox', { name: 'Texto' }), 'Texto de prueba')
+    await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
+    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar actividad' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByText('No se pudo crear la actividad.')).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Añadir' })).toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('DELETEs the activity and refreshes the page once deletion succeeds', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })
+    renderPageInEditMode()
+    const [firstActivity] = defaultArgs.content.activities.items
+
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    await user.click(firstDeleteButton as HTMLElement)
+    const confirmDialog = screen.getByRole('dialog', { name: 'Eliminar actividad' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/nosotros/activities/${firstActivity?.id}`,
+      expect.objectContaining({ method: 'DELETE' }),
+    )
+    expect(mocks.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  test('shows an error message when deletion fails', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'No se pudo eliminar la actividad.' }),
+    })
+    renderPageInEditMode()
+
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    await user.click(firstDeleteButton as HTMLElement)
+    const confirmDialog = screen.getByRole('dialog', { name: 'Eliminar actividad' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByText('No se pudo eliminar la actividad.')).toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
   })
 })
