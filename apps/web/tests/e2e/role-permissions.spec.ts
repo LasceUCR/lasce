@@ -69,7 +69,8 @@ test('shows the current matrix and applies a saved change to access control', as
     const dialog = page.getByRole('dialog', { name: 'Confirmar cambio de permisos' })
     await expect(dialog).toBeVisible()
     await dialog.getByRole('button', { name: 'Sí, guardar permisos' }).click()
-    await expect(page.getByRole('status')).toContainText('Permisos actualizados para Asistente.')
+    await expect(dialog).toBeHidden({ timeout: 15_000 })
+    await expect(page.getByText('Permisos actualizados para Asistente.')).toBeVisible()
 
     await assistantPage.goto('/administracion/descargas')
     await expect(assistantPage.getByRole('heading', { name: 'Acceso denegado' })).toBeVisible()

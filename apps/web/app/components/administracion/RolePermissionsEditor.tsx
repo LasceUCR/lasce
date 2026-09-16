@@ -173,7 +173,7 @@ export function RolePermissionsEditor({
         onDiscard={discard}
         saving={saving || confirming}
         canSave={canSave}
-        pendingChanges={pending.count}
+        pendingChanges={saving || confirming ? 0 : pending.count}
         dirtyPermissionIds={pending.dirtyPermissionIds}
         status={status}
       />
