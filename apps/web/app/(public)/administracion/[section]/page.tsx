@@ -2,6 +2,10 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { AdminPlaceholder } from '@/app/components/administracion/AdminPlaceholder'
+import { UserRoleAssignment } from '@/app/components/administracion/UserRoleAssignment'
+import { requireUser } from '@/app/lib/auth/session'
+import { availableRoles, getUserOverview } from '@/app/lib/user-administration'
+import { saveUserRole } from '../user-actions'
 
 const administracionSections = {
   descargas: {
@@ -10,7 +14,7 @@ const administracionSections = {
   },
   usuarios: {
     title: 'Usuarios',
-    description: 'Gestión de cuentas y permisos de usuarios del laboratorio.',
+    description: 'Consulta los usuarios registrados y sus roles actuales.',
   },
   infraestructura: {
     title: 'Infraestructura',
@@ -32,7 +36,7 @@ function getPageContent(section: string) {
   return null
 }
 
-export const dynamicParams = false
+export const dynamic = 'force-dynamic'
 
 export function generateStaticParams() {
   return Object.keys(administracionSections).map((section) => ({ section }))
@@ -62,6 +66,30 @@ export default async function AdministracionSectionPage({
 
   if (!content) {
     notFound()
+  }
+
+  if (section === 'usuarios') {
+    const actor = await requireUser('/administracion/usuarios')
+    if (actor.role !== 'ADMIN') {
+      return (
+        <div>
+          <h1>Acceso denegado</h1>
+          <p>No tienes autorización para administrar usuarios.</p>
+        </div>
+      )
+    }
+    const users = await getUserOverview()
+    return (
+      <UserRoleAssignment
+        currentUserId={actor.id}
+        key={JSON.stringify(users)}
+        users={users}
+        roles={availableRoles()}
+        saveAction={saveUserRole}
+        description={content.description}
+        title={content.title}
+      />
+    )
   }
 
   return <AdminPlaceholder description={content.description} title={content.title} />
