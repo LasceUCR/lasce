@@ -21,7 +21,7 @@ export interface NewUser {
 
 export interface CreatedUser {
   id: string
-  role: UserRole
+  role: UserRole | null
 }
 
 /** What login needs to check a password and open a session: nothing more. */
