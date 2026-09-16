@@ -24,6 +24,13 @@ SCHEMA_DIR = REPO_ROOT / "packages" / "contracts" / "schema"
 # One realistic payload per job, expressed the way the producer sends it
 # (camelCase keys, JSON-friendly values).
 EXAMPLES: dict[str, dict[str, Any]] = {
+    "query-goes-archive": {
+        "product": "SFXR",
+        "parameter": "0.1-0.8nm",
+        "date": "2025-01-05",
+        "startTime": "11:20",
+        "endTime": "11:22",
+    },
     "ingest-readings": {
         "deviceId": "device-001",
         "from": datetime(2026, 8, 19, tzinfo=UTC).isoformat(),
