@@ -1,0 +1,76 @@
+.form h2 {
+  margin: 0 0 8px;
+}
+
+.help {
+  margin: 0 0 20px;
+  color: #355066;
+}
+
+.roles,
+.permissions {
+  margin: 0 0 20px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+}
+
+.roles legend,
+.permissions legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.roleList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.roleOption,
+.permission {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.roleOption input,
+.permission input {
+  width: 18px;
+  height: 18px;
+  margin: 13px 0 0;
+  flex: 0 0 auto;
+}
+
+.permissionList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.permissionLabel {
+  display: block;
+  font-weight: 600;
+}
+
+.permissionHelp {
+  display: block;
+  color: #355066;
+  font-size: 14px;
+}
+
+.error {
+  margin: 0 0 16px;
+  color: #8a1f1f;
+}
+
+.status {
+  margin: 0 0 16px;
+  color: #244359;
+}
