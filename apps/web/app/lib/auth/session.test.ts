@@ -50,7 +50,7 @@ describe('createSession', () => {
   test('stores only the hash of the token it hands to the browser', async () => {
     create.mockResolvedValue({})
 
-    await createSession({ id: 'user-1', fullName: 'Ana Pérez Rojas' })
+    await createSession({ id: 'user-1', fullName: 'Ana Pérez Rojas', role: 'ADMIN' })
 
     const [sessionCookie, accountCookie] = store.set.mock.calls as [
       [string, string, { expires: Date; httpOnly: boolean }],
@@ -60,7 +60,7 @@ describe('createSession', () => {
     expect(sessionCookie[2].httpOnly).toBe(true)
     expect(accountCookie).toEqual([
       ACCOUNT_COOKIE,
-      'Ana Pérez Rojas',
+      JSON.stringify({ name: 'Ana Pérez Rojas', role: 'ADMIN' }),
       expect.objectContaining({ httpOnly: false, expires: sessionCookie[2].expires }),
     ])
 
