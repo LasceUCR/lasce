@@ -134,7 +134,7 @@ List any dependencies or write `None`.
 3. Implement the change and create clear commits.
 4. Run the tests.
 5. Open a Pull Request into `development`.
-6. Address the review and obtain the required approvals: one for `development`, three for `main`.
+6. Address the review and obtain the required approvals: two for `development`, three for `main`.
 7. Merge using **Squash and merge**. The branch is deleted automatically; `main` and `development` never are.
 
 ## 8. Merge Requirements
@@ -146,7 +146,7 @@ List any dependencies or write `None`.
 
   | Target branch | Approvals |
   | ------------- | --------- |
-  | `development` | 1         |
+  | `development` | 2         |
   | `main`        | 3         |
 
 - At least one approval comes from a code owner, listed in [`.github/CODEOWNERS`](../.github/CODEOWNERS).
