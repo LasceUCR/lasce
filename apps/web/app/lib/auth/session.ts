@@ -35,7 +35,7 @@ export interface SessionUser {
   email: string
   institution: string
   countryCode: string
-  role: UserRole
+  role: UserRole | null
   createdAt: Date
 }
 

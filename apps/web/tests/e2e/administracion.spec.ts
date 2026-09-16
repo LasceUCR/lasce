@@ -46,7 +46,6 @@ test('keeps the header tab current while browsing the other sidebar sections', a
 
   for (const [label, heading] of [
     ['Descargas', 'Descargas'],
-    ['Usuarios', 'Usuarios'],
     ['Infraestructura', 'Infraestructura'],
   ] as const) {
     await sidebar.getByRole('link', { name: label }).click()

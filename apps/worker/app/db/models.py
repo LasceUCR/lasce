@@ -182,7 +182,7 @@ class User(Base):
     # The Postgres-specific ENUM is used on purpose: the generic `sqlalchemy.Enum`
     # silently drops `create_type`. Prisma owns the `auth.user_role` type and
     # creates it in the migration, so SQLAlchemy must never emit CREATE TYPE.
-    role: Mapped[UserRole] = mapped_column(
+    role: Mapped[UserRole | None] = mapped_column(
         ENUM(
             UserRole,
             name="user_role",
