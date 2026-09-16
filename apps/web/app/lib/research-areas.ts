@@ -9,7 +9,7 @@ export const investigacionMeta = {
 export const investigacionHero = {
   kicker: 'Portal público LASCE',
   title: 'Áreas de investigación',
-  lead: 'Principales temas de investigación desarrollados por el LASCE.',
+  lead: 'Principales ramas de investigación desarrolladas por el LASCE.',
 } as const
 
 export const investigacionBackLink = {
@@ -19,80 +19,46 @@ export const investigacionBackLink = {
 
 export const researchAreas: ResearchArea[] = [
   {
-    slug: 'astrofisica-solar',
-    title: 'Astrofísica solar',
-    description: 'Estudio de fenómenos solares y su interacción con el medio interplanetario.',
-    src: '/images/research/astrofisica-solar.jpg',
-    lead: 'Investigación de la estructura magnética, fulguraciones y emisiones en la atmósfera solar y su propagación hacia la Tierra.',
-    objectives: [
-      'Analizar los mecanismos de emisión y eyección de masa coronal.',
-      'Modelar el transporte de partículas energéticas solares.',
-      'Monitorear eventos de alta energía en tiempo casi real.',
-    ],
-    scope:
-      'Abarca la observación continua y el análisis espectral de eventos solares, utilizando datos de observatorios espaciales y terrestres para comprender la dinámica de la actividad solar.',
-    topics: [
-      'Física de la corona solar',
-      'Fulguraciones y eyecciones de masa coronal (CME)',
-      'Transporte de partículas energéticas solares (SEP)',
-    ],
+    slug: 'radioastronomia-solar-evolucion-flares-cmes',
+    title: 'Radioastronomía solar y evolución de Flares-CMEs',
+    description:
+      'Estudia las emisiones solares de radio y su relación con los flares, la evolución de las eyecciones de masa coronal, la aceleración de partículas y su propagación hacia el medio interplanetario.',
+    src: '/images/research/radioastronomia-solar-evolucion-flares-cmes.jpg',
   },
   {
-    slug: 'clima-espacial',
-    title: 'Clima espacial',
-    description: 'Monitoreo, análisis y predicción del clima espacial en la región centroamericana.',
-    src: '/images/research/clima-espacial.jpg',
-    lead: 'Estudio del impacto de la actividad solar sobre el entorno geomagnético e ionosférico de Costa Rica y Centroamérica.',
-    objectives: [
-      'Evaluar el impacto de tormentas geomagnéticas en redes tecnológicas.',
-      'Caracterizar la variabilidad ionosférica sobre Costa Rica y la región.',
-      'Desarrollar modelos de alerta temprana ante perturbaciones espaciales.',
-    ],
-    scope:
-      'Comprende el estudio de la respuesta ionosférica y geomagnética ante fenómenos solares extremos, integrando mediciones de estaciones receptoras y modelos computacionales.',
-    topics: [
-      'Perturbaciones ionosféricas itinerantes (TIDs)',
-      'Corrientes inducidas geomagnéticamente (GIC)',
-      'Sistemas de alerta temprana y modelado numérico',
-    ],
+    slug: 'geomagnetismo-respuesta-regional-clima-espacial',
+    title: 'Geomagnetismo y respuesta regional al clima espacial',
+    description:
+      'Analiza las variaciones del campo magnético terrestre producidas por la actividad solar. Incluye el cálculo de índices geomagnéticos para Costa Rica. Este estudio se lleva a cabo gracias al desarrollo de una tesis doctoral de la MSc. Johana Camacho en colaboración con el Instituto Nacional de Electricidad (ICE) y el Servicio de Clima Espacial México (SCiESMEX).',
+    src: '/images/research/geomagnetismo-respuesta-regional-clima-espacial.jpg',
   },
   {
-    slug: 'radioastronomia',
-    title: 'Radioastronomía',
-    description: 'Observación y análisis de emisiones de radio solar mediante la estación ROSAC.',
-    src: '/images/research/radioastronomia.jpg',
-    lead: 'Detección y caracterización de ráfagas solares de baja frecuencia a través de la Radio-Observatorio Solar Astrofísico de Costa Rica (ROSAC).',
-    objectives: [
-      'Detectar ráfagas solares de tipo II, III y IV en frecuencias métricas y decamétricas.',
-      'Calibrar y optimizar la cadena de adquisición de la estación ROSAC.',
-      'Correlacionar emisiones de radio con eventos observados en rayos X y ultravioleta extremo.',
-    ],
-    scope:
-      'Incluye el diseño, despliegue y análisis de datos de radiotelescopios locales, permitiendo estudiar la aceleración de electrones y ondas de choque en la corona solar.',
-    topics: [
-      'Espectrometría dinámica de ráfagas solares',
-      'Instrumentación de radio y procesamiento digital de señales',
-      'Interferometría de muy larga base (VLBI) aplicada al Sol',
-    ],
+    slug: 'propagacion-prediccion-cmes-hacia-tierra',
+    title: 'Propagación y predicción de CMEs hacia la Tierra',
+    description:
+      'Desarrolla modelos y herramientas para estimar la velocidad, la trayectoria y el tiempo de llegada de las CMEs a la Tierra. Esta rama incluye el desarrollo de la herramienta científica computacional SWAAT y su futura integración con observaciones de ROSAC.',
+    src: '/images/research/propagacion-prediccion-cmes-hacia-tierra.jpg',
   },
   {
-    slug: 'investigaciones-espaciales',
-    title: 'Investigaciones espaciales',
-    description: 'Desarrollo de instrumentación y proyectos aeroespaciales en colaboración con el CINESPA UCR.',
-    src: '/images/research/investigaciones-espaciales.jpg',
-    lead: 'Diseño y validación de instrumentos científicos y cargas útiles para plataformas espaciales en el marco del Centro de Investigaciones Espaciales de la UCR.',
-    objectives: [
-      'Diseñar sensores para la medición in-situ del entorno espacial cercano.',
-      'Probar y validar subsistemas bajo condiciones térmicas y de vacío simuladas.',
-      'Promover capacidades tecnológicas nacionales en ingeniería aeroespacial.',
-    ],
-    scope:
-      'Cubre desde la concepción y simulación de instrumentos espaciales hasta la integración en plataformas CubeSat y globos estratosféricos, en colaboración con el CINESPA UCR.',
-    topics: [
-      'Diseño de cargas útiles para CubeSats',
-      'Sensores de radiación y magnetómetros compactos',
-      'Ensayos de calificación ambiental aeroespacial',
-    ],
+    slug: 'inteligencia-artificial-ciencia-datos-clima-espacial',
+    title: 'Inteligencia artificial y ciencia de datos aplicada al clima espacial',
+    description:
+      'Emplea aprendizaje automático, automatización y generación de datos sintéticos para identificar eventos solares, procesar grandes volúmenes de observaciones y mejorar la predicción de fenómenos de clima espacial.',
+    src: '/images/research/inteligencia-artificial-ciencia-datos-clima-espacial.jpg',
+  },
+  {
+    slug: 'ionosfera-gnss-efectos-tecnologicos-clima-espacial',
+    title: 'Ionosfera GNSS y efectos tecnológicos del clima espacial',
+    description:
+      'Busca hacer observaciones desde Costa Rica con equipos GNSS para determinar cómo la actividad solar y geomagnética modifica la ionosfera y afecta los sistemas de navegación satelital, las comunicaciones y otras tecnologías sensibles a las condiciones del entorno espacial en nuestro país.',
+    src: '/images/research/ionosfera-gnss-efectos-tecnologicos-clima-espacial.jpg',
+  },
+  {
+    slug: 'infraestructura-informatica-gestion-datos-clima-espacial',
+    title: 'Infraestructura informática y gestión de datos de clima espacial',
+    description:
+      'Diseña y desarrolla plataformas informáticas para capturar, procesar, almacenar y consultar grandes volúmenes de datos solares provenientes de distintas fuentes. Esta rama también implementa bases de datos y servicios web especializados, y facilita el análisis interdisciplinario de la información en colaboración con investigadores en astrofísica solar y clima espacial.',
+    src: '/images/research/infraestructura-informatica-gestion-datos-clima-espacial.png',
   },
 ]
 
