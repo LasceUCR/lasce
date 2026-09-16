@@ -44,6 +44,10 @@ cookie; that is also not an authorization check.
 
 ## Protecting a page
 
+How to call these helpers from a route, pass `canEdit` / `canDelete` into a component, and
+re-check on a Server Action is [`add-permissions.md`](add-permissions.md). The short form for an
+admin screen that must not be public:
+
 ```tsx
 import { AccessDenied } from '@/app/components/administracion/AccessDenied'
 import { requirePermission } from '@/app/lib/auth/authorization'
