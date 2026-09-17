@@ -1,3 +1,7 @@
+import { prisma } from '@lasce/db'
+import type { NosotrosActivityIcon } from '@lasce/db'
+import { z } from 'zod'
+
 /**
  * Editorial source: institutional text supplied by LASCE, transcribed verbatim except where
  * noted. Institutional overview and purpose only. Work areas, solar astrophysics and space
@@ -123,3 +127,135 @@ export const nosotrosContent = {
     label: 'Volver al inicio',
   },
 } as const satisfies NosotrosContent
+
+/**
+ * The "¿Qué hacemos?" flashcards (LASCE-CON-012-086), persisted in
+ * `nosotros_activities` — the only part of Nosotros backed by Postgres so
+ * far. `icon` here is always the lowercase form used throughout the app
+ * (`NosotrosCardIcon`); the database stores the uppercase Prisma enum member
+ * instead, so every read/write through this module converts between the two.
+ */
+const ICON_TO_DB: Record<NosotrosCardIcon, NosotrosActivityIcon> = {
+  sun: 'SUN',
+  waves: 'WAVES',
+  satellite: 'SATELLITE',
+  code: 'CODE',
+  collaboration: 'COLLABORATION',
+  education: 'EDUCATION',
+}
+
+const ICON_FROM_DB: Record<NosotrosActivityIcon, NosotrosCardIcon> = {
+  SUN: 'sun',
+  WAVES: 'waves',
+  SATELLITE: 'satellite',
+  CODE: 'code',
+  COLLABORATION: 'collaboration',
+  EDUCATION: 'education',
+}
+
+export interface NosotrosActivityRecord {
+  id: string
+  icon: NosotrosCardIcon
+  title: string
+  description: string
+  modifiedAt: string
+}
+
+type NosotrosActivityRow = {
+  id: string
+  icon: NosotrosActivityIcon
+  title: string
+  paragraph: string
+  modifiedAt: Date
+}
+
+function toActivityRecord(row: NosotrosActivityRow): NosotrosActivityRecord {
+  return {
+    id: row.id,
+    icon: ICON_FROM_DB[row.icon],
+    title: row.title,
+    description: row.paragraph,
+    modifiedAt: row.modifiedAt.toISOString(),
+  }
+}
+
+/**
+ * Loads the activity flashcards from Postgres, in display order. Ordered by
+ * `createdAt` rather than `modifiedAt` on purpose — editing a card's text
+ * updates `modifiedAt` too, and that must not also move the card.
+ */
+export async function getNosotrosActivities(): Promise<NosotrosActivityRecord[]> {
+  const rows = await prisma.nosotrosActivity.findMany({ orderBy: { createdAt: 'asc' } })
+  return rows.map(toActivityRecord)
+}
+
+/** Shared by both create and update: an activity is always icon + title + text. */
+export const nosotrosActivityInputSchema = z.object({
+  icon: z.enum(['sun', 'waves', 'satellite', 'code', 'collaboration', 'education'], {
+    error: 'Seleccione un ícono válido.',
+  }),
+  title: z.string().trim().min(1, 'El título es obligatorio.'),
+  description: z.string().trim().min(1, 'El texto es obligatorio.'),
+})
+
+export type NosotrosActivityInput = z.infer<typeof nosotrosActivityInputSchema>
+
+/**
+ * Updates one activity flashcard and stamps `modifiedBy` with the admin who
+ * made the change. Returns `null` when `id` does not match any row, rather
+ * than throwing, so the route handler can turn that into a 404.
+ */
+export async function updateNosotrosActivity(
+  id: string,
+  data: NosotrosActivityInput,
+  modifiedBy: string,
+): Promise<NosotrosActivityRecord | null> {
+  const existing = await prisma.nosotrosActivity.findUnique({ where: { id } })
+  if (!existing) return null
+
+  const row = await prisma.nosotrosActivity.update({
+    where: { id },
+    data: {
+      icon: ICON_TO_DB[data.icon],
+      title: data.title,
+      paragraph: data.description,
+      modifiedBy,
+    },
+  })
+
+  return toActivityRecord(row)
+}
+
+/**
+ * Creates a new activity flashcard, authored by the admin who submitted it.
+ * `createdAt` defaults to now, which — since the list is ordered by it —
+ * puts the new card at the end, same place `AddItemCard` prompted from.
+ */
+export async function createNosotrosActivity(
+  data: NosotrosActivityInput,
+  modifiedBy: string,
+): Promise<NosotrosActivityRecord> {
+  const row = await prisma.nosotrosActivity.create({
+    data: {
+      icon: ICON_TO_DB[data.icon],
+      title: data.title,
+      paragraph: data.description,
+      modifiedBy,
+    },
+  })
+
+  return toActivityRecord(row)
+}
+
+/**
+ * Deletes one activity flashcard. Returns `false` when `id` does not match
+ * any row, rather than throwing, so the route handler can turn that into a
+ * 404 — same pre-check pattern as `updateNosotrosActivity`.
+ */
+export async function deleteNosotrosActivity(id: string): Promise<boolean> {
+  const existing = await prisma.nosotrosActivity.findUnique({ where: { id } })
+  if (!existing) return false
+
+  await prisma.nosotrosActivity.delete({ where: { id } })
+  return true
+}

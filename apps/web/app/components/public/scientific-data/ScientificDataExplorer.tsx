@@ -1,11 +1,21 @@
 'use client'
 
 import { ChartNoAxesCombined, Images, Search } from 'lucide-react'
-import { useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react'
+import { z } from 'zod'
 
 import { DataTable } from '@/app/components/public/DataTable'
 import { Notice } from '@/app/components/public/Notice'
 import { Button } from '@/app/components/public/Button'
+import { Select } from '@/app/components/public/Select'
+import {
+  fitSuviQuery,
+  getAvailabilityMessage,
+  getSuviAvailability,
+  getSuviTimeLimits,
+  isSuviQuery,
+  type SuviAvailability,
+} from '@/app/lib/scientific-data-availability'
 import {
   findScientificProduct,
   getDefaultQueryForSource,
@@ -26,7 +36,7 @@ export interface ScientificDataExplorerProps {
   sources: ScientificSource[]
   initialQuery: ScientificDataQuery
   initialResult?: ScientificDataResult
-  goesDateRange: { min: string; max: string }
+  suviAvailability: SuviAvailability
 }
 
 type RequestState = 'idle' | 'loading' | 'success' | 'error'
@@ -62,7 +72,7 @@ export function ScientificDataExplorer({
   sources,
   initialQuery,
   initialResult,
-  goesDateRange,
+  suviAvailability,
 }: ScientificDataExplorerProps) {
   // Server-rendered controls must wait for React's handlers before accepting input.
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
@@ -71,6 +81,14 @@ export function ScientificDataExplorer({
   const [requestState, setRequestState] = useState<RequestState>(initialResult ? 'success' : 'idle')
   const [message, setMessage] = useState<string | null>(null)
   const resultsHeading = useRef<HTMLHeadingElement>(null)
+  const activeRequest = useRef<AbortController | null>(null)
+  const [progress, setProgress] = useState(0)
+  const [availability, setAvailability] = useState(suviAvailability)
+  useEffect(() => () => activeRequest.current?.abort(), [])
+  useEffect(() => {
+    const timer = setInterval(() => setAvailability(getSuviAvailability()), 60_000)
+    return () => clearInterval(timer)
+  }, [])
   const controlsDisabled = !hydrated || requestState === 'loading'
 
   const selectedSource = sources.find((source) => source.code === query.source)!
@@ -79,6 +97,12 @@ export function ScientificDataExplorer({
     [query.product, query.source],
   )
   const invalidRange = query.startTime >= query.endTime
+  const solarImages = isSuviQuery(query)
+  const dateRange = {
+    min: solarImages ? availability.start.slice(0, 10) : undefined,
+    max: query.source === 'GOES' ? availability.end.slice(0, 10) : undefined,
+  }
+  const timeLimits = solarImages ? getSuviTimeLimits(query.date, availability) : undefined
 
   function resetResults() {
     setResult(null)
@@ -90,15 +114,18 @@ export function ScientificDataExplorer({
     key: Key,
     value: ScientificDataQuery[Key],
   ) {
-    setQuery((current) => ({ ...current, [key]: value }))
+    setQuery((current) => {
+      const next = { ...current, [key]: value }
+      return key === 'date' && isSuviQuery(next) && value ? fitSuviQuery(next, availability) : next
+    })
     resetResults()
   }
 
   function selectSource(sourceCode: ScientificSourceCode) {
     const source = sources.find((candidate) => candidate.code === sourceCode)!
     const requestedDate =
-      sourceCode === 'GOES' && (query.date < goesDateRange.min || query.date > goesDateRange.max)
-        ? goesDateRange.max
+      sourceCode === 'GOES' && query.date > availability.end.slice(0, 10)
+        ? availability.end.slice(0, 10)
         : query.date
 
     setQuery(getDefaultQueryForSource(source, requestedDate))
@@ -107,11 +134,14 @@ export function ScientificDataExplorer({
 
   function selectProduct(productCode: ScientificProductCode) {
     const selection = findScientificProduct(query.source, productCode)!
-    setQuery((current) => ({
-      ...current,
-      product: productCode,
-      parameter: selection.product.parameters[0]!.code,
-    }))
+    setQuery((current) => {
+      const next = {
+        ...current,
+        product: productCode,
+        parameter: selection.product.parameters[0]!.code,
+      }
+      return isSuviQuery(next) ? fitSuviQuery(next, availability) : next
+    })
     resetResults()
   }
 
@@ -125,16 +155,17 @@ export function ScientificDataExplorer({
       return
     }
 
-    if (
-      query.source === 'GOES' &&
-      (query.date < goesDateRange.min || query.date > goesDateRange.max)
-    ) {
-      setMessage('Seleccione una fecha dentro de la ventana disponible de NOAA.')
+    const availabilityMessage = getAvailabilityMessage(query, availability)
+    if (availabilityMessage) {
+      setMessage(availabilityMessage)
       return
     }
 
     setRequestState('loading')
     setMessage(null)
+    setProgress(0)
+    const controller = new AbortController()
+    activeRequest.current = controller
 
     try {
       const parameters = new URLSearchParams({
@@ -145,21 +176,43 @@ export function ScientificDataExplorer({
         startTime: query.startTime,
         endTime: query.endTime,
       })
-      const response = await fetch(`/api/scientific-data?${parameters.toString()}`)
+      let response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
+        signal: controller.signal,
+      })
+      const deadline = Date.now() + 30 * 60_000
+      while (response.status === 202) {
+        const pending = z
+          .object({
+            state: z.literal('pending'),
+            jobId: z.string().min(1),
+            progress: z.number().min(0).max(100),
+          })
+          .parse(await response.json())
+        setProgress(pending.progress)
+        if (Date.now() > deadline) throw new Error('Historical query timed out')
+        await new Promise<void>((resolve) => setTimeout(resolve, 2000))
+        controller.signal.throwIfAborted()
+        parameters.set('jobId', pending.jobId)
+        response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
+          signal: controller.signal,
+        })
+      }
       if (!response.ok) throw new Error('Scientific data request failed')
 
       const parsed = scientificDataResultSchema.safeParse(await response.json())
       if (!parsed.success) throw new Error('Scientific data response is invalid')
+      controller.signal.throwIfAborted()
 
       setResult(parsed.data)
       setRequestState('success')
       requestAnimationFrame(() => resultsHeading.current?.focus())
     } catch {
+      if (controller.signal.aborted) return
       setResult(null)
       setRequestState('error')
       setMessage(
         query.source === 'GOES'
-          ? 'No fue posible consultar NOAA en este momento. Inténtelo nuevamente más tarde.'
+          ? 'No fue posible consultar la fuente GOES en este momento. Inténtelo nuevamente más tarde.'
           : 'No fue posible consultar los datos. Inténtelo nuevamente.',
       )
     }
@@ -190,79 +243,107 @@ export function ScientificDataExplorer({
       </div>
 
       <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
-        {query.source === 'GOES' ? (
-          <>
-            GOES usa observaciones del servicio público de NOAA. Las series cubren los últimos siete
-            días y las imágenes SUVI aproximadamente las últimas 24 horas. EHIS y MPSL requieren
-            integrar y validar el archivo científico NetCDF antes de habilitarlos.
-          </>
-        ) : (
-          <>
+        <span className="data-source-notice-copy">
+          <span aria-hidden={query.source !== 'GOES'}>
+            Las series GOES se consultan en el archivo histórico de CITIC-UCR. La disponibilidad
+            depende del producto y la fecha; la lectura puede tardar varios minutos. Las imágenes
+            SUVI se mantienen en NOAA y cubren aproximadamente las últimas 24 horas. EHIS y MPSL
+            están pendientes de integración.
+          </span>
+          <span aria-hidden={query.source !== 'ROSAC'}>
             ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están
             definidos; todos los resultados de esta fuente son simulados y están rotulados como tal.
-          </>
-        )}
+          </span>
+        </span>
       </Notice>
+      {requestState === 'loading' && (
+        <div className="data-loading">
+          <p className="data-loading-copy" role="status">
+            <span>Cargando datos</span>
+            <strong>{progress}%</strong>
+          </p>
+          <progress
+            aria-label="Cargando datos"
+            className="data-loading-progress"
+            max={100}
+            value={progress}
+          />
+          <div className="data-loading-actions">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                activeRequest.current?.abort()
+                setRequestState('idle')
+                setMessage(null)
+              }}
+            >
+              Cancelar consulta
+            </Button>
+          </div>
+        </div>
+      )}
 
-      <form className="data-query-form" noValidate onSubmit={submitQuery}>
+      <form className="data-query-form" data-select-boundary noValidate onSubmit={submitQuery}>
         <div className="data-field">
           <label htmlFor="scientific-source">Fuente de datos</label>
-          <select
+          <Select
             disabled={controlsDisabled}
             id="scientific-source"
-            onChange={(event) => selectSource(event.target.value as ScientificSourceCode)}
+            label="Fuente de datos"
+            describedBy="scientific-source-hint"
+            onChange={(value) => selectSource(value as ScientificSourceCode)}
             value={query.source}
-          >
-            {sources.map((source) => (
-              <option key={source.code} value={source.code}>
-                {source.name}
-              </option>
-            ))}
-          </select>
-          <span className="data-field-hint">{selectedSource.description}</span>
+            options={sources.map((source) => ({ value: source.code, label: source.name }))}
+          />
+          <div className="data-field-details" id="scientific-source-hint">
+            <span className="data-field-hint">{selectedSource.description}</span>
+          </div>
         </div>
 
         <div className="data-field">
           <label htmlFor="scientific-product">Producto científico</label>
-          <select
+          <Select
             disabled={controlsDisabled}
             id="scientific-product"
-            onChange={(event) => selectProduct(event.target.value as ScientificProductCode)}
-            required
+            label="Producto científico"
+            describedBy="scientific-product-hint"
+            onChange={(value) => selectProduct(value as ScientificProductCode)}
             value={query.product}
-          >
-            {selectedSource.instruments.map((instrument) => (
-              <optgroup key={instrument.code} label={`${instrument.code} — ${instrument.name}`}>
-                {instrument.products.map((product) => (
-                  <option disabled={!product.available} key={product.code} value={product.code}>
-                    {product.name} ({product.code}){product.available ? '' : ' — pendiente'}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <span className="data-field-hint">
-            Instrumento: {selected?.instrument.code} — {selected?.instrument.name}
-          </span>
-          {selected?.product.availabilityNote ? (
-            <span className="data-field-hint">{selected.product.availabilityNote}</span>
-          ) : null}
+            options={selectedSource.instruments.flatMap((instrument) =>
+              instrument.products.map((product) => ({
+                value: product.code,
+                label: `${product.name}${product.name.includes(`(${product.code})`) ? '' : ` (${product.code})`}${product.available ? '' : ' — pendiente'}`,
+                disabled: !product.available,
+                group: `${instrument.code} — ${instrument.name}`,
+              })),
+            )}
+          />
+          <div className="data-field-details" id="scientific-product-hint">
+            <span className="data-field-hint">
+              Instrumento: {selected?.instrument.code} — {selected?.instrument.name}
+            </span>
+            {selected?.product.availabilityNote ? (
+              <span className="data-field-hint">{selected.product.availabilityNote}</span>
+            ) : null}
+          </div>
         </div>
 
         <div className="data-field">
           <label htmlFor="scientific-parameter">Canal o parámetro</label>
-          <select
+          <Select
             disabled={controlsDisabled}
             id="scientific-parameter"
-            onChange={(event) => updateQuery('parameter', event.target.value)}
+            label="Canal o parámetro"
+            onChange={(value) => updateQuery('parameter', value)}
             value={query.parameter}
-          >
-            {selected?.product.parameters.map((parameter) => (
-              <option key={parameter.code} value={parameter.code}>
-                {parameter.label}
-              </option>
-            ))}
-          </select>
+            options={
+              selected?.product.parameters.map((parameter) => ({
+                value: parameter.code,
+                label: parameter.label,
+              })) ?? []
+            }
+          />
         </div>
 
         <div className="data-field">
@@ -270,18 +351,23 @@ export function ScientificDataExplorer({
           <input
             disabled={controlsDisabled}
             id="scientific-date"
-            max={query.source === 'GOES' ? goesDateRange.max : undefined}
-            min={query.source === 'GOES' ? goesDateRange.min : undefined}
+            aria-describedby={query.source === 'GOES' ? 'scientific-date-hint' : undefined}
+            max={dateRange.max}
+            min={dateRange.min}
             onChange={(event) => updateQuery('date', event.target.value)}
             required
             type="date"
             value={query.date}
           />
-          {query.source === 'GOES' ? (
-            <span className="data-field-hint">
-              Disponible del {goesDateRange.min} al {goesDateRange.max}.
-            </span>
-          ) : null}
+          <div className="data-field-details" id="scientific-date-hint">
+            {query.source === 'GOES' ? (
+              <span className="data-field-hint">
+                {solarImages
+                  ? `Últimas 24 horas (UTC): del ${availability.start.slice(0, 10)} a las ${availability.start.slice(11, 16)} al ${availability.end.slice(0, 10)} a las ${availability.end.slice(11, 16)}.`
+                  : 'Consulta histórica por fecha. Los días sin observaciones se muestran sin datos.'}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <fieldset className="data-time-range">
@@ -294,6 +380,8 @@ export function ScientificDataExplorer({
                 aria-describedby={message ? 'scientific-query-message' : undefined}
                 aria-invalid={message && invalidRange ? true : undefined}
                 id="scientific-start-time"
+                min={timeLimits?.min}
+                max={timeLimits?.max}
                 onChange={(event) => updateQuery('startTime', event.target.value)}
                 required
                 type="time"
@@ -307,6 +395,8 @@ export function ScientificDataExplorer({
                 aria-describedby={message ? 'scientific-query-message' : undefined}
                 aria-invalid={message && invalidRange ? true : undefined}
                 id="scientific-end-time"
+                min={timeLimits?.min}
+                max={timeLimits?.max}
                 onChange={(event) => updateQuery('endTime', event.target.value)}
                 required
                 type="time"
@@ -331,10 +421,6 @@ export function ScientificDataExplorer({
         <Notice id="scientific-query-message" tone="error" role="alert">
           {message}
         </Notice>
-      ) : null}
-
-      {requestState === 'loading' ? (
-        <Notice role="status">Consultando las observaciones disponibles…</Notice>
       ) : null}
 
       {requestState === 'success' && result ? (
