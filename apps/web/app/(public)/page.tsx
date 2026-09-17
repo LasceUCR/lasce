@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 
 import { Button } from '@/app/components/public/Button'
 import { GoesSolarAnimation } from '@/app/components/public/GoesSolarAnimation'
+import { HeroSolarObservation } from '@/app/components/public/HeroSolarObservation'
 import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
 import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
 import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@/app/lib/work-areas'
@@ -44,6 +45,7 @@ export default function HomePage() {
             <Button href="/nosotros">Conoce más sobre LASCE</Button>
           </div>
         </div>
+        <HeroSolarObservation />
       </section>
 
       <div className="home-content">
