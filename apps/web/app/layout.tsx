@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import './globals.css'
 import { siteUrl } from './lib/site'
 import { AnnotateWidget } from './components/utils/AnnotateWidget'
+import { EditModeProvider } from './components/public/cms/EditModeProvider'
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" data-scroll-behavior="smooth">
       <AnnotateWidget />
-      <body>{children}</body>
+      <body>
+        <EditModeProvider>{children}</EditModeProvider>
+      </body>
     </html>
   )
 }

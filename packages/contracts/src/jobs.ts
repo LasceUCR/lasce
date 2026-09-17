@@ -11,6 +11,7 @@ import { z } from 'zod'
  */
 export const JOB_NAMES = {
   ingestReadings: 'ingest-readings',
+  queryGoesArchive: 'query-goes-archive',
 } as const
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES]
@@ -24,9 +25,19 @@ export const ingestReadingsPayload = z.object({
   to: z.iso.datetime({ offset: true }),
 })
 
+/** One UTC day of observed GOES L1b data from the CITIC archive. */
+export const queryGoesArchivePayload = z.object({
+  product: z.enum(['SFXR', 'SFEU', 'GEOF', 'MPSH', 'SGPS']),
+  parameter: z.string().min(1).max(64),
+  date: z.iso.date(),
+  startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+  endTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+})
+
 /** Lookup table used by `enqueue()` and by the HTTP trigger route to validate input. */
 export const jobPayloads = {
   [JOB_NAMES.ingestReadings]: ingestReadingsPayload,
+  [JOB_NAMES.queryGoesArchive]: queryGoesArchivePayload,
 } as const satisfies Record<JobName, z.ZodType>
 
 export type JobPayloads = {
