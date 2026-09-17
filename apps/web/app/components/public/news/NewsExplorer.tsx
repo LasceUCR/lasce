@@ -15,6 +15,9 @@ const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
 
 export interface NewsExplorerProps {
   news: NewsArticle[]
+  canCreate?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
 }
 
 function matches(value: string, query: string) {
@@ -26,7 +29,12 @@ async function errorFromResponse(response: Response): Promise<string> {
   return body?.error ?? SAVE_ERROR_MESSAGE
 }
 
-export function NewsExplorer({ news }: NewsExplorerProps) {
+export function NewsExplorer({
+  news,
+  canCreate = false,
+  canEdit = false,
+  canDelete = false,
+}: NewsExplorerProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [createError, setCreateError] = useState<string | null>(null)
@@ -143,7 +151,7 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
         </p>
       ) : (
         <div className="news-list">
-          {editMode && (
+          {editMode && canCreate && (
             <AddItemCard label="Agregar noticia" size="large">
               {({ close }) => (
                 <>
@@ -164,6 +172,8 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
           {filtered.map((article) => (
             <EditableNewsCard
               article={article}
+              canDelete={canDelete}
+              canEdit={canEdit}
               key={article.slug}
               onDelete={() => handleDelete(article.slug)}
               onSave={(values) => handleSave(article.slug, values)}

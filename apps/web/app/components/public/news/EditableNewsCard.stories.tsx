@@ -50,6 +50,26 @@ export const ViewMode: Story = {
 export const EditModeOn: Story = {
   args: {
     article: mockArticle,
+    canEdit: true,
+    canDelete: true,
+    onDelete: () => {},
+    onSave: async () => null,
+  },
+  decorators: [
+    (Story) => (
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+        <Story />
+      </EditModeContext.Provider>
+    ),
+  ],
+}
+
+/** An assistant account: `edit_components` but not `delete_components` — only the pencil shows. */
+export const AssistantMode: Story = {
+  args: {
+    article: mockArticle,
+    canEdit: true,
+    canDelete: false,
     onDelete: () => {},
     onSave: async () => null,
   },
