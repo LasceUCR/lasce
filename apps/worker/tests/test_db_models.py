@@ -13,6 +13,7 @@ from app.db import (
     Research,
     ResearchAuthor,
     ResearchCrossAuthor,
+    RolePermission,
     User,
     UserRole,
     UserSession,
@@ -157,3 +158,24 @@ def test_session_belongs_to_a_user_and_dies_with_it() -> None:
 
     assert user_fk.target_fullname == "auth.users.id"
     assert user_fk.ondelete == "CASCADE"
+
+
+def test_role_permissions_live_in_the_auth_schema() -> None:
+    assert RolePermission.__table__.schema == "auth"
+
+
+def test_role_permission_matches_the_prisma_columns() -> None:
+    columns = RolePermission.__table__.columns
+
+    assert set(columns.keys()) == {"id", "role", "permission", "created_at"}
+    assert not columns["role"].nullable
+    assert not columns["permission"].nullable
+    assert columns["role"].type.enums == ["visitor", "assistant", "admin"]
+    assert columns["role"].type.name == "user_role"
+    assert columns["role"].type.schema == "auth"
+    assert columns["role"].type.create_type is False
+
+
+def test_role_permission_is_unique_per_role_and_permission() -> None:
+    constraint_names = {constraint.name for constraint in RolePermission.__table__.constraints}
+    assert "role_permissions_role_permission_key" in constraint_names

@@ -5,7 +5,7 @@ import type { UserRole } from '@lasce/db'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { ACCOUNT_COOKIE } from './account'
+import { ACCOUNT_COOKIE, encodeAccountCookie } from './account'
 import {
   SESSION_COOKIE,
   accountCookieOptions,
@@ -50,7 +50,11 @@ const sessionUserSelect = {
 } as const
 
 /** Opens a session for a user whose password was just verified. Server Actions only. */
-export async function createSession(user: { id: string; fullName: string }): Promise<void> {
+export async function createSession(user: {
+  id: string
+  fullName: string
+  role: UserRole | null
+}): Promise<void> {
   const token = generateSessionToken()
   const expiresAt = sessionExpiry()
 
@@ -60,8 +64,12 @@ export async function createSession(user: { id: string; fullName: string }): Pro
 
   const store = await cookies()
   store.set(SESSION_COOKIE, token, sessionCookieOptions(expiresAt))
-  // Raw name: Next URL-encodes cookie values itself, and the client decodes once.
-  store.set(ACCOUNT_COOKIE, user.fullName, accountCookieOptions(expiresAt))
+  // JSON payload: Next URL-encodes cookie values itself, and the client decodes once.
+  store.set(
+    ACCOUNT_COOKIE,
+    encodeAccountCookie({ name: user.fullName, role: user.role }),
+    accountCookieOptions(expiresAt),
+  )
 }
 
 async function readSessionToken(): Promise<string | null> {
