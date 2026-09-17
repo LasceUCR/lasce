@@ -13,6 +13,7 @@ migration source; the worker mirrors these tables in SQLAlchemy
 | `research`      | Public research/publications shown on `/investigacion` | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`        | Yes             |
 | `auth`          | Portal accounts created through `/acceso`              | Yes             |
+| `gallery`       | Public photo/video gallery shown on `/galeria`         | No — see below  |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
@@ -229,6 +230,63 @@ login, with no sliding renewal. The worker never writes here. See `docs/sessions
 
 Relationships: belongs to one `users` row.
 
+## `gallery` schema
+
+Nothing reads or writes these tables yet: `/galeria` still renders from the static mock in
+`apps/web/app/lib/gallery.ts`. This section documents the schema so it's kept accurate as that
+mock is replaced.
+
+### `gallery_albums`
+
+A top-level gallery album (e.g. "ROSAC") or, when `parent_album_id` is set, a sub-album nested one
+level under one (e.g. "Cimentación" under "ROSAC"). The Prisma model is `GalleryAlbum`; both
+levels share this one table via a self-relation rather than two separate tables, since the mock's
+`GalleryAlbum`/`GallerySubAlbum` TypeScript interfaces carry the same fields. The hierarchy is
+exactly 2 levels by application convention — nothing here stops a sub-album from having its own
+`parent_album_id` set to another sub-album.
+
+| Column             | Prisma type | Postgres type    | Constraints                                                                                |
+| ------------------ | ----------- | ---------------- | ------------------------------------------------------------------------------------------ |
+| `id`               | `String`    | `uuid`           | PK, `gen_random_uuid()`                                                                    |
+| `slug`             | `String`    | `text`           | `UNIQUE`, not null                                                                         |
+| `title`            | `String`    | `text`           | not null                                                                                   |
+| `description`      | `String`    | `text`           | not null                                                                                   |
+| `years_label`      | `String?`   | `text`           | nullable — display string, e.g. "2025–2026"                                                |
+| `parent_album_id`  | `String?`   | `uuid`           | FK → `gallery_albums.id`, `ON DELETE CASCADE`, nullable — set only for sub-albums; indexed |
+| `cover_object_key` | `String?`   | `text`           | nullable — MinIO object key of the cover image, rendered decoratively (`alt=""`)           |
+| `created_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                                                  |
+| `updated_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                                                     |
+
+Relationships: optionally belongs to one parent `gallery_albums` row; has many `gallery_albums`
+(its sub-albums, deleted with it); has many `gallery_media`.
+
+### `gallery_media`
+
+One photo or video shown in an album's masonry grid and lightbox.
+
+| Column          | Prisma type | Postgres type    | Constraints                                                                                                           |
+| --------------- | ----------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                                                                               |
+| `album_id`      | `String`    | `uuid`           | FK → `gallery_albums.id`, `ON DELETE CASCADE`, not null; indexed                                                      |
+| `title`         | `String`    | `text`           | not null                                                                                                              |
+| `description`   | `String`    | `text`           | not null                                                                                                              |
+| `alt_text`      | `String`    | `text`           | not null — required accessibility text for the image/video still, from creation                                       |
+| `object_key`    | `String`    | `text`           | `UNIQUE`, not null — key returned by `IAssetStorage.createUpload()`, since that service tracks no metadata of its own |
+| `format`        | `String`    | `text`           | not null — display label, e.g. "JPG", "MP4", "FITS"; free text, not an enum                                           |
+| `is_video`      | `Boolean`   | `boolean`        | not null, default `false`                                                                                             |
+| `col_span`      | `Int`       | `integer`        | not null, default `1` — masonry tile footprint, 1 or 2; not DB-constrained to that range                              |
+| `row_span`      | `Int`       | `integer`        | not null, default `1` — same as `col_span`                                                                            |
+| `captured_at`   | `DateTime`  | `date`           | not null                                                                                                              |
+| `uploader_name` | `String`    | `text`           | not null — display name only, not a `users` FK                                                                        |
+| `position`      | `Int`       | `integer`        | not null — display/lightbox order within the album                                                                    |
+| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                                                                             |
+| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                                                                                |
+
+Constraints: `UNIQUE (album_id, position)` (no two media rows in the same album share a display
+order).
+
+Relationships: belongs to one `gallery_albums` row.
+
 ### `role_permissions`
 
 Permission granted to a `UserRole` (LASCE-SEC-008-073). The permission strings are the TypeScript
@@ -269,6 +327,9 @@ behind the cookie together with its user, and `deleteCurrentSession()` deletes i
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.
+
+Nothing yet reads or writes `gallery_albums`/`gallery_media` — `/galeria` still renders from the
+static mock in `apps/web/app/lib/gallery.ts`.
 
 ## Keeping this current
 
