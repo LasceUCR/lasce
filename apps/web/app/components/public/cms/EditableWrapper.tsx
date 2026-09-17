@@ -8,8 +8,10 @@ import { IconButton } from '@/app/components/public/IconButton'
 
 export interface EditableWrapperProps {
   children: ReactNode
-  onEdit: () => void
-  onDelete: () => void
+  onEdit?: () => void
+  onDelete?: () => void
+  editLabel?: string
+  deleteLabel?: string
   deleteConfirmTitle?: string
   deleteConfirmMessage?: string
   className?: string
@@ -25,6 +27,8 @@ export function EditableWrapper({
   children,
   onEdit,
   onDelete,
+  editLabel = 'Editar',
+  deleteLabel = 'Eliminar',
   deleteConfirmTitle = 'Eliminar elemento',
   deleteConfirmMessage = '¿Desea eliminar este elemento? Esta acción no se puede deshacer.',
   className,
@@ -38,26 +42,36 @@ export function EditableWrapper({
       {children}
 
       <div className="editable-actions">
-        <IconButton icon={<Pencil size={16} strokeWidth={1.8} />} label="Editar" onClick={onEdit} />
-        <IconButton
-          icon={<Trash2 size={16} strokeWidth={1.8} />}
-          label="Eliminar"
-          onClick={() => setConfirmOpen(true)}
-          variant="danger"
-        />
+        {onEdit ? (
+          <IconButton
+            icon={<Pencil size={16} strokeWidth={1.8} />}
+            label={editLabel}
+            onClick={onEdit}
+          />
+        ) : null}
+        {onDelete ? (
+          <IconButton
+            icon={<Trash2 size={16} strokeWidth={1.8} />}
+            label={deleteLabel}
+            onClick={() => setConfirmOpen(true)}
+            variant="danger"
+          />
+        ) : null}
       </div>
 
-      <ConfirmDialog
-        confirmVariant="danger"
-        message={deleteConfirmMessage}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={() => {
-          setConfirmOpen(false)
-          onDelete()
-        }}
-        open={confirmOpen}
-        title={deleteConfirmTitle}
-      />
+      {onDelete ? (
+        <ConfirmDialog
+          confirmVariant="danger"
+          message={deleteConfirmMessage}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={() => {
+            setConfirmOpen(false)
+            onDelete()
+          }}
+          open={confirmOpen}
+          title={deleteConfirmTitle}
+        />
+      ) : null}
     </div>
   )
 }

@@ -15,7 +15,7 @@ covered in [registration.md](registration.md).
 | Login rules, messages, state                                                 | `apps/web/app/lib/auth/login.ts`                                                                                  | Vitest, colocated                       |
 | Tokens, cookie flags, return paths                                           | `apps/web/app/lib/auth/session-token.ts`                                                                          | Vitest, colocated, no mocks             |
 | Session store                                                                | `apps/web/app/lib/auth/session.ts`                                                                                | Vitest, `@lasce/db` and `next/*` mocked |
-| Display-name cookie and account copy                                         | `apps/web/app/lib/auth/account.ts`                                                                                | Vitest, colocated                       |
+| Account cookie (name, role) and account copy                                 | `apps/web/app/lib/auth/account.ts`                                                                                | Vitest, colocated                       |
 | Tab selector, login card, account links, sign-out dialog, hook, account card | `apps/web/app/components/public/auth/{AccessTabs,LoginForm,AccountLinks,SignOutButton,useAccount,AccountSummary}` | Vitest, stories as fixtures             |
 | Table                                                                        | `auth.sessions`, see `database-definition.md`                                                                     | Prisma migration, worker model test     |
 
@@ -31,13 +31,15 @@ other public page stays static; `getSessionUser` must never be called from the s
 | Cookie          | Holds                            | Flags                                                                 | Read by                       |
 | --------------- | -------------------------------- | --------------------------------------------------------------------- | ----------------------------- |
 | `lasce_session` | random 32-byte token (base64url) | `HttpOnly`, `SameSite=Lax`, `Secure` in production, `Path=/`, 30 days | the server (`getSessionUser`) |
-| `lasce_account` | the display name                 | same, minus `HttpOnly`                                                | the header, on the client     |
+| `lasce_account` | JSON `{ name, role }`            | same, minus `HttpOnly`                                                | the header, on the client     |
 
 Both are set by `createSession` and removed by `deleteCurrentSession`, and only there: Next only
 allows cookie writes inside Server Actions and Route Handlers. `Secure` is enforced by the browser
 against the page origin, so it holds behind Railway's TLS termination and still works on
 `http://localhost`, which browsers treat as a secure context. Next URL-encodes cookie values, so the
-name is stored raw and decoded once on the client.
+JSON is stored raw and decoded once on the client. A cookie that still holds only the display name
+(from a session opened before this payload existed) still greets; its role is unknown, so the
+Administración tab stays hidden until the next login.
 
 ## Login
 
@@ -95,10 +97,14 @@ re-renders on every navigation, so the cookie set by a login redirect is picked 
 Signing out clears the client cookie first (so the menu flips even when the redirect lands on the
 current page), runs the action, and puts the cookie back if the action fails. `AccountLinks`
 renders "Ingresar", or "Hola, <nombre>" (to `/cuenta`) and "Cerrar sesión", in the desktop header
-and in the mobile menu; registration is reached through the access page's own tab.
+and in the mobile menu; registration is reached through the access page's own tab. The
+Administración item is included only when the cookie role is `ASSISTANT` or `ADMIN`. Hiding the
+tab is not an authorization check: `/administracion` can still be opened by URL.
 
 Known lag: another open tab keeps showing the signed-in menu until it navigates. Its protected
-pages still redirect correctly, because the server checks the session row, not the cookie.
+pages still redirect correctly, because the server checks the session row, not the cookie. The
+role in `lasce_account` can also lag if an administrator changes it during the session; the next
+login refreshes it.
 
 ## Protecting a page
 
@@ -120,12 +126,14 @@ correctness; the admin panel gate (#83) may add one for a faster redirect.
 
 ## What later tickets build on
 
-- Role permissions (#73): `SessionUser.role` is already on the user `requireUser` returns; add a
-  `requireRole` helper next to it rather than checking roles in pages.
+- Role permissions ([role-permissions.md](role-permissions.md)): `requirePermission` sits next to
+  `requireUser` and reads `auth.role_permissions` for `SessionUser.role` on each request.
 - Download gating (#81): send anonymous visitors to `loginRedirectPath(<resource path>)` so login
-  returns them to the resource.
-- Admin panel (#83): `requireUser` plus the role check in the `administracion` layout; the
-  `administracion.spec.ts` assertion that the section never redirects must change with it.
+  returns them to the resource. Signed-in access already checks `download_resources` on
+  `/administracion/descargas`.
+- Admin panel (#83): `requireUser` plus a panel-level grant in the `administracion` layout; the
+  `administracion.spec.ts` assertion that the summary never redirects still holds. Individual
+  sections already check their own permissions.
 
 ## Known gaps
 

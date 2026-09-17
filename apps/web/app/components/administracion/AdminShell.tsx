@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Download, LayoutDashboard, Server, Users } from 'lucide-react'
+import { Download, LayoutDashboard, Server, Shield, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Toggle } from '@/app/components/public/Toggle'
@@ -24,6 +24,11 @@ const adminNavigation: AdminSidebarItem[] = [
     label: 'Usuarios',
     href: '/administracion/usuarios',
     icon: <Users size={18} strokeWidth={1.8} />,
+  },
+  {
+    label: 'Permisos',
+    href: '/administracion/permisos',
+    icon: <Shield size={18} strokeWidth={1.8} />,
   },
   {
     label: 'Infraestructura',

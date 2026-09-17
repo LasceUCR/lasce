@@ -2,10 +2,13 @@
 
 import { useSyncExternalStore, useTransition } from 'react'
 
+import type { UserRole } from '@lasce/db'
+
 import {
   clearAccountCookie,
   notifyAccountChanged,
-  readAccountName,
+  parseAccountCookieValue,
+  readAccountCookieSnapshot,
   subscribeAccount,
   writeAccountCookie,
 } from '@/app/lib/auth/account'
@@ -13,12 +16,14 @@ import {
 export interface AccountState {
   /** Display name from the account cookie, or `null` when signed out. */
   account: string | null
+  /** Role from the account cookie; `null` when signed out or the cookie is legacy. */
+  role: UserRole | null
   isSigningOut: boolean
   signOut: () => void
 }
 
 function readClientSnapshot(): string | null {
-  return readAccountName(document.cookie)
+  return readAccountCookieSnapshot(document.cookie)
 }
 
 function readServerSnapshot(): null {
@@ -54,11 +59,12 @@ function isNextRedirect(error: unknown): boolean {
  * put back so the menu tells the truth again.
  */
 export function useAccount(logoutAction: () => Promise<void>): AccountState {
-  const account = useSyncExternalStore(subscribeAccount, readClientSnapshot, readServerSnapshot)
+  const snapshot = useSyncExternalStore(subscribeAccount, readClientSnapshot, readServerSnapshot)
+  const parsed = snapshot ? parseAccountCookieValue(snapshot) : null
   const [isSigningOut, startTransition] = useTransition()
 
   function signOut() {
-    const previous = readClientSnapshot()
+    const previous = snapshot ? parseAccountCookieValue(snapshot) : null
 
     startTransition(async () => {
       clearAccountCookie()
@@ -73,5 +79,10 @@ export function useAccount(logoutAction: () => Promise<void>): AccountState {
     })
   }
 
-  return { account, isSigningOut, signOut }
+  return {
+    account: parsed?.name ?? null,
+    role: parsed?.role ?? null,
+    isSigningOut,
+    signOut,
+  }
 }

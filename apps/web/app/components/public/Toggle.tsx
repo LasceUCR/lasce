@@ -12,7 +12,6 @@ export function Toggle({ checked, onChange, label, id, disabled }: ToggleProps) 
       <span className="toggle-label">{label}</span>
       <button
         aria-checked={checked}
-        aria-label={label}
         className={['toggle-track', checked && 'toggle-track-on'].filter(Boolean).join(' ')}
         disabled={disabled}
         id={id}

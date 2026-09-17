@@ -34,9 +34,17 @@ const blankActivity: NosotrosActivityFormValues = { icon: 'sun', title: '', desc
 
 export interface NosotrosPageProps {
   content: NosotrosContent
+  canCreate?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
 }
 
-export function NosotrosPage({ content }: NosotrosPageProps) {
+export function NosotrosPage({
+  content,
+  canCreate = false,
+  canEdit = false,
+  canDelete = false,
+}: NosotrosPageProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
@@ -143,9 +151,13 @@ export function NosotrosPage({ content }: NosotrosPageProps) {
       </TopicSection>
 
       <TopicSection title={content.activities.title} titleId="nosotros-activities-title" index="1">
-        {listError ? <p className="form-alert">{listError}</p> : null}
+        {listError ? (
+          <p className="form-alert" role="alert">
+            {listError}
+          </p>
+        ) : null}
 
-        {editMode && content.activities.items.length === 0 ? (
+        {editMode && canCreate && content.activities.items.length === 0 ? (
           <p className="topic-intro">
             Haga clic en &quot;Añadir&quot; para agregar alguna actividad.
           </p>
@@ -155,8 +167,9 @@ export function NosotrosPage({ content }: NosotrosPageProps) {
           {content.activities.items.map((item) => {
             const Icon = icons[item.icon]
             const icon = <Icon size={22} strokeWidth={1.8} />
+            const showEditor = editMode && (canEdit || canDelete)
 
-            if (!editMode) {
+            if (!showEditor) {
               return (
                 <InfoCard
                   key={item.id}
@@ -172,19 +185,25 @@ export function NosotrosPage({ content }: NosotrosPageProps) {
                 key={item.id}
                 deleteConfirmMessage={`¿Desea eliminar "${item.title}"? Esta acción no se puede deshacer.`}
                 deleteConfirmTitle="Eliminar actividad"
-                onDelete={() => handleDeleteActivity(item.id)}
-                onEdit={() => openEditor(item.id)}
+                deleteLabel={`Eliminar ${item.title}`}
+                editLabel={`Editar ${item.title}`}
+                onDelete={canDelete ? () => handleDeleteActivity(item.id) : undefined}
+                onEdit={canEdit ? () => openEditor(item.id) : undefined}
               >
                 <InfoCard description={item.description} icon={icon} title={item.title} />
               </EditableWrapper>
             )
           })}
 
-          {editMode ? (
+          {editMode && canCreate ? (
             <AddItemCard label="Añadir">
               {({ close }) => (
                 <>
-                  {createError ? <p className="form-alert">{createError}</p> : null}
+                  {createError ? (
+                    <p className="form-alert" role="alert">
+                      {createError}
+                    </p>
+                  ) : null}
                   <NosotrosActivityForm
                     activity={blankActivity}
                     confirmMessage="¿Desea agregar esta actividad?"
@@ -233,7 +252,11 @@ export function NosotrosPage({ content }: NosotrosPageProps) {
       >
         {editingActivity ? (
           <>
-            {saveError ? <p className="form-alert">{saveError}</p> : null}
+            {saveError ? (
+              <p className="form-alert" role="alert">
+                {saveError}
+              </p>
+            ) : null}
             <NosotrosActivityForm
               activity={editingActivity}
               onCancel={closeEditor}

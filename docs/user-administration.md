@@ -9,11 +9,10 @@ One role can be assigned at a time. Removing it stores NULL, displayed as no che
 column and "Sin rol asignado" in the account page. New public registrations still
 default to VISITOR. The nullable migration is mirrored in the Python model.
 
-The page requires a session and ADMIN; the write action independently repeats that
-check. This protects only user administration and does not implement the permission
-matrix, the rest of the admin-panel gate, or download authorization (#73/#83/#81).
-The role is read from the database each request, so a revoked admin cannot keep
-editing through an existing session. Self-removal is allowed; access is lost on refresh.
+The page requires a session and the `manage_users` permission; the write action independently
+repeats that check. A visitor or assistant without that grant sees "Acceso denegado" and cannot
+change assignments. The role is read from the database each request, so a revoked grant cannot
+keep editing through an existing session. Self-removal is allowed; access is lost on refresh.
 
 Confirmed changes use a compare-and-set update with the previously displayed role.
 A stale row, invalid role, unauthorized request or database failure does not report
