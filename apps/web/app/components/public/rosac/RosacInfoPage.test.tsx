@@ -71,6 +71,7 @@ describe('RosacInfoPage', () => {
     render(<RosacInfoPage {...defaultArgs} />)
 
     const team = screen.getByRole('region', { name: /Investigadores/ })
+    expect(within(team).getByText(defaultArgs.content.team.hint)).toBeInTheDocument()
     const track = within(team).getByRole('list', { name: defaultArgs.content.team.title })
 
     expect(within(track).getAllByRole('listitem')).toHaveLength(
