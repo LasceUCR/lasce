@@ -34,6 +34,27 @@ function splitAuthors(value: string): string[] {
     .filter((author) => author !== '')
 }
 
+/** Messages match `newsInputSchema` (apps/web/app/lib/news.ts) so a rejection reads the same
+ * whether it's caught here, on blur, or by the server after submission. */
+function requireNonEmpty(message: string) {
+  return (value: string) => {
+    if (value.trim() === '') throw new Error(message)
+  }
+}
+
+function validateAuthors(value: string) {
+  if (splitAuthors(value).length === 0) throw new Error('Debe indicar al menos un autor.')
+}
+
+function validateExternalUrl(value: string) {
+  if (value.trim() === '') throw new Error('El enlace debe ser una URL válida.')
+  try {
+    new URL(value)
+  } catch {
+    throw new Error('El enlace debe ser una URL válida.')
+  }
+}
+
 export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormProps) {
   const [title, setTitle] = useState(article?.title ?? '')
   const [authors, setAuthors] = useState(article?.authors ?? '')
@@ -97,11 +118,29 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
 
   return (
     <div className="news-article-form">
-      <FormField label="Título" onChange={setTitle} required value={title} />
+      <FormField
+        label="Título"
+        onChange={setTitle}
+        required
+        validate={requireNonEmpty('El título es obligatorio.')}
+        value={title}
+      />
 
       <div className="news-article-form-row">
-        <FormField label="Autores" onChange={setAuthors} required value={authors} />
-        <FormField label="Fuente" onChange={setSource} required value={source} />
+        <FormField
+          label="Autores"
+          onChange={setAuthors}
+          required
+          validate={validateAuthors}
+          value={authors}
+        />
+        <FormField
+          label="Fuente"
+          onChange={setSource}
+          required
+          validate={requireNonEmpty('La fuente es obligatoria.')}
+          value={source}
+        />
       </div>
 
       <div className="news-article-form-row">
@@ -111,11 +150,19 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
           onChange={setExternalUrl}
           required
           type="url"
+          validate={validateExternalUrl}
           value={externalUrl}
         />
       </div>
 
-      <FormField label="Resumen" multiline onChange={setAbstract} required value={abstract} />
+      <FormField
+        label="Resumen"
+        multiline
+        onChange={setAbstract}
+        required
+        validate={requireNonEmpty('El resumen es obligatorio.')}
+        value={abstract}
+      />
       <FormField label="Texto alternativo de la imagen" onChange={setImageAlt} value={imageAlt} />
       <FileDropInput
         existingImageUrl={article?.imageUrl}
