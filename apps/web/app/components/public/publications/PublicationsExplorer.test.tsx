@@ -39,6 +39,18 @@ const rosacPublications = filterPublications.filter(
   (publication) => publication.researchGroup === 'ROSAC',
 )
 
+async function selectResearchGroup(
+  user: ReturnType<typeof userEvent.setup>,
+  group: 'LASCE' | 'ROSAC' | '',
+) {
+  await user.click(screen.getByRole('combobox', { name: 'Grupo de investigación' }))
+  await user.click(
+    screen.getByRole('option', {
+      name: group === '' ? 'Todas las publicaciones' : group,
+    }),
+  )
+}
+
 describe('PublicationsExplorer', () => {
   test('renders one card per publication it is given', () => {
     render(<PublicationsExplorer {...defaultArgs} />)
@@ -118,10 +130,7 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={filterPublications} />)
 
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Grupo de investigación' }),
-      'LASCE',
-    )
+    await selectResearchGroup(user, 'LASCE')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(lascePublications.length)
 
@@ -143,10 +152,7 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={filterPublications} />)
 
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Grupo de investigación' }),
-      'ROSAC',
-    )
+    await selectResearchGroup(user, 'ROSAC')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(rosacPublications.length)
 
@@ -168,20 +174,17 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={filterPublications} />)
 
-    const groupFilter = screen.getByRole('combobox', {
-      name: 'Grupo de investigación',
-    })
-
-    await user.selectOptions(groupFilter, 'LASCE')
+    await selectResearchGroup(user, 'LASCE')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(lascePublications.length)
 
-    await user.selectOptions(groupFilter, '')
+    await selectResearchGroup(user, '')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(filterPublications.length)
 
-    expect(screen.getByText('2')).toBeInTheDocument()
-    expect(screen.getByText('publicaciones')).toBeInTheDocument()
+    expect(screen.getByLabelText('Cantidad de publicaciones')).toHaveTextContent(
+      '2 publicaciones en total',
+    )
   })
 
   test('combines the group filter with the search query', async () => {
@@ -189,10 +192,7 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={filterPublications} />)
 
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Grupo de investigación' }),
-      'LASCE',
-    )
+    await selectResearchGroup(user, 'LASCE')
 
     await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'Solar')
 
@@ -220,10 +220,7 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={otherGroupPublications} />)
 
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Grupo de investigación' }),
-      'LASCE',
-    )
+    await selectResearchGroup(user, 'LASCE')
 
     expect(screen.getByRole('status')).toHaveTextContent('No hay publicaciones de LASCE.')
 
@@ -236,10 +233,7 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer {...defaultArgs} />)
 
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Grupo de investigación' }),
-      'LASCE',
-    )
+    await selectResearchGroup(user, 'LASCE')
 
     await user.type(
       screen.getByRole('searchbox', { name: 'Buscar publicaciones' }),

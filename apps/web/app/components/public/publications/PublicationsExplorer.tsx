@@ -65,9 +65,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
           <Select
             id="publication-research-group"
             label="Grupo de investigación"
-            onChange={(value) =>
-              setSelectedGroup(value === '' ? null : (value as ResearchGroup))
-            }
+            onChange={(value) => setSelectedGroup(value === '' ? null : (value as ResearchGroup))}
             options={[
               { value: '', label: 'Todas las publicaciones' },
               { value: 'LASCE', label: 'LASCE' },
@@ -77,16 +75,10 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
           />
         </div>
 
-        <div
-          aria-label="Cantidad de publicaciones"
-          aria-live="polite"
-          className="publications-kpi"
-        >
+        <div aria-label="Cantidad de publicaciones" aria-live="polite" className="publications-kpi">
           <strong>{filtered.length}</strong>
           <span>
-            {selectedGroup
-              ? `publicaciones (${selectedGroup})`
-              : 'publicaciones en total'}
+            {selectedGroup ? `publicaciones (${selectedGroup})` : 'publicaciones en total'}
           </span>
         </div>
       </div>
