@@ -21,6 +21,7 @@ const mockNews: NewsArticle = {
   authors: 'Jorge Arturo Mora',
   source: 'La Nación – Revista Dominical',
   date: '24 de mayo de 2026',
+  publishedAt: '2026-05-24',
   abstract:
     'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
   href: 'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
