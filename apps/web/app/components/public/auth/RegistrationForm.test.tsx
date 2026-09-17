@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -175,6 +175,11 @@ describe('RegistrationForm', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: registrationFormCopy.successTitle }),
     ).toBeInTheDocument()
+    expect(within(status).getAllByRole('heading')).toHaveLength(1)
+    expect(
+      screen.queryByRole('heading', { name: successArgs.heading?.title }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText(successArgs.heading?.description ?? '')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: registrationFormCopy.successLink })).toHaveAttribute(
       'href',
       registrationFormCopy.successHref,

@@ -149,6 +149,7 @@ test('creates an account with valid data', async ({ page }) => {
   await expect(
     status.getByRole('heading', { level: 2, name: registrationFormCopy.successTitle }),
   ).toBeVisible()
+  await expect(status.getByRole('heading', { name: registroIntro.title })).toHaveCount(0)
   await expect(
     status.getByRole('link', { name: registrationFormCopy.successLink }),
   ).toHaveAttribute('href', registrationFormCopy.successHref)
