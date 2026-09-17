@@ -35,6 +35,20 @@ support Tab, Shift+Tab, Enter and Space without moving focus when the image chan
 Next Image fills a stable 3:2 frame at every screen size. Below 1120px, the photo stacks above the
 overview. No external dependency or lightbox is used.
 
+## Reuse
+
+The carousel mechanics -- primary photo with looping overlay controls, secondary panel with
+group navigation, live-region announcement, no autoplay -- live in the shared
+`apps/web/app/components/public/Carousel.tsx`, not in this section's own component. Group and
+photo copy (the "Etapa"/"Fotografía" nouns and the four button labels) are props with defaults
+that match what this page has always shown, so a future carousel can override them instead of
+forking the component.
+
+`apps/web/app/components/public/rosac/ConstructionCarousel.tsx` is now a thin wrapper: it points
+`Carousel` at `rosacConstructionContent.stages` and supplies this page's accessible name. Its own
+tests only check that the wiring is correct; the interaction itself is covered once, on `Carousel`,
+in `Carousel.test.tsx`.
+
 ## Verification
 
 Stories cover the default view, assembly, single-photo stage, second photo and mobile. Unit tests
