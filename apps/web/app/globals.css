@@ -3062,6 +3062,16 @@ a.gallery-tile:focus-visible {
   scroll-snap-align: start;
 }
 
+/* `EditableWrapper`'s `.editable` sits between the slide and the card in edit
+   mode. Without this it has no flex sizing of its own, so it shrinks to fit
+   its content instead of filling the slide — which is what made short-text
+   cards render narrower and shorter than their neighbours. */
+.team-gallery-slide > .editable {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
 .researcher-card {
   display: flex;
   flex: 1 1 auto;
@@ -3929,12 +3939,12 @@ a.gallery-tile:focus-visible {
   font-size: 14px;
 }
 
-.nosotros-activity-form {
+.cms-form {
   display: flex;
   flex-direction: column;
 }
 
-.nosotros-activity-form-actions {
+.cms-form-actions {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;

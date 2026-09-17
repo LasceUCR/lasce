@@ -53,7 +53,7 @@ export function NosotrosActivityForm({
   const canSave = title.trim() !== '' && description.trim() !== ''
 
   return (
-    <div className="nosotros-activity-form">
+    <div className="cms-form">
       <FormField
         id="nosotros-activity-icon"
         label="Ícono"
@@ -79,7 +79,7 @@ export function NosotrosActivityForm({
         value={description}
       />
 
-      <div className="nosotros-activity-form-actions">
+      <div className="cms-form-actions">
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>

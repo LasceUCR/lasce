@@ -432,4 +432,147 @@ for (const activity of nosotrosActivities) {
   })
 }
 
+/**
+ * Initial data for the ROSAC researcher profiles ("Investigadores" on
+ * /radioastronomia). This is the editorial content LASCE supplied before the
+ * CMS existed, same as `nosotrosActivities` above — authored by the same
+ * placeholder `seedContentAuthor`.
+ */
+type SeedResearcher = {
+  photoUrl: string
+  role: string
+  name: string
+  email?: string
+  institution: string
+  description: string
+}
+
+const researchers: SeedResearcher[] = [
+  {
+    photoUrl: '/images/ROSAC/team/CarolinaSalas.jpg',
+    name: 'Dra. Carolina Salas Matamoros',
+    role: 'Investigadora principal',
+    email: 'carolina.salas_mata@ucr.ac.cr',
+    institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+    description:
+      'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/MiguelVelazquez.jpg',
+    name: 'Dr. Miguel Velázquez',
+    role: 'Investigador',
+    email: 'miguel.velazquez@ucr.ac.cr',
+    institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica, México',
+    description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/DavidGale.jpg',
+    name: 'Dr. David Gale',
+    role: 'Investigador',
+    email: 'david.gale@ucr.ac.cr',
+    institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), Puebla, México',
+    description:
+      'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/OscarNunez.jpg',
+    name: 'Dr. Óscar Núñez',
+    role: 'Investigador',
+    email: 'oscar.nunezmata@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Eléctrica, UCR',
+    description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/FedericoRuiz.png',
+    name: 'Dr. Federico Ruiz',
+    role: 'Investigador',
+    email: 'federico.ruizugalde@ucr.ac.cr',
+    institution: 'Instituto de Investigaciones en Ingeniería (INII), UCR',
+    description:
+      'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/GustavoLara.jpg',
+    name: 'MSc. Gustavo Lara',
+    role: 'Investigador',
+    email: 'gustavo.lara@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/AndresFallas.jpg',
+    name: 'Ing. Andrés Fallas',
+    role: 'Investigador',
+    email: 'andres.fallas@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/WagnerMejias.jpg',
+    name: 'MSc. Wagner Mejías',
+    role: 'Investigador',
+    email: 'wagner.mejias@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Mecánica, UCR',
+    description:
+      'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/EduardoIbarra.jpg',
+    name: 'Dr. Eduardo Ibarra',
+    role: 'Colaborador externo',
+    institution: 'Investigador en ingeniería de microondas en Quantum Motion Technologies, Londres',
+    description:
+      'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/AndresCorrales.jpg',
+    name: 'Ing. Andrés Corrales',
+    role: 'Colaborador externo',
+    institution: 'Hewlett Packard Enterprise, Costa Rica',
+    description:
+      'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/AndresGamboa.jpg',
+    name: 'Ing. Andrés Gamboa',
+    role: 'Colaborador externo',
+    institution: 'Cirtec Medical Enterprise',
+    description:
+      'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/JelmutRojas.jpg',
+    name: 'Jelmuth Rojas',
+    role: 'Colaborador externo',
+    institution: 'INDI CR',
+    description: 'Apoyo en tareas de nivelación de la estructura.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/BarnaldBocker-2.jpg',
+    name: 'Barnald Bocker',
+    role: 'Asistente',
+    institution: 'Estudiante de la Escuela de Física, UCR',
+    description:
+      'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/FabianChaverri.jpg',
+    name: 'MSc. Fabián Chaverri',
+    role: 'Futuro estudiante de doctorado',
+    institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+    description:
+      'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
+  },
+]
+
+await prisma.researcher.deleteMany()
+
+for (const researcher of researchers) {
+  await prisma.researcher.create({
+    data: { ...researcher, modifiedBy: seedContentAuthor.id },
+  })
+}
+
 await prisma.$disconnect()

@@ -1,14 +1,35 @@
 import { render, screen, within } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
+
+import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+
+// `RosacInfoPage.stories` pulls in `rosacInfoContent` from `@/app/lib/rosac`,
+// which imports `prisma` at module scope — this stubs it out so loading that
+// module for its static fixture doesn't also require a real DATABASE_URL.
+vi.mock('@lasce/db', () => ({ prisma: {} }))
+
+// `TeamGallery` (rendered inside `RosacInfoPage`) calls `useRouter()`, which
+// throws outside a mounted app router.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: () => {} }),
+}))
 
 import { RosacInfoPage, type RosacInfoPageProps } from './RosacInfoPage'
 import { Default } from './RosacInfoPage.stories'
 
 const defaultArgs = Default.args as RosacInfoPageProps
 
+function renderPage(props: RosacInfoPageProps = defaultArgs) {
+  return render(
+    <EditModeProvider>
+      <RosacInfoPage {...props} />
+    </EditModeProvider>,
+  )
+}
+
 describe('RosacInfoPage', () => {
   test('explains the observatory purpose, characteristics and relationship with LASCE', () => {
-    render(<RosacInfoPage {...defaultArgs} />)
+    renderPage()
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeInTheDocument()
@@ -30,7 +51,7 @@ describe('RosacInfoPage', () => {
   })
 
   test('shows an enabled scientific consultation button without creating a navigation link', () => {
-    render(<RosacInfoPage {...defaultArgs} />)
+    renderPage()
 
     const consultation = screen.getByRole('region', { name: 'Consulta científica' })
     expect(within(consultation).queryByText('Próximamente')).not.toBeInTheDocument()
@@ -44,7 +65,7 @@ describe('RosacInfoPage', () => {
   })
 
   test('returns to the home access cards', () => {
-    render(<RosacInfoPage {...defaultArgs} />)
+    renderPage()
 
     expect(screen.getByRole('link', { name: defaultArgs.content.backLink.label })).toHaveAttribute(
       'href',
@@ -53,14 +74,12 @@ describe('RosacInfoPage', () => {
   })
 
   test('accepts revised editorial content through props', () => {
-    render(
-      <RosacInfoPage
-        content={{
-          ...defaultArgs.content,
-          overview: { title: 'Acerca del observatorio', paragraphs: ['Descripción actualizada.'] },
-        }}
-      />,
-    )
+    renderPage({
+      content: {
+        ...defaultArgs.content,
+        overview: { title: 'Acerca del observatorio', paragraphs: ['Descripción actualizada.'] },
+      },
+    })
 
     const overview = screen.getByRole('region', { name: 'Acerca del observatorio' })
     expect(overview).toHaveTextContent('Descripción actualizada.')
@@ -68,7 +87,7 @@ describe('RosacInfoPage', () => {
   })
 
   test('introduces every ROSAC researcher', () => {
-    render(<RosacInfoPage {...defaultArgs} />)
+    renderPage()
 
     const team = screen.getByRole('region', { name: /Investigadores/ })
     const track = within(team).getByRole('list', { name: defaultArgs.content.team.title })
@@ -86,14 +105,12 @@ describe('RosacInfoPage', () => {
   })
 
   test('explains when no ROSAC researchers are available', () => {
-    render(
-      <RosacInfoPage
-        content={{
-          ...defaultArgs.content,
-          team: { ...defaultArgs.content.team, people: [] },
-        }}
-      />,
-    )
+    renderPage({
+      content: {
+        ...defaultArgs.content,
+        team: { ...defaultArgs.content.team, people: [] },
+      },
+    })
 
     const team = screen.getByRole('region', { name: /Investigadores/ })
     expect(within(team).getByRole('status')).toHaveTextContent(

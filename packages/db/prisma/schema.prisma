@@ -64,6 +64,7 @@ model User {
 
   sessions Session[]
   nosotrosActivities NosotrosActivity[]
+  researchers Researcher[]
 
   @@map("users")
   @@schema("auth")
@@ -267,6 +268,33 @@ model NosotrosActivity {
   modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
 
   @@map("nosotros_activities")
+  @@schema("public")
+}
+
+/// A researcher profile card shown on `/radioastronomia` (LASCE-CON-012-085).
+/// Distinct from `research.ResearchAuthor`: that one is only a citation name
+/// on a publication, this is the full public bio card — photo, role,
+/// institution, optional email, description.
+model Researcher {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Local path under `apps/web/public`, same convention `TeamMember.src` uses
+  /// today. Revisit once photo upload has a real storage-backed URL.
+  photoUrl    String   @map("photo_url")
+  role        String
+  name        String
+  institution String
+  /// Public address, rendered as a `mailto:` link. Not every researcher has one.
+  email       String?
+  description String   @db.Text
+  /// Display order. Set once at creation and never touched by an edit — same
+  /// reasoning as `NosotrosActivity.createdAt`.
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy  String   @map("modified_by") @db.Uuid
+  modifiedAt  DateTime @updatedAt @default(now()) @map("modified_at") @db.Timestamptz(3)
+
+  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+
+  @@map("researchers")
   @@schema("public")
 }
 
