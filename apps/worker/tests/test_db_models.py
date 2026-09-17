@@ -5,6 +5,8 @@ is to replicate everything here so the two languages never disagree about a colu
 """
 
 from app.db import (
+    GalleryAlbum,
+    GalleryMedia,
     News,
     NewsAuthor,
     NewsCrossAuthor,
@@ -157,3 +159,68 @@ def test_session_belongs_to_a_user_and_dies_with_it() -> None:
 
     assert user_fk.target_fullname == "auth.users.id"
     assert user_fk.ondelete == "CASCADE"
+
+
+def test_gallery_tables_live_in_the_gallery_schema() -> None:
+    for model in (GalleryAlbum, GalleryMedia):
+        assert model.__table__.schema == "gallery"
+
+
+def test_gallery_album_matches_the_prisma_columns() -> None:
+    columns = GalleryAlbum.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "slug",
+        "title",
+        "description",
+        "years_label",
+        "parent_album_id",
+        "cover_object_key",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["slug"].unique
+    assert columns["parent_album_id"].nullable
+    assert columns["years_label"].nullable
+    assert columns["cover_object_key"].nullable
+    assert not columns["title"].nullable
+
+
+def test_gallery_album_can_nest_under_another_album() -> None:
+    (parent_fk,) = GalleryAlbum.__table__.columns["parent_album_id"].foreign_keys
+
+    assert parent_fk.target_fullname == "gallery.gallery_albums.id"
+    assert parent_fk.ondelete == "CASCADE"
+
+
+def test_gallery_media_matches_the_prisma_columns() -> None:
+    columns = GalleryMedia.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "album_id",
+        "title",
+        "description",
+        "alt_text",
+        "object_key",
+        "format",
+        "is_video",
+        "col_span",
+        "row_span",
+        "captured_at",
+        "uploader_name",
+        "position",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["object_key"].unique
+    assert not columns["alt_text"].nullable
+    assert not columns["title"].nullable
+
+
+def test_gallery_media_belongs_to_an_album_and_dies_with_it() -> None:
+    (album_fk,) = GalleryMedia.__table__.columns["album_id"].foreign_keys
+
+    assert album_fk.target_fullname == "gallery.gallery_albums.id"
+    assert album_fk.ondelete == "CASCADE"
