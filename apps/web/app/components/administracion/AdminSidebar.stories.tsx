@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Download, LayoutDashboard, Server, Users } from 'lucide-react'
+import { Download, LayoutDashboard, Server, Shield, Users } from 'lucide-react'
 
 import { AdminSidebar } from './AdminSidebar'
 
@@ -18,6 +18,11 @@ const items = [
     label: 'Usuarios',
     href: '/administracion/usuarios',
     icon: <Users size={18} strokeWidth={1.8} />,
+  },
+  {
+    label: 'Permisos',
+    href: '/administracion/permisos',
+    icon: <Shield size={18} strokeWidth={1.8} />,
   },
   {
     label: 'Infraestructura',

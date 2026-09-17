@@ -74,14 +74,19 @@ describe('createUser', () => {
 
 describe('findUserByEmail', () => {
   test('looks the address up lower-cased and trimmed, selecting only what login needs', async () => {
-    const credentials = { id: 'user-1', fullName: 'Ana Pérez Rojas', passwordHash: 'scrypt$...' }
+    const credentials = {
+      id: 'user-1',
+      fullName: 'Ana Pérez Rojas',
+      passwordHash: 'scrypt$...',
+      role: 'VISITOR' as const,
+    }
     findUnique.mockResolvedValue(credentials)
 
     await expect(findUserByEmail('  Ana.Perez@UCR.ac.cr ')).resolves.toEqual(credentials)
 
     expect(findUnique).toHaveBeenCalledWith({
       where: { email: 'ana.perez@ucr.ac.cr' },
-      select: { id: true, fullName: true, passwordHash: true },
+      select: { id: true, fullName: true, passwordHash: true, role: true },
     })
   })
 

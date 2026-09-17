@@ -6,7 +6,8 @@ dict, and ``tests/test_contracts.py`` validates them against the JSON Schema
 exported from Zod — that test is what catches the two sides drifting apart.
 """
 
-from datetime import datetime
+from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -23,3 +24,13 @@ class IngestReadingsPayload(JobPayload):
     device_id: str = Field(min_length=1, alias="deviceId")
     from_: datetime = Field(alias="from")
     to: datetime
+
+
+class QueryGoesArchivePayload(JobPayload):
+    """One day and an increasing UTC time interval; selectors are validated by the reader."""
+
+    product: Literal["SFXR", "SFEU", "GEOF", "MPSH", "SGPS"]
+    parameter: str = Field(min_length=1, max_length=64)
+    date: date
+    start_time: str = Field(alias="startTime", pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    end_time: str = Field(alias="endTime", pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")

@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 import { mockDialog } from '@/tests/unit/helpers/mock-dialog'
 import { UserRoleChangeDialog, type UserRoleChangeDialogProps } from './UserRoleChangeDialog'
-import { Default, RemoveRole } from './UserRoleChangeDialog.stories'
+import {
+  Default,
+  RemoveRole,
+  SavePermissions,
+  SaveSeveralRoles,
+} from './UserRoleChangeDialog.stories'
 
 mockDialog()
 const args = Default.args as UserRoleChangeDialogProps
@@ -54,5 +59,30 @@ describe('UserRoleChangeDialog', () => {
     render(<UserRoleChangeDialog {...(RemoveRole.args as UserRoleChangeDialogProps)} />)
     expect(screen.getByText('El usuario quedará sin un rol asignado.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sí, retirar rol' })).toBeInTheDocument()
+  })
+
+  test('names the roles whose permissions will be saved', async () => {
+    const user = userEvent.setup()
+    const close = vi.fn()
+    render(
+      <UserRoleChangeDialog
+        {...(SavePermissions.args as UserRoleChangeDialogProps)}
+        onClose={close}
+      />,
+    )
+    expect(
+      screen.getByRole('heading', { name: 'Confirmar cambio de permisos' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Asistente/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'No, cancelar' })).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(screen.getByRole('button', { name: 'Sí, guardar permisos' })).toHaveFocus()
+    fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }))
+    expect(close).toHaveBeenCalledOnce()
+  })
+
+  test('lists several roles when more than one mapping changed', () => {
+    render(<UserRoleChangeDialog {...(SaveSeveralRoles.args as UserRoleChangeDialogProps)} />)
+    expect(screen.getByText(/Visitante y Asistente/)).toBeInTheDocument()
   })
 })

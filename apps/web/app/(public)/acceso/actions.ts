@@ -63,7 +63,7 @@ export async function loginUser(_previous: LoginState, formData: FormData): Prom
       }
     }
 
-    await createSession({ id: user.id, fullName: user.fullName })
+    await createSession({ id: user.id, fullName: user.fullName, role: user.role })
   } catch (error) {
     // The message, not the input: nothing the visitor typed belongs in a log.
     console.error('[acceso] loginUser failed:', error instanceof Error ? error.message : error)

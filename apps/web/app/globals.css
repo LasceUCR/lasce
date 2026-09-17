@@ -23,6 +23,8 @@
   --border: #d6e1e8;
   /* Same hue as --bright-teal-blue, dark enough for 16px text on white (WCAG AA 4.5:1). */
   --blue-accent-text: #0775ae;
+  --danger: #dc2626;
+  --danger-dark: #b91c1c;
 
   /* Dark scene, shared by the hero visual and the gallery lightbox. These were
      repeated literals across this file until the gallery needed them too. */
@@ -576,6 +578,16 @@ a {
   background: #2256c8;
 }
 
+.button-danger {
+  background: var(--danger);
+  color: var(--white);
+}
+
+.button-danger:hover,
+.button-danger:focus-visible {
+  background: var(--danger-dark);
+}
+
 .home-content {
   min-height: 438px;
   padding: 22px 0 34px;
@@ -1003,6 +1015,18 @@ a {
   --notice-accent: var(--feedback-error);
 }
 
+.data-source-notice-copy {
+  display: grid;
+}
+
+.data-source-notice-copy > span {
+  grid-area: 1 / 1;
+}
+
+.data-source-notice-copy > span[aria-hidden='true'] {
+  visibility: hidden;
+}
+
 .data-table {
   margin-top: 1rem;
   border-top: 1px solid var(--border);
@@ -1168,6 +1192,62 @@ a {
   gap: 1.25rem;
 }
 
+.data-loading {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+}
+
+.data-loading-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.data-loading-copy strong {
+  color: var(--blue-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-loading-progress {
+  display: block;
+  width: 100%;
+  height: 0.625rem;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: var(--alice-blue);
+}
+
+.data-loading-progress::-webkit-progress-bar {
+  border-radius: inherit;
+  background: var(--alice-blue);
+}
+
+.data-loading-progress::-webkit-progress-value {
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--blue), var(--blue-green));
+  transition: width 180ms ease;
+}
+
+.data-loading-progress::-moz-progress-bar {
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--blue), var(--blue-green));
+}
+
+.data-loading-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.875rem;
+}
+
 .data-field {
   display: flex;
   flex-direction: column;
@@ -1183,16 +1263,154 @@ a {
 }
 
 .data-field input,
-.data-field select {
+.select-trigger {
   width: 100%;
   min-width: 0;
   min-height: 44px;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--muted);
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   background: var(--white);
   color: var(--ink);
   font: inherit;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.data-field input:hover:not(:disabled),
+.select-trigger:hover:not(:disabled) {
+  border-color: var(--card-border-hover);
+  background: #f8fbfd;
+}
+
+.data-field input:focus:not(:focus-visible),
+.select-trigger:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.data-field input:focus-visible,
+.select-trigger:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.select-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.select-trigger > svg,
+.select-option > svg {
+  flex-shrink: 0;
+  color: var(--blue-dark);
+  transition: transform 160ms ease;
+}
+
+.select-trigger[aria-expanded='true'] {
+  border-color: var(--card-border-hover);
+  box-shadow: 0 2px 8px rgb(13 39 55 / 6%);
+}
+
+.select-trigger[aria-expanded='true'] > svg {
+  transform: rotate(180deg);
+}
+
+.select-menu {
+  z-index: 90;
+  margin: 0;
+  padding: 0.375rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #a9bdca transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 12px 32px rgb(13 39 55 / 14%);
+  font-size: 0.875rem;
+  animation: select-appear 140ms ease-out;
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.625rem 0.75rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.select-option > span,
+.select-group {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.select-menu > [role='presentation'] + [role='presentation'] {
+  margin-top: 0.125rem;
+}
+
+.select-option:hover:not([aria-disabled='true']):not([aria-selected='true']),
+.select-option[data-active='true']:not([aria-disabled='true']):not([aria-selected='true']) {
+  background: color-mix(in srgb, var(--alice-blue) 55%, var(--white));
+}
+
+.select-option[aria-selected='true'] {
+  background: color-mix(in srgb, var(--blue) 16%, var(--white));
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.select-option[aria-disabled='true'] {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.select-group {
+  padding: 0.75rem 0.75rem 0.375rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+@keyframes select-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .select-menu {
+    animation: none;
+  }
+  .select-trigger,
+  .select-trigger > svg,
+  .select-option,
+  .data-field input {
+    transition: none;
+  }
 }
 
 .data-field input[aria-invalid='true'] {
@@ -1202,6 +1420,13 @@ a {
 .data-field-hint {
   color: var(--muted);
   font-size: 0.8125rem;
+}
+
+.data-field-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 2.6em;
 }
 
 .data-time-range {
@@ -2960,7 +3185,14 @@ a.gallery-tile:focus-visible {
 }
 
 .admin-sidebar {
+  position: fixed;
+  top: 78px;
+  left: 0;
+  bottom: 0;
+  z-index: 15;
+  width: 240px;
   padding: 28px 14px;
+  overflow-y: auto;
   background: var(--navy-deep);
   color: var(--white);
 }
@@ -2998,6 +3230,7 @@ a.gallery-tile:focus-visible {
 }
 
 .admin-content {
+  grid-column: 2;
   padding: 32px;
   background: var(--page);
   min-width: 0;
@@ -3135,12 +3368,22 @@ a.gallery-tile:focus-visible {
   }
 
   .admin-sidebar {
+    position: sticky;
+    top: 78px;
+    left: auto;
+    bottom: auto;
+    width: auto;
+    height: auto;
     padding: 12px 14px;
     overflow-x: auto;
   }
 
   .admin-sidebar ul {
     flex-direction: row;
+  }
+
+  .admin-content {
+    grid-column: auto;
   }
 }
 
@@ -3217,8 +3460,8 @@ a.gallery-tile:focus-visible {
 /* --- Space backdrop (access and account pages) ----------------------------- */
 
 /* These pages sit on a dark space scene with the sun on the right, so their
-   intro and tabs switch to the light hero tokens; the white cards and the back
-   button already hold their own on dark. */
+   intro and tabs switch to the light hero tokens and the back button takes the
+   dark-surface action tokens; the white cards hold their own on dark. */
 .space-page {
   position: relative;
   isolation: isolate;
@@ -3271,6 +3514,14 @@ a.gallery-tile:focus-visible {
 .space-page .access-tab[aria-selected='true'] {
   color: var(--white);
   border-bottom-color: var(--cyan);
+}
+
+/* The back button sits directly on the scene, so it gets the orange outline
+   that every other dark surface gives `.button-secondary`. */
+.space-page .topic-page-footer {
+  --action: var(--amber-glow);
+  --action-hover: var(--amber-flame);
+  --on-action: var(--white);
 }
 
 /* --- Sign-out confirmation ------------------------------------------------- */
@@ -3487,7 +3738,313 @@ a.gallery-tile:focus-visible {
   font-size: 17px;
   overflow-wrap: anywhere;
 }
-
 .account-card .form-actions {
   margin-top: 0;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.toggle-label {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.toggle-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--white);
+}
+
+.toggle-track:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--muted);
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.toggle-track-on {
+  border-color: var(--blue);
+  background: var(--blue);
+}
+
+.toggle-track-on .toggle-thumb {
+  background: var(--white);
+  transform: translateX(18px);
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--white);
+  color: var(--ink);
+}
+
+.icon-button:hover,
+.icon-button:focus-visible {
+  border-color: var(--blue);
+  background: #f4fafd;
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.icon-button-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.icon-button-danger:hover,
+.icon-button-danger:focus-visible {
+  background: var(--danger);
+  color: var(--white);
+  border-color: var(--danger-dark);
+}
+
+.editable {
+  position: relative;
+}
+
+.editable-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+}
+
+.file-drop-field {
+  margin: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* A short, wide row — a thumbnail/icon on the left, the prompt and helper
+   text filling the rest of the width to its right — rather than a tall
+   stack, so it earns its place in a modal that already has plenty of width
+   to spare. */
+.file-drop {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--page);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-drop-active {
+  border-color: var(--blue);
+  background: #f4fafd;
+}
+
+.file-drop-icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--white);
+}
+
+.file-drop-preview-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.file-drop-preview {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.file-drop-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  box-shadow: 0 2px 6px rgba(13, 39, 55, 0.35);
+}
+
+.file-drop-copy {
+  min-width: 0;
+}
+
+.file-drop-copy p {
+  margin: 0;
+}
+
+.file-drop-copy p + p {
+  margin-top: 4px;
+}
+
+.file-drop-helper {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cms-form-field {
+  margin: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cms-form-field-label {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cms-form-field input,
+.cms-form-field textarea,
+.cms-form-field select {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.nosotros-activity-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.nosotros-activity-form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.add-item-card {
+  width: 100%;
+  min-height: 120px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-item-card:hover,
+.add-item-card:focus-visible {
+  border-color: var(--blue);
+  color: var(--blue-dark);
+}
+
+.modal {
+  /* Scales with the viewport rather than sitting at one fixed width: most of
+     a phone screen, most of a desktop window too, up to a cap so it doesn't
+     stretch absurdly wide on an ultrawide monitor. */
+  width: min(92vw, 1040px);
+  max-height: calc(100vh - 64px);
+  padding: 32px 40px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.12);
+}
+
+.modal::backdrop {
+  background: rgba(13, 39, 55, 0.45);
+}
+
+.modal h2 {
+  flex-shrink: 0;
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+/* Scrolls on its own once the form/content grows past the dialog's
+   max-height, while the title above stays put rather than scrolling away
+   with it. `flex: 1` is the part that actually makes that possible — without
+   it this sized to its own content instead of the space left inside `.modal`,
+   so it never had a bounded height for `overflow-y` to kick in against, and
+   the excess (past `max-height`) just spilled out past the dialog's own
+   bottom edge uncontrolled instead of scrolling. */
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Reserves the scrollbar's own width up front, so content doesn't sit
+     flush against it (or get nudged/clipped) only once scrolling kicks in. */
+  scrollbar-gutter: stable;
+  /* `.modal`'s own padding sits outside this scroll container, so it does
+     nothing for what happens at *this* box's edges. A full-width field's
+     focus outline paints a couple pixels past its own border — with zero
+     clearance here, that outline ran past this box's edge and got clipped by
+     its scroll/overflow boundary instead of rendering in full. The negative
+     margin cancels the padding back out so the fields still line up exactly
+     with the title/actions above and below, which don't scroll and don't
+     need it. */
+  padding: 0 6px;
+  margin: 0 -6px;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
