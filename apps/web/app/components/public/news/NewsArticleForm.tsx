@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
+import { uploadNewsImage, type UploadNewsImageResult } from '@/app/(public)/noticias/actions'
 import type { NewsArticle } from '@/app/lib/news'
 
 /** The editable fields of a news article, as `/api/news` expects them. */
@@ -43,6 +44,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   const [imageAlt, setImageAlt] = useState(article?.imageAlt ?? '')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageRemoved, setImageRemoved] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const hasImage = imageFile !== null || (Boolean(article?.imageUrl) && !imageRemoved)
   const canSave =
@@ -53,13 +56,32 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
     abstract.trim() !== '' &&
     hasImage
 
-  function handleSave() {
-    if (!canSave) return
+  async function handleSave() {
+    if (!canSave || isUploading) return
 
-    // Left as-is on purpose (LASCE-CMS-002): a freshly dropped file becomes a local object URL
-    // that only lasts for this browser session, standing in for a real upload until
-    // `apps/web/app/services/storage` is finished.
-    const imageUrl = imageFile ? URL.createObjectURL(imageFile) : (article?.imageUrl ?? '')
+    let imageUrl = article?.imageUrl ?? ''
+    if (imageFile) {
+      setUploadError(null)
+      setIsUploading(true)
+
+      let result: UploadNewsImageResult
+      try {
+        const formData = new FormData()
+        formData.set('file', imageFile)
+        result = await uploadNewsImage(formData)
+      } catch {
+        setIsUploading(false)
+        setUploadError('No se pudo subir la imagen. Inténtelo de nuevo.')
+        return
+      }
+      setIsUploading(false)
+
+      if (!result.ok) {
+        setUploadError(result.error)
+        return
+      }
+      imageUrl = result.imageUrl
+    }
 
     onSave({
       title,
@@ -104,12 +126,14 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
         }}
       />
 
+      {uploadError ? <p className="form-alert">{uploadError}</p> : null}
+
       <div className="news-article-form-actions">
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
-        <Button disabled={!canSave} onClick={handleSave} variant="primary">
-          Confirmar
+        <Button disabled={!canSave || isUploading} onClick={handleSave} variant="primary">
+          {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
         </Button>
       </div>
     </div>
