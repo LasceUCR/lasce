@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
 import { ResearcherCard, type ResearcherCardProps } from './ResearcherCard'
 
@@ -24,6 +24,21 @@ export interface TeamGalleryProps {
  */
 export function TeamGallery({ label, emptyMessage, hint, people }: TeamGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null)
+
+  useLayoutEffect(() => {
+    const track = trackRef.current
+
+    if (!track) {
+      return
+    }
+
+    track.scrollLeft = 0
+    const frame = requestAnimationFrame(() => {
+      track.scrollLeft = 0
+    })
+
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   function scrollByCards(direction: 1 | -1) {
     const track = trackRef.current

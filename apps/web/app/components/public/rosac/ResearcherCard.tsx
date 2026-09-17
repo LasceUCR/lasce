@@ -33,20 +33,16 @@ export function ResearcherCard({
   const frontButtonRef = useRef<HTMLButtonElement>(null)
   const backButtonRef = useRef<HTMLButtonElement>(null)
   const descriptionScrollRef = useRef<HTMLDivElement>(null)
-  const skipFocusRef = useRef(true)
+  const pendingFocusRef = useRef(false)
 
   useLayoutEffect(() => {
-    if (skipFocusRef.current) {
-      skipFocusRef.current = false
+    if (!pendingFocusRef.current) {
       return
     }
 
-    if (flipped) {
-      backButtonRef.current?.focus()
-      return
-    }
-
-    frontButtonRef.current?.focus()
+    pendingFocusRef.current = false
+    const target = flipped ? backButtonRef.current : frontButtonRef.current
+    target?.focus({ preventScroll: true })
   }, [flipped])
 
   function toggleFlip() {
@@ -54,6 +50,7 @@ export function ResearcherCard({
       return
     }
 
+    pendingFocusRef.current = true
     setFlipped((current) => !current)
   }
 

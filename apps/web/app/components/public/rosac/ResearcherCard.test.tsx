@@ -10,6 +10,14 @@ const withoutEmailArgs = WithoutEmail.args as ResearcherCardProps
 const withoutDescriptionArgs = WithoutDescription.args as ResearcherCardProps
 
 describe('ResearcherCard', () => {
+  test('does not focus a flip control on mount', () => {
+    render(<ResearcherCard {...defaultArgs} />)
+
+    expect(
+      screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }),
+    ).not.toHaveFocus()
+  })
+
   test('shows the role, name, email and institution on the front', () => {
     render(<ResearcherCard {...defaultArgs} />)
 

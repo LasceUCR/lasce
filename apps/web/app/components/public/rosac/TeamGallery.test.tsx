@@ -17,6 +17,12 @@ describe('TeamGallery', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(defaultArgs.people.length)
   })
 
+  test('starts the track at the first card', () => {
+    render(<TeamGallery {...defaultArgs} />)
+
+    expect(screen.getByRole('list', { name: defaultArgs.label })).toHaveProperty('scrollLeft', 0)
+  })
+
   test('tells visitors to click a card for more information', () => {
     render(<TeamGallery {...defaultArgs} />)
 
