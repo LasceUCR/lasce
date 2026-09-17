@@ -83,14 +83,14 @@ export function ResearcherCard({
             />
           ) : null}
           {identity}
-          {email ? (
-            <a className="researcher-card-email" href={`mailto:${email}`}>
-              {email}
-            </a>
-          ) : (
-            <span aria-hidden="true" className="researcher-card-email researcher-card-email-empty" />
-          )}
-          <p className="researcher-card-institution">Institución: {institution}</p>
+          <div className="researcher-card-meta">
+            {email ? (
+              <a className="researcher-card-email" href={`mailto:${email}`}>
+                {email}
+              </a>
+            ) : null}
+            <p className="researcher-card-institution">Institución: {institution}</p>
+          </div>
         </div>
 
         {canFlip ? (

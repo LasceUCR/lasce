@@ -3237,8 +3237,7 @@ a.gallery-tile:focus-visible {
   line-height: 1.3;
 }
 
-.researcher-card-email,
-.researcher-card-email-empty {
+.researcher-card-email {
   position: relative;
   z-index: 2;
   display: block;
@@ -3253,6 +3252,11 @@ a.gallery-tile:focus-visible {
 .researcher-card-email:hover,
 .researcher-card-email:focus-visible {
   color: var(--cyan);
+}
+
+.researcher-card-meta {
+  flex: 0 0 auto;
+  min-height: calc(1.4em + 10px + 1.4em);
 }
 
 .researcher-card-institution {

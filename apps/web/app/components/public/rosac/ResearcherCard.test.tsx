@@ -94,6 +94,9 @@ describe('ResearcherCard', () => {
 
     expect(screen.getByRole('heading', { name: withoutEmailArgs.name })).toBeInTheDocument()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(
+      screen.getByText(`Institución: ${withoutEmailArgs.institution}`),
+    ).toBeInTheDocument()
   })
 
   test('omits the flip when no description was supplied', () => {
