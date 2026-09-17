@@ -15,7 +15,10 @@ import { z } from 'zod'
  * the card layout needs a heading, so each title is drawn from that bullet's own wording. The
  * bullet text itself is verbatim.
  *
- * ROSAC researchers live on `/radioastronomia`, not here. See `app/lib/rosac.ts`.
+ * LASCE researchers live here (`researchers.people`). Portraits are the named files in
+ * `public/images/Researchers/`, except Dra. Carolina Salas Matamoros, who reuses the ROSAC
+ * portrait. People without a supplied portrait use `User.png`. The rest of the ROSAC team stays
+ * on `/radioastronomia`. See `app/lib/rosac.ts`.
  */
 export const nosotrosMeta = {
   title: 'Quiénes somos | LASCE',
@@ -31,11 +34,31 @@ interface NosotrosTextSection {
   paragraphs: readonly string[]
 }
 
+export interface NosotrosResearcher {
+  /** Local path under `apps/web/public`. */
+  src: string
+  name: string
+  /** The category shown at the top of the card, for example `Investigador`. */
+  role: string
+  /** Public address when LASCE supplied one. */
+  email?: string
+  /** Affiliation shown as `Institución: {institution}`. */
+  institution: string
+  description?: string
+}
+
 export interface NosotrosContent {
   hero: { kicker: string; title: string; lead: string }
   /** Provisional copy banner. Absent now that LASCE has supplied the approved text. */
   flag?: { label: string; message: string }
   overview: NosotrosTextSection
+  researchers: {
+    title: string
+    intro: string
+    hint: string
+    emptyMessage: string
+    people: readonly NosotrosResearcher[]
+  }
   activities: {
     title: string
     items: readonly {
@@ -61,6 +84,85 @@ export const nosotrosContent = {
     paragraphs: [
       'El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE) es una iniciativa científica vinculada al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica. Reúne investigación en astrofísica solar, observaciones astronómicas y desarrollo computacional para estudiar la actividad solar, su interacción con el medio interplanetario y el entorno terrestre.',
       'LASCE parte de una idea sencilla pero poderosa: para comprender el clima espacial se necesita observar distintos eslabones de una misma cadena, desde el origen magnético de una erupción solar hasta sus manifestaciones en el espacio cercano a la Tierra. Por ello, en el LASCE se realiza investigación científica integrando datos de diferentes instrumentos, longitudes de onda y plataformas.',
+    ],
+  },
+  researchers: {
+    title: 'Investigadores LASCE',
+    intro:
+      'Las personas que investigan y desarrollan el Laboratorio de Astrofísica Solar y Clima Espacial (LASCE).',
+    hint: 'Haga clic en una ficha para ver más información.',
+    emptyMessage: 'No hay información de investigadores disponible en este momento.',
+    people: [
+      {
+        src: '/images/ROSAC/team/CarolinaSalas.jpg',
+        name: 'Dra. Carolina Salas Matamoros',
+        role: 'Investigadora principal',
+        email: 'carolina.salas_mata@ucr.ac.cr',
+        institution: 'Centro de Investigaciones Espaciales, CINESPA',
+        description:
+          'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
+      },
+      {
+        src: '/images/Researchers/AllanBerrocal.jpg',
+        name: 'Dr. Allan Francisco Berrocal Rojas',
+        role: 'Investigador colaborador',
+        email: 'allan.berrocal@ucr.ac.cr',
+        institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+        description:
+          'Diseño, desarrollo e implementación de la plataforma informática del LASCE. Las tareas puntuales abarcan la captura de datos masivos de diferentes fuentes con información sobre el clima solar, el almacenamiento de los datos procesados y de interés para el proyecto en sistemas de bases de datos adecuadas para el dominio, y finalmente la habilitación de una interfaz de consulta mediante servicios web. Adicionalmente apoyar en los objetivos de análisis de datos sobre el clima solar junto a investigadores(as) especialistas en la materia como astrofísicos(as) solares.',
+      },
+      {
+        src: '/images/Researchers/LuisEsquivel.jpeg',
+        name: 'Dr. Luis Gustavo Esquivel Quirós',
+        role: 'Investigador colaborador',
+        email: 'luis.esquivel@ucr.ac.cr',
+        institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+      },
+      {
+        src: '/images/Researchers/IvanniaCalvo.png',
+        name: 'MSc. Ivania Calvo',
+        role: 'Investigadora colaboradora',
+        email: 'ivannia.calvo@ucr.ac.cr',
+        institution: 'Centro de Investigaciones Espaciales',
+        description:
+          'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+      },
+      {
+        src: '/images/Researchers/User.png',
+        name: 'Dr. Felipe Meza',
+        role: 'Investigador colaborador',
+        email: 'felipe.mezaobando@ucr.ac.cr',
+        institution:
+          'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
+      },
+      {
+        src: '/images/Researchers/User.png',
+        name: 'MSc. Alonso Vega',
+        role: 'Investigador colaborador',
+        email: 'alonso.vega_f@ucr.ac.cr',
+        institution: 'Escuela de Ingeniería Topográfica, UCR',
+        description:
+          'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
+      },
+      {
+        src: '/images/Researchers/User.png',
+        name: 'Dra. Gabriela Molina',
+        role: 'Investigadora colaboradora',
+        email: 'gmolina@herrera.unt.edu.ar',
+        institution: 'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina',
+        description:
+          'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
+      },
+      {
+        src: '/images/Researchers/User.png',
+        name: 'Dra. Yenca Migoya',
+        role: 'Investigadora colaboradora',
+        email: 'yenca@ictp.it',
+        institution:
+          'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
+        description:
+          'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
+      },
     ],
   },
   activities: {
