@@ -2,9 +2,9 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import type * as PublicationsLib from '@/app/lib/publications'
 
 const mocks = vi.hoisted(() => ({
+  requireApiPermission: vi.fn(),
   getPublications: vi.fn(),
   createPublication: vi.fn(),
-  requireAdmin: vi.fn(),
 }))
 
 vi.mock('@/app/lib/publications', async (importOriginal) => {
@@ -18,7 +18,7 @@ vi.mock('@/app/lib/publications', async (importOriginal) => {
 })
 
 vi.mock('@/app/lib/auth/apiGuard', () => ({
-  requireAdmin: mocks.requireAdmin,
+  requireApiPermission: mocks.requireApiPermission,
 }))
 
 vi.mock('@lasce/db', () => ({ prisma: {} }))
@@ -86,7 +86,7 @@ describe('POST /api/publicaciones', () => {
   test('rejects a request the admin guard denies', async () => {
     const denied = deniedResponse()
 
-    mocks.requireAdmin.mockResolvedValue({
+    mocks.requireApiPermission.mockResolvedValue({
       ok: false,
       response: denied,
     })
@@ -98,7 +98,7 @@ describe('POST /api/publicaciones', () => {
   })
 
   test('rejects a body that is not valid JSON', async () => {
-    mocks.requireAdmin.mockResolvedValue({
+    mocks.requireApiPermission.mockResolvedValue({
       ok: true,
       user: { id: 'admin-1', role: 'ADMIN' },
     })
@@ -110,7 +110,7 @@ describe('POST /api/publicaciones', () => {
   })
 
   test('rejects a body missing required fields', async () => {
-    mocks.requireAdmin.mockResolvedValue({
+    mocks.requireApiPermission.mockResolvedValue({
       ok: true,
       user: { id: 'admin-1', role: 'ADMIN' },
     })
@@ -137,7 +137,7 @@ describe('POST /api/publicaciones', () => {
   })
 
   test('creates the publication', async () => {
-    mocks.requireAdmin.mockResolvedValue({
+    mocks.requireApiPermission.mockResolvedValue({
       ok: true,
       user: { id: 'admin-1', role: 'ADMIN' },
     })
