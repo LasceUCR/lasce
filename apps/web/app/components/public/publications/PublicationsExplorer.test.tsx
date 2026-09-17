@@ -182,9 +182,7 @@ describe('PublicationsExplorer', () => {
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(filterPublications.length)
 
-    expect(screen.getByLabelText('Cantidad de publicaciones')).toHaveTextContent(
-      '2 publicaciones en total',
-    )
+    expect(screen.getByLabelText('Cantidad de publicaciones')).toHaveTextContent('2 publicaciones en total')
   })
 
   test('combines the group filter with the search query', async () => {
