@@ -55,6 +55,7 @@ export interface NosotrosContent {
   researchers: {
     title: string
     intro: string
+    hint: string
     emptyMessage: string
     people: readonly NosotrosResearcher[]
   }
@@ -89,6 +90,7 @@ export const nosotrosContent = {
     title: 'Investigadores LASCE',
     intro:
       'Las personas que investigan y desarrollan el Laboratorio de Astrofísica Solar y Clima Espacial (LASCE).',
+    hint: 'Haga clic en una ficha para ver más información.',
     emptyMessage: 'No hay información de investigadores disponible en este momento.',
     people: [
       {

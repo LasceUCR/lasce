@@ -17,6 +17,12 @@ describe('TeamGallery', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(defaultArgs.people.length)
   })
 
+  test('tells visitors to click a card for more information', () => {
+    render(<TeamGallery {...defaultArgs} />)
+
+    expect(screen.getByText(defaultArgs.hint)).toBeInTheDocument()
+  })
+
   test('shows the role, name, institution and description of every person', async () => {
     const user = userEvent.setup()
     render(<TeamGallery {...defaultArgs} />)
@@ -117,5 +123,6 @@ describe('TeamGallery', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent(emptyArgs.emptyMessage)
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    expect(screen.queryByText(emptyArgs.hint)).not.toBeInTheDocument()
   })
 })

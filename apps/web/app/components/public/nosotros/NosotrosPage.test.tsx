@@ -140,6 +140,7 @@ describe('NosotrosPage', () => {
       within(researchers).getByRole('heading', { level: 2, name: /2\.\s*Investigadores LASCE/ }),
     ).toBeInTheDocument()
     expect(researchers).toHaveTextContent(defaultArgs.content.researchers.intro)
+    expect(researchers).toHaveTextContent(defaultArgs.content.researchers.hint)
     const track = within(researchers).getByRole('list', {
       name: defaultArgs.content.researchers.title,
     })
@@ -212,9 +213,7 @@ describe('NosotrosPage', () => {
       ),
     ).toBeInTheDocument()
     expect(within(researchers).getAllByText('Investigador colaborador').length).toBeGreaterThan(0)
-    expect(within(researchers).getAllByText('Investigadora colaboradora').length).toBeGreaterThan(
-      0,
-    )
+    expect(within(researchers).getAllByText('Investigadora colaboradora').length).toBeGreaterThan(0)
     await user.click(
       within(researchers).getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }),
     )

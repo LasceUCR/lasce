@@ -3083,6 +3083,13 @@ a.gallery-tile:focus-visible {
   margin-top: 20px;
 }
 
+.team-gallery-hint {
+  margin: 0 0 12px;
+  color: #355066;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
 .team-gallery-track {
   display: flex;
   align-items: stretch;

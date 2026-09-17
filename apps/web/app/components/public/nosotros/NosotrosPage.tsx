@@ -232,6 +232,7 @@ export function NosotrosPage({
       >
         <TeamGallery
           emptyMessage={content.researchers.emptyMessage}
+          hint={content.researchers.hint}
           label={content.researchers.title}
           people={content.researchers.people}
         />

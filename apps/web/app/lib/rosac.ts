@@ -84,6 +84,7 @@ export interface RosacInfoContent {
   team: {
     title: string
     intro: string
+    hint: string
     emptyMessage: string
     people: readonly TeamMember[]
   }
@@ -212,6 +213,7 @@ export const rosacInfoContent = {
     title: 'Investigadores',
     intro:
       'Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.',
+    hint: 'Haga clic en una ficha para ver más información.',
     emptyMessage: 'No hay información de investigadores disponible en este momento.',
     people: [
       {

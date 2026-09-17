@@ -65,6 +65,7 @@ test('presents each ROSAC researcher card with public information', async ({ pag
   await page.goto('/radioastronomia')
 
   const team = page.getByRole('region', { name: /Investigadores/ })
+  await expect(team).toContainText('Haga clic en una ficha para ver más información.')
   const track = team.getByRole('list', { name: 'Investigadores' })
 
   await expect(track.getByRole('listitem')).toHaveCount(14)
@@ -77,7 +78,9 @@ test('presents each ROSAC researcher card with public information', async ({ pag
   await expect(
     team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR').first(),
   ).toBeVisible()
-  await team.getByRole('button', { name: 'Ver descripción de Dra. Carolina Salas Matamoros' }).click()
+  await team
+    .getByRole('button', { name: 'Ver descripción de Dra. Carolina Salas Matamoros' })
+    .click()
   await expect(
     team.getByText(
       'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',

@@ -34,6 +34,7 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
   )
 
   const researchers = page.getByRole('region', { name: /Investigadores LASCE/ })
+  await expect(researchers).toContainText('Haga clic en una ficha para ver más información.')
   const track = researchers.getByRole('list', { name: 'Investigadores LASCE' })
 
   await expect(track.getByRole('listitem')).toHaveCount(8)

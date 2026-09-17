@@ -8,6 +8,7 @@ import { ResearcherCard, type ResearcherCardProps } from './ResearcherCard'
 export interface TeamGalleryProps {
   label: string
   emptyMessage: string
+  hint: string
   people: readonly ResearcherCardProps[]
 }
 
@@ -21,7 +22,7 @@ export interface TeamGalleryProps {
  * email and institution are rendered as real HTML on the front; the description is on the back after a
  * flip.
  */
-export function TeamGallery({ label, emptyMessage, people }: TeamGalleryProps) {
+export function TeamGallery({ label, emptyMessage, hint, people }: TeamGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null)
 
   function scrollByCards(direction: 1 | -1) {
@@ -45,6 +46,7 @@ export function TeamGallery({ label, emptyMessage, people }: TeamGalleryProps) {
 
   return (
     <div className="team-gallery">
+      <p className="team-gallery-hint">{hint}</p>
       {/* Focusable so the scrollable region is reachable by keyboard, which axe requires. */}
       <ul aria-label={label} className="team-gallery-track" ref={trackRef} tabIndex={0}>
         {people.map((person) => (
