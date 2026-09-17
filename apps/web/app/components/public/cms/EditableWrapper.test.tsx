@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditableWrapper, type EditableWrapperProps } from './EditableWrapper'
-import { Default } from './EditableWrapper.stories'
+import { Default, EditOnly } from './EditableWrapper.stories'
 
 const defaultArgs = Default.args as EditableWrapperProps
 
@@ -52,5 +52,29 @@ describe('EditableWrapper', () => {
 
     expect(onDelete).not.toHaveBeenCalled()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('hides the delete action when onDelete is omitted', () => {
+    render(<EditableWrapper {...(EditOnly.args as EditableWrapperProps)} />)
+
+    expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+  })
+
+  test('uses the card title in the action names when they are provided', () => {
+    render(
+      <EditableWrapper
+        {...defaultArgs}
+        deleteLabel="Eliminar Fenómenos solares eruptivos"
+        editLabel="Editar Fenómenos solares eruptivos"
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Editar Fenómenos solares eruptivos' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Eliminar Fenómenos solares eruptivos' }),
+    ).toBeInTheDocument()
   })
 })

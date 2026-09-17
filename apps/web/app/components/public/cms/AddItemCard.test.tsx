@@ -11,7 +11,14 @@ describe('AddItemCard', () => {
   test('shows the label as a prompt, with no form open yet', () => {
     render(<AddItemCard {...defaultArgs} />)
 
-    expect(screen.getByRole('button', { name: defaultArgs.label })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: defaultArgs.label })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
+    expect(screen.getByRole('button', { name: defaultArgs.label })).toHaveAttribute(
+      'aria-haspopup',
+      'dialog',
+    )
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -21,6 +28,10 @@ describe('AddItemCard', () => {
 
     await user.click(screen.getByRole('button', { name: defaultArgs.label }))
 
+    expect(screen.getByRole('button', { name: defaultArgs.label })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
     expect(screen.getByRole('dialog', { name: defaultArgs.label })).toBeInTheDocument()
     expect(screen.getByText('Formulario de ejemplo')).toBeInTheDocument()
     // The prompt itself stays put behind the modal.

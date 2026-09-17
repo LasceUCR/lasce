@@ -1,12 +1,20 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { ACCOUNT_COOKIE, notifyAccountChanged, readAccountName } from '@/app/lib/auth/account'
+import {
+  ACCOUNT_COOKIE,
+  encodeAccountCookie,
+  notifyAccountChanged,
+  readAccountName,
+} from '@/app/lib/auth/account'
 
 import { useAccount } from './useAccount'
 
-function setAccountCookie(name: string) {
-  document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(name)}; Path=/`
+function setAccountCookie(
+  name: string,
+  role: 'VISITOR' | 'ASSISTANT' | 'ADMIN' | null = 'VISITOR',
+) {
+  document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(encodeAccountCookie({ name, role }))}; Path=/`
 }
 
 afterEach(() => {
@@ -18,12 +26,14 @@ describe('useAccount', () => {
     const { result, rerender } = renderHook(() => useAccount(vi.fn().mockResolvedValue(undefined)))
 
     expect(result.current.account).toBeNull()
+    expect(result.current.role).toBeNull()
     expect(result.current.isSigningOut).toBe(false)
 
-    setAccountCookie('Ana Pérez Rojas')
+    setAccountCookie('Ana Pérez Rojas', 'ADMIN')
     rerender()
 
     expect(result.current.account).toBe('Ana Pérez Rojas')
+    expect(result.current.role).toBe('ADMIN')
   })
 
   test('follows a change announced by the account store', () => {
@@ -75,6 +85,7 @@ describe('useAccount', () => {
 
     await waitFor(() => expect(logoutAction).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(result.current.account).toBe('Ana Pérez Rojas'))
+    expect(result.current.role).toBe('VISITOR')
     expect(readAccountName(document.cookie)).toBe('Ana Pérez Rojas')
   })
 })

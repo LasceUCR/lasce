@@ -27,4 +27,11 @@ describe('AdminSidebar', () => {
     expect(screen.getByRole('link', { name: 'Usuarios' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Resumen' })).not.toHaveAttribute('aria-current')
   })
+
+  test('keeps a nested user path marked as the Usuarios section', () => {
+    render(<AdminSidebar {...defaultArgs} activePathname="/administracion/usuarios/detalle" />)
+
+    expect(screen.getByRole('link', { name: 'Usuarios' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Resumen' })).not.toHaveAttribute('aria-current')
+  })
 })

@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { createSignedInUser } from './helpers/admin-users'
+
 test('opens the administration page directly, like every other public route', async ({ page }) => {
   const response = await page.goto('/administracion')
 
@@ -11,6 +13,12 @@ test('opens the administration page directly, like every other public route', as
   await expect(page.getByText('Panel de administración')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
   await expect(page.getByRole('complementary', { name: 'Información provisional' })).toBeVisible()
+  await expect(
+    page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', {
+      name: 'Administración',
+      exact: true,
+    }),
+  ).toHaveCount(0)
 })
 
 test('shows the summary stats and infrastructure status panels', async ({ page }) => {
@@ -22,37 +30,72 @@ test('shows the summary stats and infrastructure status panels', async ({ page }
   await expect(page.getByRole('heading', { level: 2, name: 'Tareas y pipelines' })).toBeVisible()
 })
 
-test('reaches the section from the main navigation and marks it as current', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/')
-
-  const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
-  const link = navigation.getByRole('link', { name: 'Administración', exact: true })
-
-  await link.click()
-
-  await expect(page).toHaveURL(/\/administracion$/)
-  await expect(link).toHaveAttribute('aria-current', 'page')
+test('hides Administración from a signed-in visitor', async ({ page, context }) => {
+  const fixture = await createSignedInUser(context, 'VISITOR')
+  try {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/')
+    await expect(
+      page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', {
+        name: 'Administración',
+        exact: true,
+      }),
+    ).toHaveCount(0)
+  } finally {
+    await fixture.cleanup()
+  }
 })
 
-test('keeps the header tab current while browsing the other sidebar sections', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto('/administracion')
+test('reaches the section from the main navigation and marks it as current', async ({
+  page,
+  context,
+}) => {
+  const fixture = await createSignedInUser(context, 'ADMIN')
+  try {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/')
 
-  const sidebar = page.getByRole('navigation', { name: 'Panel de administración' })
-  const headerLink = page
-    .getByRole('navigation', { name: 'Navegación principal' })
-    .getByRole('link', { name: 'Administración', exact: true })
+    const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
+    const link = navigation.getByRole('link', { name: 'Administración', exact: true })
 
-  for (const [label, heading] of [
-    ['Descargas', 'Descargas'],
-    ['Infraestructura', 'Infraestructura'],
-  ] as const) {
-    await sidebar.getByRole('link', { name: label }).click()
+    await link.click()
 
-    await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
-    await expect(page.getByText('Contenido en preparación')).toBeVisible()
-    await expect(sidebar.getByRole('link', { name: label })).toHaveAttribute('aria-current', 'page')
-    await expect(headerLink).toHaveAttribute('aria-current', 'page')
+    await expect(page).toHaveURL(/\/administracion$/)
+    await expect(link).toHaveAttribute('aria-current', 'page')
+  } finally {
+    await fixture.cleanup()
   }
+})
+
+test('keeps the header tab current while browsing the other sidebar sections', async ({
+  page,
+  context,
+}) => {
+  const fixture = await createSignedInUser(context, 'ASSISTANT')
+  try {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/administracion')
+
+    const sidebar = page.getByRole('navigation', { name: 'Panel de administración' })
+    const headerLink = page
+      .getByRole('navigation', { name: 'Navegación principal' })
+      .getByRole('link', { name: 'Administración', exact: true })
+
+    await sidebar.getByRole('link', { name: 'Infraestructura' }).click()
+
+    await expect(page.getByRole('heading', { level: 1, name: 'Infraestructura' })).toBeVisible()
+    await expect(page.getByText('Contenido en preparación')).toBeVisible()
+    await expect(sidebar.getByRole('link', { name: 'Infraestructura' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    await expect(headerLink).toHaveAttribute('aria-current', 'page')
+  } finally {
+    await fixture.cleanup()
+  }
+})
+
+test('sends an anonymous visitor to login from Descargas', async ({ page }) => {
+  await page.goto('/administracion/descargas')
+  await expect(page).toHaveURL(/acceso\?next=%2Fadministracion%2Fdescargas&reason=auth/)
 })
