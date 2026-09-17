@@ -3942,6 +3942,10 @@ a.gallery-tile:focus-visible {
   font-weight: 600;
 }
 
+.cms-form-field-required {
+  color: var(--danger);
+}
+
 .cms-form-field input,
 .cms-form-field textarea,
 .cms-form-field select {
@@ -3952,6 +3956,10 @@ a.gallery-tile:focus-visible {
   color: var(--ink);
   font-family: inherit;
   font-size: 14px;
+}
+
+.cms-form-field [aria-invalid='true'] {
+  border-color: var(--danger);
 }
 
 .nosotros-activity-form {
