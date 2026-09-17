@@ -1,10 +1,14 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-
+import { useRouter } from 'next/navigation'
 import { PublicationCard } from './PublicationCard'
 import { SearchBar } from '@/app/components/public/SearchBar'
+import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
+import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import type { Publication, ResearchGroup } from '@/app/lib/publications'
+
+const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
 
 export interface PublicationsExplorerProps {
   publications: Publication[]
@@ -15,9 +19,36 @@ function matches(value: string, query: string) {
 }
 
 export function PublicationsExplorer({ publications }: PublicationsExplorerProps) {
+  const router = useRouter()
+  const { editMode } = useEditMode()
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [listError, setListError] = useState<string | null>(null)
+
   const [query, setQuery] = useState('')
 
   const [selectedGroup, setSelectedGroup] = useState<ResearchGroup | null>(null)
+
+
+  function openEditor(id: string) {
+    setSaveError(null)
+    setEditingActivityId(id)
+  }
+
+  function closeEditor() {
+    setSaveError(null)
+    setEditingActivityId(null)
+  }
+
+  async function handleSaveActivity() {
+  }
+
+  async function handleCreateActivity() {
+  }
+
+  async function handleDeleteActivity() {
+  }
 
   const filtered = useMemo(() => {
     return publications.filter((publication) => {
@@ -91,7 +122,9 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
         </p>
       ) : (
         <div className="publication-list">
-          {filtered.map((publication) => (
+          {filtered.map((publication) => {
+
+            if (!editMode) { return (
             <PublicationCard
               abstract={publication.abstract}
               authors={publication.authors}
@@ -102,7 +135,28 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
               venue={publication.venue}
               year={publication.year}
             />
-          ))}
+            )}
+
+            return (
+            <EditableWrapper key={publication.slug}
+              deleteConfirmMessage={`¿Desea eliminar "${publication.title}"? Esta acción no se puede deshacer.`}
+              deleteConfirmTitle="Eliminar actividad"
+              onDelete={() => handleDeleteActivity()}
+              onEdit={() => openEditor(publication.slug)}>
+                
+                <PublicationCard
+                abstract={publication.abstract}
+                authors={publication.authors}
+                href={publication.href}
+                key={publication.slug}
+                researchGroup={publication.researchGroup}
+                title={publication.title}
+                venue={publication.venue}
+                year={publication.year}
+                />
+            </EditableWrapper>
+            )
+          })}
         </div>
       )}
     </section>
