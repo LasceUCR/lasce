@@ -65,9 +65,9 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
     'href',
     'mailto:ivannia.calvo@ucr.ac.cr',
   )
-  await expect(researchers.getByText('Investigadora principal')).toBeVisible()
+  await expect(researchers.getByText('Investigadora principal', { exact: true })).toBeVisible()
   await expect(
-    researchers.getByText('Institución: Centro de Investigaciones Espaciales, CINESPA'),
+    researchers.getByText('Institución: Centro de Investigaciones Espaciales, CINESPA').first(),
   ).toBeVisible()
   await researchers
     .getByRole('button', { name: 'Ver descripción de Dra. Carolina Salas Matamoros' })

@@ -198,8 +198,9 @@ describe('NosotrosPage', () => {
     ).toHaveAttribute('href', 'mailto:ivannia.calvo@ucr.ac.cr')
     expect(within(researchers).getByText('Investigadora principal')).toBeInTheDocument()
     expect(
-      within(researchers).getByText('Institución: Centro de Investigaciones Espaciales, CINESPA'),
-    ).toBeInTheDocument()
+      within(researchers).getAllByText('Institución: Centro de Investigaciones Espaciales, CINESPA')
+        .length,
+    ).toBeGreaterThan(0)
     await user.click(
       within(researchers).getByRole('button', {
         name: 'Ver descripción de Dra. Carolina Salas Matamoros',

@@ -69,7 +69,7 @@ test('presents each ROSAC researcher card with public information', async ({ pag
 
   await expect(track.getByRole('listitem')).toHaveCount(14)
   await expect(team.getByRole('heading', { name: 'Dra. Carolina Salas Matamoros' })).toBeVisible()
-  await expect(team.getByText('Investigadora principal')).toBeVisible()
+  await expect(team.getByText('Investigadora principal', { exact: true })).toBeVisible()
   await expect(team.getByRole('link', { name: 'carolina.salas_mata@ucr.ac.cr' })).toHaveAttribute(
     'href',
     'mailto:carolina.salas_mata@ucr.ac.cr',
