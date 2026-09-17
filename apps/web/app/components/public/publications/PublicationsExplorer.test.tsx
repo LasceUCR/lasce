@@ -61,10 +61,7 @@ describe('PublicationsExplorer', () => {
     const user = userEvent.setup()
     render(<PublicationsExplorer {...defaultArgs} />)
 
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar publicaciones' }),
-      'ROSAC',
-    )
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'ROSAC')
 
     expect(
       screen.getByRole('heading', {
@@ -101,9 +98,7 @@ describe('PublicationsExplorer', () => {
       'Investigador LASCE',
     )
 
-    expect(
-      screen.getByRole('heading', { name: 'Publicación de prueba' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Publicación de prueba' })).toBeInTheDocument()
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
   })
@@ -111,13 +106,9 @@ describe('PublicationsExplorer', () => {
   test('shows an empty state when there are no publications', () => {
     render(<PublicationsExplorer {...emptyArgs} />)
 
-    expect(
-      screen.getByRole('heading', { name: 'Publicaciones recientes' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Publicaciones recientes' })).toBeInTheDocument()
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'No hay publicaciones disponibles.',
-    )
+    expect(screen.getByRole('status')).toHaveTextContent('No hay publicaciones disponibles.')
 
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
   })
@@ -132,9 +123,7 @@ describe('PublicationsExplorer', () => {
       'LASCE',
     )
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      lascePublications.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(lascePublications.length)
 
     expect(screen.getByRole('heading', { name: 'LASCE Solar Research' })).toBeInTheDocument()
 
@@ -159,9 +148,7 @@ describe('PublicationsExplorer', () => {
       'ROSAC',
     )
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      rosacPublications.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(rosacPublications.length)
 
     expect(
       screen.getByRole('heading', {
@@ -187,15 +174,11 @@ describe('PublicationsExplorer', () => {
 
     await user.selectOptions(groupFilter, 'LASCE')
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      lascePublications.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(lascePublications.length)
 
     await user.selectOptions(groupFilter, '')
 
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
-      filterPublications.length,
-    )
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(filterPublications.length)
 
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('publicaciones')).toBeInTheDocument()
@@ -211,10 +194,7 @@ describe('PublicationsExplorer', () => {
       'LASCE',
     )
 
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar publicaciones' }),
-      'Solar',
-    )
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'Solar')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
 
@@ -245,9 +225,7 @@ describe('PublicationsExplorer', () => {
       'LASCE',
     )
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'No hay publicaciones de LASCE.',
-    )
+    expect(screen.getByRole('status')).toHaveTextContent('No hay publicaciones de LASCE.')
 
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
     expect(screen.getByText('0')).toBeInTheDocument()

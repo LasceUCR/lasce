@@ -1,10 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
-import {
-  ResearchAreasSection,
-  type ResearchAreasSectionProps,
-} from './ResearchAreasSection'
+import { ResearchAreasSection, type ResearchAreasSectionProps } from './ResearchAreasSection'
 import { Default, Empty } from './ResearchAreasSection.stories'
 
 const defaultArgs = Default.args as ResearchAreasSectionProps
@@ -28,9 +25,9 @@ describe('ResearchAreasSection', () => {
   test('renders the research area call to action', () => {
     render(<ResearchAreasSection {...defaultArgs} />)
 
-    expect(
-      screen.getAllByText('Conozca más sobre esta área'),
-    ).toHaveLength(defaultArgs.areas.length)
+    expect(screen.getAllByText('Conozca más sobre esta área')).toHaveLength(
+      defaultArgs.areas.length,
+    )
   })
 
   test('links each research area to its own detail page', () => {
@@ -41,10 +38,7 @@ describe('ResearchAreasSection', () => {
         screen.getByRole('link', {
           name: new RegExp(area.title),
         }),
-      ).toHaveAttribute(
-        'href',
-        `/investigacion/areas/${area.slug}`,
-      )
+      ).toHaveAttribute('href', `/investigacion/areas/${area.slug}`)
     }
   })
 

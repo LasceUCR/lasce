@@ -15,11 +15,7 @@ export function ResearchAreaPage({
 }: ResearchAreaPageProps) {
   return (
     <article className="topic-page">
-      <TopicHero
-        kicker="Área de investigación"
-        lead={area.description}
-        title={area.title}
-      />
+      <TopicHero kicker="Área de investigación" lead={area.description} title={area.title} />
 
       <div className="topic-page-footer page-width">
         <TopicBackLink href={backHref} label={backLabel} />

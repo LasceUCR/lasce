@@ -24,10 +24,7 @@ export default function InvestigacionPage() {
         title={investigacionHero.title}
       />
 
-      <ResearchAreasSection
-        areas={researchAreas}
-        id="research-areas"
-      />
+      <ResearchAreasSection areas={researchAreas} id="research-areas" />
 
       <div className="topic-page-footer page-width">
         <TopicBackLink href={investigacionBackLink.href} label={investigacionBackLink.label} />

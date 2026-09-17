@@ -28,8 +28,7 @@ export function PublicationCard({
 
       <p className="publication-meta">
         {authors && `${authors} · `}
-        {venue} · {year} ·{' '}
-        <strong className="publication-group">{researchGroup}</strong>
+        {venue} · {year} · <strong className="publication-group">{researchGroup}</strong>
       </p>
 
       <p className={`publication-abstract${href ? '' : ' publication-abstract-full'}`}>
