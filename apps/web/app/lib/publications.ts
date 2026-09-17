@@ -48,8 +48,6 @@ export const publicationInputSchema = z.object({
 
 export type PublicationInput = z.infer<typeof publicationInputSchema>
 
-
-
 /**
  * Loads publications from the `research` schema (`packages/db/prisma/schema.prisma`)
  * and maps each record to the shape `PublicationsExplorer` renders.
@@ -87,9 +85,7 @@ export async function getPublications(): Promise<Publication[]> {
  * Creates a publication together with its publisher, authors,
  * and ordered author relationships.
  */
-export async function createPublication(
-  data: PublicationInput,
-) {
+export async function createPublication(data: PublicationInput) {
   return prisma.$transaction(async (tx) => {
     // Publishers are normalized by name.
     const publisher = await tx.publisher.upsert({
@@ -159,11 +155,7 @@ export async function createPublication(
   })
 }
 
-
-export async function updatePublication(
-  id: string,
-  data: PublicationInput,
-) {
+export async function updatePublication(id: string, data: PublicationInput) {
   return prisma.$transaction(async (tx) => {
     // Check that the publication exists.
     const existing = await tx.research.findUnique({
@@ -254,10 +246,7 @@ export async function updatePublication(
   })
 }
 
-
-export async function deletePublication(
-  id: string,
-): Promise<boolean> {
+export async function deletePublication(id: string): Promise<boolean> {
   const existing = await prisma.research.findUnique({
     where: { id },
     select: { id: true },

@@ -41,10 +41,7 @@ export async function PATCH(
 
   const { id } = await params
 
-  const publication = await updatePublication(
-    id,
-    parsed.data,
-  )
+  const publication = await updatePublication(id, parsed.data)
 
   if (!publication) {
     return NextResponse.json(

@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { requireAdmin } from '@/app/lib/auth/apiGuard'
-import {
-  createPublication,
-  getPublications,
-  publicationInputSchema,
-} from '@/app/lib/publications'
+import { createPublication, getPublications, publicationInputSchema } from '@/app/lib/publications'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,9 +58,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
     )
   } catch {
-    return NextResponse.json(
-      { error: 'No se pudo crear la publicación.' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'No se pudo crear la publicación.' }, { status: 500 })
   }
 }

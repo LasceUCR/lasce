@@ -3812,5 +3812,6 @@ a.gallery-tile:focus-visible {
 }
 
 .publication-add-author {
-  margin-top: 10px;
+  margin-top: 20px;
+  display: flex;
 }
