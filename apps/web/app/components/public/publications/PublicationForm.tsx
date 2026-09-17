@@ -56,7 +56,13 @@ export function PublicationForm({
 
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const canSave = title.trim() !== '' && abstract.trim() !== '' && abstract.trim() !== ''
+  const canSave =
+    title.trim() !== '' &&
+    abstract.trim() !== '' &&
+    venue.trim() !== '' &&
+    date !== '' &&
+    authors.length > 0 &&
+    authors.every((author) => author.trim() !== '')
 
   function updateAuthor(index: number, value: string) {
     setAuthors((current) => current.map((author, i) => (i === index ? value : author)))

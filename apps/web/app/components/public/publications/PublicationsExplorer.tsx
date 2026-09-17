@@ -40,7 +40,6 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
   const [editingPublicationId, setEditingPublicationId] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
-  const [listError, setListError] = useState<string | null>(null)
 
   const [query, setQuery] = useState('')
 
@@ -113,7 +112,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
   }
 
   async function handleDeletePublication(id: string) {
-    setListError(null)
+    setSaveError(null)
 
     let response: Response
 
@@ -122,13 +121,13 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
         method: 'DELETE',
       })
     } catch {
-      setListError(SAVE_ERROR_MESSAGE)
+      setSaveError(SAVE_ERROR_MESSAGE)
       return
     }
 
     if (!response.ok) {
       const body: { error?: string } | null = await response.json().catch(() => null)
-      setListError(body?.error ?? SAVE_ERROR_MESSAGE)
+      setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
       return
     }
 

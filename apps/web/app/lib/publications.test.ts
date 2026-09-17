@@ -39,9 +39,10 @@ describe('getPublications', () => {
       {
         slug: 'research-1',
         title: 'A geometrical description for interplanetary propagation of Earth-directed CMEs',
-        authors: 'C. Salas-Matamoros, J. Sánchez-Guevara',
+        authors: ['C. Salas-Matamoros', 'J. Sánchez-Guevara'],
         venue: 'Monthly Notices of the Royal Astronomical Society',
         year: '2021',
+        date: new Date('2021-06-15'),
         abstract: 'We present a 3D geometrical model...',
         href: 'https://doi.org/10.1093/mnras/stab1232',
         researchGroup: 'LASCE',
@@ -69,13 +70,13 @@ describe('getPublications', () => {
     expect(await getPublications()).toEqual([])
   })
 
-  test('joins a single author without a trailing separator', async () => {
+  test('returns a single author without adding extra authors', async () => {
     findMany.mockResolvedValue([
       researchRow({ id: 'research-2', authors: [{ researchAuthor: { name: 'LASCE' } }] }),
     ])
 
     const [publication] = await getPublications()
 
-    expect(publication?.authors).toBe('LASCE')
+    expect(publication?.authors).toEqual(['LASCE'])
   })
 })
