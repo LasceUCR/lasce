@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { requireAdmin } from '@/app/lib/auth/apiGuard'
+import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import {
   deletePublication,
   publicationInputSchema,
@@ -13,7 +13,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
   let body: unknown
@@ -64,7 +64,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('delete_components')
   if (!guard.ok) return guard.response
 
   const { id } = await params

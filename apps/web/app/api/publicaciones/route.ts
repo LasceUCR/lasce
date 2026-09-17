@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { requireAdmin } from '@/app/lib/auth/apiGuard'
+import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import { createPublication, getPublications, publicationInputSchema } from '@/app/lib/publications'
 
 export const dynamic = 'force-dynamic'
@@ -19,7 +19,7 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('create_components')
   if (!guard.ok) return guard.response
 
   let body: unknown
