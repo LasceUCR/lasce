@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 
 import { PublicationCard } from './PublicationCard'
+import { Select } from '@/app/components/public/Select'
 import { SearchBar } from '@/app/components/public/SearchBar'
 import type { Publication, ResearchGroup } from '@/app/lib/publications'
 
@@ -61,28 +62,32 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
         />
 
         <div className="publications-group-filter">
-          <label className="sr-only" htmlFor="publication-research-group">
-            Grupo de investigación
-          </label>
-
-          <select
+          <Select
             id="publication-research-group"
-            onChange={(event) =>
-              setSelectedGroup(
-                event.target.value === '' ? null : (event.target.value as ResearchGroup),
-              )
+            label="Grupo de investigación"
+            onChange={(value) =>
+              setSelectedGroup(value === '' ? null : (value as ResearchGroup))
             }
+            options={[
+              { value: '', label: 'Todas las publicaciones' },
+              { value: 'LASCE', label: 'LASCE' },
+              { value: 'ROSAC', label: 'ROSAC' },
+            ]}
             value={selectedGroup ?? ''}
-          >
-            <option value="">Todas las publicaciones</option>
-            <option value="LASCE">LASCE</option>
-            <option value="ROSAC">ROSAC</option>
-          </select>
+          />
         </div>
 
-        <div aria-label="Cantidad de publicaciones" aria-live="polite" className="publications-kpi">
+        <div
+          aria-label="Cantidad de publicaciones"
+          aria-live="polite"
+          className="publications-kpi"
+        >
           <strong>{filtered.length}</strong>
-          <span>{selectedGroup ? `publicaciones (${selectedGroup})` : 'publicaciones'}</span>
+          <span>
+            {selectedGroup
+              ? `publicaciones (${selectedGroup})`
+              : 'publicaciones en total'}
+          </span>
         </div>
       </div>
 
