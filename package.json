@@ -18,6 +18,7 @@
     "db:generate": "pnpm --filter @lasce/db generate",
     "db:migrate": "pnpm --filter @lasce/db migrate",
     "db:migrate:deploy": "pnpm --filter @lasce/db migrate:deploy",
+    "db:seed": "pnpm --filter @lasce/db seed",
     "db:studio": "pnpm --filter @lasce/db studio",
     "contracts:export": "pnpm --filter @lasce/contracts export-schema",
     "jobs:register": "pnpm --filter @lasce/jobs register",
