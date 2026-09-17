@@ -168,7 +168,7 @@ describe('createNews', () => {
     expect(create).toHaveBeenCalledWith({
       data: {
         title: validInput.title,
-        publishedAt: validInput.publishedAt,
+        publishedAt: new Date(validInput.publishedAt),
         sourceId: 'source-1',
         abstract: validInput.abstract,
         externalUrl: validInput.externalUrl,
@@ -182,6 +182,34 @@ describe('createNews', () => {
       create: { newsId: 'news-1', newsAuthorId: 'author-1', position: 0 },
     })
     expect(article.slug).toBe('news-1')
+  })
+
+  // Prisma's client rejects a bare `yyyy-mm-dd` string for a DateTime/@db.Date field
+  // ("premature end of input. Expected ISO-8601 DateTime") — it must be a real Date.
+  test('converts publishedAt to a Date object rather than passing the raw string through', async () => {
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    create.mockResolvedValue({ id: 'news-1' })
+    authorUpsert.mockResolvedValue({ id: 'author-1' })
+    findUniqueOrThrow.mockResolvedValue(newsRow())
+
+    await createNews(validInput)
+
+    const { publishedAt } = create.mock.calls[0]![0].data
+    expect(publishedAt).toBeInstanceOf(Date)
+    expect(publishedAt.toISOString()).toBe('2026-05-24T00:00:00.000Z')
+  })
+
+  test('passes null through for an undated article', async () => {
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    create.mockResolvedValue({ id: 'news-1' })
+    authorUpsert.mockResolvedValue({ id: 'author-1' })
+    findUniqueOrThrow.mockResolvedValue(newsRow())
+
+    await createNews({ ...validInput, publishedAt: null })
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ publishedAt: null }) }),
+    )
   })
 })
 
