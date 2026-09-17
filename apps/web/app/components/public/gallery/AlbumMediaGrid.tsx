@@ -24,6 +24,8 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
 
   const close = useCallback(() => {
+    // The dialog closes itself natively before this runs, so the document is no
+    // longer inert and the tile can take focus back.
     triggers.current[openIndex]?.focus()
     setOpenIndex(closed)
   }, [openIndex])
@@ -40,7 +42,7 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
 
   return (
     <>
-      <div className="media-grid">
+      <ul className="media-grid tile-list">
         {media.map((item, index) => {
           const span = {
             '--media-col-span': item.colSpan,
@@ -48,9 +50,12 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
           } as CSSProperties
 
           return (
-            <div className="media-tile" key={item.id} style={span}>
+            <li className="media-tile" key={item.id} style={span}>
+              {/* Decorative: the button below names the file, and the caption
+                  repeats it as real text. The photograph's own description
+                  belongs to the lightbox, where the image is the content. */}
               <MediaFrame
-                alt={item.title}
+                alt=""
                 className="media-tile-frame"
                 placeholder={mediaPlaceholder(item)}
                 src={item.src}
@@ -77,17 +82,20 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
                 <span className="media-chip">{`${item.date} · ${item.format}`}</span>
               </div>
 
+              {/* Not a `figcaption`: this panel is `opacity: 0` until the tile
+                  is hovered or focused, so it is a reveal rather than a caption
+                  the image always carries. */}
               <div className="media-hover">
-                <strong>{item.title}</strong>
+                <p className="media-hover-title">{item.title}</p>
                 <span className="media-hover-description">{item.description}</span>
                 <span className="media-hover-meta">
                   {`${item.date} · ${item.format} · ${item.uploader}`}
                 </span>
               </div>
-            </div>
+            </li>
           )
         })}
-      </div>
+      </ul>
 
       {openItem ? (
         <MediaLightbox
@@ -96,6 +104,8 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
           onClose={close}
           onNext={showNext}
           onPrevious={showPrevious}
+          position={openIndex + 1}
+          total={media.length}
         />
       ) : null}
     </>
