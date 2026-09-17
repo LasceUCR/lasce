@@ -7,6 +7,24 @@ import { Default } from './RosacInfoPage.stories'
 const defaultArgs = Default.args as RosacInfoPageProps
 
 describe('RosacInfoPage', () => {
+  test('places construction after development and renumbers only the following numbered sections', () => {
+    render(<RosacInfoPage {...defaultArgs} />)
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent?.trim())
+    expect(headings.filter((heading) => /^\d\./.test(heading ?? ''))).toEqual([
+      '1. Características principales',
+      '2. ¿Qué desarrollamos en ROSAC?',
+      '3. Construcción del ROSAC',
+      '4. ¿Por qué observar en radio?',
+      '5. Investigadores',
+    ])
+    expect(screen.getByRole('region', { name: '3. Construcción del ROSAC' })).toHaveTextContent(
+      defaultArgs.content.construction.intro,
+    )
+  })
+
   test('explains the observatory purpose, characteristics and relationship with LASCE', () => {
     render(<RosacInfoPage {...defaultArgs} />)
 
@@ -71,6 +89,7 @@ describe('RosacInfoPage', () => {
     render(<RosacInfoPage {...defaultArgs} />)
 
     const team = screen.getByRole('region', { name: /Investigadores/ })
+    expect(within(team).getByText(defaultArgs.content.team.hint)).toBeInTheDocument()
     const track = within(team).getByRole('list', { name: defaultArgs.content.team.title })
 
     expect(within(track).getAllByRole('listitem')).toHaveLength(

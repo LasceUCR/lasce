@@ -23,3 +23,7 @@ export const Default: Story = {
 export const WithoutEmail: Story = {
   args: { ...jelmuth },
 }
+
+export const WithoutDescription: Story = {
+  args: { ...jelmuth, description: undefined },
+}
