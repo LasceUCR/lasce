@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { StrictMode } from 'react'
 import { beforeEach, describe, expect, test } from 'vitest'
 
 import { EditModeProvider, useEditMode } from './EditModeProvider'
@@ -85,6 +86,24 @@ describe('EditModeProvider', () => {
       <EditModeProvider>
         <EditModeConsumer />
       </EditModeProvider>,
+    )
+
+    expect(screen.getByRole('button')).toHaveTextContent('Modo edición activado')
+  })
+
+  test("restores edit mode from a previous session under React Strict Mode's double effect invocation", () => {
+    // Plain `render` doesn't double-invoke effects the way Next's dev server
+    // (which enables Strict Mode) does — this is the case that actually
+    // caught the read and write effects racing on mount and losing a stored
+    // `true` back to `false`.
+    window.localStorage.setItem('lasce:cms-edit-mode', 'true')
+
+    render(
+      <StrictMode>
+        <EditModeProvider>
+          <EditModeConsumer />
+        </EditModeProvider>
+      </StrictMode>,
     )
 
     expect(screen.getByRole('button')).toHaveTextContent('Modo edición activado')
