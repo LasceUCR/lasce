@@ -2864,13 +2864,18 @@ a.gallery-tile:focus-visible {
   font-size: 11px;
 }
 
+/* `:focus-visible` rather than `:focus-within`: closing the lightbox restores
+   focus to the tile's trigger programmatically, and `:focus-within` would keep
+   that tile's panel open regardless of where the pointer actually is,
+   producing a second, stuck hover panel alongside whichever tile the mouse is
+   really over. `:focus-visible` still fires for real keyboard navigation. */
 .media-tile:hover .media-hover,
-.media-tile:focus-within .media-hover {
+.media-tile-button:focus-visible ~ .media-hover {
   opacity: 1;
 }
 
 .media-tile:hover .media-overlay,
-.media-tile:focus-within .media-overlay {
+.media-tile-button:focus-visible ~ .media-overlay {
   opacity: 0;
 }
 
