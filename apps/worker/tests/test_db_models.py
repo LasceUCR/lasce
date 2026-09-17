@@ -225,6 +225,8 @@ def test_gallery_media_belongs_to_an_album_and_dies_with_it() -> None:
 
     assert album_fk.target_fullname == "gallery.gallery_albums.id"
     assert album_fk.ondelete == "CASCADE"
+
+
 def test_role_permissions_live_in_the_auth_schema() -> None:
     assert RolePermission.__table__.schema == "auth"
 

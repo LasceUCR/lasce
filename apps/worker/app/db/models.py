@@ -10,7 +10,17 @@ import uuid
 from datetime import date as date_type
 from datetime import datetime
 
-from sqlalchemy import CHAR, Date, Boolean, DateTime, ForeignKey, Integer, Text, UniqueConstraint, text
+from sqlalchemy import (
+    CHAR,
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -264,6 +274,8 @@ class GalleryMedia(Base):
     position: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class RolePermission(Base):
     """Permission granted to a ``UserRole``. Mirrors the Prisma ``RolePermission``
     model (table ``auth.role_permissions``). The permission strings are the web

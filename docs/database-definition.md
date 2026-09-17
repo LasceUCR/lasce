@@ -270,7 +270,7 @@ One photo or video shown in an album's masonry grid and lightbox.
 | `album_id`      | `String`    | `uuid`           | FK → `gallery_albums.id`, `ON DELETE CASCADE`, not null; indexed                                                      |
 | `title`         | `String`    | `text`           | not null                                                                                                              |
 | `description`   | `String`    | `text`           | not null                                                                                                              |
-| `alt_text`      | `String`    | `text`           | not null — required accessibility text for the image/video still, from creation                                      |
+| `alt_text`      | `String`    | `text`           | not null — required accessibility text for the image/video still, from creation                                       |
 | `object_key`    | `String`    | `text`           | `UNIQUE`, not null — key returned by `IAssetStorage.createUpload()`, since that service tracks no metadata of its own |
 | `format`        | `String`    | `text`           | not null — display label, e.g. "JPG", "MP4", "FITS"; free text, not an enum                                           |
 | `is_video`      | `Boolean`   | `boolean`        | not null, default `false`                                                                                             |
@@ -286,6 +286,7 @@ Constraints: `UNIQUE (album_id, position)` (no two media rows in the same album 
 order).
 
 Relationships: belongs to one `gallery_albums` row.
+
 ### `role_permissions`
 
 Permission granted to a `UserRole` (LASCE-SEC-008-073). The permission strings are the TypeScript
