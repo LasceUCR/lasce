@@ -39,6 +39,25 @@ describe('AlbumPage', () => {
     )
   })
 
+  test('presents the sub-albums and the files as lists', () => {
+    render(<AlbumPage {...albumArgs} />)
+
+    const [subAlbumList, mediaList] = screen.getAllByRole('list')
+
+    expect(subAlbumList?.children).toHaveLength(album.subAlbums.length)
+    expect(mediaList?.children).toHaveLength(album.media.length)
+  })
+
+  test('keeps the sub-album tiles one level under the Subálbumes heading', () => {
+    render(<AlbumPage {...albumArgs} />)
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Subálbumes' })).toBeInTheDocument()
+
+    for (const child of album.subAlbums) {
+      expect(screen.getByRole('heading', { level: 3, name: child.title })).toBeInTheDocument()
+    }
+  })
+
   test('leaves out the sub-album section on a page that has none', () => {
     render(<AlbumPage {...albumArgs} subAlbums={[]} />)
 

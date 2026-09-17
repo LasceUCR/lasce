@@ -31,11 +31,14 @@ export default defineConfig({
       // docs/manage-assets.md), and raised again to 75%/75%/75% at 86.2% lines
       // / 86.0% statements / 87.1% functions once the registration modules
       // under app/lib/auth and app/components/public/auth landed with tests.
+      // Raised again to 85%/85%/85% at 91.8% lines / 90.9% statements / 90.7%
+      // functions, once the gallery components were covered alongside the
+      // accessibility work in docs/gallery.md.
       // A starting floor that ratchets upward, not a target: it exists to
       // catch a drop, so raise it as coverage grows. Branches are still not
       // gated; add that floor once enough of the app is covered that the
       // figure stops being noise.
-      thresholds: { lines: 75, statements: 75, functions: 75 },
+      thresholds: { lines: 85, statements: 85, functions: 85 },
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       reportsDirectory: './coverage',
       // Components and helpers only. Route handlers, pages and Server Actions
