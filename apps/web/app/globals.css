@@ -2212,7 +2212,8 @@ a {
   grid-auto-rows: 1fr;
 }
 
-.card-grid-equal .info-card {
+.card-grid-equal .info-card,
+.card-grid-equal .researcher-card {
   min-height: 0;
   height: 100%;
   align-self: stretch;
@@ -2528,7 +2529,8 @@ a {
     grid-auto-rows: auto;
   }
 
-  .card-grid-equal .info-card {
+  .card-grid-equal .info-card,
+  .card-grid-equal .researcher-card {
     height: auto;
     align-self: start;
   }
@@ -3102,6 +3104,7 @@ a.gallery-tile:focus-visible {
   display: flex;
   flex: 0 0 auto;
   width: 440px;
+  height: 720px;
   scroll-snap-align: start;
 }
 
@@ -3112,6 +3115,8 @@ a.gallery-tile:focus-visible {
   gap: 8px;
   align-self: stretch;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
   padding: 14px;
 }
 
@@ -3134,6 +3139,8 @@ a.gallery-tile:focus-visible {
   flex: 1 1 auto;
   flex-direction: column;
   gap: 6px;
+  min-height: 0;
+  overflow: hidden;
   text-align: justify;
 }
 
@@ -3183,6 +3190,37 @@ a.gallery-tile:focus-visible {
   line-height: 1.4;
 }
 
+.researcher-card-description-scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-right: 1px;
+  padding-right: 12px;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #d4dee6 #f7f9fb;
+}
+
+.researcher-card-description-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.researcher-card-description-scroll::-webkit-scrollbar-track {
+  background: #f7f9fb;
+  border-radius: 999px;
+}
+
+.researcher-card-description-scroll::-webkit-scrollbar-thumb {
+  background: #d4dee6;
+  border-radius: 999px;
+}
+
+.researcher-card-description-scroll:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
 .researcher-card-description {
   color: var(--muted);
   font-size: 13px;
@@ -3216,6 +3254,7 @@ a.gallery-tile:focus-visible {
 @media (max-width: 760px) {
   .team-gallery-slide {
     width: 86vw;
+    height: calc(86vw * 1.15 + 240px);
   }
 }
 

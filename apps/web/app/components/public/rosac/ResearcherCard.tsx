@@ -6,7 +6,7 @@ export interface ResearcherCardProps {
   name: string
   role: string
   institution: string
-  description: string
+  description?: string
   email?: string
 }
 
@@ -34,7 +34,15 @@ export function ResearcherCard({
           <span aria-hidden="true" className="researcher-card-email researcher-card-email-empty" />
         )}
         <p className="researcher-card-institution">Institución: {institution}</p>
-        <p className="researcher-card-description">{description}</p>
+        {description ? (
+          <div
+            aria-label={`Descripción de ${name}`}
+            className="researcher-card-description-scroll"
+            tabIndex={0}
+          >
+            <p className="researcher-card-description">{description}</p>
+          </div>
+        ) : null}
       </div>
     </article>
   )

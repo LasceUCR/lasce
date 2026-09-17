@@ -41,6 +41,16 @@ export const ProvisionalCopy: Story = {
   },
 }
 
+/** Shows the empty-gallery message when LASCE has not supplied people to list. */
+export const EmptyResearchers: Story = {
+  args: {
+    content: {
+      ...nosotrosContent,
+      researchers: { ...nosotrosContent.researchers, people: [] },
+    },
+  },
+}
+
 /** Shows every editor an administrator's "Modo edición" toggle reveals. */
 export const EditMode: Story = {
   args: { ...Default.args, canCreate: true, canEdit: true, canDelete: true },

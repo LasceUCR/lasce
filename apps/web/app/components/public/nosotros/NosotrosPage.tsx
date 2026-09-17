@@ -8,6 +8,7 @@ import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { TeamGallery } from '@/app/components/public/rosac/TeamGallery'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
@@ -219,6 +220,21 @@ export function NosotrosPage({
             </AddItemCard>
           ) : null}
         </CardGrid>
+      </TopicSection>
+
+      <TopicSection
+        id="investigadores"
+        index="2"
+        intro={content.researchers.intro}
+        title={content.researchers.title}
+        titleId="nosotros-researchers-title"
+        wide
+      >
+        <TeamGallery
+          emptyMessage={content.researchers.emptyMessage}
+          label={content.researchers.title}
+          people={content.researchers.people}
+        />
       </TopicSection>
 
       <TopicSection

@@ -23,7 +23,9 @@ describe('TeamGallery', () => {
     const track = screen.getByRole('list', { name: defaultArgs.label })
     for (const person of defaultArgs.people) {
       expect(within(track).getByText(person.name)).toBeInTheDocument()
-      expect(within(track).getByText(person.description)).toBeInTheDocument()
+      if (person.description) {
+        expect(within(track).getByText(person.description)).toBeInTheDocument()
+      }
       expect(within(track).getByText(`Institución: ${person.institution}`)).toBeInTheDocument()
     }
   })
