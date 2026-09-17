@@ -13,6 +13,7 @@ const makeBucket = vi.fn()
 const putObject = vi.fn()
 const removeObject = vi.fn()
 const presignedGetObject = vi.fn()
+const setBucketPolicy = vi.fn()
 
 vi.mock('minio', () => ({
   Client: class {
@@ -21,6 +22,7 @@ vi.mock('minio', () => ({
     putObject = putObject
     removeObject = removeObject
     presignedGetObject = presignedGetObject
+    setBucketPolicy = setBucketPolicy
   },
 }))
 
@@ -174,6 +176,18 @@ describe('MinioAssetStorage', () => {
       expect(makeBucket).not.toHaveBeenCalled()
     })
 
+    test('grants anonymous reads on the bucket', async () => {
+      const storage = new MinioAssetStorage()
+      const file = fileOf('a.png', 'image/png')
+
+      await storage.createUpload(file, 'my-bucket')
+
+      expect(setBucketPolicy).toHaveBeenCalledWith(
+        'my-bucket',
+        expect.stringContaining('"Resource":["arn:aws:s3:::my-bucket/*"]'),
+      )
+    })
+
     // An invalid file must never reach MinIO — validation happens before any client call.
     test('rejects an invalid file without touching MinIO', async () => {
       const storage = new MinioAssetStorage()
@@ -220,6 +234,59 @@ describe('MinioAssetStorage', () => {
       await storage.createDownloadUrl('some/object-key', 120)
 
       expect(presignedGetObject).toHaveBeenCalledWith('the-bucket', 'some/object-key', 120)
+    })
+  })
+
+  describe('getPublicUrl', () => {
+    test('builds a URL from a bare host:port endpoint (the documented local form)', () => {
+      vi.stubEnv('MINIO_ENDPOINT', 'localhost:9000')
+      vi.stubEnv('MINIO_USE_SSL', 'false')
+      vi.stubEnv('MINIO_DEFAULT_BUCKET', 'lasce-files')
+      const storage = new MinioAssetStorage()
+
+      expect(storage.getPublicUrl('123_photo.png')).toBe(
+        'http://localhost:9000/lasce-files/123_photo.png',
+      )
+    })
+
+    test('builds a URL from a full https URL with no explicit port', () => {
+      vi.stubEnv('MINIO_ENDPOINT', 'https://minio.example.com')
+      vi.stubEnv('MINIO_DEFAULT_BUCKET', 'lasce')
+      const storage = new MinioAssetStorage()
+
+      expect(storage.getPublicUrl('123_photo.png')).toBe(
+        'https://minio.example.com/lasce/123_photo.png',
+      )
+    })
+
+    test('builds a URL from a full URL that does specify a port', () => {
+      vi.stubEnv('MINIO_ENDPOINT', 'https://minio.example.com:9443')
+      vi.stubEnv('MINIO_DEFAULT_BUCKET', 'lasce')
+      const storage = new MinioAssetStorage()
+
+      expect(storage.getPublicUrl('123_photo.png')).toBe(
+        'https://minio.example.com:9443/lasce/123_photo.png',
+      )
+    })
+
+    test('prefers the explicit bucket argument over MINIO_DEFAULT_BUCKET', () => {
+      vi.stubEnv('MINIO_ENDPOINT', 'https://minio.example.com')
+      vi.stubEnv('MINIO_DEFAULT_BUCKET', 'env-bucket')
+      const storage = new MinioAssetStorage()
+
+      expect(storage.getPublicUrl('123_photo.png', 'explicit-bucket')).toBe(
+        'https://minio.example.com/explicit-bucket/123_photo.png',
+      )
+    })
+
+    test('percent-encodes the object key', () => {
+      vi.stubEnv('MINIO_ENDPOINT', 'https://minio.example.com')
+      vi.stubEnv('MINIO_DEFAULT_BUCKET', 'lasce')
+      const storage = new MinioAssetStorage()
+
+      expect(storage.getPublicUrl('123_a photo.png')).toBe(
+        'https://minio.example.com/lasce/123_a%20photo.png',
+      )
     })
   })
 })

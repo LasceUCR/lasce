@@ -13,6 +13,18 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog', { name: openArgs.title })).toBeInTheDocument()
   })
 
+  test('defaults to the medium size when none is given', () => {
+    render(<Modal {...openArgs} />)
+
+    expect(screen.getByRole('dialog')).toHaveClass('modal-medium')
+  })
+
+  test.each(['small', 'medium', 'large'] as const)('applies the %s size class', (size) => {
+    render(<Modal {...openArgs} size={size} />)
+
+    expect(screen.getByRole('dialog')).toHaveClass(`modal-${size}`)
+  })
+
   test('renders nothing when closed', () => {
     render(<Modal {...openArgs} open={false} />)
 

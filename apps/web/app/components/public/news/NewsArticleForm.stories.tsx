@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
-import { NewsCard } from './NewsCard'
 import type { NewsArticle } from '@/app/lib/news'
 
-const meta: Meta<typeof NewsCard> = {
-  component: NewsCard,
+import { NewsArticleForm } from './NewsArticleForm'
+
+const meta: Meta<typeof NewsArticleForm> = {
+  component: NewsArticleForm,
   parameters: {
     layout: 'centered',
   },
@@ -12,9 +13,9 @@ const meta: Meta<typeof NewsCard> = {
 
 export default meta
 
-type Story = StoryObj<typeof NewsCard>
+type Story = StoryObj<typeof NewsArticleForm>
 
-const mockNews: NewsArticle = {
+const mockArticle: NewsArticle = {
   slug: 'mock-slug',
   title:
     '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
@@ -30,15 +31,18 @@ const mockNews: NewsArticle = {
     'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
 }
 
-export const Default: Story = {
+export const EditExisting: Story = {
   args: {
-    title: mockNews.title,
-    authors: mockNews.authors,
-    source: mockNews.source,
-    date: mockNews.date,
-    abstract: mockNews.abstract,
-    href: mockNews.href,
-    imageUrl: mockNews.imageUrl,
-    imageAlt: mockNews.imageAlt,
+    article: mockArticle,
+    onCancel: () => {},
+    onSave: () => {},
+  },
+}
+
+export const AddNew: Story = {
+  args: {
+    article: null,
+    onCancel: () => {},
+    onSave: () => {},
   },
 }
