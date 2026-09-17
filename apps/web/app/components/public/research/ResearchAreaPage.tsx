@@ -1,5 +1,4 @@
 import type { ResearchArea } from './ResearchAreasSection'
-import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 

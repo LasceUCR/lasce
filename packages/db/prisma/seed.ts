@@ -32,7 +32,6 @@ const researchRecords: SeedResearch[] = [
     authors: [],
     abstract: 'In recent years, machine learning (ML), space weather (SWx), and Global Navigation Satellite System (GNSS) applications have attracted significant attention from both the scientific and operations communities, establishing themselves as prominent research areas. Consequently, there has been a rapid growth in publications investigating how Artificial Intelligence (AI) techniques can advance space weather research and related areas. However, applying AI to SWx and GNSS poses numerous technical challenges. These include handling large data volumes, ensuring data availability and quality, developing advanced algorithms and software tools, and addressing the complexity of multiple spatial and temporal scales inherent to space weather. Additional challenges include handling imbalanced datasets—particularly the accurate representation of extreme space-weather events—and integrating heterogeneous data sources that often must be combined, such as solar imagery, solar and geomagnetic indices, ground-based measurements, and derived datasets. Moreover, operational applications require particular considerations and specialized techniques. As a result, students and researchers are often confronted not only with complex scientific questions but also with additional technical skill requirements that are typically not addressed in standard academic curricula. To address this gap, a series of workshops has been organized to build capacity and provide hands-on training in these emerging techniques. In this context, we outline the objectives and challenges associated with developing an international school on ML applied to SWx. We draw on experiences and lessons learned from these workshops and discuss prospective next steps.',
     externalUrl: '',
-    doi: '',
   },
   {
     title:
@@ -106,9 +105,13 @@ for (const record of researchRecords) {
   })
 
   const research = await prisma.research.upsert({
-    where: {
-      externalUrl: record.externalUrl,
-    },
+    where: record.doi
+      ? {
+        doi: record.doi,
+      }
+      : {
+        externalUrl: record.externalUrl,
+      },
     update: {
       title: record.title,
       publicationDate: record.publicationDate,

@@ -16,22 +16,11 @@ type Story = StoryObj<typeof ResearchAreaPage>
 export const Default: Story = {
   args: {
     area: {
-      slug: 'astrofisica-solar',
-      title: 'Astrofísica solar',
-      description: 'Estudio de fenómenos solares y su interacción con el medio interplanetario.',
-      lead: 'Investigación de la estructura magnética, fulguraciones y emisiones en la atmósfera solar y su propagación hacia la Tierra.',
-      objectives: [
-        'Analizar los mecanismos de emisión y eyección de masa coronal.',
-        'Modelar el transporte de partículas energéticas solares.',
-        'Monitorear eventos de alta energía en tiempo casi real.',
-      ],
-      scope:
-        'Abarca la observación continua y el análisis espectral de eventos solares, utilizando datos de observatorios espaciales y terrestres para comprender la dinámica de la actividad solar.',
-      topics: [
-        'Física de la corona solar',
-        'Fulguraciones y eyecciones de masa coronal (CME)',
-        'Transporte de partículas energéticas solares (SEP)',
-      ],
+      slug: 'radioastronomia-solar-evolucion-flares-cmes',
+      title: 'Radioastronomía solar y evolución de Flares-CMEs',
+      description:
+        'Estudia las emisiones solares de radio y su relación con los flares, la evolución de las eyecciones de masa coronal, la aceleración de partículas y su propagación hacia el medio interplanetario.',
+      src: '/images/research/radioastronomia-solar-evolucion-flares-cmes.jpg',
     },
     backHref: '/investigacion',
     backLabel: 'Volver a áreas de investigación',
@@ -41,9 +30,11 @@ export const Default: Story = {
 export const MinimalDetails: Story = {
   args: {
     area: {
-      slug: 'investigaciones-espaciales',
-      title: 'Investigaciones espaciales',
-      description: 'Desarrollo de instrumentación y proyectos aeroespaciales en colaboración con el CINESPA UCR.',
+      slug: 'propagacion-prediccion-cmes-hacia-tierra',
+      title: 'Propagación y predicción de CMEs hacia la Tierra',
+      description:
+        'Desarrolla modelos y herramientas para estimar la velocidad, la trayectoria y el tiempo de llegada de las CMEs a la Tierra. Esta rama incluye el desarrollo de la herramienta científica computacional SWAAT y su futura integración con observaciones de ROSAC.',
+      src: '/images/research/propagacion-prediccion-cmes-hacia-tierra.jpg',
     },
     backHref: '/investigacion',
     backLabel: 'Volver a áreas de investigación',

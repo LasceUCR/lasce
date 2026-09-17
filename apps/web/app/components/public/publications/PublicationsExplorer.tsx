@@ -80,7 +80,11 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
           </select>
         </div>
 
-        <div className="publications-kpi" aria-live="polite">
+        <div
+          aria-label="Cantidad de publicaciones"
+          aria-live="polite"
+          className="publications-kpi"
+        >
           <strong>{filtered.length}</strong>
           <span>
             {selectedGroup ? `publicaciones (${selectedGroup})` : 'publicaciones'}
