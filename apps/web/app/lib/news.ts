@@ -99,6 +99,16 @@ export const newsInputSchema = z.object({
 export type NewsInput = z.infer<typeof newsInputSchema>
 
 /**
+ * `newsInputSchema` validates `publishedAt` as a bare `yyyy-mm-dd` string, but
+ * Prisma's client rejects that for a `DateTime`/`@db.Date` field — it wants a
+ * full ISO datetime or a `Date` object ("premature end of input. Expected
+ * ISO-8601 DateTime"). Converts once, right before either write.
+ */
+function toPublishedAtDate(publishedAt: string | null): Date | null {
+  return publishedAt ? new Date(publishedAt) : null
+}
+
+/**
  * Replaces a news item's author list with `authors`, in order. Upserts each name (shared
  * `NewsAuthor` rows, same as the seed script) and drops cross-author rows for names no longer
  * present — the one relation `NosotrosActivity`'s CRUD doesn't have to deal with.
@@ -138,7 +148,7 @@ export async function createNews(data: NewsInput): Promise<NewsArticle> {
   const record = await prisma.news.create({
     data: {
       title: data.title,
-      publishedAt: data.publishedAt,
+      publishedAt: toPublishedAtDate(data.publishedAt),
       sourceId: source.id,
       abstract: data.abstract,
       externalUrl: data.externalUrl,
@@ -171,7 +181,7 @@ export async function updateNews(id: string, data: NewsInput): Promise<NewsArtic
     where: { id },
     data: {
       title: data.title,
-      publishedAt: data.publishedAt,
+      publishedAt: toPublishedAtDate(data.publishedAt),
       sourceId: source.id,
       abstract: data.abstract,
       externalUrl: data.externalUrl,
