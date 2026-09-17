@@ -41,6 +41,20 @@ class Publisher(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class ResearchArea(Base):
+    """An editable research area shown on the public investigation page."""
+
+    __tablename__ = "research_areas"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    src: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class Research(Base):
     """A public research record shown on `/investigacion`. Mapped to
     ``research_records`` (not ``research``) to avoid a `research.research`

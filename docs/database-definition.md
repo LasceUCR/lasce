@@ -249,6 +249,22 @@ delete components, download resources, manage users and manage permissions.
 
 The worker never writes here.
 
+## `public` schema
+
+### `research_areas`
+
+An editable research area shown on the public "investigacion" page. Each area has a stable UUID
+identifier, a title, a description, and an optional image source.
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `title`       | `String`    | `text`           | not null                               |
+| `description` | `String`    | `text`           | not null                               |
+| `src`         | `String?`   | `text`           | nullable — optional image source       |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` (newest
@@ -269,6 +285,10 @@ behind the cookie together with its user, and `deleteCurrentSession()` deletes i
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.
+
+`apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
+maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
+area create, update, and delete operations also write this table.
 
 ## Keeping this current
 
