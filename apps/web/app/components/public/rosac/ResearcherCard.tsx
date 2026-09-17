@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState, type WheelEvent } from 'react'
 
 export interface ResearcherCardProps {
   /** Local path under `apps/web/public`. */
@@ -13,6 +13,12 @@ export interface ResearcherCardProps {
   email?: string
 }
 
+/**
+ * Presentational researcher portrait card. The photo is decorative (`alt=""`) because the name,
+ * role, email and institution are real HTML. Named buttons flip the card so the mailto is never
+ * nested inside a control. The hidden face is `inert` and `aria-hidden`, and the description is a
+ * named region so overflow can be read from the keyboard.
+ */
 export function ResearcherCard({
   src,
   name,
@@ -51,25 +57,21 @@ export function ResearcherCard({
     setFlipped((current) => !current)
   }
 
-  const identity = (
-    <>
-      <div className="researcher-card-photo">
-        <Image alt="" fill sizes="(max-width: 760px) 86vw, 440px" src={src} />
-      </div>
-      <p className="researcher-card-role">{role}</p>
-      <h3 className="researcher-card-name">{name}</h3>
-    </>
-  )
+  function handleBackWheel(event: WheelEvent<HTMLButtonElement>) {
+    descriptionScrollRef.current?.scrollBy({ top: event.deltaY })
+  }
+
+  const className = ['researcher-card', canFlip ? 'has-flip' : '', flipped ? 'is-flipped' : '']
+    .filter(Boolean)
+    .join(' ')
 
   return (
-    <article
-      className={`researcher-card${canFlip ? ' has-flip' : ''}${flipped ? ' is-flipped' : ''}`}
-    >
+    <article className={className}>
       <div className="researcher-card-inner">
         <div
-          className="researcher-card-face researcher-card-front"
-          {...(flipped ? { inert: true } : {})}
           aria-hidden={flipped || undefined}
+          className="researcher-card-face researcher-card-front"
+          inert={flipped ? true : undefined}
         >
           {canFlip ? (
             <button
@@ -82,7 +84,11 @@ export function ResearcherCard({
               type="button"
             />
           ) : null}
-          {identity}
+          <div className="researcher-card-photo">
+            <Image alt="" fill sizes="(max-width: 760px) 86vw, 440px" src={src} />
+          </div>
+          <p className="researcher-card-role">{role}</p>
+          <h3 className="researcher-card-name">{name}</h3>
           <div className="researcher-card-meta">
             {email ? (
               <a className="researcher-card-email" href={`mailto:${email}`}>
@@ -95,22 +101,17 @@ export function ResearcherCard({
 
         {canFlip ? (
           <div
-            className="researcher-card-face researcher-card-back"
-            {...(!flipped ? { inert: true } : {})}
             aria-hidden={flipped ? undefined : true}
-            onClick={toggleFlip}
+            className="researcher-card-face researcher-card-back"
+            inert={!flipped ? true : undefined}
           >
             <button
+              aria-controls={descriptionId}
               aria-expanded={flipped}
               aria-label={`Volver a la ficha de ${name}`}
               className="researcher-card-flip-hit"
-              onClick={(event) => {
-                event.stopPropagation()
-                toggleFlip()
-              }}
-              onWheel={(event) => {
-                descriptionScrollRef.current?.scrollBy({ top: event.deltaY })
-              }}
+              onClick={toggleFlip}
+              onWheel={handleBackWheel}
               ref={backButtonRef}
               type="button"
             />
@@ -123,6 +124,7 @@ export function ResearcherCard({
               className="researcher-card-description-scroll"
               id={descriptionId}
               ref={descriptionScrollRef}
+              role="region"
               tabIndex={flipped ? 0 : -1}
             >
               <p className="researcher-card-description">{description}</p>

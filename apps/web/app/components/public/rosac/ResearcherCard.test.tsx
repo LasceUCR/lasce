@@ -15,38 +15,40 @@ describe('ResearcherCard', () => {
 
     expect(screen.getByRole('heading', { name: defaultArgs.name })).toBeInTheDocument()
     expect(screen.getByText(defaultArgs.role)).toBeInTheDocument()
-    expect(screen.getByText(`Institución: ${defaultArgs.institution}`)).toBeInTheDocument()
-    expect(defaultArgs.description).toBeDefined()
-    expect(screen.queryByText(defaultArgs.description ?? '')).not.toBeInTheDocument()
+    expect(screen.getAllByText(`Institución: ${defaultArgs.institution}`).length).toBeGreaterThan(0)
+    expect(
+      screen.queryByRole('region', { name: `Descripción de ${defaultArgs.name}` }),
+    ).not.toBeInTheDocument()
   })
 
   test('flips to the description when the card is activated', async () => {
     const user = userEvent.setup()
     render(<ResearcherCard {...defaultArgs} />)
 
-    await user.click(
-      screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }),
-    )
+    await user.click(screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }))
 
-    expect(screen.getByText(`Institución: ${defaultArgs.institution}`)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: defaultArgs.name })).toBeInTheDocument()
     expect(defaultArgs.description).toBeDefined()
-    expect(screen.getByText(defaultArgs.description ?? '')).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: `Descripción de ${defaultArgs.name}` }),
+    ).toHaveTextContent(defaultArgs.description ?? '')
     expect(
       screen.getByRole('button', { name: `Volver a la ficha de ${defaultArgs.name}` }),
     ).toHaveFocus()
   })
 
-  test('flips back to the photo when the description is clicked', async () => {
+  test('flips back to the photo when the back of the card is activated', async () => {
     const user = userEvent.setup()
     render(<ResearcherCard {...defaultArgs} />)
 
+    await user.click(screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }))
     await user.click(
-      screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }),
+      screen.getByRole('button', { name: `Volver a la ficha de ${defaultArgs.name}` }),
     )
-    expect(defaultArgs.description).toBeDefined()
-    await user.click(screen.getByText(defaultArgs.description ?? ''))
 
-    expect(screen.queryByText(defaultArgs.description ?? '')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', { name: `Descripción de ${defaultArgs.name}` }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: defaultArgs.name })).toBeInTheDocument()
     expect(screen.getByText(defaultArgs.role)).toBeInTheDocument()
     expect(
@@ -54,15 +56,31 @@ describe('ResearcherCard', () => {
     ).toHaveFocus()
   })
 
+  test('flips from the keyboard', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherCard {...defaultArgs} />)
+
+    const flip = screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` })
+    flip.focus()
+    await user.keyboard('{Enter}')
+
+    expect(
+      screen.getByRole('region', { name: `Descripción de ${defaultArgs.name}` }),
+    ).toHaveTextContent(defaultArgs.description ?? '')
+    expect(
+      screen.getByRole('button', { name: `Volver a la ficha de ${defaultArgs.name}` }),
+    ).toHaveFocus()
+  })
+
   test('lets the keyboard reach a named description so overflow can be read', async () => {
     const user = userEvent.setup()
     render(<ResearcherCard {...defaultArgs} />)
 
-    await user.click(
-      screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }),
-    )
+    await user.click(screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }))
 
-    const descriptionScroll = screen.getByLabelText(`Descripción de ${defaultArgs.name}`)
+    const descriptionScroll = screen.getByRole('region', {
+      name: `Descripción de ${defaultArgs.name}`,
+    })
     expect(descriptionScroll).toHaveAttribute('tabindex', '0')
     expect(defaultArgs.description).toBeDefined()
     expect(descriptionScroll).toHaveTextContent(defaultArgs.description ?? '')
@@ -85,8 +103,9 @@ describe('ResearcherCard', () => {
     expect(defaultArgs.email).toBeDefined()
     await user.click(screen.getByRole('link', { name: defaultArgs.email }))
 
-    expect(defaultArgs.description).toBeDefined()
-    expect(screen.queryByText(defaultArgs.description ?? '')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }),
+    ).toHaveAttribute('aria-expanded', 'false')
   })
 
   test('omits the email when none was supplied', () => {
@@ -95,8 +114,8 @@ describe('ResearcherCard', () => {
     expect(screen.getByRole('heading', { name: withoutEmailArgs.name })).toBeInTheDocument()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(
-      screen.getByText(`Institución: ${withoutEmailArgs.institution}`),
-    ).toBeInTheDocument()
+      screen.getAllByText(`Institución: ${withoutEmailArgs.institution}`).length,
+    ).toBeGreaterThan(0)
   })
 
   test('omits the flip when no description was supplied', () => {
@@ -104,15 +123,15 @@ describe('ResearcherCard', () => {
 
     expect(screen.getByRole('heading', { name: withoutDescriptionArgs.name })).toBeInTheDocument()
     expect(
-      screen.getByText(`Institución: ${withoutDescriptionArgs.institution}`),
-    ).toBeInTheDocument()
+      screen.getAllByText(`Institución: ${withoutDescriptionArgs.institution}`).length,
+    ).toBeGreaterThan(0)
     expect(
       screen.queryByRole('button', { name: `Ver descripción de ${withoutDescriptionArgs.name}` }),
     ).not.toBeInTheDocument()
     expect(withoutEmailArgs.description).toBeDefined()
     expect(screen.queryByText(withoutEmailArgs.description ?? '')).not.toBeInTheDocument()
     expect(
-      screen.queryByLabelText(`Descripción de ${withoutDescriptionArgs.name}`),
+      screen.queryByRole('region', { name: `Descripción de ${withoutDescriptionArgs.name}` }),
     ).not.toBeInTheDocument()
   })
 

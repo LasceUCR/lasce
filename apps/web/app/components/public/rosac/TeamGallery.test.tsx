@@ -23,8 +23,10 @@ describe('TeamGallery', () => {
 
     const track = screen.getByRole('list', { name: defaultArgs.label })
     for (const person of defaultArgs.people) {
-      expect(within(track).getByText(person.name)).toBeInTheDocument()
-      expect(within(track).getByText(`Institución: ${person.institution}`)).toBeInTheDocument()
+      expect(within(track).getByRole('heading', { name: person.name })).toBeInTheDocument()
+      expect(
+        within(track).getAllByText(`Institución: ${person.institution}`).length,
+      ).toBeGreaterThan(0)
       if (person.description) {
         await user.click(
           within(track).getByRole('button', { name: `Ver descripción de ${person.name}` }),
@@ -61,7 +63,7 @@ describe('TeamGallery', () => {
   test('renders a person who has no academic title', () => {
     render(<TeamGallery {...plainNameArgs} />)
 
-    expect(screen.getByText('Jelmuth Rojas')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Jelmuth Rojas' })).toBeInTheDocument()
     expect(screen.getByText('Colaborador externo')).toBeInTheDocument()
   })
 
