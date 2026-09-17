@@ -10,8 +10,7 @@ describe('resolveSuviFrameUrl', () => {
   })
 
   test('leaves an already-absolute URL untouched', () => {
-    const absolute =
-      'https://services.swpc.noaa.gov/images/animations/suvi/primary/195/latest.png'
+    const absolute = 'https://services.swpc.noaa.gov/images/animations/suvi/primary/195/latest.png'
 
     expect(resolveSuviFrameUrl(absolute)).toBe(absolute)
   })
