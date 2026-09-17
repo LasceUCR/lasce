@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
 
-import { requireAdmin } from '@/app/lib/auth/apiGuard'
+import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import { createNews, newsInputSchema } from '@/app/lib/news'
 
 /**
- * Creates a news item. Admin-only — the public `/noticias` page reads directly through
- * `getNews()` in a Server Component, so there is no public GET counterpart here, unlike
- * `nosotros/activities`.
+ * Creates a news item. Requires `create_components` — the public `/noticias` page reads
+ * directly through `getNews()` in a Server Component, so there is no public GET counterpart
+ * here, unlike `nosotros/activities`.
  */
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('create_components')
   if (!guard.ok) return guard.response
 
   let body: unknown

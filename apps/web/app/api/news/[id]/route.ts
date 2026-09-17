@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
 
-import { requireAdmin } from '@/app/lib/auth/apiGuard'
+import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import { deleteNews, newsInputSchema, updateNews } from '@/app/lib/news'
 
-/** Updates or deletes one news item. Admin-only, same guard as `POST` in `route.ts`. */
+/** Updates or deletes one news item. PATCH needs `edit_components`; DELETE needs
+ * `delete_components` — same pattern as `nosotros/activities/[id]/route.ts`. */
 export const dynamic = 'force-dynamic'
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
   let body: unknown
@@ -47,7 +48,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('delete_components')
   if (!guard.ok) return guard.response
 
   const { id } = await params

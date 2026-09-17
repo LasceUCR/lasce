@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import type * as NewsLib from '@/app/lib/news'
 
 const mocks = vi.hoisted(() => ({
-  requireAdmin: vi.fn(),
+  requireApiPermission: vi.fn(),
   updateNews: vi.fn(),
   deleteNews: vi.fn(),
 }))
@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
 vi.mock('@/app/lib/auth/apiGuard', () => ({
-  requireAdmin: mocks.requireAdmin,
+  requireApiPermission: mocks.requireApiPermission,
 }))
 
 vi.mock('@/app/lib/news', async (importOriginal) => {
@@ -60,18 +60,19 @@ afterEach(() => {
 })
 
 describe('PATCH /api/news/[id]', () => {
-  test('rejects a request the admin guard denies', async () => {
+  test('rejects a request the edit_components guard denies', async () => {
     const denied = deniedResponse(401)
-    mocks.requireAdmin.mockResolvedValue({ ok: false, response: denied })
+    mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
     const response = await PATCH(patchRequest(validBody), { params })
 
     expect(response).toBe(denied)
+    expect(mocks.requireApiPermission).toHaveBeenCalledWith('edit_components')
     expect(mocks.updateNews).not.toHaveBeenCalled()
   })
 
   test('rejects a body that is not valid JSON', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await PATCH(patchRequest('not json'), { params })
 
@@ -80,7 +81,7 @@ describe('PATCH /api/news/[id]', () => {
   })
 
   test('rejects a body missing required fields and lists which ones', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await PATCH(patchRequest({ ...validBody, title: '', authors: [] }), {
       params,
@@ -96,7 +97,7 @@ describe('PATCH /api/news/[id]', () => {
   })
 
   test('returns 404 when the article does not exist', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     mocks.updateNews.mockResolvedValue(null)
 
     const response = await PATCH(patchRequest(validBody), { params })
@@ -105,7 +106,7 @@ describe('PATCH /api/news/[id]', () => {
   })
 
   test('saves the change', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     const saved = { slug: 'abc', ...validBody, date: '24 de mayo de 2026', href: validBody.externalUrl }
     mocks.updateNews.mockResolvedValue(saved)
 
@@ -118,18 +119,19 @@ describe('PATCH /api/news/[id]', () => {
 })
 
 describe('DELETE /api/news/[id]', () => {
-  test('rejects a request the admin guard denies', async () => {
+  test('rejects a request the delete_components guard denies', async () => {
     const denied = deniedResponse(403)
-    mocks.requireAdmin.mockResolvedValue({ ok: false, response: denied })
+    mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response).toBe(denied)
+    expect(mocks.requireApiPermission).toHaveBeenCalledWith('delete_components')
     expect(mocks.deleteNews).not.toHaveBeenCalled()
   })
 
   test('returns 404 when the article does not exist', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     mocks.deleteNews.mockResolvedValue(false)
 
     const response = await DELETE(deleteRequest(), { params })
@@ -138,7 +140,7 @@ describe('DELETE /api/news/[id]', () => {
   })
 
   test('deletes the article and returns no content', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     mocks.deleteNews.mockResolvedValue(true)
 
     const response = await DELETE(deleteRequest(), { params })

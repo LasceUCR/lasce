@@ -3,7 +3,7 @@ import type * as NewsLib from '@/app/lib/news'
 
 const mocks = vi.hoisted(() => ({
   createNews: vi.fn(),
-  requireAdmin: vi.fn(),
+  requireApiPermission: vi.fn(),
 }))
 
 vi.mock('@/app/lib/news', async (importOriginal) => {
@@ -15,7 +15,7 @@ vi.mock('@/app/lib/news', async (importOriginal) => {
 })
 
 vi.mock('@/app/lib/auth/apiGuard', () => ({
-  requireAdmin: mocks.requireAdmin,
+  requireApiPermission: mocks.requireApiPermission,
 }))
 
 // `newsInputSchema` is kept real (via `importOriginal` above), and the module that defines it
@@ -53,18 +53,19 @@ afterEach(() => {
 })
 
 describe('POST /api/news', () => {
-  test('rejects a request the admin guard denies', async () => {
+  test('rejects a request the create_components guard denies', async () => {
     const denied = deniedResponse()
-    mocks.requireAdmin.mockResolvedValue({ ok: false, response: denied })
+    mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
     const response = await POST(postRequest(validBody))
 
     expect(response).toBe(denied)
+    expect(mocks.requireApiPermission).toHaveBeenCalledWith('create_components')
     expect(mocks.createNews).not.toHaveBeenCalled()
   })
 
   test('rejects a body that is not valid JSON', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await POST(postRequest('not json'))
 
@@ -73,7 +74,7 @@ describe('POST /api/news', () => {
   })
 
   test('rejects a body missing required fields', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await POST(postRequest({ ...validBody, title: '', authors: [] }))
 
@@ -87,7 +88,7 @@ describe('POST /api/news', () => {
   })
 
   test('creates the article', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     const created = { slug: 'new-1', ...validBody, date: '24 de mayo de 2026', href: validBody.externalUrl }
     mocks.createNews.mockResolvedValue(created)
 
