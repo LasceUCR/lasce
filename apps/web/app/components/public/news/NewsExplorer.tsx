@@ -143,15 +143,6 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
         </p>
       ) : (
         <div className="news-list">
-          {filtered.map((article) => (
-            <EditableNewsCard
-              article={article}
-              key={article.slug}
-              onDelete={() => handleDelete(article.slug)}
-              onSave={(values) => handleSave(article.slug, values)}
-            />
-          ))}
-
           {editMode && (
             <AddItemCard label="Agregar noticia">
               {({ close }) => (
@@ -169,6 +160,15 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
               )}
             </AddItemCard>
           )}
+
+          {filtered.map((article) => (
+            <EditableNewsCard
+              article={article}
+              key={article.slug}
+              onDelete={() => handleDelete(article.slug)}
+              onSave={(values) => handleSave(article.slug, values)}
+            />
+          ))}
         </div>
       )}
     </section>
