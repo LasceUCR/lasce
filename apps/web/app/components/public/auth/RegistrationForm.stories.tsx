@@ -115,7 +115,7 @@ export const Failed: Story = {
 
 export const Success: Story = {
   args: {
-    ...Default.args,
+    ...WithHeading.args,
     initialState: { ...initialRegistrationState, status: 'success' },
   },
 }

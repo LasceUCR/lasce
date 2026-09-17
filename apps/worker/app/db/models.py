@@ -10,7 +10,7 @@ import uuid
 from datetime import date as date_type
 from datetime import datetime
 
-from sqlalchemy import CHAR, Date, DateTime, ForeignKey, Integer, Text, text
+from sqlalchemy import CHAR, Date, DateTime, ForeignKey, Integer, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -211,4 +211,30 @@ class UserSession(Base):
     )
     token_hash: Mapped[str] = mapped_column(Text, unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RolePermission(Base):
+    """Permission granted to a ``UserRole``. Mirrors the Prisma ``RolePermission``
+    model (table ``auth.role_permissions``). The permission strings are the web
+    catalogue; this table only stores the mapping.
+    """
+
+    __tablename__ = "role_permissions"
+    __table_args__ = (
+        UniqueConstraint("role", "permission", name="role_permissions_role_permission_key"),
+        {"schema": "auth"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    role: Mapped[UserRole] = mapped_column(
+        ENUM(
+            UserRole,
+            name="user_role",
+            schema="auth",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        )
+    )
+    permission: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

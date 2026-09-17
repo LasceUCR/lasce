@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server'
 
+import { getPermissionsForRole } from './permission-store'
+import type { Permission } from './permissions'
 import { getSessionUser, type SessionUser } from './session'
 
-export type AdminGuardResult =
-  { ok: true; user: SessionUser } | { ok: false; response: NextResponse }
+export type ApiGuardResult = { ok: true; user: SessionUser } | { ok: false; response: NextResponse }
 
 /**
- * Route Handler guard for admin-only JSON endpoints: 401 with no session,
- * 403 with one that isn't `ADMIN`. `requireUser` (session.ts) isn't the right
- * tool here — it redirects, which makes no sense for a client-side `fetch`
- * expecting JSON back.
+ * Route Handler guard for JSON endpoints: 401 with no session, 403 when the
+ * account's role does not hold `permission`. `requireUser` / `requirePermission`
+ * (authorization.ts) are the wrong tools here — they redirect, which a
+ * client-side `fetch` expecting JSON cannot follow.
+ *
+ * Do not branch on `role === 'ADMIN'`. The matrix on `/administracion/permisos`
+ * is the source of who may create, edit or delete.
  */
-export async function requireAdmin(): Promise<AdminGuardResult> {
+export async function requireApiPermission(permission: Permission): Promise<ApiGuardResult> {
   const user = await getSessionUser()
   if (!user) {
     return {
@@ -20,7 +24,8 @@ export async function requireAdmin(): Promise<AdminGuardResult> {
     }
   }
 
-  if (user.role !== 'ADMIN') {
+  const held = await getPermissionsForRole(user.role)
+  if (!held.has(permission)) {
     return {
       ok: false,
       response: NextResponse.json(

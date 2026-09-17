@@ -33,7 +33,7 @@ datasource db {
 
 /// Access level of a portal account. Self-registration always yields `visitor`;
 /// `assistant` and `admin` are granted by an administrator (LASCE-ADM #80). What
-/// each role may do is LASCE-SEC-008-073's concern, not this enum's.
+/// each role may do lives in `RolePermission` (LASCE-SEC-008-073), not here.
 enum UserRole {
   VISITOR   @map("visitor")
   ASSISTANT @map("assistant")
@@ -85,6 +85,21 @@ model Session {
 
   @@index([userId])
   @@map("sessions")
+  @@schema("auth")
+}
+
+/// Permission granted to a `UserRole`. The permission strings themselves are
+/// the TypeScript catalogue in `apps/web/app/lib/auth/permissions.ts`; this
+/// table only stores the mapping so administrators can change it without a
+/// deploy of unrelated features (LASCE-SEC-008-073).
+model RolePermission {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role       UserRole
+  permission String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([role, permission])
+  @@map("role_permissions")
   @@schema("auth")
 }
 

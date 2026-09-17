@@ -92,7 +92,7 @@ Self-registration always produces `visitor`: the form has no role field, the Ser
 only the five validated fields, and `createUser` picks those fields one by one rather than
 spreading its argument, so a `role` smuggled into the request is dropped before the insert and the
 database default applies. Granting `assistant` or `admin` is an administrator's action (#80); what
-each role may do is #73.
+each role may do is stored in `auth.role_permissions` ([role-permissions.md](role-permissions.md)).
 
 ## Entry points
 

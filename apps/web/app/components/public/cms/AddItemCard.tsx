@@ -27,7 +27,13 @@ export function AddItemCard({ label, children }: AddItemCardProps) {
 
   return (
     <>
-      <button className="add-item-card" onClick={() => setOpen(true)} type="button">
+      <button
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        className="add-item-card"
+        onClick={() => setOpen(true)}
+        type="button"
+      >
         <Plus aria-hidden="true" size={22} strokeWidth={1.8} />
         {label}
       </button>

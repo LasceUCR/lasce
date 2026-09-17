@@ -4,8 +4,12 @@ import {
   ACCOUNT_COOKIE,
   ROLE_LABELS,
   accountMenuCopy,
+  canSeeAdminNavigation,
   clearAccountCookie,
+  encodeAccountCookie,
   notifyAccountChanged,
+  parseAccountCookieValue,
+  readAccountCookie,
   readAccountName,
   shortName,
   subscribeAccount,
@@ -57,10 +61,13 @@ describe('clearAccountCookie', () => {
     expect(readAccountName(document.cookie)).toBeNull()
   })
 
-  test('writeAccountCookie puts an encoded name back', () => {
-    writeAccountCookie('Ana Pérez')
+  test('writeAccountCookie puts an encoded name and role back', () => {
+    writeAccountCookie({ name: 'Ana Pérez', role: 'ASSISTANT' })
 
-    expect(document.cookie).toContain(`${ACCOUNT_COOKIE}=Ana%20P%C3%A9rez`)
+    expect(document.cookie).toContain(
+      `${ACCOUNT_COOKIE}=${encodeURIComponent(encodeAccountCookie({ name: 'Ana Pérez', role: 'ASSISTANT' }))}`,
+    )
+    expect(readAccountCookie(document.cookie)).toEqual({ name: 'Ana Pérez', role: 'ASSISTANT' })
     expect(readAccountName(document.cookie)).toBe('Ana Pérez')
   })
 })
@@ -83,5 +90,38 @@ describe('ROLE_LABELS', () => {
   test('names the three roles in Spanish', () => {
     expect(Object.keys(ROLE_LABELS).sort()).toEqual(['ADMIN', 'ASSISTANT', 'VISITOR'])
     expect(ROLE_LABELS.VISITOR).toBe('Visitante')
+  })
+})
+
+describe('account cookie payload', () => {
+  test('round-trips a name and role', () => {
+    expect(
+      parseAccountCookieValue(encodeAccountCookie({ name: 'Ana Pérez', role: 'ADMIN' })),
+    ).toEqual({ name: 'Ana Pérez', role: 'ADMIN' })
+  })
+
+  test('treats a legacy name-only cookie as signed in without a role', () => {
+    expect(parseAccountCookieValue('Ana Pérez')).toEqual({ name: 'Ana Pérez', role: null })
+    expect(readAccountCookie(`${ACCOUNT_COOKIE}=Ana%20P%C3%A9rez`)).toEqual({
+      name: 'Ana Pérez',
+      role: null,
+    })
+  })
+
+  test('ignores an unknown role string', () => {
+    expect(parseAccountCookieValue(JSON.stringify({ name: 'Ana', role: 'OWNER' }))).toEqual({
+      name: 'Ana',
+      role: null,
+    })
+  })
+})
+
+describe('canSeeAdminNavigation', () => {
+  test('is true only for assistants and administrators', () => {
+    expect(canSeeAdminNavigation('ASSISTANT')).toBe(true)
+    expect(canSeeAdminNavigation('ADMIN')).toBe(true)
+    expect(canSeeAdminNavigation('VISITOR')).toBe(false)
+    expect(canSeeAdminNavigation(null)).toBe(false)
+    expect(canSeeAdminNavigation(undefined)).toBe(false)
   })
 })
