@@ -12,6 +12,8 @@ import { NewsCard } from './NewsCard'
 
 export interface EditableNewsCardProps {
   article: NewsArticle
+  canEdit?: boolean
+  canDelete?: boolean
   /** Persists the edit; resolves to an error message on failure, or `null` on success. */
   onSave: (values: NewsArticleFormValues) => Promise<string | null>
   onDelete: () => void
@@ -22,7 +24,13 @@ export interface EditableNewsCardProps {
  * edición" — `NewsCard`, `EditableWrapper` and `NewsArticleForm` stay
  * unaware of each other and of the toggle.
  */
-export function EditableNewsCard({ article, onSave, onDelete }: EditableNewsCardProps) {
+export function EditableNewsCard({
+  article,
+  canEdit = false,
+  canDelete = false,
+  onSave,
+  onDelete,
+}: EditableNewsCardProps) {
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -61,7 +69,9 @@ export function EditableNewsCard({ article, onSave, onDelete }: EditableNewsCard
     </Modal>
   )
 
-  if (!editMode) {
+  const showEditor = editMode && (canEdit || canDelete)
+
+  if (!showEditor) {
     return card
   }
 
@@ -70,8 +80,8 @@ export function EditableNewsCard({ article, onSave, onDelete }: EditableNewsCard
       <EditableWrapper
         deleteConfirmMessage={`¿Desea eliminar "${article.title}"? Esta acción no se puede deshacer.`}
         deleteConfirmTitle="Eliminar noticia"
-        onDelete={onDelete}
-        onEdit={() => setIsEditing(true)}
+        onDelete={canDelete ? onDelete : undefined}
+        onEdit={canEdit ? () => setIsEditing(true) : undefined}
       >
         {card}
       </EditableWrapper>

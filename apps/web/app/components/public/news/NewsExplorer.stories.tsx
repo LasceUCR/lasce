@@ -83,7 +83,19 @@ export const Empty: Story = {
 
 /** Shows the edit/delete affordances and the "Agregar noticia" card the admin toggle reveals. */
 export const EditMode: Story = {
-  args: Default.args,
+  args: { ...Default.args, canCreate: true, canEdit: true, canDelete: true },
+  decorators: [
+    (Story) => (
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+        <Story />
+      </EditModeContext.Provider>
+    ),
+  ],
+}
+
+/** An assistant account: `edit_components` only */
+export const AssistantMode: Story = {
+  args: { ...Default.args, canCreate: false, canEdit: true, canDelete: false },
   decorators: [
     (Story) => (
       <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>

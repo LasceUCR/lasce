@@ -5,10 +5,11 @@ import { describe, expect, test, vi } from 'vitest'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 
 import { EditableNewsCard, type EditableNewsCardProps } from './EditableNewsCard'
-import { EditModeOn, ViewMode } from './EditableNewsCard.stories'
+import { AssistantMode, EditModeOn, ViewMode } from './EditableNewsCard.stories'
 
 const viewArgs = ViewMode.args as EditableNewsCardProps
 const editArgs = EditModeOn.args as EditableNewsCardProps
+const assistantArgs = AssistantMode.args as EditableNewsCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableNewsCardProps) {
   return render(
@@ -26,11 +27,25 @@ describe('EditableNewsCard', () => {
     expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
   })
 
-  test('shows edit and delete actions when edit mode is on', () => {
+  test('shows edit and delete actions when edit mode is on with full grants', () => {
     renderWithEditMode(true, editArgs)
 
     expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Eliminar' })).toBeInTheDocument()
+  })
+
+  test('shows only the edit action for an account without delete_components', () => {
+    renderWithEditMode(true, assistantArgs)
+
+    expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+  })
+
+  test('renders a plain card when edit mode is on but the account has no grants', () => {
+    renderWithEditMode(true, { ...editArgs, canEdit: false, canDelete: false })
+
+    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
   })
 
   test('opens the article form in a modal when the edit action is pressed', async () => {

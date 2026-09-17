@@ -57,6 +57,8 @@ const emptyArgs: NewsExplorerProps = {
   news: [],
 }
 
+const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
+
 function renderExplorer(props: NewsExplorerProps = defaultArgs) {
   return render(
     <EditModeProvider>
@@ -65,10 +67,10 @@ function renderExplorer(props: NewsExplorerProps = defaultArgs) {
   )
 }
 
-function renderExplorerInEditMode(props: NewsExplorerProps = defaultArgs) {
+function renderExplorerInEditMode(props: Partial<NewsExplorerProps> = {}) {
   return render(
     <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
-      <NewsExplorer {...props} />
+      <NewsExplorer {...defaultArgs} {...adminGrants} {...props} />
     </EditModeContext.Provider>,
   )
 }
@@ -205,7 +207,7 @@ describe('NewsExplorer', () => {
     expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
   })
 
-  test('offers editing and deleting each article, plus adding one, when edit mode is on', () => {
+  test('offers editing and deleting each article, plus adding one, for an admin account', () => {
     renderExplorerInEditMode()
 
     expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(defaultArgs.news.length)
@@ -213,6 +215,22 @@ describe('NewsExplorer', () => {
       defaultArgs.news.length,
     )
     expect(screen.getByRole('button', { name: 'Agregar noticia' })).toBeInTheDocument()
+  })
+
+  test('offers only editing for an assistant account without create or delete grants', () => {
+    renderExplorerInEditMode({ canCreate: false, canEdit: true, canDelete: false })
+
+    expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(defaultArgs.news.length)
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Agregar noticia' })).not.toBeInTheDocument()
+  })
+
+  test('hides every editor when edit mode is on but the account has no grants', () => {
+    renderExplorerInEditMode({ canCreate: false, canEdit: false, canDelete: false })
+
+    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Agregar noticia' })).not.toBeInTheDocument()
   })
 
   test('PATCHes the article and refreshes the page once saving succeeds', async () => {
