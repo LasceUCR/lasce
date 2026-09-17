@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
@@ -13,115 +13,134 @@ const researchGroupOptions: FormFieldOption[] = [
 ]
 
 export interface PublicationFormValues {
-  abstract: string
-  authors: string[]
-  DOI: string
-  researchGroup: ResearchGroup
   title: string
+  authors: string[]
   venue: string
   date: Date
+  abstract: string
+  DOI: string
+  researchGroup: ResearchGroup
 }
 
 export interface PublicationFormProps {
-  /** The publication's current values — the form starts pre-filled with these. */
   publication: PublicationFormValues
+  availableAuthors: string[]
   onSave: (values: PublicationFormValues) => void
   onCancel: () => void
-  /** Overrides the confirmation dialog's copy — a new card reads oddly as "save the changes". */
   confirmTitle?: string
   confirmMessage?: string
 }
 
-/**
- * Creates or edits one publication card (abstract, authors, DOI, researchGroup,
- * title, venue, date) —
- * `publication` starts blank for a new card, or pre-filled for an existing one.
- * Saving asks for confirmation first, same as `EditableWrapper`'s delete
- * action, since there is no undo yet.
- */
 export function PublicationForm({
   publication,
   onSave,
   onCancel,
   confirmTitle = 'Guardar cambios',
-  confirmMessage = '¿Desea guardar los cambios en esta publicacion?',
+  confirmMessage = '¿Desea guardar los cambios en esta publicación?',
 }: PublicationFormProps) {
-  const [title, setTitle] = useState(publication.title)
-  const [doi, setDoi] = useState(publication.DOI)
-  const [abstract, setAbstract] = useState(publication.abstract)
-  const [authors, setAuthors] = useState<string[]>(publication.authors)
-  const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
-  const [venue, setVenue] = useState(publication.venue)
-  const [date, setDate] = useState(publication.date.toISOString().split('T')[0]!)
+  const formId = useId()
 
+  const [title, setTitle] = useState(publication.title)
+  const [authors, setAuthors] = useState<string[]>(publication.authors)
+  const [venue, setVenue] = useState(publication.venue)
+  const [date, setDate] = useState(publication.date.toISOString().slice(0, 10))
+  const [abstract, setAbstract] = useState(publication.abstract)
+  const [DOI, setDOI] = useState(publication.DOI)
+  const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
+
+  const [authorToRemove, setAuthorToRemove] = useState('')
+  const [newAuthor, setNewAuthor] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
+
+  const authorOptions: FormFieldOption[] = authors.map((author) => ({
+    value: author,
+    label: author,
+  }))
 
   const canSave =
     title.trim() !== '' &&
-    abstract.trim() !== '' &&
+    authors.length > 0 &&
     venue.trim() !== '' &&
     date !== '' &&
-    authors.length > 0 &&
-    authors.every((author) => author.trim() !== '')
+    abstract.trim() !== ''
 
-  function updateAuthor(index: number, value: string) {
-    setAuthors((current) => current.map((author, i) => (i === index ? value : author)))
+  function handleRemoveAuthor() {
+    if (!authorToRemove) return
+
+    setAuthors((current) => current.filter((author) => author !== authorToRemove))
+    setAuthorToRemove('')
   }
 
-  function addAuthor() {
-    setAuthors((current) => [...current, ''])
+  function handleAddAuthor() {
+    const author = newAuthor.trim()
+
+    if (!author) return
+
+    if (!authors.some((existing) => existing.toLowerCase() === author.toLowerCase())) {
+      setAuthors((current) => [...current, author])
+    }
+
+    setNewAuthor('')
   }
 
-  function removeAuthor(index: number) {
-    setAuthors((current) => current.filter((_, i) => i !== index))
+  function handleSubmit() {
+    setConfirmOpen(false)
+
+    onSave({
+      title,
+      authors,
+      venue,
+      date: new Date(`${date}T00:00:00`),
+      abstract,
+      DOI,
+      researchGroup,
+    })
   }
 
   return (
     <div className="publication-form">
-      <FormField id="publication-title" label="Título" onChange={setTitle} required value={title} />
+      <FormField id={`${formId}-title`} label="Título" onChange={setTitle} required value={title} />
 
       <FormField
         id="publication-date"
-        label="Fecha"
-        type="date"
+        label="Fecha de publicación"
         onChange={setDate}
         required
+        type="date"
         value={date}
       />
 
-      <div className="publication-authors">
-        <label>Autores</label>
+      <FormField
+        id={`${formId}-authors-remove`}
+        label="Eliminar autor"
+        onChange={setAuthorToRemove}
+        options={authorOptions}
+        placeholder="Buscar autor..."
+        value={authorToRemove}
+      />
 
-        {authors.map((author, index) => (
-          <div className="publication-author-row" key={index}>
-            <FormField
-              id={`publication-author-${index}`}
-              label={`Autor ${index + 1}`}
-              onChange={(value) => updateAuthor(index, value)}
-              required
-              value={author}
-            />
+      <Button disabled={!authorToRemove} onClick={handleRemoveAuthor} variant="secondary">
+        Eliminar autor
+      </Button>
 
-            {authors.length > 1 ? (
-              <Button onClick={() => removeAuthor(index)} variant="secondary">
-                Eliminar
-              </Button>
-            ) : null}
-          </div>
-        ))}
+      <div className="publication-form-author-add">
+        <FormField
+          id={`${formId}-author-add`}
+          label="Añadir autor"
+          onChange={setNewAuthor}
+          value={newAuthor}
+        />
 
-        <div className="publication-add-author">
-          <Button onClick={addAuthor} variant="secondary">
-            Añadir autor
-          </Button>
-        </div>
+        <Button disabled={newAuthor.trim() === ''} onClick={handleAddAuthor} variant="secondary">
+          Añadir autor
+        </Button>
       </div>
 
-      <FormField id="publication-doi" label="DOI" onChange={setDoi} value={doi} />
+      <FormField id={`publication-doi`} label="DOI" onChange={setDOI} value={DOI} />
 
       <FormField
-        id="publication-venue"
-        label="Revista/Fuente"
+        id={`publication-venue-venue`}
+        label="Revista/Publicación"
         onChange={setVenue}
         required
         value={venue}
@@ -156,18 +175,7 @@ export function PublicationForm({
       <ConfirmDialog
         message={confirmMessage}
         onCancel={() => setConfirmOpen(false)}
-        onConfirm={() => {
-          setConfirmOpen(false)
-          onSave({
-            title,
-            abstract,
-            authors,
-            DOI: doi,
-            researchGroup,
-            venue,
-            date: new Date(date),
-          })
-        }}
+        onConfirm={handleSubmit}
         open={confirmOpen}
         title={confirmTitle}
       />
