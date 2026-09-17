@@ -26,8 +26,11 @@ export function AlbumTile({ title, meta, variant = 'sub', href, src }: AlbumTile
 
   const content = (
     <>
+      {/* The cover is decorative (`alt=""`): the heading and the meta line
+          below are real text, and when the tile is a link they already are its
+          accessible name. A description here would only repeat them. */}
       <MediaFrame
-        alt={title}
+        alt=""
         className="gallery-tile-media"
         placeholder={placeholders[variant]}
         // The grid track is a fixed 260px, so the default 33vw hint would have
@@ -36,7 +39,7 @@ export function AlbumTile({ title, meta, variant = 'sub', href, src }: AlbumTile
         src={src}
       />
       <div className="gallery-tile-body">
-        <strong>{title}</strong>
+        <h3 className="gallery-tile-title">{title}</h3>
         <span className="gallery-tile-meta">{meta}</span>
       </div>
     </>

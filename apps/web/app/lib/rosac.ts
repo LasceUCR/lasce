@@ -5,8 +5,9 @@
  * This module describes the public information page only; scientific consultation is separate.
  *
  * `team.people` is the accessible source of truth for the ROSAC researchers gallery. Portraits
- * live in `public/images/ROSAC/team/`; names, roles, emails, institution and descriptions are rendered as
- * HTML in `ResearcherCard`. `team.people[].src` must be a local path under `apps/web/public`.
+ * live in `public/images/ROSAC/team/`; names, roles, emails and institution are on the front of each
+ * card, and the description is on the back after a click. They are rendered as HTML in
+ * `ResearcherCard`. `team.people[].src` must be a local path under `apps/web/public`.
  * `next.config.ts` declares no `images` config, so a remote URL throws at render time.
  *
  * `institution` is the affiliation shown as `Institución: {institution}`. `email` is only set when
@@ -16,6 +17,8 @@
  * deploy, move it to Prisma and fetch it in the route, the way `investigacion` does. The page
  * component takes its content as a prop precisely so that migration touches only the route.
  */
+import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
+
 export const rosacInfoMeta = {
   title: 'Radioastronomía y ROSAC | LASCE',
   description:
@@ -78,11 +81,13 @@ export interface RosacInfoContent {
   overview: RosacTextSection
   characteristics: RosacCardSection
   activities: RosacCardSection
+  construction: ConstructionContent
   radioObservation: RosacTextSection
   relationship: RosacTextSection
   team: {
     title: string
     intro: string
+    hint: string
     emptyMessage: string
     people: readonly TeamMember[]
   }
@@ -95,6 +100,7 @@ export interface RosacInfoContent {
 }
 
 export const rosacInfoContent = {
+  construction: rosacConstructionContent,
   hero: {
     kicker: 'Área de trabajo LASCE',
     title: 'Radioastronomía',
@@ -211,6 +217,7 @@ export const rosacInfoContent = {
     title: 'Investigadores',
     intro:
       'Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.',
+    hint: 'Haga clic en una ficha para ver más información.',
     emptyMessage: 'No hay información de investigadores disponible en este momento.',
     people: [
       {
