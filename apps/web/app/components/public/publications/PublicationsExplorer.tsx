@@ -15,6 +15,9 @@ const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
 
 export interface PublicationsExplorerProps {
   publications: Publication[]
+  canCreate?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
 }
 
 function matches(value: string, query: string) {
@@ -26,7 +29,7 @@ function matches(value: string, query: string) {
  */
 const blankPublication: PublicationFormValues = {
   abstract: '',
-  authors: [''],
+  authors: [],
   DOI: '',
   researchGroup: 'LASCE',
   title: '',
@@ -34,7 +37,12 @@ const blankPublication: PublicationFormValues = {
   date: new Date(),
 }
 
-export function PublicationsExplorer({ publications }: PublicationsExplorerProps) {
+export function PublicationsExplorer({
+  publications,
+  canCreate = false,
+  canEdit = false,
+  canDelete = false,
+}: PublicationsExplorerProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
   const [editingPublicationId, setEditingPublicationId] = useState<string | null>(null)
@@ -206,7 +214,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
         </p>
       ) : (
         <div className="publication-list">
-          {editMode ? (
+          {editMode && canCreate ? (
             <AddItemCard label="Añadir">
               {({ close }) => (
                 <>
@@ -228,7 +236,8 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
           ) : null}
 
           {filtered.map((publication) => {
-            if (!editMode) {
+            const showEditor = editMode && (canEdit || canDelete)
+            if (!showEditor) {
               return (
                 <PublicationCard
                   abstract={publication.abstract}
@@ -247,9 +256,11 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
               <EditableWrapper
                 key={publication.slug}
                 deleteConfirmMessage={`¿Desea eliminar "${publication.title}"? Esta acción no se puede deshacer.`}
-                deleteConfirmTitle="Eliminar actividad"
-                onDelete={() => handleDeletePublication(publication.slug)}
-                onEdit={() => openEditor(publication.slug)}
+                deleteConfirmTitle="Eliminar publicacion"
+                deleteLabel={`Eliminar ${publication.title}`}
+                editLabel={`Editar ${publication.title}`}
+                onDelete={canDelete ? () => handleDeletePublication(publication.slug) : undefined}
+                onEdit={canEdit ? () => openEditor(publication.slug) : undefined}
               >
                 <PublicationCard
                   abstract={publication.abstract}

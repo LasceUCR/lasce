@@ -24,7 +24,6 @@ export interface PublicationFormValues {
 
 export interface PublicationFormProps {
   publication: PublicationFormValues
-  availableAuthors: string[]
   onSave: (values: PublicationFormValues) => void
   onCancel: () => void
   confirmTitle?: string
@@ -52,10 +51,13 @@ export function PublicationForm({
   const [newAuthor, setNewAuthor] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const authorOptions: FormFieldOption[] = authors.map((author) => ({
-    value: author,
-    label: author,
-  }))
+  const authorOptions: FormFieldOption[] = [
+    { value: '', label: 'Seleccionar autor...' },
+    ...authors.map((author) => ({
+      value: author,
+      label: author,
+    })),
+  ]
 
   const canSave =
     title.trim() !== '' &&
