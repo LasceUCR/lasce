@@ -26,7 +26,7 @@ function matches(value: string, query: string) {
  */
 const blankPublication: PublicationFormValues = {
   abstract: '',
-  authors: '',
+  authors: [''],
   DOI: '',
   researchGroup: 'LASCE',
   title: '',
@@ -142,7 +142,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
       const matchesSearch =
         query.trim() === '' ||
         matches(publication.title, query) ||
-        matches(publication.authors, query) ||
+        publication.authors.some((author) => matches(author, query)) ||
         matches(publication.abstract, query)
 
       return matchesGroup && matchesSearch
@@ -207,43 +207,6 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
         </p>
       ) : (
         <div className="publication-list">
-          {filtered.map((publication) => {
-            if (!editMode) {
-              return (
-                <PublicationCard
-                  abstract={publication.abstract}
-                  authors={publication.authors}
-                  href={publication.href}
-                  key={publication.slug}
-                  researchGroup={publication.researchGroup}
-                  title={publication.title}
-                  venue={publication.venue}
-                  year={publication.year}
-                />
-              )
-            }
-
-            return (
-              <EditableWrapper
-                key={publication.slug}
-                deleteConfirmMessage={`¿Desea eliminar "${publication.title}"? Esta acción no se puede deshacer.`}
-                deleteConfirmTitle="Eliminar actividad"
-                onDelete={() => handleDeletePublication(publication.slug)}
-                onEdit={() => openEditor(publication.slug)}
-              >
-                <PublicationCard
-                  abstract={publication.abstract}
-                  authors={publication.authors}
-                  href={publication.href}
-                  key={publication.slug}
-                  researchGroup={publication.researchGroup}
-                  title={publication.title}
-                  venue={publication.venue}
-                  year={publication.year}
-                />
-              </EditableWrapper>
-            )
-          })}
           {editMode ? (
             <AddItemCard label="Añadir">
               {({ close }) => (
@@ -264,6 +227,44 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
               )}
             </AddItemCard>
           ) : null}
+
+          {filtered.map((publication) => {
+            if (!editMode) {
+              return (
+                <PublicationCard
+                  abstract={publication.abstract}
+                  authors={publication.authors.join(', ')}
+                  href={publication.href}
+                  key={publication.slug}
+                  researchGroup={publication.researchGroup}
+                  title={publication.title}
+                  venue={publication.venue}
+                  year={publication.year}
+                />
+              )
+            }
+
+            return (
+              <EditableWrapper
+                key={publication.slug}
+                deleteConfirmMessage={`¿Desea eliminar "${publication.title}"? Esta acción no se puede deshacer.`}
+                deleteConfirmTitle="Eliminar actividad"
+                onDelete={() => handleDeletePublication(publication.slug)}
+                onEdit={() => openEditor(publication.slug)}
+              >
+                <PublicationCard
+                  abstract={publication.abstract}
+                  authors={publication.authors.join(', ')}
+                  href={publication.href}
+                  key={publication.slug}
+                  researchGroup={publication.researchGroup}
+                  title={publication.title}
+                  venue={publication.venue}
+                  year={publication.year}
+                />
+              </EditableWrapper>
+            )
+          })}
         </div>
       )}
 

@@ -14,7 +14,7 @@ const researchGroupOptions: FormFieldOption[] = [
 
 export interface PublicationFormValues {
   abstract: string
-  authors: string
+  authors: string[]
   DOI: string
   researchGroup: ResearchGroup
   title: string
@@ -49,7 +49,7 @@ export function PublicationForm({
   const [title, setTitle] = useState(publication.title)
   const [doi, setDoi] = useState(publication.DOI)
   const [abstract, setAbstract] = useState(publication.abstract)
-  const [authors, setAuthors] = useState(publication.authors)
+  const [authors, setAuthors] = useState<string[]>(publication.authors)
   const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
   const [venue, setVenue] = useState(publication.venue)
   const [date, setDate] = useState(publication.date.toISOString().split('T')[0]!)
@@ -57,6 +57,18 @@ export function PublicationForm({
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const canSave = title.trim() !== '' && abstract.trim() !== '' && abstract.trim() !== ''
+
+  function updateAuthor(index: number, value: string) {
+    setAuthors((current) => current.map((author, i) => (i === index ? value : author)))
+  }
+
+  function addAuthor() {
+    setAuthors((current) => [...current, ''])
+  }
+
+  function removeAuthor(index: number) {
+    setAuthors((current) => current.filter((_, i) => i !== index))
+  }
 
   return (
     <div className="publication-form">
@@ -71,13 +83,33 @@ export function PublicationForm({
         value={date}
       />
 
-      <FormField
-        id="publication-authors"
-        label="Autores"
-        onChange={setAuthors}
-        required
-        value={authors}
-      />
+      <div className="publication-authors">
+        <label>Autores</label>
+
+        {authors.map((author, index) => (
+          <div className="publication-author-row" key={index}>
+            <FormField
+              id={`publication-author-${index}`}
+              label={`Autor ${index + 1}`}
+              onChange={(value) => updateAuthor(index, value)}
+              required
+              value={author}
+            />
+
+            {authors.length > 1 ? (
+              <Button onClick={() => removeAuthor(index)} variant="secondary">
+                Eliminar
+              </Button>
+            ) : null}
+          </div>
+        ))}
+
+        <div className="publication-add-author">
+          <Button onClick={addAuthor} variant="secondary">
+            Añadir autor
+          </Button>
+        </div>
+      </div>
 
       <FormField id="publication-doi" label="DOI" onChange={setDoi} value={doi} />
 
@@ -106,7 +138,7 @@ export function PublicationForm({
         value={researchGroup}
       />
 
-      <div className="nosotros-activity-form-actions">
+      <div className="publication-form-actions">
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>

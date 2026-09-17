@@ -22,7 +22,7 @@ export type ResearchGroup = 'LASCE' | 'ROSAC'
 export type Publication = {
   slug: string
   title: string
-  authors: string
+  authors: string[]
   venue: string
   year: string
   date: Date
@@ -54,7 +54,7 @@ export async function getPublications(): Promise<Publication[]> {
   return records.map((record) => ({
     slug: record.id,
     title: record.title,
-    authors: record.authors.map((author) => author.researchAuthor.name).join(', '),
+    authors: record.authors.map((author) => author.researchAuthor.name),
     venue: record.publisher.name,
     year: String(record.publicationDate.getUTCFullYear()),
     date: record.publicationDate,
