@@ -131,6 +131,7 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
       >
         <TeamGallery
           emptyMessage={content.team.emptyMessage}
+          hint={content.team.hint}
           label={content.team.title}
           people={content.team.people}
         />

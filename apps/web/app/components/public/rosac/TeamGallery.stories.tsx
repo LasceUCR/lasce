@@ -16,6 +16,7 @@ type Story = StoryObj<typeof TeamGallery>
 export const Default: Story = {
   args: {
     emptyMessage: rosacInfoContent.team.emptyMessage,
+    hint: rosacInfoContent.team.hint,
     label: rosacInfoContent.team.title,
     people: rosacInfoContent.team.people.slice(0, 3),
   },
@@ -25,6 +26,7 @@ export const Default: Story = {
 export const PlainName: Story = {
   args: {
     emptyMessage: rosacInfoContent.team.emptyMessage,
+    hint: rosacInfoContent.team.hint,
     label: rosacInfoContent.team.title,
     people: rosacInfoContent.team.people.filter((person) => person.name === 'Jelmuth Rojas'),
   },
@@ -33,6 +35,7 @@ export const PlainName: Story = {
 export const Empty: Story = {
   args: {
     emptyMessage: rosacInfoContent.team.emptyMessage,
+    hint: rosacInfoContent.team.hint,
     label: rosacInfoContent.team.title,
     people: [],
   },
