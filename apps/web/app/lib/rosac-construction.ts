@@ -51,11 +51,11 @@ export const rosacConstructionContent = {
         'Antes del montaje principal se realizaron trabajos de preparación del sitio y de los componentes que posteriormente formarían parte de la estructura. Esta etapa reúne parte de la logística y adecuación previa necesaria para iniciar el ensamblaje.',
       images: [
         {
-          src: `${imageBase}/prev_montaje_1.jpeg`,
+          src: `${imageBase}/prev_montaje_1.jpg`,
           alt: 'Personas sobre y alrededor de una base de concreto, con una antena al fondo.',
         },
         {
-          src: `${imageBase}/prev_montaje_2.png`,
+          src: `${imageBase}/prev_montaje_2.jpg`,
           alt: 'Camión con grúa y componentes metálicos junto al sitio de la antena.',
         },
       ],
@@ -80,7 +80,7 @@ export const rosacConstructionContent = {
           alt: 'Plataforma elevadora junto a la estructura metálica del reflector.',
         },
         {
-          src: `${imageBase}/montaje_4.jpeg`,
+          src: `${imageBase}/montaje_4.jpg`,
           alt: 'Grupo de personas en la base de la antena, bajo la estructura del reflector.',
         },
         {
