@@ -63,6 +63,7 @@ model User {
   updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
 
   sessions Session[]
+  nosotrosActivities NosotrosActivity[]
 
   @@map("users")
   @@schema("auth")
@@ -235,3 +236,37 @@ model NewsCrossAuthor {
   @@map("news_cross_authors")
   @@schema("news")
 }
+
+/// A "¿Qué hacemos?" flashcard on the Nosotros page (LASCE-CON-012-086). One row
+/// per card — icon, title and paragraph are the three editable fields; the rest
+/// is audit metadata (who changed it last, and when).
+enum NosotrosActivityIcon {
+  SUN           @map("sun")
+  WAVES         @map("waves")
+  SATELLITE     @map("satellite")
+  CODE          @map("code")
+  COLLABORATION @map("collaboration")
+  EDUCATION     @map("education")
+
+  @@map("nosotros_activity_icon")
+  @@schema("public")
+}
+
+model NosotrosActivity {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  icon        NosotrosActivityIcon
+  title       String
+  paragraph   String               @db.Text
+  /// Display order. Set once at creation and never touched by an edit, so
+  /// saving a card's text doesn't also reorder it — `modifiedAt` alone can't
+  /// serve as the sort key because editing changes it on purpose.
+  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy  String               @map("modified_by") @db.Uuid
+  modifiedAt  DateTime             @updatedAt @default(now()) @map("modified_at") @db.Timestamptz(3)
+
+  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+
+  @@map("nosotros_activities")
+  @@schema("public")
+}
+

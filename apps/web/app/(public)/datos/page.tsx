@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { ScientificDataExplorer } from '@/app/components/public/scientific-data/ScientificDataExplorer'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { scientificSources } from '@/app/lib/scientific-data'
+import { getSuviAvailability } from '@/app/lib/scientific-data-availability'
 
 const description =
   'Consulte y visualice observaciones de los satélites GOES y la integración prevista de ROSAC.'
@@ -17,10 +18,7 @@ export const dynamic = 'force-dynamic'
 
 export default function ScientificDataRoute() {
   const today = new Date()
-  const oldestGoesDate = new Date(today)
-  oldestGoesDate.setUTCDate(today.getUTCDate() - 6)
   const maxDate = today.toISOString().slice(0, 10)
-  const minDate = oldestGoesDate.toISOString().slice(0, 10)
 
   return (
     <article className="topic-page">
@@ -31,7 +29,7 @@ export default function ScientificDataRoute() {
         variant="compact"
       />
       <ScientificDataExplorer
-        goesDateRange={{ min: minDate, max: maxDate }}
+        suviAvailability={getSuviAvailability(today)}
         initialQuery={{
           source: 'GOES',
           product: 'SFXR',

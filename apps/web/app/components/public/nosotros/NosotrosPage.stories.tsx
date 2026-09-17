@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
+import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import { nosotrosContent } from '@/app/lib/nosotros'
 
 import { NosotrosPage } from './NosotrosPage'
@@ -7,6 +8,13 @@ import { NosotrosPage } from './NosotrosPage'
 const meta: Meta<typeof NosotrosPage> = {
   component: NosotrosPage,
   parameters: { layout: 'fullscreen' },
+  decorators: [
+    (Story) => (
+      <EditModeProvider>
+        <Story />
+      </EditModeProvider>
+    ),
+  ],
 }
 
 export default meta
@@ -31,6 +39,18 @@ export const ProvisionalCopy: Story = {
       },
     },
   },
+}
+
+/** Shows the "Editar" affordance the admin's "Modo edición" toggle reveals. */
+export const EditMode: Story = {
+  args: Default.args,
+  decorators: [
+    (Story) => (
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+        <Story />
+      </EditModeContext.Provider>
+    ),
+  ],
 }
 
 export const Mobile: Story = {

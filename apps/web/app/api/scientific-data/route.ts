@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 
-import { scientificDataQuerySchema } from '@/app/lib/scientific-data'
+import { findScientificProduct, scientificDataQuerySchema } from '@/app/lib/scientific-data'
+import { getAvailabilityMessage, getSuviAvailability } from '@/app/lib/scientific-data-availability'
+import { queryCiticScientificData } from '@/app/services/scientific-data/citicScientificDataSource'
 import { queryMockScientificData } from '@/app/services/scientific-data/mockScientificDataSource'
 import {
   queryNoaaScientificData,
@@ -32,13 +34,25 @@ export async function GET(request: Request): Promise<NextResponse> {
     )
   }
 
+  const availabilityMessage = getAvailabilityMessage(parsed.data, getSuviAvailability())
+  if (availabilityMessage) {
+    return NextResponse.json(
+      { error: availabilityMessage },
+      { status: 400, headers: { 'Cache-Control': 'no-store' } },
+    )
+  }
+
   try {
     const result =
       parsed.data.source === 'GOES'
-        ? await queryNoaaScientificData(parsed.data)
+        ? findScientificProduct('GOES', parsed.data.product)?.product.visualization ===
+          'image-sequence'
+          ? await queryNoaaScientificData(parsed.data)
+          : await queryCiticScientificData(parsed.data, searchParams.get('jobId') ?? undefined)
         : await queryMockScientificData(parsed.data)
 
     return NextResponse.json(result, {
+      status: 'state' in result ? 202 : 200,
       headers: { 'Cache-Control': 'no-store' },
     })
   } catch (error) {
@@ -46,8 +60,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       console.error(`Scientific data upstream error: ${error.message}`)
       return NextResponse.json(
         {
-          error:
-            'El servicio de NOAA no está disponible en este momento. Inténtelo nuevamente más tarde.',
+          error: 'No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.',
         },
         { status: 502, headers: { 'Cache-Control': 'no-store' } },
       )
