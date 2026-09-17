@@ -9,7 +9,6 @@ import {
   publicacionesBackLink,
   publicacionesHero,
   publicacionesMeta,
-  type Publication,
 } from '@/app/lib/publications'
 
 export const metadata: Metadata = {

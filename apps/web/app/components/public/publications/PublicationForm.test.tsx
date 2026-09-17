@@ -15,23 +15,13 @@ describe('PublicationForm', () => {
       defaultArgs.publication.title,
     )
 
-    expect(screen.getByLabelText('Fecha')).toHaveValue('2026-09-17')
+    expect(screen.getByLabelText('Fecha de publicación')).toHaveValue('2026-09-17')
 
-    expect(screen.getByRole('textbox', { name: 'Autor 1' })).toHaveValue(
-      defaultArgs.publication.authors[0],
-    )
-
-    expect(screen.getByRole('textbox', { name: 'Autor 2' })).toHaveValue(
-      defaultArgs.publication.authors[1],
-    )
-
-    expect(screen.getByRole('textbox', { name: 'Autor 3' })).toHaveValue(
-      defaultArgs.publication.authors[2],
-    )
+    expect(screen.getByRole('combobox', { name: 'Eliminar autor' })).toBeInTheDocument()
 
     expect(screen.getByRole('textbox', { name: 'DOI' })).toHaveValue(defaultArgs.publication.DOI)
 
-    expect(screen.getByRole('textbox', { name: 'Revista/Fuente' })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: 'Revista/Publicación' })).toHaveValue(
       defaultArgs.publication.venue,
     )
 
@@ -66,17 +56,21 @@ describe('PublicationForm', () => {
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
   })
 
-  test('disables saving when an author is empty', async () => {
-    const user = userEvent.setup()
-
-    render(<PublicationForm {...defaultArgs} />)
-
-    await user.clear(screen.getByRole('textbox', { name: 'Autor 1' }))
+  test('disables saving when there are no authors', () => {
+    render(
+      <PublicationForm
+        {...defaultArgs}
+        publication={{
+          ...defaultArgs.publication,
+          authors: [],
+        }}
+      />,
+    )
 
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
   })
 
-  test('adds an author field', async () => {
+  test('adds an author', async () => {
     const user = userEvent.setup()
 
     render(
@@ -89,35 +83,43 @@ describe('PublicationForm', () => {
       />,
     )
 
-    expect(screen.queryByRole('textbox', { name: 'Autor 3' })).not.toBeInTheDocument()
+    const addAuthorInput = screen.getByRole('textbox', { name: 'Añadir autor' })
 
+    await user.type(addAuthorInput, 'Carlos González')
     await user.click(screen.getByRole('button', { name: 'Añadir autor' }))
 
-    expect(screen.getByRole('textbox', { name: 'Autor 3' })).toBeInTheDocument()
+    const removeAuthorSelect = screen.getByRole('combobox', {
+      name: 'Eliminar autor',
+    })
+
+    expect(
+      within(removeAuthorSelect).getByRole('option', {
+        name: 'Carlos González',
+      }),
+    ).toBeInTheDocument()
   })
 
-  test('removes an author field', async () => {
+  test('removes an author', async () => {
     const user = userEvent.setup()
 
     render(<PublicationForm {...defaultArgs} />)
 
-    expect(screen.getByRole('textbox', { name: 'Autor 2' })).toHaveValue('María Rodríguez')
+    const removeAuthorSelect = screen.getByRole('combobox', {
+      name: 'Eliminar autor',
+    })
 
-    const authorRow = screen
-      .getByRole('textbox', { name: 'Autor 2' })
-      .closest('.publication-author-row')
+    await user.selectOptions(removeAuthorSelect, 'María Rodríguez')
 
-    expect(authorRow).not.toBeNull()
+    expect(removeAuthorSelect).toHaveValue('María Rodríguez')
 
-    await user.click(
-      within(authorRow as HTMLElement).getByRole('button', {
-        name: 'Eliminar',
+    await user.click(screen.getByRole('button', { name: 'Eliminar autor' }))
+
+    expect(removeAuthorSelect).not.toHaveValue('María Rodríguez')
+    expect(
+      within(removeAuthorSelect).queryByRole('option', {
+        name: 'María Rodríguez',
       }),
-    )
-
-    expect(screen.getByRole('textbox', { name: 'Autor 2' })).toHaveValue('Carlos González')
-
-    expect(screen.queryByDisplayValue('María Rodríguez')).not.toBeInTheDocument()
+    ).not.toBeInTheDocument()
   })
 
   test('asks for confirmation before saving', async () => {
@@ -140,12 +142,11 @@ describe('PublicationForm', () => {
     render(<PublicationForm {...defaultArgs} onSave={onSave} />)
 
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
-
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Nuevo título')
 
-    await user.clear(screen.getByRole('textbox', { name: 'Autor 1' }))
-
-    await user.type(screen.getByRole('textbox', { name: 'Autor 1' }), 'Nuevo autor')
+    const addAuthorInput = screen.getByRole('textbox', { name: 'Añadir autor' })
+    await user.type(addAuthorInput, 'Nuevo autor')
+    await user.click(screen.getByRole('button', { name: 'Añadir autor' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -158,11 +159,11 @@ describe('PublicationForm', () => {
     expect(onSave).toHaveBeenCalledWith({
       title: 'Nuevo título',
       abstract: defaultArgs.publication.abstract,
-      authors: ['Nuevo autor', ...defaultArgs.publication.authors.slice(1)],
+      authors: [...defaultArgs.publication.authors, 'Nuevo autor'],
       DOI: defaultArgs.publication.DOI,
       researchGroup: defaultArgs.publication.researchGroup,
       venue: defaultArgs.publication.venue,
-      date: new Date('2026-09-17'),
+      date: new Date('2026-09-17T00:00:00'),
     })
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
