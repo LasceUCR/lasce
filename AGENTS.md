@@ -66,7 +66,7 @@ Read [`docs/git-guidelines.md`](docs/git-guidelines.md) once in full. The short 
 - PR titles add the group: `feat(auth): implement user login [g01]`.
 - Fill in every section of `.github/PULL_REQUEST_TEMPLATE.md`. Write `None` rather than deleting
   a section.
-- Squash merge only. `development` needs 1 approval, `main` needs 3, at least one from a
+- Squash merge only. `development` needs 2 approvals, `main` needs 3, at least one from a
   `.github/CODEOWNERS` owner. **Pushing a new commit dismisses existing approvals.**
 - Never commit `.env` or any credential.
 
