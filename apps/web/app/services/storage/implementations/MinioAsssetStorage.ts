@@ -8,18 +8,65 @@ import {
 import InvalidFileSizeError from '../errors/InvalidFileSizeError'
 import InvalidFileTypeError from '../errors/InvalidFileTypeError'
 
+interface EndpointConfig {
+  endPoint: string
+  port: number
+  useSSL: boolean
+}
+
+/**
+ * Parses `MINIO_ENDPOINT` into what `Minio.Client` actually accepts: a bare
+ * hostname, never a full URL. The documented value (`localhost:9000`, no
+ * scheme) and a hosted instance handed a full URL (`https://host`, no port)
+ * both need to work, so a scheme selects the URL branch and otherwise the
+ * value is treated as `host[:port]`.
+ */
+function parseEndpoint(): EndpointConfig {
+  const raw = process.env.MINIO_ENDPOINT || 'localhost'
+
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    const url = new URL(raw)
+    const useSSL = url.protocol === 'https:'
+    const port = url.port ? Number(url.port) : useSSL ? 443 : 80
+    return { endPoint: url.hostname, port, useSSL }
+  }
+
+  const [host, portPart] = raw.split(':')
+  const port = portPart ? Number(portPart) : Number(process.env.MINIO_PORT || '9000')
+  return { endPoint: host || 'localhost', port, useSSL: process.env.MINIO_USE_SSL === 'true' }
+}
+
+/**
+ * Standard S3/MinIO bucket policy granting anonymous `GetObject` on every
+ * object in `bucket` — what makes a `getPublicUrl` link actually load without
+ * a presigned query string. Idempotent: applying it again is a no-op.
+ */
+function publicReadPolicy(bucket: string): string {
+  return JSON.stringify({
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { AWS: ['*'] },
+        Action: ['s3:GetObject'],
+        Resource: [`arn:aws:s3:::${bucket}/*`],
+      },
+    ],
+  })
+}
+
 /**
  * MinIO-backed implementation of `IAssetStorage`: presigned POST-policy
  * uploads and deletes for `apps/web`.
  */
 export class MinioAssetStorage implements IAssetStorage {
   private readonly client: Minio.Client
+  private readonly endpoint: EndpointConfig
 
   constructor() {
+    this.endpoint = parseEndpoint()
     this.client = new Minio.Client({
-      endPoint: process.env.MINIO_ENDPOINT || 'localhost',
-      port: parseInt(process.env.MINIO_PORT || '9000', 10),
-      useSSL: process.env.MINIO_USE_SSL === 'true',
+      ...this.endpoint,
       accessKey: process.env.MINIO_ACCESS_KEY || '',
       secretKey: process.env.MINIO_SECRET_KEY || '',
     })
@@ -70,18 +117,43 @@ export class MinioAssetStorage implements IAssetStorage {
     return this.client.bucketExists(bucket)
   }
 
-  /** Ensures the configured bucket exists, creating it if it does not. */
+  /**
+   * Ensures the configured bucket exists, creating it if it does not, and
+   * that it grants anonymous reads — required for `getPublicUrl` links to
+   * actually load. Reapplied on every call rather than only at creation, so
+   * a bucket that already existed (created outside this service) still ends
+   * up correctly configured.
+   */
   async ensureBucket(bucket: string): Promise<void> {
     const exists = await this.bucketExists(bucket)
     if (!exists) {
       await this.client.makeBucket(bucket, '')
     }
+    await this.client.setBucketPolicy(bucket, publicReadPolicy(bucket))
   }
 
   async createDownloadUrl(objectKey: string, expiresInSeconds?: number): Promise<string> {
     const bucket = process.env.MINIO_BUCKET || ''
     const expiry = expiresInSeconds || DOWNLOAD_EXPIRY_SECONDS // default to configured expiry
     return this.client.presignedGetObject(bucket, objectKey, expiry)
+  }
+
+  /**
+   * Permanent, public URL for an object — unlike `createDownloadUrl`, this
+   * never expires, so it's safe to persist (e.g. as a record's `imageUrl`).
+   * Only loads if the bucket grants anonymous reads, which `ensureBucket`
+   * (called by `createUpload`) sets up.
+   */
+  getPublicUrl(objectKey: string, bucket?: string): string {
+    const bucketToUse = bucket || process.env.MINIO_DEFAULT_BUCKET || 'default'
+    const scheme = this.endpoint.useSSL ? 'https' : 'http'
+    const isDefaultPort =
+      (this.endpoint.useSSL && this.endpoint.port === 443) ||
+      (!this.endpoint.useSSL && this.endpoint.port === 80)
+    const host = isDefaultPort
+      ? this.endpoint.endPoint
+      : `${this.endpoint.endPoint}:${this.endpoint.port}`
+    return `${scheme}://${host}/${bucketToUse}/${encodeURIComponent(objectKey)}`
   }
 
   verifyAsset(file: File): void {

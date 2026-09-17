@@ -26,10 +26,17 @@ export interface IAssetStorage {
   /** Presigned GET for downloading a private asset. */
   createDownloadUrl(objectKey: string, expiresInSeconds?: number): Promise<string>
 
+  /**
+   * Permanent, public URL for an object so it's the one to persist on a record. Only loads
+   * if the bucket grants anonymous reads (`ensureBucket`'s job). Could be restricted to another
+   * public bucket in the future
+   */
+  getPublicUrl(objectKey: string, bucket?: string): string
+
   /** Returns whether the configured bucket exists. */
   bucketExists(bucket: string): Promise<boolean>
 
-  /** Creates the configured bucket if it does not exist. */
+  /** Creates the configured bucket if it does not exist, and grants it anonymous reads. */
   ensureBucket(bucket: string): Promise<void>
 
   /** Verify the integrity of an asset. */

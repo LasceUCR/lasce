@@ -2,14 +2,18 @@
 
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 
+export type ModalSize = 'small' | 'medium' | 'large'
+
 export interface ModalProps {
   open: boolean
   title: string
   onClose: () => void
   children: ReactNode
+  /** Small: confirmation dialogs. Medium (default): most forms. Large: wide, multi-column forms. */
+  size?: ModalSize
 }
 
-export function Modal({ open, title, onClose, children }: ModalProps) {
+export function Modal({ open, title, onClose, children, size = 'medium' }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   // Tracks whether the current press-drag-release started on the backdrop
@@ -46,7 +50,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
   return (
     <dialog
       aria-labelledby={titleId}
-      className="modal"
+      className={`modal modal-${size}`}
       onCancel={(event) => {
         // A native file input's own picker can fire a stray `cancel` that
         // bubbles up to the dialog when its Finder/Explorer prompt is

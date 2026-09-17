@@ -4264,6 +4264,10 @@ a.gallery-tile:focus-visible {
   font-weight: 600;
 }
 
+.cms-form-field-required {
+  color: var(--danger);
+}
+
 .cms-form-field input,
 .cms-form-field textarea,
 .cms-form-field select {
@@ -4276,12 +4280,46 @@ a.gallery-tile:focus-visible {
   font-size: 14px;
 }
 
+.cms-form-field [aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
 .nosotros-activity-form {
   display: flex;
   flex-direction: column;
 }
 
 .nosotros-activity-form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.news-article-form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pairs of fields sit side by side once there's room for both — on a
+   narrower modal (small screens) each still wraps onto its own full-width
+   row, same as an unpaired field. */
+.news-article-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.news-article-form-row .cms-form-field {
+  /* Flex items default to `min-width: auto`, which floors their shrinking at
+     the input's content size — on a narrower modal that pushed the pair
+     wider than the row and clipped the overflow. This lets them actually
+     shrink (or wrap fully) inside the available width instead. */
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.news-article-form-actions {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
@@ -4314,9 +4352,9 @@ a.gallery-tile:focus-visible {
 
 .modal {
   /* Scales with the viewport rather than sitting at one fixed width: most of
-     a phone screen, most of a desktop window too, up to a cap so it doesn't
-     stretch absurdly wide on an ultrawide monitor. */
-  width: min(92vw, 1040px);
+     a phone screen, most of a desktop window too, up to a cap (set per size
+     variant below) so it doesn't stretch absurdly wide on an ultrawide
+     monitor. */
   max-height: calc(100vh - 64px);
   padding: 32px 40px;
   display: flex;
@@ -4326,6 +4364,21 @@ a.gallery-tile:focus-visible {
   background: var(--white);
   color: var(--ink);
   box-shadow: 0 8px 18px rgba(21, 52, 76, 0.12);
+}
+
+/* Confirmation dialogs — a title, a line of text and two buttons. */
+.modal-small {
+  width: min(92vw, 420px);
+}
+
+/* Most forms — the default. */
+.modal-medium {
+  width: min(92vw, 640px);
+}
+
+/* Wide, multi-column forms (e.g. paired fields via `.news-article-form-row`). */
+.modal-large {
+  width: min(92vw, 1040px);
 }
 
 .modal::backdrop {
