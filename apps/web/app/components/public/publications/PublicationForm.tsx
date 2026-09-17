@@ -52,7 +52,7 @@ export function PublicationForm({
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const authorOptions: FormFieldOption[] = [
-    { value: '', label: 'Seleccionar autor...' },
+    { value: '', label: 'Seleccionar autor para eliminar...' },
     ...authors.map((author) => ({
       value: author,
       label: author,
@@ -121,7 +121,7 @@ export function PublicationForm({
         value={authorToRemove}
       />
 
-      <Button disabled={!authorToRemove} onClick={handleRemoveAuthor} variant="secondary">
+      <Button disabled={!authorToRemove} onClick={handleRemoveAuthor} variant="danger">
         Eliminar autor
       </Button>
 
