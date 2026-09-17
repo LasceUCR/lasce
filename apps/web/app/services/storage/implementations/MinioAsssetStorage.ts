@@ -8,18 +8,46 @@ import {
 import InvalidFileSizeError from '../errors/InvalidFileSizeError'
 import InvalidFileTypeError from '../errors/InvalidFileTypeError'
 
+interface EndpointConfig {
+  endPoint: string
+  port: number
+  useSSL: boolean
+}
+
+/**
+ * Parses `MINIO_ENDPOINT` into what `Minio.Client` actually accepts: a bare
+ * hostname, never a full URL. The documented value (`localhost:9000`, no
+ * scheme) and a hosted instance handed a full URL (`https://host`, no port)
+ * both need to work, so a scheme selects the URL branch and otherwise the
+ * value is treated as `host[:port]`.
+ */
+function parseEndpoint(): EndpointConfig {
+  const raw = process.env.MINIO_ENDPOINT || 'localhost'
+
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    const url = new URL(raw)
+    const useSSL = url.protocol === 'https:'
+    const port = url.port ? Number(url.port) : useSSL ? 443 : 80
+    return { endPoint: url.hostname, port, useSSL }
+  }
+
+  const [host, portPart] = raw.split(':')
+  const port = portPart ? Number(portPart) : Number(process.env.MINIO_PORT || '9000')
+  return { endPoint: host || 'localhost', port, useSSL: process.env.MINIO_USE_SSL === 'true' }
+}
+
 /**
  * MinIO-backed implementation of `IAssetStorage`: presigned POST-policy
  * uploads and deletes for `apps/web`.
  */
 export class MinioAssetStorage implements IAssetStorage {
   private readonly client: Minio.Client
+  private readonly endpoint: EndpointConfig
 
   constructor() {
+    this.endpoint = parseEndpoint()
     this.client = new Minio.Client({
-      endPoint: process.env.MINIO_ENDPOINT || 'localhost',
-      port: parseInt(process.env.MINIO_PORT || '9000', 10),
-      useSSL: process.env.MINIO_USE_SSL === 'true',
+      ...this.endpoint,
       accessKey: process.env.MINIO_ACCESS_KEY || '',
       secretKey: process.env.MINIO_SECRET_KEY || '',
     })
