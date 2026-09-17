@@ -25,6 +25,7 @@ export type Publication = {
   authors: string
   venue: string
   year: string
+  date: Date
   abstract: string
   href: string
   researchGroup: ResearchGroup
@@ -56,6 +57,7 @@ export async function getPublications(): Promise<Publication[]> {
     authors: record.authors.map((author) => author.researchAuthor.name).join(', '),
     venue: record.publisher.name,
     year: String(record.publicationDate.getUTCFullYear()),
+    date: record.publicationDate,
     abstract: record.abstract,
     href: record.externalUrl,
     researchGroup: record.researchGroup,
