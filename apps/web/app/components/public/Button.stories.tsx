@@ -63,3 +63,10 @@ export const Brand: Story = {
     type: 'submit',
   },
 }
+
+export const Danger: Story = {
+  args: {
+    children: 'Eliminar',
+    variant: 'danger',
+  },
+}

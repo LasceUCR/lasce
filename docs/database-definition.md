@@ -176,11 +176,11 @@ item); indexed on `(news_id, position)` for ordered author lookups.
 Access level of a portal account. Stored as a Postgres enum type so the default can live in the
 database and the worker could insert a row without knowing the application's constants.
 
-| Value       | Meaning                                                                   |
-| ----------- | ------------------------------------------------------------------------- |
-| `visitor`   | Default for every self-registered account (`/acceso`)                     |
-| `assistant` | Granted by an administrator; permissions are defined by LASCE-SEC-008-073 |
-| `admin`     | Granted by an administrator; manages users, roles and permissions         |
+| Value       | Meaning                                                                        |
+| ----------- | ------------------------------------------------------------------------------ |
+| `visitor`   | Default for every self-registered account (`/acceso`)                          |
+| `assistant` | Granted by an administrator; default permissions are edit and download         |
+| `admin`     | Granted by an administrator; default permissions include the full resource set |
 
 The Prisma enum is `UserRole` with members `VISITOR`, `ASSISTANT`, `ADMIN` mapped to the
 lower-case database values above.
@@ -229,6 +229,26 @@ login, with no sliding renewal. The worker never writes here. See `docs/sessions
 
 Relationships: belongs to one `users` row.
 
+### `role_permissions`
+
+Permission granted to a `UserRole` (LASCE-SEC-008-073). The permission strings are the TypeScript
+catalogue in `apps/web/app/lib/auth/permissions.ts`; this table only stores the mapping so
+administrators can change it without a deploy of unrelated features. See
+[role-permissions.md](role-permissions.md).
+
+| Column       | Prisma type | Postgres type    | Constraints               |
+| ------------ | ----------- | ---------------- | ------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`   |
+| `role`       | `UserRole`  | `auth.user_role` | not null                  |
+| `permission` | `String`    | `text`           | not null                  |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()` |
+
+Constraints: `UNIQUE (role, permission)`. The migration seeds the default matrix: visitors
+download resources; assistants edit components and download; administrators create, edit and
+delete components, download resources, manage users and manage permissions.
+
+The worker never writes here.
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` (newest
@@ -244,6 +264,8 @@ registration Server Action, mapping a unique violation on `email` to a `Duplicat
 through `findUserByEmail()` (the `/acceso` login Server Action). `apps/web/app/lib/auth/session.ts`
 owns `auth.sessions`: `createSession()` inserts a row at login, `getSessionUser()` reads the row
 behind the cookie together with its user, and `deleteCurrentSession()` deletes it at logout.
+`apps/web/app/lib/role-permissions.ts` owns `auth.role_permissions`;
+`apps/web/app/lib/auth/authorization.ts` reads it on each permission check.
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.

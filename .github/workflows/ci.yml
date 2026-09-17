@@ -178,6 +178,10 @@ jobs:
           turbo-cache: 'false'
       - name: Apply migrations
         run: pnpm db:generate && pnpm db:migrate:deploy
+      - name: Seed database
+        # e2e specs (nosotros.spec.ts among them) assert on content that only
+        # exists once seeded — `migrate:deploy` applies schema, not data.
+        run: pnpm db:seed
       - name: Cache Playwright browsers
         uses: actions/cache@v6.1.0
         with:

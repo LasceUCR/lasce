@@ -5,6 +5,7 @@ import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
+import { canSeeAdminNavigation } from '@/app/lib/auth/account'
 import { Brand } from './Brand'
 import { AccountLinks } from './auth/AccountLinks'
 import { useAccount } from './auth/useAccount'
@@ -29,7 +30,7 @@ export interface PublicHeaderProps {
 
 export function PublicHeader({ logoutAction }: PublicHeaderProps) {
   const pathname = usePathname()
-  const { account, isSigningOut, signOut } = useAccount(logoutAction)
+  const { account, role, isSigningOut, signOut } = useAccount(logoutAction)
   const headerRef = useRef<HTMLElement>(null)
   const mobileMenu = useRef<HTMLDetailsElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -79,6 +80,10 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
     }
   }, [isMobileMenuOpen])
 
+  const items = canSeeAdminNavigation(role)
+    ? navigation
+    : navigation.filter((item) => item.href !== '/administracion')
+
   return (
     <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`} ref={headerRef}>
       <Link className="brand-link" href="/" aria-label="Ir al inicio">
@@ -86,7 +91,7 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
       </Link>
 
       <nav className="desktop-nav" aria-label="Navegación principal">
-        {navigation.map((item) => {
+        {items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
           return (
@@ -126,7 +131,7 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
           <Menu aria-hidden="true" size={25} strokeWidth={1.8} />
         </summary>
         <nav aria-label="Navegación móvil">
-          {navigation.map((item) => {
+          {items.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
             return (
