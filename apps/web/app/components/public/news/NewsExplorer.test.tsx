@@ -6,16 +6,21 @@ import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/E
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
+  uploadNewsImage: vi.fn(),
 }))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
 }))
 
+vi.mock('@/app/(public)/noticias/actions', () => ({
+  uploadNewsImage: mocks.uploadNewsImage,
+}))
+
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
-// jsdom has no `URL.createObjectURL`; `NewsArticleForm` calls it when a file is dropped.
+// jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
 
@@ -272,6 +277,10 @@ describe('NewsExplorer', () => {
   test('POSTs a new article and refreshes the page once creation succeeds', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ article: {} }) })
+    mocks.uploadNewsImage.mockResolvedValue({
+      ok: true,
+      imageUrl: 'https://s3.example/lasce/foto.png',
+    })
     renderExplorerInEditMode()
 
     await user.click(screen.getByRole('button', { name: 'Agregar noticia' }))
@@ -289,7 +298,38 @@ describe('NewsExplorer', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/news', expect.objectContaining({ method: 'POST' }))
+    expect(mocks.uploadNewsImage).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/news',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('https://s3.example/lasce/foto.png'),
+      }),
+    )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  test('shows the upload error and does not create the article when the image upload fails', async () => {
+    const user = userEvent.setup()
+    mocks.uploadNewsImage.mockResolvedValue({ ok: false, error: 'La imagen es demasiado grande.' })
+    renderExplorerInEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Agregar noticia' }))
+    const dialog = screen.getByRole('dialog', { name: 'Agregar noticia' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Título' }), 'Artículo nuevo')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Autores' }), 'Autor Nuevo')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Fuente' }), 'Fuente Nueva')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Enlace' }),
+      'https://example.com/nuevo',
+    )
+    await user.type(within(dialog).getByRole('textbox', { name: 'Resumen' }), 'Resumen nuevo.')
+    const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
+
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

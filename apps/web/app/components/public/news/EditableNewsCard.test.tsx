@@ -4,6 +4,10 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 
+vi.mock('@/app/(public)/noticias/actions', () => ({
+  uploadNewsImage: vi.fn(),
+}))
+
 import { EditableNewsCard, type EditableNewsCardProps } from './EditableNewsCard'
 import { EditModeOn, ViewMode } from './EditableNewsCard.stories'
 

@@ -2,13 +2,21 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
+const mocks = vi.hoisted(() => ({
+  uploadNewsImage: vi.fn(),
+}))
+
+vi.mock('@/app/(public)/noticias/actions', () => ({
+  uploadNewsImage: mocks.uploadNewsImage,
+}))
+
 import { NewsArticleForm, type NewsArticleFormProps } from './NewsArticleForm'
 import { AddNew, EditExisting } from './NewsArticleForm.stories'
 
 const editArgs = EditExisting.args as NewsArticleFormProps
 const addArgs = AddNew.args as NewsArticleFormProps
 
-// jsdom has no `URL.createObjectURL`; saving with a freshly dropped file calls it.
+// jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
 
@@ -65,6 +73,58 @@ describe('NewsArticleForm', () => {
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(onCancel).toHaveBeenCalledTimes(1)
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('uploads a freshly dropped file and saves with the returned public URL', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    mocks.uploadNewsImage.mockResolvedValue({
+      ok: true,
+      imageUrl: 'https://s3.example/lasce/123_nueva.png',
+    })
+    render(<NewsArticleForm {...editArgs} onSave={onSave} />)
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(mocks.uploadNewsImage).toHaveBeenCalledTimes(1)
+    const formData = mocks.uploadNewsImage.mock.calls[0]![0] as FormData
+    expect((formData.get('file') as File).name).toBe('nueva.png')
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ imageUrl: 'https://s3.example/lasce/123_nueva.png' }),
+    )
+  })
+
+  test('shows the error and does not save when the upload fails', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    mocks.uploadNewsImage.mockResolvedValue({ ok: false, error: 'La imagen es demasiado grande.' })
+    render(<NewsArticleForm {...editArgs} onSave={onSave} />)
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('recovers the button and shows an error when the upload throws, instead of staying stuck', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    mocks.uploadNewsImage.mockRejectedValue(new Error('network error'))
+    render(<NewsArticleForm {...editArgs} onSave={onSave} />)
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await screen.findByText('No se pudo subir la imagen. Inténtelo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirmar' })).not.toBeDisabled()
     expect(onSave).not.toHaveBeenCalled()
   })
 
