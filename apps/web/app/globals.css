@@ -3217,8 +3217,8 @@ a.gallery-tile:focus-visible {
 /* --- Space backdrop (access and account pages) ----------------------------- */
 
 /* These pages sit on a dark space scene with the sun on the right, so their
-   intro and tabs switch to the light hero tokens; the white cards and the back
-   button already hold their own on dark. */
+   intro and tabs switch to the light hero tokens and the back button takes the
+   dark-surface action tokens; the white cards hold their own on dark. */
 .space-page {
   position: relative;
   isolation: isolate;
@@ -3271,6 +3271,14 @@ a.gallery-tile:focus-visible {
 .space-page .access-tab[aria-selected='true'] {
   color: var(--white);
   border-bottom-color: var(--cyan);
+}
+
+/* The back button sits directly on the scene, so it gets the orange outline
+   that every other dark surface gives `.button-secondary`. */
+.space-page .topic-page-footer {
+  --action: var(--amber-glow);
+  --action-hover: var(--amber-flame);
+  --on-action: var(--white);
 }
 
 /* --- Sign-out confirmation ------------------------------------------------- */
