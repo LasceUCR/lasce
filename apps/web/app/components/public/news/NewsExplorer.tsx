@@ -144,7 +144,7 @@ export function NewsExplorer({ news }: NewsExplorerProps) {
       ) : (
         <div className="news-list">
           {editMode && (
-            <AddItemCard label="Agregar noticia">
+            <AddItemCard label="Agregar noticia" size="large">
               {({ close }) => (
                 <>
                   {createError ? <p className="form-alert">{createError}</p> : null}

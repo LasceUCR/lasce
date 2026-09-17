@@ -46,6 +46,7 @@ export function EditableNewsCard({ article, onSave, onDelete }: EditableNewsCard
         setIsEditing(false)
       }}
       open={isEditing}
+      size="large"
       title="Editar noticia"
     >
       {saveError ? <p className="form-alert">{saveError}</p> : null}
