@@ -79,6 +79,13 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
             <option value="ROSAC">ROSAC</option>
           </select>
         </div>
+
+        <div className="publications-kpi" aria-live="polite">
+          <strong>{filtered.length}</strong>
+          <span>
+            {selectedGroup ? `publicaciones (${selectedGroup})` : 'publicaciones'}
+          </span>
+        </div>
       </div>
 
       <h2 id="publications-title">Publicaciones recientes</h2>

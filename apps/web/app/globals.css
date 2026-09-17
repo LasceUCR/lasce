@@ -1355,6 +1355,34 @@ a {
   font-weight: 700;
 }
 
+.publications-kpi {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  gap: 6px;
+}
+
+.publications-kpi strong {
+  position: relative;
+  top: -1px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.publications-kpi span {
+  color: var(--ink);
+}
+
 .section-heading .research-areas-description {
   max-width: 680px;
   color: var(--muted);
