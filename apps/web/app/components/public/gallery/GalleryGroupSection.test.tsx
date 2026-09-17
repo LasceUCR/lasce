@@ -48,6 +48,25 @@ describe('GalleryGroupSection', () => {
     }
   })
 
+  test('presents the cover and its sub-albums as one list', () => {
+    const { album } = withSubAlbums
+    render(<GalleryGroupSection {...withSubAlbums} />)
+
+    expect(screen.getByRole('list')).toBeInTheDocument()
+    expect(screen.getAllByRole('listitem')).toHaveLength(1 + album.subAlbums.length)
+  })
+
+  test('titles every tile one level below the album heading', () => {
+    const { album } = withSubAlbums
+    render(<GalleryGroupSection {...withSubAlbums} />)
+
+    const titles = screen
+      .getAllByRole('heading', { level: 3 })
+      .map((heading) => heading.textContent)
+
+    expect(titles).toEqual([album.title, ...album.subAlbums.map((subAlbum) => subAlbum.title)])
+  })
+
   test('renders the cover on its own when the album has no sub-albums', () => {
     render(<GalleryGroupSection {...withoutSubAlbums} />)
 
