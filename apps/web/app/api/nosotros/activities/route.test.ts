@@ -4,7 +4,7 @@ import type * as NosotrosLib from '@/app/lib/nosotros'
 const mocks = vi.hoisted(() => ({
   getNosotrosActivities: vi.fn(),
   createNosotrosActivity: vi.fn(),
-  requireAdmin: vi.fn(),
+  requireApiPermission: vi.fn(),
 }))
 
 vi.mock('@/app/lib/nosotros', async (importOriginal) => {
@@ -17,7 +17,7 @@ vi.mock('@/app/lib/nosotros', async (importOriginal) => {
 })
 
 vi.mock('@/app/lib/auth/apiGuard', () => ({
-  requireAdmin: mocks.requireAdmin,
+  requireApiPermission: mocks.requireApiPermission,
 }))
 
 // `nosotrosActivityInputSchema` is kept real (via `importOriginal` above), and
@@ -67,18 +67,19 @@ describe('GET /api/nosotros/activities', () => {
 })
 
 describe('POST /api/nosotros/activities', () => {
-  test('rejects a request the admin guard denies', async () => {
+  test('rejects a request the create_components guard denies', async () => {
     const denied = deniedResponse()
-    mocks.requireAdmin.mockResolvedValue({ ok: false, response: denied })
+    mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
     const response = await POST(postRequest(validBody))
 
     expect(response).toBe(denied)
+    expect(mocks.requireApiPermission).toHaveBeenCalledWith('create_components')
     expect(mocks.createNosotrosActivity).not.toHaveBeenCalled()
   })
 
   test('rejects a body that is not valid JSON', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await POST(postRequest('not json'))
 
@@ -87,7 +88,7 @@ describe('POST /api/nosotros/activities', () => {
   })
 
   test('rejects a body missing required fields', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await POST(postRequest({ icon: 'waves', title: '', description: '' }))
 
@@ -101,7 +102,7 @@ describe('POST /api/nosotros/activities', () => {
   })
 
   test('creates the activity, authored by the current admin', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     const created = { id: 'new-1', ...validBody, modifiedAt: '2026-01-01T00:00:00.000Z' }
     mocks.createNosotrosActivity.mockResolvedValue(created)
 

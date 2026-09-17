@@ -43,6 +43,12 @@ test('loads the public landing page without authentication', async ({ page }) =>
     }),
   ).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
+  await expect(
+    page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', {
+      name: 'Administración',
+      exact: true,
+    }),
+  ).toHaveCount(0)
   expect(new URL(page.url()).pathname).toBe('/')
 })
 
