@@ -12,6 +12,9 @@ not endorse this site, and no NASA logo or insignia is used.
 Each original was downloaded from `images-assets.nasa.gov` and resized to 1200px on its longest
 side (`sips -Z 1200 -s format jpeg -s formatOptions 80`). 36 files, 8.3MB total.
 
+`hank-bb.webp` is a 37th file in this directory with no row below and no recorded source. It backs
+the `hank-bb` entry in `gallery.ts`. Either record where it came from or remove it and the entry.
+
 To look up an original: `https://images.nasa.gov/details/<NASA ID>`.
 
 | File                              | NASA ID                         | Center | Original title                                                                   |

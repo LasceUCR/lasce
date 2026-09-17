@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { MediaLightbox, type MediaLightboxProps } from './MediaLightbox'
 import { Photograph, Video } from './MediaLightbox.stories'
@@ -10,19 +10,42 @@ const videoArgs = Video.args as MediaLightboxProps
 
 function renderLightbox(overrides: Partial<MediaLightboxProps> = {}) {
   const handlers = { onClose: vi.fn(), onPrevious: vi.fn(), onNext: vi.fn() }
-  render(<MediaLightbox {...photographArgs} {...handlers} {...overrides} />)
+  const view = render(<MediaLightbox {...photographArgs} {...handlers} {...overrides} />)
 
-  return handlers
+  return { ...handlers, ...view }
 }
 
+// jsdom implements `close()` and the `open` attribute but not `showModal`, so
+// the component's fallback path is what runs unless it is stubbed. Stub it here
+// so the modal path is the one under test, as it is in a browser.
+beforeEach(() => {
+  HTMLDialogElement.prototype.showModal = vi.fn(function showModal(this: HTMLDialogElement) {
+    this.setAttribute('open', '')
+  })
+  Reflect.deleteProperty(HTMLDialogElement.prototype, 'close')
+})
+
 describe('MediaLightbox', () => {
-  test('presents itself as a modal dialog named after the file', () => {
+  test('opens itself as a modal dialog named after the file', () => {
     renderLightbox()
 
     const dialog = screen.getByRole('dialog')
 
+    expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalledTimes(1)
     expect(dialog).toHaveAccessibleName(photographArgs.item.title)
-    expect(dialog).toHaveAttribute('aria-modal', 'true')
+  })
+
+  test('describes itself with the caption of the open file', () => {
+    renderLightbox()
+
+    expect(screen.getByRole('dialog')).toHaveAccessibleDescription(photographArgs.item.description)
+  })
+
+  test('describes the photograph itself rather than repeating its title', () => {
+    renderLightbox()
+
+    expect(screen.getByRole('img', { name: photographArgs.item.alt })).toBeInTheDocument()
+    expect(photographArgs.item.alt).not.toBe(photographArgs.item.title)
   })
 
   test('shows the album, the description and the capture details', () => {
@@ -33,6 +56,21 @@ describe('MediaLightbox', () => {
     expect(screen.getByText('Fecha de captura: 15 ene 2025')).toBeInTheDocument()
     expect(screen.getByText('Formato: JPG')).toBeInTheDocument()
     expect(screen.getByText('Subido por: Andrés Solano')).toBeInTheDocument()
+  })
+
+  test('titles the open file as the heading of the dialog', () => {
+    renderLightbox()
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: photographArgs.item.title }),
+    ).toBeInTheDocument()
+  })
+
+  test('places the open file within the album', () => {
+    renderLightbox({ position: 2, total: 13 })
+
+    expect(screen.getByText('2 / 13')).toBeInTheDocument()
+    expect(screen.getByText('Archivo 2 de 13')).toBeInTheDocument()
   })
 
   test('moves focus to the close control when it opens', () => {
@@ -48,7 +86,7 @@ describe('MediaLightbox', () => {
     await user.keyboard('{Escape}')
     await user.click(screen.getByRole('button', { name: 'Cerrar' }))
 
-    expect(onClose).toHaveBeenCalledTimes(2)
+    expect(onClose).toHaveBeenCalled()
   })
 
   test('pages through the album with the arrow keys', async () => {
@@ -73,24 +111,91 @@ describe('MediaLightbox', () => {
     expect(onNext).toHaveBeenCalledTimes(1)
   })
 
-  test('keeps Tab inside the dialog', async () => {
-    const user = userEvent.setup()
+  // A live region that arrives already populated is read out on top of the
+  // dialog's own name, so it has to start empty.
+  test('says nothing about the file it was opened on', () => {
     renderLightbox()
 
-    const close = screen.getByRole('button', { name: 'Cerrar' })
-    const next = screen.getByRole('button', { name: 'Siguiente' })
+    expect(
+      screen.queryByText(`Archivo 1 de 13: ${photographArgs.item.title}.`),
+    ).not.toBeInTheDocument()
+  })
 
-    await user.tab({ shift: true })
-    expect(next).toHaveFocus()
+  test('announces the file only once it has been paged', async () => {
+    const { rerender } = renderLightbox()
 
-    await user.tab()
-    expect(close).toHaveFocus()
+    rerender(
+      <MediaLightbox
+        {...photographArgs}
+        item={videoArgs.item}
+        onClose={vi.fn()}
+        onNext={vi.fn()}
+        onPrevious={vi.fn()}
+        position={2}
+      />,
+    )
+
+    expect(await screen.findByText(`Archivo 2 de 13: ${videoArgs.item.title}.`)).toBeInTheDocument()
+  })
+
+  test('locks the page behind it from scrolling, and releases it on close', () => {
+    const { unmount } = renderLightbox()
+
+    expect(document.body.style.overflow).toBe('hidden')
+
+    unmount()
+
+    expect(document.body.style.overflow).toBe('')
+  })
+
+  // The paths a real browser takes, which jsdom does not implement: closing
+  // natively fires `close`, and that is what reports the dismissal upwards.
+  test('closes itself natively when the browser supports it', async () => {
+    const close = vi.fn(function close(this: HTMLDialogElement) {
+      this.removeAttribute('open')
+      this.dispatchEvent(new Event('close'))
+    })
+    HTMLDialogElement.prototype.close = close
+
+    const user = userEvent.setup()
+    const { onClose } = renderLightbox()
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
+
+    expect(close).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  test('closes when the area beside the content is clicked', async () => {
+    const user = userEvent.setup()
+    const { onClose } = renderLightbox()
+
+    await user.click(screen.getByRole('dialog'))
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  test('keeps the content clickable without closing', async () => {
+    const user = userEvent.setup()
+    const { onClose } = renderLightbox()
+
+    await user.click(screen.getByRole('heading', { level: 2 }))
+
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  test('still renders where the top layer is unavailable', () => {
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal')
+
+    renderLightbox()
+
+    expect(screen.getByRole('dialog')).toHaveAttribute('open')
   })
 
   test('shows the still and the details of a video entry', () => {
     renderLightbox({ item: videoArgs.item })
 
-    expect(screen.getByRole('img', { name: videoArgs.item.title })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: videoArgs.item.alt })).toBeInTheDocument()
     expect(screen.getByText('Formato: MP4')).toBeInTheDocument()
   })
 

@@ -125,4 +125,51 @@ describe('gallery', () => {
   test('gives every media entry an image', () => {
     expect(everyMedia().filter((item) => item.src === undefined)).toEqual([])
   })
+
+  test('describes every media entry for anyone who cannot see it', () => {
+    const undescribed = everyMedia().filter((item) => item.alt.trim() === '')
+
+    expect(undescribed).toEqual([])
+  })
+
+  // The point of the alt text is to say something the caption does not. Pinning
+  // this stops a future entry from being filled in with a copy of its title.
+  test('describes each image instead of repeating its title or caption', () => {
+    const normalise = (value: string) => value.trim().replace(/.$/, '').toLowerCase()
+    const echoes = everyMedia().filter(
+      (item) =>
+        normalise(item.alt) === normalise(item.title) ||
+        normalise(item.alt) === normalise(item.description),
+    )
+
+    expect(echoes).toEqual([])
+  })
+
+  test('never opens alt text with a redundant "imagen de"', () => {
+    const redundant = everyMedia().filter((item) =>
+      /^(una vista de|foto|imagen|fotograf)/i.test(item.alt),
+    )
+
+    expect(redundant).toEqual([])
+  })
+
+  // Alt text describes the file, and 61 entries share 37 files, so two entries
+  // on the same image cannot describe it differently.
+  test('describes a shared image file identically wherever it appears', () => {
+    const byFile = new Map<string, Set<string>>()
+
+    for (const item of everyMedia()) {
+      if (item.src === undefined) continue
+      const alts = byFile.get(item.src) ?? new Set<string>()
+      alts.add(item.alt)
+      byFile.set(item.src, alts)
+    }
+
+    const contradictory = [...byFile.entries()]
+      .filter(([, alts]) => alts.size > 1)
+      .map(([src]) => src)
+
+    expect(contradictory).toEqual([])
+    expect(byFile.size).toBeGreaterThan(0)
+  })
 })
