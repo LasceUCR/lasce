@@ -18,7 +18,8 @@ export interface TeamGalleryProps {
  * carousels are the usual source of violations there. `/nosotros` reuses the same gallery.
  *
  * Each person is a `ResearcherCard`. The portrait is decorative (`alt=""`) because the name, role,
- * institution and description are rendered as real HTML beside it.
+ * email and institution are rendered as real HTML on the front; the description is on the back after a
+ * flip.
  */
 export function TeamGallery({ label, emptyMessage, people }: TeamGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null)

@@ -1408,7 +1408,8 @@ a {
   .select-trigger,
   .select-trigger > svg,
   .select-option,
-  .data-field input {
+  .data-field input,
+  .researcher-card-inner {
     transition: none;
   }
 }
@@ -3109,20 +3110,90 @@ a.gallery-tile:focus-visible {
 }
 
 .researcher-card {
-  display: flex;
+  display: block;
+  position: relative;
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: 8px;
   align-self: stretch;
   height: 100%;
   min-height: 0;
+  padding: 0;
   overflow: hidden;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  perspective: 1400px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.researcher-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s ease;
+}
+
+.researcher-card.is-flipped .researcher-card-inner {
+  transform: rotateY(180deg);
+}
+
+.researcher-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 14px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.05);
+}
+
+.researcher-card-back {
+  transform: rotateY(180deg);
+}
+
+.researcher-card-flip-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.researcher-card-flip-hit:focus,
+.researcher-card-flip-hit:focus-visible {
+  outline: none;
+}
+
+.researcher-card:has(.researcher-card-flip-hit:focus-visible) {
+  outline: 3px solid var(--action);
+  outline-offset: 3px;
+}
+
+.researcher-card.has-flip .researcher-card-photo,
+.researcher-card.has-flip .researcher-card-front .researcher-card-role,
+.researcher-card.has-flip .researcher-card-front .researcher-card-name,
+.researcher-card.has-flip .researcher-card-front .researcher-card-institution,
+.researcher-card.has-flip .researcher-card-back-header,
+.researcher-card.has-flip .researcher-card-description-scroll {
+  pointer-events: none;
 }
 
 .researcher-card-photo {
   position: relative;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
   aspect-ratio: 1 / 1.15;
   border-radius: 8px;
@@ -3134,14 +3205,12 @@ a.gallery-tile:focus-visible {
   object-position: top;
 }
 
-.researcher-card-body {
+.researcher-card-back-header {
+  position: relative;
+  flex: 0 0 auto;
   display: flex;
-  flex: 1 1 auto;
   flex-direction: column;
   gap: 6px;
-  min-height: 0;
-  overflow: hidden;
-  text-align: justify;
 }
 
 .researcher-card-role,
@@ -3170,11 +3239,13 @@ a.gallery-tile:focus-visible {
 
 .researcher-card-email,
 .researcher-card-email-empty {
+  position: relative;
+  z-index: 2;
   display: block;
   min-height: 1.4em;
   margin-bottom: 10px;
   color: var(--blue-dark);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -3186,7 +3257,7 @@ a.gallery-tile:focus-visible {
 
 .researcher-card-institution {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
 }
 
@@ -3223,8 +3294,9 @@ a.gallery-tile:focus-visible {
 
 .researcher-card-description {
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: justify;
 }
 
 .team-gallery-controls {

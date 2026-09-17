@@ -5,8 +5,9 @@
  * This module describes the public information page only; scientific consultation is separate.
  *
  * `team.people` is the accessible source of truth for the ROSAC researchers gallery. Portraits
- * live in `public/images/ROSAC/team/`; names, roles, emails, institution and descriptions are rendered as
- * HTML in `ResearcherCard`. `team.people[].src` must be a local path under `apps/web/public`.
+ * live in `public/images/ROSAC/team/`; names, roles, emails and institution are on the front of each
+ * card, and the description is on the back after a click. They are rendered as HTML in
+ * `ResearcherCard`. `team.people[].src` must be a local path under `apps/web/public`.
  * `next.config.ts` declares no `images` config, so a remote URL throws at render time.
  *
  * `institution` is the affiliation shown as `Institución: {institution}`. `email` is only set when

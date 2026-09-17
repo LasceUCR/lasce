@@ -17,16 +17,23 @@ describe('TeamGallery', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(defaultArgs.people.length)
   })
 
-  test('shows the role, name, institution and description of every person', () => {
+  test('shows the role, name, institution and description of every person', async () => {
+    const user = userEvent.setup()
     render(<TeamGallery {...defaultArgs} />)
 
     const track = screen.getByRole('list', { name: defaultArgs.label })
     for (const person of defaultArgs.people) {
       expect(within(track).getByText(person.name)).toBeInTheDocument()
-      if (person.description) {
-        expect(within(track).getByText(person.description)).toBeInTheDocument()
-      }
       expect(within(track).getByText(`Institución: ${person.institution}`)).toBeInTheDocument()
+      if (person.description) {
+        await user.click(
+          within(track).getByRole('button', { name: `Ver descripción de ${person.name}` }),
+        )
+        expect(within(track).getByText(person.description)).toBeInTheDocument()
+        await user.click(
+          within(track).getByRole('button', { name: `Volver a la ficha de ${person.name}` }),
+        )
+      }
     }
   })
 

@@ -131,7 +131,8 @@ describe('NosotrosPage', () => {
     expect(screen.queryByText('Jelmuth Rojas')).not.toBeInTheDocument()
   })
 
-  test('lists the LASCE researchers in a scrollable gallery', () => {
+  test('lists the LASCE researchers in a scrollable gallery', async () => {
+    const user = userEvent.setup()
     renderPage()
 
     const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
@@ -199,6 +200,11 @@ describe('NosotrosPage', () => {
     expect(
       within(researchers).getByText('Institución: Centro de Investigaciones Espaciales, CINESPA'),
     ).toBeInTheDocument()
+    await user.click(
+      within(researchers).getByRole('button', {
+        name: 'Ver descripción de Dra. Carolina Salas Matamoros',
+      }),
+    )
     expect(
       within(researchers).getByText(
         /coordina la integración entre astrofísica solar, radioastronomía, clima espacial/,
@@ -207,6 +213,9 @@ describe('NosotrosPage', () => {
     expect(within(researchers).getAllByText('Investigador colaborador').length).toBeGreaterThan(0)
     expect(within(researchers).getAllByText('Investigadora colaboradora').length).toBeGreaterThan(
       0,
+    )
+    await user.click(
+      within(researchers).getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }),
     )
     expect(
       within(researchers).getByText(

@@ -69,12 +69,16 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
   await expect(
     researchers.getByText('Institución: Centro de Investigaciones Espaciales, CINESPA'),
   ).toBeVisible()
+  await researchers
+    .getByRole('button', { name: 'Ver descripción de Dra. Carolina Salas Matamoros' })
+    .click()
   await expect(
     researchers.getByText(
       /coordina la integración entre astrofísica solar, radioastronomía, clima espacial/,
     ),
   ).toBeVisible()
   await expect(researchers.getByText('Investigador colaborador').first()).toBeVisible()
+  await researchers.getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }).click()
   await expect(
     researchers.getByText(
       'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
