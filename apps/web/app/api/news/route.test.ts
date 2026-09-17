@@ -89,7 +89,12 @@ describe('POST /api/news', () => {
 
   test('creates the article', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    const created = { slug: 'new-1', ...validBody, date: '24 de mayo de 2026', href: validBody.externalUrl }
+    const created = {
+      slug: 'new-1',
+      ...validBody,
+      date: '24 de mayo de 2026',
+      href: validBody.externalUrl,
+    }
     mocks.createNews.mockResolvedValue(created)
 
     const response = await POST(postRequest(validBody))

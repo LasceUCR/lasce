@@ -88,9 +88,7 @@ function toNewsArticle(record: NewsRecord): NewsArticle {
 export const newsInputSchema = z.object({
   title: z.string().trim().min(1, 'El título es obligatorio.'),
   source: z.string().trim().min(1, 'La fuente es obligatoria.'),
-  authors: z
-    .array(z.string().trim().min(1))
-    .min(1, 'Debe indicar al menos un autor.'),
+  authors: z.array(z.string().trim().min(1)).min(1, 'Debe indicar al menos un autor.'),
   publishedAt: z.string().date().nullable(),
   externalUrl: z.string().trim().url('El enlace debe ser una URL válida.'),
   abstract: z.string().trim().min(1, 'El resumen es obligatorio.'),

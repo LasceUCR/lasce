@@ -289,10 +289,7 @@ describe('NewsExplorer', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/news',
-      expect.objectContaining({ method: 'POST' }),
-    )
+    expect(fetchMock).toHaveBeenCalledWith('/api/news', expect.objectContaining({ method: 'POST' }))
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
   })
 })

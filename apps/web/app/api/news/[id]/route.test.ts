@@ -107,7 +107,12 @@ describe('PATCH /api/news/[id]', () => {
 
   test('saves the change', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    const saved = { slug: 'abc', ...validBody, date: '24 de mayo de 2026', href: validBody.externalUrl }
+    const saved = {
+      slug: 'abc',
+      ...validBody,
+      date: '24 de mayo de 2026',
+      href: validBody.externalUrl,
+    }
     mocks.updateNews.mockResolvedValue(saved)
 
     const response = await PATCH(patchRequest(validBody), { params })
