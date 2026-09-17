@@ -17,14 +17,37 @@ describe('TeamGallery', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(defaultArgs.people.length)
   })
 
-  test('shows the role, name, institution and description of every person', () => {
+  test('starts the track at the first card', () => {
+    render(<TeamGallery {...defaultArgs} />)
+
+    expect(screen.getByRole('list', { name: defaultArgs.label })).toHaveProperty('scrollLeft', 0)
+  })
+
+  test('tells visitors to click a card for more information', () => {
+    render(<TeamGallery {...defaultArgs} />)
+
+    expect(screen.getByText(defaultArgs.hint)).toBeInTheDocument()
+  })
+
+  test('shows the role, name, institution and description of every person', async () => {
+    const user = userEvent.setup()
     render(<TeamGallery {...defaultArgs} />)
 
     const track = screen.getByRole('list', { name: defaultArgs.label })
     for (const person of defaultArgs.people) {
-      expect(within(track).getByText(person.name)).toBeInTheDocument()
-      expect(within(track).getByText(person.description)).toBeInTheDocument()
-      expect(within(track).getByText(`Institución: ${person.institution}`)).toBeInTheDocument()
+      expect(within(track).getByRole('heading', { name: person.name })).toBeInTheDocument()
+      expect(
+        within(track).getAllByText(`Institución: ${person.institution}`).length,
+      ).toBeGreaterThan(0)
+      if (person.description) {
+        await user.click(
+          within(track).getByRole('button', { name: `Ver descripción de ${person.name}` }),
+        )
+        expect(within(track).getByText(person.description)).toBeInTheDocument()
+        await user.click(
+          within(track).getByRole('button', { name: `Volver a la ficha de ${person.name}` }),
+        )
+      }
     }
   })
 
@@ -52,7 +75,7 @@ describe('TeamGallery', () => {
   test('renders a person who has no academic title', () => {
     render(<TeamGallery {...plainNameArgs} />)
 
-    expect(screen.getByText('Jelmuth Rojas')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Jelmuth Rojas' })).toBeInTheDocument()
     expect(screen.getByText('Colaborador externo')).toBeInTheDocument()
   })
 
@@ -106,5 +129,6 @@ describe('TeamGallery', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent(emptyArgs.emptyMessage)
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    expect(screen.queryByText(emptyArgs.hint)).not.toBeInTheDocument()
   })
 })
