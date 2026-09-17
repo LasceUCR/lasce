@@ -8,7 +8,7 @@ export interface ConceptFlowProps {
 
 export function ConceptFlow({ title, steps, caption }: ConceptFlowProps) {
   return (
-    <div aria-label={title} className="concept-flow">
+    <div aria-label={title} className="concept-flow" role="group">
       <p className="concept-flow-title">{title}</p>
       <ol className="concept-flow-steps">
         {steps.map((step, index) => (
