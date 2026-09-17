@@ -21,6 +21,12 @@ describe('ConfirmDialog', () => {
     expect(screen.getByRole('button', { name: 'Confirmar' })).toHaveClass('button-danger')
   })
 
+  test('renders as a medium modal', () => {
+    render(<ConfirmDialog {...defaultArgs} />)
+
+    expect(screen.getByRole('dialog')).toHaveClass('modal-medium')
+  })
+
   test('calls onConfirm when the confirm action is pressed', async () => {
     const user = userEvent.setup()
     const onConfirm = vi.fn()
