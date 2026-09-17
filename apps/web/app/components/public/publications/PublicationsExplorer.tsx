@@ -66,7 +66,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
     let response: Response
 
     try {
-      response = await fetch(`/api/publications/${editingPublicationId}`, {
+      response = await fetch(`/api/publicaciones/${editingPublicationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
@@ -92,7 +92,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
     let response: Response
 
     try {
-      response = await fetch('/api/publications', {
+      response = await fetch('/api/publicaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
@@ -118,7 +118,7 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
     let response: Response
 
     try {
-      response = await fetch(`/api/publications/${id}`, {
+      response = await fetch(`/api/publicaciones/${id}`, {
         method: 'DELETE',
       })
     } catch {

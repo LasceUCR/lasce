@@ -138,7 +138,7 @@ export function PublicationForm({
         value={researchGroup}
       />
 
-      <div className="publication-form-actions">
+      <div className="nosotros-activity-form-actions">
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
