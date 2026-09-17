@@ -18,10 +18,10 @@ export const metadata: Metadata = {
 
 export default async function InvestigacionPage() {
   const [canCreate, canEdit, canDelete] = await Promise.all([
-      userHasPermission('create_components'),
-      userHasPermission('edit_components'),
-      userHasPermission('delete_components'),
-    ])
+    userHasPermission('create_components'),
+    userHasPermission('edit_components'),
+    userHasPermission('delete_components'),
+  ])
 
   return (
     <article className="topic-page">
