@@ -37,6 +37,25 @@ function parseEndpoint(): EndpointConfig {
 }
 
 /**
+ * Standard S3/MinIO bucket policy granting anonymous `GetObject` on every
+ * object in `bucket` — what makes a `getPublicUrl` link actually load without
+ * a presigned query string. Idempotent: applying it again is a no-op.
+ */
+function publicReadPolicy(bucket: string): string {
+  return JSON.stringify({
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { AWS: ['*'] },
+        Action: ['s3:GetObject'],
+        Resource: [`arn:aws:s3:::${bucket}/*`],
+      },
+    ],
+  })
+}
+
+/**
  * MinIO-backed implementation of `IAssetStorage`: presigned POST-policy
  * uploads and deletes for `apps/web`.
  */
@@ -98,18 +117,43 @@ export class MinioAssetStorage implements IAssetStorage {
     return this.client.bucketExists(bucket)
   }
 
-  /** Ensures the configured bucket exists, creating it if it does not. */
+  /**
+   * Ensures the configured bucket exists, creating it if it does not, and
+   * that it grants anonymous reads — required for `getPublicUrl` links to
+   * actually load. Reapplied on every call rather than only at creation, so
+   * a bucket that already existed (created outside this service) still ends
+   * up correctly configured.
+   */
   async ensureBucket(bucket: string): Promise<void> {
     const exists = await this.bucketExists(bucket)
     if (!exists) {
       await this.client.makeBucket(bucket, '')
     }
+    await this.client.setBucketPolicy(bucket, publicReadPolicy(bucket))
   }
 
   async createDownloadUrl(objectKey: string, expiresInSeconds?: number): Promise<string> {
     const bucket = process.env.MINIO_BUCKET || ''
     const expiry = expiresInSeconds || DOWNLOAD_EXPIRY_SECONDS // default to configured expiry
     return this.client.presignedGetObject(bucket, objectKey, expiry)
+  }
+
+  /**
+   * Permanent, public URL for an object — unlike `createDownloadUrl`, this
+   * never expires, so it's safe to persist (e.g. as a record's `imageUrl`).
+   * Only loads if the bucket grants anonymous reads, which `ensureBucket`
+   * (called by `createUpload`) sets up.
+   */
+  getPublicUrl(objectKey: string, bucket?: string): string {
+    const bucketToUse = bucket || process.env.MINIO_DEFAULT_BUCKET || 'default'
+    const scheme = this.endpoint.useSSL ? 'https' : 'http'
+    const isDefaultPort =
+      (this.endpoint.useSSL && this.endpoint.port === 443) ||
+      (!this.endpoint.useSSL && this.endpoint.port === 80)
+    const host = isDefaultPort
+      ? this.endpoint.endPoint
+      : `${this.endpoint.endPoint}:${this.endpoint.port}`
+    return `${scheme}://${host}/${bucketToUse}/${encodeURIComponent(objectKey)}`
   }
 
   verifyAsset(file: File): void {
