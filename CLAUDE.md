@@ -40,7 +40,10 @@ working through Claude Code.
 | File uploads and their known defects               | [`docs/manage-assets.md`](docs/manage-assets.md)                     |
 | Running the stack without Docker                   | [`infra/docker/README.md`](infra/docker/README.md)                   |
 | What tables exist and how do they relate?          | [`docs/database-definition.md`](docs/database-definition.md)         |
+| How does the public gallery work?                  | [`docs/gallery.md`](docs/gallery.md)                                 |
 | How does a visitor register an account?            | [`docs/registration.md`](docs/registration.md)                       |
 | How do users sign in, and how is a page protected? | [`docs/sessions.md`](docs/sessions.md)                               |
+| How are role permissions configured?               | [`docs/role-permissions.md`](docs/role-permissions.md)               |
+| How do I gate a page or a control with a grant?    | [`docs/add-permissions.md`](docs/add-permissions.md)                 |
 
 When a change makes one of these wrong, update it in the same PR.

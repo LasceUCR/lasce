@@ -1408,7 +1408,8 @@ a {
   .select-trigger,
   .select-trigger > svg,
   .select-option,
-  .data-field input {
+  .data-field input,
+  .researcher-card-inner {
     transition: none;
   }
 }
@@ -2212,7 +2213,8 @@ a {
   grid-auto-rows: 1fr;
 }
 
-.card-grid-equal .info-card {
+.card-grid-equal .info-card,
+.card-grid-equal .researcher-card {
   min-height: 0;
   height: 100%;
   align-self: stretch;
@@ -2528,7 +2530,8 @@ a {
     grid-auto-rows: auto;
   }
 
-  .card-grid-equal .info-card {
+  .card-grid-equal .info-card,
+  .card-grid-equal .researcher-card {
     height: auto;
     align-self: start;
   }
@@ -2666,6 +2669,25 @@ a {
   font-size: 14px;
 }
 
+/* Tile collections are lists for assistive technology. The grid keeps the
+   layout, so this resets only the list affordances and leaves each grid's own
+   margin-top alone. */
+.tile-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.gallery-grid > li,
+.card-grid.tile-list > li {
+  display: flex;
+}
+
+.gallery-grid > li > .gallery-tile,
+.card-grid.tile-list > li > .gallery-tile {
+  flex: 1;
+}
+
 /* Fixed tracks, not fractions: the cards keep one size and the grid wraps, so
    an album with a single cover and no sub-albums shows one normal card rather
    than one stretched across the page. */
@@ -2715,7 +2737,7 @@ a.gallery-tile:focus-visible {
 
 /* The album still reads as the parent of the tiles beside it, through type
    rather than through a larger box. */
-.gallery-tile-cover .gallery-tile-body strong {
+.gallery-tile-cover .gallery-tile-body .gallery-tile-title {
   font-size: 16px;
 }
 
@@ -2726,8 +2748,10 @@ a.gallery-tile:focus-visible {
   padding: 12px 14px;
 }
 
-.gallery-tile-body strong {
+.gallery-tile-title {
+  margin: 0;
   font-size: 14px;
+  line-height: 1.3;
 }
 
 .gallery-tile-meta {
@@ -2820,8 +2844,14 @@ a.gallery-tile:focus-visible {
   z-index: 2;
 }
 
-.media-hover strong {
+.media-hover-title {
+  margin: 0;
+  /* Inherit `.media-hover`'s colour: the panel is `opacity: 0` rather than
+     hidden, so axe checks its contrast and a default paragraph colour here
+     would change a ratio that already passes. */
+  color: inherit;
   font-size: 13px;
+  font-weight: 700;
 }
 
 .media-hover-description {
@@ -2837,13 +2867,18 @@ a.gallery-tile:focus-visible {
   font-size: 11px;
 }
 
+/* `:focus-visible` rather than `:focus-within`: closing the lightbox restores
+   focus to the tile's trigger programmatically, and `:focus-within` would keep
+   that tile's panel open regardless of where the pointer actually is,
+   producing a second, stuck hover panel alongside whichever tile the mouse is
+   really over. `:focus-visible` still fires for real keyboard navigation. */
 .media-tile:hover .media-hover,
-.media-tile:focus-within .media-hover {
+.media-tile-button:focus-visible ~ .media-hover {
   opacity: 1;
 }
 
 .media-tile:hover .media-overlay,
-.media-tile:focus-within .media-overlay {
+.media-tile-button:focus-visible ~ .media-overlay {
   opacity: 0;
 }
 
@@ -2866,24 +2901,34 @@ a.gallery-tile:focus-visible {
 .lightbox {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
   display: flex;
   flex-direction: column;
+  padding: 0;
+  border: none;
   background: rgba(0, 9, 24, 0.92);
+  color: var(--space-body);
   z-index: 100;
 }
 
-.lightbox-backdrop {
-  position: absolute;
-  inset: 0;
-  border: none;
-  background: transparent;
-  cursor: default;
+.lightbox::backdrop {
+  background: rgba(0, 9, 24, 0.92);
+}
+
+.lightbox-position {
+  margin: 0;
+  color: var(--space-meta);
+  font-size: 13px;
 }
 
 .lightbox-toolbar {
   position: relative;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   padding: 18px 24px;
   z-index: 1;
 }
@@ -2939,6 +2984,7 @@ a.gallery-tile:focus-visible {
 }
 
 .lightbox-stage {
+  margin: 0;
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -2970,7 +3016,7 @@ a.gallery-tile:focus-visible {
   text-transform: uppercase;
 }
 
-.lightbox-meta h3 {
+.lightbox-meta h2 {
   margin: 8px 0 10px;
   font-size: 19px;
   line-height: 1.3;
@@ -3037,13 +3083,22 @@ a.gallery-tile:focus-visible {
   margin-top: 20px;
 }
 
+.team-gallery-hint {
+  margin: 0 0 12px;
+  color: #355066;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
 .team-gallery-track {
   display: flex;
   align-items: stretch;
+  justify-content: flex-start;
   gap: 16px;
   margin: 0;
   padding: 4px 4px 12px;
   overflow-x: auto;
+  overflow-anchor: none;
   list-style: none;
   scroll-snap-type: x mandatory;
   scroll-padding-left: 4px;
@@ -3059,22 +3114,95 @@ a.gallery-tile:focus-visible {
   display: flex;
   flex: 0 0 auto;
   width: 440px;
+  height: 720px;
   scroll-snap-align: start;
 }
 
 .researcher-card {
-  display: flex;
+  display: block;
+  position: relative;
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: 8px;
   align-self: stretch;
   height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  perspective: 1400px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.researcher-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s ease;
+}
+
+.researcher-card.is-flipped .researcher-card-inner {
+  transform: rotateY(180deg);
+}
+
+.researcher-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 14px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.05);
+}
+
+.researcher-card-back {
+  transform: rotateY(180deg);
+}
+
+.researcher-card-flip-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.researcher-card-flip-hit:focus,
+.researcher-card-flip-hit:focus-visible {
+  outline: none;
+}
+
+.researcher-card:has(.researcher-card-flip-hit:focus-visible) {
+  outline: 3px solid var(--action);
+  outline-offset: 3px;
+}
+
+.researcher-card.has-flip .researcher-card-photo,
+.researcher-card.has-flip .researcher-card-front .researcher-card-role,
+.researcher-card.has-flip .researcher-card-front .researcher-card-name,
+.researcher-card.has-flip .researcher-card-front .researcher-card-institution,
+.researcher-card.has-flip .researcher-card-back-header,
+.researcher-card.has-flip .researcher-card-description-scroll {
+  pointer-events: none;
 }
 
 .researcher-card-photo {
   position: relative;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
   aspect-ratio: 1 / 1.15;
   border-radius: 8px;
@@ -3086,12 +3214,12 @@ a.gallery-tile:focus-visible {
   object-position: top;
 }
 
-.researcher-card-body {
+.researcher-card-back-header {
+  position: relative;
+  flex: 0 0 auto;
   display: flex;
-  flex: 1 1 auto;
   flex-direction: column;
   gap: 6px;
-  text-align: justify;
 }
 
 .researcher-card-role,
@@ -3118,13 +3246,14 @@ a.gallery-tile:focus-visible {
   line-height: 1.3;
 }
 
-.researcher-card-email,
-.researcher-card-email-empty {
+.researcher-card-email {
+  position: relative;
+  z-index: 2;
   display: block;
   min-height: 1.4em;
   margin-bottom: 10px;
   color: var(--blue-dark);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -3134,16 +3263,53 @@ a.gallery-tile:focus-visible {
   color: var(--cyan);
 }
 
+.researcher-card-meta {
+  flex: 0 0 auto;
+  min-height: calc(1.4em + 10px + 1.4em);
+}
+
 .researcher-card-institution {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
+}
+
+.researcher-card-description-scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-right: 1px;
+  padding-right: 12px;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #d4dee6 #f7f9fb;
+}
+
+.researcher-card-description-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.researcher-card-description-scroll::-webkit-scrollbar-track {
+  background: #f7f9fb;
+  border-radius: 999px;
+}
+
+.researcher-card-description-scroll::-webkit-scrollbar-thumb {
+  background: #d4dee6;
+  border-radius: 999px;
+}
+
+.researcher-card-description-scroll:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
 }
 
 .researcher-card-description {
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: justify;
 }
 
 .team-gallery-controls {
@@ -3173,6 +3339,7 @@ a.gallery-tile:focus-visible {
 @media (max-width: 760px) {
   .team-gallery-slide {
     width: 86vw;
+    height: calc(86vw * 1.15 + 240px);
   }
 }
 
@@ -3185,7 +3352,14 @@ a.gallery-tile:focus-visible {
 }
 
 .admin-sidebar {
+  position: fixed;
+  top: 78px;
+  left: 0;
+  bottom: 0;
+  z-index: 15;
+  width: 240px;
   padding: 28px 14px;
+  overflow-y: auto;
   background: var(--navy-deep);
   color: var(--white);
 }
@@ -3223,6 +3397,7 @@ a.gallery-tile:focus-visible {
 }
 
 .admin-content {
+  grid-column: 2;
   padding: 32px;
   background: var(--page);
   min-width: 0;
@@ -3360,12 +3535,22 @@ a.gallery-tile:focus-visible {
   }
 
   .admin-sidebar {
+    position: sticky;
+    top: 78px;
+    left: auto;
+    bottom: auto;
+    width: auto;
+    height: auto;
     padding: 12px 14px;
     overflow-x: auto;
   }
 
   .admin-sidebar ul {
     flex-direction: row;
+  }
+
+  .admin-content {
+    grid-column: auto;
   }
 }
 
@@ -3442,8 +3627,8 @@ a.gallery-tile:focus-visible {
 /* --- Space backdrop (access and account pages) ----------------------------- */
 
 /* These pages sit on a dark space scene with the sun on the right, so their
-   intro and tabs switch to the light hero tokens; the white cards and the back
-   button already hold their own on dark. */
+   intro and tabs switch to the light hero tokens and the back button takes the
+   dark-surface action tokens; the white cards hold their own on dark. */
 .space-page {
   position: relative;
   isolation: isolate;
@@ -3496,6 +3681,14 @@ a.gallery-tile:focus-visible {
 .space-page .access-tab[aria-selected='true'] {
   color: var(--white);
   border-bottom-color: var(--cyan);
+}
+
+/* The back button sits directly on the scene, so it gets the orange outline
+   that every other dark surface gives `.button-secondary`. */
+.space-page .topic-page-footer {
+  --action: var(--amber-glow);
+  --action-hover: var(--amber-flame);
+  --on-action: var(--white);
 }
 
 /* --- Sign-out confirmation ------------------------------------------------- */
@@ -3712,7 +3905,6 @@ a.gallery-tile:focus-visible {
   font-size: 17px;
   overflow-wrap: anywhere;
 }
-
 .account-card .form-actions {
   margin-top: 0;
 }

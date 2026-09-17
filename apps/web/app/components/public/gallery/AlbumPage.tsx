@@ -48,17 +48,18 @@ export function AlbumPage({
 
       {subAlbums.length > 0 && parentSlug ? (
         <TopicSection title="Subálbumes" titleId="album-subalbums">
-          <div className="card-grid card-grid-3">
+          <ul className="card-grid card-grid-3 tile-list">
             {subAlbums.map((subAlbum) => (
-              <AlbumTile
-                href={subAlbumPath(parentSlug, subAlbum.slug)}
-                key={subAlbum.slug}
-                meta={`${subAlbum.media.length} archivos`}
-                src={subAlbum.src}
-                title={subAlbum.title}
-              />
+              <li key={subAlbum.slug}>
+                <AlbumTile
+                  href={subAlbumPath(parentSlug, subAlbum.slug)}
+                  meta={`${subAlbum.media.length} archivos`}
+                  src={subAlbum.src}
+                  title={subAlbum.title}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         </TopicSection>
       ) : null}
 

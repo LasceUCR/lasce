@@ -33,10 +33,12 @@ function renderPage(props: NosotrosPageProps = defaultArgs) {
   )
 }
 
-function renderPageInEditMode(props: NosotrosPageProps = defaultArgs) {
+const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
+
+function renderPageInEditMode(props: Partial<NosotrosPageProps> = {}) {
   return render(
     <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
-      <NosotrosPage {...props} />
+      <NosotrosPage {...defaultArgs} {...adminGrants} {...props} />
     </EditModeContext.Provider>,
   )
 }
@@ -122,11 +124,119 @@ describe('NosotrosPage', () => {
     expect(screen.getByRole('region', { name: 'Nuestra visión' })).toBeInTheDocument()
   })
 
-  test('does not list the ROSAC researchers', () => {
+  test('does not list the ROSAC-only researchers', () => {
     renderPage()
 
-    expect(screen.queryByText('Dra. Carolina Salas Matamoros')).not.toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: /Investigadores/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Dr. Miguel Velázquez')).not.toBeInTheDocument()
+    expect(screen.queryByText('Jelmuth Rojas')).not.toBeInTheDocument()
+  })
+
+  test('lists the LASCE researchers in a scrollable gallery', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    expect(
+      within(researchers).getByRole('heading', { level: 2, name: /2\.\s*Investigadores LASCE/ }),
+    ).toBeInTheDocument()
+    expect(researchers).toHaveTextContent(defaultArgs.content.researchers.intro)
+    expect(researchers).toHaveTextContent(defaultArgs.content.researchers.hint)
+    const track = within(researchers).getByRole('list', {
+      name: defaultArgs.content.researchers.title,
+    })
+
+    expect(within(track).getAllByRole('listitem')).toHaveLength(
+      defaultArgs.content.researchers.people.length,
+    )
+    expect(track).toHaveAttribute('tabindex', '0')
+    expect(within(researchers).getByRole('button', { name: 'Anterior' })).toBeInTheDocument()
+    expect(within(researchers).getByRole('button', { name: 'Siguiente' })).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dra. Carolina Salas Matamoros' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dr. Allan Francisco Berrocal Rojas' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dr. Luis Gustavo Esquivel Quirós' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'MSc. Ivania Calvo' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dr. Felipe Meza' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'MSc. Alonso Vega' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dra. Gabriela Molina' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dra. Yenca Migoya' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('link', { name: 'felipe.mezaobando@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:felipe.mezaobando@ucr.ac.cr')
+    expect(
+      within(researchers).getByRole('link', { name: 'alonso.vega_f@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:alonso.vega_f@ucr.ac.cr')
+    expect(
+      within(researchers).getByRole('link', { name: 'gmolina@herrera.unt.edu.ar' }),
+    ).toHaveAttribute('href', 'mailto:gmolina@herrera.unt.edu.ar')
+    expect(within(researchers).getByRole('link', { name: 'yenca@ictp.it' })).toHaveAttribute(
+      'href',
+      'mailto:yenca@ictp.it',
+    )
+    expect(
+      within(researchers).getByRole('link', { name: 'carolina.salas_mata@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:carolina.salas_mata@ucr.ac.cr')
+    expect(
+      within(researchers).getByRole('link', { name: 'allan.berrocal@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:allan.berrocal@ucr.ac.cr')
+    expect(
+      within(researchers).getByRole('link', { name: 'ivannia.calvo@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:ivannia.calvo@ucr.ac.cr')
+    expect(within(researchers).getByText('Investigadora principal')).toBeInTheDocument()
+    expect(
+      within(researchers).getAllByText('Institución: Centro de Investigaciones Espaciales, CINESPA')
+        .length,
+    ).toBeGreaterThan(0)
+    await user.click(
+      within(researchers).getByRole('button', {
+        name: 'Ver descripción de Dra. Carolina Salas Matamoros',
+      }),
+    )
+    expect(
+      within(researchers).getByText(
+        /coordina la integración entre astrofísica solar, radioastronomía, clima espacial/,
+      ),
+    ).toBeInTheDocument()
+    expect(within(researchers).getAllByText('Investigador colaborador').length).toBeGreaterThan(0)
+    expect(within(researchers).getAllByText('Investigadora colaboradora').length).toBeGreaterThan(0)
+    await user.click(
+      within(researchers).getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }),
+    )
+    expect(
+      within(researchers).getByText(
+        'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  test('explains when no LASCE researchers are available', () => {
+    renderPage({
+      content: {
+        ...defaultArgs.content,
+        researchers: { ...defaultArgs.content.researchers, people: [] },
+      },
+    })
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    expect(within(researchers).getByRole('status')).toHaveTextContent(
+      defaultArgs.content.researchers.emptyMessage,
+    )
+    expect(within(researchers).queryByRole('list')).not.toBeInTheDocument()
   })
 
   test('hides the edit affordances when edit mode is off', () => {
@@ -139,8 +249,33 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
 
     const activityCount = defaultArgs.content.activities.items.length
-    expect(screen.getAllByRole('button', { name: 'Editar' })).toHaveLength(activityCount)
-    expect(screen.getAllByRole('button', { name: 'Eliminar' })).toHaveLength(activityCount)
+    expect(screen.getAllByRole('button', { name: /^Editar / })).toHaveLength(activityCount)
+    expect(screen.getAllByRole('button', { name: /^Eliminar / })).toHaveLength(activityCount)
+    expect(screen.getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
+    const [firstActivity] = defaultArgs.content.activities.items
+    expect(
+      screen.getByRole('button', { name: `Editar ${firstActivity?.title}` }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: `Eliminar ${firstActivity?.title}` }),
+    ).toBeInTheDocument()
+  })
+
+  test('lets an assistant edit cards without create or delete', () => {
+    renderPageInEditMode({ canCreate: false, canDelete: false, canEdit: true })
+
+    const activityCount = defaultArgs.content.activities.items.length
+    expect(screen.getAllByRole('button', { name: /^Editar / })).toHaveLength(activityCount)
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
+  })
+
+  test('hides every editor when edit mode is on but the account has no grants', () => {
+    renderPageInEditMode({ canCreate: false, canDelete: false, canEdit: false })
+
+    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
   })
 
   test('opens the edit modal for the activity being edited', async () => {
@@ -148,7 +283,7 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
     const [firstActivity] = defaultArgs.content.activities.items
 
-    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
     await user.click(firstEditButton as HTMLElement)
 
     const dialog = screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` })
@@ -162,7 +297,7 @@ describe('NosotrosPage', () => {
     const user = userEvent.setup()
     renderPageInEditMode()
 
-    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar / })
     await user.click(firstDeleteButton as HTMLElement)
 
     expect(screen.getByRole('dialog', { name: 'Eliminar actividad' })).toBeInTheDocument()
@@ -174,7 +309,7 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
     const [firstActivity] = defaultArgs.content.activities.items
 
-    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
     await user.click(firstEditButton as HTMLElement)
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
@@ -199,15 +334,15 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
     const [firstActivity] = defaultArgs.content.activities.items
 
-    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
     await user.click(firstEditButton as HTMLElement)
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(
-      await screen.findByText('No tiene permisos para modificar este contenido.'),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No tiene permisos para modificar este contenido.',
+    )
     expect(
       screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` }),
     ).toBeInTheDocument()
@@ -238,6 +373,23 @@ describe('NosotrosPage', () => {
     expect(
       screen.queryByText('Haga clic en "Añadir" para agregar alguna actividad.'),
     ).not.toBeInTheDocument()
+  })
+
+  test('hides the empty-activities hint from an assistant who cannot create', () => {
+    renderPageInEditMode({
+      canCreate: false,
+      canDelete: false,
+      canEdit: true,
+      content: {
+        ...defaultArgs.content,
+        activities: { ...defaultArgs.content.activities, items: [] },
+      },
+    })
+
+    expect(
+      screen.queryByText('Haga clic en "Añadir" para agregar alguna actividad.'),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
   })
 
   test('creates a new activity through "Añadir" and refreshes on success', async () => {
@@ -285,7 +437,7 @@ describe('NosotrosPage', () => {
     const confirmDialog = screen.getByRole('dialog', { name: 'Agregar actividad' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByText('No se pudo crear la actividad.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo crear la actividad.')
     expect(screen.getByRole('dialog', { name: 'Añadir' })).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
@@ -296,7 +448,7 @@ describe('NosotrosPage', () => {
     renderPageInEditMode()
     const [firstActivity] = defaultArgs.content.activities.items
 
-    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar / })
     await user.click(firstDeleteButton as HTMLElement)
     const confirmDialog = screen.getByRole('dialog', { name: 'Eliminar actividad' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
@@ -316,12 +468,12 @@ describe('NosotrosPage', () => {
     })
     renderPageInEditMode()
 
-    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+    const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar / })
     await user.click(firstDeleteButton as HTMLElement)
     const confirmDialog = screen.getByRole('dialog', { name: 'Eliminar actividad' })
     await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByText('No se pudo eliminar la actividad.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo eliminar la actividad.')
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 })

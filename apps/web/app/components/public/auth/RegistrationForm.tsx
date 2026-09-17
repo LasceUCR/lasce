@@ -24,7 +24,10 @@ export interface RegistrationFormProps {
   /** The Server Action. It arrives as a prop so the component stays presentational. */
   action: RegistrationAction
   countries: CountryOption[]
-  /** Card heading for pages that show this card beside others (the login card). */
+  /**
+   * Card heading for pages that show this card beside others (the login card).
+   * Shown with the form only; the confirmation replaces it once the account exists.
+   */
   heading?: RegistrationFormHeading
   /** Element id, so links can target the card on a page that shows several. */
   id?: string
@@ -71,7 +74,6 @@ export function RegistrationForm({
   if (state.status === 'success') {
     return (
       <section className="registration-card form-success" id={id} role="status">
-        {headingBlock}
         <h2 ref={successRef} tabIndex={-1}>
           {registrationFormCopy.successTitle}
         </h2>

@@ -43,6 +43,12 @@ test('loads the public landing page without authentication', async ({ page }) =>
     }),
   ).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
+  await expect(
+    page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', {
+      name: 'Administración',
+      exact: true,
+    }),
+  ).toHaveCount(0)
   expect(new URL(page.url()).pathname).toBe('/')
 })
 
@@ -248,7 +254,7 @@ test('opens and closes the album lightbox with the keyboard', async ({ page }) =
 
   const lightbox = page.getByRole('dialog')
   await expect(lightbox).toBeVisible()
-  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
     'Llegada de los componentes del ROSAC',
   )
   await expect(lightbox.getByText('Subido por: Andr\u00e9s Solano')).toBeVisible()
@@ -270,13 +276,13 @@ test('walks through the album lightbox with the next control', async ({ page }) 
   const lightbox = page.getByRole('dialog')
   await lightbox.getByRole('button', { name: 'Siguiente' }).click()
 
-  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
     'Ensamblaje del reflector parab\u00f3lico',
   )
   await expect(lightbox.getByText('Formato: MP4')).toBeVisible()
 
   await lightbox.getByRole('button', { name: 'Anterior' }).click()
-  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
     'Llegada de los componentes del ROSAC',
   )
 })

@@ -41,9 +41,19 @@ export const ProvisionalCopy: Story = {
   },
 }
 
-/** Shows the "Editar" affordance the admin's "Modo edición" toggle reveals. */
+/** Shows the empty-gallery message when LASCE has not supplied people to list. */
+export const EmptyResearchers: Story = {
+  args: {
+    content: {
+      ...nosotrosContent,
+      researchers: { ...nosotrosContent.researchers, people: [] },
+    },
+  },
+}
+
+/** Shows every editor an administrator's "Modo edición" toggle reveals. */
 export const EditMode: Story = {
-  args: Default.args,
+  args: { ...Default.args, canCreate: true, canEdit: true, canDelete: true },
   decorators: [
     (Story) => (
       <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
@@ -51,6 +61,12 @@ export const EditMode: Story = {
       </EditModeContext.Provider>
     ),
   ],
+}
+
+/** Assistant defaults: pencil only — no Añadir and no trash. */
+export const AssistantEditMode: Story = {
+  args: { ...Default.args, canCreate: false, canEdit: true, canDelete: false },
+  decorators: EditMode.decorators,
 }
 
 export const Mobile: Story = {

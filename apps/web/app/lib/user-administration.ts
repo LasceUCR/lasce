@@ -2,8 +2,8 @@ import { prisma, UserRole } from '@lasce/db'
 import { z } from 'zod'
 
 import { ROLE_LABELS } from './auth/account'
+import { userHasPermission } from './auth/authorization'
 import { countryName } from './auth/countries'
-import { getSessionUser } from './auth/session'
 import type { OverviewRole, OverviewUser } from './user-overview'
 
 // The enum is the platform's current role configuration, not a second role registry.
@@ -12,7 +12,7 @@ export function availableRoles(): OverviewRole[] {
 }
 
 export async function getUserOverview(): Promise<OverviewUser[]> {
-  if ((await getSessionUser())?.role !== UserRole.ADMIN) throw new Error('Unauthorized')
+  if (!(await userHasPermission('manage_users'))) throw new Error('Unauthorized')
   const users = await prisma.user.findMany({
     orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
     select: {
@@ -44,8 +44,7 @@ export type RoleChangeResult =
   { ok: true; roleIds: string[] } | { ok: false; reason?: 'conflict' | 'unauthorized' }
 
 export async function updateUserRole(input: unknown): Promise<RoleChangeResult> {
-  const actor = await getSessionUser()
-  if (actor?.role !== UserRole.ADMIN) return { ok: false, reason: 'unauthorized' }
+  if (!(await userHasPermission('manage_users'))) return { ok: false, reason: 'unauthorized' }
   const parsed = changeSchema.safeParse(input)
   if (!parsed.success) return { ok: false }
   const { userId, roleIds, previousRoleIds } = parsed.data
