@@ -136,6 +136,7 @@ List any dependencies or write `None`.
 5. Open a Pull Request into `development`.
 6. Address the review and obtain the required approvals: two for `development`, three for `main`.
 7. Merge using **Squash and merge**. The branch is deleted automatically; `main` and `development` never are.
+   A release into `main` is the one exception and uses a merge commit, see [Section 10](#10-releases).
 
 ## 8. Merge Requirements
 
@@ -168,16 +169,17 @@ Sections 1 to 8 used to be conventions that nothing checked. They are now enforc
 
 ### What is blocked
 
-| Attempt                                     | Result                                                     |
-| ------------------------------------------- | ---------------------------------------------------------- |
-| `git push` straight to `main`/`development` | Rejected: _"Changes must be made through a pull request."_ |
-| `git push --force` to either branch         | Rejected: non-fast-forward pushes are not allowed.         |
-| Deleting either branch                      | Rejected.                                                  |
-| Merging with a failing or missing check     | Merge button disabled; the check is named on the PR.       |
-| Merging without the required approvals      | Merge button disabled.                                     |
-| Merging with unresolved conversations       | Merge button disabled until every thread is resolved.      |
-| Merging a conflicted Pull Request           | Blocked by GitHub; rebase or merge the target in.          |
-| Merge commit or rebase merge                | Not offered. Squash is the only method.                    |
+| Attempt                                         | Result                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| `git push` straight to `main`/`development`     | Rejected: _"Changes must be made through a pull request."_                |
+| `git push --force` to either branch             | Rejected: non-fast-forward pushes are not allowed.                        |
+| Deleting either branch                          | Rejected.                                                                 |
+| Merging with a failing or missing check         | Merge button disabled; the check is named on the PR.                      |
+| Merging without the required approvals          | Merge button disabled.                                                    |
+| Merging with unresolved conversations           | Merge button disabled until every thread is resolved.                     |
+| Merging a conflicted Pull Request               | Blocked by GitHub; rebase or merge the target in.                         |
+| Merge commit or rebase merge into `development` | Not offered. Squash is the only method.                                   |
+| Squash or rebase merge into `main`              | Not offered. A release is a merge commit, see [Section 10](#10-releases). |
 
 Pushing a new commit **dismisses existing approvals**, so they have to be given again. This is deliberate: an approval applies to the code that was reviewed, not to the branch name.
 
@@ -212,3 +214,46 @@ git push -u origin feature-g01-my-change
 ### Changing the rules
 
 The rulesets are configuration under review like anything else. Open a Pull Request against `.github/rulesets/` explaining what should change and why; an administrator applies it once the change is approved. Editing a ruleset directly in the GitHub UI makes the committed files stale and will be reverted the next time they are applied.
+
+## 10. Releases
+
+A release ships `development` to production by merging it into `main`. It is the one Pull Request
+that is **not** squashed.
+
+1. Open a Pull Request from `development` into `main`. Title it like any other, with the sprint as
+   the module: `release(sprint-02): ship sprint 2 to production [g01]`. Fill in the template; the
+   "What Was Done?" section is the release note.
+2. Obtain three approvals, at least one from a code owner, with all eight checks green.
+3. Merge with **Create a merge commit**. It is the only method the `main` ruleset offers.
+
+### Why a release is never squashed
+
+A squash writes a brand-new commit on `main` that `development` does not contain, and
+`development` cannot receive it afterwards: it is protected, so nothing can be pushed to it, and a
+back-merge would itself be squashed into yet another new commit. From then on the last commit the
+two branches share stops moving, and every later release Pull Request compares both branches
+against that stale point. Each file that the previous sprint changed and the new sprint changed
+again shows up as a conflict, even though `main` contains nothing that `development` lacks. The
+sprint 2 release (#129) hit this on 271 files after the sprint 1 release (#68) had been squashed.
+
+A merge commit records the tip of `development` as its second parent. The next release compares
+against that tip, `main` has no changes of its own since then, and the merge applies cleanly.
+
+### When the release Pull Request reports conflicts anyway
+
+`main` only gains content of its own through a hotfix. A hotfix is squashed into `main` and then
+brought into `development` through a second Pull Request, so both branches end up with the same
+lines. If `development` later changed those lines again, the release Pull Request from
+`development` cannot be resolved, because `development` is protected. Cut a release branch and
+resolve there:
+
+```bash
+git fetch origin
+git switch -c release-g01-sprint-03 origin/development
+git merge origin/main        # keep development's version unless main has a hotfix it is missing
+git diff origin/development  # the only differences should be the ones you meant to keep
+git push -u origin release-g01-sprint-03
+```
+
+Open the release Pull Request from that branch instead. It already contains `main`, so it merges
+cleanly, and the merge commit records both histories.
