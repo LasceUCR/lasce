@@ -169,14 +169,50 @@ synchronously on the event loop would stall every other job the worker is handli
 Everything the caller needs — the header dict and a materialised copy of the data array — is
 extracted while still on the thread, so nothing tied to the closed `HDUList` escapes it.
 
+## Pixel blocks
+
+The decoded matrix does not stop at `ProcessHeaders`. Once the header is persisted,
+`suvi_pipeline.py` hands the matrix to
+`apps/worker/app/services/suvi_matrix.py`'s `SuviMatrixProcessor`, which compresses it into a
+self-describing `.sublk` block in MinIO and writes the pointer back onto the same
+`solar.suvi_frames` row (`block_file`, `block_offset`, `block_size`, `is_keyframe`). The design
+follows <https://savaldev.com/blog/suvi>: mask → quantise → delta → noise gate → zstd.
+
+A block groups at most `keyframe_interval` frames behind one keyframe. MinIO objects cannot be
+appended to, so growing a block is a bounded read-modify-write of the whole object. The object key
+is `suvi/{satellite}/{channel}/{keyframe_observed_at:%Y%m%dT%H%M%S}.sublk` (satellite and channel
+lowercased, anything outside `[a-z0-9-]` replaced with `-`) — a new prefix next to the `readings/*`
+one `apps/worker/app/processors/ingest_readings.py` already writes.
+
+### Binary layout
+
+Little-endian throughout. The index is a **fixed-size** table of `keyframe_interval` slots, so the
+payload's start offset never moves as frames are appended — `block_offset` is therefore an
+absolute byte offset inside the object.
+
+| Section | Size | Contents |
+| --- | --- | --- |
+| Header | 64 bytes | `struct.Struct("<6sBBBBHffIHHBB34x")`: magic, version, channel index, delta mode, quantisation, `keyframe_interval`, epsilon, scale, frame_count, height, width, spacecraft, mask flag, padding |
+| Index entry (× `keyframe_interval`) | 24 bytes each | `struct.Struct("<qQIi")`: unix-ms timestamp, absolute byte offset, compressed size, flags (bit 0 = keyframe) |
+| Payload | variable | chunk 0 is the zstd-compressed keyframe (`uint16`/`uint8`); later chunks are zstd-compressed deltas (`int32`/`int16`) |
+
+### Profiles
+
+| Profile | Quantisation | Epsilon | Mask | `keyframe_interval` | Used by |
+| --- | --- | --- | --- | --- | --- |
+| `SCIENTIFIC` | `UINT16`, linear | `0.0` (no gating) | no | 15 | `suvi-pipeline` |
+| `WEB` | `UINT8`, logarithmic | `0.02` | yes (`mask_margin=1.25`) | 30 | not selected by anything yet |
+
+`SuviMatrixProcessor.decode(block_file, observed_at)` reverses the process for one timestamp,
+returning the still-quantised matrix. Nothing calls it yet — it exists for a future viewer or
+export path — but it is exercised in `apps/worker/tests/test_suvi_matrix.py`.
+
+Two concurrent jobs writing the same satellite/channel could race on the read-modify-write; the
+scheduler only ever runs one job per channel, so this is accepted rather than solved.
+
 ## Current wiring
 
-The client and `apps/worker/app/processors/suvi_pipeline.py` are on disk, but the `suvi-pipeline`
-job is **not wired up**: there is no entry in `packages/contracts/src/jobs.ts`, no
-`SuviPipelinePayload` in `apps/worker/app/models/jobs.py`, and no row in `app/registry.py`, even
-though `packages/contracts/schema/suvi-pipeline.json` is present. Until those three are added, the
-worker cannot run the job and `tests/test_contracts.py` fails on the mismatch. The steps are in
-[`add-a-job.md`](add-a-job.md); the payload the processor expects is `channel`, `spacecraft` and
-`lookbackMinutes`.
-
-The client itself needs none of that — it is importable and usable on its own today.
+The client, `apps/worker/app/processors/suvi_pipeline.py` and `SuviMatrixProcessor` are all wired
+up: `suvi-pipeline` is registered in `packages/contracts/src/jobs.ts`,
+`apps/worker/app/models/jobs.py` has `SuviPipelinePayload`, and `app/registry.py` routes the job to
+`suvi_pipeline.run`. The payload is `channel`, `spacecraft` and `lookbackMinutes`.

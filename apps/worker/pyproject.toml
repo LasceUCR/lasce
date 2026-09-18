@@ -17,6 +17,7 @@ dependencies = [
     "httpx>=0.28.1",
     "numpy>=2.5.3",
     "astropy>=7.1.0",
+    "zstandard>=0.25.0",
 ]
 
 [dependency-groups]

@@ -277,10 +277,10 @@ measurement.
 | `sun_radius_px`  | `Float?`    | `double precision` | nullable; FITS `RSUN` — needed to recompute the background mask |
 | `quality_flag`   | `Int`       | `integer`        | not null, default `0`; bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE` |
 | `raw_header`     | `Json`      | `jsonb`          | not null; the whole sanitised FITS header                |
-| `block_file`     | `String?`   | `text`           | nullable — null until the compressed-pixel-block writer exists |
-| `block_offset`   | `BigInt?`   | `bigint`         | nullable                                                  |
-| `block_size`     | `Int?`      | `integer`        | nullable                                                  |
-| `is_keyframe`    | `Boolean?`  | `boolean`        | nullable                                                  |
+| `block_file`     | `String?`   | `text`           | nullable; MinIO object key written by `SuviMatrixProcessor.process` — see [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks) |
+| `block_offset`   | `BigInt?`   | `bigint`         | nullable; absolute byte offset of this frame's compressed chunk inside `block_file` |
+| `block_size`     | `Int?`      | `integer`        | nullable; compressed chunk size in bytes                  |
+| `is_keyframe`    | `Boolean?`  | `boolean`        | nullable; `true` for the frame that started the block, `false` for a delta |
 | `created_at`     | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
 | `updated_at`     | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                    |
 

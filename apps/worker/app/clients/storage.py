@@ -7,6 +7,7 @@ keep the worker's event loop free.
 import asyncio
 import io
 from functools import lru_cache
+from urllib.parse import urlsplit
 
 from minio import Minio
 
@@ -70,13 +71,31 @@ class ObjectStorage:
         return int(stat.size or 0)
 
 
+def parse_endpoint(endpoint: str, use_ssl: bool) -> tuple[str, bool]:
+    """Split ``MINIO_ENDPOINT`` into what the SDK wants: a bare ``host[:port]`` and a TLS flag.
+
+    The SDK raises ``path in endpoint is not allowed`` when given a URL such as
+    ``https://s3.example.com``, so a scheme is stripped here and, when it is ``https``,
+    it turns TLS on regardless of ``MINIO_USE_SSL``. A bare ``localhost:9000`` passes through.
+    """
+    if "://" not in endpoint:
+        return endpoint, use_ssl
+    parts = urlsplit(endpoint)
+    if not parts.netloc:
+        raise ValueError(f"MINIO_ENDPOINT has no host: {endpoint!r}")
+    if parts.path not in ("", "/"):
+        raise ValueError(f"MINIO_ENDPOINT must not contain a path: {endpoint!r}")
+    return parts.netloc, use_ssl or parts.scheme == "https"
+
+
 @lru_cache(maxsize=1)
 def get_object_storage() -> ObjectStorage:
     settings = get_settings()
+    endpoint, secure = parse_endpoint(settings.minio_endpoint, settings.minio_use_ssl)
     client = Minio(
-        settings.minio_endpoint,
+        endpoint,
         access_key=settings.minio_access_key,
         secret_key=settings.minio_secret_key,
-        secure=settings.minio_use_ssl,
+        secure=secure,
     )
     return ObjectStorage(client, settings.minio_bucket)

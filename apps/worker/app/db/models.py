@@ -285,7 +285,9 @@ class SuviFrame(Base):
     sun_radius_px: Mapped[float | None] = mapped_column(Float, nullable=True)
     quality_flag: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     raw_header: Mapped[dict[str, Any]] = mapped_column(JSONB)
-    # Pointers into the compressed pixel block. Null until the .sublk writer exists.
+    # Pointers into the compressed .sublk pixel block, written by
+    # app.services.suvi_matrix.SuviMatrixProcessor.process. Null only for a frame whose FITS HDU
+    # carried no data array.
     block_file: Mapped[str | None] = mapped_column(Text, nullable=True)
     block_offset: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     block_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
