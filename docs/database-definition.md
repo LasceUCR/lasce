@@ -13,12 +13,14 @@ migration source; the worker mirrors these tables in SQLAlchemy
 | `research`      | Public research/publications shown on `/investigacion` | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`        | Yes             |
 | `auth`          | Portal accounts created through `/acceso`              | Yes             |
+| `solar`         | SUVI L1b frames catalogued by the worker's SUVI pipeline | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
-`@@schema("research")`, every model in `news` is tagged `@@schema("news")`, and every model in
-`auth` is tagged `@@schema("auth")`; a future domain unrelated to these should get its own schema
-the same way rather than being added to one of them.
+`@@schema("research")`, every model in `news` is tagged `@@schema("news")`, every model in `auth`
+is tagged `@@schema("auth")`, and every model in `solar` is tagged `@@schema("solar")`; a future
+domain unrelated to these should get its own schema the same way rather than being added to one
+of them.
 
 ## `research` schema
 
@@ -249,6 +251,44 @@ delete components, download resources, manage users and manage permissions.
 
 The worker never writes here.
 
+## `solar` schema
+
+### `suvi_frames`
+
+One SUVI L1b frame, catalogued from its FITS header by the Python worker
+(`apps/worker/app/services/process_headers.py`) after `suvi-pipeline` downloads and decodes it —
+see [`suvi-downloader.md`](suvi-downloader.md#persisting-a-frame). The web app never writes here.
+Photometric and CCD-health numbers (`IMG_MEAN`, `CCD_TMP1`, ...) are deliberately not columns:
+they are written to InfluxDB instead, tagged by `satellite` and `channel`, under the `suvi_frames`
+measurement.
+
+| Column           | Prisma type | Postgres type    | Constraints                                             |
+| ---------------- | ----------- | ---------------- | -------------------------------------------------------- |
+| `id`             | `String`    | `uuid`           | PK, `gen_random_uuid()`                                  |
+| `observed_at`    | `DateTime`  | `timestamptz(3)` | not null; FITS `DATE-OBS`, stamped UTC; indexed          |
+| `wavelength`     | `Float`     | `double precision` | not null; FITS `WAVELNTH`, angstroms                    |
+| `satellite`      | `String`    | `text`           | not null; FITS `TELESCOP`, e.g. `"G19"`                  |
+| `channel`        | `String`    | `text`           | not null; archive channel token, e.g. `"Fe093"` — from the file name, not the header |
+| `file_name`      | `String`    | `text`           | `UNIQUE`, not null                                       |
+| `source_url`     | `String`    | `text`           | not null                                                  |
+| `exposure_time`  | `Float?`    | `double precision` | nullable; FITS `EXPTIME`, seconds                       |
+| `sun_center_x`   | `Float?`    | `double precision` | nullable; FITS `CRPIX1`                                 |
+| `sun_center_y`   | `Float?`    | `double precision` | nullable; FITS `CRPIX2`                                 |
+| `sun_radius_px`  | `Float?`    | `double precision` | nullable; FITS `RSUN` — needed to recompute the background mask |
+| `quality_flag`   | `Int`       | `integer`        | not null, default `0`; bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE` |
+| `raw_header`     | `Json`      | `jsonb`          | not null; the whole sanitised FITS header                |
+| `block_file`     | `String?`   | `text`           | nullable — null until the compressed-pixel-block writer exists |
+| `block_offset`   | `BigInt?`   | `bigint`         | nullable                                                  |
+| `block_size`     | `Int?`      | `integer`        | nullable                                                  |
+| `is_keyframe`    | `Boolean?`  | `boolean`        | nullable                                                  |
+| `created_at`     | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+| `updated_at`     | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                    |
+
+Constraints: `UNIQUE (satellite, channel, observed_at)` — this is what makes re-running the
+pipeline idempotent, since it legitimately re-lists a window and can see the same frame twice;
+the write is an upsert on this key, and `updated_at` (never `created_at`) advances on a repeat.
+Indexed on `observed_at` for the time-ordered queries the public gallery will eventually run.
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` (newest
@@ -269,6 +309,10 @@ behind the cookie together with its user, and `deleteCurrentSession()` deletes i
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.
+
+`apps/worker/app/services/process_headers.py`'s `ProcessHeaders.persist()` is the only writer of
+`solar.suvi_frames`, called from the `suvi-pipeline` processor after a frame is downloaded and
+decoded. Nothing in `apps/web` reads it yet.
 
 ## Keeping this current
 

@@ -14,6 +14,7 @@ from app.db import (
     ResearchAuthor,
     ResearchCrossAuthor,
     RolePermission,
+    SuviFrame,
     User,
     UserRole,
     UserSession,
@@ -179,3 +180,43 @@ def test_role_permission_matches_the_prisma_columns() -> None:
 def test_role_permission_is_unique_per_role_and_permission() -> None:
     constraint_names = {constraint.name for constraint in RolePermission.__table__.constraints}
     assert "role_permissions_role_permission_key" in constraint_names
+
+
+def test_suvi_frames_live_in_the_solar_schema() -> None:
+    assert SuviFrame.__table__.schema == "solar"
+
+
+def test_suvi_frame_matches_the_prisma_columns() -> None:
+    columns = SuviFrame.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "observed_at",
+        "wavelength",
+        "satellite",
+        "channel",
+        "file_name",
+        "source_url",
+        "exposure_time",
+        "sun_center_x",
+        "sun_center_y",
+        "sun_radius_px",
+        "quality_flag",
+        "raw_header",
+        "block_file",
+        "block_offset",
+        "block_size",
+        "is_keyframe",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["file_name"].unique
+    assert not columns["wavelength"].nullable
+    assert not columns["satellite"].nullable
+    assert columns["exposure_time"].nullable
+    assert columns["block_offset"].nullable
+
+
+def test_suvi_frame_is_unique_per_satellite_channel_and_observed_at() -> None:
+    constraint_names = {constraint.name for constraint in SuviFrame.__table__.constraints}
+    assert "suvi_frames_satellite_channel_observed_at_key" in constraint_names

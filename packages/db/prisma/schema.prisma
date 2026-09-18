@@ -28,7 +28,7 @@ datasource db {
 
   // One Postgres schema per domain. `public` stays declared for whatever
   // non-domain-specific table comes next.
-  schemas = ["public", "research", "news", "auth"]
+  schemas = ["public", "research", "news", "auth", "solar"]
 }
 
 /// Access level of a portal account. Self-registration always yields `visitor`;
@@ -285,3 +285,42 @@ model NosotrosActivity {
   @@schema("public")
 }
 
+/// One SUVI L1b frame, catalogued from its FITS header. Written by the Python
+/// worker (apps/worker/app/services/process_headers.py), never by the web app.
+/// Photometric and CCD-health numbers are NOT here — they go to InfluxDB.
+model SuviFrame {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// FITS `DATE-OBS`, the official instant of the exposure.
+  observedAt   DateTime @map("observed_at") @db.Timestamptz(3)
+  /// FITS `WAVELNTH`, in angstroms.
+  wavelength   Float    @db.DoublePrecision
+  /// FITS `TELESCOP`, e.g. "G19".
+  satellite    String
+  /// Archive channel token, e.g. "Fe093". From the file name, not the header.
+  channel      String
+  fileName     String   @unique @map("file_name")
+  sourceUrl    String   @map("source_url")
+  /// FITS `EXPTIME`, seconds.
+  exposureTime Float?   @map("exposure_time") @db.DoublePrecision
+  /// FITS `CRPIX1`/`CRPIX2`: the Sun's centre in the 1280x1280 matrix.
+  sunCenterX   Float?   @map("sun_center_x") @db.DoublePrecision
+  sunCenterY   Float?   @map("sun_center_y") @db.DoublePrecision
+  /// FITS `RSUN`, solar radius in pixels. Needed to recompute the background mask.
+  sunRadiusPx  Float?   @map("sun_radius_px") @db.DoublePrecision
+  /// Bitfield: bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE`. 0 means a clean capture.
+  qualityFlag  Int      @default(0) @map("quality_flag")
+  /// The whole FITS header, so a field not promoted to a column is still recoverable.
+  rawHeader    Json     @map("raw_header")
+  /// Pointers into the compressed pixel block. Null until the .sublk writer exists.
+  blockFile    String?  @map("block_file")
+  blockOffset  BigInt?  @map("block_offset")
+  blockSize    Int?     @map("block_size")
+  isKeyframe   Boolean? @map("is_keyframe")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([satellite, channel, observedAt])
+  @@index([observedAt])
+  @@map("suvi_frames")
+  @@schema("solar")
+}

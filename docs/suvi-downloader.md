@@ -136,6 +136,39 @@ async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
 Pass `now=` rather than freezing the clock, and name frames with real archive file names — the
 spelling is the thing under test.
 
+## Persisting a frame
+
+`apps/worker/app/processors/suvi_pipeline.py` does not stop at the download. Once a frame is
+fetched, it is gunzipped and opened with astropy (off the event loop — see below), and its header
+is handed to `apps/worker/app/services/process_headers.py`'s `ProcessHeaders`, which splits it into
+its two natural homes:
+
+- **PostgreSQL** (`solar.suvi_frames`) gets one catalogued row per frame: what was observed, when,
+  by which spacecraft, the solar-disc geometry (`sun_center_x/y`, `sun_radius_px`) needed to rebuild
+  a background mask, and the whole FITS header as `jsonb` so nothing promoted to a column is lost.
+  The write is an upsert keyed on `(satellite, channel, observed_at)`, so re-listing a window that
+  turns up the same frame again updates the row instead of duplicating it.
+- **InfluxDB** (measurement `suvi_frames`) gets only the numbers that are worth charting or
+  alerting on over time: the image statistics (`IMG_MEAN`, `IMG_SDEV`, ...) and the CCD/sensor
+  diagnostics (`CCD_TMP1`, `CCD_BIAS`, ...), tagged by `satellite` and `channel`.
+
+Three FITS quirks are handled in `process_headers.py` rather than left for a caller to discover:
+
+- `DATE-OBS` has no UTC offset in it (`'2026-09-18T04:14:07.332'`); it is parsed and stamped `UTC`
+  explicitly, since a naive value in a `timestamptz` column is interpreted in the server's zone.
+- The whole header is sanitised before it reaches `raw_header`: numpy scalars become Python ones,
+  astropy's `Undefined` sentinel becomes `None`, and `NaN`/`±Infinity` become `None` too, since
+  Postgres's `jsonb` rejects them outright. `COMMENT`/`HISTORY`/blank cards — which legitimately
+  repeat — are collapsed into lists instead of a plain `dict(header)` silently keeping only the
+  last one.
+- A missing optional card (say, a frame with no `SAT_PIX`) yields `None`, never `0` — a genuine
+  zero reading and an absent one are different facts, and only the former should ever reach Influx.
+
+`gzip.decompress` and `fits.open` run inside `asyncio.to_thread`, because a ~2 MB frame decoded
+synchronously on the event loop would stall every other job the worker is handling concurrently.
+Everything the caller needs — the header dict and a materialised copy of the data array — is
+extracted while still on the thread, so nothing tied to the closed `HDUList` escapes it.
+
 ## Current wiring
 
 The client and `apps/worker/app/processors/suvi_pipeline.py` are on disk, but the `suvi-pipeline`
