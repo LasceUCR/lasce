@@ -29,9 +29,10 @@ working through Claude Code.
 ## Documentation map
 
 | Question                                             | File                                                                 |
-| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| ----------------------------------------------------- | --------------------------------------------------------------------- |
 | How do the two runtimes fit together?                | [`docs/architecture.md`](docs/architecture.md)                       |
 | How do I add a job across both languages?            | [`docs/add-a-job.md`](docs/add-a-job.md)                             |
+| How do I download a SUVI image in the worker?        | [`docs/suvi-downloader.md`](docs/suvi-downloader.md)                 |
 | How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                 |
 | How do I isolate a widget that might crash the page? | [`docs/error-boundary.md`](docs/error-boundary.md)                   |
 | How do I make content editable in "Modo edición"?    | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)             |
