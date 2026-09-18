@@ -53,6 +53,18 @@ const rosacPublications = filterPublications.filter(
   (publication) => publication.researchGroup === 'ROSAC',
 )
 
+async function selectResearchGroup(
+  user: ReturnType<typeof userEvent.setup>,
+  group: 'LASCE' | 'ROSAC' | '',
+) {
+  await user.click(screen.getByRole('combobox', { name: 'Grupo de investigación' }))
+  await user.click(
+    screen.getByRole('option', {
+      name: group === '' ? 'Todas las publicaciones' : group,
+    }),
+  )
+}
+
 describe('PublicationsExplorer', () => {
   test('renders one card per publication it is given', () => {
     render(<PublicationsExplorer {...defaultArgs} />)
@@ -62,7 +74,16 @@ describe('PublicationsExplorer', () => {
     )
   })
 
-  test('narrows the list to publications matching the search query', async () => {
+  test('shows the total number of publications in the KPI', () => {
+    render(<PublicationsExplorer {...defaultArgs} />)
+
+    const kpi = screen.getByLabelText('Cantidad de publicaciones')
+
+    expect(kpi).toHaveTextContent(`${defaultArgs.publications.length}`)
+    expect(kpi).toHaveTextContent('publicaciones')
+  })
+
+  test('narrows the list and KPI to publications matching the search query', async () => {
     const user = userEvent.setup()
     render(<PublicationsExplorer {...defaultArgs} />)
 
@@ -73,27 +94,48 @@ describe('PublicationsExplorer', () => {
         name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)',
       }),
     ).toBeInTheDocument()
+
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
+
+    const kpi = screen.getByLabelText('Cantidad de publicaciones')
+    expect(kpi).toHaveTextContent('1')
   })
 
   test('matches by author as well as by title', async () => {
     const user = userEvent.setup()
-    render(<PublicationsExplorer {...defaultArgs} />)
 
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'LASCE')
+    const publications: PublicationsExplorerProps['publications'] = [
+      {
+        slug: 'author-match',
+        title: 'Publicación de prueba',
+        authors: 'Investigador LASCE',
+        venue: 'Solar Physics',
+        year: '2025',
+        abstract: 'Research about solar activity.',
+        href: 'https://example.com/publication',
+        researchGroup: 'LASCE',
+      },
+    ]
 
-    expect(
-      screen.getByRole('heading', {
-        name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)',
-      }),
-    ).toBeInTheDocument()
+    render(<PublicationsExplorer publications={publications} />)
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Buscar publicaciones' }),
+      'Investigador LASCE',
+    )
+
+    expect(screen.getByRole('heading', { name: 'Publicación de prueba' })).toBeInTheDocument()
+
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
   })
 
   test('shows an empty state when there are no publications', () => {
     render(<PublicationsExplorer {...emptyArgs} />)
 
     expect(screen.getByRole('heading', { name: 'Publicaciones recientes' })).toBeInTheDocument()
+
     expect(screen.getByRole('status')).toHaveTextContent('No hay publicaciones disponibles.')
+
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
   })
 
@@ -102,17 +144,21 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={filterPublications} />)
 
-    await user.click(screen.getByRole('button', { name: 'LASCE' }))
+    await selectResearchGroup(user, 'LASCE')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(lascePublications.length)
 
-    for (const publication of lascePublications) {
-      expect(screen.getByRole('heading', { name: publication.title })).toBeInTheDocument()
-    }
+    expect(screen.getByRole('heading', { name: 'LASCE Solar Research' })).toBeInTheDocument()
 
-    for (const publication of rosacPublications) {
-      expect(screen.queryByRole('heading', { name: publication.title })).not.toBeInTheDocument()
-    }
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)',
+      }),
+    ).not.toBeInTheDocument()
+
+    const kpi = screen.getByLabelText('Cantidad de publicaciones')
+    expect(kpi).toHaveTextContent('1')
+    expect(screen.getByText('publicaciones (LASCE)')).toBeInTheDocument()
   })
 
   test('filters publications by ROSAC', async () => {
@@ -120,33 +166,40 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={filterPublications} />)
 
-    await user.click(screen.getByRole('button', { name: 'ROSAC' }))
+    await selectResearchGroup(user, 'ROSAC')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(rosacPublications.length)
 
-    for (const publication of rosacPublications) {
-      expect(screen.getByRole('heading', { name: publication.title })).toBeInTheDocument()
-    }
+    expect(
+      screen.getByRole('heading', {
+        name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)',
+      }),
+    ).toBeInTheDocument()
 
-    for (const publication of lascePublications) {
-      expect(screen.queryByRole('heading', { name: publication.title })).not.toBeInTheDocument()
-    }
+    expect(screen.queryByRole('heading', { name: 'LASCE Solar Research' })).not.toBeInTheDocument()
+
+    const kpi = screen.getByLabelText('Cantidad de publicaciones')
+    expect(kpi).toHaveTextContent('1')
+    expect(screen.getByText('publicaciones (ROSAC)')).toBeInTheDocument()
   })
 
-  test('returns to all publications when the selected group is clicked again', async () => {
+  test('returns to all publications when the group filter is reset', async () => {
     const user = userEvent.setup()
 
     render(<PublicationsExplorer publications={filterPublications} />)
 
-    const lasceButton = screen.getByRole('button', { name: 'LASCE' })
-
-    await user.click(lasceButton)
+    await selectResearchGroup(user, 'LASCE')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(lascePublications.length)
 
-    await user.click(lasceButton)
+    await selectResearchGroup(user, '')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(filterPublications.length)
+
+    const kpi = screen.getByLabelText('Cantidad de publicaciones')
+
+    expect(kpi).toHaveTextContent('2')
+    expect(kpi).toHaveTextContent('publicaciones en total')
   })
 
   test('combines the group filter with the search query', async () => {
@@ -154,7 +207,8 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={filterPublications} />)
 
-    await user.click(screen.getByRole('button', { name: 'LASCE' }))
+    await selectResearchGroup(user, 'LASCE')
+
     await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'Solar')
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
@@ -166,6 +220,10 @@ describe('PublicationsExplorer', () => {
         name: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)',
       }),
     ).not.toBeInTheDocument()
+
+    const kpi = screen.getByLabelText('Cantidad de publicaciones')
+    expect(kpi).toHaveTextContent('1')
+    expect(screen.getByText('publicaciones (LASCE)')).toBeInTheDocument()
   })
 
   test('shows a group-specific empty state when the selected group has no publications', async () => {
@@ -177,17 +235,21 @@ describe('PublicationsExplorer', () => {
 
     render(<PublicationsExplorer publications={otherGroupPublications} />)
 
-    await user.click(screen.getByRole('button', { name: 'LASCE' }))
+    await selectResearchGroup(user, 'LASCE')
 
     expect(screen.getByRole('status')).toHaveTextContent('No hay publicaciones de LASCE.')
+
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+    expect(screen.getByText('0')).toBeInTheDocument()
   })
 
   test('shows a group-specific empty state when the search has no matches', async () => {
     const user = userEvent.setup()
+
     render(<PublicationsExplorer {...defaultArgs} />)
 
-    await user.click(screen.getByRole('button', { name: 'LASCE' }))
+    await selectResearchGroup(user, 'LASCE')
+
     await user.type(
       screen.getByRole('searchbox', { name: 'Buscar publicaciones' }),
       'texto-que-no-existe',
@@ -196,6 +258,8 @@ describe('PublicationsExplorer', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       'No se encontraron publicaciones de LASCE para “texto-que-no-existe”.',
     )
+
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+    expect(screen.getByText('0')).toBeInTheDocument()
   })
 })

@@ -560,9 +560,11 @@ a {
   0% {
     box-shadow: 0 0 0 0 rgba(255, 90, 90, 0.6);
   }
+
   70% {
     box-shadow: 0 0 0 8px rgba(255, 90, 90, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(255, 90, 90, 0);
   }
@@ -1058,6 +1060,7 @@ a {
 
 .publications-toolbar .publications-search {
   flex: 1 1 auto;
+  min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
@@ -1070,41 +1073,44 @@ a {
   flex: 1 1 auto;
 }
 
-.publications-group-filters {
+.publications-group-filter {
   display: flex;
   align-items: center;
-  gap: 8px;
+  width: 260px;
+  flex: 0 0 260px;
 }
 
-.publications-group-filters button {
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--white);
-  color: var(--ink);
-  font: inherit;
-  cursor: pointer;
-}
-
-.publications-group-filters button[aria-pressed='true'] {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--white);
+.publications-group-filter .select-trigger {
+  width: 100%;
 }
 
 @media (max-width: 760px) {
   .publications-toolbar {
     flex-direction: column;
+    align-items: stretch;
     padding: 16px;
   }
 
-  .publications-group-filters {
+  .publications-toolbar .publications-search {
     width: 100%;
+    flex: 0 0 auto;
   }
 
-  .publications-group-filters button {
-    flex: 1;
+  .publications-group-filter {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .publications-kpi {
+    width: auto;
+    min-width: 0;
+    height: 44px;
+    min-height: 0;
+    max-height: 44px;
+    flex: 0 0 44px;
+    align-self: flex-start;
+    padding: 0 14px;
   }
 }
 
@@ -1530,6 +1536,7 @@ a {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1539,6 +1546,7 @@ a {
   .select-menu {
     animation: none;
   }
+
   .select-trigger,
   .select-trigger > svg,
   .select-option,
@@ -1716,6 +1724,11 @@ a {
   -webkit-line-clamp: 2;
 }
 
+.publication-abstract-full {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+}
+
 .publication-card .button,
 .news-card .button {
   margin-top: 12px;
@@ -1725,11 +1738,63 @@ a {
   font-weight: 700;
 }
 
+.publications-kpi {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 220px;
+  flex: 0 0 220px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  gap: 6px;
+}
+
+.publications-kpi strong {
+  position: relative;
+  top: -1px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.publications-kpi span {
+  color: var(--ink);
+}
+
 .section-heading .research-areas-description {
   max-width: 680px;
   color: var(--muted);
   margin: 4px 0 0;
   font-size: 14px;
+}
+
+.research-areas {
+  margin-top: 0;
+  padding-top: 24px;
+  padding-bottom: 56px;
+}
+
+.research-area-content {
+  padding-bottom: 56px;
+}
+
+.research-area-list {
+  max-width: 760px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: #355066;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.research-area-list li + li {
+  margin-top: 8px;
 }
 
 .section-heading h2 {
@@ -4060,6 +4125,7 @@ a.gallery-tile:focus-visible {
   font-size: 17px;
   overflow-wrap: anywhere;
 }
+
 .account-card .form-actions {
   margin-top: 0;
 }
