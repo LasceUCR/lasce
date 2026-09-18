@@ -60,8 +60,9 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 # Coverage runs by default so `uv run pytest` locally reports the same number
 # the pipeline gates on. The floor is a measured starting point, raised over
-# time; it is deliberately not a target.
-addopts = "--cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=45"
+# time; it is deliberately not a target. Raised 45 -> 80 when the SUVI header
+# persistence landed with its own tests; measured 82.98% at that point.
+addopts = "--cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
 
 [tool.coverage.run]
 source = ["app"]
