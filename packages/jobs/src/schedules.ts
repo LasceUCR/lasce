@@ -25,4 +25,15 @@ export interface Schedule<K extends JobName = JobName> {
  *
  * Switching between the two does not touch a single processor.
  */
-export const schedules: Schedule[] = []
+export const schedules: Schedule[] = [
+  {
+    id: 'suvi-pipeline-fe093',
+    name: 'suvi-pipeline',
+    cron: '*/3 * * * *',
+    data: {
+      channel: 'Fe093',
+      spacecraft: 19,
+      lookbackMinutes: 5,
+    },
+  },
+]
