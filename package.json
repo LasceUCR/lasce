@@ -22,6 +22,7 @@
     "db:studio": "pnpm --filter @lasce/db studio",
     "contracts:export": "pnpm --filter @lasce/contracts export-schema",
     "jobs:register": "pnpm --filter @lasce/jobs register",
+    "jobs:unregister": "pnpm --filter @lasce/jobs unregister",
     "worker:dev": "pnpm --filter @lasce/worker dev",
     "worker:install": "pnpm --filter @lasce/worker install:deps",
     "services:up": "docker compose --env-file .env -f infra/docker/docker-compose.yml up -d",
