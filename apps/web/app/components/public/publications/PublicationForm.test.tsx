@@ -15,7 +15,7 @@ describe('PublicationForm', () => {
       defaultArgs.publication.title,
     )
 
-    expect(screen.getByLabelText('Fecha de publicación')).toHaveValue('2026-09-17')
+    expect(document.getElementById('publication-date')).toHaveValue('2026-09-17')
 
     expect(screen.getByRole('combobox', { name: 'Eliminar autor' })).toBeInTheDocument()
 
@@ -147,6 +147,9 @@ describe('PublicationForm', () => {
     const addAuthorInput = screen.getByRole('textbox', { name: 'Añadir autor' })
     await user.type(addAuthorInput, 'Nuevo autor')
     await user.click(screen.getByRole('button', { name: 'Añadir autor' }))
+
+    expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue('Nuevo título')
+    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 

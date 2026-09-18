@@ -59,12 +59,29 @@ export function PublicationForm({
     })),
   ]
 
-  const canSave =
-    title.trim() !== '' &&
-    authors.length > 0 &&
-    venue.trim() !== '' &&
-    date !== '' &&
-    abstract.trim() !== ''
+  const validationMessages: string[] = []
+
+  if (title.trim() === '') {
+    validationMessages.push('Es necesario un título.')
+  }
+
+  if (authors.length === 0) {
+    validationMessages.push('Debe haber al menos un autor.')
+  }
+
+  if (venue.trim() === '') {
+    validationMessages.push('Debe revista o medio de publicación.')
+  }
+
+  if (date === '') {
+    validationMessages.push('Debe establecer la fecha de publicacion.')
+  }
+
+  if (abstract.trim() === '') {
+    validationMessages.push('Debe tener un resumen.')
+  }
+
+  const canSave = validationMessages.length === 0
 
   function handleRemoveAuthor() {
     if (!authorToRemove) return
@@ -131,6 +148,7 @@ export function PublicationForm({
           label="Añadir autor"
           onChange={setNewAuthor}
           value={newAuthor}
+          required={authors.length === 0}
         />
 
         <Button disabled={newAuthor.trim() === ''} onClick={handleAddAuthor} variant="secondary">
