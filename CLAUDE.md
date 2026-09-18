@@ -32,6 +32,7 @@ working through Claude Code.
 | -------------------------------------------------- | -------------------------------------------------------------------- |
 | How do the two runtimes fit together?              | [`docs/architecture.md`](docs/architecture.md)                       |
 | How do I add a job across both languages?          | [`docs/add-a-job.md`](docs/add-a-job.md)                             |
+| How do I download a SUVI image in the worker?      | [`docs/suvi-downloader.md`](docs/suvi-downloader.md)                 |
 | How do I add a UI component?                       | [`docs/add-a-component.md`](docs/add-a-component.md)                 |
 | Where does a test go, and what gates it?           | [`docs/testing.md`](docs/testing.md)                                 |
 | How do I write a component or service test?        | [`docs/tests/component_testing.md`](docs/tests/component_testing.md) |
