@@ -291,7 +291,7 @@ export function PublicationsExplorer({
               publication={{
                 abstract: editingPublication.abstract,
                 authors: editingPublication.authors,
-                DOI: editingPublication.href,
+                DOI: editingPublication.href ?? '',
                 researchGroup: editingPublication.researchGroup,
                 title: editingPublication.title,
                 venue: editingPublication.venue,

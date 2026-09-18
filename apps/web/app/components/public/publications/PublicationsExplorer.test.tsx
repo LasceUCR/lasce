@@ -106,14 +106,26 @@ describe('PublicationsExplorer', () => {
 
     const publications: PublicationsExplorerProps['publications'] = [
       {
-        slug: 'author-match',
-        title: 'Publicación de prueba',
-        authors: 'Investigador LASCE',
+        slug: 'lasce-1',
+        title: 'LASCE Solar Research',
+        authors: ['Investigador LASCE'],
         venue: 'Solar Physics',
         year: '2025',
+        date: new Date('2025-01-01'),
         abstract: 'Research about solar activity.',
-        href: 'https://example.com/publication',
+        href: 'https://example.com/lasce',
         researchGroup: 'LASCE',
+      },
+      {
+        slug: 'rosac-1',
+        title: 'Radiotelescopio del Observatorio de Santa Cruz (ROSAC)',
+        authors: ['Investigador ROSAC'],
+        date: new Date('2024-01-01'),
+        venue: 'Radio Science',
+        year: '2024',
+        abstract: 'Research using ROSAC observations.',
+        href: 'https://example.com/rosac',
+        researchGroup: 'ROSAC',
       },
     ]
 
@@ -124,7 +136,7 @@ describe('PublicationsExplorer', () => {
       'Investigador LASCE',
     )
 
-    expect(screen.getByRole('heading', { name: 'Publicación de prueba' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'LASCE Solar Research' })).toBeInTheDocument()
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
   })
