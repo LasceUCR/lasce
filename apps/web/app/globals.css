@@ -4489,3 +4489,8 @@ a.gallery-tile:focus-visible {
   justify-content: flex-end;
   gap: 10px;
 }
+
+.publication-add-author {
+  margin-top: 20px;
+  display: flex;
+}
