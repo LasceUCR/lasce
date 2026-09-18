@@ -22,8 +22,15 @@ from astropy.io import fits
 from app.models.jobs import SuviPipelinePayload
 from app.processors import suvi_pipeline
 from app.services.process_headers import ProcessHeaders
+from app.services.suvi_matrix import BlockPointer, SuviMatrixProcessor
 
 FRAME_ID = uuid.UUID("22222222-2222-2222-2222-222222222222")
+BLOCK_POINTER = BlockPointer(
+    block_file="suvi/g19/fe093/20260918T041407.sublk",
+    block_offset=64,
+    block_size=128,
+    is_keyframe=True,
+)
 
 HEADER_CARDS: dict[str, Any] = {
     "DATE-OBS": "2026-09-18T04:14:07.332",
@@ -99,9 +106,20 @@ def mock_process_headers(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
     """The persistence step is covered on its own in test_process_headers.py;
     here only the pipeline's shape (progress, the returned dict) is under test.
     """
-    run = AsyncMock(return_value=FRAME_ID)
-    monkeypatch.setattr(ProcessHeaders, "run", run)
-    return run
+    persist = AsyncMock(return_value=FRAME_ID)
+    monkeypatch.setattr(ProcessHeaders, "persist", persist)
+    return persist
+
+
+def mock_matrix_processor(
+    monkeypatch: pytest.MonkeyPatch, pointer: BlockPointer | None = BLOCK_POINTER
+) -> AsyncMock:
+    """The pixel-compression step is covered on its own in test_suvi_matrix.py; here only the
+    pipeline's shape (progress, the returned dict, the ``block`` key) is under test.
+    """
+    process = AsyncMock(return_value=pointer)
+    monkeypatch.setattr(SuviMatrixProcessor, "process", process)
+    return process
 
 
 async def test_describes_the_frame_it_downloaded(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -114,7 +132,8 @@ async def test_describes_the_frame_it_downloaded(monkeypatch: pytest.MonkeyPatch
         return httpx.Response(200, content=content)
 
     serve(monkeypatch, handler)
-    run = mock_process_headers(monkeypatch)
+    persist = mock_process_headers(monkeypatch)
+    process = mock_matrix_processor(monkeypatch)
     job = AsyncMock()
 
     result = await suvi_pipeline.run(payload(), job)
@@ -131,7 +150,14 @@ async def test_describes_the_frame_it_downloaded(monkeypatch: pytest.MonkeyPatch
         "bytes": len(content),
     }
     assert result["file"]["url"].endswith(f"/suvi-l1b-fe094/{datetime.now(UTC):%Y/%m/%d}/{name}")
-    run.assert_awaited_once()
+    assert result["block"] == {
+        "file": BLOCK_POINTER.block_file,
+        "offset": BLOCK_POINTER.block_offset,
+        "size": BLOCK_POINTER.block_size,
+        "isKeyframe": BLOCK_POINTER.is_keyframe,
+    }
+    persist.assert_awaited_once()
+    process.assert_awaited_once()
     job.updateProgress.assert_any_await(50)
     job.updateProgress.assert_any_await(75)
     job.updateProgress.assert_awaited_with(100)
@@ -143,13 +169,16 @@ async def test_reports_no_frame_without_downloading_anything(
     requested = serve(
         monkeypatch, lambda _: httpx.Response(200, text="<html><body>empty</body></html>")
     )
-    run = mock_process_headers(monkeypatch)
+    persist = mock_process_headers(monkeypatch)
+    process = mock_matrix_processor(monkeypatch)
 
     result = await suvi_pipeline.run(payload(), AsyncMock())
 
     assert result["file"] is None
+    assert "block" not in result
     assert not [url for url in requested if url.endswith(".fits.gz")]
-    run.assert_not_awaited()
+    persist.assert_not_awaited()
+    process.assert_not_awaited()
 
 
 async def test_a_frame_older_than_the_window_is_not_downloaded(
@@ -159,10 +188,12 @@ async def test_a_frame_older_than_the_window_is_not_downloaded(
     requested = serve(
         monkeypatch, lambda _: httpx.Response(200, text=f'<a href="{name}">{name}</a>')
     )
-    run = mock_process_headers(monkeypatch)
+    persist = mock_process_headers(monkeypatch)
+    process = mock_matrix_processor(monkeypatch)
 
     result = await suvi_pipeline.run(payload(lookbackMinutes=10), AsyncMock())
 
     assert result["file"] is None
     assert not [url for url in requested if url.endswith(".fits.gz")]
-    run.assert_not_awaited()
+    persist.assert_not_awaited()
+    process.assert_not_awaited()

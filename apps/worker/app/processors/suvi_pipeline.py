@@ -1,12 +1,15 @@
 """``suvi-pipeline``: fetch the most recent SUVI L1b frame for one channel,
-decode it and catalogue it.
+decode it, catalogue it and compress its pixels.
 
 All archive knowledge lives in :mod:`app.clients.suvi`; this processor only
-decides the window, reports progress and hands the decoded FITS header to
-:class:`app.services.process_headers.ProcessHeaders`, which is what actually
-writes the catalogue row (Postgres) and the metric points (InfluxDB). The
-pixel data itself is decoded but not yet persisted anywhere — nothing consumes
-the image array until the compressed-pixel-block writer exists.
+decides the window, reports progress and hands off the decoded FITS header
+and pixel matrix. The header goes to
+:class:`app.services.process_headers.ProcessHeaders`, which writes the
+catalogue row (Postgres) and the metric points (InfluxDB). The matrix goes to
+:class:`app.services.suvi_matrix.SuviMatrixProcessor`, which masks, quantises,
+delta-encodes and zstd-compresses it into a `.sublk` block in MinIO, then
+writes the resulting pointer (`block_file`, `block_offset`, `block_size`,
+`is_keyframe`) back onto the same catalogue row.
 """
 
 import asyncio
@@ -23,6 +26,7 @@ from app.clients.suvi import SuviChannel, SuviDownloader
 from app.logging import get_logger
 from app.models.jobs import SuviPipelinePayload
 from app.services.process_headers import ProcessHeaders
+from app.services.suvi_matrix import BlockPointer, SuviMatrixProcessor
 
 log = get_logger(__name__)
 
@@ -75,7 +79,11 @@ def _decode_fits(compressed_bytes: bytes) -> tuple[Any, Any]:
 
 
 def _build_success_result(
-    channel: SuviChannel, download: Any, available_count: int, frame_id: uuid.UUID
+    channel: SuviChannel,
+    download: Any,
+    available_count: int,
+    frame_id: uuid.UUID,
+    pointer: BlockPointer | None,
 ) -> dict[str, Any]:
     """Build successful result with downloaded file metadata."""
     log.info(
@@ -98,6 +106,16 @@ def _build_success_result(
         },
         "available": available_count,
         "frameId": str(frame_id),
+        "block": (
+            {
+                "file": pointer.block_file,
+                "offset": pointer.block_offset,
+                "size": pointer.block_size,
+                "isKeyframe": pointer.is_keyframe,
+            }
+            if pointer is not None
+            else None
+        ),
         "pipelineDate": datetime.now(UTC).isoformat(),
     }
 
@@ -116,10 +134,16 @@ async def run(payload: SuviPipelinePayload, job: Any) -> dict[str, Any]:
 
         download = await downloader.fetch(available[0])
 
-    header, _data_matrix = await asyncio.to_thread(_decode_fits, download.content)
+    header, data_matrix = await asyncio.to_thread(_decode_fits, download.content)
     await job.updateProgress(75)
 
-    frame_id = await ProcessHeaders().run(header, download.file)
+    fields = ProcessHeaders.parse(header, download.file)
+    frame_id = await ProcessHeaders().persist(fields)
+    pointer: BlockPointer | None = None
+    if data_matrix is not None:
+        pointer = await SuviMatrixProcessor().process(
+            data_matrix, fields, frame_id, payload.spacecraft
+        )
     await job.updateProgress(100)
 
-    return _build_success_result(channel, download, len(available), frame_id)
+    return _build_success_result(channel, download, len(available), frame_id, pointer)
