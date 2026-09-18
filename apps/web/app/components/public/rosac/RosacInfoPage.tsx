@@ -21,6 +21,8 @@ import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 
 import styles from './RosacInfoPage.module.css'
+import { ConstructionCarousel } from './ConstructionCarousel'
+import { TeamGallery } from './TeamGallery'
 
 const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
@@ -88,9 +90,20 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
       </TopicSection>
 
       <TopicSection
+        id="construccion"
+        title={content.construction.title}
+        titleId="rosac-construction-title"
+        intro={content.construction.intro}
+        index="3"
+        wide
+      >
+        <ConstructionCarousel stages={content.construction.stages} />
+      </TopicSection>
+
+      <TopicSection
         title={content.radioObservation.title}
         titleId="rosac-radio-observation-title"
-        index="3"
+        index="4"
         wide
       >
         {content.radioObservation.paragraphs.map((paragraph) => (
@@ -109,9 +122,26 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
       </TopicSection>
 
       <TopicSection
+        id="investigadores"
+        index="5"
+        intro={content.team.intro}
+        title={content.team.title}
+        titleId="rosac-team-title"
+        wide
+      >
+        <TeamGallery
+          emptyMessage={content.team.emptyMessage}
+          hint={content.team.hint}
+          label={content.team.title}
+          people={content.team.people}
+        />
+      </TopicSection>
+
+      <TopicSection
         title={content.scientificConsultation.title}
         titleId="rosac-science-title"
         intro={content.scientificConsultation.description}
+        wide
       >
         <div className={styles.scientificAction}>
           <Button

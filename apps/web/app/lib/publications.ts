@@ -1,21 +1,23 @@
 import { prisma } from '@lasce/db'
 
-export const investigacionMeta = {
-  title: 'Investigación | LASCE',
+export const publicacionesMeta = {
+  title: 'Publicaciones | LASCE',
   description:
-    'Publicaciones y colaboración científica del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
+    'Publicaciones científicas del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
 } as const
 
-export const investigacionHero = {
+export const publicacionesHero = {
   kicker: 'Portal público LASCE',
-  title: 'Investigación y publicaciones',
-  lead: 'Publicaciones y colaboración científica del LASCE.',
+  title: 'Publicaciones científicas',
+  lead: 'Publicaciones y contribuciones científicas del LASCE y ROSAC.',
 } as const
 
-export const investigacionBackLink = {
+export const publicacionesBackLink = {
   href: '/',
   label: 'Volver al inicio',
 } as const
+
+export type ResearchGroup = 'LASCE' | 'ROSAC'
 
 export type Publication = {
   slug: string
@@ -24,7 +26,8 @@ export type Publication = {
   venue: string
   year: string
   abstract: string
-  href: string
+  href?: string
+  researchGroup: ResearchGroup
 }
 
 /**
@@ -54,6 +57,7 @@ export async function getPublications(): Promise<Publication[]> {
     venue: record.publisher.name,
     year: String(record.publicationDate.getUTCFullYear()),
     abstract: record.abstract,
-    href: record.externalUrl,
+    href: record.externalUrl || undefined,
+    researchGroup: record.researchGroup,
   }))
 }

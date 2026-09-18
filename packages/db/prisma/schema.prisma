@@ -26,9 +26,81 @@ datasource db {
   // prisma.config.ts, and PrismaClient gets it through the driver adapter in
   // src/index.ts.
 
-  // `public` stays declared for whatever non-research table comes next; only
-  // `research` is populated today. Prisma creates both schemas via migrations.
-  schemas = ["public", "research"]
+  // One Postgres schema per domain. `public` stays declared for whatever
+  // non-domain-specific table comes next.
+  schemas = ["public", "research", "news", "auth", "gallery"]
+}
+
+/// Access level of a portal account. Self-registration always yields `visitor`;
+/// `assistant` and `admin` are granted by an administrator (LASCE-ADM #80). What
+/// each role may do lives in `RolePermission` (LASCE-SEC-008-073), not here.
+enum UserRole {
+  VISITOR   @map("visitor")
+  ASSISTANT @map("assistant")
+  ADMIN     @map("admin")
+
+  @@map("user_role")
+  @@schema("auth")
+}
+
+/// A portal account created through the public registration form at `/registro`
+/// (LASCE-SEC-008-071). Browser sessions live in `Session`, never in columns here.
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName     String   @map("full_name")
+  /// Trimmed and lower-cased by the application before every write and lookup,
+  /// so the unique index is case-insensitive without a citext extension.
+  email        String   @unique
+  institution  String
+  /// ISO 3166-1 alpha-2 code, e.g. "CR". Display names are derived at render time.
+  countryCode  String   @map("country_code") @db.Char(2)
+  /// Self-describing KDF string, `scrypt$<N>$<r>$<p>$<salt>$<hash>`. Produced and
+  /// verified by apps/web/app/lib/auth/password.ts.
+  passwordHash String   @map("password_hash")
+  /// Registration uses the default; administrators can replace or remove the assignment.
+  role         UserRole? @default(VISITOR)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  sessions Session[]
+  nosotrosActivities NosotrosActivity[]
+
+  @@map("users")
+  @@schema("auth")
+}
+
+/// A browser session for a portal account (LASCE-SEC-008-072). The cookie holds a
+/// random token and only its SHA-256 is stored, so reading this table yields
+/// nothing a browser could present. Deleting the row revokes the session at once;
+/// expiry is absolute (30 days from login). The worker never writes here.
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// base64url SHA-256 of the `lasce_session` cookie value. Never the token itself.
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+  @@schema("auth")
+}
+
+/// Permission granted to a `UserRole`. The permission strings themselves are
+/// the TypeScript catalogue in `apps/web/app/lib/auth/permissions.ts`; this
+/// table only stores the mapping so administrators can change it without a
+/// deploy of unrelated features (LASCE-SEC-008-073).
+model RolePermission {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role       UserRole
+  permission String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([role, permission])
+  @@map("role_permissions")
+  @@schema("auth")
 }
 
 /// A journal, conference, or institutional outlet a research record was
@@ -45,28 +117,37 @@ model Publisher {
   @@schema("research")
 }
 
+enum ResearchGroup {
+  LASCE
+  ROSAC
+
+  @@schema("research")
+}
+
 /// A public research record shown on `/investigacion`: a paper, article, or
 /// institutional note, linked to its original source rather than a hosted
 /// copy. Mapped to `research_records` rather than `research` to avoid the
 /// `research.research` stutter under the `research` Postgres schema.
 model Research {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title           String
-  publicationDate DateTime @map("publication_date") @db.Date
-  publisherId     String   @map("publisher_id") @db.Uuid
-  abstract        String   @db.Text
+  publicationDate DateTime      @map("publication_date") @db.Date
+  publisherId     String        @map("publisher_id") @db.Uuid
+  researchGroup   ResearchGroup @map("research_group")
+  abstract        String        @db.Text
   /// Link to the original source. Unique so the same paper can't be listed twice.
-  externalUrl     String   @unique @map("external_url")
+  externalUrl     String        @unique @map("external_url")
   /// Digital Object Identifier, e.g. "10.1007/s11207-015-0677-0". Optional —
   /// not every record (institutional notes) has one — but unique when present.
-  doi             String?  @unique
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  doi             String?       @unique
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
 
-  publisher Publisher             @relation(fields: [publisherId], references: [id], onDelete: Restrict)
+  publisher Publisher           @relation(fields: [publisherId], references: [id], onDelete: Restrict)
   authors   ResearchCrossAuthor[]
 
   @@index([publicationDate])
+  @@index([researchGroup])
   @@map("research_records")
   @@schema("research")
 }
@@ -105,3 +186,162 @@ model ResearchCrossAuthor {
   @@map("research_cross_authors")
   @@schema("research")
 }
+
+/// An outlet where a news item was published.
+model NewsSource {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  newsRecords News[]
+
+  @@map("news_sources")
+  @@schema("news")
+}
+
+/// A public news item shown on `/noticias`: a media article, institutional note,
+/// or external coverage item linked to its source.
+model News {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  publishedAt DateTime?  @map("published_at") @db.Date
+  sourceId    String     @map("source_id") @db.Uuid
+  abstract    String     @db.Text
+  externalUrl String     @unique @map("external_url")
+  imageUrl    String     @map("image_url")
+  imageAlt    String     @map("image_alt")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  source      NewsSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  authors     NewsCrossAuthor[]
+
+  @@index([publishedAt])
+  @@map("news_records")
+  @@schema("news")
+}
+
+/// A person credited as an author on one or more news items.
+model NewsAuthor {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  newsRecords NewsCrossAuthor[]
+
+  @@map("news_authors")
+  @@schema("news")
+}
+
+/// Many-to-many join between `News` and `NewsAuthor`. Keeps `position` so a
+/// record's citation order can be reproduced on the public page.
+model NewsCrossAuthor {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  newsId       String     @map("news_id") @db.Uuid
+  newsAuthorId String     @map("news_author_id") @db.Uuid
+  position     Int
+
+  news         News       @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  newsAuthor   NewsAuthor @relation(fields: [newsAuthorId], references: [id], onDelete: Cascade)
+
+  @@unique([newsId, newsAuthorId])
+  @@index([newsId, position])
+  @@map("news_cross_authors")
+  @@schema("news")
+}
+
+/// A "¿Qué hacemos?" flashcard on the Nosotros page (LASCE-CON-012-086). One row
+/// per card — icon, title and paragraph are the three editable fields; the rest
+/// is audit metadata (who changed it last, and when).
+enum NosotrosActivityIcon {
+  SUN           @map("sun")
+  WAVES         @map("waves")
+  SATELLITE     @map("satellite")
+  CODE          @map("code")
+  COLLABORATION @map("collaboration")
+  EDUCATION     @map("education")
+
+  @@map("nosotros_activity_icon")
+  @@schema("public")
+}
+
+model NosotrosActivity {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  icon        NosotrosActivityIcon
+  title       String
+  paragraph   String               @db.Text
+  /// Display order. Set once at creation and never touched by an edit, so
+  /// saving a card's text doesn't also reorder it — `modifiedAt` alone can't
+  /// serve as the sort key because editing changes it on purpose.
+  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy  String               @map("modified_by") @db.Uuid
+  modifiedAt  DateTime             @updatedAt @default(now()) @map("modified_at") @db.Timestamptz(3)
+
+  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+
+  @@map("nosotros_activities")
+  @@schema("public")
+}
+
+/// A top-level gallery album (e.g. "ROSAC") or, when `parentAlbumId` is set, a
+/// sub-album nested one level under one (e.g. "Cimentación" under "ROSAC"). The
+/// hierarchy is exactly 2 levels by application convention; nothing here enforces
+/// that depth in the database.
+model GalleryAlbum {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug           String   @unique
+  title          String
+  description    String   @db.Text
+  /// Display string shown in the album summary line, e.g. "2025–2026".
+  yearsLabel     String?  @map("years_label")
+  parentAlbumId  String?  @map("parent_album_id") @db.Uuid
+  /// Object key of the cover image shown on the album/sub-album tile. Decorative
+  /// (rendered with alt=""), so no separate alt column — unlike GalleryMedia.
+  coverObjectKey String?  @map("cover_object_key")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  parentAlbum GalleryAlbum?  @relation("GalleryAlbumSubAlbums", fields: [parentAlbumId], references: [id], onDelete: Cascade)
+  subAlbums   GalleryAlbum[] @relation("GalleryAlbumSubAlbums")
+  media       GalleryMedia[]
+
+  @@index([parentAlbumId])
+  @@map("gallery_albums")
+  @@schema("gallery")
+}
+
+/// One photo or video shown in an album's masonry grid and lightbox.
+model GalleryMedia {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  albumId      String   @map("album_id") @db.Uuid
+  title        String
+  description  String   @db.Text
+  /// Required accessibility text for the image/video still, required from
+  /// creation. Precedent: news_records.image_alt.
+  altText      String   @map("alt_text")
+  /// Key returned by IAssetStorage.createUpload(); the storage layer itself
+  /// tracks no metadata, so this is the only place the file is findable from.
+  objectKey    String   @unique @map("object_key")
+  /// Display label such as "JPG", "MP4", "PNG", "FITS" — free text, not an enum.
+  format       String
+  isVideo      Boolean  @default(false) @map("is_video")
+  /// Masonry tile footprint, 1 or 2. Not DB-constrained to that range today.
+  colSpan      Int      @default(1) @map("col_span")
+  rowSpan      Int      @default(1) @map("row_span")
+  capturedAt   DateTime @map("captured_at") @db.Date
+  uploaderName String   @map("uploader_name")
+  /// Explicit display/lightbox order within the album, replacing array order.
+  position     Int
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  album GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId, position])
+  @@index([albumId])
+  @@map("gallery_media")
+  @@schema("gallery")
+}
+

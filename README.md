@@ -31,10 +31,17 @@ lasce/
 
 Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together,
 [`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue,
+[`docs/add-permissions.md`](docs/add-permissions.md) to gate a page or a control with a role
+grant,
 [`docs/manage-assets.md`](docs/manage-assets.md) to upload or delete files in MinIO, and
+[`docs/public-scientific-data.md`](docs/public-scientific-data.md) for the public GOES/ROSAC query,
+data provenance, and source limits,
 [`docs/testing.md`](docs/testing.md) for where tests go and what gates them, and
 [`docs/tests/component_testing.md`](docs/tests/component_testing.md) for how UI component tests
 should be structured.
+
+See [`docs/color-palette.md`](docs/color-palette.md) for the shared brand colors, CSS variables,
+and usage guidelines.
 
 ## Requirements
 

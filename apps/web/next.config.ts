@@ -46,7 +46,60 @@ function loadRootEnv(): void {
 
 loadRootEnv()
 
+/**
+ * Lets `next/image` load an uploaded news photo from MinIO. Parses
+ * `MINIO_ENDPOINT` the same way `MinioAssetStorage` does — a bare
+ * `host[:port]` (local dev) or a full URL (a hosted instance) — since
+ * `remotePatterns` needs the hostname and scheme as separate fields.
+ */
+function minioRemotePattern():
+  NonNullable<NonNullable<NextConfig['images']>['remotePatterns']>[number] | null {
+  const raw = process.env.MINIO_ENDPOINT
+  if (!raw) return null
+
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    const url = new URL(raw)
+    return {
+      protocol: url.protocol === 'https:' ? 'https' : 'http',
+      hostname: url.hostname,
+      port: url.port,
+      pathname: '/**',
+    }
+  }
+
+  const [hostname = 'localhost', port = ''] = raw.split(':')
+  return {
+    protocol: process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http',
+    hostname,
+    port,
+    pathname: '/**',
+  }
+}
+
+const minioPattern = minioRemotePattern()
+
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'services.swpc.noaa.gov',
+        pathname: '/images/animations/suvi/**',
+      },
+      ...(minioPattern ? [minioPattern] : []),
+    ],
+  },
+
+  experimental: {
+    // Server Actions default to a 1 MB body — far below the storage service's
+    // own 25 MiB cap — so a real news photo posted through `uploadNewsImage`
+    // (apps/web/app/(public)/noticias/actions.ts) would fail before it ever
+    // reached `createUpload`.
+    serverActions: {
+      bodySizeLimit: '25mb',
+    },
+  },
+
   // Workspace packages ship TypeScript source rather than a build output, which
   // keeps the monorepo free of an extra build step. Next compiles them for us.
   transpilePackages: [
@@ -79,6 +132,16 @@ const nextConfig: NextConfig = {
   // hoisted node_modules, and the glob avoids pinning the version.
   outputFileTracingIncludes: {
     '/**': ['../../node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**/*'],
+  },
+
+  // Sign-in and sign-up share one page. `/registro` shipped briefly as its own
+  // route and the header linked to `/login` before it existed, so both keep
+  // working; the query string (`next`, `reason`) travels along.
+  async redirects() {
+    return [
+      { source: '/login', destination: '/acceso', permanent: true },
+      { source: '/registro', destination: '/acceso?tab=crear-cuenta', permanent: true },
+    ]
   },
 }
 

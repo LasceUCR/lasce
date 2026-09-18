@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLink as ExternalLinkIcon } from 'lucide-react'
 
 import { Button } from './Button'
 
@@ -27,5 +27,46 @@ export const Secondary: Story = {
     href: '/#areas-de-trabajo',
     variant: 'secondary',
     icon: <ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />,
+  },
+}
+
+export const PrimaryOnDarkSurface: Story = {
+  args: Primary.args,
+  decorators: [
+    (Story) => (
+      <div className="action-surface-dark" style={{ background: 'var(--navy-deep)', padding: 24 }}>
+        <Story />
+      </div>
+    ),
+  ],
+}
+
+export const SecondaryOnDarkSurface: Story = {
+  args: Secondary.args,
+  decorators: PrimaryOnDarkSurface.decorators,
+}
+
+export const ExternalLink: Story = {
+  args: {
+    children: 'Acceder a SWAAT',
+    href: 'https://swaat.up.railway.app',
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    icon: <ExternalLinkIcon aria-hidden="true" size={16} strokeWidth={1.8} />,
+  },
+}
+
+export const Brand: Story = {
+  args: {
+    children: 'Crear cuenta',
+    variant: 'brand',
+    type: 'submit',
+  },
+}
+
+export const Danger: Story = {
+  args: {
+    children: 'Eliminar',
+    variant: 'danger',
   },
 }

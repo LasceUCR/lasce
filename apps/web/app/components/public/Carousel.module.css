@@ -1,0 +1,165 @@
+.carousel {
+  margin-top: 20px;
+  min-width: 0;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.05);
+}
+
+.imageFrame {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  align-self: start;
+  border-radius: 8px 0 0 8px;
+  background: var(--alice-blue);
+}
+
+.image {
+  object-fit: cover;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 28px;
+  overflow-wrap: anywhere;
+}
+
+.photoControl {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--white);
+  cursor: pointer;
+}
+
+.photoPrevious {
+  left: 12px;
+}
+.photoNext {
+  right: 12px;
+}
+
+.photoControl:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.photoControl:focus-visible {
+  outline: 3px solid var(--white);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px var(--blue-dark);
+}
+.panel h3 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.panel .description {
+  margin: 16px 0 24px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.actions {
+  margin-top: auto;
+}
+
+.control {
+  font-family: inherit;
+  min-height: 44px;
+  padding: 8px 14px;
+}
+
+.control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.groupControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+}
+
+.control:focus-visible {
+  outline: 3px solid var(--blue-dark);
+  outline-offset: 3px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1120px) {
+  .content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .imageFrame {
+    height: auto;
+    aspect-ratio: 3 / 2;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .groupControls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .groupControls .control {
+    width: auto;
+    min-width: 0;
+    gap: 6px;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+
+  .control svg {
+    flex-shrink: 0;
+  }
+
+  .imageFrame {
+    aspect-ratio: 3 / 2;
+  }
+
+  .panel h3 {
+    font-size: 22px;
+  }
+}

@@ -18,7 +18,7 @@ administrators and organisation owners too.
 
 |                                   | `development` | `main` |
 | --------------------------------- | ------------- | ------ |
-| Approvals required                | 1             | 3      |
+| Approvals required                | 2             | 3      |
 | Stale approvals dismissed on push | yes           | yes    |
 | Approval required after last push | yes           | yes    |
 | Review conversations resolved     | yes           | yes    |
@@ -72,15 +72,14 @@ re-applying, in the same change.
 
 ## Applying
 
-Requires repository admin. Create `development`, and update `main` in place:
-ruleset `21126704` already exists, and reusing the id preserves its history.
+Requires repository admin. Both rulesets exist, so update them in place:
+`development` is ruleset `22265030` and `main` is `21126704`. Reusing the id
+preserves a ruleset's history; a `POST` would create a duplicate instead.
 
 ```bash
-# First time: create, then read back and confirm nothing was dropped.
-gh api -X POST repos/LasceUCR/lasce/rulesets \
+gh api -X PUT repos/LasceUCR/lasce/rulesets/22265030 \
   --input .github/rulesets/development.json
 
-# Update an existing ruleset.
 gh api -X PUT repos/LasceUCR/lasce/rulesets/21126704 \
   --input .github/rulesets/main.json
 ```

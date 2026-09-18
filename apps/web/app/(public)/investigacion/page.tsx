@@ -1,33 +1,21 @@
 import type { Metadata } from 'next'
 
-import { PublicationsExplorer } from '@/app/components/public/publications/PublicationsExplorer'
-import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
+import { ResearchAreasSection } from '@/app/components/public/research/ResearchAreasSection'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import {
-  getPublications,
   investigacionBackLink,
   investigacionHero,
   investigacionMeta,
-} from '@/app/lib/publications'
+  researchAreas,
+} from '@/app/lib/research-areas'
 
 export const metadata: Metadata = {
   title: investigacionMeta.title,
   description: investigacionMeta.description,
 }
 
-/**
- * `getPublications()` reads from Postgres, which isn't reachable during
- * `next build` (CI's `build` job and the Docker image build both build
- * without a database). Without this, Next tries to prerender the page at
- * build time and the build fails on a connection error — render at request
- * time instead, same reason `app/api/health/route.ts` does the same.
- */
-export const dynamic = 'force-dynamic'
-
-export default async function InvestigacionPage() {
-  const publications = await getPublications()
-
+export default function InvestigacionPage() {
   return (
     <article className="topic-page">
       <TopicHero
@@ -36,12 +24,7 @@ export default async function InvestigacionPage() {
         title={investigacionHero.title}
       />
 
-      <ContentFlag
-        label="Información provisional"
-        message="El contenido de esta página es preliminar y está sujeto a revisión."
-      />
-
-      <PublicationsExplorer publications={publications} />
+      <ResearchAreasSection areas={researchAreas} id="research-areas" />
 
       <div className="topic-page-footer page-width">
         <TopicBackLink href={investigacionBackLink.href} label={investigacionBackLink.label} />

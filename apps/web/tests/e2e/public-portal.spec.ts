@@ -6,8 +6,12 @@ const publicRoutes = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
   { label: 'Nosotros', path: '/nosotros', heading: 'Quiénes somos' },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
-  { label: 'Instrumentación', path: '/instrumentacion', heading: 'Instrumentación' },
-  { label: 'Datos', path: '/datos', heading: 'Herramientas científicas' },
+  {
+    label: 'Herramientas científicas',
+    path: '/herramientas-cientificas',
+    heading: 'Herramientas científicas',
+  },
+  { label: 'Datos', path: '/datos', heading: 'Datos' },
   { label: 'Galería', path: '/galeria', heading: 'Galería' },
   { label: 'Noticias', path: '/noticias', heading: 'Noticias' },
   { label: 'Contacto', path: '/contacto', heading: 'Contacto' },
@@ -17,7 +21,7 @@ const areaCards = [
   { name: 'Física solar', path: '/fisica-solar' },
   { name: 'Clima espacial', path: '/clima-espacial' },
   { name: 'Radioastronomía', path: '/radioastronomia' },
-  { name: 'Instrumentación', path: '/instrumentacion' },
+  { name: 'Herramientas científicas', path: '/herramientas-cientificas' },
   { name: 'Datos y análisis', path: '/datos' },
   { name: 'Divulgación', path: '/noticias' },
 ] as const
@@ -38,7 +42,13 @@ test('loads the public landing page without authentication', async ({ page }) =>
       name: 'Exploramos el Sol para comprender el clima espacial',
     }),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
+  await expect(
+    page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', {
+      name: 'Administración',
+      exact: true,
+    }),
+  ).toHaveCount(0)
   expect(new URL(page.url()).pathname).toBe('/')
 })
 
@@ -48,7 +58,7 @@ for (const route of workAreaRoutes) {
 
     expect(response?.status()).toBe(200)
     expect(new URL(page.url()).pathname).toBe(route.path)
-    expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+    expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
     await expect(page.getByRole('heading', { level: 1, name: route.heading })).toBeVisible()
   })
 }
@@ -59,7 +69,7 @@ for (const route of publicRoutes) {
 
     expect(response?.status()).toBe(200)
     expect(new URL(page.url()).pathname).toBe(route.path)
-    expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+    expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
     await expect(page.getByRole('heading', { level: 1, name: route.heading })).toBeVisible()
   })
 }
@@ -84,7 +94,7 @@ test('displays space weather information without authentication', async ({ page 
 
   expect(response?.status()).toBe(200)
   expect(new URL(page.url()).pathname).toBe('/clima-espacial')
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Clima espacial' })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Qué es el clima espacial/ })).toBeVisible()
@@ -101,7 +111,7 @@ test('displays space weather information without authentication', async ({ page 
   await expect(page.getByRole('heading', { name: 'Indicadores actuales' })).toHaveCount(0)
   await expect(page.getByText('Datos simulados')).toHaveCount(0)
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     'content',
     /clima espacial/i,
@@ -113,7 +123,7 @@ test('displays solar astrophysics information without authentication', async ({ 
 
   expect(response?.status()).toBe(200)
   expect(new URL(page.url()).pathname).toBe('/fisica-solar')
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Astrofísica solar' })).toBeVisible()
   await expect(
@@ -127,7 +137,7 @@ test('displays solar astrophysics information without authentication', async ({ 
   await expect(page.getByText(/Laboratorio de Astrofísica Solar y Clima Espacial/)).toBeVisible()
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
   await expect(page.getByText('Contenido temporal')).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/login')
+  await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     'content',
     /actividad solar/i,
@@ -141,7 +151,7 @@ test('returns to the work areas section from space weather', async ({ page }) =>
 
   await expect(page).toHaveURL(/\/#areas-de-trabajo/)
   await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 })
 
 test('returns to the work areas section from solar astrophysics', async ({ page }) => {
@@ -151,7 +161,7 @@ test('returns to the work areas section from solar astrophysics', async ({ page 
 
   await expect(page).toHaveURL(/\/#areas-de-trabajo/)
   await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
-  expect(page.url()).not.toMatch(/\/(login|auth)(\/|$)/)
+  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 })
 
 for (const card of areaCards) {
@@ -244,7 +254,7 @@ test('opens and closes the album lightbox with the keyboard', async ({ page }) =
 
   const lightbox = page.getByRole('dialog')
   await expect(lightbox).toBeVisible()
-  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
     'Llegada de los componentes del ROSAC',
   )
   await expect(lightbox.getByText('Subido por: Andr\u00e9s Solano')).toBeVisible()
@@ -266,13 +276,13 @@ test('walks through the album lightbox with the next control', async ({ page }) 
   const lightbox = page.getByRole('dialog')
   await lightbox.getByRole('button', { name: 'Siguiente' }).click()
 
-  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
     'Ensamblaje del reflector parab\u00f3lico',
   )
   await expect(lightbox.getByText('Formato: MP4')).toBeVisible()
 
   await lightbox.getByRole('button', { name: 'Anterior' }).click()
-  await expect(lightbox.getByRole('heading', { level: 3 })).toHaveText(
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
     'Llegada de los componentes del ROSAC',
   )
 })

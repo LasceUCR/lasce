@@ -1,3 +1,35 @@
-from app.db.models import Base, Publisher, Research, ResearchAuthor, ResearchCrossAuthor
+from app.db.models import (
+    Base,
+    GalleryAlbum,
+    GalleryMedia,
+    News,
+    NewsAuthor,
+    NewsCrossAuthor,
+    NewsSource,
+    Publisher,
+    Research,
+    ResearchAuthor,
+    ResearchCrossAuthor,
+    RolePermission,
+    User,
+    UserRole,
+    UserSession,
+)
 
-__all__ = ["Base", "Publisher", "Research", "ResearchAuthor", "ResearchCrossAuthor"]
+__all__ = [
+    "Base",
+    "GalleryAlbum",
+    "GalleryMedia",
+    "News",
+    "NewsAuthor",
+    "NewsCrossAuthor",
+    "NewsSource",
+    "Publisher",
+    "Research",
+    "ResearchAuthor",
+    "ResearchCrossAuthor",
+    "RolePermission",
+    "User",
+    "UserRole",
+    "UserSession",
+]

@@ -3,11 +3,26 @@
  * Sections: ROSAC, ¿Qué hacemos?, ¿Por qué observar en radio? and La relación entre ambos.
  * Preserve the distinction between development goals and operational capabilities.
  * This module describes the public information page only; scientific consultation is separate.
+ *
+ * `team.people` is the accessible source of truth for the ROSAC researchers gallery. Portraits
+ * live in `public/images/ROSAC/team/`; names, roles, emails and institution are on the front of each
+ * card, and the description is on the back after a click. They are rendered as HTML in
+ * `ResearcherCard`. `team.people[].src` must be a local path under `apps/web/public`.
+ * `next.config.ts` declares no `images` config, so a remote URL throws at render time.
+ *
+ * `institution` is the affiliation shown as `Institución: {institution}`. `email` is only set when
+ * LASCE supplied a public address. Portraits are the named files in `public/images/ROSAC/team/`.
+ *
+ * The team list is hand maintained here on purpose. If it ever needs to be editable without a
+ * deploy, move it to Prisma and fetch it in the route, the way `investigacion` does. The page
+ * component takes its content as a prop precisely so that migration touches only the route.
  */
+import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
+
 export const rosacInfoMeta = {
   title: 'Radioastronomía y ROSAC | LASCE',
   description:
-    'Conoce el Radio Observatorio de Santa Cruz: su propósito, la antena de 11 metros, sus capacidades en desarrollo y su relación con LASCE.',
+    'Conoce el Radio Observatorio de Santa Cruz: su propósito, la antena de 11 metros, sus capacidades en desarrollo, el equipo de investigadores y su relación con LASCE.',
 } as const
 
 export type RosacCardIcon =
@@ -20,6 +35,20 @@ export type RosacCardIcon =
   | 'receiver'
   | 'maintenance'
   | 'education'
+
+export interface TeamMember {
+  /** Local path under `apps/web/public`. */
+  src: string
+  /** Rendered as visible text, never as alt text. */
+  name: string
+  /** The category shown at the top of the card, for example `Investigador`. */
+  role: string
+  /** Public address when LASCE supplied one. */
+  email?: string
+  /** Provisional institution shown as `Institución: {institution}`. */
+  institution: string
+  description: string
+}
 
 interface RosacTextSection {
   title: string
@@ -37,12 +66,31 @@ interface RosacCardSection {
 }
 
 export interface RosacInfoContent {
-  hero: { kicker: string; title: string; lead: string }
+  hero: {
+    kicker: string
+    title: string
+    lead: string
+    image: {
+      src: string
+      alt: string
+      presentation: 'mark'
+      width: number
+      height: number
+    }
+  }
   overview: RosacTextSection
   characteristics: RosacCardSection
   activities: RosacCardSection
+  construction: ConstructionContent
   radioObservation: RosacTextSection
   relationship: RosacTextSection
+  team: {
+    title: string
+    intro: string
+    hint: string
+    emptyMessage: string
+    people: readonly TeamMember[]
+  }
   scientificConsultation: {
     title: string
     description: string
@@ -52,10 +100,18 @@ export interface RosacInfoContent {
 }
 
 export const rosacInfoContent = {
+  construction: rosacConstructionContent,
   hero: {
     kicker: 'Área de trabajo LASCE',
     title: 'Radioastronomía',
     lead: 'Radio Observatorio de Santa Cruz (ROSAC)',
+    image: {
+      src: '/images/ROSAC/logo/ROSAC-YELLOW.png',
+      alt: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)',
+      presentation: 'mark',
+      width: 1209,
+      height: 615,
+    },
   },
   overview: {
     title: '¿Qué es ROSAC?',
@@ -157,6 +213,134 @@ export const rosacInfoContent = {
       'LASCE convierte observaciones en conocimiento; ROSAC genera y fortalece una parte esencial de esas observaciones. Juntos conectan ciencia básica, desarrollo tecnológico, formación y aplicaciones de interés nacional.',
     ],
   },
+  team: {
+    title: 'Investigadores',
+    intro:
+      'Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.',
+    hint: 'Haga clic en una ficha para ver más información.',
+    emptyMessage: 'No hay información de investigadores disponible en este momento.',
+    people: [
+      {
+        src: '/images/ROSAC/team/CarolinaSalas.jpg',
+        name: 'Dra. Carolina Salas Matamoros',
+        role: 'Investigadora principal',
+        email: 'carolina.salas_mata@ucr.ac.cr',
+        institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+        description:
+          'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
+      },
+      {
+        src: '/images/ROSAC/team/MiguelVelazquez.jpg',
+        name: 'Dr. Miguel Velázquez',
+        role: 'Investigador',
+        email: 'miguel.velazquez@ucr.ac.cr',
+        institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica, México',
+        description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
+      },
+      {
+        src: '/images/ROSAC/team/DavidGale.jpg',
+        name: 'Dr. David Gale',
+        role: 'Investigador',
+        email: 'david.gale@ucr.ac.cr',
+        institution:
+          'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), Puebla, México',
+        description:
+          'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
+      },
+      {
+        src: '/images/ROSAC/team/OscarNunez.jpg',
+        name: 'Dr. Óscar Núñez',
+        role: 'Investigador',
+        email: 'oscar.nunezmata@ucr.ac.cr',
+        institution: 'Escuela de Ingeniería Eléctrica, UCR',
+        description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
+      },
+      {
+        src: '/images/ROSAC/team/FedericoRuiz.png',
+        name: 'Dr. Federico Ruiz',
+        role: 'Investigador',
+        email: 'federico.ruizugalde@ucr.ac.cr',
+        institution: 'Instituto de Investigaciones en Ingeniería (INII), UCR',
+        description:
+          'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
+      },
+      {
+        src: '/images/ROSAC/team/GustavoLara.jpg',
+        name: 'MSc. Gustavo Lara',
+        role: 'Investigador',
+        email: 'gustavo.lara@ucr.ac.cr',
+        institution: 'Escuela de Ingeniería Topográfica, UCR',
+        description:
+          'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+      },
+      {
+        src: '/images/ROSAC/team/AndresFallas.jpg',
+        name: 'Ing. Andrés Fallas',
+        role: 'Investigador',
+        email: 'andres.fallas@ucr.ac.cr',
+        institution: 'Escuela de Ingeniería Topográfica, UCR',
+        description:
+          'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+      },
+      {
+        src: '/images/ROSAC/team/WagnerMejias.jpg',
+        name: 'MSc. Wagner Mejías',
+        role: 'Investigador',
+        email: 'wagner.mejias@ucr.ac.cr',
+        institution: 'Escuela de Ingeniería Mecánica, UCR',
+        description:
+          'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
+      },
+      {
+        src: '/images/ROSAC/team/EduardoIbarra.jpg',
+        name: 'Dr. Eduardo Ibarra',
+        role: 'Colaborador externo',
+        institution:
+          'Investigador en ingeniería de microondas en Quantum Motion Technologies, Londres',
+        description:
+          'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
+      },
+      {
+        src: '/images/ROSAC/team/AndresCorrales.jpg',
+        name: 'Ing. Andrés Corrales',
+        role: 'Colaborador externo',
+        institution: 'Hewlett Packard Enterprise, Costa Rica',
+        description:
+          'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
+      },
+      {
+        src: '/images/ROSAC/team/AndresGamboa.jpg',
+        name: 'Ing. Andrés Gamboa',
+        role: 'Colaborador externo',
+        institution: 'Cirtec Medical Enterprise',
+        description:
+          'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
+      },
+      {
+        src: '/images/ROSAC/team/JelmutRojas.jpg',
+        name: 'Jelmuth Rojas',
+        role: 'Colaborador externo',
+        institution: 'INDI CR',
+        description: 'Apoyo en tareas de nivelación de la estructura.',
+      },
+      {
+        src: '/images/ROSAC/team/BarnaldBocker-2.jpg',
+        name: 'Barnald Bocker',
+        role: 'Asistente',
+        institution: 'Estudiante de la Escuela de Física, UCR',
+        description:
+          'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
+      },
+      {
+        src: '/images/ROSAC/team/FabianChaverri.jpg',
+        name: 'MSc. Fabián Chaverri',
+        role: 'Futuro estudiante de doctorado',
+        institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+        description:
+          'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
+      },
+    ],
+  },
   scientificConsultation: {
     title: 'Consulta científica',
     description:
@@ -165,6 +349,6 @@ export const rosacInfoContent = {
   },
   backLink: {
     href: '/#areas-de-trabajo',
-    label: 'Volver a las áreas y accesos principales',
+    label: 'Volver a las áreas',
   },
 } as const satisfies RosacInfoContent

@@ -5,12 +5,23 @@ migrations are written. These classes just let the worker read and write the
 same tables. Whenever you change a Prisma model, change the matching class here.
 """
 
+import enum
 import uuid
 from datetime import date as date_type
 from datetime import datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import (
+    CHAR,
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Text,
+    UniqueConstraint,
+    text,
+)
+from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -90,3 +101,202 @@ class ResearchCrossAuthor(Base):
         UUID(as_uuid=True), ForeignKey("research.research_authors.id", ondelete="CASCADE")
     )
     position: Mapped[int] = mapped_column(Integer)
+
+
+class NewsSource(Base):
+    """An outlet where a news item was published. Lives in the ``news`` Postgres schema."""
+
+    __tablename__ = "news_sources"
+    __table_args__ = {"schema": "news"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(Text, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class News(Base):
+    """A public news item shown on `/noticias`."""
+
+    __tablename__ = "news_records"
+    __table_args__ = {"schema": "news"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    title: Mapped[str] = mapped_column(Text)
+    published_at: Mapped[date_type | None] = mapped_column(Date, nullable=True)
+    source_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("news.news_sources.id", ondelete="RESTRICT")
+    )
+    abstract: Mapped[str] = mapped_column(Text)
+    external_url: Mapped[str] = mapped_column(Text, unique=True)
+    image_url: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class NewsAuthor(Base):
+    """A person credited as an author on one or more news items."""
+
+    __tablename__ = "news_authors"
+    __table_args__ = {"schema": "news"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(Text, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class NewsCrossAuthor(Base):
+    """Many-to-many join between `News` and `NewsAuthor`. Keeps ``position`` so
+    a record's citation order can be reproduced.
+    """
+
+    __tablename__ = "news_cross_authors"
+    __table_args__ = {"schema": "news"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    news_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("news.news_records.id", ondelete="CASCADE")
+    )
+    news_author_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("news.news_authors.id", ondelete="CASCADE")
+    )
+    position: Mapped[int] = mapped_column(Integer)
+
+
+class UserRole(enum.StrEnum):
+    """Access level of a portal account. Mirrors the Prisma ``UserRole`` enum, whose
+    database values are the lower-case strings below (``@map`` in the schema).
+    """
+
+    VISITOR = "visitor"
+    ASSISTANT = "assistant"
+    ADMIN = "admin"
+
+
+class User(Base):
+    """A portal account created by the public ``/registro`` form. Lives in the
+    ``auth`` Postgres schema. No job touches it yet; it is mirrored by convention.
+    Never log ``password_hash``.
+    """
+
+    __tablename__ = "users"
+    __table_args__ = {"schema": "auth"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    full_name: Mapped[str] = mapped_column(Text)
+    email: Mapped[str] = mapped_column(Text, unique=True)
+    institution: Mapped[str] = mapped_column(Text)
+    country_code: Mapped[str] = mapped_column(CHAR(2))
+    password_hash: Mapped[str] = mapped_column(Text)
+    # The Postgres-specific ENUM is used on purpose: the generic `sqlalchemy.Enum`
+    # silently drops `create_type`. Prisma owns the `auth.user_role` type and
+    # creates it in the migration, so SQLAlchemy must never emit CREATE TYPE.
+    role: Mapped[UserRole | None] = mapped_column(
+        ENUM(
+            UserRole,
+            name="user_role",
+            schema="auth",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        ),
+        server_default=text("'visitor'"),
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class UserSession(Base):
+    """A browser session for a portal account; mirrors the Prisma ``Session`` model
+    (table ``auth.sessions``). Named ``UserSession`` so it is never confused with
+    ``sqlalchemy.orm.Session``. Never log ``token_hash``.
+    """
+
+    __tablename__ = "sessions"
+    __table_args__ = {"schema": "auth"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("auth.users.id", ondelete="CASCADE")
+    )
+    token_hash: Mapped[str] = mapped_column(Text, unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GalleryAlbum(Base):
+    """A top-level gallery album or, when ``parent_album_id`` is set, a sub-album
+    nested one level under one. Lives in the ``gallery`` Postgres schema. No job
+    touches it yet; it is mirrored by convention.
+    """
+
+    __tablename__ = "gallery_albums"
+    __table_args__ = {"schema": "gallery"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    slug: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    years_label: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parent_album_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("gallery.gallery_albums.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    cover_object_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GalleryMedia(Base):
+    """One photo or video shown in an album's masonry grid and lightbox. Lives in
+    the ``gallery`` Postgres schema. No job touches it yet; it is mirrored by
+    convention.
+    """
+
+    __tablename__ = "gallery_media"
+    __table_args__ = {"schema": "gallery"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    album_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("gallery.gallery_albums.id", ondelete="CASCADE")
+    )
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    alt_text: Mapped[str] = mapped_column(Text)
+    object_key: Mapped[str] = mapped_column(Text, unique=True)
+    format: Mapped[str] = mapped_column(Text)
+    is_video: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    col_span: Mapped[int] = mapped_column(Integer, server_default=text("1"))
+    row_span: Mapped[int] = mapped_column(Integer, server_default=text("1"))
+    captured_at: Mapped[date_type] = mapped_column(Date)
+    uploader_name: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RolePermission(Base):
+    """Permission granted to a ``UserRole``. Mirrors the Prisma ``RolePermission``
+    model (table ``auth.role_permissions``). The permission strings are the web
+    catalogue; this table only stores the mapping.
+    """
+
+    __tablename__ = "role_permissions"
+    __table_args__ = (
+        UniqueConstraint("role", "permission", name="role_permissions_role_permission_key"),
+        {"schema": "auth"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    role: Mapped[UserRole] = mapped_column(
+        ENUM(
+            UserRole,
+            name="user_role",
+            schema="auth",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        )
+    )
+    permission: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

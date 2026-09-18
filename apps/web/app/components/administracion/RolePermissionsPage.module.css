@@ -1,0 +1,82 @@
+.form h2 {
+  margin: 0 0 8px;
+}
+
+.help {
+  margin: 0 0 20px;
+  color: #355066;
+}
+
+.error {
+  margin: 16px 0;
+  color: #8a1f1f;
+}
+
+.status {
+  margin: 0;
+  color: #244359;
+}
+
+.permissionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dirtyRow {
+  background: #eef6fb;
+}
+
+.dirtyMark,
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--blue);
+  flex-shrink: 0;
+}
+
+.form table tbody tr:last-child th,
+.form table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #dce5ed;
+}
+
+.pending {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: min(100%, 240px);
+}
+
+.dot {
+  margin-top: 7px;
+}
+
+.pendingTitle {
+  margin: 0;
+  color: var(--navy-deep);
+  font-weight: 600;
+}
+
+.pendingHelp {
+  margin: 4px 0 0;
+  color: #355066;
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-left: auto;
+}

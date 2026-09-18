@@ -7,11 +7,33 @@ import { Default } from './RosacInfoPage.stories'
 const defaultArgs = Default.args as RosacInfoPageProps
 
 describe('RosacInfoPage', () => {
+  test('places construction after development and renumbers only the following numbered sections', () => {
+    render(<RosacInfoPage {...defaultArgs} />)
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent?.trim())
+    expect(headings.filter((heading) => /^\d\./.test(heading ?? ''))).toEqual([
+      '1. Características principales',
+      '2. ¿Qué desarrollamos en ROSAC?',
+      '3. Construcción del ROSAC',
+      '4. ¿Por qué observar en radio?',
+      '5. Investigadores',
+    ])
+    expect(screen.getByRole('region', { name: '3. Construcción del ROSAC' })).toHaveTextContent(
+      defaultArgs.content.construction.intro,
+    )
+  })
+
   test('explains the observatory purpose, characteristics and relationship with LASCE', () => {
     render(<RosacInfoPage {...defaultArgs} />)
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: defaultArgs.content.hero.image.alt })).toHaveAttribute(
+      'src',
+      defaultArgs.content.hero.image.src,
+    )
     expect(screen.getByRole('region', { name: '¿Qué es ROSAC?' })).toHaveTextContent(
       /observar el Sol y otras fuentes celestes/,
     )
@@ -61,5 +83,41 @@ describe('RosacInfoPage', () => {
     const overview = screen.getByRole('region', { name: 'Acerca del observatorio' })
     expect(overview).toHaveTextContent('Descripción actualizada.')
     expect(screen.getByRole('region', { name: 'ROSAC y LASCE' })).toBeInTheDocument()
+  })
+
+  test('introduces every ROSAC researcher', () => {
+    render(<RosacInfoPage {...defaultArgs} />)
+
+    const team = screen.getByRole('region', { name: /Investigadores/ })
+    expect(within(team).getByText(defaultArgs.content.team.hint)).toBeInTheDocument()
+    const track = within(team).getByRole('list', { name: defaultArgs.content.team.title })
+
+    expect(within(track).getAllByRole('listitem')).toHaveLength(
+      defaultArgs.content.team.people.length,
+    )
+    expect(within(team).getByText('Investigadora principal')).toBeInTheDocument()
+    for (const person of defaultArgs.content.team.people) {
+      expect(within(team).getByRole('heading', { name: person.name })).toBeInTheDocument()
+      expect(
+        within(team).getAllByText(`Institución: ${person.institution}`).length,
+      ).toBeGreaterThan(0)
+    }
+  })
+
+  test('explains when no ROSAC researchers are available', () => {
+    render(
+      <RosacInfoPage
+        content={{
+          ...defaultArgs.content,
+          team: { ...defaultArgs.content.team, people: [] },
+        }}
+      />,
+    )
+
+    const team = screen.getByRole('region', { name: /Investigadores/ })
+    expect(within(team).getByRole('status')).toHaveTextContent(
+      defaultArgs.content.team.emptyMessage,
+    )
+    expect(within(team).queryByRole('list')).not.toBeInTheDocument()
   })
 })

@@ -2,7 +2,7 @@
 
 Public institutional portal for LASCE, built with Next.js and TypeScript inside the LASCE Turborepo.
 
-The public pages are available without authentication. The header includes an **Ingresar** link to `/login`; the authentication flow and protected areas are implemented separately from this public portal.
+The public pages are available without authentication. The header includes an **Ingresar** link to `/acceso`, whose tabs cover sign-in and sign-up; the authentication flow is described in [`docs/sessions.md`](../../docs/sessions.md) and protected areas are implemented separately from this public portal.
 
 ## Requirements
 
@@ -56,21 +56,24 @@ Production deployment uses the standalone Next.js bundle through
 
 ## Public Routes
 
-| Route                | Purpose                                                        |
-| -------------------- | -------------------------------------------------------------- |
-| `/`                  | Institutional landing page and access to the main public areas |
-| `/#areas-de-trabajo` | Work areas and main portal access cards on the home page       |
-| `/fisica-solar`      | Solar astrophysics information page based on LASCE content     |
-| `/clima-espacial`    | Space weather information page                                 |
-| `/radioastronomia`   | Radio astronomy work area                                      |
-| `/nosotros`          | General information about LASCE (_Quiénes somos_)              |
-| `/investigacion`     | Research areas and activities                                  |
-| `/instrumentacion`   | Scientific instruments and observatories                       |
-| `/datos`             | Public data and analysis resources                             |
-| `/noticias`          | Institutional news                                             |
-| `/contacto`          | Contact information                                            |
+| Route                       | Purpose                                                                            |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| `/`                         | Institutional landing page and access to the main public areas                     |
+| `/#areas-de-trabajo`        | Work areas and main portal access cards on the home page                           |
+| `/fisica-solar`             | Solar astrophysics information page based on LASCE content                         |
+| `/clima-espacial`           | Space weather information page                                                     |
+| `/radioastronomia`          | Radio astronomy work area and ROSAC researchers                                    |
+| `/nosotros`                 | General information about LASCE (_Quiénes somos_)                                  |
+| `/investigacion`            | Research areas and activities                                                      |
+| `/instrumentacion`          | Scientific instruments and observatories                                           |
+| `/herramientas-cientificas` | Scientific tools: SWAAT and SWAPRO                                                 |
+| `/datos`                    | Public data and analysis resources                                                 |
+| `/noticias`                 | Institutional news                                                                 |
+| `/contacto`                 | Contact information                                                                |
+| `/acceso`                   | Sign-in and sign-up cards behind a tab selector (_Iniciar sesión_, _Crear cuenta_) |
+| `/cuenta`                   | The signed-in user's profile and sign-out; requires a session                      |
 
-Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page.
+Unknown routes return the standard Next.js `404` response. Public routes do not redirect visitors to a login page; `/login` and `/registro` redirect to `/acceso`; `/cuenta` is the one route that requires a session (see [`docs/sessions.md`](../../docs/sessions.md)).
 
 ## Work Areas
 
@@ -82,7 +85,7 @@ The three LASCE research work areas are defined once in `app/lib/work-areas.ts`.
 | `clima-espacial`  | `/clima-espacial`  | Clima espacial  |
 | `radioastronomia` | `/radioastronomia` | Radioastronomía |
 
-The home section anchor is `/#areas-de-trabajo`. The same module also lists the three portal access cards that link to existing top-level routes (`/instrumentacion`, `/datos`, `/noticias`).
+The home section anchor is `/#areas-de-trabajo`. The same module also lists the three portal access cards that link to existing top-level routes (`/herramientas-cientificas`, `/datos`, `/noticias`).
 
 Reusable UI for this section lives in `app/components/public/WorkAreaCard.tsx` and `WorkAreasSection.tsx`, with Storybook stories co-located beside each component.
 
@@ -97,6 +100,7 @@ app/
 |   |-- clima-espacial/page.tsx
 |   |-- fisica-solar/page.tsx
 |   |-- nosotros/page.tsx
+|   |-- radioastronomia/page.tsx
 |   |-- layout.tsx
 |   `-- page.tsx
 |-- components/public/
@@ -105,6 +109,7 @@ app/
 |   |-- PublicHeader.tsx
 |   |-- WorkAreaCard.tsx
 |   |-- WorkAreasSection.tsx
+|   |-- rosac/
 |   |-- solar-astrophysics/
 |   |-- space-weather/
 |   `-- topic/
@@ -112,6 +117,7 @@ app/
 |   |-- site.ts
 |   |-- solar-astrophysics.ts
 |   |-- space-weather.ts
+|   |-- rosac.ts
 |   `-- work-areas.ts
 |-- globals.css
 |-- layout.tsx
@@ -131,7 +137,8 @@ playwright.config.ts
 - `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
 - `app/(public)/fisica-solar/page.tsx` renders the solar astrophysics information page. Copy adapted from LASCE-provided material and page metadata live in `app/lib/solar-astrophysics.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
 - `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy lives in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
-- `app/(public)/nosotros/page.tsx` renders the general information page (_Quiénes somos_). Copy and page metadata live in `app/lib/nosotros.ts`. The page is public, includes a return link to `/`, and does not require authentication. Its team gallery is a scroll-snap track rather than an index carousel, so every portrait stays in the DOM and keyboard scrolling works natively; names are visible captions and the portraits are decorative.
+- `app/(public)/nosotros/page.tsx` renders the general information page (_Quiénes somos_). Copy and page metadata live in `app/lib/nosotros.ts`. The page is public, includes a return link to `/`, and does not require authentication. LASCE researchers reuse the ROSAC `TeamGallery` scroll-snap track and `ResearcherCard`s (photo, role, name, email and institution on the front; description on the back after a click); portraits live in `public/images/Researchers/`, except Dra. Carolina Salas Matamoros, who reuses the ROSAC portrait. An empty list shows an informative message instead of the gallery.
+- `app/(public)/radioastronomia/page.tsx` renders the ROSAC information page. Copy and page metadata live in `app/lib/rosac.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication. The hero shows the ROSAC wordmark (`/images/ROSAC/logo/ROSAC-YELLOW.png`). Its researchers gallery is a scroll-snap track rather than an index carousel, so every portrait stays in the DOM and keyboard scrolling works natively. Each person is a `ResearcherCard` (photo, role, name, email and institution on the front; description on the back after a click). An empty list shows an informative message instead of the gallery.
 - `app/components/public/topic/` holds reusable topic-page primitives (`TopicHero`, `TopicSection`, `InfoCard`, `ConceptFlow`, `TopicFigure`, and related layout pieces) so other work area pages can reuse the same structure without duplicating markup.
 - `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`.
 

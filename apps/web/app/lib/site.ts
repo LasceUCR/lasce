@@ -12,11 +12,12 @@ export const publicPaths = [
   '/',
   '/nosotros',
   '/investigacion',
-  '/instrumentacion',
+  '/herramientas-cientificas',
   '/datos',
   '/galeria',
   '/noticias',
   '/contacto',
+  '/acceso',
   ...workAreaSlugs.map((slug) => workAreaPath(slug)),
   ...galleryPaths,
 ] as const

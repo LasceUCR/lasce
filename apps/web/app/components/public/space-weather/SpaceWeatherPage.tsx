@@ -53,6 +53,7 @@ export function SpaceWeatherPage() {
         intro={spaceWeatherComponents.intro}
         title={spaceWeatherComponents.title}
         titleId="sw-components-title"
+        wide
       >
         <CardGrid columns={3} equalHeight>
           {spaceWeatherComponents.items.map((item, index) => {
