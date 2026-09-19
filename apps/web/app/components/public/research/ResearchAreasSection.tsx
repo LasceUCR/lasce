@@ -27,6 +27,8 @@ export interface ResearchArea {
 }
 
 export interface ResearchAreasSectionProps {
+  title: string
+  subtitle: string
   id?: string
   areas: ResearchArea[]
   canCreate?: boolean
