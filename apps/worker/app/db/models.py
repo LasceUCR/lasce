@@ -10,7 +10,17 @@ import uuid
 from datetime import date as date_type
 from datetime import datetime
 
-from sqlalchemy import CHAR, Date, DateTime, ForeignKey, Integer, Text, UniqueConstraint, text
+from sqlalchemy import (
+    CHAR,
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -226,6 +236,58 @@ class UserSession(Base):
     token_hash: Mapped[str] = mapped_column(Text, unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GalleryAlbum(Base):
+    """A top-level gallery album or, when ``parent_album_id`` is set, a sub-album
+    nested one level under one. Lives in the ``gallery`` Postgres schema. No job
+    touches it yet; it is mirrored by convention.
+    """
+
+    __tablename__ = "gallery_albums"
+    __table_args__ = {"schema": "gallery"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    slug: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    years_label: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parent_album_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("gallery.gallery_albums.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    cover_object_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GalleryMedia(Base):
+    """One photo or video shown in an album's masonry grid and lightbox. Lives in
+    the ``gallery`` Postgres schema. No job touches it yet; it is mirrored by
+    convention.
+    """
+
+    __tablename__ = "gallery_media"
+    __table_args__ = {"schema": "gallery"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    album_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("gallery.gallery_albums.id", ondelete="CASCADE")
+    )
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    alt_text: Mapped[str] = mapped_column(Text)
+    object_key: Mapped[str] = mapped_column(Text, unique=True)
+    format: Mapped[str] = mapped_column(Text)
+    is_video: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    col_span: Mapped[int] = mapped_column(Integer, server_default=text("1"))
+    row_span: Mapped[int] = mapped_column(Integer, server_default=text("1"))
+    captured_at: Mapped[date_type] = mapped_column(Date)
+    uploader_name: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class RolePermission(Base):

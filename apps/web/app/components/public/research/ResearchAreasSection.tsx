@@ -28,8 +28,6 @@ export interface ResearchArea {
 
 export interface ResearchAreasSectionProps {
   id?: string
-  title: string
-  subtitle: string
   areas: ResearchArea[]
   canCreate?: boolean
   canEdit?: boolean
@@ -99,8 +97,9 @@ export function ResearchAreasSection({
           if (!showEditor) {
             return (
               <AlbumTile
+                href={`/investigacion/areas/${area.slug}`}
                 key={area.slug}
-                meta={area.description}
+                meta="Conozca más sobre esta área"
                 src={area.src}
                 title={area.title}
               />
@@ -117,7 +116,13 @@ export function ResearchAreasSection({
               onDelete={canDelete ? () => handleDeleteArea(area.slug) : undefined}
               onEdit={canEdit ? () => openEditor(area.slug) : undefined}
             >
-              <AlbumTile meta={area.description} src={area.src} title={area.title} />
+              <AlbumTile
+                href={`/investigacion/areas/${area.slug}`}
+                key={area.slug}
+                meta="Conozca más sobre esta área"
+                src={area.src}
+                title={area.title}
+              />
             </EditableWrapper>
           )
         })}

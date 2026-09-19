@@ -124,11 +124,119 @@ describe('NosotrosPage', () => {
     expect(screen.getByRole('region', { name: 'Nuestra visión' })).toBeInTheDocument()
   })
 
-  test('does not list the ROSAC researchers', () => {
+  test('does not list the ROSAC-only researchers', () => {
     renderPage()
 
-    expect(screen.queryByText('Dra. Carolina Salas Matamoros')).not.toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: /Investigadores/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Dr. Miguel Velázquez')).not.toBeInTheDocument()
+    expect(screen.queryByText('Jelmuth Rojas')).not.toBeInTheDocument()
+  })
+
+  test('lists the LASCE researchers in a scrollable gallery', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    expect(
+      within(researchers).getByRole('heading', { level: 2, name: /2\.\s*Investigadores LASCE/ }),
+    ).toBeInTheDocument()
+    expect(researchers).toHaveTextContent(defaultArgs.content.researchers.intro)
+    expect(researchers).toHaveTextContent(defaultArgs.content.researchers.hint)
+    const track = within(researchers).getByRole('list', {
+      name: defaultArgs.content.researchers.title,
+    })
+
+    expect(within(track).getAllByRole('listitem')).toHaveLength(
+      defaultArgs.content.researchers.people.length,
+    )
+    expect(track).toHaveAttribute('tabindex', '0')
+    expect(within(researchers).getByRole('button', { name: 'Anterior' })).toBeInTheDocument()
+    expect(within(researchers).getByRole('button', { name: 'Siguiente' })).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dra. Carolina Salas Matamoros' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dr. Allan Francisco Berrocal Rojas' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dr. Luis Gustavo Esquivel Quirós' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'MSc. Ivania Calvo' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dr. Felipe Meza' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'MSc. Alonso Vega' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dra. Gabriela Molina' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('heading', { name: 'Dra. Yenca Migoya' }),
+    ).toBeInTheDocument()
+    expect(
+      within(researchers).getByRole('link', { name: 'felipe.mezaobando@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:felipe.mezaobando@ucr.ac.cr')
+    expect(
+      within(researchers).getByRole('link', { name: 'alonso.vega_f@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:alonso.vega_f@ucr.ac.cr')
+    expect(
+      within(researchers).getByRole('link', { name: 'gmolina@herrera.unt.edu.ar' }),
+    ).toHaveAttribute('href', 'mailto:gmolina@herrera.unt.edu.ar')
+    expect(within(researchers).getByRole('link', { name: 'yenca@ictp.it' })).toHaveAttribute(
+      'href',
+      'mailto:yenca@ictp.it',
+    )
+    expect(
+      within(researchers).getByRole('link', { name: 'carolina.salas_mata@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:carolina.salas_mata@ucr.ac.cr')
+    expect(
+      within(researchers).getByRole('link', { name: 'allan.berrocal@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:allan.berrocal@ucr.ac.cr')
+    expect(
+      within(researchers).getByRole('link', { name: 'ivannia.calvo@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:ivannia.calvo@ucr.ac.cr')
+    expect(within(researchers).getByText('Investigadora principal')).toBeInTheDocument()
+    expect(
+      within(researchers).getAllByText('Institución: Centro de Investigaciones Espaciales, CINESPA')
+        .length,
+    ).toBeGreaterThan(0)
+    await user.click(
+      within(researchers).getByRole('button', {
+        name: 'Ver descripción de Dra. Carolina Salas Matamoros',
+      }),
+    )
+    expect(
+      within(researchers).getByText(
+        /coordina la integración entre astrofísica solar, radioastronomía, clima espacial/,
+      ),
+    ).toBeInTheDocument()
+    expect(within(researchers).getAllByText('Investigador colaborador').length).toBeGreaterThan(0)
+    expect(within(researchers).getAllByText('Investigadora colaboradora').length).toBeGreaterThan(0)
+    await user.click(
+      within(researchers).getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }),
+    )
+    expect(
+      within(researchers).getByText(
+        'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  test('explains when no LASCE researchers are available', () => {
+    renderPage({
+      content: {
+        ...defaultArgs.content,
+        researchers: { ...defaultArgs.content.researchers, people: [] },
+      },
+    })
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    expect(within(researchers).getByRole('status')).toHaveTextContent(
+      defaultArgs.content.researchers.emptyMessage,
+    )
+    expect(within(researchers).queryByRole('list')).not.toBeInTheDocument()
   })
 
   test('hides the edit affordances when edit mode is off', () => {

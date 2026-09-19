@@ -28,7 +28,7 @@ datasource db {
 
   // One Postgres schema per domain. `public` stays declared for whatever
   // non-domain-specific table comes next.
-  schemas = ["public", "research", "news", "auth"]
+  schemas = ["public", "research", "news", "auth", "gallery"]
 }
 
 /// Access level of a portal account. Self-registration always yields `visitor`;
@@ -285,16 +285,63 @@ model NosotrosActivity {
   @@schema("public")
 }
 
+/// A top-level gallery album (e.g. "ROSAC") or, when `parentAlbumId` is set, a
+/// sub-album nested one level under one (e.g. "Cimentación" under "ROSAC"). The
+/// hierarchy is exactly 2 levels by application convention; nothing here enforces
+/// that depth in the database.
+model GalleryAlbum {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug           String   @unique
+  title          String
+  description    String   @db.Text
+  /// Display string shown in the album summary line, e.g. "2025–2026".
+  yearsLabel     String?  @map("years_label")
+  parentAlbumId  String?  @map("parent_album_id") @db.Uuid
+  /// Object key of the cover image shown on the album/sub-album tile. Decorative
+  /// (rendered with alt=""), so no separate alt column — unlike GalleryMedia.
+  coverObjectKey String?  @map("cover_object_key")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
 
-/// An editable research area shown on the public investigation page.
-model ResearchArea {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title       String
-  description String   @db.Text
-  src         String?
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  parentAlbum GalleryAlbum?  @relation("GalleryAlbumSubAlbums", fields: [parentAlbumId], references: [id], onDelete: Cascade)
+  subAlbums   GalleryAlbum[] @relation("GalleryAlbumSubAlbums")
+  media       GalleryMedia[]
 
-  @@map("research_areas")
-  @@schema("public")
+  @@index([parentAlbumId])
+  @@map("gallery_albums")
+  @@schema("gallery")
 }
+
+/// One photo or video shown in an album's masonry grid and lightbox.
+model GalleryMedia {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  albumId      String   @map("album_id") @db.Uuid
+  title        String
+  description  String   @db.Text
+  /// Required accessibility text for the image/video still, required from
+  /// creation. Precedent: news_records.image_alt.
+  altText      String   @map("alt_text")
+  /// Key returned by IAssetStorage.createUpload(); the storage layer itself
+  /// tracks no metadata, so this is the only place the file is findable from.
+  objectKey    String   @unique @map("object_key")
+  /// Display label such as "JPG", "MP4", "PNG", "FITS" — free text, not an enum.
+  format       String
+  isVideo      Boolean  @default(false) @map("is_video")
+  /// Masonry tile footprint, 1 or 2. Not DB-constrained to that range today.
+  colSpan      Int      @default(1) @map("col_span")
+  rowSpan      Int      @default(1) @map("row_span")
+  capturedAt   DateTime @map("captured_at") @db.Date
+  uploaderName String   @map("uploader_name")
+  /// Explicit display/lightbox order within the album, replacing array order.
+  position     Int
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  album GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId, position])
+  @@index([albumId])
+  @@map("gallery_media")
+  @@schema("gallery")
+}
+

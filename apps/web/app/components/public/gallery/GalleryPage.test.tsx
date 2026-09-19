@@ -34,6 +34,25 @@ describe('GalleryPage', () => {
     }
   })
 
+  // Every album is an h2 and every tile beneath it an h3, so the outline never
+  // skips a level and can be used to move around the page.
+  test('nests every tile heading under the heading of its album', () => {
+    render(<GalleryPage />)
+
+    const expected = galleryAlbumList.flatMap((album) => [
+      album.title,
+      ...album.subAlbums.map((subAlbum) => subAlbum.title),
+    ])
+
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(expected.length)
+  })
+
+  test('presents each album block as its own list', () => {
+    render(<GalleryPage />)
+
+    expect(screen.getAllByRole('list')).toHaveLength(galleryAlbumList.length)
+  })
+
   test('offers a way back to the home page', () => {
     render(<GalleryPage />)
 

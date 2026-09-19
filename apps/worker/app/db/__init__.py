@@ -1,5 +1,7 @@
 from app.db.models import (
     Base,
+    GalleryAlbum,
+    GalleryMedia,
     News,
     NewsAuthor,
     NewsCrossAuthor,
@@ -16,6 +18,8 @@ from app.db.models import (
 
 __all__ = [
     "Base",
+    "GalleryAlbum",
+    "GalleryMedia",
     "News",
     "NewsAuthor",
     "NewsCrossAuthor",

@@ -1,29 +1,44 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
-import type { TeamMember } from '@/app/lib/rosac'
-
-import { ResearcherCard } from './ResearcherCard'
+import { ResearcherCard, type ResearcherCardProps } from './ResearcherCard'
 
 export interface TeamGalleryProps {
   label: string
   emptyMessage: string
-  people: readonly TeamMember[]
+  hint: string
+  people: readonly ResearcherCardProps[]
 }
 
 /**
  * A scroll-snap track rather than an index driven carousel: every portrait stays in the DOM,
  * keyboard and touch scrolling work natively, and there is no slide state, live region or focus
  * management to get wrong. `/radioastronomia` is in the zero tolerance axe sweep and index
- * carousels are the usual source of violations there.
+ * carousels are the usual source of violations there. `/nosotros` reuses the same gallery.
  *
  * Each person is a `ResearcherCard`. The portrait is decorative (`alt=""`) because the name, role,
- * institution and description are rendered as real HTML beside it.
+ * email and institution are rendered as real HTML on the front; the description is on the back after a
+ * flip.
  */
-export function TeamGallery({ label, emptyMessage, people }: TeamGalleryProps) {
+export function TeamGallery({ label, emptyMessage, hint, people }: TeamGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null)
+
+  useLayoutEffect(() => {
+    const track = trackRef.current
+
+    if (!track) {
+      return
+    }
+
+    track.scrollLeft = 0
+    const frame = requestAnimationFrame(() => {
+      track.scrollLeft = 0
+    })
+
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   function scrollByCards(direction: 1 | -1) {
     const track = trackRef.current
@@ -46,10 +61,11 @@ export function TeamGallery({ label, emptyMessage, people }: TeamGalleryProps) {
 
   return (
     <div className="team-gallery">
+      <p className="team-gallery-hint">{hint}</p>
       {/* Focusable so the scrollable region is reachable by keyboard, which axe requires. */}
       <ul aria-label={label} className="team-gallery-track" ref={trackRef} tabIndex={0}>
         {people.map((person) => (
-          <li className="team-gallery-slide" key={person.src}>
+          <li className="team-gallery-slide" key={person.email ?? person.name}>
             <ResearcherCard
               description={person.description}
               email={person.email}
