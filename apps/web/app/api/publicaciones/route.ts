@@ -48,6 +48,13 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     const publication = await createPublication(parsed.data)
 
+    if (publication === 'duplicate-doi') {
+      return NextResponse.json(
+        { error: 'Ya existe una publicación con este DOI.' },
+        { status: 409 },
+      )
+    }
+
     return NextResponse.json(
       { publication },
       {

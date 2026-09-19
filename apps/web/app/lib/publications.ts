@@ -1,4 +1,4 @@
-import { prisma } from '@lasce/db'
+import { prisma, Prisma } from '@lasce/db'
 import { z } from 'zod'
 
 export const publicacionesMeta = {
@@ -99,20 +99,26 @@ export async function createPublication(data: PublicationInput) {
     })
 
     // Create the publication itself.
-    const research = await tx.research.create({
-      data: {
-        title: data.title,
-        publicationDate: data.date,
-        publisherId: publisher.id,
-        abstract: data.abstract,
+    let research
+    try {
+      research = await tx.research.create({
+        data: {
+          title: data.title,
+          publicationDate: data.date,
+          publisherId: publisher.id,
+          abstract: data.abstract,
+          externalUrl: data.DOI,
+          doi: data.DOI || null,
+          researchGroup: data.researchGroup,
+        },
+      })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return 'duplicate-doi'
+      }
 
-        // Currently using DOI as the external URL
-        externalUrl: data.DOI,
-        doi: data.DOI || null,
-
-        researchGroup: data.researchGroup,
-      },
-    })
+      throw error
+    }
 
     // Create/reuse each author and preserve their order.
     for (const [position, name] of data.authors.entries()) {
@@ -179,20 +185,28 @@ export async function updatePublication(id: string, data: PublicationInput) {
     })
 
     // Update the actual publication record.
-    await tx.research.update({
-      where: {
-        id,
-      },
-      data: {
-        title: data.title,
-        publicationDate: data.date,
-        publisherId: publisher.id,
-        abstract: data.abstract,
-        externalUrl: data.DOI,
-        doi: data.DOI || null,
-        researchGroup: data.researchGroup,
-      },
-    })
+    try {
+      await tx.research.update({
+        where: {
+          id,
+        },
+        data: {
+          title: data.title,
+          publicationDate: data.date,
+          publisherId: publisher.id,
+          abstract: data.abstract,
+          externalUrl: data.DOI,
+          doi: data.DOI || null,
+          researchGroup: data.researchGroup,
+        },
+      })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return 'duplicate-doi'
+      }
+
+      throw error
+    }
 
     // Remove the current author relationships.
     // only delete the cross-author rows, NOT the researchAuthor

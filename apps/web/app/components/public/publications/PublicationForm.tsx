@@ -156,7 +156,7 @@ export function PublicationForm({
         </Button>
       </div>
 
-      <FormField id={`publication-doi`} label="DOI" onChange={setDOI} value={DOI} />
+      <FormField id={`publication-doi`} label="DOI" onChange={setDOI} value={DOI} required />
 
       <FormField
         id={`publication-venue-venue`}

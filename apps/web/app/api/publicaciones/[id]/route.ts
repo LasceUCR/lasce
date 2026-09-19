@@ -43,6 +43,10 @@ export async function PATCH(
 
   const publication = await updatePublication(id, parsed.data)
 
+  if (publication === 'duplicate-doi') {
+    return NextResponse.json({ error: 'Ya existe una publicación con este DOI.' }, { status: 409 })
+  }
+
   if (!publication) {
     return NextResponse.json(
       { error: `No existe una publicación con id "${id}".` },
