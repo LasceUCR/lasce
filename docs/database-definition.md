@@ -307,9 +307,9 @@ delete components, download resources, manage users and manage permissions.
 
 The worker never writes here.
 
-## `public` schema
+## `areas` schema
 
-### `research_areas`
+### `researchArea`
 
 An editable research area shown on the public "investigacion" page. Each area has a stable UUID
 identifier, a title, a description, and an optional image source.
@@ -346,7 +346,7 @@ fixed, real LASCE research and news records so local/dev environments aren't emp
 
 `apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
 maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
-area create, update, and delete operations also write this table.
+area create, update, and delete operations will also write this table when implemented.
 
 Nothing yet reads or writes `gallery_albums`/`gallery_media` — `/galeria` still renders from the
 static mock in `apps/web/app/lib/gallery.ts`.

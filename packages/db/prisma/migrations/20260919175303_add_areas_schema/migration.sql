@@ -1,5 +1,8 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "areas";
+
 -- CreateTable
-CREATE TABLE "research_areas" (
+CREATE TABLE "areas"."research_areas" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,

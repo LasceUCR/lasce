@@ -28,7 +28,7 @@ datasource db {
 
   // One Postgres schema per domain. `public` stays declared for whatever
   // non-domain-specific table comes next.
-  schemas = ["public", "research", "news", "auth", "gallery"]
+  schemas = ["public", "research", "news", "auth", "gallery", "areas"]
 }
 
 /// Access level of a portal account. Self-registration always yields `visitor`;
@@ -345,3 +345,15 @@ model GalleryMedia {
   @@schema("gallery")
 }
 
+/// An editable research area shown on the public investigation page.
+model ResearchArea {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String   @db.Text
+  src         String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  
+  @@map("research_areas")
+  @@schema("areas")
+}

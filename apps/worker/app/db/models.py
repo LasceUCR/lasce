@@ -55,7 +55,7 @@ class ResearchArea(Base):
     """An editable research area shown on the public investigation page."""
 
     __tablename__ = "research_areas"
-    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+    __table_args__ = {"schema": "areas"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
 
     id: Mapped[uuid.UUID] = _uuid_pk()
     title: Mapped[str] = mapped_column(Text)
