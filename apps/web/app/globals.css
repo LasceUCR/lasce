@@ -189,13 +189,11 @@ a {
 }
 
 .site-header {
-  /* Read by the navigation dropdown to hang from the header's bottom edge. */
-  --site-header-padding-bottom: 7px;
   position: sticky;
   top: 0;
   z-index: 20;
   min-height: 70px;
-  padding: 11px 24px var(--site-header-padding-bottom);
+  padding: 11px 24px 7px;
   display: grid;
   grid-template-columns: minmax(370px, 1fr) auto minmax(110px, 1fr);
   align-items: center;
@@ -355,12 +353,12 @@ a {
   background: var(--action);
 }
 
-/* A flat list hanging from the header's bottom edge. Its top edge is the header's cyan
-   rule, thinner, laid over the header's bottom border; the item text lines up with the
-   summary label. */
+/* A flat list just under the summary, topped by the header's cyan rule, thinner; the
+   item text lines up with the summary label. It starts where the active underline of
+   the summary starts, so the cyan rule replaces that underline while the panel is open. */
 .nav-group-panel {
   position: absolute;
-  top: calc(100% + var(--site-header-padding-bottom));
+  top: calc(100% - 8px);
   left: -14px;
   z-index: 2;
   min-width: 200px;
