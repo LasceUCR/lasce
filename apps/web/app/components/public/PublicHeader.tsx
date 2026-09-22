@@ -23,6 +23,8 @@ const navigation: NavEntry[] = [
   { label: 'Inicio', href: '/' },
   { label: 'Nosotros', href: '/nosotros' },
   { label: 'Investigación', href: '/investigacion' },
+  { label: 'Datos', href: '/datos' },
+  { label: 'Noticias', href: '/noticias' },
   {
     label: 'Recursos',
     items: [
@@ -31,8 +33,6 @@ const navigation: NavEntry[] = [
       { label: 'Galería', href: '/galeria' },
     ],
   },
-  { label: 'Datos', href: '/datos' },
-  { label: 'Noticias', href: '/noticias' },
   { label: 'Contacto', href: '/contacto' },
   { label: 'Administración', href: '/administracion' },
 ]
