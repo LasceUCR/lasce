@@ -3398,6 +3398,9 @@ a.gallery-tile:focus-visible {
   cursor: pointer;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
+  /* Another stacking context inside a face; see .researcher-card-email. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .researcher-card-flip-hit:focus,
@@ -3476,6 +3479,12 @@ a.gallery-tile:focus-visible {
   font-size: 14px;
   line-height: 1.4;
   overflow-wrap: anywhere;
+  /* The z-index, needed to sit above the flip button, makes this a stacking context
+     that Blink and WebKit may composite on its own layer. backface-visibility is not
+     inherited from the face, so without its own value that layer keeps painting,
+     mirrored, once the card turns away. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .researcher-card-email:hover,
