@@ -14,6 +14,10 @@ for (const width of [1440, 1280, 768, 390]) {
     const navigation = page.getByRole('navigation', {
       name: isMobileMenu ? 'Navegación móvil' : 'Navegación principal',
     })
+    if (!isMobileMenu) {
+      // The desktop header keeps this page behind the "Recursos" disclosure.
+      await navigation.locator('summary', { hasText: 'Recursos' }).click()
+    }
     await expect(navigation.getByRole('link', { name: 'Instrumentación' })).toHaveCount(0)
     await navigation.getByRole('link', { name: 'Herramientas científicas' }).click()
 
