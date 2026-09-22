@@ -86,7 +86,7 @@ export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGro
     >
       <summary ref={summary}>
         {label}
-        <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} />
+        <ChevronDown aria-hidden="true" size={14} strokeWidth={1.6} />
       </summary>
       <div className="nav-group-panel">
         {items.map((item) => {
