@@ -13,8 +13,8 @@ const publicRoutes: { label: string; path: string; heading: string; group?: stri
     heading: 'Herramientas científicas',
     group: 'Recursos',
   },
-  { label: 'Datos', path: '/datos', heading: 'Datos', group: 'Recursos' },
-  { label: 'Galería', path: '/galeria', heading: 'Galería' },
+  { label: 'Datos', path: '/datos', heading: 'Datos' },
+  { label: 'Galería', path: '/galeria', heading: 'Galería', group: 'Recursos' },
   { label: 'Noticias', path: '/noticias', heading: 'Noticias' },
   { label: 'Contacto', path: '/contacto', heading: 'Contacto' },
 ]

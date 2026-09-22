@@ -54,7 +54,7 @@ describe('PublicHeader', () => {
 
     const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
     const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
-    const grouped = ['Publicaciones', 'Herramientas científicas', 'Datos']
+    const grouped = ['Publicaciones', 'Herramientas científicas', 'Galería']
 
     for (const label of grouped) {
       expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
@@ -67,6 +67,7 @@ describe('PublicHeader', () => {
     for (const label of grouped) {
       expect(desktop.getByRole('link', { name: label })).toBeVisible()
     }
-    expect(desktop.getByRole('link', { name: 'Datos' })).toHaveAttribute('href', '/datos')
+    expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
+    expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
   })
 })

@@ -28,10 +28,10 @@ const navigation: NavEntry[] = [
     items: [
       { label: 'Publicaciones', href: '/publicaciones' },
       { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
-      { label: 'Datos', href: '/datos' },
+      { label: 'Galería', href: '/galeria' },
     ],
   },
-  { label: 'Galería', href: '/galeria' },
+  { label: 'Datos', href: '/datos' },
   { label: 'Noticias', href: '/noticias' },
   { label: 'Contacto', href: '/contacto' },
   { label: 'Administración', href: '/administracion' },

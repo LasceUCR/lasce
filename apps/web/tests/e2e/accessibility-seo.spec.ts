@@ -19,8 +19,8 @@ const publicRoutes = [
   { label: 'Investigación', path: '/investigacion' },
   { label: 'Publicaciones', path: '/publicaciones' },
   { label: 'Herramientas científicas', path: '/herramientas-cientificas' },
-  { label: 'Datos', path: '/datos' },
   { label: 'Galería', path: '/galeria' },
+  { label: 'Datos', path: '/datos' },
   { label: 'Noticias', path: '/noticias' },
   { label: 'Contacto', path: '/contacto' },
 ] as const
@@ -73,7 +73,7 @@ test('skip link moves keyboard focus to the shared main content', async ({ page 
 // keyboard sweep opens it on the way. The mobile menu lists every route flat.
 const resourcesGroup = {
   label: 'Recursos',
-  items: ['Publicaciones', 'Herramientas científicas', 'Datos'],
+  items: ['Publicaciones', 'Herramientas científicas', 'Galería'],
 } as const
 
 const desktopNavigation = [
@@ -81,7 +81,7 @@ const desktopNavigation = [
   'Nosotros',
   'Investigación',
   resourcesGroup,
-  'Galería',
+  'Datos',
   'Noticias',
   'Contacto',
 ] as const

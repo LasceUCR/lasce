@@ -45,7 +45,7 @@ describe('NavGroup', () => {
     render(<NavGroup {...activeArgs} />)
 
     expect(details()).toHaveAttribute('open')
-    expect(link('Datos')).toHaveAttribute('aria-current', 'page')
+    expect(link('Galería')).toHaveAttribute('aria-current', 'page')
     expect(link('Publicaciones')).not.toHaveAttribute('aria-current')
   })
 
@@ -54,8 +54,8 @@ describe('NavGroup', () => {
     render(<NavGroup {...openArgs} />)
 
     // jsdom cannot navigate, so keep the anchor from trying.
-    link('Datos').addEventListener('click', (event) => event.preventDefault())
-    await user.click(link('Datos'))
+    link('Galería').addEventListener('click', (event) => event.preventDefault())
+    await user.click(link('Galería'))
 
     expect(details()).not.toHaveAttribute('open')
   })
@@ -64,7 +64,7 @@ describe('NavGroup', () => {
     const user = userEvent.setup()
     render(<NavGroup {...openArgs} />)
 
-    link('Datos').focus()
+    link('Galería').focus()
     await user.keyboard('{Escape}')
 
     expect(details()).not.toHaveAttribute('open')
@@ -84,14 +84,14 @@ describe('NavGroup', () => {
     render(
       <>
         <NavGroup {...openArgs} />
-        <a href="/galeria">Galería</a>
+        <a href="/noticias">Noticias</a>
       </>,
     )
 
-    link('Datos').focus()
+    link('Galería').focus()
     await user.tab()
 
-    expect(link('Galería')).toHaveFocus()
+    expect(link('Noticias')).toHaveFocus()
     expect(details()).not.toHaveAttribute('open')
   })
 })

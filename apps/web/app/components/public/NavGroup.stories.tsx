@@ -22,7 +22,7 @@ type Story = StoryObj<typeof NavGroup>
 const items = [
   { label: 'Publicaciones', href: '/publicaciones' },
   { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
-  { label: 'Datos', href: '/datos' },
+  { label: 'Galería', href: '/galeria' },
 ]
 
 export const Closed: Story = {
@@ -34,5 +34,5 @@ export const Open: Story = {
 }
 
 export const WithActiveItem: Story = {
-  args: { ...Closed.args, pathname: '/datos', defaultOpen: true },
+  args: { ...Closed.args, pathname: '/galeria', defaultOpen: true },
 }
