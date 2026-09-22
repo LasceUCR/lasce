@@ -191,7 +191,6 @@ a {
 .site-header {
   /* Read by the navigation dropdown to hang from the header's bottom edge. */
   --site-header-padding-bottom: 7px;
-  --site-header-border-width: 1px;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -202,7 +201,7 @@ a {
   align-items: center;
   gap: 24px;
   background: var(--white);
-  border-bottom: var(--site-header-border-width) solid #cdd9e0;
+  border-bottom: 1px solid #cdd9e0;
   box-shadow: 0 10px 24px rgba(10, 35, 50, 0);
   transition: box-shadow 180ms ease;
 }
@@ -356,18 +355,19 @@ a {
   background: var(--action);
 }
 
-/* A flat list hanging from the header's bottom edge, whose border is the panel's top
-   edge; the item text lines up with the summary label. */
+/* A flat list hanging from the header's bottom edge. Its top edge is the header's cyan
+   rule, thinner, laid over the header's bottom border; the item text lines up with the
+   summary label. */
 .nav-group-panel {
   position: absolute;
-  top: calc(100% + var(--site-header-padding-bottom) + var(--site-header-border-width));
+  top: calc(100% + var(--site-header-padding-bottom));
   left: -14px;
   z-index: 2;
   min-width: 200px;
   padding: 6px 0;
   display: grid;
   border: 1px solid #dbe4ea;
-  border-top: 0;
+  border-top: 3px solid var(--cyan);
   border-radius: 0 0 4px 4px;
   background: var(--white);
   box-shadow: 0 6px 20px rgba(10, 35, 50, 0.08);
