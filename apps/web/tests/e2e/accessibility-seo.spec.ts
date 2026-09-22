@@ -17,11 +17,11 @@ const publicRoutes = [
   { label: 'Inicio', path: '/' },
   { label: 'Nosotros', path: '/nosotros' },
   { label: 'Investigación', path: '/investigacion' },
+  { label: 'Datos', path: '/datos' },
+  { label: 'Noticias', path: '/noticias' },
   { label: 'Publicaciones', path: '/publicaciones' },
   { label: 'Herramientas científicas', path: '/herramientas-cientificas' },
   { label: 'Galería', path: '/galeria' },
-  { label: 'Datos', path: '/datos' },
-  { label: 'Noticias', path: '/noticias' },
   { label: 'Contacto', path: '/contacto' },
 ] as const
 
@@ -80,9 +80,9 @@ const desktopNavigation = [
   'Inicio',
   'Nosotros',
   'Investigación',
-  resourcesGroup,
   'Datos',
   'Noticias',
+  resourcesGroup,
   'Contacto',
 ] as const
 
