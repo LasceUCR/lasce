@@ -79,14 +79,14 @@ parent links and the occasional stray file.
 
 The channel token in the file name and the directory it lives in **do not match for two channels**:
 
-| `SuviChannel` | Directory          | Token in file names |
-| ------------- | ------------------ | ------------------- |
-| `FE093`       | `suvi-l1b-fe094`   | `Fe093`             |
-| `FE131`       | `suvi-l1b-fe131`   | `Fe131`             |
-| `FE171`       | `suvi-l1b-fe171`   | `Fe171`             |
-| `FE195`       | `suvi-l1b-fe195`   | `Fe195`             |
-| `FE284`       | `suvi-l1b-fe284`   | `Fe284`             |
-| `HE303`       | `suvi-l1b-he304`   | `He303`             |
+| `SuviChannel` | Directory        | Token in file names |
+| ------------- | ---------------- | ------------------- |
+| `FE093`       | `suvi-l1b-fe094` | `Fe093`             |
+| `FE131`       | `suvi-l1b-fe131` | `Fe131`             |
+| `FE171`       | `suvi-l1b-fe171` | `Fe171`             |
+| `FE195`       | `suvi-l1b-fe195` | `Fe195`             |
+| `FE284`       | `suvi-l1b-fe284` | `Fe284`             |
+| `HE303`       | `suvi-l1b-he304` | `He303`             |
 
 GOES-19 writes `Fe093` and `He303` into directories still named after the wavelengths the earlier
 spacecraft used. The enum carries both spellings, so `list_recent()` can drop a frame whose name
@@ -172,47 +172,43 @@ extracted while still on the thread, so nothing tied to the closed `HDUList` esc
 ## Pixel blocks
 
 The decoded matrix does not stop at `ProcessHeaders`. Once the header is persisted,
-`suvi_pipeline.py` hands the matrix to
-`apps/worker/app/services/suvi_matrix.py`'s `SuviMatrixProcessor`, which compresses it into a
-self-describing `.sublk` block in MinIO and writes the pointer back onto the same
-`solar.suvi_frames` row (`block_file`, `block_offset`, `block_size`, `is_keyframe`). The design
-follows <https://savaldev.com/blog/suvi>: mask → quantise → delta → noise gate → zstd.
+`suvi_pipeline.py` hands the matrix straight to `apps/worker/app/services/suvi_preview.py`'s
+`publish_preview`. Stakeholders confirmed these images are illustrative only, not a scientific
+product, so there is no compression, quantisation or delta-encoding step — `render_png` stretches
+the matrix with `log1p` normalised to its own maximum and encodes it directly as an 8-bit grayscale
+PNG.
 
-A block groups at most `keyframe_interval` frames behind one keyframe. MinIO objects cannot be
-appended to, so growing a block is a bounded read-modify-write of the whole object. The object key
-is `suvi/{satellite}/{channel}/{keyframe_observed_at:%Y%m%dT%H%M%S}.sublk` (satellite and channel
-lowercased, anything outside `[a-z0-9-]` replaced with `-`) — a new prefix next to the `readings/*`
-one `apps/worker/app/processors/ingest_readings.py` already writes.
+`publish_preview` uploads two copies of that PNG to MinIO:
 
-### Binary layout
+- A **per-frame archival copy**, keyed
+  `suvi/{satellite}/{channel}/{observed_at:%Y%m%dT%H%M%S}.png` (satellite and channel lowercased,
+  anything outside `[a-z0-9-]` replaced with `-`) — a prefix next to the `readings/*` one
+  `apps/worker/app/processors/ingest_readings.py` already writes. Its key is written back onto the
+  same `solar.suvi_frames` row (`preview_file`), so a specific frame's image stays browsable later.
+- The **always-latest copy**, at a fixed key per satellite/channel
+  (`suvi/preview/{satellite}/{channel}.png`), which `/suvi` polls. Each run overwrites the previous
+  PNG at that key rather than versioning it.
 
-Little-endian throughout. The index is a **fixed-size** table of `keyframe_interval` slots, so the
-payload's start offset never moves as frames are appended — `block_offset` is therefore an
-absolute byte offset inside the object.
+This step is skipped only if the FITS file carried no data HDU at all (`data_matrix is None`),
+which the pipeline treats as a valid — if unusual — frame.
 
-| Section | Size | Contents |
-| --- | --- | --- |
-| Header | 64 bytes | `struct.Struct("<6sBBBBHffIHHBB34x")`: magic, version, channel index, delta mode, quantisation, `keyframe_interval`, epsilon, scale, frame_count, height, width, spacecraft, mask flag, padding |
-| Index entry (× `keyframe_interval`) | 24 bytes each | `struct.Struct("<qQIi")`: unix-ms timestamp, absolute byte offset, compressed size, flags (bit 0 = keyframe) |
-| Payload | variable | chunk 0 is the zstd-compressed keyframe (`uint16`/`uint8`); later chunks are zstd-compressed deltas (`int32`/`int16`) |
+### Vista previa (proof of concept)
 
-### Profiles
-
-| Profile | Quantisation | Epsilon | Mask | `keyframe_interval` | Used by |
-| --- | --- | --- | --- | --- | --- |
-| `SCIENTIFIC` | `UINT16`, linear | `0.0` (no gating) | no | 15 | `suvi-pipeline` |
-| `WEB` | `UINT8`, logarithmic | `0.02` | yes (`mask_margin=1.25`) | 30 | not selected by anything yet |
-
-`SuviMatrixProcessor.decode(block_file, observed_at)` reverses the process for one timestamp,
-returning the still-quantised matrix. Nothing calls it yet — it exists for a future viewer or
-export path — but it is exercised in `apps/worker/tests/test_suvi_matrix.py`.
-
-Two concurrent jobs writing the same satellite/channel could race on the read-modify-write; the
-scheduler only ever runs one job per channel, so this is accepted rather than solved.
+`apps/web/app/api/suvi/preview/[satellite]/[channel]/route.ts` reads the always-latest object
+straight out of
+MinIO — building its own `Minio.Client` per request rather than going through
+`apps/web/app/services/storage`, which is unfinished (see `docs/manage-assets.md#known-gaps`) —
+and serves it as `image/png` with `Cache-Control: no-store`, or a 404 JSON body when the worker
+has not published a preview yet. `apps/web/app/(public)/suvi/page.tsx` renders one `<img>` per
+channel (`fe093`, `fe131`, `fe171`, `fe195`, `fe284`, `he303`) for GOES-19 through
+`SuviPreview` (`apps/web/app/components/public/suvi/SuviPreview.tsx`), a client component that
+polls the route every 30 seconds (its `intervalMs` prop) so the images refresh on their own,
+without a page reload, as new frames are published. It has no link in the site navigation and is
+reached directly at `/suvi`.
 
 ## Current wiring
 
-The client, `apps/worker/app/processors/suvi_pipeline.py` and `SuviMatrixProcessor` are all wired
+The client, `apps/worker/app/processors/suvi_pipeline.py` and `suvi_preview.py` are all wired
 up: `suvi-pipeline` is registered in `packages/contracts/src/jobs.ts`,
 `apps/worker/app/models/jobs.py` has `SuviPipelinePayload`, and `app/registry.py` routes the job to
 `suvi_pipeline.run`. The payload is `channel`, `spacecraft` and `lookbackMinutes`.

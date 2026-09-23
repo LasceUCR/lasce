@@ -36,4 +36,14 @@ export const schedules: Schedule[] = [
       lookbackMinutes: 5,
     },
   },
+  {
+    id: 'suvi-pipeline-fe131',
+    name: 'suvi-pipeline',
+    cron: '*/3 * * * *',
+    data: {
+      channel: 'Fe131',
+      spacecraft: 19,
+      lookbackMinutes: 5,
+    },
+  },
 ]

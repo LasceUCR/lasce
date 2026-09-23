@@ -311,11 +311,10 @@ model SuviFrame {
   qualityFlag  Int      @default(0) @map("quality_flag")
   /// The whole FITS header, so a field not promoted to a column is still recoverable.
   rawHeader    Json     @map("raw_header")
-  /// Pointers into the compressed pixel block. Null until the .sublk writer exists.
-  blockFile    String?  @map("block_file")
-  blockOffset  BigInt?  @map("block_offset")
-  blockSize    Int?     @map("block_size")
-  isKeyframe   Boolean? @map("is_keyframe")
+  /// MinIO key of this frame's rendered PNG (illustrative only, not a scientific product).
+  /// Written by app.services.suvi_preview.publish_preview. Null only for a frame whose FITS HDU
+  /// carried no data array.
+  previewFile  String?  @map("preview_file")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
 
