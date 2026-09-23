@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import { serverEnv } from '@lasce/config/env'
 
 /**
- * Serves the latest SUVI preview PNG the worker publishes at the end of `suvi-pipeline`
+ * Serves the latest SUVI preview WebP image the worker publishes at the end of `suvi-pipeline`
  * (`apps/worker/app/services/suvi_preview.py`). Backs the PoC page at `/suvi`.
  *
  * Deliberately does not use `apps/web/app/services/storage`: that layer builds its client at
@@ -68,7 +68,7 @@ export async function GET(
     secretKey: env.MINIO_SECRET_KEY ?? '',
   })
 
-  const key = `suvi/preview/${satellite}/${channel}.png`
+  const key = `suvi/preview/${satellite}/${channel}.webp`
 
   try {
     const stream = await client.getObject(env.MINIO_BUCKET, key)
@@ -79,7 +79,7 @@ export async function GET(
     const buffer = Buffer.concat(chunks)
 
     return new NextResponse(buffer, {
-      headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' },
+      headers: { 'Content-Type': 'image/webp', 'Cache-Control': 'no-store' },
     })
   } catch (error: unknown) {
     if (isNotFoundError(error)) {

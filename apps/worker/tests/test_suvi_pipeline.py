@@ -24,7 +24,7 @@ from app.processors import suvi_pipeline
 from app.services.process_headers import ProcessHeaders
 
 FRAME_ID = uuid.UUID("22222222-2222-2222-2222-222222222222")
-PREVIEW_KEY = "suvi/g19/fe093/20260918T041407.png"
+PREVIEW_KEY = "suvi/g19/fe093/20260918T041407.webp"
 
 HEADER_CARDS: dict[str, Any] = {
     "DATE-OBS": "2026-09-18T04:14:07.332",

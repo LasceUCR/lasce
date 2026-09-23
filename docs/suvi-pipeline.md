@@ -17,7 +17,7 @@ Every piece of domain knowledge the pipeline touches already has a single owner:
 | Talking to the NOAA archive               | `app/clients/suvi.py` (`SuviDownloader`)  |
 | Decoding the FITS file                    | `_decode_fits`, private to this processor |
 | Cataloguing the frame (Postgres + Influx) | `app/services/process_headers.py`         |
-| Rendering the illustrative PNG (MinIO)    | `app/services/suvi_preview.py`            |
+| Rendering the illustrative WebP (MinIO)    | `app/services/suvi_preview.py`            |
 
 `suvi_pipeline.run` exists so those three pieces get called **in the right order, with the right
 data handed between them**, and so a caller (BullMQ, or a test) has one entry point. It does not
@@ -45,7 +45,7 @@ a 5 minute lookback, so most runs are catching up on a frame the previous run ha
 
 ```
 list_recent()  ──►  fetch()  ──►  _decode_fits()  ──►  ProcessHeaders  ──►  publish_preview()
-  (metadata)         (bytes)      (header + matrix)    (catalogue row)      (rendered PNG)
+  (metadata)         (bytes)      (header + matrix)    (catalogue row)      (rendered WebP)
 ```
 
 1. **List, don't download, first.** `downloader.list_recent(channel, lookback)` asks the archive
@@ -69,7 +69,7 @@ list_recent()  ──►  fetch()  ──►  _decode_fits()  ──►  Process
 4. **Catalogue the header, then render the matrix.** `ProcessHeaders.parse` + `.persist()` writes
    the Postgres row and the Influx metric point and returns a `frame_id` — this happens **before**
    the matrix is touched, so a frame is always catalogued even if rendering were to fail.
-   `publish_preview(...)` then renders the matrix directly to an 8-bit PNG (these images are
+   `publish_preview(...)` then renders the matrix directly to an 8-bit WebP (these images are
    illustrative only, not a scientific product — there is no compression or quantisation step to
    reverse) and stores two copies in MinIO: a per-frame archival copy, whose key is written back
    onto that same catalogue row (`preview_file`), and the always-latest copy the `/suvi` PoC viewer
@@ -95,7 +95,7 @@ than that.
   },
   "available": 3, // how many frames were in the window, not just the one fetched
   "frameId": "…", // the solar.suvi_frames row this run wrote or updated
-  "preview": "suvi/g19/fe093/20260922T120000.png", // the per-frame archival key
+  "preview": "suvi/g19/fe093/20260922T120000.webp", // the per-frame archival key
   "pipelineDate": "2026-09-22T…Z",
 }
 ```
@@ -112,9 +112,9 @@ the FITS frame legitimately carries no data matrix.
 - **FITS header sanitisation** (numpy scalars, `Undefined`, `NaN`, missing optional cards) — handled
   by `ProcessHeaders`, documented in
   [`suvi-downloader.md`](suvi-downloader.md#persisting-a-frame).
-- **How the PNG is rendered and stored** — owned by `app/services/suvi_preview.py`, documented in
+- **How the WebP is rendered and stored** — owned by `app/services/suvi_preview.py`, documented in
   [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks).
-- **How the PNG reaches the browser** (`/api/suvi/preview/[satellite]/[channel]`, the polling
+- **How the WebP reaches the browser** (`/api/suvi/preview/[satellite]/[channel]`, the polling
   `SuviPreview` component) — documented in
   [`suvi-downloader.md`](suvi-downloader.md#vista-previa-proof-of-concept).
 
