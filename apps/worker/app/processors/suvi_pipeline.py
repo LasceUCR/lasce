@@ -7,8 +7,8 @@ and pixel matrix. The header goes to
 :class:`app.services.process_headers.ProcessHeaders`, which writes the
 catalogue row (Postgres) and the metric points (InfluxDB). The matrix goes to
 :func:`app.services.suvi_preview.publish_preview`, which renders it straight
-to a PNG (these images are illustrative only, not a scientific product) and
-stores both a per-frame archival copy and the always-latest PNG the PoC
+to a WebP image (these images are illustrative only, not a scientific product) and
+stores both a per-frame archival copy and the always-latest WebP the PoC
 viewer at `/suvi` reads (see `docs/suvi-downloader.md`).
 """
 

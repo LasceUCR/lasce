@@ -174,20 +174,21 @@ extracted while still on the thread, so nothing tied to the closed `HDUList` esc
 The decoded matrix does not stop at `ProcessHeaders`. Once the header is persisted,
 `suvi_pipeline.py` hands the matrix straight to `apps/worker/app/services/suvi_preview.py`'s
 `publish_preview`. Stakeholders confirmed these images are illustrative only, not a scientific
-product, so there is no compression, quantisation or delta-encoding step — `render_png` stretches
-the matrix with `log1p` normalised to its own maximum and encodes it directly as an 8-bit grayscale
-PNG.
+product, so there is no compression, quantisation or delta-encoding step — `render_webp` stretches
+the matrix with `log1p` normalised to its own maximum, encodes it as an 8-bit grayscale image and
+saves it as **lossy WebP** (`WEBP_QUALITY = 80`) rather than PNG, purely for size: a lossless
+format buys nothing for an illustration that already discards precision in the log stretch.
 
-`publish_preview` uploads two copies of that PNG to MinIO:
+`publish_preview` uploads two copies of that WebP image to MinIO:
 
 - A **per-frame archival copy**, keyed
-  `suvi/{satellite}/{channel}/{observed_at:%Y%m%dT%H%M%S}.png` (satellite and channel lowercased,
+  `suvi/{satellite}/{channel}/{observed_at:%Y%m%dT%H%M%S}.webp` (satellite and channel lowercased,
   anything outside `[a-z0-9-]` replaced with `-`) — a prefix next to the `readings/*` one
   `apps/worker/app/processors/ingest_readings.py` already writes. Its key is written back onto the
   same `solar.suvi_frames` row (`preview_file`), so a specific frame's image stays browsable later.
 - The **always-latest copy**, at a fixed key per satellite/channel
-  (`suvi/preview/{satellite}/{channel}.png`), which `/suvi` polls. Each run overwrites the previous
-  PNG at that key rather than versioning it.
+  (`suvi/preview/{satellite}/{channel}.webp`), which `/suvi` polls. Each run overwrites the
+  previous image at that key rather than versioning it.
 
 This step is skipped only if the FITS file carried no data HDU at all (`data_matrix is None`),
 which the pipeline treats as a valid — if unusual — frame.
@@ -198,7 +199,7 @@ which the pipeline treats as a valid — if unusual — frame.
 straight out of
 MinIO — building its own `Minio.Client` per request rather than going through
 `apps/web/app/services/storage`, which is unfinished (see `docs/manage-assets.md#known-gaps`) —
-and serves it as `image/png` with `Cache-Control: no-store`, or a 404 JSON body when the worker
+and serves it as `image/webp` with `Cache-Control: no-store`, or a 404 JSON body when the worker
 has not published a preview yet. `apps/web/app/(public)/suvi/page.tsx` renders one `<img>` per
 channel (`fe093`, `fe131`, `fe171`, `fe195`, `fe284`, `he303`) for GOES-19 through
 `SuviPreview` (`apps/web/app/components/public/suvi/SuviPreview.tsx`), a client component that

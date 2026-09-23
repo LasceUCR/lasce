@@ -277,7 +277,7 @@ measurement.
 | `sun_radius_px` | `Float?`    | `double precision` | nullable; FITS `RSUN` — needed to recompute the background mask                                                                                                  |
 | `quality_flag`  | `Int`       | `integer`          | not null, default `0`; bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE`                                                                                                     |
 | `raw_header`    | `Json`      | `jsonb`            | not null; the whole sanitised FITS header                                                                                                                        |
-| `preview_file`  | `String?`   | `text`             | nullable; MinIO object key of this frame's rendered PNG, written by `suvi_preview.publish_preview` — see [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks) |
+| `preview_file`  | `String?`   | `text`             | nullable; MinIO object key of this frame's rendered WebP image, written by `suvi_preview.publish_preview` — see [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks) |
 | `created_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`                                                                                                                                        |
 | `updated_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`, app-managed                                                                                                                           |
 
