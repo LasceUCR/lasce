@@ -270,10 +270,7 @@ def test_suvi_frame_matches_the_prisma_columns() -> None:
         "sun_radius_px",
         "quality_flag",
         "raw_header",
-        "block_file",
-        "block_offset",
-        "block_size",
-        "is_keyframe",
+        "preview_file",
         "created_at",
         "updated_at",
     }
@@ -281,7 +278,7 @@ def test_suvi_frame_matches_the_prisma_columns() -> None:
     assert not columns["wavelength"].nullable
     assert not columns["satellite"].nullable
     assert columns["exposure_time"].nullable
-    assert columns["block_offset"].nullable
+    assert columns["preview_file"].nullable
 
 
 def test_suvi_frame_is_unique_per_satellite_channel_and_observed_at() -> None:
