@@ -97,19 +97,27 @@ describe('ResearcherCard', () => {
   test('keeps the email link outside the flip control', () => {
     render(<ResearcherCard {...defaultArgs} />)
 
-    expect(defaultArgs.email).toBeDefined()
+    expect(typeof defaultArgs.email).toBe('string')
+    const email = defaultArgs.email
+    if (typeof email !== 'string') {
+      throw new Error('the default card has one email')
+    }
     const flip = screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` })
     expect(within(flip).queryByRole('link')).not.toBeInTheDocument()
-    const link = screen.getByRole('link', { name: defaultArgs.email })
-    expect(link).toHaveAttribute('href', `mailto:${defaultArgs.email}`)
+    const link = screen.getByRole('link', { name: email })
+    expect(link).toHaveAttribute('href', `mailto:${email}`)
   })
 
   test('does not flip when the email is opened', async () => {
     const user = userEvent.setup()
     render(<ResearcherCard {...defaultArgs} />)
 
-    expect(defaultArgs.email).toBeDefined()
-    await user.click(screen.getByRole('link', { name: defaultArgs.email }))
+    expect(typeof defaultArgs.email).toBe('string')
+    const email = defaultArgs.email
+    if (typeof email !== 'string') {
+      throw new Error('the default card has one email')
+    }
+    await user.click(screen.getByRole('link', { name: email }))
 
     expect(
       screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }),
