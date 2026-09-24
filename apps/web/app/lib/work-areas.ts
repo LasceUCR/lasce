@@ -33,8 +33,8 @@ export const workAreas = {
     icon: Orbit,
   },
   radioastronomia: {
-    title: 'Radioastronomía',
-    description: 'Datos ROSAC',
+    title: 'ROSAC',
+    description: 'Datos del radiotelescopio en el Radio Observatorio de Santa Cruz',
     icon: RadioTower,
   },
 } as const satisfies Record<
