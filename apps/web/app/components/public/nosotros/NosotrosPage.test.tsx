@@ -170,7 +170,7 @@ describe('NosotrosPage', () => {
       within(researchers).getByRole('heading', { name: 'MSc. Alonso Vega' }),
     ).toBeInTheDocument()
     expect(
-      within(researchers).getByRole('heading', { name: 'Dra. Gabriela Molina' }),
+      within(researchers).getByRole('heading', { name: 'Dra. Graciela Molina' }),
     ).toBeInTheDocument()
     expect(
       within(researchers).getByRole('heading', { name: 'Dra. Yenca Migoya' }),
@@ -188,6 +188,16 @@ describe('NosotrosPage', () => {
       'href',
       'mailto:yenca@ictp.it',
     )
+    expect(
+      within(researchers).getByRole('heading', { name: 'MSc. Johanna Pamela Camacho Garbanzo' }),
+    ).toBeInTheDocument()
+    expect(within(researchers).getByRole('link', { name: 'jcamachoga@ice.go.cr' })).toHaveAttribute(
+      'href',
+      'mailto:jcamachoga@ice.go.cr',
+    )
+    expect(
+      within(researchers).getByRole('link', { name: 'Johanna.camacho@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:Johanna.camacho@ucr.ac.cr')
     expect(
       within(researchers).getByRole('link', { name: 'carolina.salas_mata@ucr.ac.cr' }),
     ).toHaveAttribute('href', 'mailto:carolina.salas_mata@ucr.ac.cr')
@@ -220,6 +230,24 @@ describe('NosotrosPage', () => {
     expect(
       within(researchers).getByText(
         'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+      ),
+    ).toBeInTheDocument()
+    await user.click(
+      within(researchers).getByRole('button', { name: 'Ver descripción de Dr. Felipe Meza' }),
+    )
+    expect(
+      within(researchers).getByText(
+        /modelos inteligentes para el análisis, interpretación y predicción/,
+      ),
+    ).toBeInTheDocument()
+    await user.click(
+      within(researchers).getByRole('button', {
+        name: 'Ver descripción de MSc. Johanna Pamela Camacho Garbanzo',
+      }),
+    )
+    expect(
+      within(researchers).getByText(
+        /geofísica de exploración del Instituto Costarricense de Electricidad/,
       ),
     ).toBeInTheDocument()
   })

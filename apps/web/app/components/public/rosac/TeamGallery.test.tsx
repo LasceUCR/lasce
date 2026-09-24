@@ -55,14 +55,14 @@ describe('TeamGallery', () => {
     render(<TeamGallery {...defaultArgs} />)
 
     for (const person of defaultArgs.people) {
-      if (!person.email) {
-        continue
-      }
+      const addresses = typeof person.email === 'string' ? [person.email] : (person.email ?? [])
 
-      expect(screen.getByRole('link', { name: person.email })).toHaveAttribute(
-        'href',
-        `mailto:${person.email}`,
-      )
+      for (const address of addresses) {
+        expect(screen.getByRole('link', { name: address })).toHaveAttribute(
+          'href',
+          `mailto:${address}`,
+        )
+      }
     }
   })
 

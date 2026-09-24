@@ -10,7 +10,8 @@ export interface ResearcherCardProps {
   role: string
   institution: string
   description?: string
-  email?: string
+  /** One address, or several when LASCE supplied more than one. */
+  email?: string | readonly string[]
 }
 
 /**
@@ -61,6 +62,7 @@ export function ResearcherCard({
   const className = ['researcher-card', canFlip ? 'has-flip' : '', flipped ? 'is-flipped' : '']
     .filter(Boolean)
     .join(' ')
+  const emails = typeof email === 'string' ? [email] : (email ?? [])
 
   return (
     <article className={className}>
@@ -87,11 +89,11 @@ export function ResearcherCard({
           <p className="researcher-card-role">{role}</p>
           <h3 className="researcher-card-name">{name}</h3>
           <div className="researcher-card-meta">
-            {email ? (
-              <a className="researcher-card-email" href={`mailto:${email}`}>
-                {email}
+            {emails.map((address) => (
+              <a className="researcher-card-email" href={`mailto:${address}`} key={address}>
+                {address}
               </a>
-            ) : null}
+            ))}
             <p className="researcher-card-institution">Institución: {institution}</p>
           </div>
         </div>
