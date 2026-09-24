@@ -34,7 +34,7 @@ export const workAreas = {
   },
   radioastronomia: {
     title: 'ROSAC',
-    description: 'Datos del radiotelescopio en el Radio Observatorio de Santa Cruz',
+    description: 'Datos del radiotelescopio',
     icon: RadioTower,
   },
 } as const satisfies Record<
