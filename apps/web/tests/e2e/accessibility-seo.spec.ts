@@ -17,11 +17,11 @@ const publicRoutes = [
   { label: 'Inicio', path: '/' },
   { label: 'Nosotros', path: '/nosotros' },
   { label: 'Investigación', path: '/investigacion' },
+  { label: 'Datos', path: '/datos' },
+  { label: 'Noticias', path: '/noticias' },
   { label: 'Publicaciones', path: '/publicaciones' },
   { label: 'Herramientas científicas', path: '/herramientas-cientificas' },
-  { label: 'Datos', path: '/datos' },
   { label: 'Galería', path: '/galeria' },
-  { label: 'Noticias', path: '/noticias' },
   { label: 'Contacto', path: '/contacto' },
 ] as const
 
@@ -69,6 +69,23 @@ test('skip link moves keyboard focus to the shared main content', async ({ page 
   await expect(mainContent).toBeFocused()
 })
 
+// The desktop header keeps three of the routes behind a "Recursos" disclosure, so the
+// keyboard sweep opens it on the way. The mobile menu lists every route flat.
+const resourcesGroup = {
+  label: 'Recursos',
+  items: ['Publicaciones', 'Herramientas científicas', 'Galería'],
+} as const
+
+const desktopNavigation = [
+  'Inicio',
+  'Nosotros',
+  'Investigación',
+  'Datos',
+  'Noticias',
+  resourcesGroup,
+  'Contacto',
+] as const
+
 test('all desktop navigation options are reachable by keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
@@ -77,13 +94,44 @@ test('all desktop navigation options are reachable by keyboard', async ({ page }
   await page.keyboard.press('Tab')
 
   const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
-  for (const route of publicRoutes) {
+  const group = navigation.locator('details', {
+    has: page.locator('summary', { hasText: resourcesGroup.label }),
+  })
+  for (const entry of desktopNavigation) {
     await page.keyboard.press('Tab')
-    await expect(navigation.getByRole('link', { name: route.label, exact: true })).toBeFocused()
+    if (typeof entry === 'string') {
+      await expect(navigation.getByRole('link', { name: entry, exact: true })).toBeFocused()
+      // Closed before it is reached, and closed again once focus has left it.
+      await expect(group).not.toHaveAttribute('open', '')
+      continue
+    }
+
+    await expect(group.locator('summary')).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(group).toHaveAttribute('open', '')
+    for (const label of entry.items) {
+      await page.keyboard.press('Tab')
+      await expect(navigation.getByRole('link', { name: label, exact: true })).toBeFocused()
+    }
   }
 
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/contacto$/)
+})
+
+test('the open Recursos group meets WCAG A and AA automated checks', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page
+    .getByRole('navigation', { name: 'Navegación principal' })
+    .locator('summary', { hasText: resourcesGroup.label })
+    .click()
+
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+
+  expect(results.violations).toEqual([])
 })
 
 test('mobile navigation can be opened and used with the keyboard', async ({ page }) => {

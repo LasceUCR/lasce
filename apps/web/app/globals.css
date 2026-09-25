@@ -304,6 +304,90 @@ a {
   background: var(--action);
 }
 
+/* A group of links behind a disclosure, on the native <details> like the mobile menu.
+   The summary reads like a top-level item; the panel reads like the mobile menu. */
+.nav-group {
+  position: relative;
+}
+
+.nav-group summary {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #42586b;
+  font-size: 13px;
+  white-space: nowrap;
+  list-style: none;
+  cursor: pointer;
+}
+
+.nav-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-group summary svg {
+  transition: transform 180ms ease;
+}
+
+.nav-group[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.nav-group summary:hover,
+.nav-group summary:focus-visible,
+.nav-group[open] summary,
+.nav-group.active summary {
+  color: var(--blue-dark);
+}
+
+.nav-group.active summary::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 5px;
+  left: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--action);
+}
+
+/* A flat list just under the summary, topped by the header's cyan rule, thinner; the
+   item text lines up with the summary label. It starts where the active underline of
+   the summary starts, so the cyan rule replaces that underline while the panel is open. */
+.nav-group-panel {
+  position: absolute;
+  top: calc(100% - 8px);
+  left: -14px;
+  z-index: 2;
+  min-width: 200px;
+  padding: 6px 0;
+  display: grid;
+  border: 1px solid #dbe4ea;
+  border-top: 3px solid var(--cyan);
+  border-radius: 0 0 4px 4px;
+  background: var(--white);
+  box-shadow: 0 6px 20px rgba(10, 35, 50, 0.08);
+}
+
+.desktop-nav .nav-group-panel a {
+  padding: 8px 14px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.desktop-nav .nav-group-panel a:hover,
+.desktop-nav .nav-group-panel a:focus-visible,
+.desktop-nav .nav-group-panel a.active {
+  background: #eef6fa;
+  color: var(--blue-dark);
+}
+
+.desktop-nav .nav-group-panel a.active::after {
+  content: none;
+}
+
 .login-link {
   justify-self: end;
   min-width: 100px;
@@ -361,14 +445,10 @@ a {
   overflow: hidden;
 }
 
-/* Between the mobile breakpoint and 1440px the navigation items
-   leave little room for the account links, so tighten the gaps only there. */
-@media (min-width: 1121px) and (max-width: 1440px) {
+/* Just above the 1400px mobile breakpoint, up to 1440px, the navigation row
+   leaves little room for the account links, so tighten the gaps only there. */
+@media (min-width: 1401px) and (max-width: 1440px) {
   .site-header {
-    gap: 16px;
-  }
-
-  .desktop-nav {
     gap: 16px;
   }
 

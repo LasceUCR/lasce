@@ -7,21 +7,39 @@ import { useEffect, useRef, useState } from 'react'
 
 import { canSeeAdminNavigation } from '@/app/lib/auth/account'
 import { Brand } from './Brand'
+import { NavGroup, isActivePath, type NavGroupItem } from './NavGroup'
 import { AccountLinks } from './auth/AccountLinks'
 import { useAccount } from './auth/useAccount'
 
-const navigation = [
+interface NavGroupEntry {
+  label: string
+  items: NavGroupItem[]
+}
+
+type NavEntry = NavGroupItem | NavGroupEntry
+
+// The desktop header shows a group as a disclosure; the mobile menu lists every link.
+const navigation: NavEntry[] = [
   { label: 'Inicio', href: '/' },
   { label: 'Nosotros', href: '/nosotros' },
   { label: 'Investigación', href: '/investigacion' },
-  { label: 'Publicaciones', href: '/publicaciones' },
-  { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
   { label: 'Datos', href: '/datos' },
-  { label: 'Galería', href: '/galeria' },
   { label: 'Noticias', href: '/noticias' },
+  {
+    label: 'Recursos',
+    items: [
+      { label: 'Publicaciones', href: '/publicaciones' },
+      { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
+      { label: 'Galería', href: '/galeria' },
+    ],
+  },
   { label: 'Contacto', href: '/contacto' },
   { label: 'Administración', href: '/administracion' },
 ]
+
+function isGroup(entry: NavEntry): entry is NavGroupEntry {
+  return 'items' in entry
+}
 
 export interface PublicHeaderProps {
   /** The logout Server Action, passed down by the layout so the header stays presentational. */
@@ -80,9 +98,10 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
     }
   }, [isMobileMenuOpen])
 
-  const items = canSeeAdminNavigation(role)
+  const entries = canSeeAdminNavigation(role)
     ? navigation
-    : navigation.filter((item) => item.href !== '/administracion')
+    : navigation.filter((entry) => isGroup(entry) || entry.href !== '/administracion')
+  const mobileItems = entries.flatMap((entry) => (isGroup(entry) ? entry.items : [entry]))
 
   return (
     <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`} ref={headerRef}>
@@ -91,17 +110,28 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
       </Link>
 
       <nav className="desktop-nav" aria-label="Navegación principal">
-        {items.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+        {entries.map((entry) => {
+          if (isGroup(entry)) {
+            return (
+              <NavGroup
+                items={entry.items}
+                key={entry.label}
+                label={entry.label}
+                pathname={pathname}
+              />
+            )
+          }
+
+          const isActive = isActivePath(pathname, entry.href)
 
           return (
             <Link
               aria-current={isActive ? 'page' : undefined}
               className={isActive ? 'active' : undefined}
-              href={item.href}
-              key={item.label}
+              href={entry.href}
+              key={entry.label}
             >
-              {item.label}
+              {entry.label}
             </Link>
           )
         })}
@@ -131,8 +161,8 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
           <Menu aria-hidden="true" size={25} strokeWidth={1.8} />
         </summary>
         <nav aria-label="Navegación móvil">
-          {items.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+          {mobileItems.map((item) => {
+            const isActive = isActivePath(pathname, item.href)
 
             return (
               <Link
