@@ -2,7 +2,8 @@ import { expect, test } from '@playwright/test'
 
 import { galleryAlbumList, galleryAlbums } from '@/app/lib/gallery'
 
-const publicRoutes = [
+// `group` names the desktop header disclosure a route sits behind, if any.
+const publicRoutes: { label: string; path: string; heading: string; group?: string }[] = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
   { label: 'Nosotros', path: '/nosotros', heading: 'Quiénes somos' },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
@@ -10,12 +11,13 @@ const publicRoutes = [
     label: 'Herramientas científicas',
     path: '/herramientas-cientificas',
     heading: 'Herramientas científicas',
+    group: 'Recursos',
   },
   { label: 'Datos', path: '/datos', heading: 'Datos' },
-  { label: 'Galería', path: '/galeria', heading: 'Galería' },
+  { label: 'Galería', path: '/galeria', heading: 'Galería', group: 'Recursos' },
   { label: 'Noticias', path: '/noticias', heading: 'Noticias' },
   { label: 'Contacto', path: '/contacto', heading: 'Contacto' },
-] as const
+]
 
 const areaCards = [
   { name: 'Física solar', path: '/fisica-solar' },
@@ -82,10 +84,17 @@ test('navigates through every public option and exposes the active page', async 
 
   for (const route of publicRoutes) {
     const link = navigation.getByRole('link', { name: route.label, exact: true })
+    const summary = route.group ? navigation.locator('summary', { hasText: route.group }) : null
 
+    if (summary) await summary.click()
     await link.click()
     await expect(page).toHaveURL(new RegExp(`${route.path === '/' ? '/$' : `${route.path}$`}`))
+
+    // Choosing a grouped link closes its disclosure: reopen it to read the marker,
+    // then leave it closed for the next route.
+    if (summary) await summary.click()
     await expect(link).toHaveAttribute('aria-current', 'page')
+    if (summary) await page.keyboard.press('Escape')
   }
 })
 

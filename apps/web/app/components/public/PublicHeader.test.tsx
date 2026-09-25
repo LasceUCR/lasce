@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ACCOUNT_COOKIE, encodeAccountCookie } from '@/app/lib/auth/account'
@@ -45,5 +46,28 @@ describe('PublicHeader', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
     expect(screen.getAllByRole('link', { name: /^Administración$/ }).length).toBeGreaterThan(0)
+  })
+
+  test('groups the resource pages behind Recursos on desktop and lists them flat on mobile', async () => {
+    const user = userEvent.setup()
+    render(<PublicHeader logoutAction={async () => undefined} />)
+
+    const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
+    const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+    const grouped = ['Publicaciones', 'Herramientas científicas', 'Galería']
+
+    for (const label of grouped) {
+      expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
+      expect(mobile.getByRole('link', { name: label })).toBeInTheDocument()
+    }
+    expect(mobile.queryByText('Recursos')).not.toBeInTheDocument()
+
+    await user.click(desktop.getByText('Recursos'))
+
+    for (const label of grouped) {
+      expect(desktop.getByRole('link', { name: label })).toBeVisible()
+    }
+    expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
+    expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
   })
 })
