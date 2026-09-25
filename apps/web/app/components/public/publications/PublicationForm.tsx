@@ -48,7 +48,7 @@ export function PublicationForm({
   const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
 
   const [authorToRemove, setAuthorToRemove] = useState('')
-  const [newAuthor, setNewAuthor] = useState('')
+  const [newAuthor, setNewAuthor] = useState(' ')
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const authorOptions: FormFieldOption[] = [
@@ -59,29 +59,54 @@ export function PublicationForm({
     })),
   ]
 
-  const validationMessages: string[] = []
-
-  if (title.trim() === '') {
-    validationMessages.push('Es necesario un título.')
+  function validateTitle(value: string) {
+    if (value.trim() === '') {
+      throw new Error('Es necesario un título.')
+    }
   }
 
-  if (authors.length === 0) {
-    validationMessages.push('Debe haber al menos un autor.')
+  const validateDate = (value: string) => {
+    if (value === '') {
+      throw new Error('Debe establecer la fecha de publicación.')
+    }
   }
 
-  if (venue.trim() === '') {
-    validationMessages.push('Debe revista o medio de publicación.')
+  const validateVenue = (value: string) => {
+    if (value.trim() === '') {
+      throw new Error('Debe tener revista o medio de publicación.')
+    }
   }
 
-  if (date === '') {
-    validationMessages.push('Debe establecer la fecha de publicacion.')
+  const validateAbstract = (value: string) => {
+    if (value.trim() === '') {
+      throw new Error('Debe tener un resumen.')
+    }
   }
 
-  if (abstract.trim() === '') {
-    validationMessages.push('Debe tener un resumen.')
+  const validateDOI = (value: string) => {
+    if (value.trim() === '') {
+      throw new Error('Debe tener un DOI o vinculo externo.')
+    }
   }
 
-  const canSave = validationMessages.length === 0
+  const validateResearchGroup = (value: string) => {
+    if (value.trim() === '') {
+      throw new Error('Debe tener un grupo de investigación.')
+    }
+  }
+
+  const validateAuthors = () => {
+    if (authors.length === 0) {
+      throw new Error('Debe haber al menos un autor agregado.')
+    }
+  }
+
+  const canSave =
+    title.trim() !== '' &&
+    authors.length > 0 &&
+    venue.trim() !== '' &&
+    date !== '' &&
+    abstract.trim() !== ''
 
   function handleRemoveAuthor() {
     if (!authorToRemove) return
@@ -102,6 +127,20 @@ export function PublicationForm({
     setNewAuthor('')
   }
 
+  function validateFields() {
+    setTitle(title.trim())
+    setVenue(venue.trim())
+    setDate(date.trim())
+    setDOI(DOI.trim())
+    setNewAuthor(newAuthor.trim())
+    setAbstract(abstract.trim())
+    setResearchGroup(researchGroup)
+
+    if (canSave) {
+      setConfirmOpen(true)
+    }
+  }
+
   function handleSubmit() {
     setConfirmOpen(false)
 
@@ -118,7 +157,14 @@ export function PublicationForm({
 
   return (
     <div className="publication-form">
-      <FormField id={`${formId}-title`} label="Título" onChange={setTitle} required value={title} />
+      <FormField
+        id={`${formId}-title`}
+        label="Título"
+        onChange={setTitle}
+        required
+        validate={validateTitle}
+        value={title}
+      />
 
       <FormField
         id="publication-date"
@@ -126,6 +172,7 @@ export function PublicationForm({
         onChange={setDate}
         required
         type="date"
+        validate={validateDate}
         value={date}
       />
 
@@ -148,6 +195,7 @@ export function PublicationForm({
           label="Añadir autor"
           onChange={setNewAuthor}
           value={newAuthor}
+          validate={validateAuthors}
           required={authors.length === 0}
         />
 
@@ -156,13 +204,21 @@ export function PublicationForm({
         </Button>
       </div>
 
-      <FormField id={`publication-doi`} label="DOI" onChange={setDOI} value={DOI} required />
+      <FormField
+        id={`publication-doi`}
+        label="DOI"
+        onChange={setDOI}
+        validate={validateDOI}
+        value={DOI}
+        required
+      />
 
       <FormField
         id={`publication-venue-venue`}
         label="Revista/Publicación"
         onChange={setVenue}
         required
+        validate={validateVenue}
         value={venue}
       />
 
@@ -172,6 +228,7 @@ export function PublicationForm({
         multiline
         onChange={setAbstract}
         required
+        validate={validateAbstract}
         value={abstract}
       />
 
@@ -180,6 +237,7 @@ export function PublicationForm({
         label="Grupo"
         onChange={(value) => setResearchGroup(value as ResearchGroup)}
         options={researchGroupOptions}
+        validate={validateResearchGroup}
         value={researchGroup}
       />
 
@@ -187,7 +245,7 @@ export function PublicationForm({
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
-        <Button disabled={!canSave} onClick={() => setConfirmOpen(true)} variant="primary">
+        <Button onClick={validateFields} variant="primary">
           Confirmar
         </Button>
       </div>

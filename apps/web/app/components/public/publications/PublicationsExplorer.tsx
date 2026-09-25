@@ -29,12 +29,12 @@ function matches(value: string, query: string) {
  * Blank starting point for a new publication.
  */
 const blankPublication: PublicationFormValues = {
-  abstract: '',
+  abstract: ' ',
   authors: [],
-  DOI: '',
+  DOI: ' ',
   researchGroup: 'LASCE',
-  title: '',
-  venue: '',
+  title: ' ',
+  venue: ' ',
   date: new Date(),
 }
 
