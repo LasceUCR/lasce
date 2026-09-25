@@ -46,17 +46,23 @@ describe('PublicationForm', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('disables saving when the title is cleared', async () => {
+  test('disables saving when the DOI is blank', async () => {
     const user = userEvent.setup()
+    const onSave = vi.fn()
 
-    render(<PublicationForm {...defaultArgs} />)
+    render(<PublicationForm {...defaultArgs} onSave={onSave} />)
 
-    await user.clear(screen.getByRole('textbox', { name: 'Título' }))
+    await user.clear(screen.getByRole('textbox', { name: 'DOI' }))
 
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('disables saving when there are no authors', () => {
+  test('disables saving when there are no authors', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+
     render(
       <PublicationForm
         {...defaultArgs}
@@ -64,10 +70,13 @@ describe('PublicationForm', () => {
           ...defaultArgs.publication,
           authors: [],
         }}
+        onSave={onSave}
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).not.toHaveBeenCalled()
   })
 
   test('adds an author', async () => {
