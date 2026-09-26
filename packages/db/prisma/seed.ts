@@ -186,8 +186,7 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
     imageUrl: '/images/news/placeholder.jpg',
-    imageAlt:
-      'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
+    imageAlt: '',
   },
   {
     title: '¿Vale la pena invertir en ciencia? Estos proyectos costarricenses son la respuesta',
@@ -212,7 +211,7 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://delfino.cr/2025/12/cientificos-de-la-ucr-monitorean-la-actividad-solar-para-estudiar-el-impacto-del-clima-espacial-en-el-pais',
     imageUrl: '/images/news/placeholder.jpg',
-    imageAlt: 'Equipo multidisciplinario que trabaja en el proyecto del radiotelescopio ROSAC.',
+    imageAlt: '',
   },
   {
     title:
@@ -225,7 +224,7 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://www.ucr.ac.cr/noticias/2025/12/05/cientificos-de-la-ucr-monitorean-la-actividad-solar-para-estudiar-el-impacto-del-clima-espacial-en-nuestro-pais.html',
     imageUrl: '/images/news/placeholder.jpg',
-    imageAlt: 'Radiotelescopio ROSAC.',
+    imageAlt: '',
   },
   {
     title: 'UCR pone en funcionamiento radiotelescopio para investigar el Sol',
@@ -237,7 +236,7 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
     imageUrl: '/images/news/placeholder.jpg',
-    imageAlt: 'Radiotelescopio ROSAC.',
+    imageAlt: '',
   },
   {
     title:
@@ -250,7 +249,7 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://www.ucr.ac.cr/noticias/2023/9/12/empresa-global-de-telecomunicaciones-hace-una-donacion-a-la-ucr-para-radio-observatorio-que-estudiara-el-sol.html',
     imageUrl: '/images/news/placeholder.jpg',
-    imageAlt: 'Radio telescopio en el Recinto de Santa Cruz.',
+    imageAlt: '',
   },
   {
     title:
@@ -310,7 +309,7 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://origin.larepublica.net/noticia/ucr-instala-radiotelescopio-en-guanacaste-con-antena-parabolica-donada-por-racsa',
     imageUrl: '/images/news/placeholder.jpg',
-    imageAlt: 'El Radio Observatorio de Santa Cruz (ROSAC).',
+    imageAlt: '',
   },
   {
     title: 'UCR contará con su propio radiotelescopio para explorar el cosmos.',
@@ -322,8 +321,7 @@ const newsRecords: SeedNews[] = [
     externalUrl:
       'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
     imageUrl: '/images/news/placeholder.jpg',
-    imageAlt:
-      'Antena instalada en la Finca Experimental de Santa Cruz (FESC) de la Universidad de Costa Rica.',
+    imageAlt: '',
   },
 ]
 
