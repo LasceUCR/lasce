@@ -107,11 +107,11 @@ for (const record of researchRecords) {
   const research = await prisma.research.upsert({
     where: record.doi
       ? {
-          doi: record.doi,
-        }
+        doi: record.doi,
+      }
       : {
-          externalUrl: record.externalUrl,
-        },
+        externalUrl: record.externalUrl,
+      },
     update: {
       title: record.title,
       publicationDate: record.publicationDate,
@@ -185,7 +185,7 @@ const newsRecords: SeedNews[] = [
       'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
     externalUrl:
       'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
-    imageUrl: '/images/news/la-nacion-1.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt:
       'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
   },
@@ -198,7 +198,7 @@ const newsRecords: SeedNews[] = [
       'Artículo de opinión que destaca a ROSAC como ejemplo de investigación científica costarricense y de la importancia de la inversión pública en ciencia.',
     externalUrl:
       'https://www.nacion.com/opinion/columnistas/vale-la-pena-invertir-en-ciencia-estos-proyectos/ILX4QIPB6JGHBCJ6QB34QRGY2A/story/',
-    imageUrl: '/images/decorative/Solar-Flare.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: '',
   },
   {
@@ -211,7 +211,7 @@ const newsRecords: SeedNews[] = [
       'Un proyecto de la UCR busca generar datos propios sobre la actividad solar y desarrollar herramientas para estudiar y predecir el impacto del clima espacial en Costa Rica.',
     externalUrl:
       'https://delfino.cr/2025/12/cientificos-de-la-ucr-monitorean-la-actividad-solar-para-estudiar-el-impacto-del-clima-espacial-en-el-pais',
-    imageUrl: '/images/news/delfino-1.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: 'Equipo multidisciplinario que trabaja en el proyecto del radiotelescopio ROSAC.',
   },
   {
@@ -224,7 +224,7 @@ const newsRecords: SeedNews[] = [
       'La UCR presenta un proyecto interdisciplinario para estudiar la actividad solar y sus efectos sobre Costa Rica mediante observaciones, instrumentación científica y herramientas computacionales.',
     externalUrl:
       'https://www.ucr.ac.cr/noticias/2025/12/05/cientificos-de-la-ucr-monitorean-la-actividad-solar-para-estudiar-el-impacto-del-clima-espacial-en-nuestro-pais.html',
-    imageUrl: '/images/news/ucr-1.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: 'Radiotelescopio ROSAC.',
   },
   {
@@ -236,7 +236,7 @@ const newsRecords: SeedNews[] = [
       'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
     externalUrl:
       'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
-    imageUrl: '/images/news/el-norte-hoy-1.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: 'Radiotelescopio ROSAC.',
   },
   {
@@ -249,7 +249,7 @@ const newsRecords: SeedNews[] = [
       'El Grupo Prysmian Centroamérica y el Caribe donó casi dos kilómetros de cable de fibra óptica y cableado eléctrico para el proyecto del Radio Observatorio Santa Cruz (Rosac), un aporte cercano a los USD 36 000 que permitirá a Costa Rica contar con un telescopio para medir la radiación electromagnética del Sol.',
     externalUrl:
       'https://www.ucr.ac.cr/noticias/2023/9/12/empresa-global-de-telecomunicaciones-hace-una-donacion-a-la-ucr-para-radio-observatorio-que-estudiara-el-sol.html',
-    imageUrl: '/images/news/ucr-2.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: 'Radio telescopio en el Recinto de Santa Cruz.',
   },
   {
@@ -262,7 +262,7 @@ const newsRecords: SeedNews[] = [
       'Prysmian donó cerca de tres kilómetros de cables de energía y telecomunicaciones para apoyar el desarrollo y puesta en funcionamiento del radiotelescopio solar ROSAC.',
     externalUrl:
       'https://prysmianpro.com/en/prysmian-group-dona-36-000-en-cables-de-energia-y-telecomunicaciones-para-el-desarrollo-del-unico-radio-telescopio-solar-de-su-tipo-en-centroamerica/',
-    imageUrl: '/images/decorative/Solar-Flare.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: '',
   },
   {
@@ -274,7 +274,7 @@ const newsRecords: SeedNews[] = [
       'Artículo sobre el impacto social y educativo de Prysmian que menciona al proyecto del radiotelescopio solar ROSAC como una iniciativa de educación, inclusión y sostenibilidad.',
     externalUrl:
       'https://prysmianpro.com/el-impacto-social-de-prysmian-en-la-era-de-la-transicion-energetica/',
-    imageUrl: '/images/decorative/Solar-Flare.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: '',
   },
   {
@@ -285,7 +285,7 @@ const newsRecords: SeedNews[] = [
     abstract:
       'RACSA presenta el radiotelescopio de ROSAC y su objetivo de estudiar el Sol mediante la medición de ondas de radio, destacando su carácter pionero en Costa Rica y Centroamérica.',
     externalUrl: 'https://www.racsa.go.cr/blog/radiotelescopio-en-guanacaste-para-estudiar-el-sol/',
-    imageUrl: '/images/decorative/Solar-Flare.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: '',
   },
   {
@@ -297,7 +297,7 @@ const newsRecords: SeedNews[] = [
       'El radiotelescopio de ROSAC busca generar datos locales que permitan estudiar cómo las ondas solares pueden afectar sistemas como radares y telecomunicaciones en Costa Rica.',
     externalUrl:
       'https://www.elfinancierocr.com/tecnologia/radiotelescopio-en-guanacaste-apunta-hacia-el-sol/XP3IRSKZVJDWTGUBZH5R2S6GKE/story/',
-    imageUrl: '/images/decorative/Solar-Flare.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: '',
   },
   {
@@ -309,7 +309,7 @@ const newsRecords: SeedNews[] = [
       'La UCR inició el montaje de ROSAC en Guanacaste utilizando una antena parabólica donada por RACSA y adaptada para realizar observaciones solares.',
     externalUrl:
       'https://origin.larepublica.net/noticia/ucr-instala-radiotelescopio-en-guanacaste-con-antena-parabolica-donada-por-racsa',
-    imageUrl: '/images/news/la-republica-1.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt: 'El Radio Observatorio de Santa Cruz (ROSAC).',
   },
   {
@@ -321,7 +321,7 @@ const newsRecords: SeedNews[] = [
       'Un proyecto de investigación de la UCR estudia la transformación de una gran antena instalada en la Finca Experimental de Santa Cruz en un radiotelescopio para estudiar los astros.',
     externalUrl:
       'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
-    imageUrl: '/images/news/ucr-3.png',
+    imageUrl: '/images/news/placeholder.jpg',
     imageAlt:
       'Antena instalada en la Finca Experimental de Santa Cruz (FESC) de la Universidad de Costa Rica.',
   },

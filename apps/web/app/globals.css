@@ -1919,10 +1919,6 @@ a {
   object-fit: cover;
 }
 
-.news-card-image.news-card-image-decorative img {
-  object-fit: contain;
-  object-position: center;
-}
 
 .news-card-content {
   padding: 20px 22px;
