@@ -13,7 +13,7 @@ for (const viewport of [
     const areas = page.getByRole('region', { name: 'Áreas y accesos principales' })
     await expect(areas.getByRole('link')).toHaveCount(6)
     const rosacLink = areas.getByRole('link', {
-      name: /^Radioastronomía/,
+      name: /^ROSAC/,
     })
     await expect(rosacLink).toHaveAttribute('href', '/radioastronomia')
     await rosacLink.click()
