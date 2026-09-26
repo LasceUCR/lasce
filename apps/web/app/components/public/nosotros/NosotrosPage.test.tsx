@@ -131,6 +131,39 @@ describe('NosotrosPage', () => {
     expect(screen.queryByText('Jelmuth Rojas')).not.toBeInTheDocument()
   })
 
+  test('lists national and international collaborations', () => {
+    renderPage()
+
+    const collaborations = screen.getByRole('region', {
+      name: /Colaboraciones nacionales e internacionales/,
+    })
+    expect(
+      within(collaborations).getByRole('heading', {
+        level: 2,
+        name: /3\.\s*Colaboraciones nacionales e internacionales/,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      within(collaborations).getByRole('heading', { name: 'Colaboraciones internacionales' }),
+    ).toBeInTheDocument()
+    expect(
+      within(collaborations).getByRole('heading', { name: 'Colaboraciones nacionales' }),
+    ).toBeInTheDocument()
+
+    expect(within(collaborations).getAllByRole('article')).toHaveLength(
+      defaultArgs.content.collaborations.groups.length,
+    )
+    const lists = within(collaborations).getAllByRole('list')
+    expect(lists).toHaveLength(defaultArgs.content.collaborations.groups.length)
+    for (const group of defaultArgs.content.collaborations.groups) {
+      const list = within(collaborations).getByRole('list', { name: group.title })
+      expect(within(list).getAllByRole('listitem')).toHaveLength(group.institutions.length)
+      for (const institution of group.institutions) {
+        expect(within(list).getByText(institution)).toBeInTheDocument()
+      }
+    }
+  })
+
   test('lists the LASCE researchers in a scrollable gallery', async () => {
     const user = userEvent.setup()
     renderPage()

@@ -239,6 +239,33 @@ export function NosotrosPage({
       </TopicSection>
 
       <TopicSection
+        index="3"
+        title={content.collaborations.title}
+        titleId="nosotros-collaborations-title"
+        wide
+      >
+        <CardGrid columns={2} equalHeight>
+          {content.collaborations.groups.map((group, index) => {
+            const headingId = `nosotros-collaboration-${index}`
+            return (
+              <article
+                aria-labelledby={headingId}
+                className="surface-card info-card collaboration-card"
+                key={group.title}
+              >
+                <h3 id={headingId}>{group.title}</h3>
+                <ul aria-labelledby={headingId} className="collaboration-list">
+                  {group.institutions.map((institution) => (
+                    <li key={institution}>{institution}</li>
+                  ))}
+                </ul>
+              </article>
+            )
+          })}
+        </CardGrid>
+      </TopicSection>
+
+      <TopicSection
         title={content.contribution.title}
         titleId="nosotros-contribution-title"
         featured
