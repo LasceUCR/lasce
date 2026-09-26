@@ -2936,7 +2936,7 @@ a {
 }
 
 .gallery-groups {
-  padding-bottom: 20px;
+  padding-bottom: 48px;
 }
 
 .gallery-group {
@@ -3059,7 +3059,8 @@ a.gallery-tile:focus-visible {
   font-size: 12px;
 }
 
-.gallery-album-back {
+.gallery-album-back,
+.gallery-back {
   padding-top: 28px;
 }
 
