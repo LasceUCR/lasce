@@ -22,7 +22,7 @@ const publicRoutes: { label: string; path: string; heading: string; group?: stri
 const areaCards = [
   { name: 'Física solar', path: '/fisica-solar' },
   { name: 'Clima espacial', path: '/clima-espacial' },
-  { name: 'Radioastronomía', path: '/radioastronomia' },
+  { name: 'ROSAC', path: '/radioastronomia' },
   { name: 'Herramientas científicas', path: '/herramientas-cientificas' },
   { name: 'Datos y análisis', path: '/datos' },
   { name: 'Divulgación', path: '/noticias' },
