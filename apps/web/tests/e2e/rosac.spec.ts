@@ -78,11 +78,14 @@ test('presents each ROSAC researcher card with public information', async ({ pag
   await expect(
     team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UC...').first(),
   ).toBeVisible()
-  await team
+  const carolina = track.getByRole('listitem').filter({ hasText: 'Dra. Carolina Salas Matamoros' })
+  await carolina
     .getByRole('button', { name: 'Ver descripción de Dra. Carolina Salas Matamoros' })
     .click()
   await expect(
-    team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR'),
+    carolina.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR', {
+      exact: true,
+    }),
   ).toBeVisible()
   await expect(
     team.getByText(
