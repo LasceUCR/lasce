@@ -13,6 +13,11 @@ const defaultArgs = Default.args as ResearcherCardProps
 const withoutEmailArgs = WithoutEmail.args as ResearcherCardProps
 const withoutDescriptionArgs = WithoutDescription.args as ResearcherCardProps
 
+function isOnHiddenFace(text: string) {
+  const element = screen.getByText(text)
+  return element.closest('[aria-hidden="true"]') !== null
+}
+
 describe('ResearcherCard', () => {
   test('does not focus a flip control on mount', () => {
     render(<ResearcherCard {...defaultArgs} />)
@@ -182,16 +187,16 @@ describe('ResearcherCard', () => {
     const name = 'Dr. Luis Gustavo Esquivel Quirós'
     render(<ResearcherCard {...withoutDescriptionArgs} institution={institution} name={name} />)
 
-    expect(screen.getByText(`Institución: ${institutionPreview(institution)}`)).toBeInTheDocument()
-    expect(screen.queryByText(`Institución: ${institution}`)).not.toBeInTheDocument()
+    const preview = `Institución: ${institutionPreview(institution)}`
+    const full = `Institución: ${institution}`
+    expect(isOnHiddenFace(preview)).toBe(false)
+    expect(isOnHiddenFace(full)).toBe(true)
     expect(screen.queryByRole('region', { name: `Descripción de ${name}` })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: `Ver institución de ${name}` }))
 
-    expect(screen.getByText(`Institución: ${institution}`)).toBeInTheDocument()
-    expect(
-      screen.queryByText(`Institución: ${institutionPreview(institution)}`),
-    ).not.toBeInTheDocument()
+    expect(isOnHiddenFace(full)).toBe(false)
+    expect(isOnHiddenFace(preview)).toBe(true)
     expect(
       screen.getByRole('button', { name: `Volver a la ficha de ${name}` }),
     ).toHaveFocus()
@@ -205,14 +210,15 @@ describe('ResearcherCard', () => {
     ].join(' ')
     render(<ResearcherCard {...defaultArgs} institution={institution} />)
 
-    const preview = `${institution.slice(0, 50)}...`
-    expect(screen.getByText(`Institución: ${preview}`)).toBeInTheDocument()
-    expect(screen.queryByText(`Institución: ${institution}`)).not.toBeInTheDocument()
+    const preview = `Institución: ${institution.slice(0, 50)}...`
+    const full = `Institución: ${institution}`
+    expect(isOnHiddenFace(preview)).toBe(false)
+    expect(isOnHiddenFace(full)).toBe(true)
 
     await user.click(screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }))
 
-    expect(screen.getByText(`Institución: ${institution}`)).toBeInTheDocument()
-    expect(screen.queryByText(`Institución: ${preview}`)).not.toBeInTheDocument()
+    expect(isOnHiddenFace(full)).toBe(false)
+    expect(isOnHiddenFace(preview)).toBe(true)
   })
 
   test('keeps the portrait decorative so the name is not announced twice', () => {
