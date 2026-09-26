@@ -2,11 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
-import {
-  ResearcherCard,
-  institutionPreview,
-  type ResearcherCardProps,
-} from './ResearcherCard'
+import { ResearcherCard, institutionPreview, type ResearcherCardProps } from './ResearcherCard'
 import { Default, WithoutDescription, WithoutEmail } from './ResearcherCard.stories'
 
 const defaultArgs = Default.args as ResearcherCardProps
@@ -197,9 +193,7 @@ describe('ResearcherCard', () => {
 
     expect(isOnHiddenFace(full)).toBe(false)
     expect(isOnHiddenFace(preview)).toBe(true)
-    expect(
-      screen.getByRole('button', { name: `Volver a la ficha de ${name}` }),
-    ).toHaveFocus()
+    expect(screen.getByRole('button', { name: `Volver a la ficha de ${name}` })).toHaveFocus()
   })
 
   test('shows a long institution in full only after the card flips', async () => {

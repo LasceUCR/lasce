@@ -100,8 +100,7 @@ describe('RosacInfoPage', () => {
     for (const person of defaultArgs.content.team.people) {
       expect(within(team).getByRole('heading', { name: person.name })).toBeInTheDocument()
       expect(
-        within(team).getAllByText(`Institución: ${institutionPreview(person.institution)}`)
-          .length,
+        within(team).getAllByText(`Institución: ${institutionPreview(person.institution)}`).length,
       ).toBeGreaterThan(0)
     }
   })

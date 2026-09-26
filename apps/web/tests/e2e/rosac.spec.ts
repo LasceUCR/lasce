@@ -76,9 +76,7 @@ test('presents each ROSAC researcher card with public information', async ({ pag
     'mailto:carolina.salas_mata@ucr.ac.cr',
   )
   await expect(
-    team
-      .getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), U...')
-      .first(),
+    team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), U...').first(),
   ).toBeVisible()
   await team
     .getByRole('button', { name: 'Ver descripción de Dra. Carolina Salas Matamoros' })
