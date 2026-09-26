@@ -37,7 +37,7 @@ export const researchAreas: ResearchArea[] = [
     title: 'Propagación y predicción de CMEs hacia la Tierra',
     description:
       'Desarrolla modelos y herramientas para estimar la velocidad, la trayectoria y el tiempo de llegada de las CMEs a la Tierra. Esta rama incluye el desarrollo de la herramienta científica computacional SWAAT y su futura integración con observaciones de ROSAC.',
-    src: '/images/research/propagacion-prediccion-cmes-hacia-tierra.jpg',
+    src: '/images/research/propagacion-prediccion-cmes-hacia-tierra.png',
   },
   {
     slug: 'inteligencia-artificial-ciencia-datos-clima-espacial',
@@ -58,7 +58,7 @@ export const researchAreas: ResearchArea[] = [
     title: 'Infraestructura informática y gestión de datos de clima espacial',
     description:
       'Diseña y desarrolla plataformas informáticas para capturar, procesar, almacenar y consultar grandes volúmenes de datos solares provenientes de distintas fuentes. Esta rama también implementa bases de datos y servicios web especializados, y facilita el análisis interdisciplinario de la información en colaboración con investigadores en astrofísica solar y clima espacial.',
-    src: '/images/research/infraestructura-informatica-gestion-datos-clima-espacial.png',
+    src: '/images/research/infraestructura-informatica-gestion-datos-clima-espacial.jpg',
   },
   {
     slug: 'geomagnetismo-costa-rica',
