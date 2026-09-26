@@ -76,11 +76,16 @@ test('presents each ROSAC researcher card with public information', async ({ pag
     'mailto:carolina.salas_mata@ucr.ac.cr',
   )
   await expect(
-    team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR').first(),
+    team
+      .getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), U...')
+      .first(),
   ).toBeVisible()
   await team
     .getByRole('button', { name: 'Ver descripción de Dra. Carolina Salas Matamoros' })
     .click()
+  await expect(
+    team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR'),
+  ).toBeVisible()
   await expect(
     team.getByText(
       'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',

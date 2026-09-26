@@ -2,7 +2,11 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
-import { ResearcherCard, type ResearcherCardProps } from './ResearcherCard'
+import {
+  ResearcherCard,
+  institutionPreview,
+  type ResearcherCardProps,
+} from './ResearcherCard'
 import { Default, WithoutDescription, WithoutEmail } from './ResearcherCard.stories'
 
 const defaultArgs = Default.args as ResearcherCardProps
@@ -23,7 +27,9 @@ describe('ResearcherCard', () => {
 
     expect(screen.getByRole('heading', { name: defaultArgs.name })).toBeInTheDocument()
     expect(screen.getByText(defaultArgs.role)).toBeInTheDocument()
-    expect(screen.getAllByText(`Institución: ${defaultArgs.institution}`).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText(`Institución: ${institutionPreview(defaultArgs.institution)}`).length,
+    ).toBeGreaterThan(0)
     expect(
       screen.queryByRole('region', { name: `Descripción de ${defaultArgs.name}` }),
     ).not.toBeInTheDocument()
@@ -94,6 +100,23 @@ describe('ResearcherCard', () => {
     expect(descriptionScroll).toHaveTextContent(defaultArgs.description ?? '')
   })
 
+  test('places several emails on one line with a comma between them', () => {
+    render(
+      <ResearcherCard
+        {...defaultArgs}
+        email={['jcamachoga@ice.go.cr', 'Johanna.camacho@ucr.ac.cr']}
+      />,
+    )
+
+    const ice = screen.getByRole('link', { name: 'jcamachoga@ice.go.cr' })
+    expect(ice.parentElement).toHaveTextContent('jcamachoga@ice.go.cr, Johanna.camacho@ucr.ac.cr')
+    expect(ice).toHaveAttribute('href', 'mailto:jcamachoga@ice.go.cr')
+    expect(screen.getByRole('link', { name: 'Johanna.camacho@ucr.ac.cr' })).toHaveAttribute(
+      'href',
+      'mailto:Johanna.camacho@ucr.ac.cr',
+    )
+  })
+
   test('keeps the email link outside the flip control', () => {
     render(<ResearcherCard {...defaultArgs} />)
 
@@ -130,7 +153,8 @@ describe('ResearcherCard', () => {
     expect(screen.getByRole('heading', { name: withoutEmailArgs.name })).toBeInTheDocument()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(
-      screen.getAllByText(`Institución: ${withoutEmailArgs.institution}`).length,
+      screen.getAllByText(`Institución: ${institutionPreview(withoutEmailArgs.institution)}`)
+        .length,
     ).toBeGreaterThan(0)
   })
 
@@ -139,7 +163,8 @@ describe('ResearcherCard', () => {
 
     expect(screen.getByRole('heading', { name: withoutDescriptionArgs.name })).toBeInTheDocument()
     expect(
-      screen.getAllByText(`Institución: ${withoutDescriptionArgs.institution}`).length,
+      screen.getAllByText(`Institución: ${institutionPreview(withoutDescriptionArgs.institution)}`)
+        .length,
     ).toBeGreaterThan(0)
     expect(
       screen.queryByRole('button', { name: `Ver descripción de ${withoutDescriptionArgs.name}` }),
@@ -149,6 +174,45 @@ describe('ResearcherCard', () => {
     expect(
       screen.queryByRole('region', { name: `Descripción de ${withoutDescriptionArgs.name}` }),
     ).not.toBeInTheDocument()
+  })
+
+  test('flips to the full institution when it does not fit and there is no description', async () => {
+    const user = userEvent.setup()
+    const institution = 'Escuela de Ciencias de la Computación e Informática, UCR'
+    const name = 'Dr. Luis Gustavo Esquivel Quirós'
+    render(<ResearcherCard {...withoutDescriptionArgs} institution={institution} name={name} />)
+
+    expect(screen.getByText(`Institución: ${institutionPreview(institution)}`)).toBeInTheDocument()
+    expect(screen.queryByText(`Institución: ${institution}`)).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: `Descripción de ${name}` })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: `Ver institución de ${name}` }))
+
+    expect(screen.getByText(`Institución: ${institution}`)).toBeInTheDocument()
+    expect(
+      screen.queryByText(`Institución: ${institutionPreview(institution)}`),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: `Volver a la ficha de ${name}` }),
+    ).toHaveFocus()
+  })
+
+  test('shows a long institution in full only after the card flips', async () => {
+    const user = userEvent.setup()
+    const institution = [
+      'Escuela de Ingeniería Mecatrónica, TEC;',
+      'Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC',
+    ].join(' ')
+    render(<ResearcherCard {...defaultArgs} institution={institution} />)
+
+    const preview = `${institution.slice(0, 50)}...`
+    expect(screen.getByText(`Institución: ${preview}`)).toBeInTheDocument()
+    expect(screen.queryByText(`Institución: ${institution}`)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }))
+
+    expect(screen.getByText(`Institución: ${institution}`)).toBeInTheDocument()
+    expect(screen.queryByText(`Institución: ${preview}`)).not.toBeInTheDocument()
   })
 
   test('keeps the portrait decorative so the name is not announced twice', () => {

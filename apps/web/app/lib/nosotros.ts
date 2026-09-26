@@ -103,7 +103,7 @@ export const nosotrosContent = {
           'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
       },
       {
-        src: '/images/Researchers/FelipeM.jpeg',
+        src: '/images/Researchers/FelipeMeza.jpg',
         name: 'Dr. Felipe Meza',
         role: 'Investigador colaborador',
         email: 'felipe.mezaobando@ucr.ac.cr',
@@ -157,7 +157,7 @@ export const nosotrosContent = {
           'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
       },
       {
-        src: '/images/Researchers/YencaMigoya.png',
+        src: '/images/Researchers/YencaMigoya.jpg',
         name: 'Dra. Yenca Migoya',
         role: 'Investigadora colaboradora',
         email: 'yenca@ictp.it',
