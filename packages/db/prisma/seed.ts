@@ -107,11 +107,11 @@ for (const record of researchRecords) {
   const research = await prisma.research.upsert({
     where: record.doi
       ? {
-        doi: record.doi,
-      }
+          doi: record.doi,
+        }
       : {
-        externalUrl: record.externalUrl,
-      },
+          externalUrl: record.externalUrl,
+        },
     update: {
       title: record.title,
       publicationDate: record.publicationDate,

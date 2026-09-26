@@ -66,7 +66,7 @@ export const researchAreas: ResearchArea[] = [
     description:
       'Estudia las variaciones del campo magnético terrestre ante diferentes condiciones de actividad solar y geomagnética. Esta rama utiliza mediciones magnéticas realizadas en tiempo real en nuestro país para calcular índices geomagnéticos específicos para Costa Rica y desarrollar herramientas de monitoreo adaptadas al entorno regional.',
     src: '/images/research/geomagnetismo-costa-rica.jpg',
-  }
+  },
 ]
 
 export const researchAreaSlugs = researchAreas.map((area) => area.slug)
