@@ -2502,6 +2502,7 @@ a {
 }
 
 .card-grid-equal .info-card,
+.card-grid-equal .collaboration-card,
 .card-grid-equal .researcher-card {
   min-height: 0;
   height: 100%;
@@ -2550,6 +2551,7 @@ a {
 }
 
 .info-card p,
+.collaboration-list,
 .concept-flow p {
   margin: 0;
   color: #3d5566;
@@ -2723,6 +2725,14 @@ a {
   margin-top: 14px;
 }
 
+.collaboration-list {
+  padding-left: 1.2em;
+}
+
+.collaboration-list li + li {
+  margin-top: 8px;
+}
+
 @media (max-width: 1120px) {
   .topic-hero {
     grid-template-columns: 1fr;
@@ -2819,6 +2829,7 @@ a {
   }
 
   .card-grid-equal .info-card,
+  .card-grid-equal .collaboration-card,
   .card-grid-equal .researcher-card {
     height: auto;
     align-self: start;
