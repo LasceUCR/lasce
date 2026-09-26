@@ -1,15 +1,23 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 
 import { ResearcherCard, type ResearcherCardProps } from './ResearcherCard'
 
-export interface TeamGalleryProps {
+export interface TeamGalleryProps<T extends ResearcherCardProps = ResearcherCardProps> {
   label: string
   emptyMessage: string
   hint: string
-  people: readonly ResearcherCardProps[]
+  people: readonly T[]
+  /**
+   * Overrides how a person's slide renders — defaults to a plain `ResearcherCard`. This is how a
+   * caller (the ROSAC admin page) wraps a card with edit affordances without this component
+   * knowing anything about "Modo edición"; `/nosotros` never passes it and keeps the default.
+   */
+  renderPerson?: (person: T, index: number) => ReactNode
+  /** An extra slide appended after the people, e.g. an "add new" prompt in edit mode. */
+  trailingSlide?: ReactNode
 }
 
 /**
@@ -22,7 +30,14 @@ export interface TeamGalleryProps {
  * email and institution are rendered as real HTML on the front; the description is on the back after a
  * flip.
  */
-export function TeamGallery({ label, emptyMessage, hint, people }: TeamGalleryProps) {
+export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>({
+  label,
+  emptyMessage,
+  hint,
+  people,
+  renderPerson,
+  trailingSlide,
+}: TeamGalleryProps<T>) {
   const trackRef = useRef<HTMLUListElement>(null)
 
   useLayoutEffect(() => {
@@ -51,7 +66,7 @@ export function TeamGallery({ label, emptyMessage, hint, people }: TeamGalleryPr
     track.scrollBy({ behavior: 'smooth', left: direction * (track.clientWidth * 0.6) })
   }
 
-  if (people.length === 0) {
+  if (people.length === 0 && !trailingSlide) {
     return (
       <p className="content-empty" role="status">
         {emptyMessage}
@@ -62,20 +77,30 @@ export function TeamGallery({ label, emptyMessage, hint, people }: TeamGalleryPr
   return (
     <div className="team-gallery">
       <p className="team-gallery-hint">{hint}</p>
+      {people.length === 0 ? (
+        <p className="content-empty" role="status">
+          {emptyMessage}
+        </p>
+      ) : null}
       {/* Focusable so the scrollable region is reachable by keyboard, which axe requires. */}
       <ul aria-label={label} className="team-gallery-track" ref={trackRef} tabIndex={0}>
-        {people.map((person) => (
+        {people.map((person, index) => (
           <li className="team-gallery-slide" key={person.email ?? person.name}>
-            <ResearcherCard
-              description={person.description}
-              email={person.email}
-              name={person.name}
-              role={person.role}
-              institution={person.institution}
-              src={person.src}
-            />
+            {renderPerson ? (
+              renderPerson(person, index)
+            ) : (
+              <ResearcherCard
+                description={person.description}
+                email={person.email}
+                name={person.name}
+                role={person.role}
+                institution={person.institution}
+                src={person.src}
+              />
+            )}
           </li>
         ))}
+        {trailingSlide ? <li className="team-gallery-slide">{trailingSlide}</li> : null}
       </ul>
 
       <div className="team-gallery-controls">

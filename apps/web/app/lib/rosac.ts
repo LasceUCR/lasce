@@ -1,3 +1,8 @@
+import { prisma } from '@lasce/db'
+import { z } from 'zod'
+
+import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
+
 /**
  * Editorial source: LASCE_ROSAC_quienes_somos_y_que_hacemos.docx, supplied by LASCE.
  * Sections: ROSAC, ¿Qué hacemos?, ¿Por qué observar en radio? and La relación entre ambos.
@@ -17,8 +22,6 @@
  * deploy, move it to Prisma and fetch it in the route, the way `investigacion` does. The page
  * component takes its content as a prop precisely so that migration touches only the route.
  */
-import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
-
 export const rosacInfoMeta = {
   title: 'Radioastronomía y ROSAC | LASCE',
   description:
@@ -37,7 +40,9 @@ export type RosacCardIcon =
   | 'education'
 
 export interface TeamMember {
-  /** Local path under `apps/web/public`. */
+  id: string
+  /** Local path under `apps/web/public`, or a session-local `blob:` URL for a
+   * photo picked in the admin form before a real upload endpoint exists. */
   src: string
   /** Rendered as visible text, never as alt text. */
   name: string
@@ -221,6 +226,7 @@ export const rosacInfoContent = {
     emptyMessage: 'No hay información de investigadores disponible en este momento.',
     people: [
       {
+        id: 'carolina-salas',
         src: '/images/ROSAC/team/CarolinaSalas.jpg',
         name: 'Dra. Carolina Salas Matamoros',
         role: 'Investigadora principal',
@@ -230,6 +236,7 @@ export const rosacInfoContent = {
           'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
       },
       {
+        id: 'miguel-velazquez',
         src: '/images/ROSAC/team/MiguelVelazquez.jpg',
         name: 'Dr. Miguel Velázquez',
         role: 'Investigador',
@@ -238,6 +245,7 @@ export const rosacInfoContent = {
         description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
       },
       {
+        id: 'david-gale',
         src: '/images/ROSAC/team/DavidGale.jpg',
         name: 'Dr. David Gale',
         role: 'Investigador',
@@ -248,6 +256,7 @@ export const rosacInfoContent = {
           'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
       },
       {
+        id: 'oscar-nunez',
         src: '/images/ROSAC/team/OscarNunez.jpg',
         name: 'Dr. Óscar Núñez',
         role: 'Investigador',
@@ -256,6 +265,7 @@ export const rosacInfoContent = {
         description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
       },
       {
+        id: 'federico-ruiz',
         src: '/images/ROSAC/team/FedericoRuiz.png',
         name: 'Dr. Federico Ruiz',
         role: 'Investigador',
@@ -265,6 +275,7 @@ export const rosacInfoContent = {
           'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
       },
       {
+        id: 'gustavo-lara',
         src: '/images/ROSAC/team/GustavoLara.jpg',
         name: 'MSc. Gustavo Lara',
         role: 'Investigador',
@@ -274,6 +285,7 @@ export const rosacInfoContent = {
           'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
       },
       {
+        id: 'andres-fallas',
         src: '/images/ROSAC/team/AndresFallas.jpg',
         name: 'Ing. Andrés Fallas',
         role: 'Investigador',
@@ -283,6 +295,7 @@ export const rosacInfoContent = {
           'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
       },
       {
+        id: 'wagner-mejias',
         src: '/images/ROSAC/team/WagnerMejias.jpg',
         name: 'MSc. Wagner Mejías',
         role: 'Investigador',
@@ -292,6 +305,7 @@ export const rosacInfoContent = {
           'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
       },
       {
+        id: 'eduardo-ibarra',
         src: '/images/ROSAC/team/EduardoIbarra.jpg',
         name: 'Dr. Eduardo Ibarra',
         role: 'Colaborador externo',
@@ -301,6 +315,7 @@ export const rosacInfoContent = {
           'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
       },
       {
+        id: 'andres-corrales',
         src: '/images/ROSAC/team/AndresCorrales.jpg',
         name: 'Ing. Andrés Corrales',
         role: 'Colaborador externo',
@@ -309,6 +324,7 @@ export const rosacInfoContent = {
           'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
       },
       {
+        id: 'andres-gamboa',
         src: '/images/ROSAC/team/AndresGamboa.jpg',
         name: 'Ing. Andrés Gamboa',
         role: 'Colaborador externo',
@@ -317,6 +333,7 @@ export const rosacInfoContent = {
           'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
       },
       {
+        id: 'jelmuth-rojas',
         src: '/images/ROSAC/team/JelmutRojas.jpg',
         name: 'Jelmuth Rojas',
         role: 'Colaborador externo',
@@ -324,6 +341,7 @@ export const rosacInfoContent = {
         description: 'Apoyo en tareas de nivelación de la estructura.',
       },
       {
+        id: 'barnald-bocker',
         src: '/images/ROSAC/team/BarnaldBocker-2.jpg',
         name: 'Barnald Bocker',
         role: 'Asistente',
@@ -332,6 +350,7 @@ export const rosacInfoContent = {
           'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
       },
       {
+        id: 'fabian-chaverri',
         src: '/images/ROSAC/team/FabianChaverri.jpg',
         name: 'MSc. Fabián Chaverri',
         role: 'Futuro estudiante de doctorado',
@@ -352,3 +371,132 @@ export const rosacInfoContent = {
     label: 'Volver a las áreas',
   },
 } as const satisfies RosacInfoContent
+
+/**
+ * The ROSAC researcher profiles (LASCE-CON-012-085), persisted in
+ * `researchers` — the only part of the ROSAC page backed by Postgres so far.
+ * Rows map directly onto `TeamMember` (the DB's `photo_url` becomes `src`),
+ * so `getResearchers()` can be dropped straight into `TeamGallery` with no
+ * extra adapter.
+ */
+type ResearcherRow = {
+  id: string
+  photoUrl: string
+  role: string
+  name: string
+  institution: string
+  email: string | null
+  description: string
+}
+
+function toTeamMember(row: ResearcherRow): TeamMember {
+  return {
+    id: row.id,
+    src: row.photoUrl,
+    role: row.role,
+    name: row.name,
+    institution: row.institution,
+    email: row.email ?? undefined,
+    description: row.description,
+  }
+}
+
+export async function getResearchers(): Promise<TeamMember[]> {
+  const rows = await prisma.researcher.findMany({ orderBy: { createdAt: 'asc' } })
+  return rows.map(toTeamMember)
+}
+
+/**
+ * Shared by create and update. `email` is optional — an empty string means
+ * "no public address" and is stored as `null`, the same as a row that never
+ * had one.
+ */
+export const researcherInputSchema = z.object({
+  src: z.string().trim().min(1, 'La foto es obligatoria.'),
+  role: z.string().trim().min(1, 'El rol es obligatorio.'),
+  name: z.string().trim().min(1, 'El nombre es obligatorio.'),
+  email: z
+    .union([
+      z.literal(''),
+      z
+        .string()
+        .trim()
+        .pipe(z.email({ error: 'El correo no es válido.' })),
+    ])
+    .optional(),
+  institution: z.string().trim().min(1, 'La institución es obligatoria.'),
+  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+})
+
+export type ResearcherInput = z.infer<typeof researcherInputSchema>
+
+/** `''` and `undefined` both mean "no public address" — stored as `null`, same as an untouched row. */
+function normalizeEmail(email: string | undefined): string | null {
+  return email ? email : null
+}
+
+/**
+ * Creates a new researcher profile, authored by the admin who submitted it.
+ * `createdAt` defaults to now, which — since the list is ordered by it —
+ * puts the new profile at the end, same place `AddItemCard` prompted from.
+ */
+export async function createResearcher(
+  data: ResearcherInput,
+  modifiedBy: string,
+): Promise<TeamMember> {
+  const row = await prisma.researcher.create({
+    data: {
+      photoUrl: data.src,
+      role: data.role,
+      name: data.name,
+      email: normalizeEmail(data.email),
+      institution: data.institution,
+      description: data.description,
+      modifiedBy,
+    },
+  })
+
+  return toTeamMember(row)
+}
+
+/**
+ * Updates one researcher profile and stamps `modifiedBy` with the admin who
+ * made the change. Returns `null` when `id` does not match any row, rather
+ * than throwing, so the route handler can turn that into a 404.
+ */
+export async function updateResearcher(
+  id: string,
+  data: ResearcherInput,
+  modifiedBy: string,
+): Promise<TeamMember | null> {
+  const existing = await prisma.researcher.findUnique({ where: { id } })
+  if (!existing) return null
+
+  const row = await prisma.researcher.update({
+    where: { id },
+    data: {
+      photoUrl: data.src,
+      role: data.role,
+      name: data.name,
+      email: normalizeEmail(data.email),
+      institution: data.institution,
+      description: data.description,
+      modifiedBy,
+    },
+  })
+
+  return toTeamMember(row)
+}
+
+/**
+ * Deletes one researcher profile. Returns `false` when `id` does not match
+ * any row, rather than throwing, so the route handler can turn that into a
+ * 404 — same pre-check pattern as `updateResearcher`.
+ */
+export async function deleteResearcher(id: string): Promise<boolean> {
+  const existing = await prisma.researcher.findUnique({ where: { id } })
+  if (!existing) return false
+
+  await prisma.researcher.delete({ where: { id } })
+  return true
+}

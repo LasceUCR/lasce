@@ -1,6 +1,11 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
+
+// `ResearcherCard.stories` pulls in `rosacInfoContent` from `@/app/lib/rosac`,
+// which imports `prisma` at module scope — this stubs it out so loading that
+// module for its static fixture doesn't also require a real DATABASE_URL.
+vi.mock('@lasce/db', () => ({ prisma: {} }))
 
 import { ResearcherCard, type ResearcherCardProps } from './ResearcherCard'
 import { Default, WithoutDescription, WithoutEmail } from './ResearcherCard.stories'

@@ -2,6 +2,11 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
+// `TeamGallery.stories` pulls in `rosacInfoContent` from `@/app/lib/rosac`,
+// which imports `prisma` at module scope — this stubs it out so loading that
+// module for its static fixture doesn't also require a real DATABASE_URL.
+vi.mock('@lasce/db', () => ({ prisma: {} }))
+
 import { TeamGallery, type TeamGalleryProps } from './TeamGallery'
 import { Default, Empty, PlainName } from './TeamGallery.stories'
 
@@ -130,5 +135,38 @@ describe('TeamGallery', () => {
     expect(screen.getByRole('status')).toHaveTextContent(emptyArgs.emptyMessage)
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
     expect(screen.queryByText(emptyArgs.hint)).not.toBeInTheDocument()
+  })
+
+  test('lets a caller override how a person renders, e.g. to wrap it for editing', () => {
+    render(
+      <TeamGallery {...defaultArgs} renderPerson={(person) => <p>Editable: {person.name}</p>} />,
+    )
+
+    for (const person of defaultArgs.people) {
+      expect(screen.getByText(`Editable: ${person.name}`)).toBeInTheDocument()
+    }
+    expect(
+      screen.queryByRole('heading', { name: defaultArgs.people[0]!.name }),
+    ).not.toBeInTheDocument()
+  })
+
+  test('appends a trailing slide after every person', () => {
+    render(<TeamGallery {...defaultArgs} trailingSlide={<button type="button">Añadir</button>} />)
+
+    const track = screen.getByRole('list', { name: defaultArgs.label })
+    const items = within(track).getAllByRole('listitem')
+    expect(items).toHaveLength(defaultArgs.people.length + 1)
+    expect(
+      within(items[items.length - 1]!).getByRole('button', { name: 'Añadir' }),
+    ).toBeInTheDocument()
+  })
+
+  test('shows the track with just the trailing slide when there are no people yet', () => {
+    render(<TeamGallery {...emptyArgs} trailingSlide={<button type="button">Añadir</button>} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent(emptyArgs.emptyMessage)
+    const track = screen.getByRole('list', { name: emptyArgs.label })
+    expect(within(track).getAllByRole('listitem')).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
   })
 })

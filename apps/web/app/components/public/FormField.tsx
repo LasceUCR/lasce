@@ -12,7 +12,7 @@ export interface FormFieldProps {
   label: string
   value: string
   onChange: (value: string) => void
-  type?: 'text' | 'url' | 'date'
+  type?: 'text' | 'url' | 'date' | 'email'
   multiline?: boolean
   /** Renders a `<select>` with one entry per option instead of an input. */
   options?: FormFieldOption[]

@@ -3418,6 +3418,19 @@ a.gallery-tile:focus-visible {
   scroll-snap-align: start;
 }
 
+/* In edit mode, a slide's direct child is `EditableWrapper`'s `.editable` div
+   instead of `.researcher-card` itself. `.researcher-card` still expects to
+   fill a `flex: 1 1 auto; height: 100%` box handed down by `.team-gallery-slide` —
+   `.editable` has to pass that box through unchanged, or the card collapses to
+   zero height and only the edit/delete buttons (position: absolute) show. */
+.team-gallery-slide > .editable {
+  display: flex;
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+}
+
 .researcher-card {
   display: block;
   position: relative;
@@ -4437,6 +4450,18 @@ a.gallery-tile:focus-visible {
 
 .cms-form-field [aria-invalid='true'] {
   border-color: var(--danger);
+}
+
+.cms-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.cms-form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .nosotros-activity-form {
