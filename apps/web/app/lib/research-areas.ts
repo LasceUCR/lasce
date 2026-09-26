@@ -60,6 +60,13 @@ export const researchAreas: ResearchArea[] = [
       'Diseña y desarrolla plataformas informáticas para capturar, procesar, almacenar y consultar grandes volúmenes de datos solares provenientes de distintas fuentes. Esta rama también implementa bases de datos y servicios web especializados, y facilita el análisis interdisciplinario de la información en colaboración con investigadores en astrofísica solar y clima espacial.',
     src: '/images/research/infraestructura-informatica-gestion-datos-clima-espacial.png',
   },
+  {
+    slug: 'geomagnetismo-costa-rica',
+    title: 'Geomagnetismo en Costa Rica',
+    description:
+      'Estudia las variaciones del campo magnético terrestre ante diferentes condiciones de actividad solar y geomagnética. Esta rama utiliza mediciones magnéticas realizadas en tiempo real en nuestro país para calcular índices geomagnéticos específicos para Costa Rica y desarrollar herramientas de monitoreo adaptadas al entorno regional.',
+    src: '/images/research/geomagnetismo-costa-rica.jpg',
+  }
 ]
 
 export const researchAreaSlugs = researchAreas.map((area) => area.slug)
