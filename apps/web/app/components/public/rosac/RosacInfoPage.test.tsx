@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
+import { institutionPreview } from './ResearcherCard'
 import { RosacInfoPage, type RosacInfoPageProps } from './RosacInfoPage'
 import { Default } from './RosacInfoPage.stories'
 
@@ -99,7 +100,8 @@ describe('RosacInfoPage', () => {
     for (const person of defaultArgs.content.team.people) {
       expect(within(team).getByRole('heading', { name: person.name })).toBeInTheDocument()
       expect(
-        within(team).getAllByText(`Institución: ${person.institution}`).length,
+        within(team).getAllByText(`Institución: ${institutionPreview(person.institution)}`)
+          .length,
       ).toBeGreaterThan(0)
     }
   })

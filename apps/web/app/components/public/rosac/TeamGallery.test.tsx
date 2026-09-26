@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
+import { institutionPreview } from './ResearcherCard'
 import { TeamGallery, type TeamGalleryProps } from './TeamGallery'
 import { Default, Empty, PlainName } from './TeamGallery.stories'
 
@@ -37,7 +38,7 @@ describe('TeamGallery', () => {
     for (const person of defaultArgs.people) {
       expect(within(track).getByRole('heading', { name: person.name })).toBeInTheDocument()
       expect(
-        within(track).getAllByText(`Institución: ${person.institution}`).length,
+        within(track).getAllByText(`Institución: ${institutionPreview(person.institution)}`).length,
       ).toBeGreaterThan(0)
       if (person.description) {
         await user.click(
