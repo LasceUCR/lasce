@@ -40,8 +40,8 @@ export interface NosotrosResearcher {
   name: string
   /** The category shown at the top of the card, for example `Investigador`. */
   role: string
-  /** Public address when LASCE supplied one. */
-  email?: string
+  /** Public address, or several, when LASCE supplied them. */
+  email?: string | readonly string[]
   /** Affiliation shown as `Institución: {institution}`. */
   institution: string
   description?: string
@@ -103,6 +103,16 @@ export const nosotrosContent = {
           'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
       },
       {
+        src: '/images/Researchers/FelipeMeza.jpg',
+        name: 'Dr. Felipe Meza',
+        role: 'Investigador colaborador',
+        email: 'felipe.mezaobando@ucr.ac.cr',
+        institution:
+          'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
+        description:
+          'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
+      },
+      {
         src: '/images/Researchers/AllanBerrocal.jpg',
         name: 'Dr. Allan Francisco Berrocal Rojas',
         role: 'Investigador colaborador',
@@ -119,23 +129,6 @@ export const nosotrosContent = {
         institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
       },
       {
-        src: '/images/Researchers/IvanniaCalvo.png',
-        name: 'MSc. Ivania Calvo',
-        role: 'Investigadora colaboradora',
-        email: 'ivannia.calvo@ucr.ac.cr',
-        institution: 'Centro de Investigaciones Espaciales',
-        description:
-          'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
-      },
-      {
-        src: '/images/Researchers/User.png',
-        name: 'Dr. Felipe Meza',
-        role: 'Investigador colaborador',
-        email: 'felipe.mezaobando@ucr.ac.cr',
-        institution:
-          'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
-      },
-      {
         src: '/images/Researchers/User.png',
         name: 'MSc. Alonso Vega',
         role: 'Investigador colaborador',
@@ -145,16 +138,26 @@ export const nosotrosContent = {
           'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
       },
       {
-        src: '/images/Researchers/User.png',
-        name: 'Dra. Gabriela Molina',
+        src: '/images/Researchers/IvanniaCalvo.png',
+        name: 'MSc. Ivannia Calvo',
+        role: 'Investigadora colaboradora',
+        email: 'ivannia.calvo@ucr.ac.cr',
+        institution: 'Centro de Investigaciones Espaciales',
+        description:
+          'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+      },
+      {
+        src: '/images/Researchers/MolinaMariaGraciela.jpg',
+        name: 'Dra. Graciela Molina',
         role: 'Investigadora colaboradora',
         email: 'gmolina@herrera.unt.edu.ar',
-        institution: 'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina',
+        institution:
+          'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina; Istituto Nazionale di Geofisica e Vulcanologia (INGV), Italia',
         description:
           'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
       },
       {
-        src: '/images/Researchers/User.png',
+        src: '/images/Researchers/YencaMigoya.jpg',
         name: 'Dra. Yenca Migoya',
         role: 'Investigadora colaboradora',
         email: 'yenca@ictp.it',
@@ -162,6 +165,15 @@ export const nosotrosContent = {
           'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
         description:
           'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
+      },
+      {
+        src: '/images/Researchers/JohanaCamacho.jpeg',
+        name: 'MSc. Johanna Pamela Camacho Garbanzo',
+        role: 'Investigadora colaboradora',
+        email: ['jcamachoga@ice.go.cr', 'Johanna.camacho@ucr.ac.cr'],
+        institution: 'Instituto Costarricense de Electricidad; Universidad de Costa Rica',
+        description:
+          'Es geofísica de exploración del Instituto Costarricense de Electricidad (ICE), donde cuenta con más de 17 años de experiencia en la aplicación de métodos geofísicos para la caracterización del subsuelo y el desarrollo de proyectos de investigación aplicada. Asimismo, posee 8 años de experiencia como docente universitaria en la Escuela de Física de la Universidad de Costa Rica, impartiendo laboratorios de Física General. Actualmente es estudiante de doctorado e investigadora del Laboratorio de Clima Espacial (LASCE), donde desarrolla investigaciones relacionadas con geomagnetismo, ionósfera y clima espacial, utilizando registros de campo magnético terrestre en tiempo real. Su trabajo se enfoca en el análisis de la interacción entre la actividad geomagnética y la ionósfera, así como en sus aplicaciones para el estudio del clima espacial en Costa Rica. A lo largo de su trayectoria profesional ha participado en numerosos estudios e informes de investigación geofísica aplicados a infraestructura, exploración del subsuelo, energía e ingeniería, mediante el uso de técnicas como radar de penetración terrestre (GPR), tomografía de resistividad eléctrica y otros métodos geofísicos. Sus principales áreas de interés incluyen la geofísica aplicada, el geomagnetismo, el clima espacial y la formación de nuevas generaciones de científicos e Ingenieros.',
       },
     ],
   },

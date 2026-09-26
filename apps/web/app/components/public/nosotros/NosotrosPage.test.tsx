@@ -161,7 +161,7 @@ describe('NosotrosPage', () => {
       within(researchers).getByRole('heading', { name: 'Dr. Luis Gustavo Esquivel Quirós' }),
     ).toBeInTheDocument()
     expect(
-      within(researchers).getByRole('heading', { name: 'MSc. Ivania Calvo' }),
+      within(researchers).getByRole('heading', { name: 'MSc. Ivannia Calvo' }),
     ).toBeInTheDocument()
     expect(
       within(researchers).getByRole('heading', { name: 'Dr. Felipe Meza' }),
@@ -170,7 +170,7 @@ describe('NosotrosPage', () => {
       within(researchers).getByRole('heading', { name: 'MSc. Alonso Vega' }),
     ).toBeInTheDocument()
     expect(
-      within(researchers).getByRole('heading', { name: 'Dra. Gabriela Molina' }),
+      within(researchers).getByRole('heading', { name: 'Dra. Graciela Molina' }),
     ).toBeInTheDocument()
     expect(
       within(researchers).getByRole('heading', { name: 'Dra. Yenca Migoya' }),
@@ -188,6 +188,16 @@ describe('NosotrosPage', () => {
       'href',
       'mailto:yenca@ictp.it',
     )
+    expect(
+      within(researchers).getByRole('heading', { name: 'MSc. Johanna Pamela Camacho Garbanzo' }),
+    ).toBeInTheDocument()
+    expect(within(researchers).getByRole('link', { name: 'jcamachoga@ice.go.cr' })).toHaveAttribute(
+      'href',
+      'mailto:jcamachoga@ice.go.cr',
+    )
+    expect(
+      within(researchers).getByRole('link', { name: 'Johanna.camacho@ucr.ac.cr' }),
+    ).toHaveAttribute('href', 'mailto:Johanna.camacho@ucr.ac.cr')
     expect(
       within(researchers).getByRole('link', { name: 'carolina.salas_mata@ucr.ac.cr' }),
     ).toHaveAttribute('href', 'mailto:carolina.salas_mata@ucr.ac.cr')
@@ -215,11 +225,29 @@ describe('NosotrosPage', () => {
     expect(within(researchers).getAllByText('Investigador colaborador').length).toBeGreaterThan(0)
     expect(within(researchers).getAllByText('Investigadora colaboradora').length).toBeGreaterThan(0)
     await user.click(
-      within(researchers).getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }),
+      within(researchers).getByRole('button', { name: 'Ver descripción de MSc. Ivannia Calvo' }),
     )
     expect(
       within(researchers).getByText(
         'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+      ),
+    ).toBeInTheDocument()
+    await user.click(
+      within(researchers).getByRole('button', { name: 'Ver descripción de Dr. Felipe Meza' }),
+    )
+    expect(
+      within(researchers).getByText(
+        /modelos inteligentes para el análisis, interpretación y predicción/,
+      ),
+    ).toBeInTheDocument()
+    await user.click(
+      within(researchers).getByRole('button', {
+        name: 'Ver descripción de MSc. Johanna Pamela Camacho Garbanzo',
+      }),
+    )
+    expect(
+      within(researchers).getByText(
+        /geofísica de exploración del Instituto Costarricense de Electricidad/,
       ),
     ).toBeInTheDocument()
   })

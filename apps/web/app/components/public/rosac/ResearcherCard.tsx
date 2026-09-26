@@ -1,7 +1,18 @@
 'use client'
 
 import Image from 'next/image'
-import { useId, useLayoutEffect, useRef, useState, type WheelEvent } from 'react'
+import { Fragment, useId, useLayoutEffect, useRef, useState, type WheelEvent } from 'react'
+
+/** Front-of-card institution text. Longer affiliations end with `...` after this many characters. */
+export const INSTITUTION_PREVIEW_LENGTH = 50
+
+export function institutionPreview(institution: string): string {
+  if (institution.length <= INSTITUTION_PREVIEW_LENGTH) {
+    return institution
+  }
+
+  return `${institution.slice(0, INSTITUTION_PREVIEW_LENGTH)}...`
+}
 
 export interface ResearcherCardProps {
   /** Local path under `apps/web/public`. */
@@ -10,14 +21,16 @@ export interface ResearcherCardProps {
   role: string
   institution: string
   description?: string
-  email?: string
+  /** One address, or several when LASCE supplied more than one. */
+  email?: string | readonly string[]
 }
 
 /**
  * Presentational researcher portrait card. The photo is decorative (`alt=""`) because the name,
  * role, email and institution are real HTML. Named buttons flip the card so the mailto is never
- * nested inside a control. The hidden face is `inert` and `aria-hidden`, and the description is a
- * named region so overflow can be read from the keyboard.
+ * nested inside a control. A description, or an institution that does not fit on the front, opens
+ * the back, where the affiliation is shown in full. The hidden face is `inert` and `aria-hidden`,
+ * and the description is a named region so overflow can be read from the keyboard.
  */
 export function ResearcherCard({
   src,
@@ -28,8 +41,12 @@ export function ResearcherCard({
   email,
 }: ResearcherCardProps) {
   const [flipped, setFlipped] = useState(false)
-  const canFlip = Boolean(description)
   const descriptionId = useId()
+  const institutionId = useId()
+  const institutionText = institutionPreview(institution)
+  const canFlip = Boolean(description) || institutionText !== institution
+  const detailsLabel = description ? `Ver descripción de ${name}` : `Ver institución de ${name}`
+  const detailsId = description ? descriptionId : institutionId
   const frontButtonRef = useRef<HTMLButtonElement>(null)
   const backButtonRef = useRef<HTMLButtonElement>(null)
   const descriptionScrollRef = useRef<HTMLDivElement>(null)
@@ -61,6 +78,7 @@ export function ResearcherCard({
   const className = ['researcher-card', canFlip ? 'has-flip' : '', flipped ? 'is-flipped' : '']
     .filter(Boolean)
     .join(' ')
+  const emails = typeof email === 'string' ? [email] : (email ?? [])
 
   return (
     <article className={className}>
@@ -72,9 +90,9 @@ export function ResearcherCard({
         >
           {canFlip ? (
             <button
-              aria-controls={descriptionId}
+              aria-controls={detailsId}
               aria-expanded={flipped}
-              aria-label={`Ver descripción de ${name}`}
+              aria-label={detailsLabel}
               className="researcher-card-flip-hit"
               onClick={toggleFlip}
               ref={frontButtonRef}
@@ -87,12 +105,19 @@ export function ResearcherCard({
           <p className="researcher-card-role">{role}</p>
           <h3 className="researcher-card-name">{name}</h3>
           <div className="researcher-card-meta">
-            {email ? (
-              <a className="researcher-card-email" href={`mailto:${email}`}>
-                {email}
-              </a>
+            {emails.length > 0 ? (
+              <p className="researcher-card-emails">
+                {emails.map((address, index) => (
+                  <Fragment key={address}>
+                    {index > 0 ? ', ' : null}
+                    <a className="researcher-card-email" href={`mailto:${address}`}>
+                      {address}
+                    </a>
+                  </Fragment>
+                ))}
+              </p>
             ) : null}
-            <p className="researcher-card-institution">Institución: {institution}</p>
+            <p className="researcher-card-institution">Institución: {institutionText}</p>
           </div>
         </div>
 
@@ -103,7 +128,7 @@ export function ResearcherCard({
             inert={!flipped ? true : undefined}
           >
             <button
-              aria-controls={descriptionId}
+              aria-controls={detailsId}
               aria-expanded={flipped}
               aria-label={`Volver a la ficha de ${name}`}
               className="researcher-card-flip-hit"
@@ -114,18 +139,25 @@ export function ResearcherCard({
             />
             <div className="researcher-card-back-header">
               <h3 className="researcher-card-name">{name}</h3>
-              <p className="researcher-card-institution">Institución: {institution}</p>
+              <p
+                className="researcher-card-institution"
+                id={description ? undefined : institutionId}
+              >
+                Institución: {institution}
+              </p>
             </div>
-            <div
-              aria-label={`Descripción de ${name}`}
-              className="researcher-card-description-scroll"
-              id={descriptionId}
-              ref={descriptionScrollRef}
-              role="region"
-              tabIndex={flipped ? 0 : -1}
-            >
-              <p className="researcher-card-description">{description}</p>
-            </div>
+            {description ? (
+              <div
+                aria-label={`Descripción de ${name}`}
+                className="researcher-card-description-scroll"
+                id={descriptionId}
+                ref={descriptionScrollRef}
+                role="region"
+                tabIndex={flipped ? 0 : -1}
+              >
+                <p className="researcher-card-description">{description}</p>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
