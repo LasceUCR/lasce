@@ -3,13 +3,13 @@ import type { ResearchArea } from '@/app/components/public/research/ResearchArea
 export const investigacionMeta = {
   title: 'Investigación | LASCE',
   description:
-    'Áreas de investigación del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
+    'Áreas de investigación y colaboraciones científicas del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
 } as const
 
 export const investigacionHero = {
   kicker: 'Portal público LASCE',
-  title: 'Áreas de investigación',
-  lead: 'Principales ramas de investigación desarrolladas por el LASCE.',
+  title: 'Investigación',
+  lead: 'Líneas científicas, áreas temáticas y colaboraciones de investigación del LASCE.',
 } as const
 
 export const investigacionBackLink = {
