@@ -476,12 +476,10 @@ a {
   isolation: isolate;
   color: var(--white);
   background:
-    radial-gradient(
-      circle at 76% 42%,
+    radial-gradient(circle at 76% 42%,
       rgba(0, 0, 0, 0.92),
       rgba(0, 0, 0, 0.52) 30%,
-      transparent 54%
-    ),
+      transparent 54%),
     linear-gradient(115deg, rgba(2, 48, 71, 0.7) 0%, rgba(0, 9, 24, 0.96) 46%, #000 100%),
     radial-gradient(circle at 12% 24%, rgba(255, 255, 255, 0.74) 0 1px, transparent 1.4px),
     radial-gradient(circle at 32% 68%, rgba(255, 255, 255, 0.48) 0 1px, transparent 1.5px),
@@ -884,6 +882,10 @@ a {
   line-height: 1.2;
 }
 
+/* ==========================================================================
+   Areas (home widget) — .areas, .area-grid, .area-card
+   ========================================================================== */
+
 .areas {
   margin-top: 34px;
   scroll-margin-top: 24px;
@@ -990,6 +992,29 @@ a {
   transform: translateX(4px);
 }
 
+/* Areas — breakpoints */
+
+@media (max-width: 760px) {
+  .areas h2 {
+    font-size: 22px;
+  }
+
+  .area-grid,
+  .indicator-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .areas {
+    margin-top: 26px;
+  }
+
+  .area-grid {
+    margin-top: 16px;
+    gap: 12px;
+  }
+}
+
+
 .site-footer {
   padding: 10px 0;
   background: var(--navy-deep);
@@ -1018,7 +1043,7 @@ a {
   height: 45px;
 }
 
-.footer-identity > div:last-child {
+.footer-identity>div:last-child {
   display: flex;
   flex-direction: column;
 }
@@ -1050,7 +1075,7 @@ a {
   text-underline-offset: 3px;
 }
 
-.footer-links a + a::before {
+.footer-links a+a::before {
   content: '·';
   margin: 0 10px;
   color: #8399a7;
@@ -1126,6 +1151,10 @@ a {
   font-size: 14px;
 }
 
+/* ==========================================================================
+   Publications — .publications, .publications-toolbar, .publication-card
+   ========================================================================== */
+
 .publications-toolbar {
   display: flex;
   align-items: stretch;
@@ -1164,6 +1193,91 @@ a {
   width: 100%;
 }
 
+.publications {
+  margin-top: 8px;
+  padding-bottom: 56px;
+}
+
+.publications h2 {
+  margin-top: 28px;
+}
+
+.publication-list {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.publication-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.publication-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.publication-abstract {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.publication-abstract-full {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+}
+
+.publication-card .button,
+.news-card .button {
+  margin-top: 12px;
+}
+
+.publication-group {
+  font-weight: 700;
+}
+
+.publications-kpi {
+  width: 220px;
+  min-height: 44px;
+  color: var(--ink);
+  justify-content: flex-start;
+  align-items: center;
+  font-family: inherit;
+  font-size: 16px;
+  display: flex;
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: 8px;
+  flex: 0 0 220px;
+  gap: 6px;
+  padding: 0 14px;
+}
+
+.publications-kpi strong {
+  position: relative;
+  top: -1px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.publications-kpi span {
+  color: var(--ink);
+}
+
+/* Publications — breakpoints */
+
 @media (max-width: 760px) {
   .publications-toolbar {
     flex-direction: column;
@@ -1183,24 +1297,16 @@ a {
   }
 
   .publications-kpi {
-    width: auto;
+    width: 100%;
     min-width: 0;
+    max-width: none;
     height: 44px;
-    min-height: 0;
+    min-height: 44px;
     max-height: 44px;
-    flex: 0 0 44px;
-    align-self: flex-start;
+    flex: 0 0 auto;
+    align-self: stretch;
     padding: 0 14px;
   }
-}
-
-.publications {
-  margin-top: 8px;
-  padding-bottom: 56px;
-}
-
-.publications h2 {
-  margin-top: 28px;
 }
 
 .content-empty {
@@ -1239,11 +1345,11 @@ a {
   display: grid;
 }
 
-.data-source-notice-copy > span {
+.data-source-notice-copy>span {
   grid-area: 1 / 1;
 }
 
-.data-source-notice-copy > span[aria-hidden='true'] {
+.data-source-notice-copy>span[aria-hidden='true'] {
   visibility: hidden;
 }
 
@@ -1392,7 +1498,7 @@ a {
   margin-bottom: 0.5rem;
 }
 
-.data-section-heading > svg {
+.data-section-heading>svg {
   flex-shrink: 0;
   color: var(--blue-dark);
 }
@@ -1525,15 +1631,15 @@ a {
   cursor: pointer;
 }
 
-.select-trigger > span {
+.select-trigger>span {
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.select-trigger > svg,
-.select-option > svg {
+.select-trigger>svg,
+.select-option>svg {
   flex-shrink: 0;
   color: var(--blue-dark);
   transition: transform 160ms ease;
@@ -1544,7 +1650,7 @@ a {
   box-shadow: 0 2px 8px rgb(13 39 55 / 6%);
 }
 
-.select-trigger[aria-expanded='true'] > svg {
+.select-trigger[aria-expanded='true']>svg {
   transform: rotate(180deg);
 }
 
@@ -1578,14 +1684,14 @@ a {
   transition: background-color 120ms ease;
 }
 
-.select-option > span,
+.select-option>span,
 .select-group {
   min-width: 0;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-.select-menu > [role='presentation'] + [role='presentation'] {
+.select-menu>[role='presentation']+[role='presentation'] {
   margin-top: 0.125rem;
 }
 
@@ -1628,7 +1734,7 @@ a {
   }
 
   .select-trigger,
-  .select-trigger > svg,
+  .select-trigger>svg,
   .select-option,
   .data-field input,
   .researcher-card-inner {
@@ -1773,79 +1879,10 @@ a {
   }
 }
 
-.publication-list {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 
-.publication-card h3 {
-  margin: 0 0 6px;
-  font-size: 16px;
-  line-height: 1.35;
-}
-
-.publication-meta {
-  margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.publication-abstract {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.publication-abstract-full {
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-}
-
-.publication-card .button,
-.news-card .button {
-  margin-top: 12px;
-}
-
-.publication-group {
-  font-weight: 700;
-}
-
-.publications-kpi {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 220px;
-  flex: 0 0 220px;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--white);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 14px;
-  gap: 6px;
-}
-
-.publications-kpi strong {
-  position: relative;
-  top: -1px;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.publications-kpi span {
-  color: var(--ink);
-}
+/* ==========================================================================
+   Research Areas — .research-areas, .research-area-content, .research-area-list
+   ========================================================================== */
 
 .section-heading .research-areas-description {
   max-width: 680px;
@@ -1858,6 +1895,18 @@ a {
   margin-top: 0;
   padding-top: 24px;
   padding-bottom: 56px;
+}
+
+.research-areas .gallery-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.research-areas .gallery-tile-body {
+  flex: 1;
+}
+
+.research-areas .gallery-tile-meta {
+  margin-top: auto;
 }
 
 .research-area-content {
@@ -1873,13 +1922,31 @@ a {
   line-height: 1.7;
 }
 
-.research-area-list li + li {
+.research-area-list li+li {
   margin-top: 8px;
+}
+
+/* Research Areas — breakpoints */
+
+@media (max-width: 900px) {
+  .research-areas .gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .research-areas .gallery-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .section-heading h2 {
   margin: 0;
 }
+
+/* ==========================================================================
+   News — .news, .news-list, .news-card
+   ========================================================================== */
 
 .news {
   margin-top: 8px;
@@ -1951,6 +2018,8 @@ a {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+/* News — breakpoints */
 
 @media (max-width: 1120px) {
   .news-card-content {
@@ -2200,8 +2269,7 @@ a {
     max-width: 220px;
   }
 
-  .indicators h2,
-  .areas h2 {
+  .indicators h2 {
     font-size: 22px;
   }
 
@@ -2209,18 +2277,8 @@ a {
     padding-block: 22px 30px;
   }
 
-  .indicator-grid,
-  .area-grid {
+  .indicator-grid {
     grid-template-columns: 1fr;
-  }
-
-  .areas {
-    margin-top: 26px;
-  }
-
-  .area-grid {
-    margin-top: 16px;
-    gap: 12px;
   }
 
   .footer-inner,
@@ -2719,7 +2777,7 @@ a {
   padding: 8px 0 48px;
 }
 
-.topic-intro + .topic-intro {
+.topic-intro+.topic-intro {
   margin-top: 14px;
 }
 
@@ -2907,7 +2965,9 @@ a {
   color: var(--action-hover);
 }
 
-/* Gallery ------------------------------------------------------------------ */
+/* ==========================================================================
+   Gallery — .gallery-grid, .gallery-tile, .media-grid, .media-tile, .lightbox
+   ========================================================================== */
 
 .media-frame {
   position: relative;
@@ -2978,13 +3038,13 @@ a {
   margin-bottom: 0;
 }
 
-.gallery-grid > li,
-.card-grid.tile-list > li {
+.gallery-grid>li,
+.card-grid.tile-list>li {
   display: flex;
 }
 
-.gallery-grid > li > .gallery-tile,
-.card-grid.tile-list > li > .gallery-tile {
+.gallery-grid>li>.gallery-tile,
+.card-grid.tile-list>li>.gallery-tile {
   flex: 1;
 }
 
@@ -3055,6 +3115,7 @@ a.gallery-tile:focus-visible {
 }
 
 .gallery-tile-meta {
+  margin-top: auto;
   color: var(--muted);
   font-size: 12px;
 }
@@ -3173,12 +3234,12 @@ a.gallery-tile:focus-visible {
    producing a second, stuck hover panel alongside whichever tile the mouse is
    really over. `:focus-visible` still fires for real keyboard navigation. */
 .media-tile:hover .media-hover,
-.media-tile-button:focus-visible ~ .media-hover {
+.media-tile-button:focus-visible~.media-hover {
   opacity: 1;
 }
 
 .media-tile:hover .media-overlay,
-.media-tile-button:focus-visible ~ .media-overlay {
+.media-tile-button:focus-visible~.media-overlay {
   opacity: 0;
 }
 
@@ -3338,6 +3399,8 @@ a.gallery-tile:focus-visible {
   color: var(--space-meta);
   font-size: 12px;
 }
+
+/* Gallery — breakpoints */
 
 @media (max-width: 1120px) {
   .lightbox-stage {
@@ -3753,7 +3816,7 @@ a.gallery-tile:focus-visible {
   padding: 12px 0;
 }
 
-.admin-activity-list li + li {
+.admin-activity-list li+li {
   border-top: 1px solid var(--border);
 }
 
@@ -3962,12 +4025,10 @@ a.gallery-tile:focus-visible {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(0, 9, 24, 0.82) 0%,
-    rgba(0, 9, 24, 0.55) 45%,
-    rgba(0, 9, 24, 0.15) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba(0, 9, 24, 0.82) 0%,
+      rgba(0, 9, 24, 0.55) 45%,
+      rgba(0, 9, 24, 0.15) 100%);
 }
 
 .space-page .page-intro h1 {
@@ -4396,7 +4457,7 @@ a.gallery-tile:focus-visible {
   margin: 0;
 }
 
-.file-drop-copy p + p {
+.file-drop-copy p+p {
   margin-top: 4px;
 }
 
