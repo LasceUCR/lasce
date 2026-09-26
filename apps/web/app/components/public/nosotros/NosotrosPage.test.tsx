@@ -161,7 +161,7 @@ describe('NosotrosPage', () => {
       within(researchers).getByRole('heading', { name: 'Dr. Luis Gustavo Esquivel Quirós' }),
     ).toBeInTheDocument()
     expect(
-      within(researchers).getByRole('heading', { name: 'MSc. Ivania Calvo' }),
+      within(researchers).getByRole('heading', { name: 'MSc. Ivannia Calvo' }),
     ).toBeInTheDocument()
     expect(
       within(researchers).getByRole('heading', { name: 'Dr. Felipe Meza' }),
@@ -225,7 +225,7 @@ describe('NosotrosPage', () => {
     expect(within(researchers).getAllByText('Investigador colaborador').length).toBeGreaterThan(0)
     expect(within(researchers).getAllByText('Investigadora colaboradora').length).toBeGreaterThan(0)
     await user.click(
-      within(researchers).getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }),
+      within(researchers).getByRole('button', { name: 'Ver descripción de MSc. Ivannia Calvo' }),
     )
     expect(
       within(researchers).getByText(

@@ -50,7 +50,7 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
   await expect(
     researchers.getByRole('heading', { name: 'Dr. Luis Gustavo Esquivel Quirós' }),
   ).toBeVisible()
-  await expect(researchers.getByRole('heading', { name: 'MSc. Ivania Calvo' })).toBeVisible()
+  await expect(researchers.getByRole('heading', { name: 'MSc. Ivannia Calvo' })).toBeVisible()
   await expect(researchers.getByRole('heading', { name: 'Dr. Felipe Meza' })).toBeVisible()
   await expect(researchers.getByRole('heading', { name: 'MSc. Alonso Vega' })).toBeVisible()
   await expect(researchers.getByRole('heading', { name: 'Dra. Graciela Molina' })).toBeVisible()
@@ -89,7 +89,7 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
     ),
   ).toBeVisible()
   await expect(researchers.getByText('Investigador colaborador').first()).toBeVisible()
-  await researchers.getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }).click()
+  await researchers.getByRole('button', { name: 'Ver descripción de MSc. Ivannia Calvo' }).click()
   await expect(
     researchers.getByText(
       'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',

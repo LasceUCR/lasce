@@ -139,7 +139,7 @@ export const nosotrosContent = {
       },
       {
         src: '/images/Researchers/IvanniaCalvo.png',
-        name: 'MSc. Ivania Calvo',
+        name: 'MSc. Ivannia Calvo',
         role: 'Investigadora colaboradora',
         email: 'ivannia.calvo@ucr.ac.cr',
         institution: 'Centro de Investigaciones Espaciales',
