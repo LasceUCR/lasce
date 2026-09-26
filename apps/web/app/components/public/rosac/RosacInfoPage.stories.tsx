@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
-import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import { rosacInfoContent } from '@/app/lib/rosac'
 
 import { RosacInfoPage } from './RosacInfoPage'
@@ -32,6 +32,22 @@ export const EmptyResearchers: Story = {
       team: { ...rosacInfoContent.team, people: [] },
     },
   },
+}
+
+export const EditMode: Story = {
+  args: {
+    content: rosacInfoContent,
+    canCreate: true,
+    canEdit: true,
+    canDelete: true,
+  },
+  decorators: [
+    (Story) => (
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+        <Story />
+      </EditModeContext.Provider>
+    ),
+  ],
 }
 
 export const Mobile: Story = {

@@ -158,6 +158,13 @@ test('opens on the login tab and switches to registration without leaving the pa
     headerActions(page).getByRole('link', { name: accountMenuCopy.signIn }),
   ).toHaveAttribute('href', ACCESS_PATH)
 
+  // The card's own link must open the registration tab, not only rewrite the address bar.
+  await loginCard(page).getByRole('link', { name: loginFormCopy.noAccountLink }).click()
+  await expect(page).toHaveURL(/\?tab=crear-cuenta$/)
+  await expect(registerTab).toHaveAttribute('aria-selected', 'true')
+  await expect(page.locator(`#${REGISTRATION_CARD_ID}`)).toBeVisible()
+  await expect(loginCard(page)).toBeHidden()
+
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.locator('.mobile-menu summary').click()

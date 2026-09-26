@@ -33,6 +33,7 @@ working through Claude Code.
 | How do the two runtimes fit together?              | [`docs/architecture.md`](docs/architecture.md)                       |
 | How do I add a job across both languages?          | [`docs/add-a-job.md`](docs/add-a-job.md)                             |
 | How do I add a UI component?                       | [`docs/add-a-component.md`](docs/add-a-component.md)                 |
+| How do I make content editable in "Modo edición"?  | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)             |
 | Where does a test go, and what gates it?           | [`docs/testing.md`](docs/testing.md)                                 |
 | How do I write a component or service test?        | [`docs/tests/component_testing.md`](docs/tests/component_testing.md) |
 | Branches, commits, PRs, required checks            | [`docs/git-guidelines.md`](docs/git-guidelines.md)                   |
@@ -40,7 +41,10 @@ working through Claude Code.
 | File uploads and their known defects               | [`docs/manage-assets.md`](docs/manage-assets.md)                     |
 | Running the stack without Docker                   | [`infra/docker/README.md`](infra/docker/README.md)                   |
 | What tables exist and how do they relate?          | [`docs/database-definition.md`](docs/database-definition.md)         |
+| How does the public gallery work?                  | [`docs/gallery.md`](docs/gallery.md)                                 |
 | How does a visitor register an account?            | [`docs/registration.md`](docs/registration.md)                       |
 | How do users sign in, and how is a page protected? | [`docs/sessions.md`](docs/sessions.md)                               |
+| How are role permissions configured?               | [`docs/role-permissions.md`](docs/role-permissions.md)               |
+| How do I gate a page or a control with a grant?    | [`docs/add-permissions.md`](docs/add-permissions.md)                 |
 
 When a change makes one of these wrong, update it in the same PR.

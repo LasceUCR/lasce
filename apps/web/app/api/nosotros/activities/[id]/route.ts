@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { requireAdmin } from '@/app/lib/auth/apiGuard'
+import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import {
   deleteNosotrosActivity,
   nosotrosActivityInputSchema,
@@ -9,10 +9,9 @@ import {
 
 /**
  * Updates or deletes one "¿Qué hacemos?" activity flashcard
- * (LASCE-CON-012-086). Admin-only — this is the write path the public GET
- * sibling deliberately has none of. `US-29 Access the Administration Panel`
- * is still pending, so this route is today's only real enforcement point for
- * that requirement.
+ * (LASCE-CON-012-086). PATCH needs `edit_components`; DELETE needs
+ * `delete_components`. Hiding the pencil or trash is not enough — this is
+ * the write path the public GET sibling deliberately has none of.
  */
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +19,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
   let body: unknown
@@ -57,7 +56,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('delete_components')
   if (!guard.ok) return guard.response
 
   const { id } = await params

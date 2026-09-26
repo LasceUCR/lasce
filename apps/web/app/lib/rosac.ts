@@ -1,21 +1,26 @@
 import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
+import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
+
 /**
  * Editorial source: LASCE_ROSAC_quienes_somos_y_que_hacemos.docx, supplied by LASCE.
  * Sections: ROSAC, ¿Qué hacemos?, ¿Por qué observar en radio? and La relación entre ambos.
  * Preserve the distinction between development goals and operational capabilities.
  * This module describes the public information page only; scientific consultation is separate.
  *
- * `rosacInfoContent.team.people` below is the seed/fixture shape (Storybook, tests, and the
- * original editorial copy) — the live page reads the real list from Postgres through
- * `getResearchers()` instead (LASCE-CON-012-085). `team.people[].src` must be a local path under
- * `apps/web/public`, or a `blob:` URL created client-side from a freshly picked photo.
+ * `team.people` is the accessible source of truth for the ROSAC researchers gallery. Portraits
+ * live in `public/images/ROSAC/team/`; names, roles, emails and institution are on the front of each
+ * card, and the description is on the back after a click. They are rendered as HTML in
+ * `ResearcherCard`. `team.people[].src` must be a local path under `apps/web/public`.
  * `next.config.ts` declares no `images` config, so a remote URL throws at render time.
  *
  * `institution` is the affiliation shown as `Institución: {institution}`. `email` is only set when
- * LASCE supplied a public address — it has no admin form field yet, so it can be read but not
- * written through `createResearcher`/`updateResearcher`.
+ * LASCE supplied a public address. Portraits are the named files in `public/images/ROSAC/team/`.
+ *
+ * The team list is hand maintained here on purpose. If it ever needs to be editable without a
+ * deploy, move it to Prisma and fetch it in the route, the way `investigacion` does. The page
+ * component takes its content as a prop precisely so that migration touches only the route.
  */
 export const rosacInfoMeta = {
   title: 'Radioastronomía y ROSAC | LASCE',
@@ -81,11 +86,13 @@ export interface RosacInfoContent {
   overview: RosacTextSection
   characteristics: RosacCardSection
   activities: RosacCardSection
+  construction: ConstructionContent
   radioObservation: RosacTextSection
   relationship: RosacTextSection
   team: {
     title: string
     intro: string
+    hint: string
     emptyMessage: string
     people: readonly TeamMember[]
   }
@@ -98,6 +105,7 @@ export interface RosacInfoContent {
 }
 
 export const rosacInfoContent = {
+  construction: rosacConstructionContent,
   hero: {
     kicker: 'Área de trabajo LASCE',
     title: 'Radioastronomía',
@@ -214,6 +222,7 @@ export const rosacInfoContent = {
     title: 'Investigadores',
     intro:
       'Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.',
+    hint: 'Haga clic en una ficha para ver más información.',
     emptyMessage: 'No hay información de investigadores disponible en este momento.',
     people: [
       {
@@ -398,20 +407,33 @@ export async function getResearchers(): Promise<TeamMember[]> {
 }
 
 /**
- * Shared by create and update. `email` is deliberately absent: the admin
- * form has no field for it yet, so it is never part of the write path —
- * `updateResearcher` leaves an existing address untouched, and a new profile
- * simply starts without one.
+ * Shared by create and update. `email` is optional — an empty string means
+ * "no public address" and is stored as `null`, the same as a row that never
+ * had one.
  */
 export const researcherInputSchema = z.object({
   src: z.string().trim().min(1, 'La foto es obligatoria.'),
   role: z.string().trim().min(1, 'El rol es obligatorio.'),
   name: z.string().trim().min(1, 'El nombre es obligatorio.'),
+  email: z
+    .union([
+      z.literal(''),
+      z
+        .string()
+        .trim()
+        .pipe(z.email({ error: 'El correo no es válido.' })),
+    ])
+    .optional(),
   institution: z.string().trim().min(1, 'La institución es obligatoria.'),
   description: z.string().trim().min(1, 'La descripción es obligatoria.'),
 })
 
 export type ResearcherInput = z.infer<typeof researcherInputSchema>
+
+/** `''` and `undefined` both mean "no public address" — stored as `null`, same as an untouched row. */
+function normalizeEmail(email: string | undefined): string | null {
+  return email ? email : null
+}
 
 /**
  * Creates a new researcher profile, authored by the admin who submitted it.
@@ -427,6 +449,7 @@ export async function createResearcher(
       photoUrl: data.src,
       role: data.role,
       name: data.name,
+      email: normalizeEmail(data.email),
       institution: data.institution,
       description: data.description,
       modifiedBy,
@@ -455,6 +478,7 @@ export async function updateResearcher(
       photoUrl: data.src,
       role: data.role,
       name: data.name,
+      email: normalizeEmail(data.email),
       institution: data.institution,
       description: data.description,
       modifiedBy,

@@ -13,6 +13,11 @@ export interface ButtonProps {
    * `href` — `noopener noreferrer` prevents the opened page from reaching back into
    * this one through `window.opener`. */
   rel?: string
+  /**
+   * Render a plain anchor so the browser loads `href` as a new document instead of the client
+   * router transitioning to it. Use it when the destination must re-read its state from the URL.
+   */
+  fullPageLoad?: boolean
   icon?: ReactNode
   className?: string
   type?: 'button' | 'submit'
@@ -26,6 +31,7 @@ export function Button({
   href,
   target,
   rel,
+  fullPageLoad,
   icon,
   className,
   type = 'button',
@@ -41,6 +47,14 @@ export function Button({
   )
 
   if (href) {
+    if (fullPageLoad) {
+      return (
+        <a className={classes} href={href} rel={rel} target={target}>
+          {content}
+        </a>
+      )
+    }
+
     return (
       <Link className={classes} href={href} rel={rel} target={target}>
         {content}

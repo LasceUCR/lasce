@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 
-import { requireAdmin } from '@/app/lib/auth/apiGuard'
+import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import { createResearcher, getResearchers, researcherInputSchema } from '@/app/lib/rosac'
 
 /**
  * Reads and creates ROSAC researcher profiles (LASCE-CON-012-085). GET is
- * public read-only content; POST is admin-only, same guard as the PATCH and
- * DELETE handlers in `[id]/route.ts`.
+ * public read-only content; POST requires `create_components`. PATCH and
+ * DELETE in `[id]/route.ts` check `edit_components` and `delete_components`.
  */
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +17,7 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const guard = await requireAdmin()
+  const guard = await requireApiPermission('create_components')
   if (!guard.ok) return guard.response
 
   let body: unknown

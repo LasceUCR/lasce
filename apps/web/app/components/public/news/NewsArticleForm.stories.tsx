@@ -1,0 +1,48 @@
+import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+
+import type { NewsArticle } from '@/app/lib/news'
+
+import { NewsArticleForm } from './NewsArticleForm'
+
+const meta: Meta<typeof NewsArticleForm> = {
+  component: NewsArticleForm,
+  parameters: {
+    layout: 'centered',
+  },
+}
+
+export default meta
+
+type Story = StoryObj<typeof NewsArticleForm>
+
+const mockArticle: NewsArticle = {
+  slug: 'mock-slug',
+  title:
+    '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
+  authors: 'Jorge Arturo Mora',
+  source: 'La Nación – Revista Dominical',
+  date: '24 de mayo de 2026',
+  publishedAt: '2026-05-24',
+  abstract:
+    'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
+  href: 'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
+  imageUrl: '/images/news/la-nacion-1.png',
+  imageAlt:
+    'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
+}
+
+export const EditExisting: Story = {
+  args: {
+    article: mockArticle,
+    onCancel: () => {},
+    onSave: () => {},
+  },
+}
+
+export const AddNew: Story = {
+  args: {
+    article: null,
+    onCancel: () => {},
+    onSave: () => {},
+  },
+}

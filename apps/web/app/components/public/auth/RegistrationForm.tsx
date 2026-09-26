@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react'
 
 import type { CountryOption } from '@/app/lib/auth/countries'
+import { LOGIN_HREF } from '@/app/lib/auth/login'
 import {
   REGISTRATION_LABELS,
   REGISTRATION_PLACEHOLDERS,
@@ -24,7 +25,10 @@ export interface RegistrationFormProps {
   /** The Server Action. It arrives as a prop so the component stays presentational. */
   action: RegistrationAction
   countries: CountryOption[]
-  /** Card heading for pages that show this card beside others (the login card). */
+  /**
+   * Card heading for pages that show this card beside others (the login card).
+   * Shown with the form only; the confirmation replaces it once the account exists.
+   */
   heading?: RegistrationFormHeading
   /** Element id, so links can target the card on a page that shows several. */
   id?: string
@@ -71,12 +75,13 @@ export function RegistrationForm({
   if (state.status === 'success') {
     return (
       <section className="registration-card form-success" id={id} role="status">
-        {headingBlock}
         <h2 ref={successRef} tabIndex={-1}>
           {registrationFormCopy.successTitle}
         </h2>
         <p>{registrationFormCopy.successBody}</p>
-        <Button href={registrationFormCopy.successHref} variant="brand">
+        {/* The tab selector keeps its selection across client-side navigations, so this
+            link loads the page fresh on the login tab, which also resets this card. */}
+        <Button fullPageLoad href={LOGIN_HREF} variant="brand">
           {registrationFormCopy.successLink}
         </Button>
       </section>

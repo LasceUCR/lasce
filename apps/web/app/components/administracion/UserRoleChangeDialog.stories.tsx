@@ -36,3 +36,30 @@ export const SaveFailure: Story = {
     },
   },
 }
+
+export const SavePermissions: Story = {
+  args: {
+    roleNames: ['Asistente'],
+    onClose: () => {},
+    onConfirm: async () => {},
+  },
+}
+
+export const SaveSeveralRoles: Story = {
+  args: {
+    ...SavePermissions.args,
+    roleNames: ['Visitante', 'Asistente'],
+  },
+}
+
+export const PermissionConflict: Story = {
+  args: {
+    ...SavePermissions.args,
+    onConfirm: async () => {
+      throw new RoleAssignmentError(
+        'La información de este rol cambió. Recarga la página antes de volver a guardarlo.',
+        true,
+      )
+    },
+  },
+}

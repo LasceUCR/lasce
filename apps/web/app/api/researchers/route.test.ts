@@ -4,7 +4,7 @@ import type * as RosacLib from '@/app/lib/rosac'
 const mocks = vi.hoisted(() => ({
   getResearchers: vi.fn(),
   createResearcher: vi.fn(),
-  requireAdmin: vi.fn(),
+  requireApiPermission: vi.fn(),
 }))
 
 // `@/app/lib/rosac` imports `prisma` at module scope, which throws if
@@ -23,7 +23,7 @@ vi.mock('@/app/lib/rosac', async (importOriginal) => {
 })
 
 vi.mock('@/app/lib/auth/apiGuard', () => ({
-  requireAdmin: mocks.requireAdmin,
+  requireApiPermission: mocks.requireApiPermission,
 }))
 
 import { GET, POST } from './route'
@@ -75,18 +75,19 @@ describe('GET /api/researchers', () => {
 })
 
 describe('POST /api/researchers', () => {
-  test('rejects a request the admin guard denies', async () => {
+  test('rejects a request the permission guard denies', async () => {
     const denied = deniedResponse()
-    mocks.requireAdmin.mockResolvedValue({ ok: false, response: denied })
+    mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
     const response = await POST(postRequest(validBody))
 
     expect(response).toBe(denied)
+    expect(mocks.requireApiPermission).toHaveBeenCalledWith('create_components')
     expect(mocks.createResearcher).not.toHaveBeenCalled()
   })
 
   test('rejects a body that is not valid JSON', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await POST(postRequest('not json'))
 
@@ -95,7 +96,7 @@ describe('POST /api/researchers', () => {
   })
 
   test('rejects a body missing required fields', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await POST(postRequest({ ...validBody, name: '', src: '' }))
 
@@ -109,7 +110,7 @@ describe('POST /api/researchers', () => {
   })
 
   test('creates the researcher, authored by the current admin', async () => {
-    mocks.requireAdmin.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     const created = { id: 'new-1', ...validBody }
     mocks.createResearcher.mockResolvedValue(created)
 

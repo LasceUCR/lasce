@@ -1,21 +1,21 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const { findMany, updateMany, getSessionUser } = vi.hoisted(() => ({
+const { findMany, updateMany, userHasPermission } = vi.hoisted(() => ({
   findMany: vi.fn(),
   updateMany: vi.fn(),
-  getSessionUser: vi.fn(),
+  userHasPermission: vi.fn(),
 }))
 vi.mock('@lasce/db', () => ({
   UserRole: { VISITOR: 'VISITOR', ASSISTANT: 'ASSISTANT', ADMIN: 'ADMIN' },
   prisma: { user: { findMany, updateMany } },
 }))
-vi.mock('./auth/session', () => ({ getSessionUser }))
+vi.mock('./auth/authorization', () => ({ userHasPermission }))
 import { availableRoles, getUserOverview, updateUserRole } from './user-administration'
 
 const userId = 'ce0bcbba-04bd-4f14-b5d6-9c9db5f6ed74'
 beforeEach(() => {
   vi.resetAllMocks()
-  getSessionUser.mockResolvedValue({ id: 'actor', role: 'ADMIN' })
+  userHasPermission.mockResolvedValue(true)
 })
 
 describe('user administration', () => {
@@ -54,19 +54,16 @@ describe('user administration', () => {
     ])
     expect((await getUserOverview())[0]!.roleIds).toEqual(['VISITOR'])
   })
-  test.each([null, { role: 'VISITOR' }, { role: 'ASSISTANT' }, { role: null }])(
-    'denies reads and writes without an administrator session: %j',
-    async (actor) => {
-      getSessionUser.mockResolvedValue(actor)
-      await expect(getUserOverview()).rejects.toThrow('Unauthorized')
-      expect(await updateUserRole({ userId, roleIds: ['ADMIN'], previousRoleIds: [] })).toEqual({
-        ok: false,
-        reason: 'unauthorized',
-      })
-      expect(findMany).not.toHaveBeenCalled()
-      expect(updateMany).not.toHaveBeenCalled()
-    },
-  )
+  test('denies reads and writes without the manage-users grant', async () => {
+    userHasPermission.mockResolvedValue(false)
+    await expect(getUserOverview()).rejects.toThrow('Unauthorized')
+    expect(await updateUserRole({ userId, roleIds: ['ADMIN'], previousRoleIds: [] })).toEqual({
+      ok: false,
+      reason: 'unauthorized',
+    })
+    expect(findMany).not.toHaveBeenCalled()
+    expect(updateMany).not.toHaveBeenCalled()
+  })
   test.each([['ADMIN', 'VISITOR'], ['invented']])(
     'rejects invalid roles %j',
     async (...roleIds) => {

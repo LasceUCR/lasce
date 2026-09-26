@@ -4,6 +4,7 @@ import { expect as baseExpect, test, type Page } from '@playwright/test'
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
+  LOGIN_HREF,
   REGISTRATION_CARD_ID,
   REGISTRATION_HREF,
   accesoIntro,
@@ -149,11 +150,22 @@ test('creates an account with valid data', async ({ page }) => {
   await expect(
     status.getByRole('heading', { level: 2, name: registrationFormCopy.successTitle }),
   ).toBeVisible()
-  await expect(
-    status.getByRole('link', { name: registrationFormCopy.successLink }),
-  ).toHaveAttribute('href', registrationFormCopy.successHref)
+  await expect(status.getByRole('heading', { name: registroIntro.title })).toHaveCount(0)
+  const loginLink = status.getByRole('link', { name: registrationFormCopy.successLink })
+  await expect(loginLink).toHaveAttribute('href', LOGIN_HREF)
   await expect(page).toHaveURL(registrationUrl())
   await expect(submitButton(page)).toHaveCount(0)
+
+  // The link must open the login card, not only rewrite the address bar.
+  await loginLink.click()
+  await expect(page).toHaveURL(new RegExp(`${escapeRegExp(LOGIN_HREF)}$`))
+  await expect(page.getByRole('tab', { name: accessTabsCopy.tabs.login })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  await expect(page.locator(`#${LOGIN_CARD_ID}`)).toBeVisible()
+  await expect(registrationCard(page)).toBeHidden()
+  await expect(page.getByRole('status')).toHaveCount(0)
 })
 
 test('refuses an empty submission and names every missing field', async ({ page }) => {

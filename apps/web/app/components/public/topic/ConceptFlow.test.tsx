@@ -10,7 +10,7 @@ describe('ConceptFlow', () => {
   test('lists every step in order and names the region with its title', () => {
     render(<ConceptFlow {...defaultArgs} />)
 
-    const region = screen.getByLabelText(defaultArgs.title)
+    const region = screen.getByRole('group', { name: defaultArgs.title })
     const steps = within(region).getAllByRole('listitem')
 
     expect(steps).toHaveLength(defaultArgs.steps.length)

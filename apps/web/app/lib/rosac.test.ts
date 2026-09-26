@@ -98,8 +98,20 @@ describe('researcherInputSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  test('has no email field — the admin form has none yet', () => {
-    expect('email' in researcherInputSchema.shape).toBe(false)
+  test('accepts an empty email — no public address', () => {
+    expect(researcherInputSchema.safeParse({ ...validInput, email: '' }).success).toBe(true)
+  })
+
+  test('accepts a well-formed email', () => {
+    expect(
+      researcherInputSchema.safeParse({ ...validInput, email: 'alguien@ucr.ac.cr' }).success,
+    ).toBe(true)
+  })
+
+  test('rejects a malformed email', () => {
+    const result = researcherInputSchema.safeParse({ ...validInput, email: 'not-an-email' })
+
+    expect(result.success).toBe(false)
   })
 })
 
@@ -108,6 +120,7 @@ describe('updateResearcher', () => {
     src: '/images/ROSAC/team/Updated.jpg',
     role: 'Investigador asociado',
     name: 'Nuevo nombre',
+    email: 'nuevo.nombre@ucr.ac.cr',
     institution: 'UCR',
     description: 'Texto actualizado.',
   }
@@ -121,13 +134,14 @@ describe('updateResearcher', () => {
     expect(update).not.toHaveBeenCalled()
   })
 
-  test('persists the change and stamps modifiedBy, leaving email untouched', async () => {
+  test('persists the change, including the email', async () => {
     findUnique.mockResolvedValue(researcherRow())
     update.mockResolvedValue(
       researcherRow({
         photoUrl: updateInput.src,
         role: updateInput.role,
         name: updateInput.name,
+        email: updateInput.email,
         description: updateInput.description,
       }),
     )
@@ -140,14 +154,25 @@ describe('updateResearcher', () => {
         photoUrl: updateInput.src,
         role: updateInput.role,
         name: updateInput.name,
+        email: updateInput.email,
         institution: updateInput.institution,
         description: updateInput.description,
         modifiedBy: 'admin-1',
       },
     })
     expect(result?.name).toBe('Nuevo nombre')
-    // The email column was never part of `data`, so the existing address survives untouched.
-    expect(result?.email).toBe('carolina.salas_mata@ucr.ac.cr')
+    expect(result?.email).toBe('nuevo.nombre@ucr.ac.cr')
+  })
+
+  test('clears the email when the form submits an empty one', async () => {
+    findUnique.mockResolvedValue(researcherRow())
+    update.mockResolvedValue(researcherRow({ email: null }))
+
+    await updateResearcher('researcher-1', { ...updateInput, email: '' }, 'admin-1')
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ email: null }) }),
+    )
   })
 })
 
@@ -177,12 +202,32 @@ describe('createResearcher', () => {
         photoUrl: createInput.src,
         role: createInput.role,
         name: createInput.name,
+        email: null,
         institution: createInput.institution,
         description: createInput.description,
         modifiedBy: 'admin-1',
       },
     })
     expect(result.email).toBeUndefined()
+  })
+
+  test('creates the profile with the given email', async () => {
+    const createInput = {
+      src: '/images/ROSAC/team/New.jpg',
+      role: 'Investigador',
+      name: 'Persona Nueva',
+      email: 'persona.nueva@ucr.ac.cr',
+      institution: 'UCR',
+      description: 'Texto de prueba.',
+    }
+    create.mockResolvedValue(researcherRow({ email: createInput.email }))
+
+    const result = await createResearcher(createInput, 'admin-1')
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ email: createInput.email }) }),
+    )
+    expect(result.email).toBe(createInput.email)
   })
 })
 
