@@ -14,7 +14,13 @@ export interface ResearchAreasSectionProps {
 
 export function ResearchAreasSection({ id, areas }: ResearchAreasSectionProps) {
   return (
-    <section className="research-areas page-width" id={id}>
+    <section aria-labelledby="research-areas-title" className="research-areas page-width" id={id}>
+      <div className="section-heading">
+        <h2 id="research-areas-title">Áreas de investigación</h2>
+        <p className="research-areas-description">
+          Principales ramas de investigación desarrolladas por el LASCE.
+        </p>
+      </div>
       <div className="gallery-grid">
         {areas.map((area) => (
           <AlbumTile
