@@ -208,6 +208,40 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   ).toHaveAttribute('aria-current', 'page')
 })
 
+test('displays the back button at the top of the gallery index and returns home', async ({
+  page,
+}) => {
+  await page.goto('/galeria')
+
+  const backLink = page.getByRole('link', { name: 'Volver al inicio' })
+  const heading = page.getByRole('heading', { level: 1, name: 'Galería' })
+
+  await expect(backLink).toBeVisible()
+  const backBox = await backLink.boundingBox()
+  const headingBox = await heading.boundingBox()
+  expect(backBox && headingBox && backBox.y < headingBox.y).toBeTruthy()
+
+  await backLink.click()
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('displays the back button at the top of an album page and returns to gallery', async ({
+  page,
+}) => {
+  await page.goto('/galeria/rosac')
+
+  const backLink = page.getByRole('link', { name: 'Volver a la galería' })
+  const heading = page.getByRole('heading', { level: 1, name: galleryAlbums.rosac.title })
+
+  await expect(backLink).toBeVisible()
+  const backBox = await backLink.boundingBox()
+  const headingBox = await heading.boundingBox()
+  expect(backBox && headingBox && backBox.y < headingBox.y).toBeTruthy()
+
+  await backLink.click()
+  await expect(page).toHaveURL(/\/galeria$/)
+})
+
 for (const album of galleryAlbumList) {
   test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
     await page.goto('/galeria')

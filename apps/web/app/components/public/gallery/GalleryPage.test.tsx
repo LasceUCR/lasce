@@ -53,9 +53,15 @@ describe('GalleryPage', () => {
     expect(screen.getAllByRole('list')).toHaveLength(galleryAlbumList.length)
   })
 
-  test('offers a way back to the home page', () => {
+  test('offers a way back to the home page at the top of the page', () => {
     render(<GalleryPage />)
 
-    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
+    const backLink = screen.getByRole('link', { name: 'Volver al inicio' })
+    const heading = screen.getByRole('heading', { level: 1, name: galeriaHero.title })
+
+    expect(backLink).toHaveAttribute('href', '/')
+    expect(
+      Boolean(backLink.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
   })
 })
