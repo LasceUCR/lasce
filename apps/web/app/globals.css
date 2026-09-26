@@ -884,6 +884,10 @@ a {
   line-height: 1.2;
 }
 
+/* ==========================================================================
+   Areas (home widget) — .areas, .area-grid, .area-card
+   ========================================================================== */
+
 .areas {
   margin-top: 34px;
   scroll-margin-top: 24px;
@@ -988,6 +992,28 @@ a {
   background: rgba(255, 255, 255, 0.1);
   color: var(--white);
   transform: translateX(4px);
+}
+
+/* Areas — breakpoints */
+
+@media (max-width: 760px) {
+  .areas h2 {
+    font-size: 22px;
+  }
+
+  .area-grid,
+  .indicator-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .areas {
+    margin-top: 26px;
+  }
+
+  .area-grid {
+    margin-top: 16px;
+    gap: 12px;
+  }
 }
 
 .site-footer {
@@ -1126,6 +1152,10 @@ a {
   font-size: 14px;
 }
 
+/* ==========================================================================
+   Publications — .publications, .publications-toolbar, .publication-card
+   ========================================================================== */
+
 .publications-toolbar {
   display: flex;
   align-items: stretch;
@@ -1164,6 +1194,91 @@ a {
   width: 100%;
 }
 
+.publications {
+  margin-top: 8px;
+  padding-bottom: 56px;
+}
+
+.publications h2 {
+  margin-top: 28px;
+}
+
+.publication-list {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.publication-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.publication-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.publication-abstract {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.publication-abstract-full {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+}
+
+.publication-card .button,
+.news-card .button {
+  margin-top: 12px;
+}
+
+.publication-group {
+  font-weight: 700;
+}
+
+.publications-kpi {
+  width: 220px;
+  min-height: 44px;
+  color: var(--ink);
+  justify-content: flex-start;
+  align-items: center;
+  font-family: inherit;
+  font-size: 16px;
+  display: flex;
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: 8px;
+  flex: 0 0 220px;
+  gap: 6px;
+  padding: 0 14px;
+}
+
+.publications-kpi strong {
+  position: relative;
+  top: -1px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.publications-kpi span {
+  color: var(--ink);
+}
+
+/* Publications — breakpoints */
+
 @media (max-width: 760px) {
   .publications-toolbar {
     flex-direction: column;
@@ -1183,24 +1298,16 @@ a {
   }
 
   .publications-kpi {
-    width: auto;
+    width: 100%;
     min-width: 0;
+    max-width: none;
     height: 44px;
-    min-height: 0;
+    min-height: 44px;
     max-height: 44px;
-    flex: 0 0 44px;
-    align-self: flex-start;
+    flex: 0 0 auto;
+    align-self: stretch;
     padding: 0 14px;
   }
-}
-
-.publications {
-  margin-top: 8px;
-  padding-bottom: 56px;
-}
-
-.publications h2 {
-  margin-top: 28px;
 }
 
 .content-empty {
@@ -1773,79 +1880,9 @@ a {
   }
 }
 
-.publication-list {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.publication-card h3 {
-  margin: 0 0 6px;
-  font-size: 16px;
-  line-height: 1.35;
-}
-
-.publication-meta {
-  margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.publication-abstract {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.publication-abstract-full {
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-}
-
-.publication-card .button,
-.news-card .button {
-  margin-top: 12px;
-}
-
-.publication-group {
-  font-weight: 700;
-}
-
-.publications-kpi {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 220px;
-  flex: 0 0 220px;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--white);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 14px;
-  gap: 6px;
-}
-
-.publications-kpi strong {
-  position: relative;
-  top: -1px;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.publications-kpi span {
-  color: var(--ink);
-}
+/* ==========================================================================
+   Research Areas — .research-areas, .research-area-content, .research-area-list
+   ========================================================================== */
 
 .section-heading .research-areas-description {
   max-width: 680px;
@@ -1858,6 +1895,18 @@ a {
   margin-top: 0;
   padding-top: 24px;
   padding-bottom: 56px;
+}
+
+.research-areas .gallery-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.research-areas .gallery-tile-body {
+  flex: 1;
+}
+
+.research-areas .gallery-tile-meta {
+  margin-top: auto;
 }
 
 .research-area-content {
@@ -1877,9 +1926,27 @@ a {
   margin-top: 8px;
 }
 
+/* Research Areas — breakpoints */
+
+@media (max-width: 900px) {
+  .research-areas .gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .research-areas .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .section-heading h2 {
   margin: 0;
 }
+
+/* ==========================================================================
+   News — .news, .news-list, .news-card
+   ========================================================================== */
 
 .news {
   margin-top: 8px;
@@ -1951,6 +2018,8 @@ a {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+/* News — breakpoints */
 
 @media (max-width: 1120px) {
   .news-card-content {
@@ -2200,8 +2269,7 @@ a {
     max-width: 220px;
   }
 
-  .indicators h2,
-  .areas h2 {
+  .indicators h2 {
     font-size: 22px;
   }
 
@@ -2209,18 +2277,8 @@ a {
     padding-block: 22px 30px;
   }
 
-  .indicator-grid,
-  .area-grid {
+  .indicator-grid {
     grid-template-columns: 1fr;
-  }
-
-  .areas {
-    margin-top: 26px;
-  }
-
-  .area-grid {
-    margin-top: 16px;
-    gap: 12px;
   }
 
   .footer-inner,
@@ -2907,7 +2965,9 @@ a {
   color: var(--action-hover);
 }
 
-/* Gallery ------------------------------------------------------------------ */
+/* ==========================================================================
+   Gallery — .gallery-grid, .gallery-tile, .media-grid, .media-tile, .lightbox
+   ========================================================================== */
 
 .media-frame {
   position: relative;
@@ -3055,6 +3115,7 @@ a.gallery-tile:focus-visible {
 }
 
 .gallery-tile-meta {
+  margin-top: auto;
   color: var(--muted);
   font-size: 12px;
 }
@@ -3338,6 +3399,8 @@ a.gallery-tile:focus-visible {
   color: var(--space-meta);
   font-size: 12px;
 }
+
+/* Gallery — breakpoints */
 
 @media (max-width: 1120px) {
   .lightbox-stage {
