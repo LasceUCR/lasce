@@ -8,6 +8,17 @@ const defaultArgs = Default.args as ResearchAreasSectionProps
 const emptyArgs = Empty.args as ResearchAreasSectionProps
 
 describe('ResearchAreasSection', () => {
+  test('renders the section title and description', () => {
+    render(<ResearchAreasSection {...defaultArgs} />)
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Áreas de investigación' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Principales ramas de investigación desarrolladas por el LASCE.'),
+    ).toBeInTheDocument()
+  })
+
   test('renders one link per research area it is given', () => {
     render(<ResearchAreasSection {...defaultArgs} />)
 
