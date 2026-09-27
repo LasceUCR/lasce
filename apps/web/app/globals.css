@@ -1881,17 +1881,137 @@ a {
   margin: 0;
 }
 
+/* ==========================================================================
+   Academic activities (news section & details)
+   ========================================================================== */
+
+.academic-activities {
+  margin-top: 8px;
+  padding-bottom: 32px;
+}
+
+.section-heading .academic-activities-description {
+  max-width: none;
+  color: var(--muted);
+  margin: 6px 0 24px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.academic-activities-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.academic-activity-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.academic-activity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.academic-activity-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.academic-activity-action {
+  margin-top: 14px;
+}
+
+.academic-activity-detail-body {
+  padding-bottom: 56px;
+}
+
+.academic-activity-detail-card {
+  padding: 32px;
+}
+
+.academic-activity-detail-card h2 {
+  margin: 0 0 16px;
+  font-size: 24px;
+  color: var(--ink);
+}
+
+.academic-activity-description-text {
+  color: #355066;
+  font-size: 16px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.academic-activity-meta-line {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.academic-activity-meta-line strong {
+  color: var(--ink);
+}
+
+.academic-activity-resources {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.academic-activity-resources h3 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  color: var(--ink);
+}
+
+.academic-activity-resources-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .news {
   margin-top: 8px;
   padding-bottom: 56px;
 }
 
 .news h2 {
-  margin-top: 28px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+}
+
+.news .search-filter-bar {
+  margin-bottom: 20px;
 }
 
 .news-list {
-  margin-top: 24px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
