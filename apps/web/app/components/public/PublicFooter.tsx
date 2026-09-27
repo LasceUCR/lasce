@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import type { PublicFooterContent } from '@/app/lib/footer'
@@ -48,19 +49,34 @@ export function PublicFooter({ content, year = new Date().getFullYear() }: Publi
             <span>{content.location}</span>
           </div>
         </div>
-        <nav className="footer-links" aria-label={content.navigationLabel}>
-          {content.links.map((link) =>
-            link.external ? (
-              <a href={link.href} key={link.href} rel="noreferrer" target="_blank">
-                {link.label}
-              </a>
-            ) : (
-              <Link href={link.href} key={link.href}>
-                {link.label}
-              </Link>
-            ),
-          )}
-        </nav>
+        <div className="footer-end">
+          <a
+            className="footer-partner"
+            href={content.partnerLogo.href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <Image
+              src={content.partnerLogo.src}
+              alt={content.partnerLogo.name}
+              width={content.partnerLogo.width}
+              height={content.partnerLogo.height}
+            />
+          </a>
+          <nav className="footer-links" aria-label={content.navigationLabel}>
+            {content.links.map((link) =>
+              link.external ? (
+                <a href={link.href} key={link.href} rel="noreferrer" target="_blank">
+                  {link.label}
+                </a>
+              ) : (
+                <Link href={link.href} key={link.href}>
+                  {link.label}
+                </Link>
+              ),
+            )}
+          </nav>
+        </div>
       </div>
       <div className="footer-legal page-width">
         <p className="footer-copyright">

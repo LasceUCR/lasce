@@ -21,11 +21,23 @@ export interface FooterLink {
   external?: boolean
 }
 
+export interface FooterPartnerLogo {
+  /** Alt text for the logo, which is also the link's accessible name. */
+  name: string
+  href: string
+  /** Path under `apps/web/public`, beside the other institutional logos. */
+  src: string
+  width: number
+  height: number
+}
+
 export interface PublicFooterContent {
   /** Names shown beside the logo, in order. */
   institutions: readonly FooterInstitution[]
   institutionsLabel: string
   location: string
+  /** Collaborating organisation shown before the footer links. */
+  partnerLogo: FooterPartnerLogo
   navigationLabel: string
   links: readonly FooterLink[]
   copyright: { holder: string; notice: string }
@@ -47,6 +59,13 @@ export const footerContent: PublicFooterContent = {
   ],
   institutionsLabel: 'Instituciones',
   location: 'San Pedro de Montes de Oca',
+  partnerLogo: {
+    name: 'International Space Weather Initiative (ISWI)',
+    href: 'https://www.iswi-secretariat.org/',
+    src: '/brand/logo-ISWI.png',
+    width: 300,
+    height: 192,
+  },
   navigationLabel: 'Enlaces del pie de página',
   links: [
     { label: 'Contacto', href: '/contacto' },
