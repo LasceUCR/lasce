@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { logoutUser } from '@/app/(public)/cuenta/actions'
 import { PublicFooter } from '@/app/components/public/PublicFooter'
 import { PublicHeader } from '@/app/components/public/PublicHeader'
+import { footerContent } from '@/app/lib/footer'
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
@@ -14,7 +15,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       <main className="public-shell-content" id="main-content" tabIndex={-1}>
         {children}
       </main>
-      <PublicFooter />
+      <PublicFooter content={footerContent} />
     </div>
   )
 }
