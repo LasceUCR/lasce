@@ -56,26 +56,37 @@ describe('PublicHeader', () => {
     expect(screen.getByAltText('Laboratorio de Ciencias Espaciales')).toBeInTheDocument()
   })
 
-  test('groups the resource pages behind Recursos on desktop and lists them flat on mobile', async () => {
-    const user = userEvent.setup()
-    render(<PublicHeader logoutAction={async () => undefined} />)
+  test(
+    'groups the resource pages behind Recursos on desktop, and behind an accordion on mobile',
+    async () => {
+      const user = userEvent.setup()
+      render(<PublicHeader logoutAction={async () => undefined} />)
 
-    const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
-    const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
-    const grouped = ['Publicaciones', 'Herramientas científicas', 'Galería']
+      const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
+      const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+      const grouped = ['Publicaciones', 'Herramientas científicas', 'Galería']
 
-    for (const label of grouped) {
-      expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
-      expect(mobile.getByRole('link', { name: label })).toBeInTheDocument()
-    }
-    expect(mobile.queryByText('Recursos')).not.toBeInTheDocument()
+      // Both start closed: Recursos reads like a normal item on mobile, not a heading.
+      for (const label of grouped) {
+        expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
+        expect(mobile.getByRole('link', { name: label })).not.toBeVisible()
+      }
+      expect(mobile.queryByRole('button', { name: 'Recursos' })).not.toBeInTheDocument()
 
-    await user.click(desktop.getByText('Recursos'))
+      await user.click(mobile.getByText('Recursos'))
 
-    for (const label of grouped) {
-      expect(desktop.getByRole('link', { name: label })).toBeVisible()
-    }
-    expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
-    expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
-  })
+      for (const label of grouped) {
+        expect(mobile.getByRole('link', { name: label })).toBeVisible()
+      }
+      expect(mobile.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
+
+      await user.click(desktop.getByText('Recursos'))
+
+      for (const label of grouped) {
+        expect(desktop.getByRole('link', { name: label })).toBeVisible()
+      }
+      expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
+      expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
+    },
+  )
 })
