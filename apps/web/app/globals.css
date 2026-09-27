@@ -1871,8 +1871,7 @@ a {
   line-clamp: unset;
 }
 
-.publication-card .button,
-.news-card .button {
+.publication-card .button {
   margin-top: 12px;
 }
 
@@ -2183,13 +2182,17 @@ a {
   object-fit: cover;
 }
 
-.news-card-image.news-card-image-decorative img {
-  object-fit: contain;
-  object-position: center;
+.news-card-content {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
 }
 
-.news-card-content {
-  padding: 20px 22px;
+.news-card-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .news-card h3 {
