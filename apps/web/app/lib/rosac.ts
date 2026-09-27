@@ -45,8 +45,8 @@ export interface TeamMember {
   name: string
   /** The category shown at the top of the card, for example `Investigador`. */
   role: string
-  /** Public address when LASCE supplied one. */
-  email?: string
+  /** Zero, one or several public addresses, when LASCE supplied them. */
+  email?: string | readonly string[]
   /** Provisional institution shown as `Institución: {institution}`. */
   institution: string
   description: string
@@ -382,7 +382,7 @@ type ResearcherRow = {
   role: string
   name: string
   institution: string
-  email: string | null
+  email: string[]
   description: string
 }
 
@@ -393,7 +393,7 @@ function toTeamMember(row: ResearcherRow): TeamMember {
     role: row.role,
     name: row.name,
     institution: row.institution,
-    email: row.email ?? undefined,
+    email: row.email.length > 0 ? row.email : undefined,
     description: row.description,
   }
 }
@@ -404,33 +404,33 @@ export async function getResearchers(): Promise<TeamMember[]> {
 }
 
 /**
- * Shared by create and update. `email` is optional — an empty string means
- * "no public address" and is stored as `null`, the same as a row that never
- * had one.
+ * Shared by create and update. `email` is a single form field — a comma
+ * separated list of zero, one or several addresses — split and validated
+ * into an array here, since a researcher can have more than one (LASCE-CON-
+ * 012-085 follow-up, matching `ResearcherCard`'s multi-address display).
  */
 export const researcherInputSchema = z.object({
   src: z.string().trim().min(1, 'La foto es obligatoria.'),
   role: z.string().trim().min(1, 'El rol es obligatorio.'),
   name: z.string().trim().min(1, 'El nombre es obligatorio.'),
   email: z
-    .union([
-      z.literal(''),
-      z
-        .string()
-        .trim()
-        .pipe(z.email({ error: 'El correo no es válido.' })),
-    ])
+    .string()
+    .trim()
+    .transform((value) =>
+      value === ''
+        ? []
+        : value
+            .split(',')
+            .map((address) => address.trim())
+            .filter((address) => address !== ''),
+    )
+    .pipe(z.array(z.email({ error: 'Uno o más correos no son válidos.' })))
     .optional(),
   institution: z.string().trim().min(1, 'La institución es obligatoria.'),
   description: z.string().trim().min(1, 'La descripción es obligatoria.'),
 })
 
 export type ResearcherInput = z.infer<typeof researcherInputSchema>
-
-/** `''` and `undefined` both mean "no public address" — stored as `null`, same as an untouched row. */
-function normalizeEmail(email: string | undefined): string | null {
-  return email ? email : null
-}
 
 /**
  * Creates a new researcher profile, authored by the admin who submitted it.
@@ -446,7 +446,7 @@ export async function createResearcher(
       photoUrl: data.src,
       role: data.role,
       name: data.name,
-      email: normalizeEmail(data.email),
+      email: data.email ?? [],
       institution: data.institution,
       description: data.description,
       modifiedBy,
@@ -475,7 +475,7 @@ export async function updateResearcher(
       photoUrl: data.src,
       role: data.role,
       name: data.name,
-      email: normalizeEmail(data.email),
+      email: data.email ?? [],
       institution: data.institution,
       description: data.description,
       modifiedBy,

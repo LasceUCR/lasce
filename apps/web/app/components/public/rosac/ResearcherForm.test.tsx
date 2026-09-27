@@ -27,7 +27,9 @@ describe('ResearcherForm', () => {
     const researcher = editArgs.researcher!
     expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue(researcher.role)
     expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue(researcher.name)
-    expect(screen.getByRole('textbox', { name: 'Contacto' })).toHaveValue(researcher.email)
+    expect(screen.getByRole('textbox', { name: 'Contacto' })).toHaveValue(
+      researcher.email as string,
+    )
     expect(screen.getByRole('textbox', { name: 'Institución' })).toHaveValue(researcher.institution)
     expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(researcher.description)
   })

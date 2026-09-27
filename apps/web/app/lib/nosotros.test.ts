@@ -45,7 +45,7 @@ function researcherRow(overrides: Partial<Record<string, unknown>> = {}) {
     role: 'Investigador colaborador',
     name: 'Dr. Allan Francisco Berrocal Rojas',
     institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
-    email: 'allan.berrocal@ucr.ac.cr',
+    email: ['allan.berrocal@ucr.ac.cr'],
     description: 'Diseño, desarrollo e implementación de la plataforma informática del LASCE.',
     createdAt: new Date('2025-12-01T00:00:00.000Z'),
     modifiedAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -215,7 +215,7 @@ describe('deleteNosotrosActivity', () => {
 
 describe('getNosotrosResearchers', () => {
   test('maps each row to a NosotrosResearcher, dropping a missing email and description to undefined', async () => {
-    researcherFindMany.mockResolvedValue([researcherRow({ email: null, description: null })])
+    researcherFindMany.mockResolvedValue([researcherRow({ email: [], description: null })])
 
     const researchers = await getNosotrosResearchers()
 
@@ -237,7 +237,7 @@ describe('getNosotrosResearchers', () => {
 
     const [researcher] = await getNosotrosResearchers()
 
-    expect(researcher?.email).toBe('allan.berrocal@ucr.ac.cr')
+    expect(researcher?.email).toEqual(['allan.berrocal@ucr.ac.cr'])
     expect(researcher?.description).toBe(
       'Diseño, desarrollo e implementación de la plataforma informática del LASCE.',
     )
@@ -295,6 +295,18 @@ describe('nosotrosResearcherInputSchema', () => {
 
     expect(result.success).toBe(false)
   })
+
+  test('splits a comma-separated list into several addresses', () => {
+    const result = nosotrosResearcherInputSchema.safeParse({
+      ...validInput,
+      email: 'uno@ucr.ac.cr, dos@ucr.ac.cr',
+    })
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.email).toEqual(['uno@ucr.ac.cr', 'dos@ucr.ac.cr'])
+    }
+  })
 })
 
 describe('updateNosotrosResearcher', () => {
@@ -302,7 +314,7 @@ describe('updateNosotrosResearcher', () => {
     src: '/images/Researchers/Updated.jpg',
     role: 'Investigador colaborador',
     name: 'Nuevo nombre',
-    email: 'nuevo.nombre@ucr.ac.cr',
+    email: ['nuevo.nombre@ucr.ac.cr'],
     institution: 'UCR',
     description: 'Texto actualizado.',
   }
@@ -343,7 +355,24 @@ describe('updateNosotrosResearcher', () => {
       },
     })
     expect(result?.name).toBe('Nuevo nombre')
-    expect(result?.email).toBe('nuevo.nombre@ucr.ac.cr')
+    expect(result?.email).toEqual(['nuevo.nombre@ucr.ac.cr'])
+  })
+
+  test('persists several addresses', async () => {
+    researcherFindUnique.mockResolvedValue(researcherRow())
+    const emails = ['uno@ucr.ac.cr', 'dos@ucr.ac.cr']
+    researcherUpdate.mockResolvedValue(researcherRow({ email: emails }))
+
+    const result = await updateNosotrosResearcher(
+      'researcher-1',
+      { ...updateInput, email: emails },
+      'admin-1',
+    )
+
+    expect(researcherUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ email: emails }) }),
+    )
+    expect(result?.email).toEqual(emails)
   })
 
   test('clears the description when the form submits none', async () => {
@@ -372,7 +401,7 @@ describe('createNosotrosResearcher', () => {
         photoUrl: createInput.src,
         role: createInput.role,
         name: createInput.name,
-        email: null,
+        email: [],
         description: null,
       }),
     )
@@ -384,7 +413,7 @@ describe('createNosotrosResearcher', () => {
         photoUrl: createInput.src,
         role: createInput.role,
         name: createInput.name,
-        email: null,
+        email: [],
         institution: createInput.institution,
         description: null,
         modifiedBy: 'admin-1',

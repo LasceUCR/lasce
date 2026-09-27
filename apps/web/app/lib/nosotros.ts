@@ -128,7 +128,7 @@ export const nosotrosContent = {
       {
         id: 'ivannia-calvo',
         src: '/images/Researchers/IvanniaCalvo.png',
-        name: 'MSc. Ivania Calvo',
+        name: 'MSc. Ivannia Calvo',
         role: 'Investigadora colaboradora',
         email: 'ivannia.calvo@ucr.ac.cr',
         institution: 'Centro de Investigaciones Espaciales',
@@ -137,12 +137,14 @@ export const nosotrosContent = {
       },
       {
         id: 'felipe-meza',
-        src: '/images/Researchers/User.png',
+        src: '/images/Researchers/FelipeMeza.jpg',
         name: 'Dr. Felipe Meza',
         role: 'Investigador colaborador',
         email: 'felipe.mezaobando@ucr.ac.cr',
         institution:
           'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
+        description:
+          'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
       },
       {
         id: 'alonso-vega',
@@ -156,8 +158,8 @@ export const nosotrosContent = {
       },
       {
         id: 'gabriela-molina',
-        src: '/images/Researchers/User.png',
-        name: 'Dra. Gabriela Molina',
+        src: '/images/Researchers/MolinaMariaGraciela.jpg',
+        name: 'Dra. Graciela Molina',
         role: 'Investigadora colaboradora',
         email: 'gmolina@herrera.unt.edu.ar',
         institution:
@@ -167,7 +169,7 @@ export const nosotrosContent = {
       },
       {
         id: 'yenca-migoya',
-        src: '/images/Researchers/User.png',
+        src: '/images/Researchers/YencaMigoya.jpg',
         name: 'Dra. Yenca Migoya',
         role: 'Investigadora colaboradora',
         email: 'yenca@ictp.it',
@@ -177,6 +179,7 @@ export const nosotrosContent = {
           'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
       },
       {
+        id: 'johanna-camacho',
         src: '/images/Researchers/JohanaCamacho.jpeg',
         name: 'MSc. Johanna Pamela Camacho Garbanzo',
         role: 'Investigadora colaboradora',
@@ -397,7 +400,7 @@ type NosotrosResearcherRow = {
   role: string
   name: string
   institution: string
-  email: string | null
+  email: string[]
   description: string | null
 }
 
@@ -408,7 +411,7 @@ function toNosotrosResearcher(row: NosotrosResearcherRow): NosotrosResearcher {
     role: row.role,
     name: row.name,
     institution: row.institution,
-    email: row.email ?? undefined,
+    email: row.email.length > 0 ? row.email : undefined,
     description: row.description ?? undefined,
   }
 }
@@ -422,20 +425,27 @@ export async function getNosotrosResearchers(): Promise<NosotrosResearcher[]> {
  * Shared by create and update. Unlike `researcherInputSchema` (ROSAC),
  * `description` is optional here — several current Nosotros profiles were
  * curated with no bio text, and `NosotrosResearcher.description` is nullable
- * to match.
+ * to match. `email` is a single form field — a comma separated list of zero,
+ * one or several addresses — split and validated into an array here, since a
+ * researcher can have more than one (matching `ResearcherCard`'s multi-address
+ * display).
  */
 export const nosotrosResearcherInputSchema = z.object({
   src: z.string().trim().min(1, 'La foto es obligatoria.'),
   role: z.string().trim().min(1, 'El rol es obligatorio.'),
   name: z.string().trim().min(1, 'El nombre es obligatorio.'),
   email: z
-    .union([
-      z.literal(''),
-      z
-        .string()
-        .trim()
-        .pipe(z.email({ error: 'El correo no es válido.' })),
-    ])
+    .string()
+    .trim()
+    .transform((value) =>
+      value === ''
+        ? []
+        : value
+            .split(',')
+            .map((address) => address.trim())
+            .filter((address) => address !== ''),
+    )
+    .pipe(z.array(z.email({ error: 'Uno o más correos no son válidos.' })))
     .optional(),
   institution: z.string().trim().min(1, 'La institución es obligatoria.'),
   description: z.string().trim().optional(),
@@ -463,7 +473,7 @@ export async function createNosotrosResearcher(
       photoUrl: data.src,
       role: data.role,
       name: data.name,
-      email: normalizeOptional(data.email),
+      email: data.email ?? [],
       institution: data.institution,
       description: normalizeOptional(data.description),
       modifiedBy,
@@ -492,7 +502,7 @@ export async function updateNosotrosResearcher(
       photoUrl: data.src,
       role: data.role,
       name: data.name,
-      email: normalizeOptional(data.email),
+      email: data.email ?? [],
       institution: data.institution,
       description: normalizeOptional(data.description),
       modifiedBy,

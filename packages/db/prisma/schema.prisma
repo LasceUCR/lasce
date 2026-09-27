@@ -299,8 +299,9 @@ model Researcher {
   role        String
   name        String
   institution String
-  /// Public address, rendered as a `mailto:` link. Not every researcher has one.
-  email       String?
+  /// Zero, one or several public addresses, each rendered as its own `mailto:`
+  /// link. An empty array means the researcher has none.
+  email       String[] @default([])
   description String   @db.Text
   /// Display order. Set once at creation and never touched by an edit — same
   /// reasoning as `NosotrosActivity.createdAt`.
@@ -324,8 +325,9 @@ model NosotrosResearcher {
   role        String
   name        String
   institution String
-  /// Public address, rendered as a `mailto:` link. Not every researcher has one.
-  email       String?
+  /// Zero, one or several public addresses, each rendered as its own `mailto:`
+  /// link. An empty array means the researcher has none.
+  email       String[] @default([])
   /// Unlike `Researcher.description`, nullable — several current Nosotros
   /// entries were curated with no bio text at all, and `ResearcherCard`
   /// already treats a missing description as "this card doesn't flip".

@@ -7,6 +7,7 @@ import { describe, expect, test, vi } from 'vitest'
 // module for its static fixture doesn't also require a real DATABASE_URL.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
+import { institutionPreview } from './ResearcherCard'
 import { TeamGallery, type TeamGalleryProps } from './TeamGallery'
 import { Default, Empty, PlainName } from './TeamGallery.stories'
 

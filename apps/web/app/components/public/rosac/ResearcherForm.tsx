@@ -22,7 +22,12 @@ export interface PersonProfile {
   src: string
   role: string
   name: string
-  email?: string
+  /**
+   * One address, or several — `ResearcherCard` can display more than one, for
+   * profiles curated before this form existed. Editing always collapses back
+   * to a single address: the form has one "Contacto" field, not a list.
+   */
+  email?: string | readonly string[]
   institution: string
   description?: string
 }
@@ -62,6 +67,14 @@ function validateEmail(value: string) {
   }
 }
 
+/** Collapses `PersonProfile.email` to one editable string — joining several
+ * addresses so editing never silently drops one, since this form has a
+ * single "Contacto" field rather than a list. */
+function editableEmail(email: PersonProfile['email']): string {
+  if (!email) return ''
+  return typeof email === 'string' ? email : email.join(', ')
+}
+
 /**
  * Creates or edits one ROSAC researcher profile (photo, role, name, contacto,
  * institución, descripción) — `researcher` is `null` for a new profile, or
@@ -83,7 +96,7 @@ export function ResearcherForm({
 }: ResearcherFormProps) {
   const [role, setRole] = useState(researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
-  const [email, setEmail] = useState(researcher?.email ?? '')
+  const [email, setEmail] = useState(editableEmail(researcher?.email))
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
   const [description, setDescription] = useState(researcher?.description ?? '')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
