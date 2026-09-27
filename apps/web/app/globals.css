@@ -1871,8 +1871,7 @@ a {
   line-clamp: unset;
 }
 
-.publication-card .button,
-.news-card .button {
+.publication-card .button {
   margin-top: 12px;
 }
 
@@ -1982,7 +1981,16 @@ a {
 }
 
 .news-card-content {
+  display: flex;
+  flex-direction: column;
   padding: 20px 22px;
+}
+
+.news-card-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .news-card h3 {
