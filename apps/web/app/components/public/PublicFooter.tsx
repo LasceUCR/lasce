@@ -50,19 +50,6 @@ export function PublicFooter({ content, year = new Date().getFullYear() }: Publi
           </div>
         </div>
         <div className="footer-end">
-          <a
-            className="footer-partner"
-            href={content.partnerLogo.href}
-            rel="noreferrer"
-            target="_blank"
-          >
-            <Image
-              src={content.partnerLogo.src}
-              alt={content.partnerLogo.name}
-              width={content.partnerLogo.width}
-              height={content.partnerLogo.height}
-            />
-          </a>
           <nav className="footer-links" aria-label={content.navigationLabel}>
             {content.links.map((link) =>
               link.external ? (
@@ -76,6 +63,19 @@ export function PublicFooter({ content, year = new Date().getFullYear() }: Publi
               ),
             )}
           </nav>
+          <a
+            className="footer-partner"
+            href={content.partnerLogo.href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <Image
+              src={content.partnerLogo.src}
+              alt={content.partnerLogo.name}
+              width={content.partnerLogo.width}
+              height={content.partnerLogo.height}
+            />
+          </a>
         </div>
       </div>
       <div className="footer-legal page-width">
