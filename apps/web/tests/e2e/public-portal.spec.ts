@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 
+import { footerContent } from '@/app/lib/footer'
 import { galleryAlbumList, galleryAlbums } from '@/app/lib/gallery'
 
 // `group` names the desktop header disclosure a route sits behind, if any.
@@ -343,4 +344,59 @@ test('displays academic activities in the news section and navigates to workshop
   await expect(
     page.getByRole('heading', { level: 2, name: 'Descripción de la actividad' }),
   ).toBeVisible()
+})
+
+for (const route of publicRoutes) {
+  test(`shows the legal and institutional footer on ${route.path}`, async ({ page }) => {
+    await page.goto(route.path)
+
+    const footer = page.getByRole('contentinfo')
+    await expect(footer.getByText(/© \d{4} /)).toBeVisible()
+
+    const institutions = footer.getByRole('list', { name: footerContent.institutionsLabel })
+    for (const institution of footerContent.institutions) {
+      await expect(institutions.getByText(institution.label, { exact: true })).toBeVisible()
+
+      if (institution.href) {
+        await expect(
+          institutions.getByRole('link', { name: institution.label, exact: true }),
+        ).toHaveAttribute('href', institution.href)
+      }
+    }
+
+    const { partnerLogo } = footerContent
+    await expect(footer.getByRole('img', { name: partnerLogo.name })).toBeVisible()
+    await expect(footer.getByRole('link', { name: partnerLogo.name })).toHaveAttribute(
+      'href',
+      partnerLogo.href,
+    )
+
+    // Legal information sits beside the footer navigation, never inside it.
+    await expect(footer.getByRole('navigation').getByText(/©/)).toHaveCount(0)
+  })
+}
+
+test('keeps the footer readable on a phone without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const footer = page.getByRole('contentinfo')
+  await footer.scrollIntoViewIfNeeded()
+  await expect(footer.getByText(/© \d{4} /)).toBeVisible()
+  await expect(footer.getByRole('list', { name: footerContent.institutionsLabel })).toBeVisible()
+
+  // The links and the ISWI logo share one row on a phone: links left, logo right, no overlap.
+  const logo = footer.getByRole('img', { name: footerContent.partnerLogo.name })
+  await expect(logo).toBeVisible()
+  const logoBox = await logo.boundingBox()
+  const navigationBox = await footer.getByRole('navigation').boundingBox()
+  expect(logoBox).not.toBeNull()
+  expect(navigationBox).not.toBeNull()
+  if (logoBox && navigationBox) {
+    expect(navigationBox.x + navigationBox.width).toBeLessThanOrEqual(logoBox.x)
+    expect(logoBox.x + logoBox.width).toBeLessThanOrEqual(390)
+  }
+
+  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+  expect(fits).toBe(true)
 })
