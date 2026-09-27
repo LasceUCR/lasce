@@ -1023,10 +1023,6 @@ a {
   flex-direction: column;
 }
 
-.footer-identity strong {
-  font-size: 13px;
-}
-
 .footer-identity span {
   color: #99adba;
   font-size: 12px;
@@ -1060,11 +1056,6 @@ a {
   margin-top: 10px;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 32px;
   color: #99adba;
   font-size: 12px;
   line-height: 1.5;
@@ -1081,12 +1072,14 @@ a {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-.footer-institutions li + li {
-  margin-inline-start: 10px;
-  padding-inline-start: 10px;
-  border-inline-start: 1px solid rgba(255, 255, 255, 0.25);
+/* The alt text after the slash keeps the dot out of each item's accessible name. */
+.footer-institutions li + li::before {
+  content: '·' / '';
+  margin: 0 6px;
 }
 
 .footer-institutions abbr {
@@ -2289,26 +2282,6 @@ a {
     flex-wrap: wrap;
     row-gap: 8px;
     color: var(--white);
-  }
-
-  .footer-legal,
-  .footer-institutions {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .footer-legal {
-    gap: 10px;
-  }
-
-  .footer-institutions {
-    gap: 4px;
-  }
-
-  .footer-institutions li + li {
-    margin-inline-start: 0;
-    padding-inline-start: 0;
-    border-inline-start: 0;
   }
 }
 

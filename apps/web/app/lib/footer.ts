@@ -6,10 +6,10 @@
  * metadata still expands it as "Laboratorio de Ciencias Espaciales" and is out of scope here.
  */
 export interface FooterInstitution {
-  /** Visible text, for example `UCR`. */
-  abbreviation: string
-  /** Full name, exposed as the `<abbr>` tooltip. */
-  name: string
+  /** Visible text, for example `CINESPA`. */
+  label: string
+  /** Full name, exposed as an `<abbr>` tooltip when the label is an abbreviation. */
+  name?: string
   /** Official website. Omit to render plain text: LASCE is this portal. */
   href?: string
 }
@@ -22,30 +22,31 @@ export interface FooterLink {
 }
 
 export interface PublicFooterContent {
-  identity: { title: string; location: string }
+  /** Names shown beside the logo, in order. */
+  institutions: readonly FooterInstitution[]
+  institutionsLabel: string
+  location: string
   navigationLabel: string
   links: readonly FooterLink[]
   copyright: { holder: string; notice: string }
-  institutionsLabel: string
-  institutions: readonly FooterInstitution[]
 }
 
 export const footerContent: PublicFooterContent = {
-  identity: { title: 'Universidad de Costa Rica · LASCE', location: 'San Pedro de Montes de Oca' },
+  institutions: [
+    { label: 'Universidad de Costa Rica', href: 'https://www.ucr.ac.cr/' },
+    {
+      label: 'CINESPA',
+      name: 'Centro de Investigaciones Espaciales',
+      href: 'https://cinespa.ucr.ac.cr/',
+    },
+    { label: 'LASCE', name: 'Laboratorio de Astrofísica Solar y Clima Espacial' },
+  ],
+  institutionsLabel: 'Instituciones',
+  location: 'San Pedro de Montes de Oca',
   navigationLabel: 'Enlaces del pie de página',
   links: [
     { label: 'Contacto', href: '/contacto' },
     { label: 'Instagram', href: 'https://www.instagram.com/lasce_ucr/', external: true },
   ],
   copyright: { holder: 'Universidad de Costa Rica', notice: 'Todos los derechos reservados.' },
-  institutionsLabel: 'Instituciones',
-  institutions: [
-    { abbreviation: 'UCR', name: 'Universidad de Costa Rica', href: 'https://www.ucr.ac.cr/' },
-    {
-      abbreviation: 'CINESPA',
-      name: 'Centro de Investigaciones Espaciales',
-      href: 'https://cinespa.ucr.ac.cr/',
-    },
-    { abbreviation: 'LASCE', name: 'Laboratorio de Astrofísica Solar y Clima Espacial' },
-  ],
 }

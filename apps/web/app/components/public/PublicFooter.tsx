@@ -24,8 +24,28 @@ export function PublicFooter({ content, year = new Date().getFullYear() }: Publi
         <div className="footer-identity">
           <Brand light />
           <div>
-            <strong>{content.identity.title}</strong>
-            <span>{content.identity.location}</span>
+            <ul className="footer-institutions" aria-label={content.institutionsLabel}>
+              {content.institutions.map((institution) => {
+                const label = institution.name ? (
+                  <abbr title={institution.name}>{institution.label}</abbr>
+                ) : (
+                  institution.label
+                )
+
+                return (
+                  <li key={institution.label}>
+                    {institution.href ? (
+                      <a href={institution.href} rel="noreferrer" target="_blank">
+                        {label}
+                      </a>
+                    ) : (
+                      label
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+            <span>{content.location}</span>
           </div>
         </div>
         <nav className="footer-links" aria-label={content.navigationLabel}>
@@ -46,23 +66,6 @@ export function PublicFooter({ content, year = new Date().getFullYear() }: Publi
         <p className="footer-copyright">
           {`© ${year} ${content.copyright.holder}. ${content.copyright.notice}`}
         </p>
-        <ul className="footer-institutions" aria-label={content.institutionsLabel}>
-          {content.institutions.map((institution) => {
-            const label = <abbr title={institution.name}>{institution.abbreviation}</abbr>
-
-            return (
-              <li key={institution.abbreviation}>
-                {institution.href ? (
-                  <a href={institution.href} rel="noreferrer" target="_blank">
-                    {label}
-                  </a>
-                ) : (
-                  label
-                )}
-              </li>
-            )
-          })}
-        </ul>
       </div>
     </footer>
   )
