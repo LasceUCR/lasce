@@ -22,26 +22,26 @@ type Story = StoryObj<typeof AlbumTile>
 export const Cover: Story = {
   args: {
     title: 'Construcción del ROSAC',
-    meta: '3 subálbumes · 33 archivos · 2025–2026',
+    meta: '5 subálbumes · 15 archivos · 2023–2025',
     variant: 'cover',
     href: '/galeria/rosac',
-    src: '/images/galeria/antena-goldstone-complejo.jpg',
+    src: '/images/galeria/rosac/8.jpg',
   },
 }
 
 /** A group that has no album page yet: the same tile, without a link. */
 export const CoverWithoutLink: Story = {
   args: {
-    title: 'Eclipse solar del 8 de abril',
-    meta: '16 archivos · abril 2026',
+    title: 'Construcción del ROSAC',
+    meta: '5 subálbumes · 15 archivos · 2023–2025',
     variant: 'cover',
   },
 }
 
 export const SubAlbum: Story = {
   args: {
-    title: 'Cimentación e instalación de la antena',
-    meta: '8 archivos',
-    src: '/images/galeria/cimentacion-obra-01.jpg',
+    title: 'Trabajos previos al montaje',
+    meta: '2 archivos',
+    src: '/images/galeria/rosac/3.jpg',
   },
 }
