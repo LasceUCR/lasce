@@ -58,6 +58,25 @@ describe('PublicFooter', () => {
     expect(footer.getByText(defaultArgs.content.location)).toBeInTheDocument()
   })
 
+  test('links the ISWI logo to its official site', () => {
+    render(<PublicFooter {...defaultArgs} />)
+
+    const { navigationLabel, partnerLogo } = defaultArgs.content
+    const link = screen.getByRole('link', { name: partnerLogo.name })
+
+    expect(link).toHaveAttribute('href', partnerLogo.href)
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link.getAttribute('rel')).toContain('noreferrer')
+    expect(within(link).getByRole('img', { name: partnerLogo.name })).toHaveAttribute(
+      'src',
+      partnerLogo.src,
+    )
+
+    // The logo identifies a partner organisation, so it stays out of the footer navigation.
+    const navigation = within(screen.getByRole('navigation', { name: navigationLabel }))
+    expect(navigation.queryByRole('img')).not.toBeInTheDocument()
+  })
+
   test('keeps the legal information outside the footer navigation', () => {
     render(<PublicFooter {...defaultArgs} />)
 

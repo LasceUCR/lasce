@@ -333,6 +333,13 @@ for (const route of publicRoutes) {
       }
     }
 
+    const { partnerLogo } = footerContent
+    await expect(footer.getByRole('img', { name: partnerLogo.name })).toBeVisible()
+    await expect(footer.getByRole('link', { name: partnerLogo.name })).toHaveAttribute(
+      'href',
+      partnerLogo.href,
+    )
+
     // Legal information sits beside the footer navigation, never inside it.
     await expect(footer.getByRole('navigation').getByText(/©/)).toHaveCount(0)
   })
@@ -346,6 +353,17 @@ test('keeps the footer readable on a phone without horizontal overflow', async (
   await footer.scrollIntoViewIfNeeded()
   await expect(footer.getByText(/© \d{4} /)).toBeVisible()
   await expect(footer.getByRole('list', { name: footerContent.institutionsLabel })).toBeVisible()
+
+  // The ISWI logo stacks above the links on a phone and must not cover them.
+  const logo = footer.getByRole('img', { name: footerContent.partnerLogo.name })
+  await expect(logo).toBeVisible()
+  const logoBox = await logo.boundingBox()
+  const navigationBox = await footer.getByRole('navigation').boundingBox()
+  expect(logoBox).not.toBeNull()
+  expect(navigationBox).not.toBeNull()
+  if (logoBox && navigationBox) {
+    expect(logoBox.y + logoBox.height).toBeLessThanOrEqual(navigationBox.y)
+  }
 
   const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
   expect(fits).toBe(true)
