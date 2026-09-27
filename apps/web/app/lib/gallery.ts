@@ -123,8 +123,8 @@ export interface GalleryMedia {
   uploader: string
   isVideo: boolean
   /** Tile footprint in the masonry grid. */
-  colSpan: 1 | 2
-  rowSpan: 1 | 2
+  colSpan: 1 | 2 | 3 | 4
+  rowSpan: 1 | 2 | 3 | 4
   /** Optional: a file still awaiting upload renders the placeholder frame. */
   src?: string
 }
