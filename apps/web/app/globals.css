@@ -195,7 +195,10 @@ a {
   min-height: 70px;
   padding: 11px 24px 7px;
   display: grid;
-  grid-template-columns: minmax(370px, 1fr) auto minmax(110px, 1fr);
+  /* The brand column's minimum is a fixed length, so grid won't grow it to fit overflowing
+     content: 590px covers the four logos and two dividers (~562px) with a little room, so the
+     desktop nav never overlaps the CINESPA logo. */
+  grid-template-columns: minmax(590px, 1fr) auto minmax(110px, 1fr);
   align-items: center;
   gap: 24px;
   background: var(--white);
@@ -256,6 +259,11 @@ a {
 .brand .ucr-signature-logo {
   width: 140px;
   height: 50px;
+}
+
+.brand .cinespa-logo {
+  width: 165px;
+  height: 55px;
 }
 
 .brand .lasce-logo {
@@ -2125,13 +2133,18 @@ a {
   }
 
   .brand .ucr-signature-logo {
-    width: 100px;
-    height: 38px;
+    width: 81px;
+    height: 34px;
+  }
+
+  .brand .cinespa-logo {
+    width: 95px;
+    height: 37px;
   }
 
   .brand .lasce-logo {
-    width: 112px;
-    height: 38px;
+    width: 95px;
+    height: 34px;
   }
 
   .brand-divider {
@@ -2856,20 +2869,36 @@ a {
 
 @media (max-width: 430px) {
   .brand {
-    gap: 7px;
+    gap: 6px;
   }
 
   .brand img {
     height: 36px;
   }
 
+  /* The seal already disappears once the visitor scrolls (see `.is-scrolled`); on a phone the
+     header has no room for it alongside three wordmarks, so it stays hidden from the start. */
+  .brand .compdes-logo {
+    display: none;
+  }
+
+  .brand .ucr-signature-logo {
+    width: 82px;
+    height: 26px;
+  }
+
+  .brand .cinespa-logo {
+    width: 83px;
+    height: 27px;
+  }
+
   .brand .lasce-logo {
-    width: 105px;
-    height: 34px;
+    width: 95px;
+    height: 26px;
   }
 
   .brand-divider {
-    height: 32px;
+    height: 28px;
   }
 
   .hero h1 {
