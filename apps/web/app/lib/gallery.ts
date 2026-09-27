@@ -148,12 +148,7 @@ export interface GalleryAlbum {
   src?: string
 }
 
-export const albumSlugs = [
-  'rosac',
-  'laboratorio',
-  'eclipse',
-  'workshop-ml-2026',
-] as const
+export const albumSlugs = ['rosac', 'laboratorio', 'eclipse', 'workshop-ml-2026'] as const
 
 export type AlbumSlug = (typeof albumSlugs)[number]
 
@@ -1221,7 +1216,7 @@ const workshopMlMedia = [
     format: 'JPG',
     uploader: 'LASCE',
     isVideo: false,
-    colSpan: 2,
+    colSpan: 1,
     rowSpan: 1,
     src: `${imageBase}/workshop-ml-2026/17.jpg`,
   },
