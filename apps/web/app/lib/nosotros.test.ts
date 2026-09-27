@@ -214,8 +214,8 @@ describe('deleteNosotrosActivity', () => {
 })
 
 describe('getNosotrosResearchers', () => {
-  test('maps each row to a NosotrosResearcher, dropping a missing email and description to undefined', async () => {
-    researcherFindMany.mockResolvedValue([researcherRow({ email: [], description: null })])
+  test('maps each row to a NosotrosResearcher, dropping a missing email to undefined', async () => {
+    researcherFindMany.mockResolvedValue([researcherRow({ email: [] })])
 
     const researchers = await getNosotrosResearchers()
 
@@ -227,7 +227,7 @@ describe('getNosotrosResearchers', () => {
         name: 'Dr. Allan Francisco Berrocal Rojas',
         institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
         email: undefined,
-        description: undefined,
+        description: 'Diseño, desarrollo e implementación de la plataforma informática del LASCE.',
       },
     ])
   })
@@ -265,10 +265,10 @@ describe('nosotrosResearcherInputSchema', () => {
     expect(nosotrosResearcherInputSchema.safeParse(validInput).success).toBe(true)
   })
 
-  test('accepts a missing description — unlike ROSAC, it is optional here', () => {
+  test('rejects a missing description — required for every researcher, same as ROSAC', () => {
     const { description: _description, ...withoutDescription } = validInput
 
-    expect(nosotrosResearcherInputSchema.safeParse(withoutDescription).success).toBe(true)
+    expect(nosotrosResearcherInputSchema.safeParse(withoutDescription).success).toBe(false)
   })
 
   test('rejects a missing photo', () => {
@@ -374,27 +374,16 @@ describe('updateNosotrosResearcher', () => {
     )
     expect(result?.email).toEqual(emails)
   })
-
-  test('clears the description when the form submits none', async () => {
-    researcherFindUnique.mockResolvedValue(researcherRow())
-    researcherUpdate.mockResolvedValue(researcherRow({ description: null }))
-
-    const { description: _description, ...updateWithoutDescription } = updateInput
-    await updateNosotrosResearcher('researcher-1', updateWithoutDescription, 'admin-1')
-
-    expect(researcherUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ description: null }) }),
-    )
-  })
 })
 
 describe('createNosotrosResearcher', () => {
-  test('creates the profile, authored by the given user, with no email or description', async () => {
+  test('creates the profile, authored by the given user, with no email', async () => {
     const createInput = {
       src: '/images/Researchers/New.jpg',
       role: 'Investigador colaborador',
       name: 'Persona Nueva',
       institution: 'UCR',
+      description: 'Texto de prueba.',
     }
     researcherCreate.mockResolvedValue(
       researcherRow({
@@ -402,7 +391,7 @@ describe('createNosotrosResearcher', () => {
         role: createInput.role,
         name: createInput.name,
         email: [],
-        description: null,
+        description: createInput.description,
       }),
     )
 
@@ -415,12 +404,12 @@ describe('createNosotrosResearcher', () => {
         name: createInput.name,
         email: [],
         institution: createInput.institution,
-        description: null,
+        description: createInput.description,
         modifiedBy: 'admin-1',
       },
     })
     expect(result.email).toBeUndefined()
-    expect(result.description).toBeUndefined()
+    expect(result.description).toBe(createInput.description)
   })
 })
 

@@ -48,7 +48,7 @@ export interface NosotrosResearcher {
   email?: string | readonly string[]
   /** Affiliation shown as `Institución: {institution}`. */
   institution: string
-  description?: string
+  description: string
 }
 
 export interface NosotrosContent {
@@ -124,6 +124,10 @@ export const nosotrosContent = {
         role: 'Investigador colaborador',
         email: 'luis.esquivel@ucr.ac.cr',
         institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+        // TODO: pending real bio text from LASCE — `description` is now required
+        // for every researcher (see `NosotrosResearcher`), and this is the only
+        // profile that never had one.
+        description: 'Información pendiente.',
       },
       {
         id: 'ivannia-calvo',
@@ -401,7 +405,7 @@ type NosotrosResearcherRow = {
   name: string
   institution: string
   email: string[]
-  description: string | null
+  description: string
 }
 
 function toNosotrosResearcher(row: NosotrosResearcherRow): NosotrosResearcher {
@@ -412,7 +416,7 @@ function toNosotrosResearcher(row: NosotrosResearcherRow): NosotrosResearcher {
     name: row.name,
     institution: row.institution,
     email: row.email.length > 0 ? row.email : undefined,
-    description: row.description ?? undefined,
+    description: row.description,
   }
 }
 
@@ -422,13 +426,11 @@ export async function getNosotrosResearchers(): Promise<NosotrosResearcher[]> {
 }
 
 /**
- * Shared by create and update. Unlike `researcherInputSchema` (ROSAC),
- * `description` is optional here — several current Nosotros profiles were
- * curated with no bio text, and `NosotrosResearcher.description` is nullable
- * to match. `email` is a single form field — a comma separated list of zero,
- * one or several addresses — split and validated into an array here, since a
- * researcher can have more than one (matching `ResearcherCard`'s multi-address
- * display).
+ * Shared by create and update, same shape as `researcherInputSchema` (ROSAC)
+ * — every researcher needs a bio, on both rosters. `email` is a single form
+ * field — a comma separated list of zero, one or several addresses — split
+ * and validated into an array here, since a researcher can have more than
+ * one (matching `ResearcherCard`'s multi-address display).
  */
 export const nosotrosResearcherInputSchema = z.object({
   src: z.string().trim().min(1, 'La foto es obligatoria.'),
@@ -448,15 +450,10 @@ export const nosotrosResearcherInputSchema = z.object({
     .pipe(z.array(z.email({ error: 'Uno o más correos no son válidos.' })))
     .optional(),
   institution: z.string().trim().min(1, 'La institución es obligatoria.'),
-  description: z.string().trim().optional(),
+  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
 })
 
 export type NosotrosResearcherInput = z.infer<typeof nosotrosResearcherInputSchema>
-
-/** `''` and `undefined` both mean "not set" — stored as `null`, same as an untouched row. */
-function normalizeOptional(value: string | undefined): string | null {
-  return value ? value : null
-}
 
 /**
  * Creates a new Nosotros researcher profile, authored by the admin who
@@ -475,7 +472,7 @@ export async function createNosotrosResearcher(
       name: data.name,
       email: data.email ?? [],
       institution: data.institution,
-      description: normalizeOptional(data.description),
+      description: data.description,
       modifiedBy,
     },
   })
@@ -504,7 +501,7 @@ export async function updateNosotrosResearcher(
       name: data.name,
       email: data.email ?? [],
       institution: data.institution,
-      description: normalizeOptional(data.description),
+      description: data.description,
       modifiedBy,
     },
   })

@@ -594,7 +594,7 @@ describe('NosotrosPage', () => {
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
   })
 
-  test('POSTs a new researcher without a description, since it is optional here', async () => {
+  test('POSTs a new researcher once every required field, including description, is filled in', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ researcher: {} }) })
     mocks.uploadResearcherImage.mockResolvedValue({
@@ -610,10 +610,12 @@ describe('NosotrosPage', () => {
     await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
     await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
     await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Descripción' }),
+      'Texto de prueba.',
+    )
     const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
-
-    expect(within(dialog).getByRole('button', { name: 'Confirmar' })).toBeEnabled()
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
     const confirmDialog = screen.getByRole('dialog', { name: 'Agregar investigador' })

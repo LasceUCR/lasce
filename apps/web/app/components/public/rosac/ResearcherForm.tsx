@@ -1,11 +1,14 @@
 'use client'
 
+import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
+import { IconButton } from '@/app/components/public/IconButton'
+import { Modal } from '@/app/components/public/Modal'
 import {
   uploadResearcherImage,
   type UploadResearcherImageResult,
@@ -22,11 +25,7 @@ export interface PersonProfile {
   src: string
   role: string
   name: string
-  /**
-   * One address, or several — `ResearcherCard` can display more than one, for
-   * profiles curated before this form existed. Editing always collapses back
-   * to a single address: the form has one "Contacto" field, not a list.
-   */
+  /** Zero, one or several public addresses — edited here as chips, each with its own "quitar". */
   email?: string | readonly string[]
   institution: string
   description?: string
@@ -51,28 +50,17 @@ export interface ResearcherFormProps {
   /** Overrides the confirmation dialog's copy — a new researcher reads oddly as "save changes". */
   confirmTitle?: string
   confirmMessage?: string
-  /**
-   * ROSAC researchers always need a bio (`rosac.ts`'s `researcherInputSchema`
-   * requires it); Nosotros researchers don't (`nosotrosResearcherInputSchema`
-   * allows an empty one — several current profiles have no bio at all).
-   * Defaults to `true` so existing ROSAC callers keep their current behavior.
-   */
-  descriptionRequired?: boolean
 }
 
-function validateEmail(value: string) {
-  if (value.trim() === '') return
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
-    throw new Error('El correo no es válido.')
-  }
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 }
 
-/** Collapses `PersonProfile.email` to one editable string — joining several
- * addresses so editing never silently drops one, since this form has a
- * single "Contacto" field rather than a list. */
-function editableEmail(email: PersonProfile['email']): string {
-  if (!email) return ''
-  return typeof email === 'string' ? email : email.join(', ')
+/** Normalizes `PersonProfile.email` to a plain array of addresses, whichever
+ * shape the record was given in. */
+function parseEmails(email: PersonProfile['email']): string[] {
+  if (!email) return []
+  return typeof email === 'string' ? [email] : [...email]
 }
 
 /**
@@ -92,11 +80,13 @@ export function ResearcherForm({
   onCancel,
   confirmTitle = 'Guardar cambios',
   confirmMessage = '¿Desea guardar los cambios en este investigador?',
-  descriptionRequired = true,
 }: ResearcherFormProps) {
   const [role, setRole] = useState(researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
-  const [email, setEmail] = useState(editableEmail(researcher?.email))
+  const [emails, setEmails] = useState(parseEmails(researcher?.email))
+  const [isAddingEmail, setIsAddingEmail] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [newEmailError, setNewEmailError] = useState<string | null>(null)
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
   const [description, setDescription] = useState(researcher?.description ?? '')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -104,7 +94,9 @@ export function ResearcherForm({
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
   const uploadErrorRef = useRef<HTMLParagraphElement>(null)
+  const validationErrorRef = useRef<HTMLParagraphElement>(null)
 
   // Scrolls the error into view as soon as it appears — the modal this form
   // usually sits in can be taller than the viewport, and a message added
@@ -115,13 +107,38 @@ export function ResearcherForm({
     }
   }, [uploadError])
 
+  useEffect(() => {
+    if (validationError) {
+      scrollIntoViewIfSupported(validationErrorRef.current)
+    }
+  }, [validationError])
+
   const hasPhoto = photoFile !== null || (Boolean(researcher?.src) && !photoRemoved)
-  const canSave =
-    role.trim() !== '' &&
-    name.trim() !== '' &&
-    institution.trim() !== '' &&
-    (!descriptionRequired || description.trim() !== '') &&
-    hasPhoto
+
+  /** Only computed when "Confirmar" is pressed — see the note on the button below. */
+  function missingFields(): string[] {
+    const missing: string[] = []
+    if (!hasPhoto) missing.push('Foto')
+    if (role.trim() === '') missing.push('Rol')
+    if (name.trim() === '') missing.push('Nombre')
+    if (institution.trim() === '') missing.push('Institución')
+    if (description.trim() === '') missing.push('Descripción')
+    return missing
+  }
+
+  // Validates only when "Confirmar" is pressed, not as the person types —
+  // same reasoning as the add-contact modal: a message that appears before
+  // anyone has finished filling the form in reads as premature nagging.
+  function handleConfirmClick() {
+    const missing = missingFields()
+    if (missing.length > 0) {
+      setValidationError(`Falta completar: ${missing.join(', ')}.`)
+      return
+    }
+
+    setValidationError(null)
+    setConfirmOpen(true)
+  }
 
   async function handleConfirm() {
     setConfirmOpen(false)
@@ -150,7 +167,36 @@ export function ResearcherForm({
       src = result.imageUrl
     }
 
-    onSave({ role, name, email, institution, description, src })
+    onSave({ role, name, email: emails.join(', '), institution, description, src })
+  }
+
+  function openAddEmail() {
+    setNewEmail('')
+    setNewEmailError(null)
+    setIsAddingEmail(true)
+  }
+
+  function closeAddEmail() {
+    setIsAddingEmail(false)
+  }
+
+  function handleAddEmail() {
+    const trimmed = newEmail.trim()
+    if (!isValidEmail(trimmed)) {
+      setNewEmailError('El correo no es válido.')
+      return
+    }
+    if (emails.includes(trimmed)) {
+      setNewEmailError('Ese correo ya fue agregado.')
+      return
+    }
+
+    setEmails([...emails, trimmed])
+    closeAddEmail()
+  }
+
+  function handleRemoveEmail(address: string) {
+    setEmails(emails.filter((existing) => existing !== address))
   }
 
   return (
@@ -162,26 +208,90 @@ export function ResearcherForm({
         onFileSelect={(file) => {
           setPhotoFile(file)
           setPhotoRemoved(file === null)
+          setValidationError(null)
         }}
       />
 
-      <FormField id="researcher-role" label="Rol" onChange={setRole} required value={role} />
-
-      <FormField id="researcher-name" label="Nombre" onChange={setName} required value={name} />
+      <FormField
+        id="researcher-role"
+        label="Rol"
+        onChange={(value) => {
+          setRole(value)
+          setValidationError(null)
+        }}
+        required
+        value={role}
+      />
 
       <FormField
-        id="researcher-email"
-        label="Contacto"
-        onChange={setEmail}
-        type="email"
-        validate={validateEmail}
-        value={email}
+        id="researcher-name"
+        label="Nombre"
+        onChange={(value) => {
+          setName(value)
+          setValidationError(null)
+        }}
+        required
+        value={name}
       />
+
+      <div className="cms-form-field">
+        <span className="cms-form-field-label" id="researcher-email-label">
+          Contacto
+        </span>
+        <div aria-labelledby="researcher-email-label" className="email-chip-field" role="group">
+          {emails.map((address) => (
+            <span className="email-chip" key={address}>
+              {address}
+              <IconButton
+                className="email-chip-remove"
+                icon={<X size={12} strokeWidth={2} />}
+                label={`Eliminar ${address}`}
+                onClick={() => handleRemoveEmail(address)}
+              />
+            </span>
+          ))}
+          <IconButton
+            className="email-chip-add"
+            icon={<Plus size={14} strokeWidth={2} />}
+            label="Añadir contacto"
+            onClick={openAddEmail}
+          />
+        </div>
+      </div>
+
+      <Modal onClose={closeAddEmail} open={isAddingEmail} size="small" title="Añadir contacto">
+        <FormField
+          id="new-researcher-email"
+          label="Correo electrónico"
+          onChange={(value) => {
+            setNewEmail(value)
+            setNewEmailError(null)
+          }}
+          type="email"
+          value={newEmail}
+        />
+        {newEmailError ? (
+          <p className="form-alert" role="alert">
+            {newEmailError}
+          </p>
+        ) : null}
+        <div className="cms-form-actions">
+          <Button onClick={closeAddEmail} variant="secondary">
+            Cancelar
+          </Button>
+          <Button disabled={newEmail.trim() === ''} onClick={handleAddEmail} variant="primary">
+            Añadir
+          </Button>
+        </div>
+      </Modal>
 
       <FormField
         id="researcher-institution"
         label="Institución"
-        onChange={setInstitution}
+        onChange={(value) => {
+          setInstitution(value)
+          setValidationError(null)
+        }}
         required
         value={institution}
       />
@@ -190,8 +300,11 @@ export function ResearcherForm({
         id="researcher-description"
         label="Descripción"
         multiline
-        onChange={setDescription}
-        required={descriptionRequired}
+        onChange={(value) => {
+          setDescription(value)
+          setValidationError(null)
+        }}
+        required
         value={description}
       />
 
@@ -201,15 +314,17 @@ export function ResearcherForm({
         </p>
       ) : null}
 
+      {validationError ? (
+        <p className="form-alert" ref={validationErrorRef} role="alert">
+          {validationError}
+        </p>
+      ) : null}
+
       <div className="cms-form-actions">
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
-        <Button
-          disabled={!canSave || isUploading}
-          onClick={() => setConfirmOpen(true)}
-          variant="primary"
-        >
+        <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
           {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
         </Button>
       </div>

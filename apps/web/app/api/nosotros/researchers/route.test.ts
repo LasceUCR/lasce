@@ -109,14 +109,14 @@ describe('POST /api/nosotros/researchers', () => {
     expect(mocks.createNosotrosResearcher).not.toHaveBeenCalled()
   })
 
-  test('accepts a body with no description — it is optional here', async () => {
+  test('rejects a body with no description — required for every researcher now', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     const { description: _description, ...bodyWithoutDescription } = validBody
-    mocks.createNosotrosResearcher.mockResolvedValue({ id: 'new-1', ...bodyWithoutDescription })
 
     const response = await POST(postRequest(bodyWithoutDescription))
 
-    expect(response.status).toBe(201)
+    expect(response.status).toBe(400)
+    expect(mocks.createNosotrosResearcher).not.toHaveBeenCalled()
   })
 
   test('creates the researcher, authored by the current admin', async () => {

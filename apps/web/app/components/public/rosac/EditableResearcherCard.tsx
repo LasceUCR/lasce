@@ -17,8 +17,6 @@ export interface EditableResearcherCardProps {
   /** Persists the edit; resolves to an error message on failure, or `null` on success. */
   onSave: (values: ResearcherFormValues) => Promise<string | null>
   onDelete: () => void
-  /** Forwarded to `ResearcherForm` — see its own doc comment. Defaults to `true` (ROSAC). */
-  descriptionRequired?: boolean
 }
 
 /**
@@ -36,7 +34,6 @@ export function EditableResearcherCard({
   canDelete = false,
   onSave,
   onDelete,
-  descriptionRequired = true,
 }: EditableResearcherCardProps) {
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
@@ -89,7 +86,6 @@ export function EditableResearcherCard({
         </p>
       ) : null}
       <ResearcherForm
-        descriptionRequired={descriptionRequired}
         onCancel={() => {
           setSaveError(null)
           setIsEditing(false)

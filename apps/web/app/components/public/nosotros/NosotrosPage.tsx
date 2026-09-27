@@ -333,7 +333,6 @@ export function NosotrosPage({
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
-              descriptionRequired={false}
               onDelete={() => handleDeleteResearcher(person.id)}
               onSave={(values) => handleSaveResearcher(person.id, values)}
               researcher={person}
@@ -352,7 +351,6 @@ export function NosotrosPage({
                     <ResearcherForm
                       confirmMessage="¿Desea agregar este investigador?"
                       confirmTitle="Agregar investigador"
-                      descriptionRequired={false}
                       onCancel={() => {
                         setResearcherCreateError(null)
                         close()

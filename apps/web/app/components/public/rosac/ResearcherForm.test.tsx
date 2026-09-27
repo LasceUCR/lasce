@@ -27,9 +27,8 @@ describe('ResearcherForm', () => {
     const researcher = editArgs.researcher!
     expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue(researcher.role)
     expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue(researcher.name)
-    expect(screen.getByRole('textbox', { name: 'Contacto' })).toHaveValue(
-      researcher.email as string,
-    )
+    expect(screen.getByText(researcher.email as string)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: `Eliminar ${researcher.email}` })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Institución' })).toHaveValue(researcher.institution)
     expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(researcher.description)
   })
@@ -39,8 +38,10 @@ describe('ResearcherForm', () => {
 
     expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('')
     expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue('')
-    expect(screen.getByRole('textbox', { name: 'Contacto' })).toHaveValue('')
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir contacto' })).toBeInTheDocument()
+    // "Confirmar" stays clickable even blank — missing fields are only reported once pressed.
+    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
   })
 
   test('calls onCancel directly, without asking for confirmation', async () => {
@@ -54,31 +55,144 @@ describe('ResearcherForm', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('disables saving when a required field is cleared', async () => {
+  test('lists every missing field when confirming a blank form, without asking for confirmation', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...addArgs} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      screen.getByText('Falta completar: Foto, Rol, Nombre, Institución, Descripción.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('names only the field that was cleared', async () => {
     const user = userEvent.setup()
     render(<ResearcherForm {...editArgs} />)
 
     await user.clear(screen.getByRole('textbox', { name: 'Nombre' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    expect(screen.getByText('Falta completar: Nombre.')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('clears the missing-fields message once the field is filled back in', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherForm {...editArgs} />)
+
+    await user.clear(screen.getByRole('textbox', { name: 'Nombre' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(screen.getByText('Falta completar: Nombre.')).toBeInTheDocument()
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Alguien')
+
+    expect(screen.queryByText('Falta completar: Nombre.')).not.toBeInTheDocument()
   })
 
   test('does not require contacto — it is optional', async () => {
     const user = userEvent.setup()
     render(<ResearcherForm {...editArgs} />)
+    const researcher = editArgs.researcher!
 
-    await user.clear(screen.getByRole('textbox', { name: 'Contacto' }))
+    await user.click(screen.getByRole('button', { name: `Eliminar ${researcher.email}` }))
 
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
   })
 
-  test('disables saving once the existing photo is removed', async () => {
+  test('adds a contact through the modal and shows it as a chip', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherForm {...editArgs} />)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Correo electrónico' }),
+      'nuevo@ucr.ac.cr',
+    )
+    await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
+
+    expect(screen.getByText('nuevo@ucr.ac.cr')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Añadir contacto' })).not.toBeInTheDocument()
+  })
+
+  test('rejects a malformed address in the add-contact modal', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherForm {...editArgs} />)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Correo electrónico' }),
+      'not-an-email',
+    )
+    await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
+
+    expect(within(dialog).getByText('El correo no es válido.')).toBeInTheDocument()
+    expect(screen.queryByText('not-an-email')).not.toBeInTheDocument()
+  })
+
+  test('rejects an address that was already added', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherForm {...editArgs} />)
+    const researcher = editArgs.researcher!
+
+    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Correo electrónico' }),
+      researcher.email as string,
+    )
+    await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
+
+    expect(within(dialog).getByText('Ese correo ya fue agregado.')).toBeInTheDocument()
+  })
+
+  test('removes a contact chip', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherForm {...editArgs} />)
+    const researcher = editArgs.researcher!
+
+    await user.click(screen.getByRole('button', { name: `Eliminar ${researcher.email}` }))
+
+    expect(screen.queryByText(researcher.email as string)).not.toBeInTheDocument()
+  })
+
+  test('saves several contacts as a comma-separated list', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...editArgs} onSave={onSave} />)
+    const researcher = editArgs.researcher!
+
+    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
+    await user.type(
+      within(addDialog).getByRole('textbox', { name: 'Correo electrónico' }),
+      'nuevo@ucr.ac.cr',
+    )
+    await user.click(within(addDialog).getByRole('button', { name: 'Añadir' }))
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ email: `${researcher.email}, nuevo@ucr.ac.cr` }),
+    )
+  })
+
+  test('reports the photo as missing once the existing one is removed', async () => {
     const user = userEvent.setup()
     render(<ResearcherForm {...editArgs} />)
 
     await user.click(screen.getByRole('button', { name: 'Quitar imagen' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    expect(screen.getByText('Falta completar: Foto.')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('asks for confirmation before saving', async () => {

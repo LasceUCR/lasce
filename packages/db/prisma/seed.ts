@@ -609,9 +609,7 @@ for (const researcher of researchers) {
 /**
  * Initial data for the Nosotros researcher roster ("Investigadores LASCE" on
  * /nosotros) — independent from `researchers` above (the ROSAC team on
- * /radioastronomia). `description` is optional: a few of these profiles were
- * curated with no bio text, and `nosotros_researchers.description` is
- * nullable to match.
+ * /radioastronomia).
  */
 type SeedNosotrosResearcher = {
   photoUrl: string
@@ -619,7 +617,7 @@ type SeedNosotrosResearcher = {
   name: string
   email?: string[]
   institution: string
-  description?: string
+  description: string
 }
 
 const nosotrosResearchers: SeedNosotrosResearcher[] = [
@@ -647,6 +645,9 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     role: 'Investigador colaborador',
     email: ['luis.esquivel@ucr.ac.cr'],
     institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+    // TODO: pending real bio text from LASCE — `description` is required for
+    // every researcher now, and this is the only profile that never had one.
+    description: 'Información pendiente.',
   },
   {
     photoUrl: '/images/Researchers/IvanniaCalvo.png',
