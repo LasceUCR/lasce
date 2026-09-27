@@ -1230,7 +1230,7 @@ const workshopMlMedia = [
     format: 'JPG',
     uploader: 'LASCE',
     isVideo: false,
-    colSpan: 2,
+    colSpan: 4,
     rowSpan: 2,
     src: `${imageBase}/workshop-ml-2026/18.jpg`,
   },
