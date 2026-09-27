@@ -39,7 +39,11 @@ export const footerContent: PublicFooterContent = {
       name: 'Centro de Investigaciones Espaciales',
       href: 'https://cinespa.ucr.ac.cr/',
     },
-    { label: 'LASCE', name: 'Laboratorio de Astrofísica Solar y Clima Espacial' },
+    {
+      label: 'LASCE',
+      name: 'Laboratorio de Astrofísica Solar y Clima Espacial',
+      href: 'https://lasce.ucr.ac.cr/',
+    },
   ],
   institutionsLabel: 'Instituciones',
   location: 'San Pedro de Montes de Oca',
