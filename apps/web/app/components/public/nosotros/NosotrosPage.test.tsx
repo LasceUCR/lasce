@@ -69,6 +69,36 @@ describe('NosotrosPage', () => {
     )
   })
 
+  test('lists the international initiatives above the distinctive contribution', () => {
+    renderPage()
+
+    const initiatives = screen.getByRole('region', {
+      name: 'Iniciativas internacionales de las que forma parte',
+    })
+    const contribution = screen.getByRole('region', { name: 'Aporte distintivo' })
+
+    expect(
+      initiatives.compareDocumentPosition(contribution) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      within(initiatives).getByRole('heading', {
+        level: 3,
+        name: 'Iniciativa Internacional de Clima Espacial (ISWI)',
+      }),
+    ).toBeInTheDocument()
+    expect(
+      within(initiatives).getByRole('heading', {
+        level: 3,
+        name: 'Iniciativa VLBI Iberoamericana (IVIA)',
+      }),
+    ).toBeInTheDocument()
+    expect(initiatives).toHaveTextContent(/Comité de las Naciones Unidas/)
+    expect(initiatives).toHaveTextContent(/red VLBI en Latinoamérica/)
+    expect(
+      within(initiatives).getByRole('link', { name: 'Sitio oficial de la ISWI' }),
+    ).toHaveAttribute('href', 'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html')
+  })
+
   test('lists everything the laboratory does', () => {
     renderPage()
 

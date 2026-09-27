@@ -1,9 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Code, GraduationCap, Satellite, Sun, Users, Waves, type LucideIcon } from 'lucide-react'
+import {
+  Code,
+  ExternalLink,
+  GraduationCap,
+  Satellite,
+  Sun,
+  Users,
+  Waves,
+  type LucideIcon,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
+import { Button } from '@/app/components/public/Button'
 import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
@@ -246,6 +256,30 @@ export function NosotrosPage({
       </TopicSection>
 
       <ResearchCollaborationsSection collaborations={collaborations} id="research-collaborations" />
+
+      <TopicSection title={content.initiatives.title} titleId="nosotros-initiatives-title" wide>
+        {content.initiatives.items.map((item) => (
+          <div className="topic-initiative" key={item.id}>
+            <h3>{item.title}</h3>
+            {item.paragraphs.map((paragraph) => (
+              <p className="topic-intro" key={paragraph}>
+                {paragraph}
+              </p>
+            ))}
+            {item.href && item.linkLabel ? (
+              <Button
+                href={item.href}
+                icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
+                rel="noopener noreferrer"
+                target="_blank"
+                variant="secondary"
+              >
+                {item.linkLabel}
+              </Button>
+            ) : null}
+          </div>
+        ))}
+      </TopicSection>
 
       <TopicSection
         title={content.contribution.title}
