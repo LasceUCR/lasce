@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Menu } from 'lucide-react'
+import { ChevronDown, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
@@ -18,7 +18,8 @@ interface NavGroupEntry {
 
 type NavEntry = NavGroupItem | NavGroupEntry
 
-// The desktop header shows a group as a disclosure; the mobile menu lists every link.
+// The desktop header shows a group as a disclosure; the mobile menu keeps the same
+// grouping, under a plain label the group's own items nest below.
 const navigation: NavEntry[] = [
   { label: 'Inicio', href: '/' },
   { label: 'Nosotros', href: '/nosotros' },
@@ -101,7 +102,6 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
   const entries = canSeeAdminNavigation(role)
     ? navigation
     : navigation.filter((entry) => isGroup(entry) || entry.href !== '/administracion')
-  const mobileItems = entries.flatMap((entry) => (isGroup(entry) ? entry.items : [entry]))
 
   return (
     <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`} ref={headerRef}>
@@ -161,29 +161,65 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
           <Menu aria-hidden="true" size={25} strokeWidth={1.8} />
         </summary>
         <nav aria-label="Navegación móvil">
-          {mobileItems.map((item) => {
-            const isActive = isActivePath(pathname, item.href)
+          {entries.map((entry) => {
+            if (isGroup(entry)) {
+              return (
+                <details
+                  className="mobile-nav-group"
+                  key={entry.label}
+                  open={entry.items.some((item) => isActivePath(pathname, item.href))}
+                >
+                  <summary className="mobile-nav-group-summary">
+                    {entry.label}
+                    <ChevronDown aria-hidden="true" size={18} strokeWidth={1.8} />
+                  </summary>
+                  <div className="mobile-nav-group-panel">
+                    {entry.items.map((item) => {
+                      const isActive = isActivePath(pathname, item.href)
+
+                      return (
+                        <Link
+                          aria-current={isActive ? 'page' : undefined}
+                          className={
+                            isActive ? 'mobile-nav-group-item active' : 'mobile-nav-group-item'
+                          }
+                          href={item.href}
+                          key={item.label}
+                          onClick={closeMobileMenu}
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </details>
+              )
+            }
+
+            const isActive = isActivePath(pathname, entry.href)
 
             return (
               <Link
                 aria-current={isActive ? 'page' : undefined}
                 className={isActive ? 'active' : undefined}
-                href={item.href}
-                key={item.label}
+                href={entry.href}
+                key={entry.label}
                 onClick={closeMobileMenu}
               >
-                {item.label}
+                {entry.label}
               </Link>
             )
           })}
-          <AccountLinks
-            account={account}
-            isSigningOut={isSigningOut}
-            onNavigate={closeMobileMenu}
-            onSignOut={signOut}
-            pathname={pathname}
-            variant="mobile"
-          />
+          <div className="mobile-account-section">
+            <AccountLinks
+              account={account}
+              isSigningOut={isSigningOut}
+              onNavigate={closeMobileMenu}
+              onSignOut={signOut}
+              pathname={pathname}
+              variant="mobile"
+            />
+          </div>
         </nav>
       </details>
     </header>

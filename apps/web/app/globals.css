@@ -356,9 +356,9 @@ a {
 .nav-group-panel {
   position: absolute;
   top: calc(100% + 6px);
-  /* Anchored by its right edge, close to Recursos' own, so the 200px panel grows mostly
-     leftward instead of reaching over Contacto, the next item in the bar. */
-  right: -8px;
+  /* Centered under Recursos itself, not the bar. */
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2;
   min-width: 200px;
   padding: 6px 0;
@@ -372,19 +372,20 @@ a {
 
 /* The caret: a square rotated 45deg, half tucked behind the panel's own top edge so
    only the upper point shows, with the same hairline border as the panel on the two
-   visible sides so it reads as one continuous shape. */
+   visible sides so it reads as one continuous shape. Centered under Recursos like
+   the panel itself, so the two translations combine (shift to center, then rotate). */
 .nav-group-panel::before {
   content: '';
   position: absolute;
   top: -5px;
-  right: 39px;
+  left: 50%;
   width: 10px;
   height: 10px;
   border-top: 1px solid #dbe4ea;
   border-left: 1px solid #dbe4ea;
   border-radius: 2px 0 0 0;
   background: var(--white);
-  transform: rotate(45deg);
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .desktop-nav .nav-group-panel a {
@@ -2054,6 +2055,71 @@ a {
     color: var(--blue-dark);
   }
 
+  /* Recursos in the mobile menu: an accordion that looks like a normal menu item
+     (same size and padding as the flat links) until opened, when its three pages
+     drop down beneath it, indented just enough to read as children. */
+  .mobile-nav-group {
+    display: grid;
+  }
+
+  /* Qualified with ".mobile-menu nav" so this beats the generic ".mobile-menu summary"
+     rule above (the hamburger toggle's own styling), which would otherwise also match
+     this nested summary and override its size/layout. */
+  .mobile-menu nav .mobile-nav-group-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    color: inherit;
+    font-size: 14px;
+    list-style: none;
+    cursor: pointer;
+    /* No hover/focus/open background at all: Recursos only opens and closes,
+       it never gets "marked" the way an actual page link does. The browser's
+       own default focus rectangle is also suppressed for the same reason. */
+    outline: none;
+  }
+
+  .mobile-menu nav .mobile-nav-group-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-nav-group-summary svg {
+    flex-shrink: 0;
+    transition: transform 180ms ease;
+  }
+
+  .mobile-nav-group[open] .mobile-nav-group-summary svg {
+    transform: rotate(180deg);
+  }
+
+  /* Chrome (and other browsers following the newer <details> rendering model) wraps
+     everything after <summary> in its own internal box, so a plain "display: grid" on
+     the <details> itself doesn't reach these links — the panel needs its own grid. */
+  .mobile-nav-group-panel {
+    display: grid;
+  }
+
+  .mobile-menu nav a.mobile-nav-group-item {
+    padding-left: 26px;
+  }
+
+  /* Mi cuenta / Cerrar sesión sit apart from the links above them. */
+  .mobile-account-section {
+    display: grid;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .mobile-account-link-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   /* The sign-out button sits among the links and must read like one. */
   .mobile-menu nav button {
     width: 100%;
@@ -2876,37 +2942,51 @@ a {
 }
 
 @media (max-width: 430px) {
+  /* A little tighter than the 760px tier's 16px, to give the five brand marks (the
+     seal included again) enough room without shrinking any one of them too far. */
+  .site-header {
+    padding: 5px 12px;
+  }
+
   .brand {
-    gap: 6px;
+    gap: 4px;
   }
 
   .brand img {
     height: 36px;
   }
 
-  /* The seal already disappears once the visitor scrolls (see `.is-scrolled`); on a phone the
-     header has no room for it alongside three wordmarks, so it stays hidden from the start. */
+  /* Brought back at a small size: it disappears once the visitor scrolls, same as the
+     760px tier, but is no longer hidden from the start. */
   .brand .compdes-logo {
-    display: none;
+    width: 22px;
+    height: 24px;
+    flex-basis: 22px;
+  }
+
+  .site-header.is-scrolled .brand .compdes-logo {
+    width: 0;
+    flex-basis: 0;
+    opacity: 0;
   }
 
   .brand .ucr-signature-logo {
-    width: 82px;
-    height: 26px;
+    width: 72px;
+    height: 23px;
   }
 
   .brand .cinespa-logo {
-    width: 83px;
-    height: 27px;
+    width: 94px;
+    height: 31px;
   }
 
   .brand .lasce-logo {
-    width: 95px;
-    height: 26px;
+    width: 84px;
+    height: 23px;
   }
 
   .brand-divider {
-    height: 28px;
+    height: 24px;
   }
 
   .hero h1 {

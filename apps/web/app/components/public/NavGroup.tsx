@@ -26,15 +26,21 @@ export function isActivePath(pathname: string, href: string): boolean {
 
 /**
  * A disclosure of navigation links for the desktop header, on the native
- * `<details>` element like the mobile menu. The summary opens it with a click,
- * Enter or Space; choosing a link, Escape, a pointer outside or focus leaving
- * the group closes it. The links are in the tab order only while it is open.
- * The `open` attribute is the only state, so nothing lags behind the browser.
+ * `<details>` element like the mobile menu. Hovering the group opens it
+ * without a click (so does a click, Enter or Space, for touch and keyboard);
+ * choosing a link, Escape, the pointer leaving the group, a pointer outside
+ * or focus leaving the group closes it. The links are in the tab order only
+ * while it is open. The `open` attribute is the only state, so nothing lags
+ * behind the browser.
  */
 export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGroupProps) {
   const details = useRef<HTMLDetailsElement>(null)
   const summary = useRef<HTMLElement>(null)
   const isActive = items.some((item) => isActivePath(pathname, item.href))
+
+  function open() {
+    details.current?.setAttribute('open', '')
+  }
 
   function close() {
     details.current?.removeAttribute('open')
@@ -81,6 +87,8 @@ export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGro
       className={isActive ? 'nav-group active' : 'nav-group'}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
+      onMouseEnter={open}
+      onMouseLeave={close}
       open={defaultOpen ? true : undefined}
       ref={details}
     >
