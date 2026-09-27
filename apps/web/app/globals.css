@@ -1070,7 +1070,7 @@ a {
 
 .footer-partner img {
   width: auto;
-  height: 45px;
+  height: 55px;
 }
 
 .footer-legal {
@@ -1083,6 +1083,7 @@ a {
 }
 
 .footer-copyright {
+  text-align: center;
   margin: 0;
 }
 
