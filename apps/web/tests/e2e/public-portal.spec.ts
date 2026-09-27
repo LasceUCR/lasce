@@ -357,6 +357,46 @@ test('returns 404 for an unknown public route', async ({ page }) => {
   expect(response?.status()).toBe(404)
 })
 
+test('displays research collaborations and allows filtering by scope', async ({ page }) => {
+  const response = await page.goto('/nosotros')
+
+  expect(response?.status()).toBe(200)
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Colaboraciones de investigación' }),
+  ).toBeVisible()
+
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toBeVisible()
+
+  await page.getByRole('combobox', { name: 'Tipo de colaboración' }).click()
+  await page.getByRole('option', { name: 'Nacionales', exact: true }).click()
+
+  await expect(page.getByText('2', { exact: true })).toBeVisible()
+  await expect(page.getByText('colaboraciones nacionales', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toHaveCount(0)
+
+  await page.getByRole('combobox', { name: 'Tipo de colaboración' }).click()
+  await page.getByRole('option', { name: 'Internacionales', exact: true }).click()
+
+  await expect(page.getByText('6', { exact: true })).toBeVisible()
+  await expect(page.getByText('colaboraciones internacionales', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toHaveCount(0)
+})
+
 for (const route of publicRoutes) {
   test(`shows the legal and institutional footer on ${route.path}`, async ({ page }) => {
     await page.goto(route.path)

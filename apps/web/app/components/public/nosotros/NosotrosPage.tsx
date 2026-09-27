@@ -8,6 +8,7 @@ import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { ResearchCollaborationsSection } from '@/app/components/public/research/ResearchCollaborationsSection'
 import { TeamGallery } from '@/app/components/public/rosac/TeamGallery'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
@@ -16,6 +17,10 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
+import {
+  researchCollaborations,
+  type ResearchCollaboration,
+} from '@/app/lib/research-collaborations'
 
 import { NosotrosActivityForm, type NosotrosActivityFormValues } from './NosotrosActivityForm'
 
@@ -35,6 +40,7 @@ const blankActivity: NosotrosActivityFormValues = { icon: 'sun', title: '', desc
 
 export interface NosotrosPageProps {
   content: NosotrosContent
+  collaborations?: ResearchCollaboration[]
   canCreate?: boolean
   canEdit?: boolean
   canDelete?: boolean
@@ -42,6 +48,7 @@ export interface NosotrosPageProps {
 
 export function NosotrosPage({
   content,
+  collaborations = researchCollaborations,
   canCreate = false,
   canEdit = false,
   canDelete = false,
@@ -237,6 +244,8 @@ export function NosotrosPage({
           people={content.researchers.people}
         />
       </TopicSection>
+
+      <ResearchCollaborationsSection collaborations={collaborations} id="research-collaborations" />
 
       <TopicSection
         title={content.contribution.title}
