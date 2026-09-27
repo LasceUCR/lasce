@@ -8,6 +8,11 @@ import { researchAreas } from '@/app/lib/research-areas'
 const publicRoutes: { label: string; path: string; heading: string; group?: string }[] = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
   { label: 'Nosotros', path: '/nosotros', heading: 'Quiénes somos' },
+  {
+    label: 'Colaboraciones e Iniciativas',
+    path: '/colaboraciones-e-iniciativas',
+    heading: 'Colaboraciones e Iniciativas',
+  },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
   {
     label: 'Herramientas científicas',
@@ -400,7 +405,7 @@ test('returns 404 for an unknown public route', async ({ page }) => {
 })
 
 test('displays research collaborations', async ({ page }) => {
-  const response = await page.goto('/nosotros')
+  const response = await page.goto('/colaboraciones-e-iniciativas')
 
   expect(response?.status()).toBe(200)
   await expect(
@@ -413,6 +418,13 @@ test('displays research collaborations', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
   ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Colaboraciones e Iniciativas' }),
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Sitio oficial de la ISWI' })).toHaveAttribute(
+    'href',
+    'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html',
+  )
   await expect(page.getByRole('combobox', { name: 'Tipo de colaboración' })).toHaveCount(0)
 })
 

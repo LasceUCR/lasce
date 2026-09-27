@@ -26,13 +26,6 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
   await expect(page.getByRole('region', { name: /Qué hacemos/ })).toContainText(
     /Analizamos fenómenos solares eruptivos/,
   )
-  await expect(
-    page.getByRole('region', { name: 'Iniciativas internacionales de las que forma parte' }),
-  ).toContainText(/Iniciativa VLBI Iberoamericana/)
-  await expect(page.getByRole('link', { name: 'Sitio oficial de la ISWI' })).toHaveAttribute(
-    'href',
-    'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html',
-  )
   await expect(page.getByRole('region', { name: 'Aporte distintivo' })).toContainText(
     /no sea únicamente usuaria de información internacional/,
   )

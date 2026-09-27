@@ -23,6 +23,7 @@ type NavEntry = NavGroupItem | NavGroupEntry
 const navigation: NavEntry[] = [
   { label: 'Inicio', href: '/' },
   { label: 'Nosotros', href: '/nosotros' },
+  { label: 'Colaboraciones e Iniciativas', href: '/colaboraciones-e-iniciativas' },
   { label: 'Investigación', href: '/investigacion' },
   { label: 'Datos', href: '/datos' },
   { label: 'Noticias', href: '/noticias' },

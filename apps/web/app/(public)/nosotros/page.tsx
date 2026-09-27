@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { NosotrosPage } from '@/app/components/public/nosotros/NosotrosPage'
 import { userHasPermission } from '@/app/lib/auth/authorization'
 import { getNosotrosActivities, nosotrosContent, nosotrosMeta } from '@/app/lib/nosotros'
-import { researchCollaborations } from '@/app/lib/research-collaborations'
 
 export const metadata: Metadata = {
   ...nosotrosMeta,
@@ -25,7 +24,6 @@ export default async function NosotrosRoute() {
       canCreate={canCreate}
       canDelete={canDelete}
       canEdit={canEdit}
-      collaborations={researchCollaborations}
       content={{
         ...nosotrosContent,
         activities: { title: nosotrosContent.activities.title, items: activities },

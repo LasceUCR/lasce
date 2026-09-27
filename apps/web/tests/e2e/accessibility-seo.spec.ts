@@ -16,6 +16,7 @@ const galleryRoutes = galleryAlbumList.flatMap((album) => [
 const publicRoutes = [
   { label: 'Inicio', path: '/' },
   { label: 'Nosotros', path: '/nosotros' },
+  { label: 'Colaboraciones e Iniciativas', path: '/colaboraciones-e-iniciativas' },
   { label: 'Investigación', path: '/investigacion' },
   { label: 'Datos', path: '/datos' },
   { label: 'Noticias', path: '/noticias' },
@@ -79,6 +80,7 @@ const resourcesGroup = {
 const desktopNavigation = [
   'Inicio',
   'Nosotros',
+  'Colaboraciones e Iniciativas',
   'Investigación',
   'Datos',
   'Noticias',
