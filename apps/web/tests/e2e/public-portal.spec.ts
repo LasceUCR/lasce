@@ -315,7 +315,7 @@ test('returns 404 for an unknown public route', async ({ page }) => {
 })
 
 test('displays research collaborations and allows filtering by scope', async ({ page }) => {
-  const response = await page.goto('/investigacion')
+  const response = await page.goto('/nosotros')
 
   expect(response?.status()).toBe(200)
   await expect(
