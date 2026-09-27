@@ -7,11 +7,12 @@ import { researchAreas } from '@/app/lib/research-areas'
 // `group` names the desktop header disclosure a route sits behind, if any.
 const publicRoutes: { label: string; path: string; heading: string; group?: string }[] = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
-  { label: 'Nosotros', path: '/nosotros', heading: 'Quiénes somos' },
+  { label: 'Quiénes somos', path: '/nosotros', heading: 'Quiénes somos', group: 'Nosotros' },
   {
     label: 'Colaboraciones e Iniciativas',
     path: '/colaboraciones-e-iniciativas',
     heading: 'Colaboraciones e Iniciativas',
+    group: 'Nosotros',
   },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
   {
