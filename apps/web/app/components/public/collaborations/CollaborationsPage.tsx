@@ -55,7 +55,7 @@ export function CollaborationsPage({ content, collaborations }: CollaborationsPa
                   icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
                   rel="noopener noreferrer"
                   target="_blank"
-                  variant="secondary"
+                  variant="brand"
                 >
                   {item.linkLabel}
                 </Button>

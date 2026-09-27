@@ -50,6 +50,9 @@ describe('CollaborationsPage', () => {
     expect(
       within(initiatives).getByRole('link', { name: 'Sitio oficial de la ISWI' }),
     ).toHaveAttribute('href', 'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html')
+    expect(
+      within(initiatives).getByRole('link', { name: 'Sitio oficial de la IVIA' }),
+    ).toHaveAttribute('href', 'https://oaq.epn.edu.ec/ivia-net/index.php/es/')
   })
 
   test('returns to the public landing page', () => {

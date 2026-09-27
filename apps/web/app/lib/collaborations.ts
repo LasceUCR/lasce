@@ -60,6 +60,8 @@ export const collaborationsContent = {
       {
         id: 'ivia',
         title: 'Iniciativa VLBI Iberoamericana (IVIA)',
+        href: 'https://oaq.epn.edu.ec/ivia-net/index.php/es/',
+        linkLabel: 'Sitio oficial de la IVIA',
         logo: {
           src: '/brand/logo-Iniciativa-VLBI-Ibero-Americana.png',
           alt: 'Logotipo de la Iniciativa VLBI Iberoamericana (IVIA)',
