@@ -48,6 +48,14 @@ describe('PublicHeader', () => {
     expect(screen.getAllByRole('link', { name: /^Administración$/ }).length).toBeGreaterThan(0)
   })
 
+  test('identifies UCR, CINESPA and LASCE in the header brand', () => {
+    render(<PublicHeader logoutAction={async () => undefined} />)
+
+    expect(screen.getByAltText('Universidad de Costa Rica')).toBeInTheDocument()
+    expect(screen.getByAltText('Centro de Investigaciones Espaciales')).toBeInTheDocument()
+    expect(screen.getByAltText('Laboratorio de Ciencias Espaciales')).toBeInTheDocument()
+  })
+
   test('groups the resource pages behind Recursos on desktop and lists them flat on mobile', async () => {
     const user = userEvent.setup()
     render(<PublicHeader logoutAction={async () => undefined} />)

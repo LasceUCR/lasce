@@ -208,6 +208,35 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   ).toHaveAttribute('aria-current', 'page')
 })
 
+test('shows the UCR, CINESPA and LASCE brand without overflow on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const header = page.locator('.site-header')
+  await expect(header.getByAltText('Universidad de Costa Rica')).toBeVisible()
+  await expect(header.getByAltText('Centro de Investigaciones Espaciales')).toBeVisible()
+  await expect(header.getByAltText('Laboratorio de Ciencias Espaciales')).toBeVisible()
+
+  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+  expect(fits).toBe(true)
+})
+
+test('keeps the brand clear of the desktop navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+
+  const brandBox = await page.locator('.brand').boundingBox()
+  const navBox = await page
+    .getByRole('navigation', { name: 'Navegación principal' })
+    .boundingBox()
+
+  expect(brandBox).not.toBeNull()
+  expect(navBox).not.toBeNull()
+  if (brandBox && navBox) {
+    expect(brandBox.x + brandBox.width).toBeLessThanOrEqual(navBox.x)
+  }
+})
+
 for (const album of galleryAlbumList) {
   test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
     await page.goto('/galeria')
