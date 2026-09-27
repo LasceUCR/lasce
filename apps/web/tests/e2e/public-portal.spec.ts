@@ -354,7 +354,7 @@ test('keeps the footer readable on a phone without horizontal overflow', async (
   await expect(footer.getByText(/© \d{4} /)).toBeVisible()
   await expect(footer.getByRole('list', { name: footerContent.institutionsLabel })).toBeVisible()
 
-  // The ISWI logo stacks above the links on a phone and must not cover them.
+  // The links and the ISWI logo share one row on a phone: links left, logo right, no overlap.
   const logo = footer.getByRole('img', { name: footerContent.partnerLogo.name })
   await expect(logo).toBeVisible()
   const logoBox = await logo.boundingBox()
@@ -362,7 +362,8 @@ test('keeps the footer readable on a phone without horizontal overflow', async (
   expect(logoBox).not.toBeNull()
   expect(navigationBox).not.toBeNull()
   if (logoBox && navigationBox) {
-    expect(logoBox.y + logoBox.height).toBeLessThanOrEqual(navigationBox.y)
+    expect(navigationBox.x + navigationBox.width).toBeLessThanOrEqual(logoBox.x)
+    expect(logoBox.x + logoBox.width).toBeLessThanOrEqual(390)
   }
 
   const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
