@@ -132,7 +132,7 @@ playwright.config.ts
 
 - `app/(public)/layout.tsx` defines the shared public page structure.
 - `PublicHeader` owns desktop and mobile navigation and marks the active route with `aria-current="page"`.
-- `PublicFooter` shows the institutional identity, the footer links (Contacto, Instagram) and a legal row with the copyright year and the UCR / CINESPA / LASCE identification. Every string lives in `app/lib/footer.ts`; the year defaults to the render-time year (build time on prerendered routes).
+- `PublicFooter` names the Universidad de Costa Rica, CINESPA and LASCE beside the logo, shows the footer links (Contacto, Instagram) and a legal row with the copyright year. Every string lives in `app/lib/footer.ts`; the year defaults to the render-time year (build time on prerendered routes).
 - `Brand` centralizes the institutional logo variants used by the header and footer.
 - `app/lib/site.ts` defines the canonical site origin and public route list used by SEO metadata.
 - `app/lib/footer.ts` defines every string the public footer shows.
