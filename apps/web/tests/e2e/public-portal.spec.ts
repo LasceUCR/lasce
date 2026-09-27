@@ -324,11 +324,11 @@ for (const route of publicRoutes) {
 
     const institutions = footer.getByRole('list', { name: footerContent.institutionsLabel })
     for (const institution of footerContent.institutions) {
-      await expect(institutions.getByText(institution.abbreviation, { exact: true })).toBeVisible()
+      await expect(institutions.getByText(institution.label, { exact: true })).toBeVisible()
 
       if (institution.href) {
         await expect(
-          institutions.getByRole('link', { name: institution.abbreviation, exact: true }),
+          institutions.getByRole('link', { name: institution.label, exact: true }),
         ).toHaveAttribute('href', institution.href)
       }
     }

@@ -24,7 +24,7 @@ describe('PublicFooter', () => {
     expect(footer.getByText(`© ${defaultArgs.year} ${holder}. ${notice}`)).toBeInTheDocument()
   })
 
-  test('identifies UCR, CINESPA and LASCE', () => {
+  test('names the university, CINESPA and LASCE beside the logo', () => {
     render(<PublicFooter {...defaultArgs} />)
 
     const { institutions, institutionsLabel } = defaultArgs.content
@@ -33,17 +33,29 @@ describe('PublicFooter', () => {
     expect(list.getAllByRole('listitem')).toHaveLength(institutions.length)
 
     for (const institution of institutions) {
-      expect(list.getByText(institution.abbreviation)).toHaveAttribute('title', institution.name)
+      const label = list.getByText(institution.label)
+
+      if (institution.name) {
+        expect(label).toHaveAttribute('title', institution.name)
+      }
 
       if (institution.href) {
-        const link = list.getByRole('link', { name: institution.abbreviation })
+        const link = list.getByRole('link', { name: institution.label })
         expect(link).toHaveAttribute('href', institution.href)
         expect(link).toHaveAttribute('target', '_blank')
         expect(link.getAttribute('rel')).toContain('noreferrer')
       } else {
-        expect(list.queryByRole('link', { name: institution.abbreviation })).not.toBeInTheDocument()
+        expect(list.queryByRole('link', { name: institution.label })).not.toBeInTheDocument()
       }
     }
+  })
+
+  test('shows the campus location', () => {
+    render(<PublicFooter {...defaultArgs} />)
+
+    const footer = within(screen.getByRole('contentinfo'))
+
+    expect(footer.getByText(defaultArgs.content.location)).toBeInTheDocument()
   })
 
   test('keeps the legal information outside the footer navigation', () => {
