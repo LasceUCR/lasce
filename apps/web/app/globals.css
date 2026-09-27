@@ -1948,7 +1948,7 @@ a {
 
 .research-collaborations {
   margin-top: 0;
-  padding-top: 56px;
+  padding-top: 8px;
   padding-bottom: 56px;
 }
 
@@ -2741,12 +2741,12 @@ a {
 }
 
 .topic-initiative-with-logo {
-  grid-template-columns: 180px minmax(0, 1fr);
+  grid-template-columns: 240px minmax(0, 1fr);
 }
 
 .topic-initiative-logo {
   width: 100%;
-  max-width: 180px;
+  max-width: 240px;
   height: auto;
   justify-self: center;
 }
@@ -3102,7 +3102,7 @@ a {
   }
 
   .topic-initiative-logo {
-    width: 160px;
+    width: 200px;
   }
 
   .card-grid-4,

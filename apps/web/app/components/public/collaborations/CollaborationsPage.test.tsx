@@ -23,7 +23,7 @@ describe('CollaborationsPage', () => {
     ).toBeInTheDocument()
 
     const initiatives = screen.getByRole('region', {
-      name: 'Iniciativas internacionales de las que forma parte',
+      name: 'Iniciativas internacionales de las que LASCE forma parte',
     })
     expect(
       within(initiatives).getByRole('heading', {

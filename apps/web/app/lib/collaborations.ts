@@ -40,7 +40,7 @@ export const collaborationsContent = {
     lead: 'Organizaciones que colaboran con el Laboratorio de Astrofísica Solar y Clima Espacial, y las iniciativas internacionales de las que forma parte.',
   },
   initiatives: {
-    title: 'Iniciativas internacionales de las que forma parte',
+    title: 'Iniciativas internacionales de las que LASCE forma parte',
     items: [
       {
         id: 'iswi',

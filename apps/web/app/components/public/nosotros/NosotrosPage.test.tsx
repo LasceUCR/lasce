@@ -76,7 +76,9 @@ describe('NosotrosPage', () => {
       screen.queryByRole('heading', { name: 'Colaboraciones de investigación' }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('region', { name: 'Iniciativas internacionales de las que forma parte' }),
+      screen.queryByRole('region', {
+        name: 'Iniciativas internacionales de las que LASCE forma parte',
+      }),
     ).not.toBeInTheDocument()
   })
 
