@@ -3149,6 +3149,10 @@ a.gallery-tile:focus-visible {
   padding-top: 28px;
 }
 
+.gallery-album-footer {
+  padding-top: 20px;
+}
+
 .media-grid {
   margin-top: 14px;
   display: grid;
