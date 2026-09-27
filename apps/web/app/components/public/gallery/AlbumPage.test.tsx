@@ -64,7 +64,7 @@ describe('AlbumPage', () => {
     expect(screen.queryByRole('heading', { name: 'Subálbumes' })).not.toBeInTheDocument()
   })
 
-  test('returns to the gallery index by default from the top of the page', () => {
+  test('returns to the gallery index by default from the bottom of the page', () => {
     render(<AlbumPage {...albumArgs} />)
 
     const backLink = screen.getByRole('link', { name: 'Volver a la galería' })
@@ -72,7 +72,7 @@ describe('AlbumPage', () => {
 
     expect(backLink).toHaveAttribute('href', '/galeria')
     expect(
-      Boolean(backLink.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING),
+      Boolean(heading.compareDocumentPosition(backLink) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true)
   })
 
@@ -91,7 +91,7 @@ describe('AlbumPage', () => {
 
     expect(backLink).toHaveAttribute('href', '/galeria/rosac')
     expect(
-      Boolean(backLink.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING),
+      Boolean(heading.compareDocumentPosition(backLink) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true)
   })
 })

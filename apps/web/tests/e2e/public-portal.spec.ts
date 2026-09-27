@@ -208,7 +208,7 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   ).toHaveAttribute('aria-current', 'page')
 })
 
-test('displays the back button at the top of the gallery index and returns home', async ({
+test('displays the back button at the bottom of the gallery index and returns home', async ({
   page,
 }) => {
   await page.goto('/galeria')
@@ -219,13 +219,13 @@ test('displays the back button at the top of the gallery index and returns home'
   await expect(backLink).toBeVisible()
   const backBox = await backLink.boundingBox()
   const headingBox = await heading.boundingBox()
-  expect(backBox && headingBox && backBox.y < headingBox.y).toBeTruthy()
+  expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
 
   await backLink.click()
   await expect(page).toHaveURL(/\/$/)
 })
 
-test('displays the back button at the top of an album page and returns to gallery', async ({
+test('displays the back button at the bottom of an album page and returns to gallery', async ({
   page,
 }) => {
   await page.goto('/galeria/rosac')
@@ -236,7 +236,7 @@ test('displays the back button at the top of an album page and returns to galler
   await expect(backLink).toBeVisible()
   const backBox = await backLink.boundingBox()
   const headingBox = await heading.boundingBox()
-  expect(backBox && headingBox && backBox.y < headingBox.y).toBeTruthy()
+  expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
 
   await backLink.click()
   await expect(page).toHaveURL(/\/galeria$/)
@@ -271,7 +271,15 @@ for (const album of galleryAlbumList) {
       ).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Sub\u00e1lbumes' })).toHaveCount(0)
 
-      await page.getByRole('link', { name: `Volver a ${album.title}` }).click()
+      const backLink = page.getByRole('link', { name: `Volver a ${album.title}` })
+      await expect(backLink).toBeVisible()
+      const backBox = await backLink.boundingBox()
+      const headingBox = await page
+        .getByRole('heading', { level: 1, name: subAlbum.title })
+        .boundingBox()
+      expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
+
+      await backLink.click()
 
       await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
     })
