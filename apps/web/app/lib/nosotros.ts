@@ -44,8 +44,8 @@ export interface NosotrosResearcher {
   name: string
   /** The category shown at the top of the card, for example `Investigador`. */
   role: string
-  /** Public address when LASCE supplied one. */
-  email?: string
+  /** Public address, or several, when LASCE supplied them. */
+  email?: string | readonly string[]
   /** Affiliation shown as `Institución: {institution}`. */
   institution: string
   description?: string
@@ -160,7 +160,8 @@ export const nosotrosContent = {
         name: 'Dra. Gabriela Molina',
         role: 'Investigadora colaboradora',
         email: 'gmolina@herrera.unt.edu.ar',
-        institution: 'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina',
+        institution:
+          'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina; Istituto Nazionale di Geofisica e Vulcanologia (INGV), Italia',
         description:
           'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
       },
@@ -174,6 +175,15 @@ export const nosotrosContent = {
           'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
         description:
           'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
+      },
+      {
+        src: '/images/Researchers/JohanaCamacho.jpeg',
+        name: 'MSc. Johanna Pamela Camacho Garbanzo',
+        role: 'Investigadora colaboradora',
+        email: ['jcamachoga@ice.go.cr', 'Johanna.camacho@ucr.ac.cr'],
+        institution: 'Instituto Costarricense de Electricidad; Universidad de Costa Rica',
+        description:
+          'Es geofísica de exploración del Instituto Costarricense de Electricidad (ICE), donde cuenta con más de 17 años de experiencia en la aplicación de métodos geofísicos para la caracterización del subsuelo y el desarrollo de proyectos de investigación aplicada. Asimismo, posee 8 años de experiencia como docente universitaria en la Escuela de Física de la Universidad de Costa Rica, impartiendo laboratorios de Física General. Actualmente es estudiante de doctorado e investigadora del Laboratorio de Clima Espacial (LASCE), donde desarrolla investigaciones relacionadas con geomagnetismo, ionósfera y clima espacial, utilizando registros de campo magnético terrestre en tiempo real. Su trabajo se enfoca en el análisis de la interacción entre la actividad geomagnética y la ionósfera, así como en sus aplicaciones para el estudio del clima espacial en Costa Rica. A lo largo de su trayectoria profesional ha participado en numerosos estudios e informes de investigación geofísica aplicados a infraestructura, exploración del subsuelo, energía e ingeniería, mediante el uso de técnicas como radar de penetración terrestre (GPR), tomografía de resistividad eléctrica y otros métodos geofísicos. Sus principales áreas de interés incluyen la geofísica aplicada, el geomagnetismo, el clima espacial y la formación de nuevas generaciones de científicos e Ingenieros.',
       },
     ],
   },

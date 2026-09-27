@@ -42,7 +42,7 @@ describe('TeamGallery', () => {
     for (const person of defaultArgs.people) {
       expect(within(track).getByRole('heading', { name: person.name })).toBeInTheDocument()
       expect(
-        within(track).getAllByText(`Institución: ${person.institution}`).length,
+        within(track).getAllByText(`Institución: ${institutionPreview(person.institution)}`).length,
       ).toBeGreaterThan(0)
       if (person.description) {
         await user.click(
@@ -60,14 +60,14 @@ describe('TeamGallery', () => {
     render(<TeamGallery {...defaultArgs} />)
 
     for (const person of defaultArgs.people) {
-      if (!person.email) {
-        continue
-      }
+      const addresses = typeof person.email === 'string' ? [person.email] : (person.email ?? [])
 
-      expect(screen.getByRole('link', { name: person.email })).toHaveAttribute(
-        'href',
-        `mailto:${person.email}`,
-      )
+      for (const address of addresses) {
+        expect(screen.getByRole('link', { name: address })).toHaveAttribute(
+          'href',
+          `mailto:${address}`,
+        )
+      }
     }
   })
 
