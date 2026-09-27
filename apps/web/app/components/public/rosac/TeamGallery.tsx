@@ -65,7 +65,7 @@ export function TeamGallery({ label, emptyMessage, hint, people }: TeamGalleryPr
       {/* Focusable so the scrollable region is reachable by keyboard, which axe requires. */}
       <ul aria-label={label} className="team-gallery-track" ref={trackRef} tabIndex={0}>
         {people.map((person) => (
-          <li className="team-gallery-slide" key={person.email ?? person.name}>
+          <li className="team-gallery-slide" key={person.name}>
             <ResearcherCard
               description={person.description}
               email={person.email}
