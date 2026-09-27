@@ -2293,7 +2293,7 @@ a {
 
   .footer-inner {
     padding-block: 14px;
-    gap: 18px;
+    gap: 16px;
   }
 
   .footer-identity {
@@ -2306,14 +2306,25 @@ a {
     color: var(--white);
   }
 
+  /* Links on the left, the ISWI logo on the far right, sharing one row. */
   .footer-end {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-links a {
+    padding-block: 6px;
+    font-size: 13px;
   }
 
   .footer-partner img {
-    height: 38px;
+    height: 44px;
+  }
+
+  .footer-copyright {
+    text-align: left;
   }
 }
 
