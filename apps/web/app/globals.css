@@ -350,33 +350,41 @@ a {
   color: var(--blue-dark);
 }
 
-.nav-group.active summary::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: 5px;
-  left: 0;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--action);
-}
-
-/* A flat list just under the summary, topped by the header's cyan rule, thinner; the
-   item text lines up with the summary label. It starts where the active underline of
-   the summary starts, so the cyan rule replaces that underline while the panel is open. */
+/* A small floating panel under the summary, not the shared active-link underline: a
+   caret points up at "Recursos" instead, and the accent moves to the panel's own
+   bottom edge (see below). */
 .nav-group-panel {
   position: absolute;
-  top: calc(100% - 8px);
-  left: -14px;
+  top: calc(100% + 6px);
+  /* Anchored by its right edge, close to Recursos' own, so the 200px panel grows mostly
+     leftward instead of reaching over Contacto, the next item in the bar. */
+  right: -8px;
   z-index: 2;
   min-width: 200px;
   padding: 6px 0;
   display: grid;
   border: 1px solid #dbe4ea;
-  border-top: 3px solid var(--cyan);
-  border-radius: 0 0 4px 4px;
+  border-bottom: 2px solid var(--cyan);
+  border-radius: 6px;
   background: var(--white);
   box-shadow: 0 6px 20px rgba(10, 35, 50, 0.08);
+}
+
+/* The caret: a square rotated 45deg, half tucked behind the panel's own top edge so
+   only the upper point shows, with the same hairline border as the panel on the two
+   visible sides so it reads as one continuous shape. */
+.nav-group-panel::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: 39px;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid #dbe4ea;
+  border-left: 1px solid #dbe4ea;
+  border-radius: 2px 0 0 0;
+  background: var(--white);
+  transform: rotate(45deg);
 }
 
 .desktop-nav .nav-group-panel a {
