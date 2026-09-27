@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 
+import { footerContent } from '@/app/lib/footer'
 import { galleryAlbumList, galleryAlbums } from '@/app/lib/gallery'
 
 // `group` names the desktop header disclosure a route sits behind, if any.
@@ -312,4 +313,40 @@ test('returns 404 for an unknown public route', async ({ page }) => {
   const response = await page.goto('/ruta-publica-inexistente')
 
   expect(response?.status()).toBe(404)
+})
+
+for (const route of publicRoutes) {
+  test(`shows the legal and institutional footer on ${route.path}`, async ({ page }) => {
+    await page.goto(route.path)
+
+    const footer = page.getByRole('contentinfo')
+    await expect(footer.getByText(/© \d{4} /)).toBeVisible()
+
+    const institutions = footer.getByRole('list', { name: footerContent.institutionsLabel })
+    for (const institution of footerContent.institutions) {
+      await expect(institutions.getByText(institution.abbreviation, { exact: true })).toBeVisible()
+
+      if (institution.href) {
+        await expect(
+          institutions.getByRole('link', { name: institution.abbreviation, exact: true }),
+        ).toHaveAttribute('href', institution.href)
+      }
+    }
+
+    // Legal information sits beside the footer navigation, never inside it.
+    await expect(footer.getByRole('navigation').getByText(/©/)).toHaveCount(0)
+  })
+}
+
+test('keeps the footer readable on a phone without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const footer = page.getByRole('contentinfo')
+  await footer.scrollIntoViewIfNeeded()
+  await expect(footer.getByText(/© \d{4} /)).toBeVisible()
+  await expect(footer.getByRole('list', { name: footerContent.institutionsLabel })).toBeVisible()
+
+  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+  expect(fits).toBe(true)
 })
