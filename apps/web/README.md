@@ -114,6 +114,7 @@ app/
 |   |-- space-weather/
 |   `-- topic/
 |-- lib/
+|   |-- footer.ts
 |   |-- site.ts
 |   |-- solar-astrophysics.ts
 |   |-- space-weather.ts
@@ -131,9 +132,10 @@ playwright.config.ts
 
 - `app/(public)/layout.tsx` defines the shared public page structure.
 - `PublicHeader` owns desktop and mobile navigation and marks the active route with `aria-current="page"`.
-- `PublicFooter` contains institutional information and the LASCE Instagram link.
+- `PublicFooter` shows the institutional identity, the footer links (Contacto, Instagram) and a legal row with the copyright year and the UCR / CINESPA / LASCE identification. Every string lives in `app/lib/footer.ts`; the year defaults to the render-time year (build time on prerendered routes).
 - `Brand` centralizes the institutional logo variants used by the header and footer.
 - `app/lib/site.ts` defines the canonical site origin and public route list used by SEO metadata.
+- `app/lib/footer.ts` defines every string the public footer shows.
 - `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
 - `app/(public)/fisica-solar/page.tsx` renders the solar astrophysics information page. Copy adapted from LASCE-provided material and page metadata live in `app/lib/solar-astrophysics.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
 - `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy lives in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
