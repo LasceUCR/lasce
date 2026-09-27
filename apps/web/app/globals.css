@@ -1023,13 +1023,9 @@ a {
   flex-direction: column;
 }
 
-.footer-identity strong {
-  font-size: 13px;
-}
-
 .footer-identity span {
   color: #99adba;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .footer-links {
@@ -1054,6 +1050,72 @@ a {
   content: '·';
   margin: 0 10px;
   color: #8399a7;
+}
+
+.footer-end {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.footer-partner {
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+.footer-partner:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+.footer-partner img {
+  width: auto;
+  height: 55px;
+}
+
+.footer-legal {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #99adba;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.footer-copyright {
+  text-align: center;
+  margin: 0;
+}
+
+.footer-institutions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* The alt text after the slash keeps the dot out of each item's accessible name. */
+.footer-institutions li + li::before {
+  content: '·' / '';
+  margin: 0 6px;
+}
+
+.footer-institutions abbr {
+  text-decoration: none;
+}
+
+.footer-institutions a {
+  color: var(--white);
+}
+
+.footer-institutions a:hover,
+.footer-institutions a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .sr-only {
@@ -2433,7 +2495,7 @@ a {
 
   .footer-inner {
     padding-block: 14px;
-    gap: 18px;
+    gap: 16px;
   }
 
   .footer-identity {
@@ -2444,6 +2506,27 @@ a {
     flex-wrap: wrap;
     row-gap: 8px;
     color: var(--white);
+  }
+
+  /* Links on the left, the ISWI logo on the far right, sharing one row. */
+  .footer-end {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-links a {
+    padding-block: 6px;
+    font-size: 13px;
+  }
+
+  .footer-partner img {
+    height: 44px;
+  }
+
+  .footer-copyright {
+    text-align: left;
   }
 }
 
