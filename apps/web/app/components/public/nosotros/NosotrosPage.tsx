@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import {
   Code,
@@ -259,24 +260,38 @@ export function NosotrosPage({
 
       <TopicSection title={content.initiatives.title} titleId="nosotros-initiatives-title" wide>
         {content.initiatives.items.map((item) => (
-          <div className="topic-initiative" key={item.id}>
-            <h3>{item.title}</h3>
-            {item.paragraphs.map((paragraph) => (
-              <p className="topic-intro" key={paragraph}>
-                {paragraph}
-              </p>
-            ))}
-            {item.href && item.linkLabel ? (
-              <Button
-                href={item.href}
-                icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
-                rel="noopener noreferrer"
-                target="_blank"
-                variant="secondary"
-              >
-                {item.linkLabel}
-              </Button>
+          <div
+            className={item.logo ? 'topic-initiative topic-initiative-with-logo' : 'topic-initiative'}
+            key={item.id}
+          >
+            {item.logo ? (
+              <Image
+                alt={item.logo.alt}
+                className="topic-initiative-logo"
+                height={item.logo.height}
+                src={item.logo.src}
+                width={item.logo.width}
+              />
             ) : null}
+            <div>
+              <h3>{item.title}</h3>
+              {item.paragraphs.map((paragraph) => (
+                <p className="topic-intro" key={paragraph}>
+                  {paragraph}
+                </p>
+              ))}
+              {item.href && item.linkLabel ? (
+                <Button
+                  href={item.href}
+                  icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  variant="secondary"
+                >
+                  {item.linkLabel}
+                </Button>
+              ) : null}
+            </div>
           </div>
         ))}
       </TopicSection>

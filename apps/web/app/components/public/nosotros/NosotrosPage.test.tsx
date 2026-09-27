@@ -87,9 +87,19 @@ describe('NosotrosPage', () => {
       }),
     ).toBeInTheDocument()
     expect(
+      within(initiatives).getByRole('img', {
+        name: 'Logotipo de la Iniciativa Internacional de Clima Espacial (ISWI)',
+      }),
+    ).toBeInTheDocument()
+    expect(
       within(initiatives).getByRole('heading', {
         level: 3,
         name: 'Iniciativa VLBI Iberoamericana (IVIA)',
+      }),
+    ).toBeInTheDocument()
+    expect(
+      within(initiatives).getByRole('img', {
+        name: 'Logotipo de la Iniciativa VLBI Iberoamericana (IVIA)',
       }),
     ).toBeInTheDocument()
     expect(initiatives).toHaveTextContent(/Comité de las Naciones Unidas/)

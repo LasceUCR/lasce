@@ -47,6 +47,8 @@ interface NosotrosInitiative {
   /** Official site, opened in a new tab. */
   href?: string
   linkLabel?: string
+  /** Mark shown beside the title. */
+  logo?: { src: string; alt: string; width: number; height: number }
 }
 
 export interface NosotrosResearcher {
@@ -251,6 +253,12 @@ export const nosotrosContent = {
         title: 'Iniciativa Internacional de Clima Espacial (ISWI)',
         href: 'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html',
         linkLabel: 'Sitio oficial de la ISWI',
+        logo: {
+          src: '/brand/logo-ISWI.png',
+          alt: 'Logotipo de la Iniciativa Internacional de Clima Espacial (ISWI)',
+          width: 300,
+          height: 192,
+        },
         paragraphs: [
           'La Iniciativa Internacional de Clima Espacial (ISWI, por sus siglas en inglés) del Comité de las Naciones Unidas sobre la Utilización del Espacio Ultraterrestre con Fines Pacíficos se puso en marcha en 2009 y concluyó formalmente como tema de la agenda del Comité en 2012. Sin embargo, las actividades de la ISWI continuaron y, desde 2013, se tratan en el nuevo tema permanente de la agenda sobre clima espacial de la Subcomisión de Asuntos Científicos y Técnicos del Comité.',
         ],
@@ -258,6 +266,12 @@ export const nosotrosContent = {
       {
         id: 'ivia',
         title: 'Iniciativa VLBI Iberoamericana (IVIA)',
+        logo: {
+          src: '/brand/logo-Iniciativa-VLBI-Ibero-Americana.png',
+          alt: 'Logotipo de la Iniciativa VLBI Iberoamericana (IVIA)',
+          width: 900,
+          height: 300,
+        },
         paragraphs: [
           'En 2019 surgió la Iniciativa VLBI Iberoamericana (IVIA), una instancia de trabajo conjunto orientada al desarrollo de la radioastronomía en Iberoamérica, tomando como eje conceptual el desarrollo de la radioastronomía en la región y la implementación de una red VLBI en Latinoamérica, en colaboración con España y Portugal.',
           'En su conformación actual hay representantes de instituciones de Argentina, Brasil, Colombia, Costa Rica, Ecuador, México, Perú y Uruguay. Asimismo, se propone promover la participación de los demás países de la región. Participan también el Instituto Conjunto para VLBI (JIVE, con sede en Países Bajos, organización que centraliza el procesamiento de datos de la red europea de VLBI, llamada EVN), el Instituto Geográfico Nacional de España y el Instituto de Telecomunicações de Portugal.',
