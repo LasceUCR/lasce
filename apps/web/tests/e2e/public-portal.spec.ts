@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 
+import { footerContent } from '@/app/lib/footer'
 import { galleryAlbumList, galleryAlbums } from '@/app/lib/gallery'
 
 // `group` names the desktop header disclosure a route sits behind, if any.
@@ -237,6 +238,40 @@ test('keeps the brand clear of the desktop navigation', async ({ page }) => {
   }
 })
 
+test('displays the back button at the bottom of the gallery index and returns home', async ({
+  page,
+}) => {
+  await page.goto('/galeria')
+
+  const backLink = page.getByRole('link', { name: 'Volver al inicio' })
+  const heading = page.getByRole('heading', { level: 1, name: 'Galería' })
+
+  await expect(backLink).toBeVisible()
+  const backBox = await backLink.boundingBox()
+  const headingBox = await heading.boundingBox()
+  expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
+
+  await backLink.click()
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('displays the back button at the bottom of an album page and returns to gallery', async ({
+  page,
+}) => {
+  await page.goto('/galeria/rosac')
+
+  const backLink = page.getByRole('link', { name: 'Volver a la galería' })
+  const heading = page.getByRole('heading', { level: 1, name: galleryAlbums.rosac.title })
+
+  await expect(backLink).toBeVisible()
+  const backBox = await backLink.boundingBox()
+  const headingBox = await heading.boundingBox()
+  expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
+
+  await backLink.click()
+  await expect(page).toHaveURL(/\/galeria$/)
+})
+
 for (const album of galleryAlbumList) {
   test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
     await page.goto('/galeria')
@@ -266,7 +301,15 @@ for (const album of galleryAlbumList) {
       ).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Sub\u00e1lbumes' })).toHaveCount(0)
 
-      await page.getByRole('link', { name: `Volver a ${album.title}` }).click()
+      const backLink = page.getByRole('link', { name: `Volver a ${album.title}` })
+      await expect(backLink).toBeVisible()
+      const backBox = await backLink.boundingBox()
+      const headingBox = await page
+        .getByRole('heading', { level: 1, name: subAlbum.title })
+        .boundingBox()
+      expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
+
+      await backLink.click()
 
       await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
     })
@@ -341,4 +384,99 @@ test('returns 404 for an unknown public route', async ({ page }) => {
   const response = await page.goto('/ruta-publica-inexistente')
 
   expect(response?.status()).toBe(404)
+})
+
+test('displays research collaborations and allows filtering by scope', async ({ page }) => {
+  const response = await page.goto('/nosotros')
+
+  expect(response?.status()).toBe(200)
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Colaboraciones de investigación' }),
+  ).toBeVisible()
+
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toBeVisible()
+
+  await page.getByRole('combobox', { name: 'Tipo de colaboración' }).click()
+  await page.getByRole('option', { name: 'Nacionales', exact: true }).click()
+
+  await expect(page.getByText('2', { exact: true })).toBeVisible()
+  await expect(page.getByText('colaboraciones nacionales', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toHaveCount(0)
+
+  await page.getByRole('combobox', { name: 'Tipo de colaboración' }).click()
+  await page.getByRole('option', { name: 'Internacionales', exact: true }).click()
+
+  await expect(page.getByText('6', { exact: true })).toBeVisible()
+  await expect(page.getByText('colaboraciones internacionales', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toHaveCount(0)
+})
+
+for (const route of publicRoutes) {
+  test(`shows the legal and institutional footer on ${route.path}`, async ({ page }) => {
+    await page.goto(route.path)
+
+    const footer = page.getByRole('contentinfo')
+    await expect(footer.getByText(/© \d{4} /)).toBeVisible()
+
+    const institutions = footer.getByRole('list', { name: footerContent.institutionsLabel })
+    for (const institution of footerContent.institutions) {
+      await expect(institutions.getByText(institution.label, { exact: true })).toBeVisible()
+
+      if (institution.href) {
+        await expect(
+          institutions.getByRole('link', { name: institution.label, exact: true }),
+        ).toHaveAttribute('href', institution.href)
+      }
+    }
+
+    const { partnerLogo } = footerContent
+    await expect(footer.getByRole('img', { name: partnerLogo.name })).toBeVisible()
+    await expect(footer.getByRole('link', { name: partnerLogo.name })).toHaveAttribute(
+      'href',
+      partnerLogo.href,
+    )
+
+    // Legal information sits beside the footer navigation, never inside it.
+    await expect(footer.getByRole('navigation').getByText(/©/)).toHaveCount(0)
+  })
+}
+
+test('keeps the footer readable on a phone without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const footer = page.getByRole('contentinfo')
+  await footer.scrollIntoViewIfNeeded()
+  await expect(footer.getByText(/© \d{4} /)).toBeVisible()
+  await expect(footer.getByRole('list', { name: footerContent.institutionsLabel })).toBeVisible()
+
+  // The links and the ISWI logo share one row on a phone: links left, logo right, no overlap.
+  const logo = footer.getByRole('img', { name: footerContent.partnerLogo.name })
+  await expect(logo).toBeVisible()
+  const logoBox = await logo.boundingBox()
+  const navigationBox = await footer.getByRole('navigation').boundingBox()
+  expect(logoBox).not.toBeNull()
+  expect(navigationBox).not.toBeNull()
+  if (logoBox && navigationBox) {
+    expect(navigationBox.x + navigationBox.width).toBeLessThanOrEqual(logoBox.x)
+    expect(logoBox.x + logoBox.width).toBeLessThanOrEqual(390)
+  }
+
+  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+  expect(fits).toBe(true)
 })

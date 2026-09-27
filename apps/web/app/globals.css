@@ -1040,13 +1040,9 @@ a {
   flex-direction: column;
 }
 
-.footer-identity strong {
-  font-size: 13px;
-}
-
 .footer-identity span {
   color: #99adba;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .footer-links {
@@ -1071,6 +1067,72 @@ a {
   content: '·';
   margin: 0 10px;
   color: #8399a7;
+}
+
+.footer-end {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.footer-partner {
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+.footer-partner:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+.footer-partner img {
+  width: auto;
+  height: 55px;
+}
+
+.footer-legal {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #99adba;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.footer-copyright {
+  text-align: center;
+  margin: 0;
+}
+
+.footer-institutions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* The alt text after the slash keeps the dot out of each item's accessible name. */
+.footer-institutions li + li::before {
+  content: '·' / '';
+  margin: 0 6px;
+}
+
+.footer-institutions abbr {
+  text-decoration: none;
+}
+
+.footer-institutions a {
+  color: var(--white);
+}
+
+.footer-institutions a:hover,
+.footer-institutions a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .sr-only {
@@ -1826,8 +1888,7 @@ a {
   line-clamp: unset;
 }
 
-.publication-card .button,
-.news-card .button {
+.publication-card .button {
   margin-top: 12px;
 }
 
@@ -1864,17 +1925,23 @@ a {
   color: var(--ink);
 }
 
-.section-heading .research-areas-description {
-  max-width: 680px;
+.section-heading .research-areas-description,
+.section-heading .research-collaborations-description {
+  max-width: none;
   color: var(--muted);
-  margin: 4px 0 0;
-  font-size: 14px;
+  margin: 6px 0 24px;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .research-areas {
   margin-top: 0;
-  padding-top: 24px;
-  padding-bottom: 56px;
+  padding-top: 8px;
+  padding-bottom: 48px;
+}
+
+.research-areas .gallery-grid {
+  margin-top: 0;
 }
 
 .research-area-content {
@@ -1892,6 +1959,202 @@ a {
 
 .research-area-list li + li {
   margin-top: 8px;
+}
+
+/* ==========================================================================
+   Collaborations (page) — .collaborations-toolbar, .collaborations-kpi, .collaboration-card
+   ========================================================================== */
+
+.research-collaborations {
+  margin-top: 0;
+  padding-top: 56px;
+  padding-bottom: 56px;
+}
+
+.collaborations-toolbar {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin-bottom: 28px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
+}
+
+.collaborations-toolbar .collaborations-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.collaborations-scope-filter {
+  display: flex;
+  align-items: center;
+  width: 270px;
+  flex: 0 0 270px;
+}
+
+.collaborations-scope-filter .select-trigger {
+  width: 100%;
+}
+
+.collaborations-kpi {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 270px;
+  flex: 0 0 270px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 15px;
+  white-space: nowrap;
+  gap: 6px;
+}
+
+.collaborations-kpi strong {
+  position: relative;
+  top: -1px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.collaborations-kpi span {
+  color: var(--ink);
+}
+
+.collaborations-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.collaboration-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 215px;
+  align-self: stretch;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.collaboration-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(21, 52, 76, 0.08);
+}
+
+.collaboration-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.collaboration-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.collaboration-badge-national {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.collaboration-badge-international {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.collaboration-country {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.collaboration-name {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.collaboration-acronym {
+  margin: auto 0 0;
+  padding-top: 10px;
+  font-size: 14px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+.collaboration-acronym strong {
+  color: var(--ink);
+}
+
+/* Collaborations — breakpoints */
+
+@media (max-width: 1080px) {
+  .collaborations-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .collaborations-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .collaborations-toolbar .collaborations-search {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  .collaborations-scope-filter {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .collaborations-kpi {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  .collaborations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .collaboration-card {
+    min-height: auto;
+  }
 }
 
 .section-heading h2 {
@@ -1936,13 +2199,17 @@ a {
   object-fit: cover;
 }
 
-.news-card-image.news-card-image-decorative img {
-  object-fit: contain;
-  object-position: center;
+.news-card-content {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
 }
 
-.news-card-content {
-  padding: 20px 22px;
+.news-card-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .news-card h3 {
@@ -2318,7 +2585,7 @@ a {
 
   .footer-inner {
     padding-block: 14px;
-    gap: 18px;
+    gap: 16px;
   }
 
   .footer-identity {
@@ -2329,6 +2596,27 @@ a {
     flex-wrap: wrap;
     row-gap: 8px;
     color: var(--white);
+  }
+
+  /* Links on the left, the ISWI logo on the far right, sharing one row. */
+  .footer-end {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-links a {
+    padding-block: 6px;
+    font-size: 13px;
+  }
+
+  .footer-partner img {
+    height: 44px;
+  }
+
+  .footer-copyright {
+    text-align: left;
   }
 }
 
@@ -2534,7 +2822,7 @@ a {
 }
 
 .topic-intro {
-  max-width: 760px;
+  max-width: none;
   margin: 10px 0 0;
   color: #355066;
   font-size: 16px;
@@ -3080,7 +3368,7 @@ a {
 }
 
 .gallery-group-description {
-  max-width: 680px;
+  max-width: none;
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 14px;
@@ -3178,6 +3466,10 @@ a.gallery-tile:focus-visible {
 
 .gallery-album-back {
   padding-top: 28px;
+}
+
+.gallery-album-footer {
+  padding-top: 20px;
 }
 
 .media-grid {
