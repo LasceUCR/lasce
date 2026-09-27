@@ -32,7 +32,8 @@ export const academicActivities: AcademicActivity[] = [
       'Esta actividad fortaleció la proyección internacional del LASCE, amplió las redes de colaboración científica y contribuyó a la formación de capacidades regionales para investigar, monitorear y predecir los efectos del clima espacial sobre la ionosfera y los sistemas tecnológicos. Asimismo, generó un espacio para identificar nuevos desafíos científicos, oportunidades de cooperación y futuras iniciativas que integren la física del clima espacial con herramientas avanzadas de análisis de datos.',
     ].join('\n\n'),
     imageUrl: '/images/galeria/workshop-ml-2026/1.jpg',
-    imageAlt: 'Comité y participantes junto al cartel oficial del taller de Machine Learning y clima espacial',
+    imageAlt:
+      'Comité y participantes junto al cartel oficial del taller de Machine Learning y clima espacial',
     resources: [
       {
         label: 'Ver galería de fotos del taller',
