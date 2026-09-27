@@ -334,7 +334,7 @@ test('displays research collaborations and allows filtering by scope', async ({ 
   await page.getByRole('option', { name: 'Nacionales', exact: true }).click()
 
   await expect(page.getByText('2', { exact: true })).toBeVisible()
-  await expect(page.getByText('colaboraciones nacionales')).toBeVisible()
+  await expect(page.getByText('colaboraciones nacionales', { exact: true })).toBeVisible()
   await expect(
     page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
   ).toBeVisible()
@@ -346,7 +346,7 @@ test('displays research collaborations and allows filtering by scope', async ({ 
   await page.getByRole('option', { name: 'Internacionales', exact: true }).click()
 
   await expect(page.getByText('6', { exact: true })).toBeVisible()
-  await expect(page.getByText('colaboraciones internacionales')).toBeVisible()
+  await expect(page.getByText('colaboraciones internacionales', { exact: true })).toBeVisible()
   await expect(
     page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
   ).toBeVisible()

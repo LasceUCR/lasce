@@ -245,10 +245,7 @@ export function NosotrosPage({
         />
       </TopicSection>
 
-      <ResearchCollaborationsSection
-        collaborations={collaborations}
-        id="research-collaborations"
-      />
+      <ResearchCollaborationsSection collaborations={collaborations} id="research-collaborations" />
 
       <TopicSection
         title={content.contribution.title}
