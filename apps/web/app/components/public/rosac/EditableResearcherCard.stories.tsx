@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
-import type { TeamMember } from '@/app/lib/rosac'
 
 import { EditableResearcherCard } from './EditableResearcherCard'
+import type { PersonProfile } from './ResearcherForm'
 
 const meta: Meta<typeof EditableResearcherCard> = {
   component: EditableResearcherCard,
@@ -16,8 +16,7 @@ export default meta
 
 type Story = StoryObj<typeof EditableResearcherCard>
 
-const mockResearcher: TeamMember = {
-  id: 'carolina-salas',
+const mockResearcher: PersonProfile = {
   src: '/images/ROSAC/team/CarolinaSalas.jpg',
   name: 'Dra. Carolina Salas Matamoros',
   role: 'Investigadora principal',

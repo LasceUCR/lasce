@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
@@ -10,7 +10,22 @@ import {
   uploadResearcherImage,
   type UploadResearcherImageResult,
 } from '@/app/(public)/radioastronomia/actions'
-import type { TeamMember } from '@/app/lib/rosac'
+import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
+
+/**
+ * The shape this form needs from a person record — deliberately not imported
+ * from `@/app/lib/rosac` or `@/app/lib/nosotros`, so the same form (and
+ * `EditableResearcherCard`) can edit either the ROSAC team or the Nosotros
+ * roster without either page's content module depending on the other.
+ */
+export interface PersonProfile {
+  src: string
+  role: string
+  name: string
+  email?: string
+  institution: string
+  description?: string
+}
 
 export interface ResearcherFormValues {
   role: string
@@ -25,12 +40,19 @@ export interface ResearcherFormValues {
 
 export interface ResearcherFormProps {
   /** `null` starts a blank form for a new researcher. */
-  researcher: TeamMember | null
+  researcher: PersonProfile | null
   onSave: (values: ResearcherFormValues) => void
   onCancel: () => void
   /** Overrides the confirmation dialog's copy — a new researcher reads oddly as "save changes". */
   confirmTitle?: string
   confirmMessage?: string
+  /**
+   * ROSAC researchers always need a bio (`rosac.ts`'s `researcherInputSchema`
+   * requires it); Nosotros researchers don't (`nosotrosResearcherInputSchema`
+   * allows an empty one — several current profiles have no bio at all).
+   * Defaults to `true` so existing ROSAC callers keep their current behavior.
+   */
+  descriptionRequired?: boolean
 }
 
 function validateEmail(value: string) {
@@ -57,6 +79,7 @@ export function ResearcherForm({
   onCancel,
   confirmTitle = 'Guardar cambios',
   confirmMessage = '¿Desea guardar los cambios en este investigador?',
+  descriptionRequired = true,
 }: ResearcherFormProps) {
   const [role, setRole] = useState(researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
@@ -68,13 +91,23 @@ export function ResearcherForm({
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const uploadErrorRef = useRef<HTMLParagraphElement>(null)
+
+  // Scrolls the error into view as soon as it appears — the modal this form
+  // usually sits in can be taller than the viewport, and a message added
+  // below the last field is otherwise easy to miss without scrolling down.
+  useEffect(() => {
+    if (uploadError) {
+      scrollIntoViewIfSupported(uploadErrorRef.current)
+    }
+  }, [uploadError])
 
   const hasPhoto = photoFile !== null || (Boolean(researcher?.src) && !photoRemoved)
   const canSave =
     role.trim() !== '' &&
     name.trim() !== '' &&
     institution.trim() !== '' &&
-    description.trim() !== '' &&
+    (!descriptionRequired || description.trim() !== '') &&
     hasPhoto
 
   async function handleConfirm() {
@@ -145,11 +178,15 @@ export function ResearcherForm({
         label="Descripción"
         multiline
         onChange={setDescription}
-        required
+        required={descriptionRequired}
         value={description}
       />
 
-      {uploadError ? <p className="form-alert">{uploadError}</p> : null}
+      {uploadError ? (
+        <p className="form-alert" ref={uploadErrorRef} role="alert">
+          {uploadError}
+        </p>
+      ) : null}
 
       <div className="cms-form-actions">
         <Button onClick={onCancel} variant="secondary">

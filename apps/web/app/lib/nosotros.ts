@@ -15,10 +15,13 @@ import { z } from 'zod'
  * the card layout needs a heading, so each title is drawn from that bullet's own wording. The
  * bullet text itself is verbatim.
  *
- * LASCE researchers live here (`researchers.people`). Portraits are the named files in
+ * `researchers.people` is persisted in Postgres (LASCE-CON-012-086 follow-up) and fetched by
+ * `getNosotrosResearchers()`; the hardcoded array below is only a fallback fixture for Storybook
+ * and tests, never what the real `/nosotros` route renders. Portraits are the named files in
  * `public/images/Researchers/`, except Dra. Carolina Salas Matamoros, who reuses the ROSAC
- * portrait. People without a supplied portrait use `User.png`. The rest of the ROSAC team stays
- * on `/radioastronomia`. See `app/lib/rosac.ts`.
+ * portrait, or a MinIO URL once uploaded through the admin form. People without a supplied
+ * portrait use `User.png`. This is a separate, independently curated roster from the ROSAC team on
+ * `/radioastronomia` — see `app/lib/rosac.ts` — not the same people re-shown here.
  */
 export const nosotrosMeta = {
   title: 'Quiénes somos | LASCE',
@@ -35,7 +38,8 @@ interface NosotrosTextSection {
 }
 
 export interface NosotrosResearcher {
-  /** Local path under `apps/web/public`. */
+  id: string
+  /** Local path under `apps/web/public`, or a MinIO URL once uploaded through the admin form. */
   src: string
   name: string
   /** The category shown at the top of the card, for example `Investigador`. */
@@ -94,6 +98,7 @@ export const nosotrosContent = {
     emptyMessage: 'No hay información de investigadores disponible en este momento.',
     people: [
       {
+        id: 'carolina-salas',
         src: '/images/ROSAC/team/CarolinaSalas.jpg',
         name: 'Dra. Carolina Salas Matamoros',
         role: 'Investigadora principal',
@@ -103,6 +108,7 @@ export const nosotrosContent = {
           'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
       },
       {
+        id: 'allan-berrocal',
         src: '/images/Researchers/AllanBerrocal.jpg',
         name: 'Dr. Allan Francisco Berrocal Rojas',
         role: 'Investigador colaborador',
@@ -112,6 +118,7 @@ export const nosotrosContent = {
           'Diseño, desarrollo e implementación de la plataforma informática del LASCE. Las tareas puntuales abarcan la captura de datos masivos de diferentes fuentes con información sobre el clima solar, el almacenamiento de los datos procesados y de interés para el proyecto en sistemas de bases de datos adecuadas para el dominio, y finalmente la habilitación de una interfaz de consulta mediante servicios web. Adicionalmente apoyar en los objetivos de análisis de datos sobre el clima solar junto a investigadores(as) especialistas en la materia como astrofísicos(as) solares.',
       },
       {
+        id: 'luis-esquivel',
         src: '/images/Researchers/LuisEsquivel.jpeg',
         name: 'Dr. Luis Gustavo Esquivel Quirós',
         role: 'Investigador colaborador',
@@ -119,6 +126,7 @@ export const nosotrosContent = {
         institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
       },
       {
+        id: 'ivannia-calvo',
         src: '/images/Researchers/IvanniaCalvo.png',
         name: 'MSc. Ivania Calvo',
         role: 'Investigadora colaboradora',
@@ -128,6 +136,7 @@ export const nosotrosContent = {
           'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
       },
       {
+        id: 'felipe-meza',
         src: '/images/Researchers/User.png',
         name: 'Dr. Felipe Meza',
         role: 'Investigador colaborador',
@@ -136,6 +145,7 @@ export const nosotrosContent = {
           'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
       },
       {
+        id: 'alonso-vega',
         src: '/images/Researchers/User.png',
         name: 'MSc. Alonso Vega',
         role: 'Investigador colaborador',
@@ -145,6 +155,7 @@ export const nosotrosContent = {
           'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
       },
       {
+        id: 'gabriela-molina',
         src: '/images/Researchers/User.png',
         name: 'Dra. Gabriela Molina',
         role: 'Investigadora colaboradora',
@@ -154,6 +165,7 @@ export const nosotrosContent = {
           'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
       },
       {
+        id: 'yenca-migoya',
         src: '/images/Researchers/User.png',
         name: 'Dra. Yenca Migoya',
         role: 'Investigadora colaboradora',
@@ -359,5 +371,136 @@ export async function deleteNosotrosActivity(id: string): Promise<boolean> {
   if (!existing) return false
 
   await prisma.nosotrosActivity.delete({ where: { id } })
+  return true
+}
+
+/**
+ * The `nosotros_researchers` roster shown on `/nosotros` (LASCE-CON-012-086
+ * follow-up), independent from `researchers` (the ROSAC team on
+ * `/radioastronomia` — see `app/lib/rosac.ts`). Rows map directly onto
+ * `NosotrosResearcher`, the same shape `TeamGallery`/`ResearcherCard` expect,
+ * so `getNosotrosResearchers()` drops straight into `TeamGallery`.
+ */
+type NosotrosResearcherRow = {
+  id: string
+  photoUrl: string
+  role: string
+  name: string
+  institution: string
+  email: string | null
+  description: string | null
+}
+
+function toNosotrosResearcher(row: NosotrosResearcherRow): NosotrosResearcher {
+  return {
+    id: row.id,
+    src: row.photoUrl,
+    role: row.role,
+    name: row.name,
+    institution: row.institution,
+    email: row.email ?? undefined,
+    description: row.description ?? undefined,
+  }
+}
+
+export async function getNosotrosResearchers(): Promise<NosotrosResearcher[]> {
+  const rows = await prisma.nosotrosResearcher.findMany({ orderBy: { createdAt: 'asc' } })
+  return rows.map(toNosotrosResearcher)
+}
+
+/**
+ * Shared by create and update. Unlike `researcherInputSchema` (ROSAC),
+ * `description` is optional here — several current Nosotros profiles were
+ * curated with no bio text, and `NosotrosResearcher.description` is nullable
+ * to match.
+ */
+export const nosotrosResearcherInputSchema = z.object({
+  src: z.string().trim().min(1, 'La foto es obligatoria.'),
+  role: z.string().trim().min(1, 'El rol es obligatorio.'),
+  name: z.string().trim().min(1, 'El nombre es obligatorio.'),
+  email: z
+    .union([
+      z.literal(''),
+      z
+        .string()
+        .trim()
+        .pipe(z.email({ error: 'El correo no es válido.' })),
+    ])
+    .optional(),
+  institution: z.string().trim().min(1, 'La institución es obligatoria.'),
+  description: z.string().trim().optional(),
+})
+
+export type NosotrosResearcherInput = z.infer<typeof nosotrosResearcherInputSchema>
+
+/** `''` and `undefined` both mean "not set" — stored as `null`, same as an untouched row. */
+function normalizeOptional(value: string | undefined): string | null {
+  return value ? value : null
+}
+
+/**
+ * Creates a new Nosotros researcher profile, authored by the admin who
+ * submitted it. `createdAt` defaults to now, which — since the list is
+ * ordered by it — puts the new profile at the end, same place `AddItemCard`
+ * prompted from.
+ */
+export async function createNosotrosResearcher(
+  data: NosotrosResearcherInput,
+  modifiedBy: string,
+): Promise<NosotrosResearcher> {
+  const row = await prisma.nosotrosResearcher.create({
+    data: {
+      photoUrl: data.src,
+      role: data.role,
+      name: data.name,
+      email: normalizeOptional(data.email),
+      institution: data.institution,
+      description: normalizeOptional(data.description),
+      modifiedBy,
+    },
+  })
+
+  return toNosotrosResearcher(row)
+}
+
+/**
+ * Updates one Nosotros researcher profile and stamps `modifiedBy` with the
+ * admin who made the change. Returns `null` when `id` does not match any
+ * row, rather than throwing, so the route handler can turn that into a 404.
+ */
+export async function updateNosotrosResearcher(
+  id: string,
+  data: NosotrosResearcherInput,
+  modifiedBy: string,
+): Promise<NosotrosResearcher | null> {
+  const existing = await prisma.nosotrosResearcher.findUnique({ where: { id } })
+  if (!existing) return null
+
+  const row = await prisma.nosotrosResearcher.update({
+    where: { id },
+    data: {
+      photoUrl: data.src,
+      role: data.role,
+      name: data.name,
+      email: normalizeOptional(data.email),
+      institution: data.institution,
+      description: normalizeOptional(data.description),
+      modifiedBy,
+    },
+  })
+
+  return toNosotrosResearcher(row)
+}
+
+/**
+ * Deletes one Nosotros researcher profile. Returns `false` when `id` does
+ * not match any row, rather than throwing, so the route handler can turn
+ * that into a 404 — same pre-check pattern as `updateNosotrosResearcher`.
+ */
+export async function deleteNosotrosResearcher(id: string): Promise<boolean> {
+  const existing = await prisma.nosotrosResearcher.findUnique({ where: { id } })
+  if (!existing) return false
+
+  await prisma.nosotrosResearcher.delete({ where: { id } })
   return true
 }

@@ -1,8 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
-import type { TeamMember } from '@/app/lib/rosac'
-
-import { ResearcherForm } from './ResearcherForm'
+import { ResearcherForm, type PersonProfile } from './ResearcherForm'
 
 const meta: Meta<typeof ResearcherForm> = {
   component: ResearcherForm,
@@ -13,8 +11,7 @@ export default meta
 
 type Story = StoryObj<typeof ResearcherForm>
 
-const mockResearcher: TeamMember = {
-  id: 'carolina-salas',
+const mockResearcher: PersonProfile = {
   src: '/images/ROSAC/team/CarolinaSalas.jpg',
   name: 'Dra. Carolina Salas Matamoros',
   role: 'Investigadora principal',

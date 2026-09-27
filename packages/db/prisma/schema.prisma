@@ -46,25 +46,26 @@ enum UserRole {
 /// A portal account created through the public registration form at `/registro`
 /// (LASCE-SEC-008-071). Browser sessions live in `Session`, never in columns here.
 model User {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fullName     String   @map("full_name")
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName     String    @map("full_name")
   /// Trimmed and lower-cased by the application before every write and lookup,
   /// so the unique index is case-insensitive without a citext extension.
-  email        String   @unique
+  email        String    @unique
   institution  String
   /// ISO 3166-1 alpha-2 code, e.g. "CR". Display names are derived at render time.
-  countryCode  String   @map("country_code") @db.Char(2)
+  countryCode  String    @map("country_code") @db.Char(2)
   /// Self-describing KDF string, `scrypt$<N>$<r>$<p>$<salt>$<hash>`. Produced and
   /// verified by apps/web/app/lib/auth/password.ts.
-  passwordHash String   @map("password_hash")
+  passwordHash String    @map("password_hash")
   /// Registration uses the default; administrators can replace or remove the assignment.
   role         UserRole? @default(VISITOR)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  sessions Session[]
-  nosotrosActivities NosotrosActivity[]
-  researchers Researcher[]
+  sessions            Session[]
+  nosotrosActivities  NosotrosActivity[]
+  researchers         Researcher[]
+  nosotrosResearchers NosotrosResearcher[]
 
   @@map("users")
   @@schema("auth")
@@ -110,7 +111,7 @@ model Publisher {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   researchRecords Research[]
 
@@ -142,9 +143,9 @@ model Research {
   /// not every record (institutional notes) has one — but unique when present.
   doi             String?       @unique
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime      @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  publisher Publisher           @relation(fields: [publisherId], references: [id], onDelete: Restrict)
+  publisher Publisher             @relation(fields: [publisherId], references: [id], onDelete: Restrict)
   authors   ResearchCrossAuthor[]
 
   @@index([publicationDate])
@@ -162,7 +163,7 @@ model ResearchAuthor {
   /// worth revisiting (an external id, ORCID, ...) if it becomes a real problem.
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   researchRecords ResearchCrossAuthor[]
 
@@ -193,7 +194,7 @@ model NewsSource {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   newsRecords News[]
 
@@ -204,19 +205,19 @@ model NewsSource {
 /// A public news item shown on `/noticias`: a media article, institutional note,
 /// or external coverage item linked to its source.
 model News {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
-  publishedAt DateTime?  @map("published_at") @db.Date
-  sourceId    String     @map("source_id") @db.Uuid
-  abstract    String     @db.Text
-  externalUrl String     @unique @map("external_url")
-  imageUrl    String     @map("image_url")
-  imageAlt    String     @map("image_alt")
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime   @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  publishedAt DateTime? @map("published_at") @db.Date
+  sourceId    String    @map("source_id") @db.Uuid
+  abstract    String    @db.Text
+  externalUrl String    @unique @map("external_url")
+  imageUrl    String    @map("image_url")
+  imageAlt    String    @map("image_alt")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  source      NewsSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
-  authors     NewsCrossAuthor[]
+  source  NewsSource        @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  authors NewsCrossAuthor[]
 
   @@index([publishedAt])
   @@map("news_records")
@@ -228,7 +229,7 @@ model NewsAuthor {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   newsRecords NewsCrossAuthor[]
 
@@ -239,13 +240,13 @@ model NewsAuthor {
 /// Many-to-many join between `News` and `NewsAuthor`. Keeps `position` so a
 /// record's citation order can be reproduced on the public page.
 model NewsCrossAuthor {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  newsId       String     @map("news_id") @db.Uuid
-  newsAuthorId String     @map("news_author_id") @db.Uuid
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  newsId       String @map("news_id") @db.Uuid
+  newsAuthorId String @map("news_author_id") @db.Uuid
   position     Int
 
-  news         News       @relation(fields: [newsId], references: [id], onDelete: Cascade)
-  newsAuthor   NewsAuthor @relation(fields: [newsAuthorId], references: [id], onDelete: Cascade)
+  news       News       @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  newsAuthor NewsAuthor @relation(fields: [newsAuthorId], references: [id], onDelete: Cascade)
 
   @@unique([newsId, newsAuthorId])
   @@index([newsId, position])
@@ -269,16 +270,16 @@ enum NosotrosActivityIcon {
 }
 
 model NosotrosActivity {
-  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  icon        NosotrosActivityIcon
-  title       String
-  paragraph   String               @db.Text
+  id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  icon       NosotrosActivityIcon
+  title      String
+  paragraph  String               @db.Text
   /// Display order. Set once at creation and never touched by an edit, so
   /// saving a card's text doesn't also reorder it — `modifiedAt` alone can't
   /// serve as the sort key because editing changes it on purpose.
-  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
-  modifiedBy  String               @map("modified_by") @db.Uuid
-  modifiedAt  DateTime             @updatedAt @default(now()) @map("modified_at") @db.Timestamptz(3)
+  createdAt  DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy String               @map("modified_by") @db.Uuid
+  modifiedAt DateTime             @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
   modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
 
@@ -305,13 +306,42 @@ model Researcher {
   /// reasoning as `NosotrosActivity.createdAt`.
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   modifiedBy  String   @map("modified_by") @db.Uuid
-  modifiedAt  DateTime @updatedAt @default(now()) @map("modified_at") @db.Timestamptz(3)
+  modifiedAt  DateTime @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
   modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
 
   @@map("researchers")
   @@schema("public")
 }
+
+/// A researcher profile card shown on `/nosotros` (LASCE-CON-012-086 follow-up).
+/// Same shape as `Researcher`, but a deliberately separate table: the two pages
+/// show distinct, independently curated rosters (see the doc comment on
+/// `NosotrosContent.researchers` in `app/lib/nosotros.ts`), not one shared team.
+model NosotrosResearcher {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  photoUrl    String   @map("photo_url")
+  role        String
+  name        String
+  institution String
+  /// Public address, rendered as a `mailto:` link. Not every researcher has one.
+  email       String?
+  /// Unlike `Researcher.description`, nullable — several current Nosotros
+  /// entries were curated with no bio text at all, and `ResearcherCard`
+  /// already treats a missing description as "this card doesn't flip".
+  description String?  @db.Text
+  /// Display order. Set once at creation and never touched by an edit — same
+  /// reasoning as `NosotrosActivity.createdAt`.
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy  String   @map("modified_by") @db.Uuid
+  modifiedAt  DateTime @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
+
+  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+
+  @@map("nosotros_researchers")
+  @@schema("public")
+}
+
 /// A top-level gallery album (e.g. "ROSAC") or, when `parentAlbumId` is set, a
 /// sub-album nested one level under one (e.g. "Cimentación" under "ROSAC"). The
 /// hierarchy is exactly 2 levels by application convention; nothing here enforces
@@ -371,4 +401,3 @@ model GalleryMedia {
   @@map("gallery_media")
   @@schema("gallery")
 }
-

@@ -606,4 +606,101 @@ for (const researcher of researchers) {
   })
 }
 
+/**
+ * Initial data for the Nosotros researcher roster ("Investigadores LASCE" on
+ * /nosotros) — independent from `researchers` above (the ROSAC team on
+ * /radioastronomia). `description` is optional: a few of these profiles were
+ * curated with no bio text, and `nosotros_researchers.description` is
+ * nullable to match.
+ */
+type SeedNosotrosResearcher = {
+  photoUrl: string
+  role: string
+  name: string
+  email?: string
+  institution: string
+  description?: string
+}
+
+const nosotrosResearchers: SeedNosotrosResearcher[] = [
+  {
+    photoUrl: '/images/ROSAC/team/CarolinaSalas.jpg',
+    name: 'Dra. Carolina Salas Matamoros',
+    role: 'Investigadora principal',
+    email: 'carolina.salas_mata@ucr.ac.cr',
+    institution: 'Centro de Investigaciones Espaciales, CINESPA',
+    description:
+      'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
+  },
+  {
+    photoUrl: '/images/Researchers/AllanBerrocal.jpg',
+    name: 'Dr. Allan Francisco Berrocal Rojas',
+    role: 'Investigador colaborador',
+    email: 'allan.berrocal@ucr.ac.cr',
+    institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+    description:
+      'Diseño, desarrollo e implementación de la plataforma informática del LASCE. Las tareas puntuales abarcan la captura de datos masivos de diferentes fuentes con información sobre el clima solar, el almacenamiento de los datos procesados y de interés para el proyecto en sistemas de bases de datos adecuadas para el dominio, y finalmente la habilitación de una interfaz de consulta mediante servicios web. Adicionalmente apoyar en los objetivos de análisis de datos sobre el clima solar junto a investigadores(as) especialistas en la materia como astrofísicos(as) solares.',
+  },
+  {
+    photoUrl: '/images/Researchers/LuisEsquivel.jpeg',
+    name: 'Dr. Luis Gustavo Esquivel Quirós',
+    role: 'Investigador colaborador',
+    email: 'luis.esquivel@ucr.ac.cr',
+    institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+  },
+  {
+    photoUrl: '/images/Researchers/IvanniaCalvo.png',
+    name: 'MSc. Ivania Calvo',
+    role: 'Investigadora colaboradora',
+    email: 'ivannia.calvo@ucr.ac.cr',
+    institution: 'Centro de Investigaciones Espaciales',
+    description:
+      'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+  },
+  {
+    photoUrl: '/images/Researchers/User.png',
+    name: 'Dr. Felipe Meza',
+    role: 'Investigador colaborador',
+    email: 'felipe.mezaobando@ucr.ac.cr',
+    institution:
+      'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
+  },
+  {
+    photoUrl: '/images/Researchers/User.png',
+    name: 'MSc. Alonso Vega',
+    role: 'Investigador colaborador',
+    email: 'alonso.vega_f@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
+  },
+  {
+    photoUrl: '/images/Researchers/User.png',
+    name: 'Dra. Gabriela Molina',
+    role: 'Investigadora colaboradora',
+    email: 'gmolina@herrera.unt.edu.ar',
+    institution: 'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina',
+    description:
+      'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
+  },
+  {
+    photoUrl: '/images/Researchers/User.png',
+    name: 'Dra. Yenca Migoya',
+    role: 'Investigadora colaboradora',
+    email: 'yenca@ictp.it',
+    institution:
+      'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
+    description:
+      'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
+  },
+]
+
+await prisma.nosotrosResearcher.deleteMany()
+
+for (const researcher of nosotrosResearchers) {
+  await prisma.nosotrosResearcher.create({
+    data: { ...researcher, modifiedBy: seedContentAuthor.id },
+  })
+}
+
 await prisma.$disconnect()

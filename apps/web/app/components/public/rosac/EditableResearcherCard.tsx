@@ -1,29 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Modal } from '@/app/components/public/Modal'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import type { TeamMember } from '@/app/lib/rosac'
+import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import { ResearcherCard } from './ResearcherCard'
-import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
+import { ResearcherForm, type PersonProfile, type ResearcherFormValues } from './ResearcherForm'
 
 export interface EditableResearcherCardProps {
-  researcher: TeamMember
+  researcher: PersonProfile
   canEdit?: boolean
   canDelete?: boolean
   /** Persists the edit; resolves to an error message on failure, or `null` on success. */
   onSave: (values: ResearcherFormValues) => Promise<string | null>
   onDelete: () => void
+  /** Forwarded to `ResearcherForm` — see its own doc comment. Defaults to `true` (ROSAC). */
+  descriptionRequired?: boolean
 }
 
 /**
- * The one piece that knows both about `TeamMember` and about "Modo edición"
- * — `ResearcherCard`, `EditableWrapper` and `ResearcherForm` stay unaware of
- * each other and of the toggle. `TeamGallery` slots this in through its
- * `renderPerson` override so the shared gallery track stays presentational.
+ * The one piece that knows both about a person's profile and about "Modo
+ * edición" — `ResearcherCard`, `EditableWrapper` and `ResearcherForm` stay
+ * unaware of each other and of the toggle. `TeamGallery` slots this in
+ * through its `renderPerson` override so the shared gallery track stays
+ * presentational. Reused by both `/radioastronomia` (ROSAC) and `/nosotros`
+ * — the `researcher` prop and `onSave`/`onDelete` callbacks are the only
+ * seam to whichever content module owns the actual record.
  */
 export function EditableResearcherCard({
   researcher,
@@ -31,10 +36,21 @@ export function EditableResearcherCard({
   canDelete = false,
   onSave,
   onDelete,
+  descriptionRequired = true,
 }: EditableResearcherCardProps) {
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const saveErrorRef = useRef<HTMLParagraphElement>(null)
+
+  // Scrolls the error into view as soon as it appears — the modal can be
+  // taller than the viewport, and a message added above a long form is
+  // otherwise easy to miss without scrolling back up.
+  useEffect(() => {
+    if (saveError) {
+      scrollIntoViewIfSupported(saveErrorRef.current)
+    }
+  }, [saveError])
 
   const card = (
     <ResearcherCard
@@ -67,8 +83,13 @@ export function EditableResearcherCard({
       size="large"
       title="Editar investigador"
     >
-      {saveError ? <p className="form-alert">{saveError}</p> : null}
+      {saveError ? (
+        <p className="form-alert" ref={saveErrorRef} role="alert">
+          {saveError}
+        </p>
+      ) : null}
       <ResearcherForm
+        descriptionRequired={descriptionRequired}
         onCancel={() => {
           setSaveError(null)
           setIsEditing(false)

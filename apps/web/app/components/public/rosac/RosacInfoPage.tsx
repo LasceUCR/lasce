@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ChartNoAxesCombined,
   Crosshair,
@@ -25,6 +25,7 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
+import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import styles from './RosacInfoPage.module.css'
 import { ConstructionCarousel } from './ConstructionCarousel'
@@ -63,6 +64,15 @@ export function RosacInfoPage({
   const { editMode } = useEditMode()
   const [createError, setCreateError] = useState<string | null>(null)
   const [listError, setListError] = useState<string | null>(null)
+  const createErrorRef = useRef<HTMLParagraphElement>(null)
+
+  // Scrolls the "Añadir investigador" error into view as soon as it appears —
+  // same reasoning as `ResearcherForm`'s own upload error.
+  useEffect(() => {
+    if (createError) {
+      scrollIntoViewIfSupported(createErrorRef.current)
+    }
+  }, [createError])
 
   async function handleSaveResearcher(
     id: string,
@@ -248,7 +258,11 @@ export function RosacInfoPage({
               <AddItemCard label="Añadir investigador">
                 {({ close }) => (
                   <>
-                    {createError ? <p className="form-alert">{createError}</p> : null}
+                    {createError ? (
+                      <p className="form-alert" ref={createErrorRef} role="alert">
+                        {createError}
+                      </p>
+                    ) : null}
                     <ResearcherForm
                       confirmMessage="¿Desea agregar este investigador?"
                       confirmTitle="Agregar investigador"

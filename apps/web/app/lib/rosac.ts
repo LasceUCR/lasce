@@ -9,18 +9,15 @@ import { rosacConstructionContent, type ConstructionContent } from './rosac-cons
  * Preserve the distinction between development goals and operational capabilities.
  * This module describes the public information page only; scientific consultation is separate.
  *
- * `team.people` is the accessible source of truth for the ROSAC researchers gallery. Portraits
- * live in `public/images/ROSAC/team/`; names, roles, emails and institution are on the front of each
- * card, and the description is on the back after a click. They are rendered as HTML in
- * `ResearcherCard`. `team.people[].src` must be a local path under `apps/web/public`.
- * `next.config.ts` declares no `images` config, so a remote URL throws at render time.
+ * `team.people` is persisted in Postgres (LASCE-CON-012-085) and fetched by `getResearchers()`;
+ * the hardcoded array below is only a fallback fixture for Storybook and tests, never what the
+ * real `/radioastronomia` route renders. Names, roles, emails and institution are on the front of
+ * each card, and the description is on the back after a click. They are rendered as HTML in
+ * `ResearcherCard`. `team.people[].src` is either a local path under `apps/web/public` or a MinIO
+ * URL from the admin form's photo upload — see `next.config.ts`'s `images.remotePatterns`.
  *
  * `institution` is the affiliation shown as `Institución: {institution}`. `email` is only set when
- * LASCE supplied a public address. Portraits are the named files in `public/images/ROSAC/team/`.
- *
- * The team list is hand maintained here on purpose. If it ever needs to be editable without a
- * deploy, move it to Prisma and fetch it in the route, the way `investigacion` does. The page
- * component takes its content as a prop precisely so that migration touches only the route.
+ * LASCE supplied a public address, or an admin added one through the form.
  */
 export const rosacInfoMeta = {
   title: 'Radioastronomía y ROSAC | LASCE',
