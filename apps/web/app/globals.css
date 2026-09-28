@@ -3143,8 +3143,13 @@ a {
 }
 
 @media (max-width: 430px) {
+  .site-header {
+    padding-inline: 8px;
+    gap: 4px;
+  }
+
   .brand {
-    gap: 7px;
+    gap: 6px;
   }
 
   .brand img {

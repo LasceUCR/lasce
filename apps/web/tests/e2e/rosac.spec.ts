@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 
 for (const viewport of [
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
+  { width: 320, height: 720 },
+  { width: 768, height: 900 },
 ]) {
   test(`opens ROSAC through the existing radio astronomy card and returns to the access cards at ${viewport.width}px`, async ({
     page,
@@ -26,6 +29,15 @@ for (const viewport of [
     // The map loads on the client only, after the initial page content, so give it a
     // moment before checking that its own footprint does not cause horizontal overflow.
     await expect(page.getByRole('region', { name: /^Mapa de ubicación de/ })).toBeVisible()
+    const map = page.getByRole('region', { name: /^Mapa de ubicación de/ })
+    const marker = map.getByRole('button', { name: 'ROSAC', exact: true })
+    await expect(marker).toBeVisible()
+    const mapBounds = (await map.boundingBox())!
+    const markerBounds = (await marker.boundingBox())!
+    expect(markerBounds.x).toBeGreaterThanOrEqual(mapBounds.x)
+    expect(markerBounds.x + markerBounds.width).toBeLessThanOrEqual(mapBounds.x + mapBounds.width)
+    expect(markerBounds.y).toBeGreaterThanOrEqual(mapBounds.y)
+    expect(markerBounds.y + markerBounds.height).toBeLessThanOrEqual(mapBounds.y + mapBounds.height)
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
@@ -149,6 +161,34 @@ test('loads the location map with real satellite tiles and a marker identified a
   await expect(map.getByText('ROSAC')).toBeVisible()
   await expect(map.locator('img.leaflet-tile-loaded').first()).toBeVisible()
   await expect(location.getByRole('status')).toHaveCount(0)
+})
+
+test('names map controls in Spanish and allows keyboard users to leave the map', async ({
+  page,
+}) => {
+  await page.goto('/radioastronomia')
+  const map = page.getByRole('region', { name: 'Mapa de ubicación de ROSAC' })
+  const canvas = page.getByLabel('Mapa interactivo de ROSAC', { exact: true })
+  await canvas.focus()
+  await expect(canvas).toBeFocused()
+  await expect(canvas).toHaveAccessibleDescription(/Use las flechas/)
+  await page.keyboard.press('Tab')
+  await expect(map.getByRole('button', { name: 'ROSAC', exact: true })).toBeFocused()
+  await page.keyboard.press('Tab')
+  const zoomIn = map.getByRole('button', { name: 'Acercar' })
+  await expect(zoomIn).toBeFocused()
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Tab')
+  await expect(map.getByRole('button', { name: 'Alejar' })).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(map.getByRole('link', { name: 'Leaflet' })).toBeFocused()
+  await page.keyboard.press('Tab')
+  expect(await map.evaluate((element) => element.contains(document.activeElement))).toBe(false)
+  const results = await new AxeBuilder({ page })
+    .include('.leaflet-container')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+    .analyze()
+  expect(results.violations).toEqual([])
 })
 
 test('falls back to a text message if the map tiles cannot be loaded, keeping the rest of the page usable', async ({

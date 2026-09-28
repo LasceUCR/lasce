@@ -17,6 +17,10 @@
   height: 360px;
 }
 
+.locationMap :global(.leaflet-control-attribution a) {
+  text-decoration: underline;
+}
+
 .locationMapSkeleton,
 .locationMapUnavailable {
   display: flex;

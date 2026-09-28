@@ -1,6 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { ErrorBoundary } from '@/app/components/public/ErrorBoundary'
+import { LocationUnavailable } from './LocationUnavailable'
 
 import type { RosacLocationContent } from '@/app/lib/rosac'
 
@@ -14,7 +16,9 @@ const RosacLocationMap = dynamic(
   () => import('./RosacLocationMap').then((mod) => mod.RosacLocationMap),
   {
     ssr: false,
-    loading: () => <div aria-hidden="true" className={`${styles.locationMapSkeleton} surface-card`} />,
+    loading: () => (
+      <div aria-hidden="true" className={`${styles.locationMapSkeleton} surface-card`} />
+    ),
   },
 )
 
@@ -23,5 +27,9 @@ export interface RosacLocationMapLoaderProps {
 }
 
 export function RosacLocationMapLoader({ location }: RosacLocationMapLoaderProps) {
-  return <RosacLocationMap location={location} />
+  return (
+    <ErrorBoundary fallback={<LocationUnavailable message={location.unavailableMessage} />}>
+      <RosacLocationMap location={location} />
+    </ErrorBoundary>
+  )
 }

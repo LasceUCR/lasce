@@ -78,7 +78,7 @@ describe('Carousel', () => {
     // The rest of the carousel stays usable: title, description and both levels of navigation.
     expect(screen.getByRole('heading', { name: firstStage.title })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Fotografía siguiente' }))
-    expect(screen.getByRole('img', { name: firstStage.images[1].alt })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: firstStage.images[1]!.alt })).toBeInTheDocument()
   })
 
   test('does not advance automatically or expose playback controls', () => {
@@ -103,16 +103,19 @@ describe('Carousel', () => {
     expect(previous).toHaveFocus()
     await user.keyboard('{Enter}')
     expect(previous).toHaveFocus()
-    expect(screen.getByRole('status')).toHaveTextContent('Fotografía 2 de 2')
+    const photoCount = defaultArgs.groups[0].images.length
+    expect(screen.getByRole('status')).toHaveTextContent(
+      `Fotografía ${photoCount} de ${photoCount}`,
+    )
     await user.tab()
     const next = screen.getByRole('button', { name: 'Fotografía siguiente' })
     expect(next).toHaveFocus()
     await user.keyboard(' ')
-    expect(screen.getByRole('status')).toHaveTextContent('Fotografía 1 de 2')
+    expect(screen.getByRole('status')).toHaveTextContent(`Fotografía 1 de ${photoCount}`)
     await user.tab()
     expect(screen.getByRole('button', { name: 'Etapa siguiente' })).toHaveFocus()
     await user.keyboard('{Enter}')
-    expect(screen.getByRole('status')).toHaveTextContent('Etapa 2 de 5')
+    expect(screen.getByRole('status')).toHaveTextContent(`Etapa 2 de ${defaultArgs.groups.length}`)
   })
 
   test('replaces every label and noun when a caller overrides them', () => {
@@ -120,7 +123,9 @@ describe('Carousel', () => {
     render(<Carousel {...customArgs} />)
     expect(screen.getByRole('button', { name: 'Imagen siguiente' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sección siguiente' })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent(/^Sección 1 de 5:.*Imagen 1 de 2\.$/)
+    expect(screen.getByRole('status')).toHaveTextContent(
+      `Sección 1 de ${customArgs.groups.length}: ${customArgs.groups[0].title}. Imagen 1 de ${customArgs.groups[0].images.length}.`,
+    )
     expect(screen.queryByRole('button', { name: 'Fotografía siguiente' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Etapa siguiente' })).not.toBeInTheDocument()
   })

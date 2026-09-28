@@ -71,7 +71,7 @@ interface RosacCardSection {
   }[]
 }
 
-interface RosacLocationContent {
+export interface RosacLocationContent {
   title: string
   intro: string
   /**
@@ -89,6 +89,9 @@ interface RosacLocationContent {
   coordinates: { latitude: number; longitude: number }
   /** Leaflet zoom level for the initial view. Higher is closer. */
   zoom: number
+  tileUrl: string
+  attribution: string
+  loadTimeoutMs: number
   /** Shown in a permanent tooltip on the marker, so it reads without a click. */
   markerLabel: string
   /** Shown instead of the map if it fails to load; the address remains either way. */
@@ -190,6 +193,11 @@ export const rosacInfoContent = {
     address: rosacLocationAddress,
     coordinates: { latitude: 10.2840093, longitude: -85.5959871 },
     zoom: 16,
+    tileUrl:
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution:
+      'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    loadTimeoutMs: 15_000,
     markerLabel: 'ROSAC',
     unavailableMessage:
       'No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.',

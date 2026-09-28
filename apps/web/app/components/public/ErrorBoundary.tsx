@@ -20,13 +20,13 @@ interface ErrorBoundaryState {
  * the rest of this codebase.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false }
+  override state: ErrorBoundaryState = { hasError: false }
 
   static getDerivedStateFromError() {
     return { hasError: true }
   }
 
-  render() {
+  override render() {
     return this.state.hasError ? this.props.fallback : this.props.children
   }
 }
