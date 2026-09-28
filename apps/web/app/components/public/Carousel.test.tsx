@@ -41,9 +41,44 @@ describe('Carousel', () => {
     }
     expect(next).toBeDisabled()
     fireEvent.click(previous)
-    expect(screen.getByRole('heading', { name: 'Donación de equipo EATON' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: defaultArgs.groups.at(-2)!.title }),
+    ).toBeInTheDocument()
+  })
+
+  test('hides photo navigation controls for a group with a single photo', () => {
+    const singlePhotoArgs: CarouselProps = {
+      ...defaultArgs,
+      groups: [
+        defaultArgs.groups[0],
+        {
+          id: 'unica',
+          title: 'Etapa única',
+          description: 'Descripción de prueba.',
+          images: [defaultArgs.groups[0].images[0]],
+        },
+      ],
+    }
+    render(<Carousel {...singlePhotoArgs} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Etapa siguiente' }))
+    expect(screen.getByRole('heading', { name: 'Etapa única' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Fotografía anterior' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Fotografía siguiente' })).not.toBeInTheDocument()
+  })
+
+  test('shows a placeholder for a photo that fails to load, keeping the rest of the carousel usable', () => {
+    render(<Carousel {...defaultArgs} />)
+    const [firstStage] = defaultArgs.groups
+    const firstImage = screen.getByRole('img', { name: firstStage.images[0].alt })
+
+    fireEvent.error(firstImage)
+
+    expect(screen.getByText('No fue posible cargar esta fotografía.')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: firstStage.images[0].alt })).not.toBeInTheDocument()
+    // The rest of the carousel stays usable: title, description and both levels of navigation.
+    expect(screen.getByRole('heading', { name: firstStage.title })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Fotografía siguiente' }))
+    expect(screen.getByRole('img', { name: firstStage.images[1].alt })).toBeInTheDocument()
   })
 
   test('does not advance automatically or expose playback controls', () => {

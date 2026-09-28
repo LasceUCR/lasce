@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 
@@ -37,6 +37,8 @@ export interface CarouselProps {
   previousPhotoLabel?: string
   /** Label for the overlay button that moves to the next photo. */
   nextPhotoLabel?: string
+  /** Shown in place of a photo that fails to load; the rest of the carousel stays usable. */
+  imageUnavailableMessage?: string
 }
 
 /**
@@ -59,17 +61,24 @@ export function Carousel({
   nextGroupLabel = 'Etapa siguiente',
   previousPhotoLabel = 'Fotografía anterior',
   nextPhotoLabel = 'Fotografía siguiente',
+  imageUnavailableMessage = 'No fue posible cargar esta fotografía.',
 }: CarouselProps) {
   const [{ groupIndex, imageIndex }, setPosition] = useState({ groupIndex: 0, imageIndex: 0 })
+  const [failedImages, setFailedImages] = useState<ReadonlySet<string>>(() => new Set())
 
   const group = groups[groupIndex]!
   const image = group.images[imageIndex]!
+  const imageFailed = failedImages.has(image.src)
 
   function movePhoto(direction: -1 | 1) {
     setPosition((position) => ({
       ...position,
       imageIndex: (position.imageIndex + direction + group.images.length) % group.images.length,
     }))
+  }
+
+  function markImageFailed(src: string) {
+    setFailedImages((previous) => (previous.has(src) ? previous : new Set(previous).add(src)))
   }
 
   return (
@@ -81,14 +90,22 @@ export function Carousel({
     >
       <div className={styles.content}>
         <div className={styles.imageFrame}>
-          <Image
-            key={image.src}
-            src={image.src}
-            alt={image.alt}
-            fill
-            sizes="(max-width: 1120px) calc(100vw - 32px), (max-width: 1400px) 60vw, 820px"
-            className={styles.image}
-          />
+          {imageFailed ? (
+            <div className={styles.imageUnavailable} role="status">
+              <ImageOff aria-hidden="true" size={22} strokeWidth={1.8} />
+              <p>{imageUnavailableMessage}</p>
+            </div>
+          ) : (
+            <Image
+              key={image.src}
+              src={image.src}
+              alt={image.alt}
+              fill
+              sizes="(max-width: 1120px) calc(100vw - 32px), (max-width: 1400px) 60vw, 820px"
+              className={styles.image}
+              onError={() => markImageFailed(image.src)}
+            />
+          )}
           {group.images.length > 1 && (
             <>
               <button
