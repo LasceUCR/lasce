@@ -65,6 +65,25 @@ interface RosacCardSection {
   }[]
 }
 
+interface RosacLocationContent {
+  title: string
+  intro: string
+  /** Always shown, not only as a fallback: the accessible, always-available reference. */
+  address: string
+  /**
+   * Google Maps' pin for "Radiobservatorio de Santa Cruz ROSAC UCR", confirmed by the
+   * team as the correct location. Not a surveyed GPS point, but accurate enough for
+   * wayfinding.
+   */
+  coordinates: { latitude: number; longitude: number }
+  /** Leaflet zoom level for the initial view. Higher is closer. */
+  zoom: number
+  /** Shown in a permanent tooltip on the marker, so it reads without a click. */
+  markerLabel: string
+  /** Shown instead of the map if it fails to load; the address remains either way. */
+  unavailableMessage: string
+}
+
 export interface RosacInfoContent {
   hero: {
     kicker: string
@@ -80,6 +99,7 @@ export interface RosacInfoContent {
   }
   overview: RosacTextSection
   characteristics: RosacCardSection
+  location: RosacLocationContent
   activities: RosacCardSection
   construction: ConstructionContent
   radioObservation: RosacTextSection
@@ -152,6 +172,17 @@ export const rosacInfoContent = {
           'Se desarrollan capacidades para apuntar, seguir fuentes astronómicas y registrar sus emisiones de radio.',
       },
     ],
+  },
+  location: {
+    title: 'Ubicación',
+    intro:
+      'El Radio Observatorio de Santa Cruz (ROSAC) se ubica en el Recinto de Santa Cruz de la Universidad de Costa Rica, en Guanacaste.',
+    address: 'Recinto de Santa Cruz, Universidad de Costa Rica, Santa Cruz, Guanacaste, Costa Rica',
+    coordinates: { latitude: 10.2840093, longitude: -85.5959871 },
+    zoom: 16,
+    markerLabel: 'ROSAC',
+    unavailableMessage:
+      'No fue posible cargar el mapa. Puede ubicar el observatorio en el Recinto de Santa Cruz de la Universidad de Costa Rica, en Santa Cruz, Guanacaste.',
   },
   activities: {
     title: '¿Qué desarrollamos en ROSAC?',
