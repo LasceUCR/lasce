@@ -39,7 +39,7 @@ export function AcademicActivityCard({ activity }: AcademicActivityCardProps) {
 
         {activity.abstract ? <p className="news-abstract">{activity.abstract}</p> : null}
 
-        <div className="academic-activity-action">
+        <div className="news-card-footer">
           <Button
             href={`/noticias/actividades/${activity.slug}`}
             icon={<ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} />}

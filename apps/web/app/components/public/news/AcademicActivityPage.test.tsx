@@ -24,17 +24,17 @@ describe('AcademicActivityPage', () => {
       expect(screen.getByText(paragraph)).toBeInTheDocument()
     }
     if (defaultArgs.activity.category) {
-      expect(screen.getByText('Tipo de actividad:')).toBeInTheDocument()
+      expect(screen.getByText('Tipo de actividad')).toBeInTheDocument()
       expect(screen.getAllByText(new RegExp(defaultArgs.activity.category)).length).toBeGreaterThan(
         0,
       )
     }
     if (defaultArgs.activity.date) {
-      expect(screen.getByText('Fecha:')).toBeInTheDocument()
+      expect(screen.getByText('Fecha')).toBeInTheDocument()
       expect(screen.getAllByText(new RegExp(defaultArgs.activity.date)).length).toBeGreaterThan(0)
     }
     if (defaultArgs.activity.location) {
-      expect(screen.getByText('Lugar:')).toBeInTheDocument()
+      expect(screen.getByText('Lugar')).toBeInTheDocument()
       expect(screen.getAllByText(new RegExp(defaultArgs.activity.location)).length).toBeGreaterThan(
         0,
       )
