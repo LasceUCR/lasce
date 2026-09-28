@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import { footerContent } from '@/app/lib/footer'
 import { galleryAlbumList, galleryAlbums } from '@/app/lib/gallery'
+import { researchAreas } from '@/app/lib/research-areas'
 
 // `group` names the desktop header disclosure a route sits behind, if any.
 const publicRoutes: { label: string; path: string; heading: string; group?: string }[] = [
@@ -185,6 +186,24 @@ for (const card of areaCards) {
     await expect(page).toHaveURL(new RegExp(`${card.path}$`))
   })
 }
+
+test('lists every research area and opens its detail page', async ({ page }) => {
+  const response = await page.goto('/investigacion')
+
+  expect(response?.status()).toBe(200)
+
+  for (const area of researchAreas) {
+    await expect(page.getByRole('article', { name: area.title })).toBeVisible()
+  }
+
+  const [first] = researchAreas
+  if (!first) throw new Error('researchAreas is empty')
+
+  await page.getByRole('link', { name: `Conozca más sobre esta área (${first.title})` }).click()
+
+  await expect(page).toHaveURL(new RegExp(`/investigacion/areas/${first.slug}$`))
+  await expect(page.getByRole('heading', { level: 1, name: first.title })).toBeVisible()
+})
 
 test('navigates with the mobile menu and closes it afterwards', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
