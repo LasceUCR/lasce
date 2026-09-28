@@ -1,7 +1,9 @@
 # ROSAC construction section
 
 `/radioastronomia#construccion` presents all 15 supplied construction photographs between
-activities (section 2) and radio observation (section 4). Researchers is section 5.
+activities (section 3) and radio observation (section 5). Researchers is section 6. A
+"Ubicación" section with a map (section 2) sits before activities -- see
+docs/rosac-location.md.
 
 ## Content
 
