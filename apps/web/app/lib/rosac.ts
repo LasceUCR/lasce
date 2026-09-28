@@ -19,6 +19,12 @@
  */
 import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
 
+// Built once and reused in both `location.intro` (as flowing prose) and `location.address`
+// (as its own field, kept for anything that needs the bare address rather than a sentence),
+// so the two can never drift apart.
+const rosacLocationAddress =
+  'Recinto de Santa Cruz, Universidad de Costa Rica, Santa Cruz, Guanacaste, Costa Rica'
+
 export const rosacInfoMeta = {
   title: 'Radioastronomía y ROSAC | LASCE',
   description:
@@ -68,7 +74,12 @@ interface RosacCardSection {
 interface RosacLocationContent {
   title: string
   intro: string
-  /** Always shown, not only as a fallback: the accessible, always-available reference. */
+  /**
+   * Not rendered on its own -- folded into `intro`'s own text, so the address stays visible
+   * whether the map loads, fails, or is still downloading, without a second, near-duplicate
+   * line of text next to it. Kept as its own field so `intro` only needs to be built from it
+   * once (see `rosacInfoContent.location` below), not typed out twice.
+   */
   address: string
   /**
    * Google Maps' pin for "Radiobservatorio de Santa Cruz ROSAC UCR", confirmed by the
@@ -175,14 +186,13 @@ export const rosacInfoContent = {
   },
   location: {
     title: 'Ubicación',
-    intro:
-      'El Radio Observatorio de Santa Cruz (ROSAC) se ubica en el Recinto de Santa Cruz de la Universidad de Costa Rica, en Guanacaste.',
-    address: 'Recinto de Santa Cruz, Universidad de Costa Rica, Santa Cruz, Guanacaste, Costa Rica',
+    intro: `El Radio Observatorio de Santa Cruz (ROSAC) se ubica en el ${rosacLocationAddress}.`,
+    address: rosacLocationAddress,
     coordinates: { latitude: 10.2840093, longitude: -85.5959871 },
     zoom: 16,
     markerLabel: 'ROSAC',
     unavailableMessage:
-      'No fue posible cargar el mapa. Puede ubicar el observatorio en el Recinto de Santa Cruz de la Universidad de Costa Rica, en Santa Cruz, Guanacaste.',
+      'No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.',
   },
   activities: {
     title: '¿Qué desarrollamos en ROSAC?',

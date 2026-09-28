@@ -9,8 +9,7 @@ decisions behind it (issue: ROSAC Location Map PBI). Covers `RosacLocationMap.ts
 
 ```
 RosacInfoPage.tsx (Server Component)
-  └─ TopicSection "2. Ubicación"
-       ├─ <p> content.location.address        always rendered, independent of the map
+  └─ TopicSection "2. Ubicación"        intro = content.location.intro, includes the address
        └─ RosacLocationMapLoader (Client)      next/dynamic(..., { ssr: false })
             └─ RosacLocationMap (Client)       the actual Leaflet map
                  └─ ErrorBoundary
@@ -20,7 +19,7 @@ RosacInfoPage.tsx (Server Component)
 | Piece                         | File                                      | Covered by                                                                                       |
 | ----------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | Location content & copy       | `app/lib/rosac.ts` (`location` field)     | `RosacInfoPage.test.tsx`                                                                         |
-| Section wiring, address text  | `RosacInfoPage.tsx`                       | `RosacInfoPage.test.tsx`                                                                         |
+| Section wiring                | `RosacInfoPage.tsx`                       | `RosacInfoPage.test.tsx`                                                                         |
 | Client-only loading           | `RosacLocationMapLoader.tsx`              | exercised via `RosacInfoPage.test.tsx` (no dedicated test: it is a one-line `next/dynamic` call) |
 | The map itself                | `RosacLocationMap.tsx`                    | `RosacLocationMap.test.tsx`                                                                      |
 | Generic render-error fallback | `app/components/public/ErrorBoundary.tsx` | (no dedicated unit test yet)                                                                     |
@@ -34,12 +33,21 @@ it is imported. `RosacInfoPage.tsx` is a Server Component, and Next.js does not 
 `RosacLocationMapLoader.tsx` exists only to hold that `dynamic()` call and a loading skeleton, so
 `RosacInfoPage.tsx` can stay a Server Component like the rest of this page.
 
-## Coordinates
+## Coordinates and address
 
 `app/lib/rosac.ts`'s `location.coordinates` is Google Maps' pin for "Radiobservatorio de Santa
 Cruz ROSAC UCR", confirmed by the team as the correct location -- not a surveyed GPS point, but
 accurate enough for wayfinding. If it ever needs correcting, update it in `app/lib/rosac.ts` alone
 -- nothing else needs to change.
+
+The address itself is not rendered as its own line: a standalone "Recinto de Santa Cruz,
+Universidad de Costa Rica..." paragraph directly below an intro sentence that already named the
+same place read as duplicated text, and being short and comma-separated, it also came out
+oddly spaced under the site's justified body-text style, which suits a full sentence, not a
+bare address. `rosac.ts` now builds `location.intro` from a single `rosacLocationAddress`
+constant, so the address appears once, as part of one flowing sentence, and `location.address`
+(the same constant) stays available as plain data for anything that needs the bare string rather
+than a sentence -- nothing currently does.
 
 ## The map provider
 
@@ -52,9 +60,9 @@ do not remove it.
 
 ## Reliability: what "the map cannot be loaded" means here
 
-- The textual address (`content.location.address`) is rendered directly by `RosacInfoPage.tsx`,
-  outside the map component entirely, so it is on the page whether the map loads, fails, or is
-  still downloading its client bundle.
+- The address is part of `content.location.intro`'s own text (see "Coordinates and address"
+  below), rendered by `TopicSection` directly, outside the map component entirely -- so it is on
+  the page whether the map loads, fails, or is still downloading its client bundle.
 - `RosacLocationMap.tsx`'s `TileWatcher` only flips to the "unavailable" message on a `tileerror`
   that happens **before any tile has ever loaded successfully**. A single flaky tile among dozens,
   on a map the visitor can already see, does not tear down a working map.

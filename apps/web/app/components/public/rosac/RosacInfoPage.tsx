@@ -80,7 +80,6 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
         title={content.location.title}
         titleId="rosac-location-title"
       >
-        <p className="topic-intro">{content.location.address}</p>
         <RosacLocationMapLoader location={content.location} />
       </TopicSection>
 
