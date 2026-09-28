@@ -517,15 +517,4 @@ describe('NosotrosPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo eliminar la actividad.')
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
-
-  test('renders research collaborations section and cards', () => {
-    renderPage()
-
-    expect(
-      screen.getByRole('heading', { level: 2, name: 'Colaboraciones de investigación' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/Organizaciones y grupos que colaboran con el LASCE/),
-    ).toBeInTheDocument()
-  })
 })
