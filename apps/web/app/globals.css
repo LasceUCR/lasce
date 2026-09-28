@@ -3734,6 +3734,15 @@ a.gallery-tile:focus-visible {
   .research-area-card .research-area-card-description {
     text-align: start;
   }
+
+  /* Stacked, the card has no right edge to line up against, so the button spans its width. */
+  .research-area-card-action {
+    align-self: stretch;
+  }
+
+  .research-area-card-action .button {
+    width: 100%;
+  }
 }
 
 /* --- ROSAC researchers (/radioastronomia#investigadores) --- */
