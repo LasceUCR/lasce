@@ -209,6 +209,40 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   ).toHaveAttribute('aria-current', 'page')
 })
 
+test('displays the back button at the bottom of the gallery index and returns home', async ({
+  page,
+}) => {
+  await page.goto('/galeria')
+
+  const backLink = page.getByRole('link', { name: 'Volver al inicio' })
+  const heading = page.getByRole('heading', { level: 1, name: 'Galería' })
+
+  await expect(backLink).toBeVisible()
+  const backBox = await backLink.boundingBox()
+  const headingBox = await heading.boundingBox()
+  expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
+
+  await backLink.click()
+  await expect(page).toHaveURL(/\/$/)
+})
+
+test('displays the back button at the bottom of an album page and returns to gallery', async ({
+  page,
+}) => {
+  await page.goto('/galeria/rosac')
+
+  const backLink = page.getByRole('link', { name: 'Volver a la galería' })
+  const heading = page.getByRole('heading', { level: 1, name: galleryAlbums.rosac.title })
+
+  await expect(backLink).toBeVisible()
+  const backBox = await backLink.boundingBox()
+  const headingBox = await heading.boundingBox()
+  expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
+
+  await backLink.click()
+  await expect(page).toHaveURL(/\/galeria$/)
+})
+
 for (const album of galleryAlbumList) {
   test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
     await page.goto('/galeria')
@@ -238,7 +272,15 @@ for (const album of galleryAlbumList) {
       ).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Sub\u00e1lbumes' })).toHaveCount(0)
 
-      await page.getByRole('link', { name: `Volver a ${album.title}` }).click()
+      const backLink = page.getByRole('link', { name: `Volver a ${album.title}` })
+      await expect(backLink).toBeVisible()
+      const backBox = await backLink.boundingBox()
+      const headingBox = await page
+        .getByRole('heading', { level: 1, name: subAlbum.title })
+        .boundingBox()
+      expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
+
+      await backLink.click()
 
       await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
     })
@@ -344,6 +386,46 @@ test('displays academic activities in the news section and navigates to workshop
   await expect(
     page.getByRole('heading', { level: 2, name: 'Descripción de la actividad' }),
   ).toBeVisible()
+})
+
+test('displays research collaborations and allows filtering by scope', async ({ page }) => {
+  const response = await page.goto('/nosotros')
+
+  expect(response?.status()).toBe(200)
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Colaboraciones de investigación' }),
+  ).toBeVisible()
+
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toBeVisible()
+
+  await page.getByRole('combobox', { name: 'Tipo de colaboración' }).click()
+  await page.getByRole('option', { name: 'Nacionales', exact: true }).click()
+
+  await expect(page.getByText('2', { exact: true })).toBeVisible()
+  await expect(page.getByText('colaboraciones nacionales', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toHaveCount(0)
+
+  await page.getByRole('combobox', { name: 'Tipo de colaboración' }).click()
+  await page.getByRole('option', { name: 'Internacionales', exact: true }).click()
+
+  await expect(page.getByText('6', { exact: true })).toBeVisible()
+  await expect(page.getByText('colaboraciones internacionales', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+  ).toHaveCount(0)
 })
 
 for (const route of publicRoutes) {
