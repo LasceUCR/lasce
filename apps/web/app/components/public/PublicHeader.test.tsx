@@ -107,7 +107,10 @@ describe('PublicHeader', () => {
     await user.click(desktop.getByText('Nosotros'))
 
     expect(desktop.getByRole('link', { name: 'Quiénes somos' })).toBeVisible()
-    expect(desktop.getByRole('link', { name: 'Quiénes somos' })).toHaveAttribute('href', '/nosotros')
+    expect(desktop.getByRole('link', { name: 'Quiénes somos' })).toHaveAttribute(
+      'href',
+      '/nosotros',
+    )
     expect(desktop.getByRole('link', { name: 'Colaboraciones e Iniciativas' })).toHaveAttribute(
       'href',
       '/colaboraciones-e-iniciativas',
