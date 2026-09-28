@@ -58,7 +58,7 @@ when the current page is one of its children.
   on Escape, a pointer outside the group, or focus leaving the group. See the component's own doc
   comment for the full list.
 - The panel (`.nav-group-panel`) is centered under the summary (`left: 50%; transform:
-  translateX(-50%)`), not right-anchored as it originally was.
+translateX(-50%)`), not right-anchored as it originally was.
 - Covered by `NavGroup.test.tsx`, including a test for the hover-opens/mouse-leave-closes behavior.
   The centering itself is pure CSS and is not asserted in jsdom; verify it visually if you touch
   `.nav-group-panel`.
@@ -79,9 +79,9 @@ when the current page is one of its children.
 
 ## Covered by
 
-| Piece                            | File                                          | Covered by                    |
-| --------------------------------- | ---------------------------------------------- | ------------------------------ |
-| Institutional lockup              | `app/components/public/Brand.tsx`              | (no dedicated unit test yet)   |
-| Desktop group disclosure          | `app/components/public/NavGroup.tsx`           | `NavGroup.test.tsx`            |
-| Header layout + mobile accordion  | `app/components/public/PublicHeader.tsx`       | `PublicHeader.test.tsx`        |
-| Responsive rules for both         | `app/globals.css`                              | manual verification (no CSS test harness in this repo) |
+| Piece                            | File                                     | Covered by                                             |
+| -------------------------------- | ---------------------------------------- | ------------------------------------------------------ |
+| Institutional lockup             | `app/components/public/Brand.tsx`        | (no dedicated unit test yet)                           |
+| Desktop group disclosure         | `app/components/public/NavGroup.tsx`     | `NavGroup.test.tsx`                                    |
+| Header layout + mobile accordion | `app/components/public/PublicHeader.tsx` | `PublicHeader.test.tsx`                                |
+| Responsive rules for both        | `app/globals.css`                        | manual verification (no CSS test harness in this repo) |

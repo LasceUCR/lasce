@@ -56,37 +56,36 @@ describe('PublicHeader', () => {
     expect(screen.getByAltText('Laboratorio de Ciencias Espaciales')).toBeInTheDocument()
   })
 
-  test(
-    'groups the resource pages behind Recursos on desktop, and behind an accordion on mobile',
-    async () => {
-      const user = userEvent.setup()
-      render(<PublicHeader logoutAction={async () => undefined} />)
+  test('groups the resource pages behind Recursos on desktop, and behind an accordion on mobile', async () => {
+    const user = userEvent.setup()
+    render(<PublicHeader logoutAction={async () => undefined} />)
 
-      const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
-      const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
-      const grouped = ['Publicaciones', 'Herramientas científicas', 'Galería']
+    await user.click(screen.getByLabelText('Abrir navegación'))
 
-      // Both start closed: Recursos reads like a normal item on mobile, not a heading.
-      for (const label of grouped) {
-        expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
-        expect(mobile.getByRole('link', { name: label })).not.toBeVisible()
-      }
-      expect(mobile.queryByRole('button', { name: 'Recursos' })).not.toBeInTheDocument()
+    const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
+    const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+    const grouped = ['Publicaciones', 'Herramientas científicas', 'Galería']
 
-      await user.click(mobile.getByText('Recursos'))
+    // Both start closed: Recursos reads like a normal item on mobile, not a heading.
+    for (const label of grouped) {
+      expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
+      expect(mobile.getByRole('link', { name: label })).not.toBeVisible()
+    }
+    expect(mobile.queryByRole('button', { name: 'Recursos' })).not.toBeInTheDocument()
 
-      for (const label of grouped) {
-        expect(mobile.getByRole('link', { name: label })).toBeVisible()
-      }
-      expect(mobile.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
+    await user.click(mobile.getByText('Recursos'))
 
-      await user.click(desktop.getByText('Recursos'))
+    for (const label of grouped) {
+      expect(mobile.getByRole('link', { name: label })).toBeVisible()
+    }
+    expect(mobile.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
 
-      for (const label of grouped) {
-        expect(desktop.getByRole('link', { name: label })).toBeVisible()
-      }
-      expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
-      expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
-    },
-  )
+    await user.click(desktop.getByText('Recursos'))
+
+    for (const label of grouped) {
+      expect(desktop.getByRole('link', { name: label })).toBeVisible()
+    }
+    expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
+    expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
+  })
 })

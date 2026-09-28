@@ -2,7 +2,7 @@
 
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useRef, type FocusEvent, type KeyboardEvent } from 'react'
+import { useEffect, useRef, type FocusEvent, type KeyboardEvent, type MouseEvent } from 'react'
 
 export interface NavGroupItem {
   label: string
@@ -31,7 +31,9 @@ export function isActivePath(pathname: string, href: string): boolean {
  * choosing a link, Escape, the pointer leaving the group, a pointer outside
  * or focus leaving the group closes it. The links are in the tab order only
  * while it is open. The `open` attribute is the only state, so nothing lags
- * behind the browser.
+ * behind the browser. A click never toggles it closed (only the actions above
+ * do): the native default is prevented and replaced with an explicit `open()`,
+ * so a click right after a hover-open cannot flip it shut again.
  */
 export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGroupProps) {
   const details = useRef<HTMLDetailsElement>(null)
@@ -44,6 +46,13 @@ export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGro
 
   function close() {
     details.current?.removeAttribute('open')
+  }
+
+  // The native default just toggles; prevent it and always open instead, so a
+  // click while the pointer already opened it via hover cannot close it again.
+  function handleSummaryClick(event: MouseEvent<HTMLElement>) {
+    event.preventDefault()
+    open()
   }
 
   useEffect(() => {
@@ -92,7 +101,7 @@ export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGro
       open={defaultOpen ? true : undefined}
       ref={details}
     >
-      <summary ref={summary}>
+      <summary onClick={handleSummaryClick} ref={summary}>
         {label}
         <ChevronDown aria-hidden="true" size={14} strokeWidth={1.6} />
       </summary>

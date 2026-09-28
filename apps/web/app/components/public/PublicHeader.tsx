@@ -75,6 +75,56 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
     setIsMobileMenuOpen(Boolean(mobileMenu.current?.open))
   }
 
+  // Which mobile "Recursos"-style groups are expanded, keyed by label. Starts
+  // with whichever ones contain the current page, and updates on navigation
+  // without collapsing one the visitor opened by hand. A group's own `open`
+  // is fully controlled from here rather than left to the native default, so
+  // a click deterministically expands or collapses it (see NavGroup.tsx for
+  // why relying on the native toggle alone is fragile).
+  const [openGroupLabels, setOpenGroupLabels] = useState<Set<string>>(
+    () =>
+      new Set(
+        navigation
+          .filter(
+            (entry): entry is NavGroupEntry =>
+              isGroup(entry) && entry.items.some((item) => isActivePath(pathname, item.href)),
+          )
+          .map((entry) => entry.label),
+      ),
+  )
+
+  useEffect(() => {
+    setOpenGroupLabels((current) => {
+      let changed = false
+      const next = new Set(current)
+
+      for (const entry of navigation) {
+        if (
+          isGroup(entry) &&
+          entry.items.some((item) => isActivePath(pathname, item.href)) &&
+          !next.has(entry.label)
+        ) {
+          next.add(entry.label)
+          changed = true
+        }
+      }
+
+      return changed ? next : current
+    })
+  }, [pathname])
+
+  function toggleGroup(label: string) {
+    setOpenGroupLabels((current) => {
+      const next = new Set(current)
+      if (next.has(label)) {
+        next.delete(label)
+      } else {
+        next.add(label)
+      }
+      return next
+    })
+  }
+
   useEffect(() => {
     if (!isMobileMenuOpen) {
       document.body.style.overflow = ''
@@ -167,9 +217,15 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
                 <details
                   className="mobile-nav-group"
                   key={entry.label}
-                  open={entry.items.some((item) => isActivePath(pathname, item.href))}
+                  open={openGroupLabels.has(entry.label)}
                 >
-                  <summary className="mobile-nav-group-summary">
+                  <summary
+                    className="mobile-nav-group-summary"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      toggleGroup(entry.label)
+                    }}
+                  >
                     {entry.label}
                     <ChevronDown aria-hidden="true" size={18} strokeWidth={1.8} />
                   </summary>
