@@ -23,6 +23,9 @@ for (const viewport of [
     await expect(
       page.getByRole('img', { name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)' }),
     ).toBeVisible()
+    // The map loads on the client only, after the initial page content, so give it a
+    // moment before checking that its own footprint does not cause horizontal overflow.
+    await expect(page.getByRole('region', { name: /^Mapa de ubicación de/ })).toBeVisible()
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
@@ -51,6 +54,9 @@ test('serves the general information and LASCE relationship directly without aut
   await expect(page.getByRole('heading', { name: 'Antena de 11 metros' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Entre 100 y 1000 MHz' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Santa Cruz, Guanacaste' })).toBeVisible()
+  const location = page.getByRole('region', { name: '2. Ubicación' })
+  await expect(location).toContainText('Recinto de Santa Cruz')
+  await expect(location.getByRole('region', { name: /^Mapa de ubicación de/ })).toBeVisible()
   await expect(page.getByRole('region', { name: 'ROSAC y LASCE' })).toContainText(
     'LASCE convierte observaciones en conocimiento',
   )
@@ -130,4 +136,34 @@ test('the skip link focuses ROSAC content', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Saltar al contenido principal' })).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(page.getByRole('main')).toBeFocused()
+})
+
+test('loads the location map with real satellite tiles and a marker identified as ROSAC', async ({
+  page,
+}) => {
+  await page.goto('/radioastronomia')
+
+  const location = page.getByRole('region', { name: '2. Ubicación' })
+  const map = location.getByRole('region', { name: /^Mapa de ubicación de/ })
+  await expect(map).toBeVisible()
+  await expect(map.getByText('ROSAC')).toBeVisible()
+  await expect(map.locator('img.leaflet-tile-loaded').first()).toBeVisible()
+  await expect(location.getByRole('status')).toHaveCount(0)
+})
+
+test('falls back to a text message if the map tiles cannot be loaded, keeping the rest of the page usable', async ({
+  page,
+}) => {
+  await page.route('**/*.arcgisonline.com/**', (route) => route.abort())
+  await page.goto('/radioastronomia')
+
+  const location = page.getByRole('region', { name: '2. Ubicación' })
+  await expect(location.getByRole('status')).toContainText('No fue posible cargar el mapa')
+  // The address is rendered outside the map component, so it survives the failure.
+  await expect(location).toContainText('Recinto de Santa Cruz')
+  await expect(location.getByRole('region', { name: /^Mapa de ubicación de/ })).toHaveCount(0)
+
+  // The rest of the page is unaffected by the map failing.
+  await expect(page.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'ROSAC y LASCE' })).toBeVisible()
 })

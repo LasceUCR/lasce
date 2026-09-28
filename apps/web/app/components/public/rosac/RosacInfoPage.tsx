@@ -22,6 +22,7 @@ import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 
 import styles from './RosacInfoPage.module.css'
 import { ConstructionCarousel } from './ConstructionCarousel'
+import { RosacLocationMapLoader } from './RosacLocationMapLoader'
 import { TeamGallery } from './TeamGallery'
 
 const icons: Record<RosacCardIcon, LucideIcon> = {
@@ -73,7 +74,17 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
         </CardGrid>
       </TopicSection>
 
-      <TopicSection title={content.activities.title} titleId="rosac-activities-title" index="2">
+      <TopicSection
+        index="2"
+        intro={content.location.intro}
+        title={content.location.title}
+        titleId="rosac-location-title"
+      >
+        <p className="topic-intro">{content.location.address}</p>
+        <RosacLocationMapLoader location={content.location} />
+      </TopicSection>
+
+      <TopicSection title={content.activities.title} titleId="rosac-activities-title" index="3">
         <CardGrid columns={3} equalHeight>
           {content.activities.items.map((item) => {
             const Icon = icons[item.icon]
@@ -94,7 +105,7 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
         title={content.construction.title}
         titleId="rosac-construction-title"
         intro={content.construction.intro}
-        index="3"
+        index="4"
         wide
       >
         <ConstructionCarousel stages={content.construction.stages} />
@@ -103,7 +114,7 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
       <TopicSection
         title={content.radioObservation.title}
         titleId="rosac-radio-observation-title"
-        index="4"
+        index="5"
         wide
       >
         {content.radioObservation.paragraphs.map((paragraph) => (
@@ -123,7 +134,7 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
 
       <TopicSection
         id="investigadores"
-        index="5"
+        index="6"
         intro={content.team.intro}
         title={content.team.title}
         titleId="rosac-team-title"
