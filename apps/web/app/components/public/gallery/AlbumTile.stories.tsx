@@ -21,8 +21,8 @@ type Story = StoryObj<typeof AlbumTile>
 
 export const Cover: Story = {
   args: {
-    title: 'Construcción del ROSAC',
-    meta: '5 subálbumes · 15 archivos · 2023–2025',
+    title: 'Fotos del ROSAC',
+    meta: '5 subálbumes · 108 archivos · 2019–2023',
     variant: 'cover',
     href: '/galeria/rosac',
     src: '/images/galeria/rosac/8.jpg',
@@ -32,8 +32,8 @@ export const Cover: Story = {
 /** A group that has no album page yet: the same tile, without a link. */
 export const CoverWithoutLink: Story = {
   args: {
-    title: 'Construcción del ROSAC',
-    meta: '5 subálbumes · 15 archivos · 2023–2025',
+    title: 'Fotos del ROSAC',
+    meta: '5 subálbumes · 108 archivos · 2019–2023',
     variant: 'cover',
   },
 }

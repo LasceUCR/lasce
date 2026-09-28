@@ -77,7 +77,7 @@ type Story = StoryObj<typeof AlbumMediaGrid>
 
 export const Default: Story = {
   args: {
-    albumTitle: 'Construcción del ROSAC',
+    albumTitle: 'Fotos del ROSAC',
     media,
   },
 }
@@ -85,7 +85,7 @@ export const Default: Story = {
 /** A single file, to see the grid and the lightbox with nothing to page through. */
 export const SingleFile: Story = {
   args: {
-    albumTitle: 'Construcción del ROSAC',
+    albumTitle: 'Fotos del ROSAC',
     media: media.slice(0, 1),
   },
 }

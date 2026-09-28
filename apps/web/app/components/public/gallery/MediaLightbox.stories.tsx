@@ -13,7 +13,7 @@ type Story = StoryObj<typeof MediaLightbox>
 
 export const Photograph: Story = {
   args: {
-    albumTitle: 'Construcción del ROSAC',
+    albumTitle: 'Fotos del ROSAC',
     item: {
       id: 'm1',
       title: 'Adecuación de la base de concreto',

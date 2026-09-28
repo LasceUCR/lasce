@@ -81,12 +81,12 @@ describe('AlbumPage', () => {
       <AlbumPage
         {...albumArgs}
         backHref="/galeria/rosac"
-        backLabel="Volver a Construcción del ROSAC"
+        backLabel="Volver a Fotos del ROSAC"
         subAlbums={[]}
       />,
     )
 
-    const backLink = screen.getByRole('link', { name: 'Volver a Construcción del ROSAC' })
+    const backLink = screen.getByRole('link', { name: 'Volver a Fotos del ROSAC' })
     const heading = screen.getByRole('heading', { level: 1, name: album.title })
 
     expect(backLink).toHaveAttribute('href', '/galeria/rosac')
