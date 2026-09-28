@@ -43,6 +43,7 @@ working through Claude Code.
 | What tables exist and how do they relate?          | [`docs/database-definition.md`](docs/database-definition.md)         |
 | How does the public gallery work?                  | [`docs/gallery.md`](docs/gallery.md)                                 |
 | How does the ROSAC location map work?              | [`docs/rosac-location.md`](docs/rosac-location.md)                   |
+| How is the research areas page built?              | [`docs/research.md`](docs/research.md)                               |
 | How does a visitor register an account?            | [`docs/registration.md`](docs/registration.md)                       |
 | How do users sign in, and how is a page protected? | [`docs/sessions.md`](docs/sessions.md)                               |
 | How are role permissions configured?               | [`docs/role-permissions.md`](docs/role-permissions.md)               |
