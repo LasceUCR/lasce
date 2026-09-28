@@ -8,7 +8,7 @@ with a map (section 2) sits before activities -- see docs/rosac-location.md.
 
 `apps/web/app/lib/rosac-construction.ts` centralizes introduction, stage descriptions, original
 image paths and descriptive alternatives. The five stages follow the process order required by
-the "ROSAC Construction Process" PBI, and contain 5, 5, 5, 3 and 5 photographs:
+the "ROSAC Construction Process" PBI, and contain 5, 5, 5, 3 and 5 photographs. The accepted image count depends on the available representative material; five is not a minimum or a fixed requirement:
 
 1. Preparación para el montaje
 2. Montaje de la estructura
@@ -55,9 +55,7 @@ animation or pause interaction.
 
 The shared secondary buttons below the overview move between stages and reset the image to the
 first photo. They are disabled at the first/last stage, centered with 32px spacing on desktop,
-and stay in one row with 12px spacing on mobile. There are no stage tabs or visible photo counters
--- position is announced to assistive technology only (see below), a deliberate choice kept for
-this PBI. A polite status region announces the stage and photo position after manual changes.
+and stay in one row with 12px spacing on mobile. There are no stage tabs. A visible photo counter shows the current position and total for the selected stage. The same information is announced through the live region; the visual duplicate is hidden from assistive technology. A polite status region announces the stage and photo position after manual changes.
 Native buttons support Tab, Shift+Tab, Enter and Space without moving focus when the image changes.
 
 Next Image fills a stable 3:2 frame at every screen size. Below 1120px, the photo stacks above the
@@ -96,6 +94,4 @@ on the shared `next/image` mock in `apps/web/vitest.setup.ts` forwarding `onErro
 a real error event on the rendered `<img>`. Browser checks cover image loading, stable 3:2 geometry,
 manual controls, keyboard, a blocked-image fallback, axe and overflow at 1440, 768, 390 and 320px.
 
-At 320px the existing shared header makes the document 327px wide even with this section hidden.
-The carousel fits the viewport and does not increase that overflow. Fixing the header remains
-outside this PBI. Automated accessibility checks do not replace assistive-technology user testing.
+The page must fit the viewport at all four tested widths, including 320px; no baseline overflow exception is allowed. Automated accessibility checks do not replace assistive-technology user testing.

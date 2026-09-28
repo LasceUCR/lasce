@@ -130,6 +130,9 @@ export function Carousel({
         <div className={styles.panel}>
           <h3>{group.title}</h3>
           <p className={styles.description}>{group.description}</p>
+          <p className={styles.photoPosition} aria-hidden="true">
+            {photoNoun} {imageIndex + 1} de {group.images.length}
+          </p>
           <div className={styles.actions}>
             <div className={styles.groupControls}>
               <Button

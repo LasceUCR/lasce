@@ -103,6 +103,13 @@
   margin-top: auto;
 }
 
+.photoPosition {
+  margin: 0 0 16px;
+  color: var(--ink);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
 .control {
   font-family: inherit;
   min-height: 44px;

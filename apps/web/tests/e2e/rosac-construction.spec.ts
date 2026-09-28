@@ -12,14 +12,6 @@ for (const width of [1440, 768, 390, 320]) {
     await page.clock.install()
     await page.goto('/radioastronomia')
     const section = page.getByRole('region', { name: '4. Construcción del ROSAC' })
-    // The shared header already overflows at 320px without this section.
-    const baselineWidth = await section.evaluate((element) => {
-      element.style.display = 'none'
-      const result = document.documentElement.scrollWidth
-      element.style.display = ''
-      return result
-    })
-    if (width > 320) expect(baselineWidth).toBeLessThanOrEqual(width)
     await section.scrollIntoViewIfNeeded()
     await expect(section.getByRole('button', { name: 'Fotografía siguiente' })).toBeVisible()
     await expect(section.getByRole('button', { name: 'Anterior', exact: true })).toHaveCount(0)
@@ -38,7 +30,12 @@ for (const width of [1440, 768, 390, 320]) {
       if (stageIndex > 0) await section.getByRole('button', { name: 'Etapa siguiente' }).click()
       await page.mouse.move(0, 0)
       await expect(section.getByRole('heading', { name: stage.title })).toBeVisible()
-      for (const image of stage.images) {
+      for (const [imageIndex, image] of stage.images.entries()) {
+        await expect(
+          section.getByText(`Fotografía ${imageIndex + 1} de ${stage.images.length}`, {
+            exact: true,
+          }),
+        ).toBeVisible()
         const photo = section.getByRole('img', { name: image.alt })
         await expect(photo).toBeVisible()
         await expect
@@ -56,7 +53,7 @@ for (const width of [1440, 768, 390, 320]) {
       await expect(section.getByRole('img', { name: stage.images[0].alt })).toBeVisible()
       await expect(section.getByRole('heading', { name: stage.title })).toBeVisible()
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-        Math.max(width, baselineWidth),
+        width,
       )
       expect(
         await section.evaluate(
@@ -91,12 +88,14 @@ test('keeps photographs static and supports keyboard navigation', async ({ page 
   await expect(section.getByRole('img', { name: first.alt })).toBeVisible()
   const next = section.getByRole('button', { name: 'Fotografía siguiente' })
   await next.focus()
-  await page.keyboard.press('Enter')
-  await expect(
-    section.getByRole('img', { name: rosacConstructionContent.stages[0].images[1].alt }),
-  ).toBeVisible()
-  await expect(next).toBeFocused()
-  await page.keyboard.press('Space')
+  const images = rosacConstructionContent.stages[0].images
+  for (let index = 1; index <= images.length; index++) {
+    await page.keyboard.press(index % 2 === 0 ? 'Space' : 'Enter')
+    await expect(
+      section.getByRole('img', { name: images[index % images.length]!.alt }),
+    ).toBeVisible()
+    await expect(next).toBeFocused()
+  }
   await expect(section.getByRole('img', { name: first.alt })).toBeVisible()
 })
 

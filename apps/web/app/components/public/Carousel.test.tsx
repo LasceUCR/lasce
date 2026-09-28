@@ -13,7 +13,12 @@ describe('Carousel', () => {
     for (const [index, group] of defaultArgs.groups.entries()) {
       if (index > 0) fireEvent.click(screen.getByRole('button', { name: 'Etapa siguiente' }))
       expect(screen.getByText(group.description)).toBeInTheDocument()
-      for (const image of group.images) {
+      for (const [imageIndex, image] of group.images.entries()) {
+        expect(
+          screen.getByText(`Fotografía ${imageIndex + 1} de ${group.images.length}`, {
+            exact: true,
+          }),
+        ).toBeVisible()
         expect(screen.getByRole('img', { name: image.alt })).toHaveAttribute('src', image.src)
         if (group.images.length > 1)
           fireEvent.click(screen.getByRole('button', { name: 'Fotografía siguiente' }))
@@ -32,7 +37,9 @@ describe('Carousel', () => {
     const previous = screen.getByRole('button', { name: 'Etapa anterior' })
     const next = screen.getByRole('button', { name: 'Etapa siguiente' })
     expect(previous).toBeDisabled()
-    expect(screen.queryByText(/^Fotografía \d+ de/)).not.toBeInTheDocument()
+    expect(
+      screen.getByText(`Fotografía 1 de ${defaultArgs.groups[0].images.length}`, { exact: true }),
+    ).toBeVisible()
     fireEvent.click(screen.getByRole('button', { name: 'Fotografía siguiente' }))
     for (const group of defaultArgs.groups.slice(1)) {
       fireEvent.click(next)
@@ -62,6 +69,7 @@ describe('Carousel', () => {
     render(<Carousel {...singlePhotoArgs} />)
     fireEvent.click(screen.getByRole('button', { name: 'Etapa siguiente' }))
     expect(screen.getByRole('heading', { name: 'Etapa única' })).toBeInTheDocument()
+    expect(screen.getByText('Fotografía 1 de 1', { exact: true })).toBeVisible()
     expect(screen.queryByRole('button', { name: 'Fotografía anterior' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Fotografía siguiente' })).not.toBeInTheDocument()
   })
