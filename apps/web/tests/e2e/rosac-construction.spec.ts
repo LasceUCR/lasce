@@ -11,7 +11,7 @@ for (const width of [1440, 768, 390, 320]) {
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     await page.clock.install()
     await page.goto('/radioastronomia')
-    const section = page.getByRole('region', { name: '3. Construcción del ROSAC' })
+    const section = page.getByRole('region', { name: '4. Construcción del ROSAC' })
     // The shared header already overflows at 320px without this section.
     const baselineWidth = await section.evaluate((element) => {
       element.style.display = 'none'
@@ -73,7 +73,9 @@ for (const width of [1440, 768, 390, 320]) {
     }
     await expect(section.getByRole('button', { name: 'Etapa siguiente' })).toBeDisabled()
     await section.getByRole('button', { name: 'Etapa anterior' }).click()
-    await expect(section.getByRole('heading', { name: 'Donación de equipo EATON' })).toBeVisible()
+    await expect(
+      section.getByRole('heading', { name: rosacConstructionContent.stages.at(-2)!.title }),
+    ).toBeVisible()
     await section.getByRole('button', { name: 'Etapa siguiente' }).click()
     await expect(section.getByRole('heading', { name: 'Instalación eléctrica' })).toBeVisible()
   })
@@ -96,4 +98,30 @@ test('keeps photographs static and supports keyboard navigation', async ({ page 
   await expect(next).toBeFocused()
   await page.keyboard.press('Space')
   await expect(section.getByRole('img', { name: first.alt })).toBeVisible()
+})
+
+test('shows a placeholder for a photograph that fails to load, keeping the stage usable', async ({
+  page,
+}) => {
+  const stage = rosacConstructionContent.stages.at(-1)!
+  const brokenImage = stage.images[0]
+  await page.route(
+    (url) => url.pathname === '/_next/image' && url.searchParams.get('url') === brokenImage.src,
+    (route) => route.abort(),
+  )
+  await page.goto('/radioastronomia')
+  const section = page.getByRole('region', { name: '4. Construcción del ROSAC' })
+  await section.scrollIntoViewIfNeeded()
+  for (let index = 0; index < rosacConstructionContent.stages.length - 1; index++) {
+    await section.getByRole('button', { name: 'Etapa siguiente' }).click()
+  }
+
+  await expect(section.getByRole('heading', { name: stage.title })).toBeVisible()
+  await expect(section.getByText('No fue posible cargar esta fotografía.')).toBeVisible()
+  await expect(section.getByRole('img', { name: brokenImage.alt })).toHaveCount(0)
+  // The rest of the stage stays usable: description and navigating to the next photo, which
+  // loads fine, both keep working despite the failed one.
+  await expect(section.getByText(stage.description)).toBeVisible()
+  await section.getByRole('button', { name: 'Fotografía siguiente' }).click()
+  await expect(section.getByRole('img', { name: stage.images[1].alt })).toBeVisible()
 })
