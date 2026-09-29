@@ -70,8 +70,8 @@ test('skip link moves keyboard focus to the shared main content', async ({ page 
   await expect(mainContent).toBeFocused()
 })
 
-// The desktop header keeps some routes behind a disclosure, so the keyboard sweep opens
-// each one on the way. The mobile menu lists every route flat, without the group label.
+// The desktop header and the mobile menu keep some routes behind a disclosure, so the
+// keyboard sweep opens each one on the way.
 const nosotrosGroup = {
   label: 'Nosotros',
   items: ['Quiénes somos', 'Colaboraciones e Iniciativas'],
@@ -157,8 +157,9 @@ test('mobile navigation can be opened and used with the keyboard', async ({ page
   const navigation = page.getByRole('navigation', { name: 'Navegación móvil' })
   for (const route of publicRoutes) {
     await page.keyboard.press('Tab')
-    if (route.label === 'Publicaciones') {
-      await expect(navigation.getByText('Recursos', { exact: true })).toBeFocused()
+    if (route.label === 'Quiénes somos' || route.label === 'Publicaciones') {
+      const groupLabel = route.label === 'Quiénes somos' ? 'Nosotros' : 'Recursos'
+      await expect(navigation.getByText(groupLabel, { exact: true })).toBeFocused()
       await page.keyboard.press('Enter')
       await page.keyboard.press('Tab')
     }

@@ -37,14 +37,13 @@ route is in the sitemap.
 
 ## Navigation
 
-The desktop header groups the page with Quiénes somos under **Nosotros**, the same disclosure
-pattern as **Recursos**. The group label is not itself a link. The mobile menu lists
-"Quiénes somos" and "Colaboraciones e Iniciativas" as flat links and does not show the word
-"Nosotros".
+The desktop header and the mobile menu group the page with Quiénes somos under **Nosotros**,
+the same disclosure pattern as **Recursos**. The group label is not itself a link. On mobile
+it is an accordion that starts closed.
 
 ## Layout
 
-**Organisations.** A grid of cards: four columns above 1080px, two columns down to 760px, one
+**Organizations.** A grid of cards: four columns above 1080px, two columns down to 760px, one
 column below that. Each card shows a "Nacional" or "Internacional" badge, the country, the
 organization name as an `h3`, and the acronym when the entry has one. There is no search field
 and no scope filter. An empty list renders the status text "No hay información de colaboraciones
