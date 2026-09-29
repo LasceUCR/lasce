@@ -10,7 +10,7 @@ migration source; the worker mirrors these tables in SQLAlchemy
 | Postgres schema | Used for                                               | Populated today |
 | --------------- | ------------------------------------------------------ | --------------- |
 | `public`        | Default, for anything not domain-specific              | No tables yet   |
-| `research`      | Public research/publications shown on `/investigacion` | Yes             |
+| `research`      | Public research/publications shown on `/publicaciones` | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`        | Yes             |
 | `auth`          | Portal accounts created through `/acceso`              | Yes             |
 | `gallery`       | Public photo/video gallery shown on `/galeria`         | No — see below  |
@@ -39,7 +39,7 @@ Relationships: has many `research_records`.
 
 ### `research_records`
 
-A public research record shown on `/investigacion`: a paper, article, or institutional note,
+A public research record shown on `/publicaciones`: a paper, article, or institutional note,
 linked to its original source rather than a hosted copy. The Prisma model is `Research`
 (`prisma.research.*`); the table itself is named `research_records`, not `research`, to avoid the
 `research.research` stutter under the `research` Postgres schema.
@@ -311,7 +311,7 @@ The worker never writes here.
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` (newest
 `publication_date` first, authors ordered by `position`) and maps each row to the `Publication`
-shape `/investigacion` renders.
+shape `/publicaciones` renders.
 
 `apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape

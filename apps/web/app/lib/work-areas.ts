@@ -33,8 +33,8 @@ export const workAreas = {
     icon: Orbit,
   },
   radioastronomia: {
-    title: 'Radioastronomía',
-    description: 'Datos ROSAC',
+    title: 'ROSAC',
+    description: 'Datos del radiotelescopio',
     icon: RadioTower,
   },
 } as const satisfies Record<

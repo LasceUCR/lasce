@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
+import { LOGIN_HREF } from '@/app/lib/auth/login'
 import {
   REGISTRATION_FIELDS,
   REGISTRATION_LABELS,
@@ -180,10 +181,9 @@ describe('RegistrationForm', () => {
       screen.queryByRole('heading', { name: successArgs.heading?.title }),
     ).not.toBeInTheDocument()
     expect(screen.queryByText(successArgs.heading?.description ?? '')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: registrationFormCopy.successLink })).toHaveAttribute(
-      'href',
-      registrationFormCopy.successHref,
-    )
+    const link = screen.getByRole('link', { name: registrationFormCopy.successLink })
+    expect(link).toHaveAttribute('href', LOGIN_HREF)
+    expect(link).toHaveAttribute('href', '/acceso?tab=iniciar-sesion')
     expect(
       screen.queryByRole('button', { name: registrationFormCopy.submit }),
     ).not.toBeInTheDocument()

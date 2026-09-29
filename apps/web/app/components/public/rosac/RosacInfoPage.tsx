@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import {
   ChartNoAxesCombined,
   Crosshair,
@@ -11,18 +14,27 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/components/public/Button'
+import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
+import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
+import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import styles from './RosacInfoPage.module.css'
 import { ConstructionCarousel } from './ConstructionCarousel'
+import { EditableResearcherCard } from './EditableResearcherCard'
+import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
+import { RosacLocationMapLoader } from './RosacLocationMapLoader'
 import { TeamGallery } from './TeamGallery'
+
+const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
 
 const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
@@ -38,9 +50,102 @@ const icons: Record<RosacCardIcon, LucideIcon> = {
 
 export interface RosacInfoPageProps {
   content: RosacInfoContent
+  canCreate?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
 }
 
-export function RosacInfoPage({ content }: RosacInfoPageProps) {
+export function RosacInfoPage({
+  content,
+  canCreate = false,
+  canEdit = false,
+  canDelete = false,
+}: RosacInfoPageProps) {
+  const router = useRouter()
+  const { editMode } = useEditMode()
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [listError, setListError] = useState<string | null>(null)
+  const createErrorRef = useRef<HTMLParagraphElement>(null)
+
+  // Scrolls the "Añadir investigador" error into view as soon as it appears —
+  // same reasoning as `ResearcherForm`'s own upload error.
+  useEffect(() => {
+    if (createError) {
+      scrollIntoViewIfSupported(createErrorRef.current)
+    }
+  }, [createError])
+
+  async function handleSaveResearcher(
+    id: string,
+    values: ResearcherFormValues,
+  ): Promise<string | null> {
+    let response: Response
+    try {
+      response = await fetch(`/api/researchers/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      })
+    } catch {
+      return SAVE_ERROR_MESSAGE
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      return body?.error ?? SAVE_ERROR_MESSAGE
+    }
+
+    // Re-runs the server component's `getResearchers()` so the page reflects the saved
+    // change immediately, without an optimistic guess.
+    router.refresh()
+    return null
+  }
+
+  async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
+    setCreateError(null)
+
+    let response: Response
+    try {
+      response = await fetch('/api/researchers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      })
+    } catch {
+      setCreateError(SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      setCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    close()
+    router.refresh()
+  }
+
+  async function handleDeleteResearcher(id: string) {
+    setListError(null)
+
+    let response: Response
+    try {
+      response = await fetch(`/api/researchers/${id}`, { method: 'DELETE' })
+    } catch {
+      setListError(SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      setListError(body?.error ?? SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    router.refresh()
+  }
+
   return (
     <article className="topic-page">
       <TopicHero {...content.hero} />
@@ -73,7 +178,16 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
         </CardGrid>
       </TopicSection>
 
-      <TopicSection title={content.activities.title} titleId="rosac-activities-title" index="2">
+      <TopicSection
+        index="2"
+        intro={content.location.intro}
+        title={content.location.title}
+        titleId="rosac-location-title"
+      >
+        <RosacLocationMapLoader location={content.location} />
+      </TopicSection>
+
+      <TopicSection title={content.activities.title} titleId="rosac-activities-title" index="3">
         <CardGrid columns={3} equalHeight>
           {content.activities.items.map((item) => {
             const Icon = icons[item.icon]
@@ -94,7 +208,7 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
         title={content.construction.title}
         titleId="rosac-construction-title"
         intro={content.construction.intro}
-        index="3"
+        index="4"
         wide
       >
         <ConstructionCarousel stages={content.construction.stages} />
@@ -103,7 +217,7 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
       <TopicSection
         title={content.radioObservation.title}
         titleId="rosac-radio-observation-title"
-        index="4"
+        index="5"
         wide
       >
         {content.radioObservation.paragraphs.map((paragraph) => (
@@ -123,17 +237,57 @@ export function RosacInfoPage({ content }: RosacInfoPageProps) {
 
       <TopicSection
         id="investigadores"
-        index="5"
+        index="6"
         intro={content.team.intro}
         title={content.team.title}
         titleId="rosac-team-title"
         wide
       >
+        {listError ? (
+          <p className="form-alert" role="alert">
+            {listError}
+          </p>
+        ) : null}
+
         <TeamGallery
           emptyMessage={content.team.emptyMessage}
           hint={content.team.hint}
           label={content.team.title}
           people={content.team.people}
+          renderPerson={(person) => (
+            <EditableResearcherCard
+              canDelete={canDelete}
+              canEdit={canEdit}
+              onDelete={() => handleDeleteResearcher(person.id)}
+              onSave={(values) => handleSaveResearcher(person.id, values)}
+              researcher={person}
+            />
+          )}
+          trailingSlide={
+            editMode && canCreate ? (
+              <AddItemCard label="Añadir investigador">
+                {({ close }) => (
+                  <>
+                    {createError ? (
+                      <p className="form-alert" ref={createErrorRef} role="alert">
+                        {createError}
+                      </p>
+                    ) : null}
+                    <ResearcherForm
+                      confirmMessage="¿Desea agregar este investigador?"
+                      confirmTitle="Agregar investigador"
+                      onCancel={() => {
+                        setCreateError(null)
+                        close()
+                      }}
+                      onSave={(values) => handleCreateResearcher(values, close)}
+                      researcher={null}
+                    />
+                  </>
+                )}
+              </AddItemCard>
+            ) : undefined
+          }
         />
       </TopicSection>
 

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react'
 
 import type { CountryOption } from '@/app/lib/auth/countries'
+import { LOGIN_HREF } from '@/app/lib/auth/login'
 import {
   REGISTRATION_LABELS,
   REGISTRATION_PLACEHOLDERS,
@@ -78,7 +79,9 @@ export function RegistrationForm({
           {registrationFormCopy.successTitle}
         </h2>
         <p>{registrationFormCopy.successBody}</p>
-        <Button href={registrationFormCopy.successHref} variant="brand">
+        {/* The tab selector keeps its selection across client-side navigations, so this
+            link loads the page fresh on the login tab, which also resets this card. */}
+        <Button fullPageLoad href={LOGIN_HREF} variant="brand">
           {registrationFormCopy.successLink}
         </Button>
       </section>

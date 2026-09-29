@@ -13,7 +13,12 @@ describe('Carousel', () => {
     for (const [index, group] of defaultArgs.groups.entries()) {
       if (index > 0) fireEvent.click(screen.getByRole('button', { name: 'Etapa siguiente' }))
       expect(screen.getByText(group.description)).toBeInTheDocument()
-      for (const image of group.images) {
+      for (const [imageIndex, image] of group.images.entries()) {
+        expect(
+          screen.getByText(`Fotografía ${imageIndex + 1} de ${group.images.length}`, {
+            exact: true,
+          }),
+        ).toBeVisible()
         expect(screen.getByRole('img', { name: image.alt })).toHaveAttribute('src', image.src)
         if (group.images.length > 1)
           fireEvent.click(screen.getByRole('button', { name: 'Fotografía siguiente' }))
@@ -32,7 +37,9 @@ describe('Carousel', () => {
     const previous = screen.getByRole('button', { name: 'Etapa anterior' })
     const next = screen.getByRole('button', { name: 'Etapa siguiente' })
     expect(previous).toBeDisabled()
-    expect(screen.queryByText(/^Fotografía \d+ de/)).not.toBeInTheDocument()
+    expect(
+      screen.getByText(`Fotografía 1 de ${defaultArgs.groups[0].images.length}`, { exact: true }),
+    ).toBeVisible()
     fireEvent.click(screen.getByRole('button', { name: 'Fotografía siguiente' }))
     for (const group of defaultArgs.groups.slice(1)) {
       fireEvent.click(next)
@@ -41,9 +48,45 @@ describe('Carousel', () => {
     }
     expect(next).toBeDisabled()
     fireEvent.click(previous)
-    expect(screen.getByRole('heading', { name: 'Donación de equipo EATON' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: defaultArgs.groups.at(-2)!.title }),
+    ).toBeInTheDocument()
+  })
+
+  test('hides photo navigation controls for a group with a single photo', () => {
+    const singlePhotoArgs: CarouselProps = {
+      ...defaultArgs,
+      groups: [
+        defaultArgs.groups[0],
+        {
+          id: 'unica',
+          title: 'Etapa única',
+          description: 'Descripción de prueba.',
+          images: [defaultArgs.groups[0].images[0]],
+        },
+      ],
+    }
+    render(<Carousel {...singlePhotoArgs} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Etapa siguiente' }))
+    expect(screen.getByRole('heading', { name: 'Etapa única' })).toBeInTheDocument()
+    expect(screen.getByText('Fotografía 1 de 1', { exact: true })).toBeVisible()
     expect(screen.queryByRole('button', { name: 'Fotografía anterior' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Fotografía siguiente' })).not.toBeInTheDocument()
+  })
+
+  test('shows a placeholder for a photo that fails to load, keeping the rest of the carousel usable', () => {
+    render(<Carousel {...defaultArgs} />)
+    const [firstStage] = defaultArgs.groups
+    const firstImage = screen.getByRole('img', { name: firstStage.images[0].alt })
+
+    fireEvent.error(firstImage)
+
+    expect(screen.getByText('No fue posible cargar esta fotografía.')).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: firstStage.images[0].alt })).not.toBeInTheDocument()
+    // The rest of the carousel stays usable: title, description and both levels of navigation.
+    expect(screen.getByRole('heading', { name: firstStage.title })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Fotografía siguiente' }))
+    expect(screen.getByRole('img', { name: firstStage.images[1]!.alt })).toBeInTheDocument()
   })
 
   test('does not advance automatically or expose playback controls', () => {
@@ -68,16 +111,19 @@ describe('Carousel', () => {
     expect(previous).toHaveFocus()
     await user.keyboard('{Enter}')
     expect(previous).toHaveFocus()
-    expect(screen.getByRole('status')).toHaveTextContent('Fotografía 2 de 2')
+    const photoCount = defaultArgs.groups[0].images.length
+    expect(screen.getByRole('status')).toHaveTextContent(
+      `Fotografía ${photoCount} de ${photoCount}`,
+    )
     await user.tab()
     const next = screen.getByRole('button', { name: 'Fotografía siguiente' })
     expect(next).toHaveFocus()
     await user.keyboard(' ')
-    expect(screen.getByRole('status')).toHaveTextContent('Fotografía 1 de 2')
+    expect(screen.getByRole('status')).toHaveTextContent(`Fotografía 1 de ${photoCount}`)
     await user.tab()
     expect(screen.getByRole('button', { name: 'Etapa siguiente' })).toHaveFocus()
     await user.keyboard('{Enter}')
-    expect(screen.getByRole('status')).toHaveTextContent('Etapa 2 de 5')
+    expect(screen.getByRole('status')).toHaveTextContent(`Etapa 2 de ${defaultArgs.groups.length}`)
   })
 
   test('replaces every label and noun when a caller overrides them', () => {
@@ -85,7 +131,9 @@ describe('Carousel', () => {
     render(<Carousel {...customArgs} />)
     expect(screen.getByRole('button', { name: 'Imagen siguiente' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sección siguiente' })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent(/^Sección 1 de 5:.*Imagen 1 de 2\.$/)
+    expect(screen.getByRole('status')).toHaveTextContent(
+      `Sección 1 de ${customArgs.groups.length}: ${customArgs.groups[0].title}. Imagen 1 de ${customArgs.groups[0].images.length}.`,
+    )
     expect(screen.queryByRole('button', { name: 'Fotografía siguiente' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Etapa siguiente' })).not.toBeInTheDocument()
   })
