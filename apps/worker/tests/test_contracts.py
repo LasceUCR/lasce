@@ -36,6 +36,12 @@ EXAMPLES: dict[str, dict[str, Any]] = {
         "from": datetime(2026, 8, 19, tzinfo=UTC).isoformat(),
         "to": datetime(2026, 8, 20, tzinfo=UTC).isoformat(),
     },
+    "exis-pipeline": {
+        "product": "SFXR",
+        "spacecraft": 19,
+        "lookbackDays": 3,
+        "date": "2026-09-27",
+    },
     "suvi-pipeline": {
         "channel": "Fe171",
         "spacecraft": 19,
