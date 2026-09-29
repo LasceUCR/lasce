@@ -4189,6 +4189,11 @@ a.gallery-tile:focus-visible {
   color: var(--white);
 }
 
+/* The narrow-screen toggle. Above 1120px the sidebar itself is the menu. */
+.admin-menu-toggle {
+  display: none;
+}
+
 .admin-content {
   grid-column: 2;
   padding: 32px;
@@ -4327,6 +4332,8 @@ a.gallery-tile:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  /* The sidebar becomes a sticky bar under the header; the list opens in place
+     below the toggle and pushes the content down, so nothing overlaps. */
   .admin-sidebar {
     position: sticky;
     top: var(--header-height);
@@ -4334,16 +4341,74 @@ a.gallery-tile:focus-visible {
     bottom: auto;
     width: auto;
     height: auto;
-    padding: 12px 14px;
-    overflow-x: auto;
+    max-height: calc(100vh - var(--header-height));
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .admin-menu-toggle {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: var(--navy-deep);
+    color: var(--white);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .admin-menu-toggle:focus-visible {
+    outline: 2px solid var(--amber-flame);
+    outline-offset: -2px;
+  }
+
+  .admin-menu-current {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--amber-glow);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-menu-chevron {
+    flex: 0 0 auto;
+    margin-left: auto;
+    transition: transform 160ms ease;
+  }
+
+  .admin-sidebar.is-open .admin-menu-chevron {
+    transform: rotate(180deg);
   }
 
   .admin-sidebar ul {
-    flex-direction: row;
+    display: none;
+    flex-direction: column;
+    padding: 4px 14px 12px;
+  }
+
+  .admin-sidebar.is-open ul {
+    display: flex;
+  }
+
+  .admin-sidebar a {
+    min-height: 44px;
   }
 
   .admin-content {
     grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-menu-chevron {
+    transition: none;
   }
 }
 

@@ -43,3 +43,19 @@ export const NoGrants: Story = {
     granted: [],
   },
 }
+
+/** The shell on a phone: the sidebar is a sticky bar above the section content. */
+export const Mobile: Story = {
+  args: Default.args,
+  globals: { viewport: { value: 'adminMobile', isRotated: false } },
+  parameters: {
+    viewport: {
+      options: {
+        adminMobile: {
+          name: 'Mobile (390px)',
+          styles: { width: '390px', height: '844px' },
+        },
+      },
+    },
+  },
+}
