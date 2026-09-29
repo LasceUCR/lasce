@@ -4328,8 +4328,10 @@ a.gallery-tile:focus-visible {
 }
 
 @media (max-width: 1120px) {
+  /* The content row takes the spare height, so a short page does not stretch the bar. */
   .admin-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
   /* The sidebar becomes a sticky bar under the header; the list opens in place
