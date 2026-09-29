@@ -8,6 +8,7 @@ import { UserRoleAssignment } from '@/app/components/administracion/UserRoleAssi
 import { adminSections, getAdminSection } from '@/app/lib/admin-sections'
 import { requirePermission } from '@/app/lib/auth/authorization'
 import { PERMISSION_DENIED } from '@/app/lib/auth/permissions'
+import { requireUser } from '@/app/lib/auth/session'
 import { getPermissionMatrix } from '@/app/lib/role-permissions'
 import { availableRoles, getUserOverview } from '@/app/lib/user-administration'
 import { saveRolePermissions } from '../permission-actions'
@@ -48,6 +49,9 @@ export default async function AdministracionSectionPage({
   if (!content) {
     notFound()
   }
+
+  // Every section needs a session, so login returns the visitor to this exact section.
+  await requireUser(`/administracion/${section}`)
 
   if (section === 'usuarios') {
     const { user, allowed } = await requirePermission('manage_users', '/administracion/usuarios')
