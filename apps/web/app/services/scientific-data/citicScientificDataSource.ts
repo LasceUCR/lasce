@@ -76,9 +76,9 @@ export async function queryCiticScientificData(
       points: result.points,
       origin: {
         kind: 'observed',
-        provider: 'CITIC-UCR — archivo histórico GOES de NOAA',
+        provider: 'GOES',
         notice:
-          'Observaciones históricas del archivo GOES nivel 1b de CITIC-UCR. Se excluyen valores de relleno y observaciones marcadas con calidad degradada o inválida.' +
+          'Fuente: GOES. Observaciones históricas de nivel 1b. Se excluyen valores de relleno y observaciones marcadas con calidad degradada o inválida.' +
           (result.sampled
             ? ' Se muestran 360 observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.'
             : ''),

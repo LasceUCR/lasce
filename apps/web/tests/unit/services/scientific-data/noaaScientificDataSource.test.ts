@@ -59,7 +59,8 @@ describe('queryNoaaScientificData', () => {
         alt: 'Imágenes solares: 171 Å (Fe171) observada por GOES-19 a las 08:30 UTC',
       },
     ])
-    expect(result.origin).toMatchObject({ kind: 'observed', satellite: 19 })
+    expect(result.origin).toMatchObject({ kind: 'observed', satellite: 19, provider: 'GOES' })
+    expect(result.origin.notice).not.toMatch(/NOAA|CITIC|LASCE/)
   })
 
   test.each([

@@ -121,9 +121,9 @@ async function querySuvi(
     parameter,
     origin: {
       kind: 'observed',
-      provider: 'NOAA Space Weather Prediction Center',
+      provider: 'GOES',
       notice:
-        'Imágenes observadas del producto de animación SUVI primario de NOAA. Este índice cubre aproximadamente las últimas 24 horas.',
+        'Fuente: GOES. Imágenes observadas de SUVI; disponibles aproximadamente durante las últimas 24 horas.',
       ...(images[0]?.satellite ? { satellite: images[0].satellite } : {}),
     },
     visualization: 'image-sequence',
