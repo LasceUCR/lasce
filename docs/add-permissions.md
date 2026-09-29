@@ -19,6 +19,14 @@ The helpers are in `apps/web/app/lib/auth/authorization.ts`:
 Do not call any of these from the shared `(public)` layout. Call them in the page (or the Server
 Action) that needs the answer.
 
+The one layout that reads grants is `apps/web/app/(public)/administracion/layout.tsx`, the layout
+of the protected section rather than the shared one. It calls `getSessionUser()` and
+`getPermissionsForRole()` once per request and passes the held grants to `AdminShell` as
+`granted`, so the menu offers only the entries of the section catalogue
+(`apps/web/app/lib/admin-sections.ts`) the account may open. That is a courtesy to the reader,
+not a check: each section page still calls `requirePermission`. See
+[`admin-navigation.md`](admin-navigation.md).
+
 ## 1. Decide which grant is the work
 
 Reuse the existing names when they already match:
@@ -174,3 +182,6 @@ Only when the existing names are the wrong work:
    performs the work.
 
 The Permisos table will show the new row once the catalogue and the migration agree.
+
+A new administration section is declared once in `apps/web/app/lib/admin-sections.ts`, with the
+grant it needs. The menu and the `[section]` route both read that entry.

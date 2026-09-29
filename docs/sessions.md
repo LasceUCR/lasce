@@ -131,9 +131,10 @@ correctness; the admin panel gate (#83) may add one for a faster redirect.
 - Download gating (#81): send anonymous visitors to `loginRedirectPath(<resource path>)` so login
   returns them to the resource. Signed-in access already checks `download_resources` on
   `/administracion/descargas`.
-- Admin panel (#83): `requireUser` plus a panel-level grant in the `administracion` layout; the
-  `administracion.spec.ts` assertion that the summary never redirects still holds. Individual
-  sections already check their own permissions.
+- Admin panel: the `administracion` layout calls `getSessionUser()`, which never redirects, to
+  offer only the menu sections the account may open
+  ([admin-navigation.md](admin-navigation.md)); the `administracion.spec.ts` assertion that the
+  summary never redirects still holds. Individual sections check their own permissions.
 
 ## Known gaps
 
