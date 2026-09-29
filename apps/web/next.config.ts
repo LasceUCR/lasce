@@ -80,14 +80,7 @@ const minioPattern = minioRemotePattern()
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'services.swpc.noaa.gov',
-        pathname: '/images/animations/suvi/**',
-      },
-      ...(minioPattern ? [minioPattern] : []),
-    ],
+    remotePatterns: [...(minioPattern ? [minioPattern] : [])],
   },
 
   experimental: {

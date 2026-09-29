@@ -5,7 +5,7 @@ import type { ScientificDataProvider, ScientificDataSource } from './scientificD
 
 /**
  * A source whose products are served by different backends, chosen by the instrument that
- * owns the product in the catalog (for GOES: SUVI from NOAA, EXIS/MAG/SEISS from CITIC).
+ * owns the product in the catalog (for GOES: SUVI from the frame catalogue, EXIS/MAG/SEISS from CITIC).
  */
 export function createInstrumentRoutedDataSource(
   code: ScientificSourceCode,

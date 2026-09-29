@@ -19,7 +19,7 @@ export interface PendingScientificDataQuery {
 
 export type ScientificDataResponse = ScientificDataResult | PendingScientificDataQuery
 
-/** A backend that serves some products: NOAA SUVI, the CITIC archive, the ROSAC simulation, … */
+/** A backend that serves some products: the SUVI frame catalogue, the CITIC archive, the ROSAC simulation, … */
 export interface ScientificDataProvider {
   query(request: ScientificDataRequest): Promise<ScientificDataResponse>
 }

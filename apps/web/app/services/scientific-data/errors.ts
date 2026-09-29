@@ -1,4 +1,4 @@
-/** A backend (NOAA, the CITIC worker, …) failed or returned unusable data. Maps to 502. */
+/** A backend (the SUVI archive, the CITIC worker, …) failed or returned unusable data. Maps to 502. */
 export class ScientificDataUpstreamError extends Error {
   constructor(message: string) {
     super(message)

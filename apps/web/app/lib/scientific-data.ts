@@ -313,7 +313,7 @@ export const scientificSources: ScientificSource[] = [
   {
     code: 'GOES',
     name: 'GOES — CITIC / NOAA',
-    description: 'Series históricas GOES del archivo de CITIC-UCR e imágenes SUVI de NOAA.',
+    description: 'Series históricas e imágenes SUVI de GOES del archivo de CITIC-UCR.',
     dataKind: 'observed',
     instruments: goesInstruments,
   },
@@ -440,6 +440,10 @@ const scientificResultBaseSchema = z.object({
   parameter: scientificParameterSchema,
   origin: scientificOriginSchema,
 })
+/** An absolute URL, or a same-origin path such as `/api/suvi/frames/<id>` (never `//host`). */
+const imageUrlSchema = z
+  .string()
+  .refine((value) => /^\/(?!\/)/.test(value) || URL.canParse(value), 'Invalid image URL')
 
 export const scientificDataResultSchema: z.ZodType<ScientificDataResult> = z.discriminatedUnion(
   'visualization',
@@ -451,7 +455,7 @@ export const scientificDataResultSchema: z.ZodType<ScientificDataResult> = z.dis
     scientificResultBaseSchema.extend({
       visualization: z.literal('image-sequence'),
       images: z.array(
-        z.object({ timestamp: z.string(), imageUrl: z.string().url(), alt: z.string() }),
+        z.object({ timestamp: z.string(), imageUrl: imageUrlSchema, alt: z.string() }),
       ),
     }),
     scientificResultBaseSchema.extend({
