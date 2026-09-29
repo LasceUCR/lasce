@@ -62,9 +62,7 @@ describe('ResearcherForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(
-      screen.getByText('Falta completar: Foto, Rol, Nombre, Institución.'),
-    ).toBeInTheDocument()
+    expect(screen.getByText('Falta completar: Foto, Rol, Nombre, Institución.')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
