@@ -41,13 +41,13 @@ configurable without letting an administrator lock themselves out.
 | Resource downloads                            | `/administracion/descargas` (`download_resources`)                            |
 | Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md) |
 
-The administration menu offers only the sections whose grant the account holds, read from
-`auth.role_permissions` on each request by the `administracion` layout
-([admin-navigation.md](admin-navigation.md)). Hiding a link is still not an authorization check:
-every section page and every write action repeats the permission lookup, and the role is read
-from the database each request (same as user administration). The public header's Administración
-tab is shown only to `ASSISTANT` and `ADMIN`, from the account cookie; that is also not an
-authorization check.
+The administration panel admits only `ASSISTANT` and `ADMIN` (the `administracion` layout turns
+visitors away), and its menu offers only the sections whose grant the account holds, read from
+`auth.role_permissions` on each request ([admin-navigation.md](admin-navigation.md)). Hiding a
+link is still not an authorization check: every section page and every write action repeats the
+permission lookup, and the role is read from the database each request (same as user
+administration). The public header's Administración tab follows the same role rule from the
+account cookie; that is a convenience, the layout is the check.
 
 ## Protecting a page
 

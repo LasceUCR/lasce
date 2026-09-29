@@ -14,23 +14,33 @@ grant its page requires. `(public)/administracion/[section]/page.tsx` reads it f
 resolve. Adding a section means one entry there plus, when the page needs more than the
 placeholder, a branch in `[section]/page.tsx`.
 
-## The menu follows the grants
+## Who enters, and what the menu offers
 
 `apps/web/app/(public)/administracion/layout.tsx` is the layout of the protected section, not the
-shared `(public)` one, so it may read the session ([sessions.md](sessions.md)). It calls
-`getSessionUser()` and `getPermissionsForRole()`, both memoised per request, and passes the held
-grants to `AdminShell` as `granted`. `visibleAdminMenu(granted)` keeps the entries without a grant
-(Resumen, Infraestructura) and those whose grant is held. With the default matrix:
+shared `(public)` one, so it may read the session ([sessions.md](sessions.md)). It gates the whole
+panel and then builds the menu:
 
-| Viewer               | Sections offered                    |
-| -------------------- | ----------------------------------- |
-| Anonymous            | Resumen, Infraestructura            |
-| Visitante, Asistente | Resumen, Descargas, Infraestructura |
-| Administrador        | all five                            |
+1. `requireUser('/administracion')` sends an anonymous visitor to `/acceso` and back to the panel.
+2. `canSeeAdminNavigation(role)`, the same rule that hides the header tab, turns a signed-in
+   visitor away with Acceso denegado. Only assistants and administrators continue.
+3. `getPermissionsForRole()` (memoised per request) gives the held grants, passed to `AdminShell`
+   as `granted`. `visibleAdminMenu(granted)` keeps the entries without a grant (Resumen,
+   Infraestructura) and those whose grant is held.
 
-Changing the matrix on `/administracion/permisos` changes the menu on the next request; no new
-login is needed. Hiding a link is not authorization: every section page still calls
-`requirePermission`, as [add-permissions.md](add-permissions.md) describes.
+With the default matrix:
+
+| Viewer        | Result                                                 |
+| ------------- | ------------------------------------------------------ |
+| Anonymous     | Redirect to `/acceso?next=/administracion&reason=auth` |
+| Visitante     | Acceso denegado, no menu                               |
+| Asistente     | Resumen, Descargas, Infraestructura                    |
+| Administrador | all five                                               |
+
+A visitor holds `download_resources` by default, but the panel gate comes first, so that grant
+does not open `/administracion/descargas` for them. Changing the matrix on
+`/administracion/permisos` changes the menu on the next request; no new login is needed. Hiding a
+link is not authorization: every section page still calls `requirePermission`, as
+[add-permissions.md](add-permissions.md) describes.
 
 ## Narrow screens
 
