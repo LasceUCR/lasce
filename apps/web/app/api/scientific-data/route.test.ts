@@ -4,6 +4,7 @@ import { ScientificDataUpstreamError } from '@/app/services/scientific-data/erro
 const mocks = vi.hoisted(() => ({
   queryMockScientificData: vi.fn(),
   querySuviFrames: vi.fn(),
+  queryExisReadings: vi.fn(),
   queryCiticScientificData: vi.fn(),
 }))
 
@@ -13,6 +14,10 @@ vi.mock('@/app/services/scientific-data/mockScientificDataSource', () => ({
 
 vi.mock('@/app/services/scientific-data/suviFrameDataSource', () => ({
   querySuviFrames: mocks.querySuviFrames,
+}))
+
+vi.mock('@/app/services/scientific-data/exisReadingsDataSource', () => ({
+  queryExisReadings: mocks.queryExisReadings,
 }))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
@@ -25,10 +30,11 @@ function request(parameters: Record<string, string>) {
   return new Request(`http://localhost/api/scientific-data?${new URLSearchParams(parameters)}`)
 }
 
+// A MAG product: the one GOES instrument family still read on demand through CITIC.
 const validGoesQuery = {
   source: 'GOES',
-  product: 'SFXR',
-  parameter: '0.1-0.8nm',
+  product: 'GEOF',
+  parameter: 'total',
   date: '2026-09-10',
   startTime: '08:00',
   endTime: '09:00',
@@ -78,7 +84,7 @@ describe('GET /api/scientific-data', () => {
     expect(await response.json()).toMatchObject({ state: 'pending', progress: 20 })
     expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, 'goes-1')
   })
-  test('routes a valid GOES query to the CITIC historical adapter', async () => {
+  test('routes a MAG query to the CITIC historical adapter', async () => {
     const expected = { visualization: 'time-series', points: [] }
     mocks.queryCiticScientificData.mockResolvedValue(expected)
 
@@ -89,7 +95,24 @@ describe('GET /api/scientific-data', () => {
     expect(await response.json()).toEqual(expected)
     expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, undefined)
     expect(mocks.querySuviFrames).not.toHaveBeenCalled()
+    expect(mocks.queryExisReadings).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    ['SFXR', '0.1-0.8nm'],
+    ['SFEU', 'mgii_index'],
+  ])('routes EXIS %s to the InfluxDB readings synchronously', async (product, parameter) => {
+    const expected = { visualization: 'time-series', points: [] }
+    mocks.queryExisReadings.mockResolvedValue(expected)
+    const exis = { ...validGoesQuery, product, parameter }
+
+    const response = await GET(request(exis))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual(expected)
+    expect(mocks.queryExisReadings).toHaveBeenCalledWith(exis)
+    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
   })
 
   test('routes a valid ROSAC query only to the simulated adapter', async () => {

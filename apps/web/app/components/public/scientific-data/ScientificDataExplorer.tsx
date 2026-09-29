@@ -229,10 +229,11 @@ export function ScientificDataExplorer({
       <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
         <span className="data-source-notice-copy">
           <span aria-hidden={query.source !== 'GOES'}>
-            Las series GOES se consultan en el archivo histórico de CITIC-UCR. La disponibilidad
-            depende del producto y la fecha; la lectura puede tardar varios minutos. Las imágenes
-            SUVI son representaciones ilustrativas de las observaciones catalogadas. EHIS y MPSL
-            están pendientes de integración.
+            Las series GOES se consultan en el archivo histórico de CITIC-UCR. Las series EXIS
+            provienen de la ingesta diaria y se publican con aproximadamente un día de retraso; las
+            de MAG y SEISS se leen a demanda y pueden tardar varios minutos. Las imágenes SUVI son
+            representaciones ilustrativas de las observaciones catalogadas. EHIS y MPSL están
+            pendientes de integración.
           </span>
           <span aria-hidden={query.source !== 'ROSAC'}>
             ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están
