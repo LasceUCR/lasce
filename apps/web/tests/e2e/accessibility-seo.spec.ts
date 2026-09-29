@@ -15,7 +15,8 @@ const galleryRoutes = galleryAlbumList.flatMap((album) => [
 
 const publicRoutes = [
   { label: 'Inicio', path: '/' },
-  { label: 'Nosotros', path: '/nosotros' },
+  { label: 'Quiénes somos', path: '/nosotros' },
+  { label: 'Colaboraciones e Iniciativas', path: '/colaboraciones-e-iniciativas' },
   { label: 'Investigación', path: '/investigacion' },
   { label: 'Datos', path: '/datos' },
   { label: 'Noticias', path: '/noticias' },
@@ -69,8 +70,13 @@ test('skip link moves keyboard focus to the shared main content', async ({ page 
   await expect(mainContent).toBeFocused()
 })
 
-// The desktop header keeps three of the routes behind a "Recursos" disclosure, so the
-// keyboard sweep opens it on the way. The mobile menu lists every route flat.
+// The desktop header and the mobile menu keep some routes behind a disclosure, so the
+// keyboard sweep opens each one on the way.
+const nosotrosGroup = {
+  label: 'Nosotros',
+  items: ['Quiénes somos', 'Colaboraciones e Iniciativas'],
+} as const
+
 const resourcesGroup = {
   label: 'Recursos',
   items: ['Publicaciones', 'Herramientas científicas', 'Galería'],
@@ -78,7 +84,7 @@ const resourcesGroup = {
 
 const desktopNavigation = [
   'Inicio',
-  'Nosotros',
+  nosotrosGroup,
   'Investigación',
   'Datos',
   'Noticias',
@@ -94,18 +100,18 @@ test('all desktop navigation options are reachable by keyboard', async ({ page }
   await page.keyboard.press('Tab')
 
   const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
-  const group = navigation.locator('details', {
-    has: page.locator('summary', { hasText: resourcesGroup.label }),
-  })
   for (const entry of desktopNavigation) {
     await page.keyboard.press('Tab')
     if (typeof entry === 'string') {
       await expect(navigation.getByRole('link', { name: entry, exact: true })).toBeFocused()
-      // Closed before it is reached, and closed again once focus has left it.
-      await expect(group).not.toHaveAttribute('open', '')
+      // Closed before a top-level link is reached, and closed again once focus has left it.
+      await expect(navigation.locator('details.nav-group[open]')).toHaveCount(0)
       continue
     }
 
+    const group = navigation.locator('details', {
+      has: page.locator('summary', { hasText: entry.label }),
+    })
     await expect(group.locator('summary')).toBeFocused()
     await page.keyboard.press('Enter')
     await expect(group).toHaveAttribute('open', '')
@@ -151,8 +157,9 @@ test('mobile navigation can be opened and used with the keyboard', async ({ page
   const navigation = page.getByRole('navigation', { name: 'Navegación móvil' })
   for (const route of publicRoutes) {
     await page.keyboard.press('Tab')
-    if (route.label === 'Publicaciones') {
-      await expect(navigation.getByText('Recursos', { exact: true })).toBeFocused()
+    if (route.label === 'Quiénes somos' || route.label === 'Publicaciones') {
+      const groupLabel = route.label === 'Quiénes somos' ? 'Nosotros' : 'Recursos'
+      await expect(navigation.getByText(groupLabel, { exact: true })).toBeFocused()
       await page.keyboard.press('Enter')
       await page.keyboard.press('Tab')
     }

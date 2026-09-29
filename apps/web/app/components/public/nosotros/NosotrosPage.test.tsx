@@ -69,6 +69,19 @@ describe('NosotrosPage', () => {
     )
   })
 
+  test('leaves collaborations and initiatives to their own page', () => {
+    renderPage()
+
+    expect(
+      screen.queryByRole('heading', { name: 'Colaboraciones de investigación' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', {
+        name: 'Iniciativas internacionales de las que LASCE forma parte',
+      }),
+    ).not.toBeInTheDocument()
+  })
+
   test('lists everything the laboratory does', () => {
     renderPage()
 
@@ -503,16 +516,5 @@ describe('NosotrosPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo eliminar la actividad.')
     expect(mocks.refresh).not.toHaveBeenCalled()
-  })
-
-  test('renders research collaborations section and cards', () => {
-    renderPage()
-
-    expect(
-      screen.getByRole('heading', { level: 2, name: 'Colaboraciones de investigación' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/Organizaciones y grupos que colaboran con el LASCE/),
-    ).toBeInTheDocument()
   })
 })

@@ -7,7 +7,13 @@ import { researchAreas } from '@/app/lib/research-areas'
 // `group` names the desktop header disclosure a route sits behind, if any.
 const publicRoutes: { label: string; path: string; heading: string; group?: string }[] = [
   { label: 'Inicio', path: '/', heading: 'Exploramos el Sol para comprender el clima espacial' },
-  { label: 'Nosotros', path: '/nosotros', heading: 'Quiénes somos' },
+  { label: 'Quiénes somos', path: '/nosotros', heading: 'Quiénes somos', group: 'Nosotros' },
+  {
+    label: 'Colaboraciones e Iniciativas',
+    path: '/colaboraciones-e-iniciativas',
+    heading: 'Colaboraciones e Iniciativas',
+    group: 'Nosotros',
+  },
   { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
   {
     label: 'Herramientas científicas',
@@ -399,8 +405,8 @@ test('returns 404 for an unknown public route', async ({ page }) => {
   expect(response?.status()).toBe(404)
 })
 
-test('displays research collaborations and allows filtering by scope', async ({ page }) => {
-  const response = await page.goto('/nosotros')
+test('displays research collaborations', async ({ page }) => {
+  const response = await page.goto('/colaboraciones-e-iniciativas')
 
   expect(response?.status()).toBe(200)
   await expect(
@@ -413,30 +419,14 @@ test('displays research collaborations and allows filtering by scope', async ({ 
   await expect(
     page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
   ).toBeVisible()
-
-  await page.getByRole('combobox', { name: 'Tipo de colaboración' }).click()
-  await page.getByRole('option', { name: 'Nacionales', exact: true }).click()
-
-  await expect(page.getByText('2', { exact: true })).toBeVisible()
-  await expect(page.getByText('colaboraciones nacionales', { exact: true })).toBeVisible()
   await expect(
-    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+    page.getByRole('heading', { level: 1, name: 'Colaboraciones e Iniciativas' }),
   ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
-  ).toHaveCount(0)
-
-  await page.getByRole('combobox', { name: 'Tipo de colaboración' }).click()
-  await page.getByRole('option', { name: 'Internacionales', exact: true }).click()
-
-  await expect(page.getByText('6', { exact: true })).toBeVisible()
-  await expect(page.getByText('colaboraciones internacionales', { exact: true })).toBeVisible()
-  await expect(
-    page.getByRole('heading', { level: 3, name: 'Facultad de Ciencias Exactas y Tecnología' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
-  ).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Sitio oficial de la ISWI' })).toHaveAttribute(
+    'href',
+    'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html',
+  )
+  await expect(page.getByRole('combobox', { name: 'Tipo de colaboración' })).toHaveCount(0)
 })
 
 for (const route of publicRoutes) {

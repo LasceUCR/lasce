@@ -19,6 +19,8 @@ import { z } from 'zod'
  * `public/images/Researchers/`, except Dra. Carolina Salas Matamoros, who reuses the ROSAC
  * portrait. People without a supplied portrait use `User.png`. The rest of the ROSAC team stays
  * on `/radioastronomia`. See `app/lib/rosac.ts`.
+ *
+ * International initiatives and research collaborations live on `/colaboraciones-e-iniciativas`.
  */
 export const nosotrosMeta = {
   title: 'Quiénes somos | LASCE',
