@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { ScientificDataExplorer } from '@/app/components/public/scientific-data/ScientificDataExplorer'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { scientificSources } from '@/app/lib/scientific-data'
-import { getSuviAvailability } from '@/app/lib/scientific-data-availability'
+import { getGoesAvailability } from '@/app/lib/scientific-data-availability'
 
 const description =
   'Consulte y visualice observaciones de los satélites GOES y la integración prevista de ROSAC.'
@@ -29,7 +29,7 @@ export default function ScientificDataRoute() {
         variant="compact"
       />
       <ScientificDataExplorer
-        suviAvailability={getSuviAvailability(today)}
+        goesAvailability={getGoesAvailability(today)}
         initialQuery={{
           source: 'GOES',
           product: 'SFXR',

@@ -3,7 +3,7 @@ import { ScientificDataUpstreamError } from '@/app/services/scientific-data/erro
 
 const mocks = vi.hoisted(() => ({
   queryMockScientificData: vi.fn(),
-  queryNoaaScientificData: vi.fn(),
+  querySuviFrames: vi.fn(),
   queryCiticScientificData: vi.fn(),
 }))
 
@@ -11,8 +11,8 @@ vi.mock('@/app/services/scientific-data/mockScientificDataSource', () => ({
   queryMockScientificData: mocks.queryMockScientificData,
 }))
 
-vi.mock('@/app/services/scientific-data/noaaScientificDataSource', () => ({
-  queryNoaaScientificData: mocks.queryNoaaScientificData,
+vi.mock('@/app/services/scientific-data/suviFrameDataSource', () => ({
+  querySuviFrames: mocks.querySuviFrames,
 }))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
@@ -45,29 +45,27 @@ afterEach(() => {
 })
 
 describe('GET /api/scientific-data', () => {
-  test.each([
-    { date: '2026-09-08' },
-    { date: '2026-09-09', startTime: '11:59', endTime: '13:00' },
-    { date: '2026-09-10', startTime: '11:00', endTime: '12:01' },
-  ])('rejects SUVI outside the last 24 hours before contacting NOAA: %j', async (overrides) => {
+  test('rejects SUVI on a future date before querying the frame archive', async () => {
     const response = await GET(
-      request({ ...validGoesQuery, product: 'Fe171', parameter: 'image', ...overrides }),
+      request({ ...validGoesQuery, product: 'Fe171', parameter: 'image', date: '2026-09-11' }),
     )
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({
-      error: expect.stringContaining('últimas 24 horas'),
+      error: expect.stringContaining('posterior a hoy'),
     })
-    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
-    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    expect(mocks.querySuviFrames).not.toHaveBeenCalled()
   })
-  test('keeps SUVI on the NOAA image source', async () => {
-    mocks.queryNoaaScientificData.mockResolvedValue({ visualization: 'image-sequence', images: [] })
-    const suvi = { ...validGoesQuery, product: 'Fe171', parameter: 'image' }
-    const response = await GET(request(suvi))
-    expect(response.status).toBe(200)
-    expect(mocks.queryNoaaScientificData).toHaveBeenCalledWith(suvi)
-    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
-  })
+  test.each(['2026-09-10', '2025-01-05'])(
+    'routes SUVI on %s to the frame archive',
+    async (date) => {
+      mocks.querySuviFrames.mockResolvedValue({ visualization: 'image-sequence', images: [] })
+      const suvi = { ...validGoesQuery, product: 'Fe171', parameter: 'image', date }
+      const response = await GET(request(suvi))
+      expect(response.status).toBe(200)
+      expect(mocks.querySuviFrames).toHaveBeenCalledWith(suvi)
+      expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    },
+  )
 
   test('returns pending progress and forwards the poll identifier to CITIC', async () => {
     mocks.queryCiticScientificData.mockResolvedValue({
@@ -90,7 +88,7 @@ describe('GET /api/scientific-data', () => {
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual(expected)
     expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, undefined)
-    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
+    expect(mocks.querySuviFrames).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
 
@@ -112,7 +110,7 @@ describe('GET /api/scientific-data', () => {
 
     expect(response.status).toBe(200)
     expect(mocks.queryMockScientificData).toHaveBeenCalledWith(rosacQuery)
-    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
+    expect(mocks.querySuviFrames).not.toHaveBeenCalled()
   })
 
   test('rejects invalid source/product combinations before querying a source', async () => {
@@ -122,7 +120,7 @@ describe('GET /api/scientific-data', () => {
     expect(await response.json()).toMatchObject({
       error: 'Los criterios de consulta no son válidos.',
     })
-    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
+    expect(mocks.querySuviFrames).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
 

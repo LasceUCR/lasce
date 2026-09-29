@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { scientificDataQuerySchema } from '@/app/lib/scientific-data'
-import { getAvailabilityMessage, getSuviAvailability } from '@/app/lib/scientific-data-availability'
+import { getAvailabilityMessage, getGoesAvailability } from '@/app/lib/scientific-data-availability'
 import { scientificDataSources } from '@/app/services/scientific-data'
 import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'
 
@@ -30,7 +30,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     )
   }
 
-  const availabilityMessage = getAvailabilityMessage(parsed.data, getSuviAvailability())
+  const availabilityMessage = getAvailabilityMessage(parsed.data, getGoesAvailability())
   if (availabilityMessage) {
     return NextResponse.json(
       { error: availabilityMessage },

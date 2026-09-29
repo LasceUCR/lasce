@@ -72,9 +72,7 @@ for (const width of [320, 768, 1440]) {
   })
 }
 
-test('limits solar dates and UTC times while retaining historical series dates', async ({
-  page,
-}) => {
+test('keeps historical dates and full UTC days for solar images and series', async ({ page }) => {
   await page.goto('/datos')
   const date = page.getByLabel('Fecha', { exact: true })
   await expect(date).not.toHaveAttribute('min')
@@ -82,24 +80,14 @@ test('limits solar dates and UTC times while retaining historical series dates',
   const product = page.getByRole('combobox', { name: 'Producto científico' })
   await product.click()
   await page.getByRole('option', { name: /171 Å/ }).click()
-  const today = (await date.getAttribute('max'))!
-  const yesterday = new Date(`${today}T00:00:00Z`)
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1)
-  await expect(date).toHaveAttribute('min', yesterday.toISOString().slice(0, 10))
-  await expect(page.getByText(/Últimas 24 horas \(UTC\):/)).toBeVisible()
-  await date.fill(yesterday.toISOString().slice(0, 10))
-  const minimum = (await page.getByLabel('Hora de inicio').getAttribute('min'))!
-  expect(minimum).toMatch(/^\d{2}:\d{2}$/)
-  await expect(page.getByLabel('Hora de fin')).toHaveAttribute('max', '23:59')
-  if (minimum > '00:00') {
-    await page.getByLabel('Hora de inicio').fill('00:00')
-    await page.getByRole('button', { name: 'Consultar datos' }).click()
-    await expect(page.getByRole('alert').filter({ hasText: /últimas 24 horas/ })).toBeVisible()
-  }
+  await expect(date).toHaveValue('2025-01-05')
+  await expect(date).not.toHaveAttribute('min')
+  await expect(date).toHaveAttribute('max', /^\d{4}-\d{2}-\d{2}$/)
+  await expect(page.getByLabel('Hora de inicio')).not.toHaveAttribute('min')
+  await expect(page.getByLabel('Hora de fin')).not.toHaveAttribute('max')
   await product.click()
   await page.getByRole('option', { name: /Flujo solar: rayos X/ }).click()
   await expect(date).not.toHaveAttribute('min')
-  await date.fill('2025-01-05')
   await expect(date).toHaveValue('2025-01-05')
 })
 
