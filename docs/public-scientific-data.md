@@ -87,6 +87,27 @@ same Zod schema used by the browser. Results use a discriminated union:
 Source or worker failures return `502`; invalid criteria return `400`. Responses use
 `Cache-Control: no-store` so a stale observation is not presented as a new query result.
 
+### Source routing
+
+The route validates the query and hands it to `scientificDataSources`, a
+`ScientificDataSourceManager` (`apps/web/app/services/scientific-data/`). The route does not know
+which backend serves the query:
+
+```text
+route.ts → ScientificDataSourceManager ─ by query.source ─→ GOES  ─ by instrument ─→ SUVI → NOAA
+                                                                                      EXIS, MAG, SEISS → CITIC worker
+                                                          → ROSAC ─ by instrument ─→ ROSAC-I1, ROSAC-I2 → simulation
+```
+
+`services/scientific-data/index.ts` is the only place that pairs products with backends. To replace
+a backend (for example, reading GOES time series from the database instead of the worker),
+implement `ScientificDataProvider` and change its entry there. A synchronous provider returns the
+result directly. Only asynchronous ones return `{ state: 'pending', jobId, progress }`, which the
+route sends as `202`. GOES time-series providers should build their result with
+`buildGoesTimeSeriesResult` so provenance is described consistently. To add a source, extend
+`SCIENTIFIC_SOURCE_CODES` and the catalog in `app/lib/scientific-data.ts`, then register one
+more source in `index.ts`.
+
 ## Reusable presentation
 
 The query's three selectors share `Select`, a labeled combobox with keyboard navigation,

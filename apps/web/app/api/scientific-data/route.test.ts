@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import type * as NoaaSource from '@/app/services/scientific-data/noaaScientificDataSource'
+import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'
 
 const mocks = vi.hoisted(() => ({
   queryMockScientificData: vi.fn(),
@@ -11,10 +11,9 @@ vi.mock('@/app/services/scientific-data/mockScientificDataSource', () => ({
   queryMockScientificData: mocks.queryMockScientificData,
 }))
 
-vi.mock('@/app/services/scientific-data/noaaScientificDataSource', async (importOriginal) => {
-  const original = await importOriginal<typeof NoaaSource>()
-  return { ...original, queryNoaaScientificData: mocks.queryNoaaScientificData }
-})
+vi.mock('@/app/services/scientific-data/noaaScientificDataSource', () => ({
+  queryNoaaScientificData: mocks.queryNoaaScientificData,
+}))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
   queryCiticScientificData: mocks.queryCiticScientificData,
@@ -128,8 +127,6 @@ describe('GET /api/scientific-data', () => {
   })
 
   test('returns a stable gateway error when CITIC is unavailable', async () => {
-    const { ScientificDataUpstreamError } =
-      await import('@/app/services/scientific-data/noaaScientificDataSource')
     mocks.queryCiticScientificData.mockRejectedValue(new ScientificDataUpstreamError('offline'))
 
     const response = await GET(request(validGoesQuery))

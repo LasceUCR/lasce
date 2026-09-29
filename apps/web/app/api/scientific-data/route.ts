@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server'
 
-import { findScientificProduct, scientificDataQuerySchema } from '@/app/lib/scientific-data'
+import { scientificDataQuerySchema } from '@/app/lib/scientific-data'
 import { getAvailabilityMessage, getSuviAvailability } from '@/app/lib/scientific-data-availability'
-import { queryCiticScientificData } from '@/app/services/scientific-data/citicScientificDataSource'
-import { queryMockScientificData } from '@/app/services/scientific-data/mockScientificDataSource'
-import {
-  queryNoaaScientificData,
-  ScientificDataUpstreamError,
-} from '@/app/services/scientific-data/noaaScientificDataSource'
+import { scientificDataSources } from '@/app/services/scientific-data'
+import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'
 
 /**
  * Public read-only endpoint for scientific visualization. It intentionally has
@@ -43,13 +39,10 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const result =
-      parsed.data.source === 'GOES'
-        ? findScientificProduct('GOES', parsed.data.product)?.product.visualization ===
-          'image-sequence'
-          ? await queryNoaaScientificData(parsed.data)
-          : await queryCiticScientificData(parsed.data, searchParams.get('jobId') ?? undefined)
-        : await queryMockScientificData(parsed.data)
+    const result = await scientificDataSources.query({
+      query: parsed.data,
+      jobId: searchParams.get('jobId') ?? undefined,
+    })
 
     return NextResponse.json(result, {
       status: 'state' in result ? 202 : 200,
