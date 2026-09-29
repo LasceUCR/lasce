@@ -94,4 +94,16 @@ describe('NavGroup', () => {
     expect(link('Noticias')).toHaveFocus()
     expect(details()).not.toHaveAttribute('open')
   })
+
+  test('opens on hover without a click, and closes when the pointer leaves', () => {
+    render(<NavGroup {...closedArgs} />)
+
+    expect(details()).not.toHaveAttribute('open')
+
+    fireEvent.mouseEnter(details())
+    expect(details()).toHaveAttribute('open')
+
+    fireEvent.mouseLeave(details())
+    expect(details()).not.toHaveAttribute('open')
+  })
 })

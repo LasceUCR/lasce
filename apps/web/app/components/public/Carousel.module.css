@@ -26,6 +26,25 @@
   object-fit: cover;
 }
 
+.imageUnavailable {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+  background: var(--alice-blue);
+}
+
+.imageUnavailable p {
+  margin: 0;
+  max-width: 32ch;
+}
+
 .panel {
   display: flex;
   flex-direction: column;
@@ -82,6 +101,13 @@
 
 .actions {
   margin-top: auto;
+}
+
+.photoPosition {
+  margin: 0 0 16px;
+  color: var(--ink);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
 
 .control {

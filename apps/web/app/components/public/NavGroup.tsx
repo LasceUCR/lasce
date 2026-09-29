@@ -2,7 +2,7 @@
 
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useRef, type FocusEvent, type KeyboardEvent } from 'react'
+import { useEffect, useRef, type FocusEvent, type KeyboardEvent, type MouseEvent } from 'react'
 
 export interface NavGroupItem {
   label: string
@@ -26,18 +26,33 @@ export function isActivePath(pathname: string, href: string): boolean {
 
 /**
  * A disclosure of navigation links for the desktop header, on the native
- * `<details>` element like the mobile menu. The summary opens it with a click,
- * Enter or Space; choosing a link, Escape, a pointer outside or focus leaving
- * the group closes it. The links are in the tab order only while it is open.
- * The `open` attribute is the only state, so nothing lags behind the browser.
+ * `<details>` element like the mobile menu. Hovering the group opens it
+ * without a click (so does a click, Enter or Space, for touch and keyboard);
+ * choosing a link, Escape, the pointer leaving the group, a pointer outside
+ * or focus leaving the group closes it. The links are in the tab order only
+ * while it is open. The `open` attribute is the only state, so nothing lags
+ * behind the browser. A click never toggles it closed (only the actions above
+ * do): the native default is prevented and replaced with an explicit `open()`,
+ * so a click right after a hover-open cannot flip it shut again.
  */
 export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGroupProps) {
   const details = useRef<HTMLDetailsElement>(null)
   const summary = useRef<HTMLElement>(null)
   const isActive = items.some((item) => isActivePath(pathname, item.href))
 
+  function open() {
+    details.current?.setAttribute('open', '')
+  }
+
   function close() {
     details.current?.removeAttribute('open')
+  }
+
+  // The native default just toggles; prevent it and always open instead, so a
+  // click while the pointer already opened it via hover cannot close it again.
+  function handleSummaryClick(event: MouseEvent<HTMLElement>) {
+    event.preventDefault()
+    open()
   }
 
   useEffect(() => {
@@ -81,10 +96,12 @@ export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGro
       className={isActive ? 'nav-group active' : 'nav-group'}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
+      onMouseEnter={open}
+      onMouseLeave={close}
       open={defaultOpen ? true : undefined}
       ref={details}
     >
-      <summary ref={summary}>
+      <summary onClick={handleSummaryClick} ref={summary}>
         {label}
         <ChevronDown aria-hidden="true" size={14} strokeWidth={1.6} />
       </summary>

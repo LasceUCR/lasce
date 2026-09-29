@@ -16,14 +16,30 @@ describe('RosacInfoPage', () => {
       .map((heading) => heading.textContent?.trim())
     expect(headings.filter((heading) => /^\d\./.test(heading ?? ''))).toEqual([
       '1. Características principales',
-      '2. ¿Qué desarrollamos en ROSAC?',
-      '3. Construcción del ROSAC',
-      '4. ¿Por qué observar en radio?',
-      '5. Investigadores',
+      '2. Ubicación',
+      '3. ¿Qué desarrollamos en ROSAC?',
+      '4. Construcción del ROSAC',
+      '5. ¿Por qué observar en radio?',
+      '6. Investigadores',
     ])
-    expect(screen.getByRole('region', { name: '3. Construcción del ROSAC' })).toHaveTextContent(
+    expect(screen.getByRole('region', { name: '4. Construcción del ROSAC' })).toHaveTextContent(
       defaultArgs.content.construction.intro,
     )
+  })
+
+  test('shows the location in its own section, with the address always visible and a map', async () => {
+    render(<RosacInfoPage {...defaultArgs} />)
+
+    const location = screen.getByRole('region', { name: '2. Ubicación' })
+    expect(location).toHaveTextContent(defaultArgs.content.location.address)
+
+    // The map itself loads on the client only (see RosacLocationMapLoader.tsx), so its
+    // region appears a tick after the section that always renders the address.
+    expect(
+      await within(location).findByRole('region', {
+        name: `Mapa de ubicación de ${defaultArgs.content.location.markerLabel}`,
+      }),
+    ).toBeInTheDocument()
   })
 
   test('explains the observatory purpose, characteristics and relationship with LASCE', () => {

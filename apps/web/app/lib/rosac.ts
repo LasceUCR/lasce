@@ -19,6 +19,12 @@
  */
 import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
 
+// Built once and reused in both `location.intro` (as flowing prose) and `location.address`
+// (as its own field, kept for anything that needs the bare address rather than a sentence),
+// so the two can never drift apart.
+const rosacLocationAddress =
+  'Recinto de Santa Cruz, Universidad de Costa Rica, Santa Cruz, Guanacaste, Costa Rica'
+
 export const rosacInfoMeta = {
   title: 'Radioastronomía y ROSAC | LASCE',
   description:
@@ -65,6 +71,33 @@ interface RosacCardSection {
   }[]
 }
 
+export interface RosacLocationContent {
+  title: string
+  intro: string
+  /**
+   * Not rendered on its own -- folded into `intro`'s own text, so the address stays visible
+   * whether the map loads, fails, or is still downloading, without a second, near-duplicate
+   * line of text next to it. Kept as its own field so `intro` only needs to be built from it
+   * once (see `rosacInfoContent.location` below), not typed out twice.
+   */
+  address: string
+  /**
+   * Google Maps' pin for "Radiobservatorio de Santa Cruz ROSAC UCR", confirmed by the
+   * team as the correct location. Not a surveyed GPS point, but accurate enough for
+   * wayfinding.
+   */
+  coordinates: { latitude: number; longitude: number }
+  /** Leaflet zoom level for the initial view. Higher is closer. */
+  zoom: number
+  tileUrl: string
+  attribution: string
+  loadTimeoutMs: number
+  /** Shown in a permanent tooltip on the marker, so it reads without a click. */
+  markerLabel: string
+  /** Shown instead of the map if it fails to load; the address remains either way. */
+  unavailableMessage: string
+}
+
 export interface RosacInfoContent {
   hero: {
     kicker: string
@@ -80,6 +113,7 @@ export interface RosacInfoContent {
   }
   overview: RosacTextSection
   characteristics: RosacCardSection
+  location: RosacLocationContent
   activities: RosacCardSection
   construction: ConstructionContent
   radioObservation: RosacTextSection
@@ -152,6 +186,21 @@ export const rosacInfoContent = {
           'Se desarrollan capacidades para apuntar, seguir fuentes astronómicas y registrar sus emisiones de radio.',
       },
     ],
+  },
+  location: {
+    title: 'Ubicación',
+    intro: `El Radio Observatorio de Santa Cruz (ROSAC) se ubica en el ${rosacLocationAddress}.`,
+    address: rosacLocationAddress,
+    coordinates: { latitude: 10.2840093, longitude: -85.5959871 },
+    zoom: 16,
+    tileUrl:
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution:
+      'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    loadTimeoutMs: 15_000,
+    markerLabel: 'ROSAC',
+    unavailableMessage:
+      'No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.',
   },
   activities: {
     title: '¿Qué desarrollamos en ROSAC?',
