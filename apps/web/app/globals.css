@@ -2751,6 +2751,13 @@ a {
   justify-self: center;
 }
 
+.topic-initiative-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
 .topic-initiative h3 {
   margin: 0;
   color: var(--blue-dark);
@@ -2765,6 +2772,7 @@ a {
 
 .topic-initiative .button {
   margin-top: 18px;
+  align-self: flex-end;
 }
 
 .card-grid {

@@ -42,7 +42,7 @@ export function CollaborationsPage({ content, collaborations }: CollaborationsPa
                 width={item.logo.width}
               />
             ) : null}
-            <div>
+            <div className="topic-initiative-copy">
               <h3>{item.title}</h3>
               {item.paragraphs.map((paragraph) => (
                 <p className="topic-intro" key={paragraph}>
