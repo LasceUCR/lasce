@@ -1,4 +1,4 @@
-import { AlbumTile } from '../gallery/AlbumTile'
+import { ResearchAreaCard } from './ResearchAreaCard'
 
 export interface ResearchArea {
   slug: string
@@ -15,17 +15,20 @@ export interface ResearchAreasSectionProps {
 export function ResearchAreasSection({ id, areas }: ResearchAreasSectionProps) {
   return (
     <section className="research-areas page-width" id={id}>
-      <div className="gallery-grid">
-        {areas.map((area) => (
-          <AlbumTile
-            href={`/investigacion/areas/${area.slug}`}
-            key={area.slug}
-            meta="Conozca más sobre esta área"
-            src={area.src}
-            title={area.title}
-          />
-        ))}
-      </div>
+      {areas.length > 0 ? (
+        <ul className="research-area-list">
+          {areas.map((area) => (
+            <li key={area.slug}>
+              <ResearchAreaCard
+                description={area.description}
+                href={`/investigacion/areas/${area.slug}`}
+                src={area.src}
+                title={area.title}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   )
 }
