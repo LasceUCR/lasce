@@ -1,6 +1,4 @@
-import { useId } from 'react'
-
-import { AlbumTile } from '../gallery/AlbumTile'
+import { ResearchAreaCard } from './ResearchAreaCard'
 
 export interface ResearchArea {
   slug: string
@@ -11,33 +9,26 @@ export interface ResearchArea {
 
 export interface ResearchAreasSectionProps {
   id?: string
-  title: string
-  subtitle: string
   areas: ResearchArea[]
 }
 
-export function ResearchAreasSection({ id, title, subtitle, areas }: ResearchAreasSectionProps) {
-  const fallbackTitleId = useId()
-  const titleId = id ? `${id}-title` : fallbackTitleId
-
+export function ResearchAreasSection({ id, areas }: ResearchAreasSectionProps) {
   return (
-    <section className="research-areas page-width" id={id} aria-labelledby={titleId}>
-      <div className="section-heading">
-        <h2 id={titleId}>{title}</h2>
-        <p className="research-areas-description">{subtitle}</p>
-      </div>
-
-      <div className="gallery-grid">
-        {areas.map((area) => (
-          <AlbumTile
-            /* href={`/investigacion/areas/${area.slug}`} */
-            key={area.slug}
-            meta={area.description}
-            src={area.src}
-            title={area.title}
-          />
-        ))}
-      </div>
+    <section className="research-areas page-width" id={id}>
+      {areas.length > 0 ? (
+        <ul className="research-area-list">
+          {areas.map((area) => (
+            <li key={area.slug}>
+              <ResearchAreaCard
+                description={area.description}
+                href={`/investigacion/areas/${area.slug}`}
+                src={area.src}
+                title={area.title}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   )
 }

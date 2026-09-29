@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ACCOUNT_COOKIE, encodeAccountCookie } from '@/app/lib/auth/account'
@@ -45,5 +46,85 @@ describe('PublicHeader', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
     expect(screen.getAllByRole('link', { name: /^Administración$/ }).length).toBeGreaterThan(0)
+  })
+
+  test('identifies UCR, CINESPA and LASCE in the header brand', () => {
+    render(<PublicHeader logoutAction={async () => undefined} />)
+
+    expect(screen.getByAltText('Universidad de Costa Rica')).toBeInTheDocument()
+    expect(screen.getByAltText('Centro de Investigaciones Espaciales')).toBeInTheDocument()
+    expect(screen.getByAltText('Laboratorio de Ciencias Espaciales')).toBeInTheDocument()
+  })
+
+  test('groups the resource pages behind Recursos on desktop, and behind an accordion on mobile', async () => {
+    const user = userEvent.setup()
+    render(<PublicHeader logoutAction={async () => undefined} />)
+
+    await user.click(screen.getByLabelText('Abrir navegación'))
+
+    const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
+    const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+    const grouped = ['Publicaciones', 'Herramientas científicas', 'Galería']
+
+    // Both start closed: Recursos reads like a normal item on mobile, not a heading.
+    for (const label of grouped) {
+      expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
+      expect(mobile.getByRole('link', { name: label })).not.toBeVisible()
+    }
+    expect(mobile.queryByRole('button', { name: 'Recursos' })).not.toBeInTheDocument()
+
+    await user.click(mobile.getByText('Recursos'))
+
+    for (const label of grouped) {
+      expect(mobile.getByRole('link', { name: label })).toBeVisible()
+    }
+    expect(mobile.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
+
+    await user.click(desktop.getByText('Recursos'))
+
+    for (const label of grouped) {
+      expect(desktop.getByRole('link', { name: label })).toBeVisible()
+    }
+    expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
+    expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
+  })
+
+  test('groups the about pages behind Nosotros on desktop, and behind an accordion on mobile', async () => {
+    const user = userEvent.setup()
+    render(<PublicHeader logoutAction={async () => undefined} />)
+
+    await user.click(screen.getByLabelText('Abrir navegación'))
+
+    const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
+    const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+    const grouped = ['Quiénes somos', 'Colaboraciones e Iniciativas']
+
+    for (const label of grouped) {
+      expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
+      expect(mobile.getByRole('link', { name: label })).not.toBeVisible()
+    }
+    expect(mobile.queryByRole('button', { name: 'Nosotros' })).not.toBeInTheDocument()
+    expect(desktop.queryByRole('link', { name: 'Nosotros' })).not.toBeInTheDocument()
+
+    await user.click(mobile.getByText('Nosotros'))
+
+    expect(mobile.getByRole('link', { name: 'Quiénes somos' })).toBeVisible()
+    expect(mobile.getByRole('link', { name: 'Quiénes somos' })).toHaveAttribute('href', '/nosotros')
+    expect(mobile.getByRole('link', { name: 'Colaboraciones e Iniciativas' })).toHaveAttribute(
+      'href',
+      '/colaboraciones-e-iniciativas',
+    )
+
+    await user.click(desktop.getByText('Nosotros'))
+
+    expect(desktop.getByRole('link', { name: 'Quiénes somos' })).toBeVisible()
+    expect(desktop.getByRole('link', { name: 'Quiénes somos' })).toHaveAttribute(
+      'href',
+      '/nosotros',
+    )
+    expect(desktop.getByRole('link', { name: 'Colaboraciones e Iniciativas' })).toHaveAttribute(
+      'href',
+      '/colaboraciones-e-iniciativas',
+    )
   })
 })

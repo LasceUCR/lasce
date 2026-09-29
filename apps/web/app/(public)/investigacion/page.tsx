@@ -24,12 +24,7 @@ export default function InvestigacionPage() {
         title={investigacionHero.title}
       />
 
-      <ResearchAreasSection
-        areas={researchAreas}
-        id="research-areas"
-        subtitle="Principales temas de investigación desarrollados por el LASCE."
-        title="Áreas de investigación"
-      />
+      <ResearchAreasSection areas={researchAreas} id="research-areas" />
 
       <div className="topic-page-footer page-width">
         <TopicBackLink href={investigacionBackLink.href} label={investigacionBackLink.label} />

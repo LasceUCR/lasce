@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 
 import { PublicationCard } from './PublicationCard'
+import { Select } from '@/app/components/public/Select'
 import { SearchBar } from '@/app/components/public/SearchBar'
 import type { Publication, ResearchGroup } from '@/app/lib/publications'
 
@@ -60,26 +61,25 @@ export function PublicationsExplorer({ publications }: PublicationsExplorerProps
           query={query}
         />
 
-        <div
-          aria-label="Filtrar por grupo de investigación"
-          className="publications-group-filters"
-          role="group"
-        >
-          <button
-            aria-pressed={selectedGroup === 'LASCE'}
-            onClick={() => setSelectedGroup(selectedGroup === 'LASCE' ? null : 'LASCE')}
-            type="button"
-          >
-            LASCE
-          </button>
+        <div className="publications-group-filter">
+          <Select
+            id="publication-research-group"
+            label="Grupo de investigación"
+            onChange={(value) => setSelectedGroup(value === '' ? null : (value as ResearchGroup))}
+            options={[
+              { value: '', label: 'Todas las publicaciones' },
+              { value: 'LASCE', label: 'LASCE' },
+              { value: 'ROSAC', label: 'ROSAC' },
+            ]}
+            value={selectedGroup ?? ''}
+          />
+        </div>
 
-          <button
-            aria-pressed={selectedGroup === 'ROSAC'}
-            onClick={() => setSelectedGroup(selectedGroup === 'ROSAC' ? null : 'ROSAC')}
-            type="button"
-          >
-            ROSAC
-          </button>
+        <div aria-label="Cantidad de publicaciones" aria-live="polite" className="publications-kpi">
+          <strong>{filtered.length}</strong>
+          <span>
+            {selectedGroup ? `publicaciones (${selectedGroup})` : 'publicaciones en total'}
+          </span>
         </div>
       </div>
 

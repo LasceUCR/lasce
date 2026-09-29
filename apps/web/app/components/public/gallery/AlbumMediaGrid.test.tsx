@@ -134,4 +134,14 @@ describe('AlbumMediaGrid', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: first.title })).toBeInTheDocument()
   })
+
+  test('indicates there is no content available when an album has no media', () => {
+    render(<AlbumMediaGrid albumTitle="Categoría vacía" media={[]} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No hay contenido disponible en esta categoría.',
+    )
+    expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('button')).toHaveLength(0)
+  })
 })

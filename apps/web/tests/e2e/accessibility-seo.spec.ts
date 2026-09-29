@@ -15,13 +15,14 @@ const galleryRoutes = galleryAlbumList.flatMap((album) => [
 
 const publicRoutes = [
   { label: 'Inicio', path: '/' },
-  { label: 'Nosotros', path: '/nosotros' },
+  { label: 'Quiénes somos', path: '/nosotros' },
+  { label: 'Colaboraciones e Iniciativas', path: '/colaboraciones-e-iniciativas' },
   { label: 'Investigación', path: '/investigacion' },
+  { label: 'Datos', path: '/datos' },
+  { label: 'Noticias', path: '/noticias' },
   { label: 'Publicaciones', path: '/publicaciones' },
   { label: 'Herramientas científicas', path: '/herramientas-cientificas' },
-  { label: 'Datos', path: '/datos' },
   { label: 'Galería', path: '/galeria' },
-  { label: 'Noticias', path: '/noticias' },
   { label: 'Contacto', path: '/contacto' },
 ] as const
 
@@ -69,6 +70,28 @@ test('skip link moves keyboard focus to the shared main content', async ({ page 
   await expect(mainContent).toBeFocused()
 })
 
+// The desktop header and the mobile menu keep some routes behind a disclosure, so the
+// keyboard sweep opens each one on the way.
+const nosotrosGroup = {
+  label: 'Nosotros',
+  items: ['Quiénes somos', 'Colaboraciones e Iniciativas'],
+} as const
+
+const resourcesGroup = {
+  label: 'Recursos',
+  items: ['Publicaciones', 'Herramientas científicas', 'Galería'],
+} as const
+
+const desktopNavigation = [
+  'Inicio',
+  nosotrosGroup,
+  'Investigación',
+  'Datos',
+  'Noticias',
+  resourcesGroup,
+  'Contacto',
+] as const
+
 test('all desktop navigation options are reachable by keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
@@ -77,13 +100,44 @@ test('all desktop navigation options are reachable by keyboard', async ({ page }
   await page.keyboard.press('Tab')
 
   const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
-  for (const route of publicRoutes) {
+  for (const entry of desktopNavigation) {
     await page.keyboard.press('Tab')
-    await expect(navigation.getByRole('link', { name: route.label, exact: true })).toBeFocused()
+    if (typeof entry === 'string') {
+      await expect(navigation.getByRole('link', { name: entry, exact: true })).toBeFocused()
+      // Closed before a top-level link is reached, and closed again once focus has left it.
+      await expect(navigation.locator('details.nav-group[open]')).toHaveCount(0)
+      continue
+    }
+
+    const group = navigation.locator('details', {
+      has: page.locator('summary', { hasText: entry.label }),
+    })
+    await expect(group.locator('summary')).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(group).toHaveAttribute('open', '')
+    for (const label of entry.items) {
+      await page.keyboard.press('Tab')
+      await expect(navigation.getByRole('link', { name: label, exact: true })).toBeFocused()
+    }
   }
 
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/contacto$/)
+})
+
+test('the open Recursos group meets WCAG A and AA automated checks', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await page
+    .getByRole('navigation', { name: 'Navegación principal' })
+    .locator('summary', { hasText: resourcesGroup.label })
+    .click()
+
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+
+  expect(results.violations).toEqual([])
 })
 
 test('mobile navigation can be opened and used with the keyboard', async ({ page }) => {
@@ -95,7 +149,7 @@ test('mobile navigation can be opened and used with the keyboard', async ({ page
   await page.keyboard.press('Tab')
 
   const menu = page.locator('.mobile-menu')
-  const summary = menu.locator('summary')
+  const summary = page.getByLabel('Abrir navegación', { exact: true })
   await expect(summary).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(menu).toHaveAttribute('open', '')
@@ -103,6 +157,12 @@ test('mobile navigation can be opened and used with the keyboard', async ({ page
   const navigation = page.getByRole('navigation', { name: 'Navegación móvil' })
   for (const route of publicRoutes) {
     await page.keyboard.press('Tab')
+    if (route.label === 'Quiénes somos' || route.label === 'Publicaciones') {
+      const groupLabel = route.label === 'Quiénes somos' ? 'Nosotros' : 'Recursos'
+      await expect(navigation.getByText(groupLabel, { exact: true })).toBeFocused()
+      await page.keyboard.press('Enter')
+      await page.keyboard.press('Tab')
+    }
     await expect(navigation.getByRole('link', { name: route.label, exact: true })).toBeFocused()
   }
 

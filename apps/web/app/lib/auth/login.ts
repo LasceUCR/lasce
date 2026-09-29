@@ -153,6 +153,8 @@ export function accessTabHref(tab: AccessTab, next?: string): string {
 
 /** Where "Crear cuenta" links point: the access page with the registration tab open. */
 export const REGISTRATION_HREF = accessTabHref('register')
+/** Where the registration confirmation points: the access page with the login tab open. */
+export const LOGIN_HREF = accessTabHref('login')
 
 export const accesoMeta = {
   title: 'Acceso al portal | LASCE',

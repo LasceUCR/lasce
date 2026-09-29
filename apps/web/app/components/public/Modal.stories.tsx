@@ -30,3 +30,15 @@ export const Closed: Story = {
     onClose: () => {},
   },
 }
+
+export const Small: Story = {
+  args: { ...Open.args, size: 'small' },
+}
+
+export const Medium: Story = {
+  args: { ...Open.args, size: 'medium' },
+}
+
+export const Large: Story = {
+  args: { ...Open.args, size: 'large' },
+}

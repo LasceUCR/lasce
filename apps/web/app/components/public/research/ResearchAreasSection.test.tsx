@@ -8,59 +8,41 @@ const defaultArgs = Default.args as ResearchAreasSectionProps
 const emptyArgs = Empty.args as ResearchAreasSectionProps
 
 describe('ResearchAreasSection', () => {
-  test('renders one card per research area it is given', () => {
+  test('lists one item per research area it is given', () => {
     render(<ResearchAreasSection {...defaultArgs} />)
 
-    const region = screen.getByRole('region', { name: defaultArgs.title })
+    const list = screen.getByRole('list')
 
-    expect(within(region).getAllByRole('article')).toHaveLength(defaultArgs.areas.length)
+    expect(within(list).getAllByRole('listitem')).toHaveLength(defaultArgs.areas.length)
   })
 
-  test('renders each research area title and description', () => {
+  test('shows every research area with its title and description', () => {
     render(<ResearchAreasSection {...defaultArgs} />)
 
     for (const area of defaultArgs.areas) {
-      expect(screen.getByText(area.title)).toBeInTheDocument()
-      expect(screen.getByText(area.description)).toBeInTheDocument()
+      const card = screen.getByRole('article', { name: area.title })
+
+      expect(within(card).getByRole('heading', { level: 3, name: area.title })).toBeInTheDocument()
+      expect(within(card).getByText(area.description)).toBeInTheDocument()
     }
   })
-  /*
+
   test('links each research area to its own detail page', () => {
     render(<ResearchAreasSection {...defaultArgs} />)
 
+    expect(screen.getAllByRole('link')).toHaveLength(defaultArgs.areas.length)
+
     for (const area of defaultArgs.areas) {
-      expect(screen.getByRole('link', { name: new RegExp(area.title) })).toHaveAttribute(
-        'href',
-        `/investigacion/areas/${area.slug}`,
-      )
+      expect(
+        screen.getByRole('link', { name: `Conozca más sobre esta área (${area.title})` }),
+      ).toHaveAttribute('href', `/investigacion/areas/${area.slug}`)
     }
   })
-*/
-  test('still renders its heading when there are no research areas', () => {
+
+  test('renders no list and no links when there are no research areas', () => {
     render(<ResearchAreasSection {...emptyArgs} />)
 
-    expect(screen.getByRole('heading', { name: emptyArgs.title })).toBeInTheDocument()
+    expect(screen.queryByRole('list')).not.toBeInTheDocument()
     expect(screen.queryAllByRole('link')).toHaveLength(0)
-  })
-
-  test('labels the section with its own heading', () => {
-    render(<ResearchAreasSection {...defaultArgs} />)
-
-    const region = screen.getByRole('region', { name: defaultArgs.title })
-    const heading = screen.getByRole('heading', { name: defaultArgs.title })
-
-    expect(region).toHaveAttribute('aria-labelledby', heading.id)
-    expect(heading.id).toBe(`${defaultArgs.id}-title`)
-  })
-
-  test('falls back to a generated heading id when no id prop is given', () => {
-    render(<ResearchAreasSection {...emptyArgs} />)
-
-    const heading = screen.getByRole('heading', { name: emptyArgs.title })
-    const region = screen.getByRole('region', { name: emptyArgs.title })
-
-    expect(heading.id).not.toBe('')
-    expect(heading.id).not.toMatch(/^undefined/)
-    expect(region).toHaveAttribute('aria-labelledby', heading.id)
   })
 })
