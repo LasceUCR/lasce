@@ -5,7 +5,7 @@
  * Nacional de España, and the last sentence was cut off after "y los existen"; it closes on
  * the Northern Hemisphere, the contrast that sentence was making.
  *
- * Partner organisations live in `research-collaborations.ts` and are passed in by the route.
+ * Partner organizations live in `research-collaborations.ts` and are passed in by the route.
  */
 export const collaborationsMeta = {
   title: 'Colaboraciones e Iniciativas | LASCE',
