@@ -6,9 +6,10 @@ import type { ReactNode } from 'react'
 
 import { Toggle } from '@/app/components/public/Toggle'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import { adminMenu, type AdminMenuKey } from '@/app/lib/admin-sections'
+import { visibleAdminMenu, type AdminMenuKey } from '@/app/lib/admin-sections'
+import type { Permission } from '@/app/lib/auth/permissions'
 
-import { AdminSidebar, type AdminSidebarItem } from './AdminSidebar'
+import { AdminSidebar } from './AdminSidebar'
 
 // Icons stay here so the catalogue in `lib/admin-sections.ts` remains plain data.
 const icons: Record<AdminMenuKey, ReactNode> = {
@@ -19,23 +20,28 @@ const icons: Record<AdminMenuKey, ReactNode> = {
   infraestructura: <Server size={18} strokeWidth={1.8} />,
 }
 
-const adminNavigation: AdminSidebarItem[] = adminMenu.map((item) => ({
-  label: item.label,
-  href: item.href,
-  icon: icons[item.key],
-}))
-
 export interface AdminShellProps {
   children: ReactNode
+  /**
+   * Grants the account holds, looked up once per request by the section layout.
+   * Only the menu entries they unlock are rendered. Hiding a link is not an
+   * authorization check; every section page still calls `requirePermission`.
+   */
+  granted: readonly Permission[]
 }
 
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({ children, granted }: AdminShellProps) {
   const pathname = usePathname()
   const { editMode, setEditMode } = useEditMode()
+  const items = visibleAdminMenu(granted).map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: icons[item.key],
+  }))
 
   return (
     <div className="admin-shell">
-      <AdminSidebar activePathname={pathname} items={adminNavigation} />
+      <AdminSidebar activePathname={pathname} items={items} />
       <div className="admin-content">
         <div className="admin-header">
           <p className="topic-kicker">Panel de administración</p>
