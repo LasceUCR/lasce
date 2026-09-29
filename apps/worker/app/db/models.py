@@ -15,8 +15,8 @@ from sqlalchemy import (
     CHAR,
     Boolean,
     Date,
-    Float,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     Text,
@@ -340,5 +340,46 @@ class SuviFrame(Base):
     # written by app.services.suvi_preview.publish_preview. Null only for a frame whose FITS HDU
     # carried no data array.
     preview_file: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ExisFile(Base):
+    """One daily EXIS L1b file (one product, one UTC day). Written by
+    ``app.services.exis_readings.ExisReadings``, the only writer this table
+    has. The readings themselves are in the ``exis_irradiance`` InfluxDB
+    measurement; this row records that the day was ingested, from which
+    version of the archive's file, and how many points each channel produced.
+    """
+
+    __tablename__ = "exis_files"
+    __table_args__ = (
+        UniqueConstraint(
+            "satellite",
+            "product",
+            "day",
+            name="exis_files_satellite_product_day_key",
+        ),
+        {"schema": "solar"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    satellite: Mapped[str] = mapped_column(Text)
+    product: Mapped[str] = mapped_column(Text)
+    day: Mapped[date_type] = mapped_column(Date)
+    file_name: Mapped[str] = mapped_column(Text, unique=True)
+    version: Mapped[str] = mapped_column(Text)
+    source_url: Mapped[str] = mapped_column(Text)
+    source_modified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    first_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    point_count: Mapped[dict[str, int]] = mapped_column(JSONB)
+    attributes: Mapped[dict[str, Any]] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

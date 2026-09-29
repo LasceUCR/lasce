@@ -7,14 +7,14 @@ migration source; the worker mirrors these tables in SQLAlchemy
 
 ## Schemas
 
-| Postgres schema | Used for                                               | Populated today |
-| --------------- | ------------------------------------------------------ | --------------- |
-| `public`        | Default, for anything not domain-specific              | No tables yet   |
-| `research`      | Public research/publications shown on `/publicaciones` | Yes             |
-| `news`          | Public news/media coverage shown on `/noticias`        | Yes             |
-| `auth`          | Portal accounts created through `/acceso`              | Yes             |
-| `gallery`       | Public photo/video gallery shown on `/galeria`         | No — see below  |
-| `solar`         | SUVI L1b frames catalogued by the worker's SUVI pipeline | Yes           |
+| Postgres schema | Used for                                                  | Populated today |
+| --------------- | --------------------------------------------------------- | --------------- |
+| `public`        | Default, for anything not domain-specific                 | No tables yet   |
+| `research`      | Public research/publications shown on `/publicaciones`    | Yes             |
+| `news`          | Public news/media coverage shown on `/noticias`           | Yes             |
+| `auth`          | Portal accounts created through `/acceso`                 | Yes             |
+| `gallery`       | Public photo/video gallery shown on `/galeria`            | No — see below  |
+| `solar`         | SUVI frames and EXIS daily files catalogued by the worker | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
@@ -320,29 +320,58 @@ Photometric and CCD-health numbers (`IMG_MEAN`, `CCD_TMP1`, ...) are deliberatel
 they are written to InfluxDB instead, tagged by `satellite` and `channel`, under the `suvi_frames`
 measurement.
 
-| Column          | Prisma type | Postgres type      | Constraints                                                                                                                                                      |
-| --------------- | ----------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`            | `String`    | `uuid`             | PK, `gen_random_uuid()`                                                                                                                                          |
-| `observed_at`   | `DateTime`  | `timestamptz(3)`   | not null; FITS `DATE-OBS`, stamped UTC; indexed                                                                                                                  |
-| `wavelength`    | `Float`     | `double precision` | not null; FITS `WAVELNTH`, angstroms                                                                                                                             |
-| `satellite`     | `String`    | `text`             | not null; FITS `TELESCOP`, e.g. `"G19"`                                                                                                                          |
-| `channel`       | `String`    | `text`             | not null; archive channel token, e.g. `"Fe093"` — from the file name, not the header                                                                             |
-| `file_name`     | `String`    | `text`             | `UNIQUE`, not null                                                                                                                                               |
-| `source_url`    | `String`    | `text`             | not null                                                                                                                                                         |
-| `exposure_time` | `Float?`    | `double precision` | nullable; FITS `EXPTIME`, seconds                                                                                                                                |
-| `sun_center_x`  | `Float?`    | `double precision` | nullable; FITS `CRPIX1`                                                                                                                                          |
-| `sun_center_y`  | `Float?`    | `double precision` | nullable; FITS `CRPIX2`                                                                                                                                          |
-| `sun_radius_px` | `Float?`    | `double precision` | nullable; FITS `RSUN` — needed to recompute the background mask                                                                                                  |
-| `quality_flag`  | `Int`       | `integer`          | not null, default `0`; bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE`                                                                                                     |
-| `raw_header`    | `Json`      | `jsonb`            | not null; the whole sanitised FITS header                                                                                                                        |
+| Column          | Prisma type | Postgres type      | Constraints                                                                                                                                                             |
+| --------------- | ----------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | `String`    | `uuid`             | PK, `gen_random_uuid()`                                                                                                                                                 |
+| `observed_at`   | `DateTime`  | `timestamptz(3)`   | not null; FITS `DATE-OBS`, stamped UTC; indexed                                                                                                                         |
+| `wavelength`    | `Float`     | `double precision` | not null; FITS `WAVELNTH`, angstroms                                                                                                                                    |
+| `satellite`     | `String`    | `text`             | not null; FITS `TELESCOP`, e.g. `"G19"`                                                                                                                                 |
+| `channel`       | `String`    | `text`             | not null; archive channel token, e.g. `"Fe093"` — from the file name, not the header                                                                                    |
+| `file_name`     | `String`    | `text`             | `UNIQUE`, not null                                                                                                                                                      |
+| `source_url`    | `String`    | `text`             | not null                                                                                                                                                                |
+| `exposure_time` | `Float?`    | `double precision` | nullable; FITS `EXPTIME`, seconds                                                                                                                                       |
+| `sun_center_x`  | `Float?`    | `double precision` | nullable; FITS `CRPIX1`                                                                                                                                                 |
+| `sun_center_y`  | `Float?`    | `double precision` | nullable; FITS `CRPIX2`                                                                                                                                                 |
+| `sun_radius_px` | `Float?`    | `double precision` | nullable; FITS `RSUN` — needed to recompute the background mask                                                                                                         |
+| `quality_flag`  | `Int`       | `integer`          | not null, default `0`; bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE`                                                                                                            |
+| `raw_header`    | `Json`      | `jsonb`            | not null; the whole sanitised FITS header                                                                                                                               |
 | `preview_file`  | `String?`   | `text`             | nullable; MinIO object key of this frame's rendered WebP image, written by `suvi_preview.publish_preview` — see [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks) |
-| `created_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`                                                                                                                                        |
-| `updated_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`, app-managed                                                                                                                           |
+| `created_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`                                                                                                                                               |
+| `updated_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`, app-managed                                                                                                                                  |
 
 Constraints: `UNIQUE (satellite, channel, observed_at)` — this is what makes re-running the
 pipeline idempotent, since it legitimately re-lists a window and can see the same frame twice;
 the write is an upsert on this key, and `updated_at` (never `created_at`) advances on a repeat.
 Indexed on `observed_at` for the time-ordered queries the public gallery will eventually run.
+
+### `exis_files`
+
+One daily EXIS L1b file (one product, one UTC day) ingested by the worker's `exis-pipeline` job
+(`apps/worker/app/services/exis_readings.py`) — see [`exis-pipeline.md`](exis-pipeline.md). The
+readings themselves are **not** here: they are written to InfluxDB under the `exis_irradiance`
+measurement, tagged by `satellite`, `product` and `channel`. This row records that the day was
+ingested, from which archive version, and how many points each channel produced. The web app
+never writes here.
+
+| Column               | Prisma type | Postgres type    | Constraints                                                                    |
+| -------------------- | ----------- | ---------------- | ------------------------------------------------------------------------------ |
+| `id`                 | `String`    | `uuid`           | PK, `gen_random_uuid()`                                                        |
+| `satellite`          | `String`    | `text`           | not null; NetCDF `platform_ID`, e.g. `"G19"`                                   |
+| `product`            | `String`    | `text`           | not null; `"SFEU"` or `"SFXR"`                                                 |
+| `day`                | `DateTime`  | `date`           | not null; the UTC day the file covers, from its name                           |
+| `file_name`          | `String`    | `text`           | `UNIQUE`, not null                                                             |
+| `version`            | `String`    | `text`           | not null; the `_vX-Y-Z` part of the name, e.g. `"0-0-0"`                       |
+| `source_url`         | `String`    | `text`           | not null                                                                       |
+| `source_modified_at` | `DateTime?` | `timestamptz(3)` | nullable; the archive's `Last-Modified` when ingested — a newer one re-ingests |
+| `first_observed_at`  | `DateTime?` | `timestamptz(3)` | nullable; earliest reading kept, across channels                               |
+| `last_observed_at`   | `DateTime?` | `timestamptz(3)` | nullable; latest reading kept, across channels                                 |
+| `point_count`        | `Json`      | `jsonb`          | not null; points written per channel code, e.g. `{"0.1-0.8nm": 81208}`         |
+| `attributes`         | `Json`      | `jsonb`          | not null; the NetCDF global attributes (provenance, algorithm versions)        |
+| `created_at`         | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                                      |
+| `updated_at`         | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                                         |
+
+Constraints: `UNIQUE (satellite, product, day)` — the upsert key, so a higher `_vX-Y-Z` of the
+same day replaces the older row instead of adding a second one.
 
 ## Where this is read and written
 
@@ -368,6 +397,9 @@ fixed, real LASCE research and news records so local/dev environments aren't emp
 `apps/worker/app/services/process_headers.py`'s `ProcessHeaders.persist()` is the only writer of
 `solar.suvi_frames`, called from the `suvi-pipeline` processor after a frame is downloaded and
 decoded. Nothing in `apps/web` reads it yet.
+`apps/worker/app/services/exis_readings.py`'s `ExisReadings.persist()` is the only writer of
+`solar.exis_files`, and `ExisReadings.ingested_modified_at()` its only reader; both are called
+from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
 Nothing yet reads or writes `gallery_albums`/`gallery_media` — `/galeria` still renders from the
 static mock in `apps/web/app/lib/gallery.ts`.
 
