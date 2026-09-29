@@ -45,6 +45,7 @@ working through Claude Code.
 | How is the research areas page built?              | [`docs/research.md`](docs/research.md)                               |
 | How does a visitor register an account?            | [`docs/registration.md`](docs/registration.md)                       |
 | How do users sign in, and how is a page protected? | [`docs/sessions.md`](docs/sessions.md)                               |
+| How do I get an account to sign in locally?        | [`docs/user-administration.md`](docs/user-administration.md)         |
 | How are role permissions configured?               | [`docs/role-permissions.md`](docs/role-permissions.md)               |
 | How do I gate a page or a control with a grant?    | [`docs/add-permissions.md`](docs/add-permissions.md)                 |
 | How is the header/nav organized and responsive?    | [`docs/header-and-navigation.md`](docs/header-and-navigation.md)     |
