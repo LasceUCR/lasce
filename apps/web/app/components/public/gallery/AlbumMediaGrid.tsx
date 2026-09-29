@@ -40,6 +40,14 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
 
   const openItem = openIndex === closed ? null : media[openIndex]
 
+  if (media.length === 0) {
+    return (
+      <p className="content-empty" role="status">
+        No hay contenido disponible en esta categoría.
+      </p>
+    )
+  }
+
   return (
     <>
       <ul className="media-grid tile-list">

@@ -81,17 +81,28 @@ describe('AlbumPage', () => {
       <AlbumPage
         {...albumArgs}
         backHref="/galeria/rosac"
-        backLabel="Volver a Construcción del ROSAC"
+        backLabel="Volver a Fotos del ROSAC"
         subAlbums={[]}
       />,
     )
 
-    const backLink = screen.getByRole('link', { name: 'Volver a Construcción del ROSAC' })
+    const backLink = screen.getByRole('link', { name: 'Volver a Fotos del ROSAC' })
     const heading = screen.getByRole('heading', { level: 1, name: album.title })
 
     expect(backLink).toHaveAttribute('href', '/galeria/rosac')
     expect(
       Boolean(heading.compareDocumentPosition(backLink) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true)
+  })
+
+  test('displays an empty state notice and no full-size buttons when an album has no media', () => {
+    render(<AlbumPage {...albumArgs} media={[]} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No hay contenido disponible en esta categoría.',
+    )
+    expect(
+      screen.queryByRole('button', { name: /^Ver a tamaño completo:/ }),
+    ).not.toBeInTheDocument()
   })
 })
