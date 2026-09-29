@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+import { isAdminItemActive } from '@/app/lib/admin-sections'
+
 export interface AdminSidebarItem {
   label: string
   href: string
@@ -17,10 +19,7 @@ export function AdminSidebar({ items, activePathname }: AdminSidebarProps) {
     <nav aria-label="Panel de administración" className="admin-sidebar">
       <ul>
         {items.map((item) => {
-          const isActive =
-            item.href === '/administracion'
-              ? activePathname === '/administracion'
-              : activePathname === item.href || activePathname.startsWith(`${item.href}/`)
+          const isActive = isAdminItemActive(item.href, activePathname)
 
           return (
             <li key={item.href}>

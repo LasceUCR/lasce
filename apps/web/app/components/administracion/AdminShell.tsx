@@ -6,36 +6,24 @@ import type { ReactNode } from 'react'
 
 import { Toggle } from '@/app/components/public/Toggle'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { adminMenu, type AdminMenuKey } from '@/app/lib/admin-sections'
 
 import { AdminSidebar, type AdminSidebarItem } from './AdminSidebar'
 
-const adminNavigation: AdminSidebarItem[] = [
-  {
-    label: 'Resumen',
-    href: '/administracion',
-    icon: <LayoutDashboard size={18} strokeWidth={1.8} />,
-  },
-  {
-    label: 'Descargas',
-    href: '/administracion/descargas',
-    icon: <Download size={18} strokeWidth={1.8} />,
-  },
-  {
-    label: 'Usuarios',
-    href: '/administracion/usuarios',
-    icon: <Users size={18} strokeWidth={1.8} />,
-  },
-  {
-    label: 'Permisos',
-    href: '/administracion/permisos',
-    icon: <Shield size={18} strokeWidth={1.8} />,
-  },
-  {
-    label: 'Infraestructura',
-    href: '/administracion/infraestructura',
-    icon: <Server size={18} strokeWidth={1.8} />,
-  },
-]
+// Icons stay here so the catalogue in `lib/admin-sections.ts` remains plain data.
+const icons: Record<AdminMenuKey, ReactNode> = {
+  resumen: <LayoutDashboard size={18} strokeWidth={1.8} />,
+  descargas: <Download size={18} strokeWidth={1.8} />,
+  usuarios: <Users size={18} strokeWidth={1.8} />,
+  permisos: <Shield size={18} strokeWidth={1.8} />,
+  infraestructura: <Server size={18} strokeWidth={1.8} />,
+}
+
+const adminNavigation: AdminSidebarItem[] = adminMenu.map((item) => ({
+  label: item.label,
+  href: item.href,
+  icon: icons[item.key],
+}))
 
 export interface AdminShellProps {
   children: ReactNode
