@@ -18,7 +18,8 @@ export interface PublicationFormValues {
   venue: string
   date: Date
   abstract: string
-  DOI: string
+  href: string
+  DOI?: string
   researchGroup: ResearchGroup
 }
 
@@ -44,7 +45,8 @@ export function PublicationForm({
   const [venue, setVenue] = useState(publication.venue)
   const [date, setDate] = useState(publication.date.toISOString().slice(0, 10))
   const [abstract, setAbstract] = useState(publication.abstract)
-  const [DOI, setDOI] = useState(publication.DOI)
+  const [href, setHref] = useState(publication.href)
+  const [DOI, setDOI] = useState(publication.DOI || '')
   const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
 
   const [authorToRemove, setAuthorToRemove] = useState('')
@@ -83,9 +85,9 @@ export function PublicationForm({
     }
   }
 
-  const validateDOI = (value: string) => {
+  const validateHref = (value: string) => {
     if (value.trim() === '') {
-      throw new Error('Debe tener un DOI o vinculo externo.')
+      throw new Error('Debe tener un enlace del que acceder.')
     }
   }
 
@@ -106,7 +108,9 @@ export function PublicationForm({
     authors.length > 0 &&
     venue.trim() !== '' &&
     date !== '' &&
-    abstract.trim() !== ''
+    abstract.trim() !== '' &&
+    href.trim() !== '' &&
+    researchGroup.trim() !== ''
 
   function handleRemoveAuthor() {
     if (!authorToRemove) return
@@ -131,10 +135,10 @@ export function PublicationForm({
     setTitle(title.trim())
     setVenue(venue.trim())
     setDate(date.trim())
-    setDOI(DOI.trim())
+    setHref(href.trim())
+    setDOI(DOI?.trim() ?? '')
     setNewAuthor(newAuthor.trim())
     setAbstract(abstract.trim())
-    setResearchGroup(researchGroup)
 
     if (canSave) {
       setConfirmOpen(true)
@@ -150,6 +154,7 @@ export function PublicationForm({
       venue,
       date: new Date(`${date}T00:00:00`),
       abstract,
+      href,
       DOI,
       researchGroup,
     })
@@ -205,12 +210,19 @@ export function PublicationForm({
       </div>
 
       <FormField
+        id={`publication-href`}
+        label="Enlace externo"
+        onChange={setHref}
+        validate={validateHref}
+        value={href}
+        required
+      />
+      
+      <FormField
         id={`publication-doi`}
         label="DOI"
         onChange={setDOI}
-        validate={validateDOI}
         value={DOI}
-        required
       />
 
       <FormField

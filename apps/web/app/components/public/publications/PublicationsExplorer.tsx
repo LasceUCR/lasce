@@ -31,6 +31,7 @@ function matches(value: string, query: string) {
 const blankPublication: PublicationFormValues = {
   abstract: ' ',
   authors: [],
+  href: ' ',
   DOI: ' ',
   researchGroup: 'LASCE',
   title: ' ',
@@ -291,7 +292,8 @@ export function PublicationsExplorer({
               publication={{
                 abstract: editingPublication.abstract,
                 authors: editingPublication.authors,
-                DOI: editingPublication.href ?? '',
+                href: editingPublication.href ?? '',
+                DOI: editingPublication.DOI ?? '',
                 researchGroup: editingPublication.researchGroup,
                 title: editingPublication.title,
                 venue: editingPublication.venue,
