@@ -318,17 +318,16 @@ test('shows real photographs rather than placeholder frames', async ({ page }) =
 test('opens and closes the album lightbox with the keyboard', async ({ page }) => {
   await page.goto('/galeria/rosac')
 
+  const [first] = galleryAlbums.rosac.media
   const tile = page.getByRole('button', {
-    name: 'Ver a tama\u00f1o completo: Llegada de los componentes del ROSAC',
+    name: `Ver a tamaño completo: ${first.title}`,
   })
   await tile.click()
 
   const lightbox = page.getByRole('dialog')
   await expect(lightbox).toBeVisible()
-  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
-    'Llegada de los componentes del ROSAC',
-  )
-  await expect(lightbox.getByText('Subido por: Andr\u00e9s Solano')).toBeVisible()
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(first.title)
+  await expect(lightbox.getByText(`Subido por: ${first.uploader}`)).toBeVisible()
 
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
@@ -338,24 +337,21 @@ test('opens and closes the album lightbox with the keyboard', async ({ page }) =
 test('walks through the album lightbox with the next control', async ({ page }) => {
   await page.goto('/galeria/rosac')
 
+  const [first, second] = galleryAlbums.rosac.media
   await page
     .getByRole('button', {
-      name: 'Ver a tama\u00f1o completo: Llegada de los componentes del ROSAC',
+      name: `Ver a tamaño completo: ${first.title}`,
     })
     .click()
 
   const lightbox = page.getByRole('dialog')
   await lightbox.getByRole('button', { name: 'Siguiente' }).click()
 
-  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
-    'Ensamblaje del reflector parab\u00f3lico',
-  )
-  await expect(lightbox.getByText('Formato: MP4')).toBeVisible()
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(second.title)
+  await expect(lightbox.getByText(`Formato: ${second.format}`)).toBeVisible()
 
   await lightbox.getByRole('button', { name: 'Anterior' }).click()
-  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(
-    'Llegada de los componentes del ROSAC',
-  )
+  await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(first.title)
 })
 
 test('returns 404 for an album that does not exist', async ({ page }) => {
