@@ -11,19 +11,19 @@ the values are `observed` or `simulated`; these states must never be inferred fr
 
 ### GOES
 
-GOES time series are read from the [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo). SUVI images continue to use NOAA SWPC, as the shared archive has no SUVI directory. Neither adapter substitutes simulated observations on failure.
+GOES time series are read from the [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo). SUVI images come from the frames the worker's `suvi-pipeline` job catalogues in `solar.suvi_frames` (see [`suvi-pipeline.md`](suvi-pipeline.md)), since the shared archive has no SUVI directory. Neither adapter substitutes simulated observations on failure.
 
 The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
-| Product    | Archive path                   | Selection                                                                          |
-| ---------- | ------------------------------ | ---------------------------------------------------------------------------------- |
-| SFXR       | EXIS/SFXR                      | XRS-A or XRS-B, using each report's primary detector flag                          |
-| SFEU       | EXIS/SFEU                      | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio             |
-| GEOF       | MAG/GEOF                       | Ambient EPN x/y/z or total ACRF magnitude                                          |
-| MPSH       | SEIS/MPSH                      | Electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5              |
-| SGPS       | SEIS/SGPS                      | Explicit SGPS−X or SGPS+X sensor; differential channels or integral P11 (>500 MeV) |
-| SUVI bands | NOAA primary animation indexes | Images from approximately the last 24 hours                                        |
-| EHIS, MPSL | Present under SEIS             | Reader and channel catalog remain pending                                          |
+| Product    | Archive path                | Selection                                                                          |
+| ---------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| SFXR       | EXIS/SFXR                   | XRS-A or XRS-B, using each report's primary detector flag                          |
+| SFEU       | EXIS/SFEU                   | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio             |
+| GEOF       | MAG/GEOF                    | Ambient EPN x/y/z or total ACRF magnitude                                          |
+| MPSH       | SEIS/MPSH                   | Electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5              |
+| SGPS       | SEIS/SGPS                   | Explicit SGPS−X or SGPS+X sensor; differential channels or integral P11 (>500 MeV) |
+| SUVI bands | `solar.suvi_frames` + MinIO | Clean frames (`quality_flag = 0`) of one spacecraft, at most 8 sampled evenly      |
+| EHIS, MPSL | Present under SEIS          | Reader and channel catalog remain pending                                          |
 
 Operational SWPC channels are not interchangeable with L1b selectors. The former MPSH nominal energies are replaced with archive band/telescope identifiers. SGPS L1b does not supply the previous integral thresholds below 500 MeV. EPN components retain their native axis names; no undocumented coordinate transform or directional averaging is applied. Flux units are checked against NetCDF metadata.
 
@@ -39,10 +39,13 @@ The worker lists only the requested day, selects overlapping granules by filenam
 
 There is no rolling seven-day restriction on historical date selection. Availability varies by product and day. Confirmed missing directories and compressed files produce an empty result; timeouts, invalid formats, and transport errors fail the query.
 
-SUVI alone uses a rolling 24-hour limit. The server provides the initial UTC bounds; the browser
-refreshes them every minute. The calendar and time fields expose the allowed interval, switching
-from a historical product fits the selection to that interval, and the API rejects out-of-window
-image requests before contacting NOAA. This constraint does not restrict CITIC historical dates.
+SUVI follows the same rule as the time series: any date up to the current UTC day. The provider
+(`suviFrameDataSource.ts`) reads the channel's rendered frames in the interval, keeps only the
+spacecraft that observed most recently so one sequence never mixes satellites, and samples at most
+eight evenly. Each image URL is `/api/suvi/frames/[id]`, which streams that frame's archival WebP
+(`preview_file`) from the private MinIO bucket with an immutable cache header. The images are
+illustrative grayscale renders, not calibrated science products. Coverage starts when the pipeline
+began cataloguing a channel; an interval without frames returns an empty sequence.
 
 On 2026-09-13 the reader was checked against real G18 L1b samples dated 2025-01-05 for all five enabled historical products. Synthetic NetCDF fixtures exercise detector selection, fill values, quality flags, sensor dimensions, time bounds, and compressed archives without depending on the remote service.
 
@@ -94,7 +97,7 @@ The route validates the query and hands it to `scientificDataSources`, a
 which backend serves the query:
 
 ```text
-route.ts → ScientificDataSourceManager ─ by query.source ─→ GOES  ─ by instrument ─→ SUVI → NOAA
+route.ts → ScientificDataSourceManager ─ by query.source ─→ GOES  ─ by instrument ─→ SUVI → suvi_frames + MinIO
                                                                                       EXIS, MAG, SEISS → CITIC worker
                                                           → ROSAC ─ by instrument ─→ ROSAC-I1, ROSAC-I2 → simulation
 ```
@@ -132,7 +135,7 @@ labels are not shrunk into illegible text. The document itself stays within the 
 
 ## Verification
 
-Unit tests cover catalog validation, source isolation, historical job contracts, NetCDF decoding and filtering, archive transport, SUVI filename timestamps, sampling without interpolation, ROSAC series
+Unit tests cover catalog validation, source isolation, historical job contracts, NetCDF decoding and filtering, archive transport, SUVI frame selection, sampling without interpolation, ROSAC series
 and spectrum generation, request errors, accessible chart descriptions, source switching and the
 absence of downloads. Playwright covers the public GOES flow with an API-boundary fixture, ROSAC's
 dynamic spectrum, invalid ranges, empty results and mobile overflow. `/datos` remains part of the

@@ -108,4 +108,4 @@ tint of the accent. This token is the only extra color introduced for scientific
 `ScientificDataChart` uses the blue and neutral tokens for curves, axes, and labels.
 `DynamicSpectrumChart` interpolates from `--alice-blue` to `--blue-dark` for both cells and its
 legend. It also provides numeric descriptions and an accompanying `DataTable`, so users do not
-need to distinguish colors to access the values. Observed SUVI images retain NOAA's colors.
+need to distinguish colors to access the values. SUVI images are shown as the worker renders them: illustrative grayscale.

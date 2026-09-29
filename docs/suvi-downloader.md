@@ -207,6 +207,12 @@ polls the route every 30 seconds (its `intervalMs` prop) so the images refresh o
 without a page reload, as new frames are published. It has no link in the site navigation and is
 reached directly at `/suvi`.
 
+The public `/datos` explorer reads the per-frame archival copies instead: it lists frames from
+`suvi_frames` and loads each image through `apps/web/app/api/suvi/frames/[id]/route.ts`, which
+looks up the row's `preview_file` and streams it. Both routes share the MinIO client in
+`apps/web/app/lib/suvi-storage.ts`. See
+[`public-scientific-data.md`](public-scientific-data.md#goes).
+
 ## Current wiring
 
 The client, `apps/worker/app/processors/suvi_pipeline.py` and `suvi_preview.py` are all wired
