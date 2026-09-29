@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LogOut, User } from 'lucide-react'
 
 import { accountMenuCopy } from '@/app/lib/auth/account'
 import { ACCESS_PATH } from '@/app/lib/auth/login'
@@ -52,10 +53,18 @@ export function AccountLinks({
   return (
     <>
       <Link {...linkProps('/cuenta', 'login-link register-link account-link')} title={account}>
-        {isHeader ? accountMenuCopy.greeting(account) : accountMenuCopy.account}
+        {isHeader ? (
+          accountMenuCopy.greeting(account)
+        ) : (
+          <span className="mobile-account-link-content">
+            <User aria-hidden="true" size={18} strokeWidth={1.8} />
+            <span>{accountMenuCopy.account}</span>
+          </span>
+        )}
       </Link>
       <SignOutButton
         className={isHeader ? 'login-link' : undefined}
+        icon={isHeader ? undefined : <LogOut aria-hidden="true" size={18} strokeWidth={1.8} />}
         isSigningOut={isSigningOut}
         onSignOut={onSignOut}
       />
