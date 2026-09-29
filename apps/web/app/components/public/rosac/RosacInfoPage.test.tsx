@@ -75,7 +75,7 @@ describe('RosacInfoPage', () => {
   })
 
   test('shows the location in its own section, with the address always visible and a map', async () => {
-    render(<RosacInfoPage {...defaultArgs} />)
+    renderPage()
 
     const location = screen.getByRole('region', { name: '2. Ubicación' })
     expect(location).toHaveTextContent(defaultArgs.content.location.address)

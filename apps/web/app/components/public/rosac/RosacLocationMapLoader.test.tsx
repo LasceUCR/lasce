@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
+// `rosac.ts` imports `prisma` at module scope — this stubs it out so loading
+// it for its static fixture doesn't also require a real DATABASE_URL.
+vi.mock('@lasce/db', () => ({ prisma: {} }))
+
 import { rosacInfoContent } from '@/app/lib/rosac'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
 

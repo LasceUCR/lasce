@@ -8,7 +8,6 @@ import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import { ResearchCollaborationsSection } from '@/app/components/public/research/ResearchCollaborationsSection'
 import { EditableResearcherCard } from '@/app/components/public/rosac/EditableResearcherCard'
 import {
   ResearcherForm,
@@ -22,10 +21,6 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
-import {
-  researchCollaborations,
-  type ResearchCollaboration,
-} from '@/app/lib/research-collaborations'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import { NosotrosActivityForm, type NosotrosActivityFormValues } from './NosotrosActivityForm'

@@ -3,6 +3,12 @@ import { z } from 'zod'
 
 import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
 
+// Built once and reused in both `location.intro` (as flowing prose) and `location.address`
+// (as its own field, kept for anything that needs the bare address rather than a sentence),
+// so the two can never drift apart.
+const rosacLocationAddress =
+  'Recinto de Santa Cruz, Universidad de Costa Rica, Santa Cruz, Guanacaste, Costa Rica'
+
 /**
  * Editorial source: LASCE_ROSAC_quienes_somos_y_que_hacemos.docx, supplied by LASCE.
  * Sections: ROSAC, ¿Qué hacemos?, ¿Por qué observar en radio? and La relación entre ambos.

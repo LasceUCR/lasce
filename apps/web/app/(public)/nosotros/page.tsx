@@ -8,7 +8,6 @@ import {
   nosotrosContent,
   nosotrosMeta,
 } from '@/app/lib/nosotros'
-import { researchCollaborations } from '@/app/lib/research-collaborations'
 
 export const metadata: Metadata = {
   ...nosotrosMeta,

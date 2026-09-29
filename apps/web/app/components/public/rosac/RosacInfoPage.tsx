@@ -31,6 +31,7 @@ import styles from './RosacInfoPage.module.css'
 import { ConstructionCarousel } from './ConstructionCarousel'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
+import { RosacLocationMapLoader } from './RosacLocationMapLoader'
 import { TeamGallery } from './TeamGallery'
 
 const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
