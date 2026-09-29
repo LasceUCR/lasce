@@ -3,6 +3,11 @@ import L from 'leaflet'
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
+// `RosacLocationMap.stories` pulls in `rosacInfoContent` from `@/app/lib/rosac`,
+// which imports `prisma` at module scope — this stubs it out so loading that
+// module for its static fixture doesn't also require a real DATABASE_URL.
+vi.mock('@lasce/db', () => ({ prisma: {} }))
+
 import { Default } from './RosacLocationMap.stories'
 import { RosacLocationMap, type RosacLocationMapProps } from './RosacLocationMap'
 
