@@ -210,7 +210,7 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   await page.goto('/')
 
   const menu = page.locator('.mobile-menu')
-  await menu.locator('summary').click()
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
   await expect(menu).toHaveAttribute('open', '')
 
   const navigation = page.getByRole('navigation', { name: 'Navegación móvil' })
@@ -220,12 +220,39 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   await expect(page).toHaveURL(/\/noticias$/)
   await expect(menu).not.toHaveAttribute('open', '')
 
-  await menu.locator('summary').click()
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
   await expect(
     page
       .getByRole('navigation', { name: 'Navegación móvil' })
       .getByRole('link', { name: 'Noticias', exact: true }),
   ).toHaveAttribute('aria-current', 'page')
+})
+
+test('shows the UCR, CINESPA and LASCE brand without overflow on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const header = page.locator('.site-header')
+  await expect(header.getByAltText('Universidad de Costa Rica')).toBeVisible()
+  await expect(header.getByAltText('Centro de Investigaciones Espaciales')).toBeVisible()
+  await expect(header.getByAltText('Laboratorio de Ciencias Espaciales')).toBeVisible()
+
+  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+  expect(fits).toBe(true)
+})
+
+test('keeps the brand clear of the desktop navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+
+  const brandBox = await page.getByRole('banner').locator('.brand').boundingBox()
+  const navBox = await page.getByRole('navigation', { name: 'Navegación principal' }).boundingBox()
+
+  expect(brandBox).not.toBeNull()
+  expect(navBox).not.toBeNull()
+  if (brandBox && navBox) {
+    expect(brandBox.x + brandBox.width).toBeLessThanOrEqual(navBox.x)
+  }
 })
 
 test('displays the back button at the bottom of the gallery index and returns home', async ({

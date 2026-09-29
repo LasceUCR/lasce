@@ -143,7 +143,7 @@ test('mobile navigation can be opened and used with the keyboard', async ({ page
   await page.keyboard.press('Tab')
 
   const menu = page.locator('.mobile-menu')
-  const summary = menu.locator('summary')
+  const summary = page.getByLabel('Abrir navegación', { exact: true })
   await expect(summary).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(menu).toHaveAttribute('open', '')
@@ -151,6 +151,11 @@ test('mobile navigation can be opened and used with the keyboard', async ({ page
   const navigation = page.getByRole('navigation', { name: 'Navegación móvil' })
   for (const route of publicRoutes) {
     await page.keyboard.press('Tab')
+    if (route.label === 'Publicaciones') {
+      await expect(navigation.getByText('Recursos', { exact: true })).toBeFocused()
+      await page.keyboard.press('Enter')
+      await page.keyboard.press('Tab')
+    }
     await expect(navigation.getByRole('link', { name: route.label, exact: true })).toBeFocused()
   }
 

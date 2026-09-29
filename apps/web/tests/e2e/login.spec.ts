@@ -167,7 +167,7 @@ test('opens on the login tab and switches to registration without leaving the pa
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await page.locator('.mobile-menu summary').click()
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   const names = await menu.getByRole('link').allTextContents()
   expect(names.slice(-1)).toEqual([accountMenuCopy.signIn])
@@ -248,7 +248,7 @@ test('shows the profile on the account page once signed in', async ({ page }) =>
   await expect(signOutButton(page)).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.locator('.mobile-menu summary').click()
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   await expect(menu.getByRole('link', { name: accountMenuCopy.account })).toHaveAttribute(
     'href',

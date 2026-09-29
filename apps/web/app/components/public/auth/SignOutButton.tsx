@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 
 import { accountMenuCopy, signOutDialogCopy } from '@/app/lib/auth/account'
 
@@ -16,6 +16,8 @@ export interface SignOutButtonProps {
   isSigningOut?: boolean
   /** Classes of the trigger, so it can look like a header pill or a site button. */
   className?: string
+  /** Optional icon rendered before the label; the mobile menu uses it, the header pill doesn't. */
+  icon?: ReactNode
 }
 
 /**
@@ -30,6 +32,7 @@ export function SignOutButton({
   submitsForm = false,
   isSigningOut = false,
   className,
+  icon,
 }: SignOutButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -83,7 +86,16 @@ export function SignOutButton({
         ref={triggerRef}
         type={submitsForm ? 'submit' : 'button'}
       >
-        {isSigningOut ? accountMenuCopy.signingOut : accountMenuCopy.signOut}
+        {icon ? (
+          <span className="mobile-account-link-content">
+            {icon}
+            <span>{isSigningOut ? accountMenuCopy.signingOut : accountMenuCopy.signOut}</span>
+          </span>
+        ) : isSigningOut ? (
+          accountMenuCopy.signingOut
+        ) : (
+          accountMenuCopy.signOut
+        )}
       </button>
 
       {isOpen ? (
