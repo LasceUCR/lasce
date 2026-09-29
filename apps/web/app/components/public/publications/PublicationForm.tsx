@@ -5,6 +5,9 @@ import { useId, useState } from 'react'
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
+import { Plus, X } from 'lucide-react'
+import { IconButton } from '@/app/components/public/IconButton'
+import { Modal } from '@/app/components/public/Modal'
 import type { ResearchGroup } from '@/app/lib/publications'
 
 const researchGroupOptions: FormFieldOption[] = [
@@ -49,17 +52,12 @@ export function PublicationForm({
   const [DOI, setDOI] = useState(publication.DOI || '')
   const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
 
-  const [authorToRemove, setAuthorToRemove] = useState('')
-  const [newAuthor, setNewAuthor] = useState(' ')
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [isAddingAuthor, setIsAddingAuthor] = useState(false)
+  const [newAuthor, setNewAuthor] = useState('')
+  const [newAuthorError, setNewAuthorError] = useState<string | null>(null)
+  const [showAuthorValidation, setShowAuthorValidation] = useState(false)
 
-  const authorOptions: FormFieldOption[] = [
-    { value: '', label: 'Seleccionar autor para eliminar...' },
-    ...authors.map((author) => ({
-      value: author,
-      label: author,
-    })),
-  ]
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   function validateTitle(value: string) {
     if (value.trim() === '') {
@@ -97,12 +95,6 @@ export function PublicationForm({
     }
   }
 
-  const validateAuthors = () => {
-    if (authors.length === 0) {
-      throw new Error('Debe haber al menos un autor agregado.')
-    }
-  }
-
   const canSave =
     title.trim() !== '' &&
     authors.length > 0 &&
@@ -112,23 +104,35 @@ export function PublicationForm({
     href.trim() !== '' &&
     researchGroup.trim() !== ''
 
-  function handleRemoveAuthor() {
-    if (!authorToRemove) return
+  function openAddAuthor() {
+    setNewAuthor('')
+    setNewAuthorError(null)
+    setIsAddingAuthor(true)
+  }
 
-    setAuthors((current) => current.filter((author) => author !== authorToRemove))
-    setAuthorToRemove('')
+  function closeAddAuthor() {
+    setIsAddingAuthor(false)
   }
 
   function handleAddAuthor() {
-    const author = newAuthor.trim()
+    const trimmed = newAuthor.trim()
 
-    if (!author) return
-
-    if (!authors.some((existing) => existing.toLowerCase() === author.toLowerCase())) {
-      setAuthors((current) => [...current, author])
+    if (!trimmed) {
+      setNewAuthorError('El nombre del autor es obligatorio.')
+      return
     }
 
-    setNewAuthor('')
+    if (authors.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
+      setNewAuthorError('Ese autor ya fue agregado.')
+      return
+    }
+
+    setAuthors([...authors, trimmed])
+    closeAddAuthor()
+  }
+
+  function handleRemoveAuthor(author: string) {
+    setAuthors(authors.filter((existing) => existing !== author))
   }
 
   function validateFields() {
@@ -139,6 +143,7 @@ export function PublicationForm({
     setDOI(DOI?.trim() ?? '')
     setNewAuthor(newAuthor.trim())
     setAbstract(abstract.trim())
+    setShowAuthorValidation(true)
 
     if (canSave) {
       setConfirmOpen(true)
@@ -181,33 +186,65 @@ export function PublicationForm({
         value={date}
       />
 
-      <FormField
-        id={`${formId}-authors-remove`}
-        label="Eliminar autor"
-        onChange={setAuthorToRemove}
-        options={authorOptions}
-        placeholder="Buscar autor..."
-        value={authorToRemove}
-      />
+      <div className="cms-form-field">
+        <span className="cms-form-field-label" id="publication-authors-label">
+          Autores
+        </span>
 
-      <Button disabled={!authorToRemove} onClick={handleRemoveAuthor} variant="danger">
-        Eliminar autor
-      </Button>
+        <div
+          aria-labelledby="publication-authors-label"
+          className={`email-chip-field${showAuthorValidation && authors.length === 0 ? ' form-field-error' : ''}`}
+          role="group"
+        >
+          {authors.map((author) => (
+            <span className="email-chip" key={author}>
+              {author}
 
-      <div className="publication-form-author-add">
+              <IconButton
+                className="email-chip-remove"
+                icon={<X size={12} strokeWidth={2} />}
+                label={`Eliminar ${author}`}
+                onClick={() => handleRemoveAuthor(author)}
+              />
+            </span>
+          ))}
+
+          <IconButton
+            className="email-chip-add"
+            icon={<Plus size={14} strokeWidth={2} />}
+            label="Añadir autor"
+            onClick={openAddAuthor}
+          />
+        </div>
+      </div>
+
+      <Modal onClose={closeAddAuthor} open={isAddingAuthor} size="small" title="Añadir autor">
         <FormField
-          id={`${formId}-author-add`}
-          label="Añadir autor"
-          onChange={setNewAuthor}
+          id={`${formId}-new-author`}
+          label="Nombre del autor"
+          onChange={(value) => {
+            setNewAuthor(value)
+            setNewAuthorError(null)
+          }}
           value={newAuthor}
-          validate={validateAuthors}
-          required={authors.length === 0}
         />
 
-        <Button disabled={newAuthor.trim() === ''} onClick={handleAddAuthor} variant="secondary">
-          Añadir autor
-        </Button>
-      </div>
+        {newAuthorError ? (
+          <p className="form-alert" role="alert">
+            {newAuthorError}
+          </p>
+        ) : null}
+
+        <div className="cms-form-actions">
+          <Button onClick={closeAddAuthor} variant="secondary">
+            Cancelar
+          </Button>
+
+          <Button disabled={newAuthor.trim() === ''} onClick={handleAddAuthor} variant="primary">
+            Añadir
+          </Button>
+        </div>
+      </Modal>
 
       <FormField
         id={`publication-href`}
@@ -217,13 +254,8 @@ export function PublicationForm({
         value={href}
         required
       />
-      
-      <FormField
-        id={`publication-doi`}
-        label="DOI"
-        onChange={setDOI}
-        value={DOI}
-      />
+
+      <FormField id={`publication-doi`} label="DOI" onChange={setDOI} value={DOI} />
 
       <FormField
         id={`publication-venue-venue`}
