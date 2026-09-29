@@ -121,7 +121,7 @@ test('registration is reached through the access page tab, not the header', asyn
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await expect(page.locator('.header-actions')).toBeHidden()
-  await page.locator('.mobile-menu summary').click()
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   await expect(menu.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', ACCESS_PATH)
   await expect(menu.getByRole('link', { name: 'Crear cuenta' })).toHaveCount(0)

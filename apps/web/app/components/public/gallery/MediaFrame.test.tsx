@@ -23,12 +23,12 @@ describe('MediaFrame', () => {
     render(<MediaFrame {...placeholderArgs} />)
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
-    expect(screen.getByText('Foto: Cimentación de la plataforma')).toBeInTheDocument()
+    expect(screen.getByText(placeholderArgs.placeholder)).toBeInTheDocument()
   })
 
   test('tells video apart from photography in the placeholder', () => {
     render(<MediaFrame {...videoArgs} />)
 
-    expect(screen.getByText('Video: Ensamblaje del reflector parabólico')).toBeInTheDocument()
+    expect(screen.getByText(videoArgs.placeholder)).toBeInTheDocument()
   })
 })

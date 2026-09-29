@@ -40,10 +40,6 @@ export function AlbumPage({
 }: AlbumPageProps) {
   return (
     <article className="topic-page">
-      <div className="gallery-album-back page-width">
-        <TopicBackLink href={backHref} label={backLabel} />
-      </div>
-
       <TopicHero kicker="Galería LASCE" lead={description} notice={meta} title={title} />
 
       {subAlbums.length > 0 && parentSlug ? (
@@ -70,6 +66,10 @@ export function AlbumPage({
       >
         <AlbumMediaGrid albumTitle={title} media={media} />
       </TopicSection>
+
+      <div className="topic-page-footer gallery-album-footer page-width">
+        <TopicBackLink href={backHref} label={backLabel} />
+      </div>
     </article>
   )
 }

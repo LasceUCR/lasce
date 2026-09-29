@@ -37,7 +37,7 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
   await expect(researchers).toContainText('Haga clic en una ficha para ver más información.')
   const track = researchers.getByRole('list', { name: 'Investigadores LASCE' })
 
-  await expect(track.getByRole('listitem')).toHaveCount(8)
+  await expect(track.getByRole('listitem')).toHaveCount(9)
   await expect(track).toHaveAttribute('tabindex', '0')
   await expect(researchers.getByRole('button', { name: 'Anterior' })).toBeVisible()
   await expect(researchers.getByRole('button', { name: 'Siguiente' })).toBeVisible()
@@ -50,10 +50,20 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
   await expect(
     researchers.getByRole('heading', { name: 'Dr. Luis Gustavo Esquivel Quirós' }),
   ).toBeVisible()
-  await expect(researchers.getByRole('heading', { name: 'MSc. Ivania Calvo' })).toBeVisible()
+  await expect(researchers.getByRole('heading', { name: 'MSc. Ivannia Calvo' })).toBeVisible()
   await expect(researchers.getByRole('heading', { name: 'Dr. Felipe Meza' })).toBeVisible()
   await expect(researchers.getByRole('heading', { name: 'MSc. Alonso Vega' })).toBeVisible()
-  await expect(researchers.getByRole('heading', { name: 'Dra. Gabriela Molina' })).toBeVisible()
+  await expect(researchers.getByRole('heading', { name: 'Dra. Graciela Molina' })).toBeVisible()
+  await expect(
+    researchers.getByRole('heading', { name: 'MSc. Johanna Pamela Camacho Garbanzo' }),
+  ).toBeVisible()
+  await expect(researchers.getByRole('link', { name: 'jcamachoga@ice.go.cr' })).toHaveAttribute(
+    'href',
+    'mailto:jcamachoga@ice.go.cr',
+  )
+  await expect(
+    researchers.getByRole('link', { name: 'Johanna.camacho@ucr.ac.cr' }),
+  ).toHaveAttribute('href', 'mailto:Johanna.camacho@ucr.ac.cr')
   await expect(researchers.getByRole('heading', { name: 'Dra. Yenca Migoya' })).toBeVisible()
   await expect(
     researchers.getByRole('link', { name: 'carolina.salas_mata@ucr.ac.cr' }),
@@ -79,7 +89,7 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
     ),
   ).toBeVisible()
   await expect(researchers.getByText('Investigador colaborador').first()).toBeVisible()
-  await researchers.getByRole('button', { name: 'Ver descripción de MSc. Ivania Calvo' }).click()
+  await researchers.getByRole('button', { name: 'Ver descripción de MSc. Ivannia Calvo' }).click()
   await expect(
     researchers.getByText(
       'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
@@ -114,11 +124,14 @@ test('reaches the section from the navigation and marks it as current', async ({
   await page.goto('/')
 
   const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
-  const link = navigation.getByRole('link', { name: 'Nosotros', exact: true })
+  const summary = navigation.locator('summary', { hasText: 'Nosotros' })
+  await summary.click()
+  const link = navigation.getByRole('link', { name: 'Quiénes somos', exact: true })
 
   await link.click()
 
   await expect(page).toHaveURL(/\/nosotros$/)
+  await summary.click()
   await expect(link).toHaveAttribute('aria-current', 'page')
 })
 
