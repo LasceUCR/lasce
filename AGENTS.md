@@ -23,8 +23,8 @@ Redis queue:
 | `packages/types`         | TypeScript           | Pure types, no runtime code                            |
 | `packages/eslint-config` | n/a                  | Shared flat configs                                    |
 
-Stores: PostgreSQL (relational), Redis (queue transport), InfluxDB 3 (time series, worker only),
-MinIO (files).
+Stores: PostgreSQL (relational), Redis (queue transport), InfluxDB 3 (time series, written by the
+worker, read by the web for the EXIS series on `/datos`), MinIO (files).
 
 The public site is **in Spanish** (`<html lang="es">`, routes like `/clima-espacial`,
 `/investigacion`). Keep user-facing copy in Spanish; keep code, comments and commits in English.

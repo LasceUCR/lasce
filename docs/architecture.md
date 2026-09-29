@@ -42,7 +42,7 @@ check itself against.
 | Store      | Written by                                      | Read by                   | Schema owner                           |
 | ---------- | ----------------------------------------------- | ------------------------- | -------------------------------------- |
 | PostgreSQL | `apps/web` (Prisma), `apps/worker` (SQLAlchemy) | both                      | **Prisma** — the only migration source |
-| InfluxDB   | `apps/worker`                                   | `apps/worker`             | schema-on-write                        |
+| InfluxDB   | `apps/worker`                                   | `apps/worker`, `apps/web` | schema-on-write                        |
 | MinIO      | `apps/worker`, `apps/web`                       | `apps/worker`, `apps/web` | —                                      |
 | Redis      | `apps/web` enqueues, `apps/worker` consumes     | both                      | BullMQ                                 |
 

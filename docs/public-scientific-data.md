@@ -11,7 +11,7 @@ the values are `observed` or `simulated`; these states must never be inferred fr
 
 ### GOES
 
-GOES time series are read from the [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo). SUVI images come from the frames the worker's `suvi-pipeline` job catalogues in `solar.suvi_frames` (see [`suvi-pipeline.md`](suvi-pipeline.md)), since the shared archive has no SUVI directory. Neither adapter substitutes simulated observations on failure.
+MAG and SEISS time series are read from the [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo). EXIS series (SFEU, SFXR) are read from InfluxDB, where the worker's `exis-pipeline` job stores them (see [EXIS from InfluxDB](#exis-from-influxdb)). SUVI images come from the frames the worker's `suvi-pipeline` job catalogues in `solar.suvi_frames` (see [`suvi-pipeline.md`](suvi-pipeline.md)), since the shared archive has no SUVI directory. Neither adapter substitutes simulated observations on failure.
 
 The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
@@ -27,11 +27,9 @@ The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/Q
 
 Operational SWPC channels are not interchangeable with L1b selectors. The former MPSH nominal energies are replaced with archive band/telescope identifiers. SGPS L1b does not supply the previous integral thresholds below 500 MeV. EPN components retain their native axis names; no undocumented coordinate transform or directional averaging is applied. Flux units are checked against NetCDF metadata.
 
-The web enqueues `query-goes-archive`; only the Python worker downloads and decodes NetCDF. The endpoint responds with `202` and `{ state: 'pending', jobId, progress }` during processing. The browser polls the same criteria with `jobId` every two seconds. Completed work returns the existing time-series response with CITIC provenance. Identical requests share a deterministic job identifier; current-day requests refresh in ten-minute buckets. BullMQ retains completed results for up to 24 hours, subject to its count cap. A new submission can retry failed work; polling never retries or re-enqueues expired jobs.
+For MAG and SEISS, the web enqueues `query-goes-archive`; only the Python worker downloads and decodes NetCDF. The endpoint responds with `202` and `{ state: 'pending', jobId, progress }` during processing. The browser polls the same criteria with `jobId` every two seconds. Completed work returns the existing time-series response with CITIC provenance. Identical requests share a deterministic job identifier; current-day requests refresh in ten-minute buckets. BullMQ retains completed results for up to 24 hours, subject to its count cap. A new submission can retry failed work; polling never retries or re-enqueues expired jobs.
 
-The worker's scheduled `exis-pipeline` job separately stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` does not read that store yet and still queries CITIC on demand.
-
-Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. No new environment variables or database migrations are needed. SUVI and provisional ROSAC remain synchronous.
+Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. No new environment variables or database migrations are needed. SUVI, EXIS and provisional ROSAC are synchronous.
 
 Processing uses CF time units and calendars, preserves subsecond timestamps, and includes the entire selected end minute. Fill values, non-finite values, negative irradiance/particle flux, and degraded or invalid data-quality flags are excluded. MAG's valid correction flag is accepted according to its good-quality bit mask. No values are interpolated. At most 360 observations are sampled uniformly by position after filtering and sorting; the notice identifies sampling. Conflicting timestamps and mixed-satellite intervals fail explicitly.
 
@@ -48,6 +46,15 @@ illustrative grayscale renders, not calibrated science products. Coverage starts
 began cataloguing a channel; an interval without frames returns an empty sequence.
 
 On 2026-09-13 the reader was checked against real G18 L1b samples dated 2025-01-05 for all five enabled historical products. Synthetic NetCDF fixtures exercise detector selection, fill values, quality flags, sensor dimensions, time bounds, and compressed archives without depending on the remote service.
+
+#### EXIS from InfluxDB
+
+The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB (`exis_irradiance`), one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)). `exisReadingsDataSource.ts` reads it synchronously through InfluxDB 3's SQL HTTP API (`influxSql.ts`, a plain `fetch` with every value bound as a query parameter), so these products never return `202`. The SFXR/SFEU rows in the table above describe the CITIC archive layout; the quality filtering applied at ingestion is the same.
+
+- Sampling happens inside the query: per satellite, the first reading, every _n_-th after it and the last, at most 360 in total; nothing is averaged or interpolated, and the notice says when a series was sampled.
+- One series never mixes spacecraft: the satellite that observed most recently in the interval is kept.
+- Only ingested days have data. NOAA publishes a day about one day late, so today, and any day the pipeline never ingested (before it started, or not backfilled), returns an empty series. There is no fallback to CITIC.
+- The web needs `INFLUXDB_HOST`, `INFLUXDB_TOKEN` and `INFLUXDB_DATABASE` (validated in `packages/config/src/env.ts`). A table that was never written reads as empty; any other InfluxDB failure is a `502`.
 
 ### ROSAC
 
@@ -98,7 +105,8 @@ which backend serves the query:
 
 ```text
 route.ts → ScientificDataSourceManager ─ by query.source ─→ GOES  ─ by instrument ─→ SUVI → suvi_frames + MinIO
-                                                                                      EXIS, MAG, SEISS → CITIC worker
+                                                                                      EXIS → InfluxDB (exis_irradiance)
+                                                                                      MAG, SEISS → CITIC worker
                                                           → ROSAC ─ by instrument ─→ ROSAC-I1, ROSAC-I2 → simulation
 ```
 
