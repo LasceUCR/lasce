@@ -13,22 +13,23 @@ type Story = StoryObj<typeof MediaLightbox>
 
 export const Photograph: Story = {
   args: {
-    albumTitle: 'Construcción del ROSAC',
+    albumTitle: 'Fotos del ROSAC',
     item: {
       id: 'm1',
-      title: 'Llegada de los componentes del ROSAC',
-      description: 'Descarga del contenedor con las piezas del reflector principal.',
-      alt: 'Un terreno desértico despejado y nivelado, con una antena parabólica al fondo.',
-      date: '15 ene 2025',
+      title: 'Adecuación de la base de concreto',
+      description:
+        'Inspección de la losa de cimentación y preparación del terreno antes del izado de la antena.',
+      alt: 'Personas sobre y alrededor de una base de concreto, con una antena al fondo.',
+      date: '2024',
       format: 'JPG',
-      uploader: 'Andrés Solano',
+      uploader: 'Equipo ROSAC',
       isVideo: false,
       colSpan: 2,
       rowSpan: 2,
-      src: '/images/galeria/antena-nueva-en-espera.jpg',
+      src: '/images/galeria/rosac/3.jpg',
     },
     position: 1,
-    total: 13,
+    total: 15,
     onClose: () => {},
     onPrevious: () => {},
     onNext: () => {},
@@ -40,16 +41,17 @@ export const Video: Story = {
     ...Photograph.args,
     item: {
       id: 'm2',
-      title: 'Ensamblaje del reflector parabólico',
-      description: 'Registro en video del armado de los paneles del reflector.',
-      alt: 'Una grúa de gran altura sostiene en el aire el plato reflector de una antena junto a su pedestal.',
-      date: '22 ene 2025',
-      format: 'MP4',
-      uploader: 'Fabián Alvarado',
+      title: 'Elevación de componentes del soporte',
+      description:
+        'Maniobra de izado de pasarela y soporte metálico hacia la parte superior de la estructura.',
+      alt: 'Componente metálico con baranda suspendido junto al soporte de la antena.',
+      date: '2024',
+      format: 'JPG',
+      uploader: 'Equipo ROSAC',
       isVideo: true,
       colSpan: 2,
       rowSpan: 1,
-      src: '/images/galeria/antena-grua-plato.jpg',
+      src: '/images/galeria/rosac/6.jpg',
     },
   },
 }
@@ -58,7 +60,7 @@ export const Video: Story = {
 export const LastFile: Story = {
   args: {
     ...Photograph.args,
-    position: 13,
-    total: 13,
+    position: 15,
+    total: 15,
   },
 }

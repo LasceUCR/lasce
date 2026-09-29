@@ -195,7 +195,10 @@ a {
   min-height: 70px;
   padding: 11px 24px 7px;
   display: grid;
-  grid-template-columns: minmax(370px, 1fr) auto minmax(110px, 1fr);
+  /* The brand column's minimum is a fixed length, so grid won't grow it to fit overflowing
+     content: 590px covers the four logos and two dividers (~562px) with a little room, so the
+     desktop nav never overlaps the CINESPA logo. */
+  grid-template-columns: minmax(590px, 1fr) auto minmax(110px, 1fr);
   align-items: center;
   gap: 24px;
   background: var(--white);
@@ -256,6 +259,11 @@ a {
 .brand .ucr-signature-logo {
   width: 140px;
   height: 50px;
+}
+
+.brand .cinespa-logo {
+  width: 165px;
+  height: 55px;
 }
 
 .brand .lasce-logo {
@@ -342,33 +350,42 @@ a {
   color: var(--blue-dark);
 }
 
-.nav-group.active summary::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: 5px;
-  left: 0;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--action);
-}
-
-/* A flat list just under the summary, topped by the header's cyan rule, thinner; the
-   item text lines up with the summary label. It starts where the active underline of
-   the summary starts, so the cyan rule replaces that underline while the panel is open. */
+/* A small floating panel under the summary, not the shared active-link underline: a
+   caret points up at "Recursos" instead, and the accent moves to the panel's own
+   bottom edge (see below). */
 .nav-group-panel {
   position: absolute;
-  top: calc(100% - 8px);
-  left: -14px;
+  top: calc(100% + 6px);
+  /* Centered under Recursos itself, not the bar. */
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2;
   min-width: 200px;
   padding: 6px 0;
   display: grid;
   border: 1px solid #dbe4ea;
-  border-top: 3px solid var(--cyan);
-  border-radius: 0 0 4px 4px;
+  border-bottom: 2px solid var(--cyan);
+  border-radius: 6px;
   background: var(--white);
   box-shadow: 0 6px 20px rgba(10, 35, 50, 0.08);
+}
+
+/* The caret: a square rotated 45deg, half tucked behind the panel's own top edge so
+   only the upper point shows, with the same hairline border as the panel on the two
+   visible sides so it reads as one continuous shape. Centered under Recursos like
+   the panel itself, so the two translations combine (shift to center, then rotate). */
+.nav-group-panel::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid #dbe4ea;
+  border-left: 1px solid #dbe4ea;
+  border-radius: 2px 0 0 0;
+  background: var(--white);
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .desktop-nav .nav-group-panel a {
@@ -2286,6 +2303,71 @@ a {
     color: var(--blue-dark);
   }
 
+  /* Recursos in the mobile menu: an accordion that looks like a normal menu item
+     (same size and padding as the flat links) until opened, when its three pages
+     drop down beneath it, indented just enough to read as children. */
+  .mobile-nav-group {
+    display: grid;
+  }
+
+  /* Qualified with ".mobile-menu nav" so this beats the generic ".mobile-menu summary"
+     rule above (the hamburger toggle's own styling), which would otherwise also match
+     this nested summary and override its size/layout. */
+  .mobile-menu nav .mobile-nav-group-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    color: inherit;
+    font-size: 14px;
+    list-style: none;
+    cursor: pointer;
+    /* No hover/focus/open background at all: Recursos only opens and closes,
+       it never gets "marked" the way an actual page link does. The browser's
+       own default focus rectangle is also suppressed for the same reason. */
+    outline: none;
+  }
+
+  .mobile-menu nav .mobile-nav-group-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-nav-group-summary svg {
+    flex-shrink: 0;
+    transition: transform 180ms ease;
+  }
+
+  .mobile-nav-group[open] .mobile-nav-group-summary svg {
+    transform: rotate(180deg);
+  }
+
+  /* Chrome (and other browsers following the newer <details> rendering model) wraps
+     everything after <summary> in its own internal box, so a plain "display: grid" on
+     the <details> itself doesn't reach these links — the panel needs its own grid. */
+  .mobile-nav-group-panel {
+    display: grid;
+  }
+
+  .mobile-menu nav a.mobile-nav-group-item {
+    padding-left: 26px;
+  }
+
+  /* Mi cuenta / Cerrar sesión sit apart from the links above them. */
+  .mobile-account-section {
+    display: grid;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .mobile-account-link-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   /* The sign-out button sits among the links and must read like one. */
   .mobile-menu nav button {
     width: 100%;
@@ -2373,13 +2455,18 @@ a {
   }
 
   .brand .ucr-signature-logo {
-    width: 100px;
-    height: 38px;
+    width: 81px;
+    height: 34px;
+  }
+
+  .brand .cinespa-logo {
+    width: 95px;
+    height: 37px;
   }
 
   .brand .lasce-logo {
-    width: 112px;
-    height: 38px;
+    width: 95px;
+    height: 34px;
   }
 
   .brand-divider {
@@ -3123,22 +3210,63 @@ a {
   }
 }
 
+@media (min-width: 761px) and (max-width: 900px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .header-actions {
+    display: none;
+  }
+}
+
 @media (max-width: 430px) {
+  /* A little tighter than the 760px tier's 16px, to give the five brand marks (the
+     seal included again) enough room without shrinking any one of them too far. */
+  .site-header {
+    padding: 5px 12px;
+  }
+
   .brand {
-    gap: 7px;
+    gap: 4px;
   }
 
   .brand img {
     height: 36px;
   }
 
+  /* Brought back at a small size: it disappears once the visitor scrolls, same as the
+     760px tier, but is no longer hidden from the start. */
+  .brand .compdes-logo {
+    width: 22px;
+    height: 24px;
+    flex-basis: 22px;
+  }
+
+  .site-header.is-scrolled .brand .compdes-logo {
+    width: 0;
+    flex-basis: 0;
+    opacity: 0;
+  }
+
+  .brand .ucr-signature-logo {
+    width: 56px;
+    height: 23px;
+  }
+
+  .brand .cinespa-logo {
+    width: 73px;
+    height: 31px;
+  }
+
   .brand .lasce-logo {
-    width: 105px;
-    height: 34px;
+    width: 65px;
+    height: 23px;
   }
 
   .brand-divider {
-    height: 32px;
+    height: 24px;
   }
 
   .hero h1 {
