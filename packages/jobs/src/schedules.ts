@@ -76,4 +76,26 @@ export const schedules: Schedule[] = [
       lookbackMinutes: 30,
     },
   },
+  // NOAA publishes EXIS one file per day, around 04:20 UTC the next morning, and sometimes
+  // republishes a day. Hourly is plenty: an unchanged window costs one listing and a HEAD per day.
+  {
+    id: 'exis-pipeline-sfeu',
+    name: 'exis-pipeline',
+    cron: '*/1 * * * *',
+    data: {
+      product: 'SFEU',
+      spacecraft: 19,
+      lookbackDays: 3,
+    },
+  },
+  {
+    id: 'exis-pipeline-sfxr',
+    name: 'exis-pipeline',
+    cron: '*/1 * * * *',
+    data: {
+      product: 'SFXR',
+      spacecraft: 19,
+      lookbackDays: 3,
+    },
+  },
 ]
