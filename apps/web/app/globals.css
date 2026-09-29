@@ -3222,10 +3222,9 @@ a {
 }
 
 @media (max-width: 430px) {
-  /* A little tighter than the 760px tier's 16px, to give the five brand marks (the
-     seal included again) enough room without shrinking any one of them too far. */
   .site-header {
-    padding: 5px 12px;
+    padding: 5px 8px;
+    gap: 4px;
   }
 
   .brand {
