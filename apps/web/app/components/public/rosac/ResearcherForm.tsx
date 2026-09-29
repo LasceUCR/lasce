@@ -25,7 +25,7 @@ export interface PersonProfile {
   src: string
   role: string
   name: string
-  /** Zero, one or several public addresses — edited here as chips, each with its own "quitar". */
+  /** Zero, one or two public addresses — edited here as chips, each with its own "quitar". */
   email?: string | readonly string[]
   institution: string
   description?: string
@@ -51,6 +51,10 @@ export interface ResearcherFormProps {
   confirmTitle?: string
   confirmMessage?: string
 }
+
+/** Matches the database CHECK constraint on both `researchers.email` and
+ * `nosotros_researchers.email` — never send more than this many. */
+const MAX_EMAILS = 2
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
@@ -122,7 +126,6 @@ export function ResearcherForm({
     if (role.trim() === '') missing.push('Rol')
     if (name.trim() === '') missing.push('Nombre')
     if (institution.trim() === '') missing.push('Institución')
-    if (description.trim() === '') missing.push('Descripción')
     return missing
   }
 
@@ -182,6 +185,10 @@ export function ResearcherForm({
 
   function handleAddEmail() {
     const trimmed = newEmail.trim()
+    if (emails.length >= MAX_EMAILS) {
+      setNewEmailError(`Máximo ${MAX_EMAILS} correos de contacto.`)
+      return
+    }
     if (!isValidEmail(trimmed)) {
       setNewEmailError('El correo no es válido.')
       return
@@ -250,12 +257,14 @@ export function ResearcherForm({
               />
             </span>
           ))}
-          <IconButton
-            className="email-chip-add"
-            icon={<Plus size={14} strokeWidth={2} />}
-            label="Añadir contacto"
-            onClick={openAddEmail}
-          />
+          {emails.length < MAX_EMAILS ? (
+            <IconButton
+              className="email-chip-add"
+              icon={<Plus size={14} strokeWidth={2} />}
+              label="Añadir contacto"
+              onClick={openAddEmail}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -304,7 +313,6 @@ export function ResearcherForm({
           setDescription(value)
           setValidationError(null)
         }}
-        required
         value={description}
       />
 

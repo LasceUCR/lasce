@@ -45,11 +45,11 @@ export interface TeamMember {
   name: string
   /** The category shown at the top of the card, for example `Investigador`. */
   role: string
-  /** Zero, one or several public addresses, when LASCE supplied them. */
+  /** Zero, one or two public addresses, when LASCE supplied them. */
   email?: string | readonly string[]
   /** Provisional institution shown as `Institución: {institution}`. */
   institution: string
-  description: string
+  description?: string
 }
 
 interface RosacTextSection {
@@ -383,7 +383,7 @@ type ResearcherRow = {
   name: string
   institution: string
   email: string[]
-  description: string
+  description: string | null
 }
 
 function toTeamMember(row: ResearcherRow): TeamMember {
@@ -394,7 +394,7 @@ function toTeamMember(row: ResearcherRow): TeamMember {
     name: row.name,
     institution: row.institution,
     email: row.email.length > 0 ? row.email : undefined,
-    description: row.description,
+    description: row.description ?? undefined,
   }
 }
 
@@ -403,11 +403,17 @@ export async function getResearchers(): Promise<TeamMember[]> {
   return rows.map(toTeamMember)
 }
 
+/** `''` and `undefined` both mean "not set" — stored as `null`, same as an untouched row. */
+function normalizeOptional(value: string | undefined): string | null {
+  return value ? value : null
+}
+
 /**
  * Shared by create and update. `email` is a single form field — a comma
- * separated list of zero, one or several addresses — split and validated
- * into an array here, since a researcher can have more than one (LASCE-CON-
- * 012-085 follow-up, matching `ResearcherCard`'s multi-address display).
+ * separated list of zero, one or two addresses — split and validated into an
+ * array here, since a researcher can have more than one (LASCE-CON-012-085
+ * follow-up, matching `ResearcherCard`'s multi-address display). Capped at 2
+ * by both this schema and a database CHECK constraint.
  */
 export const researcherInputSchema = z.object({
   src: z.string().trim().min(1, 'La foto es obligatoria.'),
@@ -424,10 +430,14 @@ export const researcherInputSchema = z.object({
             .map((address) => address.trim())
             .filter((address) => address !== ''),
     )
-    .pipe(z.array(z.email({ error: 'Uno o más correos no son válidos.' })))
+    .pipe(
+      z
+        .array(z.email({ error: 'Uno o más correos no son válidos.' }))
+        .max(2, 'Máximo 2 correos de contacto.'),
+    )
     .optional(),
   institution: z.string().trim().min(1, 'La institución es obligatoria.'),
-  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+  description: z.string().trim().optional(),
 })
 
 export type ResearcherInput = z.infer<typeof researcherInputSchema>
@@ -448,7 +458,7 @@ export async function createResearcher(
       name: data.name,
       email: data.email ?? [],
       institution: data.institution,
-      description: data.description,
+      description: normalizeOptional(data.description),
       modifiedBy,
     },
   })
@@ -477,7 +487,7 @@ export async function updateResearcher(
       name: data.name,
       email: data.email ?? [],
       institution: data.institution,
-      description: data.description,
+      description: normalizeOptional(data.description),
       modifiedBy,
     },
   })

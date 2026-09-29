@@ -134,6 +134,21 @@ describe('researcherInputSchema', () => {
 
     expect(result.success).toBe(false)
   })
+
+  test('rejects more than 2 addresses', () => {
+    const result = researcherInputSchema.safeParse({
+      ...validInput,
+      email: 'uno@ucr.ac.cr, dos@ucr.ac.cr, tres@ucr.ac.cr',
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  test('accepts a missing description — optional', () => {
+    const { description: _description, ...withoutDescription } = validInput
+
+    expect(researcherInputSchema.safeParse(withoutDescription).success).toBe(true)
+  })
 })
 
 describe('updateResearcher', () => {

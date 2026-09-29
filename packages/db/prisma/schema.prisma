@@ -299,10 +299,12 @@ model Researcher {
   role        String
   name        String
   institution String
-  /// Zero, one or several public addresses, each rendered as its own `mailto:`
-  /// link. An empty array means the researcher has none.
+  /// Zero, one or two public addresses, each rendered as its own `mailto:`
+  /// link — capped at 2 by a CHECK constraint (see the migration), since
+  /// Prisma's schema language has no array-length attribute of its own. An
+  /// empty array means the researcher has none.
   email       String[] @default([])
-  description String   @db.Text
+  description String?  @db.Text
   /// Display order. Set once at creation and never touched by an edit — same
   /// reasoning as `NosotrosActivity.createdAt`.
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -325,10 +327,12 @@ model NosotrosResearcher {
   role        String
   name        String
   institution String
-  /// Zero, one or several public addresses, each rendered as its own `mailto:`
-  /// link. An empty array means the researcher has none.
+  /// Zero, one or two public addresses, each rendered as its own `mailto:`
+  /// link — capped at 2 by a CHECK constraint (see the migration), since
+  /// Prisma's schema language has no array-length attribute of its own. An
+  /// empty array means the researcher has none.
   email       String[] @default([])
-  description String   @db.Text
+  description String?  @db.Text
   /// Display order. Set once at creation and never touched by an edit — same
   /// reasoning as `NosotrosActivity.createdAt`.
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)

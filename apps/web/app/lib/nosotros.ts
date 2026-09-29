@@ -44,11 +44,11 @@ export interface NosotrosResearcher {
   name: string
   /** The category shown at the top of the card, for example `Investigador`. */
   role: string
-  /** Public address, or several, when LASCE supplied them. */
+  /** Public address, or up to two, when LASCE supplied them. */
   email?: string | readonly string[]
   /** Affiliation shown as `Institución: {institution}`. */
   institution: string
-  description: string
+  description?: string
 }
 
 export interface NosotrosContent {
@@ -124,10 +124,6 @@ export const nosotrosContent = {
         role: 'Investigador colaborador',
         email: 'luis.esquivel@ucr.ac.cr',
         institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
-        // TODO: pending real bio text from LASCE — `description` is now required
-        // for every researcher (see `NosotrosResearcher`), and this is the only
-        // profile that never had one.
-        description: 'Información pendiente.',
       },
       {
         id: 'ivannia-calvo',
@@ -405,7 +401,7 @@ type NosotrosResearcherRow = {
   name: string
   institution: string
   email: string[]
-  description: string
+  description: string | null
 }
 
 function toNosotrosResearcher(row: NosotrosResearcherRow): NosotrosResearcher {
@@ -416,7 +412,7 @@ function toNosotrosResearcher(row: NosotrosResearcherRow): NosotrosResearcher {
     name: row.name,
     institution: row.institution,
     email: row.email.length > 0 ? row.email : undefined,
-    description: row.description,
+    description: row.description ?? undefined,
   }
 }
 
@@ -427,10 +423,12 @@ export async function getNosotrosResearchers(): Promise<NosotrosResearcher[]> {
 
 /**
  * Shared by create and update, same shape as `researcherInputSchema` (ROSAC)
- * — every researcher needs a bio, on both rosters. `email` is a single form
- * field — a comma separated list of zero, one or several addresses — split
- * and validated into an array here, since a researcher can have more than
- * one (matching `ResearcherCard`'s multi-address display).
+ * — `description` is optional on both rosters, several profiles have no bio
+ * text. `email` is a single form field — a comma separated list of zero, one
+ * or two addresses — split and validated into an array here, since a
+ * researcher can have more than one (matching `ResearcherCard`'s
+ * multi-address display). Capped at 2 by both this schema and a database
+ * CHECK constraint.
  */
 export const nosotrosResearcherInputSchema = z.object({
   src: z.string().trim().min(1, 'La foto es obligatoria.'),
@@ -447,13 +445,22 @@ export const nosotrosResearcherInputSchema = z.object({
             .map((address) => address.trim())
             .filter((address) => address !== ''),
     )
-    .pipe(z.array(z.email({ error: 'Uno o más correos no son válidos.' })))
+    .pipe(
+      z
+        .array(z.email({ error: 'Uno o más correos no son válidos.' }))
+        .max(2, 'Máximo 2 correos de contacto.'),
+    )
     .optional(),
   institution: z.string().trim().min(1, 'La institución es obligatoria.'),
-  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+  description: z.string().trim().optional(),
 })
 
 export type NosotrosResearcherInput = z.infer<typeof nosotrosResearcherInputSchema>
+
+/** `''` and `undefined` both mean "not set" — stored as `null`, same as an untouched row. */
+function normalizeOptional(value: string | undefined): string | null {
+  return value ? value : null
+}
 
 /**
  * Creates a new Nosotros researcher profile, authored by the admin who
@@ -472,7 +479,7 @@ export async function createNosotrosResearcher(
       name: data.name,
       email: data.email ?? [],
       institution: data.institution,
-      description: data.description,
+      description: normalizeOptional(data.description),
       modifiedBy,
     },
   })
@@ -501,7 +508,7 @@ export async function updateNosotrosResearcher(
       name: data.name,
       email: data.email ?? [],
       institution: data.institution,
-      description: data.description,
+      description: normalizeOptional(data.description),
       modifiedBy,
     },
   })

@@ -615,7 +615,7 @@ type SeedNosotrosResearcher = {
   name: string
   email?: string[]
   institution: string
-  description: string
+  description?: string
 }
 
 const nosotrosResearchers: SeedNosotrosResearcher[] = [
@@ -643,9 +643,6 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     role: 'Investigador colaborador',
     email: ['luis.esquivel@ucr.ac.cr'],
     institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
-    // TODO: pending real bio text from LASCE — `description` is required for
-    // every researcher now, and this is the only profile that never had one.
-    description: 'Información pendiente.',
   },
   {
     photoUrl: '/images/Researchers/IvanniaCalvo.png',

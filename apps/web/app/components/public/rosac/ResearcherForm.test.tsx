@@ -63,7 +63,7 @@ describe('ResearcherForm', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(
-      screen.getByText('Falta completar: Foto, Rol, Nombre, Institución, Descripción.'),
+      screen.getByText('Falta completar: Foto, Rol, Nombre, Institución.'),
     ).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
@@ -117,6 +117,21 @@ describe('ResearcherForm', () => {
 
     expect(screen.getByText('nuevo@ucr.ac.cr')).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Añadir contacto' })).not.toBeInTheDocument()
+  })
+
+  test('hides the add-contact button once 2 addresses are present', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherForm {...editArgs} />)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Correo electrónico' }),
+      'nuevo@ucr.ac.cr',
+    )
+    await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
+
+    expect(screen.queryByRole('button', { name: 'Añadir contacto' })).not.toBeInTheDocument()
   })
 
   test('rejects a malformed address in the add-contact modal', async () => {

@@ -265,10 +265,10 @@ describe('nosotrosResearcherInputSchema', () => {
     expect(nosotrosResearcherInputSchema.safeParse(validInput).success).toBe(true)
   })
 
-  test('rejects a missing description — required for every researcher, same as ROSAC', () => {
+  test('accepts a missing description — optional, same as ROSAC', () => {
     const { description: _description, ...withoutDescription } = validInput
 
-    expect(nosotrosResearcherInputSchema.safeParse(withoutDescription).success).toBe(false)
+    expect(nosotrosResearcherInputSchema.safeParse(withoutDescription).success).toBe(true)
   })
 
   test('rejects a missing photo', () => {
@@ -306,6 +306,15 @@ describe('nosotrosResearcherInputSchema', () => {
     if (result.success) {
       expect(result.data.email).toEqual(['uno@ucr.ac.cr', 'dos@ucr.ac.cr'])
     }
+  })
+
+  test('rejects more than 2 addresses', () => {
+    const result = nosotrosResearcherInputSchema.safeParse({
+      ...validInput,
+      email: 'uno@ucr.ac.cr, dos@ucr.ac.cr, tres@ucr.ac.cr',
+    })
+
+    expect(result.success).toBe(false)
   })
 })
 
