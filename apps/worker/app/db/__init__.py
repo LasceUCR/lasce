@@ -1,5 +1,6 @@
 from app.db.models import (
     Base,
+    ExisFile,
     GalleryAlbum,
     GalleryMedia,
     News,
@@ -19,6 +20,7 @@ from app.db.models import (
 
 __all__ = [
     "Base",
+    "ExisFile",
     "GalleryAlbum",
     "GalleryMedia",
     "News",

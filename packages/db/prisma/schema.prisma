@@ -345,6 +345,37 @@ model NosotrosResearcher {
   @@schema("public")
 }
 
+/// One daily EXIS L1b file (one product, one UTC day) whose readings are in InfluxDB.
+/// Written only by the worker's `exis-pipeline` job; the readings themselves live in the
+/// `exis_irradiance` InfluxDB measurement, not here.
+model ExisFile {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// NetCDF `platform_ID`, e.g. "G19".
+  satellite        String
+  /// "SFEU" or "SFXR".
+  product          String
+  /// The UTC day the file covers, from its name.
+  day              DateTime  @db.Date
+  fileName         String    @unique @map("file_name")
+  /// The `_vX-Y-Z` part of the file name, e.g. "0-0-0".
+  version          String
+  sourceUrl        String    @map("source_url")
+  /// The archive's `Last-Modified` when ingested. A newer one means NOAA republished the day.
+  sourceModifiedAt DateTime? @map("source_modified_at") @db.Timestamptz(3)
+  firstObservedAt  DateTime? @map("first_observed_at") @db.Timestamptz(3)
+  lastObservedAt   DateTime? @map("last_observed_at") @db.Timestamptz(3)
+  /// Points written to InfluxDB per channel code, e.g. {"0.1-0.8nm": 86112}.
+  pointCount       Json      @map("point_count")
+  /// The NetCDF global attributes, so provenance not promoted to a column is still recoverable.
+  attributes       Json
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([satellite, product, day])
+  @@map("exis_files")
+  @@schema("solar")
+}
+
 /// A top-level gallery album (e.g. "ROSAC") or, when `parentAlbumId` is set, a
 /// sub-album nested one level under one (e.g. "Cimentación" under "ROSAC"). The
 /// hierarchy is exactly 2 levels by application convention; nothing here enforces
