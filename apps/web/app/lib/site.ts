@@ -12,6 +12,7 @@ const galleryPaths = galleryAlbumList.flatMap((album) => [
 export const publicPaths = [
   '/',
   '/nosotros',
+  '/colaboraciones-e-iniciativas',
   '/investigacion',
   '/herramientas-cientificas',
   '/datos',
