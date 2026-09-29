@@ -44,7 +44,7 @@ services:
   influxdb:
     image: influxdb:3-core
     restart: unless-stopped
-    user: "1000:1000"
+    user: "1500:1500"
     environment:
       INFLUXDB3_NODE_ID: lasce-node-0
       INFLUXDB3_OBJECT_STORE: file
