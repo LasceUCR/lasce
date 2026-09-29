@@ -21,19 +21,16 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-from html.parser import HTMLParser
 from typing import Literal
-from urllib.parse import urljoin, urlparse
 
 import httpx
 
-BASE_URL = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes"
-SPACECRAFT = (16, 17, 18, 19)
-DEFAULT_SPACECRAFT = 19
+from app.clients import ngdc
+from app.clients.ngdc import BASE_URL, DEFAULT_SPACECRAFT, MAX_LISTING_BYTES
+
 DEFAULT_LOOKBACK = timedelta(minutes=10)
 # A compressed L1b frame is 1-2 MB; the ceiling only guards against a surprise.
 MAX_FILE_BYTES = 16 * 1024 * 1024
-MAX_LISTING_BYTES = 8 * 1024 * 1024
 EXTENSION = ".fits.gz"
 
 Exposure = Literal["long", "short"]
@@ -134,34 +131,9 @@ def parse_file_name(name: str, url: str = "") -> SuviFile | None:
     )
 
 
-class _LinkParser(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.hrefs: list[str] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag != "a":
-            return
-        for name, value in attrs:
-            if name == "href" and value:
-                self.hrefs.append(value)
-
-
 def parse_listing(html: str, directory: str) -> list[str]:
     """Absolute URLs of the ``.fits.gz`` files directly inside ``directory``."""
-    parser = _LinkParser()
-    parser.feed(html)
-    files = []
-    for href in parser.hrefs:
-        url = urljoin(directory, href)
-        # Restrict fetches to direct children of the directory being listed.
-        if not url.startswith(directory) or urlparse(url).query:
-            continue
-        child = url[len(directory) :]
-        if not child or "/" in child or not child.endswith(EXTENSION):
-            continue
-        files.append(url)
-    return sorted(set(files))
+    return ngdc.parse_listing(html, directory, EXTENSION)
 
 
 def day_urls(channel: SuviChannel, spacecraft: int, start: datetime, end: datetime) -> list[str]:
@@ -189,9 +161,7 @@ class SuviDownloader:
     """
 
     def __init__(self, client: httpx.AsyncClient, spacecraft: int = DEFAULT_SPACECRAFT) -> None:
-        if spacecraft not in SPACECRAFT:
-            valid = ", ".join(str(number) for number in SPACECRAFT)
-            raise ValueError(f"Invalid GOES spacecraft: {spacecraft}. Valid values are: {valid}.")
+        ngdc.check_spacecraft(spacecraft)
         self._client = client
         self.spacecraft = spacecraft
 
@@ -262,19 +232,4 @@ class SuviDownloader:
     async def _fetch(
         self, url: str, limit: int = MAX_FILE_BYTES, missing_is_empty: bool = False
     ) -> bytes | None:
-        """Read a URL, stopping as soon as it goes over ``limit``.
-
-        Streaming means an oversized response is abandoned rather than read into
-        memory first. ``missing_is_empty`` covers a day directory the archive
-        does not have, which is a normal answer rather than a failure.
-        """
-        data = bytearray()
-        async with self._client.stream("GET", url) as response:
-            if missing_is_empty and response.status_code == 404:
-                return None
-            response.raise_for_status()
-            async for chunk in response.aiter_bytes():
-                data.extend(chunk)
-                if len(data) > limit:
-                    raise ValueError(f"Archive response exceeds the size limit: {url}")
-        return bytes(data)
+        return await ngdc.fetch_capped(self._client, url, limit, missing_is_empty)
