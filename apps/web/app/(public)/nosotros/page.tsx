@@ -31,7 +31,6 @@ export default async function NosotrosRoute() {
       canCreate={canCreate}
       canDelete={canDelete}
       canEdit={canEdit}
-      collaborations={researchCollaborations}
       content={{
         ...nosotrosContent,
         activities: { title: nosotrosContent.activities.title, items: activities },

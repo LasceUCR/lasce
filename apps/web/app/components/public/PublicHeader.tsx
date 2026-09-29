@@ -22,7 +22,13 @@ type NavEntry = NavGroupItem | NavGroupEntry
 // grouping, under a plain label the group's own items nest below.
 const navigation: NavEntry[] = [
   { label: 'Inicio', href: '/' },
-  { label: 'Nosotros', href: '/nosotros' },
+  {
+    label: 'Nosotros',
+    items: [
+      { label: 'Quiénes somos', href: '/nosotros' },
+      { label: 'Colaboraciones e Iniciativas', href: '/colaboraciones-e-iniciativas' },
+    ],
+  },
   { label: 'Investigación', href: '/investigacion' },
   { label: 'Datos', href: '/datos' },
   { label: 'Noticias', href: '/noticias' },

@@ -74,6 +74,19 @@ describe('NosotrosPage', () => {
     )
   })
 
+  test('leaves collaborations and initiatives to their own page', () => {
+    renderPage()
+
+    expect(
+      screen.queryByRole('heading', { name: 'Colaboraciones de investigación' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', {
+        name: 'Iniciativas internacionales de las que LASCE forma parte',
+      }),
+    ).not.toBeInTheDocument()
+  })
+
   test('lists everything the laboratory does', () => {
     renderPage()
 

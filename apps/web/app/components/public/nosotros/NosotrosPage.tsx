@@ -46,7 +46,6 @@ const blankActivity: NosotrosActivityFormValues = { icon: 'sun', title: '', desc
 
 export interface NosotrosPageProps {
   content: NosotrosContent
-  collaborations?: ResearchCollaboration[]
   canCreate?: boolean
   canEdit?: boolean
   canDelete?: boolean
@@ -54,7 +53,6 @@ export interface NosotrosPageProps {
 
 export function NosotrosPage({
   content,
-  collaborations = researchCollaborations,
   canCreate = false,
   canEdit = false,
   canDelete = false,
@@ -372,8 +370,6 @@ export function NosotrosPage({
           }
         />
       </TopicSection>
-
-      <ResearchCollaborationsSection collaborations={collaborations} id="research-collaborations" />
 
       <TopicSection
         title={content.contribution.title}
