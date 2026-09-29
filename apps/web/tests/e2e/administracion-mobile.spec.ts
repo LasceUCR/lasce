@@ -98,11 +98,23 @@ test('keeps the fixed sidebar and no toggle on desktop', async ({ page, context 
   }
 })
 
-test('offers an anonymous visitor only the public sections in the bar', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/administracion')
+test('offers an assistant only the sections its grants unlock in the bar', async ({
+  page,
+  context,
+}) => {
+  const fixture = await createSignedInUser(context, 'ASSISTANT')
+  try {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/administracion')
 
-  await menuToggle(page).click()
+    await menuToggle(page).click()
 
-  await expect(adminMenu(page).getByRole('link')).toHaveText(['Resumen', 'Infraestructura'])
+    await expect(adminMenu(page).getByRole('link')).toHaveText([
+      'Resumen',
+      'Descargas',
+      'Infraestructura',
+    ])
+  } finally {
+    await fixture.cleanup()
+  }
 })
