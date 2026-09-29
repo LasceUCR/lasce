@@ -9,11 +9,11 @@ Laboratory **resources** are a separate concern: downloading them (`download_res
 
 ## Defaults
 
-| Role          | Permissions                                                                                                             |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Visitante     | `download_resources`                                                                                                    |
-| Asistente     | `edit_components`, `download_resources`                                                                                 |
-| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `manage_users`, `manage_permissions` |
+| Role          | Permissions                                                                                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitante     | `download_resources`                                                                                                                               |
+| Asistente     | `edit_components`, `download_resources`                                                                                                            |
+| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions` |
 
 The component-management grants gate the "¿Qué hacemos?" cards on `/nosotros`
 when Modo edición is on. Assistants may edit; administrators may also create
