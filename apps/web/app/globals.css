@@ -3685,25 +3685,6 @@ a {
   }
 }
 
-@media (max-width: 360px) {
-  .brand {
-    gap: 5px;
-  }
-
-  .brand .compdes-logo {
-    width: 28px;
-    flex-basis: 28px;
-  }
-
-  .brand .ucr-signature-logo {
-    width: 88px;
-  }
-
-  .brand .lasce-logo {
-    width: 94px;
-  }
-}
-
 .section-heading h1 {
   margin: 0;
   font-size: 25px;
