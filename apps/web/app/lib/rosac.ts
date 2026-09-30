@@ -111,6 +111,7 @@ export interface RosacInfoContent {
       presentation: 'mark'
       width: number
       height: number
+      photo: { src: string; alt: string }
     }
   }
   overview: RosacTextSection
@@ -147,6 +148,10 @@ export const rosacInfoContent = {
       presentation: 'mark',
       width: 1209,
       height: 615,
+      photo: {
+        src: '/images/ROSAC/antena-rosac.webp',
+        alt: 'Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control.',
+      },
     },
   },
   overview: {
