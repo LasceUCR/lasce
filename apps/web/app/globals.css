@@ -2592,11 +2592,35 @@ a {
 }
 
 .topic-hero-mark-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 64px;
-  max-width: 95rem;
+  gap: 24px;
+  text-align: center;
+}
+
+.topic-hero-mark-heading {
+  align-self: stretch;
+  text-align: left;
+}
+
+.topic-hero-mark-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  align-self: stretch;
+}
+
+.topic-hero-mark-footer .topic-lead {
+  margin: 0;
+}
+
+.topic-hero-mark-logo {
+  display: block;
+  flex-shrink: 0;
+  width: 72px;
+  height: auto;
 }
 
 .topic-hero-copy-only .topic-lead {
@@ -2663,17 +2687,22 @@ a {
   object-position: center;
 }
 
-.topic-hero-mark {
-  display: flex;
-  justify-content: center;
+.topic-hero-mark-photo {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  /* Tied to viewport height, not just width, so "¿Qué es ROSAC?" — the
+     section right after this header — stays visible without scrolling on
+     a typical laptop screen. */
+  height: clamp(300px, 46vh, 520px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #000918;
 }
 
-.topic-hero-mark-image {
-  display: block;
-  width: 260px;
-  max-width: 100%;
-  height: auto;
-  transform: translateY(-25px);
+.topic-hero-mark-photo-image {
+  object-fit: cover;
+  object-position: center;
 }
 
 .topic-hero-with-mark h1 {
@@ -3087,13 +3116,24 @@ a {
   }
 
   .topic-hero-mark-body {
-    grid-template-columns: 1fr;
-    gap: 90px;
     max-width: none;
   }
 
-  .topic-hero-mark-image {
-    width: min(260px, 80%);
+  .topic-hero-mark-logo {
+    width: 56px;
+  }
+
+  .topic-hero-mark-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .topic-hero-mark-footer .topic-lead {
+    text-align: center;
+  }
+
+  .topic-hero-mark-photo {
+    height: clamp(240px, 42vh, 360px);
   }
 
   .topic-lead {
