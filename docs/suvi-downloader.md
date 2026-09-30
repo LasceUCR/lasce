@@ -190,18 +190,18 @@ Little-endian throughout. The index is a **fixed-size** table of `keyframe_inter
 payload's start offset never moves as frames are appended — `block_offset` is therefore an
 absolute byte offset inside the object.
 
-| Section | Size | Contents |
-| --- | --- | --- |
-| Header | 64 bytes | `struct.Struct("<6sBBBBHffIHHBB34x")`: magic, version, channel index, delta mode, quantisation, `keyframe_interval`, epsilon, scale, frame_count, height, width, spacecraft, mask flag, padding |
-| Index entry (× `keyframe_interval`) | 24 bytes each | `struct.Struct("<qQIi")`: unix-ms timestamp, absolute byte offset, compressed size, flags (bit 0 = keyframe) |
-| Payload | variable | chunk 0 is the zstd-compressed keyframe (`uint16`/`uint8`); later chunks are zstd-compressed deltas (`int32`/`int16`) |
+| Section                             | Size          | Contents                                                                                                                                                                                        |
+| ----------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Header                              | 64 bytes      | `struct.Struct("<6sBBBBHffIHHBB34x")`: magic, version, channel index, delta mode, quantisation, `keyframe_interval`, epsilon, scale, frame_count, height, width, spacecraft, mask flag, padding |
+| Index entry (× `keyframe_interval`) | 24 bytes each | `struct.Struct("<qQIi")`: unix-ms timestamp, absolute byte offset, compressed size, flags (bit 0 = keyframe)                                                                                    |
+| Payload                             | variable      | chunk 0 is the zstd-compressed keyframe (`uint16`/`uint8`); later chunks are zstd-compressed deltas (`int32`/`int16`)                                                                           |
 
 ### Profiles
 
-| Profile | Quantisation | Epsilon | Mask | `keyframe_interval` | Used by |
-| --- | --- | --- | --- | --- | --- |
-| `SCIENTIFIC` | `UINT16`, linear | `0.0` (no gating) | no | 15 | `suvi-pipeline` |
-| `WEB` | `UINT8`, logarithmic | `0.02` | yes (`mask_margin=1.25`) | 30 | not selected by anything yet |
+| Profile      | Quantisation         | Epsilon           | Mask                     | `keyframe_interval` | Used by                      |
+| ------------ | -------------------- | ----------------- | ------------------------ | ------------------- | ---------------------------- |
+| `SCIENTIFIC` | `UINT16`, linear     | `0.0` (no gating) | no                       | 15                  | `suvi-pipeline`              |
+| `WEB`        | `UINT8`, logarithmic | `0.02`            | yes (`mask_margin=1.25`) | 30                  | not selected by anything yet |
 
 `SuviMatrixProcessor.decode(block_file, observed_at)` reverses the process for one timestamp,
 returning the still-quantised matrix. Nothing calls it yet — it exists for a future viewer or

@@ -320,27 +320,27 @@ Photometric and CCD-health numbers (`IMG_MEAN`, `CCD_TMP1`, ...) are deliberatel
 they are written to InfluxDB instead, tagged by `satellite` and `channel`, under the `suvi_frames`
 measurement.
 
-| Column           | Prisma type | Postgres type    | Constraints                                             |
-| ---------------- | ----------- | ---------------- | -------------------------------------------------------- |
-| `id`             | `String`    | `uuid`           | PK, `gen_random_uuid()`                                  |
-| `observed_at`    | `DateTime`  | `timestamptz(3)` | not null; FITS `DATE-OBS`, stamped UTC; indexed          |
-| `wavelength`     | `Float`     | `double precision` | not null; FITS `WAVELNTH`, angstroms                    |
-| `satellite`      | `String`    | `text`           | not null; FITS `TELESCOP`, e.g. `"G19"`                  |
-| `channel`        | `String`    | `text`           | not null; archive channel token, e.g. `"Fe093"` — from the file name, not the header |
-| `file_name`      | `String`    | `text`           | `UNIQUE`, not null                                       |
-| `source_url`     | `String`    | `text`           | not null                                                  |
-| `exposure_time`  | `Float?`    | `double precision` | nullable; FITS `EXPTIME`, seconds                       |
-| `sun_center_x`   | `Float?`    | `double precision` | nullable; FITS `CRPIX1`                                 |
-| `sun_center_y`   | `Float?`    | `double precision` | nullable; FITS `CRPIX2`                                 |
-| `sun_radius_px`  | `Float?`    | `double precision` | nullable; FITS `RSUN` — needed to recompute the background mask |
-| `quality_flag`   | `Int`       | `integer`        | not null, default `0`; bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE` |
-| `raw_header`     | `Json`      | `jsonb`          | not null; the whole sanitised FITS header                |
-| `block_file`     | `String?`   | `text`           | nullable; MinIO object key written by `SuviMatrixProcessor.process` — see [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks) |
-| `block_offset`   | `BigInt?`   | `bigint`         | nullable; absolute byte offset of this frame's compressed chunk inside `block_file` |
-| `block_size`     | `Int?`      | `integer`        | nullable; compressed chunk size in bytes                  |
-| `is_keyframe`    | `Boolean?`  | `boolean`        | nullable; `true` for the frame that started the block, `false` for a delta |
-| `created_at`     | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
-| `updated_at`     | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                    |
+| Column          | Prisma type | Postgres type      | Constraints                                                                                                                       |
+| --------------- | ----------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | `String`    | `uuid`             | PK, `gen_random_uuid()`                                                                                                           |
+| `observed_at`   | `DateTime`  | `timestamptz(3)`   | not null; FITS `DATE-OBS`, stamped UTC; indexed                                                                                   |
+| `wavelength`    | `Float`     | `double precision` | not null; FITS `WAVELNTH`, angstroms                                                                                              |
+| `satellite`     | `String`    | `text`             | not null; FITS `TELESCOP`, e.g. `"G19"`                                                                                           |
+| `channel`       | `String`    | `text`             | not null; archive channel token, e.g. `"Fe093"` — from the file name, not the header                                              |
+| `file_name`     | `String`    | `text`             | `UNIQUE`, not null                                                                                                                |
+| `source_url`    | `String`    | `text`             | not null                                                                                                                          |
+| `exposure_time` | `Float?`    | `double precision` | nullable; FITS `EXPTIME`, seconds                                                                                                 |
+| `sun_center_x`  | `Float?`    | `double precision` | nullable; FITS `CRPIX1`                                                                                                           |
+| `sun_center_y`  | `Float?`    | `double precision` | nullable; FITS `CRPIX2`                                                                                                           |
+| `sun_radius_px` | `Float?`    | `double precision` | nullable; FITS `RSUN` — needed to recompute the background mask                                                                   |
+| `quality_flag`  | `Int`       | `integer`          | not null, default `0`; bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE`                                                                      |
+| `raw_header`    | `Json`      | `jsonb`            | not null; the whole sanitised FITS header                                                                                         |
+| `block_file`    | `String?`   | `text`             | nullable; MinIO object key written by `SuviMatrixProcessor.process` — see [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks) |
+| `block_offset`  | `BigInt?`   | `bigint`           | nullable; absolute byte offset of this frame's compressed chunk inside `block_file`                                               |
+| `block_size`    | `Int?`      | `integer`          | nullable; compressed chunk size in bytes                                                                                          |
+| `is_keyframe`   | `Boolean?`  | `boolean`          | nullable; `true` for the frame that started the block, `false` for a delta                                                        |
+| `created_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`                                                                                                         |
+| `updated_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`, app-managed                                                                                            |
 
 Constraints: `UNIQUE (satellite, channel, observed_at)` — this is what makes re-running the
 pipeline idempotent, since it legitimately re-lists a window and can see the same frame twice;
