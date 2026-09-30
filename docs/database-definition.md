@@ -7,13 +7,13 @@ migration source; the worker mirrors these tables in SQLAlchemy
 
 ## Schemas
 
-| Postgres schema | Used for                                               | Populated today |
-| --------------- | ------------------------------------------------------ | --------------- |
-| `public`        | Default, for anything not domain-specific              | No tables yet   |
-| `research`      | Public research/publications shown on `/publicaciones` | Yes             |
-| `news`          | Public news/media coverage shown on `/noticias`        | Yes             |
-| `auth`          | Portal accounts created through `/acceso`              | Yes             |
-| `gallery`       | Public photo/video gallery shown on `/galeria`          | No — see below  |
+| Postgres schema | Used for                                                 | Populated today |
+| --------------- | -------------------------------------------------------- | --------------- |
+| `public`        | Default, for anything not domain-specific                | No tables yet   |
+| `research`      | Public research/publications shown on `/publicaciones`   | Yes             |
+| `news`          | Public news/media coverage shown on `/noticias`          | Yes             |
+| `auth`          | Portal accounts created through `/acceso`                | Yes             |
+| `gallery`       | Public photo/video gallery shown on `/galeria`           | No — see below  |
 | `solar`         | SUVI L1b frames catalogued by the worker's SUVI pipeline | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma

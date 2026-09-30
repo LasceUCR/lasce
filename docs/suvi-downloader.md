@@ -79,14 +79,14 @@ parent links and the occasional stray file.
 
 The channel token in the file name and the directory it lives in **do not match for two channels**:
 
-| `SuviChannel` | Directory          | Token in file names |
-| ------------- | ------------------ | ------------------- |
-| `FE093`       | `suvi-l1b-fe094`   | `Fe093`             |
-| `FE131`       | `suvi-l1b-fe131`   | `Fe131`             |
-| `FE171`       | `suvi-l1b-fe171`   | `Fe171`             |
-| `FE195`       | `suvi-l1b-fe195`   | `Fe195`             |
-| `FE284`       | `suvi-l1b-fe284`   | `Fe284`             |
-| `HE303`       | `suvi-l1b-he304`   | `He303`             |
+| `SuviChannel` | Directory        | Token in file names |
+| ------------- | ---------------- | ------------------- |
+| `FE093`       | `suvi-l1b-fe094` | `Fe093`             |
+| `FE131`       | `suvi-l1b-fe131` | `Fe131`             |
+| `FE171`       | `suvi-l1b-fe171` | `Fe171`             |
+| `FE195`       | `suvi-l1b-fe195` | `Fe195`             |
+| `FE284`       | `suvi-l1b-fe284` | `Fe284`             |
+| `HE303`       | `suvi-l1b-he304` | `He303`             |
 
 GOES-19 writes `Fe093` and `He303` into directories still named after the wavelengths the earlier
 spacecraft used. The enum carries both spellings, so `list_recent()` can drop a frame whose name
