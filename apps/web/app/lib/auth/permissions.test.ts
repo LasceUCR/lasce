@@ -21,6 +21,7 @@ describe('permission catalogue', () => {
       'edit_components',
       'delete_components',
       'download_resources',
+      'download_goes_resources',
       'manage_users',
       'manage_permissions',
     ])
