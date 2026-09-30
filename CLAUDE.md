@@ -52,6 +52,8 @@ working through Claude Code.
 | How do users sign in, and how is a page protected?   | [`docs/sessions.md`](docs/sessions.md)                               |
 | How are role permissions configured?                 | [`docs/role-permissions.md`](docs/role-permissions.md)               |
 | How do I gate a page or a control with a grant?      | [`docs/add-permissions.md`](docs/add-permissions.md)                 |
+| How are academic activities structured?              | [`docs/academic-activities.md`](docs/academic-activities.md)         |
 | How is the header/nav organized and responsive?      | [`docs/header-and-navigation.md`](docs/header-and-navigation.md)     |
+| How does the administration menu work?               | [`docs/admin-navigation.md`](docs/admin-navigation.md)               |
 
 When a change makes one of these wrong, update it in the same PR.

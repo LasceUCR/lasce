@@ -124,14 +124,14 @@ export function NewsExplorer({
 
   return (
     <section aria-labelledby="news-title" className="news page-width">
+      <h2 id="news-title">Noticias recientes</h2>
+
       <SearchBar
         label="Buscar noticias"
         onQueryChange={setQuery}
         placeholder="Buscar por título, autor o palabra clave..."
         query={query}
       />
-
-      <h2 id="news-title">Noticias recientes</h2>
 
       {hasQuery ? (
         <p aria-live="polite" className="sr-only">
