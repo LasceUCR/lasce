@@ -38,9 +38,7 @@ export const queryGoesArchivePayload = z.object({
 /** Fetch the most recent SUVI L1b frame for one channel. */
 export const suviPipelinePayload = z.object({
   channel: z.enum(['Fe093', 'Fe131', 'Fe171', 'Fe195', 'Fe284', 'He303']),
-  spacecraft: z
-    .union([z.literal(16), z.literal(17), z.literal(18), z.literal(19)])
-    .default(19),
+  spacecraft: z.union([z.literal(16), z.literal(17), z.literal(18), z.literal(19)]).default(19),
   lookbackMinutes: z.number().int().min(1).max(1440).default(10),
 })
 

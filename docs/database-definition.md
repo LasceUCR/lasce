@@ -8,7 +8,7 @@ migration source; the worker mirrors these tables in SQLAlchemy
 ## Schemas
 
 | Postgres schema | Used for                                                 | Populated today |
-| --------------- | --------------------------------------------------------- | --------------- |
+| --------------- | -------------------------------------------------------- | --------------- |
 | `public`        | Default, for anything not domain-specific                | No tables yet   |
 | `research`      | Public research/publications shown on `/publicaciones`   | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`          | Yes             |
