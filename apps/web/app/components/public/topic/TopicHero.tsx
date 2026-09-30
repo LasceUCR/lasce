@@ -14,6 +14,11 @@ export type TopicHeroImage =
       presentation: 'mark'
       width: number
       height: number
+      /**
+       * An optional real photograph shown below the heading, as a wide
+       * framed banner — the mark moves down next to the lead line below it.
+       */
+      photo?: { src: string; alt: string }
     }
 
 export interface TopicHeroProps {
@@ -46,26 +51,36 @@ export function TopicHero({
         .join(' ')}
     >
       {image?.presentation === 'mark' ? (
-        <>
-          <p className="topic-kicker">{kicker}</p>
-          <div className="topic-hero-mark-body">
-            <div className="topic-hero-copy">
-              <h1>{title}</h1>
-              {lead ? <p className="topic-lead">{lead}</p> : null}
-              {notice ? <p className="topic-notice">{notice}</p> : null}
-            </div>
-            <div className="topic-hero-mark">
+        <div className="topic-hero-mark-body">
+          <div className="topic-hero-mark-heading">
+            <p className="topic-kicker">{kicker}</p>
+            <h1>{title}</h1>
+          </div>
+          {image.photo ? (
+            <div className="topic-hero-mark-photo">
               <Image
-                alt={image.alt}
-                className="topic-hero-mark-image"
-                height={image.height}
+                alt={image.photo.alt}
+                className="topic-hero-mark-photo-image"
+                fill
                 priority
-                src={image.src}
-                width={image.width}
+                sizes="(max-width: 1332px) 100vw, 1332px"
+                src={image.photo.src}
               />
             </div>
+          ) : null}
+          <div className="topic-hero-mark-footer">
+            <Image
+              alt={image.alt}
+              className="topic-hero-mark-logo"
+              height={image.height}
+              priority={!image.photo}
+              src={image.src}
+              width={image.width}
+            />
+            {lead ? <p className="topic-lead">{lead}</p> : null}
           </div>
-        </>
+          {notice ? <p className="topic-notice">{notice}</p> : null}
+        </div>
       ) : (
         <>
           <div className="topic-hero-copy">
