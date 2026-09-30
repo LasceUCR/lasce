@@ -88,4 +88,43 @@ describe('PublicHeader', () => {
     expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
     expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
   })
+
+  test('groups the about pages behind Nosotros on desktop, and behind an accordion on mobile', async () => {
+    const user = userEvent.setup()
+    render(<PublicHeader logoutAction={async () => undefined} />)
+
+    await user.click(screen.getByLabelText('Abrir navegación'))
+
+    const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
+    const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+    const grouped = ['Quiénes somos', 'Colaboraciones e Iniciativas']
+
+    for (const label of grouped) {
+      expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
+      expect(mobile.getByRole('link', { name: label })).not.toBeVisible()
+    }
+    expect(mobile.queryByRole('button', { name: 'Nosotros' })).not.toBeInTheDocument()
+    expect(desktop.queryByRole('link', { name: 'Nosotros' })).not.toBeInTheDocument()
+
+    await user.click(mobile.getByText('Nosotros'))
+
+    expect(mobile.getByRole('link', { name: 'Quiénes somos' })).toBeVisible()
+    expect(mobile.getByRole('link', { name: 'Quiénes somos' })).toHaveAttribute('href', '/nosotros')
+    expect(mobile.getByRole('link', { name: 'Colaboraciones e Iniciativas' })).toHaveAttribute(
+      'href',
+      '/colaboraciones-e-iniciativas',
+    )
+
+    await user.click(desktop.getByText('Nosotros'))
+
+    expect(desktop.getByRole('link', { name: 'Quiénes somos' })).toBeVisible()
+    expect(desktop.getByRole('link', { name: 'Quiénes somos' })).toHaveAttribute(
+      'href',
+      '/nosotros',
+    )
+    expect(desktop.getByRole('link', { name: 'Colaboraciones e Iniciativas' })).toHaveAttribute(
+      'href',
+      '/colaboraciones-e-iniciativas',
+    )
+  })
 })

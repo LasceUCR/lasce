@@ -9,6 +9,11 @@
   --alice-blue: #eef4f7ff;
   --white: #ffffffff;
 
+  /* Rendered height of `.site-header`, measured: the desktop nav row adds to it
+     above 1400px and the compact header applies at 760px and below. Anything
+     pinned under the header (the admin sidebar) offsets by this token. */
+  --header-height: 82px;
+
   /* Existing UI aliases keep components connected to the brand palette. */
   --navy-deep: var(--deep-space-blue);
   --blue: var(--bright-teal-blue);
@@ -1943,77 +1948,13 @@ a {
 }
 
 /* ==========================================================================
-   Collaborations (page) — .collaborations-toolbar, .collaborations-kpi, .collaboration-card
+   Collaborations (page) — .collaboration-card
    ========================================================================== */
 
 .research-collaborations {
   margin-top: 0;
-  padding-top: 56px;
+  padding-top: 8px;
   padding-bottom: 56px;
-}
-
-.collaborations-toolbar {
-  display: flex;
-  align-items: stretch;
-  gap: 14px;
-  margin-bottom: 28px;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--white);
-  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
-}
-
-.collaborations-toolbar .collaborations-search {
-  flex: 1 1 auto;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.collaborations-scope-filter {
-  display: flex;
-  align-items: center;
-  width: 270px;
-  flex: 0 0 270px;
-}
-
-.collaborations-scope-filter .select-trigger {
-  width: 100%;
-}
-
-.collaborations-kpi {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 270px;
-  flex: 0 0 270px;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--white);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 15px;
-  white-space: nowrap;
-  gap: 6px;
-}
-
-.collaborations-kpi strong {
-  position: relative;
-  top: -1px;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.collaborations-kpi span {
-  color: var(--ink);
 }
 
 .collaborations-grid {
@@ -2107,28 +2048,6 @@ a {
 }
 
 @media (max-width: 760px) {
-  .collaborations-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 16px;
-  }
-
-  .collaborations-toolbar .collaborations-search {
-    width: 100%;
-    flex: 0 0 auto;
-  }
-
-  .collaborations-scope-filter {
-    width: 100%;
-    min-width: 0;
-    flex: 0 0 auto;
-  }
-
-  .collaborations-kpi {
-    width: 100%;
-    flex: 0 0 auto;
-  }
-
   .collaborations-grid {
     grid-template-columns: 1fr;
   }
@@ -2142,17 +2061,89 @@ a {
   margin: 0;
 }
 
+/* ==========================================================================
+   Academic activities (news section & details)
+   ========================================================================== */
+
+.academic-activities {
+  margin-top: 8px;
+  padding-bottom: 32px;
+}
+
+.section-heading .academic-activities-description {
+  max-width: none;
+  color: var(--muted);
+  margin: 6px 0 24px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.academic-activities-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.academic-activity-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.academic-activity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.academic-activity-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.activity-resources-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 20px;
+}
+
 .news {
   margin-top: 8px;
   padding-bottom: 56px;
 }
 
 .news h2 {
-  margin-top: 28px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+}
+
+.news .search-filter-bar {
+  margin-bottom: 20px;
 }
 
 .news-list {
-  margin-top: 24px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -2238,6 +2229,10 @@ a {
 }
 
 @media (max-width: 1400px) {
+  :root {
+    --header-height: 75px;
+  }
+
   .site-header {
     grid-template-columns: 1fr auto auto;
   }
@@ -2425,6 +2420,10 @@ a {
 
   .search-filter-bar {
     padding: 16px;
+  }
+
+  :root {
+    --header-height: 64px;
   }
 
   .site-header {
@@ -2814,6 +2813,53 @@ a {
   max-width: none;
 }
 
+.topic-initiative {
+  margin-top: 18px;
+  display: grid;
+  align-items: center;
+  gap: 22px 36px;
+  padding: 28px 32px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.05);
+}
+
+.topic-initiative-with-logo {
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.topic-initiative-logo {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  justify-self: center;
+}
+
+.topic-initiative-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.topic-initiative h3 {
+  margin: 0;
+  color: var(--blue-dark);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.topic-initiative .topic-intro {
+  margin-top: 12px;
+}
+
+.topic-initiative .button {
+  margin-top: 18px;
+  align-self: flex-end;
+}
+
 .card-grid {
   margin-top: 20px;
   display: grid;
@@ -3139,6 +3185,19 @@ a {
     font-size: 16px;
   }
 
+  .topic-initiative {
+    padding: 22px 18px;
+  }
+
+  .topic-initiative-with-logo {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .topic-initiative-logo {
+    width: 200px;
+  }
+
   .card-grid-4,
   .card-grid-3,
   .card-grid-2 {
@@ -3222,10 +3281,9 @@ a {
 }
 
 @media (max-width: 430px) {
-  /* A little tighter than the 760px tier's 16px, to give the five brand marks (the
-     seal included again) enough room without shrinking any one of them too far. */
   .site-header {
-    padding: 5px 12px;
+    padding: 5px 8px;
+    gap: 4px;
   }
 
   .brand {
@@ -3914,6 +3972,19 @@ a.gallery-tile:focus-visible {
   scroll-snap-align: start;
 }
 
+/* In edit mode, a slide's direct child is `EditableWrapper`'s `.editable` div
+   instead of `.researcher-card` itself. `.researcher-card` still expects to
+   fill a `flex: 1 1 auto; height: 100%` box handed down by `.team-gallery-slide` —
+   `.editable` has to pass that box through unchanged, or the card collapses to
+   zero height and only the edit/delete buttons (position: absolute) show. */
+.team-gallery-slide > .editable {
+  display: flex;
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+}
+
 .researcher-card {
   display: block;
   position: relative;
@@ -4155,12 +4226,12 @@ a.gallery-tile:focus-visible {
 .admin-shell {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
-  min-height: calc(100vh - 78px);
+  min-height: calc(100vh - var(--header-height));
 }
 
 .admin-sidebar {
   position: fixed;
-  top: 78px;
+  top: var(--header-height);
   left: 0;
   bottom: 0;
   z-index: 15;
@@ -4195,12 +4266,17 @@ a.gallery-tile:focus-visible {
 .admin-sidebar a:hover,
 .admin-sidebar a:focus-visible {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--on-hover);
+  color: var(--white);
 }
 
 .admin-sidebar a.active {
   background: var(--blue-dark);
-  color: var(--on-hover);
+  color: var(--white);
+}
+
+/* The narrow-screen toggle. Above 1120px the sidebar itself is the menu. */
+.admin-menu-toggle {
+  display: none;
 }
 
 .admin-content {
@@ -4337,27 +4413,89 @@ a.gallery-tile:focus-visible {
 }
 
 @media (max-width: 1120px) {
+  /* The content row takes the spare height, so a short page does not stretch the bar. */
   .admin-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
+  /* The sidebar becomes a sticky bar under the header; the list opens in place
+     below the toggle and pushes the content down, so nothing overlaps. */
   .admin-sidebar {
     position: sticky;
-    top: 78px;
+    top: var(--header-height);
     left: auto;
     bottom: auto;
     width: auto;
     height: auto;
-    padding: 12px 14px;
-    overflow-x: auto;
+    max-height: calc(100vh - var(--header-height));
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .admin-menu-toggle {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: var(--navy-deep);
+    color: var(--white);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .admin-menu-toggle:focus-visible {
+    outline: 2px solid var(--amber-flame);
+    outline-offset: -2px;
+  }
+
+  .admin-menu-current {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--amber-glow);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-menu-chevron {
+    flex: 0 0 auto;
+    margin-left: auto;
+    transition: transform 160ms ease;
+  }
+
+  .admin-sidebar.is-open .admin-menu-chevron {
+    transform: rotate(180deg);
   }
 
   .admin-sidebar ul {
-    flex-direction: row;
+    display: none;
+    flex-direction: column;
+    padding: 4px 14px 12px;
+  }
+
+  .admin-sidebar.is-open ul {
+    display: flex;
+  }
+
+  .admin-sidebar a {
+    min-height: 44px;
   }
 
   .admin-content {
     grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-menu-chevron {
+    transition: none;
   }
 }
 
@@ -4935,6 +5073,74 @@ a.gallery-tile:focus-visible {
 
 .cms-form-field [aria-invalid='true'] {
   border-color: var(--danger);
+}
+
+/* The "Contacto" field's board: existing addresses as chips, with a dashed
+   "+" slot after the last one to open the add-a-contact modal. */
+.email-chip-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.email-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--page);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.icon-button.email-chip-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+}
+
+.icon-button.email-chip-remove:hover,
+.icon-button.email-chip-remove:focus-visible {
+  background: var(--danger);
+  color: var(--white);
+}
+
+.icon-button.email-chip-add {
+  width: 28px;
+  height: 28px;
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+}
+
+.icon-button.email-chip-add:hover,
+.icon-button.email-chip-add:focus-visible {
+  border-color: var(--action);
+  border-style: solid;
+  color: var(--action);
+}
+
+.cms-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.cms-form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .nosotros-activity-form {

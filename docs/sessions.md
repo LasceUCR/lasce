@@ -102,8 +102,10 @@ Signing out clears the client cookie first (so the menu flips even when the redi
 current page), runs the action, and puts the cookie back if the action fails. `AccountLinks`
 renders "Ingresar", or "Hola, <nombre>" (to `/cuenta`) and "Cerrar sesión", in the desktop header
 and in the mobile menu; registration is reached through the access page's own tab. The
-Administración item is included only when the cookie role is `ASSISTANT` or `ADMIN`. Hiding the
-tab is not an authorization check: `/administracion` can still be opened by URL.
+Administración item is included only when the cookie role is `ASSISTANT` or `ADMIN`. The
+`administracion` layout applies the same rule from the session (`canSeeAdminNavigation`): anonymous
+visitors are sent to login and signed-in visitors see Acceso denegado
+([admin-navigation.md](admin-navigation.md)).
 
 Known lag: another open tab keeps showing the signed-in menu until it navigates. Its protected
 pages still redirect correctly, because the server checks the session row, not the cookie. The
@@ -135,9 +137,10 @@ correctness; the admin panel gate (#83) may add one for a faster redirect.
 - Download gating (#81): send anonymous visitors to `loginRedirectPath(<resource path>)` so login
   returns them to the resource. Signed-in access already checks `download_resources` on
   `/administracion/descargas`.
-- Admin panel (#83): `requireUser` plus a panel-level grant in the `administracion` layout; the
-  `administracion.spec.ts` assertion that the summary never redirects still holds. Individual
-  sections already check their own permissions.
+- Admin panel: the `administracion` layout calls `requireUser('/administracion')`, turns
+  visitors away with Acceso denegado, and offers only the menu sections the account's grants
+  unlock ([admin-navigation.md](admin-navigation.md)). Individual sections still check their own
+  permissions.
 
 ## Known gaps
 

@@ -1,3 +1,4 @@
+import { academicActivitySlugs } from './academic-activities'
 import { albumPath, galleryAlbumList, subAlbumPath } from './gallery'
 import { workAreaPath, workAreaSlugs } from './work-areas'
 
@@ -11,6 +12,7 @@ const galleryPaths = galleryAlbumList.flatMap((album) => [
 export const publicPaths = [
   '/',
   '/nosotros',
+  '/colaboraciones-e-iniciativas',
   '/investigacion',
   '/herramientas-cientificas',
   '/datos',
@@ -19,5 +21,6 @@ export const publicPaths = [
   '/contacto',
   '/acceso',
   ...workAreaSlugs.map((slug) => workAreaPath(slug)),
+  ...academicActivitySlugs.map((slug) => `/noticias/actividades/${slug}`),
   ...galleryPaths,
 ] as const
