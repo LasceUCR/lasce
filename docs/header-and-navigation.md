@@ -33,8 +33,9 @@ size that read as an afterthought. The tier in `globals.css` now:
 ## Menu organization (`PublicHeader.tsx`, `NavGroup.tsx`)
 
 `Publicaciones`, `Herramientas científicas` and `Galería` are grouped behind a single **Recursos**
-entry instead of three flat top-level links. `Contacto` and `Administración` (when present) stay as
-their own links after the group.
+entry instead of three flat top-level links. `Contacto` stays as its own link after the group.
+`Administración` is not in this list: it lives inside the signed-in account menu
+(`AccountLinks.tsx`/`AccountMenu.tsx`, see `docs/`'s auth docs), so it never appears twice.
 
 ```
 Desktop nav   › NavGroup "Recursos"        <details>/<summary>, opens on hover, click, Enter/Space
@@ -57,6 +58,9 @@ when the current page is one of its children.
 - Opens on `mouseenter`/`mouseleave` (no click required) as well as on click, Enter or Space; closes
   on Escape, a pointer outside the group, or focus leaving the group. See the component's own doc
   comment for the full list.
+- That open/close interaction lives in `useDisclosure.ts`, not in `NavGroup.tsx` itself: it's shared
+  with the signed-in account menu (`AccountMenu.tsx`) so both dropdowns open, close and feel
+  identical. `NavGroup.tsx` only owns what goes in its panel.
 - The panel (`.nav-group-panel`) is centered under the summary (`left: 50%; transform:
 translateX(-50%)`), not right-anchored as it originally was.
 - Covered by `NavGroup.test.tsx`, including a test for the hover-opens/mouse-leave-closes behavior.
