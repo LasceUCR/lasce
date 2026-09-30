@@ -17,7 +17,7 @@ Every piece of domain knowledge the pipeline touches already has a single owner:
 | Talking to the NOAA archive               | `app/clients/suvi.py` (`SuviDownloader`)  |
 | Decoding the FITS file                    | `_decode_fits`, private to this processor |
 | Cataloguing the frame (Postgres + Influx) | `app/services/process_headers.py`         |
-| Rendering the illustrative WebP (MinIO)    | `app/services/suvi_preview.py`            |
+| Rendering the illustrative WebP (MinIO)   | `app/services/suvi_preview.py`            |
 
 `suvi_pipeline.run` exists so those three pieces get called **in the right order, with the right
 data handed between them**, and so a caller (BullMQ, or a test) has one entry point. It does not
