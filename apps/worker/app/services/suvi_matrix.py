@@ -405,9 +405,7 @@ def _can_append(
         return False
     if header.height != height or header.width != width:
         return False
-    if not entries or timestamp_ms <= entries[-1].timestamp_ms:
-        return False
-    return True
+    return bool(entries) and timestamp_ms > entries[-1].timestamp_ms
 
 
 _ExistingBlock = tuple[str, bytes, BlockHeader, list[IndexEntry]]
@@ -546,12 +544,7 @@ class SuviMatrixProcessor:
             fields.sun_center_y,
             fields.sun_radius_px,
         )
-        if (
-            profile.mask
-            and center_x is not None
-            and center_y is not None
-            and radius_px is not None
-        ):
+        if profile.mask and center_x is not None and center_y is not None and radius_px is not None:
             working = apply_mask(
                 working,
                 center_x,
