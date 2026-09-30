@@ -75,5 +75,5 @@ export const schedules: Schedule[] = [
       spacecraft: 19,
       lookbackMinutes: 30,
     },
-  },  
+  },
 ]
