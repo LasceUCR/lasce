@@ -40,7 +40,7 @@ export const contactMeta = {
 
 const instagram = footerContent.links.find((link) => link.label === 'Instagram' && link.external)
 
-export const contactContent = {
+export const contactContent: ContactContent = {
   hero: {
     kicker: 'Portal público LASCE',
     title: 'Contacto',
@@ -75,7 +75,7 @@ export const contactContent = {
       : []),
   ],
   backLink: { href: '/', label: 'Volver al inicio' },
-} as const satisfies ContactContent
+}
 
 function channelLines(channel: ContactChannel): string[] {
   return [channel.value, ...(channel.lines ?? [])].filter(
