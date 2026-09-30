@@ -6,48 +6,42 @@ import type { ReactNode } from 'react'
 
 import { Toggle } from '@/app/components/public/Toggle'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { visibleAdminMenu, type AdminMenuKey } from '@/app/lib/admin-sections'
+import type { Permission } from '@/app/lib/auth/permissions'
 
-import { AdminSidebar, type AdminSidebarItem } from './AdminSidebar'
+import { AdminSidebar } from './AdminSidebar'
 
-const adminNavigation: AdminSidebarItem[] = [
-  {
-    label: 'Resumen',
-    href: '/administracion',
-    icon: <LayoutDashboard size={18} strokeWidth={1.8} />,
-  },
-  {
-    label: 'Descargas',
-    href: '/administracion/descargas',
-    icon: <Download size={18} strokeWidth={1.8} />,
-  },
-  {
-    label: 'Usuarios',
-    href: '/administracion/usuarios',
-    icon: <Users size={18} strokeWidth={1.8} />,
-  },
-  {
-    label: 'Permisos',
-    href: '/administracion/permisos',
-    icon: <Shield size={18} strokeWidth={1.8} />,
-  },
-  {
-    label: 'Infraestructura',
-    href: '/administracion/infraestructura',
-    icon: <Server size={18} strokeWidth={1.8} />,
-  },
-]
+// Icons stay here so the catalogue in `lib/admin-sections.ts` remains plain data.
+const icons: Record<AdminMenuKey, ReactNode> = {
+  resumen: <LayoutDashboard size={18} strokeWidth={1.8} />,
+  descargas: <Download size={18} strokeWidth={1.8} />,
+  usuarios: <Users size={18} strokeWidth={1.8} />,
+  permisos: <Shield size={18} strokeWidth={1.8} />,
+  infraestructura: <Server size={18} strokeWidth={1.8} />,
+}
 
 export interface AdminShellProps {
   children: ReactNode
+  /**
+   * Grants the account holds, looked up once per request by the section layout.
+   * Only the menu entries they unlock are rendered. Hiding a link is not an
+   * authorization check; every section page still calls `requirePermission`.
+   */
+  granted: readonly Permission[]
 }
 
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({ children, granted }: AdminShellProps) {
   const pathname = usePathname()
   const { editMode, setEditMode } = useEditMode()
+  const items = visibleAdminMenu(granted).map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: icons[item.key],
+  }))
 
   return (
     <div className="admin-shell">
-      <AdminSidebar activePathname={pathname} items={adminNavigation} />
+      <AdminSidebar activePathname={pathname} items={items} />
       <div className="admin-content">
         <div className="admin-header">
           <p className="topic-kicker">Panel de administración</p>
