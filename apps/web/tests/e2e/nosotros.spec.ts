@@ -124,11 +124,14 @@ test('reaches the section from the navigation and marks it as current', async ({
   await page.goto('/')
 
   const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
-  const link = navigation.getByRole('link', { name: 'Nosotros', exact: true })
+  const summary = navigation.locator('summary', { hasText: 'Nosotros' })
+  await summary.click()
+  const link = navigation.getByRole('link', { name: 'Quiénes somos', exact: true })
 
   await link.click()
 
   await expect(page).toHaveURL(/\/nosotros$/)
+  await summary.click()
   await expect(link).toHaveAttribute('aria-current', 'page')
 })
 
