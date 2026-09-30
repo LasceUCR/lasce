@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -55,6 +55,22 @@ describe('InstrumentProductSelect', () => {
     await user.keyboard('se{Enter}{ArrowDown}{Enter}')
     expect(onChange).toHaveBeenLastCalledWith('particles')
     await user.keyboard('{Enter}{Escape}')
+    expect(screen.queryByRole('tree')).not.toBeInTheDocument()
+  })
+
+  test('dismisses on outside pointer input and hides the tree when disabled', async () => {
+    const user = userEvent.setup()
+    const { rerender } = render(<InstrumentProductSelect {...groupedArgs} />)
+    const trigger = screen.getByRole('combobox')
+    await user.click(trigger)
+    fireEvent.pointerDown(document.body)
+    expect(screen.queryByRole('tree')).not.toBeInTheDocument()
+
+    await user.click(trigger)
+    expect(screen.getByRole('tree')).toBeVisible()
+    rerender(<InstrumentProductSelect {...groupedArgs} disabled />)
+    expect(screen.queryByRole('tree')).not.toBeInTheDocument()
+    await user.click(trigger)
     expect(screen.queryByRole('tree')).not.toBeInTheDocument()
   })
 })

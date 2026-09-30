@@ -1,11 +1,12 @@
 'use client'
 
 import { Check, ChevronDown } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import type { CSSProperties, KeyboardEvent } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 
 import type { SelectOption } from '../Select'
+import { useFloatingMenu } from '../useFloatingMenu'
 
 export interface InstrumentProductSelectProps {
   id: string
@@ -29,11 +30,18 @@ export function InstrumentProductSelect({
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(`option-${value}`)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
-  const [position, setPosition] = useState<CSSProperties>({})
   const trigger = useRef<HTMLButtonElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const search = useRef({ text: '', time: 0 })
   const expanded = open && !disabled
+  const dismissMenu = useCallback(() => setOpen(false), [])
+  const { position, placeMenu } = useFloatingMenu({
+    open: expanded,
+    triggerRef: trigger,
+    menuRef: list,
+    onDismiss: dismissMenu,
+    boundarySelector: '[data-select-boundary]',
+  })
   const selected = options.find((option) => option.value === value)
   const groups = Array.from(new Set(options.map((option) => option.group))).map((label, index) => ({
     key: `group-${index}`,
@@ -52,41 +60,6 @@ export function InstrumentProductSelect({
     { key: group.key, label: group.label },
     ...(openGroup === group.key ? optionNodes(group.options) : []),
   ])
-
-  function placeMenu() {
-    const rect = trigger.current!.getBoundingClientRect()
-    const boundary = trigger.current!.closest<HTMLElement>('[data-select-boundary]')
-    const boundaryRect = boundary?.getBoundingClientRect()
-    const viewport = window.visualViewport
-    const top = viewport?.offsetTop ?? 0
-    const left = viewport?.offsetLeft ?? 0
-    const height = viewport?.height ?? window.innerHeight
-    const width = viewport?.width ?? window.innerWidth
-    const menuInset = 8
-    const viewportInset = 12
-    const gap = 6
-    const availableTop = Math.max(top + viewportInset, (boundaryRect?.top ?? top) + menuInset)
-    const availableRight = Math.min(
-      left + width - viewportInset,
-      (boundaryRect?.right ?? left + width) - menuInset,
-    )
-    const availableBottom = Math.min(
-      top + height - viewportInset,
-      (boundaryRect?.bottom ?? top + height) - menuInset,
-    )
-    const availableLeft = Math.max(left + viewportInset, (boundaryRect?.left ?? left) + menuInset)
-    const below = availableBottom - rect.bottom - gap
-    const above = rect.top - availableTop - gap
-    const upwards = below < 160 && above > below
-    const menuWidth = Math.min(rect.width, availableRight - availableLeft)
-    setPosition({
-      position: 'fixed',
-      left: Math.max(availableLeft, Math.min(rect.left, availableRight - menuWidth)),
-      width: menuWidth,
-      maxHeight: Math.max(0, Math.min(320, upwards ? above : below)),
-      ...(upwards ? { bottom: window.innerHeight - rect.top + gap } : { top: rect.bottom + gap }),
-    })
-  }
 
   function showMenu(next?: string) {
     placeMenu()
@@ -118,32 +91,6 @@ export function InstrumentProductSelect({
     setOpen(false)
     trigger.current?.focus({ preventScroll: true })
   }
-
-  useEffect(() => {
-    if (!expanded) return
-    const closeOutside = (event: PointerEvent) => {
-      if (
-        !trigger.current?.contains(event.target as Node) &&
-        !list.current?.contains(event.target as Node)
-      )
-        setOpen(false)
-    }
-    const reposition = (event: Event) => {
-      if (!list.current?.contains(event.target as Node)) placeMenu()
-    }
-    document.addEventListener('pointerdown', closeOutside)
-    window.addEventListener('resize', reposition)
-    window.addEventListener('scroll', reposition, true)
-    window.visualViewport?.addEventListener('resize', reposition)
-    window.visualViewport?.addEventListener('scroll', reposition)
-    return () => {
-      document.removeEventListener('pointerdown', closeOutside)
-      window.removeEventListener('resize', reposition)
-      window.removeEventListener('scroll', reposition, true)
-      window.visualViewport?.removeEventListener('resize', reposition)
-      window.visualViewport?.removeEventListener('scroll', reposition)
-    }
-  }, [expanded])
 
   useEffect(() => {
     if (!expanded) return
