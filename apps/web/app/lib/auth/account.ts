@@ -87,10 +87,18 @@ export function readAccountName(cookieHeader: string): string | null {
   return readAccountCookie(cookieHeader)?.name ?? null
 }
 
-/** Assistants and administrators see the Administración tab; visitors do not. */
+/**
+ * Assistants and administrators may enter the administration panel; visitors
+ * may not. The header tab and the `administracion` layout share this rule, so
+ * the tab is never shown to someone the panel would turn away.
+ */
 export function canSeeAdminNavigation(role: UserRole | null | undefined): boolean {
   return role === 'ASSISTANT' || role === 'ADMIN'
 }
+
+/** Shown by the `administracion` layout to a signed-in account the rule above rejects. */
+export const adminAccessDeniedMessage =
+  'La administración está disponible solo para asistentes y personas administradoras.'
 
 /** The first name, for the header greeting. */
 export function shortName(fullName: string): string {
