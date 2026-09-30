@@ -17,7 +17,13 @@ describe('PublicationForm', () => {
 
     expect(document.getElementById('publication-date')).toHaveValue('2026-09-17')
 
-    expect(screen.getByRole('combobox', { name: 'Eliminar autor' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Autores' })).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('button', {
+        name: `Eliminar ${defaultArgs.publication.authors[0]}`,
+      }),
+    ).toBeInTheDocument()
 
     expect(screen.getByRole('textbox', { name: 'DOI' })).toHaveValue(defaultArgs.publication.DOI)
 
@@ -92,18 +98,28 @@ describe('PublicationForm', () => {
       />,
     )
 
-    const addAuthorInput = screen.getByRole('textbox', { name: 'Añadir autor' })
-
-    await user.type(addAuthorInput, 'Carlos González')
     await user.click(screen.getByRole('button', { name: 'Añadir autor' }))
 
-    const removeAuthorSelect = screen.getByRole('combobox', {
-      name: 'Eliminar autor',
+    const dialog = screen.getByRole('dialog', {
+      name: 'Añadir autor',
     })
 
+    await user.type(
+      within(dialog).getByRole('textbox', {
+        name: 'Nombre del autor',
+      }),
+      'Carlos González',
+    )
+
+    await user.click(
+      within(dialog).getByRole('button', {
+        name: 'Añadir',
+      }),
+    )
+
     expect(
-      within(removeAuthorSelect).getByRole('option', {
-        name: 'Carlos González',
+      screen.getByRole('button', {
+        name: 'Eliminar Carlos González',
       }),
     ).toBeInTheDocument()
   })
@@ -113,20 +129,17 @@ describe('PublicationForm', () => {
 
     render(<PublicationForm {...defaultArgs} />)
 
-    const removeAuthorSelect = screen.getByRole('combobox', {
-      name: 'Eliminar autor',
+    const removeAuthorButton = screen.getByRole('button', {
+      name: 'Eliminar María Rodríguez',
     })
 
-    await user.selectOptions(removeAuthorSelect, 'María Rodríguez')
+    expect(removeAuthorButton).toBeInTheDocument()
 
-    expect(removeAuthorSelect).toHaveValue('María Rodríguez')
+    await user.click(removeAuthorButton)
 
-    await user.click(screen.getByRole('button', { name: 'Eliminar autor' }))
-
-    expect(removeAuthorSelect).not.toHaveValue('María Rodríguez')
     expect(
-      within(removeAuthorSelect).queryByRole('option', {
-        name: 'María Rodríguez',
+      screen.queryByRole('button', {
+        name: 'Eliminar María Rodríguez',
       }),
     ).not.toBeInTheDocument()
   })
@@ -153,26 +166,53 @@ describe('PublicationForm', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Nuevo título')
 
-    const addAuthorInput = screen.getByRole('textbox', { name: 'Añadir autor' })
-    await user.type(addAuthorInput, 'Nuevo autor')
     await user.click(screen.getByRole('button', { name: 'Añadir autor' }))
+
+    const addAuthorDialog = screen.getByRole('dialog', {
+      name: 'Añadir autor',
+    })
+
+    await user.type(
+      within(addAuthorDialog).getByRole('textbox', {
+        name: 'Nombre del autor',
+      }),
+      'Nuevo autor',
+    )
+
+    await user.click(
+      within(addAuthorDialog).getByRole('button', {
+        name: 'Añadir',
+      }),
+    )
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Eliminar Nuevo autor',
+      }),
+    ).toBeInTheDocument()
 
     expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue('Nuevo título')
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
 
+    // Confirm the form
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     const dialog = screen.getByRole('dialog', {
       name: 'Guardar cambios',
     })
 
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    await user.click(
+      within(dialog).getByRole('button', {
+        name: 'Confirmar',
+      }),
+    )
 
     expect(onSave).toHaveBeenCalledWith({
       title: 'Nuevo título',
       abstract: defaultArgs.publication.abstract,
       authors: [...defaultArgs.publication.authors, 'Nuevo autor'],
       DOI: defaultArgs.publication.DOI,
+      href: defaultArgs.publication.href,
       researchGroup: defaultArgs.publication.researchGroup,
       venue: defaultArgs.publication.venue,
       date: new Date('2026-09-17T00:00:00'),

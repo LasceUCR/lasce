@@ -33,6 +33,7 @@ const validBody = {
   title: 'Nueva publicación',
   abstract: 'Un resumen de la publicación.',
   authors: ['Juan Pérez', 'María Rodríguez'],
+  href: 'https://example.com/publication',
   DOI: '10.1234/example',
   researchGroup: 'LASCE',
   venue: 'Solar Physics',
@@ -125,7 +126,8 @@ describe('PATCH /api/publicaciones/[id]', () => {
       year: '2026',
       date: new Date('2026-01-01'),
       abstract: validBody.abstract,
-      href: validBody.DOI,
+      href: validBody.href,
+      DOI: validBody.DOI,
       researchGroup: validBody.researchGroup,
     }
 

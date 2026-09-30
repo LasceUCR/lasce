@@ -18,7 +18,8 @@ export const Default: Story = {
       authors: ['Juan Pérez', 'María Rodríguez', 'Carlos González'],
       venue: 'Astrophysical Journal',
       date: new Date('2026-09-17'),
-      DOI: 'google.com',
+      href: 'https://ieeexplore.ieee.org/abstract/document/10933895',
+      DOI: 'https://doi.org/10.1109/CONCAPAN63470.2024.10933895',
       abstract:
         'This study analyzes solar activity and its relationship with space weather phenomena observed during the study period.',
       researchGroup: 'LASCE',
