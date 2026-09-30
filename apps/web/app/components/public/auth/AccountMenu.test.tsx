@@ -33,7 +33,7 @@ describe('AccountMenu', () => {
     await user.click(trigger())
 
     expect(details()).toHaveAttribute('open')
-    expect(screen.getByText('Prueba')).toBeVisible()
+    expect(screen.getByText(visitorArgs.account, { selector: 'p' })).toBeVisible()
     expect(screen.getByText('Visitante')).toBeVisible()
     expect(screen.getByRole('link', { name: accountMenuCopy.account })).toHaveAttribute(
       'href',
@@ -104,6 +104,10 @@ describe('AccountMenu', () => {
     )
 
     screen.getByRole('link', { name: accountMenuCopy.account }).focus()
+    await user.tab()
+
+    expect(screen.getByRole('button', { name: accountMenuCopy.signOut })).toHaveFocus()
+    expect(details()).toHaveAttribute('open')
     await user.tab()
 
     expect(screen.getByRole('link', { name: 'Noticias' })).toHaveFocus()

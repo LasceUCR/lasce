@@ -22,7 +22,9 @@ describe('PublicHeader', () => {
 
     expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
     expect(document.querySelector('details.account-menu')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ingresar' })).toBeInTheDocument()
+    for (const link of screen.getAllByRole('link', { name: 'Ingresar' })) {
+      expect(link).toHaveAttribute('href', '/acceso')
+    }
     expect(
       within(screen.getByRole('navigation', { name: 'Navegación principal' })).getByRole('link', {
         name: /^Contacto$/,
