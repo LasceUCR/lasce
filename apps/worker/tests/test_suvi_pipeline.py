@@ -4,12 +4,16 @@ The processor takes its window from the clock, so the frame the fake archive
 serves is named after the current time rather than hard-coded.
 """
 
+import gzip
+import io
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
 import httpx
+import numpy as np
 import pytest
+from astropy.io import fits
 
 from app.models.jobs import SuviPipelinePayload
 from app.processors import suvi_pipeline
@@ -20,6 +24,13 @@ def frame_name(observed: datetime) -> str:
     start = f"{observed:%Y%j%H%M%S}0"
     end = f"{observed + timedelta(seconds=1):%Y%j%H%M%S}0"
     return f"OR_SUVI-L1b-Fe093_G19_s{start}_e{end}_c{end}.fits.gz"
+
+
+def frame_bytes() -> bytes:
+    """A gzipped single-HDU FITS image, the shape the archive actually serves."""
+    raw = io.BytesIO()
+    fits.PrimaryHDU(np.arange(4, dtype=np.int16).reshape(2, 2)).writeto(raw)
+    return gzip.compress(raw.getvalue())
 
 
 def payload(**changes: Any) -> SuviPipelinePayload:
@@ -52,7 +63,7 @@ async def test_describes_the_frame_it_downloaded(monkeypatch: pytest.MonkeyPatch
     def handler(request: httpx.Request) -> httpx.Response:
         if str(request.url).endswith("/"):
             return httpx.Response(200, text=f'<a href="{name}">{name}</a>')
-        return httpx.Response(200, content=b"fits-bytes")
+        return httpx.Response(200, content=frame_bytes())
 
     serve(monkeypatch, handler)
     job = AsyncMock()
@@ -67,7 +78,7 @@ async def test_describes_the_frame_it_downloaded(monkeypatch: pytest.MonkeyPatch
         "url": result["file"]["url"],
         "observedAt": result["file"]["observedAt"],
         "exposure": "long",
-        "bytes": len(b"fits-bytes"),
+        "bytes": len(frame_bytes()),
     }
     assert result["file"]["url"].endswith(f"/suvi-l1b-fe094/{datetime.now(UTC):%Y/%m/%d}/{name}")
     job.updateProgress.assert_awaited_with(100)
