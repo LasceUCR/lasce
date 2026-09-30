@@ -53,9 +53,9 @@ describe('MediaLightbox', () => {
 
     expect(screen.getByText(photographArgs.albumTitle)).toBeInTheDocument()
     expect(screen.getByText(photographArgs.item.description)).toBeInTheDocument()
-    expect(screen.getByText('Fecha de captura: 15 ene 2025')).toBeInTheDocument()
-    expect(screen.getByText('Formato: JPG')).toBeInTheDocument()
-    expect(screen.getByText('Subido por: Andrés Solano')).toBeInTheDocument()
+    expect(screen.getByText(`Fecha de captura: ${photographArgs.item.date}`)).toBeInTheDocument()
+    expect(screen.getByText(`Formato: ${photographArgs.item.format}`)).toBeInTheDocument()
+    expect(screen.getByText(`Subido por: ${photographArgs.item.uploader}`)).toBeInTheDocument()
   })
 
   test('titles the open file as the heading of the dialog', () => {
@@ -135,7 +135,9 @@ describe('MediaLightbox', () => {
       />,
     )
 
-    expect(await screen.findByText(`Archivo 2 de 13: ${videoArgs.item.title}.`)).toBeInTheDocument()
+    expect(
+      await screen.findByText(`Archivo 2 de ${videoArgs.total}: ${videoArgs.item.title}.`),
+    ).toBeInTheDocument()
   })
 
   test('locks the page behind it from scrolling, and releases it on close', () => {
@@ -196,13 +198,13 @@ describe('MediaLightbox', () => {
     renderLightbox({ item: videoArgs.item })
 
     expect(screen.getByRole('img', { name: videoArgs.item.alt })).toBeInTheDocument()
-    expect(screen.getByText('Formato: MP4')).toBeInTheDocument()
+    expect(screen.getByText(`Formato: ${videoArgs.item.format}`)).toBeInTheDocument()
   })
 
   test('falls back to a caption when the file has no image yet', () => {
     renderLightbox({ item: { ...videoArgs.item, src: undefined } })
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
-    expect(screen.getByText('Video: Ensamblaje del reflector parabólico')).toBeInTheDocument()
+    expect(screen.getByText(`Video: ${videoArgs.item.title}`)).toBeInTheDocument()
   })
 })

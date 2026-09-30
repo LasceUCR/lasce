@@ -4,6 +4,7 @@ import { expect as baseExpect, test, type Page } from '@playwright/test'
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
+  LOGIN_HREF,
   REGISTRATION_CARD_ID,
   REGISTRATION_HREF,
   accesoIntro,
@@ -120,7 +121,7 @@ test('registration is reached through the access page tab, not the header', asyn
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await expect(page.locator('.header-actions')).toBeHidden()
-  await page.locator('.mobile-menu summary').click()
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   await expect(menu.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', ACCESS_PATH)
   await expect(menu.getByRole('link', { name: 'Crear cuenta' })).toHaveCount(0)
@@ -150,11 +151,21 @@ test('creates an account with valid data', async ({ page }) => {
     status.getByRole('heading', { level: 2, name: registrationFormCopy.successTitle }),
   ).toBeVisible()
   await expect(status.getByRole('heading', { name: registroIntro.title })).toHaveCount(0)
-  await expect(
-    status.getByRole('link', { name: registrationFormCopy.successLink }),
-  ).toHaveAttribute('href', registrationFormCopy.successHref)
+  const loginLink = status.getByRole('link', { name: registrationFormCopy.successLink })
+  await expect(loginLink).toHaveAttribute('href', LOGIN_HREF)
   await expect(page).toHaveURL(registrationUrl())
   await expect(submitButton(page)).toHaveCount(0)
+
+  // The link must open the login card, not only rewrite the address bar.
+  await loginLink.click()
+  await expect(page).toHaveURL(new RegExp(`${escapeRegExp(LOGIN_HREF)}$`))
+  await expect(page.getByRole('tab', { name: accessTabsCopy.tabs.login })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  await expect(page.locator(`#${LOGIN_CARD_ID}`)).toBeVisible()
+  await expect(registrationCard(page)).toBeHidden()
+  await expect(page.getByRole('status')).toHaveCount(0)
 })
 
 test('refuses an empty submission and names every missing field', async ({ page }) => {

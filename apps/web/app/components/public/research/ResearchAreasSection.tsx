@@ -3,7 +3,7 @@
 import { useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { AlbumTile } from '../gallery/AlbumTile'
+import { ResearchAreaCard } from './ResearchAreaCard'
 import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
@@ -74,112 +74,21 @@ export function ResearchAreasSection({
   async function handleDeleteArea(id: string) {}
 
   return (
-    <section aria-labelledby={titleId} className="research-areas page-width" id={id}>
-      <div className="section-heading">
-        <h2 id={titleId}>{title}</h2>
-        <p className="research-areas-description">{subtitle}</p>
-      </div>
-
-      {saveError ? (
-        <p className="form-alert" role="alert">
-          {saveError}
-        </p>
-      ) : null}
-
-      {editMode && canCreate && areas.length === 0 ? (
-        <p className="research-areas-description">
-          Haga clic en &quot;Añadir&quot; para agregar un área de investigación.
-        </p>
-      ) : null}
-
-      <div className="gallery-grid">
-        {areas.map((area) => {
-          const showEditor = editMode && (canEdit || canDelete)
-
-          if (!showEditor) {
-            return (
-              <AlbumTile
+    <section className="research-areas page-width" id={id}>
+      {areas.length > 0 ? (
+        <ul className="research-area-list">
+          {areas.map((area) => (
+            <li key={area.slug}>
+              <ResearchAreaCard
+                description={area.description}
                 href={`/investigacion/areas/${area.slug}`}
-                key={area.slug}
-                meta="Conozca más sobre esta área"
                 src={area.src}
                 title={area.title}
               />
-            )
-          }
-
-          return (
-            <EditableWrapper
-              key={area.slug}
-              deleteConfirmMessage={`¿Desea eliminar "${area.title}"? Esta acción no se puede deshacer.`}
-              deleteConfirmTitle="Eliminar área"
-              deleteLabel={`Eliminar ${area.title}`}
-              editLabel={`Editar ${area.title}`}
-              onDelete={canDelete ? () => handleDeleteArea(area.slug) : undefined}
-              onEdit={canEdit ? () => openEditor(area.slug) : undefined}
-            >
-              <AlbumTile
-                href={`/investigacion/areas/${area.slug}`}
-                key={area.slug}
-                meta="Conozca más sobre esta área"
-                src={area.src}
-                title={area.title}
-              />
-            </EditableWrapper>
-          )
-        })}
-
-        {editMode && canCreate ? (
-          <AddItemCard label="Añadir">
-            {({ close }) => (
-              <>
-                {createError ? (
-                  <p className="form-alert" role="alert">
-                    {createError}
-                  </p>
-                ) : null}
-
-                <ResearchAreaForm
-                  area={blankArea}
-                  confirmMessage="¿Desea agregar esta área de investigación?"
-                  confirmTitle="Agregar área"
-                  onCancel={() => {
-                    setCreateError(null)
-                    close()
-                  }}
-                  onSave={(values) => handleCreateArea(values, close)}
-                />
-              </>
-            )}
-          </AddItemCard>
-        ) : null}
-      </div>
-
-      <Modal
-        onClose={closeEditor}
-        open={editingArea !== undefined}
-        title={editingArea ? `Editar "${editingArea.title}"` : 'Editar área de investigación'}
-      >
-        {editingArea ? (
-          <>
-            {saveError ? (
-              <p className="form-alert" role="alert">
-                {saveError}
-              </p>
-            ) : null}
-
-            <ResearchAreaForm
-              area={{
-                title: editingArea.title,
-                description: editingArea.description,
-                src: editingArea.src ?? '',
-              }}
-              onCancel={closeEditor}
-              onSave={handleSaveArea}
-            />
-          </>
-        ) : null}
-      </Modal>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   )
 }

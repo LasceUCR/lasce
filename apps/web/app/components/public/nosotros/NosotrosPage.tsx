@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Code, GraduationCap, Satellite, Sun, Users, Waves, type LucideIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -8,6 +8,11 @@ import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { EditableResearcherCard } from '@/app/components/public/rosac/EditableResearcherCard'
+import {
+  ResearcherForm,
+  type ResearcherFormValues,
+} from '@/app/components/public/rosac/ResearcherForm'
 import { TeamGallery } from '@/app/components/public/rosac/TeamGallery'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ContentFlag } from '@/app/components/public/topic/ContentFlag'
@@ -16,6 +21,7 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
+import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import { NosotrosActivityForm, type NosotrosActivityFormValues } from './NosotrosActivityForm'
 
@@ -52,6 +58,17 @@ export function NosotrosPage({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
   const [listError, setListError] = useState<string | null>(null)
+  const [researcherCreateError, setResearcherCreateError] = useState<string | null>(null)
+  const [researcherListError, setResearcherListError] = useState<string | null>(null)
+  const researcherCreateErrorRef = useRef<HTMLParagraphElement>(null)
+
+  // Scrolls the "Añadir investigador" error into view as soon as it appears —
+  // same reasoning as `ResearcherForm`'s own upload error.
+  useEffect(() => {
+    if (researcherCreateError) {
+      scrollIntoViewIfSupported(researcherCreateErrorRef.current)
+    }
+  }, [researcherCreateError])
 
   const editingActivity = content.activities.items.find((item) => item.id === editingActivityId)
 
@@ -131,6 +148,77 @@ export function NosotrosPage({
     if (!response.ok) {
       const body: { error?: string } | null = await response.json().catch(() => null)
       setListError(body?.error ?? SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    router.refresh()
+  }
+
+  async function handleSaveResearcher(
+    id: string,
+    values: ResearcherFormValues,
+  ): Promise<string | null> {
+    let response: Response
+    try {
+      response = await fetch(`/api/nosotros/researchers/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      })
+    } catch {
+      return SAVE_ERROR_MESSAGE
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      return body?.error ?? SAVE_ERROR_MESSAGE
+    }
+
+    // Re-runs the server component's `getNosotrosResearchers()` so the page
+    // reflects the saved change immediately, without an optimistic guess.
+    router.refresh()
+    return null
+  }
+
+  async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
+    setResearcherCreateError(null)
+
+    let response: Response
+    try {
+      response = await fetch('/api/nosotros/researchers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      })
+    } catch {
+      setResearcherCreateError(SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      setResearcherCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    close()
+    router.refresh()
+  }
+
+  async function handleDeleteResearcher(id: string) {
+    setResearcherListError(null)
+
+    let response: Response
+    try {
+      response = await fetch(`/api/nosotros/researchers/${id}`, { method: 'DELETE' })
+    } catch {
+      setResearcherListError(SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      setResearcherListError(body?.error ?? SAVE_ERROR_MESSAGE)
       return
     }
 
@@ -230,11 +318,51 @@ export function NosotrosPage({
         titleId="nosotros-researchers-title"
         wide
       >
+        {researcherListError ? (
+          <p className="form-alert" role="alert">
+            {researcherListError}
+          </p>
+        ) : null}
+
         <TeamGallery
           emptyMessage={content.researchers.emptyMessage}
           hint={content.researchers.hint}
           label={content.researchers.title}
           people={content.researchers.people}
+          renderPerson={(person) => (
+            <EditableResearcherCard
+              canDelete={canDelete}
+              canEdit={canEdit}
+              onDelete={() => handleDeleteResearcher(person.id)}
+              onSave={(values) => handleSaveResearcher(person.id, values)}
+              researcher={person}
+            />
+          )}
+          trailingSlide={
+            editMode && canCreate ? (
+              <AddItemCard label="Añadir investigador">
+                {({ close }) => (
+                  <>
+                    {researcherCreateError ? (
+                      <p className="form-alert" ref={researcherCreateErrorRef} role="alert">
+                        {researcherCreateError}
+                      </p>
+                    ) : null}
+                    <ResearcherForm
+                      confirmMessage="¿Desea agregar este investigador?"
+                      confirmTitle="Agregar investigador"
+                      onCancel={() => {
+                        setResearcherCreateError(null)
+                        close()
+                      }}
+                      onSave={(values) => handleCreateResearcher(values, close)}
+                      researcher={null}
+                    />
+                  </>
+                )}
+              </AddItemCard>
+            ) : undefined
+          }
         />
       </TopicSection>
 

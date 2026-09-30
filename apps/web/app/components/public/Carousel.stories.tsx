@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { rosacConstructionContent } from '@/app/lib/rosac-construction'
 
-import { Carousel } from './Carousel'
+import { Carousel, type CarouselProps } from './Carousel'
 
 // The ROSAC construction stages double as a realistic fixture here: five
 // groups, including one with a single photo, which is exactly the shape a
@@ -42,12 +42,23 @@ export const Assembly: Story = {
   },
 }
 
+// None of the real ROSAC stages has exactly one photo any more (see rosac-construction.ts),
+// so this story builds its own minimal fixture to keep exercising the single-photo state:
+// hidden photo controls, no looping within the group.
+const singlePhotoGroups: CarouselProps['groups'] = [
+  rosacConstructionContent.stages[0],
+  {
+    id: 'unica',
+    title: 'Etapa con una sola fotografía',
+    description: 'Fixture sintético para esta historia: agrupa una sola imagen.',
+    images: [rosacConstructionContent.stages[0].images[0]],
+  },
+]
+
 export const SinglePhotoGroup: Story = {
-  args: Default.args,
+  args: { groups: singlePhotoGroups, ariaLabel: 'Proceso de construcción del ROSAC' },
   play: async ({ canvas, userEvent }) => {
-    for (let index = 0; index < 3; index++) {
-      await userEvent.click(canvas.getByRole('button', { name: 'Etapa siguiente' }))
-    }
+    await userEvent.click(canvas.getByRole('button', { name: 'Etapa siguiente' }))
   },
 }
 
