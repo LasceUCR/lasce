@@ -281,7 +281,8 @@ def quantize(matrix: np.ndarray, quantization: Quantization, scale: float) -> np
         log_values = np.log1p(np.clip(matrix, 0, None))
         values = log_values / scale * qmax
     values = np.clip(values, 0, qmax)
-    return np.floor(values).astype(dtype)
+    quantized: np.ndarray = np.floor(values).astype(dtype)
+    return quantized
 
 
 def encode_delta(
