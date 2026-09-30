@@ -216,6 +216,10 @@ export function PublicationForm({
             onClick={openAddAuthor}
           />
         </div>
+
+        {showAuthorValidation && authors.length === 0 && (
+          <p className="form-field-error">Se requiere al menos un autor para la publicación.</p>
+        )}
       </div>
 
       <Modal onClose={closeAddAuthor} open={isAddingAuthor} size="small" title="Añadir autor">
