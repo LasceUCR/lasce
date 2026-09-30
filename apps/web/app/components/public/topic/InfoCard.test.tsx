@@ -15,7 +15,7 @@ describe('InfoCard', () => {
 
     expect(screen.getByRole('article', { name: args.title })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: args.title })).toBeInTheDocument()
-    expect(screen.getByText(args.description)).toBeInTheDocument()
+    expect(screen.getByText(args.description as string)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Acceder a SWAAT' })).toHaveAttribute(
       'href',
       'https://swaat.up.railway.app/',
@@ -26,7 +26,7 @@ describe('InfoCard', () => {
     render(<InfoCard {...defaultArgs} />)
 
     expect(screen.getByRole('heading', { level: 3, name: defaultArgs.title })).toBeInTheDocument()
-    expect(screen.getByText(defaultArgs.description)).toBeInTheDocument()
+    expect(screen.getByText(defaultArgs.description as string)).toBeInTheDocument()
     expect(screen.queryByText('Más información')).not.toBeInTheDocument()
   })
 
