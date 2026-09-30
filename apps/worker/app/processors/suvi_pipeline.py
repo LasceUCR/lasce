@@ -61,8 +61,7 @@ def _extract_fits_data(hdul: Any) -> tuple[dict[str, Any], Any]:
 
 def _log_fits_contents(headers: dict[str, Any], data_matrix: Any) -> None:
     """Log extracted FITS headers and data matrix."""
-    log.info(headers)
-    log.info(data_matrix)
+    log.info("decoded suvi fits", headers=headers, data_matrix=data_matrix)
 
 
 def _build_success_result(
