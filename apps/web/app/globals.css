@@ -9,6 +9,11 @@
   --alice-blue: #eef4f7ff;
   --white: #ffffffff;
 
+  /* Rendered height of `.site-header`, measured: the desktop nav row adds to it
+     above 1400px and the compact header applies at 760px and below. Anything
+     pinned under the header (the admin sidebar) offsets by this token. */
+  --header-height: 82px;
+
   /* Existing UI aliases keep components connected to the brand palette. */
   --navy-deep: var(--deep-space-blue);
   --blue: var(--bright-teal-blue);
@@ -2152,6 +2157,10 @@ a {
 }
 
 @media (max-width: 1400px) {
+  :root {
+    --header-height: 75px;
+  }
+
   .site-header {
     grid-template-columns: 1fr auto auto;
   }
@@ -2339,6 +2348,10 @@ a {
 
   .search-filter-bar {
     padding: 16px;
+  }
+
+  :root {
+    --header-height: 64px;
   }
 
   .site-header {
@@ -4181,12 +4194,12 @@ a.gallery-tile:focus-visible {
 .admin-shell {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
-  min-height: calc(100vh - 78px);
+  min-height: calc(100vh - var(--header-height));
 }
 
 .admin-sidebar {
   position: fixed;
-  top: 78px;
+  top: var(--header-height);
   left: 0;
   bottom: 0;
   z-index: 15;
@@ -4221,12 +4234,17 @@ a.gallery-tile:focus-visible {
 .admin-sidebar a:hover,
 .admin-sidebar a:focus-visible {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--on-hover);
+  color: var(--white);
 }
 
 .admin-sidebar a.active {
   background: var(--blue-dark);
-  color: var(--on-hover);
+  color: var(--white);
+}
+
+/* The narrow-screen toggle. Above 1120px the sidebar itself is the menu. */
+.admin-menu-toggle {
+  display: none;
 }
 
 .admin-content {
@@ -4363,27 +4381,89 @@ a.gallery-tile:focus-visible {
 }
 
 @media (max-width: 1120px) {
+  /* The content row takes the spare height, so a short page does not stretch the bar. */
   .admin-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
+  /* The sidebar becomes a sticky bar under the header; the list opens in place
+     below the toggle and pushes the content down, so nothing overlaps. */
   .admin-sidebar {
     position: sticky;
-    top: 78px;
+    top: var(--header-height);
     left: auto;
     bottom: auto;
     width: auto;
     height: auto;
-    padding: 12px 14px;
-    overflow-x: auto;
+    max-height: calc(100vh - var(--header-height));
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .admin-menu-toggle {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: var(--navy-deep);
+    color: var(--white);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .admin-menu-toggle:focus-visible {
+    outline: 2px solid var(--amber-flame);
+    outline-offset: -2px;
+  }
+
+  .admin-menu-current {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--amber-glow);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-menu-chevron {
+    flex: 0 0 auto;
+    margin-left: auto;
+    transition: transform 160ms ease;
+  }
+
+  .admin-sidebar.is-open .admin-menu-chevron {
+    transform: rotate(180deg);
   }
 
   .admin-sidebar ul {
-    flex-direction: row;
+    display: none;
+    flex-direction: column;
+    padding: 4px 14px 12px;
+  }
+
+  .admin-sidebar.is-open ul {
+    display: flex;
+  }
+
+  .admin-sidebar a {
+    min-height: 44px;
   }
 
   .admin-content {
     grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-menu-chevron {
+    transition: none;
   }
 }
 
