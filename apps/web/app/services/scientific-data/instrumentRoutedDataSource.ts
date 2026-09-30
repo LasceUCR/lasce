@@ -1,4 +1,8 @@
-import { findScientificProduct, type ScientificSourceCode } from '@/app/lib/scientific-data'
+import {
+  findScientificProduct,
+  type ScientificInstrumentCode,
+  type ScientificSourceCode,
+} from '@/app/lib/scientific-data'
 
 import { UnsupportedScientificQueryError } from './errors'
 import type { ScientificDataProvider, ScientificDataSource } from './scientificDataSource'
@@ -9,7 +13,7 @@ import type { ScientificDataProvider, ScientificDataSource } from './scientificD
  */
 export function createInstrumentRoutedDataSource(
   code: ScientificSourceCode,
-  providers: Partial<Record<string, ScientificDataProvider>>,
+  providers: Partial<Record<ScientificInstrumentCode, ScientificDataProvider>>,
 ): ScientificDataSource {
   return {
     code,

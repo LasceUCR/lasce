@@ -82,7 +82,9 @@ same Zod schema used by the browser. Results use a discriminated union:
 - `image-sequence` with NOAA image URLs and capture timestamps;
 - `dynamic-spectrum` with `timestamps`, `frequencies`, and `cells`.
 
-Source or worker failures return `502`; invalid criteria return `400`. Responses use
+Source or worker failures return `502`; invalid criteria return `400`. A valid query with no
+provider registered in `services/scientific-data/index.ts` is a wiring defect and returns `500`
+with a Spanish JSON error. Responses use
 `Cache-Control: no-store` so a stale observation is not presented as a new query result.
 
 ### Source routing

@@ -3,7 +3,10 @@ import { NextResponse } from 'next/server'
 import { scientificDataQuerySchema } from '@/app/lib/scientific-data'
 import { getAvailabilityMessage, getSuviAvailability } from '@/app/lib/scientific-data-availability'
 import { scientificDataSources } from '@/app/services/scientific-data'
-import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'
+import {
+  ScientificDataUpstreamError,
+  UnsupportedScientificQueryError,
+} from '@/app/services/scientific-data/errors'
 
 /**
  * Public read-only endpoint for scientific visualization. It intentionally has
@@ -56,6 +59,14 @@ export async function GET(request: Request): Promise<NextResponse> {
           error: 'No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.',
         },
         { status: 502, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+
+    if (error instanceof UnsupportedScientificQueryError) {
+      console.error(`Scientific data wiring error: ${error.message}`)
+      return NextResponse.json(
+        { error: 'La fuente científica no está disponible en este momento.' },
+        { status: 500, headers: { 'Cache-Control': 'no-store' } },
       )
     }
 

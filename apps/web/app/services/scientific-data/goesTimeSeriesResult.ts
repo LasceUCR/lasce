@@ -24,14 +24,18 @@ export function buildGoesTimeSeriesResult(
   if (query.source !== 'GOES' || !selection || selection.product.visualization !== 'time-series') {
     throw new Error('Only GOES time series can be shaped as a GOES time-series result')
   }
+  const parameter = selection.product.parameters.find(
+    (candidate) => candidate.code === query.parameter,
+  )
+  if (!parameter) {
+    throw new Error(`Unknown parameter ${query.parameter} for GOES product ${query.product}`)
+  }
 
   return {
     query,
     instrument: { code: selection.instrument.code, name: selection.instrument.name },
     product: { code: selection.product.code, name: selection.product.name },
-    parameter: selection.product.parameters.find(
-      (parameter) => parameter.code === query.parameter,
-    )!,
+    parameter,
     visualization: 'time-series',
     points,
     origin: {

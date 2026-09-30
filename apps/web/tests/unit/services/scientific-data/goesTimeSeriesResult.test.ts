@@ -46,4 +46,11 @@ describe('GOES time-series result', () => {
       /GOES time series/,
     )
   })
+
+  test('refuses a parameter the product does not offer', () => {
+    const origin = { provider: 'P', notice: 'N', satellite: null }
+    expect(() =>
+      buildGoesTimeSeriesResult({ ...query, parameter: 'unknown' }, points, origin),
+    ).toThrow(/Unknown parameter unknown/)
+  })
 })

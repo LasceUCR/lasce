@@ -8,7 +8,7 @@ export class ScientificDataUpstreamError extends Error {
 
 /**
  * No source or provider is registered for a query that passed validation. This is a wiring
- * defect in `index.ts`, not a user error, so the route lets it surface as a 500.
+ * defect in `index.ts`, not a user error, so the route answers it with a 500.
  */
 export class UnsupportedScientificQueryError extends Error {
   constructor(message: string) {
