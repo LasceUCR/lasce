@@ -7,13 +7,13 @@ array, and the astropy dependency it would need is not worth carrying until
 something does.
 """
 
+import gzip
+import io
 from datetime import UTC, datetime, timedelta
 from typing import Any
-import io
-from astropy.io import fits
-import gzip
 
 import httpx
+from astropy.io import fits
 
 from app.clients.suvi import SuviChannel, SuviDownloader
 from app.logging import get_logger
