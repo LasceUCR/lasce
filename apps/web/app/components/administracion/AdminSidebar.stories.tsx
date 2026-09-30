@@ -39,9 +39,43 @@ export default meta
 
 type Story = StoryObj<typeof AdminSidebar>
 
+// Below 1120px the sidebar collapses into a bar; this viewport shows that layout.
+const mobileViewport = {
+  globals: { viewport: { value: 'adminMobile', isRotated: false } },
+  parameters: {
+    viewport: {
+      options: {
+        adminMobile: {
+          name: 'Mobile (390px)',
+          styles: { width: '390px', height: '844px' },
+        },
+      },
+    },
+  },
+}
+
 export const Default: Story = {
   args: {
     items,
     activePathname: '/administracion',
   },
+}
+
+/** The collapsed bar, naming the current section. */
+export const Mobile: Story = {
+  args: {
+    ...Default.args,
+    activePathname: '/administracion/usuarios',
+  },
+  ...mobileViewport,
+}
+
+/** The bar with its list expanded in place. */
+export const MobileOpen: Story = {
+  args: {
+    ...Default.args,
+    activePathname: '/administracion/usuarios',
+    defaultOpen: true,
+  },
+  ...mobileViewport,
 }

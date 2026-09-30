@@ -51,5 +51,6 @@ working through Claude Code.
 | How are role permissions configured?                 | [`docs/role-permissions.md`](docs/role-permissions.md)               |
 | How do I gate a page or a control with a grant?      | [`docs/add-permissions.md`](docs/add-permissions.md)                 |
 | How is the header/nav organized and responsive?      | [`docs/header-and-navigation.md`](docs/header-and-navigation.md)     |
+| How does the administration menu work?               | [`docs/admin-navigation.md`](docs/admin-navigation.md)               |
 
 When a change makes one of these wrong, update it in the same PR.
