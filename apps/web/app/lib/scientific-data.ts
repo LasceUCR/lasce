@@ -444,7 +444,7 @@ const scientificOriginSchema = z.object({
 })
 const scientificResultBaseSchema = z.object({
   query: scientificDataQuerySchema,
-  instrument: z.object({ code: z.string(), name: z.string() }),
+  instrument: z.object({ code: z.enum(SCIENTIFIC_INSTRUMENT_CODES), name: z.string() }),
   product: z.object({ code: z.enum(SCIENTIFIC_PRODUCT_CODES), name: z.string() }),
   parameter: scientificParameterSchema,
   origin: scientificOriginSchema,
