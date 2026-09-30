@@ -5130,3 +5130,9 @@ a.gallery-tile:focus-visible {
   justify-content: flex-end;
   gap: 10px;
 }
+
+.research-area-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

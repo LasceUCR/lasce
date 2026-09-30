@@ -75,20 +75,64 @@ export function ResearchAreasSection({
 
   return (
     <section className="research-areas page-width" id={id}>
-      {areas.length > 0 ? (
-        <ul className="research-area-list">
-          {areas.map((area) => (
-            <li key={area.slug}>
-              <ResearchAreaCard
-                description={area.description}
-                href={`/investigacion/areas/${area.slug}`}
-                src={area.src}
-                title={area.title}
+      <header className="research-areas-header">
+        <h2 id={titleId}>{title}</h2>
+        <p>{subtitle}</p>
+      </header>
+
+      <div className="research-area-content">
+        {editMode && canCreate ? (
+          <AddItemCard label="Añadir">
+            {({ close }) => (
+              <ResearchAreaForm
+                area={blankArea}
+                confirmMessage="¿Desea agregar esta area?"
+                confirmTitle="Agregar area"
+                onCancel={close}
+                onSave={(values) => handleCreateArea(values, close)}
               />
-            </li>
-          ))}
-        </ul>
-      ) : null}
+            )}
+          </AddItemCard>
+        ) : null}
+
+        {areas.length > 0 ? (
+          <ul className="research-area-list" aria-labelledby={titleId}>
+            {areas.map((area) => (
+              <li key={area.slug}>
+                <EditableWrapper
+                  key={area.slug}
+                  onEdit={canEdit ? () => openEditor(area.slug) : undefined}
+                  onDelete={canDelete ? () => handleDeleteArea(area.slug) : undefined}
+                  deleteConfirmTitle="Eliminar área"
+                >
+                  <ResearchAreaCard
+                    description={area.description}
+                    href={`/investigacion/areas/${area.slug}`}
+                    src={area.src}
+                    title={area.title}
+                  />
+                </EditableWrapper>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+
+      <Modal open={editingArea !== undefined} onClose={closeEditor} title="Editar área">
+        {editingArea ? (
+          <ResearchAreaForm
+            area={{
+              title: editingArea.title,
+              description: editingArea.description,
+              src: editingArea.src ?? '',
+            }}
+            confirmMessage="¿Desea agregar esta area?"
+            confirmTitle="Agregar area"
+            onCancel={closeEditor}
+            onSave={handleSaveArea}
+          />
+        ) : null}
+      </Modal>
     </section>
   )
 }
