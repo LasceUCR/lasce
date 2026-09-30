@@ -98,6 +98,7 @@ app/
 |-- (public)/
 |   |-- [section]/page.tsx
 |   |-- clima-espacial/page.tsx
+|   |-- contacto/page.tsx
 |   |-- fisica-solar/page.tsx
 |   |-- nosotros/page.tsx
 |   |-- radioastronomia/page.tsx
@@ -114,6 +115,7 @@ app/
 |   |-- space-weather/
 |   `-- topic/
 |-- lib/
+|   |-- contact.ts
 |   |-- footer.ts
 |   |-- site.ts
 |   |-- solar-astrophysics.ts
