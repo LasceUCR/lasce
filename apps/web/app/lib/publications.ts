@@ -39,7 +39,7 @@ export const publicationInputSchema = z.object({
   authors: z
     .array(z.string().trim().min(1, 'El nombre del autor es obligatorio.'))
     .min(1, 'Debe existir al menos un autor.'),
-  href: z.string().trim().min(1, 'La URL es obligatoria.'),
+  href: z.string().trim(),
   DOI: z.string().trim(),
   researchGroup: z.enum(['LASCE', 'ROSAC'], {
     error: 'Seleccione un grupo de investigación válido.',
@@ -110,7 +110,7 @@ export async function createPublication(data: PublicationInput) {
           publicationDate: data.date,
           publisherId: publisher.id,
           abstract: data.abstract,
-          externalUrl: data.href,
+          externalUrl: data.href || null,
           doi: data.DOI || null,
           researchGroup: data.researchGroup,
         },
@@ -198,7 +198,7 @@ export async function updatePublication(id: string, data: PublicationInput) {
           publicationDate: data.date,
           publisherId: publisher.id,
           abstract: data.abstract,
-          externalUrl: data.href,
+          externalUrl: data.href || null,
           doi: data.DOI || null,
           researchGroup: data.researchGroup,
         },

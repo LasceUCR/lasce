@@ -21,7 +21,7 @@ export interface PublicationFormValues {
   venue: string
   date: Date
   abstract: string
-  href: string
+  href?: string
   DOI?: string
   researchGroup: ResearchGroup
 }
@@ -48,7 +48,7 @@ export function PublicationForm({
   const [venue, setVenue] = useState(publication.venue)
   const [date, setDate] = useState(publication.date.toISOString().slice(0, 10))
   const [abstract, setAbstract] = useState(publication.abstract)
-  const [href, setHref] = useState(publication.href)
+  const [href, setHref] = useState(publication.href || '')
   const [DOI, setDOI] = useState(publication.DOI || '')
   const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
 
@@ -83,12 +83,6 @@ export function PublicationForm({
     }
   }
 
-  const validateHref = (value: string) => {
-    if (value.trim() === '') {
-      throw new Error('Debe tener un enlace del que acceder.')
-    }
-  }
-
   const validateResearchGroup = (value: string) => {
     if (value.trim() === '') {
       throw new Error('Debe tener un grupo de investigación.')
@@ -101,7 +95,6 @@ export function PublicationForm({
     venue.trim() !== '' &&
     date !== '' &&
     abstract.trim() !== '' &&
-    href.trim() !== '' &&
     researchGroup.trim() !== ''
 
   function openAddAuthor() {
@@ -139,7 +132,7 @@ export function PublicationForm({
     setTitle(title.trim())
     setVenue(venue.trim())
     setDate(date.trim())
-    setHref(href.trim())
+    setHref(href?.trim() ?? '')
     setDOI(DOI?.trim() ?? '')
     setNewAuthor(newAuthor.trim())
     setAbstract(abstract.trim())
@@ -250,14 +243,7 @@ export function PublicationForm({
         </div>
       </Modal>
 
-      <FormField
-        id={`publication-href`}
-        label="Enlace externo"
-        onChange={setHref}
-        validate={validateHref}
-        value={href}
-        required
-      />
+      <FormField id={`publication-href`} label="Enlace externo" onChange={setHref} value={href} />
 
       <FormField id={`publication-doi`} label="DOI" onChange={setDOI} value={DOI} />
 
