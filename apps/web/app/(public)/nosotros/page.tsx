@@ -2,7 +2,12 @@ import type { Metadata } from 'next'
 
 import { NosotrosPage } from '@/app/components/public/nosotros/NosotrosPage'
 import { userHasPermission } from '@/app/lib/auth/authorization'
-import { getNosotrosActivities, nosotrosContent, nosotrosMeta } from '@/app/lib/nosotros'
+import {
+  getNosotrosActivities,
+  getNosotrosResearchers,
+  nosotrosContent,
+  nosotrosMeta,
+} from '@/app/lib/nosotros'
 
 export const metadata: Metadata = {
   ...nosotrosMeta,
@@ -12,8 +17,9 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function NosotrosRoute() {
-  const [activities, canCreate, canEdit, canDelete] = await Promise.all([
+  const [activities, researchers, canCreate, canEdit, canDelete] = await Promise.all([
     getNosotrosActivities(),
+    getNosotrosResearchers(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
@@ -27,6 +33,7 @@ export default async function NosotrosRoute() {
       content={{
         ...nosotrosContent,
         activities: { title: nosotrosContent.activities.title, items: activities },
+        researchers: { ...nosotrosContent.researchers, people: researchers },
       }}
     />
   )

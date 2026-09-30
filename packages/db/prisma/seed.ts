@@ -461,4 +461,254 @@ for (const activity of nosotrosActivities) {
   })
 }
 
+/**
+ * Initial data for the ROSAC researcher profiles ("Investigadores" on
+ * /radioastronomia). This is the editorial content LASCE supplied before the
+ * CMS existed, same as `nosotrosActivities` above — authored by the same
+ * placeholder `seedContentAuthor`.
+ */
+type SeedResearcher = {
+  photoUrl: string
+  role: string
+  name: string
+  email?: string[]
+  institution: string
+  description: string
+}
+
+const researchers: SeedResearcher[] = [
+  {
+    photoUrl: '/images/ROSAC/team/CarolinaSalas.jpg',
+    name: 'Dra. Carolina Salas Matamoros',
+    role: 'Investigadora principal',
+    email: ['carolina.salas_mata@ucr.ac.cr'],
+    institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+    description:
+      'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/MiguelVelazquez.jpg',
+    name: 'Dr. Miguel Velázquez',
+    role: 'Investigador',
+    email: ['miguel.velazquez@ucr.ac.cr'],
+    institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica, México',
+    description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/DavidGale.jpg',
+    name: 'Dr. David Gale',
+    role: 'Investigador',
+    email: ['david.gale@ucr.ac.cr'],
+    institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), Puebla, México',
+    description:
+      'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/OscarNunez.jpg',
+    name: 'Dr. Óscar Núñez',
+    role: 'Investigador',
+    email: ['oscar.nunezmata@ucr.ac.cr'],
+    institution: 'Escuela de Ingeniería Eléctrica, UCR',
+    description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/FedericoRuiz.png',
+    name: 'Dr. Federico Ruiz',
+    role: 'Investigador',
+    email: ['federico.ruizugalde@ucr.ac.cr'],
+    institution: 'Instituto de Investigaciones en Ingeniería (INII), UCR',
+    description:
+      'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/GustavoLara.jpg',
+    name: 'MSc. Gustavo Lara',
+    role: 'Investigador',
+    email: ['gustavo.lara@ucr.ac.cr'],
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/AndresFallas.jpg',
+    name: 'Ing. Andrés Fallas',
+    role: 'Investigador',
+    email: ['andres.fallas@ucr.ac.cr'],
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/WagnerMejias.jpg',
+    name: 'MSc. Wagner Mejías',
+    role: 'Investigador',
+    email: ['wagner.mejias@ucr.ac.cr'],
+    institution: 'Escuela de Ingeniería Mecánica, UCR',
+    description:
+      'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/EduardoIbarra.jpg',
+    name: 'Dr. Eduardo Ibarra',
+    role: 'Colaborador externo',
+    institution: 'Investigador en ingeniería de microondas en Quantum Motion Technologies, Londres',
+    description:
+      'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/AndresCorrales.jpg',
+    name: 'Ing. Andrés Corrales',
+    role: 'Colaborador externo',
+    institution: 'Hewlett Packard Enterprise, Costa Rica',
+    description:
+      'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/AndresGamboa.jpg',
+    name: 'Ing. Andrés Gamboa',
+    role: 'Colaborador externo',
+    institution: 'Cirtec Medical Enterprise',
+    description:
+      'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/JelmutRojas.jpg',
+    name: 'Jelmuth Rojas',
+    role: 'Colaborador externo',
+    institution: 'INDI CR',
+    description: 'Apoyo en tareas de nivelación de la estructura.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/BarnaldBocker-2.jpg',
+    name: 'Barnald Bocker',
+    role: 'Asistente',
+    institution: 'Estudiante de la Escuela de Física, UCR',
+    description:
+      'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
+  },
+  {
+    photoUrl: '/images/ROSAC/team/FabianChaverri.jpg',
+    name: 'MSc. Fabián Chaverri',
+    role: 'Futuro estudiante de doctorado',
+    institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+    description:
+      'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
+  },
+]
+
+await prisma.researcher.deleteMany()
+
+for (const researcher of researchers) {
+  await prisma.researcher.create({
+    data: { ...researcher, modifiedBy: seedContentAuthor.id },
+  })
+}
+
+/**
+ * Initial data for the Nosotros researcher roster ("Investigadores LASCE" on
+ * /nosotros) — independent from `researchers` above (the ROSAC team on
+ * /radioastronomia).
+ */
+type SeedNosotrosResearcher = {
+  photoUrl: string
+  role: string
+  name: string
+  email?: string[]
+  institution: string
+  description?: string
+}
+
+const nosotrosResearchers: SeedNosotrosResearcher[] = [
+  {
+    photoUrl: '/images/ROSAC/team/CarolinaSalas.jpg',
+    name: 'Dra. Carolina Salas Matamoros',
+    role: 'Investigadora principal',
+    email: ['carolina.salas_mata@ucr.ac.cr'],
+    institution: 'Centro de Investigaciones Espaciales, CINESPA',
+    description:
+      'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
+  },
+  {
+    photoUrl: '/images/Researchers/AllanBerrocal.jpg',
+    name: 'Dr. Allan Francisco Berrocal Rojas',
+    role: 'Investigador colaborador',
+    email: ['allan.berrocal@ucr.ac.cr'],
+    institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+    description:
+      'Diseño, desarrollo e implementación de la plataforma informática del LASCE. Las tareas puntuales abarcan la captura de datos masivos de diferentes fuentes con información sobre el clima solar, el almacenamiento de los datos procesados y de interés para el proyecto en sistemas de bases de datos adecuadas para el dominio, y finalmente la habilitación de una interfaz de consulta mediante servicios web. Adicionalmente apoyar en los objetivos de análisis de datos sobre el clima solar junto a investigadores(as) especialistas en la materia como astrofísicos(as) solares.',
+  },
+  {
+    photoUrl: '/images/Researchers/LuisEsquivel.jpeg',
+    name: 'Dr. Luis Gustavo Esquivel Quirós',
+    role: 'Investigador colaborador',
+    email: ['luis.esquivel@ucr.ac.cr'],
+    institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+  },
+  {
+    photoUrl: '/images/Researchers/IvanniaCalvo.png',
+    name: 'MSc. Ivannia Calvo',
+    role: 'Investigadora colaboradora',
+    email: ['ivannia.calvo@ucr.ac.cr'],
+    institution: 'Centro de Investigaciones Espaciales',
+    description:
+      'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+  },
+  {
+    photoUrl: '/images/Researchers/FelipeMeza.jpg',
+    name: 'Dr. Felipe Meza',
+    role: 'Investigador colaborador',
+    email: ['felipe.mezaobando@ucr.ac.cr'],
+    institution:
+      'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
+    description:
+      'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
+  },
+  {
+    photoUrl: '/images/Researchers/User.png',
+    name: 'MSc. Alonso Vega',
+    role: 'Investigador colaborador',
+    email: ['alonso.vega_f@ucr.ac.cr'],
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
+  },
+  {
+    photoUrl: '/images/Researchers/MolinaMariaGraciela.jpg',
+    name: 'Dra. Graciela Molina',
+    role: 'Investigadora colaboradora',
+    email: ['gmolina@herrera.unt.edu.ar'],
+    institution:
+      'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina; Istituto Nazionale di Geofisica e Vulcanologia (INGV), Italia',
+    description:
+      'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
+  },
+  {
+    photoUrl: '/images/Researchers/YencaMigoya.jpg',
+    name: 'Dra. Yenca Migoya',
+    role: 'Investigadora colaboradora',
+    email: ['yenca@ictp.it'],
+    institution:
+      'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
+    description:
+      'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
+  },
+  {
+    photoUrl: '/images/Researchers/JohanaCamacho.jpeg',
+    name: 'MSc. Johanna Pamela Camacho Garbanzo',
+    role: 'Investigadora colaboradora',
+    email: ['jcamachoga@ice.go.cr', 'Johanna.camacho@ucr.ac.cr'],
+    institution: 'Instituto Costarricense de Electricidad; Universidad de Costa Rica',
+    description:
+      'Es geofísica de exploración del Instituto Costarricense de Electricidad (ICE), donde cuenta con más de 17 años de experiencia en la aplicación de métodos geofísicos para la caracterización del subsuelo y el desarrollo de proyectos de investigación aplicada. Asimismo, posee 8 años de experiencia como docente universitaria en la Escuela de Física de la Universidad de Costa Rica, impartiendo laboratorios de Física General. Actualmente es estudiante de doctorado e investigadora del Laboratorio de Clima Espacial (LASCE), donde desarrolla investigaciones relacionadas con geomagnetismo, ionósfera y clima espacial, utilizando registros de campo magnético terrestre en tiempo real. Su trabajo se enfoca en el análisis de la interacción entre la actividad geomagnética y la ionósfera, así como en sus aplicaciones para el estudio del clima espacial en Costa Rica. A lo largo de su trayectoria profesional ha participado en numerosos estudios e informes de investigación geofísica aplicados a infraestructura, exploración del subsuelo, energía e ingeniería, mediante el uso de técnicas como radar de penetración terrestre (GPR), tomografía de resistividad eléctrica y otros métodos geofísicos. Sus principales áreas de interés incluyen la geofísica aplicada, el geomagnetismo, el clima espacial y la formación de nuevas generaciones de científicos e Ingenieros.',
+  },
+]
+
+await prisma.nosotrosResearcher.deleteMany()
+
+for (const researcher of nosotrosResearchers) {
+  await prisma.nosotrosResearcher.create({
+    data: { ...researcher, modifiedBy: seedContentAuthor.id },
+  })
+}
+
 await prisma.$disconnect()
