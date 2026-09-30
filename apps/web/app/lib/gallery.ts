@@ -28,8 +28,8 @@ export interface GalleryMedia {
   uploader: string
   isVideo: boolean
   /** Tile footprint in the masonry grid. */
-  colSpan: 1 | 2
-  rowSpan: 1 | 2
+  colSpan: 1 | 2 | 3 | 4
+  rowSpan: 1 | 2 | 3 | 4
   /** Optional: a file still awaiting upload renders the placeholder frame. */
   src?: string
 }
@@ -53,7 +53,7 @@ export interface GalleryAlbum {
   src?: string
 }
 
-export const albumSlugs = ['rosac'] as const
+export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
 
 export type AlbumSlug = (typeof albumSlugs)[number]
 
@@ -1613,6 +1613,261 @@ const rosacMedia = [
   },
 ] as const satisfies readonly GalleryMedia[]
 
+const workshopMlMedia = [
+  {
+    id: 'workshop-ml-1',
+    title: 'Comité y participantes junto al cartel oficial',
+    description:
+      'Miembros de la organización y participantes, incluida la Dra. Carolina Salas Matamoros, posando junto al banner del evento.',
+    alt: 'Grupo de personas posando de pie frente al banner del taller de Machine Learning y clima espacial.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 2,
+    rowSpan: 2,
+    src: `${imageBase}/workshop-ml-2026/1.jpg`,
+  },
+  {
+    id: 'workshop-ml-2',
+    title: 'Intervención de la Dra. Carolina Salas Matamoros',
+    description:
+      'La Dra. Carolina Salas Matamoros dirigiéndose al público desde el podio durante una de las sesiones del taller.',
+    alt: 'Dra. Carolina Salas Matamoros hablando ante el micrófono en el podio de la Universidad de Costa Rica.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 2,
+    src: `${imageBase}/workshop-ml-2026/2.jpg`,
+  },
+  {
+    id: 'workshop-ml-3',
+    title: 'Palabras de la Dra. Carolina Salas Matamoros',
+    description:
+      'Momento de la intervención de la Dra. Carolina Salas Matamoros durante las actividades del evento académico.',
+    alt: 'Primer plano de la Dra. Carolina Salas Matamoros sonriendo mientras se dirige a la audiencia desde el podio.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/3.jpg`,
+  },
+  {
+    id: 'workshop-ml-4',
+    title: 'Conferencia sobre fenómenos solares',
+    description:
+      'Sesión académica en el auditorio con proyección de láminas explicativas sobre física solar y fulguraciones.',
+    alt: 'Expositor en el escenario del auditorio proyectando una lámina informativa sobre erupciones solares.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 2,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/4.jpg`,
+  },
+  {
+    id: 'workshop-ml-5',
+    title: 'Sesión práctica de análisis y programación',
+    description:
+      'Participantes trabajando con sus computadoras portátiles durante una sesión práctica interactiva.',
+    alt: 'Asistentes en el auditorio con computadoras portátiles abiertas siguiendo una sesión práctica proyectada en pantalla.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/5.jpg`,
+  },
+  {
+    id: 'workshop-ml-6',
+    title: 'Fotografía grupal en el auditorio',
+    description:
+      'Participantes, ponentes y organizadores reunidos en el escenario principal del auditorio.',
+    alt: 'Grupo general de asistentes y organizadores del taller posando en el escenario del auditorio.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 2,
+    rowSpan: 2,
+    src: `${imageBase}/workshop-ml-2026/6.jpg`,
+  },
+  {
+    id: 'workshop-ml-7',
+    title: 'Recorrido por áreas exteriores',
+    description:
+      'Grupo de participantes recorriendo senderos y jardines durante una actividad al aire libre.',
+    alt: 'Participantes del evento caminando en grupo por un sendero rodeado de vegetación y flores.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 2,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/7.jpg`,
+  },
+  {
+    id: 'workshop-ml-8',
+    title: 'Banner oficial del taller',
+    description:
+      'Identidad visual y cartel informativo del taller internacional sobre Machine Learning y Clima Espacial.',
+    alt: 'Cartel vertical del evento con logotipos de las entidades organizadoras y el título del taller.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/8.jpg`,
+  },
+  {
+    id: 'workshop-ml-9',
+    title: 'Participantes y colaboradoras junto al cartel del evento',
+    description:
+      'Asistentes y colaboradoras, entre ellas la Dra. Carolina Salas Matamoros, posando junto al banner institucional.',
+    alt: 'Tres participantes posando sonrientes de pie frente al banner oficial del taller.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/9.jpg`,
+  },
+  {
+    id: 'workshop-ml-10',
+    title: 'Presentación sobre el Radio Observatorio de Santa Cruz',
+    description:
+      'La Dra. Carolina Salas Matamoros exponiendo detalles y avances vinculados al Radio Observatorio de Santa Cruz (ROSAC).',
+    alt: 'Dra. Carolina Salas Matamoros en el podio presentando diapositivas sobre el Radio Observatorio de Santa Cruz.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 2,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/10.jpg`,
+  },
+  {
+    id: 'workshop-ml-11',
+    title: 'Exposición magistral de la Dra. Carolina Salas Matamoros',
+    description:
+      'La Dra. Carolina Salas Matamoros durante el desarrollo de una conferencia magistral desde el podio.',
+    alt: 'Dra. Carolina Salas Matamoros dirigiéndose al auditorio con gestos explicativos desde el podio.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/11.jpg`,
+  },
+  {
+    id: 'workshop-ml-12',
+    title: 'Ponencia sobre modelado y Machine Learning',
+    description:
+      'Presentación técnica sobre el desarrollo de emuladores y modelos de aprendizaje automático en estudios ionosféricos.',
+    alt: 'Expositor presentando diapositivas técnicas de machine learning aplicadas a irregularidades ionosféricas.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/12.jpg`,
+  },
+  {
+    id: 'workshop-ml-13',
+    title: 'Audiencia y participantes en el auditorio',
+    description:
+      'Vista general de los asistentes y participantes siguiendo con atención las exposiciones del programa.',
+    alt: 'Participantes sentados en las butacas del auditorio escuchando una de las ponencias del evento.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 2,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/13.jpg`,
+  },
+  {
+    id: 'workshop-ml-14',
+    title: 'Charla técnica sobre clima espacial y eyecciones de masa',
+    description:
+      'Presentación académica en el auditorio con datos observacionales sobre eventos y dinámica solar.',
+    alt: 'Expositor en el escenario junto a la pantalla que proyecta gráficas e imágenes de datos solares.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/14.jpg`,
+  },
+  {
+    id: 'workshop-ml-15',
+    title: 'Visita grupal al Jardín Botánico Lankester',
+    description:
+      'Fotografía de recuerdo de los participantes durante una visita al Jardín Botánico Lankester.',
+    alt: 'Grupo de participantes posando en el exterior junto al rótulo del Jardín Botánico Lankester.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 2,
+    rowSpan: 2,
+    src: `${imageBase}/workshop-ml-2026/15.jpg`,
+  },
+  {
+    id: 'workshop-ml-16',
+    title: 'Intervención protocolaria en el podio',
+    description:
+      'La Dra. Carolina Salas Matamoros en el atril durante una sesión protocolaria o de apertura.',
+    alt: 'Dra. Carolina Salas Matamoros atenta a sus notas en el podio institucional junto a la bandera nacional.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 2,
+    src: `${imageBase}/workshop-ml-2026/16.jpg`,
+  },
+  {
+    id: 'workshop-ml-17',
+    title: 'Vista panorámica del escenario durante la sesión técnica',
+    description:
+      'Perspectiva amplia del auditorio y el escenario durante la exposición de resultados científicos.',
+    alt: 'Toma panorámica del escenario del auditorio con el ponente en el atril y la presentación proyectada en pantalla.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 1,
+    rowSpan: 1,
+    src: `${imageBase}/workshop-ml-2026/17.jpg`,
+  },
+  {
+    id: 'workshop-ml-18',
+    title: 'Encuentro social en Restaurante y Mirador Ram Luna',
+    description:
+      'Participantes y organizadores reunidos durante una velada social con vista panorámica a la ciudad.',
+    alt: 'Grupo de participantes reunidos de noche en el Restaurante y Mirador Ram Luna con la ciudad iluminada de fondo.',
+    date: '16-20 feb 2026',
+    format: 'JPG',
+    uploader: 'LASCE',
+    isVideo: false,
+    colSpan: 4,
+    rowSpan: 2,
+    src: `${imageBase}/workshop-ml-2026/18.jpg`,
+  },
+] as const satisfies readonly GalleryMedia[]
+
 export const galleryAlbums = {
   rosac: {
     slug: 'rosac',
@@ -1664,6 +1919,16 @@ export const galleryAlbums = {
       },
     ],
     media: rosacMedia,
+  },
+  'workshop-ml-2026': {
+    slug: 'workshop-ml-2026',
+    title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+    description:
+      'Taller enfocado en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial y los sistemas GNSS.',
+    years: 'febrero 2026',
+    src: `${imageBase}/workshop-ml-2026/1.jpg`,
+    subAlbums: [],
+    media: workshopMlMedia,
   },
 } as const satisfies Record<AlbumSlug, GalleryAlbum>
 

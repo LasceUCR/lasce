@@ -35,15 +35,19 @@ configurable without letting an administrator lock themselves out.
 | Save action                                   | `apps/web/app/(public)/administracion/permission-actions.ts`                  |
 | Management UI                                 | `apps/web/app/components/administracion/RolePermissions{Page,Editor}.tsx`     |
 | Access-denied copy                            | `apps/web/app/components/administracion/AccessDenied.tsx`                     |
+| Admin menu catalogue and visibility rule      | `apps/web/app/lib/admin-sections.ts`                                          |
 | JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                  |
 | Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)     |
 | Resource downloads                            | `/administracion/descargas` (`download_resources`)                            |
 | Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md) |
 
-Hiding a sidebar link is not an authorization check. Every write action repeats the permission
-lookup, and the role is read from the database each request (same as user administration). The
-public header's Administración tab is shown only to `ASSISTANT` and `ADMIN`, from the account
-cookie; that is also not an authorization check.
+The administration panel admits only `ASSISTANT` and `ADMIN` (the `administracion` layout turns
+visitors away), and its menu offers only the sections whose grant the account holds, read from
+`auth.role_permissions` on each request ([admin-navigation.md](admin-navigation.md)). Hiding a
+link is still not an authorization check: every section page and every write action repeats the
+permission lookup, and the role is read from the database each request (same as user
+administration). The public header's Administración tab follows the same role rule from the
+account cookie; that is a convenience, the layout is the check.
 
 ## Protecting a page
 

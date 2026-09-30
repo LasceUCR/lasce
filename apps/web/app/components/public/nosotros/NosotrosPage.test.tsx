@@ -11,10 +11,15 @@ vi.mock('@lasce/db', () => ({ prisma: {} }))
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
+  uploadResearcherImage: vi.fn(),
 }))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
+}))
+
+vi.mock('@/app/(public)/radioastronomia/actions', () => ({
+  uploadResearcherImage: mocks.uploadResearcherImage,
 }))
 
 import { NosotrosPage, type NosotrosPageProps } from './NosotrosPage'
@@ -289,10 +294,15 @@ describe('NosotrosPage', () => {
   test('offers editing each activity card when edit mode is on', () => {
     renderPageInEditMode()
 
+    const activities = screen.getByRole('region', { name: /Qué hacemos/ })
     const activityCount = defaultArgs.content.activities.items.length
-    expect(screen.getAllByRole('button', { name: /^Editar / })).toHaveLength(activityCount)
-    expect(screen.getAllByRole('button', { name: /^Eliminar / })).toHaveLength(activityCount)
-    expect(screen.getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
+    expect(within(activities).getAllByRole('button', { name: /^Editar / })).toHaveLength(
+      activityCount,
+    )
+    expect(within(activities).getAllByRole('button', { name: /^Eliminar / })).toHaveLength(
+      activityCount,
+    )
+    expect(within(activities).getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
     const [firstActivity] = defaultArgs.content.activities.items
     expect(
       screen.getByRole('button', { name: `Editar ${firstActivity?.title}` }),
@@ -305,10 +315,13 @@ describe('NosotrosPage', () => {
   test('lets an assistant edit cards without create or delete', () => {
     renderPageInEditMode({ canCreate: false, canDelete: false, canEdit: true })
 
+    const activities = screen.getByRole('region', { name: /Qué hacemos/ })
     const activityCount = defaultArgs.content.activities.items.length
-    expect(screen.getAllByRole('button', { name: /^Editar / })).toHaveLength(activityCount)
-    expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
+    expect(within(activities).getAllByRole('button', { name: /^Editar / })).toHaveLength(
+      activityCount,
+    )
+    expect(within(activities).queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()
+    expect(within(activities).queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
   })
 
   test('hides every editor when edit mode is on but the account has no grants', () => {
@@ -516,5 +529,115 @@ describe('NosotrosPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo eliminar la actividad.')
     expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('hides the researcher edit affordances when edit mode is off', () => {
+    renderPage()
+
+    expect(screen.queryByRole('button', { name: /^Editar a/ })).not.toBeInTheDocument()
+  })
+
+  test('offers editing, deleting and adding researchers for an admin account', () => {
+    renderPageInEditMode()
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    expect(within(researchers).getAllByRole('button', { name: /^Editar a/ })).toHaveLength(
+      defaultArgs.content.researchers.people.length,
+    )
+    expect(within(researchers).getAllByRole('button', { name: /^Eliminar a/ })).toHaveLength(
+      defaultArgs.content.researchers.people.length,
+    )
+    expect(
+      within(researchers).getByRole('button', { name: 'Añadir investigador' }),
+    ).toBeInTheDocument()
+  })
+
+  test('offers only editing researchers for an assistant account without create or delete grants', () => {
+    renderPageInEditMode({ canCreate: false, canDelete: false, canEdit: true })
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    expect(within(researchers).getAllByRole('button', { name: /^Editar a/ })).toHaveLength(
+      defaultArgs.content.researchers.people.length,
+    )
+    expect(
+      within(researchers).queryByRole('button', { name: /^Eliminar a/ }),
+    ).not.toBeInTheDocument()
+    expect(
+      within(researchers).queryByRole('button', { name: 'Añadir investigador' }),
+    ).not.toBeInTheDocument()
+  })
+
+  test('PATCHes the researcher and refreshes the page once saving succeeds', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ researcher: {} }) })
+    renderPageInEditMode()
+    const [firstResearcher] = defaultArgs.content.researchers.people
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    const [firstEditButton] = within(researchers).getAllByRole('button', { name: /^Editar a/ })
+    await user.click(firstEditButton as HTMLElement)
+    const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/nosotros/researchers/${firstResearcher?.id}`,
+      expect.objectContaining({ method: 'PATCH' }),
+    )
+    expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog', { name: 'Editar investigador' })).not.toBeInTheDocument()
+  })
+
+  test('DELETEs the researcher and refreshes the page once removal succeeds', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true })
+    renderPageInEditMode()
+    const [firstResearcher] = defaultArgs.content.researchers.people
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    const [firstDeleteButton] = within(researchers).getAllByRole('button', { name: /^Eliminar a/ })
+    await user.click(firstDeleteButton as HTMLElement)
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar investigador' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(`/api/nosotros/researchers/${firstResearcher?.id}`, {
+      method: 'DELETE',
+    })
+    expect(mocks.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  test('POSTs a new researcher once every required field, including description, is filled in', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ researcher: {} }) })
+    mocks.uploadResearcherImage.mockResolvedValue({
+      ok: true,
+      imageUrl: 'https://s3.example/lasce/foto.png',
+    })
+    URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+    URL.revokeObjectURL = vi.fn()
+    renderPageInEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Descripción' }),
+      'Texto de prueba.',
+    )
+    const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
+
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar investigador' })
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/nosotros/researchers',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(mocks.refresh).toHaveBeenCalledTimes(1)
   })
 })

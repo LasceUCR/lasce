@@ -88,6 +88,13 @@ const nextConfig: NextConfig = {
       },
       ...(minioPattern ? [minioPattern] : []),
     ],
+    // `getPublicUrl` signs against the same internal `MINIO_ENDPOINT` used for
+    // uploads (`docs/manage-assets.md#known-gaps`, gap 7 — there is no separate
+    // `MINIO_PUBLIC_ENDPOINT` yet), which in local dev is `localhost:9000`. The
+    // image optimizer refuses to fetch a hostname that resolves to a private or
+    // loopback IP as an SSRF guard; this only lifts that guard outside
+    // production, where the real MinIO/S3 host is never a loopback address.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV !== 'production',
   },
 
   experimental: {
