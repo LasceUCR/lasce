@@ -32,14 +32,15 @@ the reader, not a check: each section page still calls `requirePermission`. See
 
 Reuse the existing names when they already match:
 
-| Grant                | Typical UI                     |
-| -------------------- | ------------------------------ |
-| `edit_components`    | Pencil, inline editor, Guardar |
-| `delete_components`  | Trash                          |
-| `create_components`  | Añadir / Crear                 |
-| `download_resources` | `/administracion/descargas`    |
-| `manage_users`       | `/administracion/usuarios`     |
-| `manage_permissions` | `/administracion/permisos`     |
+| Grant                     | Typical UI                                 |
+| ------------------------- | ------------------------------------------ |
+| `edit_components`         | Pencil, inline editor, Guardar             |
+| `delete_components`       | Trash                                      |
+| `create_components`       | Añadir / Crear                             |
+| `download_resources`      | `/administracion/descargas`                |
+| `download_goes_resources` | Not used yet (reserved for GOES downloads) |
+| `manage_users`            | `/administracion/usuarios`                 |
+| `manage_permissions`      | `/administracion/permisos`                 |
 
 Assistant defaults include `edit_components` only. Admin defaults include create, edit and
 delete. A visitor has none of those three, so they see the public page with no tools.
