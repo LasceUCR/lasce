@@ -69,7 +69,7 @@ Production deployment uses the standalone Next.js bundle through
 | `/herramientas-cientificas` | Scientific tools: SWAAT and SWAPRO                                                 |
 | `/datos`                    | Public data and analysis resources                                                 |
 | `/noticias`                 | Institutional news                                                                 |
-| `/contacto`                 | Official contact channels ([`docs/contact.md`](../../docs/contact.md))                 |
+| `/contacto`                 | Official contact channels ([`docs/contact.md`](../../docs/contact.md))             |
 | `/acceso`                   | Sign-in and sign-up cards behind a tab selector (_Iniciar sesión_, _Crear cuenta_) |
 | `/cuenta`                   | The signed-in user's profile and sign-out; requires a session                      |
 

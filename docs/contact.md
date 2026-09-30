@@ -7,7 +7,7 @@ PostgreSQL. Changing a phone number, an address line or the Instagram handle mea
 
 The route used to be the placeholder served by `app/(public)/[section]/page.tsx` ("Contenido en
 preparación"). That entry is gone. `/contacto` is now
-[`app/(public)/contacto/page.tsx`](../apps/web/app/(public)/contacto/page.tsx). The dynamic
+[`app/(public)/contacto/page.tsx`](<../apps/web/app/(public)/contacto/page.tsx>). The dynamic
 section route remains only for a work area that does not have its own page yet.
 
 ## The shape
@@ -23,13 +23,13 @@ section route remains only for a work area that does not have its own page yet.
   └─ .topic-page-footer           TopicBackLink "Volver al inicio"
 ```
 
-| Piece            | File                                            | Covered by                                      |
-| ---------------- | ----------------------------------------------- | ----------------------------------------------- |
-| Channels         | `app/lib/contact.ts`                            | `app/lib/contact.test.ts`                       |
-| Page             | `app/components/public/contact/ContactPage.tsx` | `ContactPage.test.tsx`, `ContactPage.stories.tsx` |
-| Route            | `app/(public)/contacto/page.tsx`                | `tests/e2e/contacto.spec.ts`                    |
-| Sitemap and SEO  | `app/lib/site.ts` (`publicPaths`)               | `tests/e2e/accessibility-seo.spec.ts`           |
-| Header link      | `app/components/public/PublicHeader.tsx`        | `tests/e2e/public-portal.spec.ts`               |
+| Piece           | File                                            | Covered by                                        |
+| --------------- | ----------------------------------------------- | ------------------------------------------------- |
+| Channels        | `app/lib/contact.ts`                            | `app/lib/contact.test.ts`                         |
+| Page            | `app/components/public/contact/ContactPage.tsx` | `ContactPage.test.tsx`, `ContactPage.stories.tsx` |
+| Route           | `app/(public)/contacto/page.tsx`                | `tests/e2e/contacto.spec.ts`                      |
+| Sitemap and SEO | `app/lib/site.ts` (`publicPaths`)               | `tests/e2e/accessibility-seo.spec.ts`             |
+| Header link     | `app/components/public/PublicHeader.tsx`        | `tests/e2e/public-portal.spec.ts`                 |
 
 `Contacto` is its own item in the header, after **Recursos**. The footer also links to `/contacto`.
 The footer element itself uses `id="contacto"` on every page. The section on this page uses
@@ -42,11 +42,11 @@ a placeholder (`próximamente`, `por definir`, `contenido en preparación`, `eje
 the same for an empty `tel:`, `mailto:` or `#` link). The page does not render an empty card and
 does not say that a missing channel is coming later.
 
-| Channel    | Visible text                                              | Link                                      |
-| ---------- | --------------------------------------------------------- | ----------------------------------------- |
-| Teléfono   | `2511-6566`                                               | `tel:+50625116566`                        |
-| Ubicación  | Sede Rodrigo Facio, then Montes de Oca, San José          | none                                      |
-| Instagram  | `@lasce_ucr`                                              | the Instagram URL already in `footer.ts`  |
+| Channel   | Visible text                                     | Link                                     |
+| --------- | ------------------------------------------------ | ---------------------------------------- |
+| Teléfono  | `2511-6566`                                      | `tel:+50625116566`                       |
+| Ubicación | Sede Rodrigo Facio, then Montes de Oca, San José | none                                     |
+| Instagram | `@lasce_ucr`                                     | the Instagram URL already in `footer.ts` |
 
 The phone is the Costa Rica local form. The `tel:` link includes the country code `+506`. The
 address is two lines and does not include a postal code. Instagram opens in a new tab with
