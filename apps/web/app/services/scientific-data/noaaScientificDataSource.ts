@@ -8,15 +8,10 @@ import {
   type ScientificParameter,
 } from '@/app/lib/scientific-data'
 
+import { ScientificDataUpstreamError } from './errors'
+
 const NOAA_BASE_URL = 'https://services.swpc.noaa.gov'
 const MAX_SUVI_IMAGES = 8
-
-export class ScientificDataUpstreamError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'ScientificDataUpstreamError'
-  }
-}
 
 async function fetchNoaaJson<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   let response: Response

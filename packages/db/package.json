@@ -13,6 +13,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "push": "prisma db push",
     "seed": "tsx prisma/seed.ts",
+    "accounts:create": "tsx prisma/seed-user-administration.ts",
     "studio": "prisma studio",
     "lint": "eslint .",
     "typecheck": "prisma generate && tsc --noEmit",

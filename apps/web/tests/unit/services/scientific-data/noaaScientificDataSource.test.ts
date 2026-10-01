@@ -1,10 +1,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { ScientificDataQuery, ScientificProductCode } from '@/app/lib/scientific-data'
-import {
-  queryNoaaScientificData,
-  ScientificDataUpstreamError,
-} from '@/app/services/scientific-data/noaaScientificDataSource'
+import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'
+import { queryNoaaScientificData } from '@/app/services/scientific-data/noaaScientificDataSource'
 
 function responseWith(body: unknown, ok = true, status = 200) {
   return { ok, status, json: async () => body }

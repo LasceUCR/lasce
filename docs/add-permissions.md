@@ -19,18 +19,28 @@ The helpers are in `apps/web/app/lib/auth/authorization.ts`:
 Do not call any of these from the shared `(public)` layout. Call them in the page (or the Server
 Action) that needs the answer.
 
+The one layout that reads the session is `apps/web/app/(public)/administracion/layout.tsx`, the
+layout of the protected section rather than the shared one. It calls `requireUser()`, admits only
+assistants and administrators (`canSeeAdminNavigation`, the header's rule), then reads
+`getPermissionsForRole()` once per request and passes the held grants to `AdminShell` as
+`granted`, so the menu offers only the entries of the section catalogue
+(`apps/web/app/lib/admin-sections.ts`) the account may open. The menu filter is a courtesy to
+the reader, not a check: each section page still calls `requirePermission`. See
+[`admin-navigation.md`](admin-navigation.md).
+
 ## 1. Decide which grant is the work
 
 Reuse the existing names when they already match:
 
-| Grant                | Typical UI                     |
-| -------------------- | ------------------------------ |
-| `edit_components`    | Pencil, inline editor, Guardar |
-| `delete_components`  | Trash                          |
-| `create_components`  | Añadir / Crear                 |
-| `download_resources` | `/administracion/descargas`    |
-| `manage_users`       | `/administracion/usuarios`     |
-| `manage_permissions` | `/administracion/permisos`     |
+| Grant                     | Typical UI                                 |
+| ------------------------- | ------------------------------------------ |
+| `edit_components`         | Pencil, inline editor, Guardar             |
+| `delete_components`       | Trash                                      |
+| `create_components`       | Añadir / Crear                             |
+| `download_resources`      | `/administracion/descargas`                |
+| `download_goes_resources` | Not used yet (reserved for GOES downloads) |
+| `manage_users`            | `/administracion/usuarios`                 |
+| `manage_permissions`      | `/administracion/permisos`                 |
 
 Assistant defaults include `edit_components` only. Admin defaults include create, edit and
 delete. A visitor has none of those three, so they see the public page with no tools.
@@ -174,3 +184,6 @@ Only when the existing names are the wrong work:
    performs the work.
 
 The Permisos table will show the new row once the catalogue and the migration agree.
+
+A new administration section is declared once in `apps/web/app/lib/admin-sections.ts`, with the
+grant it needs. The menu and the `[section]` route both read that entry.
