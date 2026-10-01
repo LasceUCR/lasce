@@ -81,7 +81,7 @@ export function ResearchAreaForm({
     }
 
     setValidationError(null)
-    setConfirmOpen(true)
+    handleConfirmSave()
   }
 
   async function handleConfirmSave() {

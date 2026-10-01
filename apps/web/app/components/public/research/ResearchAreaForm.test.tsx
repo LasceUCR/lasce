@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -62,7 +62,7 @@ describe('ResearchAreaForm', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('asks for confirmation before saving an existing area', async () => {
+  test('saves immediately without asking for confirmation for an existing area', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
 
@@ -70,11 +70,15 @@ describe('ResearchAreaForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(onSave).not.toHaveBeenCalled()
-    expect(screen.getByRole('dialog', { name: 'Guardar cambios' })).toBeInTheDocument()
+    expect(onSave).toHaveBeenCalledWith({
+      title: existingAreaArgs.area.title,
+      description: existingAreaArgs.area.description,
+      src: existingAreaArgs.area.src,
+    })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('saves edited values after confirmation while keeping the existing image', async () => {
+  test('saves edited values directly while keeping the existing image', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
 
@@ -83,9 +87,6 @@ describe('ResearchAreaForm', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Nueva área')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).toHaveBeenCalledWith({
       title: 'Nueva área',
@@ -108,11 +109,6 @@ describe('ResearchAreaForm', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    await user.click(
-      within(screen.getByRole('dialog', { name: 'Guardar cambios' })).getByRole('button', {
-        name: 'Confirmar',
-      }),
-    )
 
     expect(mocks.uploadResearchAreaImage).toHaveBeenCalledTimes(1)
     const formData = mocks.uploadResearchAreaImage.mock.calls[0]![0] as FormData
@@ -120,6 +116,7 @@ describe('ResearchAreaForm', () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ src: 'https://s3.example/lasce/123_nueva.png' }),
     )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('shows the upload error and does not save when the upload is rejected', async () => {
@@ -135,14 +132,10 @@ describe('ResearchAreaForm', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    await user.click(
-      within(screen.getByRole('dialog', { name: 'Guardar cambios' })).getByRole('button', {
-        name: 'Confirmar',
-      }),
-    )
 
     expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('recovers after the upload throws and allows retrying', async () => {
@@ -155,16 +148,12 @@ describe('ResearchAreaForm', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    await user.click(
-      within(screen.getByRole('dialog', { name: 'Guardar cambios' })).getByRole('button', {
-        name: 'Confirmar',
-      }),
-    )
 
     expect(
       await screen.findByText('No se pudo subir la imagen. Inténtelo de nuevo.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirmar' })).not.toBeDisabled()
     expect(onSave).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
