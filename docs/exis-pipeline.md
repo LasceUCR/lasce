@@ -156,11 +156,14 @@ dropped by the quality flags. That is expected, not a decoder fault.
 
 ## Out of scope
 
-- **Visualization.** Nothing in `apps/web` reads `exis_irradiance` yet. `/datos` still queries
-  CITIC on demand through `query-goes-archive`
-  ([`public-scientific-data.md`](public-scientific-data.md)).
-- **Downsampling.** SFXR is stored at its native 1 s cadence (about 160 000 points per day). A
-  chart should downsample in its InfluxDB query, not here.
+- **Visualization.** `/datos` reads `exis_irradiance` for SFEU and SFXR through
+  `apps/web/app/services/scientific-data/exisReadingsDataSource.ts`, which queries InfluxDB's SQL
+  HTTP API (`INFLUXDB_HOST`, `INFLUXDB_TOKEN`, `INFLUXDB_DATABASE`) and answers synchronously; a
+  day that was never ingested is an empty series
+  ([`public-scientific-data.md`](public-scientific-data.md)). The worker itself does not render
+  anything.
+- **Downsampling.** SFXR is stored at its native 1 s cadence (about 160 000 points per day). The
+  web samples inside the InfluxDB query (at most 360 points per satellite), not here.
 - **Near real time.** The data is about a day old by design, because that is when NOAA publishes
   it.
 
