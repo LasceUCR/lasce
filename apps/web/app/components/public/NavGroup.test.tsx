@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { NavGroup, isActivePath, type NavGroupProps } from './NavGroup'
 import { Closed, Open, WithActiveItem } from './NavGroup.stories'
@@ -95,7 +95,8 @@ describe('NavGroup', () => {
     expect(details()).not.toHaveAttribute('open')
   })
 
-  test('opens on hover without a click, and closes when the pointer leaves', () => {
+  test('opens on hover without a click, and closes a short grace period after the pointer leaves', () => {
+    vi.useFakeTimers()
     render(<NavGroup {...closedArgs} />)
 
     expect(details()).not.toHaveAttribute('open')
@@ -104,6 +105,30 @@ describe('NavGroup', () => {
     expect(details()).toHaveAttribute('open')
 
     fireEvent.mouseLeave(details())
+    // Not immediate: a path from the trigger into the panel that briefly
+    // crosses neither box (a diagonal, or the account panel's extra width)
+    // must not cut the dropdown.
+    expect(details()).toHaveAttribute('open')
+
+    vi.advanceTimersByTime(120)
     expect(details()).not.toHaveAttribute('open')
+
+    vi.useRealTimers()
+  })
+
+  test('does not close if the pointer re-enters during the grace period', () => {
+    vi.useFakeTimers()
+    render(<NavGroup {...closedArgs} />)
+
+    fireEvent.mouseEnter(details())
+    fireEvent.mouseLeave(details())
+    vi.advanceTimersByTime(60)
+    fireEvent.mouseEnter(details())
+    // Past when the original close would have fired, had it not been cancelled.
+    vi.advanceTimersByTime(120)
+
+    expect(details()).toHaveAttribute('open')
+
+    vi.useRealTimers()
   })
 })
