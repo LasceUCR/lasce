@@ -28,6 +28,7 @@ import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import styles from './RosacInfoPage.module.css'
+import { AcknowledgmentsGallery } from './AcknowledgmentsGallery'
 import { ConstructionCarousel } from './ConstructionCarousel'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
@@ -288,6 +289,20 @@ export function RosacInfoPage({
               </AddItemCard>
             ) : undefined
           }
+        />
+      </TopicSection>
+
+      <TopicSection
+        id="agradecimientos"
+        index="7"
+        intro={content.acknowledgments.subtitle}
+        title={content.acknowledgments.title}
+        titleId="rosac-acknowledgments-title"
+        wide
+      >
+        <AcknowledgmentsGallery
+          institutions={content.acknowledgments.institutions}
+          label={content.acknowledgments.title}
         />
       </TopicSection>
 

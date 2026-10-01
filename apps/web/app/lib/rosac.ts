@@ -128,12 +128,23 @@ export interface RosacInfoContent {
     emptyMessage: string
     people: readonly TeamMember[]
   }
+  acknowledgments: {
+    title: string
+    subtitle: string
+    institutions: readonly RosacAcknowledgment[]
+  }
   scientificConsultation: {
     title: string
     description: string
     buttonLabel: string
   }
   backLink: { href: string; label: string }
+}
+
+/** One acknowledged institution — a logo, kept square and undistorted, plus its name. */
+export interface RosacAcknowledgment {
+  name: string
+  logo: { src: string; alt: string }
 }
 
 export const rosacInfoContent = {
@@ -408,6 +419,131 @@ export const rosacInfoContent = {
         institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
         description:
           'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
+      },
+    ],
+  },
+  acknowledgments: {
+    title: 'Agradecimientos ROSAC',
+    subtitle: 'Lista de instituciones a las que el ROSAC les extiende agradecimiento',
+    institutions: [
+      {
+        name: 'Vicerrectoría de Investigación, UCR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
+          alt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
+        },
+      },
+      {
+        name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/cinespa.webp',
+          alt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
+        },
+      },
+      {
+        name: 'Escuela de Física, UCR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/efis.webp',
+          alt: 'Logo de la Escuela de Física, UCR',
+        },
+      },
+      {
+        name: 'Escuela de Ingeniería Mecánica, UCR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/eim.webp',
+          alt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
+        },
+      },
+      {
+        name: 'Escuela de Ingeniería Topográfica, UCR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/eit.webp',
+          alt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
+        },
+      },
+      {
+        name: 'Escuela de Ingeniería Eléctrica, UCR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/eie.webp',
+          alt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
+        },
+      },
+      {
+        name: 'Recinto de Santa Cruz',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
+          alt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
+        },
+      },
+      {
+        name: 'Oficina de Servicios Generales (OSG), UCR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/osg.webp',
+          alt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
+        },
+      },
+      {
+        name: 'Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR), UCR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/lanamme.webp',
+          alt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
+        },
+      },
+      {
+        name: 'Radiográfica Costarricense S.A. (RACSA)',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/racsa.webp',
+          alt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
+        },
+      },
+      {
+        name: 'Bomberos de Costa Rica',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
+          alt: 'Logo de Bomberos de Costa Rica',
+        },
+      },
+      {
+        name: 'Instituto Geográfico Nacional',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
+          alt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
+        },
+      },
+      {
+        name: 'INDI CR',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/indi.webp',
+          alt: 'Logo de INDI, Ingeniería y Diseño',
+        },
+      },
+      {
+        name: 'Prysmian Group',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
+          alt: 'Logo de Prysmian Group',
+        },
+      },
+      {
+        name: 'EATON Costa Rica',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/eaton.webp',
+          alt: 'Logo de EATON Costa Rica',
+        },
+      },
+      {
+        name: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), México',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/inaoe.webp',
+          alt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
+        },
+      },
+      {
+        name: 'Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+        logo: {
+          src: '/images/ROSAC/acknowledgments/amexcid.webp',
+          alt: 'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+        },
       },
     ],
   },

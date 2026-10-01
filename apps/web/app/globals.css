@@ -4770,6 +4770,82 @@ a.gallery-tile:focus-visible {
   }
 }
 
+.acknowledgments-gallery {
+  margin-top: 20px;
+}
+
+.acknowledgments-track {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 16px;
+  margin: 0;
+  padding: 4px 4px 12px;
+  overflow-x: auto;
+  overflow-anchor: none;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 4px;
+}
+
+.acknowledgments-track:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
+.acknowledgments-slide {
+  flex: 0 0 auto;
+  width: 200px;
+  scroll-snap-align: start;
+}
+
+.acknowledgments-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  text-align: center;
+}
+
+.acknowledgments-logo {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.acknowledgments-logo img {
+  object-fit: contain;
+  object-position: center;
+}
+
+/* `.public-shell-content p` justifies every paragraph on the public site;
+   this name is short and center-aligned by design, so it needs the extra
+   specificity to win over that rule rather than inherit justify. */
+.acknowledgments-card .acknowledgments-name {
+  margin: 0;
+  color: var(--blue-dark);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .acknowledgments-slide {
+    width: 42vw;
+  }
+
+  .acknowledgments-logo {
+    width: 100px;
+    height: 100px;
+  }
+}
+
 /* --- Administración (/administracion) --- */
 
 .admin-shell {
