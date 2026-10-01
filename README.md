@@ -59,7 +59,8 @@ pnpm worker:install         # uv sync for the Python worker
 
 pnpm services:up            # PostgreSQL, Redis, InfluxDB, MinIO
 pnpm db:migrate             # create the schema
-pnpm --filter @lasce/db seed
+pnpm db:seed                # initial public content
+pnpm accounts:create        # sign-in accounts, one per role (prints the password)
 
 pnpm dev                    # http://localhost:3000
 pnpm worker:dev             # in a second terminal
@@ -78,6 +79,7 @@ PostgreSQL — the page shows the status changing as it happens.
 | `pnpm build`                                      | Build every package                                     |
 | `pnpm lint` / `pnpm typecheck` / `pnpm test`      | Across TypeScript **and** Python                        |
 | `pnpm db:migrate` / `pnpm db:studio`              | Prisma migrations / Prisma Studio                       |
+| `pnpm accounts:create`                            | Local sign-in accounts, one per role                    |
 | `pnpm contracts:export`                           | Regenerate the JSON Schema the worker validates against |
 | `pnpm jobs:register`                              | Sync the declared schedules into BullMQ                 |
 | `pnpm services:up` / `:down` / `:logs` / `:reset` | Docker Compose stack                                    |
