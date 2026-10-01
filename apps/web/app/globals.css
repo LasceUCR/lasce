@@ -1572,6 +1572,11 @@ a {
   scroll-margin-top: 7rem;
 }
 
+/* Keep the anchor focus target for assistive technology without framing a static heading. */
+#scientific-query-title:focus {
+  outline: none;
+}
+
 .data-explorer {
   width: min(100% - 64px, 65rem);
   margin-inline: auto;
@@ -4556,6 +4561,12 @@ a.gallery-tile:focus-visible {
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.55s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .researcher-card-inner {
+    transition: none;
+  }
 }
 
 .researcher-card.is-flipped .researcher-card-inner {
