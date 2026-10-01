@@ -7,14 +7,16 @@ import type { UserRole } from '@lasce/db'
  * screens. The mapping itself is stored in `auth.role_permissions`.
  *
  * Component create/edit/delete will gate content-management screens that do not
- * exist yet. `download_resources` is the only grant that covers laboratory
- * resources: downloading them.
+ * exist yet. `download_resources` covers laboratory resources: downloading them.
+ * `download_goes_resources` is reserved for GOES satellite data downloads, which
+ * do not exist yet.
  */
 export const PERMISSIONS = [
   'create_components',
   'edit_components',
   'delete_components',
   'download_resources',
+  'download_goes_resources',
   'manage_users',
   'manage_permissions',
 ] as const
@@ -26,6 +28,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   edit_components: 'Editar componentes',
   delete_components: 'Eliminar componentes',
   download_resources: 'Descargar recursos',
+  download_goes_resources: 'Descargar recursos GOES',
   manage_users: 'Administrar usuarios',
   manage_permissions: 'Configurar permisos',
 }
@@ -35,6 +38,7 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   edit_components: 'Editar componentes del portal cuando esa función esté disponible.',
   delete_components: 'Eliminar componentes del portal cuando esa función esté disponible.',
   download_resources: 'Descargar recursos del laboratorio y consultar el historial de descargas.',
+  download_goes_resources: 'Descargar datos de los satélites GOES.',
   manage_users: 'Consultar cuentas y asignar o retirar roles.',
   manage_permissions: 'Ver y cambiar los permisos asociados a cada rol.',
 }
@@ -44,6 +48,7 @@ export const PERMISSION_DENIED: Record<Permission, string> = {
   edit_components: 'No tienes autorización para editar componentes.',
   delete_components: 'No tienes autorización para eliminar componentes.',
   download_resources: 'No tienes autorización para acceder a las descargas.',
+  download_goes_resources: 'No tienes autorización para descargar recursos GOES.',
   manage_users: 'No tienes autorización para administrar usuarios.',
   manage_permissions: 'No tienes autorización para configurar los permisos de los roles.',
 }
@@ -57,6 +62,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> =
     'edit_components',
     'delete_components',
     'download_resources',
+    'download_goes_resources',
     'manage_users',
     'manage_permissions',
   ],
