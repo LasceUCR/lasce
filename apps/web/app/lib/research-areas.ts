@@ -1,4 +1,6 @@
+import { prisma } from '@lasce/db'
 import type { ResearchArea } from '@/app/components/public/research/ResearchAreasSection'
+import { z } from 'zod'
 
 export const investigacionMeta = {
   title: 'Investigación | LASCE',
@@ -73,4 +75,26 @@ export const researchAreaSlugs = researchAreas.map((area) => area.slug)
 
 export function getResearchArea(slug: string): ResearchArea | undefined {
   return researchAreas.find((area) => area.slug === slug)
+}
+
+export const researchAreaInputSchema = z.object({
+  title: z.string().trim().min(1, 'El título es obligatorio.'),
+  description: z.string().trim(),
+  src: z.string().trim().min(1, 'La imagen es obligatoria.'),
+})
+
+export type ResearchAreaInput = z.infer<typeof researchAreaInputSchema>
+
+export async function getResearchAreas() {
+  return prisma.researchArea.findMany({ orderBy: { createdAt: 'asc' } })
+}
+
+export async function createResearchArea(data: ResearchAreaInput) {
+  return prisma.researchArea.create({
+    data: {
+      title: data.title,
+      description: data.description,
+      src: data.src ?? null,
+    },
+  })
 }

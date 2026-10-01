@@ -1,7 +1,6 @@
 'use client'
 
 import { useId, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 import { ResearchAreaCard } from './ResearchAreaCard'
 import { Modal } from '@/app/components/public/Modal'
@@ -14,7 +13,7 @@ import { ResearchAreaForm, type ResearchAreaFormValues } from './ResearchAreaFor
 const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
 
 const blankArea: ResearchAreaFormValues = {
-  title: '',
+  title: ' ',
   description: '',
   src: '',
 }
@@ -46,7 +45,6 @@ export function ResearchAreasSection({
   canDelete = false,
 }: ResearchAreasSectionProps) {
   const { editMode } = useEditMode()
-  const router = useRouter()
 
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -86,8 +84,8 @@ export function ResearchAreasSection({
             {({ close }) => (
               <ResearchAreaForm
                 area={blankArea}
-                confirmMessage="¿Desea agregar esta area?"
-                confirmTitle="Agregar area"
+                confirmMessage="¿Desea agregar esta área?"
+                confirmTitle="Agregar área"
                 onCancel={close}
                 onSave={(values) => handleCreateArea(values, close)}
               />
@@ -118,19 +116,27 @@ export function ResearchAreasSection({
         ) : null}
       </div>
 
-      <Modal open={editingArea !== undefined} onClose={closeEditor} title="Editar área">
+      <Modal
+        open={editingArea !== undefined}
+        onClose={closeEditor}
+        title={editingArea ? `Editar "${editingArea.title}"` : 'Editar área'}
+      >
         {editingArea ? (
-          <ResearchAreaForm
-            area={{
-              title: editingArea.title,
-              description: editingArea.description,
-              src: editingArea.src ?? '',
-            }}
-            confirmMessage="¿Desea agregar esta area?"
-            confirmTitle="Agregar area"
-            onCancel={closeEditor}
-            onSave={handleSaveArea}
-          />
+          <>
+            {saveError ? <p className="form-alert">{saveError}</p> : null}
+
+            <ResearchAreaForm
+              area={{
+                title: editingArea.title,
+                description: editingArea.description,
+                src: editingArea.src ?? '',
+              }}
+              confirmMessage="¿Desea agregar esta área?"
+              confirmTitle="Agregar área"
+              onCancel={closeEditor}
+              onSave={handleSaveArea}
+            />
+          </>
         ) : null}
       </Modal>
     </section>

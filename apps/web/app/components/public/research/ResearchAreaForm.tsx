@@ -1,14 +1,21 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
+import { FileDropInput } from '@/app/components/public/FileDropInput'
+import {
+  uploadResearchAreaImage,
+  type UploadResearchAreaImageResult,
+} from '@/app/(public)/investigacion/actions'
 import { FormField } from '@/app/components/public/FormField'
+import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 export interface ResearchAreaFormValues {
   title: string
   description: string
+  /** Permanent URL already uploaded by the time `onSave` runs. */
   src: string
 }
 
@@ -30,70 +37,139 @@ export function ResearchAreaForm({
 }: ResearchAreaFormProps) {
   const [title, setTitle] = useState(area.title)
   const [description, setDescription] = useState(area.description)
-  const [src, setSrc] = useState(area.src)
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoRemoved, setPhotoRemoved] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const uploadErrorRef = useRef<HTMLParagraphElement>(null)
+  const validationErrorRef = useRef<HTMLParagraphElement>(null)
 
-  const formId = useId()
+  useEffect(() => {
+    if (uploadError) {
+      scrollIntoViewIfSupported(uploadErrorRef.current)
+    }
+  }, [uploadError])
 
-  const canSave = title.trim() !== '' && description.trim() !== ''
+  useEffect(() => {
+    if (validationError) {
+      scrollIntoViewIfSupported(validationErrorRef.current)
+    }
+  }, [validationError])
 
-  function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
+  const hasPhoto = photoFile !== null || (Boolean(area?.src) && !photoRemoved)
 
-    if (!file) return
-
-    setImageFile(file)
+  function validateTitle(value: string) {
+    if (value.trim() === '') {
+      throw new Error('Es necesario un título.')
+    }
   }
 
-  function handleConfirmSave() {
-    let imageSrc = src
+  function missingFields(): string[] {
+    const missing: string[] = []
+    if (!hasPhoto) missing.push('Foto')
+    if (title.trim() === '') missing.push('Título')
+    return missing
+  }
 
-    if (imageFile) {
-      imageSrc = URL.createObjectURL(imageFile)
+  function handleConfirmClick() {
+    const missing = missingFields()
+    if (missing.length > 0) {
+      setValidationError(`Falta completar: ${missing.join(', ')}.`)
+      return
     }
 
+    setValidationError(null)
+    setConfirmOpen(true)
+  }
+
+  async function handleConfirmSave() {
     setConfirmOpen(false)
+    setUploadError(null)
+
+    let src = area?.src ?? ''
+    if (photoFile) {
+      setIsUploading(true)
+
+      let result: UploadResearchAreaImageResult
+      try {
+        const formData = new FormData()
+        formData.set('file', photoFile)
+        result = await uploadResearchAreaImage(formData)
+      } catch {
+        setIsUploading(false)
+        setUploadError('No se pudo subir la imagen. Inténtelo de nuevo.')
+        return
+      }
+      setIsUploading(false)
+
+      if (!result.ok) {
+        setUploadError(result.error)
+        return
+      }
+      src = result.imageUrl
+    }
 
     onSave({
       title,
       description,
-      src: imageSrc,
+      src,
     })
   }
 
   return (
     <div className="research-area-form">
-      <FormField id={`${formId}-title`} label="Título" onChange={setTitle} required value={title} />
+      <FileDropInput
+        existingImageUrl={area?.src}
+        helperText="Imagen ilustrativa para el área de investigación, en formato JPG o PNG."
+        label="Foto"
+        onFileSelect={(file) => {
+          setPhotoFile(file)
+          setPhotoRemoved(file === null)
+          setValidationError(null)
+        }}
+      />
 
       <FormField
-        id={`${formId}-description`}
+        id="area-title"
+        label="Título"
+        onChange={(value) => {
+          setTitle(value)
+          setValidationError(null)
+        }}
+        required
+        validate={validateTitle}
+        value={title}
+      />
+
+      <FormField
+        id="area-description"
         label="Descripción"
         multiline
         onChange={setDescription}
-        required
         value={description}
       />
 
-      <div className="form-field">
-        <label htmlFor={`${formId}-image`}>Imagen</label>
+      {uploadError ? (
+        <p className="form-alert" ref={uploadErrorRef} role="alert">
+          {uploadError}
+        </p>
+      ) : null}
 
-        <input accept="image/*" id={`${formId}-image`} onChange={handleImageChange} type="file" />
+      {validationError ? (
+        <p className="form-alert" ref={validationErrorRef} role="alert">
+          {validationError}
+        </p>
+      ) : null}
 
-        {imageFile && <p className="form-field-help">Imagen seleccionada: {imageFile.name}</p>}
-
-        {!imageFile && src && (
-          <p className="form-field-help">La imagen actual se conservará si no selecciona otra.</p>
-        )}
-      </div>
-
-      <div className="nosotros-activity-form-actions">
+      <div className="cms-form-actions">
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
 
-        <Button disabled={!canSave} onClick={() => setConfirmOpen(true)} variant="primary">
-          Confirmar
+        <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
+          {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
         </Button>
       </div>
 
