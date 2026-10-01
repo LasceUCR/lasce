@@ -343,6 +343,7 @@ Constraints: `UNIQUE (satellite, channel, observed_at)` — this is what makes r
 pipeline idempotent, since it legitimately re-lists a window and can see the same frame twice;
 the write is an upsert on this key, and `updated_at` (never `created_at`) advances on a repeat.
 Indexed on `observed_at` for the time-ordered queries the public gallery will eventually run.
+
 ## `areas` schema
 
 ### `researchArea`
