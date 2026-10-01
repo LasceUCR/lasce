@@ -53,7 +53,7 @@ linked to its original source rather than a hosted copy. The Prisma model is `Re
 | `publication_date` | `DateTime`  | `date`           | not null; indexed for the public page's sort         |
 | `publisher_id`     | `String`    | `uuid`           | FK → `publishers.id`, `ON DELETE RESTRICT`, not null |
 | `abstract`         | `String`    | `text`           | not null                                             |
-| `external_url`     | `String`    | `text`           | `UNIQUE`, not null — link to the original source     |
+| `external_url`     | `String`    | `text`           | `UNIQUE`, nullable — not every record has one        |
 | `doi`              | `String?`   | `text`           | `UNIQUE`, nullable — not every record has one        |
 | `created_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`                            |
 | `updated_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed               |
