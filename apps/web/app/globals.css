@@ -3151,6 +3151,17 @@ a {
   padding: 8px 0 48px;
 }
 
+.info-card-content a {
+  color: var(--blue-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.info-card-content a:hover,
+.info-card-content a:focus-visible {
+  color: var(--blue-dark);
+}
+
 .topic-intro + .topic-intro {
   margin-top: 14px;
 }
