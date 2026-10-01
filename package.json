@@ -20,6 +20,7 @@
     "db:migrate:deploy": "pnpm --filter @lasce/db migrate:deploy",
     "db:seed": "pnpm --filter @lasce/db seed",
     "db:studio": "pnpm --filter @lasce/db studio",
+    "accounts:create": "pnpm --filter @lasce/db accounts:create",
     "contracts:export": "pnpm --filter @lasce/contracts export-schema",
     "jobs:register": "pnpm --filter @lasce/jobs register",
     "worker:dev": "pnpm --filter @lasce/worker dev",

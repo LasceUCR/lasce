@@ -9,6 +9,11 @@
   --alice-blue: #eef4f7ff;
   --white: #ffffffff;
 
+  /* Rendered height of `.site-header`, measured: the desktop nav row adds to it
+     above 1400px and the compact header applies at 760px and below. Anything
+     pinned under the header (the admin sidebar) offsets by this token. */
+  --header-height: 82px;
+
   /* Existing UI aliases keep components connected to the brand palette. */
   --navy-deep: var(--deep-space-blue);
   --blue: var(--bright-teal-blue);
@@ -37,6 +42,7 @@
 
   /* Error feedback needs a distinct, readable semantic color. */
   --feedback-error: #9c302b;
+  --input-error: #b42318;
 }
 
 /* Actions inherit their contrast from the surrounding surface. Explicit surface
@@ -335,11 +341,15 @@ a {
   display: none;
 }
 
-.nav-group summary svg {
+/* :last-child (not :last-of-type) matters here: the account menu's trigger
+   has a leading `User` icon before its own chevron, so this must single out
+   the chevron specifically, not every svg in the summary. It's always last:
+   both here and in NavGroup, the chevron is the final child. */
+.nav-group summary svg:last-child {
   transition: transform 180ms ease;
 }
 
-.nav-group[open] summary svg {
+.nav-group[open] summary svg:last-child {
   transform: rotate(180deg);
 }
 
@@ -388,7 +398,8 @@ a {
   transform: translateX(-50%) rotate(45deg);
 }
 
-.desktop-nav .nav-group-panel a {
+.desktop-nav .nav-group-panel a,
+.header-actions .nav-group-panel a {
   padding: 8px 14px;
   font-size: 13px;
   line-height: 1.3;
@@ -396,16 +407,113 @@ a {
 
 .desktop-nav .nav-group-panel a:hover,
 .desktop-nav .nav-group-panel a:focus-visible,
-.desktop-nav .nav-group-panel a.active {
+.desktop-nav .nav-group-panel a.active,
+.header-actions .nav-group-panel a:hover,
+.header-actions .nav-group-panel a:focus-visible,
+.header-actions .nav-group-panel a.active {
   background: #eef6fa;
   color: var(--blue-dark);
 }
 
-.desktop-nav .nav-group-panel a.active::after {
+.desktop-nav .nav-group-panel a.active::after,
+.header-actions .nav-group-panel a.active::after {
   content: none;
 }
 
+/* The trigger is a plain nav-group summary (short name + chevron), styled
+   entirely by the shared rules above: no avatar, no badge, nothing of its own.
+   Only its panel differs, and only horizontally: the trigger sits at the
+   header's right edge, so the panel is right-anchored instead of centered
+   like "Recursos", or it would run off the viewport. Its vertical origin
+   (`top`) is untouched, inherited from `.nav-group-panel` above, because
+   `.header-actions` now stretches to the same 63px row `.desktop-nav` does
+   (see `.header-actions` below) — so the two panels start at the same Y. */
+.account-menu .nav-group-panel {
+  left: auto;
+  right: 0;
+  transform: none;
+  min-width: 220px;
+}
+
+.account-menu .nav-group-panel::before {
+  left: auto;
+  right: 8px;
+  transform: rotate(45deg);
+}
+
+/* An icon + label row, shared by the mobile menu's "Mi cuenta"/"Cerrar
+   sesión" and the desktop account menu's "Cerrar sesión" (`SignOutButton`'s
+   `icon` prop always wraps in this class). Unscoped so it works at every
+   width, not just the mobile menu's own breakpoint. */
+.mobile-account-link-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Account name and role: informational only, not a link. */
+.account-menu-info {
+  padding: 4px 14px 8px;
+}
+
+.account-menu-name {
+  margin: 0;
+  overflow: hidden;
+  color: var(--blue-dark);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-menu-role {
+  margin: 2px 0 0;
+  color: #6b7f91;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* Same divider color mobile's account section uses above "Administración"
+   (`.mobile-account-section`), rather than a separate near-identical hex. */
+.account-menu-divider {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* Same neutral color and icon+label layout as "Mi cuenta"/"Cerrar sesión" in
+   the mobile menu (`.mobile-account-link-content`) — not red, it's the last
+   item, not a destructive one. */
+.account-menu-panel button.account-menu-signout {
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-menu-panel button.account-menu-signout:hover,
+.account-menu-panel button.account-menu-signout:focus-visible {
+  background: #eef6fa;
+  color: var(--blue-dark);
+}
+
+.account-menu-panel button.account-menu-signout:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
 .login-link {
+  /* .header-actions now stretches its children to the full header height
+     (to match .desktop-nav, see below); keep the pill at its own size,
+     centered in that taller box, instead of stretching with it. */
+  align-self: center;
   justify-self: end;
   min-width: 100px;
   min-height: 42px;
@@ -425,41 +533,18 @@ a {
   background: var(--white);
 }
 
-/* Both account links share the header's last grid cell. */
+/* Both account links share the header's last grid cell. Same box model as
+   .desktop-nav (height: 63px; align-items: stretch) so the account nav-group
+   stretches to the exact same height "Recursos"/"Nosotros" do: their panels
+   both hang off a `top: calc(100% + 6px)` measured from that box, so equal
+   boxes mean equal panel Y positions. .login-link opts back out with its own
+   align-self above, since it's a fixed-size pill, not a nav-group. */
 .header-actions {
+  height: 63px;
   justify-self: end;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 10px;
-}
-
-/* Compact text-style variant: the cell is too narrow for two pills. */
-.register-link {
-  min-width: 0;
-  padding: 0 8px;
-  border-color: transparent;
-  color: var(--blue-dark);
-  white-space: nowrap;
-}
-
-/* The sign-out control is a button styled like the login pill. */
-.header-actions button.login-link {
-  background: none;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.header-actions .login-link:disabled {
-  cursor: progress;
-  opacity: 0.6;
-}
-
-/* The greeting shows the first name; a very long one is clipped, not wrapped. */
-.account-link {
-  max-width: 180px;
-  overflow: hidden;
 }
 
 /* Just above the 1400px mobile breakpoint, up to 1440px, the navigation row
@@ -471,10 +556,6 @@ a {
 
   .header-actions {
     gap: 4px;
-  }
-
-  .register-link {
-    padding: 0 4px;
   }
 }
 
@@ -2056,17 +2137,89 @@ a {
   margin: 0;
 }
 
+/* ==========================================================================
+   Academic activities (news section & details)
+   ========================================================================== */
+
+.academic-activities {
+  margin-top: 8px;
+  padding-bottom: 32px;
+}
+
+.section-heading .academic-activities-description {
+  max-width: none;
+  color: var(--muted);
+  margin: 6px 0 24px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.academic-activities-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.academic-activity-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.academic-activity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.academic-activity-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.activity-resources-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 20px;
+}
+
 .news {
   margin-top: 8px;
   padding-bottom: 56px;
 }
 
 .news h2 {
-  margin-top: 28px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+}
+
+.news .search-filter-bar {
+  margin-bottom: 20px;
 }
 
 .news-list {
-  margin-top: 24px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -2152,6 +2305,10 @@ a {
 }
 
 @media (max-width: 1400px) {
+  :root {
+    --header-height: 75px;
+  }
+
   .site-header {
     grid-template-columns: 1fr auto auto;
   }
@@ -2276,12 +2433,6 @@ a {
     border-top: 1px solid var(--border);
   }
 
-  .mobile-account-link-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
   /* The sign-out button sits among the links and must read like one. */
   .mobile-menu nav button {
     width: 100%;
@@ -2339,6 +2490,10 @@ a {
 
   .search-filter-bar {
     padding: 16px;
+  }
+
+  :root {
+    --header-height: 64px;
   }
 
   .site-header {
@@ -2592,11 +2747,35 @@ a {
 }
 
 .topic-hero-mark-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 64px;
-  max-width: 95rem;
+  gap: 24px;
+  text-align: center;
+}
+
+.topic-hero-mark-heading {
+  align-self: stretch;
+  text-align: left;
+}
+
+.topic-hero-mark-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  align-self: stretch;
+}
+
+.topic-hero-mark-footer .topic-lead {
+  margin: 0;
+}
+
+.topic-hero-mark-logo {
+  display: block;
+  flex-shrink: 0;
+  width: 72px;
+  height: auto;
 }
 
 .topic-hero-copy-only .topic-lead {
@@ -2663,17 +2842,22 @@ a {
   object-position: center;
 }
 
-.topic-hero-mark {
-  display: flex;
-  justify-content: center;
+.topic-hero-mark-photo {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  /* Tied to viewport height, not just width, so "¿Qué es ROSAC?" — the
+     section right after this header — stays visible without scrolling on
+     a typical laptop screen. */
+  height: clamp(300px, 46vh, 520px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #000918;
 }
 
-.topic-hero-mark-image {
-  display: block;
-  width: 260px;
-  max-width: 100%;
-  height: auto;
-  transform: translateY(-25px);
+.topic-hero-mark-photo-image {
+  object-fit: cover;
+  object-position: center;
 }
 
 .topic-hero-with-mark h1 {
@@ -3036,6 +3220,17 @@ a {
   padding: 8px 0 48px;
 }
 
+.info-card-content a {
+  color: var(--blue-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.info-card-content a:hover,
+.info-card-content a:focus-visible {
+  color: var(--blue-dark);
+}
+
 .topic-intro + .topic-intro {
   margin-top: 14px;
 }
@@ -3087,13 +3282,24 @@ a {
   }
 
   .topic-hero-mark-body {
-    grid-template-columns: 1fr;
-    gap: 90px;
     max-width: none;
   }
 
-  .topic-hero-mark-image {
-    width: min(260px, 80%);
+  .topic-hero-mark-logo {
+    width: 56px;
+  }
+
+  .topic-hero-mark-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .topic-hero-mark-footer .topic-lead {
+    text-align: center;
+  }
+
+  .topic-hero-mark-photo {
+    height: clamp(240px, 42vh, 360px);
   }
 
   .topic-lead {
@@ -4141,12 +4347,12 @@ a.gallery-tile:focus-visible {
 .admin-shell {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
-  min-height: calc(100vh - 78px);
+  min-height: calc(100vh - var(--header-height));
 }
 
 .admin-sidebar {
   position: fixed;
-  top: 78px;
+  top: var(--header-height);
   left: 0;
   bottom: 0;
   z-index: 15;
@@ -4181,12 +4387,17 @@ a.gallery-tile:focus-visible {
 .admin-sidebar a:hover,
 .admin-sidebar a:focus-visible {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--on-hover);
+  color: var(--white);
 }
 
 .admin-sidebar a.active {
   background: var(--blue-dark);
-  color: var(--on-hover);
+  color: var(--white);
+}
+
+/* The narrow-screen toggle. Above 1120px the sidebar itself is the menu. */
+.admin-menu-toggle {
+  display: none;
 }
 
 .admin-content {
@@ -4323,27 +4534,89 @@ a.gallery-tile:focus-visible {
 }
 
 @media (max-width: 1120px) {
+  /* The content row takes the spare height, so a short page does not stretch the bar. */
   .admin-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
+  /* The sidebar becomes a sticky bar under the header; the list opens in place
+     below the toggle and pushes the content down, so nothing overlaps. */
   .admin-sidebar {
     position: sticky;
-    top: 78px;
+    top: var(--header-height);
     left: auto;
     bottom: auto;
     width: auto;
     height: auto;
-    padding: 12px 14px;
-    overflow-x: auto;
+    max-height: calc(100vh - var(--header-height));
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .admin-menu-toggle {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: var(--navy-deep);
+    color: var(--white);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .admin-menu-toggle:focus-visible {
+    outline: 2px solid var(--amber-flame);
+    outline-offset: -2px;
+  }
+
+  .admin-menu-current {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--amber-glow);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-menu-chevron {
+    flex: 0 0 auto;
+    margin-left: auto;
+    transition: transform 160ms ease;
+  }
+
+  .admin-sidebar.is-open .admin-menu-chevron {
+    transform: rotate(180deg);
   }
 
   .admin-sidebar ul {
-    flex-direction: row;
+    display: none;
+    flex-direction: column;
+    padding: 4px 14px 12px;
+  }
+
+  .admin-sidebar.is-open ul {
+    display: flex;
+  }
+
+  .admin-sidebar a {
+    min-height: 44px;
   }
 
   .admin-content {
     grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-menu-chevron {
+    transition: none;
   }
 }
 
@@ -5129,6 +5402,15 @@ a.gallery-tile:focus-visible {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.publication-add-author {
+  margin-top: 20px;
+  display: flex;
+}
+
+.email-chip-field.form-field-error {
+  border-color: var(--input-error);
 }
 
 .research-area-content {
