@@ -29,9 +29,7 @@ describe('ResearchAreaForm', () => {
   test('starts pre-filled with the research area being edited', () => {
     render(<ResearchAreaForm {...existingAreaArgs} />)
 
-    expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue(
-      existingAreaArgs.area.title,
-    )
+    expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue(existingAreaArgs.area.title)
     expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(
       existingAreaArgs.area.description,
     )
