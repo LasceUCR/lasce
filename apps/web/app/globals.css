@@ -1397,6 +1397,7 @@ a {
 
 .data-source-notice-copy {
   display: grid;
+  text-align: left;
 }
 
 .data-source-notice-copy > span {
@@ -1528,6 +1529,49 @@ a {
 }
 
 /* Query layout shared by all source adapters in ScientificDataExplorer. */
+.data-page-header {
+  width: min(100% - 64px, 65rem);
+  margin-inline: auto;
+  padding-block: 1.5rem 1.25rem;
+}
+
+.data-page-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.data-page-title h1 {
+  margin: 0;
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  line-height: 1.1;
+}
+
+.data-page-header .topic-lead {
+  max-width: none;
+  margin: 0.625rem 0 0;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.data-query-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  color: var(--blue-dark);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
+#scientific-query-title {
+  scroll-margin-top: 7rem;
+}
+
 .data-explorer {
   width: min(100% - 64px, 65rem);
   margin-inline: auto;
@@ -1569,7 +1613,79 @@ a {
 .data-query-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
+  gap: 0.5rem 1.25rem;
+}
+
+.data-permissions {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--bright-teal-blue);
+  border-radius: 8px;
+  background: var(--alice-blue);
+  color: var(--ink);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.data-permissions h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.data-permissions p {
+  margin: 0.5rem 0 0;
+  text-align: left;
+}
+
+.data-wavelengths {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-wavelengths legend {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.data-wavelength-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.data-wavelength-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.data-wavelength-options label:has(:checked) {
+  border-color: var(--blue-dark);
+  background: var(--alice-blue);
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.data-wavelength-options input {
+  margin: 0;
+  accent-color: var(--blue-dark);
+}
+
+.data-wavelength-options label:has(:focus-visible) {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .data-loading {
@@ -1636,8 +1752,7 @@ a {
   font-size: 0.875rem;
 }
 
-.data-field label,
-.data-time-range legend {
+.data-field label {
   font-size: 0.875rem;
   font-weight: 700;
 }
@@ -1697,6 +1812,65 @@ a {
   flex-shrink: 0;
   color: var(--blue-dark);
   transition: transform 160ms ease;
+}
+
+.instrument-product-trigger {
+  height: auto;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+}
+
+.instrument-product-trigger > span {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+.instrument-product-selection {
+  display: block;
+  margin-bottom: 0.375rem;
+  color: var(--blue-dark);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.instrument-product-heading {
+  background: color-mix(in srgb, var(--alice-blue) 55%, var(--white));
+  color: var(--blue-dark);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+[aria-expanded='true'] > .instrument-product-heading > svg {
+  transform: rotate(180deg);
+}
+
+.instrument-product-options {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 200ms ease,
+    opacity 160ms ease,
+    visibility 0s linear 200ms;
+}
+
+[aria-expanded='true'] > .instrument-product-options {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.instrument-product-options > [role='group'] {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.instrument-product-options .select-option {
+  padding-left: 1.25rem;
 }
 
 .select-trigger[aria-expanded='true'] {
@@ -1760,6 +1934,11 @@ a {
   font-weight: 700;
 }
 
+.instrument-product-menu .select-option.instrument-product-heading:is(:hover, [data-active='true']),
+.instrument-product-menu [aria-expanded='true'] > .select-option.instrument-product-heading {
+  background: var(--alice-blue);
+}
+
 .select-option[aria-disabled='true'] {
   color: var(--muted);
   cursor: not-allowed;
@@ -1790,6 +1969,7 @@ a {
   .select-trigger,
   .select-trigger > svg,
   .select-option,
+  .instrument-product-options,
   .data-field input,
   .researcher-card-inner {
     transition: none;
@@ -1819,10 +1999,6 @@ a {
   border: 0;
 }
 
-.data-time-range legend {
-  margin-bottom: 0.5rem;
-}
-
 .data-time-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1837,6 +2013,24 @@ a {
 .data-query-submit button {
   width: 100%;
   min-height: 44px;
+}
+
+.data-query-form > .data-field,
+.data-query-form > .data-time-range,
+.data-query-form .data-time-fields > .data-field,
+.data-query-form > .data-query-submit {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 0.5rem;
+}
+
+.data-query-form > .data-query-submit button {
+  grid-row: 2;
+}
+
+.data-query-form > .data-source-field {
+  display: flex;
 }
 
 .data-query-form :disabled {
@@ -1911,6 +2105,28 @@ a {
   height: auto;
 }
 
+.data-image-frame {
+  display: grid;
+  aspect-ratio: 1;
+}
+
+.data-image-frame > * {
+  grid-area: 1 / 1;
+}
+
+.data-image-frame[data-state='loading'] img {
+  opacity: 0;
+}
+
+.data-image-status {
+  align-self: center;
+  margin: 0;
+  padding: 1rem;
+  color: var(--white);
+  text-align: center;
+  font-size: 0.875rem;
+}
+
 .data-image-grid figcaption {
   padding: 0.5rem 0.75rem;
   background: var(--white);
@@ -1919,6 +2135,7 @@ a {
 }
 
 @media (max-width: 760px) {
+  .data-page-header,
   .data-explorer {
     width: calc(100% - 32px);
   }
@@ -1930,6 +2147,217 @@ a {
   .data-query-form,
   .data-results {
     padding: 1rem;
+  }
+}
+
+/* Today's solar observations are independent of the historical query form. */
+.solar-today {
+  width: min(100% - 64px, 65rem);
+  margin: 0 auto 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.solar-today-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.solar-today h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--blue-dark);
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.solar-today .solar-today-lead {
+  max-width: 42rem;
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  text-align: left;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.solar-today-source {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--blue-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.solar-today-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-block: 1rem 0.75rem;
+}
+
+.solar-today-controls .data-wavelengths {
+  padding: 0;
+  border: 0;
+}
+
+.solar-today-controls .data-wavelength-options label {
+  background: var(--white);
+}
+
+.solar-today-controls .data-wavelength-options label:has(:checked) {
+  background: var(--blue-dark);
+  color: var(--white);
+}
+
+.solar-today-controls .data-wavelength-options input {
+  accent-color: var(--blue);
+}
+
+.solar-today-range {
+  flex: 0 1 13rem;
+}
+
+.solar-today-strip {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  padding-bottom: 0.5rem;
+}
+
+.solar-today-strip:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.data-image-strip {
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 4rem) / 5);
+  grid-template-columns: none;
+  margin: 0;
+}
+
+.data-image-strip li {
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.data-image-strip figure {
+  border-radius: 12px;
+}
+
+.data-image-strip figcaption {
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.solar-today-loading > span {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.solar-today-placeholders {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.solar-today-placeholders > div {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--space-black);
+  color: var(--white);
+}
+
+.solar-today-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--blue-dark);
+}
+
+.solar-today-empty h3,
+.solar-today-empty p {
+  margin: 0;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.solar-today-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.solar-today-footer p {
+  margin: 0;
+  text-align: left;
+}
+
+.solar-today-footer .button {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+.solar-today-scroll-hint {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .data-image-strip {
+    grid-auto-columns: calc((100% - 2rem) / 3);
+  }
+
+  .solar-today-scroll-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .solar-today {
+    width: calc(100% - 32px);
+  }
+}
+
+@media (max-width: 600px) {
+  .data-image-strip {
+    grid-auto-columns: 72%;
+  }
+
+  .solar-today-placeholders {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .solar-today-placeholders > div:nth-child(n + 4) {
+    display: none;
   }
 }
 

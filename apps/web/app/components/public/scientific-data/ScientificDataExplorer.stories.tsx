@@ -26,8 +26,8 @@ const resultFixture: TimeSeriesDataResult = {
   parameter: { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
   origin: {
     kind: 'observed',
-    provider: 'CITIC-UCR — archivo histórico GOES de NOAA',
-    notice: 'Observaciones históricas del archivo GOES nivel 1b de CITIC-UCR.',
+    provider: 'GOES',
+    notice: 'Fuente: GOES. Observaciones históricas de nivel 1b.',
     satellite: 18,
   },
   visualization: 'time-series',
@@ -134,4 +134,8 @@ export const WithRosacDynamicSpectrum: Story = {
 
 export const WithSuviImages: Story = {
   args: { ...Default.args, initialQuery: suviQuery, initialResult: suviFixture },
+}
+
+export const WithUnavailableSuviBand: Story = {
+  args: { ...WithSuviImages.args, initialResult: { ...suviFixture, images: [] } },
 }

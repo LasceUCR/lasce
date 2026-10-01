@@ -18,3 +18,9 @@ export const Default: Story = {
     ],
   },
 }
+
+export const UnavailableImage: Story = {
+  args: {
+    images: [{ ...Default.args!.images![0]!, imageUrl: '/unavailable-solar-image.png' }],
+  },
+}
