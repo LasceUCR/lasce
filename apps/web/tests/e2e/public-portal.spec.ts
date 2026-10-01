@@ -207,7 +207,7 @@ test('lists every research area and opens its detail page', async ({ page }) => 
 
   await page.getByRole('link', { name: `Conozca más sobre esta área (${first.title})` }).click()
 
-  await expect(page).toHaveURL(new RegExp(`/investigacion/areas/${first.slug}$`))
+  await expect(page).toHaveURL(new RegExp(`/investigacion/areas/${first.id}$`))
   await expect(page.getByRole('heading', { level: 1, name: first.title })).toBeVisible()
 })
 
