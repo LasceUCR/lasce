@@ -37,6 +37,9 @@ vi.mock('./ResearchAreaForm', () => ({
 
 const defaultArgs = Default.args as ResearchAreasSectionProps
 const emptyArgs = Empty.args as ResearchAreasSectionProps
+const firstArea = defaultArgs.areas[0]
+
+if (!firstArea) throw new Error('The default research areas story must contain an area.')
 
 function renderCreateSection() {
   return render(
@@ -57,6 +60,20 @@ function renderSection(props: ResearchAreasSectionProps) {
       <ResearchAreasSection {...props} />
     </EditModeContext.Provider>,
   )
+}
+
+function renderEditableSection() {
+  return render(
+    <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
+      <ResearchAreasSection {...defaultArgs} canDelete canEdit />
+    </EditModeContext.Provider>,
+  )
+}
+
+function clickFirstButton(name: string) {
+  const button = screen.getAllByRole('button', { name }).at(0)
+  if (!button) throw new Error(`Expected a button named "${name}".`)
+  fireEvent.click(button)
 }
 
 afterEach(() => {
@@ -133,6 +150,68 @@ describe('ResearchAreasSection', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
     expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('patches an area, closes the editor, and refreshes after success', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderEditableSection()
+    clickFirstButton('Editar')
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+    expect(fetchMock).toHaveBeenCalledWith(`/api/research-areas/${firstArea.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Área creada', description: 'Descripción', src: '' }),
+    })
+    expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('shows a PATCH API error and keeps the editor open', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderEditableSection()
+    clickFirstButton('Editar')
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('deletes an area and refreshes after confirmation', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderEditableSection()
+    clickFirstButton('Eliminar')
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+    expect(fetchMock).toHaveBeenCalledWith(`/api/research-areas/${firstArea.id}`, {
+      method: 'DELETE',
+    })
+    expect(mocks.refresh).toHaveBeenCalledOnce()
+  })
+
+  test('shows a DELETE API error without refreshing', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderEditableSection()
+    clickFirstButton('Eliminar')
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 })

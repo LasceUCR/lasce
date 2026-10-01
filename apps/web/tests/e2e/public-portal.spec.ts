@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 
+import { prisma } from '@lasce/db'
 import { footerContent } from '@/app/lib/footer'
 import { galleryAlbumList, galleryAlbums } from '@/app/lib/gallery'
 import { researchAreas } from '@/app/lib/research-areas'
@@ -194,21 +195,43 @@ for (const card of areaCards) {
 }
 
 test('lists every research area and opens its detail page', async ({ page }) => {
-  const response = await page.goto('/investigacion')
+  const createdAreas: { id: string; title: string; description: string; src: string | null }[] = []
 
-  expect(response?.status()).toBe(200)
+  try {
+    for (const area of researchAreas) {
+      createdAreas.push(
+        await prisma.researchArea.create({
+          data: {
+            title: area.title,
+            description: area.description,
+            src: area.src,
+          },
+        }),
+      )
+    }
 
-  for (const area of researchAreas) {
-    await expect(page.getByRole('article', { name: area.title })).toBeVisible()
+    const response = await page.goto('/investigacion')
+
+    expect(response?.status()).toBe(200)
+
+    for (const area of createdAreas) {
+      await expect(page.getByRole('article', { name: area.title })).toBeVisible()
+    }
+
+    const [first] = createdAreas
+    if (!first) throw new Error('researchAreas is empty')
+
+    await page.getByRole('link', { name: `Conozca más sobre esta área (${first.title})` }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/investigacion/areas/${first.id}$`))
+    await expect(page.getByRole('heading', { level: 1, name: first.title })).toBeVisible()
+  } finally {
+    if (createdAreas.length > 0) {
+      await prisma.researchArea.deleteMany({
+        where: { id: { in: createdAreas.map((area) => area.id) } },
+      })
+    }
   }
-
-  const [first] = researchAreas
-  if (!first) throw new Error('researchAreas is empty')
-
-  await page.getByRole('link', { name: `Conozca más sobre esta área (${first.title})` }).click()
-
-  await expect(page).toHaveURL(new RegExp(`/investigacion/areas/${first.id}$`))
-  await expect(page.getByRole('heading', { level: 1, name: first.title })).toBeVisible()
 })
 
 test('navigates with the mobile menu and closes it afterwards', async ({ page }) => {
