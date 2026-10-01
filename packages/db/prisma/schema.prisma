@@ -137,8 +137,8 @@ model Research {
   publisherId     String        @map("publisher_id") @db.Uuid
   researchGroup   ResearchGroup @map("research_group")
   abstract        String        @db.Text
-  /// Link to the original source. Unique so the same paper can't be listed twice.
-  externalUrl     String        @unique @map("external_url")
+  /// Publications might not have a url.
+  externalUrl     String?       @unique @map("external_url")
   /// Digital Object Identifier, e.g. "10.1007/s11207-015-0677-0". Optional —
   /// not every record (institutional notes) has one — but unique when present.
   doi             String?       @unique

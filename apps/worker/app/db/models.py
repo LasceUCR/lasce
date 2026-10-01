@@ -69,7 +69,7 @@ class Research(Base):
         UUID(as_uuid=True), ForeignKey("research.publishers.id", ondelete="RESTRICT")
     )
     abstract: Mapped[str] = mapped_column(Text)
-    external_url: Mapped[str] = mapped_column(Text, unique=True)
+    external_url: Mapped[str] = mapped_column(Text, unique=True, nullable=True)
     doi: Mapped[str | None] = mapped_column(Text, unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

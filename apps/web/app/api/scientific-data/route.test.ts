@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import type * as NoaaSource from '@/app/services/scientific-data/noaaScientificDataSource'
+import { scientificSources } from '@/app/lib/scientific-data'
+import {
+  ScientificDataUpstreamError,
+  UnsupportedScientificQueryError,
+} from '@/app/services/scientific-data/errors'
 
 const mocks = vi.hoisted(() => ({
   queryMockScientificData: vi.fn(),
@@ -11,16 +15,28 @@ vi.mock('@/app/services/scientific-data/mockScientificDataSource', () => ({
   queryMockScientificData: mocks.queryMockScientificData,
 }))
 
-vi.mock('@/app/services/scientific-data/noaaScientificDataSource', async (importOriginal) => {
-  const original = await importOriginal<typeof NoaaSource>()
-  return { ...original, queryNoaaScientificData: mocks.queryNoaaScientificData }
-})
+vi.mock('@/app/services/scientific-data/noaaScientificDataSource', () => ({
+  queryNoaaScientificData: mocks.queryNoaaScientificData,
+}))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
   queryCiticScientificData: mocks.queryCiticScientificData,
 }))
 
 import { GET } from './route'
+
+const availableProducts = scientificSources.flatMap((source) =>
+  source.instruments.flatMap((instrument) =>
+    instrument.products
+      .filter((product) => product.available)
+      .map((product) => ({
+        source: source.code,
+        instrument: instrument.code,
+        product: product.code,
+        parameter: product.parameters[0]!.code,
+      })),
+  ),
+)
 
 function request(parameters: Record<string, string>) {
   return new Request(`http://localhost/api/scientific-data?${new URLSearchParams(parameters)}`)
@@ -127,9 +143,35 @@ describe('GET /api/scientific-data', () => {
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
 
+  test.each(availableProducts)(
+    'registers a provider for every available product: $source $instrument $product',
+    async ({ source, product, parameter }) => {
+      for (const adapter of Object.values(mocks)) adapter.mockResolvedValue({ points: [] })
+
+      const response = await GET(request({ ...validGoesQuery, source, product, parameter }))
+
+      expect(response.status).toBe(200)
+    },
+  )
+
+  test('returns a stable server error when a product has no registered provider', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.queryCiticScientificData.mockRejectedValue(
+      new UnsupportedScientificQueryError('No provider is registered for GOES product SFXR'),
+    )
+
+    const response = await GET(request(validGoesQuery))
+
+    expect(response.status).toBe(500)
+    expect(response.headers.get('Cache-Control')).toBe('no-store')
+    expect(await response.json()).toEqual({
+      error: 'La fuente científica no está disponible en este momento.',
+    })
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('No provider is registered'))
+    consoleError.mockRestore()
+  })
+
   test('returns a stable gateway error when CITIC is unavailable', async () => {
-    const { ScientificDataUpstreamError } =
-      await import('@/app/services/scientific-data/noaaScientificDataSource')
     mocks.queryCiticScientificData.mockRejectedValue(new ScientificDataUpstreamError('offline'))
 
     const response = await GET(request(validGoesQuery))
