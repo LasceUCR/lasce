@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
+import { ArrowDown } from 'lucide-react'
 
 import { ScientificDataExplorer } from '@/app/components/public/scientific-data/ScientificDataExplorer'
-import { TopicHero } from '@/app/components/public/topic/TopicHero'
-import { scientificSources } from '@/app/lib/scientific-data'
+import { SolarTodayLive } from '@/app/components/public/scientific-data/SolarTodayLive'
+import { goesInstruments, scientificSources } from '@/app/lib/scientific-data'
 import { getSuviAvailability } from '@/app/lib/scientific-data-availability'
 
-const description =
-  'Consulte y visualice observaciones de los satélites GOES y la integración prevista de ROSAC.'
+const description = 'Explore imágenes del Sol y consulte la información científica disponible.'
 
 export const metadata: Metadata = {
   title: 'Datos científicos | LASCE',
@@ -22,11 +22,19 @@ export default function ScientificDataRoute() {
 
   return (
     <article className="topic-page">
-      <TopicHero
-        kicker="Datos abiertos de LASCE"
-        lead={description}
-        title="Datos"
-        variant="compact"
+      <header className="data-page-header">
+        <p className="topic-kicker">Portal público LASCE</p>
+        <div className="data-page-title">
+          <h1>Datos</h1>
+          <a className="data-query-shortcut" href="#scientific-query-title">
+            Ir a la consulta <ArrowDown aria-hidden="true" size={16} />
+          </a>
+        </div>
+        <p className="topic-lead">{description}</p>
+      </header>
+      <SolarTodayLive
+        instrument={goesInstruments.find((instrument) => instrument.code === 'SUVI')!}
+        initialNow={today.toISOString()}
       />
       <ScientificDataExplorer
         suviAvailability={getSuviAvailability(today)}
