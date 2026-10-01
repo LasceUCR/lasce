@@ -1,4 +1,4 @@
-import { ExternalLink, MapPin, Phone } from 'lucide-react'
+import { MapPin, Phone } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
@@ -12,10 +12,31 @@ import {
   type ContactContent,
 } from '@/app/lib/contact'
 
+/** lucide-react 1.34 does not export an Instagram icon. Same stroke style as Phone and MapPin. */
+function InstagramIcon() {
+  return (
+    <svg
+      fill="none"
+      height="22"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+      viewBox="0 0 24 24"
+      width="22"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect height="20" rx="5" ry="5" width="20" x="2" y="2" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  )
+}
+
 function channelIcon(id: string): ReactNode {
   if (id === 'phone') return <Phone size={22} strokeWidth={1.8} />
   if (id === 'location') return <MapPin size={22} strokeWidth={1.8} />
-  if (id === 'instagram') return <ExternalLink size={22} strokeWidth={1.8} />
+  if (id === 'instagram') return <InstagramIcon />
   return null
 }
 

@@ -19,7 +19,7 @@ section route remains only for a work area that does not have its own page yet.
   │    └─ CardGrid columns=3      equal height, same grid as other InfoCards
   │         ├─ InfoCard Teléfono  Phone icon, tel link
   │         ├─ InfoCard Ubicación MapPin icon, two address lines
-  │         └─ InfoCard Instagram ExternalLink icon, profile in a new tab
+  │         └─ InfoCard Instagram camera icon, profile in a new tab
   └─ .topic-page-footer           TopicBackLink "Volver al inicio"
 ```
 
@@ -65,8 +65,9 @@ The phone and the Instagram handle are links inside that description. A string d
 one paragraph. A channel with `lines` renders one paragraph per line, which is how the address
 keeps its two rows.
 
-The installed `lucide-react` build does not export an Instagram icon. The card uses `ExternalLink`.
-Importing `Instagram` from that package fails the page at compile time.
+The installed `lucide-react` build does not export an Instagram icon, so the card draws the camera
+mark in `ContactPage.tsx` with the same stroke weight as the phone and map icons. Importing
+`Instagram` from that package fails the page at compile time.
 
 ## Adding a channel
 
