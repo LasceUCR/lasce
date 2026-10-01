@@ -51,7 +51,7 @@ export default function HomePage() {
       <div className="home-content">
         <section className="indicators page-width" id="datos" aria-labelledby="indicators-title">
           <div className="indicator-heading">
-            <h2 id="indicators-title">Índices geomagnéticos</h2>
+            <h2 id="indicators-title">Índices geomagnéticos de Costa Rica</h2>
             <span>Datos de demostración</span>
           </div>
           <div className="indicator-grid">

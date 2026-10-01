@@ -157,7 +157,75 @@ for (const record of researchRecords) {
   }
 }
 
-await prisma.$disconnect()
+/**
+ * Initial data for the research_areas table. This is content LASCE provided,
+ * like other seeds here, before the CMS implementation of the respective
+ * site
+ */
+
+type SeedResearchArea = {
+  title: string
+  description: string
+  src: string
+}
+
+const researchAreas: SeedResearchArea[] = [
+  {
+    title: 'Radioastronomía solar y evolución de Flares-CMEs',
+    description:
+      'Estudia las emisiones solares de radio y su relación con los flares, la evolución de las eyecciones de masa coronal, la aceleración de partículas y su propagación hacia el medio interplanetario.',
+    src: '/images/research/radioastronomia-solar-evolucion-flares-cmes.jpg',
+  },
+  {
+    title: 'Geomagnetismo y respuesta regional al clima espacial',
+    description:
+      'Analiza las variaciones del campo magnético terrestre producidas por la actividad solar. Incluye el cálculo de índices geomagnéticos para Costa Rica. Este estudio se lleva a cabo gracias al desarrollo de una tesis doctoral de la MSc. Johana Camacho en colaboración con el Instituto Nacional de Electricidad (ICE) y el Servicio de Clima Espacial México (SCiESMEX).',
+    src: '/images/research/geomagnetismo-respuesta-regional-clima-espacial.jpg',
+  },
+  {
+    title: 'Propagación y predicción de CMEs hacia la Tierra',
+    description:
+      'Desarrolla modelos y herramientas para estimar la velocidad, la trayectoria y el tiempo de llegada de las CMEs a la Tierra. Esta rama incluye el desarrollo de la herramienta científica computacional SWAAT y su futura integración con observaciones de ROSAC.',
+    src: '/images/research/propagacion-prediccion-cmes-hacia-tierra.png',
+  },
+  {
+    title: 'Inteligencia artificial y ciencia de datos aplicada al clima espacial',
+    description:
+      'Emplea aprendizaje automático, automatización y generación de datos sintéticos para identificar eventos solares, procesar grandes volúmenes de observaciones y mejorar la predicción de fenómenos de clima espacial.',
+    src: '/images/research/inteligencia-artificial-ciencia-datos-clima-espacial.jpg',
+  },
+  {
+    title: 'Ionosfera GNSS y efectos tecnológicos del clima espacial',
+    description:
+      'Busca hacer observaciones desde Costa Rica con equipos GNSS para determinar cómo la actividad solar y geomagnética modifica la ionosfera y afecta los sistemas de navegación satelital, las comunicaciones y otras tecnologías sensibles a las condiciones del entorno espacial en nuestro país.',
+    src: '/images/research/ionosfera-gnss-efectos-tecnologicos-clima-espacial.jpg',
+  },
+  {
+    title: 'Infraestructura informática y gestión de datos de clima espacial',
+    description:
+      'Diseña y desarrolla plataformas informáticas para capturar, procesar, almacenar y consultar grandes volúmenes de datos solares provenientes de distintas fuentes. Esta rama también implementa bases de datos y servicios web especializados, y facilita el análisis interdisciplinario de la información en colaboración con investigadores en astrofísica solar y clima espacial.',
+    src: '/images/research/infraestructura-informatica-gestion-datos-clima-espacial.jpg',
+  },
+  {
+    title: 'Geomagnetismo en Costa Rica',
+    description:
+      'Estudia las variaciones del campo magnético terrestre ante diferentes condiciones de actividad solar y geomagnética. Esta rama utiliza mediciones magnéticas realizadas en tiempo real en nuestro país para calcular índices geomagnéticos específicos para Costa Rica y desarrollar herramientas de monitoreo adaptadas al entorno regional.',
+    src: '/images/research/geomagnetismo-costa-rica.jpg',
+  },
+]
+
+for (const area of researchAreas) {
+  const existing = await prisma.researchArea.findFirst({
+    where: { title: area.title },
+    select: { id: true },
+  })
+
+  if (existing) {
+    await prisma.researchArea.update({ where: { id: existing.id }, data: area })
+  } else {
+    await prisma.researchArea.create({ data: area })
+  }
+}
 
 /**
  * Initial data for the news tables.

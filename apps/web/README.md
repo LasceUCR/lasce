@@ -69,7 +69,7 @@ Production deployment uses the standalone Next.js bundle through
 | `/herramientas-cientificas` | Scientific tools: SWAAT and SWAPRO                                                 |
 | `/datos`                    | Public data and analysis resources                                                 |
 | `/noticias`                 | Institutional news                                                                 |
-| `/contacto`                 | Contact information                                                                |
+| `/contacto`                 | Official contact channels ([`docs/contact.md`](../../docs/contact.md))             |
 | `/acceso`                   | Sign-in and sign-up cards behind a tab selector (_Iniciar sesión_, _Crear cuenta_) |
 | `/cuenta`                   | The signed-in user's profile and sign-out; requires a session                      |
 
@@ -98,6 +98,7 @@ app/
 |-- (public)/
 |   |-- [section]/page.tsx
 |   |-- clima-espacial/page.tsx
+|   |-- contacto/page.tsx
 |   |-- fisica-solar/page.tsx
 |   |-- nosotros/page.tsx
 |   |-- radioastronomia/page.tsx
@@ -114,6 +115,7 @@ app/
 |   |-- space-weather/
 |   `-- topic/
 |-- lib/
+|   |-- contact.ts
 |   |-- footer.ts
 |   |-- site.ts
 |   |-- solar-astrophysics.ts

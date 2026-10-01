@@ -2,7 +2,8 @@
 
 import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useRef, type FocusEvent, type KeyboardEvent, type MouseEvent } from 'react'
+
+import { useDisclosure } from './useDisclosure'
 
 export interface NavGroupItem {
   label: string
@@ -30,66 +31,23 @@ export function isActivePath(pathname: string, href: string): boolean {
  * without a click (so does a click, Enter or Space, for touch and keyboard);
  * choosing a link, Escape, the pointer leaving the group, a pointer outside
  * or focus leaving the group closes it. The links are in the tab order only
- * while it is open. The `open` attribute is the only state, so nothing lags
- * behind the browser. A click never toggles it closed (only the actions above
- * do): the native default is prevented and replaced with an explicit `open()`,
- * so a click right after a hover-open cannot flip it shut again.
+ * while it is open. The interaction itself lives in `useDisclosure`, shared
+ * with the signed-in account menu (`AccountMenu.tsx`), so both dropdowns
+ * open, close and feel identical; this component only owns what goes in the
+ * panel.
  */
 export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGroupProps) {
-  const details = useRef<HTMLDetailsElement>(null)
-  const summary = useRef<HTMLElement>(null)
+  const {
+    detailsRef,
+    summaryRef,
+    open,
+    close,
+    handleSummaryClick,
+    handleMouseLeave,
+    handleKeyDown,
+    handleBlur,
+  } = useDisclosure()
   const isActive = items.some((item) => isActivePath(pathname, item.href))
-
-  function open() {
-    details.current?.setAttribute('open', '')
-  }
-
-  function close() {
-    details.current?.removeAttribute('open')
-  }
-
-  // The native default just toggles; prevent it and always open instead, so a
-  // click while the pointer already opened it via hover cannot close it again.
-  function handleSummaryClick(event: MouseEvent<HTMLElement>) {
-    event.preventDefault()
-    open()
-  }
-
-  useEffect(() => {
-    function closeOnOutsidePointer(event: PointerEvent) {
-      const element = details.current
-      if (!element?.open || element.contains(event.target as Node)) {
-        return
-      }
-
-      element.removeAttribute('open')
-    }
-
-    document.addEventListener('pointerdown', closeOnOutsidePointer)
-
-    return () => document.removeEventListener('pointerdown', closeOnOutsidePointer)
-  }, [])
-
-  function handleKeyDown(event: KeyboardEvent<HTMLDetailsElement>) {
-    if (event.key !== 'Escape' || !details.current?.open) {
-      return
-    }
-
-    event.preventDefault()
-    close()
-    summary.current?.focus()
-  }
-
-  // Focus leaving the group closes it. A null relatedTarget is left alone: Safari
-  // does not focus a link on click, and closing then would remove it mid-click.
-  function handleBlur(event: FocusEvent<HTMLDetailsElement>) {
-    const next = event.relatedTarget
-    if (!next || details.current?.contains(next as Node)) {
-      return
-    }
-
-    close()
-  }
 
   return (
     <details
@@ -97,11 +55,11 @@ export function NavGroup({ label, items, pathname, defaultOpen = false }: NavGro
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onMouseEnter={open}
-      onMouseLeave={close}
+      onMouseLeave={handleMouseLeave}
       open={defaultOpen ? true : undefined}
-      ref={details}
+      ref={detailsRef}
     >
-      <summary onClick={handleSummaryClick} ref={summary}>
+      <summary onClick={handleSummaryClick} ref={summaryRef}>
         {label}
         <ChevronDown aria-hidden="true" size={14} strokeWidth={1.6} />
       </summary>

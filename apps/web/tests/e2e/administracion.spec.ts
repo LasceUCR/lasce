@@ -57,8 +57,9 @@ test('hides Administración from a signed-in visitor', async ({ page, context })
   try {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/')
+    await page.locator('.header-actions summary').press('Enter')
     await expect(
-      page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', {
+      page.locator('.header-actions').getByRole('link', {
         name: 'Administración',
         exact: true,
       }),
@@ -68,7 +69,7 @@ test('hides Administración from a signed-in visitor', async ({ page, context })
   }
 })
 
-test('reaches the section from the main navigation and marks it as current', async ({
+test('reaches the section from the account menu and marks it as current', async ({
   page,
   context,
 }) => {
@@ -77,19 +78,21 @@ test('reaches the section from the main navigation and marks it as current', asy
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/')
 
-    const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
+    const navigation = page.locator('.header-actions')
+    await navigation.locator('summary').press('Enter')
     const link = navigation.getByRole('link', { name: 'Administración', exact: true })
 
     await link.click()
 
     await expect(page).toHaveURL(/\/administracion$/)
+    await navigation.locator('summary').press('Enter')
     await expect(link).toHaveAttribute('aria-current', 'page')
   } finally {
     await fixture.cleanup()
   }
 })
 
-test('keeps the header tab current while browsing the other sidebar sections', async ({
+test('keeps the account menu link current while browsing the other sidebar sections', async ({
   page,
   context,
 }) => {
@@ -100,7 +103,7 @@ test('keeps the header tab current while browsing the other sidebar sections', a
 
     const sidebar = page.getByRole('navigation', { name: 'Panel de administración' })
     const headerLink = page
-      .getByRole('navigation', { name: 'Navegación principal' })
+      .locator('.header-actions')
       .getByRole('link', { name: 'Administración', exact: true })
 
     await sidebar.getByRole('link', { name: 'Infraestructura' }).click()
@@ -111,6 +114,7 @@ test('keeps the header tab current while browsing the other sidebar sections', a
       'aria-current',
       'page',
     )
+    await page.locator('.header-actions summary').press('Enter')
     await expect(headerLink).toHaveAttribute('aria-current', 'page')
   } finally {
     await fixture.cleanup()

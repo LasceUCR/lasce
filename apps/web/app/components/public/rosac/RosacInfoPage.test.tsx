@@ -68,6 +68,7 @@ describe('RosacInfoPage', () => {
       '4. Construcción del ROSAC',
       '5. ¿Por qué observar en radio?',
       '6. Investigadores',
+      '7. Agradecimientos ROSAC',
     ])
     expect(screen.getByRole('region', { name: '4. Construcción del ROSAC' })).toHaveTextContent(
       defaultArgs.content.construction.intro,

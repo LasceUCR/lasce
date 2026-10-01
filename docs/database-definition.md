@@ -343,6 +343,21 @@ Constraints: `UNIQUE (satellite, channel, observed_at)` — this is what makes r
 pipeline idempotent, since it legitimately re-lists a window and can see the same frame twice;
 the write is an upsert on this key, and `updated_at` (never `created_at`) advances on a repeat.
 Indexed on `observed_at` for the time-ordered queries the public gallery will eventually run.
+## `areas` schema
+
+### `researchArea`
+
+An editable research area shown on the public "investigacion" page. Each area has a stable UUID
+identifier, a title, a description, and an optional image source.
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `title`       | `String`    | `text`           | not null                               |
+| `description` | `String`    | `text`           | not null                               |
+| `src`         | `String?`   | `text`           | not null                               |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
 
 ## Where this is read and written
 
@@ -368,6 +383,10 @@ fixed, real LASCE research and news records so local/dev environments aren't emp
 `apps/worker/app/services/process_headers.py`'s `ProcessHeaders.persist()` is the only writer of
 `solar.suvi_frames`, called from the `suvi-pipeline` processor after a frame is downloaded and
 decoded. Nothing in `apps/web` reads it yet.
+`apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
+maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
+area create, update, and delete operations will also write this table when implemented.
+
 Nothing yet reads or writes `gallery_albums`/`gallery_media` — `/galeria` still renders from the
 static mock in `apps/web/app/lib/gallery.ts`.
 

@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { ACCOUNT_COOKIE, encodeAccountCookie } from '@/app/lib/auth/account'
+import { ACCOUNT_COOKIE, encodeAccountCookie, shortName } from '@/app/lib/auth/account'
 
 import { PublicHeader } from './PublicHeader'
 
@@ -21,6 +21,10 @@ describe('PublicHeader', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
     expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
+    expect(document.querySelector('details.account-menu')).not.toBeInTheDocument()
+    for (const link of screen.getAllByRole('link', { name: 'Ingresar' })) {
+      expect(link).toHaveAttribute('href', '/acceso')
+    }
     expect(
       within(screen.getByRole('navigation', { name: 'Navegación principal' })).getByRole('link', {
         name: /^Contacto$/,
@@ -35,17 +39,36 @@ describe('PublicHeader', () => {
     expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
   })
 
-  test('shows Administración to an assistant and an administrator', () => {
+  test('shows Administración to an assistant and an administrator, only inside the account menu', async () => {
+    const user = userEvent.setup()
     setAccountCookie('Carlos Solís', 'ASSISTANT')
     const { unmount } = render(<PublicHeader logoutAction={async () => undefined} />)
 
-    expect(screen.getAllByRole('link', { name: /^Administración$/ }).length).toBeGreaterThan(0)
+    expect(
+      within(screen.getByRole('navigation', { name: 'Navegación principal' })).queryByRole('link', {
+        name: /^Administración$/,
+      }),
+    ).not.toBeInTheDocument()
+
+    const assistantTrigger = screen.getByText(shortName('Carlos Solís'), { selector: 'summary' })
+    await user.click(assistantTrigger)
+    expect(
+      within(assistantTrigger.closest('details') as HTMLElement).getByRole('link', {
+        name: /^Administración$/,
+      }),
+    ).toHaveAttribute('href', '/administracion')
     unmount()
 
     setAccountCookie('Ana Pérez Rojas', 'ADMIN')
     render(<PublicHeader logoutAction={async () => undefined} />)
 
-    expect(screen.getAllByRole('link', { name: /^Administración$/ }).length).toBeGreaterThan(0)
+    const adminTrigger = screen.getByText(shortName('Ana Pérez Rojas'), { selector: 'summary' })
+    await user.click(adminTrigger)
+    expect(
+      within(adminTrigger.closest('details') as HTMLElement).getByRole('link', {
+        name: /^Administración$/,
+      }),
+    ).toHaveAttribute('href', '/administracion')
   })
 
   test('identifies UCR, CINESPA and LASCE in the header brand', () => {

@@ -35,6 +35,7 @@ The public site is **in Spanish** (`<html lang="es">`, routes like `/clima-espac
 pnpm install && pnpm worker:install    # Node deps, then `uv sync` for the worker
 pnpm services:up                       # Postgres, Redis, InfluxDB, MinIO via Docker Compose
 pnpm db:migrate                        # Prisma migrations
+pnpm accounts:create                   # local sign-in accounts, one per role; prints the password
 
 pnpm dev                               # Next.js on :3000
 pnpm worker:dev                        # Python worker, second terminal
