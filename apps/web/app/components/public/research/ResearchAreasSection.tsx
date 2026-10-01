@@ -51,6 +51,7 @@ export function ResearchAreasSection({
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const editingArea = areas.find((area) => area.id === editingAreaId)
 
@@ -67,7 +68,32 @@ export function ResearchAreasSection({
     setEditingAreaId(null)
   }
 
-  async function handleSaveArea(values: ResearchAreaFormValues) {}
+  async function handleSaveArea(values: ResearchAreaFormValues) {
+    if (!editingAreaId) return
+
+    setSaveError(null)
+
+    let response: Response
+    try {
+      response = await fetch(`/api/research-areas/${editingAreaId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      })
+    } catch {
+      setSaveError(SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    closeEditor()
+    router.refresh()
+  }
 
   async function handleCreateArea(values: ResearchAreaFormValues, close: () => void) {
     setCreateError(null)
@@ -94,7 +120,25 @@ export function ResearchAreasSection({
     router.refresh()
   }
 
-  async function handleDeleteArea(id: string) {}
+  async function handleDeleteArea(id: string) {
+    setDeleteError(null)
+
+    let response: Response
+    try {
+      response = await fetch(`/api/research-areas/${id}`, { method: 'DELETE' })
+    } catch {
+      setDeleteError(SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      setDeleteError(body?.error ?? SAVE_ERROR_MESSAGE)
+      return
+    }
+
+    router.refresh()
+  }
 
   return (
     <section className="research-areas page-width" id={id}>
@@ -102,6 +146,12 @@ export function ResearchAreasSection({
         <h2 id={titleId}>{title}</h2>
         <p>{subtitle}</p>
       </header>
+
+      {deleteError ? (
+        <p className="form-alert" role="alert">
+          {deleteError}
+        </p>
+      ) : null}
 
       <div className="research-area-content">
         {editMode && canCreate ? (
@@ -158,7 +208,11 @@ export function ResearchAreasSection({
       >
         {editingArea ? (
           <>
-            {saveError ? <p className="form-alert">{saveError}</p> : null}
+            {saveError ? (
+              <p className="form-alert" role="alert">
+                {saveError}
+              </p>
+            ) : null}
 
             <ResearchAreaForm
               area={{

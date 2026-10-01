@@ -119,3 +119,34 @@ export async function createResearchArea(data: ResearchAreaInput) {
     },
   })
 }
+
+export async function updateResearchArea(
+  id: string,
+  data: ResearchAreaInput,
+): Promise<ResearchArea | null> {
+  if (!z.uuid().safeParse(id).success) return null
+
+  const existing = await prisma.researchArea.findUnique({ where: { id } })
+  if (!existing) return null
+
+  const row = await prisma.researchArea.update({
+    where: { id },
+    data: {
+      title: data.title,
+      description: data.description,
+      src: data.src,
+    },
+  })
+
+  return toResearchArea(row)
+}
+
+export async function deleteResearchArea(id: string): Promise<boolean> {
+  if (!z.uuid().safeParse(id).success) return false
+
+  const existing = await prisma.researchArea.findUnique({ where: { id } })
+  if (!existing) return false
+
+  await prisma.researchArea.delete({ where: { id } })
+  return true
+}
