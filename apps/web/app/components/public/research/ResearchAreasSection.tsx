@@ -220,8 +220,8 @@ export function ResearchAreasSection({
                 description: editingArea.description,
                 src: editingArea.src ?? '',
               }}
-              confirmMessage="¿Desea agregar esta área?"
-              confirmTitle="Agregar área"
+              confirmMessage="¿Desea guardar los cambios?"
+              confirmTitle="Editar área"
               onCancel={closeEditor}
               onSave={handleSaveArea}
             />
