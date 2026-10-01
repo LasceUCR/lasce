@@ -55,7 +55,7 @@ function renderEditMode(props: RosacInfoPageProps = editModeArgs) {
 }
 
 describe('RosacInfoPage', () => {
-  test('places construction after development and renumbers only the following numbered sections', () => {
+  test('places instruments after section five and numbers the following sections consecutively', () => {
     renderPage()
 
     const headings = screen
@@ -67,8 +67,9 @@ describe('RosacInfoPage', () => {
       '3. ¿Qué desarrollamos en ROSAC?',
       '4. Construcción del ROSAC',
       '5. ¿Por qué observar en radio?',
-      '6. Investigadores',
-      '7. Agradecimientos ROSAC',
+      '6. Instrumentos científicos',
+      '7. Investigadores',
+      '8. Agradecimientos ROSAC',
     ])
     expect(screen.getByRole('region', { name: '4. Construcción del ROSAC' })).toHaveTextContent(
       defaultArgs.content.construction.intro,
@@ -112,18 +113,31 @@ describe('RosacInfoPage', () => {
     expect(relationship).toHaveTextContent('ROSAC aporta infraestructura nacional')
   })
 
-  test('shows an enabled scientific consultation button without creating a navigation link', () => {
+  test('links the general consultation to the ROSAC simulations', () => {
     renderPage()
 
     const consultation = screen.getByRole('region', { name: 'Consulta científica' })
     expect(within(consultation).queryByText('Próximamente')).not.toBeInTheDocument()
-    const button = within(consultation).getByRole('button', {
+    const link = within(consultation).getByRole('link', {
       name: 'Consultar información científica',
     })
-    expect(button).toBeEnabled()
-    expect(button).toHaveAttribute('type', 'button')
-    expect(button).not.toHaveAttribute('href')
-    expect(within(consultation).queryByRole('link')).not.toBeInTheDocument()
+    expect(link).toHaveAttribute('href', '/datos?source=ROSAC#scientific-query-title')
+  })
+
+  test('presents three instrument cards without authentication or edit permissions', () => {
+    renderPage()
+    const instruments = within(screen.getByRole('region', { name: '6. Instrumentos científicos' }))
+    expect(instruments.getAllByRole('article')).toHaveLength(3)
+    expect(instruments.getAllByRole('heading', { level: 3 })).toHaveLength(3)
+    expect(
+      instruments.getAllByRole('img', { name: /Imagen ilustrativa de la galería ROSAC/ }),
+    ).toHaveLength(3)
+    for (const name of ['Instrumento 1', 'Instrumento 2']) {
+      const card = within(instruments.getByRole('article', { name, exact: true }))
+      expect(card.queryByText(/pendiente|por definir/i)).not.toBeInTheDocument()
+    }
+    expect(instruments.getAllByRole('link')).toHaveLength(2)
+    expect(instruments.getByText(/integración en la sección de datos/)).toBeVisible()
   })
 
   test('returns to the home access cards', () => {
