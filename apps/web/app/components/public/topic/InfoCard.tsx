@@ -2,7 +2,7 @@ import { useId, type ReactNode } from 'react'
 
 export interface InfoCardProps {
   title: string
-  description: string
+  description: ReactNode
   icon: ReactNode
   more?: string
   moreLabel?: string
@@ -31,7 +31,7 @@ export function InfoCard({
       </span>
       <div className="info-card-content">
         <Heading id={titleId}>{title}</Heading>
-        <p>{description}</p>
+        {typeof description === 'string' ? <p>{description}</p> : description}
         {more ? (
           <details className="info-card-more">
             <summary>{moreLabel}</summary>
