@@ -1,3 +1,7 @@
+.instrumentsSection :global(.topic-intro) {
+  text-align: start;
+}
+
 .scientificAction {
   display: flex;
   flex-wrap: wrap;
