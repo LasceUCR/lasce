@@ -5,10 +5,10 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { userHasPermission } from '@/app/lib/auth/authorization'
 import {
+  getResearchAreas,
   investigacionBackLink,
   investigacionHero,
   investigacionMeta,
-  researchAreas,
 } from '@/app/lib/research-areas'
 
 export const metadata: Metadata = {
@@ -17,7 +17,8 @@ export const metadata: Metadata = {
 }
 
 export default async function InvestigacionPage() {
-  const [canCreate, canEdit, canDelete] = await Promise.all([
+  const [areas, canCreate, canEdit, canDelete] = await Promise.all([
+    getResearchAreas(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
@@ -35,7 +36,7 @@ export default async function InvestigacionPage() {
         canCreate={canCreate}
         canDelete={canDelete}
         canEdit={canEdit}
-        areas={researchAreas}
+        areas={areas}
         id="research-areas"
         subtitle="Principales temas de investigación desarrollados por el LASCE."
         title="Áreas de investigación"
