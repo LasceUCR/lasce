@@ -199,6 +199,8 @@ test('lists every research area and opens its detail page', async ({ page }) => 
 
   try {
     for (const area of researchAreas) {
+      if (!area.src) throw new Error(`Research area "${area.title}" must have an image`)
+
       createdAreas.push(
         await prisma.researchArea.create({
           data: {
@@ -215,13 +217,21 @@ test('lists every research area and opens its detail page', async ({ page }) => 
     expect(response?.status()).toBe(200)
 
     for (const area of createdAreas) {
-      await expect(page.getByRole('article', { name: area.title })).toBeVisible()
+      const link = page
+        .getByRole('link', { name: `Conozca más sobre esta área (${area.title})` })
+        .and(page.locator(`a[href="/investigacion/areas/${area.id}"]`))
+
+      await expect(link).toBeVisible()
+      await expect(link).toHaveAttribute('href', `/investigacion/areas/${area.id}`)
     }
 
     const [first] = createdAreas
     if (!first) throw new Error('researchAreas is empty')
 
-    await page.getByRole('link', { name: `Conozca más sobre esta área (${first.title})` }).click()
+    await page
+      .getByRole('link', { name: `Conozca más sobre esta área (${first.title})` })
+      .and(page.locator(`a[href="/investigacion/areas/${first.id}"]`))
+      .click()
 
     await expect(page).toHaveURL(new RegExp(`/investigacion/areas/${first.id}$`))
     await expect(page.getByRole('heading', { level: 1, name: first.title })).toBeVisible()
