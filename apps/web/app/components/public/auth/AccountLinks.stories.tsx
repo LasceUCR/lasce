@@ -24,6 +24,7 @@ export const SignedOutHeader: Story = {
   args: {
     variant: 'header',
     account: null,
+    role: null,
     pathname: '/',
     isSigningOut: false,
     onSignOut: () => {},
@@ -34,6 +35,7 @@ export const SignedInHeader: Story = {
   args: {
     ...SignedOutHeader.args,
     account: 'Ana Pérez Rojas',
+    role: 'VISITOR',
     pathname: '/cuenta',
   },
 }
@@ -58,6 +60,14 @@ export const SignedInMobile: Story = {
   args: {
     ...SignedOutMobile.args,
     account: 'Ana Pérez Rojas',
+    role: 'VISITOR',
     pathname: '/',
+  },
+}
+
+export const SignedInMobileAdmin: Story = {
+  args: {
+    ...SignedInMobile.args,
+    role: 'ADMIN',
   },
 }

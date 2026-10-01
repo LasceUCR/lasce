@@ -5,7 +5,6 @@ import { ChevronDown, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-import { canSeeAdminNavigation } from '@/app/lib/auth/account'
 import { Brand } from './Brand'
 import { NavGroup, isActivePath, type NavGroupItem } from './NavGroup'
 import { AccountLinks } from './auth/AccountLinks'
@@ -41,7 +40,6 @@ const navigation: NavEntry[] = [
     ],
   },
   { label: 'Contacto', href: '/contacto' },
-  { label: 'Administración', href: '/administracion' },
 ]
 
 function isGroup(entry: NavEntry): entry is NavGroupEntry {
@@ -155,10 +153,6 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
     }
   }, [isMobileMenuOpen])
 
-  const entries = canSeeAdminNavigation(role)
-    ? navigation
-    : navigation.filter((entry) => isGroup(entry) || entry.href !== '/administracion')
-
   return (
     <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`} ref={headerRef}>
       <Link className="brand-link" href="/" aria-label="Ir al inicio">
@@ -166,7 +160,7 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
       </Link>
 
       <nav className="desktop-nav" aria-label="Navegación principal">
-        {entries.map((entry) => {
+        {navigation.map((entry) => {
           if (isGroup(entry)) {
             return (
               <NavGroup
@@ -199,6 +193,7 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
           isSigningOut={isSigningOut}
           onSignOut={signOut}
           pathname={pathname}
+          role={role}
           variant="header"
         />
       </div>
@@ -217,7 +212,7 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
           <Menu aria-hidden="true" size={25} strokeWidth={1.8} />
         </summary>
         <nav aria-label="Navegación móvil">
-          {entries.map((entry) => {
+          {navigation.map((entry) => {
             if (isGroup(entry)) {
               return (
                 <details
@@ -279,6 +274,7 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
               onNavigate={closeMobileMenu}
               onSignOut={signOut}
               pathname={pathname}
+              role={role}
               variant="mobile"
             />
           </div>

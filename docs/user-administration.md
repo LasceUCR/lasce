@@ -31,13 +31,32 @@ and restart the web process. Do not reset a shared development database when swi
 
 ## Optional local test accounts
 
-From the repository root:
+From the repository root, with `pnpm services:up` and `pnpm db:migrate` already run:
 
-```powershell
-pnpm --filter @lasce/db exec tsx prisma/seed-user-administration.ts
+```bash
+pnpm accounts:create
 ```
 
-This opt-in script rejects non-local database hosts and creates four new uniquely named
-accounts (ADMIN, ASSISTANT, VISITOR, unassigned) with a random password printed once.
-It neither clears tables nor changes existing accounts. Do not commit its credential output.
-The ordinary seed is not used. End-to-end fixtures remove only their own UUIDs afterwards.
+It runs `packages/db/prisma/seed-user-administration.ts`. This opt-in script rejects non-local
+database hosts and creates four new uniquely named accounts, one per role (ADMIN, ASSISTANT,
+VISITOR, unassigned), sharing one random password. It prints the addresses and the password
+once, for example:
+
+```json
+{
+  "users": [
+    { "email": "qa-visitor-1a2b3c4d@example.com", "role": "VISITOR" },
+    { "email": "qa-assistant-1a2b3c4d@example.com", "role": "ASSISTANT" },
+    { "email": "qa-admin-1a2b3c4d@example.com", "role": "ADMIN" },
+    { "email": "qa-none-1a2b3c4d@example.com", "role": null }
+  ],
+  "password": "<random>"
+}
+```
+
+Sign in at `http://localhost:3000/acceso` with any of them. Run it again whenever you need a fresh
+set; it neither clears tables nor changes existing accounts. Do not commit its credential output.
+
+The ordinary seed (`pnpm db:seed`) creates no account you can sign in with. Its
+`contenido@lasce.cinespa.ucr.ac.cr` user only credits the seeded content as `modifiedBy`; its
+password hash can never match. End-to-end fixtures remove only their own UUIDs afterwards.

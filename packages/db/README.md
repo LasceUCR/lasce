@@ -8,13 +8,18 @@ one owner for the schema avoids two migration histories fighting over the same d
 
 ## Commands
 
-| Command                                  | What it does                                   |
-| ---------------------------------------- | ---------------------------------------------- |
-| `pnpm db:generate`                       | Regenerates the client into `generated/client` |
-| `pnpm db:migrate`                        | Creates and applies a migration in development |
-| `pnpm --filter @lasce/db migrate:deploy` | Applies pending migrations (production)        |
-| `pnpm --filter @lasce/db seed`           | Inserts the demo devices                       |
-| `pnpm db:studio`                         | Opens Prisma Studio                            |
+| Command                                  | What it does                                                          |
+| ---------------------------------------- | --------------------------------------------------------------------- |
+| `pnpm db:generate`                       | Regenerates the client into `generated/client`                        |
+| `pnpm db:migrate`                        | Creates and applies a migration in development                        |
+| `pnpm --filter @lasce/db migrate:deploy` | Applies pending migrations (production)                               |
+| `pnpm db:seed`                           | Inserts the initial public content (research, news, researchers, ...) |
+| `pnpm accounts:create`                   | Creates one sign-in account per role, **local database only**         |
+| `pnpm db:studio`                         | Opens Prisma Studio                                                   |
+
+`db:seed` creates no account you can sign in with; use `accounts:create`, which prints the new
+addresses and their shared password once. See
+[`docs/user-administration.md`](../../docs/user-administration.md#optional-local-test-accounts).
 
 ## Usage
 
