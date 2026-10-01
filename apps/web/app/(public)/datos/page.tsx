@@ -5,6 +5,7 @@ import { ScientificDataExplorer } from '@/app/components/public/scientific-data/
 import { SolarTodayLive } from '@/app/components/public/scientific-data/SolarTodayLive'
 import { goesInstruments, scientificSources } from '@/app/lib/scientific-data'
 import { getSuviAvailability } from '@/app/lib/scientific-data-availability'
+import { getInitialScientificQuery } from '@/app/lib/scientific-data-navigation'
 
 const description = 'Explore imágenes del Sol y consulte la información científica disponible.'
 
@@ -16,9 +17,14 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default function ScientificDataRoute() {
+interface ScientificDataRouteProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function ScientificDataRoute({ searchParams }: ScientificDataRouteProps) {
   const today = new Date()
   const maxDate = today.toISOString().slice(0, 10)
+  const initialQuery = getInitialScientificQuery(await searchParams, maxDate)
 
   return (
     <article className="topic-page">
@@ -37,15 +43,9 @@ export default function ScientificDataRoute() {
         initialNow={today.toISOString()}
       />
       <ScientificDataExplorer
+        key={`${initialQuery.source}:${initialQuery.product}`}
         suviAvailability={getSuviAvailability(today)}
-        initialQuery={{
-          source: 'GOES',
-          product: 'SFXR',
-          parameter: '0.1-0.8nm',
-          date: maxDate,
-          startTime: '00:00',
-          endTime: '23:59',
-        }}
+        initialQuery={initialQuery}
         sources={scientificSources}
       />
     </article>
