@@ -42,6 +42,7 @@
 
   /* Error feedback needs a distinct, readable semantic color. */
   --feedback-error: #9c302b;
+  --input-error: #b42318;
 }
 
 /* Actions inherit their contrast from the surrounding surface. Explicit surface
@@ -5321,4 +5322,13 @@ a.gallery-tile:focus-visible {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.publication-add-author {
+  margin-top: 20px;
+  display: flex;
+}
+
+.email-chip-field.form-field-error {
+  border-color: var(--input-error);
 }
