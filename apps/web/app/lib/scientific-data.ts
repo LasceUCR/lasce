@@ -18,9 +18,18 @@ export const GOES_PRODUCT_CODES = [
 ] as const
 export const ROSAC_PRODUCT_CODES = ['ROSAC-I1', 'ROSAC-I2'] as const
 export const SCIENTIFIC_PRODUCT_CODES = [...GOES_PRODUCT_CODES, ...ROSAC_PRODUCT_CODES] as const
+export const SCIENTIFIC_INSTRUMENT_CODES = [
+  'EXIS',
+  'MAG',
+  'SEISS',
+  'SUVI',
+  'ROSAC-I1',
+  'ROSAC-I2',
+] as const
 
 export type ScientificSourceCode = (typeof SCIENTIFIC_SOURCE_CODES)[number]
 export type ScientificProductCode = (typeof SCIENTIFIC_PRODUCT_CODES)[number]
+export type ScientificInstrumentCode = (typeof SCIENTIFIC_INSTRUMENT_CODES)[number]
 export type VisualizationKind = 'time-series' | 'image-sequence' | 'dynamic-spectrum'
 
 export interface ScientificParameter {
@@ -39,7 +48,7 @@ export interface ScientificProduct {
 }
 
 export interface ScientificInstrument {
-  code: string
+  code: ScientificInstrumentCode
   name: string
   products: ScientificProduct[]
 }
@@ -435,7 +444,7 @@ const scientificOriginSchema = z.object({
 })
 const scientificResultBaseSchema = z.object({
   query: scientificDataQuerySchema,
-  instrument: z.object({ code: z.string(), name: z.string() }),
+  instrument: z.object({ code: z.enum(SCIENTIFIC_INSTRUMENT_CODES), name: z.string() }),
   product: z.object({ code: z.enum(SCIENTIFIC_PRODUCT_CODES), name: z.string() }),
   parameter: scientificParameterSchema,
   origin: scientificOriginSchema,

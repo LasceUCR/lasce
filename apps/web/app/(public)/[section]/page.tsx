@@ -7,16 +7,6 @@ import { isWorkAreaSlug, workAreaSlugs, workAreas } from '@/app/lib/work-areas'
 
 const excludedDynamicWorkAreaSlugs = new Set(['clima-espacial', 'fisica-solar', 'radioastronomia'])
 
-const publicSections = {
-  contacto: {
-    title: 'Contacto',
-    description:
-      'Consulte los canales oficiales para comunicarse con el laboratorio y conocer su ubicación en la Universidad de Costa Rica.',
-  },
-} as const
-
-type PublicSection = keyof typeof publicSections
-
 type PublicPageContent = {
   title: string
   description: string
@@ -28,17 +18,10 @@ type PublicSectionPageProps = {
 }
 
 function getPageContent(section: string): PublicPageContent | null {
-  if (isWorkAreaSlug(section)) {
+  if (isWorkAreaSlug(section) && !excludedDynamicWorkAreaSlugs.has(section)) {
     return {
       ...workAreas[section],
       kicker: 'Área de trabajo LASCE',
-    }
-  }
-
-  if (section in publicSections) {
-    return {
-      ...publicSections[section as PublicSection],
-      kicker: 'Portal público LASCE',
     }
   }
 
@@ -48,10 +31,9 @@ function getPageContent(section: string): PublicPageContent | null {
 export const dynamicParams = false
 
 export function generateStaticParams() {
-  return [
-    ...Object.keys(publicSections),
-    ...workAreaSlugs.filter((section) => !excludedDynamicWorkAreaSlugs.has(section)),
-  ].map((section) => ({ section }))
+  return workAreaSlugs
+    .filter((section) => !excludedDynamicWorkAreaSlugs.has(section))
+    .map((section) => ({ section }))
 }
 
 export async function generateMetadata({ params }: PublicSectionPageProps): Promise<Metadata> {

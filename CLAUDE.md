@@ -46,10 +46,13 @@ working through Claude Code.
 | How does the ROSAC location map work?                | [`docs/rosac-location.md`](docs/rosac-location.md)                   |
 | How is the research areas page built?                | [`docs/research.md`](docs/research.md)                               |
 | How is the collaborations page built?                | [`docs/collaborations.md`](docs/collaborations.md)                   |
+| How does a visitor see LASCE contact information?    | [`docs/contact.md`](docs/contact.md)                                 |
 | How does a visitor register an account?              | [`docs/registration.md`](docs/registration.md)                       |
 | How do users sign in, and how is a page protected?   | [`docs/sessions.md`](docs/sessions.md)                               |
+| How do I get an account to sign in locally?          | [`docs/user-administration.md`](docs/user-administration.md)         |
 | How are role permissions configured?                 | [`docs/role-permissions.md`](docs/role-permissions.md)               |
 | How do I gate a page or a control with a grant?      | [`docs/add-permissions.md`](docs/add-permissions.md)                 |
+| How are academic activities structured?              | [`docs/academic-activities.md`](docs/academic-activities.md)         |
 | How is the header/nav organized and responsive?      | [`docs/header-and-navigation.md`](docs/header-and-navigation.md)     |
 | How does the administration menu work?               | [`docs/admin-navigation.md`](docs/admin-navigation.md)               |
 

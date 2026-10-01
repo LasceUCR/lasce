@@ -9,7 +9,9 @@ import {
   type ScientificDataQuery,
   type TimeSeriesDataResult,
 } from '@/app/lib/scientific-data'
-import { ScientificDataUpstreamError } from './noaaScientificDataSource'
+import { ScientificDataUpstreamError } from './errors'
+import { buildGoesTimeSeriesResult } from './goesTimeSeriesResult'
+import type { PendingScientificDataQuery } from './scientificDataSource'
 
 const archiveResultSchema = z.object({
   query: queryGoesArchivePayload,
@@ -18,16 +20,10 @@ const archiveResultSchema = z.object({
   sampled: z.boolean(),
 })
 
-export interface PendingArchiveQuery {
-  state: 'pending'
-  jobId: string
-  progress: number
-}
-
 export async function queryCiticScientificData(
   query: ScientificDataQuery,
   requestedJobId?: string,
-): Promise<TimeSeriesDataResult | PendingArchiveQuery> {
+): Promise<TimeSeriesDataResult | PendingScientificDataQuery> {
   const selection = findScientificProduct(query.source, query.product)
   if (query.source !== 'GOES' || !selection || selection.product.visualization !== 'time-series') {
     throw new Error('The CITIC archive only accepts GOES time series')
@@ -65,26 +61,15 @@ export async function queryCiticScientificData(
     if (JSON.stringify(result.query) !== JSON.stringify(payload)) {
       throw new Error('Historical result does not match the query')
     }
-    return {
-      query,
-      instrument: { code: selection.instrument.code, name: selection.instrument.name },
-      product: { code: selection.product.code, name: selection.product.name },
-      parameter: selection.product.parameters.find(
-        (parameter) => parameter.code === query.parameter,
-      )!,
-      visualization: 'time-series',
-      points: result.points,
-      origin: {
-        kind: 'observed',
-        provider: 'CITIC-UCR — archivo histórico GOES de NOAA',
-        notice:
-          'Observaciones históricas del archivo GOES nivel 1b de CITIC-UCR. Se excluyen valores de relleno y observaciones marcadas con calidad degradada o inválida.' +
-          (result.sampled
-            ? ' Se muestran 360 observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.'
-            : ''),
-        ...(result.satellite ? { satellite: result.satellite } : {}),
-      },
-    }
+    return buildGoesTimeSeriesResult(query, result.points, {
+      provider: 'CITIC-UCR — archivo histórico GOES de NOAA',
+      notice:
+        'Observaciones históricas del archivo GOES nivel 1b de CITIC-UCR. Se excluyen valores de relleno y observaciones marcadas con calidad degradada o inválida.' +
+        (result.sampled
+          ? ' Se muestran 360 observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.'
+          : ''),
+      satellite: result.satellite,
+    })
   } catch (error) {
     if (error instanceof ScientificDataUpstreamError) throw error
     throw new ScientificDataUpstreamError('No fue posible procesar la consulta histórica de CITIC.')

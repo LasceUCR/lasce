@@ -405,6 +405,37 @@ test('returns 404 for an unknown public route', async ({ page }) => {
   expect(response?.status()).toBe(404)
 })
 
+test('displays academic activities in the news section and navigates to workshop details', async ({
+  page,
+}) => {
+  const response = await page.goto('/noticias')
+
+  expect(response?.status()).toBe(200)
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Actividades académicas' }),
+  ).toBeVisible()
+
+  await expect(
+    page.getByRole('heading', {
+      level: 3,
+      name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+    }),
+  ).toBeVisible()
+  await expect(page.getByText('Actividad académica')).toBeVisible()
+
+  await page.getByRole('link', { name: /Ver detalles de la actividad/i }).click()
+  await expect(page).toHaveURL(/\/noticias\/actividades\/machine-learning-workshop$/)
+  await expect(
+    page.getByRole('heading', {
+      level: 1,
+      name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+    }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Descripción de la actividad' }),
+  ).toBeVisible()
+})
+
 test('displays research collaborations', async ({ page }) => {
   const response = await page.goto('/colaboraciones-e-iniciativas')
 
