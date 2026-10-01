@@ -60,7 +60,7 @@ class ResearchArea(Base):
     id: Mapped[uuid.UUID] = _uuid_pk()
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str] = mapped_column(Text)
-    src: Mapped[str | None] = mapped_column(Text, nullable=True)
+    src: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

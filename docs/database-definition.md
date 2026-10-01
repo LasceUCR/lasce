@@ -319,7 +319,7 @@ identifier, a title, a description, and an optional image source.
 | `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
 | `title`       | `String`    | `text`           | not null                               |
 | `description` | `String`    | `text`           | not null                               |
-| `src`         | `String?`   | `text`           | nullable — optional image source       |
+| `src`         | `String?`   | `text`           | not null                               |
 | `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
 | `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
 
