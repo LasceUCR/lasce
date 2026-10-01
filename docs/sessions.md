@@ -62,6 +62,10 @@ else, including `//host`, schemes and `/acceso` itself (which would loop); the f
 page.
 `loginRedirectPath(returnTo)` builds `/acceso?next=<encoded>&reason=auth` for protected pages.
 
+To try any of this locally, `pnpm accounts:create` creates one account per role and prints their
+shared password; see
+[user-administration.md](user-administration.md#optional-local-test-accounts).
+
 ## Sessions
 
 `auth.sessions` stores `token_hash` (SHA-256 of the cookie token, base64url), `user_id` (cascade
