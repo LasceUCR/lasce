@@ -30,6 +30,7 @@ import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 import styles from './RosacInfoPage.module.css'
 import { AcknowledgmentsGallery } from './AcknowledgmentsGallery'
 import { ConstructionCarousel } from './ConstructionCarousel'
+import { DonationCard } from './DonationCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
@@ -304,6 +305,21 @@ export function RosacInfoPage({
           institutions={content.acknowledgments.institutions}
           label={content.acknowledgments.title}
         />
+      </TopicSection>
+
+      <TopicSection
+        id="donaciones"
+        index="8"
+        intro={content.donations.subtitle}
+        title={content.donations.title}
+        titleId="rosac-donations-title"
+        wide
+      >
+        <div className="news-list">
+          {content.donations.items.map((donation) => (
+            <DonationCard donation={donation} key={donation.title} />
+          ))}
+        </div>
       </TopicSection>
 
       <TopicSection

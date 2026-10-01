@@ -133,6 +133,11 @@ export interface RosacInfoContent {
     subtitle: string
     institutions: readonly RosacAcknowledgment[]
   }
+  donations: {
+    title: string
+    subtitle: string
+    items: readonly RosacDonation[]
+  }
   scientificConsultation: {
     title: string
     description: string
@@ -145,6 +150,13 @@ export interface RosacInfoContent {
 export interface RosacAcknowledgment {
   name: string
   logo: { src: string; alt: string }
+}
+
+/** One donation announcement — a photo and a short write-up of the contribution. */
+export interface RosacDonation {
+  title: string
+  description: string
+  image: { src: string; alt: string }
 }
 
 export const rosacInfoContent = {
@@ -543,6 +555,22 @@ export const rosacInfoContent = {
         logo: {
           src: '/images/ROSAC/acknowledgments/amexcid.webp',
           alt: 'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+        },
+      },
+    ],
+  },
+  donations: {
+    title: 'Donaciones ROSAC',
+    subtitle:
+      'El apoyo de empresas y organizaciones que hacen posible seguir creciendo y desarrollando nuestra labor.',
+    items: [
+      {
+        title: 'Donaciones Eaton',
+        description:
+          'La organización ROSAC recibió dos donaciones de equipo por parte de la empresa Eaton, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.',
+        image: {
+          src: '/images/ROSAC/donations/eaton.webp',
+          alt: 'Equipo de ROSAC junto a representantes de Eaton y el tablero eléctrico donado',
         },
       },
     ],
