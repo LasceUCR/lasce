@@ -44,6 +44,7 @@ export interface ScientificProduct {
   visualization: VisualizationKind
   available: boolean
   availabilityNote?: string
+  wavelength?: string
   parameters: ScientificParameter[]
 }
 
@@ -181,7 +182,7 @@ const sgpsParameters: ScientificParameter[] = ['minus', 'plus'].flatMap((sensor)
 )
 
 const unavailableFromRollingApi =
-  'El archivo de CITIC incluye este producto; su lector y sus canales aún están pendientes de integración.'
+  'Este producto GOES y sus canales aún están pendientes de integración.'
 
 export const goesInstruments: ScientificInstrument[] = [
   {
@@ -261,15 +262,16 @@ export const goesInstruments: ScientificInstrument[] = [
     code: 'SUVI',
     name: 'Generador de imágenes solares ultravioleta',
     products: [
-      { code: 'Fe093', name: 'Imágenes solares: 94 Å (Fe093)' },
-      { code: 'Fe131', name: 'Imágenes solares: 131 Å (Fe131)' },
-      { code: 'Fe171', name: 'Imágenes solares: 171 Å (Fe171)' },
-      { code: 'Fe195', name: 'Imágenes solares: 195 Å (Fe195)' },
-      { code: 'Fe284', name: 'Imágenes solares: 284 Å (Fe284)' },
-      { code: 'He303', name: 'Imágenes solares: 304 Å (He303)' },
-    ].map(({ code, name }) => ({
+      { code: 'Fe093', wavelength: '94 Å' },
+      { code: 'Fe131', wavelength: '131 Å' },
+      { code: 'Fe171', wavelength: '171 Å' },
+      { code: 'Fe195', wavelength: '195 Å' },
+      { code: 'Fe284', wavelength: '284 Å' },
+      { code: 'He303', wavelength: '304 Å' },
+    ].map(({ code, wavelength }) => ({
       code: code as ScientificProductCode,
-      name,
+      name: `Imágenes solares: ${wavelength} (${code})`,
+      wavelength,
       visualization: 'image-sequence' as const,
       available: true,
       parameters: [{ code: 'image', label: 'Imagen calibrada', unit: 'imagen' }],
@@ -321,8 +323,8 @@ export const rosacInstruments: ScientificInstrument[] = [
 export const scientificSources: ScientificSource[] = [
   {
     code: 'GOES',
-    name: 'GOES — CITIC / NOAA',
-    description: 'Series históricas GOES del archivo de CITIC-UCR e imágenes SUVI de NOAA.',
+    name: 'GOES',
+    description: 'Series históricas e imágenes solares SUVI de GOES.',
     dataKind: 'observed',
     instruments: goesInstruments,
   },
