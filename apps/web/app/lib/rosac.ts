@@ -2,6 +2,7 @@ import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
 import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
+import { rosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
 
 // Built once and reused in both `location.intro` (as flowing prose) and `location.address`
 // (as its own field, kept for anything that needs the bare address rather than a sentence),
@@ -119,6 +120,7 @@ export interface RosacInfoContent {
   location: RosacLocationContent
   activities: RosacCardSection
   construction: ConstructionContent
+  instruments: RosacInstrumentsContent
   radioObservation: RosacTextSection
   relationship: RosacTextSection
   team: {
@@ -137,6 +139,7 @@ export interface RosacInfoContent {
     title: string
     description: string
     buttonLabel: string
+    href: string
   }
   backLink: { href: string; label: string }
 }
@@ -149,6 +152,7 @@ export interface RosacAcknowledgment {
 
 export const rosacInfoContent = {
   construction: rosacConstructionContent,
+  instruments: rosacInstrumentsContent,
   hero: {
     kicker: 'Área de trabajo LASCE',
     title: 'Radioastronomía',
@@ -550,8 +554,9 @@ export const rosacInfoContent = {
   scientificConsultation: {
     title: 'Consulta científica',
     description:
-      'La consulta de información científica de ROSAC estará disponible en una sección independiente de esta presentación del observatorio.',
+      'Explore las consultas de demostración de ROSAC en la sección de datos. Sus resultados son simulados mientras se define la integración de los instrumentos.',
     buttonLabel: 'Consultar información científica',
+    href: '/datos?source=ROSAC#scientific-query-title',
   },
   backLink: {
     href: '/#areas-de-trabajo',
