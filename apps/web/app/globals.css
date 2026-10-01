@@ -5927,3 +5927,9 @@ a.gallery-tile:focus-visible {
 .email-chip-field.form-field-error {
   border-color: var(--input-error);
 }
+
+.research-area-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

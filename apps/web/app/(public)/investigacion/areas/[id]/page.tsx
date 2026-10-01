@@ -2,21 +2,17 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { ResearchAreaPage } from '@/app/components/public/research/ResearchAreaPage'
-import { getResearchArea, researchAreaSlugs } from '@/app/lib/research-areas'
+import { getResearchAreaById } from '@/app/lib/research-areas'
 
 interface ResearchAreaRouteProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ id: string }>
 }
 
-export const dynamicParams = false
-
-export function generateStaticParams() {
-  return researchAreaSlugs.map((slug) => ({ slug }))
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: ResearchAreaRouteProps): Promise<Metadata> {
-  const { slug } = await params
-  const area = getResearchArea(slug)
+  const { id } = await params
+  const area = await getResearchAreaById(id)
 
   if (!area) {
     return {}
@@ -29,8 +25,8 @@ export async function generateMetadata({ params }: ResearchAreaRouteProps): Prom
 }
 
 export default async function ResearchAreaRoute({ params }: ResearchAreaRouteProps) {
-  const { slug } = await params
-  const area = getResearchArea(slug)
+  const { id } = await params
+  const area = await getResearchAreaById(id)
 
   if (!area) {
     notFound()
