@@ -127,6 +127,18 @@ describe('RosacInfoPage', () => {
     expect(within(consultation).queryByRole('link')).not.toBeInTheDocument()
   })
 
+  test('invites visitors to help and links the donations CTA to the contact page', () => {
+    renderPage()
+
+    const donations = screen.getByRole('region', { name: '8. Donaciones ROSAC' })
+    expect(
+      within(donations).getByRole('heading', { name: defaultArgs.content.donations.cta.title }),
+    ).toBeInTheDocument()
+    expect(
+      within(donations).getByRole('link', { name: defaultArgs.content.donations.cta.buttonLabel }),
+    ).toHaveAttribute('href', defaultArgs.content.donations.cta.href)
+  })
+
   test('returns to the home access cards', () => {
     renderPage()
 

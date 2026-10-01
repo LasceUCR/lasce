@@ -5,6 +5,7 @@ import {
   ChartNoAxesCombined,
   Crosshair,
   GraduationCap,
+  Mail,
   MapPin,
   Radio,
   RadioTower,
@@ -319,6 +320,20 @@ export function RosacInfoPage({
           {content.donations.items.map((donation) => (
             <DonationCard donation={donation} key={donation.title} />
           ))}
+        </div>
+
+        <div className={styles.donationsCta}>
+          <div className={styles.donationsCtaText}>
+            <h3>{content.donations.cta.title}</h3>
+            <p>{content.donations.cta.description}</p>
+          </div>
+          <Button
+            href={content.donations.cta.href}
+            icon={<Mail aria-hidden="true" size={18} strokeWidth={1.8} />}
+            variant="secondary"
+          >
+            {content.donations.cta.buttonLabel}
+          </Button>
         </div>
       </TopicSection>
 

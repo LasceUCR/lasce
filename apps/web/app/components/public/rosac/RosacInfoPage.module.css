@@ -5,6 +5,31 @@
   margin-top: 20px;
 }
 
+.donationsCta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 20px 24px;
+  border: 1px solid #b7d3e0;
+  border-left: 6px solid var(--cyan);
+  border-radius: 12px;
+  background: #f7fcfe;
+}
+
+.donationsCtaText h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.donationsCtaText p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .locationMapWrapper {
   overflow: hidden;
   padding: 0;

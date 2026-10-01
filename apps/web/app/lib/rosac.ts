@@ -137,6 +137,7 @@ export interface RosacInfoContent {
     title: string
     subtitle: string
     items: readonly RosacDonation[]
+    cta: { title: string; description: string; buttonLabel: string; href: string }
   }
   scientificConsultation: {
     title: string
@@ -574,6 +575,13 @@ export const rosacInfoContent = {
         },
       },
     ],
+    cta: {
+      title: '¿Te gustaría ayudarnos?',
+      description:
+        'Escríbenos y conversemos sobre cómo tu empresa u organización puede apoyar a ROSAC.',
+      buttonLabel: 'Contáctanos',
+      href: '/contacto',
+    },
   },
   scientificConsultation: {
     title: 'Consulta científica',
