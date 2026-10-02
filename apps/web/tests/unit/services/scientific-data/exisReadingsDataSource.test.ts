@@ -8,7 +8,10 @@ vi.mock('@/app/services/scientific-data/influxSql', () => ({
   queryInfluxSql: mocks.queryInfluxSql,
 }))
 
-import { queryExisReadings } from '@/app/services/scientific-data/exisReadingsDataSource'
+import {
+  queryExisReadings,
+  queryExisReadingsFull,
+} from '@/app/services/scientific-data/exisReadingsDataSource'
 
 const query: ScientificDataQuery = {
   source: 'GOES',
@@ -117,5 +120,55 @@ describe('queryExisReadings', () => {
       queryExisReadings({ ...query, product: 'GEOF', parameter: 'total' }),
     ).rejects.toThrow('only accept SFEU and SFXR')
     expect(mocks.queryInfluxSql).not.toHaveBeenCalled()
+  })
+})
+
+describe('queryExisReadingsFull', () => {
+  test('reads every reading in the window without sampling, with the same bound params', async () => {
+    mocks.queryInfluxSql.mockResolvedValue([])
+
+    await queryExisReadingsFull(query)
+
+    const [sql, params] = mocks.queryInfluxSql.mock.calls[0]!
+    expect(sql).toContain('FROM exis_irradiance')
+    expect(sql).not.toContain('ROW_NUMBER')
+    expect(params).toEqual({
+      product: 'SFXR',
+      channel: '0.1-0.8nm',
+      start: '2026-09-27T08:00:00Z',
+      end: '2026-09-27T09:00:59.999Z',
+    })
+  })
+
+  test('keeps more than 360 readings of the latest satellite and says nothing was sampled', async () => {
+    const rows = [
+      reading('2026-09-27T07:59:59', -1, 0, 'G18'),
+      ...Array.from({ length: 400 }, (_, index) =>
+        reading(new Date(Date.UTC(2026, 8, 27, 8, 0, index)).toISOString(), index, 0),
+      ),
+    ]
+    mocks.queryInfluxSql.mockResolvedValue(rows)
+
+    const result = await queryExisReadingsFull(query)
+
+    expect(result.points).toHaveLength(400)
+    expect(result.points.some((point) => point.value === -1)).toBe(false)
+    expect(result.origin).toMatchObject({ kind: 'observed', satellite: 19 })
+    expect(result.origin.notice).toContain('sin muestreo')
+  })
+
+  test('returns an empty series for a day that was never ingested', async () => {
+    mocks.queryInfluxSql.mockResolvedValue([])
+
+    const result = await queryExisReadingsFull(query)
+
+    expect(result.points).toEqual([])
+    expect(result.origin).not.toHaveProperty('satellite')
+  })
+
+  test('refuses GOES products that are not EXIS', async () => {
+    await expect(
+      queryExisReadingsFull({ ...query, product: 'GEOF', parameter: 'total' }),
+    ).rejects.toThrow('only accept SFEU and SFXR')
   })
 })

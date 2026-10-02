@@ -397,3 +397,29 @@ class ExisFile(Base):
     attributes: Mapped[dict[str, Any]] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ResourceDownload(Base):
+    """One file a signed-in user downloaded from ``/datos`` (a chart image or a data
+    export). Lives in the ``public`` Postgres schema. Written only by
+    ``apps/web/app/services/downloads/downloadService.ts``; no job touches it, it is
+    mirrored by convention. The row outlives the account (``user_id`` is set to null).
+    """
+
+    __tablename__ = "resource_downloads"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("auth.users.id", ondelete="SET NULL"), nullable=True
+    )
+    source: Mapped[str] = mapped_column(Text)
+    instrument: Mapped[str] = mapped_column(Text)
+    product: Mapped[str] = mapped_column(Text)
+    format: Mapped[str] = mapped_column(Text)
+    params: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    object_key: Mapped[str] = mapped_column(Text)
+    byte_size: Mapped[int] = mapped_column(Integer)
+    row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

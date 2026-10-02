@@ -43,6 +43,7 @@ describe('serverEnv', () => {
 
     expect(env.MINIO_ENDPOINT).toBe('localhost:9000')
     expect(env.MINIO_BUCKET).toBe('lasce-files')
+    expect(env.MINIO_DOWNLOADS_BUCKET).toBe('lasce-downloads')
     expect(env.MINIO_USE_SSL).toBe(false)
     expect(env.MINIO_ACCESS_KEY).toBeUndefined()
     expect(env.MINIO_SECRET_KEY).toBeUndefined()

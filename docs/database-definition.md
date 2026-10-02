@@ -9,7 +9,7 @@ migration source; the worker mirrors these tables in SQLAlchemy
 
 | Postgres schema | Used for                                                  | Populated today |
 | --------------- | --------------------------------------------------------- | --------------- |
-| `public`        | Default, for anything not domain-specific                 | No tables yet   |
+| `public`        | Default, for anything not domain-specific                 | Yes             |
 | `research`      | Public research/publications shown on `/publicaciones`    | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`           | Yes             |
 | `auth`          | Portal accounts created through `/acceso`                 | Yes             |
@@ -303,9 +303,10 @@ administrators can change it without a deploy of unrelated features. See
 | `permission` | `String`    | `text`           | not null                  |
 | `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()` |
 
-Constraints: `UNIQUE (role, permission)`. The migration seeds the default matrix: visitors
+Constraints: `UNIQUE (role, permission)`. The migrations seed the default matrix: visitors
 download resources; assistants edit components and download; administrators create, edit and
-delete components, download resources, manage users and manage permissions.
+delete components, download resources, download GOES resources (`download_goes_resources`, added
+by `20260929120000_add_download_goes_resources_permission`), manage users and manage permissions.
 
 The worker never writes here.
 
@@ -390,6 +391,35 @@ never writes here.
 Constraints: `UNIQUE (satellite, product, day)` — the upsert key, so a higher `_vX-Y-Z` of the
 same day replaces the older row instead of adding a second one.
 
+## `public` schema (downloads)
+
+### `resource_downloads`
+
+One file a signed-in user downloaded from `/datos`: a chart image or a data export (see
+[downloads.md](downloads.md)). Written by `apps/web/app/services/downloads/downloadService.ts`
+only after the file reached the private `MINIO_DOWNLOADS_BUCKET`, so every row names an object that
+existed. That object is deleted after a day by the bucket's lifecycle rule; this row is the
+permanent record. The worker never writes here.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                           |
+| ------------ | ----------- | ---------------- | --------------------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                               |
+| `user_id`    | `String?`   | `uuid`           | FK → `auth.users.id`, `ON DELETE SET NULL`, so the record outlives it |
+| `source`     | `String`    | `text`           | not null; e.g. `"GOES"`, `"ROSAC"`                                    |
+| `instrument` | `String`    | `text`           | not null; e.g. `"EXIS"`                                               |
+| `product`    | `String`    | `text`           | not null; e.g. `"SFXR"`                                               |
+| `format`     | `String`    | `text`           | not null; a `DOWNLOAD_FORMATS` code, e.g. `"csv"`                     |
+| `params`     | `Json`      | `jsonb`          | not null; `{ parameter, date, startTime, endTime }` of the query      |
+| `object_key` | `String`    | `text`           | not null; key inside `MINIO_DOWNLOADS_BUCKET`                         |
+| `byte_size`  | `Int`       | `integer`        | not null                                                              |
+| `row_count`  | `Int?`      | `integer`        | nullable; data rows exported, null for images                         |
+| `expires_at` | `DateTime`  | `timestamptz(3)` | not null; when the presigned link handed to the user stops working    |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                             |
+
+Indexes: `(user_id, created_at)` for a user's history, `(source, instrument, created_at)` for
+usage per instrument. Codes are plain strings, as in `role_permissions`, so a new instrument or
+format needs no migration.
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` (newest
@@ -407,6 +437,8 @@ owns `auth.sessions`: `createSession()` inserts a row at login, `getSessionUser(
 behind the cookie together with its user, and `deleteCurrentSession()` deletes it at logout.
 `apps/web/app/lib/role-permissions.ts` owns `auth.role_permissions`;
 `apps/web/app/lib/auth/authorization.ts` reads it on each permission check.
+`apps/web/app/services/downloads/downloadService.ts`'s `createResourceDownload()` is the only
+writer of `public.resource_downloads`. Nothing reads it yet.
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.

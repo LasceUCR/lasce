@@ -19,7 +19,7 @@ interface MinioEndpoint {
 }
 
 /** Splits `MINIO_ENDPOINT` into what the JS SDK wants: a bare host, a port and a TLS flag. */
-function parseEndpoint(endpoint: string, useSslDefault: boolean): MinioEndpoint {
+export function parseEndpoint(endpoint: string, useSslDefault: boolean): MinioEndpoint {
   if (endpoint.includes('://')) {
     const url = new URL(endpoint)
     const isHttps = url.protocol === 'https:'

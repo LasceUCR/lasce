@@ -33,6 +33,9 @@ const serverEnvSchema = z.object({
   MINIO_SECRET_KEY: z.string().min(1).optional(),
   MINIO_BUCKET: z.string().min(1).default('lasce-files'),
   MINIO_USE_SSL: z.stringbool().default(false),
+  // Private bucket for the files /datos generates on request (chart images, data exports).
+  // Never given a public policy: they are reachable only through 30-minute presigned links.
+  MINIO_DOWNLOADS_BUCKET: z.string().min(1).default('lasce-downloads'),
 
   // InfluxDB 3 — written by the worker's `exis-pipeline`, read by the web for the
   // EXIS series on /datos. The token is optional for the same reason as the MinIO

@@ -3,20 +3,18 @@
 import { getPermissionsForRole } from '@/app/lib/auth/permission-store'
 import { getSessionUser } from '@/app/lib/auth/session'
 import {
-  validateResourceDownload,
-  type DownloadAccessDenied,
-} from '@/app/services/downloads/downloadAccess'
+  createResourceDownload,
+  type ResourceDownloadResult,
+} from '@/app/services/downloads/downloadService'
+import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'
 
 export type RequestResourceDownloadResult =
-  | { ok: true; url: string; filename: string; expiresAt: string }
-  | DownloadAccessDenied
-  | { ok: false; reason: 'unauthenticated' | 'unavailable'; message: string }
+  ResourceDownloadResult | { ok: false; reason: 'unauthenticated' | 'failed'; message: string }
 
 /**
- * Validates a download from `/datos`: a session, then the user's current grants against the
- * download policy. Every attempt is checked again here; the buttons on the page only mirror it.
- * Producing the file itself is not implemented yet, so a validated request is answered with
- * `unavailable`.
+ * Generates a chart image or data export for the query shown on `/datos` and returns a
+ * 30-minute link to it. Every check lives in `createResourceDownload`; the buttons on the page
+ * only mirror them.
  */
 export async function requestResourceDownload(
   request: unknown,
@@ -30,12 +28,26 @@ export async function requestResourceDownload(
     }
   }
 
-  const access = validateResourceDownload(request, await getPermissionsForRole(user.role))
-  if (!access.ok) return access
-
-  return {
-    ok: false,
-    reason: 'unavailable',
-    message: 'La generación de archivos de descarga todavía no está disponible.',
+  try {
+    return await createResourceDownload({
+      userId: user.id,
+      grants: await getPermissionsForRole(user.role),
+      request,
+    })
+  } catch (error) {
+    if (error instanceof ScientificDataUpstreamError) {
+      console.error(`Resource download upstream error: ${error.message}`)
+      return {
+        ok: false,
+        reason: 'failed',
+        message: 'No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.',
+      }
+    }
+    console.error('Resource download failed', error)
+    return {
+      ok: false,
+      reason: 'failed',
+      message: 'No fue posible preparar la descarga. Inténtelo nuevamente más tarde.',
+    }
   }
 }
