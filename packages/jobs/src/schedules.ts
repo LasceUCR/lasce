@@ -77,11 +77,12 @@ export const schedules: Schedule[] = [
     },
   },
   // NOAA publishes EXIS one file per day, around 04:20 UTC the next morning, and sometimes
-  // republishes a day. Hourly is plenty: an unchanged window costs one listing and a HEAD per day.
+  // republishes a day. Hourly at minute 20 is plenty: an unchanged window costs one listing and a
+  // HEAD per day.
   {
     id: 'exis-pipeline-sfeu',
     name: 'exis-pipeline',
-    cron: '*/1 * * * *',
+    cron: '20 * * * *',
     data: {
       product: 'SFEU',
       spacecraft: 19,
@@ -91,7 +92,7 @@ export const schedules: Schedule[] = [
   {
     id: 'exis-pipeline-sfxr',
     name: 'exis-pipeline',
-    cron: '*/1 * * * *',
+    cron: '20 * * * *',
     data: {
       product: 'SFXR',
       spacecraft: 19,
