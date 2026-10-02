@@ -100,11 +100,23 @@ translateX(-50%)`), not right-anchored as it originally was.
     button) can trigger `:focus-visible` even from a mouse click.
 - Covered by `PublicHeader.test.tsx`'s accordion test.
 
+### Mobile: the menu panel (`.mobile-menu`)
+
+- The page behind the menu is locked (`body { overflow: hidden }`) while it is open, so the panel
+  scrolls itself: `max-height` is the dynamic viewport height (`100dvh`, with a `100vh` fallback)
+  minus the header and the bottom safe area, with `overflow-y: auto`. This keeps the last option
+  reachable in landscape on a phone.
+- The menu closes on a `pointerdown` or `touchstart` anywhere outside the `<details>`, listened to
+  in the capture phase. The listener reads `details.open` directly instead of React state, because
+  the native `toggle` event is asynchronous and iOS can deliver the outside touch before it.
+- Covered by `PublicHeader.test.tsx` (touch outside) and `tests/e2e/responsive-controls.spec.ts`
+  (outside tap after scrolling the panel, last option in landscape).
+
 ## Covered by
 
-| Piece                            | File                                     | Covered by                                             |
-| -------------------------------- | ---------------------------------------- | ------------------------------------------------------ |
-| Institutional lockup             | `app/components/public/Brand.tsx`        | (no dedicated unit test yet)                           |
-| Desktop group disclosure         | `app/components/public/NavGroup.tsx`     | `NavGroup.test.tsx`                                    |
-| Header layout + mobile accordion | `app/components/public/PublicHeader.tsx` | `PublicHeader.test.tsx`                                |
-| Responsive rules for both        | `app/globals.css`                        | manual verification (no CSS test harness in this repo) |
+| Piece                            | File                                     | Covered by                                           |
+| -------------------------------- | ---------------------------------------- | ---------------------------------------------------- |
+| Institutional lockup             | `app/components/public/Brand.tsx`        | (no dedicated unit test yet)                         |
+| Desktop group disclosure         | `app/components/public/NavGroup.tsx`     | `NavGroup.test.tsx`                                  |
+| Header layout + mobile accordion | `app/components/public/PublicHeader.tsx` | `PublicHeader.test.tsx`                              |
+| Responsive rules for both        | `app/globals.css`                        | `tests/e2e/responsive-controls.spec.ts`, plus manual |
