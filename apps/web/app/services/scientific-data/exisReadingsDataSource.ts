@@ -31,6 +31,15 @@ SELECT time, value, satellite, n FROM (
 ) WHERE (rn - 1) % CAST(GREATEST(CEIL((n - 1) / ${MAX_POINTS - 1}.0), 1) AS BIGINT) = 0 OR rn = n
 ORDER BY time`
 
+/*
+ * Every reading in the window, for data exports. The query schema limits a request to one UTC day,
+ * so the worst case is one SFXR day: ~86 000 rows per satellite.
+ */
+const ALL_READINGS_SQL = `
+SELECT time, value, satellite, 0 AS n FROM exis_irradiance
+WHERE product = $product AND channel = $channel AND time >= $start AND time <= $end
+ORDER BY time`
+
 const readingRow = z.object({
   time: z.string(),
   value: z.number().finite(),
@@ -63,22 +72,23 @@ function latestSatelliteReadings(readings: Reading[]) {
  * EXIS (SFEU, SFXR) series from the readings the worker's `exis-pipeline` stores in InfluxDB
  * (`exis_irradiance`). Only ingested days have data; any other day is an empty series.
  */
-export async function queryExisReadings(query: ScientificDataQuery): Promise<TimeSeriesDataResult> {
+function readingParams(query: ScientificDataQuery) {
   const selection = findScientificProduct(query.source, query.product)
   if (query.source !== 'GOES' || !selection || !EXIS_PRODUCTS.has(selection.product.code)) {
     throw new Error('The EXIS readings only accept SFEU and SFXR')
   }
+  return {
+    product: query.product,
+    channel: query.parameter,
+    start: `${query.date}T${query.startTime}:00Z`,
+    end: `${query.date}T${query.endTime}:59.999Z`,
+  }
+}
 
-  const rows = await queryInfluxSql(
-    SAMPLED_READINGS_SQL,
-    {
-      product: query.product,
-      channel: query.parameter,
-      start: `${query.date}T${query.startTime}:00Z`,
-      end: `${query.date}T${query.endTime}:59.999Z`,
-    },
-    readingRow,
-  )
+const EXIS_PROVIDER = 'CITIC-UCR — lecturas EXIS nivel 1b de NOAA'
+
+export async function queryExisReadings(query: ScientificDataQuery): Promise<TimeSeriesDataResult> {
+  const rows = await queryInfluxSql(SAMPLED_READINGS_SQL, readingParams(query), readingRow)
   const { satellite, readings, total } = latestSatelliteReadings(rows)
   const sampled = total > MAX_POINTS
 
@@ -86,12 +96,35 @@ export async function queryExisReadings(query: ScientificDataQuery): Promise<Tim
     query,
     readings.map(({ time, value }) => ({ timestamp: toIsoTimestamp(time), value })),
     {
-      provider: 'CITIC-UCR — lecturas EXIS nivel 1b de NOAA',
+      provider: EXIS_PROVIDER,
       notice:
         'Lecturas EXIS nivel 1b ingeridas diariamente por CITIC-UCR; NOAA publica cada día con aproximadamente un día de retraso. Se excluyen valores de relleno, negativos y observaciones marcadas con calidad degradada o inválida.' +
         (sampled
           ? ` Se muestran ${MAX_POINTS} observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.`
           : ''),
+      satellite: satellite ? satelliteNumber(satellite) : null,
+    },
+  )
+}
+
+/**
+ * The same EXIS series without sampling: every stored reading of the latest satellite in the
+ * window. Feeds the CSV export on `/datos`, never the chart, which stays at 360 points.
+ */
+export async function queryExisReadingsFull(
+  query: ScientificDataQuery,
+): Promise<TimeSeriesDataResult> {
+  const rows = await queryInfluxSql(ALL_READINGS_SQL, readingParams(query), readingRow)
+  const satellite = rows.at(-1)?.satellite
+  const readings = rows.filter((reading) => reading.satellite === satellite)
+
+  return buildGoesTimeSeriesResult(
+    query,
+    readings.map(({ time, value }) => ({ timestamp: toIsoTimestamp(time), value })),
+    {
+      provider: EXIS_PROVIDER,
+      notice:
+        'Lecturas EXIS nivel 1b ingeridas diariamente por CITIC-UCR, sin muestreo: incluye todas las observaciones válidas del intervalo.',
       satellite: satellite ? satelliteNumber(satellite) : null,
     },
   )
