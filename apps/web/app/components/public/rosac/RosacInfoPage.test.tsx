@@ -133,7 +133,7 @@ describe('RosacInfoPage', () => {
       instruments.getAllByRole('img', { name: /Imagen ilustrativa de la galería ROSAC/ }),
     ).toHaveLength(3)
     for (const name of ['Instrumento 1', 'Instrumento 2']) {
-      const card = within(instruments.getByRole('article', { name, exact: true }))
+      const card = within(instruments.getByRole('article', { name }))
       expect(card.queryByText(/pendiente|por definir/i)).not.toBeInTheDocument()
     }
     expect(instruments.getAllByRole('link')).toHaveLength(2)
