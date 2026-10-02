@@ -32,7 +32,9 @@ test.describe('responsive native controls', () => {
   })
 
   test('scrolls the mobile navigation to its last option in landscape', async ({ page }) => {
-    await page.goto('/')
+    // Any page carries the same menu. The home hero redraws its solar animation on a canvas
+    // every frame, which kept WebKit's main thread too busy for the actions below to settle.
+    await page.goto('/contacto')
     for (const viewport of [
       { width: 667, height: 320 },
       { width: 844, height: 390 },
@@ -62,13 +64,12 @@ test.describe('responsive native controls', () => {
         expect(panel.scrollTop).toBeGreaterThan(0)
       }
       // A trial click runs the checks a real tap needs (visible, stable, receives the pointer)
-      // without leaving the page. Following the link is covered by public-portal.spec.ts;
-      // doing it here left WebKit stuck rendering /acceso under `next dev`.
+      // without leaving the page. Following the links is covered by public-portal.spec.ts.
       await lastLink.click({ trial: true })
       await page.getByLabel('Abrir navegación').click()
       await expect(navigation).toBeHidden()
       await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
-      await page.goto('/')
+      await page.goto('/contacto')
     }
   })
 
