@@ -77,23 +77,6 @@ export function GalleryGroupSection({
       {/* A list, so a reader can be told how many albums this block holds
           and can step through them. The grid still owns the layout. */}
       <ul className="gallery-grid tile-list">
-        {editMode && canCreate ? (
-          <li className="gallery-grid-add">
-            <AddItemCard label="Añadir álbum">
-              {({ close }) => (
-                <button
-                  onClick={() => {
-                    handleCreate()
-                    close()
-                  }}
-                  type="button"
-                >
-                  Crear álbum
-                </button>
-              )}
-            </AddItemCard>
-          </li>
-        ) : null}
         <li>
           {editMode && (canEdit || canDelete) ? (
             <EditableWrapper
@@ -121,6 +104,23 @@ export function GalleryGroupSection({
             />
           </li>
         ))}
+        {editMode && canCreate ? (
+          <li className="gallery-grid-add">
+            <AddItemCard label="Añadir subálbum">
+              {({ close }) => (
+                <button
+                  onClick={() => {
+                    handleCreate()
+                    close()
+                  }}
+                  type="button"
+                >
+                  Crear subálbum
+                </button>
+              )}
+            </AddItemCard>
+          </li>
+        ) : null}
       </ul>
     </section>
   )

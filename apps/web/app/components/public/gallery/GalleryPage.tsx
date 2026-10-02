@@ -1,4 +1,5 @@
 import { GalleryGroupSection } from './GalleryGroupSection'
+import { GalleryAlbumAddCard } from './GalleryAlbumAddCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { galeriaHero } from '@/app/lib/gallery'
@@ -22,6 +23,7 @@ export function GalleryPage({
       <TopicHero kicker={galeriaHero.kicker} lead={galeriaHero.lead} title={galeriaHero.title} />
 
       <div className="gallery-groups page-width">
+        <GalleryAlbumAddCard canCreate={canCreate} />
         {albums.map((album) => (
           <GalleryGroupSection
             album={album}
