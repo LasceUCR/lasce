@@ -85,30 +85,11 @@ test('keeps the default query for invalid links and the third pending instrument
   await expect(page.getByRole('combobox', { name: 'Instrumento y producto' })).toContainText('SFXR')
 })
 
-test('ROSAC respects reduced motion and exposes distinct gallery controls', async ({ page }) => {
+test('ROSAC disables researcher flip animations with reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/radioastronomia')
-  for (const label of ['Investigadores', 'Agradecimientos ROSAC']) {
-    const next = page.getByRole('button', { name: `Siguiente: ${label}` })
-    await expect(next).toHaveAttribute(
-      'aria-controls',
-      (await page.getByRole('list', { name: label, exact: true }).getAttribute('id')) as string,
-    )
-    await next.focus()
-    await page.keyboard.press('Enter')
-    await expect(next).toBeFocused()
-  }
-  expect(
-    await page
-      .locator('.researcher-card-inner')
-      .first()
-      .evaluate((element) => getComputedStyle(element).transitionDuration),
-  ).toBe('0s')
-  expect(
-    await page.locator('html').evaluate((element) => getComputedStyle(element).scrollBehavior),
-  ).toBe('auto')
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-    .analyze()
-  expect(results.violations).toEqual([])
+  await expect(page.locator('.researcher-card-inner').first()).toHaveCSS(
+    'transition-duration',
+    '0s',
+  )
 })

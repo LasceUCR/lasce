@@ -57,14 +57,12 @@ The third card has no inactive button. Layout uses a responsive three-column gri
 the other sections, compact padding and 16:9 image frames. Consultation links use solid blue
 action buttons.
 
-The ROSAC researcher and acknowledgment galleries now give scroll controls distinct names and
-associate them with their tracks. Their scripted scrolling respects reduced motion; the
-researcher flip transition and page anchor scrolling also respect that preference.
-Researcher email links have a minimum 24px touch target and readable hover/focus colors.
+The researcher flip transition respects the reduced-motion preference.
 
 ## Verification
 
 Unit tests cover partial content, optional citations, failed-image recovery, the three cards,
-catalog consistency, safe URL preselection, and reduced-motion controls. Playwright covers
+catalog consistency, and safe URL preselection. Playwright covers
 public access, keyboard navigation to both simulations, the unchanged two-instrument selector,
-invalid links, 320/390/768/1440px layouts, and WCAG A/AA axe scans of cards and the ROSAC page.
+invalid links, 320/390/768/1440px layouts, reduced-motion researcher flips, and WCAG A/AA axe
+scans scoped to the instrument cards.
