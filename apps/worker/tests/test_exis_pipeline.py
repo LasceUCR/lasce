@@ -20,7 +20,7 @@ import pytest
 
 from app.models.jobs import ExisPipelinePayload
 from app.processors import exis_pipeline
-from app.services.exis_readings import ExisReadings
+from app.services.exis_readings import ExisReadings, IngestedFile
 from tests.test_exis_readings import sfxr_netcdf
 
 FILE_ID = uuid.UUID("44444444-4444-4444-4444-444444444444")
@@ -89,12 +89,16 @@ def serve(monkeypatch: pytest.MonkeyPatch, handler: Any) -> list[str]:
 def mock_readings(
     monkeypatch: pytest.MonkeyPatch, ingested: dict[str, datetime | None] | None = None
 ) -> AsyncMock:
-    """``ingested`` maps a file name to the ``Last-Modified`` already recorded for it."""
+    """``ingested`` maps each file name already in the catalogue to the
+    ``Last-Modified`` recorded for it; a name missing from it was never ingested.
+    """
 
-    async def ingested_modified_at(file: Any) -> datetime | None:
-        return (ingested or {}).get(file.name)
+    async def lookup(file: Any) -> IngestedFile | None:
+        if file.name not in (ingested or {}):
+            return None
+        return IngestedFile(source_modified_at=(ingested or {})[file.name])
 
-    monkeypatch.setattr(ExisReadings, "ingested_modified_at", staticmethod(ingested_modified_at))
+    monkeypatch.setattr(ExisReadings, "ingested", staticmethod(lookup))
     persist = AsyncMock(return_value=FILE_ID)
     monkeypatch.setattr(ExisReadings, "persist", persist)
     return persist
@@ -175,17 +179,44 @@ async def test_a_republished_older_day_is_ingested_when_the_newest_is_current(
     persist.assert_awaited_once()
 
 
-async def test_a_file_without_last_modified_is_always_ingested(
+async def test_a_file_without_last_modified_is_ingested_the_first_time(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     yesterday = TODAY - timedelta(days=1)
     serve(monkeypatch, archive([yesterday], sfxr_netcdf(tmp_path), {yesterday: None}))
-    persist = mock_readings(monkeypatch, {name(yesterday): None})
+    persist = mock_readings(monkeypatch)
 
     result = await exis_pipeline.run(payload(), AsyncMock())
 
     assert result["file"]["modifiedAt"] is None
     assert persist.await_args.args[2] is None
+
+
+async def test_a_file_without_last_modified_is_not_ingested_again(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    yesterday = TODAY - timedelta(days=1)
+    requested = serve(monkeypatch, archive([yesterday], b"", {yesterday: None}))
+    persist = mock_readings(monkeypatch, {name(yesterday): None})
+
+    result = await exis_pipeline.run(payload(), AsyncMock())
+
+    assert result["skipped"] is True
+    assert downloads(requested) == []
+    persist.assert_not_awaited()
+
+
+async def test_a_newest_day_without_last_modified_does_not_block_older_days(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    yesterday, before = TODAY - timedelta(days=1), TODAY - timedelta(days=2)
+    serve(monkeypatch, archive([before, yesterday], sfxr_netcdf(tmp_path), {yesterday: None}))
+    persist = mock_readings(monkeypatch, {name(yesterday): None})
+
+    result = await exis_pipeline.run(payload(), AsyncMock())
+
+    assert result["file"]["name"] == name(before)
+    persist.assert_awaited_once()
 
 
 async def test_reports_no_file_without_downloading_anything(

@@ -5,7 +5,7 @@ units, fill values and ``flag_masks`` layout as the real daily files in
 NOAA's archive (checked against ``ops_exis-l1b-sf{eu,xr}_g19_d20260927``), so
 the decoder runs against the real library on a real file shape. Persistence
 is tested against fakes of the two things it talks to: ``session_scope``
-(Postgres) and ``influx.write`` (InfluxDB).
+(Postgres) and ``influx.write``/``influx.query`` (InfluxDB).
 """
 
 import uuid
@@ -23,7 +23,14 @@ from sqlalchemy.dialects import postgresql
 
 from app.clients.exis import ExisProduct, parse_file_name
 from app.services import exis_readings
-from app.services.exis_readings import CHANNELS, ExisDecoded, ExisReadings, build_points, decode
+from app.services.exis_readings import (
+    CHANNELS,
+    ExisDecoded,
+    ExisReadings,
+    IngestedFile,
+    build_points,
+    decode,
+)
 
 FILE_ID = uuid.UUID("33333333-3333-3333-3333-333333333333")
 DAY = datetime(2026, 9, 27, tzinfo=UTC)
@@ -188,7 +195,7 @@ def test_one_point_per_reading_tagged_by_satellite_product_and_channel() -> None
     tags, fields, stamp = lines[0].split(" ")
     assert tags.startswith(f"{exis_readings.MEASUREMENT},")
     assert {"satellite=G19", "product=SFXR", "channel=0.1-0.8nm"} <= set(tags.split(",")[1:])
-    assert fields == "value=1e-06"
+    assert set(fields.split(",")) == {"value=1e-06", "valid=true"}
     assert int(stamp) == int(DAY.timestamp()) * 10**9
 
 
@@ -199,24 +206,28 @@ class _FakeResult:
     def scalar_one(self) -> Any:
         return self._value
 
-    def scalar_one_or_none(self) -> Any:
+    def one_or_none(self) -> Any:
         return self._value
 
 
 class _FakeSession:
-    def __init__(self, value: Any, log: list[str]) -> None:
-        self._value = value
+    """Answers each statement with the next of ``values``, in order."""
+
+    def __init__(self, values: list[Any], log: list[str]) -> None:
+        self._values = list(values)
         self._log = log
         self.executed: list[Any] = []
 
     async def execute(self, stmt: Any) -> _FakeResult:
         self._log.append("postgres")
         self.executed.append(stmt)
-        return _FakeResult(self._value)
+        return _FakeResult(self._values.pop(0))
 
 
-def fake_database(monkeypatch: pytest.MonkeyPatch, value: Any, log: list[str]) -> _FakeSession:
-    session = _FakeSession(value, log)
+def fake_database(
+    monkeypatch: pytest.MonkeyPatch, values: list[Any], log: list[str]
+) -> _FakeSession:
+    session = _FakeSession(values, log)
 
     @asynccontextmanager
     async def fake_session_scope() -> AsyncIterator[_FakeSession]:
@@ -226,11 +237,19 @@ def fake_database(monkeypatch: pytest.MonkeyPatch, value: Any, log: list[str]) -
     return session
 
 
+MODIFIED = datetime(2026, 9, 28, 4, 17, 28, tzinfo=UTC)
+
+
+def fields_of(line: str) -> set[str]:
+    return set(line.split(" ")[1].split(","))
+
+
 async def test_persist_writes_every_batch_before_the_catalogue_row(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     order: list[str] = []
-    session = fake_database(monkeypatch, FILE_ID, order)
+    # The first statement finds no earlier ingest of the day; the second is the upsert.
+    session = fake_database(monkeypatch, [None, FILE_ID], order)
     monkeypatch.setattr(exis_readings, "BATCH_SIZE", 2)
     influx = AsyncMock()
     influx.write.side_effect = lambda points: order.append(f"influx:{len(points)}")
@@ -242,41 +261,137 @@ async def test_persist_writes_every_batch_before_the_catalogue_row(
         },
         attributes={"title": "EXIS XRS L1b Solar Flux: X-Ray"},
     )
-    modified = datetime(2026, 9, 28, 4, 17, 28, tzinfo=UTC)
 
-    file_id = await ExisReadings(influx=influx).persist(decoded, exis_file(), modified)
+    file_id = await ExisReadings(influx=influx).persist(decoded, exis_file(), MODIFIED)
 
     assert file_id == FILE_ID
-    assert order == ["influx:2", "influx:2", "influx:1", "postgres"]
-    (stmt,) = session.executed
+    assert order == ["postgres", "influx:2", "influx:2", "influx:1", "postgres"]
+    _, stmt = session.executed
     row = stmt.compile(dialect=postgresql.dialect()).params
     assert row["satellite"] == "G19"
     assert row["product"] == "SFXR"
     assert row["day"] == date(2026, 9, 27)
     assert row["version"] == "0-0-2"
-    assert row["source_modified_at"] == modified
+    assert row["source_modified_at"] == MODIFIED
     assert row["first_observed_at"] == DAY
     assert row["last_observed_at"] == DAY + timedelta(seconds=9)
     assert row["point_count"] == {"0.05-0.4nm": 3, "0.1-0.8nm": 2}
 
 
-async def test_a_failed_influx_write_leaves_no_catalogue_row(
+async def test_the_first_ingest_of_a_day_withdraws_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_database(monkeypatch, [None, FILE_ID], [])
+    influx = AsyncMock()
+    decoded = ExisDecoded(satellite="G19", series={"0.1-0.8nm": [(DAY, 1e-6)]})
+
+    await ExisReadings(influx=influx).persist(decoded, exis_file(), MODIFIED)
+
+    influx.query.assert_not_awaited()
+    (written,) = influx.write.await_args_list
+    assert all("valid=true" in fields_of(point.to_line_protocol()) for point in written.args[0])
+
+
+async def test_a_republished_day_withdraws_the_readings_it_dropped(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     order: list[str] = []
-    session = fake_database(monkeypatch, FILE_ID, order)
+    later = DAY + timedelta(seconds=2)
+    session = fake_database(monkeypatch, [(DAY, later), FILE_ID], order)
+    influx = AsyncMock()
+    # The earlier version stored three XRS-B readings; the new one keeps only the first.
+    influx.query.return_value = [
+        {"channel": "0.1-0.8nm", "ns": int(DAY.timestamp()) * 10**9 + offset * 10**9}
+        for offset in range(3)
+    ]
+    influx.write.side_effect = lambda points: order.append("influx")
+    decoded = ExisDecoded(satellite="G19", series={"0.1-0.8nm": [(DAY, 1e-6)]})
+
+    await ExisReadings(influx=influx).persist(decoded, exis_file(), MODIFIED)
+
+    lookup = str(session.executed[0].compile(dialect=postgresql.dialect()))
+    assert "solar.exis_files.day" in lookup
+    sql = influx.query.await_args.args[0]
+    assert "satellite = 'G19'" in sql
+    assert "product = 'SFXR'" in sql
+    assert "time >= '2026-09-27T00:00:00.000000Z'" in sql
+    assert "time <= '2026-09-27T00:00:02.000000Z'" in sql
+    lines = [point.to_line_protocol() for point in influx.write.await_args.args[0]]
+    assert [fields_of(line) for line in lines] == [
+        {"valid=false"},
+        {"valid=false"},
+        {"valid=true", "value=1e-06"},
+    ]
+    assert [int(line.split(" ")[2]) for line in lines[:2]] == [
+        int(DAY.timestamp()) * 10**9 + 10**9,
+        int(DAY.timestamp()) * 10**9 + 2 * 10**9,
+    ]
+    # The catalogue row still comes last, so a crash leaves the day to be redone.
+    assert order == ["postgres", "influx", "postgres"]
+
+
+async def test_an_earlier_ingest_with_no_readings_withdraws_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_database(monkeypatch, [(None, None), FILE_ID], [])
+    influx = AsyncMock()
+    decoded = ExisDecoded(satellite="G19", series={"0.1-0.8nm": [(DAY, 1e-6)]})
+
+    await ExisReadings(influx=influx).persist(decoded, exis_file(), MODIFIED)
+
+    influx.query.assert_not_awaited()
+
+
+def test_only_readings_the_new_file_dropped_are_withdrawn() -> None:
+    second = DAY + timedelta(seconds=1, microseconds=500)
+    decoded = ExisDecoded(
+        satellite="G19", series={"0.1-0.8nm": [(DAY, 1e-6), (second, 2e-6)], "0.05-0.4nm": []}
+    )
+    base = int(DAY.timestamp()) * 10**9
+    stored = [
+        {"channel": "0.1-0.8nm", "ns": base},
+        {"channel": "0.1-0.8nm", "ns": base + 1_000_500_000},
+        {"channel": "0.1-0.8nm", "ns": base + 7 * 10**9},
+        {"channel": "0.05-0.4nm", "ns": base},
+        {"channel": "0.05-0.4nm", "ns": base},
+    ]
+
+    lines = [
+        point.to_line_protocol()
+        for point in exis_readings.stale_points(ExisProduct.SFXR, decoded, stored)
+    ]
+
+    assert len(lines) == 2
+    assert {line.split(" ")[0].split("channel=")[1].split(",")[0] for line in lines} == {
+        "0.05-0.4nm",
+        "0.1-0.8nm",
+    }
+    assert sorted(int(line.split(" ")[2]) for line in lines) == [base, base + 7 * 10**9]
+    assert all(fields_of(line) == {"valid=false"} for line in lines)
+
+
+async def test_a_failed_influx_write_leaves_no_catalogue_row(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = fake_database(monkeypatch, [None, FILE_ID], [])
     influx = AsyncMock()
     influx.write.side_effect = RuntimeError("influx is down")
     decoded = ExisDecoded(satellite="G19", series={"0.1-0.8nm": [(DAY, 1e-6)]})
 
     with pytest.raises(RuntimeError):
         await ExisReadings(influx=influx).persist(decoded, exis_file(), None)
-    assert session.executed == []
+    # Only the lookup of an earlier ingest ran; the upsert never did.
+    assert len(session.executed) == 1
 
 
-@pytest.mark.parametrize("recorded", [None, datetime(2026, 9, 28, 4, 17, 28, tzinfo=UTC)])
-async def test_ingested_modified_at_reads_the_recorded_value(
+@pytest.mark.parametrize("recorded", [None, MODIFIED])
+async def test_ingested_reads_the_recorded_last_modified(
     monkeypatch: pytest.MonkeyPatch, recorded: datetime | None
 ) -> None:
-    fake_database(monkeypatch, recorded, [])
-    assert await ExisReadings.ingested_modified_at(exis_file()) == recorded
+    fake_database(monkeypatch, [(recorded,)], [])
+    assert await ExisReadings.ingested(exis_file()) == IngestedFile(source_modified_at=recorded)
+
+
+async def test_a_file_never_ingested_has_no_record(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_database(monkeypatch, [None], [])
+    assert await ExisReadings.ingested(exis_file()) is None

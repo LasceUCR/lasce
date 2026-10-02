@@ -8,9 +8,10 @@ day to ingest, skips a day already ingested, and reports progress. See
 
 NOAA publishes EXIS one day at a time, about a day late, and sometimes
 republishes a day. So each run walks the days in its window newest first and
-ingests the first one whose ``Last-Modified`` differs from what was recorded
-the last time it was ingested. When nothing changed, no file is downloaded:
-the run costs one listing plus one ``HEAD`` per day in the window.
+ingests the first one that was never ingested under its name, or whose
+``Last-Modified`` differs from what was recorded the last time it was. When
+nothing changed, no file is downloaded: the run costs one listing plus one
+``HEAD`` per day in the window.
 """
 
 import asyncio
@@ -58,14 +59,20 @@ def _describe(file: ExisFile, modified_at: datetime | None, size: int) -> dict[s
 async def _first_changed(
     downloader: ExisDownloader, readings: ExisReadings, available: list[ExisFile]
 ) -> tuple[ExisFile, datetime | None] | None:
-    """The newest file whose ``Last-Modified`` differs from the one recorded.
+    """The newest file never ingested under its name, or whose ``Last-Modified``
+    differs from the one recorded.
 
-    A file the server sends no ``Last-Modified`` for cannot be proven
-    unchanged, so it counts as changed.
+    A file the server sends no ``Last-Modified`` for is ingested once and then
+    left alone. Counting it as changed every time would re-ingest the newest
+    day on every run and never reach an older one. A new ``_vX-Y-Z`` changes
+    the name, so it is still picked up.
     """
     for file in available:
         modified_at = await downloader.modified_at(file)
-        if modified_at is None or modified_at != await readings.ingested_modified_at(file):
+        ingested = await readings.ingested(file)
+        if ingested is None:
+            return file, modified_at
+        if modified_at is not None and modified_at != ingested.source_modified_at:
             return file, modified_at
     return None
 

@@ -79,11 +79,14 @@ list_recent()/list_day()  ──►  modified_at() vs catalogue  ──►  fetc
    window crossing the 1st spans two. It keeps the highest version of each day, newest day first.
    An empty window returns `file: null` with progress `100`. This is normal, not an error.
 
-2. **Find the first changed day.** Newest first, the processor `HEAD`s each file and compares its
-   `Last-Modified` with `source_modified_at` in `solar.exis_files`:
-   - The first file that differs is ingested.
-   - A file the server sends no `Last-Modified` for cannot be proven unchanged, so it counts as
-     changed.
+2. **Find the first changed day.** Newest first, the processor `HEAD`s each file and looks it up
+   by name in `solar.exis_files`:
+   - A name never ingested is ingested. A higher `_vX-Y-Z` is a new name, so it is caught here.
+   - A name already ingested is ingested again only if the server's `Last-Modified` differs from
+     the recorded `source_modified_at`.
+   - A file the server sends no `Last-Modified` for is ingested once and then left alone. Counting
+     it as changed on every run would re-ingest the newest day forever and never reach an older
+     one; the cost is that a same-name republish without the header goes unnoticed.
    - If every day matches, the run returns `skipped: true`.
 
    A republished older day is therefore picked up once the newer days are current. As with SUVI,
@@ -105,13 +108,20 @@ list_recent()/list_day()  ──►  modified_at() vs catalogue  ──►  fetc
    of 10 000:
    - measurement `exis_irradiance`
    - tags `satellite`, `product`, `channel`
-   - field `value`
+   - fields `value` and `valid` (always `true` for a reading the file has)
    - the observation time as the timestamp
 
+   **Readers must filter `WHERE valid`.** If the day was ingested before (a row for the same
+   satellite, product and day, whatever its version), `persist()` first asks InfluxDB which
+   readings it stored between that row's `first_observed_at` and `last_observed_at`. Every one the
+   new file no longer has, for example a report a reprocessing now flags as bad, is rewritten
+   with `valid=false`. InfluxDB 3 Core cannot delete single points, and it merges fields on the
+   same series and timestamp, so the old `value` stays but is marked withdrawn.
+
    Only then does it upsert the `solar.exis_files` row. The order is deliberately the reverse of
-   SUVI's. The row is what tells the next run "this day is done", so a failure part-way leaves no
-   row and the day is redone. Redoing a day is safe: InfluxDB replaces a point with the same
-   series and timestamp instead of duplicating it.
+   SUVI's. The row is what tells the next run "this day is done", so a failure part-way leaves the
+   previous row (or none) and the day is redone. Redoing a day is safe: InfluxDB replaces a point
+   with the same series and timestamp instead of duplicating it.
 
 Progress is reported at `25 → 50 → 75 → 100`: after listing, after download, after decoding, after
 storing.

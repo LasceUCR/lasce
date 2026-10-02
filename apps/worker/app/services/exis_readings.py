@@ -18,6 +18,11 @@ Three things decide what counts as a reading, and match what
   (``good_quality_qf``) is dropped, not stored as a suspicious number.
 - For XRS, each report is taken from whichever detector ``primary_xrs*``
   names, never averaged across both (:func:`app.clients.netcdf.primary_irradiance`).
+
+Every point carries a boolean ``valid`` field, and readers must filter on it.
+InfluxDB 3 Core cannot delete single points, so when a republished day drops a
+reading the earlier version had, that reading is overwritten with
+``valid=false`` instead of being removed (:func:`stale_points`).
 """
 
 import asyncio
@@ -49,6 +54,7 @@ BATCH_SIZE = 10_000
 # Which part of the file names the product, so a file saved under the wrong
 # directory is rejected instead of decoded as the wrong channels.
 _TITLE_SUFFIX = {ExisProduct.SFEU: "EUV", ExisProduct.SFXR: "X-Ray"}
+_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 
 
 @dataclass(frozen=True)
@@ -205,18 +211,72 @@ def decode(content: bytes, product: ExisProduct, spacecraft: int) -> ExisDecoded
     return ExisDecoded(satellite=satellite, series=series, attributes=attributes)
 
 
+def _nanoseconds(stamp: datetime) -> int:
+    """``stamp`` as integer nanoseconds since the epoch, exactly as InfluxDB keys it."""
+    delta = stamp - _EPOCH
+    return (delta.days * 86_400 + delta.seconds) * 10**9 + delta.microseconds * 1_000
+
+
+def _point(satellite: str, product: ExisProduct, channel: str) -> Point:
+    point: Point = (
+        Point(MEASUREMENT)
+        .tag("satellite", satellite)
+        .tag("product", product.value)
+        .tag("channel", channel)
+    )
+    return point
+
+
 def build_points(product: ExisProduct, decoded: ExisDecoded) -> list[Point]:
     """One InfluxDB point per reading. CPU-bound; the caller runs it on a thread."""
     return [
-        Point(MEASUREMENT)
-        .tag("satellite", decoded.satellite)
-        .tag("product", product.value)
-        .tag("channel", code)
+        _point(decoded.satellite, product, code)
         .field("value", value)
+        .field("valid", True)
         .time(stamp)
         for code, points in decoded.series.items()
         for stamp, value in points
     ]
+
+
+def stale_points(
+    product: ExisProduct, decoded: ExisDecoded, stored: list[dict[str, Any]]
+) -> list[Point]:
+    """A ``valid=false`` point for every stored reading ``decoded`` no longer has.
+
+    ``stored`` holds the rows already in InfluxDB for the day, as ``channel``
+    and ``ns`` (the timestamp in nanoseconds). Only ``valid`` is written, and
+    InfluxDB merges fields on the same series and timestamp, so the old
+    ``value`` stays readable but is marked as withdrawn.
+    """
+    kept = {
+        (code, _nanoseconds(stamp))
+        for code, points in decoded.series.items()
+        for stamp, _ in points
+    }
+    gone = sorted({(str(row["channel"]), int(row["ns"])) for row in stored} - kept)
+    return [
+        _point(decoded.satellite, product, channel).field("valid", False).time(ns)
+        for channel, ns in gone
+    ]
+
+
+def _stored_query(satellite: str, product: ExisProduct, first: datetime, last: datetime) -> str:
+    # Both tags are validated values (`decode` checks the satellite, the product
+    # is an enum), never free text, so formatting them in is safe.
+    return (
+        f"SELECT channel, CAST(time AS BIGINT) AS ns FROM {MEASUREMENT} "
+        f"WHERE satellite = '{satellite}' AND product = '{product.value}' "
+        f"AND time >= '{first.astimezone(UTC):%Y-%m-%dT%H:%M:%S.%fZ}' "
+        f"AND time <= '{last.astimezone(UTC):%Y-%m-%dT%H:%M:%S.%fZ}'"
+    )
+
+
+@dataclass(frozen=True)
+class IngestedFile:
+    """What the catalogue remembers about a file it has ingested."""
+
+    source_modified_at: datetime | None
 
 
 class ExisReadings:
@@ -228,28 +288,31 @@ class ExisReadings:
         self._influx = influx or get_influx_client()
 
     @staticmethod
-    async def ingested_modified_at(file: ExisFile) -> datetime | None:
-        """The ``Last-Modified`` recorded when ``file`` was last ingested, or
-        ``None`` if it never was (or the archive sent none at the time).
+    async def ingested(file: ExisFile) -> IngestedFile | None:
+        """What was recorded when ``file`` (this exact name) was ingested, or
+        ``None`` if it never was.
         """
         stmt = select(ExisFileRow.source_modified_at).where(ExisFileRow.file_name == file.name)
         async with session_scope() as session:
             result = await session.execute(stmt)
-            modified_at: datetime | None = result.scalar_one_or_none()
-        return modified_at
+            row = result.one_or_none()
+        return None if row is None else IngestedFile(source_modified_at=row[0])
 
     async def persist(
         self, decoded: ExisDecoded, file: ExisFile, source_modified_at: datetime | None
     ) -> uuid.UUID:
-        """Write the InfluxDB points, then upsert the Postgres row.
+        """Withdraw readings the file no longer has, write its InfluxDB points,
+        then upsert the Postgres row.
 
         The order is deliberate and the reverse of SUVI's: the row is what
         tells the next run "this day is done", so it is written only once
-        every point has been. A failure part-way leaves no row, and the next
-        run redoes the whole day. That is safe because InfluxDB replaces a
-        point with the same series and timestamp instead of duplicating it.
+        every point has been. A failure part-way leaves the previous row (or
+        none), and the next run redoes the whole day. That is safe because
+        InfluxDB replaces a point with the same series and timestamp instead
+        of duplicating it.
         """
-        points = await asyncio.to_thread(build_points, file.product, decoded)
+        points = await self._stale_points(decoded, file)
+        points += await asyncio.to_thread(build_points, file.product, decoded)
         for offset in range(0, len(points), BATCH_SIZE):
             await self._influx.write(points[offset : offset + BATCH_SIZE])
 
@@ -290,3 +353,34 @@ class ExisReadings:
             points=len(points),
         )
         return file_id
+
+    async def _stale_points(self, decoded: ExisDecoded, file: ExisFile) -> list[Point]:
+        """Tombstones for the readings an earlier ingest of this day stored and
+        ``decoded`` drops. Empty the first time a day is ingested.
+
+        The row is looked up by day, not by name, so a higher ``_vX-Y-Z``
+        withdraws what the lower one wrote.
+        """
+        stmt = select(ExisFileRow.first_observed_at, ExisFileRow.last_observed_at).where(
+            ExisFileRow.satellite == decoded.satellite,
+            ExisFileRow.product == file.product.value,
+            ExisFileRow.day == file.day,
+        )
+        async with session_scope() as session:
+            result = await session.execute(stmt)
+            previous = result.one_or_none()
+        if previous is None or previous[0] is None or previous[1] is None:
+            return []
+        stored = await self._influx.query(
+            _stored_query(decoded.satellite, file.product, previous[0], previous[1])
+        )
+        stale = await asyncio.to_thread(stale_points, file.product, decoded, stored)
+        if stale:
+            log.info(
+                "withdrawing exis readings",
+                satellite=decoded.satellite,
+                product=file.product.value,
+                day=file.day.isoformat(),
+                readings=len(stale),
+            )
+        return stale

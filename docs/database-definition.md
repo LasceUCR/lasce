@@ -365,7 +365,8 @@ identifier, a title, a description, and an optional image source.
 One daily EXIS L1b file (one product, one UTC day) ingested by the worker's `exis-pipeline` job
 (`apps/worker/app/services/exis_readings.py`) — see [`exis-pipeline.md`](exis-pipeline.md). The
 readings themselves are **not** here: they are written to InfluxDB under the `exis_irradiance`
-measurement, tagged by `satellite`, `product` and `channel`. This row records that the day was
+measurement, tagged by `satellite`, `product` and `channel`, with a `valid` field readers must
+filter on. This row records that the day was
 ingested, from which archive version, and how many points each channel produced. The web app
 never writes here.
 
