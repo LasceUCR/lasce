@@ -4,6 +4,7 @@ import { Play } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 
+import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { MediaFrame } from './MediaFrame'
 import { MediaLightbox } from './MediaLightbox'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
@@ -39,10 +40,13 @@ export function AlbumMediaGrid({
   const [openIndex, setOpenIndex] = useState(closed)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
   const showEditor = editMode && (canEdit || canDelete || canCreate)
+  const showAddCard = editMode && canCreate
 
-  function handleDelete(_id: string): void {}
+  function handleCreate(): void {}
 
-  function handleUpdate(_id: string): void {}
+  function handleDelete(id: string): void {}
+
+  function handleUpdate(id: string): void {}
 
   const close = useCallback(() => {
     // The dialog closes itself natively before this runs, so the document is no
@@ -61,17 +65,26 @@ export function AlbumMediaGrid({
 
   const openItem = openIndex === closed ? null : media[openIndex]
 
-  if (media.length === 0) {
-    return (
-      <p className="content-empty" role="status">
-        No hay contenido disponible en esta categoría.
-      </p>
-    )
-  }
-
   return (
     <>
       <ul className="media-grid tile-list">
+        {editMode && canCreate ? (
+          <li className="media-grid-add">
+            <AddItemCard label="Añadir contenido">
+              {({ close }) => (
+                <button
+                  onClick={() => {
+                    handleCreate()
+                    close()
+                  }}
+                  type="button"
+                >
+                  Crear contenido
+                </button>
+              )}
+            </AddItemCard>
+          </li>
+        ) : null}
         {media.map((item, index) => {
           const span = {
             '--media-col-span': item.colSpan,

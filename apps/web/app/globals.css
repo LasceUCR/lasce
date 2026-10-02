@@ -4113,6 +4113,11 @@ a.gallery-tile:focus-visible {
   gap: 16px;
 }
 
+.media-grid-add {
+  display: flex;
+}
+
+
 .media-tile {
   position: relative;
   grid-column: span var(--media-col-span, 1);

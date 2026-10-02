@@ -104,23 +104,6 @@ export function GalleryGroupSection({
             />
           </li>
         ))}
-        {editMode && canCreate ? (
-          <li className="gallery-grid-add">
-            <AddItemCard label="Añadir subálbum">
-              {({ close }) => (
-                <button
-                  onClick={() => {
-                    handleCreate()
-                    close()
-                  }}
-                  type="button"
-                >
-                  Crear subálbum
-                </button>
-              )}
-            </AddItemCard>
-          </li>
-        ) : null}
       </ul>
     </section>
   )
