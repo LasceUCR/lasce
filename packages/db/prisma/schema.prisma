@@ -345,6 +345,20 @@ model NosotrosResearcher {
   @@schema("public")
 }
 
+/// Defines a group for albumss to be displayed(e.g. "Fotos ROSAC" or "2026 Workshop")
+/// This is the first organization level within gallery
+model GallerySection {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  description   String?        @db.Text
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime       @default(now()) @map("updated_at") @db.Timestamptz(3)
+  galleryAlbums GalleryAlbum[]
+
+  @@map("gallery_sections")
+  @@schema("gallery")
+}
+
 /// A top-level gallery album (e.g. "ROSAC") or, when `parentAlbumId` is set, a
 /// sub-album nested one level under one (e.g. "Cimentación" under "ROSAC"). The
 /// hierarchy is exactly 2 levels by application convention; nothing here enforces
@@ -356,6 +370,7 @@ model GalleryAlbum {
   description    String   @db.Text
   /// Display string shown in the album summary line, e.g. "2025–2026".
   yearsLabel     String?  @map("years_label")
+  sectionId      String   @map("section_id") @db.Uuid
   parentAlbumId  String?  @map("parent_album_id") @db.Uuid
   /// Object key of the cover image shown on the album/sub-album tile. Decorative
   /// (rendered with alt=""), so no separate alt column — unlike GalleryMedia.
@@ -366,6 +381,7 @@ model GalleryAlbum {
   parentAlbum GalleryAlbum?  @relation("GalleryAlbumSubAlbums", fields: [parentAlbumId], references: [id], onDelete: Cascade)
   subAlbums   GalleryAlbum[] @relation("GalleryAlbumSubAlbums")
   media       GalleryMedia[]
+  section     GallerySection @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 
   @@index([parentAlbumId])
   @@map("gallery_albums")
@@ -404,6 +420,7 @@ model GalleryMedia {
   @@map("gallery_media")
   @@schema("gallery")
 }
+
 /// An editable research area shown on the public investigation page.
 model ResearchArea {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

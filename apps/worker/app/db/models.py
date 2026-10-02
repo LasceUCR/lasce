@@ -237,6 +237,20 @@ class UserSession(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
+class GallerySection(Base):
+    """A group of gallery albums used as the first organization level within
+    the gallery, e.g. "Fotos ROSAC" or "2026 Workshop". Lives in the
+    ``gallery`` Postgres schema.
+    """
+
+    __tablename__ = "gallery_sections"
+    __table_args__ = {"schema": "gallery"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 class GalleryAlbum(Base):
     """A top-level gallery album or, when ``parent_album_id`` is set, a sub-album
@@ -252,6 +266,14 @@ class GalleryAlbum(Base):
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str] = mapped_column(Text)
     years_label: Mapped[str | None] = mapped_column(Text, nullable=True)
+    section_id: Mapped[uuid.UUID] = mapped_column(
+    UUID(as_uuid=True),
+    ForeignKey(
+        "gallery.gallery_sections.id",
+        onupdate="CASCADE",
+        ondelete="CASCADE",
+        ),
+    )
     parent_album_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("gallery.gallery_albums.id", ondelete="CASCADE"),
