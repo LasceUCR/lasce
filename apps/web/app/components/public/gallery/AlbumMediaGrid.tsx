@@ -7,7 +7,11 @@ import type { CSSProperties } from 'react'
 import { MediaFrame } from './MediaFrame'
 import { MediaLightbox } from './MediaLightbox'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
-import { mediaPlaceholder, type GalleryMedia } from '@/app/lib/gallery'
+import type { GalleryMedia } from '@/app/lib/gallery'
+
+function mediaPlaceholder(item: GalleryMedia): string {
+  return `${item.isVideo ? 'Video' : 'Foto'}: ${item.title}`
+}
 
 export interface AlbumMediaGridProps {
   albumTitle: string

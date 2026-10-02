@@ -8,12 +8,15 @@ import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import {
-  albumMediaMeta,
-  subAlbumPath,
-  type GalleryMedia,
-  type GallerySubAlbum,
-} from '@/app/lib/gallery'
+import type { GalleryMedia, GallerySubAlbum } from '@/app/lib/gallery'
+
+function albumMediaMeta(media: readonly GalleryMedia[]): string {
+  return `${media.length} archivos en este álbum`
+}
+
+function subAlbumPath(albumSlug: string, subAlbumSlug: string): string {
+  return `/galeria/${albumSlug}/${subAlbumSlug}`
+}
 
 export interface AlbumPageProps {
   title: string

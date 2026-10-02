@@ -5,7 +5,11 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { KeyboardEvent, MouseEvent } from 'react'
 
 import { MediaFrame } from './MediaFrame'
-import { mediaPlaceholder, type GalleryMedia } from '@/app/lib/gallery'
+import type { GalleryMedia } from '@/app/lib/gallery'
+
+function mediaPlaceholder(item: GalleryMedia): string {
+  return `${item.isVideo ? 'Video' : 'Foto'}: ${item.title}`
+}
 
 export interface MediaLightboxProps {
   albumTitle: string

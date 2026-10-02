@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import {
-  createTopLevelGalleryAlbum,
-  galleryTopLevelAlbumInputSchema,
-} from '@/app/lib/gallery'
+import { createTopLevelGalleryAlbum, galleryTopLevelAlbumInputSchema } from '@/app/lib/gallery'
 
 export const dynamic = 'force-dynamic'
 

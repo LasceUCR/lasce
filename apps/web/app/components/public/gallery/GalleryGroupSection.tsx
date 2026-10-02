@@ -4,7 +4,29 @@ import { AlbumTile } from './AlbumTile'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import { albumMeta, albumPath, subAlbumPath, type GalleryAlbum } from '@/app/lib/gallery'
+import type { GalleryAlbum } from '@/app/lib/gallery'
+
+function albumPath(slug: string): string {
+  return `/galeria/${slug}`
+}
+
+function subAlbumPath(albumSlug: string, subAlbumSlug: string): string {
+  return `/galeria/${albumSlug}/${subAlbumSlug}`
+}
+
+function albumMeta(album: GalleryAlbum): string {
+  const fileCount = album.subAlbums.reduce(
+    (total, subAlbum) => total + subAlbum.media.length,
+    album.media.length,
+  )
+  const parts = [`${fileCount} archivos`, album.years]
+
+  if (album.subAlbums.length > 0) {
+    parts.unshift(`${album.subAlbums.length} subálbumes`)
+  }
+
+  return parts.join(' · ')
+}
 
 export interface GalleryGroupSectionProps {
   album: GalleryAlbum
