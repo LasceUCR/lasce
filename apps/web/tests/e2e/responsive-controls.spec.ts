@@ -61,10 +61,11 @@ test.describe('responsive native controls', () => {
         expect(panel.overflows).toBe(true)
         expect(panel.scrollTop).toBeGreaterThan(0)
       }
-      // The click proves the last option receives the pointer once scrolled into view.
-      // Where it leads is covered by public-portal.spec.ts; waiting for that render here
-      // made WebKit time out in `next dev` while the router was still rendering.
-      await lastLink.click()
+      // A trial click runs the checks a real tap needs (visible, stable, receives the pointer)
+      // without leaving the page. Following the link is covered by public-portal.spec.ts;
+      // doing it here left WebKit stuck rendering /acceso under `next dev`.
+      await lastLink.click({ trial: true })
+      await page.getByLabel('Abrir navegación').click()
       await expect(navigation).toBeHidden()
       await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
       await page.goto('/')
