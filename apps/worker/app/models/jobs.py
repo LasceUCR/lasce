@@ -7,6 +7,7 @@ exported from Zod — that test is what catches the two sides drifting apart.
 """
 
 from datetime import date, datetime
+from datetime import date as date_type
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -42,3 +43,12 @@ class SuviPipelinePayload(JobPayload):
     channel: Literal["Fe093", "Fe131", "Fe171", "Fe195", "Fe284", "He303"]
     spacecraft: int = Field(default=19)
     lookback_minutes: int = Field(alias="lookbackMinutes", ge=1, le=1440, default=10)
+
+
+class ExisPipelinePayload(JobPayload):
+    """Ingest one daily EXIS L1b file; without ``date``, the newest day in the lookback."""
+
+    product: Literal["SFEU", "SFXR"]
+    spacecraft: int = Field(default=19)
+    lookback_days: int = Field(alias="lookbackDays", ge=1, le=31, default=3)
+    date: date_type | None = None

@@ -10,12 +10,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.models.jobs import (
+    ExisPipelinePayload,
     IngestReadingsPayload,
     JobPayload,
     QueryGoesArchivePayload,
     SuviPipelinePayload,
 )
-from app.processors import ingest_readings, query_goes_archive, suvi_pipeline
+from app.processors import exis_pipeline, ingest_readings, query_goes_archive, suvi_pipeline
 
 Processor = Callable[[Any, Any], Awaitable[dict[str, Any]]]
 
@@ -38,6 +39,7 @@ REGISTRY: dict[str, JobHandler] = {
     "ingest-readings": JobHandler(IngestReadingsPayload, ingest_readings.run),
     "query-goes-archive": JobHandler(QueryGoesArchivePayload, query_goes_archive.run),
     "suvi-pipeline": JobHandler(SuviPipelinePayload, suvi_pipeline.run),
+    "exis-pipeline": JobHandler(ExisPipelinePayload, exis_pipeline.run),
 }
 
 

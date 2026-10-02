@@ -7,14 +7,14 @@ migration source; the worker mirrors these tables in SQLAlchemy
 
 ## Schemas
 
-| Postgres schema | Used for                                                 | Populated today |
-| --------------- | -------------------------------------------------------- | --------------- |
-| `public`        | Default, for anything not domain-specific                | No tables yet   |
-| `research`      | Public research/publications shown on `/publicaciones`   | Yes             |
-| `news`          | Public news/media coverage shown on `/noticias`          | Yes             |
-| `auth`          | Portal accounts created through `/acceso`                | Yes             |
-| `gallery`       | Public photo/video gallery shown on `/galeria`           | No — see below  |
-| `solar`         | SUVI L1b frames catalogued by the worker's SUVI pipeline | Yes             |
+| Postgres schema | Used for                                                  | Populated today |
+| --------------- | --------------------------------------------------------- | --------------- |
+| `public`        | Default, for anything not domain-specific                 | No tables yet   |
+| `research`      | Public research/publications shown on `/publicaciones`    | Yes             |
+| `news`          | Public news/media coverage shown on `/noticias`           | Yes             |
+| `auth`          | Portal accounts created through `/acceso`                 | Yes             |
+| `gallery`       | Public photo/video gallery shown on `/galeria`            | No — see below  |
+| `solar`         | SUVI frames and EXIS daily files catalogued by the worker | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
@@ -360,6 +360,36 @@ identifier, a title, a description, and an optional image source.
 | `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
 | `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
 
+### `exis_files`
+
+One daily EXIS L1b file (one product, one UTC day) ingested by the worker's `exis-pipeline` job
+(`apps/worker/app/services/exis_readings.py`) — see [`exis-pipeline.md`](exis-pipeline.md). The
+readings themselves are **not** here: they are written to InfluxDB under the `exis_irradiance`
+measurement, tagged by `satellite`, `product` and `channel`, with a `valid` field readers must
+filter on. This row records that the day was
+ingested, from which archive version, and how many points each channel produced. The web app
+never writes here.
+
+| Column               | Prisma type | Postgres type    | Constraints                                                                    |
+| -------------------- | ----------- | ---------------- | ------------------------------------------------------------------------------ |
+| `id`                 | `String`    | `uuid`           | PK, `gen_random_uuid()`                                                        |
+| `satellite`          | `String`    | `text`           | not null; NetCDF `platform_ID`, e.g. `"G19"`                                   |
+| `product`            | `String`    | `text`           | not null; `"SFEU"` or `"SFXR"`                                                 |
+| `day`                | `DateTime`  | `date`           | not null; the UTC day the file covers, from its name                           |
+| `file_name`          | `String`    | `text`           | `UNIQUE`, not null                                                             |
+| `version`            | `String`    | `text`           | not null; the `_vX-Y-Z` part of the name, e.g. `"0-0-0"`                       |
+| `source_url`         | `String`    | `text`           | not null                                                                       |
+| `source_modified_at` | `DateTime?` | `timestamptz(3)` | nullable; the archive's `Last-Modified` when ingested — a newer one re-ingests |
+| `first_observed_at`  | `DateTime?` | `timestamptz(3)` | nullable; earliest reading kept, across channels                               |
+| `last_observed_at`   | `DateTime?` | `timestamptz(3)` | nullable; latest reading kept, across channels                                 |
+| `point_count`        | `Json`      | `jsonb`          | not null; points written per channel code, e.g. `{"0.1-0.8nm": 81208}`         |
+| `attributes`         | `Json`      | `jsonb`          | not null; the NetCDF global attributes (provenance, algorithm versions)        |
+| `created_at`         | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                                      |
+| `updated_at`         | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                                         |
+
+Constraints: `UNIQUE (satellite, product, day)` — the upsert key, so a higher `_vX-Y-Z` of the
+same day replaces the older row instead of adding a second one.
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` (newest
@@ -384,6 +414,9 @@ fixed, real LASCE research and news records so local/dev environments aren't emp
 `apps/worker/app/services/process_headers.py`'s `ProcessHeaders.persist()` is the only writer of
 `solar.suvi_frames`, called from the `suvi-pipeline` processor after a frame is downloaded and
 decoded. Nothing in `apps/web` reads it yet.
+`apps/worker/app/services/exis_readings.py`'s `ExisReadings.persist()` is the only writer of
+`solar.exis_files`, and `ExisReadings.ingested_modified_at()` its only reader; both are called
+from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
 `apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
 maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
 area create, update, and delete operations will also write this table when implemented.
