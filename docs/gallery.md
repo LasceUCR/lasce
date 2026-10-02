@@ -1,9 +1,8 @@
 # Gallery
 
-How `/galeria` is built, and the rules for adding a file to it. The content is still mock data in
-[`apps/web/app/lib/gallery.ts`](../apps/web/app/lib/gallery.ts); the images under
-`apps/web/public/images/galeria/` are public-domain NASA stand-ins, documented in the README beside
-them. Wiring in a real source (Postgres rows plus MinIO objects) is a change to that one module.
+How `/galeria` is built, and the rules for adding a file to it. The initial albums, sub-albums and
+media are declared in [`apps/web/app/lib/gallery.ts`](../apps/web/app/lib/gallery.ts) and inserted into PostgreSQL by `pnpm db:seed`. The seed stores the existing `/images/galeria/` paths as object keys; these assets remain served from the web app's public directory rather than being uploaded to
+MinIO.
 
 ## The shape
 
@@ -22,6 +21,7 @@ them. Wiring in a real source (Postgres rows plus MinIO objects) is a change to 
 | Piece                 | File                                            | Covered by                     |
 | --------------------- | ----------------------------------------------- | ------------------------------ |
 | Mock data and helpers | `app/lib/gallery.ts`                            | `app/lib/gallery.test.ts`      |
+| Gallery write actions | `app/lib/gallery.ts`                            | `app/lib/gallery.test.ts`      |
 | Index page            | `app/components/public/gallery/GalleryPage.tsx` | `GalleryPage.test.tsx`         |
 | One album block       | `…/GalleryGroupSection.tsx`                     | `GalleryGroupSection.test.tsx` |
 | Album / sub-album     | `…/AlbumPage.tsx`                               | `AlbumPage.test.tsx`           |
@@ -81,8 +81,6 @@ These are deliberate. Please do not "fix" them back.
 
 ## Known gaps
 
-- The data is mock. There is no gallery table in `packages/db/prisma/schema.prisma`; when one is
-  added, `imageAlt` on `News` is the precedent for a required alt column.
 - A video entry renders its still image and never a `<video>`, so `isVideo` only drives the badge
   and the placeholder caption.
 - `hank-bb.webp` is the one image with no provenance row in

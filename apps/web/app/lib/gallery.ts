@@ -3,11 +3,6 @@ import { z } from 'zod'
 
 export const galleryIdSchema = z.uuid()
 
-export const gallerySectionInputSchema = z.object({
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  description: z.string().trim().nullable().optional(),
-})
-
 const galleryAlbumFields = {
   slug: z
     .string()
@@ -19,16 +14,10 @@ const galleryAlbumFields = {
   coverObjectKey: z.string().trim().min(1).nullable().optional(),
 }
 
-export const galleryTopLevelAlbumInputSchema = z
-  .object({
-    ...galleryAlbumFields,
-    sectionId: galleryIdSchema,
-  })
-  .strict()
+export const galleryTopLevelAlbumInputSchema = z.object(galleryAlbumFields).strict()
 
 export const gallerySubAlbumInputSchema = z.object(galleryAlbumFields).strict()
 
-export type GallerySectionInput = z.infer<typeof gallerySectionInputSchema>
 export type GalleryTopLevelAlbumInput = z.infer<typeof galleryTopLevelAlbumInputSchema>
 export type GallerySubAlbumInput = z.infer<typeof gallerySubAlbumInputSchema>
 
@@ -2128,39 +2117,20 @@ export async function getGalleryAlbums(): Promise<GalleryAlbum[]> {
 
 type GalleryAlbumFields = GallerySubAlbumInput
 
-export async function createGallerySection(data: GallerySectionInput) {
-  return prisma.gallerySection.create({
-    data: {
-      title: data.title,
-      description: data.description ?? null,
-    },
-  })
-}
-
 type CreateTopLevelAlbumResult =
   | { ok: true; album: Awaited<ReturnType<typeof prisma.galleryAlbum.create>> }
-  | { ok: false; reason: 'section-not-found' | 'duplicate-slug' }
+  | { ok: false; reason: 'duplicate-slug' }
 
 export async function createTopLevelGalleryAlbum(
   data: GalleryTopLevelAlbumInput,
 ): Promise<CreateTopLevelAlbumResult> {
-  const section = await prisma.gallerySection.findUnique({
-    where: { id: data.sectionId },
-    select: { id: true },
-  })
-  if (!section) return { ok: false, reason: 'section-not-found' }
-
   try {
     const album = await prisma.galleryAlbum.create({
-      data: toAlbumCreateData(data, {
-        sectionId: section.id,
-        parentAlbumId: null,
-      }),
+      data: toAlbumCreateData(data, null),
     })
     return { ok: true, album }
   } catch (error) {
     if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'duplicate-slug' }
-    if (hasPrismaErrorCode(error, 'P2003')) return { ok: false, reason: 'section-not-found' }
     throw error
   }
 }
@@ -2175,17 +2145,14 @@ export async function createGallerySubAlbum(
 ): Promise<CreateSubAlbumResult> {
   const parent = await prisma.galleryAlbum.findUnique({
     where: { id: parentAlbumId },
-    select: { id: true, sectionId: true, parentAlbumId: true },
+    select: { id: true, parentAlbumId: true },
   })
   if (!parent) return { ok: false, reason: 'parent-not-found' }
   if (parent.parentAlbumId !== null) return { ok: false, reason: 'parent-not-top-level' }
 
   try {
     const album = await prisma.galleryAlbum.create({
-      data: toAlbumCreateData(data, {
-        sectionId: parent.sectionId,
-        parentAlbumId: parent.id,
-      }),
+      data: toAlbumCreateData(data, parent.id),
     })
     return { ok: true, album }
   } catch (error) {
@@ -2195,18 +2162,14 @@ export async function createGallerySubAlbum(
   }
 }
 
-function toAlbumCreateData(
-  data: GalleryAlbumFields,
-  relation: { sectionId: string; parentAlbumId: string | null },
-) {
+function toAlbumCreateData(data: GalleryAlbumFields, parentAlbumId: string | null) {
   return {
     slug: data.slug,
     title: data.title,
     description: data.description,
     yearsLabel: data.yearsLabel ?? null,
     coverObjectKey: data.coverObjectKey ?? null,
-    sectionId: relation.sectionId,
-    parentAlbumId: relation.parentAlbumId,
+    parentAlbumId,
   }
 }
 

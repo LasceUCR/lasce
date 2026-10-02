@@ -10,7 +10,7 @@ import { config as loadEnv } from 'dotenv'
 loadEnv({ path: fileURLToPath(new URL('../../../.env', import.meta.url)), quiet: true })
 
 const { prisma } = await import('../src/index.js')
-const { galeriaMeta, galleryAlbumList } = await import('../../../apps/web/app/lib/gallery.js')
+const { galleryAlbumList } = await import('../../../apps/web/app/lib/gallery.js')
 
 const galleryMonthNumbers: Record<string, number> = {
   ene: 0,
@@ -821,19 +821,6 @@ for (const researcher of nosotrosResearchers) {
   })
 }
 
-const gallerySection = await prisma.gallerySection.upsert({
-  where: { id: 'f4634c78-945e-4f06-a440-76540b5f4af7' },
-  update: {
-    title: 'Galería LASCE',
-    description: galeriaMeta.description,
-  },
-  create: {
-    id: 'f4634c78-945e-4f06-a440-76540b5f4af7',
-    title: 'Galería LASCE',
-    description: galeriaMeta.description,
-  },
-})
-
 async function seedGalleryMedia(
   albumId: string,
   media: (typeof galleryAlbumList)[number]['media'][number],
@@ -872,7 +859,6 @@ for (const album of galleryAlbumList) {
       title: album.title,
       description: album.description,
       yearsLabel: album.years,
-      sectionId: gallerySection.id,
       parentAlbumId: null,
       coverObjectKey: album.src ?? null,
     },
@@ -881,7 +867,6 @@ for (const album of galleryAlbumList) {
       title: album.title,
       description: album.description,
       yearsLabel: album.years,
-      sectionId: gallerySection.id,
       coverObjectKey: album.src ?? null,
     },
   })
@@ -896,7 +881,6 @@ for (const album of galleryAlbumList) {
       update: {
         title: subAlbum.title,
         description: subAlbum.description,
-        sectionId: gallerySection.id,
         parentAlbumId: databaseAlbum.id,
         coverObjectKey: subAlbum.src ?? null,
       },
@@ -904,7 +888,6 @@ for (const album of galleryAlbumList) {
         slug: subAlbum.slug,
         title: subAlbum.title,
         description: subAlbum.description,
-        sectionId: gallerySection.id,
         parentAlbumId: databaseAlbum.id,
         coverObjectKey: subAlbum.src ?? null,
       },

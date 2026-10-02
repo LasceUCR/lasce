@@ -42,9 +42,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const result = await createTopLevelGalleryAlbum(parsed.data)
   if (!result.ok) {
-    if (result.reason === 'section-not-found') {
-      return NextResponse.json({ error: 'No existe la sección indicada.' }, { status: 404 })
-    }
     return NextResponse.json({ error: 'Ya existe un álbum con este slug.' }, { status: 409 })
   }
 

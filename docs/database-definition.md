@@ -232,23 +232,9 @@ Relationships: belongs to one `users` row.
 
 ## `gallery` schema
 
-Nothing reads or writes these tables yet: `/galeria` still renders from the static mock in
-`apps/web/app/lib/gallery.ts`. This section documents the schema so it's kept accurate as that
-mock is replaced.
-
-**### `gallery_sections`**
-
-A gallery section groups gallery albums into a first-level category, e.g. "Fotos ROSAC" or "2026 Workshop". A section may exist without containing any albums. The Prisma model is `GallerySection`; sections and albums use separate tables, with each album belonging to exactly one section.
-
-| Column        | Prisma type | Postgres type    | Constraints                            |
-| ------------- | ----------- | ---------------- | -------------------------------------- |
-| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
-| `title`       | `String`    | `text`           | not null                               |
-| `description` | `String?`   | `text`           | nullable                               |
-| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
-| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
-
-Relationships: has many `gallery_albums`. A section does not require any albums and may therefore exist with zero associated album rows.
+Gallery albums and sub-albums are written through the POST endpoints documented in
+[`gallery.md`](gallery.md), and `/galeria` reads the database-backed album hierarchy. Initial
+gallery content is declared in `apps/web/app/lib/gallery.ts` and populated by `pnpm db:seed`.
 
 ### `gallery_albums`
 
@@ -266,15 +252,13 @@ exactly 2 levels by application convention — nothing here stops a sub-album fr
 | `title`            | `String`    | `text`           | not null                                                                                   |
 | `description`      | `String`    | `text`           | not null                                                                                   |
 | `years_label`      | `String?`   | `text`           | nullable — display string, e.g. "2025–2026"                                                |
-| `section_id`       | `String`    | `uuid`           | FK → `gallery_sections.id`, `ON UPDATE CASCADE`, `ON DELETE CASCADE`, not null             |
 | `parent_album_id`  | `String?`   | `uuid`           | FK → `gallery_albums.id`, `ON DELETE CASCADE`, nullable — set only for sub-albums; indexed |
 | `cover_object_key` | `String?`   | `text`           | nullable — MinIO object key of the cover image, rendered decoratively (`alt=""`)           |
 | `created_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                                                  |
 | `updated_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                                                     |
 
-Relationships: belongs to exactly one `gallery_sections` row; optionally belongs to one parent `gallery_albums` row; has many `gallery_albums` (its sub-albums, deleted with it); has many `gallery_media`.
-
-Deleting a `gallery_sections` row cascades to its associated `gallery_albums`, which in turn cascades to their associated `gallery_media`. A section can therefore exist independently without any albums.
+Relationships: optionally belongs to one parent `gallery_albums` row; has many `gallery_albums`
+(its sub-albums, deleted with it); has many `gallery_media`.
 
 ### `gallery_media`
 
