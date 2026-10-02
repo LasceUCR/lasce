@@ -1,15 +1,18 @@
 import { GalleryGroupSection } from './GalleryGroupSection'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
-import { galeriaHero, galleryAlbumList } from '@/app/lib/gallery'
+import { galeriaHero } from '@/app/lib/gallery'
+import type { GalleryAlbum } from '@/app/lib/gallery'
 
 export interface GalleryPageProps {
+  albums: readonly GalleryAlbum[]
   canCreate?: boolean
   canEdit?: boolean
   canDelete?: boolean
 }
 
 export function GalleryPage({
+  albums,
   canCreate = false,
   canEdit = false,
   canDelete = false,
@@ -19,7 +22,7 @@ export function GalleryPage({
       <TopicHero kicker={galeriaHero.kicker} lead={galeriaHero.lead} title={galeriaHero.title} />
 
       <div className="gallery-groups page-width">
-        {galleryAlbumList.map((album) => (
+        {albums.map((album) => (
           <GalleryGroupSection
             album={album}
             key={album.slug}

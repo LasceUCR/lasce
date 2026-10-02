@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { GalleryPage } from '@/app/components/public/gallery/GalleryPage'
 import { userHasPermission } from '@/app/lib/auth/authorization'
-import { galeriaMeta } from '@/app/lib/gallery'
+import { galeriaMeta, galleryAlbumList } from '@/app/lib/gallery'
 
 export const metadata: Metadata = {
   title: galeriaMeta.title,
@@ -18,5 +18,12 @@ export default async function GaleriaRoute() {
     userHasPermission('delete_components'),
   ])
 
-  return <GalleryPage canCreate={canCreate} canDelete={canDelete} canEdit={canEdit} />
+  return (
+    <GalleryPage
+      albums={galleryAlbumList}
+      canCreate={canCreate}
+      canDelete={canDelete}
+      canEdit={canEdit}
+    />
+  )
 }

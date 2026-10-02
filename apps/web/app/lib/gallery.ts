@@ -32,7 +32,6 @@ export type GallerySectionInput = z.infer<typeof gallerySectionInputSchema>
 export type GalleryTopLevelAlbumInput = z.infer<typeof galleryTopLevelAlbumInputSchema>
 export type GallerySubAlbumInput = z.infer<typeof gallerySubAlbumInputSchema>
 
-
 /**
  * Real content for the public gallery.
  *
@@ -67,17 +66,25 @@ export interface GalleryMedia {
   rowSpan: 1 | 2 | 3 | 4
   /** Optional: a file still awaiting upload renders the placeholder frame. */
   src?: string
+  /** MinIO object key when the media record comes from PostgreSQL. */
+  objectKey?: string
 }
 
 export interface GallerySubAlbum {
+  /** Database id, present for records loaded from PostgreSQL. */
+  id?: string
   slug: string
   title: string
   description: string
   media: readonly GalleryMedia[]
   src?: string
+  /** MinIO object key when the album record comes from PostgreSQL. */
+  coverObjectKey?: string
 }
 
 export interface GalleryAlbum {
+  /** Database id, present for records loaded from PostgreSQL. */
+  id?: string
   slug: string
   title: string
   description: string
@@ -86,6 +93,8 @@ export interface GalleryAlbum {
   subAlbums: readonly GallerySubAlbum[]
   media: readonly GalleryMedia[]
   src?: string
+  /** MinIO object key when the album record comes from PostgreSQL. */
+  coverObjectKey?: string
 }
 
 export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
@@ -2030,7 +2039,75 @@ export function mediaPlaceholder(item: GalleryMedia): string {
   return `${item.isVideo ? 'Video' : 'Foto'}: ${item.title}`
 }
 
+type DatabaseGalleryMedia = {
+  id: string
+  title: string
+  description: string
+  altText: string
+  objectKey: string
+  format: string
+  isVideo: boolean
+  colSpan: number
+  rowSpan: number
+  capturedAt: Date
+  uploaderName: string
+}
 
+/** Validates a stored tile dimension before narrowing it to the gallery's supported span. */
+function toGalleryTileSpan(value: number, mediaId: string, dimension: string): 1 | 2 | 3 | 4 {
+  if (value === 1 || value === 2 || value === 3 || value === 4) return value
+  throw new Error(`Gallery media ${mediaId} has invalid ${dimension}: ${value}`)
+}
+
+/** Converts a database media record to the public gallery shape while retaining its object key. */
+function toGalleryMedia(media: DatabaseGalleryMedia): GalleryMedia {
+  return {
+    id: media.id,
+    title: media.title,
+    description: media.description,
+    alt: media.altText,
+    date: media.capturedAt.toISOString().slice(0, 10),
+    format: media.format,
+    uploader: media.uploaderName,
+    isVideo: media.isVideo,
+    colSpan: toGalleryTileSpan(media.colSpan, media.id, 'colSpan'),
+    rowSpan: toGalleryTileSpan(media.rowSpan, media.id, 'rowSpan'),
+    objectKey: media.objectKey,
+  }
+}
+
+/** Loads top-level albums and their nested albums/media in display order, including database IDs. */
+export async function getGalleryAlbums(): Promise<GalleryAlbum[]> {
+  const albums = await prisma.galleryAlbum.findMany({
+    where: { parentAlbumId: null },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      media: { orderBy: { position: 'asc' } },
+      subAlbums: {
+        orderBy: { createdAt: 'asc' },
+        include: { media: { orderBy: { position: 'asc' } } },
+      },
+    },
+  })
+
+  return albums.map((album) => ({
+    id: album.id,
+    slug: album.slug,
+    title: album.title,
+    description: album.description,
+    years: album.yearsLabel ?? '',
+    coverObjectKey: album.coverObjectKey ?? undefined,
+    subAlbums: album.subAlbums.map((subAlbum) => ({
+      id: subAlbum.id,
+      slug: subAlbum.slug,
+      title: subAlbum.title,
+      description: subAlbum.description,
+      coverObjectKey: subAlbum.coverObjectKey ?? undefined,
+      media: subAlbum.media.map(toGalleryMedia),
+    })),
+    media: album.media.map(toGalleryMedia),
+  }))
+}
 
 type GalleryAlbumFields = GallerySubAlbumInput
 
