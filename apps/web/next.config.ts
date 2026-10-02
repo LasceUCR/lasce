@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
 
 import type { NextConfig } from 'next'
@@ -79,6 +80,15 @@ function minioRemotePattern():
 const minioPattern = minioRemotePattern()
 
 const nextConfig: NextConfig = {
+  // Phones use the host's LAN address, not localhost. Without this, Next blocks
+  // dev chunks over HTTP and native disclosures open without React hydrating.
+  allowedDevOrigins:
+    process.env.NODE_ENV === 'development'
+      ? Object.values(networkInterfaces())
+          .flatMap((addresses) => addresses ?? [])
+          .filter((address) => address.family === 'IPv4' && !address.internal)
+          .map((address) => address.address)
+      : undefined,
   images: {
     remotePatterns: [
       {
