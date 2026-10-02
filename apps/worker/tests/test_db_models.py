@@ -16,6 +16,7 @@ from app.db import (
     Research,
     ResearchAuthor,
     ResearchCrossAuthor,
+    ResourceDownload,
     RolePermission,
     SuviFrame,
     User,
@@ -319,3 +320,36 @@ def test_exis_file_matches_the_prisma_columns() -> None:
 def test_exis_file_is_unique_per_satellite_product_and_day() -> None:
     constraint_names = {constraint.name for constraint in ExisFile.__table__.constraints}
     assert "exis_files_satellite_product_day_key" in constraint_names
+
+
+def test_resource_downloads_live_in_the_public_schema() -> None:
+    assert ResourceDownload.__table__.schema == "public"
+
+
+def test_resource_download_matches_the_prisma_columns() -> None:
+    columns = ResourceDownload.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "user_id",
+        "source",
+        "instrument",
+        "product",
+        "format",
+        "params",
+        "object_key",
+        "byte_size",
+        "row_count",
+        "expires_at",
+        "created_at",
+    }
+    assert columns["user_id"].nullable
+    assert columns["row_count"].nullable
+    assert not columns["object_key"].nullable
+
+
+def test_resource_download_outlives_its_user() -> None:
+    (user_fk,) = ResourceDownload.__table__.columns["user_id"].foreign_keys
+
+    assert user_fk.target_fullname == "auth.users.id"
+    assert user_fk.ondelete == "SET NULL"
