@@ -5,6 +5,32 @@
   margin-top: 20px;
 }
 
+/* Colors, border and radius come from the shared `:global(.topic-highlight)`
+   (see globals.css) applied alongside this class — only layout lives here,
+   so the CTA follows that style automatically if it ever changes. The
+   `:global(.topic-highlight)` prefix raises this rule's specificity above
+   that class's own padding, regardless of each stylesheet's load order. */
+:global(.topic-highlight).donationsCta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 20px 24px;
+}
+
+.donationsCtaText h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.donationsCtaText p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .locationMapWrapper {
   overflow: hidden;
   padding: 0;
