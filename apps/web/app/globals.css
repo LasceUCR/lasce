@@ -1638,6 +1638,29 @@ a {
   text-align: left;
 }
 
+.data-downloads {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.data-downloads h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.data-downloads-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.data-downloads .data-field-hint {
+  margin: 0;
+}
+
 .data-wavelengths {
   grid-column: 1 / -1;
   min-width: 0;

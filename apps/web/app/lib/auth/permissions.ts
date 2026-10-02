@@ -7,9 +7,10 @@ import type { UserRole } from '@lasce/db'
  * screens. The mapping itself is stored in `auth.role_permissions`.
  *
  * Component create/edit/delete will gate content-management screens that do not
- * exist yet. `download_resources` covers laboratory resources: downloading them.
- * `download_goes_resources` is reserved for GOES satellite data downloads, which
- * do not exist yet.
+ * exist yet. `download_resources` covers laboratory resources: downloading them,
+ * including chart images and non-GOES data from `/datos`.
+ * `download_goes_resources` additionally unlocks GOES data exports there
+ * (`app/lib/downloads/policy.ts`).
  */
 export const PERMISSIONS = [
   'create_components',

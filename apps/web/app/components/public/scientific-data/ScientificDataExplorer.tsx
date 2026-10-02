@@ -12,10 +12,14 @@ import {
 } from 'react'
 import { z } from 'zod'
 
+import type { RequestResourceDownloadResult } from '@/app/(public)/datos/actions'
 import { DataTable } from '@/app/components/public/DataTable'
 import { Notice } from '@/app/components/public/Notice'
 import { Button } from '@/app/components/public/Button'
 import { Select } from '@/app/components/public/Select'
+import type { Permission } from '@/app/lib/auth/permissions'
+import type { DownloadFormat } from '@/app/lib/downloads/formats'
+import { getDownloadOptions } from '@/app/lib/downloads/policy'
 import {
   getAvailabilityMessage,
   type GoesAvailability,
@@ -34,14 +38,37 @@ import {
 
 import { DynamicSpectrumChart } from './DynamicSpectrumChart'
 import { InstrumentProductSelect } from './InstrumentProductSelect'
+import { ResourceDownloadActions, type ResourceDownloadMessage } from './ResourceDownloadActions'
 import { ScientificDataChart } from './ScientificDataChart'
 import { SuviImageSequence } from './SuviImageSequence'
+
+export interface ResourceDownloadRequestInput {
+  query: ScientificDataQuery
+  format: DownloadFormat
+  jobId?: string
+}
 
 export interface ScientificDataExplorerProps {
   sources: ScientificSource[]
   initialQuery: ScientificDataQuery
   initialResult?: ScientificDataResult
   goesAvailability: GoesAvailability
+  /** Whether a session exists. Decides between disabled buttons and a sign-in link. */
+  signedIn?: boolean
+  /** The signed-in user's grants; only used to draw the download buttons, never to enforce. */
+  downloadGrants?: readonly Permission[]
+  /** Where an anonymous visitor goes when choosing a download. */
+  loginHref?: string
+  /** The `requestResourceDownload` Server Action. Without it no download buttons are shown. */
+  requestDownload?: (
+    request: ResourceDownloadRequestInput,
+  ) => Promise<RequestResourceDownloadResult>
+  /** Opens a download link or the sign-in page. Defaults to a full page load. */
+  navigate?: (url: string) => void
+}
+
+function assignLocation(url: string) {
+  window.location.assign(url)
 }
 
 type RequestState = 'idle' | 'loading' | 'success' | 'error'
@@ -78,6 +105,11 @@ export function ScientificDataExplorer({
   initialQuery,
   initialResult,
   goesAvailability,
+  signedIn = false,
+  downloadGrants = [],
+  loginHref = '/acceso',
+  requestDownload,
+  navigate = assignLocation,
 }: ScientificDataExplorerProps) {
   // Server-rendered controls must wait for React's handlers before accepting input.
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
@@ -88,6 +120,10 @@ export function ScientificDataExplorer({
   const resultsHeading = useRef<HTMLHeadingElement>(null)
   const activeRequest = useRef<AbortController | null>(null)
   const [progress, setProgress] = useState(0)
+  /** The asynchronous job that produced `result`, so a download can reuse it instead of re-queuing. */
+  const [resultJobId, setResultJobId] = useState<string | null>(null)
+  const [pendingDownload, setPendingDownload] = useState<DownloadFormat | null>(null)
+  const [downloadMessage, setDownloadMessage] = useState<ResourceDownloadMessage | null>(null)
   useEffect(() => () => activeRequest.current?.abort(), [])
   const controlsDisabled = !hydrated
 
@@ -106,6 +142,44 @@ export function ScientificDataExplorer({
     setResult(null)
     setRequestState('idle')
     setMessage(null)
+    setResultJobId(null)
+    setDownloadMessage(null)
+  }
+
+  async function downloadResult(format: DownloadFormat) {
+    if (!result || !requestDownload) return
+    if (!signedIn) {
+      navigate(loginHref)
+      return
+    }
+
+    setPendingDownload(format)
+    setDownloadMessage(null)
+    try {
+      const outcome = await requestDownload({
+        query: result.query,
+        format,
+        ...(resultJobId ? { jobId: resultJobId } : {}),
+      })
+      if (outcome.ok) {
+        setDownloadMessage({
+          tone: 'info',
+          text: `La descarga de ${outcome.filename} comenzó. El enlace vence en 30 minutos.`,
+        })
+        navigate(outcome.url)
+      } else if (outcome.reason === 'unauthenticated') {
+        navigate(loginHref)
+      } else {
+        setDownloadMessage({ tone: 'error', text: outcome.message })
+      }
+    } catch {
+      setDownloadMessage({
+        tone: 'error',
+        text: 'No fue posible preparar la descarga. Inténtelo nuevamente más tarde.',
+      })
+    } finally {
+      setPendingDownload(null)
+    }
   }
 
   function updateQuery<Key extends keyof ScientificDataQuery>(
@@ -163,6 +237,9 @@ export function ScientificDataExplorer({
       setRequestState('loading')
       setMessage(null)
       setProgress(0)
+      setResultJobId(null)
+      setDownloadMessage(null)
+      let jobId: string | null = null
       const controller = new AbortController()
       activeRequest.current = controller
 
@@ -192,6 +269,7 @@ export function ScientificDataExplorer({
           if (Date.now() > deadline) throw new Error('Historical query timed out')
           await new Promise<void>((resolve) => setTimeout(resolve, 2000))
           controller.signal.throwIfAborted()
+          jobId = pending.jobId
           parameters.set('jobId', pending.jobId)
           response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
             signal: controller.signal,
@@ -204,6 +282,7 @@ export function ScientificDataExplorer({
         controller.signal.throwIfAborted()
 
         setResult(parsed.data)
+        setResultJobId(jobId)
         setRequestState('success')
         if (focusResults) {
           requestAnimationFrame(() => {
@@ -392,10 +471,11 @@ export function ScientificDataExplorer({
       <aside aria-labelledby="scientific-permissions-title" className="data-permissions">
         <h3 id="scientific-permissions-title">Permisos de consulta y descarga</h3>
         <p>
-          Puede consultar información histórica de GOES sin una cuenta. Solo se permite descargar
-          imágenes de las gráficas; los datos originales y las imágenes solares SUVI no se pueden
-          descargar desde esta plataforma. Para descargar imágenes de las gráficas, necesita una
-          cuenta e iniciar sesión.
+          Puede consultar información histórica de GOES sin una cuenta. Para descargar, necesita una
+          cuenta e iniciar sesión. Las imágenes de las gráficas se pueden descargar para cualquier
+          fuente; los datos en CSV de ROSAC están disponibles para toda cuenta, y los de GOES
+          requieren un permiso de descarga de datos GOES. Las imágenes solares SUVI no se pueden
+          descargar desde esta plataforma. Cada enlace de descarga vence en 30 minutos.
         </p>
       </aside>
 
@@ -567,6 +647,16 @@ export function ScientificDataExplorer({
                 ))}
               </DataTable>
             </>
+          ) : null}
+
+          {requestDownload && hasResults ? (
+            <ResourceDownloadActions
+              message={downloadMessage}
+              onDownload={(format) => void downloadResult(format)}
+              options={getDownloadOptions(result.query, downloadGrants)}
+              pendingFormat={pendingDownload}
+              signedIn={signedIn}
+            />
           ) : null}
         </section>
       ) : null}

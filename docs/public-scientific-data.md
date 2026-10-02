@@ -2,7 +2,8 @@
 
 `LASCE-PUB-002` provides a public, read-only query at `/datos`. Visitors select a source, a
 scientific instrument, one of its products, a channel or parameter, one calendar day, and an
-increasing UTC time range. Consultation does not require login. No download action is added by this PBI.
+increasing UTC time range. Consultation does not require login. Downloading a chart or its data
+does, and is described in [downloads.md](downloads.md).
 
 ## Daily solar consultation
 
@@ -50,11 +51,19 @@ replace the new selection, and automatic updates do not move keyboard focus. Loa
 bands, source errors and individual image failures have visible messages. A failed image is
 removed while its UTC capture time remains visible; switching bands can recover normally.
 
-The visible permissions banner communicates the approved policy: historical GOES information
-can be consulted without an account; only images of graphs may be downloaded; original data and
-SUVI solar images cannot be downloaded through the platform; downloading graph images requires
-an account and signing in. This is informational and does not introduce an export endpoint,
-download button or authentication change.
+The visible permissions banner communicates the policy:
+
+- historical GOES information can be consulted without an account;
+- downloading anything requires an account and signing in;
+- chart images can be downloaded for every source;
+- ROSAC data (CSV) is open to every account;
+- GOES data requires the GOES data download permission (`download_goes_resources`);
+- SUVI solar images cannot be downloaded;
+- every download link expires after 30 minutes.
+
+Under each charted result, a **Descargas** block offers the formats the product allows. The
+banner is informational; the Server Action enforces the same rules
+([downloads.md](downloads.md)).
 
 ## Sources and provenance
 

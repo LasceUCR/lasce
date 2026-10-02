@@ -139,3 +139,49 @@ export const WithSuviImages: Story = {
 export const WithUnavailableSuviBand: Story = {
   args: { ...WithSuviImages.args, initialResult: { ...suviFixture, images: [] } },
 }
+
+const pendingDownload = () => new Promise<never>(() => {})
+
+/** A signed-in visitor without `download_goes_resources`: GOES image yes, GOES data no. */
+export const WithDownloadsForVisitor: Story = {
+  args: {
+    ...WithObservedResults.args,
+    signedIn: true,
+    downloadGrants: ['download_resources'],
+    requestDownload: pendingDownload,
+    navigate: () => undefined,
+  },
+}
+
+/** A user holding both download grants. */
+export const WithDownloadsForGoesDataHolder: Story = {
+  args: {
+    ...WithDownloadsForVisitor.args,
+    downloadGrants: ['download_resources', 'download_goes_resources'],
+  },
+}
+
+/** Anonymous: buttons lead to sign-in. */
+export const WithDownloadsSignedOut: Story = {
+  args: { ...WithDownloadsForVisitor.args, signedIn: false, downloadGrants: [] },
+}
+
+/** ROSAC data is open to every account. */
+export const WithRosacDownloads: Story = {
+  args: {
+    ...WithRosacDynamicSpectrum.args,
+    ...WithDownloadsForVisitor.args,
+    initialQuery: rosacQuery,
+    initialResult: rosacSpectrumFixture,
+  },
+}
+
+/** SUVI offers no download at all, whatever the grants. */
+export const WithSuviAndAllGrants: Story = {
+  args: {
+    ...WithSuviImages.args,
+    signedIn: true,
+    downloadGrants: ['download_resources', 'download_goes_resources'],
+    requestDownload: pendingDownload,
+  },
+}
