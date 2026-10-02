@@ -15,7 +15,12 @@ const publicRoutes: { label: string; path: string; heading: string; group?: stri
     heading: 'Colaboraciones e Iniciativas',
     group: 'Nosotros',
   },
-  { label: 'Investigación', path: '/investigacion', heading: 'Investigación' },
+  {
+    label: 'Áreas de investigación',
+    path: '/investigacion',
+    heading: 'Investigación',
+    group: 'Investigación',
+  },
   {
     label: 'Herramientas científicas',
     path: '/herramientas-cientificas',
@@ -23,8 +28,8 @@ const publicRoutes: { label: string; path: string; heading: string; group?: stri
     group: 'Recursos',
   },
   { label: 'Datos', path: '/datos', heading: 'Datos' },
-  { label: 'Galería', path: '/galeria', heading: 'Galería', group: 'Recursos' },
-  { label: 'Noticias', path: '/noticias', heading: 'Noticias' },
+  { label: 'Galería', path: '/galeria', heading: 'Galería', group: 'Divulgación' },
+  { label: 'Noticias', path: '/noticias', heading: 'Noticias', group: 'Divulgación' },
   { label: 'Contacto', path: '/contacto', heading: 'Contacto' },
 ]
 
@@ -42,6 +47,15 @@ const workAreaRoutes = [
   { path: '/clima-espacial', heading: 'Clima espacial' },
   { path: '/radioastronomia', heading: 'Radioastronomía' },
 ] as const
+
+// Every header destination: the public routes above plus the work areas, which sit
+// behind the Investigación disclosure.
+const navigationRoutes: { label: string; path: string; group?: string }[] = [
+  ...publicRoutes,
+  { label: 'Física solar', path: '/fisica-solar', group: 'Investigación' },
+  { label: 'Clima espacial', path: '/clima-espacial', group: 'Investigación' },
+  { label: 'ROSAC', path: '/radioastronomia', group: 'Investigación' },
+]
 
 test('loads the public landing page without authentication', async ({ page }) => {
   const response = await page.goto('/')
@@ -91,7 +105,7 @@ test('navigates through every public option and exposes the active page', async 
 
   const navigation = page.getByRole('navigation', { name: 'Navegación principal' })
 
-  for (const route of publicRoutes) {
+  for (const route of navigationRoutes) {
     const link = navigation.getByRole('link', { name: route.label, exact: true })
     const summary = route.group ? navigation.locator('summary', { hasText: route.group }) : null
 
@@ -253,6 +267,7 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   await expect(menu).toHaveAttribute('open', '')
 
   const navigation = page.getByRole('navigation', { name: 'Navegación móvil' })
+  await navigation.locator('summary', { hasText: 'Divulgación' }).click()
   const newsLink = navigation.getByRole('link', { name: 'Noticias', exact: true })
   await newsLink.click()
 
