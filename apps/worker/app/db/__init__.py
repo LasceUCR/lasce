@@ -1,5 +1,6 @@
 from app.db.models import (
     Base,
+    ExisFile,
     GalleryAlbum,
     GalleryMedia,
     News,
@@ -11,6 +12,7 @@ from app.db.models import (
     ResearchAuthor,
     ResearchCrossAuthor,
     RolePermission,
+    SuviFrame,
     User,
     UserRole,
     UserSession,
@@ -18,6 +20,7 @@ from app.db.models import (
 
 __all__ = [
     "Base",
+    "ExisFile",
     "GalleryAlbum",
     "GalleryMedia",
     "News",
@@ -29,6 +32,7 @@ __all__ = [
     "ResearchAuthor",
     "ResearchCrossAuthor",
     "RolePermission",
+    "SuviFrame",
     "User",
     "UserRole",
     "UserSession",

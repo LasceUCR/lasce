@@ -91,7 +91,7 @@ const suviFixture: ImageSequenceDataResult = {
   origin: {
     kind: 'simulated',
     provider: 'Muestra local de Storybook',
-    notice: 'Imagen de demostración del componente; esta historia no consulta NOAA.',
+    notice: 'Imagen de demostración del componente; esta historia no consulta el archivo SUVI.',
   },
   visualization: 'image-sequence',
   images: [
@@ -116,7 +116,7 @@ export const Default: Story = {
   args: {
     sources: scientificSources,
     initialQuery,
-    suviAvailability: { start: '2026-09-09T12:00:00.000Z', end: '2026-09-10T12:00:00.000Z' },
+    goesAvailability: { today: '2026-09-10' },
   },
 }
 

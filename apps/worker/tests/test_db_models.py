@@ -5,6 +5,7 @@ is to replicate everything here so the two languages never disagree about a colu
 """
 
 from app.db import (
+    ExisFile,
     GalleryAlbum,
     GalleryMedia,
     News,
@@ -16,6 +17,7 @@ from app.db import (
     ResearchAuthor,
     ResearchCrossAuthor,
     RolePermission,
+    SuviFrame,
     User,
     UserRole,
     UserSession,
@@ -246,3 +248,74 @@ def test_role_permission_matches_the_prisma_columns() -> None:
 def test_role_permission_is_unique_per_role_and_permission() -> None:
     constraint_names = {constraint.name for constraint in RolePermission.__table__.constraints}
     assert "role_permissions_role_permission_key" in constraint_names
+
+
+def test_suvi_frames_live_in_the_solar_schema() -> None:
+    assert SuviFrame.__table__.schema == "solar"
+
+
+def test_suvi_frame_matches_the_prisma_columns() -> None:
+    columns = SuviFrame.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "observed_at",
+        "wavelength",
+        "satellite",
+        "channel",
+        "file_name",
+        "source_url",
+        "exposure_time",
+        "sun_center_x",
+        "sun_center_y",
+        "sun_radius_px",
+        "quality_flag",
+        "raw_header",
+        "preview_file",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["file_name"].unique
+    assert not columns["wavelength"].nullable
+    assert not columns["satellite"].nullable
+    assert columns["exposure_time"].nullable
+    assert columns["preview_file"].nullable
+
+
+def test_suvi_frame_is_unique_per_satellite_channel_and_observed_at() -> None:
+    constraint_names = {constraint.name for constraint in SuviFrame.__table__.constraints}
+    assert "suvi_frames_satellite_channel_observed_at_key" in constraint_names
+
+
+def test_exis_files_live_in_the_solar_schema() -> None:
+    assert ExisFile.__table__.schema == "solar"
+
+
+def test_exis_file_matches_the_prisma_columns() -> None:
+    columns = ExisFile.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "satellite",
+        "product",
+        "day",
+        "file_name",
+        "version",
+        "source_url",
+        "source_modified_at",
+        "first_observed_at",
+        "last_observed_at",
+        "point_count",
+        "attributes",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["file_name"].unique
+    assert not columns["day"].nullable
+    assert columns["source_modified_at"].nullable
+    assert columns["first_observed_at"].nullable
+
+
+def test_exis_file_is_unique_per_satellite_product_and_day() -> None:
+    constraint_names = {constraint.name for constraint in ExisFile.__table__.constraints}
+    assert "exis_files_satellite_product_day_key" in constraint_names

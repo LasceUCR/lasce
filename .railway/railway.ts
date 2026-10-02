@@ -49,7 +49,8 @@ export default defineRailway((ctx) => {
       // so it is passed as a Docker build arg in cd.yml instead.
 
       // Object storage for apps/web's asset uploads/deletes
-      // (app/services/storage). Like the worker's INFLUXDB_*/MINIO_* below, MinIO
+      // (app/services/storage), and for /api/suvi/frames/[id], which reads
+      // SUVI previews from the same bucket. Like the worker's INFLUXDB_*/MINIO_* below, MinIO
       // has no Railway plugin yet and is deferred, so preserve() leaves these
       // exactly as set in the dashboard — nothing, today — which is what
       // keeps the app booting per docs/deployment.md, "Known gaps": upload
@@ -60,6 +61,14 @@ export default defineRailway((ctx) => {
       MINIO_SECRET_KEY: preserve(),
       MINIO_BUCKET: preserve(),
       MINIO_USE_SSL: preserve(),
+      // The /datos explorer reads EXIS readings from InfluxDB
+      // (app/services/scientific-data/influxSql.ts). Like MINIO_*, preserve()
+      // keeps the dashboard values, which are unset until InfluxDB is
+      // provisioned, so EXIS queries fail until then (docs/deployment.md,
+      // "Known gaps").
+      INFLUXDB_HOST: preserve(),
+      INFLUXDB_TOKEN: preserve(),
+      INFLUXDB_DATABASE: preserve(),
     },
     // Runs inside the deployment, with the service's own DATABASE_URL. A failed
     // migration aborts the release and leaves the previous version live.
@@ -86,9 +95,9 @@ export default defineRailway((ctx) => {
       // INFLUXDB_* / MINIO_* are intentionally unset: neither has a Railway
       // plugin and both are deferred. `ingest-readings` will fail until these
       // are provisioned. See docs/deployment.md. The `web` service above
-      // carries the same MINIO_* keys via preserve(), for the same reason —
-      // apps/web/app/services/storage writes to the same bucket now too, and
-      // is deferred exactly like this service is.
+      // carries both the MINIO_* and INFLUXDB_* keys via preserve(), for the
+      // same reason: its storage service and the SUVI frame route read the same
+      // bucket, and /datos reads the same InfluxDB database.
     },
     // No HTTP listener, so no healthcheck and no domain.
     replicas: 1,

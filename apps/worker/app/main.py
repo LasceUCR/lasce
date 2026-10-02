@@ -8,7 +8,9 @@ Run it with ``pnpm worker:dev`` (or ``uv run python -m app.main``).
 """
 
 import asyncio
+import selectors
 import signal
+import sys
 from datetime import UTC, datetime
 from typing import Any
 
@@ -86,5 +88,21 @@ async def main() -> None:
     log.info("worker stopped")
 
 
+def _selector_loop() -> asyncio.AbstractEventLoop:
+    """A selector-based loop, which is the only kind psycopg can run async on.
+
+    Python picks ``ProactorEventLoop`` by default on Windows, and psycopg 3
+    refuses it outright ("Psycopg cannot use the 'ProactorEventLoop' to run in
+    async mode"), so every database call in a processor fails on a Windows dev
+    machine while working fine in the Linux container. The trade-off is that
+    ``SelectSelector`` caps out at 512 handles and the loop loses subprocess
+    support; neither matters for a queue consumer at this concurrency.
+    """
+    return asyncio.SelectorEventLoop(selectors.SelectSelector())
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    if sys.platform == "win32":
+        asyncio.run(main(), loop_factory=_selector_loop)
+    else:
+        asyncio.run(main())

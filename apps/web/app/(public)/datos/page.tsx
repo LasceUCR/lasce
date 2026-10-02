@@ -4,7 +4,7 @@ import { ArrowDown } from 'lucide-react'
 import { ScientificDataExplorer } from '@/app/components/public/scientific-data/ScientificDataExplorer'
 import { SolarTodayLive } from '@/app/components/public/scientific-data/SolarTodayLive'
 import { goesInstruments, scientificSources } from '@/app/lib/scientific-data'
-import { getSuviAvailability } from '@/app/lib/scientific-data-availability'
+import { getGoesAvailability } from '@/app/lib/scientific-data-availability'
 import { getInitialScientificQuery } from '@/app/lib/scientific-data-navigation'
 
 const description = 'Explore imágenes del Sol y consulte la información científica disponible.'
@@ -44,7 +44,7 @@ export default async function ScientificDataRoute({ searchParams }: ScientificDa
       />
       <ScientificDataExplorer
         key={`${initialQuery.source}:${initialQuery.product}`}
-        suviAvailability={getSuviAvailability(today)}
+        goesAvailability={getGoesAvailability(today)}
         initialQuery={initialQuery}
         sources={scientificSources}
       />
