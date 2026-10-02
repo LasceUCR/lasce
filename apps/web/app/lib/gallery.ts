@@ -2059,8 +2059,14 @@ function toGalleryTileSpan(value: number, mediaId: string, dimension: string): 1
   throw new Error(`Gallery media ${mediaId} has invalid ${dimension}: ${value}`)
 }
 
+function publicGallerySource(objectKey: string | null | undefined): string | undefined {
+  return objectKey?.startsWith('/images/galeria/') ? objectKey : undefined
+}
+
 /** Converts a database media record to the public gallery shape while retaining its object key. */
 function toGalleryMedia(media: DatabaseGalleryMedia): GalleryMedia {
+  const src = publicGallerySource(media.objectKey)
+
   return {
     id: media.id,
     title: media.title,
@@ -2073,6 +2079,7 @@ function toGalleryMedia(media: DatabaseGalleryMedia): GalleryMedia {
     colSpan: toGalleryTileSpan(media.colSpan, media.id, 'colSpan'),
     rowSpan: toGalleryTileSpan(media.rowSpan, media.id, 'rowSpan'),
     objectKey: media.objectKey,
+    ...(src ? { src } : {}),
   }
 }
 
@@ -2090,23 +2097,33 @@ export async function getGalleryAlbums(): Promise<GalleryAlbum[]> {
     },
   })
 
-  return albums.map((album) => ({
-    id: album.id,
-    slug: album.slug,
-    title: album.title,
-    description: album.description,
-    years: album.yearsLabel ?? '',
-    coverObjectKey: album.coverObjectKey ?? undefined,
-    subAlbums: album.subAlbums.map((subAlbum) => ({
-      id: subAlbum.id,
-      slug: subAlbum.slug,
-      title: subAlbum.title,
-      description: subAlbum.description,
-      coverObjectKey: subAlbum.coverObjectKey ?? undefined,
-      media: subAlbum.media.map(toGalleryMedia),
-    })),
-    media: album.media.map(toGalleryMedia),
-  }))
+  return albums.map((album) => {
+    const src = publicGallerySource(album.coverObjectKey)
+
+    return {
+      id: album.id,
+      slug: album.slug,
+      title: album.title,
+      description: album.description,
+      years: album.yearsLabel ?? '',
+      coverObjectKey: album.coverObjectKey ?? undefined,
+      ...(src ? { src } : {}),
+      subAlbums: album.subAlbums.map((subAlbum) => {
+        const subAlbumSrc = publicGallerySource(subAlbum.coverObjectKey)
+
+        return {
+          id: subAlbum.id,
+          slug: subAlbum.slug,
+          title: subAlbum.title,
+          description: subAlbum.description,
+          coverObjectKey: subAlbum.coverObjectKey ?? undefined,
+          ...(subAlbumSrc ? { src: subAlbumSrc } : {}),
+          media: subAlbum.media.map(toGalleryMedia),
+        }
+      }),
+      media: album.media.map(toGalleryMedia),
+    }
+  })
 }
 
 type GalleryAlbumFields = GallerySubAlbumInput

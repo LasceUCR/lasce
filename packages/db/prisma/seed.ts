@@ -10,6 +10,48 @@ import { config as loadEnv } from 'dotenv'
 loadEnv({ path: fileURLToPath(new URL('../../../.env', import.meta.url)), quiet: true })
 
 const { prisma } = await import('../src/index.js')
+const { galeriaMeta, galleryAlbumList } = await import('../../../apps/web/app/lib/gallery.js')
+
+const galleryMonthNumbers: Record<string, number> = {
+  ene: 0,
+  feb: 1,
+  mar: 2,
+  abr: 3,
+  may: 4,
+  jun: 5,
+  jul: 6,
+  ago: 7,
+  sep: 8,
+  set: 8,
+  oct: 9,
+  nov: 10,
+  dic: 11,
+}
+
+function galleryCapturedAt(label: string): Date {
+  const match = /^(\d{1,2})(?:-\d{1,2})?\s+([a-záéíóú]+)\s+(\d{4})$/i.exec(label)
+  const [, day, monthLabel, year] = match ?? []
+
+  if (day === undefined || monthLabel === undefined || year === undefined) {
+    throw new Error(`Unsupported gallery capture date: ${label}`)
+  }
+
+  const month = galleryMonthNumbers[monthLabel.toLowerCase()]
+  if (month === undefined) {
+    throw new Error(`Unsupported gallery capture date: ${label}`)
+  }
+
+  const capturedAt = new Date(Date.UTC(Number(year), month, Number(day)))
+  if (
+    capturedAt.getUTCFullYear() !== Number(year) ||
+    capturedAt.getUTCMonth() !== month ||
+    capturedAt.getUTCDate() !== Number(day)
+  ) {
+    throw new Error(`Invalid gallery capture date: ${label}`)
+  }
+
+  return capturedAt
+}
 
 type SeedResearch = {
   title: string
@@ -777,6 +819,101 @@ for (const researcher of nosotrosResearchers) {
   await prisma.nosotrosResearcher.create({
     data: { ...researcher, modifiedBy: seedContentAuthor.id },
   })
+}
+
+const gallerySection = await prisma.gallerySection.upsert({
+  where: { id: 'f4634c78-945e-4f06-a440-76540b5f4af7' },
+  update: {
+    title: 'Galería LASCE',
+    description: galeriaMeta.description,
+  },
+  create: {
+    id: 'f4634c78-945e-4f06-a440-76540b5f4af7',
+    title: 'Galería LASCE',
+    description: galeriaMeta.description,
+  },
+})
+
+async function seedGalleryMedia(
+  albumId: string,
+  media: (typeof galleryAlbumList)[number]['media'][number],
+  position: number,
+): Promise<void> {
+  if (!media.src) {
+    throw new Error(`Gallery media "${media.title}" has no public asset path`)
+  }
+
+  const data = {
+    albumId,
+    title: media.title,
+    description: media.description,
+    altText: media.alt,
+    objectKey: media.src,
+    format: media.format,
+    isVideo: media.isVideo,
+    colSpan: media.colSpan,
+    rowSpan: media.rowSpan,
+    capturedAt: galleryCapturedAt(media.date),
+    uploaderName: media.uploader,
+    position,
+  }
+
+  await prisma.galleryMedia.upsert({
+    where: { objectKey: media.src },
+    update: data,
+    create: data,
+  })
+}
+
+for (const album of galleryAlbumList) {
+  const databaseAlbum = await prisma.galleryAlbum.upsert({
+    where: { slug: album.slug },
+    update: {
+      title: album.title,
+      description: album.description,
+      yearsLabel: album.years,
+      sectionId: gallerySection.id,
+      parentAlbumId: null,
+      coverObjectKey: album.src ?? null,
+    },
+    create: {
+      slug: album.slug,
+      title: album.title,
+      description: album.description,
+      yearsLabel: album.years,
+      sectionId: gallerySection.id,
+      coverObjectKey: album.src ?? null,
+    },
+  })
+
+  for (const [position, media] of album.media.entries()) {
+    await seedGalleryMedia(databaseAlbum.id, media, position)
+  }
+
+  for (const subAlbum of album.subAlbums) {
+    const databaseSubAlbum = await prisma.galleryAlbum.upsert({
+      where: { slug: subAlbum.slug },
+      update: {
+        title: subAlbum.title,
+        description: subAlbum.description,
+        sectionId: gallerySection.id,
+        parentAlbumId: databaseAlbum.id,
+        coverObjectKey: subAlbum.src ?? null,
+      },
+      create: {
+        slug: subAlbum.slug,
+        title: subAlbum.title,
+        description: subAlbum.description,
+        sectionId: gallerySection.id,
+        parentAlbumId: databaseAlbum.id,
+        coverObjectKey: subAlbum.src ?? null,
+      },
+    })
+
+    for (const [position, media] of subAlbum.media.entries()) {
+      await seedGalleryMedia(databaseSubAlbum.id, media, position)
+    }
+  }
 }
 
 await prisma.$disconnect()

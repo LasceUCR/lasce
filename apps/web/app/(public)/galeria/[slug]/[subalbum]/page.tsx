@@ -3,21 +3,19 @@ import { notFound } from 'next/navigation'
 
 import { AlbumPage } from '@/app/components/public/gallery/AlbumPage'
 import { userHasPermission } from '@/app/lib/auth/authorization'
-import { albumPath, getAlbum, getSubAlbum, subAlbumParams } from '@/app/lib/gallery'
+import { albumPath, getGalleryAlbums } from '@/app/lib/gallery'
 
 type SubAlbumRouteProps = {
   params: Promise<{ slug: string; subalbum: string }>
 }
 
-export const dynamicParams = false
-
-export function generateStaticParams() {
-  return subAlbumParams()
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: SubAlbumRouteProps): Promise<Metadata> {
   const { slug, subalbum } = await params
-  const subAlbum = getSubAlbum(slug, subalbum)
+  const albums = await getGalleryAlbums()
+  const album = albums.find((item) => item.slug === slug)
+  const subAlbum = album?.subAlbums.find((item) => item.slug === subalbum)
 
   if (!subAlbum) {
     return {}
@@ -31,13 +29,14 @@ export async function generateMetadata({ params }: SubAlbumRouteProps): Promise<
 
 export default async function SubAlbumRoute({ params }: SubAlbumRouteProps) {
   const { slug, subalbum } = await params
-  const album = getAlbum(slug)
-  const subAlbum = getSubAlbum(slug, subalbum)
-  const [canCreate, canEdit, canDelete] = await Promise.all([
+  const [albums, canCreate, canEdit, canDelete] = await Promise.all([
+    getGalleryAlbums(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
+  const album = albums.find((item) => item.slug === slug)
+  const subAlbum = album?.subAlbums.find((item) => item.slug === subalbum)
 
   if (!album || !subAlbum) {
     notFound()

@@ -3,21 +3,18 @@ import { notFound } from 'next/navigation'
 
 import { AlbumPage } from '@/app/components/public/gallery/AlbumPage'
 import { userHasPermission } from '@/app/lib/auth/authorization'
-import { albumMeta, albumSlugs, getAlbum } from '@/app/lib/gallery'
+import { albumMeta, getGalleryAlbums } from '@/app/lib/gallery'
 
 type AlbumRouteProps = {
   params: Promise<{ slug: string }>
 }
 
-export const dynamicParams = false
-
-export function generateStaticParams() {
-  return albumSlugs.map((slug) => ({ slug }))
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: AlbumRouteProps): Promise<Metadata> {
   const { slug } = await params
-  const album = getAlbum(slug)
+  const albums = await getGalleryAlbums()
+  const album = albums.find((item) => item.slug === slug)
 
   if (!album) {
     return {}
@@ -31,12 +28,13 @@ export async function generateMetadata({ params }: AlbumRouteProps): Promise<Met
 
 export default async function AlbumRoute({ params }: AlbumRouteProps) {
   const { slug } = await params
-  const album = getAlbum(slug)
-  const [canCreate, canEdit, canDelete] = await Promise.all([
+  const [albums, canCreate, canEdit, canDelete] = await Promise.all([
+    getGalleryAlbums(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
+  const album = albums.find((item) => item.slug === slug)
 
   if (!album) {
     notFound()
