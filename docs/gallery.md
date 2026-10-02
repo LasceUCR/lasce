@@ -34,6 +34,28 @@ Routes, the sitemap and the axe sweep all derive their album lists from `gallery
 album is picked up by `app/lib/site.ts` and `tests/e2e/accessibility-seo.spec.ts` without any edit
 there.
 
+## Media API
+
+- `PATCH /api/gallery/albums/{albumId}` requires `edit_components` and accepts one or more album
+  metadata fields: `slug`, `title`, `description`, `yearsLabel`, and `coverObjectKey`. Set
+  `yearsLabel` or `coverObjectKey` to `null` to clear it. An empty update is rejected. It returns
+  the updated album with status `200`, `404` when the album does not exist, and `409` when the slug
+  is already in use.
+- `DELETE /api/gallery/albums/{albumId}` requires `delete_components` and removes the album and its
+  sub-albums and media records through the database cascade. It does not delete associated assets
+  from MinIO or another asset store. A successful delete returns `204`; an unknown album returns
+  `404`.
+- `POST /api/gallery/albums/{albumId}/media` accepts `title`, `description`, `alt`, `objectKey`,
+  `format`, `date` (ISO `YYYY-MM-DD`) and `uploader`, with optional `isVideo`, `colSpan`, and
+  `rowSpan`. It requires `create_components`, assigns the next position in the album, and returns
+  the created media with status `201`.
+- `DELETE /api/gallery/media/{mediaId}` requires `delete_components` and removes only the database
+  record. It does not delete the associated file from MinIO or another asset store. A successful
+  delete returns `204`.
+- `PATCH /api/gallery/media/{mediaId}` requires `edit_components` and accepts one or more media
+  metadata fields from the create payload. It returns the updated media record with status `200`;
+  an empty update is rejected.
+
 ## Alt text
 
 `GalleryMedia.alt` is **required**, and every value comes from the `mediaAlt` table at the top of

@@ -1,23 +1,19 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import {
-  createGallerySubAlbum,
-  galleryIdSchema,
-  gallerySubAlbumInputSchema,
-} from '@/app/lib/gallery'
+import { createGalleryMedia, galleryIdSchema, galleryMediaInputSchema } from '@/app/lib/gallery'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ parentAlbumId: string }> },
+  { params }: { params: Promise<{ albumId: string }> },
 ): Promise<NextResponse> {
   const guard = await requireApiPermission('create_components')
   if (!guard.ok) return guard.response
 
-  const { parentAlbumId } = await params
-  if (!galleryIdSchema.safeParse(parentAlbumId).success) {
+  const { albumId } = await params
+  if (!galleryIdSchema.safeParse(albumId).success) {
     return NextResponse.json({ error: 'El id del álbum no es válido.' }, { status: 400 })
   }
 
@@ -31,7 +27,7 @@ export async function POST(
     )
   }
 
-  const parsed = gallerySubAlbumInputSchema.safeParse(body)
+  const parsed = galleryMediaInputSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
       {
@@ -42,22 +38,19 @@ export async function POST(
     )
   }
 
-  const result = await createGallerySubAlbum(parentAlbumId, parsed.data)
+  const result = await createGalleryMedia(albumId, parsed.data)
   if (!result.ok) {
-    if (result.reason === 'parent-not-found') {
-      return NextResponse.json({ error: 'No existe el álbum padre indicado.' }, { status: 404 })
+    if (result.reason === 'album-not-found') {
+      return NextResponse.json({ error: 'No existe el álbum indicado.' }, { status: 404 })
     }
-    if (result.reason === 'parent-not-top-level') {
-      return NextResponse.json(
-        { error: 'No se pueden crear subálbumes dentro de otro subálbum.' },
-        { status: 400 },
-      )
-    }
-    return NextResponse.json({ error: 'Ya existe un álbum con este slug.' }, { status: 409 })
+    return NextResponse.json(
+      { error: 'El archivo ya existe o se modificó el álbum. Inténtelo de nuevo.' },
+      { status: 409 },
+    )
   }
 
   return NextResponse.json(
-    { album: result.album },
+    { media: result.media },
     { status: 201, headers: { 'Cache-Control': 'no-store' } },
   )
 }

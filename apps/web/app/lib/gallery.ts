@@ -18,8 +18,51 @@ export const galleryTopLevelAlbumInputSchema = z.object(galleryAlbumFields).stri
 
 export const gallerySubAlbumInputSchema = z.object(galleryAlbumFields).strict()
 
+export const galleryAlbumUpdateSchema = z
+  .object(galleryAlbumFields)
+  .partial()
+  .strict()
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    'Debe proporcionar al menos un campo para editar.',
+  )
+
+const galleryMediaFields = {
+  title: z.string().trim().min(1, 'El título es obligatorio.'),
+  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+  alt: z.string().trim().min(1, 'El texto alternativo es obligatorio.'),
+  objectKey: z.string().trim().min(1, 'La clave del archivo es obligatoria.'),
+  format: z.string().trim().min(1, 'El formato es obligatorio.'),
+  isVideo: z.boolean(),
+  colSpan: z.number().int().min(1).max(4),
+  rowSpan: z.number().int().min(1).max(4),
+  date: z.string().date(),
+  uploader: z.string().trim().min(1, 'El nombre de quien subió el archivo es obligatorio.'),
+}
+
+export const galleryMediaInputSchema = z
+  .object({
+    ...galleryMediaFields,
+    isVideo: galleryMediaFields.isVideo.default(false),
+    colSpan: galleryMediaFields.colSpan.default(1),
+    rowSpan: galleryMediaFields.rowSpan.default(1),
+  })
+  .strict()
+
+export const galleryMediaUpdateSchema = z
+  .object(galleryMediaFields)
+  .partial()
+  .strict()
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    'Debe proporcionar al menos un campo para editar.',
+  )
+
 export type GalleryTopLevelAlbumInput = z.infer<typeof galleryTopLevelAlbumInputSchema>
 export type GallerySubAlbumInput = z.infer<typeof gallerySubAlbumInputSchema>
+export type GalleryAlbumUpdate = z.infer<typeof galleryAlbumUpdateSchema>
+export type GalleryMediaInput = z.infer<typeof galleryMediaInputSchema>
+export type GalleryMediaUpdate = z.infer<typeof galleryMediaUpdateSchema>
 
 /**
  * Real content for the public gallery.
@@ -2115,6 +2158,91 @@ export async function getGalleryAlbums(): Promise<GalleryAlbum[]> {
   })
 }
 
+type CreateGalleryMediaResult =
+  { ok: true; media: GalleryMedia } | { ok: false; reason: 'album-not-found' | 'conflict' }
+
+/** Adds media to an album at the next position without uploading or deleting the asset itself. */
+export async function createGalleryMedia(
+  albumId: string,
+  data: GalleryMediaInput,
+): Promise<CreateGalleryMediaResult> {
+  const album = await prisma.galleryAlbum.findUnique({
+    where: { id: albumId },
+    select: { id: true },
+  })
+  if (!album) return { ok: false, reason: 'album-not-found' }
+
+  const lastMedia = await prisma.galleryMedia.findFirst({
+    where: { albumId },
+    orderBy: { position: 'desc' },
+    select: { position: true },
+  })
+
+  try {
+    const media = await prisma.galleryMedia.create({
+      data: {
+        albumId,
+        title: data.title,
+        description: data.description,
+        altText: data.alt,
+        objectKey: data.objectKey,
+        format: data.format,
+        isVideo: data.isVideo,
+        colSpan: data.colSpan,
+        rowSpan: data.rowSpan,
+        capturedAt: new Date(`${data.date}T00:00:00.000Z`),
+        uploaderName: data.uploader,
+        position: (lastMedia?.position ?? -1) + 1,
+      },
+    })
+    return { ok: true, media: toGalleryMedia(media) }
+  } catch (error) {
+    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'conflict' }
+    if (hasPrismaErrorCode(error, 'P2003')) return { ok: false, reason: 'album-not-found' }
+    throw error
+  }
+}
+
+type UpdateGalleryMediaResult =
+  { ok: true; media: GalleryMedia } | { ok: false; reason: 'not-found' | 'conflict' }
+
+/** Updates supplied media metadata fields; the stored asset is never modified here. */
+export async function updateGalleryMedia(
+  mediaId: string,
+  data: GalleryMediaUpdate,
+): Promise<UpdateGalleryMediaResult> {
+  const updateData = {
+    ...(data.title !== undefined ? { title: data.title } : {}),
+    ...(data.description !== undefined ? { description: data.description } : {}),
+    ...(data.alt !== undefined ? { altText: data.alt } : {}),
+    ...(data.objectKey !== undefined ? { objectKey: data.objectKey } : {}),
+    ...(data.format !== undefined ? { format: data.format } : {}),
+    ...(data.isVideo !== undefined ? { isVideo: data.isVideo } : {}),
+    ...(data.colSpan !== undefined ? { colSpan: data.colSpan } : {}),
+    ...(data.rowSpan !== undefined ? { rowSpan: data.rowSpan } : {}),
+    ...(data.date !== undefined ? { capturedAt: new Date(`${data.date}T00:00:00.000Z`) } : {}),
+    ...(data.uploader !== undefined ? { uploaderName: data.uploader } : {}),
+  }
+
+  try {
+    const media = await prisma.galleryMedia.update({
+      where: { id: mediaId },
+      data: updateData,
+    })
+    return { ok: true, media: toGalleryMedia(media) }
+  } catch (error) {
+    if (hasPrismaErrorCode(error, 'P2025')) return { ok: false, reason: 'not-found' }
+    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'conflict' }
+    throw error
+  }
+}
+
+/** Deletes the media database record only; the associated asset is left untouched. */
+export async function deleteGalleryMedia(mediaId: string): Promise<boolean> {
+  const result = await prisma.galleryMedia.deleteMany({ where: { id: mediaId } })
+  return result.count > 0
+}
+
 type GalleryAlbumFields = GallerySubAlbumInput
 
 type CreateTopLevelAlbumResult =
@@ -2133,6 +2261,42 @@ export async function createTopLevelGalleryAlbum(
     if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'duplicate-slug' }
     throw error
   }
+}
+
+type UpdateGalleryAlbumResult =
+  | { ok: true; album: Awaited<ReturnType<typeof prisma.galleryAlbum.update>> }
+  | { ok: false; reason: 'not-found' | 'duplicate-slug' }
+
+/** Updates supplied album fields without changing its parent or contents. */
+export async function updateGalleryAlbum(
+  albumId: string,
+  data: GalleryAlbumUpdate,
+): Promise<UpdateGalleryAlbumResult> {
+  const updateData = {
+    ...(data.slug !== undefined ? { slug: data.slug } : {}),
+    ...(data.title !== undefined ? { title: data.title } : {}),
+    ...(data.description !== undefined ? { description: data.description } : {}),
+    ...(data.yearsLabel !== undefined ? { yearsLabel: data.yearsLabel } : {}),
+    ...(data.coverObjectKey !== undefined ? { coverObjectKey: data.coverObjectKey } : {}),
+  }
+
+  try {
+    const album = await prisma.galleryAlbum.update({
+      where: { id: albumId },
+      data: updateData,
+    })
+    return { ok: true, album }
+  } catch (error) {
+    if (hasPrismaErrorCode(error, 'P2025')) return { ok: false, reason: 'not-found' }
+    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'duplicate-slug' }
+    throw error
+  }
+}
+
+/** Deletes an album and its cascading database records*/
+export async function deleteGalleryAlbum(albumId: string): Promise<boolean> {
+  const result = await prisma.galleryAlbum.deleteMany({ where: { id: albumId } })
+  return result.count > 0
 }
 
 type CreateSubAlbumResult =
