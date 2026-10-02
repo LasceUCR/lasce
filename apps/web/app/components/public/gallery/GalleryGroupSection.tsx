@@ -60,7 +60,7 @@ export function GalleryGroupSection({
     <AlbumTile
       href={albumPath(album.slug)}
       meta={albumMeta(album)}
-      src={album.src}
+      src={album.coverObjectKey}
       title={album.title}
       variant="cover"
     />
@@ -99,7 +99,7 @@ export function GalleryGroupSection({
             <AlbumTile
               href={subAlbumPath(album.slug, subAlbum.slug)}
               meta={`${subAlbum.media.length} archivos`}
-              src={subAlbum.src}
+              src={subAlbum.coverObjectKey}
               title={subAlbum.title}
             />
           </li>
