@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { GalleryGroupSection } from './GalleryGroupSection'
+import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 import type { GalleryAlbum, GalleryMedia } from '@/app/lib/gallery'
 
 const sampleMedia: GalleryMedia = {
@@ -38,6 +39,13 @@ const albumWithSubAlbums: GalleryAlbum = {
 const meta: Meta<typeof GalleryGroupSection> = {
   component: GalleryGroupSection,
   parameters: { layout: 'padded' },
+  decorators: [
+    (Story) => (
+      <EditModeContext.Provider value={{ editMode: false, setEditMode: () => undefined }}>
+        <Story />
+      </EditModeContext.Provider>
+    ),
+  ],
 }
 
 export default meta
