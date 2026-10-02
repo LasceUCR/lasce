@@ -1,3 +1,38 @@
+import { prisma } from '@lasce/db'
+import { z } from 'zod'
+
+export const galleryIdSchema = z.uuid()
+
+export const gallerySectionInputSchema = z.object({
+  title: z.string().trim().min(1, 'El título es obligatorio.'),
+  description: z.string().trim().nullable().optional(),
+})
+
+const galleryAlbumFields = {
+  slug: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'El slug debe usar letras minúsculas, números y guiones.'),
+  title: z.string().trim().min(1, 'El título es obligatorio.'),
+  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+  yearsLabel: z.string().trim().min(1).nullable().optional(),
+  coverObjectKey: z.string().trim().min(1).nullable().optional(),
+}
+
+export const galleryTopLevelAlbumInputSchema = z
+  .object({
+    ...galleryAlbumFields,
+    sectionId: galleryIdSchema,
+  })
+  .strict()
+
+export const gallerySubAlbumInputSchema = z.object(galleryAlbumFields).strict()
+
+export type GallerySectionInput = z.infer<typeof gallerySectionInputSchema>
+export type GalleryTopLevelAlbumInput = z.infer<typeof galleryTopLevelAlbumInputSchema>
+export type GallerySubAlbumInput = z.infer<typeof gallerySubAlbumInputSchema>
+
+
 /**
  * Real content for the public gallery.
  *
@@ -1993,4 +2028,94 @@ export function albumMediaMeta(media: readonly GalleryMedia[]): string {
 /** Placeholder caption for a media tile whose file has not been uploaded. */
 export function mediaPlaceholder(item: GalleryMedia): string {
   return `${item.isVideo ? 'Video' : 'Foto'}: ${item.title}`
+}
+
+
+
+type GalleryAlbumFields = GallerySubAlbumInput
+
+export async function createGallerySection(data: GallerySectionInput) {
+  return prisma.gallerySection.create({
+    data: {
+      title: data.title,
+      description: data.description ?? null,
+    },
+  })
+}
+
+type CreateTopLevelAlbumResult =
+  | { ok: true; album: Awaited<ReturnType<typeof prisma.galleryAlbum.create>> }
+  | { ok: false; reason: 'section-not-found' | 'duplicate-slug' }
+
+export async function createTopLevelGalleryAlbum(
+  data: GalleryTopLevelAlbumInput,
+): Promise<CreateTopLevelAlbumResult> {
+  const section = await prisma.gallerySection.findUnique({
+    where: { id: data.sectionId },
+    select: { id: true },
+  })
+  if (!section) return { ok: false, reason: 'section-not-found' }
+
+  try {
+    const album = await prisma.galleryAlbum.create({
+      data: toAlbumCreateData(data, {
+        sectionId: section.id,
+        parentAlbumId: null,
+      }),
+    })
+    return { ok: true, album }
+  } catch (error) {
+    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'duplicate-slug' }
+    if (hasPrismaErrorCode(error, 'P2003')) return { ok: false, reason: 'section-not-found' }
+    throw error
+  }
+}
+
+type CreateSubAlbumResult =
+  | { ok: true; album: Awaited<ReturnType<typeof prisma.galleryAlbum.create>> }
+  | { ok: false; reason: 'parent-not-found' | 'parent-not-top-level' | 'duplicate-slug' }
+
+export async function createGallerySubAlbum(
+  parentAlbumId: string,
+  data: GallerySubAlbumInput,
+): Promise<CreateSubAlbumResult> {
+  const parent = await prisma.galleryAlbum.findUnique({
+    where: { id: parentAlbumId },
+    select: { id: true, sectionId: true, parentAlbumId: true },
+  })
+  if (!parent) return { ok: false, reason: 'parent-not-found' }
+  if (parent.parentAlbumId !== null) return { ok: false, reason: 'parent-not-top-level' }
+
+  try {
+    const album = await prisma.galleryAlbum.create({
+      data: toAlbumCreateData(data, {
+        sectionId: parent.sectionId,
+        parentAlbumId: parent.id,
+      }),
+    })
+    return { ok: true, album }
+  } catch (error) {
+    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'duplicate-slug' }
+    if (hasPrismaErrorCode(error, 'P2003')) return { ok: false, reason: 'parent-not-found' }
+    throw error
+  }
+}
+
+function toAlbumCreateData(
+  data: GalleryAlbumFields,
+  relation: { sectionId: string; parentAlbumId: string | null },
+) {
+  return {
+    slug: data.slug,
+    title: data.title,
+    description: data.description,
+    yearsLabel: data.yearsLabel ?? null,
+    coverObjectKey: data.coverObjectKey ?? null,
+    sectionId: relation.sectionId,
+    parentAlbumId: relation.parentAlbumId,
+  }
+}
+
+function hasPrismaErrorCode(error: unknown, code: string): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === code
 }

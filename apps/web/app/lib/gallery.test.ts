@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import {
   albumFileCount,
@@ -17,9 +17,54 @@ import {
   mediaPlaceholder,
   subAlbumParams,
   subAlbumPath,
+  createGallerySection,
+  createGallerySubAlbum,
+  createTopLevelGalleryAlbum,
+  gallerySectionInputSchema,
+  gallerySubAlbumInputSchema,
+  galleryTopLevelAlbumInputSchema,
   type GalleryAlbum,
   type GalleryMedia,
 } from './gallery'
+
+
+const mocks = vi.hoisted(() => ({
+  gallerySectionCreate: vi.fn(),
+  gallerySectionFindUnique: vi.fn(),
+  galleryAlbumCreate: vi.fn(),
+  galleryAlbumFindUnique: vi.fn(),
+}))
+
+vi.mock('@lasce/db', () => ({
+  prisma: {
+    gallerySection: {
+      create: mocks.gallerySectionCreate,
+      findUnique: mocks.gallerySectionFindUnique,
+    },
+    galleryAlbum: {
+      create: mocks.galleryAlbumCreate,
+      findUnique: mocks.galleryAlbumFindUnique,
+    },
+  },
+}))
+
+const sectionId = 'd2719cb3-9d5b-4e2d-8a11-b089d5e14d7a'
+const parentAlbumId = 'd373bcfb-dd4c-486d-a6f2-a5282d8bc65e'
+const topLevelInput = {
+  slug: 'rosac',
+  title: 'ROSAC',
+  description: 'Construcción y desarrollo del observatorio.',
+  sectionId,
+}
+const subAlbumInput = {
+  slug: 'cimentacion',
+  title: 'Cimentación',
+  description: 'Construcción de la base.',
+}
+
+afterEach(() => {
+  vi.clearAllMocks()
+})
 
 // Vitest runs with apps/web as its working directory.
 const publicDir = join(process.cwd(), 'public')
@@ -190,5 +235,127 @@ describe('gallery', () => {
 
     expect(contradictory).toEqual([])
     expect(byFile.size).toBeGreaterThan(0)
+  })
+})
+
+
+describe('gallery management input schemas', () => {
+  test('trims required section values and allows an omitted description', () => {
+    expect(gallerySectionInputSchema.parse({ title: ' Sección ' })).toEqual({
+      title: 'Sección',
+    })
+  })
+
+  test('requires a valid section id and URL-safe slug for top-level albums', () => {
+    expect(galleryTopLevelAlbumInputSchema.safeParse(topLevelInput).success).toBe(true)
+    expect(
+      galleryTopLevelAlbumInputSchema.safeParse({ ...topLevelInput, slug: 'Álbum ROSAC' }).success,
+    ).toBe(false)
+    expect(
+      galleryTopLevelAlbumInputSchema.safeParse({ ...topLevelInput, sectionId: 'not-a-uuid' })
+        .success,
+    ).toBe(false)
+  })
+
+  test('validates sub-album content without allowing a section id', () => {
+    expect(gallerySubAlbumInputSchema.safeParse(subAlbumInput).success).toBe(true)
+    expect(gallerySubAlbumInputSchema.safeParse({ ...subAlbumInput, sectionId }).success).toBe(
+      false,
+    )
+  })
+})
+
+describe('createGallerySection', () => {
+  test('stores a missing description as null', async () => {
+    const section = { id: sectionId, title: 'Sección', description: null }
+    mocks.gallerySectionCreate.mockResolvedValue(section)
+
+    await expect(createGallerySection({ title: 'Sección' })).resolves.toEqual(section)
+    expect(mocks.gallerySectionCreate).toHaveBeenCalledWith({
+      data: { title: 'Sección', description: null },
+    })
+  })
+})
+
+describe('createTopLevelGalleryAlbum', () => {
+  test('creates a top-level album in the selected section', async () => {
+    const album = { id: parentAlbumId, ...topLevelInput, parentAlbumId: null }
+    mocks.gallerySectionFindUnique.mockResolvedValue({ id: sectionId })
+    mocks.galleryAlbumCreate.mockResolvedValue(album)
+
+    await expect(createTopLevelGalleryAlbum(topLevelInput)).resolves.toEqual({ ok: true, album })
+    expect(mocks.galleryAlbumCreate).toHaveBeenCalledWith({
+      data: {
+        ...topLevelInput,
+        yearsLabel: null,
+        coverObjectKey: null,
+        parentAlbumId: null,
+      },
+    })
+  })
+
+  test('does not create an album when its section does not exist', async () => {
+    mocks.gallerySectionFindUnique.mockResolvedValue(null)
+
+    await expect(createTopLevelGalleryAlbum(topLevelInput)).resolves.toEqual({
+      ok: false,
+      reason: 'section-not-found',
+    })
+    expect(mocks.galleryAlbumCreate).not.toHaveBeenCalled()
+  })
+
+  test('reports a duplicate album slug', async () => {
+    mocks.gallerySectionFindUnique.mockResolvedValue({ id: sectionId })
+    mocks.galleryAlbumCreate.mockRejectedValue({ code: 'P2002' })
+
+    await expect(createTopLevelGalleryAlbum(topLevelInput)).resolves.toEqual({
+      ok: false,
+      reason: 'duplicate-slug',
+    })
+  })
+})
+
+describe('createGallerySubAlbum', () => {
+  test('inherits its section and parent from the top-level album', async () => {
+    const album = { id: 'sub-1', ...subAlbumInput, sectionId, parentAlbumId }
+    mocks.galleryAlbumFindUnique.mockResolvedValue({
+      id: parentAlbumId,
+      sectionId,
+      parentAlbumId: null,
+    })
+    mocks.galleryAlbumCreate.mockResolvedValue(album)
+
+    await expect(createGallerySubAlbum(parentAlbumId, subAlbumInput)).resolves.toEqual({
+      ok: true,
+      album,
+    })
+    expect(mocks.galleryAlbumCreate).toHaveBeenCalledWith({
+      data: {
+        ...subAlbumInput,
+        yearsLabel: null,
+        coverObjectKey: null,
+        sectionId,
+        parentAlbumId,
+      },
+    })
+  })
+
+  test('rejects a missing or nested parent without creating an album', async () => {
+    mocks.galleryAlbumFindUnique.mockResolvedValue(null)
+    await expect(createGallerySubAlbum(parentAlbumId, subAlbumInput)).resolves.toEqual({
+      ok: false,
+      reason: 'parent-not-found',
+    })
+
+    mocks.galleryAlbumFindUnique.mockResolvedValue({
+      id: parentAlbumId,
+      sectionId,
+      parentAlbumId: 'another-parent',
+    })
+    await expect(createGallerySubAlbum(parentAlbumId, subAlbumInput)).resolves.toEqual({
+      ok: false,
+      reason: 'parent-not-top-level',
+    })
+    expect(mocks.galleryAlbumCreate).not.toHaveBeenCalled()
   })
 })
