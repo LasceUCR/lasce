@@ -60,6 +60,7 @@ export default defineRailway((ctx) => {
       MINIO_ACCESS_KEY: preserve(),
       MINIO_SECRET_KEY: preserve(),
       MINIO_BUCKET: preserve(),
+      MINIO_DOWNLOADS_BUCKET: preserve(),
       MINIO_USE_SSL: preserve(),
       // The /datos explorer reads EXIS readings from InfluxDB
       // (app/services/scientific-data/influxSql.ts). Like MINIO_*, preserve()
