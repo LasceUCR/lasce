@@ -33,6 +33,10 @@ working through Claude Code.
 | How do the two runtimes fit together?                | [`docs/architecture.md`](docs/architecture.md)                       |
 | How do I add a job across both languages?            | [`docs/add-a-job.md`](docs/add-a-job.md)                             |
 | How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                 |
+| How does the SUVI pipeline job orchestrate a run?    | [`docs/suvi-pipeline.md`](docs/suvi-pipeline.md)                     |
+| How does the EXIS pipeline job ingest a day?         | [`docs/exis-pipeline.md`](docs/exis-pipeline.md)                     |
+| How do `/datos` chart and data downloads work?       | [`docs/downloads.md`](docs/downloads.md)                             |
+| How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                 |
 | How do I isolate a widget that might crash the page? | [`docs/error-boundary.md`](docs/error-boundary.md)                   |
 | How do I make content editable in "Modo edición"?    | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)             |
 | Where does a test go, and what gates it?             | [`docs/testing.md`](docs/testing.md)                                 |

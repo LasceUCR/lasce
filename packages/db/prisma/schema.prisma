@@ -28,7 +28,7 @@ datasource db {
 
   // One Postgres schema per domain. `public` stays declared for whatever
   // non-domain-specific table comes next.
-  schemas = ["public", "research", "news", "auth", "gallery", "areas"]
+  schemas = ["public", "research", "news", "auth", "gallery",  "solar", "areas"]
 }
 
 /// Access level of a portal account. Self-registration always yields `visitor`;
@@ -63,6 +63,7 @@ model User {
   updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   sessions            Session[]
+  resourceDownloads   ResourceDownload[]
   nosotrosActivities  NosotrosActivity[]
   researchers         Researcher[]
   nosotrosResearchers NosotrosResearcher[]
@@ -287,6 +288,109 @@ model NosotrosActivity {
   @@schema("public")
 }
 
+/// One SUVI L1b frame, catalogued from its FITS header. Written by the Python
+/// worker (apps/worker/app/services/process_headers.py), never by the web app.
+/// Photometric and CCD-health numbers are NOT here — they go to InfluxDB.
+model SuviFrame {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// FITS `DATE-OBS`, the official instant of the exposure.
+  observedAt   DateTime @map("observed_at") @db.Timestamptz(3)
+  /// FITS `WAVELNTH`, in angstroms.
+  wavelength   Float    @db.DoublePrecision
+  /// FITS `TELESCOP`, e.g. "G19".
+  satellite    String
+  /// Archive channel token, e.g. "Fe093". From the file name, not the header.
+  channel      String
+  fileName     String   @unique @map("file_name")
+  sourceUrl    String   @map("source_url")
+  /// FITS `EXPTIME`, seconds.
+  exposureTime Float?   @map("exposure_time") @db.DoublePrecision
+  /// FITS `CRPIX1`/`CRPIX2`: the Sun's centre in the 1280x1280 matrix.
+  sunCenterX   Float?   @map("sun_center_x") @db.DoublePrecision
+  sunCenterY   Float?   @map("sun_center_y") @db.DoublePrecision
+  /// FITS `RSUN`, solar radius in pixels. Needed to recompute the background mask.
+  sunRadiusPx  Float?   @map("sun_radius_px") @db.DoublePrecision
+  /// Bitfield: bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE`. 0 means a clean capture.
+  qualityFlag  Int      @default(0) @map("quality_flag")
+  /// The whole FITS header, so a field not promoted to a column is still recoverable.
+  rawHeader    Json     @map("raw_header")
+  /// MinIO key of this frame's rendered PNG (illustrative only, not a scientific product).
+  /// Written by app.services.suvi_preview.publish_preview. Null only for a frame whose FITS HDU
+  /// carried no data array.
+  previewFile  String?  @map("preview_file")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([satellite, channel, observedAt])
+  @@index([observedAt])
+  @@map("suvi_frames")
+  @@schema("solar")
+}
+
+/// One daily EXIS L1b file (one product, one UTC day) whose readings are in InfluxDB.
+/// Written only by the worker's `exis-pipeline` job; the readings themselves live in the
+/// `exis_irradiance` InfluxDB measurement, not here.
+model ExisFile {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// NetCDF `platform_ID`, e.g. "G19".
+  satellite        String
+  /// "SFEU" or "SFXR".
+  product          String
+  /// The UTC day the file covers, from its name.
+  day              DateTime  @db.Date
+  fileName         String    @unique @map("file_name")
+  /// The `_vX-Y-Z` part of the file name, e.g. "0-0-0".
+  version          String
+  sourceUrl        String    @map("source_url")
+  /// The archive's `Last-Modified` when ingested. A newer one means NOAA republished the day.
+  sourceModifiedAt DateTime? @map("source_modified_at") @db.Timestamptz(3)
+  firstObservedAt  DateTime? @map("first_observed_at") @db.Timestamptz(3)
+  lastObservedAt   DateTime? @map("last_observed_at") @db.Timestamptz(3)
+  /// Points written to InfluxDB per channel code, e.g. {"0.1-0.8nm": 86112}.
+  pointCount       Json      @map("point_count")
+  /// The NetCDF global attributes, so provenance not promoted to a column is still recoverable.
+  attributes       Json
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([satellite, product, day])
+  @@map("exis_files")
+  @@schema("solar")
+}
+
+/// One file a signed-in user downloaded from `/datos`: a chart image or a data export. Written
+/// by `apps/web/app/services/downloads/downloadService.ts` only after the object reached the
+/// private downloads bucket, so every row names an object that existed. The object itself
+/// expires (bucket lifecycle); this row is the permanent record. The worker never writes here.
+model ResourceDownload {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Null once the account is deleted, so the audit trail outlives it.
+  userId     String?  @map("user_id") @db.Uuid
+  /// Codes from the catalogue in `apps/web/app/lib/scientific-data.ts`, e.g. "GOES" / "EXIS" /
+  /// "SFXR". Plain strings, like `RolePermission.permission`, so a new instrument needs no migration.
+  source     String
+  instrument String
+  product    String
+  /// A code from `DOWNLOAD_FORMATS` in `apps/web/app/lib/downloads/formats.ts`, e.g. "csv".
+  format     String
+  /// The query that produced the file: `parameter`, `date`, `startTime`, `endTime`.
+  params     Json
+  /// Key inside `MINIO_DOWNLOADS_BUCKET`.
+  objectKey  String   @map("object_key")
+  byteSize   Int      @map("byte_size")
+  /// Data rows exported; null for images.
+  rowCount   Int?     @map("row_count")
+  /// When the presigned link handed to the user stops working.
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([source, instrument, createdAt])
+  @@map("resource_downloads")
+  @@schema("public")
+}
 /// A researcher profile card shown on `/radioastronomia` (LASCE-CON-012-085).
 /// Distinct from `research.ResearchAuthor`: that one is only a citation name
 /// on a publication, this is the full public bio card — photo, role,

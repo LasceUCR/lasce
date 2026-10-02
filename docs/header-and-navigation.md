@@ -32,13 +32,32 @@ size that read as an afterthought. The tier in `globals.css` now:
 
 ## Menu organization (`PublicHeader.tsx`, `NavGroup.tsx`)
 
-`Publicaciones`, `Herramientas científicas` and `Galería` are grouped behind a single **Recursos**
-entry instead of three flat top-level links. `Contacto` stays as its own link after the group.
-`Administración` is not in this list: it lives inside the signed-in account menu
-(`AccountLinks.tsx`/`AccountMenu.tsx`, see `docs/`'s auth docs), so it never appears twice.
+The `navigation` array in `PublicHeader.tsx` is the single source for both the desktop bar and the
+mobile menu. It reaches every area of the homepage's "Áreas y accesos principales" section
+(`app/lib/work-areas.ts`) without a trip back to `/`:
+
+| Top bar entry | Kind     | Items                                                                                               |
+| ------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| Inicio        | link     | `/`                                                                                                 |
+| Nosotros      | dropdown | Quiénes somos, Colaboraciones e Iniciativas                                                         |
+| Investigación | dropdown | Áreas de investigación (`/investigacion`), Física solar, Clima espacial, ROSAC (`/radioastronomia`) |
+| Datos         | link     | `/datos`                                                                                            |
+| Divulgación   | dropdown | Noticias, Galería                                                                                   |
+| Recursos      | dropdown | Publicaciones, Herramientas científicas                                                             |
+| Contacto      | link     | `/contacto`                                                                                         |
+
+Each destination appears once; a group is only a label, never a page of its own. `Áreas de
+investigación` keeps `/investigacion` (the research areas page) reachable now that
+`Investigación` is a dropdown rather than a link. `Administración` is not in this list: it lives
+inside the signed-in account menu (`AccountLinks.tsx`/`AccountMenu.tsx`, see `docs/`'s auth docs),
+so it never appears twice.
+
+The desktop bar is only shown above 1400px (below that, the mobile menu takes over; see
+`globals.css`). Adding entries widens it, so check the 1401–1440px range visually after changing
+this list: the bar must not run into the brand lockup.
 
 ```
-Desktop nav   › NavGroup "Recursos"        <details>/<summary>, opens on hover, click, Enter/Space
+Desktop nav   › NavGroup (one per group)   <details>/<summary>, opens on hover, click, Enter/Space
                  └─ nav-group-panel          centered under the summary, one link per grouped page
 Mobile nav    › .mobile-nav-group           same <details> pattern, no NavGroup component reuse
                  └─ mobile-nav-group-panel   indented links, auto-opens if the current page is inside

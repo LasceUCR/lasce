@@ -43,6 +43,7 @@ describe('serverEnv', () => {
 
     expect(env.MINIO_ENDPOINT).toBe('localhost:9000')
     expect(env.MINIO_BUCKET).toBe('lasce-files')
+    expect(env.MINIO_DOWNLOADS_BUCKET).toBe('lasce-downloads')
     expect(env.MINIO_USE_SSL).toBe(false)
     expect(env.MINIO_ACCESS_KEY).toBeUndefined()
     expect(env.MINIO_SECRET_KEY).toBeUndefined()
@@ -57,6 +58,20 @@ describe('serverEnv', () => {
     resetServerEnv()
     process.env.MINIO_USE_SSL = 'true'
     expect(serverEnv().MINIO_USE_SSL).toBe(true)
+  })
+
+  test('applies the InfluxDB defaults, leaving the token unset', () => {
+    const env = serverEnv()
+
+    expect(env.INFLUXDB_HOST).toBe('http://localhost:8181')
+    expect(env.INFLUXDB_DATABASE).toBe('lasce')
+    expect(env.INFLUXDB_TOKEN).toBeUndefined()
+  })
+
+  test('rejects an INFLUXDB_HOST that is not a URL', () => {
+    process.env.INFLUXDB_HOST = 'not a url'
+
+    expect(() => serverEnv()).toThrowError(/INFLUXDB_HOST/)
   })
 
   test('rejects an empty MINIO_ENDPOINT', () => {

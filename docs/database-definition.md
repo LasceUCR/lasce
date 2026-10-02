@@ -7,19 +7,21 @@ migration source; the worker mirrors these tables in SQLAlchemy
 
 ## Schemas
 
-| Postgres schema | Used for                                               | Populated today |
-| --------------- | ------------------------------------------------------ | --------------- |
-| `public`        | Default, for anything not domain-specific              | No tables yet   |
-| `research`      | Public research/publications shown on `/publicaciones` | Yes             |
-| `news`          | Public news/media coverage shown on `/noticias`        | Yes             |
-| `auth`          | Portal accounts created through `/acceso`              | Yes             |
-| `gallery`       | Public photo/video gallery shown on `/galeria`         | No — see below  |
+| Postgres schema | Used for                                                  | Populated today |
+| --------------- | --------------------------------------------------------- | --------------- |
+| `public`        | Default, for anything not domain-specific                 | Yes             |
+| `research`      | Public research/publications shown on `/publicaciones`    | Yes             |
+| `news`          | Public news/media coverage shown on `/noticias`           | Yes             |
+| `auth`          | Portal accounts created through `/acceso`                 | Yes             |
+| `gallery`       | Public photo/video gallery shown on `/galeria`            | No — see below  |
+| `solar`         | SUVI frames and EXIS daily files catalogued by the worker | Yes             |
 
 Multi-schema support is enabled via Prisma's `schemas` datasource setting (GA as of the Prisma
 version this repo pins — no `previewFeatures` flag needed). Every model in `research` is tagged
-`@@schema("research")`, every model in `news` is tagged `@@schema("news")`, and every model in
-`auth` is tagged `@@schema("auth")`; a future domain unrelated to these should get its own schema
-the same way rather than being added to one of them.
+`@@schema("research")`, every model in `news` is tagged `@@schema("news")`, every model in `auth`
+is tagged `@@schema("auth")`, and every model in `solar` is tagged `@@schema("solar")`; a future
+domain unrelated to these should get its own schema the same way rather than being added to one
+of them.
 
 ## `research` schema
 
@@ -301,11 +303,47 @@ administrators can change it without a deploy of unrelated features. See
 | `permission` | `String`    | `text`           | not null                  |
 | `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()` |
 
-Constraints: `UNIQUE (role, permission)`. The migration seeds the default matrix: visitors
+Constraints: `UNIQUE (role, permission)`. The migrations seed the default matrix: visitors
 download resources; assistants edit components and download; administrators create, edit and
-delete components, download resources, manage users and manage permissions.
+delete components, download resources, download GOES resources (`download_goes_resources`, added
+by `20260929120000_add_download_goes_resources_permission`), manage users and manage permissions.
 
 The worker never writes here.
+
+## `solar` schema
+
+### `suvi_frames`
+
+One SUVI L1b frame, catalogued from its FITS header by the Python worker
+(`apps/worker/app/services/process_headers.py`) after `suvi-pipeline` downloads and decodes it —
+see [`suvi-downloader.md`](suvi-downloader.md#persisting-a-frame). The web app never writes here.
+Photometric and CCD-health numbers (`IMG_MEAN`, `CCD_TMP1`, ...) are deliberately not columns:
+they are written to InfluxDB instead, tagged by `satellite` and `channel`, under the `suvi_frames`
+measurement.
+
+| Column          | Prisma type | Postgres type      | Constraints                                                                                                                                                             |
+| --------------- | ----------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | `String`    | `uuid`             | PK, `gen_random_uuid()`                                                                                                                                                 |
+| `observed_at`   | `DateTime`  | `timestamptz(3)`   | not null; FITS `DATE-OBS`, stamped UTC; indexed                                                                                                                         |
+| `wavelength`    | `Float`     | `double precision` | not null; FITS `WAVELNTH`, angstroms                                                                                                                                    |
+| `satellite`     | `String`    | `text`             | not null; FITS `TELESCOP`, e.g. `"G19"`                                                                                                                                 |
+| `channel`       | `String`    | `text`             | not null; archive channel token, e.g. `"Fe093"` — from the file name, not the header                                                                                    |
+| `file_name`     | `String`    | `text`             | `UNIQUE`, not null                                                                                                                                                      |
+| `source_url`    | `String`    | `text`             | not null                                                                                                                                                                |
+| `exposure_time` | `Float?`    | `double precision` | nullable; FITS `EXPTIME`, seconds                                                                                                                                       |
+| `sun_center_x`  | `Float?`    | `double precision` | nullable; FITS `CRPIX1`                                                                                                                                                 |
+| `sun_center_y`  | `Float?`    | `double precision` | nullable; FITS `CRPIX2`                                                                                                                                                 |
+| `sun_radius_px` | `Float?`    | `double precision` | nullable; FITS `RSUN` — needed to recompute the background mask                                                                                                         |
+| `quality_flag`  | `Int`       | `integer`          | not null, default `0`; bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE`                                                                                                            |
+| `raw_header`    | `Json`      | `jsonb`            | not null; the whole sanitised FITS header                                                                                                                               |
+| `preview_file`  | `String?`   | `text`             | nullable; MinIO object key of this frame's rendered WebP image, written by `suvi_preview.publish_preview` — see [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks) |
+| `created_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`                                                                                                                                               |
+| `updated_at`    | `DateTime`  | `timestamptz(3)`   | not null, default `now()`, app-managed                                                                                                                                  |
+
+Constraints: `UNIQUE (satellite, channel, observed_at)` — this is what makes re-running the
+pipeline idempotent, since it legitimately re-lists a window and can see the same frame twice;
+the write is an upsert on this key, and `updated_at` (never `created_at`) advances on a repeat.
+Indexed on `observed_at` for the time-ordered queries the public gallery will eventually run.
 
 ## `areas` schema
 
@@ -322,6 +360,65 @@ identifier, a title, a description, and an optional image source.
 | `src`         | `String?`   | `text`           | not null                               |
 | `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
 | `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+### `exis_files`
+
+One daily EXIS L1b file (one product, one UTC day) ingested by the worker's `exis-pipeline` job
+(`apps/worker/app/services/exis_readings.py`) — see [`exis-pipeline.md`](exis-pipeline.md). The
+readings themselves are **not** here: they are written to InfluxDB under the `exis_irradiance`
+measurement, tagged by `satellite`, `product` and `channel`, with a `valid` field readers must
+filter on. This row records that the day was
+ingested, from which archive version, and how many points each channel produced. The web app
+never writes here.
+
+| Column               | Prisma type | Postgres type    | Constraints                                                                    |
+| -------------------- | ----------- | ---------------- | ------------------------------------------------------------------------------ |
+| `id`                 | `String`    | `uuid`           | PK, `gen_random_uuid()`                                                        |
+| `satellite`          | `String`    | `text`           | not null; NetCDF `platform_ID`, e.g. `"G19"`                                   |
+| `product`            | `String`    | `text`           | not null; `"SFEU"` or `"SFXR"`                                                 |
+| `day`                | `DateTime`  | `date`           | not null; the UTC day the file covers, from its name                           |
+| `file_name`          | `String`    | `text`           | `UNIQUE`, not null                                                             |
+| `version`            | `String`    | `text`           | not null; the `_vX-Y-Z` part of the name, e.g. `"0-0-0"`                       |
+| `source_url`         | `String`    | `text`           | not null                                                                       |
+| `source_modified_at` | `DateTime?` | `timestamptz(3)` | nullable; the archive's `Last-Modified` when ingested — a newer one re-ingests |
+| `first_observed_at`  | `DateTime?` | `timestamptz(3)` | nullable; earliest reading kept, across channels                               |
+| `last_observed_at`   | `DateTime?` | `timestamptz(3)` | nullable; latest reading kept, across channels                                 |
+| `point_count`        | `Json`      | `jsonb`          | not null; points written per channel code, e.g. `{"0.1-0.8nm": 81208}`         |
+| `attributes`         | `Json`      | `jsonb`          | not null; the NetCDF global attributes (provenance, algorithm versions)        |
+| `created_at`         | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                                      |
+| `updated_at`         | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                                         |
+
+Constraints: `UNIQUE (satellite, product, day)` — the upsert key, so a higher `_vX-Y-Z` of the
+same day replaces the older row instead of adding a second one.
+
+## `public` schema (downloads)
+
+### `resource_downloads`
+
+One file a signed-in user downloaded from `/datos`: a chart image or a data export (see
+[downloads.md](downloads.md)). Written by `apps/web/app/services/downloads/downloadService.ts`
+only after the file reached the private `MINIO_DOWNLOADS_BUCKET`, so every row names an object that
+existed. That object is deleted after a day by the bucket's lifecycle rule; this row is the
+permanent record. The worker never writes here.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                           |
+| ------------ | ----------- | ---------------- | --------------------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                               |
+| `user_id`    | `String?`   | `uuid`           | FK → `auth.users.id`, `ON DELETE SET NULL`, so the record outlives it |
+| `source`     | `String`    | `text`           | not null; e.g. `"GOES"`, `"ROSAC"`                                    |
+| `instrument` | `String`    | `text`           | not null; e.g. `"EXIS"`                                               |
+| `product`    | `String`    | `text`           | not null; e.g. `"SFXR"`                                               |
+| `format`     | `String`    | `text`           | not null; a `DOWNLOAD_FORMATS` code, e.g. `"csv"`                     |
+| `params`     | `Json`      | `jsonb`          | not null; `{ parameter, date, startTime, endTime }` of the query      |
+| `object_key` | `String`    | `text`           | not null; key inside `MINIO_DOWNLOADS_BUCKET`                         |
+| `byte_size`  | `Int`       | `integer`        | not null                                                              |
+| `row_count`  | `Int?`      | `integer`        | nullable; data rows exported, null for images                         |
+| `expires_at` | `DateTime`  | `timestamptz(3)` | not null; when the presigned link handed to the user stops working    |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                             |
+
+Indexes: `(user_id, created_at)` for a user's history, `(source, instrument, created_at)` for
+usage per instrument. Codes are plain strings, as in `role_permissions`, so a new instrument or
+format needs no migration.
 
 ## Where this is read and written
 
@@ -340,10 +437,18 @@ owns `auth.sessions`: `createSession()` inserts a row at login, `getSessionUser(
 behind the cookie together with its user, and `deleteCurrentSession()` deletes it at logout.
 `apps/web/app/lib/role-permissions.ts` owns `auth.role_permissions`;
 `apps/web/app/lib/auth/authorization.ts` reads it on each permission check.
+`apps/web/app/services/downloads/downloadService.ts`'s `createResourceDownload()` is the only
+writer of `public.resource_downloads`. Nothing reads it yet.
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.
 
+`apps/worker/app/services/process_headers.py`'s `ProcessHeaders.persist()` is the only writer of
+`solar.suvi_frames`, called from the `suvi-pipeline` processor after a frame is downloaded and
+decoded. Nothing in `apps/web` reads it yet.
+`apps/worker/app/services/exis_readings.py`'s `ExisReadings.persist()` is the only writer of
+`solar.exis_files`, and `ExisReadings.ingested_modified_at()` its only reader; both are called
+from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
 `apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
 maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
 area create, update, and delete operations will also write this table when implemented.

@@ -1,0 +1,217 @@
+# Downloading SUVI images
+
+`apps/worker/app/clients/suvi.py` reads SUVI L1b frames from NOAA's public GOES archive. It
+replaces the NOAA example script the pipeline started from: the archive knowledge lives in one
+module, the parsing is pure functions you can test without a network, and a processor is left
+deciding only which channel it wants and how far back to look.
+
+The module never writes to disk. `download()` hands back bytes, so the caller chooses what happens
+next — MinIO, astropy, or nothing at all.
+
+## Using it
+
+```python
+from datetime import timedelta
+
+import httpx
+
+from app.clients.suvi import SuviChannel, SuviDownloader
+
+async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
+    downloader = SuviDownloader(client, spacecraft=19)
+    downloads = await downloader.download(SuviChannel.FE093, timedelta(minutes=30))
+
+for download in downloads:
+    print(download.file.name, download.file.exposure, len(download.content))
+```
+
+The caller owns the HTTP client. That is deliberate: one client can serve several channels in the
+same job, and its timeouts stay in one place instead of being buried in this module.
+
+### Parameters
+
+| Parameter    | Default            | Meaning                                                     |
+| ------------ | ------------------ | ----------------------------------------------------------- |
+| `channel`    | required           | The passband, as a `SuviChannel`                            |
+| `spacecraft` | `19`               | GOES 16, 17, 18 or 19. Anything else raises `ValueError`    |
+| `lookback`   | `timedelta(10min)` | How far back from now to look                               |
+| `exposure`   | `'long'`           | `'long'`, `'short'` or `'both'`                             |
+| `limit`      | `1`                | How many of the most recent frames to download              |
+| `now`        | the clock          | Injectable end of the window; the tests use it to pin a day |
+
+### Listing without downloading
+
+`list_recent()` does everything `download()` does except fetch the bytes, and `fetch()` then
+downloads one frame you picked out of that list. Use the pair whenever you want to decide something
+from the metadata first — that is what `suvi_pipeline.py` does, so a job with nothing in its window
+reports it without spending a request.
+
+```python
+available = await downloader.list_recent(SuviChannel.HE303, timedelta(minutes=30))
+if available:
+    download = await downloader.fetch(available[0])
+```
+
+Both return frames **most recent first**, so `[0]` is the latest image.
+
+## What a frame tells you
+
+`SuviFile` is built entirely from the archive's own file name, with no need to open the FITS:
+
+```python
+SuviFile(
+    name='OR_SUVI-L1b-Fe093_G19_s20262610344072_e20262610344082_c20262610344250.fits.gz',
+    url='https://data.ngdc.noaa.gov/.../suvi-l1b-fe094/2026/09/18/OR_SUVI-L1b-Fe093_G19_s....gz',
+    channel=SuviChannel.FE093,
+    spacecraft=19,
+    start=datetime(2026, 9, 18, 3, 44, 7, 200000, tzinfo=UTC),
+    end=datetime(2026, 9, 18, 3, 44, 8, 200000, tzinfo=UTC),
+    exposure='long',
+)
+```
+
+The stamps are `YYYYJJJHHMMSSt`, where the trailing digit is tenths of a second. Exposure comes from
+the gap between them: one second is a long exposure, zero a short one. A name that parses to
+anything else is skipped rather than raised on, because a directory listing also carries sort links,
+parent links and the occasional stray file.
+
+## The channel trap
+
+The channel token in the file name and the directory it lives in **do not match for two channels**:
+
+| `SuviChannel` | Directory        | Token in file names |
+| ------------- | ---------------- | ------------------- |
+| `FE093`       | `suvi-l1b-fe094` | `Fe093`             |
+| `FE131`       | `suvi-l1b-fe131` | `Fe131`             |
+| `FE171`       | `suvi-l1b-fe171` | `Fe171`             |
+| `FE195`       | `suvi-l1b-fe195` | `Fe195`             |
+| `FE284`       | `suvi-l1b-fe284` | `Fe284`             |
+| `HE303`       | `suvi-l1b-he304` | `He303`             |
+
+GOES-19 writes `Fe093` and `He303` into directories still named after the wavelengths the earlier
+spacecraft used. The enum carries both spellings, so `list_recent()` can drop a frame whose name
+disagrees with the channel that was asked for. Never build one of these paths by lowercasing the
+channel value.
+
+## The archive lags about 15 minutes
+
+NOAA publishes L1b frames well after they are observed. A 10 minute window is often **empty**:
+measured at 03:57 UTC, the most recent Fe093 frame was from 03:44 — a lag of 13 minutes. That is the
+archive's publication delay, not a failure, and an empty window is a normal answer rather than an
+error.
+
+Two consequences:
+
+- Use a lookback of 30 minutes or more if the job has to come back with an image.
+- Handle the empty list. `download()` returns `[]` and does not raise.
+
+## Windows that cross midnight
+
+The archive stores one directory per UTC day, so a window spanning midnight covers two of them.
+`day_urls()` enumerates every day the window touches and `list_recent()` lists them concurrently. A
+day the archive does not have answers 404 and is skipped; any other HTTP error propagates as
+`httpx.HTTPStatusError` and fails the job.
+
+## Limits
+
+Both the directory listing and the frame are streamed and abandoned the moment they cross a ceiling
+(`MAX_LISTING_BYTES`, 8 MB; `MAX_FILE_BYTES`, 16 MB), so an unexpectedly huge response never lands
+on the heap in full. A real compressed frame is 1–2 MB.
+
+## Testing against it
+
+`apps/worker/tests/test_suvi.py` never touches the network. The parsing is pure, and the client is
+driven with `httpx.MockTransport` plus a fixed `now`:
+
+```python
+def handler(request: httpx.Request) -> httpx.Response:
+    if str(request.url).endswith('/'):
+        return httpx.Response(200, text=f'<a href="{NAME}">{NAME}</a>')
+    return httpx.Response(200, content=b'fits-bytes')
+
+async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+    files = await SuviDownloader(client).list_recent(SuviChannel.FE093, now=NOW)
+```
+
+Pass `now=` rather than freezing the clock, and name frames with real archive file names — the
+spelling is the thing under test.
+
+## Persisting a frame
+
+`apps/worker/app/processors/suvi_pipeline.py` does not stop at the download. Once a frame is
+fetched, it is gunzipped and opened with astropy (off the event loop — see below), and its header
+is handed to `apps/worker/app/services/process_headers.py`'s `ProcessHeaders`, which splits it into
+its two natural homes:
+
+- **PostgreSQL** (`solar.suvi_frames`) gets one catalogued row per frame: what was observed, when,
+  by which spacecraft, the solar-disc geometry (`sun_center_x/y`, `sun_radius_px`) needed to rebuild
+  a background mask, and the whole FITS header as `jsonb` so nothing promoted to a column is lost.
+  The write is an upsert keyed on `(satellite, channel, observed_at)`, so re-listing a window that
+  turns up the same frame again updates the row instead of duplicating it.
+- **InfluxDB** (measurement `suvi_frames`) gets only the numbers that are worth charting or
+  alerting on over time: the image statistics (`IMG_MEAN`, `IMG_SDEV`, ...) and the CCD/sensor
+  diagnostics (`CCD_TMP1`, `CCD_BIAS`, ...), tagged by `satellite` and `channel`.
+
+Three FITS quirks are handled in `process_headers.py` rather than left for a caller to discover:
+
+- `DATE-OBS` has no UTC offset in it (`'2026-09-18T04:14:07.332'`); it is parsed and stamped `UTC`
+  explicitly, since a naive value in a `timestamptz` column is interpreted in the server's zone.
+- The whole header is sanitised before it reaches `raw_header`: numpy scalars become Python ones,
+  astropy's `Undefined` sentinel becomes `None`, and `NaN`/`±Infinity` become `None` too, since
+  Postgres's `jsonb` rejects them outright. `COMMENT`/`HISTORY`/blank cards — which legitimately
+  repeat — are collapsed into lists instead of a plain `dict(header)` silently keeping only the
+  last one.
+- A missing optional card (say, a frame with no `SAT_PIX`) yields `None`, never `0` — a genuine
+  zero reading and an absent one are different facts, and only the former should ever reach Influx.
+
+`gzip.decompress` and `fits.open` run inside `asyncio.to_thread`, because a ~2 MB frame decoded
+synchronously on the event loop would stall every other job the worker is handling concurrently.
+Everything the caller needs — the header dict and a materialised copy of the data array — is
+extracted while still on the thread, so nothing tied to the closed `HDUList` escapes it.
+
+## Pixel blocks
+
+The decoded matrix does not stop at `ProcessHeaders`. Once the header is persisted,
+`suvi_pipeline.py` hands the matrix straight to `apps/worker/app/services/suvi_preview.py`'s
+`publish_preview`. Stakeholders confirmed these images are illustrative only, not a scientific
+product, so there is no compression, quantisation or delta-encoding step — `render_webp` stretches
+the matrix with `log1p` normalised to its own maximum, encodes it as an 8-bit grayscale image and
+saves it as **lossy WebP** (`WEBP_QUALITY = 80`) rather than PNG, purely for size: a lossless
+format buys nothing for an illustration that already discards precision in the log stretch.
+
+`publish_preview` uploads two copies of that WebP image to MinIO:
+
+- A **per-frame archival copy**, keyed
+  `suvi/{satellite}/{channel}/{observed_at:%Y%m%dT%H%M%S}.webp` (satellite and channel lowercased,
+  anything outside `[a-z0-9-]` replaced with `-`) — a prefix next to the `readings/*` one
+  `apps/worker/app/processors/ingest_readings.py` already writes. Its key is written back onto the
+  same `solar.suvi_frames` row (`preview_file`), so a specific frame's image stays browsable later.
+- The **always-latest copy**, at a fixed key per satellite/channel
+  (`suvi/preview/{satellite}/{channel}.webp`). Each run overwrites the previous image at that key
+  rather than versioning it. Nothing in `apps/web` reads it.
+
+This step is skipped only if the FITS file carried no data HDU at all (`data_matrix is None`),
+which the pipeline treats as a valid — if unusual — frame.
+
+### How the WebP reaches the browser
+
+The bucket stays private. `/datos` asks `GET /api/scientific-data` for a SUVI band and date;
+`apps/web/app/services/scientific-data/suviFrameDataSource.ts` (`querySuviFrames`) selects the
+matching `solar.suvi_frames` rows (channel = product code, `preview_file` set, `quality_flag = 0`),
+keeps the most recent satellite and returns up to eight frames spread evenly across the window,
+each with `imageUrl: /api/suvi/frames/<id>`.
+
+`apps/web/app/api/suvi/frames/[id]/route.ts` validates the uuid, looks up the row's
+`preview_file`, reads that object from MinIO through `apps/web/app/lib/suvi-storage.ts` — which
+builds its own `Minio.Client` per request instead of using `apps/web/app/services/storage`, which
+is unfinished (see `docs/manage-assets.md#known-gaps`) — and serves it as `image/webp` with
+`Cache-Control: public, max-age=31536000, immutable` (an archival key never changes). An unknown
+id, a row without a preview, or a missing object is a 404. Only keys recorded on a row are
+reachable.
+
+## Current wiring
+
+The client, `apps/worker/app/processors/suvi_pipeline.py` and `suvi_preview.py` are all wired
+up: `suvi-pipeline` is registered in `packages/contracts/src/jobs.ts`,
+`apps/worker/app/models/jobs.py` has `SuviPipelinePayload`, and `app/registry.py` routes the job to
+`suvi_pipeline.run`. The payload is `channel`, `spacecraft` and `lookbackMinutes`.

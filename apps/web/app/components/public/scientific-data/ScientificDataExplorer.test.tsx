@@ -5,9 +5,14 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { ScientificDataExplorer, type ScientificDataExplorerProps } from './ScientificDataExplorer'
 import {
   Default,
+  WithDownloadsForGoesDataHolder,
+  WithDownloadsForVisitor,
+  WithDownloadsSignedOut,
   WithObservedResults,
+  WithRosacDownloads,
   WithRosacDynamicSpectrum,
   WithoutResults,
+  WithSuviAndAllGrants,
   WithSuviImages,
 } from './ScientificDataExplorer.stories'
 
@@ -17,6 +22,11 @@ const withoutResultsArgs = WithoutResults.args as ScientificDataExplorerProps
 const spectrumArgs = WithRosacDynamicSpectrum.args as ScientificDataExplorerProps
 const resultFixture = withResultsArgs.initialResult!
 const suviArgs = WithSuviImages.args as ScientificDataExplorerProps
+const visitorDownloadArgs = WithDownloadsForVisitor.args as ScientificDataExplorerProps
+const goesHolderDownloadArgs = WithDownloadsForGoesDataHolder.args as ScientificDataExplorerProps
+const signedOutDownloadArgs = WithDownloadsSignedOut.args as ScientificDataExplorerProps
+const rosacDownloadArgs = WithRosacDownloads.args as ScientificDataExplorerProps
+const suviDownloadArgs = WithSuviAndAllGrants.args as ScientificDataExplorerProps
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -175,13 +185,12 @@ describe('ScientificDataExplorer', () => {
     )
   })
 
-  test('renders supplied observations without requesting data or exposing downloads', () => {
+  test('renders supplied observations without requesting data', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     render(<ScientificDataExplorer {...withResultsArgs} />)
 
     expect(screen.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /descargar/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /descargar/i })).not.toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
   })
@@ -190,11 +199,176 @@ describe('ScientificDataExplorer', () => {
     render(<ScientificDataExplorer {...defaultArgs} />)
     const banner = screen.getByRole('complementary', { name: 'Permisos de consulta y descarga' })
     expect(banner).toHaveTextContent('Puede consultar información histórica de GOES sin una cuenta')
-    expect(banner).toHaveTextContent('Solo se permite descargar imágenes de las gráficas')
-    expect(banner).toHaveTextContent(
-      'los datos originales y las imágenes solares SUVI no se pueden descargar',
+    expect(banner).toHaveTextContent('Para descargar, necesita una cuenta e iniciar sesión')
+    expect(banner).toHaveTextContent('los de GOES requieren un permiso de descarga de datos GOES')
+    expect(banner).toHaveTextContent('Las imágenes solares SUVI no se pueden descargar')
+    expect(banner).toHaveTextContent('Cada enlace de descarga vence en 30 minutos')
+  })
+
+  test('offers the GOES chart image but not GOES data without the GOES data grant', () => {
+    render(<ScientificDataExplorer {...visitorDownloadArgs} />)
+
+    expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Descargar datos (CSV)' })).not.toBeInTheDocument()
+  })
+
+  test('offers GOES data to a holder of the GOES data grant', () => {
+    render(<ScientificDataExplorer {...goesHolderDownloadArgs} />)
+
+    expect(screen.getByRole('button', { name: 'Descargar datos (CSV)' })).toBeEnabled()
+  })
+
+  test('requests the shown query and opens the returned link', async () => {
+    const requestDownload = vi.fn().mockResolvedValue({
+      ok: true,
+      url: 'http://minio/signed',
+      filename: 'GOES_EXIS_SFXR.png',
+      expiresAt: '2026-09-10T10:00:00.000Z',
+    })
+    const navigate = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <ScientificDataExplorer
+        {...visitorDownloadArgs}
+        navigate={navigate}
+        requestDownload={requestDownload}
+      />,
     )
-    expect(banner).toHaveTextContent('necesita una cuenta e iniciar sesión')
+
+    await user.click(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' }))
+
+    expect(requestDownload).toHaveBeenCalledWith({ query: resultFixture.query, format: 'png' })
+    expect(navigate).toHaveBeenCalledWith('http://minio/signed')
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'La descarga de GOES_EXIS_SFXR.png comenzó. El enlace vence en 30 minutos.',
+    )
+  })
+
+  test('sends anonymous visitors to sign in instead of requesting a download', async () => {
+    const requestDownload = vi.fn()
+    const navigate = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <ScientificDataExplorer
+        {...signedOutDownloadArgs}
+        loginHref="/acceso?next=%2Fdatos&reason=auth"
+        navigate={navigate}
+        requestDownload={requestDownload}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: /CSV/ })).not.toBeInTheDocument()
+    await user.click(
+      screen.getByRole('button', { name: 'Inicie sesión para descargar la gráfica' }),
+    )
+
+    expect(requestDownload).not.toHaveBeenCalled()
+    expect(navigate).toHaveBeenCalledWith('/acceso?next=%2Fdatos&reason=auth')
+  })
+
+  test('sends a visitor whose session expired to sign in', async () => {
+    const navigate = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <ScientificDataExplorer
+        {...visitorDownloadArgs}
+        loginHref="/acceso"
+        navigate={navigate}
+        requestDownload={vi.fn().mockResolvedValue({
+          ok: false,
+          reason: 'unauthenticated',
+          message: 'Inicie sesión para descargar recursos.',
+        })}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' }))
+
+    expect(navigate).toHaveBeenCalledWith('/acceso')
+  })
+
+  test('shows why a download was refused and lets the visitor try again', async () => {
+    const user = userEvent.setup()
+    render(
+      <ScientificDataExplorer
+        {...visitorDownloadArgs}
+        requestDownload={vi.fn().mockResolvedValue({
+          ok: false,
+          reason: 'failed',
+          message: 'No fue posible preparar la descarga. Inténtelo nuevamente más tarde.',
+        })}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No fue posible preparar la descarga.',
+    )
+    expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
+  })
+
+  test('reports a download that could not reach the server', async () => {
+    const user = userEvent.setup()
+    render(
+      <ScientificDataExplorer
+        {...visitorDownloadArgs}
+        requestDownload={vi.fn().mockRejectedValue(new Error('offline'))}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No fue posible preparar la descarga. Inténtelo nuevamente más tarde.',
+    )
+  })
+
+  test('reuses the job that answered an asynchronous query for its download', async () => {
+    const pending = { state: 'pending', jobId: 'goes-job-1', progress: 50 }
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce({ ok: true, status: 202, json: async () => pending })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => resultFixture }),
+    )
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const requestDownload = vi.fn().mockReturnValue(new Promise(() => {}))
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    render(
+      <ScientificDataExplorer
+        {...visitorDownloadArgs}
+        initialResult={undefined}
+        requestDownload={requestDownload}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+    await vi.advanceTimersByTimeAsync(2000)
+    await user.click(await screen.findByRole('button', { name: 'Descargar gráfica (PNG)' }))
+    vi.useRealTimers()
+
+    expect(requestDownload).toHaveBeenCalledWith({
+      query: resultFixture.query,
+      format: 'png',
+      jobId: 'goes-job-1',
+    })
+    expect(screen.getByRole('button', { name: 'Preparando descarga…' })).toBeDisabled()
+  })
+
+  test('offers ROSAC data to every account', () => {
+    render(<ScientificDataExplorer {...rosacDownloadArgs} />)
+
+    expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Descargar datos (CSV)' })).toBeEnabled()
+  })
+
+  test('offers no download for SUVI images, whatever the grants', () => {
+    render(<ScientificDataExplorer {...suviDownloadArgs} />)
+
+    expect(screen.queryByRole('button', { name: /descargar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Descargas' })).not.toBeInTheDocument()
   })
 
   test('identifies the source only as GOES while preserving observation notices', () => {

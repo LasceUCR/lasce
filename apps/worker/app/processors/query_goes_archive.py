@@ -10,7 +10,6 @@ import io
 import re
 import tarfile
 import tempfile
-import threading
 from datetime import UTC, datetime, timedelta
 from typing import Any, BinaryIO, cast
 from urllib.parse import unquote, urljoin, urlparse
@@ -20,6 +19,7 @@ import httpx
 import numpy as np
 from netCDF4 import Dataset, num2date
 
+from app.clients.netcdf import NETCDF_LOCK, primary_irradiance
 from app.models.jobs import QueryGoesArchivePayload
 
 BASE_URL = "https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/"
@@ -34,7 +34,6 @@ MAX_FILE_BYTES = 8 * 1024 * 1024
 MAX_ARCHIVE_BYTES = 1024 * 1024 * 1024
 MAX_FILES = 6000
 MAX_POINTS = 360
-NETCDF_LOCK = threading.Lock()
 FILE_PATTERN = re.compile(
     r"^OR_(?:EXIS|MAG|SEIS)-L1b-([A-Z]+)_G(\d{2})_s(\d{14})_e(\d{14})_c\d{14}\.nc$"
 )
@@ -135,14 +134,7 @@ def read_netcdf(content: bytes, payload: QueryGoesArchivePayload) -> list[tuple[
             raise ValueError("Unexpected NetCDF product")
         time_name = "time"
         if payload.product == "SFXR":
-            primary = dataset.variables[f"primary_{variable}"][:]
-            first = dataset.variables[f"irradiance_{variable}1"]
-            second = dataset.variables[f"irradiance_{variable}2"]
-            if first.units != unit or second.units != unit:
-                raise ValueError("Unexpected irradiance units")
-            values = np.ma.where(primary == 0, first[:], second[:])
-            values = np.ma.masked_where(~np.isin(primary, [0, 1]), values)
-            values = np.ma.masked_where(dataset.variables["invalid_flags"][:] != 0, values)
+            values = primary_irradiance(dataset, variable, unit)
         else:
             data = dataset.variables[variable]
             if data.units != unit:

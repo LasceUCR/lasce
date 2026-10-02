@@ -138,7 +138,8 @@ const nextConfig: NextConfig = {
   // ioredis, BullMQ, the Prisma client and the MinIO SDK are required at
   // runtime instead of being bundled — they carry native or dynamic requires
   // that do not survive it.
-  serverExternalPackages: ['ioredis', 'bullmq', '@prisma/client', 'minio'],
+  // `@resvg/resvg-js` loads a platform-specific native binary, so it cannot be bundled either.
+  serverExternalPackages: ['ioredis', 'bullmq', '@prisma/client', 'minio', '@resvg/resvg-js'],
 
   // Next's runtime require-hook loads @swc/helpers' ESM variants through a
   // dynamic require the file tracer cannot see, so standalone output shipped
@@ -147,8 +148,12 @@ const nextConfig: NextConfig = {
   // never bound a port, which read as a healthcheck timeout. Pull the whole
   // package in. pnpm's isolated layout keeps it under .pnpm rather than a
   // hoisted node_modules, and the glob avoids pinning the version.
+  //
+  // The font resvg draws chart downloads with is read from disk at runtime
+  // (app/services/downloads/exporters/png.ts), which the tracer cannot see either.
   outputFileTracingIncludes: {
     '/**': ['../../node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**/*'],
+    '/datos': ['./app/services/downloads/fonts/*.ttf'],
   },
 
   // Sign-in and sign-up share one page. `/registro` shipped briefly as its own

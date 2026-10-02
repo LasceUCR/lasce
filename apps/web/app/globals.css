@@ -1639,6 +1639,29 @@ a {
   text-align: left;
 }
 
+.data-downloads {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.data-downloads h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.data-downloads-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.data-downloads .data-field-hint {
+  margin: 0;
+}
+
 .data-wavelengths {
   grid-column: 1 / -1;
   min-width: 0;
@@ -2735,6 +2758,15 @@ a {
   text-overflow: ellipsis;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+/* Same look as `.news-abstract`, but unclamped — a donation write-up has no
+   detail page to link to for the rest of the text, so it all shows here. */
+.donation-card-description {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 @media (max-width: 1120px) {

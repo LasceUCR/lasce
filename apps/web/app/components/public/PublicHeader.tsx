@@ -28,15 +28,28 @@ const navigation: NavEntry[] = [
       { label: 'Colaboraciones e Iniciativas', href: '/colaboraciones-e-iniciativas' },
     ],
   },
-  { label: 'Investigación', href: '/investigacion' },
+  {
+    label: 'Investigación',
+    items: [
+      { label: 'Áreas de investigación', href: '/investigacion' },
+      { label: 'Física solar', href: '/fisica-solar' },
+      { label: 'Clima espacial', href: '/clima-espacial' },
+      { label: 'ROSAC', href: '/radioastronomia' },
+    ],
+  },
   { label: 'Datos', href: '/datos' },
-  { label: 'Noticias', href: '/noticias' },
+  {
+    label: 'Divulgación',
+    items: [
+      { label: 'Noticias', href: '/noticias' },
+      { label: 'Galería', href: '/galeria' },
+    ],
+  },
   {
     label: 'Recursos',
     items: [
       { label: 'Publicaciones', href: '/publicaciones' },
       { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
-      { label: 'Galería', href: '/galeria' },
     ],
   },
   { label: 'Contacto', href: '/contacto' },
