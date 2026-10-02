@@ -77,17 +77,27 @@ const nosotrosGroup = {
   items: ['Quiénes somos', 'Colaboraciones e Iniciativas'],
 } as const
 
+const researchGroup = {
+  label: 'Investigación',
+  items: ['Áreas de investigación', 'Física solar', 'Clima espacial', 'ROSAC'],
+} as const
+
+const outreachGroup = {
+  label: 'Divulgación',
+  items: ['Noticias', 'Galería'],
+} as const
+
 const resourcesGroup = {
   label: 'Recursos',
-  items: ['Publicaciones', 'Herramientas científicas', 'Galería'],
+  items: ['Publicaciones', 'Herramientas científicas'],
 } as const
 
 const desktopNavigation = [
   'Inicio',
   nosotrosGroup,
-  'Investigación',
+  researchGroup,
   'Datos',
-  'Noticias',
+  outreachGroup,
   resourcesGroup,
   'Contacto',
 ] as const
@@ -155,15 +165,20 @@ test('mobile navigation can be opened and used with the keyboard', async ({ page
   await expect(menu).toHaveAttribute('open', '')
 
   const navigation = page.getByRole('navigation', { name: 'Navegación móvil' })
-  for (const route of publicRoutes) {
+  // The mobile menu lists the same entries, in the same order, as the desktop bar.
+  for (const entry of desktopNavigation) {
     await page.keyboard.press('Tab')
-    if (route.label === 'Quiénes somos' || route.label === 'Publicaciones') {
-      const groupLabel = route.label === 'Quiénes somos' ? 'Nosotros' : 'Recursos'
-      await expect(navigation.getByText(groupLabel, { exact: true })).toBeFocused()
-      await page.keyboard.press('Enter')
-      await page.keyboard.press('Tab')
+    if (typeof entry === 'string') {
+      await expect(navigation.getByRole('link', { name: entry, exact: true })).toBeFocused()
+      continue
     }
-    await expect(navigation.getByRole('link', { name: route.label, exact: true })).toBeFocused()
+
+    await expect(navigation.getByText(entry.label, { exact: true })).toBeFocused()
+    await page.keyboard.press('Enter')
+    for (const label of entry.items) {
+      await page.keyboard.press('Tab')
+      await expect(navigation.getByRole('link', { name: label, exact: true })).toBeFocused()
+    }
   }
 
   await page.keyboard.press('Enter')

@@ -32,13 +32,32 @@ size that read as an afterthought. The tier in `globals.css` now:
 
 ## Menu organization (`PublicHeader.tsx`, `NavGroup.tsx`)
 
-`Publicaciones`, `Herramientas científicas` and `Galería` are grouped behind a single **Recursos**
-entry instead of three flat top-level links. `Contacto` stays as its own link after the group.
-`Administración` is not in this list: it lives inside the signed-in account menu
-(`AccountLinks.tsx`/`AccountMenu.tsx`, see `docs/`'s auth docs), so it never appears twice.
+The `navigation` array in `PublicHeader.tsx` is the single source for both the desktop bar and the
+mobile menu. It reaches every area of the homepage's "Áreas y accesos principales" section
+(`app/lib/work-areas.ts`) without a trip back to `/`:
+
+| Top bar entry | Kind     | Items                                                                                               |
+| ------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| Inicio        | link     | `/`                                                                                                 |
+| Nosotros      | dropdown | Quiénes somos, Colaboraciones e Iniciativas                                                         |
+| Investigación | dropdown | Áreas de investigación (`/investigacion`), Física solar, Clima espacial, ROSAC (`/radioastronomia`) |
+| Datos         | link     | `/datos`                                                                                            |
+| Divulgación   | dropdown | Noticias, Galería                                                                                   |
+| Recursos      | dropdown | Publicaciones, Herramientas científicas                                                             |
+| Contacto      | link     | `/contacto`                                                                                         |
+
+Each destination appears once; a group is only a label, never a page of its own. `Áreas de
+investigación` keeps `/investigacion` (the research areas page) reachable now that
+`Investigación` is a dropdown rather than a link. `Administración` is not in this list: it lives
+inside the signed-in account menu (`AccountLinks.tsx`/`AccountMenu.tsx`, see `docs/`'s auth docs),
+so it never appears twice.
+
+The desktop bar is only shown above 1400px (below that, the mobile menu takes over; see
+`globals.css`). Adding entries widens it, so check the 1401–1440px range visually after changing
+this list: the bar must not run into the brand lockup.
 
 ```
-Desktop nav   › NavGroup "Recursos"        <details>/<summary>, opens on hover, click, Enter/Space
+Desktop nav   › NavGroup (one per group)   <details>/<summary>, opens on hover, click, Enter/Space
                  └─ nav-group-panel          centered under the summary, one link per grouped page
 Mobile nav    › .mobile-nav-group           same <details> pattern, no NavGroup component reuse
                  └─ mobile-nav-group-panel   indented links, auto-opens if the current page is inside
@@ -81,11 +100,23 @@ translateX(-50%)`), not right-anchored as it originally was.
     button) can trigger `:focus-visible` even from a mouse click.
 - Covered by `PublicHeader.test.tsx`'s accordion test.
 
+### Mobile: the menu panel (`.mobile-menu`)
+
+- The page behind the menu is locked (`body { overflow: hidden }`) while it is open, so the panel
+  scrolls itself: `max-height` is the dynamic viewport height (`100dvh`, with a `100vh` fallback)
+  minus the header and the bottom safe area, with `overflow-y: auto`. This keeps the last option
+  reachable in landscape on a phone.
+- The menu closes on a `pointerdown` or `touchstart` anywhere outside the `<details>`, listened to
+  in the capture phase. The listener reads `details.open` directly instead of React state, because
+  the native `toggle` event is asynchronous and iOS can deliver the outside touch before it.
+- Covered by `PublicHeader.test.tsx` (touch outside) and `tests/e2e/responsive-controls.spec.ts`
+  (outside tap after scrolling the panel, last option in landscape).
+
 ## Covered by
 
-| Piece                            | File                                     | Covered by                                             |
-| -------------------------------- | ---------------------------------------- | ------------------------------------------------------ |
-| Institutional lockup             | `app/components/public/Brand.tsx`        | (no dedicated unit test yet)                           |
-| Desktop group disclosure         | `app/components/public/NavGroup.tsx`     | `NavGroup.test.tsx`                                    |
-| Header layout + mobile accordion | `app/components/public/PublicHeader.tsx` | `PublicHeader.test.tsx`                                |
-| Responsive rules for both        | `app/globals.css`                        | manual verification (no CSS test harness in this repo) |
+| Piece                            | File                                     | Covered by                                           |
+| -------------------------------- | ---------------------------------------- | ---------------------------------------------------- |
+| Institutional lockup             | `app/components/public/Brand.tsx`        | (no dedicated unit test yet)                         |
+| Desktop group disclosure         | `app/components/public/NavGroup.tsx`     | `NavGroup.test.tsx`                                  |
+| Header layout + mobile accordion | `app/components/public/PublicHeader.tsx` | `PublicHeader.test.tsx`                              |
+| Responsive rules for both        | `app/globals.css`                        | `tests/e2e/responsive-controls.spec.ts`, plus manual |

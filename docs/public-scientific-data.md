@@ -2,7 +2,8 @@
 
 `LASCE-PUB-002` provides a public, read-only query at `/datos`. Visitors select a source, a
 scientific instrument, one of its products, a channel or parameter, one calendar day, and an
-increasing UTC time range. Consultation does not require login. No download action is added by this PBI.
+increasing UTC time range. Consultation does not require login. Downloading a chart or its data
+does, and is described in [downloads.md](downloads.md).
 
 ## Daily solar consultation
 
@@ -55,11 +56,19 @@ replace the new selection, and automatic updates do not move keyboard focus. Loa
 bands, source errors and individual image failures have visible messages. A failed image is
 removed while its UTC capture time remains visible; switching bands can recover normally.
 
-The visible permissions banner communicates the approved policy: historical GOES information
-can be consulted without an account; only images of graphs may be downloaded; original data and
-SUVI solar images cannot be downloaded through the platform; downloading graph images requires
-an account and signing in. This is informational and does not introduce an export endpoint,
-download button or authentication change.
+The visible permissions banner communicates the policy:
+
+- historical GOES information can be consulted without an account;
+- downloading anything requires an account and signing in;
+- chart images can be downloaded for every source;
+- ROSAC data (CSV) is open to every account;
+- GOES data requires the GOES data download permission (`download_goes_resources`);
+- SUVI solar images cannot be downloaded;
+- every download link expires after 30 minutes.
+
+Under each charted result, a **Descargas** block offers the formats the product allows. The
+banner is informational; the Server Action enforces the same rules
+([downloads.md](downloads.md)).
 
 ## Sources and provenance
 
@@ -109,6 +118,14 @@ The worker lists only the requested day, selects overlapping granules by filenam
 There is no rolling seven-day restriction on historical date selection. Availability varies by product and day. Confirmed missing directories and compressed files produce an empty result; timeouts, invalid formats, and transport errors fail the query.
 
 There is no SUVI-specific time window: any GOES date up to today (UTC) can be requested, and the API rejects only dates after today.
+
+The start and end time fields sit side by side while their group is at least 336 px wide (two
+columns of at least 10 rem each, plus the gap) and stack when it is narrower, so localized native
+controls with AM/PM segments are not clipped. The rule depends on the group's own width, not on a
+viewport breakpoint. The date and time inputs use a 16 px font, which keeps iOS Safari from zooming
+in on focus, and size themselves by stretching instead of a percentage width. The field before the
+time range (Fecha) shares its grid row and does not use a subgrid, so when the time fields stack
+its label and input stay aligned with Hora de inicio instead of stretching with the row.
 
 On 2026-09-13 the reader was checked against real G18 L1b samples dated 2025-01-05 for all five enabled historical products. Synthetic NetCDF fixtures exercise detector selection, fill values, quality flags, sensor dimensions, time bounds, and compressed archives without depending on the remote service.
 

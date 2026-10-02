@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
@@ -17,6 +17,17 @@ afterEach(() => {
 })
 
 describe('PublicHeader', () => {
+  test('closes on touch outside even before the native toggle notification', () => {
+    render(<PublicHeader logoutAction={async () => undefined} />)
+    const trigger = screen.getByLabelText('Abrir navegación')
+    const disclosure = trigger.closest('details')!
+    disclosure.open = true
+    fireEvent.touchStart(trigger)
+    expect(disclosure.open).toBe(true)
+    fireEvent.touchStart(document.body)
+    expect(disclosure.open).toBe(false)
+  })
+
   test('hides Administración when nobody is signed in', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
@@ -79,37 +90,87 @@ describe('PublicHeader', () => {
     expect(screen.getByAltText('Laboratorio de Ciencias Espaciales')).toBeInTheDocument()
   })
 
-  test('groups the resource pages behind Recursos on desktop, and behind an accordion on mobile', async () => {
-    const user = userEvent.setup()
+  test.each([
+    {
+      group: 'Investigación',
+      items: [
+        ['Áreas de investigación', '/investigacion'],
+        ['Física solar', '/fisica-solar'],
+        ['Clima espacial', '/clima-espacial'],
+        ['ROSAC', '/radioastronomia'],
+      ],
+    },
+    {
+      group: 'Divulgación',
+      items: [
+        ['Noticias', '/noticias'],
+        ['Galería', '/galeria'],
+      ],
+    },
+    {
+      group: 'Recursos',
+      items: [
+        ['Publicaciones', '/publicaciones'],
+        ['Herramientas científicas', '/herramientas-cientificas'],
+      ],
+    },
+  ])(
+    'groups the $group pages behind a disclosure on desktop, and behind an accordion on mobile',
+    async ({ group, items }) => {
+      const user = userEvent.setup()
+      render(<PublicHeader logoutAction={async () => undefined} />)
+
+      await user.click(screen.getByLabelText('Abrir navegación'))
+
+      const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
+      const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+
+      // Both start closed: the group reads like a normal item on mobile, not a heading.
+      for (const [label] of items) {
+        expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
+        expect(mobile.getByRole('link', { name: label })).not.toBeVisible()
+      }
+      expect(mobile.queryByRole('button', { name: group })).not.toBeInTheDocument()
+      expect(desktop.queryByRole('link', { name: group })).not.toBeInTheDocument()
+
+      await user.click(mobile.getByText(group))
+
+      for (const [label, href] of items) {
+        expect(mobile.getByRole('link', { name: label })).toBeVisible()
+        expect(mobile.getByRole('link', { name: label })).toHaveAttribute('href', href)
+      }
+
+      await user.click(desktop.getByText(group))
+
+      for (const [label, href] of items) {
+        expect(desktop.getByRole('link', { name: label })).toBeVisible()
+        expect(desktop.getByRole('link', { name: label })).toHaveAttribute('href', href)
+      }
+      expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
+    },
+  )
+
+  test('links every page from the header exactly once', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
-    await user.click(screen.getByLabelText('Abrir navegación'))
+    for (const name of ['Navegación principal', 'Navegación móvil']) {
+      const hrefs = within(screen.getByRole('navigation', { name }))
+        .getAllByRole('link', { hidden: true })
+        .map((link) => link.getAttribute('href'))
+        .filter((href) => href !== '/acceso')
 
-    const desktop = within(screen.getByRole('navigation', { name: 'Navegación principal' }))
-    const mobile = within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
-    const grouped = ['Publicaciones', 'Herramientas científicas', 'Galería']
-
-    // Both start closed: Recursos reads like a normal item on mobile, not a heading.
-    for (const label of grouped) {
-      expect(desktop.getByRole('link', { name: label })).not.toBeVisible()
-      expect(mobile.getByRole('link', { name: label })).not.toBeVisible()
+      expect(new Set(hrefs).size).toBe(hrefs.length)
+      expect(hrefs).toEqual(
+        expect.arrayContaining([
+          '/fisica-solar',
+          '/clima-espacial',
+          '/radioastronomia',
+          '/herramientas-cientificas',
+          '/datos',
+          '/noticias',
+        ]),
+      )
     }
-    expect(mobile.queryByRole('button', { name: 'Recursos' })).not.toBeInTheDocument()
-
-    await user.click(mobile.getByText('Recursos'))
-
-    for (const label of grouped) {
-      expect(mobile.getByRole('link', { name: label })).toBeVisible()
-    }
-    expect(mobile.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
-
-    await user.click(desktop.getByText('Recursos'))
-
-    for (const label of grouped) {
-      expect(desktop.getByRole('link', { name: label })).toBeVisible()
-    }
-    expect(desktop.getByRole('link', { name: 'Galería' })).toHaveAttribute('href', '/galeria')
-    expect(desktop.getByRole('link', { name: 'Datos' })).toBeVisible()
   })
 
   test('groups the about pages behind Nosotros on desktop, and behind an accordion on mobile', async () => {

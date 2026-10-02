@@ -70,6 +70,7 @@ describe('RosacInfoPage', () => {
       '6. Instrumentos científicos',
       '7. Investigadores',
       '8. Agradecimientos ROSAC',
+      '9. Donaciones ROSAC',
     ])
     expect(screen.getByRole('region', { name: '4. Construcción del ROSAC' })).toHaveTextContent(
       defaultArgs.content.construction.intro,
@@ -138,6 +139,18 @@ describe('RosacInfoPage', () => {
     }
     expect(instruments.getAllByRole('link')).toHaveLength(2)
     expect(instruments.getByText(/integración en la sección de datos/)).toBeVisible()
+  })
+
+  test('invites visitors to help and links the donations CTA to the contact page', () => {
+    renderPage()
+
+    const donations = screen.getByRole('region', { name: '9. Donaciones ROSAC' })
+    expect(
+      within(donations).getByRole('heading', { name: defaultArgs.content.donations.cta.title }),
+    ).toBeInTheDocument()
+    expect(
+      within(donations).getByRole('link', { name: defaultArgs.content.donations.cta.buttonLabel }),
+    ).toHaveAttribute('href', defaultArgs.content.donations.cta.href)
   })
 
   test('returns to the home access cards', () => {

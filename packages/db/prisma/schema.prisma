@@ -63,6 +63,7 @@ model User {
   updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   sessions            Session[]
+  resourceDownloads   ResourceDownload[]
   nosotrosActivities  NosotrosActivity[]
   researchers         Researcher[]
   nosotrosResearchers NosotrosResearcher[]
@@ -355,6 +356,40 @@ model ExisFile {
   @@unique([satellite, product, day])
   @@map("exis_files")
   @@schema("solar")
+}
+
+/// One file a signed-in user downloaded from `/datos`: a chart image or a data export. Written
+/// by `apps/web/app/services/downloads/downloadService.ts` only after the object reached the
+/// private downloads bucket, so every row names an object that existed. The object itself
+/// expires (bucket lifecycle); this row is the permanent record. The worker never writes here.
+model ResourceDownload {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Null once the account is deleted, so the audit trail outlives it.
+  userId     String?  @map("user_id") @db.Uuid
+  /// Codes from the catalogue in `apps/web/app/lib/scientific-data.ts`, e.g. "GOES" / "EXIS" /
+  /// "SFXR". Plain strings, like `RolePermission.permission`, so a new instrument needs no migration.
+  source     String
+  instrument String
+  product    String
+  /// A code from `DOWNLOAD_FORMATS` in `apps/web/app/lib/downloads/formats.ts`, e.g. "csv".
+  format     String
+  /// The query that produced the file: `parameter`, `date`, `startTime`, `endTime`.
+  params     Json
+  /// Key inside `MINIO_DOWNLOADS_BUCKET`.
+  objectKey  String   @map("object_key")
+  byteSize   Int      @map("byte_size")
+  /// Data rows exported; null for images.
+  rowCount   Int?     @map("row_count")
+  /// When the presigned link handed to the user stops working.
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([source, instrument, createdAt])
+  @@map("resource_downloads")
+  @@schema("public")
 }
 /// A researcher profile card shown on `/radioastronomia` (LASCE-CON-012-085).
 /// Distinct from `research.ResearchAuthor`: that one is only a citation name

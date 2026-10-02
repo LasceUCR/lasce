@@ -114,6 +114,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-lasce}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-lasce-secret}
       MINIO_BUCKET: ${MINIO_BUCKET:-lasce-files}
+      MINIO_DOWNLOADS_BUCKET: ${MINIO_DOWNLOADS_BUCKET:-lasce-downloads}
       MINIO_USE_SSL: "false"
     ports:
       - "3000:3000"

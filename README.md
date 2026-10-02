@@ -70,6 +70,20 @@ Open http://localhost:3000 and enqueue the demo job. It travels through Redis to
 worker, which writes points to InfluxDB, archives a CSV to MinIO and records the run in
 PostgreSQL — the page shows the status changing as it happens.
 
+### Testing on a phone
+
+`pnpm dev` listens on every network interface. To open the site from a phone on the same Wi-Fi,
+find the computer's IPv4 address (`ipconfig` on Windows) and browse to `http://<that-ip>:3000`.
+In development, `apps/web/next.config.ts` adds the computer's LAN IPv4 addresses to
+`allowedDevOrigins`; without that, Next.js blocks its dev assets and the page renders without
+hydrating. On Windows, Node must be allowed through the firewall on private networks.
+`NEXT_PUBLIC_APP_URL` only feeds page metadata, `robots.txt` and the sitemap, so it can stay on
+`localhost`.
+
+Chrome on iOS adds its own attributes to `<html>` before React hydrates. `app/layout.tsx` sets
+`suppressHydrationWarning` on that element alone, so the mismatch is not reported. It does not hide
+mismatches in any other element.
+
 ## Commands
 
 | Command                                           | What it does                                            |

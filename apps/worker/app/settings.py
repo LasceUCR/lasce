@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     minio_secret_key: str = ""
     minio_bucket: str = "lasce-files"
     minio_use_ssl: bool = False
+    # Private bucket for /datos downloads. Only apps/web writes it; validated here to keep the
+    # two validators in step.
+    minio_downloads_bucket: str = "lasce-downloads"
 
     # --- Worker ---
     worker_concurrency: int = 4

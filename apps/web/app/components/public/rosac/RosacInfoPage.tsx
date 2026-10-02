@@ -5,6 +5,7 @@ import {
   ChartNoAxesCombined,
   Crosshair,
   GraduationCap,
+  Mail,
   MapPin,
   Radio,
   RadioTower,
@@ -30,6 +31,7 @@ import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 import styles from './RosacInfoPage.module.css'
 import { AcknowledgmentsGallery } from './AcknowledgmentsGallery'
 import { ConstructionCarousel } from './ConstructionCarousel'
+import { DonationCard } from './DonationCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { InstrumentCard } from './InstrumentCard'
 import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
@@ -321,6 +323,35 @@ export function RosacInfoPage({
           institutions={content.acknowledgments.institutions}
           label={content.acknowledgments.title}
         />
+      </TopicSection>
+
+      <TopicSection
+        id="donaciones"
+        index="9"
+        intro={content.donations.subtitle}
+        title={content.donations.title}
+        titleId="rosac-donations-title"
+        wide
+      >
+        <div className="news-list">
+          {content.donations.items.map((donation) => (
+            <DonationCard donation={donation} key={donation.title} />
+          ))}
+        </div>
+
+        <div className={`topic-highlight ${styles.donationsCta}`}>
+          <div className={styles.donationsCtaText}>
+            <h3>{content.donations.cta.title}</h3>
+            <p>{content.donations.cta.description}</p>
+          </div>
+          <Button
+            href={content.donations.cta.href}
+            icon={<Mail aria-hidden="true" size={18} strokeWidth={1.8} />}
+            variant="secondary"
+          >
+            {content.donations.cta.buttonLabel}
+          </Button>
+        </div>
       </TopicSection>
 
       <TopicSection

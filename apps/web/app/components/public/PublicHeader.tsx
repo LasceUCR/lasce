@@ -28,15 +28,28 @@ const navigation: NavEntry[] = [
       { label: 'Colaboraciones e Iniciativas', href: '/colaboraciones-e-iniciativas' },
     ],
   },
-  { label: 'Investigación', href: '/investigacion' },
+  {
+    label: 'Investigación',
+    items: [
+      { label: 'Áreas de investigación', href: '/investigacion' },
+      { label: 'Física solar', href: '/fisica-solar' },
+      { label: 'Clima espacial', href: '/clima-espacial' },
+      { label: 'ROSAC', href: '/radioastronomia' },
+    ],
+  },
   { label: 'Datos', href: '/datos' },
-  { label: 'Noticias', href: '/noticias' },
+  {
+    label: 'Divulgación',
+    items: [
+      { label: 'Noticias', href: '/noticias' },
+      { label: 'Galería', href: '/galeria' },
+    ],
+  },
   {
     label: 'Recursos',
     items: [
       { label: 'Publicaciones', href: '/publicaciones' },
       { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
-      { label: 'Galería', href: '/galeria' },
     ],
   },
   { label: 'Contacto', href: '/contacto' },
@@ -54,7 +67,6 @@ export interface PublicHeaderProps {
 export function PublicHeader({ logoutAction }: PublicHeaderProps) {
   const pathname = usePathname()
   const { account, role, isSigningOut, signOut } = useAccount(logoutAction)
-  const headerRef = useRef<HTMLElement>(null)
   const mobileMenu = useRef<HTMLDetailsElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -136,25 +148,36 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
     }
 
     document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen])
 
-    function closeMenuOnOutsidePointer(event: PointerEvent) {
-      if (headerRef.current?.contains(event.target as Node)) {
+  useEffect(() => {
+    function closeMenuOnOutsidePointer(event: Event) {
+      // Read the native disclosure directly; its toggle notification is asynchronous.
+      if (!mobileMenu.current?.open) return
+      if (mobileMenu.current?.contains(event.target as Node)) {
         return
       }
 
       closeMobileMenu()
     }
 
-    document.addEventListener('pointerdown', closeMenuOnOutsidePointer)
+    document.addEventListener('pointerdown', closeMenuOnOutsidePointer, true)
+    document.addEventListener('touchstart', closeMenuOnOutsidePointer, {
+      capture: true,
+      passive: true,
+    })
 
     return () => {
-      document.body.style.overflow = ''
-      document.removeEventListener('pointerdown', closeMenuOnOutsidePointer)
+      document.removeEventListener('pointerdown', closeMenuOnOutsidePointer, true)
+      document.removeEventListener('touchstart', closeMenuOnOutsidePointer, true)
     }
-  }, [isMobileMenuOpen])
+  }, [])
 
   return (
-    <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`} ref={headerRef}>
+    <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`}>
       <Link className="brand-link" href="/" aria-label="Ir al inicio">
         <Brand />
       </Link>
