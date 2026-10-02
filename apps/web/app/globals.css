@@ -996,7 +996,8 @@ a {
 .area-grid {
   margin-top: 24px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0, …) so a card's content cannot widen its column past the page on tablets. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px 28px;
 }
 
@@ -2001,13 +2002,33 @@ a {
 
 .data-time-fields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Native time controls need room for localized hour/minute and AM/PM segments. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  grid-row: span 3;
+  /* Top-aligned so the time labels and inputs line up with a neighbouring field. */
+  align-self: start;
+  align-content: start;
   gap: 1rem;
+}
+
+.data-field input[type='date'],
+.data-field input[type='time'] {
+  /* Avoid iOS native controls adding padding outside a percentage width.
+     https://bugs.webkit.org/show_bug.cgi?id=301648 */
+  width: auto;
+  max-width: 100%;
+  align-self: stretch;
+  justify-self: stretch;
+  font-size: 1rem;
 }
 
 .data-query-submit {
   display: flex;
+  grid-row: span 3;
+  align-self: end;
   align-items: flex-end;
+  /* Keeps the spacing the button had when it sat in the input row of a subgrid. */
+  padding-top: 0.5rem;
 }
 
 .data-query-submit button {
@@ -2015,22 +2036,22 @@ a {
   min-height: 44px;
 }
 
-.data-query-form > .data-field,
-.data-query-form > .data-time-range,
-.data-query-form .data-time-fields > .data-field,
-.data-query-form > .data-query-submit {
+.data-query-form > .data-field {
   display: grid;
   grid-row: span 3;
   grid-template-rows: subgrid;
   row-gap: 0.5rem;
 }
 
-.data-query-form > .data-query-submit button {
-  grid-row: 2;
-}
-
 .data-query-form > .data-source-field {
   display: flex;
+}
+
+/* The field before the time range shares its grid row. When the time fields stack,
+   that row grows; a subgrid would stretch this field's label and input with it. */
+.data-query-form > .data-field:has(+ .data-time-fields) {
+  display: flex;
+  align-self: start;
 }
 
 .data-query-form :disabled {
@@ -2141,7 +2162,11 @@ a {
   }
 
   .data-query-form {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .data-time-fields {
+    margin-bottom: 0.5rem;
   }
 
   .data-query-form,
@@ -2781,6 +2806,11 @@ a {
     top: 50px;
     right: 0;
     width: min(280px, calc(100vw - 32px));
+    /* The page is locked while this menu is open; the panel must scroll itself. */
+    max-height: calc(100vh - var(--header-height) - 16px);
+    max-height: calc(100dvh - var(--header-height) - 16px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
     padding: 8px;
     display: grid;
     border: 1px solid var(--border);
@@ -5668,6 +5698,7 @@ a.gallery-tile:focus-visible {
 }
 
 .cms-form-field {
+  min-width: 0;
   margin: 14px 0;
   display: flex;
   flex-direction: column;
@@ -5687,6 +5718,8 @@ a.gallery-tile:focus-visible {
 .cms-form-field input,
 .cms-form-field textarea,
 .cms-form-field select {
+  width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -5840,6 +5873,7 @@ a.gallery-tile:focus-visible {
      variant below) so it doesn't stretch absurdly wide on an ultrawide
      monitor. */
   max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
   padding: 32px 40px;
   display: flex;
   flex-direction: column;
@@ -5906,6 +5940,25 @@ a.gallery-tile:focus-visible {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .cms-form-field input,
+  .cms-form-field textarea,
+  .cms-form-field select {
+    font-size: 1rem;
+  }
+
+  .modal {
+    padding: 24px 16px;
+  }
+
+  .modal-actions,
+  .cms-form-actions,
+  .news-article-form-actions,
+  .nosotros-activity-form-actions {
+    flex-wrap: wrap;
+  }
 }
 
 .publication-add-author {
