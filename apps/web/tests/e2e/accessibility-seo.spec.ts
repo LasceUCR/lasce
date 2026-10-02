@@ -77,17 +77,27 @@ const nosotrosGroup = {
   items: ['Quiénes somos', 'Colaboraciones e Iniciativas'],
 } as const
 
+const researchGroup = {
+  label: 'Investigación',
+  items: ['Áreas de investigación', 'Física solar', 'Clima espacial', 'ROSAC'],
+} as const
+
+const outreachGroup = {
+  label: 'Divulgación',
+  items: ['Noticias', 'Galería'],
+} as const
+
 const resourcesGroup = {
   label: 'Recursos',
-  items: ['Publicaciones', 'Herramientas científicas', 'Galería'],
+  items: ['Publicaciones', 'Herramientas científicas'],
 } as const
 
 const desktopNavigation = [
   'Inicio',
   nosotrosGroup,
-  'Investigación',
+  researchGroup,
   'Datos',
-  'Noticias',
+  outreachGroup,
   resourcesGroup,
   'Contacto',
 ] as const
