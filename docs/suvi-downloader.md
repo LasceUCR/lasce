@@ -187,25 +187,27 @@ format buys nothing for an illustration that already discards precision in the l
   `apps/worker/app/processors/ingest_readings.py` already writes. Its key is written back onto the
   same `solar.suvi_frames` row (`preview_file`), so a specific frame's image stays browsable later.
 - The **always-latest copy**, at a fixed key per satellite/channel
-  (`suvi/preview/{satellite}/{channel}.webp`), which `/suvi` polls. Each run overwrites the
-  previous image at that key rather than versioning it.
+  (`suvi/preview/{satellite}/{channel}.webp`). Each run overwrites the previous image at that key
+  rather than versioning it. Nothing in `apps/web` reads it.
 
 This step is skipped only if the FITS file carried no data HDU at all (`data_matrix is None`),
 which the pipeline treats as a valid — if unusual — frame.
 
-### Vista previa (proof of concept)
+### How the WebP reaches the browser
 
-`apps/web/app/api/suvi/preview/[satellite]/[channel]/route.ts` reads the always-latest object
-straight out of
-MinIO — building its own `Minio.Client` per request rather than going through
-`apps/web/app/services/storage`, which is unfinished (see `docs/manage-assets.md#known-gaps`) —
-and serves it as `image/webp` with `Cache-Control: no-store`, or a 404 JSON body when the worker
-has not published a preview yet. `apps/web/app/(public)/suvi/page.tsx` renders one `<img>` per
-channel (`fe093`, `fe131`, `fe171`, `fe195`, `fe284`, `he303`) for GOES-19 through
-`SuviPreview` (`apps/web/app/components/public/suvi/SuviPreview.tsx`), a client component that
-polls the route every 30 seconds (its `intervalMs` prop) so the images refresh on their own,
-without a page reload, as new frames are published. It has no link in the site navigation and is
-reached directly at `/suvi`.
+The bucket stays private. `/datos` asks `GET /api/scientific-data` for a SUVI band and date;
+`apps/web/app/services/scientific-data/suviFrameDataSource.ts` (`querySuviFrames`) selects the
+matching `solar.suvi_frames` rows (channel = product code, `preview_file` set, `quality_flag = 0`),
+keeps the most recent satellite and returns up to eight frames spread evenly across the window,
+each with `imageUrl: /api/suvi/frames/<id>`.
+
+`apps/web/app/api/suvi/frames/[id]/route.ts` validates the uuid, looks up the row's
+`preview_file`, reads that object from MinIO through `apps/web/app/lib/suvi-storage.ts` — which
+builds its own `Minio.Client` per request instead of using `apps/web/app/services/storage`, which
+is unfinished (see `docs/manage-assets.md#known-gaps`) — and serves it as `image/webp` with
+`Cache-Control: public, max-age=31536000, immutable` (an archival key never changes). An unknown
+id, a row without a preview, or a missing object is a 404. Only keys recorded on a row are
+reachable.
 
 ## Current wiring
 

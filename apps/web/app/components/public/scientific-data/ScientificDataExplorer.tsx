@@ -17,12 +17,8 @@ import { Notice } from '@/app/components/public/Notice'
 import { Button } from '@/app/components/public/Button'
 import { Select } from '@/app/components/public/Select'
 import {
-  fitSuviQuery,
   getAvailabilityMessage,
-  getSuviAvailability,
-  getSuviTimeLimits,
-  isSuviQuery,
-  type SuviAvailability,
+  type GoesAvailability,
 } from '@/app/lib/scientific-data-availability'
 import {
   findScientificProduct,
@@ -45,7 +41,7 @@ export interface ScientificDataExplorerProps {
   sources: ScientificSource[]
   initialQuery: ScientificDataQuery
   initialResult?: ScientificDataResult
-  suviAvailability: SuviAvailability
+  goesAvailability: GoesAvailability
 }
 
 type RequestState = 'idle' | 'loading' | 'success' | 'error'
@@ -81,7 +77,7 @@ export function ScientificDataExplorer({
   sources,
   initialQuery,
   initialResult,
-  suviAvailability,
+  goesAvailability,
 }: ScientificDataExplorerProps) {
   // Server-rendered controls must wait for React's handlers before accepting input.
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
@@ -92,12 +88,7 @@ export function ScientificDataExplorer({
   const resultsHeading = useRef<HTMLHeadingElement>(null)
   const activeRequest = useRef<AbortController | null>(null)
   const [progress, setProgress] = useState(0)
-  const [availability, setAvailability] = useState(suviAvailability)
   useEffect(() => () => activeRequest.current?.abort(), [])
-  useEffect(() => {
-    const timer = setInterval(() => setAvailability(getSuviAvailability()), 60_000)
-    return () => clearInterval(timer)
-  }, [])
   const controlsDisabled = !hydrated
 
   const selectedSource = sources.find((source) => source.code === query.source)!
@@ -106,12 +97,9 @@ export function ScientificDataExplorer({
     [query.product, query.source],
   )
   const invalidRange = query.startTime >= query.endTime
-  const solarImages = isSuviQuery(query)
-  const dateRange = {
-    min: solarImages ? availability.start.slice(0, 10) : undefined,
-    max: query.source === 'GOES' ? availability.end.slice(0, 10) : undefined,
-  }
-  const timeLimits = solarImages ? getSuviTimeLimits(query.date, availability) : undefined
+  const solarImages =
+    query.source === 'GOES' && selected?.product.visualization === 'image-sequence'
+  const maxDate = query.source === 'GOES' ? goesAvailability.today : undefined
 
   function resetResults() {
     activeRequest.current?.abort()
@@ -124,18 +112,15 @@ export function ScientificDataExplorer({
     key: Key,
     value: ScientificDataQuery[Key],
   ) {
-    setQuery((current) => {
-      const next = { ...current, [key]: value }
-      return key === 'date' && isSuviQuery(next) && value ? fitSuviQuery(next, availability) : next
-    })
+    setQuery((current) => ({ ...current, [key]: value }))
     resetResults()
   }
 
   function selectSource(sourceCode: ScientificSourceCode) {
     const source = sources.find((candidate) => candidate.code === sourceCode)!
     const requestedDate =
-      sourceCode === 'GOES' && query.date > availability.end.slice(0, 10)
-        ? availability.end.slice(0, 10)
+      sourceCode === 'GOES' && query.date > goesAvailability.today
+        ? goesAvailability.today
         : query.date
 
     setQuery(getDefaultQueryForSource(source, requestedDate))
@@ -144,13 +129,11 @@ export function ScientificDataExplorer({
 
   function selectProduct(productCode: ScientificProductCode) {
     const selection = findScientificProduct(query.source, productCode)!
-    const next = {
+    setQuery({
       ...query,
       product: productCode,
       parameter: selection.product.parameters[0]!.code,
-    }
-    const fitted = isSuviQuery(next) ? fitSuviQuery(next, availability) : next
-    setQuery(fitted)
+    })
     resetResults()
   }
 
@@ -164,7 +147,7 @@ export function ScientificDataExplorer({
       return
     }
 
-    const availabilityMessage = getAvailabilityMessage(query, availability)
+    const availabilityMessage = getAvailabilityMessage(query, goesAvailability)
     if (availabilityMessage) {
       setMessage(availabilityMessage)
       return
@@ -334,8 +317,7 @@ export function ScientificDataExplorer({
             disabled={controlsDisabled}
             id="scientific-date"
             aria-describedby={query.source === 'GOES' ? 'scientific-date-hint' : undefined}
-            max={dateRange.max}
-            min={dateRange.min}
+            max={maxDate}
             onChange={(event) => updateQuery('date', event.target.value)}
             required
             type="date"
@@ -344,9 +326,7 @@ export function ScientificDataExplorer({
           <div className="data-field-details" id="scientific-date-hint">
             {query.source === 'GOES' ? (
               <span className="data-field-hint">
-                {solarImages
-                  ? `Últimas 24 horas (UTC): del ${availability.start.slice(0, 10)} a las ${availability.start.slice(11, 16)} al ${availability.end.slice(0, 10)} a las ${availability.end.slice(11, 16)}.`
-                  : 'Consulta histórica por fecha. Los días sin observaciones se muestran sin datos.'}
+                Consulta histórica por fecha. Los días sin observaciones se muestran sin datos.
               </span>
             ) : null}
           </div>
@@ -364,8 +344,6 @@ export function ScientificDataExplorer({
               aria-describedby={message ? 'scientific-query-message' : undefined}
               aria-invalid={message && invalidRange ? true : undefined}
               id="scientific-start-time"
-              min={timeLimits?.min}
-              max={timeLimits?.max}
               onChange={(event) => updateQuery('startTime', event.target.value)}
               required
               type="time"
@@ -379,8 +357,6 @@ export function ScientificDataExplorer({
               aria-describedby={message ? 'scientific-query-message' : undefined}
               aria-invalid={message && invalidRange ? true : undefined}
               id="scientific-end-time"
-              min={timeLimits?.min}
-              max={timeLimits?.max}
               onChange={(event) => updateQuery('endTime', event.target.value)}
               required
               type="time"
@@ -404,8 +380,7 @@ export function ScientificDataExplorer({
         <span className="data-source-notice-copy">
           <span aria-hidden={query.source !== 'GOES'}>
             Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica
-            puede tardar varios minutos. Las imágenes SUVI cubren aproximadamente las últimas 24
-            horas. EHIS y MPSL están pendientes de integración.
+            puede tardar varios minutos. EHIS y MPSL están pendientes de integración.
           </span>
           <span aria-hidden={query.source !== 'ROSAC'}>
             ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están

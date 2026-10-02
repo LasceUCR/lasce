@@ -2,9 +2,17 @@ import { expect, test, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { findScientificProduct, type ScientificProductCode } from '../../app/lib/scientific-data'
 
+const SUVI_FRAME_PREFIX = '/api/suvi/frames/5f0c2a52-8a51-4c7e-9d5b-'
+
+/** A stable, uuid-shaped frame path per SUVI product and image position. */
+function suviFrameUrl(product: string, index: number) {
+  const channel = ['Fe093', 'Fe131', 'Fe171', 'Fe195', 'Fe284', 'He303'].indexOf(product)
+  return `${SUVI_FRAME_PREFIX}${channel.toString(16).padStart(2, '0')}${index.toString(16).padStart(10, '0')}`
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route('**/_next/image?**', async (route) => {
-    if (!new URL(route.request().url()).searchParams.get('url')?.includes('test-suvi')) {
+    if (!new URL(route.request().url()).searchParams.get('url')?.startsWith(SUVI_FRAME_PREFIX)) {
       return route.fallback()
     }
     await route.fulfill({
@@ -41,7 +49,7 @@ test.beforeEach(async ({ page }) => {
             ? []
             : Array.from({ length: 8 }, (_, index) => ({
                 timestamp: new Date(start + ((end - start) * index) / 7).toISOString(),
-                imageUrl: `https://services.swpc.noaa.gov/images/animations/suvi/primary/test-suvi-${selection.product.code}-${index}.png`,
+                imageUrl: suviFrameUrl(selection.product.code, index),
                 alt: `Imagen solar de GOES: ${selection.product.wavelength}`,
               })),
       },
@@ -161,9 +169,7 @@ for (const width of [320, 768, 1440]) {
   })
 }
 
-test('limits solar dates and UTC times while retaining historical series dates', async ({
-  page,
-}) => {
+test('limits GOES dates to today and lets SUVI use historical dates', async ({ page }) => {
   await page.goto('/datos')
   await selectHistoricalXrays(page)
   const date = page.getByLabel('Fecha', { exact: true })
@@ -173,24 +179,11 @@ test('limits solar dates and UTC times while retaining historical series dates',
   await product.click()
   await page.getByRole('treeitem', { name: /^SUVI/ }).click()
   await page.getByRole('treeitem', { name: /171 Å/ }).click()
-  const today = (await date.getAttribute('max'))!
-  const yesterday = new Date(`${today}T00:00:00Z`)
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1)
-  await expect(date).toHaveAttribute('min', yesterday.toISOString().slice(0, 10))
-  await expect(page.getByText(/Últimas 24 horas \(UTC\):/)).toBeVisible()
-  await date.fill(yesterday.toISOString().slice(0, 10))
-  const minimum = (await page.getByLabel('Hora de inicio').getAttribute('min'))!
-  expect(minimum).toMatch(/^\d{2}:\d{2}$/)
-  await expect(page.getByLabel('Hora de fin')).toHaveAttribute('max', '23:59')
-  if (minimum > '00:00') {
-    await page.getByLabel('Hora de inicio').fill('00:00')
-    await page.getByRole('button', { name: 'Consultar datos' }).click()
-    await expect(page.getByRole('alert').filter({ hasText: /últimas 24 horas/ })).toBeVisible()
-  }
-  await selectHistoricalXrays(page)
   await expect(date).not.toHaveAttribute('min')
-  await date.fill('2025-01-05')
+  await expect(date).toHaveAttribute('max', /^\d{4}-\d{2}-\d{2}$/)
   await expect(date).toHaveValue('2025-01-05')
+  await expect(page.getByLabel('Hora de inicio')).not.toHaveAttribute('min')
+  await expect(page.getByLabel('Hora de fin')).not.toHaveAttribute('max')
 })
 
 async function mockObservedXrays(page: Page, points = true, pending = false) {
@@ -461,7 +454,11 @@ test('changes the daily band and range without modifying the lower query or relo
 
 test('replaces broken daily images while preserving the manual consultation', async ({ page }) => {
   await page.route('**/_next/image?**', async (route) => {
-    if (route.request().url().includes('test-suvi-Fe195'))
+    if (
+      decodeURIComponent(route.request().url()).includes(
+        suviFrameUrl('Fe195', 0).slice(0, SUVI_FRAME_PREFIX.length + 2),
+      )
+    )
       return route.fulfill({ status: 404, body: '' })
     return route.fallback()
   })

@@ -72,8 +72,8 @@ list_recent()  ──►  fetch()  ──►  _decode_fits()  ──►  Process
    `publish_preview(...)` then renders the matrix directly to an 8-bit WebP (these images are
    illustrative only, not a scientific product — there is no compression or quantisation step to
    reverse) and stores two copies in MinIO: a per-frame archival copy, whose key is written back
-   onto that same catalogue row (`preview_file`), and the always-latest copy the `/suvi` PoC viewer
-   reads. This step is skipped only if the FITS file had no data HDU at all (`data_matrix is
+   onto that same catalogue row (`preview_file`), and an always-latest copy per satellite/channel
+   (nothing in `apps/web` reads that one). This step is skipped only if the FITS file had no data HDU at all (`data_matrix is
 None`), which the pipeline treats as a valid — if unusual — frame.
 
 Progress is reported at four points (`0 → 50 → 75 → 100`) so a caller watching the BullMQ job can
@@ -114,9 +114,9 @@ the FITS frame legitimately carries no data matrix.
   [`suvi-downloader.md`](suvi-downloader.md#persisting-a-frame).
 - **How the WebP is rendered and stored** — owned by `app/services/suvi_preview.py`, documented in
   [`suvi-downloader.md`](suvi-downloader.md#pixel-blocks).
-- **How the WebP reaches the browser** (`/api/suvi/preview/[satellite]/[channel]`, the polling
-  `SuviPreview` component) — documented in
-  [`suvi-downloader.md`](suvi-downloader.md#vista-previa-proof-of-concept).
+- **How the WebP reaches the browser** (`/api/suvi/frames/[id]`, read by `/datos` through
+  `querySuviFrames`) — documented in
+  [`suvi-downloader.md`](suvi-downloader.md#how-the-webp-reaches-the-browser).
 
 If a change touches any of those, update that section of `suvi-downloader.md` instead of this file.
 Update this file when the **order of stages**, the **payload shape**, or **what a run returns**
