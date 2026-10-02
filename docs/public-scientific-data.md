@@ -94,6 +94,14 @@ refreshes them every minute. The calendar and time fields expose the allowed int
 from a historical product fits the selection to that interval, and the API rejects out-of-window
 image requests before contacting NOAA. This constraint does not restrict CITIC historical dates.
 
+The start and end time fields sit side by side while their group is at least 336 px wide (two
+columns of at least 10 rem each, plus the gap) and stack when it is narrower, so localized native
+controls with AM/PM segments are not clipped. The rule depends on the group's own width, not on a
+viewport breakpoint. The date and time inputs use a 16 px font, which keeps iOS Safari from zooming
+in on focus, and size themselves by stretching instead of a percentage width. The field before the
+time range (Fecha) shares its grid row and does not use a subgrid, so when the time fields stack
+its label and input stay aligned with Hora de inicio instead of stretching with the row.
+
 On 2026-09-13 the reader was checked against real G18 L1b samples dated 2025-01-05 for all five enabled historical products. Synthetic NetCDF fixtures exercise detector selection, fill values, quality flags, sensor dimensions, time bounds, and compressed archives without depending on the remote service.
 
 ### ROSAC
