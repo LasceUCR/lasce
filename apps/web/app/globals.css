@@ -2712,6 +2712,15 @@ a {
   -webkit-line-clamp: 2;
 }
 
+/* Same look as `.news-abstract`, but unclamped — a donation write-up has no
+   detail page to link to for the rest of the text, so it all shows here. */
+.donation-card-description {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 @media (max-width: 1120px) {
   .news-card-content {
     padding: 16px 18px;
