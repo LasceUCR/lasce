@@ -6,6 +6,7 @@ import {
   goesInstruments,
   rosacInstruments,
   scientificDataQuerySchema,
+  scientificDataResultSchema,
 } from './scientific-data'
 
 const validQuery = {
@@ -67,4 +68,30 @@ describe('scientific data catalog and query validation', () => {
   ])('rejects %s', (_label, overrides) => {
     expect(scientificDataQuerySchema.safeParse({ ...validQuery, ...overrides }).success).toBe(false)
   })
+
+  function imageResult(imageUrl: string) {
+    return {
+      query: { ...validQuery, product: 'Fe171', parameter: 'image' },
+      instrument: { code: 'SUVI', name: 'Generador de imágenes solares ultravioleta' },
+      product: { code: 'Fe171', name: 'Imágenes solares: 171 Å (Fe171)' },
+      parameter: { code: 'image', label: 'Imagen calibrada', unit: 'imagen' },
+      origin: { kind: 'observed', provider: 'CITIC-UCR', notice: 'Ilustrativa.' },
+      visualization: 'image-sequence',
+      images: [{ timestamp: '2026-09-10T08:30:00Z', imageUrl, alt: 'Imagen solar' }],
+    }
+  }
+
+  test.each([
+    '/api/suvi/frames/7f0c2a52-8a51-4c7e-9d5b-2f1a0e6b3c11',
+    'https://example.org/suvi.webp',
+  ])('accepts the image URL %s', (imageUrl) => {
+    expect(scientificDataResultSchema.safeParse(imageResult(imageUrl)).success).toBe(true)
+  })
+
+  test.each(['//evil.example/suvi.webp', 'suvi.webp', ''])(
+    'rejects the image URL %j',
+    (imageUrl) => {
+      expect(scientificDataResultSchema.safeParse(imageResult(imageUrl)).success).toBe(false)
+    },
+  )
 })
