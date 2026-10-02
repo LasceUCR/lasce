@@ -9,19 +9,21 @@ import enum
 import uuid
 from datetime import date as date_type
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
     CHAR,
     Boolean,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     Text,
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import ENUM, UUID
+from sqlalchemy.dialects.postgresql import ENUM, JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -314,3 +316,43 @@ class RolePermission(Base):
     )
     permission: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SuviFrame(Base):
+    """One SUVI L1b frame, catalogued from its FITS header. Written by
+    ``app.services.process_headers.ProcessHeaders``, the only writer this table
+    has — the web app never touches it. Photometric and CCD-health numbers
+    (``IMG_MEAN``, ``CCD_TMP1``, ...) are deliberately not columns here: they
+    change every frame and belong in InfluxDB, queried by time rather than by row.
+    """
+
+    __tablename__ = "suvi_frames"
+    __table_args__ = (
+        UniqueConstraint(
+            "satellite",
+            "channel",
+            "observed_at",
+            name="suvi_frames_satellite_channel_observed_at_key",
+        ),
+        {"schema": "solar"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    wavelength: Mapped[float] = mapped_column(Float)
+    satellite: Mapped[str] = mapped_column(Text)
+    channel: Mapped[str] = mapped_column(Text)
+    file_name: Mapped[str] = mapped_column(Text, unique=True)
+    source_url: Mapped[str] = mapped_column(Text)
+    exposure_time: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sun_center_x: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sun_center_y: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sun_radius_px: Mapped[float | None] = mapped_column(Float, nullable=True)
+    quality_flag: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    raw_header: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    # MinIO key of this frame's rendered PNG (illustrative only, not a scientific product),
+    # written by app.services.suvi_preview.publish_preview. Null only for a frame whose FITS HDU
+    # carried no data array.
+    preview_file: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
