@@ -1,10 +1,17 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { useRef, useState } from 'react'
+
 import { AlbumTile } from './AlbumTile'
-import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { Modal } from '@/app/components/public/Modal'
+import { AlbumForm, type AlbumFormValues } from '@/app/components/public/gallery/forms/AlbumForm'
 import type { GalleryAlbum } from '@/app/lib/gallery'
+
+const SAVE_ERROR_MESSAGE = 'No se pudo guardar el álbum. Inténtelo de nuevo.'
+const DELETE_ERROR_MESSAGE = 'No se pudo eliminar el álbum. Inténtelo de nuevo.'
 
 function albumPath(slug: string): string {
   return `/galeria/${slug}`
@@ -45,16 +52,84 @@ export function GalleryGroupSection({
   album,
   canEdit = false,
   canDelete = false,
-  canCreate = false,
+  canCreate: _canCreate = false,
 }: GalleryGroupSectionProps) {
   const { editMode } = useEditMode()
+  const router = useRouter()
   const headingId = `galeria-${album.slug}`
+  const [isEditing, setIsEditing] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const saveInProgress = useRef(false)
+  const deleteInProgress = useRef(false)
 
-  function handleDelete(slug: string): void {}
+  async function handleDelete(): Promise<void> {
+    if (!album.id || deleteInProgress.current) return
 
-  function handleCreate(): void {}
+    deleteInProgress.current = true
+    setDeleteError(null)
 
-  function handleUpdate(slug: string): void {}
+    try {
+      const response = await fetch(`/api/gallery/albums/${album.id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const body: { error?: string } | null = await response.json().catch(() => null)
+        setDeleteError(body?.error ?? DELETE_ERROR_MESSAGE)
+        return
+      }
+
+      router.refresh()
+    } catch {
+      setDeleteError(DELETE_ERROR_MESSAGE)
+    } finally {
+      deleteInProgress.current = false
+    }
+  }
+
+  function handleUpdate(): void {
+    setSaveError(null)
+    setIsEditing(true)
+  }
+
+  function closeEditor(): void {
+    setSaveError(null)
+    setIsEditing(false)
+  }
+
+  async function handleSave(values: AlbumFormValues): Promise<void> {
+    if (!album.id || saveInProgress.current) return
+
+    saveInProgress.current = true
+    setIsSaving(true)
+    setSaveError(null)
+
+    try {
+      const response = await fetch(`/api/gallery/albums/${album.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: values.title,
+          description: values.description,
+          yearsLabel: values.yearsLabel.trim() || null,
+          coverObjectKey: values.coverObjectKey || null,
+        }),
+      })
+
+      if (!response.ok) {
+        const body: { error?: string } | null = await response.json().catch(() => null)
+        setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
+        return
+      }
+
+      closeEditor()
+      router.refresh()
+    } catch {
+      setSaveError(SAVE_ERROR_MESSAGE)
+    } finally {
+      saveInProgress.current = false
+      setIsSaving(false)
+    }
+  }
 
   const cover = (
     <AlbumTile
@@ -73,6 +148,11 @@ export function GalleryGroupSection({
         <span className="gallery-group-meta">{albumMeta(album)}</span>
       </div>
       <p className="gallery-group-description">{album.description}</p>
+      {deleteError ? (
+        <p className="form-alert" role="alert">
+          {deleteError}
+        </p>
+      ) : null}
 
       {/* A list, so a reader can be told how many albums this block holds
           and can step through them. The grid still owns the layout. */}
@@ -85,8 +165,8 @@ export function GalleryGroupSection({
               deleteConfirmMessage={`¿Desea eliminar "${album.title}"? Esta acción no se puede deshacer.`}
               deleteLabel={`Eliminar ${album.title}`}
               editLabel={`Editar ${album.title}`}
-              onDelete={canDelete ? () => handleDelete(album.slug) : undefined}
-              onEdit={canEdit ? () => handleUpdate(album.slug) : undefined}
+              onDelete={() => handleDelete()}
+              onEdit={() => handleUpdate()}
             >
               {cover}
             </EditableWrapper>
@@ -105,6 +185,25 @@ export function GalleryGroupSection({
           </li>
         ))}
       </ul>
+
+      <Modal onClose={closeEditor} open={isEditing} title={`Editar "${album.title}"`}>
+        {saveError ? (
+          <p className="form-alert" role="alert">
+            {saveError}
+          </p>
+        ) : null}
+        {isSaving ? <p role="status">Guardando álbum...</p> : null}
+        <AlbumForm
+          album={{
+            title: album.title,
+            description: album.description,
+            yearsLabel: album.years,
+            coverObjectKey: album.coverObjectKey ?? '',
+          }}
+          onCancel={closeEditor}
+          onSave={handleSave}
+        />
+      </Modal>
     </section>
   )
 }

@@ -1,9 +1,20 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { GalleryGroupSection, type GalleryGroupSectionProps } from './GalleryGroupSection'
 import { WithoutSubAlbums, WithSubAlbums } from './GalleryGroupSection.stories'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+
+const mocks = vi.hoisted(() => ({
+  refresh: vi.fn(),
+}))
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: mocks.refresh }),
+}))
+
+vi.mock('@lasce/db', () => ({ prisma: {} }))
 
 function albumMeta(album: GalleryGroupSectionProps['album']): string {
   const fileCount = album.subAlbums.reduce(
@@ -23,6 +34,15 @@ function renderSection(props: GalleryGroupSectionProps, editMode = false) {
     </EditModeContext.Provider>,
   )
 }
+
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn())
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.clearAllMocks()
+})
 
 describe('GalleryGroupSection', () => {
   test('names the album and summarises what it holds', () => {
@@ -92,10 +112,126 @@ describe('GalleryGroupSection', () => {
 
   test('shows album editing controls when edit mode and grants are enabled', () => {
     const { album } = withSubAlbums
-    renderSection({ ...withSubAlbums, canDelete: true, canEdit: true }, true)
+    renderSection(
+      {
+        ...withSubAlbums,
+        album: { ...album, id: 'album-id', coverObjectKey: '/images/galeria/rosac/8.jpg' },
+        canDelete: true,
+        canEdit: true,
+      },
+      true,
+    )
 
     expect(screen.getByRole('button', { name: `Editar ${album.title}` })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: `Eliminar ${album.title}` })).toBeInTheDocument()
+  })
+
+  test('edits the album with AlbumForm and refreshes after a successful PATCH', async () => {
+    const user = userEvent.setup()
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 200 }))
+    const { album } = withSubAlbums
+    renderSection(
+      {
+        ...withSubAlbums,
+        album: { ...album, id: 'album-id', coverObjectKey: '/images/galeria/rosac/8.jpg' },
+        canEdit: true,
+      },
+      true,
+    )
+
+    await user.click(screen.getByRole('button', { name: `Editar ${album.title}` }))
+
+    expect(screen.getByRole('dialog', { name: `Editar "${album.title}"` })).toBeInTheDocument()
+    await user.clear(screen.getByRole('textbox', { name: 'Título' }))
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'ROSAC actualizado')
+    await user.clear(screen.getByRole('textbox', { name: 'Descripción' }))
+    await user.type(screen.getByRole('textbox', { name: 'Descripción' }), 'Descripción nueva.')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith('/api/gallery/albums/album-id', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'ROSAC actualizado',
+          description: 'Descripción nueva.',
+          yearsLabel: '2019–2023',
+          coverObjectKey: '/images/galeria/rosac/8.jpg',
+        }),
+      })
+    })
+    expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(
+      screen.queryByRole('dialog', { name: `Editar "${album.title}"` }),
+    ).not.toBeInTheDocument()
+  })
+
+  test('confirms album deletion, calls DELETE, and refreshes after success', async () => {
+    const user = userEvent.setup()
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 204 }))
+    const { album } = withSubAlbums
+    renderSection(
+      {
+        ...withSubAlbums,
+        album: { ...album, id: 'album-id' },
+        canDelete: true,
+      },
+      true,
+    )
+
+    await user.click(screen.getByRole('button', { name: `Eliminar ${album.title}` }))
+    expect(screen.getByRole('dialog', { name: 'Eliminar álbum' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith('/api/gallery/albums/album-id', { method: 'DELETE' })
+    })
+    expect(mocks.refresh).toHaveBeenCalledOnce()
+  })
+
+  test('shows the server error when album deletion fails', async () => {
+    const user = userEvent.setup()
+    vi.mocked(fetch).mockResolvedValue(
+      Response.json({ error: 'No existe el álbum indicado.' }, { status: 404 }),
+    )
+    const { album } = withSubAlbums
+    renderSection(
+      {
+        ...withSubAlbums,
+        album: { ...album, id: 'album-id' },
+        canDelete: true,
+      },
+      true,
+    )
+
+    await user.click(screen.getByRole('button', { name: `Eliminar ${album.title}` }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No existe el álbum indicado.')
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('shows the server error and keeps the edit form open when saving fails', async () => {
+    const user = userEvent.setup()
+    vi.mocked(fetch).mockResolvedValue(
+      Response.json({ error: 'Ya existe un álbum con este slug.' }, { status: 409 }),
+    )
+    const { album } = withSubAlbums
+    renderSection(
+      {
+        ...withSubAlbums,
+        album: { ...album, id: 'album-id', coverObjectKey: '/images/galeria/rosac/8.jpg' },
+        canEdit: true,
+      },
+      true,
+    )
+
+    await user.click(screen.getByRole('button', { name: `Editar ${album.title}` }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe un álbum con este slug.')
+    expect(mocks.refresh).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog', { name: `Editar "${album.title}"` })).toBeInTheDocument()
   })
 
   test('shows the add-album control when creation is granted', () => {
