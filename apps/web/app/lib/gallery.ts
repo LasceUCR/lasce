@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
@@ -2255,6 +2257,15 @@ export async function createTopLevelGalleryAlbum(
   try {
     const album = await prisma.galleryAlbum.create({
       data: toAlbumCreateData(data, null),
+    })
+    return { ok: true, album }
+  } catch (error) {
+    if (!hasPrismaErrorCode(error, 'P2002')) throw error
+  }
+
+  try {
+    const album = await prisma.galleryAlbum.create({
+      data: toAlbumCreateData({ ...data, slug: `${data.slug}-${randomUUID()}` }, null),
     })
     return { ok: true, album }
   } catch (error) {

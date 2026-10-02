@@ -34,11 +34,10 @@ Routes, the sitemap and the axe sweep all derive their album lists from `gallery
 album is picked up by `app/lib/site.ts` and `tests/e2e/accessibility-seo.spec.ts` without any edit
 there.
 
-## Media API
+## API
 
 - `PATCH /api/gallery/albums/{albumId}` requires `edit_components` and accepts one or more album
-  metadata fields: `slug`, `title`, `description`, `yearsLabel`, and `coverObjectKey`. Set
-  `yearsLabel` or `coverObjectKey` to `null` to clear it. An empty update is rejected. It returns
+  metadata fieldscreate the payload. An empty update is rejected. It returns
   the updated album with status `200`, `404` when the album does not exist, and `409` when the slug
   is already in use.
 - `DELETE /api/gallery/albums/{albumId}` requires `delete_components` and removes the album and its

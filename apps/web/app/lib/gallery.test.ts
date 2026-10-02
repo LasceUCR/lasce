@@ -17,44 +17,59 @@ import {
   mediaPlaceholder,
   subAlbumParams,
   subAlbumPath,
-  createGallerySection,
+  createGalleryMedia,
+  deleteGalleryAlbum,
+  deleteGalleryMedia,
   createGallerySubAlbum,
   createTopLevelGalleryAlbum,
-  gallerySectionInputSchema,
+  getGalleryAlbums,
+  galleryAlbumUpdateSchema,
+  galleryMediaInputSchema,
+  galleryMediaUpdateSchema,
   gallerySubAlbumInputSchema,
   galleryTopLevelAlbumInputSchema,
+  updateGalleryMedia,
+  updateGalleryAlbum,
   type GalleryAlbum,
   type GalleryMedia,
 } from './gallery'
 
-
 const mocks = vi.hoisted(() => ({
-  gallerySectionCreate: vi.fn(),
-  gallerySectionFindUnique: vi.fn(),
   galleryAlbumCreate: vi.fn(),
   galleryAlbumFindUnique: vi.fn(),
+  galleryAlbumFindMany: vi.fn(),
+  galleryAlbumDeleteMany: vi.fn(),
+  galleryAlbumUpdate: vi.fn(),
+  galleryMediaCreate: vi.fn(),
+  galleryMediaFindFirst: vi.fn(),
+  galleryMediaDeleteMany: vi.fn(),
+  galleryMediaUpdate: vi.fn(),
 }))
 
 vi.mock('@lasce/db', () => ({
   prisma: {
-    gallerySection: {
-      create: mocks.gallerySectionCreate,
-      findUnique: mocks.gallerySectionFindUnique,
-    },
     galleryAlbum: {
       create: mocks.galleryAlbumCreate,
       findUnique: mocks.galleryAlbumFindUnique,
+      findMany: mocks.galleryAlbumFindMany,
+      deleteMany: mocks.galleryAlbumDeleteMany,
+      update: mocks.galleryAlbumUpdate,
+    },
+    galleryMedia: {
+      create: mocks.galleryMediaCreate,
+      findFirst: mocks.galleryMediaFindFirst,
+      deleteMany: mocks.galleryMediaDeleteMany,
+      update: mocks.galleryMediaUpdate,
     },
   },
 }))
 
-const sectionId = 'd2719cb3-9d5b-4e2d-8a11-b089d5e14d7a'
+const albumId = '39bf18d8-e9ab-44c9-9043-71121c3bc2d9'
 const parentAlbumId = 'd373bcfb-dd4c-486d-a6f2-a5282d8bc65e'
 const topLevelInput = {
   slug: 'rosac',
   title: 'ROSAC',
   description: 'Construcción y desarrollo del observatorio.',
-  sectionId,
 }
 const subAlbumInput = {
   slug: 'cimentacion',
@@ -238,49 +253,202 @@ describe('gallery', () => {
   })
 })
 
-
 describe('gallery management input schemas', () => {
-  test('trims required section values and allows an omitted description', () => {
-    expect(gallerySectionInputSchema.parse({ title: ' Sección ' })).toEqual({
-      title: 'Sección',
-    })
-  })
-
-  test('requires a valid section id and URL-safe slug for top-level albums', () => {
+  test('validates top-level albums and URL-safe slugs', () => {
     expect(galleryTopLevelAlbumInputSchema.safeParse(topLevelInput).success).toBe(true)
     expect(
       galleryTopLevelAlbumInputSchema.safeParse({ ...topLevelInput, slug: 'Álbum ROSAC' }).success,
     ).toBe(false)
+  })
+
+  test('validates sub-album content', () => {
+    expect(gallerySubAlbumInputSchema.safeParse(subAlbumInput).success).toBe(true)
+  })
+
+  test('accepts partial album updates, including clearing nullable fields', () => {
+    expect(galleryAlbumUpdateSchema.parse({ title: ' Nuevo título ' })).toEqual({
+      title: 'Nuevo título',
+    })
+    expect(galleryAlbumUpdateSchema.parse({ yearsLabel: null, coverObjectKey: null })).toEqual({
+      yearsLabel: null,
+      coverObjectKey: null,
+    })
+    expect(galleryAlbumUpdateSchema.safeParse({}).success).toBe(false)
+    expect(galleryAlbumUpdateSchema.safeParse({ parentAlbumId: null }).success).toBe(false)
+  })
+
+  test('validates media metadata and applies display defaults', () => {
     expect(
-      galleryTopLevelAlbumInputSchema.safeParse({ ...topLevelInput, sectionId: 'not-a-uuid' })
-        .success,
+      galleryMediaInputSchema.parse({
+        title: ' Foto ',
+        description: ' Descripción ',
+        alt: ' Texto alternativo ',
+        objectKey: ' assets/foto.jpg ',
+        format: ' JPG ',
+        date: '2026-02-16',
+        uploader: ' LASCE ',
+      }),
+    ).toEqual({
+      title: 'Foto',
+      description: 'Descripción',
+      alt: 'Texto alternativo',
+      objectKey: 'assets/foto.jpg',
+      format: 'JPG',
+      isVideo: false,
+      colSpan: 1,
+      rowSpan: 1,
+      date: '2026-02-16',
+      uploader: 'LASCE',
+    })
+    expect(
+      galleryMediaInputSchema.safeParse({
+        title: 'Foto',
+        description: 'Descripción',
+        alt: 'Texto alternativo',
+        objectKey: 'assets/foto.jpg',
+        format: 'JPG',
+        date: '2026-02-30',
+        uploader: 'LASCE',
+      }).success,
     ).toBe(false)
   })
 
-  test('validates sub-album content without allowing a section id', () => {
-    expect(gallerySubAlbumInputSchema.safeParse(subAlbumInput).success).toBe(true)
-    expect(gallerySubAlbumInputSchema.safeParse({ ...subAlbumInput, sectionId }).success).toBe(
-      false,
+  test('accepts partial media updates but rejects empty or invalid updates', () => {
+    expect(galleryMediaUpdateSchema.parse({ title: ' Nuevo título ' })).toEqual({
+      title: 'Nuevo título',
+    })
+    expect(galleryMediaUpdateSchema.safeParse({}).success).toBe(false)
+    expect(galleryMediaUpdateSchema.safeParse({ rowSpan: 5 }).success).toBe(false)
+  })
+})
+
+describe('getGalleryAlbums', () => {
+  test('maps database albums, sub-albums, and media to the public gallery shape', async () => {
+    const capturedAt = new Date('2026-02-16T00:00:00.000Z')
+    mocks.galleryAlbumFindMany.mockResolvedValue([
+      {
+        id: 'album-id',
+        slug: 'rosac',
+        title: 'Fotos ROSAC',
+        description: 'Documentación del observatorio.',
+        yearsLabel: '2025–2026',
+        coverObjectKey: '/images/galeria/rosac-cover.jpg',
+        media: [
+          {
+            id: 'media-id',
+            title: 'Montaje',
+            description: 'Montaje del reflector.',
+            altText: 'Reflector durante el montaje.',
+            objectKey: '/images/galeria/montaje.jpg',
+            format: 'JPG',
+            isVideo: false,
+            colSpan: 2,
+            rowSpan: 1,
+            capturedAt,
+            uploaderName: 'LASCE',
+          },
+        ],
+        subAlbums: [
+          {
+            id: 'subalbum-id',
+            slug: 'montaje',
+            title: 'Montaje',
+            description: 'Trabajos de montaje.',
+            coverObjectKey: '/images/galeria/montaje-cover.jpg',
+            media: [],
+          },
+        ],
+      },
+    ])
+
+    await expect(getGalleryAlbums()).resolves.toEqual([
+      {
+        id: 'album-id',
+        slug: 'rosac',
+        title: 'Fotos ROSAC',
+        description: 'Documentación del observatorio.',
+        years: '2025–2026',
+        coverObjectKey: '/images/galeria/rosac-cover.jpg',
+        src: '/images/galeria/rosac-cover.jpg',
+        media: [
+          {
+            id: 'media-id',
+            title: 'Montaje',
+            description: 'Montaje del reflector.',
+            alt: 'Reflector durante el montaje.',
+            date: '2026-02-16',
+            format: 'JPG',
+            uploader: 'LASCE',
+            isVideo: false,
+            colSpan: 2,
+            rowSpan: 1,
+            objectKey: '/images/galeria/montaje.jpg',
+            src: '/images/galeria/montaje.jpg',
+          },
+        ],
+        subAlbums: [
+          {
+            id: 'subalbum-id',
+            slug: 'montaje',
+            title: 'Montaje',
+            description: 'Trabajos de montaje.',
+            coverObjectKey: '/images/galeria/montaje-cover.jpg',
+            src: '/images/galeria/montaje-cover.jpg',
+            media: [],
+          },
+        ],
+      },
+    ])
+    expect(mocks.galleryAlbumFindMany).toHaveBeenCalledWith({
+      where: { parentAlbumId: null },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        media: { orderBy: { position: 'asc' } },
+        subAlbums: {
+          orderBy: { createdAt: 'asc' },
+          include: { media: { orderBy: { position: 'asc' } } },
+        },
+      },
+    })
+  })
+
+  test('rejects stored media tile spans that cannot be rendered', async () => {
+    mocks.galleryAlbumFindMany.mockResolvedValue([
+      {
+        id: 'album-id',
+        slug: 'rosac',
+        title: 'Fotos ROSAC',
+        description: 'Documentación del observatorio.',
+        yearsLabel: null,
+        coverObjectKey: null,
+        subAlbums: [],
+        media: [
+          {
+            id: 'media-id',
+            title: 'Montaje',
+            description: 'Montaje del reflector.',
+            altText: 'Reflector durante el montaje.',
+            objectKey: 'gallery/montaje.jpg',
+            format: 'JPG',
+            isVideo: false,
+            colSpan: 0,
+            rowSpan: 1,
+            capturedAt: new Date('2026-02-16T00:00:00.000Z'),
+            uploaderName: 'LASCE',
+          },
+        ],
+      },
+    ])
+
+    await expect(getGalleryAlbums()).rejects.toThrow(
+      'Gallery media media-id has invalid colSpan: 0',
     )
   })
 })
 
-describe('createGallerySection', () => {
-  test('stores a missing description as null', async () => {
-    const section = { id: sectionId, title: 'Sección', description: null }
-    mocks.gallerySectionCreate.mockResolvedValue(section)
-
-    await expect(createGallerySection({ title: 'Sección' })).resolves.toEqual(section)
-    expect(mocks.gallerySectionCreate).toHaveBeenCalledWith({
-      data: { title: 'Sección', description: null },
-    })
-  })
-})
-
 describe('createTopLevelGalleryAlbum', () => {
-  test('creates a top-level album in the selected section', async () => {
+  test('creates a top-level album without a section relation', async () => {
     const album = { id: parentAlbumId, ...topLevelInput, parentAlbumId: null }
-    mocks.gallerySectionFindUnique.mockResolvedValue({ id: sectionId })
     mocks.galleryAlbumCreate.mockResolvedValue(album)
 
     await expect(createTopLevelGalleryAlbum(topLevelInput)).resolves.toEqual({ ok: true, album })
@@ -294,33 +462,103 @@ describe('createTopLevelGalleryAlbum', () => {
     })
   })
 
-  test('does not create an album when its section does not exist', async () => {
-    mocks.gallerySectionFindUnique.mockResolvedValue(null)
+  test('retries a duplicate slug once with a UUID suffix', async () => {
+    const album = { id: parentAlbumId, ...topLevelInput, parentAlbumId: null }
+    mocks.galleryAlbumCreate.mockRejectedValueOnce({ code: 'P2002' }).mockResolvedValueOnce(album)
+
+    await expect(createTopLevelGalleryAlbum(topLevelInput)).resolves.toEqual({ ok: true, album })
+    expect(mocks.galleryAlbumCreate).toHaveBeenNthCalledWith(1, {
+      data: {
+        ...topLevelInput,
+        yearsLabel: null,
+        coverObjectKey: null,
+        parentAlbumId: null,
+      },
+    })
+    const retryData = mocks.galleryAlbumCreate.mock.calls[1]?.[0].data
+    expect(retryData).toMatchObject({
+      title: topLevelInput.title,
+      description: topLevelInput.description,
+      yearsLabel: null,
+      coverObjectKey: null,
+      parentAlbumId: null,
+    })
+    expect(retryData.slug).toMatch(
+      /^rosac-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
+  })
+
+  test('reports a conflict if the UUID-suffixed slug also exists', async () => {
+    mocks.galleryAlbumCreate
+      .mockRejectedValueOnce({ code: 'P2002' })
+      .mockRejectedValueOnce({ code: 'P2002' })
 
     await expect(createTopLevelGalleryAlbum(topLevelInput)).resolves.toEqual({
       ok: false,
-      reason: 'section-not-found',
+      reason: 'duplicate-slug',
     })
-    expect(mocks.galleryAlbumCreate).not.toHaveBeenCalled()
+    expect(mocks.galleryAlbumCreate).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('updateGalleryAlbum', () => {
+  test('updates only provided album fields', async () => {
+    const album = {
+      id: albumId,
+      slug: 'rosac',
+      title: 'Título actualizado',
+      description: 'Descripción original.',
+      yearsLabel: '2025–2026',
+      coverObjectKey: null,
+      parentAlbumId: null,
+    }
+    mocks.galleryAlbumUpdate.mockResolvedValue(album)
+
+    await expect(updateGalleryAlbum(albumId, { title: 'Título actualizado' })).resolves.toEqual({
+      ok: true,
+      album,
+    })
+    expect(mocks.galleryAlbumUpdate).toHaveBeenCalledWith({
+      where: { id: albumId },
+      data: { title: 'Título actualizado' },
+    })
   })
 
-  test('reports a duplicate album slug', async () => {
-    mocks.gallerySectionFindUnique.mockResolvedValue({ id: sectionId })
-    mocks.galleryAlbumCreate.mockRejectedValue({ code: 'P2002' })
+  test('maps missing album and duplicate slug errors', async () => {
+    mocks.galleryAlbumUpdate.mockRejectedValueOnce({ code: 'P2025' })
+    await expect(updateGalleryAlbum(albumId, { title: 'Título' })).resolves.toEqual({
+      ok: false,
+      reason: 'not-found',
+    })
 
-    await expect(createTopLevelGalleryAlbum(topLevelInput)).resolves.toEqual({
+    mocks.galleryAlbumUpdate.mockRejectedValueOnce({ code: 'P2002' })
+    await expect(updateGalleryAlbum(albumId, { slug: 'otro-album' })).resolves.toEqual({
       ok: false,
       reason: 'duplicate-slug',
     })
   })
 })
 
+describe('deleteGalleryAlbum', () => {
+  test('deletes the album database record and returns true', async () => {
+    mocks.galleryAlbumDeleteMany.mockResolvedValue({ count: 1 })
+
+    await expect(deleteGalleryAlbum(albumId)).resolves.toBe(true)
+    expect(mocks.galleryAlbumDeleteMany).toHaveBeenCalledWith({ where: { id: albumId } })
+  })
+
+  test('returns false when the album does not exist', async () => {
+    mocks.galleryAlbumDeleteMany.mockResolvedValue({ count: 0 })
+
+    await expect(deleteGalleryAlbum('missing-id')).resolves.toBe(false)
+  })
+})
+
 describe('createGallerySubAlbum', () => {
-  test('inherits its section and parent from the top-level album', async () => {
-    const album = { id: 'sub-1', ...subAlbumInput, sectionId, parentAlbumId }
+  test('creates a sub-album linked to its top-level parent', async () => {
+    const album = { id: 'sub-1', ...subAlbumInput, parentAlbumId }
     mocks.galleryAlbumFindUnique.mockResolvedValue({
       id: parentAlbumId,
-      sectionId,
       parentAlbumId: null,
     })
     mocks.galleryAlbumCreate.mockResolvedValue(album)
@@ -334,9 +572,107 @@ describe('createGallerySubAlbum', () => {
         ...subAlbumInput,
         yearsLabel: null,
         coverObjectKey: null,
-        sectionId,
         parentAlbumId,
       },
+    })
+  })
+
+  describe('createGalleryMedia', () => {
+    const input = {
+      title: 'Montaje',
+      description: 'Montaje del reflector.',
+      alt: 'Reflector durante el montaje.',
+      objectKey: 'gallery/montaje.jpg',
+      format: 'JPG',
+      isVideo: false,
+      colSpan: 2 as const,
+      rowSpan: 1 as const,
+      date: '2026-02-16',
+      uploader: 'LASCE',
+    }
+
+    test('creates media at the next album position and maps it to gallery fields', async () => {
+      mocks.galleryAlbumFindUnique.mockResolvedValue({ id: albumId })
+      mocks.galleryMediaFindFirst.mockResolvedValue({ position: 3 })
+      const capturedAt = new Date('2026-02-16T00:00:00.000Z')
+      mocks.galleryMediaCreate.mockResolvedValue({
+        id: 'media-id',
+        title: input.title,
+        description: input.description,
+        altText: input.alt,
+        objectKey: input.objectKey,
+        format: input.format,
+        isVideo: input.isVideo,
+        colSpan: input.colSpan,
+        rowSpan: input.rowSpan,
+        capturedAt,
+        uploaderName: input.uploader,
+      })
+
+      await expect(createGalleryMedia(albumId, input)).resolves.toEqual({
+        ok: true,
+        media: {
+          id: 'media-id',
+          title: input.title,
+          description: input.description,
+          alt: input.alt,
+          objectKey: input.objectKey,
+          format: input.format,
+          isVideo: false,
+          colSpan: 2,
+          rowSpan: 1,
+          date: '2026-02-16',
+          uploader: input.uploader,
+        },
+      })
+      expect(mocks.galleryMediaCreate).toHaveBeenCalledWith({
+        data: {
+          albumId,
+          title: input.title,
+          description: input.description,
+          altText: input.alt,
+          objectKey: input.objectKey,
+          format: input.format,
+          isVideo: input.isVideo,
+          colSpan: input.colSpan,
+          rowSpan: input.rowSpan,
+          capturedAt,
+          uploaderName: input.uploader,
+          position: 4,
+        },
+      })
+    })
+
+    test('reports a missing album and a unique-key conflict', async () => {
+      mocks.galleryAlbumFindUnique.mockResolvedValue(null)
+      await expect(createGalleryMedia(albumId, input)).resolves.toEqual({
+        ok: false,
+        reason: 'album-not-found',
+      })
+      expect(mocks.galleryMediaCreate).not.toHaveBeenCalled()
+
+      mocks.galleryAlbumFindUnique.mockResolvedValue({ id: albumId })
+      mocks.galleryMediaFindFirst.mockResolvedValue(null)
+      mocks.galleryMediaCreate.mockRejectedValue({ code: 'P2002' })
+      await expect(createGalleryMedia(albumId, input)).resolves.toEqual({
+        ok: false,
+        reason: 'conflict',
+      })
+    })
+  })
+
+  describe('deleteGalleryMedia', () => {
+    test('deletes only the matching database record', async () => {
+      mocks.galleryMediaDeleteMany.mockResolvedValue({ count: 1 })
+
+      await expect(deleteGalleryMedia('media-id')).resolves.toBe(true)
+      expect(mocks.galleryMediaDeleteMany).toHaveBeenCalledWith({ where: { id: 'media-id' } })
+    })
+
+    test('returns false when no matching record exists', async () => {
+      mocks.galleryMediaDeleteMany.mockResolvedValue({ count: 0 })
+
+      await expect(deleteGalleryMedia('missing-id')).resolves.toBe(false)
     })
   })
 
@@ -349,7 +685,6 @@ describe('createGallerySubAlbum', () => {
 
     mocks.galleryAlbumFindUnique.mockResolvedValue({
       id: parentAlbumId,
-      sectionId,
       parentAlbumId: 'another-parent',
     })
     await expect(createGallerySubAlbum(parentAlbumId, subAlbumInput)).resolves.toEqual({
@@ -357,5 +692,78 @@ describe('createGallerySubAlbum', () => {
       reason: 'parent-not-top-level',
     })
     expect(mocks.galleryAlbumCreate).not.toHaveBeenCalled()
+  })
+})
+
+describe('updateGalleryMedia', () => {
+  test('updates supplied fields and returns mapped gallery media', async () => {
+    const capturedAt = new Date('2026-02-16T00:00:00.000Z')
+    mocks.galleryMediaUpdate.mockResolvedValue({
+      id: 'media-id',
+      title: 'Título nuevo',
+      description: 'Descripción original.',
+      altText: 'Texto alternativo original.',
+      objectKey: 'gallery/montaje.jpg',
+      format: 'JPG',
+      isVideo: false,
+      colSpan: 1,
+      rowSpan: 1,
+      capturedAt,
+      uploaderName: 'LASCE',
+    })
+
+    await expect(updateGalleryMedia('media-id', { title: 'Título nuevo' })).resolves.toEqual({
+      ok: true,
+      media: {
+        id: 'media-id',
+        title: 'Título nuevo',
+        description: 'Descripción original.',
+        alt: 'Texto alternativo original.',
+        objectKey: 'gallery/montaje.jpg',
+        format: 'JPG',
+        isVideo: false,
+        colSpan: 1,
+        rowSpan: 1,
+        date: '2026-02-16',
+        uploader: 'LASCE',
+      },
+    })
+    expect(mocks.galleryMediaUpdate).toHaveBeenCalledWith({
+      where: { id: 'media-id' },
+      data: { title: 'Título nuevo' },
+    })
+  })
+
+  test('converts date updates and maps not-found and conflict errors', async () => {
+    mocks.galleryMediaUpdate.mockResolvedValue({
+      id: 'media-id',
+      title: 'Montaje',
+      description: 'Descripción.',
+      altText: 'Texto alternativo.',
+      objectKey: 'gallery/montaje.jpg',
+      format: 'JPG',
+      isVideo: false,
+      colSpan: 1,
+      rowSpan: 1,
+      capturedAt: new Date('2026-03-01T00:00:00.000Z'),
+      uploaderName: 'LASCE',
+    })
+
+    await updateGalleryMedia('media-id', { date: '2026-03-01' })
+    expect(mocks.galleryMediaUpdate).toHaveBeenCalledWith({
+      where: { id: 'media-id' },
+      data: { capturedAt: new Date('2026-03-01T00:00:00.000Z') },
+    })
+
+    mocks.galleryMediaUpdate.mockRejectedValueOnce({ code: 'P2025' })
+    await expect(updateGalleryMedia('missing-id', { title: 'Título' })).resolves.toEqual({
+      ok: false,
+      reason: 'not-found',
+    })
+
+    mocks.galleryMediaUpdate.mockRejectedValueOnce({ code: 'P2002' })
+    await expect(
+      updateGalleryMedia('media-id', { objectKey: 'already-used.jpg' }),
+    ).resolves.toEqual({ ok: false, reason: 'conflict' })
   })
 })
