@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
@@ -17,6 +17,17 @@ afterEach(() => {
 })
 
 describe('PublicHeader', () => {
+  test('closes on touch outside even before the native toggle notification', () => {
+    render(<PublicHeader logoutAction={async () => undefined} />)
+    const trigger = screen.getByLabelText('Abrir navegación')
+    const disclosure = trigger.closest('details')!
+    disclosure.open = true
+    fireEvent.touchStart(trigger)
+    expect(disclosure.open).toBe(true)
+    fireEvent.touchStart(document.body)
+    expect(disclosure.open).toBe(false)
+  })
+
   test('hides Administración when nobody is signed in', () => {
     render(<PublicHeader logoutAction={async () => undefined} />)
 
