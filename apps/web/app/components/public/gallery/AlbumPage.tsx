@@ -1,5 +1,10 @@
+'use client'
+
 import { AlbumMediaGrid } from './AlbumMediaGrid'
 import { AlbumTile } from './AlbumTile'
+import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
+import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
+import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
@@ -20,6 +25,9 @@ export interface AlbumPageProps {
   subAlbums?: readonly GallerySubAlbum[]
   /** Slug the sub-album links hang off. Required when `subAlbums` is given. */
   parentSlug?: string
+  canCreate?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
   backHref?: string
   backLabel?: string
 }
@@ -35,24 +43,74 @@ export function AlbumPage({
   media,
   subAlbums = [],
   parentSlug,
+  canCreate = false,
+  canEdit = false,
+  canDelete = false,
   backHref = '/galeria',
   backLabel = 'Volver a la galería',
 }: AlbumPageProps) {
+  const { editMode } = useEditMode()
+
+  function handleSave(): void {}
+
+  function handleDelete(slug: string): void {}
+
+  function handleCreate(): void {}
+
+  function handleUpdate(slug: string): void {}
+
+  const showEditor = editMode && (canEdit || canDelete)
+
   return (
     <article className="topic-page">
       <TopicHero kicker="Galería LASCE" lead={description} notice={meta} title={title} />
 
-      {subAlbums.length > 0 && parentSlug ? (
+      {parentSlug && (subAlbums.length > 0 || (editMode && canCreate)) ? (
         <TopicSection title="Subálbumes" titleId="album-subalbums">
-          <ul className="card-grid card-grid-3 tile-list">
+          <ul className="card-grid card-grid-3 tile-list gallery-subalbum-list">
+            {editMode && canCreate ? (
+              <li className="gallery-subalbum-add">
+                <AddItemCard label="Añadir subálbum">
+                  {({ close }) => (
+                    <button
+                      onClick={() => {
+                        handleCreate()
+                        close()
+                      }}
+                      type="button"
+                    >
+                      Crear subálbum
+                    </button>
+                  )}
+                </AddItemCard>
+              </li>
+            ) : null}
             {subAlbums.map((subAlbum) => (
               <li key={subAlbum.slug}>
-                <AlbumTile
-                  href={subAlbumPath(parentSlug, subAlbum.slug)}
-                  meta={`${subAlbum.media.length} archivos`}
-                  src={subAlbum.src}
-                  title={subAlbum.title}
-                />
+                {showEditor ? (
+                  <EditableWrapper
+                    deleteLabel={`Eliminar ${subAlbum.title}`}
+                    deleteConfirmTitle="Eliminar subálbum"
+                    deleteConfirmMessage={`¿Desea eliminar "${subAlbum.title}"? Esta acción no se puede deshacer.`}
+                    editLabel={`Editar ${subAlbum.title}`}
+                    onDelete={canDelete ? () => handleDelete(subAlbum.slug) : undefined}
+                    onEdit={canEdit ? () => handleUpdate(subAlbum.slug) : undefined}
+                  >
+                    <AlbumTile
+                      href={subAlbumPath(parentSlug, subAlbum.slug)}
+                      meta={`${subAlbum.media.length} archivos`}
+                      src={subAlbum.src}
+                      title={subAlbum.title}
+                    />
+                  </EditableWrapper>
+                ) : (
+                  <AlbumTile
+                    href={subAlbumPath(parentSlug, subAlbum.slug)}
+                    meta={`${subAlbum.media.length} archivos`}
+                    src={subAlbum.src}
+                    title={subAlbum.title}
+                  />
+                )}
               </li>
             ))}
           </ul>
@@ -64,7 +122,14 @@ export function AlbumPage({
         title="Fotografías y video de este álbum"
         titleId="album-media"
       >
-        <AlbumMediaGrid albumTitle={title} media={media} />
+        <AlbumMediaGrid
+          albumTitle={title}
+          media={media}
+          editMode={editMode}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          canCreate={canCreate}
+        />
       </TopicSection>
 
       <div className="topic-page-footer gallery-album-footer page-width">

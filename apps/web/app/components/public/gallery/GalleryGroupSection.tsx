@@ -1,8 +1,16 @@
+'use client'
+
 import { AlbumTile } from './AlbumTile'
+import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
+import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
+import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { albumMeta, albumPath, subAlbumPath, type GalleryAlbum } from '@/app/lib/gallery'
 
 export interface GalleryGroupSectionProps {
   album: GalleryAlbum
+  canEdit?: boolean
+  canDelete?: boolean
+  canCreate?: boolean
 }
 
 /**
@@ -11,8 +19,30 @@ export interface GalleryGroupSectionProps {
  * sub-albums changes how many rows a block occupies, never how wide its cards
  * are. Card sizing lives entirely in `.gallery-grid`; nothing here measures.
  */
-export function GalleryGroupSection({ album }: GalleryGroupSectionProps) {
+export function GalleryGroupSection({
+  album,
+  canEdit = false,
+  canDelete = false,
+  canCreate = false,
+}: GalleryGroupSectionProps) {
+  const { editMode } = useEditMode()
   const headingId = `galeria-${album.slug}`
+
+  function handleDelete(slug: string): void {}
+
+  function handleCreate(): void {}
+
+  function handleUpdate(slug: string): void {}
+
+  const cover = (
+    <AlbumTile
+      href={albumPath(album.slug)}
+      meta={albumMeta(album)}
+      src={album.src}
+      title={album.title}
+      variant="cover"
+    />
+  )
 
   return (
     <section aria-labelledby={headingId} className="gallery-group">
@@ -25,14 +55,39 @@ export function GalleryGroupSection({ album }: GalleryGroupSectionProps) {
       {/* A list, so a reader can be told how many albums this block holds
           and can step through them. The grid still owns the layout. */}
       <ul className="gallery-grid tile-list">
+        {editMode && canCreate ? (
+          <li className="gallery-grid-add">
+            <AddItemCard label="Añadir álbum">
+              {({ close }) => (
+                <button
+                  onClick={() => {
+                    handleCreate()
+                    close()
+                  }}
+                  type="button"
+                >
+                  Crear álbum
+                </button>
+              )}
+            </AddItemCard>
+          </li>
+        ) : null}
         <li>
-          <AlbumTile
-            href={albumPath(album.slug)}
-            meta={albumMeta(album)}
-            src={album.src}
-            title={album.title}
-            variant="cover"
-          />
+          {editMode && (canEdit || canDelete) ? (
+            <EditableWrapper
+              className="gallery-grid-editable"
+              deleteConfirmTitle="Eliminar álbum"
+              deleteConfirmMessage={`¿Desea eliminar "${album.title}"? Esta acción no se puede deshacer.`}
+              deleteLabel={`Eliminar ${album.title}`}
+              editLabel={`Editar ${album.title}`}
+              onDelete={canDelete ? () => handleDelete(album.slug) : undefined}
+              onEdit={canEdit ? () => handleUpdate(album.slug) : undefined}
+            >
+              {cover}
+            </EditableWrapper>
+          ) : (
+            cover
+          )}
         </li>
         {album.subAlbums.map((subAlbum) => (
           <li key={subAlbum.slug}>

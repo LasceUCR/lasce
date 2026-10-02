@@ -6,11 +6,16 @@ import type { CSSProperties } from 'react'
 
 import { MediaFrame } from './MediaFrame'
 import { MediaLightbox } from './MediaLightbox'
+import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { mediaPlaceholder, type GalleryMedia } from '@/app/lib/gallery'
 
 export interface AlbumMediaGridProps {
   albumTitle: string
   media: readonly GalleryMedia[]
+  editMode?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
+  canCreate?: boolean
 }
 
 const closed = -1
@@ -19,9 +24,21 @@ const closed = -1
  * The album's masonry grid. Owns the lightbox index, so the grid and the dialog
  * agree on which file is open and focus can return to the tile that opened it.
  */
-export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
+export function AlbumMediaGrid({
+  albumTitle,
+  media,
+  editMode = false,
+  canEdit = false,
+  canDelete = false,
+  canCreate = false,
+}: AlbumMediaGridProps) {
   const [openIndex, setOpenIndex] = useState(closed)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
+  const showEditor = editMode && (canEdit || canDelete || canCreate)
+
+  function handleDelete(_id: string): void {}
+
+  function handleUpdate(_id: string): void {}
 
   const close = useCallback(() => {
     // The dialog closes itself natively before this runs, so the document is no
@@ -56,18 +73,35 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
             '--media-col-span': item.colSpan,
             '--media-row-span': item.rowSpan,
           } as CSSProperties
+          const frame = (
+            <MediaFrame
+              alt=""
+              className="media-tile-frame"
+              placeholder={mediaPlaceholder(item)}
+              src={item.src}
+            />
+          )
 
           return (
             <li className="media-tile" key={item.id} style={span}>
               {/* Decorative: the button below names the file, and the caption
                   repeats it as real text. The photograph's own description
                   belongs to the lightbox, where the image is the content. */}
-              <MediaFrame
-                alt=""
-                className="media-tile-frame"
-                placeholder={mediaPlaceholder(item)}
-                src={item.src}
-              />
+              {showEditor ? (
+                <EditableWrapper
+                  className="media-tile-editable"
+                  deleteLabel={`Eliminar ${item.title}`}
+                  deleteConfirmTitle="Eliminar archivo"
+                  deleteConfirmMessage={`¿Desea eliminar "${item.title}"? Esta acción no se puede deshacer.`}
+                  editLabel={`Editar ${item.title}`}
+                  onDelete={canDelete ? () => handleDelete(item.id) : undefined}
+                  onEdit={canEdit ? () => handleUpdate(item.id) : undefined}
+                >
+                  {frame}
+                </EditableWrapper>
+              ) : (
+                frame
+              )}
 
               <button
                 aria-label={`Ver a tamaño completo: ${item.title}`}
