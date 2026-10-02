@@ -322,7 +322,7 @@ export function RosacInfoPage({
           ))}
         </div>
 
-        <div className={styles.donationsCta}>
+        <div className={`topic-highlight ${styles.donationsCta}`}>
           <div className={styles.donationsCtaText}>
             <h3>{content.donations.cta.title}</h3>
             <p>{content.donations.cta.description}</p>

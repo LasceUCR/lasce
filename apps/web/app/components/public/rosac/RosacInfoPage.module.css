@@ -5,7 +5,12 @@
   margin-top: 20px;
 }
 
-.donationsCta {
+/* Colors, border and radius come from the shared `:global(.topic-highlight)`
+   (see globals.css) applied alongside this class — only layout lives here,
+   so the CTA follows that style automatically if it ever changes. The
+   `:global(.topic-highlight)` prefix raises this rule's specificity above
+   that class's own padding, regardless of each stylesheet's load order. */
+:global(.topic-highlight).donationsCta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -13,10 +18,6 @@
   gap: 16px;
   margin-top: 20px;
   padding: 20px 24px;
-  border: 1px solid #b7d3e0;
-  border-left: 6px solid var(--cyan);
-  border-radius: 12px;
-  background: #f7fcfe;
 }
 
 .donationsCtaText h3 {
