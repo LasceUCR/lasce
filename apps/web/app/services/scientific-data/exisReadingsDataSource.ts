@@ -16,7 +16,9 @@ const MAX_POINTS = 360
  * Samples inside InfluxDB so at most ~360 rows per satellite cross the wire (SFXR is stored at
  * 1 s, ~86 000 points a day): the first reading, then every `stride`-th, plus the last one.
  * `stride` is chosen so the first group alone never exceeds 360; keeping the last reading can add
- * one more, trimmed in TypeScript. Nothing is averaged or interpolated.
+ * one more, trimmed in TypeScript. Nothing is averaged or interpolated. Readings withdrawn by a
+ * re-ingest (`valid = false`, see docs/exis-pipeline.md) are excluded before numbering, so they
+ * never count toward `n` or the sampling.
  */
 const SAMPLED_READINGS_SQL = `
 SELECT time, value, satellite, n FROM (
@@ -24,7 +26,8 @@ SELECT time, value, satellite, n FROM (
          ROW_NUMBER() OVER (PARTITION BY satellite ORDER BY time) AS rn,
          COUNT(*) OVER (PARTITION BY satellite) AS n
   FROM exis_irradiance
-  WHERE product = $product AND channel = $channel AND time >= $start AND time <= $end
+  WHERE product = $product AND channel = $channel AND valid = true
+    AND time >= $start AND time <= $end
 ) WHERE (rn - 1) % CAST(GREATEST(CEIL((n - 1) / ${MAX_POINTS - 1}.0), 1) AS BIGINT) = 0 OR rn = n
 ORDER BY time`
 

@@ -16,8 +16,8 @@ The six band controls come from the existing instrument catalog, labeled in Å. 
 range selector offers the whole day or the latest 6, 3 or 1 hours, always clamped to today's UTC
 midnight. Band and range changes update automatically without navigation or changing the form
 below. Refreshing images updates the current time and supports retries. At UTC midnight, before
-a valid interval exists, an empty state appears instead of substituting yesterday. No image
-history service, ingestion change or additional upstream endpoint is introduced.
+a valid interval exists, an empty state appears instead of substituting yesterday. The images come from the `suvi_frames` archive that the worker's `suvi-pipeline` fills (served
+through `/api/suvi/frames/[id]`); no additional upstream endpoint is called from the browser.
 
 The lower form defaults to EXIS/ray X and retains manual SUVI consultation for any UTC date up
 to today, read from the archive the worker fills. Selecting a product there does not request data
@@ -73,7 +73,7 @@ GOES products are served by three backends, chosen by instrument:
 
 SUVI and EXIS are filled by the worker's `suvi-pipeline` and `exis-pipeline` jobs (see
 [`suvi-pipeline.md`](suvi-pipeline.md) and [`exis-pipeline.md`](exis-pipeline.md)); only days those
-jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. Ingestion and storage are unchanged.
+jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. SUVI and EXIS now read the worker's own stores (`suvi_frames` + MinIO, and InfluxDB `exis_irradiance`) rather than the CITIC archive; EXIS queries keep only `valid = true` readings, so points withdrawn by a re-ingest never appear.
 
 The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
@@ -93,7 +93,9 @@ The web enqueues `query-goes-archive`; only the Python worker downloads and deco
 
 The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` reads that store synchronously for EXIS, sampling at most 360 points per satellite inside the InfluxDB query, and only MAG and SEISS still go through `query-goes-archive`.
 
-Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. The web reads InfluxDB through `INFLUXDB_HOST`, `INFLUXDB_TOKEN` and `INFLUXDB_DATABASE`. SUVI, EXIS and provisional ROSAC are synchronous.
+Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. The web reads InfluxDB through `INFLUXDB_HOST`, `INFLUXDB_TOKEN` and `INFLUXDB_DATABASE`, so deployment needs `INFLUXDB_*` on the web service as well (see [`deployment.md`](deployment.md#10-known-gaps)). SUVI, EXIS and provisional ROSAC are synchronous.
+
+The InfluxDB SQL (`GREATEST`, `CAST`, the string `$start`/`$end` bound against `time`, and the "table not found" handling in `influxSql.ts`) is covered only by unit tests with a mocked client and has not yet run against a real InfluxDB 3 instance; check `/datos` EXIS against an ingested day before relying on it.
 
 Processing uses CF time units and calendars, preserves subsecond timestamps, and includes the entire selected end minute. Fill values, non-finite values, negative irradiance/particle flux, and degraded or invalid data-quality flags are excluded. MAG's valid correction flag is accepted according to its good-quality bit mask. No values are interpolated. At most 360 observations are sampled uniformly by position after filtering and sorting; the notice identifies sampling. Conflicting timestamps and mixed-satellite intervals fail explicitly.
 

@@ -44,6 +44,16 @@ describe('queryExisReadings', () => {
     expect(sql).not.toContain('0.1-0.8nm')
   })
 
+  test('excludes withdrawn readings before numbering and sampling', async () => {
+    mocks.queryInfluxSql.mockResolvedValue([])
+
+    await queryExisReadings(query)
+
+    const [sql] = mocks.queryInfluxSql.mock.calls[0]!
+    expect(sql).toContain('valid = true')
+    expect(sql.indexOf('valid = true')).toBeLessThan(sql.indexOf(') WHERE (rn - 1)'))
+  })
+
   test('returns the readings as an observed GOES series with explicit UTC timestamps', async () => {
     mocks.queryInfluxSql.mockResolvedValue([
       reading('2026-09-27T08:00:00.377369', 5.9e-7, 2),

@@ -64,7 +64,7 @@ describe('GET /api/suvi/frames/[id]', () => {
     },
   )
 
-  test('streams the catalogued WebP with a long-lived cache header', async () => {
+  test('streams the catalogued WebP with a one-day cache header', async () => {
     mocks.findUnique.mockResolvedValue({ previewFile: 'suvi/g19/fe171/20260910T083000.webp' })
     mocks.getObject.mockResolvedValue(chunks('RIFF', 'WEBP'))
 
@@ -80,7 +80,7 @@ describe('GET /api/suvi/frames/[id]', () => {
     )
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('image/webp')
-    expect(response.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable')
+    expect(response.headers.get('Cache-Control')).toBe('public, max-age=86400')
     expect(Buffer.from(await response.arrayBuffer()).toString()).toBe('RIFFWEBP')
   })
 

@@ -35,11 +35,13 @@ export async function GET(
   try {
     const buffer = await readSuviObject(frame.previewFile)
 
-    // An archival key is per observation timestamp, so its bytes never change.
+    // The key is per observation, but a re-ingest or a change to the render in
+    // apps/worker/app/services/suvi_preview.py overwrites its bytes, so browsers
+    // cache it for a day rather than forever.
     return new NextResponse(buffer, {
       headers: {
         'Content-Type': 'image/webp',
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Cache-Control': 'public, max-age=86400',
       },
     })
   } catch (error: unknown) {
