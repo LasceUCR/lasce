@@ -1,8 +1,9 @@
 name: Scheduled jobs
 
-# Replaces `pnpm jobs:register`: rather than registering BullMQ's internal
-# scheduler on every deploy, the schedule lives here and enqueues through the
-# app's own trigger route. See docs/deployment.md.
+# Manual, one-off trigger: enqueues a single job through the app's own trigger
+# route. It does not schedule anything. Recurring jobs are fired by BullMQ's
+# scheduler, which cd.yml syncs from packages/jobs/src/schedules.ts on every
+# deploy. See docs/deployment.md.
 on:
   workflow_dispatch:
     inputs:
