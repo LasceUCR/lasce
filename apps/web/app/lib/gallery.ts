@@ -110,6 +110,7 @@ export interface GallerySubAlbum {
   slug: string
   title: string
   description: string
+  yearsLabel?: string
   media: readonly GalleryMedia[]
   src?: string
   /** MinIO object key when the album record comes from PostgreSQL. */
@@ -2150,6 +2151,9 @@ export async function getGalleryAlbums(): Promise<GalleryAlbum[]> {
           slug: subAlbum.slug,
           title: subAlbum.title,
           description: subAlbum.description,
+          ...(subAlbum.yearsLabel !== null && subAlbum.yearsLabel !== undefined
+            ? { yearsLabel: subAlbum.yearsLabel }
+            : {}),
           coverObjectKey: subAlbum.coverObjectKey ?? undefined,
           ...(subAlbumSrc ? { src: subAlbumSrc } : {}),
           media: subAlbum.media.map(toGalleryMedia),
