@@ -224,7 +224,11 @@ that is **not** squashed.
    the module: `release(sprint-02): ship sprint 2 to production [g01]`. Fill in the template; the
    "What Was Done?" section is the release note.
 2. Obtain three approvals, at least one from a code owner, with all eight checks green.
-3. Merge with **Create a merge commit**. It is the only method the `main` ruleset offers.
+3. Merge with **Create a merge commit**. It is the only method the `main` ruleset offers. If the
+   button offers **Squash and merge** instead, or the `ruleset drift` check on the Pull Request is
+   red, **stop**: the ruleset on GitHub no longer matches `.github/rulesets/main.json`, and a squash
+   would break the next release. Ask an administrator to apply the file
+   ([`.github/rulesets/README.md`](../.github/rulesets/README.md#applying)) and merge afterwards.
 
 ### Why a release is never squashed
 

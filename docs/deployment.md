@@ -8,13 +8,14 @@ deliberately deferred. See [Pending: UCR server migration](#pending-ucr-server-m
 
 ## 1. Pipeline overview
 
-Two workflows, plus a scheduled one.
+Two workflows, plus a scheduled one and a ruleset check.
 
 | Workflow                          | Trigger                                                        | What it does                                                  |
 | --------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
 | `.github/workflows/ci.yml`        | Pull requests into `development` / `main`, and `workflow_call` | Verification only. Never writes anything.                     |
 | `.github/workflows/cd.yml`        | Push to `development` / `main`, or manual dispatch             | Calls `ci.yml`, publishes images to GHCR, deploys to Railway. |
 | `.github/workflows/cron-jobs.yml` | 03:00 UTC daily, or manual dispatch                            | Enqueues recurring jobs.                                      |
+| `.github/workflows/rulesets.yml`  | Pull requests into `main`, ruleset changes, 12:00 UTC daily    | Fails if the live branch rulesets differ from the JSON files. |
 
 `cd.yml` calls `ci.yml` as a reusable workflow rather than duplicating triggers,
 so **a delivery is gated on exactly the same jobs that gate a pull request**,

@@ -64,6 +64,14 @@ for byte and records `c79f23f` as an ancestor. It was safe because
 `git diff d3c53d4 origin/main` was empty and `d3c53d4` is on `development`:
 `main` had no content of its own to lose.
 
+The sprint 2 release (#131) was squashed anyway. #130 had changed
+`main.json` to merge-only the day before, but nobody applied it, so GitHub
+still offered only squash. The merge base stayed at `b3ee608`, and the sprint
+3 release (#231) conflicted the same way. It was repaired like sprint 2, on
+`release-g01-sprint-03`, after checking that `main`'s tree was identical to
+`2c757c2` on `development`. The `ruleset drift` workflow (see
+[Known limitation](#known-limitation)) now catches an unapplied change.
+
 A ruleset can only choose among the merge methods the repository has
 enabled, so `allow_merge_commit` must be on at the repository level as well.
 See [Applying](#applying).
@@ -169,6 +177,12 @@ defaults to what it returns, so those two are the only expected difference:
 diff <(jq -S '{rules}' .github/rulesets/main.json) \
      <(gh api repos/LasceUCR/lasce/rulesets/21126704 --jq '{rules}' | jq -S .)
 ```
+
+[`rulesets.yml`](../workflows/rulesets.yml) runs that comparison for both
+files on every Pull Request into `main`, on any push that changes this
+directory, and daily from `main`. A red `ruleset drift` run means a change
+was merged here but never applied: apply it. It is deliberately not one of
+the eight required checks, so drift warns rather than locking `main`.
 
 Do not automate the apply from a workflow: it would need an admin token in
 CI, which is a larger risk than the drift.
