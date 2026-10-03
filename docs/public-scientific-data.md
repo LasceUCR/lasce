@@ -26,6 +26,11 @@ until **Consultar datos** is pressed.
 
 ## Instrument visibility (PUB-002)
 
+ROSAC's [instrument cards](rosac-instruments.md) can preselect an existing simulation with
+`/datos?source=ROSAC&instrument=ROSAC-I1#scientific-query-title` (or `ROSAC-I2`). The general
+`source=ROSAC` link selects its first instrument. Unknown or repeated parameters retain the
+default GOES query. Preselection does not submit a query or add a third ROSAC instrument.
+
 The form uses one expandable selector: **Instrumento y producto**. Opening it shows only the
 instrument names; activating an instrument expands its products below and collapses the previous
 group. Opening or closing a group preserves the selection and makes no network request.

@@ -33,6 +33,7 @@ import { AcknowledgmentsGallery } from './AcknowledgmentsGallery'
 import { ConstructionCarousel } from './ConstructionCarousel'
 import { DonationCard } from './DonationCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
+import { InstrumentCard } from './InstrumentCard'
 import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
 import { TeamGallery } from './TeamGallery'
@@ -239,8 +240,24 @@ export function RosacInfoPage({
       </TopicSection>
 
       <TopicSection
-        id="investigadores"
+        id="instrumentos"
         index="6"
+        title={content.instruments.title}
+        titleId="rosac-instruments-title"
+        intro={content.instruments.intro}
+        className={styles.instrumentsSection}
+        wide
+      >
+        <CardGrid columns={3} equalHeight>
+          {content.instruments.items.map((instrument) => (
+            <InstrumentCard key={instrument.id} instrument={instrument} />
+          ))}
+        </CardGrid>
+      </TopicSection>
+
+      <TopicSection
+        id="investigadores"
+        index="7"
         intro={content.team.intro}
         title={content.team.title}
         titleId="rosac-team-title"
@@ -296,7 +313,7 @@ export function RosacInfoPage({
 
       <TopicSection
         id="agradecimientos"
-        index="7"
+        index="8"
         intro={content.acknowledgments.subtitle}
         title={content.acknowledgments.title}
         titleId="rosac-acknowledgments-title"
@@ -310,7 +327,7 @@ export function RosacInfoPage({
 
       <TopicSection
         id="donaciones"
-        index="8"
+        index="9"
         intro={content.donations.subtitle}
         title={content.donations.title}
         titleId="rosac-donations-title"
@@ -345,6 +362,8 @@ export function RosacInfoPage({
       >
         <div className={styles.scientificAction}>
           <Button
+            href={content.scientificConsultation.href}
+            fullPageLoad
             variant="secondary"
             icon={<ChartNoAxesCombined aria-hidden="true" size={20} strokeWidth={1.8} />}
           >

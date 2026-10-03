@@ -8,6 +8,7 @@ import { getSessionUser } from '@/app/lib/auth/session'
 import { loginRedirectPath } from '@/app/lib/auth/session-token'
 import { goesInstruments, scientificSources } from '@/app/lib/scientific-data'
 import { getGoesAvailability } from '@/app/lib/scientific-data-availability'
+import { getInitialScientificQuery } from '@/app/lib/scientific-data-navigation'
 
 import { requestResourceDownload } from './actions'
 
@@ -21,9 +22,14 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default async function ScientificDataRoute() {
+interface ScientificDataRouteProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function ScientificDataRoute({ searchParams }: ScientificDataRouteProps) {
   const today = new Date()
   const maxDate = today.toISOString().slice(0, 10)
+  const initialQuery = getInitialScientificQuery(await searchParams, maxDate)
   // The page stays public: an anonymous visitor gets an empty grant set, not a redirect.
   // Grants only decide which download buttons are enabled; the Server Action checks again.
   const user = await getSessionUser()
@@ -46,15 +52,9 @@ export default async function ScientificDataRoute() {
         initialNow={today.toISOString()}
       />
       <ScientificDataExplorer
+        key={`${initialQuery.source}:${initialQuery.product}`}
         goesAvailability={getGoesAvailability(today)}
-        initialQuery={{
-          source: 'GOES',
-          product: 'SFXR',
-          parameter: '0.1-0.8nm',
-          date: maxDate,
-          startTime: '00:00',
-          endTime: '23:59',
-        }}
+        initialQuery={initialQuery}
         sources={scientificSources}
         signedIn={user !== null}
         downloadGrants={grants}
