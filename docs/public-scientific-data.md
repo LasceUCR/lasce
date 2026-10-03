@@ -1,35 +1,115 @@
 # Public scientific data query
 
 `LASCE-PUB-002` provides a public, read-only query at `/datos`. Visitors select a source, a
-scientific product grouped under its instrument, a channel or parameter, one calendar day, and an
-increasing UTC time range. No login or download action is exposed.
+scientific instrument, one of its products, a channel or parameter, one calendar day, and an
+increasing UTC time range. Consultation does not require login. Downloading a chart or its data
+does, and is described in [downloads.md](downloads.md).
+
+## Daily solar consultation
+
+Opening `/datos` shows **El Sol de hoy**, a separate section above the consultation form. It
+automatically requests GOES/SUVI at 195 Å for the current UTC day. A single row shows up to five
+chronological images, evenly selected from the existing response and including its first and
+last observations. Desktop displays all five, tablet shows three at a time, and mobile uses a
+keyboard-focusable horizontal strip. No image is duplicated to fill missing observations.
+
+The six band controls come from the existing instrument catalog, labeled in Å. An independent
+range selector offers the whole day or the latest 6, 3 or 1 hours, always clamped to today's UTC
+midnight. Band and range changes update automatically without navigation or changing the form
+below. Refreshing images updates the current time and supports retries. At UTC midnight, before
+a valid interval exists, an empty state appears instead of substituting yesterday. The images come from the `suvi_frames` archive that the worker's `suvi-pipeline` fills (served
+through `/api/suvi/frames/[id]`); no additional upstream endpoint is called from the browser.
+
+The lower form defaults to EXIS/ray X and retains manual SUVI consultation for any UTC date up
+to today, read from the archive the worker fills. Selecting a product there does not request data
+until **Consultar datos** is pressed.
+
+## Instrument visibility (PUB-002)
+
+ROSAC's [instrument cards](rosac-instruments.md) can preselect an existing simulation with
+`/datos?source=ROSAC&instrument=ROSAC-I1#scientific-query-title` (or `ROSAC-I2`). The general
+`source=ROSAC` link selects its first instrument. Unknown or repeated parameters retain the
+default GOES query. Preselection does not submit a query or add a third ROSAC instrument.
+
+The form uses one expandable selector: **Instrumento y producto**. Opening it shows only the
+instrument names; activating an instrument expands its products below and collapses the previous
+group. Opening or closing a group preserves the selection and makes no network request.
+EXIS exposes SFEU/EUV and SFXR/ray X, MAG exposes GEOF, SEISS exposes its particle products, and
+SUVI exposes its image bands. Selecting a product closes the menu, chooses a valid default
+parameter, clears obsolete results, and makes no network request until submission. Pending
+products remain visible but disabled. Source/product/parameter identifiers and the API contract
+are unchanged; all options are derived from the existing source catalog.
+
+`InstrumentProductSelect` is a dedicated component with a tree popup; the shared `Select` keeps
+its original listbox behavior. Both use the same base select styles. Instrument codes and full
+names wrap in blue group headers without extra borders or gaps before the products. Groups
+expand and collapse with a short height/opacity transition, respecting reduced-motion settings.
+Collapsed products are hidden from assistive technology and interaction. The selected control displays the
+instrument and product together. Up/Down navigate visible rows, Right expands a group or enters
+its products, Left returns to the parent or collapses it, and Enter/Space expands a group or
+selects a product. Home/End, type-ahead, Escape and outside dismissal remain available. Other
+selects retain their compact listbox presentation. Popup placement stays inside the viewport;
+instrument names do not require horizontal scrolling on mobile.
+
+Changing criteria or cancelling aborts the previous browser request. Late responses cannot
+replace the new selection, and automatic updates do not move keyboard focus. Loading, empty
+bands, source errors and individual image failures have visible messages. A failed image is
+removed while its UTC capture time remains visible; switching bands can recover normally.
+
+The visible permissions banner communicates the policy:
+
+- historical GOES information can be consulted without an account;
+- downloading anything requires an account and signing in;
+- chart images can be downloaded for every source;
+- ROSAC data (CSV) is open to every account;
+- GOES data requires the GOES data download permission (`download_goes_resources`);
+- SUVI solar images cannot be downloaded;
+- every download link expires after 30 minutes.
+
+Under each charted result, a **Descargas** block offers the formats the product allows. The
+banner is informational; the Server Action enforces the same rules
+([downloads.md](downloads.md)).
 
 ## Sources and provenance
 
-The response always includes an `origin` object. The interface displays its provider and whether
+The response always includes an `origin` object. The interface displays its source and whether
 the values are `observed` or `simulated`; these states must never be inferred from styling alone.
 
 ### GOES
 
-GOES time series are read from the [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo). SUVI images continue to use NOAA SWPC, as the shared archive has no SUVI directory. Neither adapter substitutes simulated observations on failure.
+GOES products are served by three backends, chosen by instrument:
+
+| Instrument | Backend                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| SUVI       | `solar.suvi_frames` (Postgres) for the catalogue, MinIO for the WebP, served by `/api/suvi/frames/[id]` |
+| EXIS       | InfluxDB measurement `exis_irradiance`, read through its SQL HTTP API (`INFLUXDB_*` variables)          |
+| MAG, SEISS | The [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo) via the worker |
+
+SUVI and EXIS are filled by the worker's `suvi-pipeline` and `exis-pipeline` jobs (see
+[`suvi-pipeline.md`](suvi-pipeline.md) and [`exis-pipeline.md`](exis-pipeline.md)); only days those
+jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. SUVI and EXIS now read the worker's own stores (`suvi_frames` + MinIO, and InfluxDB `exis_irradiance`) rather than the CITIC archive; EXIS queries keep only `valid = true` readings, so points withdrawn by a re-ingest never appear.
 
 The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
-| Product    | Archive path                   | Selection                                                                          |
-| ---------- | ------------------------------ | ---------------------------------------------------------------------------------- |
-| SFXR       | EXIS/SFXR                      | XRS-A or XRS-B, using each report's primary detector flag                          |
-| SFEU       | EXIS/SFEU                      | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio             |
-| GEOF       | MAG/GEOF                       | Ambient EPN x/y/z or total ACRF magnitude                                          |
-| MPSH       | SEIS/MPSH                      | Electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5              |
-| SGPS       | SEIS/SGPS                      | Explicit SGPS−X or SGPS+X sensor; differential channels or integral P11 (>500 MeV) |
-| SUVI bands | NOAA primary animation indexes | Images from approximately the last 24 hours                                        |
-| EHIS, MPSL | Present under SEIS             | Reader and channel catalog remain pending                                          |
+| Product    | Archive path                | Selection                                                                          |
+| ---------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| SFXR       | InfluxDB `exis_irradiance`  | XRS-A or XRS-B, using each report's primary detector flag                          |
+| SFEU       | InfluxDB `exis_irradiance`  | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio             |
+| GEOF       | MAG/GEOF                    | Ambient EPN x/y/z or total ACRF magnitude                                          |
+| MPSH       | SEIS/MPSH                   | Electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5              |
+| SGPS       | SEIS/SGPS                   | Explicit SGPS−X or SGPS+X sensor; differential channels or integral P11 (>500 MeV) |
+| SUVI bands | `solar.suvi_frames` + MinIO | Up to eight clean frames per query, spread evenly, most recent satellite only      |
+| EHIS, MPSL | Present under SEIS          | Reader and channel catalog remain pending                                          |
 
 Operational SWPC channels are not interchangeable with L1b selectors. The former MPSH nominal energies are replaced with archive band/telescope identifiers. SGPS L1b does not supply the previous integral thresholds below 500 MeV. EPN components retain their native axis names; no undocumented coordinate transform or directional averaging is applied. Flux units are checked against NetCDF metadata.
 
-The web enqueues `query-goes-archive`; only the Python worker downloads and decodes NetCDF. The endpoint responds with `202` and `{ state: 'pending', jobId, progress }` during processing. The browser polls the same criteria with `jobId` every two seconds. Completed work returns the existing time-series response with CITIC provenance. Identical requests share a deterministic job identifier; current-day requests refresh in ten-minute buckets. BullMQ retains completed results for up to 24 hours, subject to its count cap. A new submission can retry failed work; polling never retries or re-enqueues expired jobs.
+The web enqueues `query-goes-archive`; only the Python worker downloads and decodes NetCDF. The endpoint responds with `202` and `{ state: 'pending', jobId, progress }` during processing. The browser polls the same criteria with `jobId` every two seconds. Completed work returns the existing time-series response with GOES as the public source. Identical requests share a deterministic job identifier; current-day requests refresh in ten-minute buckets. BullMQ retains completed results for up to 24 hours, subject to its count cap. A new submission can retry failed work; polling never retries or re-enqueues expired jobs.
 
-Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. No new environment variables or database migrations are needed. SUVI and provisional ROSAC remain synchronous.
+The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` reads that store synchronously for EXIS, sampling at most 360 points per satellite inside the InfluxDB query, and only MAG and SEISS still go through `query-goes-archive`.
+
+Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. The web reads InfluxDB through `INFLUXDB_HOST`, `INFLUXDB_TOKEN` and `INFLUXDB_DATABASE`, so deployment needs `INFLUXDB_*` on the web service as well (see [`deployment.md`](deployment.md#10-known-gaps)). SUVI, EXIS and provisional ROSAC are synchronous.
+
+The InfluxDB SQL (`GREATEST`, `CAST`, the string `$start`/`$end` bound against `time`, and the "table not found" handling in `influxSql.ts`) is covered only by unit tests with a mocked client and has not yet run against a real InfluxDB 3 instance; check `/datos` EXIS against an ingested day before relying on it.
 
 Processing uses CF time units and calendars, preserves subsecond timestamps, and includes the entire selected end minute. Fill values, non-finite values, negative irradiance/particle flux, and degraded or invalid data-quality flags are excluded. MAG's valid correction flag is accepted according to its good-quality bit mask. No values are interpolated. At most 360 observations are sampled uniformly by position after filtering and sorting; the notice identifies sampling. Conflicting timestamps and mixed-satellite intervals fail explicitly.
 
@@ -37,10 +117,15 @@ The worker lists only the requested day, selects overlapping granules by filenam
 
 There is no rolling seven-day restriction on historical date selection. Availability varies by product and day. Confirmed missing directories and compressed files produce an empty result; timeouts, invalid formats, and transport errors fail the query.
 
-SUVI alone uses a rolling 24-hour limit. The server provides the initial UTC bounds; the browser
-refreshes them every minute. The calendar and time fields expose the allowed interval, switching
-from a historical product fits the selection to that interval, and the API rejects out-of-window
-image requests before contacting NOAA. This constraint does not restrict CITIC historical dates.
+There is no SUVI-specific time window: any GOES date up to today (UTC) can be requested, and the API rejects only dates after today.
+
+The start and end time fields sit side by side while their group is at least 336 px wide (two
+columns of at least 10 rem each, plus the gap) and stack when it is narrower, so localized native
+controls with AM/PM segments are not clipped. The rule depends on the group's own width, not on a
+viewport breakpoint. The date and time inputs use a 16 px font, which keeps iOS Safari from zooming
+in on focus, and size themselves by stretching instead of a percentage width. The field before the
+time range (Fecha) shares its grid row and does not use a subgrid, so when the time fields stack
+its label and input stay aligned with Hora de inicio instead of stretching with the row.
 
 On 2026-09-13 the reader was checked against real G18 L1b samples dated 2025-01-05 for all five enabled historical products. Synthetic NetCDF fixtures exercise detector selection, fill values, quality flags, sensor dimensions, time bounds, and compressed archives without depending on the remote service.
 
@@ -79,23 +164,50 @@ The endpoint validates source/product/parameter compatibility and the calendar/t
 same Zod schema used by the browser. Results use a discriminated union:
 
 - `time-series` with `points`;
-- `image-sequence` with NOAA image URLs and capture timestamps;
+- `image-sequence` with image URLs (a same-origin `/api/suvi/frames/<id>` path or an absolute URL) and capture timestamps;
 - `dynamic-spectrum` with `timestamps`, `frequencies`, and `cells`.
 
-Source or worker failures return `502`; invalid criteria return `400`. Responses use
+Source or worker failures return `502`; invalid criteria return `400`. A valid query with no
+provider registered in `services/scientific-data/index.ts` is a wiring defect and returns `500`
+with a Spanish JSON error. Responses use
 `Cache-Control: no-store` so a stale observation is not presented as a new query result.
+
+### Source routing
+
+The route validates the query and hands it to `scientificDataSources`, a
+`ScientificDataSourceManager` (`apps/web/app/services/scientific-data/`). The route does not know
+which backend serves the query:
+
+```text
+route.ts → ScientificDataSourceManager ─ by query.source ─→ GOES  ─ by instrument ─→ SUVI → suvi_frames + MinIO
+                                                                                      EXIS → InfluxDB
+                                                                                      MAG, SEISS → CITIC worker
+                                                          → ROSAC ─ by instrument ─→ ROSAC-I1, ROSAC-I2 → simulation
+```
+
+`services/scientific-data/index.ts` is the only place that pairs products with backends. To replace
+a backend (for example, reading GOES time series from the database instead of the worker),
+implement `ScientificDataProvider` and change its entry there. A synchronous provider returns the
+result directly. Only asynchronous ones return `{ state: 'pending', jobId, progress }`, which the
+route sends as `202`. GOES time-series providers should build their result with
+`buildGoesTimeSeriesResult` so provenance is described consistently. To add a source, extend
+`SCIENTIFIC_SOURCE_CODES` and the catalog in `app/lib/scientific-data.ts`, then register one
+more source in `index.ts`.
 
 ## Reusable presentation
 
-The query's three selectors share `Select`, a labeled combobox with keyboard navigation,
+The query's source and parameter selectors use `Select`; the combined instrument/product field
+uses `InstrumentProductSelect`. Both are labeled comboboxes with keyboard navigation,
 type-ahead, disabled options, and Escape/outside dismissal. Its popup fits the viewport, uses a
 bounded vertical scrollbar, and wraps long option labels within the menu. Pointer hover uses a
 subtle background; keyboard focus remains visible. Reduced-motion preferences disable animation.
 
-The data page uses `TopicHero` with `variant="compact"`. This opt-in variant is available to other
-interactive pages; default headers retain their original dimensions. There are no page-specific
-or explorer CSS files. Styles follow the repository's existing `globals.css` pattern with scoped
-component class names and tokens documented in `color-palette.md`.
+The data page has a compact introduction with **Portal público LASCE**, a prominent **Datos**
+heading, a short description and an anchor linking directly to the query. The solar section keeps
+its image row with tighter spacing. Query fields follow their heading immediately; source and
+permission notices remain visible below the form. Date and time inputs align through shared grid
+rows, while the source selector retains its normal height beside the two-line instrument selector.
+These styles use scoped classes in `globals.css`; shared selects and other page headers are unchanged.
 
 - `Notice` exposes information, warning and error tones with an explicit accessible role.
 - `DataTable` provides a collapsible, keyboard-scrollable table with a visible caption.
@@ -114,3 +226,11 @@ and spectrum generation, request errors, accessible chart descriptions, source s
 absence of downloads. Playwright covers the public GOES flow with an API-boundary fixture, ROSAC's
 dynamic spectrum, invalid ranges, empty results and mobile overflow. `/datos` remains part of the
 repository-wide WCAG A/AA axe sweep.
+
+Daily consultation tests additionally cover automatic loading, five-frame sampling, range and
+band selection, independence from the lower form, obsolete responses, UTC midnight, image
+loading/errors, the permission text and GOES-only source labels. Playwright verifies the solar
+row above the form at 320, 768 and 1440 px, readable instrument names, keyboard focus, expandable
+product choices without requests, manual SUVI consultation, empty bands, source failures and
+axe accessibility checks. Browser images and API responses are fixtures so these checks do not
+depend on expiring upstream observations.

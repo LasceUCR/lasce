@@ -1,5 +1,9 @@
 import { useId } from 'react'
 
+import {
+  DYNAMIC_SPECTRUM_CHART as chart,
+  layoutDynamicSpectrum,
+} from '@/app/lib/charts/dynamicSpectrumLayout'
 import type { DynamicSpectrumCell } from '@/app/lib/scientific-data'
 
 export interface DynamicSpectrumChartProps {
@@ -12,15 +16,12 @@ export interface DynamicSpectrumChartProps {
   unit: string
 }
 
-const chart = { width: 760, height: 350, top: 28, right: 36, bottom: 54, left: 72 }
-
 function formatTime(timestamp: string) {
   return timestamp.slice(11, 16)
 }
 
-function colorFor(value: number, minimum: number, maximum: number) {
-  const ratio = maximum === minimum ? 0.5 : (value - minimum) / (maximum - minimum)
-  return `color-mix(in srgb, var(--blue-dark) ${ratio * 100}%, var(--alice-blue))`
+function colorFor(intensity: number) {
+  return `color-mix(in srgb, var(--blue-dark) ${intensity * 100}%, var(--alice-blue))`
 }
 
 export function DynamicSpectrumChart({
@@ -34,25 +35,16 @@ export function DynamicSpectrumChart({
 }: DynamicSpectrumChartProps) {
   const titleId = useId()
   const descriptionId = useId()
-  if (!cells.length || !frequencies.length || !timestamps.length) {
+  const layout = layoutDynamicSpectrum({ cells, frequencies, timestamps })
+  if (!layout) {
     return (
       <p className="content-empty" role="status">
         No hay valores para graficar.
       </p>
     )
   }
-  const values = cells.map(({ value }) => value)
-  const minimum = Math.min(...values)
-  const maximum = Math.max(...values)
-  const plotWidth = chart.width - chart.left - chart.right
-  const plotHeight = chart.height - chart.top - chart.bottom
-  const cellWidth = plotWidth / timestamps.length
-  const cellHeight = plotHeight / frequencies.length
-  const timestampIndexes = new Map(timestamps.map((timestamp, index) => [timestamp, index]))
-  const frequencyIndexes = new Map(frequencies.map((frequency, index) => [frequency, index]))
-  const firstTimestamp = timestamps[0]!
-  const middleTimestamp = timestamps[Math.floor((timestamps.length - 1) / 2)]!
-  const lastTimestamp = timestamps.at(-1)!
+  const { firstTimestamp, lastTimestamp, maximum, middleTimestamp, minimum, plotWidth, rects } =
+    layout
 
   return (
     <figure className="data-chart-figure">
@@ -77,22 +69,17 @@ export function DynamicSpectrumChart({
             {maximum.toFixed(2)} {unit}.
           </desc>
 
-          {cells.map((cell) => {
-            const xIndex = timestampIndexes.get(cell.timestamp)!
-            const frequencyIndex = frequencyIndexes.get(cell.frequency)!
-
-            return (
-              <rect
-                aria-hidden="true"
-                fill={colorFor(cell.value, minimum, maximum)}
-                height={cellHeight + 0.5}
-                key={`${cell.timestamp}-${cell.frequency}`}
-                width={cellWidth + 0.5}
-                x={chart.left + xIndex * cellWidth}
-                y={chart.top + (frequencies.length - frequencyIndex - 1) * cellHeight}
-              />
-            )
-          })}
+          {rects.map(({ key, x, y, width, height, intensity }) => (
+            <rect
+              aria-hidden="true"
+              fill={colorFor(intensity)}
+              height={height}
+              key={key}
+              width={width}
+              x={x}
+              y={y}
+            />
+          ))}
 
           <line
             aria-hidden="true"

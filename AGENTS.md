@@ -35,6 +35,7 @@ The public site is **in Spanish** (`<html lang="es">`, routes like `/clima-espac
 pnpm install && pnpm worker:install    # Node deps, then `uv sync` for the worker
 pnpm services:up                       # Postgres, Redis, InfluxDB, MinIO via Docker Compose
 pnpm db:migrate                        # Prisma migrations
+pnpm accounts:create                   # local sign-in accounts, one per role; prints the password
 
 pnpm dev                               # Next.js on :3000
 pnpm worker:dev                        # Python worker, second terminal
@@ -66,8 +67,11 @@ Read [`docs/git-guidelines.md`](docs/git-guidelines.md) once in full. The short 
 - PR titles add the group: `feat(auth): implement user login [g01]`.
 - Fill in every section of `.github/PULL_REQUEST_TEMPLATE.md`. Write `None` rather than deleting
   a section.
-- Squash merge only. `development` needs 2 approvals, `main` needs 3, at least one from a
-  `.github/CODEOWNERS` owner. **Pushing a new commit dismisses existing approvals.**
+- Squash merge into `development`. A release from `development` into `main` is the one
+  exception: it is merged with a **merge commit**, never squashed, so that `development` stays
+  an ancestor of `main` (section 10 of `docs/git-guidelines.md`). `development` needs 2
+  approvals, `main` needs 3, at least one from a `.github/CODEOWNERS` owner. **Pushing a new
+  commit dismisses existing approvals.**
 - Never commit `.env` or any credential.
 
 If you have already committed to a protected branch locally, move the work rather than forcing:

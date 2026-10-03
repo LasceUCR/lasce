@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useActionState, useEffect, useRef } from 'react'
 
 import {
@@ -114,9 +113,10 @@ export function LoginForm({
         </div>
       </form>
 
+      {/* A plain anchor rather than a Link: the tab selector keeps its selection across
+          client-side navigations, so the registration tab only opens on a fresh load. */}
       <p className="login-alt">
-        {loginFormCopy.noAccountPrompt}{' '}
-        <Link href={registerHref}>{loginFormCopy.noAccountLink}</Link>
+        {loginFormCopy.noAccountPrompt} <a href={registerHref}>{loginFormCopy.noAccountLink}</a>
       </p>
       <p className="login-footnote">{loginFormCopy.footnote}</p>
     </section>

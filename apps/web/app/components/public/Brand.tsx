@@ -38,6 +38,15 @@ export function Brand({ light = false }: BrandProps) {
       />
       <span className="brand-divider" aria-hidden="true" />
       <Image
+        className="cinespa-logo"
+        src="/brand/logo-cinespa.png"
+        alt="Centro de Investigaciones Espaciales"
+        width={1378}
+        height={511}
+        priority
+      />
+      <span className="brand-divider" aria-hidden="true" />
+      <Image
         className="lasce-logo"
         src="/brand/Logo_Lasce.jpg"
         alt="Laboratorio de Ciencias Espaciales"

@@ -8,7 +8,7 @@ The public pages are available without authentication. The header includes an **
 
 - Node.js 22 or newer
 - pnpm 10.34.5, managed through Corepack
-- Chromium for the Playwright end-to-end tests
+- Chromium and WebKit for the Playwright end-to-end tests
 
 ## Installation
 
@@ -69,7 +69,7 @@ Production deployment uses the standalone Next.js bundle through
 | `/herramientas-cientificas` | Scientific tools: SWAAT and SWAPRO                                                 |
 | `/datos`                    | Public data and analysis resources                                                 |
 | `/noticias`                 | Institutional news                                                                 |
-| `/contacto`                 | Contact information                                                                |
+| `/contacto`                 | Official contact channels ([`docs/contact.md`](../../docs/contact.md))             |
 | `/acceso`                   | Sign-in and sign-up cards behind a tab selector (_Iniciar sesión_, _Crear cuenta_) |
 | `/cuenta`                   | The signed-in user's profile and sign-out; requires a session                      |
 
@@ -98,6 +98,7 @@ app/
 |-- (public)/
 |   |-- [section]/page.tsx
 |   |-- clima-espacial/page.tsx
+|   |-- contacto/page.tsx
 |   |-- fisica-solar/page.tsx
 |   |-- nosotros/page.tsx
 |   |-- radioastronomia/page.tsx
@@ -114,6 +115,8 @@ app/
 |   |-- space-weather/
 |   `-- topic/
 |-- lib/
+|   |-- contact.ts
+|   |-- footer.ts
 |   |-- site.ts
 |   |-- solar-astrophysics.ts
 |   |-- space-weather.ts
@@ -131,9 +134,10 @@ playwright.config.ts
 
 - `app/(public)/layout.tsx` defines the shared public page structure.
 - `PublicHeader` owns desktop and mobile navigation and marks the active route with `aria-current="page"`.
-- `PublicFooter` contains institutional information and the LASCE Instagram link.
+- `PublicFooter` names the Universidad de Costa Rica, CINESPA and LASCE beside the logo, shows the footer links (Contacto, Instagram) and a legal row with the copyright year. Every string lives in `app/lib/footer.ts`; the year defaults to the render-time year (build time on prerendered routes).
 - `Brand` centralizes the institutional logo variants used by the header and footer.
 - `app/lib/site.ts` defines the canonical site origin and public route list used by SEO metadata.
+- `app/lib/footer.ts` defines every string the public footer shows.
 - `app/lib/work-areas.ts` defines the work area slugs, card content, and home section anchor.
 - `app/(public)/fisica-solar/page.tsx` renders the solar astrophysics information page. Copy adapted from LASCE-provided material and page metadata live in `app/lib/solar-astrophysics.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
 - `app/(public)/clima-espacial/page.tsx` renders the space weather information page. Copy lives in `app/lib/space-weather.ts`. The page is public, includes a return link to `/#areas-de-trabajo`, and does not require authentication.
@@ -150,11 +154,11 @@ The automated accessibility suite uses `@axe-core/playwright` with WCAG A and AA
 
 ## Automated Tests
 
-Install the Playwright Chromium browser once after installing dependencies:
+Install the Playwright Chromium and WebKit browsers once after installing dependencies:
 
 ```powershell
 Set-Location apps/web
-.\node_modules\.bin\playwright.cmd install chromium
+.\node_modules\.bin\playwright.cmd install chromium webkit
 Set-Location ../..
 ```
 
@@ -183,6 +187,7 @@ The Playwright configuration starts the web development server automatically whe
 - Keyboard navigation and the skip link
 - Automated WCAG A and AA checks
 - Public indexing metadata, `robots.txt`, and `sitemap.xml`
+- Responsive controls on Desktop Safari, iPhone 13, and Pixel 5 profiles: mobile navigation, the news modal, and the `/datos` date and time fields at 320 to 1440 px in both orientations (see [`docs/testing.md`](../../docs/testing.md#responsive-checks))
 
 ## Quality Commands
 

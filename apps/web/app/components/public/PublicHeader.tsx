@@ -1,27 +1,63 @@
 'use client'
 
 import Link from 'next/link'
-import { Menu } from 'lucide-react'
+import { ChevronDown, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-import { canSeeAdminNavigation } from '@/app/lib/auth/account'
 import { Brand } from './Brand'
+import { NavGroup, isActivePath, type NavGroupItem } from './NavGroup'
 import { AccountLinks } from './auth/AccountLinks'
 import { useAccount } from './auth/useAccount'
 
-const navigation = [
+interface NavGroupEntry {
+  label: string
+  items: NavGroupItem[]
+}
+
+type NavEntry = NavGroupItem | NavGroupEntry
+
+// The desktop header shows a group as a disclosure; the mobile menu keeps the same
+// grouping, under a plain label the group's own items nest below.
+const navigation: NavEntry[] = [
   { label: 'Inicio', href: '/' },
-  { label: 'Nosotros', href: '/nosotros' },
-  { label: 'Investigación', href: '/investigacion' },
-  { label: 'Publicaciones', href: '/publicaciones' },
-  { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
+  {
+    label: 'Nosotros',
+    items: [
+      { label: 'Quiénes somos', href: '/nosotros' },
+      { label: 'Colaboraciones e Iniciativas', href: '/colaboraciones-e-iniciativas' },
+    ],
+  },
+  {
+    label: 'Investigación',
+    items: [
+      { label: 'Áreas de investigación', href: '/investigacion' },
+      { label: 'Física solar', href: '/fisica-solar' },
+      { label: 'Clima espacial', href: '/clima-espacial' },
+      { label: 'ROSAC', href: '/radioastronomia' },
+    ],
+  },
   { label: 'Datos', href: '/datos' },
-  { label: 'Galería', href: '/galeria' },
-  { label: 'Noticias', href: '/noticias' },
+  {
+    label: 'Divulgación',
+    items: [
+      { label: 'Noticias', href: '/noticias' },
+      { label: 'Galería', href: '/galeria' },
+    ],
+  },
+  {
+    label: 'Recursos',
+    items: [
+      { label: 'Publicaciones', href: '/publicaciones' },
+      { label: 'Herramientas científicas', href: '/herramientas-cientificas' },
+    ],
+  },
   { label: 'Contacto', href: '/contacto' },
-  { label: 'Administración', href: '/administracion' },
 ]
+
+function isGroup(entry: NavEntry): entry is NavGroupEntry {
+  return 'items' in entry
+}
 
 export interface PublicHeaderProps {
   /** The logout Server Action, passed down by the layout so the header stays presentational. */
@@ -31,7 +67,6 @@ export interface PublicHeaderProps {
 export function PublicHeader({ logoutAction }: PublicHeaderProps) {
   const pathname = usePathname()
   const { account, role, isSigningOut, signOut } = useAccount(logoutAction)
-  const headerRef = useRef<HTMLElement>(null)
   const mobileMenu = useRef<HTMLDetailsElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -56,6 +91,56 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
     setIsMobileMenuOpen(Boolean(mobileMenu.current?.open))
   }
 
+  // Which mobile "Recursos"-style groups are expanded, keyed by label. Starts
+  // with whichever ones contain the current page, and updates on navigation
+  // without collapsing one the visitor opened by hand. A group's own `open`
+  // is fully controlled from here rather than left to the native default, so
+  // a click deterministically expands or collapses it (see NavGroup.tsx for
+  // why relying on the native toggle alone is fragile).
+  const [openGroupLabels, setOpenGroupLabels] = useState<Set<string>>(
+    () =>
+      new Set(
+        navigation
+          .filter(
+            (entry): entry is NavGroupEntry =>
+              isGroup(entry) && entry.items.some((item) => isActivePath(pathname, item.href)),
+          )
+          .map((entry) => entry.label),
+      ),
+  )
+
+  useEffect(() => {
+    setOpenGroupLabels((current) => {
+      let changed = false
+      const next = new Set(current)
+
+      for (const entry of navigation) {
+        if (
+          isGroup(entry) &&
+          entry.items.some((item) => isActivePath(pathname, item.href)) &&
+          !next.has(entry.label)
+        ) {
+          next.add(entry.label)
+          changed = true
+        }
+      }
+
+      return changed ? next : current
+    })
+  }, [pathname])
+
+  function toggleGroup(label: string) {
+    setOpenGroupLabels((current) => {
+      const next = new Set(current)
+      if (next.has(label)) {
+        next.delete(label)
+      } else {
+        next.add(label)
+      }
+      return next
+    })
+  }
+
   useEffect(() => {
     if (!isMobileMenuOpen) {
       document.body.style.overflow = ''
@@ -63,45 +148,63 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
     }
 
     document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen])
 
-    function closeMenuOnOutsidePointer(event: PointerEvent) {
-      if (headerRef.current?.contains(event.target as Node)) {
+  useEffect(() => {
+    function closeMenuOnOutsidePointer(event: Event) {
+      // Read the native disclosure directly; its toggle notification is asynchronous.
+      if (!mobileMenu.current?.open) return
+      if (mobileMenu.current?.contains(event.target as Node)) {
         return
       }
 
       closeMobileMenu()
     }
 
-    document.addEventListener('pointerdown', closeMenuOnOutsidePointer)
+    document.addEventListener('pointerdown', closeMenuOnOutsidePointer, true)
+    document.addEventListener('touchstart', closeMenuOnOutsidePointer, {
+      capture: true,
+      passive: true,
+    })
 
     return () => {
-      document.body.style.overflow = ''
-      document.removeEventListener('pointerdown', closeMenuOnOutsidePointer)
+      document.removeEventListener('pointerdown', closeMenuOnOutsidePointer, true)
+      document.removeEventListener('touchstart', closeMenuOnOutsidePointer, true)
     }
-  }, [isMobileMenuOpen])
-
-  const items = canSeeAdminNavigation(role)
-    ? navigation
-    : navigation.filter((item) => item.href !== '/administracion')
+  }, [])
 
   return (
-    <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`} ref={headerRef}>
+    <header className={`site-header ${isScrolled ? 'is-scrolled' : ''}`}>
       <Link className="brand-link" href="/" aria-label="Ir al inicio">
         <Brand />
       </Link>
 
       <nav className="desktop-nav" aria-label="Navegación principal">
-        {items.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+        {navigation.map((entry) => {
+          if (isGroup(entry)) {
+            return (
+              <NavGroup
+                items={entry.items}
+                key={entry.label}
+                label={entry.label}
+                pathname={pathname}
+              />
+            )
+          }
+
+          const isActive = isActivePath(pathname, entry.href)
 
           return (
             <Link
               aria-current={isActive ? 'page' : undefined}
               className={isActive ? 'active' : undefined}
-              href={item.href}
-              key={item.label}
+              href={entry.href}
+              key={entry.label}
             >
-              {item.label}
+              {entry.label}
             </Link>
           )
         })}
@@ -113,6 +216,7 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
           isSigningOut={isSigningOut}
           onSignOut={signOut}
           pathname={pathname}
+          role={role}
           variant="header"
         />
       </div>
@@ -131,29 +235,72 @@ export function PublicHeader({ logoutAction }: PublicHeaderProps) {
           <Menu aria-hidden="true" size={25} strokeWidth={1.8} />
         </summary>
         <nav aria-label="Navegación móvil">
-          {items.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+          {navigation.map((entry) => {
+            if (isGroup(entry)) {
+              return (
+                <details
+                  className="mobile-nav-group"
+                  key={entry.label}
+                  open={openGroupLabels.has(entry.label)}
+                >
+                  <summary
+                    className="mobile-nav-group-summary"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      toggleGroup(entry.label)
+                    }}
+                  >
+                    {entry.label}
+                    <ChevronDown aria-hidden="true" size={18} strokeWidth={1.8} />
+                  </summary>
+                  <div className="mobile-nav-group-panel">
+                    {entry.items.map((item) => {
+                      const isActive = isActivePath(pathname, item.href)
+
+                      return (
+                        <Link
+                          aria-current={isActive ? 'page' : undefined}
+                          className={
+                            isActive ? 'mobile-nav-group-item active' : 'mobile-nav-group-item'
+                          }
+                          href={item.href}
+                          key={item.label}
+                          onClick={closeMobileMenu}
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </details>
+              )
+            }
+
+            const isActive = isActivePath(pathname, entry.href)
 
             return (
               <Link
                 aria-current={isActive ? 'page' : undefined}
                 className={isActive ? 'active' : undefined}
-                href={item.href}
-                key={item.label}
+                href={entry.href}
+                key={entry.label}
                 onClick={closeMobileMenu}
               >
-                {item.label}
+                {entry.label}
               </Link>
             )
           })}
-          <AccountLinks
-            account={account}
-            isSigningOut={isSigningOut}
-            onNavigate={closeMobileMenu}
-            onSignOut={signOut}
-            pathname={pathname}
-            variant="mobile"
-          />
+          <div className="mobile-account-section">
+            <AccountLinks
+              account={account}
+              isSigningOut={isSigningOut}
+              onNavigate={closeMobileMenu}
+              onSignOut={signOut}
+              pathname={pathname}
+              role={role}
+              variant="mobile"
+            />
+          </div>
         </nav>
       </details>
     </header>

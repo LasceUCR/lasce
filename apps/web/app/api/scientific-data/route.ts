@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
 
-import { findScientificProduct, scientificDataQuerySchema } from '@/app/lib/scientific-data'
-import { getAvailabilityMessage, getSuviAvailability } from '@/app/lib/scientific-data-availability'
-import { queryCiticScientificData } from '@/app/services/scientific-data/citicScientificDataSource'
-import { queryMockScientificData } from '@/app/services/scientific-data/mockScientificDataSource'
+import { scientificDataQuerySchema } from '@/app/lib/scientific-data'
+import { getAvailabilityMessage, getGoesAvailability } from '@/app/lib/scientific-data-availability'
+import { scientificDataSources } from '@/app/services/scientific-data'
 import {
-  queryNoaaScientificData,
   ScientificDataUpstreamError,
-} from '@/app/services/scientific-data/noaaScientificDataSource'
+  UnsupportedScientificQueryError,
+} from '@/app/services/scientific-data/errors'
 
 /**
  * Public read-only endpoint for scientific visualization. It intentionally has
@@ -34,7 +33,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     )
   }
 
-  const availabilityMessage = getAvailabilityMessage(parsed.data, getSuviAvailability())
+  const availabilityMessage = getAvailabilityMessage(parsed.data, getGoesAvailability())
   if (availabilityMessage) {
     return NextResponse.json(
       { error: availabilityMessage },
@@ -43,13 +42,10 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const result =
-      parsed.data.source === 'GOES'
-        ? findScientificProduct('GOES', parsed.data.product)?.product.visualization ===
-          'image-sequence'
-          ? await queryNoaaScientificData(parsed.data)
-          : await queryCiticScientificData(parsed.data, searchParams.get('jobId') ?? undefined)
-        : await queryMockScientificData(parsed.data)
+    const result = await scientificDataSources.query({
+      query: parsed.data,
+      jobId: searchParams.get('jobId') ?? undefined,
+    })
 
     return NextResponse.json(result, {
       status: 'state' in result ? 202 : 200,
@@ -63,6 +59,14 @@ export async function GET(request: Request): Promise<NextResponse> {
           error: 'No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.',
         },
         { status: 502, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+
+    if (error instanceof UnsupportedScientificQueryError) {
+      console.error(`Scientific data wiring error: ${error.message}`)
+      return NextResponse.json(
+        { error: 'La fuente científica no está disponible en este momento.' },
+        { status: 500, headers: { 'Cache-Control': 'no-store' } },
       )
     }
 

@@ -20,22 +20,22 @@ type Story = StoryObj<typeof MediaFrame>
 
 export const WithImage: Story = {
   args: {
-    src: '/images/galeria/antena-grua-plato.jpg',
-    alt: 'Grúa colocando el reflector principal sobre el pedestal',
-    placeholder: 'Foto: Ensamblaje del reflector parabólico',
+    src: '/images/galeria/rosac/5.jpg',
+    alt: 'Grúa situada sobre un soporte cilíndrico durante los trabajos de montaje.',
+    placeholder: 'Foto: Posicionamiento de grúa en soporte central',
   },
 }
 
 export const Placeholder: Story = {
   args: {
-    alt: 'Cimentación de la plataforma',
-    placeholder: 'Foto: Cimentación de la plataforma',
+    alt: 'Adecuación de la base de concreto',
+    placeholder: 'Foto: Adecuación de la base de concreto',
   },
 }
 
 export const VideoPlaceholder: Story = {
   args: {
-    alt: 'Ensamblaje del reflector parabólico',
-    placeholder: 'Video: Ensamblaje del reflector parabólico',
+    alt: 'Elevación de componentes del soporte',
+    placeholder: 'Video: Elevación de componentes del soporte',
   },
 }

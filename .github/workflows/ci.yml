@@ -186,10 +186,10 @@ jobs:
         uses: actions/cache@v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - name: Install Chromium
+          key: playwright-${{ runner.os }}-chromium-webkit-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium and WebKit
         working-directory: apps/web
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium webkit
       # playwright.config.ts starts `next dev` as its own webServer.
       - run: pnpm --filter @lasce/web test:e2e
       - uses: actions/upload-artifact@v7.0.1

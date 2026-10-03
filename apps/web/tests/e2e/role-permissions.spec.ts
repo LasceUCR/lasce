@@ -10,11 +10,11 @@ test('requires authentication before showing role permission management', async 
   await expect(page.getByRole('checkbox')).toHaveCount(0)
 })
 
-test('denies permission management to a visitor and does not persist a write', async ({
+test('denies permission management to an assistant and does not persist a write', async ({
   page,
   context,
 }) => {
-  const fixture = await createSignedInUser(context, 'VISITOR')
+  const fixture = await createSignedInUser(context, 'ASSISTANT')
   try {
     await page.goto('/administracion/permisos')
     await expect(page.getByRole('heading', { name: 'Acceso denegado' })).toBeVisible()
@@ -89,8 +89,11 @@ test('shows the current matrix and applies a saved change to access control', as
   }
 })
 
-test('lets a visitor reach downloads and denies user administration', async ({ page, context }) => {
-  const fixture = await createSignedInUser(context, 'VISITOR')
+test('lets an assistant reach downloads and denies user administration', async ({
+  page,
+  context,
+}) => {
+  const fixture = await createSignedInUser(context, 'ASSISTANT')
   try {
     await page.goto('/administracion/descargas')
     await expect(page.getByRole('heading', { level: 1, name: 'Descargas' })).toBeVisible()

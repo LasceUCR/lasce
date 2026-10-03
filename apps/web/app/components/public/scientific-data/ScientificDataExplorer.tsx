@@ -1,20 +1,28 @@
 'use client'
 
 import { ChartNoAxesCombined, Images, Search } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+} from 'react'
 import { z } from 'zod'
 
+import type { RequestResourceDownloadResult } from '@/app/(public)/datos/actions'
 import { DataTable } from '@/app/components/public/DataTable'
 import { Notice } from '@/app/components/public/Notice'
 import { Button } from '@/app/components/public/Button'
 import { Select } from '@/app/components/public/Select'
+import type { Permission } from '@/app/lib/auth/permissions'
+import type { DownloadFormat } from '@/app/lib/downloads/formats'
+import { getDownloadOptions } from '@/app/lib/downloads/policy'
 import {
-  fitSuviQuery,
   getAvailabilityMessage,
-  getSuviAvailability,
-  getSuviTimeLimits,
-  isSuviQuery,
-  type SuviAvailability,
+  type GoesAvailability,
 } from '@/app/lib/scientific-data-availability'
 import {
   findScientificProduct,
@@ -29,14 +37,38 @@ import {
 } from '@/app/lib/scientific-data'
 
 import { DynamicSpectrumChart } from './DynamicSpectrumChart'
+import { InstrumentProductSelect } from './InstrumentProductSelect'
+import { ResourceDownloadActions, type ResourceDownloadMessage } from './ResourceDownloadActions'
 import { ScientificDataChart } from './ScientificDataChart'
 import { SuviImageSequence } from './SuviImageSequence'
+
+export interface ResourceDownloadRequestInput {
+  query: ScientificDataQuery
+  format: DownloadFormat
+  jobId?: string
+}
 
 export interface ScientificDataExplorerProps {
   sources: ScientificSource[]
   initialQuery: ScientificDataQuery
   initialResult?: ScientificDataResult
-  suviAvailability: SuviAvailability
+  goesAvailability: GoesAvailability
+  /** Whether a session exists. Decides between disabled buttons and a sign-in link. */
+  signedIn?: boolean
+  /** The signed-in user's grants; only used to draw the download buttons, never to enforce. */
+  downloadGrants?: readonly Permission[]
+  /** Where an anonymous visitor goes when choosing a download. */
+  loginHref?: string
+  /** The `requestResourceDownload` Server Action. Without it no download buttons are shown. */
+  requestDownload?: (
+    request: ResourceDownloadRequestInput,
+  ) => Promise<RequestResourceDownloadResult>
+  /** Opens a download link or the sign-in page. Defaults to a full page load. */
+  navigate?: (url: string) => void
+}
+
+function assignLocation(url: string) {
+  window.location.assign(url)
 }
 
 type RequestState = 'idle' | 'loading' | 'success' | 'error'
@@ -72,7 +104,12 @@ export function ScientificDataExplorer({
   sources,
   initialQuery,
   initialResult,
-  suviAvailability,
+  goesAvailability,
+  signedIn = false,
+  downloadGrants = [],
+  loginHref = '/acceso',
+  requestDownload,
+  navigate = assignLocation,
 }: ScientificDataExplorerProps) {
   // Server-rendered controls must wait for React's handlers before accepting input.
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
@@ -83,13 +120,12 @@ export function ScientificDataExplorer({
   const resultsHeading = useRef<HTMLHeadingElement>(null)
   const activeRequest = useRef<AbortController | null>(null)
   const [progress, setProgress] = useState(0)
-  const [availability, setAvailability] = useState(suviAvailability)
+  /** The asynchronous job that produced `result`, so a download can reuse it instead of re-queuing. */
+  const [resultJobId, setResultJobId] = useState<string | null>(null)
+  const [pendingDownload, setPendingDownload] = useState<DownloadFormat | null>(null)
+  const [downloadMessage, setDownloadMessage] = useState<ResourceDownloadMessage | null>(null)
   useEffect(() => () => activeRequest.current?.abort(), [])
-  useEffect(() => {
-    const timer = setInterval(() => setAvailability(getSuviAvailability()), 60_000)
-    return () => clearInterval(timer)
-  }, [])
-  const controlsDisabled = !hydrated || requestState === 'loading'
+  const controlsDisabled = !hydrated
 
   const selectedSource = sources.find((source) => source.code === query.source)!
   const selected = useMemo(
@@ -97,35 +133,68 @@ export function ScientificDataExplorer({
     [query.product, query.source],
   )
   const invalidRange = query.startTime >= query.endTime
-  const solarImages = isSuviQuery(query)
-  const dateRange = {
-    min: solarImages ? availability.start.slice(0, 10) : undefined,
-    max: query.source === 'GOES' ? availability.end.slice(0, 10) : undefined,
-  }
-  const timeLimits = solarImages ? getSuviTimeLimits(query.date, availability) : undefined
+  const solarImages =
+    query.source === 'GOES' && selected?.product.visualization === 'image-sequence'
+  const maxDate = query.source === 'GOES' ? goesAvailability.today : undefined
 
   function resetResults() {
+    activeRequest.current?.abort()
     setResult(null)
     setRequestState('idle')
     setMessage(null)
+    setResultJobId(null)
+    setDownloadMessage(null)
+  }
+
+  async function downloadResult(format: DownloadFormat) {
+    if (!result || !requestDownload) return
+    if (!signedIn) {
+      navigate(loginHref)
+      return
+    }
+
+    setPendingDownload(format)
+    setDownloadMessage(null)
+    try {
+      const outcome = await requestDownload({
+        query: result.query,
+        format,
+        ...(resultJobId ? { jobId: resultJobId } : {}),
+      })
+      if (outcome.ok) {
+        setDownloadMessage({
+          tone: 'info',
+          text: `La descarga de ${outcome.filename} comenzó. El enlace vence en 30 minutos.`,
+        })
+        navigate(outcome.url)
+      } else if (outcome.reason === 'unauthenticated') {
+        navigate(loginHref)
+      } else {
+        setDownloadMessage({ tone: 'error', text: outcome.message })
+      }
+    } catch {
+      setDownloadMessage({
+        tone: 'error',
+        text: 'No fue posible preparar la descarga. Inténtelo nuevamente más tarde.',
+      })
+    } finally {
+      setPendingDownload(null)
+    }
   }
 
   function updateQuery<Key extends keyof ScientificDataQuery>(
     key: Key,
     value: ScientificDataQuery[Key],
   ) {
-    setQuery((current) => {
-      const next = { ...current, [key]: value }
-      return key === 'date' && isSuviQuery(next) && value ? fitSuviQuery(next, availability) : next
-    })
+    setQuery((current) => ({ ...current, [key]: value }))
     resetResults()
   }
 
   function selectSource(sourceCode: ScientificSourceCode) {
     const source = sources.find((candidate) => candidate.code === sourceCode)!
     const requestedDate =
-      sourceCode === 'GOES' && query.date > availability.end.slice(0, 10)
-        ? availability.end.slice(0, 10)
+      sourceCode === 'GOES' && query.date > goesAvailability.today
+        ? goesAvailability.today
         : query.date
 
     setQuery(getDefaultQueryForSource(source, requestedDate))
@@ -134,18 +203,15 @@ export function ScientificDataExplorer({
 
   function selectProduct(productCode: ScientificProductCode) {
     const selection = findScientificProduct(query.source, productCode)!
-    setQuery((current) => {
-      const next = {
-        ...current,
-        product: productCode,
-        parameter: selection.product.parameters[0]!.code,
-      }
-      return isSuviQuery(next) ? fitSuviQuery(next, availability) : next
+    setQuery({
+      ...query,
+      product: productCode,
+      parameter: selection.product.parameters[0]!.code,
     })
     resetResults()
   }
 
-  async function submitQuery(event: FormEvent<HTMLFormElement>) {
+  function submitQuery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const validationMessage = getValidationMessage(query)
@@ -155,68 +221,87 @@ export function ScientificDataExplorer({
       return
     }
 
-    const availabilityMessage = getAvailabilityMessage(query, availability)
+    const availabilityMessage = getAvailabilityMessage(query, goesAvailability)
     if (availabilityMessage) {
       setMessage(availabilityMessage)
       return
     }
 
-    setRequestState('loading')
-    setMessage(null)
-    setProgress(0)
-    const controller = new AbortController()
-    activeRequest.current = controller
+    void requestData(query, true)
+  }
 
-    try {
-      const parameters = new URLSearchParams({
-        source: query.source,
-        product: query.product,
-        parameter: query.parameter,
-        date: query.date,
-        startTime: query.startTime,
-        endTime: query.endTime,
-      })
-      let response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
-        signal: controller.signal,
-      })
-      const deadline = Date.now() + 30 * 60_000
-      while (response.status === 202) {
-        const pending = z
-          .object({
-            state: z.literal('pending'),
-            jobId: z.string().min(1),
-            progress: z.number().min(0).max(100),
-          })
-          .parse(await response.json())
-        setProgress(pending.progress)
-        if (Date.now() > deadline) throw new Error('Historical query timed out')
-        await new Promise<void>((resolve) => setTimeout(resolve, 2000))
-        controller.signal.throwIfAborted()
-        parameters.set('jobId', pending.jobId)
-        response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
+  const requestData = useCallback(
+    async (requestedQuery: ScientificDataQuery, focusResults = false) => {
+      activeRequest.current?.abort()
+      setResult(null)
+      setRequestState('loading')
+      setMessage(null)
+      setProgress(0)
+      setResultJobId(null)
+      setDownloadMessage(null)
+      let jobId: string | null = null
+      const controller = new AbortController()
+      activeRequest.current = controller
+
+      try {
+        const parameters = new URLSearchParams({
+          source: requestedQuery.source,
+          product: requestedQuery.product,
+          parameter: requestedQuery.parameter,
+          date: requestedQuery.date,
+          startTime: requestedQuery.startTime,
+          endTime: requestedQuery.endTime,
+        })
+        let response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
           signal: controller.signal,
         })
+        const deadline = Date.now() + 30 * 60_000
+        while (response.status === 202) {
+          const pending = z
+            .object({
+              state: z.literal('pending'),
+              jobId: z.string().min(1),
+              progress: z.number().min(0).max(100),
+            })
+            .parse(await response.json())
+          controller.signal.throwIfAborted()
+          setProgress(pending.progress)
+          if (Date.now() > deadline) throw new Error('Historical query timed out')
+          await new Promise<void>((resolve) => setTimeout(resolve, 2000))
+          controller.signal.throwIfAborted()
+          jobId = pending.jobId
+          parameters.set('jobId', pending.jobId)
+          response = await fetch(`/api/scientific-data?${parameters.toString()}`, {
+            signal: controller.signal,
+          })
+        }
+        if (!response.ok) throw new Error('Scientific data request failed')
+
+        const parsed = scientificDataResultSchema.safeParse(await response.json())
+        if (!parsed.success) throw new Error('Scientific data response is invalid')
+        controller.signal.throwIfAborted()
+
+        setResult(parsed.data)
+        setResultJobId(jobId)
+        setRequestState('success')
+        if (focusResults) {
+          requestAnimationFrame(() => {
+            if (!controller.signal.aborted) resultsHeading.current?.focus()
+          })
+        }
+      } catch {
+        if (controller.signal.aborted) return
+        setResult(null)
+        setRequestState('error')
+        setMessage(
+          requestedQuery.source === 'GOES'
+            ? 'No fue posible consultar la fuente GOES en este momento. Inténtelo nuevamente más tarde.'
+            : 'No fue posible consultar los datos. Inténtelo nuevamente.',
+        )
       }
-      if (!response.ok) throw new Error('Scientific data request failed')
-
-      const parsed = scientificDataResultSchema.safeParse(await response.json())
-      if (!parsed.success) throw new Error('Scientific data response is invalid')
-      controller.signal.throwIfAborted()
-
-      setResult(parsed.data)
-      setRequestState('success')
-      requestAnimationFrame(() => resultsHeading.current?.focus())
-    } catch {
-      if (controller.signal.aborted) return
-      setResult(null)
-      setRequestState('error')
-      setMessage(
-        query.source === 'GOES'
-          ? 'No fue posible consultar la fuente GOES en este momento. Inténtelo nuevamente más tarde.'
-          : 'No fue posible consultar los datos. Inténtelo nuevamente.',
-      )
-    }
-  }
+    },
+    [],
+  )
 
   const seriesValues =
     result?.visualization === 'time-series' ? result.points.map((point) => point.value) : []
@@ -235,57 +320,17 @@ export function ScientificDataExplorer({
       <div className="data-section-heading">
         <div>
           <p className="topic-kicker">Consulta pública</p>
-          <h2 id="scientific-query-title">Configure los datos que desea visualizar</h2>
+          <h2 id="scientific-query-title" tabIndex={-1}>
+            Configure los datos que desea visualizar
+          </h2>
         </div>
         <span className="topic-badge">
           {selectedSource.dataKind === 'observed' ? 'Datos observados' : 'Simulación'}
         </span>
       </div>
 
-      <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
-        <span className="data-source-notice-copy">
-          <span aria-hidden={query.source !== 'GOES'}>
-            Las series GOES se consultan en el archivo histórico de CITIC-UCR. La disponibilidad
-            depende del producto y la fecha; la lectura puede tardar varios minutos. Las imágenes
-            SUVI se mantienen en NOAA y cubren aproximadamente las últimas 24 horas. EHIS y MPSL
-            están pendientes de integración.
-          </span>
-          <span aria-hidden={query.source !== 'ROSAC'}>
-            ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están
-            definidos; todos los resultados de esta fuente son simulados y están rotulados como tal.
-          </span>
-        </span>
-      </Notice>
-      {requestState === 'loading' && (
-        <div className="data-loading">
-          <p className="data-loading-copy" role="status">
-            <span>Cargando datos</span>
-            <strong>{progress}%</strong>
-          </p>
-          <progress
-            aria-label="Cargando datos"
-            className="data-loading-progress"
-            max={100}
-            value={progress}
-          />
-          <div className="data-loading-actions">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                activeRequest.current?.abort()
-                setRequestState('idle')
-                setMessage(null)
-              }}
-            >
-              Cancelar consulta
-            </Button>
-          </div>
-        </div>
-      )}
-
       <form className="data-query-form" data-select-boundary noValidate onSubmit={submitQuery}>
-        <div className="data-field">
+        <div className="data-field data-source-field">
           <label htmlFor="scientific-source">Fuente de datos</label>
           <Select
             disabled={controlsDisabled}
@@ -302,11 +347,11 @@ export function ScientificDataExplorer({
         </div>
 
         <div className="data-field">
-          <label htmlFor="scientific-product">Producto científico</label>
-          <Select
+          <label htmlFor="scientific-product">Instrumento y producto</label>
+          <InstrumentProductSelect
             disabled={controlsDisabled}
             id="scientific-product"
-            label="Producto científico"
+            label="Instrumento y producto"
             describedBy="scientific-product-hint"
             onChange={(value) => selectProduct(value as ScientificProductCode)}
             value={query.product}
@@ -314,37 +359,36 @@ export function ScientificDataExplorer({
               instrument.products.map((product) => ({
                 value: product.code,
                 label: `${product.name}${product.name.includes(`(${product.code})`) ? '' : ` (${product.code})`}${product.available ? '' : ' — pendiente'}`,
-                disabled: !product.available,
                 group: `${instrument.code} — ${instrument.name}`,
+                disabled: !product.available,
               })),
             )}
           />
           <div className="data-field-details" id="scientific-product-hint">
-            <span className="data-field-hint">
-              Instrumento: {selected?.instrument.code} — {selected?.instrument.name}
-            </span>
             {selected?.product.availabilityNote ? (
               <span className="data-field-hint">{selected.product.availabilityNote}</span>
             ) : null}
           </div>
         </div>
 
-        <div className="data-field">
-          <label htmlFor="scientific-parameter">Canal o parámetro</label>
-          <Select
-            disabled={controlsDisabled}
-            id="scientific-parameter"
-            label="Canal o parámetro"
-            onChange={(value) => updateQuery('parameter', value)}
-            value={query.parameter}
-            options={
-              selected?.product.parameters.map((parameter) => ({
-                value: parameter.code,
-                label: parameter.label,
-              })) ?? []
-            }
-          />
-        </div>
+        {!solarImages ? (
+          <div className="data-field">
+            <label htmlFor="scientific-parameter">Canal o parámetro</label>
+            <Select
+              disabled={controlsDisabled}
+              id="scientific-parameter"
+              label="Canal o parámetro"
+              onChange={(value) => updateQuery('parameter', value)}
+              value={query.parameter}
+              options={
+                selected?.product.parameters.map((parameter) => ({
+                  value: parameter.code,
+                  label: parameter.label,
+                })) ?? []
+              }
+            />
+          </div>
+        ) : null}
 
         <div className="data-field">
           <label htmlFor="scientific-date">Fecha</label>
@@ -352,8 +396,7 @@ export function ScientificDataExplorer({
             disabled={controlsDisabled}
             id="scientific-date"
             aria-describedby={query.source === 'GOES' ? 'scientific-date-hint' : undefined}
-            max={dateRange.max}
-            min={dateRange.min}
+            max={maxDate}
             onChange={(event) => updateQuery('date', event.target.value)}
             required
             type="date"
@@ -362,53 +405,48 @@ export function ScientificDataExplorer({
           <div className="data-field-details" id="scientific-date-hint">
             {query.source === 'GOES' ? (
               <span className="data-field-hint">
-                {solarImages
-                  ? `Últimas 24 horas (UTC): del ${availability.start.slice(0, 10)} a las ${availability.start.slice(11, 16)} al ${availability.end.slice(0, 10)} a las ${availability.end.slice(11, 16)}.`
-                  : 'Consulta histórica por fecha. Los días sin observaciones se muestran sin datos.'}
+                Consulta histórica por fecha. Los días sin observaciones se muestran sin datos.
               </span>
             ) : null}
           </div>
         </div>
 
-        <fieldset className="data-time-range">
-          <legend>Rango horario (UTC)</legend>
-          <div className="data-time-fields">
-            <div className="data-field">
-              <label htmlFor="scientific-start-time">Hora de inicio</label>
-              <input
-                disabled={controlsDisabled}
-                aria-describedby={message ? 'scientific-query-message' : undefined}
-                aria-invalid={message && invalidRange ? true : undefined}
-                id="scientific-start-time"
-                min={timeLimits?.min}
-                max={timeLimits?.max}
-                onChange={(event) => updateQuery('startTime', event.target.value)}
-                required
-                type="time"
-                value={query.startTime}
-              />
-            </div>
-            <div className="data-field">
-              <label htmlFor="scientific-end-time">Hora de fin</label>
-              <input
-                disabled={controlsDisabled}
-                aria-describedby={message ? 'scientific-query-message' : undefined}
-                aria-invalid={message && invalidRange ? true : undefined}
-                id="scientific-end-time"
-                min={timeLimits?.min}
-                max={timeLimits?.max}
-                onChange={(event) => updateQuery('endTime', event.target.value)}
-                required
-                type="time"
-                value={query.endTime}
-              />
-            </div>
+        <div
+          className="data-time-range data-time-fields"
+          role="group"
+          aria-label="Rango horario (UTC)"
+        >
+          <div className="data-field">
+            <label htmlFor="scientific-start-time">Hora de inicio (UTC)</label>
+            <input
+              disabled={controlsDisabled}
+              aria-describedby={message ? 'scientific-query-message' : undefined}
+              aria-invalid={message && invalidRange ? true : undefined}
+              id="scientific-start-time"
+              onChange={(event) => updateQuery('startTime', event.target.value)}
+              required
+              type="time"
+              value={query.startTime}
+            />
           </div>
-        </fieldset>
+          <div className="data-field">
+            <label htmlFor="scientific-end-time">Hora de fin (UTC)</label>
+            <input
+              disabled={controlsDisabled}
+              aria-describedby={message ? 'scientific-query-message' : undefined}
+              aria-invalid={message && invalidRange ? true : undefined}
+              id="scientific-end-time"
+              onChange={(event) => updateQuery('endTime', event.target.value)}
+              required
+              type="time"
+              value={query.endTime}
+            />
+          </div>
+        </div>
 
         <div className="data-query-submit">
           <Button
-            disabled={controlsDisabled}
+            disabled={controlsDisabled || requestState === 'loading'}
             icon={<Search aria-hidden="true" size={18} strokeWidth={1.8} />}
             type="submit"
           >
@@ -416,6 +454,50 @@ export function ScientificDataExplorer({
           </Button>
         </div>
       </form>
+
+      <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
+        <span className="data-source-notice-copy">
+          <span aria-hidden={query.source !== 'GOES'}>
+            Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica
+            puede tardar varios minutos. EHIS y MPSL están pendientes de integración.
+          </span>
+          <span aria-hidden={query.source !== 'ROSAC'}>
+            ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están
+            definidos; todos los resultados de esta fuente son simulados y están rotulados como tal.
+          </span>
+        </span>
+      </Notice>
+
+      <aside aria-labelledby="scientific-permissions-title" className="data-permissions">
+        <h3 id="scientific-permissions-title">Permisos de consulta y descarga</h3>
+        <p>
+          Puede consultar información histórica de GOES sin una cuenta. Para descargar, necesita una
+          cuenta e iniciar sesión. Las imágenes de las gráficas se pueden descargar para cualquier
+          fuente; los datos en CSV de ROSAC están disponibles para toda cuenta, y los de GOES
+          requieren un permiso de descarga de datos GOES. Las imágenes solares SUVI no se pueden
+          descargar desde esta plataforma. Cada enlace de descarga vence en 30 minutos.
+        </p>
+      </aside>
+
+      {requestState === 'loading' && (
+        <div className="data-loading">
+          <p className="data-loading-copy" role="status">
+            <span>{solarImages ? 'Cargando imágenes solares' : 'Cargando datos'}</span>
+            {!solarImages && <strong>{progress}%</strong>}
+          </p>
+          <progress
+            aria-label={solarImages ? 'Cargando imágenes solares' : 'Cargando datos'}
+            className="data-loading-progress"
+            max={100}
+            value={solarImages ? undefined : progress}
+          />
+          <div className="data-loading-actions">
+            <Button type="button" variant="secondary" onClick={resetResults}>
+              Cancelar consulta
+            </Button>
+          </div>
+        </div>
+      )}
 
       {message ? (
         <Notice id="scientific-query-message" tone="error" role="alert">
@@ -429,7 +511,10 @@ export function ScientificDataExplorer({
             <div>
               <p className="topic-kicker">Resultados de la consulta</p>
               <h2 id="scientific-results-title" ref={resultsHeading} tabIndex={-1}>
-                {result.product.name} ({result.product.code})
+                {result.product.name}
+                {result.product.name.includes(`(${result.product.code})`)
+                  ? ''
+                  : ` (${result.product.code})`}
               </h2>
             </div>
             {result.visualization === 'image-sequence' ? (
@@ -445,8 +530,12 @@ export function ScientificDataExplorer({
               <dd>{result.instrument.code}</dd>
             </div>
             <div>
-              <dt>Canal</dt>
-              <dd>{result.parameter.label}</dd>
+              <dt>{result.visualization === 'image-sequence' ? 'Longitud de onda' : 'Canal'}</dt>
+              <dd>
+                {result.visualization === 'image-sequence'
+                  ? selected?.product.wavelength
+                  : result.parameter.label}
+              </dd>
             </div>
             <div>
               <dt>Fecha</dt>
@@ -459,7 +548,7 @@ export function ScientificDataExplorer({
               </dd>
             </div>
             <div>
-              <dt>Proveedor</dt>
+              <dt>Fuente</dt>
               <dd>{result.origin.provider}</dd>
             </div>
             {result.origin.satellite ? (
@@ -478,8 +567,9 @@ export function ScientificDataExplorer({
             <div className="content-empty" role="status">
               <h3>No hay datos disponibles</h3>
               <p>
-                No se encontraron observaciones para el producto, la fecha y el rango horario
-                seleccionados. Modifique los criterios e intente nuevamente.
+                {result.visualization === 'image-sequence'
+                  ? 'No hay imágenes solares disponibles para la banda, la fecha y el horario seleccionados. Seleccione otra banda o intente nuevamente más tarde.'
+                  : 'No se encontraron observaciones para el producto, la fecha y el rango horario seleccionados. Modifique los criterios e intente nuevamente.'}
               </p>
             </div>
           ) : null}
@@ -557,6 +647,16 @@ export function ScientificDataExplorer({
                 ))}
               </DataTable>
             </>
+          ) : null}
+
+          {requestDownload && hasResults ? (
+            <ResourceDownloadActions
+              message={downloadMessage}
+              onDownload={(format) => void downloadResult(format)}
+              options={getDownloadOptions(result.query, downloadGrants)}
+              pendingFormat={pendingDownload}
+              signedIn={signedIn}
+            />
           ) : null}
         </section>
       ) : null}

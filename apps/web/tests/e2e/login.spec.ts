@@ -48,6 +48,13 @@ const loginButton = (page: Page) =>
   loginCard(page).getByRole('button', { name: loginFormCopy.submit })
 const loginAlert = (page: Page) => loginCard(page).getByRole('alert')
 const headerActions = (page: Page) => page.locator('.header-actions')
+async function openAccountMenu(page: Page) {
+  await headerActions(page).locator('summary').press('Enter')
+  await expect(
+    headerActions(page).getByRole('link', { name: accountMenuCopy.account }),
+  ).toBeVisible()
+}
+
 const signOutButton = (page: Page) =>
   headerActions(page).getByRole('button', { name: accountMenuCopy.signOut })
 const signOutDialog = (page: Page) => page.getByRole('dialog', { name: signOutDialogCopy.title })
@@ -158,9 +165,16 @@ test('opens on the login tab and switches to registration without leaving the pa
     headerActions(page).getByRole('link', { name: accountMenuCopy.signIn }),
   ).toHaveAttribute('href', ACCESS_PATH)
 
+  // The card's own link must open the registration tab, not only rewrite the address bar.
+  await loginCard(page).getByRole('link', { name: loginFormCopy.noAccountLink }).click()
+  await expect(page).toHaveURL(/\?tab=crear-cuenta$/)
+  await expect(registerTab).toHaveAttribute('aria-selected', 'true')
+  await expect(page.locator(`#${REGISTRATION_CARD_ID}`)).toBeVisible()
+  await expect(loginCard(page)).toBeHidden()
+
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await page.locator('.mobile-menu summary').click()
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   const names = await menu.getByRole('link').allTextContents()
   expect(names.slice(-1)).toEqual([accountMenuCopy.signIn])
@@ -212,6 +226,7 @@ test('signs in and returns to the page the visitor came from', async ({ page }) 
   await signInFromHeader(page, '/noticias')
 
   await expect(page).toHaveURL(/\/noticias$/)
+  await openAccountMenu(page)
   await expect(signOutButton(page)).toBeVisible()
 })
 
@@ -219,6 +234,7 @@ test('lands on the home page when nothing says where the visitor came from', asy
   await signIn(page)
 
   await expect(page).toHaveURL(/\/$/)
+  await openAccountMenu(page)
   await expect(signOutButton(page)).toBeVisible()
 })
 
@@ -235,13 +251,14 @@ test('shows the profile on the account page once signed in', async ({ page }) =>
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/i)
   await expect(page.locator('.space-page-bg img')).toBeVisible()
 
+  await openAccountMenu(page)
   await expect(
-    headerActions(page).getByRole('link', { name: accountMenuCopy.greeting(account.fullName) }),
+    headerActions(page).getByRole('link', { name: accountMenuCopy.account }),
   ).toHaveAttribute('href', '/cuenta')
   await expect(signOutButton(page)).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.locator('.mobile-menu summary').click()
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   await expect(menu.getByRole('link', { name: accountMenuCopy.account })).toHaveAttribute(
     'href',
@@ -254,6 +271,7 @@ test('returns to a safe path after login and ignores an off-site one', async ({ 
   await signIn(page, `${ACCESS_PATH}?next=%2Fdatos`)
   await expect(page).toHaveURL(/\/datos$/)
 
+  await openAccountMenu(page)
   await signOutButton(page).click()
   await confirmSignOut(page)
   await expect(page).toHaveURL(/\/$/)
@@ -281,6 +299,7 @@ test('signs out from the header and loses access to the account page', async ({ 
   await signInFromHeader(page, '/noticias')
   await expect(page).toHaveURL(/\/noticias$/)
 
+  await openAccountMenu(page)
   await signOutButton(page).click()
   await confirmSignOut(page)
 
@@ -296,6 +315,7 @@ test('signs out from the header and loses access to the account page', async ({ 
 
 test('asks before signing out and keeps the session when cancelled', async ({ page }) => {
   await signIn(page)
+  await openAccountMenu(page)
   await expect(signOutButton(page)).toBeVisible()
 
   await signOutButton(page).click()
@@ -304,6 +324,7 @@ test('asks before signing out and keeps the session when cancelled', async ({ pa
 
   await signOutDialog(page).getByRole('button', { name: signOutDialogCopy.cancel }).click()
   await expect(signOutDialog(page)).toHaveCount(0)
+  await openAccountMenu(page)
   await expect(signOutButton(page)).toBeVisible()
 
   await signOutButton(page).click()

@@ -10,55 +10,59 @@ import type { GalleryMedia } from '@/app/lib/gallery'
 const media: GalleryMedia[] = [
   {
     id: 'm1',
-    title: 'Llegada de los componentes del ROSAC',
-    description: 'Descarga del contenedor con las piezas del reflector principal.',
-    alt: 'Un terreno desértico despejado y nivelado, con una antena parabólica al fondo.',
-    date: '15 ene 2025',
+    title: 'Adecuación de la base de concreto',
+    description:
+      'Inspección de la losa de cimentación y preparación del terreno antes del izado de la antena.',
+    alt: 'Personas sobre y alrededor de una base de concreto, con una antena al fondo.',
+    date: '2024',
     format: 'JPG',
-    uploader: 'Andrés Solano',
+    uploader: 'Equipo ROSAC',
     isVideo: false,
     colSpan: 2,
     rowSpan: 2,
-    src: '/images/galeria/antena-nueva-en-espera.jpg',
+    src: '/images/galeria/rosac/3.jpg',
   },
   {
     id: 'm2',
-    title: 'Ensamblaje del reflector parabólico',
-    description: 'Registro en video del armado de los paneles del reflector.',
-    alt: 'Una grúa de gran altura sostiene en el aire el plato reflector de una antena junto a su pedestal.',
-    date: '22 ene 2025',
-    format: 'MP4',
-    uploader: 'Fabián Alvarado',
+    title: 'Elevación de componentes del soporte',
+    description:
+      'Maniobra de izado de pasarela y soporte metálico hacia la parte superior de la estructura.',
+    alt: 'Componente metálico con baranda suspendido junto al soporte de la antena.',
+    date: '2024',
+    format: 'JPG',
+    uploader: 'Equipo ROSAC',
     isVideo: true,
     colSpan: 2,
     rowSpan: 1,
-    src: '/images/galeria/antena-grua-plato.jpg',
+    src: '/images/galeria/rosac/6.jpg',
   },
   {
     id: 'm3',
-    title: 'Cimentación de la plataforma',
-    description: 'Vaciado de concreto para la base de la antena.',
-    alt: 'Obreros con casco trabajan sobre una parrilla de varilla de acero en una losa de concreto.',
-    date: '3 feb 2025',
+    title: 'Trabajos en altura con plataforma elevadora',
+    description:
+      'Labores de ajuste y fijación en el marco posterior del reflector del radiotelescopio.',
+    alt: 'Plataforma elevadora junto a la estructura metálica del reflector.',
+    date: '2024',
     format: 'JPG',
-    uploader: 'María Rodríguez',
+    uploader: 'Equipo ROSAC',
     isVideo: false,
     colSpan: 1,
     rowSpan: 2,
-    src: '/images/galeria/cimentacion-obra-01.jpg',
+    src: '/images/galeria/rosac/7.jpg',
   },
   {
     id: 'm4',
-    title: 'Instalación del mástil de soporte',
-    description: 'Colocación del mástil central antes del montaje del reflector.',
-    alt: 'Cuatro brazos metálicos forman un cuadrípode sobre el plato de una antena parabólica blanca.',
-    date: '10 feb 2025',
+    title: 'Logística y descarga de componentes',
+    description:
+      'Traslado y descarga de piezas estructurales metálicas en el sitio del observatorio.',
+    alt: 'Camión con grúa y componentes metálicos junto al sitio de la antena.',
+    date: '2024',
     format: 'JPG',
-    uploader: 'Andrés Solano',
+    uploader: 'Equipo ROSAC',
     isVideo: false,
     colSpan: 1,
     rowSpan: 1,
-    src: '/images/galeria/antena-cuadripode.jpg',
+    src: '/images/galeria/rosac/4.jpg',
   },
 ]
 
@@ -73,7 +77,7 @@ type Story = StoryObj<typeof AlbumMediaGrid>
 
 export const Default: Story = {
   args: {
-    albumTitle: 'Construcción del ROSAC',
+    albumTitle: 'Fotos del ROSAC',
     media,
   },
 }
@@ -81,7 +85,14 @@ export const Default: Story = {
 /** A single file, to see the grid and the lightbox with nothing to page through. */
 export const SingleFile: Story = {
   args: {
-    albumTitle: 'Construcción del ROSAC',
+    albumTitle: 'Fotos del ROSAC',
     media: media.slice(0, 1),
+  },
+}
+
+export const Empty: Story = {
+  args: {
+    albumTitle: 'Categoría sin contenido',
+    media: [],
   },
 }

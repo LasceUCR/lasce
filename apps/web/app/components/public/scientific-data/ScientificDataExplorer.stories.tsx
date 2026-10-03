@@ -26,8 +26,8 @@ const resultFixture: TimeSeriesDataResult = {
   parameter: { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
   origin: {
     kind: 'observed',
-    provider: 'CITIC-UCR — archivo histórico GOES de NOAA',
-    notice: 'Observaciones históricas del archivo GOES nivel 1b de CITIC-UCR.',
+    provider: 'GOES',
+    notice: 'Fuente: GOES. Observaciones históricas de nivel 1b.',
     satellite: 18,
   },
   visualization: 'time-series',
@@ -91,7 +91,7 @@ const suviFixture: ImageSequenceDataResult = {
   origin: {
     kind: 'simulated',
     provider: 'Muestra local de Storybook',
-    notice: 'Imagen de demostración del componente; esta historia no consulta NOAA.',
+    notice: 'Imagen de demostración del componente; esta historia no consulta el archivo SUVI.',
   },
   visualization: 'image-sequence',
   images: [
@@ -116,7 +116,7 @@ export const Default: Story = {
   args: {
     sources: scientificSources,
     initialQuery,
-    suviAvailability: { start: '2026-09-09T12:00:00.000Z', end: '2026-09-10T12:00:00.000Z' },
+    goesAvailability: { today: '2026-09-10' },
   },
 }
 
@@ -134,4 +134,54 @@ export const WithRosacDynamicSpectrum: Story = {
 
 export const WithSuviImages: Story = {
   args: { ...Default.args, initialQuery: suviQuery, initialResult: suviFixture },
+}
+
+export const WithUnavailableSuviBand: Story = {
+  args: { ...WithSuviImages.args, initialResult: { ...suviFixture, images: [] } },
+}
+
+const pendingDownload = () => new Promise<never>(() => {})
+
+/** A signed-in visitor without `download_goes_resources`: GOES image yes, GOES data no. */
+export const WithDownloadsForVisitor: Story = {
+  args: {
+    ...WithObservedResults.args,
+    signedIn: true,
+    downloadGrants: ['download_resources'],
+    requestDownload: pendingDownload,
+    navigate: () => undefined,
+  },
+}
+
+/** A user holding both download grants. */
+export const WithDownloadsForGoesDataHolder: Story = {
+  args: {
+    ...WithDownloadsForVisitor.args,
+    downloadGrants: ['download_resources', 'download_goes_resources'],
+  },
+}
+
+/** Anonymous: buttons lead to sign-in. */
+export const WithDownloadsSignedOut: Story = {
+  args: { ...WithDownloadsForVisitor.args, signedIn: false, downloadGrants: [] },
+}
+
+/** ROSAC data is open to every account. */
+export const WithRosacDownloads: Story = {
+  args: {
+    ...WithRosacDynamicSpectrum.args,
+    ...WithDownloadsForVisitor.args,
+    initialQuery: rosacQuery,
+    initialResult: rosacSpectrumFixture,
+  },
+}
+
+/** SUVI offers no download at all, whatever the grants. */
+export const WithSuviAndAllGrants: Story = {
+  args: {
+    ...WithSuviImages.args,
+    signedIn: true,
+    downloadGrants: ['download_resources', 'download_goes_resources'],
+    requestDownload: pendingDownload,
+  },
 }

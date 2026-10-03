@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 
 import {
   LOGIN_FIELDS,
+  LOGIN_HREF,
   accessTabHref,
   initialLoginState,
   loginMessages,
@@ -89,5 +90,9 @@ describe('accessTabHref', () => {
   test('points at a tab and carries the return path when given', () => {
     expect(accessTabHref('register')).toBe('/acceso?tab=crear-cuenta')
     expect(accessTabHref('login', '/noticias')).toBe('/acceso?tab=iniciar-sesion&next=%2Fnoticias')
+  })
+
+  test('is what the registration confirmation links to', () => {
+    expect(LOGIN_HREF).toBe('/acceso?tab=iniciar-sesion')
   })
 })

@@ -9,6 +9,11 @@
   --alice-blue: #eef4f7ff;
   --white: #ffffffff;
 
+  /* Rendered height of `.site-header`, measured: the desktop nav row adds to it
+     above 1400px and the compact header applies at 760px and below. Anything
+     pinned under the header (the admin sidebar) offsets by this token. */
+  --header-height: 82px;
+
   /* Existing UI aliases keep components connected to the brand palette. */
   --navy-deep: var(--deep-space-blue);
   --blue: var(--bright-teal-blue);
@@ -37,6 +42,7 @@
 
   /* Error feedback needs a distinct, readable semantic color. */
   --feedback-error: #9c302b;
+  --input-error: #b42318;
 }
 
 /* Actions inherit their contrast from the surrounding surface. Explicit surface
@@ -195,7 +201,10 @@ a {
   min-height: 70px;
   padding: 11px 24px 7px;
   display: grid;
-  grid-template-columns: minmax(370px, 1fr) auto minmax(110px, 1fr);
+  /* The brand column's minimum is a fixed length, so grid won't grow it to fit overflowing
+     content: 590px covers the four logos and two dividers (~562px) with a little room, so the
+     desktop nav never overlaps the CINESPA logo. */
+  grid-template-columns: minmax(590px, 1fr) auto minmax(110px, 1fr);
   align-items: center;
   gap: 24px;
   background: var(--white);
@@ -258,6 +267,11 @@ a {
   height: 50px;
 }
 
+.brand .cinespa-logo {
+  width: 165px;
+  height: 55px;
+}
+
 .brand .lasce-logo {
   width: 164px;
   height: 50px;
@@ -304,7 +318,202 @@ a {
   background: var(--action);
 }
 
+/* A group of links behind a disclosure, on the native <details> like the mobile menu.
+   The summary reads like a top-level item; the panel reads like the mobile menu. */
+.nav-group {
+  position: relative;
+}
+
+.nav-group summary {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #42586b;
+  font-size: 13px;
+  white-space: nowrap;
+  list-style: none;
+  cursor: pointer;
+}
+
+.nav-group summary::-webkit-details-marker {
+  display: none;
+}
+
+/* :last-child (not :last-of-type) matters here: the account menu's trigger
+   has a leading `User` icon before its own chevron, so this must single out
+   the chevron specifically, not every svg in the summary. It's always last:
+   both here and in NavGroup, the chevron is the final child. */
+.nav-group summary svg:last-child {
+  transition: transform 180ms ease;
+}
+
+.nav-group[open] summary svg:last-child {
+  transform: rotate(180deg);
+}
+
+.nav-group summary:hover,
+.nav-group summary:focus-visible,
+.nav-group[open] summary,
+.nav-group.active summary {
+  color: var(--blue-dark);
+}
+
+/* A small floating panel under the summary, not the shared active-link underline: a
+   caret points up at "Recursos" instead, and the accent moves to the panel's own
+   bottom edge (see below). */
+.nav-group-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  /* Centered under Recursos itself, not the bar. */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  min-width: 200px;
+  padding: 6px 0;
+  display: grid;
+  border: 1px solid #dbe4ea;
+  border-bottom: 2px solid var(--cyan);
+  border-radius: 6px;
+  background: var(--white);
+  box-shadow: 0 6px 20px rgba(10, 35, 50, 0.08);
+}
+
+/* The caret: a square rotated 45deg, half tucked behind the panel's own top edge so
+   only the upper point shows, with the same hairline border as the panel on the two
+   visible sides so it reads as one continuous shape. Centered under Recursos like
+   the panel itself, so the two translations combine (shift to center, then rotate). */
+.nav-group-panel::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid #dbe4ea;
+  border-left: 1px solid #dbe4ea;
+  border-radius: 2px 0 0 0;
+  background: var(--white);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.desktop-nav .nav-group-panel a,
+.header-actions .nav-group-panel a {
+  padding: 8px 14px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.desktop-nav .nav-group-panel a:hover,
+.desktop-nav .nav-group-panel a:focus-visible,
+.desktop-nav .nav-group-panel a.active,
+.header-actions .nav-group-panel a:hover,
+.header-actions .nav-group-panel a:focus-visible,
+.header-actions .nav-group-panel a.active {
+  background: #eef6fa;
+  color: var(--blue-dark);
+}
+
+.desktop-nav .nav-group-panel a.active::after,
+.header-actions .nav-group-panel a.active::after {
+  content: none;
+}
+
+/* The trigger is a plain nav-group summary (short name + chevron), styled
+   entirely by the shared rules above: no avatar, no badge, nothing of its own.
+   Only its panel differs, and only horizontally: the trigger sits at the
+   header's right edge, so the panel is right-anchored instead of centered
+   like "Recursos", or it would run off the viewport. Its vertical origin
+   (`top`) is untouched, inherited from `.nav-group-panel` above, because
+   `.header-actions` now stretches to the same 63px row `.desktop-nav` does
+   (see `.header-actions` below) — so the two panels start at the same Y. */
+.account-menu .nav-group-panel {
+  left: auto;
+  right: 0;
+  transform: none;
+  min-width: 220px;
+}
+
+.account-menu .nav-group-panel::before {
+  left: auto;
+  right: 8px;
+  transform: rotate(45deg);
+}
+
+/* An icon + label row, shared by the mobile menu's "Mi cuenta"/"Cerrar
+   sesión" and the desktop account menu's "Cerrar sesión" (`SignOutButton`'s
+   `icon` prop always wraps in this class). Unscoped so it works at every
+   width, not just the mobile menu's own breakpoint. */
+.mobile-account-link-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Account name and role: informational only, not a link. */
+.account-menu-info {
+  padding: 4px 14px 8px;
+}
+
+.account-menu-name {
+  margin: 0;
+  overflow: hidden;
+  color: var(--blue-dark);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-menu-role {
+  margin: 2px 0 0;
+  color: #6b7f91;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* Same divider color mobile's account section uses above "Administración"
+   (`.mobile-account-section`), rather than a separate near-identical hex. */
+.account-menu-divider {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* Same neutral color and icon+label layout as "Mi cuenta"/"Cerrar sesión" in
+   the mobile menu (`.mobile-account-link-content`) — not red, it's the last
+   item, not a destructive one. */
+.account-menu-panel button.account-menu-signout {
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-menu-panel button.account-menu-signout:hover,
+.account-menu-panel button.account-menu-signout:focus-visible {
+  background: #eef6fa;
+  color: var(--blue-dark);
+}
+
+.account-menu-panel button.account-menu-signout:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
 .login-link {
+  /* .header-actions now stretches its children to the full header height
+     (to match .desktop-nav, see below); keep the pill at its own size,
+     centered in that taller box, instead of stretching with it. */
+  align-self: center;
   justify-self: end;
   min-width: 100px;
   min-height: 42px;
@@ -324,60 +533,29 @@ a {
   background: var(--white);
 }
 
-/* Both account links share the header's last grid cell. */
+/* Both account links share the header's last grid cell. Same box model as
+   .desktop-nav (height: 63px; align-items: stretch) so the account nav-group
+   stretches to the exact same height "Recursos"/"Nosotros" do: their panels
+   both hang off a `top: calc(100% + 6px)` measured from that box, so equal
+   boxes mean equal panel Y positions. .login-link opts back out with its own
+   align-self above, since it's a fixed-size pill, not a nav-group. */
 .header-actions {
+  height: 63px;
   justify-self: end;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 10px;
 }
 
-/* Compact text-style variant: the cell is too narrow for two pills. */
-.register-link {
-  min-width: 0;
-  padding: 0 8px;
-  border-color: transparent;
-  color: var(--blue-dark);
-  white-space: nowrap;
-}
-
-/* The sign-out control is a button styled like the login pill. */
-.header-actions button.login-link {
-  background: none;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.header-actions .login-link:disabled {
-  cursor: progress;
-  opacity: 0.6;
-}
-
-/* The greeting shows the first name; a very long one is clipped, not wrapped. */
-.account-link {
-  max-width: 180px;
-  overflow: hidden;
-}
-
-/* Between the mobile breakpoint and 1440px the navigation items
-   leave little room for the account links, so tighten the gaps only there. */
-@media (min-width: 1121px) and (max-width: 1440px) {
+/* Just above the 1400px mobile breakpoint, up to 1440px, the navigation row
+   leaves little room for the account links, so tighten the gaps only there. */
+@media (min-width: 1401px) and (max-width: 1440px) {
   .site-header {
-    gap: 16px;
-  }
-
-  .desktop-nav {
     gap: 16px;
   }
 
   .header-actions {
     gap: 4px;
-  }
-
-  .register-link {
-    padding: 0 4px;
   }
 }
 
@@ -818,7 +996,8 @@ a {
 .area-grid {
   margin-top: 24px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* minmax(0, …) so a card's content cannot widen its column past the page on tablets. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px 28px;
 }
 
@@ -943,13 +1122,9 @@ a {
   flex-direction: column;
 }
 
-.footer-identity strong {
-  font-size: 13px;
-}
-
 .footer-identity span {
   color: #99adba;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .footer-links {
@@ -974,6 +1149,72 @@ a {
   content: '·';
   margin: 0 10px;
   color: #8399a7;
+}
+
+.footer-end {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.footer-partner {
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+.footer-partner:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+.footer-partner img {
+  width: auto;
+  height: 55px;
+}
+
+.footer-legal {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #99adba;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.footer-copyright {
+  text-align: center;
+  margin: 0;
+}
+
+.footer-institutions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* The alt text after the slash keeps the dot out of each item's accessible name. */
+.footer-institutions li + li::before {
+  content: '·' / '';
+  margin: 0 6px;
+}
+
+.footer-institutions abbr {
+  text-decoration: none;
+}
+
+.footer-institutions a {
+  color: var(--white);
+}
+
+.footer-institutions a:hover,
+.footer-institutions a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .sr-only {
@@ -1157,6 +1398,7 @@ a {
 
 .data-source-notice-copy {
   display: grid;
+  text-align: left;
 }
 
 .data-source-notice-copy > span {
@@ -1288,6 +1530,54 @@ a {
 }
 
 /* Query layout shared by all source adapters in ScientificDataExplorer. */
+.data-page-header {
+  width: min(100% - 64px, 65rem);
+  margin-inline: auto;
+  padding-block: 1.5rem 1.25rem;
+}
+
+.data-page-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.data-page-title h1 {
+  margin: 0;
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  line-height: 1.1;
+}
+
+.data-page-header .topic-lead {
+  max-width: none;
+  margin: 0.625rem 0 0;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.data-query-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  color: var(--blue-dark);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
+#scientific-query-title {
+  scroll-margin-top: 7rem;
+}
+
+/* Keep the anchor focus target for assistive technology without framing a static heading. */
+#scientific-query-title:focus {
+  outline: none;
+}
+
 .data-explorer {
   width: min(100% - 64px, 65rem);
   margin-inline: auto;
@@ -1329,7 +1619,102 @@ a {
 .data-query-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
+  gap: 0.5rem 1.25rem;
+}
+
+.data-permissions {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--bright-teal-blue);
+  border-radius: 8px;
+  background: var(--alice-blue);
+  color: var(--ink);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.data-permissions h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.data-permissions p {
+  margin: 0.5rem 0 0;
+  text-align: left;
+}
+
+.data-downloads {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.data-downloads h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.data-downloads-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.data-downloads .data-field-hint {
+  margin: 0;
+}
+
+.data-wavelengths {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-wavelengths legend {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.data-wavelength-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.data-wavelength-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.data-wavelength-options label:has(:checked) {
+  border-color: var(--blue-dark);
+  background: var(--alice-blue);
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.data-wavelength-options input {
+  margin: 0;
+  accent-color: var(--blue-dark);
+}
+
+.data-wavelength-options label:has(:focus-visible) {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .data-loading {
@@ -1396,8 +1781,7 @@ a {
   font-size: 0.875rem;
 }
 
-.data-field label,
-.data-time-range legend {
+.data-field label {
   font-size: 0.875rem;
   font-weight: 700;
 }
@@ -1457,6 +1841,65 @@ a {
   flex-shrink: 0;
   color: var(--blue-dark);
   transition: transform 160ms ease;
+}
+
+.instrument-product-trigger {
+  height: auto;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+}
+
+.instrument-product-trigger > span {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+.instrument-product-selection {
+  display: block;
+  margin-bottom: 0.375rem;
+  color: var(--blue-dark);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.instrument-product-heading {
+  background: color-mix(in srgb, var(--alice-blue) 55%, var(--white));
+  color: var(--blue-dark);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+[aria-expanded='true'] > .instrument-product-heading > svg {
+  transform: rotate(180deg);
+}
+
+.instrument-product-options {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 200ms ease,
+    opacity 160ms ease,
+    visibility 0s linear 200ms;
+}
+
+[aria-expanded='true'] > .instrument-product-options {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.instrument-product-options > [role='group'] {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.instrument-product-options .select-option {
+  padding-left: 1.25rem;
 }
 
 .select-trigger[aria-expanded='true'] {
@@ -1520,6 +1963,11 @@ a {
   font-weight: 700;
 }
 
+.instrument-product-menu .select-option.instrument-product-heading:is(:hover, [data-active='true']),
+.instrument-product-menu [aria-expanded='true'] > .select-option.instrument-product-heading {
+  background: var(--alice-blue);
+}
+
 .select-option[aria-disabled='true'] {
   color: var(--muted);
   cursor: not-allowed;
@@ -1550,6 +1998,7 @@ a {
   .select-trigger,
   .select-trigger > svg,
   .select-option,
+  .instrument-product-options,
   .data-field input,
   .researcher-card-inner {
     transition: none;
@@ -1579,24 +2028,58 @@ a {
   border: 0;
 }
 
-.data-time-range legend {
-  margin-bottom: 0.5rem;
-}
-
 .data-time-fields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Native time controls need room for localized hour/minute and AM/PM segments. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  grid-row: span 3;
+  /* Top-aligned so the time labels and inputs line up with a neighbouring field. */
+  align-self: start;
+  align-content: start;
   gap: 1rem;
+}
+
+.data-field input[type='date'],
+.data-field input[type='time'] {
+  /* Avoid iOS native controls adding padding outside a percentage width.
+     https://bugs.webkit.org/show_bug.cgi?id=301648 */
+  width: auto;
+  max-width: 100%;
+  align-self: stretch;
+  justify-self: stretch;
+  font-size: 1rem;
 }
 
 .data-query-submit {
   display: flex;
+  grid-row: span 3;
+  align-self: end;
   align-items: flex-end;
+  /* Keeps the spacing the button had when it sat in the input row of a subgrid. */
+  padding-top: 0.5rem;
 }
 
 .data-query-submit button {
   width: 100%;
   min-height: 44px;
+}
+
+.data-query-form > .data-field {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 0.5rem;
+}
+
+.data-query-form > .data-source-field {
+  display: flex;
+}
+
+/* The field before the time range shares its grid row. When the time fields stack,
+   that row grows; a subgrid would stretch this field's label and input with it. */
+.data-query-form > .data-field:has(+ .data-time-fields) {
+  display: flex;
+  align-self: start;
 }
 
 .data-query-form :disabled {
@@ -1671,6 +2154,28 @@ a {
   height: auto;
 }
 
+.data-image-frame {
+  display: grid;
+  aspect-ratio: 1;
+}
+
+.data-image-frame > * {
+  grid-area: 1 / 1;
+}
+
+.data-image-frame[data-state='loading'] img {
+  opacity: 0;
+}
+
+.data-image-status {
+  align-self: center;
+  margin: 0;
+  padding: 1rem;
+  color: var(--white);
+  text-align: center;
+  font-size: 0.875rem;
+}
+
 .data-image-grid figcaption {
   padding: 0.5rem 0.75rem;
   background: var(--white);
@@ -1679,17 +2184,233 @@ a {
 }
 
 @media (max-width: 760px) {
+  .data-page-header,
   .data-explorer {
     width: calc(100% - 32px);
   }
 
   .data-query-form {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .data-time-fields {
+    margin-bottom: 0.5rem;
   }
 
   .data-query-form,
   .data-results {
     padding: 1rem;
+  }
+}
+
+/* Today's solar observations are independent of the historical query form. */
+.solar-today {
+  width: min(100% - 64px, 65rem);
+  margin: 0 auto 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.solar-today-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.solar-today h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--blue-dark);
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.solar-today .solar-today-lead {
+  max-width: 42rem;
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  text-align: left;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.solar-today-source {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--blue-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.solar-today-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-block: 1rem 0.75rem;
+}
+
+.solar-today-controls .data-wavelengths {
+  padding: 0;
+  border: 0;
+}
+
+.solar-today-controls .data-wavelength-options label {
+  background: var(--white);
+}
+
+.solar-today-controls .data-wavelength-options label:has(:checked) {
+  background: var(--blue-dark);
+  color: var(--white);
+}
+
+.solar-today-controls .data-wavelength-options input {
+  accent-color: var(--blue);
+}
+
+.solar-today-range {
+  flex: 0 1 13rem;
+}
+
+.solar-today-strip {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  padding-bottom: 0.5rem;
+}
+
+.solar-today-strip:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.data-image-strip {
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 4rem) / 5);
+  grid-template-columns: none;
+  margin: 0;
+}
+
+.data-image-strip li {
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.data-image-strip figure {
+  border-radius: 12px;
+}
+
+.data-image-strip figcaption {
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.solar-today-loading > span {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.solar-today-placeholders {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.solar-today-placeholders > div {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--space-black);
+  color: var(--white);
+}
+
+.solar-today-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--blue-dark);
+}
+
+.solar-today-empty h3,
+.solar-today-empty p {
+  margin: 0;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.solar-today-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.solar-today-footer p {
+  margin: 0;
+  text-align: left;
+}
+
+.solar-today-footer .button {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+.solar-today-scroll-hint {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .data-image-strip {
+    grid-auto-columns: calc((100% - 2rem) / 3);
+  }
+
+  .solar-today-scroll-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .solar-today {
+    width: calc(100% - 32px);
+  }
+}
+
+@media (max-width: 600px) {
+  .data-image-strip {
+    grid-auto-columns: 72%;
+  }
+
+  .solar-today-placeholders {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .solar-today-placeholders > div:nth-child(n + 4) {
+    display: none;
   }
 }
 
@@ -1729,8 +2450,7 @@ a {
   line-clamp: unset;
 }
 
-.publication-card .button,
-.news-card .button {
+.publication-card .button {
   margin-top: 12px;
 }
 
@@ -1767,38 +2487,202 @@ a {
   color: var(--ink);
 }
 
-.section-heading .research-areas-description {
-  max-width: 680px;
+.section-heading .research-areas-description,
+.section-heading .research-collaborations-description {
+  max-width: none;
   color: var(--muted);
-  margin: 4px 0 0;
-  font-size: 14px;
+  margin: 6px 0 24px;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
+/* The bottom padding plus `.topic-page-footer`'s 8px leaves the same 16px above the back link
+   as a `TopicSection` page. The cards themselves are styled with the gallery, further down. */
 .research-areas {
   margin-top: 0;
   padding-top: 24px;
+  padding-bottom: 8px;
+}
+
+/* ==========================================================================
+   Collaborations (page) — .collaboration-card
+   ========================================================================== */
+
+.research-collaborations {
+  margin-top: 0;
+  padding-top: 8px;
   padding-bottom: 56px;
 }
 
-.research-area-content {
-  padding-bottom: 56px;
+.collaborations-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
 }
 
-.research-area-list {
-  max-width: 760px;
-  margin: 12px 0 0;
-  padding-left: 20px;
-  color: #355066;
-  font-size: 16px;
-  line-height: 1.7;
+.collaboration-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 215px;
+  align-self: stretch;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.research-area-list li + li {
-  margin-top: 8px;
+.collaboration-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(21, 52, 76, 0.08);
+}
+
+.collaboration-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.collaboration-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.collaboration-badge-national {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.collaboration-badge-international {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.collaboration-country {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.collaboration-name {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.collaboration-acronym {
+  margin: auto 0 0;
+  padding-top: 10px;
+  font-size: 14px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+.collaboration-acronym strong {
+  color: var(--ink);
+}
+
+/* Collaborations — breakpoints */
+
+@media (max-width: 1080px) {
+  .collaborations-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .collaborations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .collaboration-card {
+    min-height: auto;
+  }
 }
 
 .section-heading h2 {
   margin: 0;
+}
+
+/* ==========================================================================
+   Academic activities (news section & details)
+   ========================================================================== */
+
+.academic-activities {
+  margin-top: 8px;
+  padding-bottom: 32px;
+}
+
+.section-heading .academic-activities-description {
+  max-width: none;
+  color: var(--muted);
+  margin: 6px 0 24px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.academic-activities-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.academic-activity-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.academic-activity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.academic-activity-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.activity-resources-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 20px;
 }
 
 .news {
@@ -1807,11 +2691,16 @@ a {
 }
 
 .news h2 {
-  margin-top: 28px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+}
+
+.news .search-filter-bar {
+  margin-bottom: 20px;
 }
 
 .news-list {
-  margin-top: 24px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1839,13 +2728,17 @@ a {
   object-fit: cover;
 }
 
-.news-card-image.news-card-image-decorative img {
-  object-fit: contain;
-  object-position: center;
+.news-card-content {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
 }
 
-.news-card-content {
-  padding: 20px 22px;
+.news-card-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .news-card h3 {
@@ -1872,6 +2765,15 @@ a {
   -webkit-line-clamp: 2;
 }
 
+/* Same look as `.news-abstract`, but unclamped — a donation write-up has no
+   detail page to link to for the rest of the text, so it all shows here. */
+.donation-card-description {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 @media (max-width: 1120px) {
   .news-card-content {
     padding: 16px 18px;
@@ -1893,6 +2795,10 @@ a {
 }
 
 @media (max-width: 1400px) {
+  :root {
+    --header-height: 75px;
+  }
+
   .site-header {
     grid-template-columns: 1fr auto auto;
   }
@@ -1937,6 +2843,11 @@ a {
     top: 50px;
     right: 0;
     width: min(280px, calc(100vw - 32px));
+    /* The page is locked while this menu is open; the panel must scroll itself. */
+    max-height: calc(100vh - var(--header-height) - 16px);
+    max-height: calc(100dvh - var(--header-height) - 16px - env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
     padding: 8px;
     display: grid;
     border: 1px solid var(--border);
@@ -1956,6 +2867,65 @@ a {
   .mobile-menu nav a.active {
     background: #edf7fb;
     color: var(--blue-dark);
+  }
+
+  /* Recursos in the mobile menu: an accordion that looks like a normal menu item
+     (same size and padding as the flat links) until opened, when its three pages
+     drop down beneath it, indented just enough to read as children. */
+  .mobile-nav-group {
+    display: grid;
+  }
+
+  /* Qualified with ".mobile-menu nav" so this beats the generic ".mobile-menu summary"
+     rule above (the hamburger toggle's own styling), which would otherwise also match
+     this nested summary and override its size/layout. */
+  .mobile-menu nav .mobile-nav-group-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    color: inherit;
+    font-size: 14px;
+    list-style: none;
+    cursor: pointer;
+    /* No hover/focus/open background at all: Recursos only opens and closes,
+       it never gets "marked" the way an actual page link does. The browser's
+       own default focus rectangle is also suppressed for the same reason. */
+    outline: none;
+  }
+
+  .mobile-menu nav .mobile-nav-group-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-nav-group-summary svg {
+    flex-shrink: 0;
+    transition: transform 180ms ease;
+  }
+
+  .mobile-nav-group[open] .mobile-nav-group-summary svg {
+    transform: rotate(180deg);
+  }
+
+  /* Chrome (and other browsers following the newer <details> rendering model) wraps
+     everything after <summary> in its own internal box, so a plain "display: grid" on
+     the <details> itself doesn't reach these links — the panel needs its own grid. */
+  .mobile-nav-group-panel {
+    display: grid;
+  }
+
+  .mobile-menu nav a.mobile-nav-group-item {
+    padding-left: 26px;
+  }
+
+  /* Mi cuenta / Cerrar sesión sit apart from the links above them. */
+  .mobile-account-section {
+    display: grid;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
   }
 
   /* The sign-out button sits among the links and must read like one. */
@@ -2017,6 +2987,10 @@ a {
     padding: 16px;
   }
 
+  :root {
+    --header-height: 64px;
+  }
+
   .site-header {
     min-height: 64px;
     padding: 5px 16px;
@@ -2045,13 +3019,18 @@ a {
   }
 
   .brand .ucr-signature-logo {
-    width: 100px;
-    height: 38px;
+    width: 81px;
+    height: 34px;
+  }
+
+  .brand .cinespa-logo {
+    width: 95px;
+    height: 37px;
   }
 
   .brand .lasce-logo {
-    width: 112px;
-    height: 38px;
+    width: 95px;
+    height: 34px;
   }
 
   .brand-divider {
@@ -2151,7 +3130,7 @@ a {
 
   .footer-inner {
     padding-block: 14px;
-    gap: 18px;
+    gap: 16px;
   }
 
   .footer-identity {
@@ -2162,6 +3141,27 @@ a {
     flex-wrap: wrap;
     row-gap: 8px;
     color: var(--white);
+  }
+
+  /* Links on the left, the ISWI logo on the far right, sharing one row. */
+  .footer-end {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-links a {
+    padding-block: 6px;
+    font-size: 13px;
+  }
+
+  .footer-partner img {
+    height: 44px;
+  }
+
+  .footer-copyright {
+    text-align: left;
   }
 }
 
@@ -2242,11 +3242,35 @@ a {
 }
 
 .topic-hero-mark-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 64px;
-  max-width: 95rem;
+  gap: 24px;
+  text-align: center;
+}
+
+.topic-hero-mark-heading {
+  align-self: stretch;
+  text-align: left;
+}
+
+.topic-hero-mark-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  align-self: stretch;
+}
+
+.topic-hero-mark-footer .topic-lead {
+  margin: 0;
+}
+
+.topic-hero-mark-logo {
+  display: block;
+  flex-shrink: 0;
+  width: 72px;
+  height: auto;
 }
 
 .topic-hero-copy-only .topic-lead {
@@ -2313,17 +3337,22 @@ a {
   object-position: center;
 }
 
-.topic-hero-mark {
-  display: flex;
-  justify-content: center;
+.topic-hero-mark-photo {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  /* Tied to viewport height, not just width, so "¿Qué es ROSAC?" — the
+     section right after this header — stays visible without scrolling on
+     a typical laptop screen. */
+  height: clamp(300px, 46vh, 520px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #000918;
 }
 
-.topic-hero-mark-image {
-  display: block;
-  width: 260px;
-  max-width: 100%;
-  height: auto;
-  transform: translateY(-25px);
+.topic-hero-mark-photo-image {
+  object-fit: cover;
+  object-position: center;
 }
 
 .topic-hero-with-mark h1 {
@@ -2367,7 +3396,7 @@ a {
 }
 
 .topic-intro {
-  max-width: 760px;
+  max-width: none;
   margin: 10px 0 0;
   color: #355066;
   font-size: 16px;
@@ -2376,6 +3405,53 @@ a {
 
 .topic-section-lede .topic-intro {
   max-width: none;
+}
+
+.topic-initiative {
+  margin-top: 18px;
+  display: grid;
+  align-items: center;
+  gap: 22px 36px;
+  padding: 28px 32px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.05);
+}
+
+.topic-initiative-with-logo {
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.topic-initiative-logo {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  justify-self: center;
+}
+
+.topic-initiative-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.topic-initiative h3 {
+  margin: 0;
+  color: var(--blue-dark);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.topic-initiative .topic-intro {
+  margin-top: 12px;
+}
+
+.topic-initiative .button {
+  margin-top: 18px;
+  align-self: flex-end;
 }
 
 .card-grid {
@@ -2639,6 +3715,17 @@ a {
   padding: 8px 0 48px;
 }
 
+.info-card-content a {
+  color: var(--blue-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.info-card-content a:hover,
+.info-card-content a:focus-visible {
+  color: var(--blue-dark);
+}
+
 .topic-intro + .topic-intro {
   margin-top: 14px;
 }
@@ -2690,17 +3777,41 @@ a {
   }
 
   .topic-hero-mark-body {
-    grid-template-columns: 1fr;
-    gap: 90px;
     max-width: none;
   }
 
-  .topic-hero-mark-image {
-    width: min(260px, 80%);
+  .topic-hero-mark-logo {
+    width: 56px;
+  }
+
+  .topic-hero-mark-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .topic-hero-mark-footer .topic-lead {
+    text-align: center;
+  }
+
+  .topic-hero-mark-photo {
+    height: clamp(240px, 42vh, 360px);
   }
 
   .topic-lead {
     font-size: 16px;
+  }
+
+  .topic-initiative {
+    padding: 22px 18px;
+  }
+
+  .topic-initiative-with-logo {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .topic-initiative-logo {
+    width: 200px;
   }
 
   .card-grid-4,
@@ -2774,22 +3885,62 @@ a {
   }
 }
 
+@media (min-width: 761px) and (max-width: 900px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .header-actions {
+    display: none;
+  }
+}
+
 @media (max-width: 430px) {
+  .site-header {
+    padding: 5px 8px;
+    gap: 4px;
+  }
+
   .brand {
-    gap: 7px;
+    gap: 4px;
   }
 
   .brand img {
     height: 36px;
   }
 
+  /* Brought back at a small size: it disappears once the visitor scrolls, same as the
+     760px tier, but is no longer hidden from the start. */
+  .brand .compdes-logo {
+    width: 22px;
+    height: 24px;
+    flex-basis: 22px;
+  }
+
+  .site-header.is-scrolled .brand .compdes-logo {
+    width: 0;
+    flex-basis: 0;
+    opacity: 0;
+  }
+
+  .brand .ucr-signature-logo {
+    width: 56px;
+    height: 23px;
+  }
+
+  .brand .cinespa-logo {
+    width: 73px;
+    height: 31px;
+  }
+
   .brand .lasce-logo {
-    width: 105px;
-    height: 34px;
+    width: 65px;
+    height: 23px;
   }
 
   .brand-divider {
-    height: 32px;
+    height: 24px;
   }
 
   .hero h1 {
@@ -2883,7 +4034,7 @@ a {
 }
 
 .gallery-group-description {
-  max-width: 680px;
+  max-width: none;
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 14px;
@@ -2981,6 +4132,10 @@ a.gallery-tile:focus-visible {
 
 .gallery-album-back {
   padding-top: 28px;
+}
+
+.gallery-album-footer {
+  padding-top: 20px;
 }
 
 .media-grid {
@@ -3297,6 +4452,101 @@ a.gallery-tile:focus-visible {
   }
 }
 
+/* --- Research areas (/investigacion) --- */
+
+/* One full-width card per row, the same list `/publicaciones` and `/noticias` use. The card
+   repeats the `.news-card` metrics on purpose, so the three pages read as one family. It sits
+   after `.surface-card` and `.media-frame` so these rules win on source order. */
+.research-area-list {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  list-style: none;
+}
+
+.surface-card.research-area-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(21, 52, 76, 0.06);
+}
+
+.research-area-card-image {
+  min-height: 190px;
+}
+
+.research-area-card-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px 22px;
+}
+
+.research-area-card h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+/* Clamped so every card keeps one height; the full text is the detail page's lead. */
+.research-area-card-description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* Bottom-right corner of the card, so every button lines up down the right edge of the list. */
+.research-area-card-action {
+  align-self: flex-end;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+@media (max-width: 1120px) {
+  .research-area-card-content {
+    padding: 16px 18px;
+  }
+}
+
+@media (max-width: 700px) {
+  .surface-card.research-area-card {
+    grid-template-columns: 1fr;
+  }
+
+  .research-area-card-image {
+    min-height: 200px;
+  }
+
+  /* At this width the clamp cuts mid-paragraph, and the site-wide justify would stretch the
+     cut line across the card. The selector outranks `.public-shell-content p`. */
+  .research-area-card .research-area-card-description {
+    text-align: start;
+  }
+
+  /* Stacked, the card has no right edge to line up against, so the button spans its width. */
+  .research-area-card-action {
+    align-self: stretch;
+  }
+
+  .research-area-card-action .button {
+    width: 100%;
+  }
+}
+
 /* --- ROSAC researchers (/radioastronomia#investigadores) --- */
 
 .team-gallery {
@@ -3338,6 +4588,19 @@ a.gallery-tile:focus-visible {
   scroll-snap-align: start;
 }
 
+/* In edit mode, a slide's direct child is `EditableWrapper`'s `.editable` div
+   instead of `.researcher-card` itself. `.researcher-card` still expects to
+   fill a `flex: 1 1 auto; height: 100%` box handed down by `.team-gallery-slide` —
+   `.editable` has to pass that box through unchanged, or the card collapses to
+   zero height and only the edit/delete buttons (position: absolute) show. */
+.team-gallery-slide > .editable {
+  display: flex;
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+}
+
 .researcher-card {
   display: block;
   position: relative;
@@ -3360,6 +4623,12 @@ a.gallery-tile:focus-visible {
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.55s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .researcher-card-inner {
+    transition: none;
+  }
 }
 
 .researcher-card.is-flipped .researcher-card-inner {
@@ -3398,6 +4667,9 @@ a.gallery-tile:focus-visible {
   cursor: pointer;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
+  /* Another stacking context inside a face; see .researcher-card-emails. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .researcher-card-flip-hit:focus,
@@ -3466,15 +4738,23 @@ a.gallery-tile:focus-visible {
   line-height: 1.3;
 }
 
-.researcher-card-email {
+.researcher-card-emails {
   position: relative;
   z-index: 2;
-  display: block;
   min-height: 1.4em;
-  margin-bottom: 10px;
-  color: var(--blue-dark);
+  margin: 0 0 10px;
   font-size: 14px;
   line-height: 1.4;
+  /* The z-index, needed to sit above the flip button, makes this a stacking context
+     that Blink and WebKit may composite on its own layer. backface-visibility is not
+     inherited from the face, so without its own value that layer keeps painting,
+     mirrored, once the card turns away. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.researcher-card-email {
+  color: var(--blue-dark);
   overflow-wrap: anywhere;
 }
 
@@ -3563,17 +4843,93 @@ a.gallery-tile:focus-visible {
   }
 }
 
+.acknowledgments-gallery {
+  margin-top: 20px;
+}
+
+.acknowledgments-track {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 16px;
+  margin: 0;
+  padding: 4px 4px 12px;
+  overflow-x: auto;
+  overflow-anchor: none;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 4px;
+}
+
+.acknowledgments-track:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
+.acknowledgments-slide {
+  flex: 0 0 auto;
+  width: 200px;
+  scroll-snap-align: start;
+}
+
+.acknowledgments-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  text-align: center;
+}
+
+.acknowledgments-logo {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.acknowledgments-logo img {
+  object-fit: contain;
+  object-position: center;
+}
+
+/* `.public-shell-content p` justifies every paragraph on the public site;
+   this name is short and center-aligned by design, so it needs the extra
+   specificity to win over that rule rather than inherit justify. */
+.acknowledgments-card .acknowledgments-name {
+  margin: 0;
+  color: var(--blue-dark);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .acknowledgments-slide {
+    width: 42vw;
+  }
+
+  .acknowledgments-logo {
+    width: 100px;
+    height: 100px;
+  }
+}
+
 /* --- Administración (/administracion) --- */
 
 .admin-shell {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
-  min-height: calc(100vh - 78px);
+  min-height: calc(100vh - var(--header-height));
 }
 
 .admin-sidebar {
   position: fixed;
-  top: 78px;
+  top: var(--header-height);
   left: 0;
   bottom: 0;
   z-index: 15;
@@ -3608,12 +4964,17 @@ a.gallery-tile:focus-visible {
 .admin-sidebar a:hover,
 .admin-sidebar a:focus-visible {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--on-hover);
+  color: var(--white);
 }
 
 .admin-sidebar a.active {
   background: var(--blue-dark);
-  color: var(--on-hover);
+  color: var(--white);
+}
+
+/* The narrow-screen toggle. Above 1120px the sidebar itself is the menu. */
+.admin-menu-toggle {
+  display: none;
 }
 
 .admin-content {
@@ -3750,27 +5111,89 @@ a.gallery-tile:focus-visible {
 }
 
 @media (max-width: 1120px) {
+  /* The content row takes the spare height, so a short page does not stretch the bar. */
   .admin-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
+  /* The sidebar becomes a sticky bar under the header; the list opens in place
+     below the toggle and pushes the content down, so nothing overlaps. */
   .admin-sidebar {
     position: sticky;
-    top: 78px;
+    top: var(--header-height);
     left: auto;
     bottom: auto;
     width: auto;
     height: auto;
-    padding: 12px 14px;
-    overflow-x: auto;
+    max-height: calc(100vh - var(--header-height));
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  .admin-menu-toggle {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: var(--navy-deep);
+    color: var(--white);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .admin-menu-toggle:focus-visible {
+    outline: 2px solid var(--amber-flame);
+    outline-offset: -2px;
+  }
+
+  .admin-menu-current {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--amber-glow);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-menu-chevron {
+    flex: 0 0 auto;
+    margin-left: auto;
+    transition: transform 160ms ease;
+  }
+
+  .admin-sidebar.is-open .admin-menu-chevron {
+    transform: rotate(180deg);
   }
 
   .admin-sidebar ul {
-    flex-direction: row;
+    display: none;
+    flex-direction: column;
+    padding: 4px 14px 12px;
+  }
+
+  .admin-sidebar.is-open ul {
+    display: flex;
+  }
+
+  .admin-sidebar a {
+    min-height: 44px;
   }
 
   .admin-content {
     grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-menu-chevron {
+    transition: none;
   }
 }
 
@@ -4318,6 +5741,7 @@ a.gallery-tile:focus-visible {
 }
 
 .cms-form-field {
+  min-width: 0;
   margin: 14px 0;
   display: flex;
   flex-direction: column;
@@ -4337,6 +5761,8 @@ a.gallery-tile:focus-visible {
 .cms-form-field input,
 .cms-form-field textarea,
 .cms-form-field select {
+  width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -4348,6 +5774,74 @@ a.gallery-tile:focus-visible {
 
 .cms-form-field [aria-invalid='true'] {
   border-color: var(--danger);
+}
+
+/* The "Contacto" field's board: existing addresses as chips, with a dashed
+   "+" slot after the last one to open the add-a-contact modal. */
+.email-chip-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.email-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--page);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.icon-button.email-chip-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+}
+
+.icon-button.email-chip-remove:hover,
+.icon-button.email-chip-remove:focus-visible {
+  background: var(--danger);
+  color: var(--white);
+}
+
+.icon-button.email-chip-add {
+  width: 28px;
+  height: 28px;
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+}
+
+.icon-button.email-chip-add:hover,
+.icon-button.email-chip-add:focus-visible {
+  border-color: var(--action);
+  border-style: solid;
+  color: var(--action);
+}
+
+.cms-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.cms-form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .nosotros-activity-form {
@@ -4422,6 +5916,7 @@ a.gallery-tile:focus-visible {
      variant below) so it doesn't stretch absurdly wide on an ultrawide
      monitor. */
   max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
   padding: 32px 40px;
   display: flex;
   flex-direction: column;
@@ -4488,4 +5983,38 @@ a.gallery-tile:focus-visible {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .cms-form-field input,
+  .cms-form-field textarea,
+  .cms-form-field select {
+    font-size: 1rem;
+  }
+
+  .modal {
+    padding: 24px 16px;
+  }
+
+  .modal-actions,
+  .cms-form-actions,
+  .news-article-form-actions,
+  .nosotros-activity-form-actions {
+    flex-wrap: wrap;
+  }
+}
+
+.publication-add-author {
+  margin-top: 20px;
+  display: flex;
+}
+
+.email-chip-field.form-field-error {
+  border-color: var(--input-error);
+}
+
+.research-area-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }

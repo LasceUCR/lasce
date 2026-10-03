@@ -18,9 +18,18 @@ export const GOES_PRODUCT_CODES = [
 ] as const
 export const ROSAC_PRODUCT_CODES = ['ROSAC-I1', 'ROSAC-I2'] as const
 export const SCIENTIFIC_PRODUCT_CODES = [...GOES_PRODUCT_CODES, ...ROSAC_PRODUCT_CODES] as const
+export const SCIENTIFIC_INSTRUMENT_CODES = [
+  'EXIS',
+  'MAG',
+  'SEISS',
+  'SUVI',
+  'ROSAC-I1',
+  'ROSAC-I2',
+] as const
 
 export type ScientificSourceCode = (typeof SCIENTIFIC_SOURCE_CODES)[number]
 export type ScientificProductCode = (typeof SCIENTIFIC_PRODUCT_CODES)[number]
+export type ScientificInstrumentCode = (typeof SCIENTIFIC_INSTRUMENT_CODES)[number]
 export type VisualizationKind = 'time-series' | 'image-sequence' | 'dynamic-spectrum'
 
 export interface ScientificParameter {
@@ -35,11 +44,12 @@ export interface ScientificProduct {
   visualization: VisualizationKind
   available: boolean
   availabilityNote?: string
+  wavelength?: string
   parameters: ScientificParameter[]
 }
 
 export interface ScientificInstrument {
-  code: string
+  code: ScientificInstrumentCode
   name: string
   products: ScientificProduct[]
 }
@@ -172,7 +182,7 @@ const sgpsParameters: ScientificParameter[] = ['minus', 'plus'].flatMap((sensor)
 )
 
 const unavailableFromRollingApi =
-  'El archivo de CITIC incluye este producto; su lector y sus canales aún están pendientes de integración.'
+  'Este producto GOES y sus canales aún están pendientes de integración.'
 
 export const goesInstruments: ScientificInstrument[] = [
   {
@@ -252,15 +262,16 @@ export const goesInstruments: ScientificInstrument[] = [
     code: 'SUVI',
     name: 'Generador de imágenes solares ultravioleta',
     products: [
-      { code: 'Fe093', name: 'Imágenes solares: 94 Å (Fe093)' },
-      { code: 'Fe131', name: 'Imágenes solares: 131 Å (Fe131)' },
-      { code: 'Fe171', name: 'Imágenes solares: 171 Å (Fe171)' },
-      { code: 'Fe195', name: 'Imágenes solares: 195 Å (Fe195)' },
-      { code: 'Fe284', name: 'Imágenes solares: 284 Å (Fe284)' },
-      { code: 'He303', name: 'Imágenes solares: 304 Å (He303)' },
-    ].map(({ code, name }) => ({
+      { code: 'Fe093', wavelength: '94 Å' },
+      { code: 'Fe131', wavelength: '131 Å' },
+      { code: 'Fe171', wavelength: '171 Å' },
+      { code: 'Fe195', wavelength: '195 Å' },
+      { code: 'Fe284', wavelength: '284 Å' },
+      { code: 'He303', wavelength: '304 Å' },
+    ].map(({ code, wavelength }) => ({
       code: code as ScientificProductCode,
-      name,
+      name: `Imágenes solares: ${wavelength} (${code})`,
+      wavelength,
       visualization: 'image-sequence' as const,
       available: true,
       parameters: [{ code: 'image', label: 'Imagen calibrada', unit: 'imagen' }],
@@ -312,8 +323,8 @@ export const rosacInstruments: ScientificInstrument[] = [
 export const scientificSources: ScientificSource[] = [
   {
     code: 'GOES',
-    name: 'GOES — CITIC / NOAA',
-    description: 'Series históricas GOES del archivo de CITIC-UCR e imágenes SUVI de NOAA.',
+    name: 'GOES',
+    description: 'Series históricas e imágenes solares SUVI de GOES.',
     dataKind: 'observed',
     instruments: goesInstruments,
   },
@@ -433,9 +444,13 @@ const scientificOriginSchema = z.object({
   notice: z.string(),
   satellite: z.number().int().optional(),
 })
+/** An absolute URL, or a same-origin path such as `/api/suvi/frames/<id>` (never `//host`). */
+const imageUrlSchema = z
+  .string()
+  .refine((value) => /^\/(?!\/)/.test(value) || URL.canParse(value), 'Invalid image URL')
 const scientificResultBaseSchema = z.object({
   query: scientificDataQuerySchema,
-  instrument: z.object({ code: z.string(), name: z.string() }),
+  instrument: z.object({ code: z.enum(SCIENTIFIC_INSTRUMENT_CODES), name: z.string() }),
   product: z.object({ code: z.enum(SCIENTIFIC_PRODUCT_CODES), name: z.string() }),
   parameter: scientificParameterSchema,
   origin: scientificOriginSchema,
@@ -451,7 +466,7 @@ export const scientificDataResultSchema: z.ZodType<ScientificDataResult> = z.dis
     scientificResultBaseSchema.extend({
       visualization: z.literal('image-sequence'),
       images: z.array(
-        z.object({ timestamp: z.string(), imageUrl: z.string().url(), alt: z.string() }),
+        z.object({ timestamp: z.string(), imageUrl: imageUrlSchema, alt: z.string() }),
       ),
     }),
     scientificResultBaseSchema.extend({

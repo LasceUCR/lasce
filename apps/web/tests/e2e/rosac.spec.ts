@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 
 for (const viewport of [
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
+  { width: 320, height: 720 },
+  { width: 768, height: 900 },
 ]) {
   test(`opens ROSAC through the existing radio astronomy card and returns to the access cards at ${viewport.width}px`, async ({
     page,
@@ -13,7 +16,7 @@ for (const viewport of [
     const areas = page.getByRole('region', { name: 'Áreas y accesos principales' })
     await expect(areas.getByRole('link')).toHaveCount(6)
     const rosacLink = areas.getByRole('link', {
-      name: /^Radioastronomía/,
+      name: /^ROSAC/,
     })
     await expect(rosacLink).toHaveAttribute('href', '/radioastronomia')
     await rosacLink.click()
@@ -23,6 +26,18 @@ for (const viewport of [
     await expect(
       page.getByRole('img', { name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)' }),
     ).toBeVisible()
+    // The map loads on the client only, after the initial page content, so give it a
+    // moment before checking that its own footprint does not cause horizontal overflow.
+    await expect(page.getByRole('region', { name: /^Mapa de ubicación de/ })).toBeVisible()
+    const map = page.getByRole('region', { name: /^Mapa de ubicación de/ })
+    const marker = map.getByRole('button', { name: 'ROSAC', exact: true })
+    await expect(marker).toBeVisible()
+    const mapBounds = (await map.boundingBox())!
+    const markerBounds = (await marker.boundingBox())!
+    expect(markerBounds.x).toBeGreaterThanOrEqual(mapBounds.x)
+    expect(markerBounds.x + markerBounds.width).toBeLessThanOrEqual(mapBounds.x + mapBounds.width)
+    expect(markerBounds.y).toBeGreaterThanOrEqual(mapBounds.y)
+    expect(markerBounds.y + markerBounds.height).toBeLessThanOrEqual(mapBounds.y + mapBounds.height)
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true)
@@ -51,6 +66,9 @@ test('serves the general information and LASCE relationship directly without aut
   await expect(page.getByRole('heading', { name: 'Antena de 11 metros' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Entre 100 y 1000 MHz' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Santa Cruz, Guanacaste' })).toBeVisible()
+  const location = page.getByRole('region', { name: '2. Ubicación' })
+  await expect(location).toContainText('Recinto de Santa Cruz')
+  await expect(location.getByRole('region', { name: /^Mapa de ubicación de/ })).toBeVisible()
   await expect(page.getByRole('region', { name: 'ROSAC y LASCE' })).toContainText(
     'LASCE convierte observaciones en conocimiento',
   )
@@ -76,11 +94,17 @@ test('presents each ROSAC researcher card with public information', async ({ pag
     'mailto:carolina.salas_mata@ucr.ac.cr',
   )
   await expect(
-    team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR').first(),
+    team.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UC...').first(),
   ).toBeVisible()
-  await team
+  const carolina = track.getByRole('listitem').filter({ hasText: 'Dra. Carolina Salas Matamoros' })
+  await carolina
     .getByRole('button', { name: 'Ver descripción de Dra. Carolina Salas Matamoros' })
     .click()
+  await expect(
+    carolina.getByText('Institución: Centro de Investigaciones Espaciales (CINESPA), UCR', {
+      exact: true,
+    }),
+  ).toBeVisible()
   await expect(
     team.getByText(
       'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
@@ -93,17 +117,13 @@ test('presents each ROSAC researcher card with public information', async ({ pag
   }
 })
 
-test('keeps the scientific consultation button enabled and without a destination', async ({
-  page,
-}) => {
+test('links the scientific consultation to the ROSAC data source', async ({ page }) => {
   await page.goto('/radioastronomia')
 
   const consultation = page.getByRole('region', { name: 'Consulta científica' })
   await expect(consultation.getByText('Próximamente')).toHaveCount(0)
-  const button = consultation.getByRole('button', { name: 'Consultar información científica' })
-  await expect(button).toBeEnabled()
-  await expect(button).not.toHaveAttribute('href')
-  await expect(consultation.getByRole('link')).toHaveCount(0)
+  const link = consultation.getByRole('link', { name: 'Consultar información científica' })
+  await expect(link).toHaveAttribute('href', '/datos?source=ROSAC#scientific-query-title')
 })
 
 test('keeps ROSAC access out of the shared navigation and scientific tools', async ({ page }) => {
@@ -124,4 +144,62 @@ test('the skip link focuses ROSAC content', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Saltar al contenido principal' })).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(page.getByRole('main')).toBeFocused()
+})
+
+test('loads the location map with real satellite tiles and a marker identified as ROSAC', async ({
+  page,
+}) => {
+  await page.goto('/radioastronomia')
+
+  const location = page.getByRole('region', { name: '2. Ubicación' })
+  const map = location.getByRole('region', { name: /^Mapa de ubicación de/ })
+  await expect(map).toBeVisible()
+  await expect(map.getByText('ROSAC')).toBeVisible()
+  await expect(map.locator('img.leaflet-tile-loaded').first()).toBeVisible()
+  await expect(location.getByRole('status')).toHaveCount(0)
+})
+
+test('names map controls in Spanish and allows keyboard users to leave the map', async ({
+  page,
+}) => {
+  await page.goto('/radioastronomia')
+  const map = page.getByRole('region', { name: 'Mapa de ubicación de ROSAC' })
+  const canvas = page.getByLabel('Mapa interactivo de ROSAC', { exact: true })
+  await canvas.focus()
+  await expect(canvas).toBeFocused()
+  await expect(canvas).toHaveAccessibleDescription(/Use las flechas/)
+  await page.keyboard.press('Tab')
+  await expect(map.getByRole('button', { name: 'ROSAC', exact: true })).toBeFocused()
+  await page.keyboard.press('Tab')
+  const zoomIn = map.getByRole('button', { name: 'Acercar' })
+  await expect(zoomIn).toBeFocused()
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('Tab')
+  await expect(map.getByRole('button', { name: 'Alejar' })).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(map.getByRole('link', { name: 'Leaflet' })).toBeFocused()
+  await page.keyboard.press('Tab')
+  expect(await map.evaluate((element) => element.contains(document.activeElement))).toBe(false)
+  const results = await new AxeBuilder({ page })
+    .include('.leaflet-container')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+    .analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('falls back to a text message if the map tiles cannot be loaded, keeping the rest of the page usable', async ({
+  page,
+}) => {
+  await page.route('**/*.arcgisonline.com/**', (route) => route.abort())
+  await page.goto('/radioastronomia')
+
+  const location = page.getByRole('region', { name: '2. Ubicación' })
+  await expect(location.getByRole('status')).toContainText('No fue posible cargar el mapa')
+  // The address is rendered outside the map component, so it survives the failure.
+  await expect(location).toContainText('Recinto de Santa Cruz')
+  await expect(location.getByRole('region', { name: /^Mapa de ubicación de/ })).toHaveCount(0)
+
+  // The rest of the page is unaffected by the map failing.
+  await expect(page.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'ROSAC y LASCE' })).toBeVisible()
 })

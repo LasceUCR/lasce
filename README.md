@@ -59,7 +59,8 @@ pnpm worker:install         # uv sync for the Python worker
 
 pnpm services:up            # PostgreSQL, Redis, InfluxDB, MinIO
 pnpm db:migrate             # create the schema
-pnpm --filter @lasce/db seed
+pnpm db:seed                # initial public content
+pnpm accounts:create        # sign-in accounts, one per role (prints the password)
 
 pnpm dev                    # http://localhost:3000
 pnpm worker:dev             # in a second terminal
@@ -68,6 +69,20 @@ pnpm worker:dev             # in a second terminal
 Open http://localhost:3000 and enqueue the demo job. It travels through Redis to the Python
 worker, which writes points to InfluxDB, archives a CSV to MinIO and records the run in
 PostgreSQL — the page shows the status changing as it happens.
+
+### Testing on a phone
+
+`pnpm dev` listens on every network interface. To open the site from a phone on the same Wi-Fi,
+find the computer's IPv4 address (`ipconfig` on Windows) and browse to `http://<that-ip>:3000`.
+In development, `apps/web/next.config.ts` adds the computer's LAN IPv4 addresses to
+`allowedDevOrigins`; without that, Next.js blocks its dev assets and the page renders without
+hydrating. On Windows, Node must be allowed through the firewall on private networks.
+`NEXT_PUBLIC_APP_URL` only feeds page metadata, `robots.txt` and the sitemap, so it can stay on
+`localhost`.
+
+Chrome on iOS adds its own attributes to `<html>` before React hydrates. `app/layout.tsx` sets
+`suppressHydrationWarning` on that element alone, so the mismatch is not reported. It does not hide
+mismatches in any other element.
 
 ## Commands
 
@@ -78,6 +93,7 @@ PostgreSQL — the page shows the status changing as it happens.
 | `pnpm build`                                      | Build every package                                     |
 | `pnpm lint` / `pnpm typecheck` / `pnpm test`      | Across TypeScript **and** Python                        |
 | `pnpm db:migrate` / `pnpm db:studio`              | Prisma migrations / Prisma Studio                       |
+| `pnpm accounts:create`                            | Local sign-in accounts, one per role                    |
 | `pnpm contracts:export`                           | Regenerate the JSON Schema the worker validates against |
 | `pnpm jobs:register`                              | Sync the declared schedules into BullMQ                 |
 | `pnpm services:up` / `:down` / `:logs` / `:reset` | Docker Compose stack                                    |

@@ -1,9 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import type * as NoaaSource from '@/app/services/scientific-data/noaaScientificDataSource'
+import { scientificSources } from '@/app/lib/scientific-data'
+import {
+  ScientificDataUpstreamError,
+  UnsupportedScientificQueryError,
+} from '@/app/services/scientific-data/errors'
 
 const mocks = vi.hoisted(() => ({
   queryMockScientificData: vi.fn(),
-  queryNoaaScientificData: vi.fn(),
+  querySuviFrames: vi.fn(),
+  queryExisReadings: vi.fn(),
   queryCiticScientificData: vi.fn(),
 }))
 
@@ -11,10 +16,13 @@ vi.mock('@/app/services/scientific-data/mockScientificDataSource', () => ({
   queryMockScientificData: mocks.queryMockScientificData,
 }))
 
-vi.mock('@/app/services/scientific-data/noaaScientificDataSource', async (importOriginal) => {
-  const original = await importOriginal<typeof NoaaSource>()
-  return { ...original, queryNoaaScientificData: mocks.queryNoaaScientificData }
-})
+vi.mock('@/app/services/scientific-data/suviFrameDataSource', () => ({
+  querySuviFrames: mocks.querySuviFrames,
+}))
+
+vi.mock('@/app/services/scientific-data/exisReadingsDataSource', () => ({
+  queryExisReadings: mocks.queryExisReadings,
+}))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
   queryCiticScientificData: mocks.queryCiticScientificData,
@@ -22,14 +30,28 @@ vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
 
 import { GET } from './route'
 
+const availableProducts = scientificSources.flatMap((source) =>
+  source.instruments.flatMap((instrument) =>
+    instrument.products
+      .filter((product) => product.available)
+      .map((product) => ({
+        source: source.code,
+        instrument: instrument.code,
+        product: product.code,
+        parameter: product.parameters[0]!.code,
+      })),
+  ),
+)
+
 function request(parameters: Record<string, string>) {
   return new Request(`http://localhost/api/scientific-data?${new URLSearchParams(parameters)}`)
 }
 
+// A MAG product: the GOES instrument family still read on demand through CITIC.
 const validGoesQuery = {
   source: 'GOES',
-  product: 'SFXR',
-  parameter: '0.1-0.8nm',
+  product: 'GEOF',
+  parameter: 'total',
   date: '2026-09-10',
   startTime: '08:00',
   endTime: '09:00',
@@ -46,29 +68,27 @@ afterEach(() => {
 })
 
 describe('GET /api/scientific-data', () => {
-  test.each([
-    { date: '2026-09-08' },
-    { date: '2026-09-09', startTime: '11:59', endTime: '13:00' },
-    { date: '2026-09-10', startTime: '11:00', endTime: '12:01' },
-  ])('rejects SUVI outside the last 24 hours before contacting NOAA: %j', async (overrides) => {
+  test('rejects SUVI on a future date before querying the frame archive', async () => {
     const response = await GET(
-      request({ ...validGoesQuery, product: 'Fe171', parameter: 'image', ...overrides }),
+      request({ ...validGoesQuery, product: 'Fe171', parameter: 'image', date: '2026-09-11' }),
     )
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({
-      error: expect.stringContaining('últimas 24 horas'),
+      error: expect.stringContaining('posterior a hoy'),
     })
-    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
-    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    expect(mocks.querySuviFrames).not.toHaveBeenCalled()
   })
-  test('keeps SUVI on the NOAA image source', async () => {
-    mocks.queryNoaaScientificData.mockResolvedValue({ visualization: 'image-sequence', images: [] })
-    const suvi = { ...validGoesQuery, product: 'Fe171', parameter: 'image' }
-    const response = await GET(request(suvi))
-    expect(response.status).toBe(200)
-    expect(mocks.queryNoaaScientificData).toHaveBeenCalledWith(suvi)
-    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
-  })
+  test.each(['2026-09-10', '2025-01-05'])(
+    'routes SUVI on %s to the frame archive',
+    async (date) => {
+      mocks.querySuviFrames.mockResolvedValue({ visualization: 'image-sequence', images: [] })
+      const suvi = { ...validGoesQuery, product: 'Fe171', parameter: 'image', date }
+      const response = await GET(request(suvi))
+      expect(response.status).toBe(200)
+      expect(mocks.querySuviFrames).toHaveBeenCalledWith(suvi)
+      expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    },
+  )
 
   test('returns pending progress and forwards the poll identifier to CITIC', async () => {
     mocks.queryCiticScientificData.mockResolvedValue({
@@ -81,7 +101,7 @@ describe('GET /api/scientific-data', () => {
     expect(await response.json()).toMatchObject({ state: 'pending', progress: 20 })
     expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, 'goes-1')
   })
-  test('routes a valid GOES query to the CITIC historical adapter', async () => {
+  test('routes a MAG query to the CITIC historical adapter', async () => {
     const expected = { visualization: 'time-series', points: [] }
     mocks.queryCiticScientificData.mockResolvedValue(expected)
 
@@ -91,8 +111,25 @@ describe('GET /api/scientific-data', () => {
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual(expected)
     expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, undefined)
-    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
+    expect(mocks.querySuviFrames).not.toHaveBeenCalled()
+    expect(mocks.queryExisReadings).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    ['SFXR', '0.1-0.8nm'],
+    ['SFEU', 'mgii_index'],
+  ])('routes EXIS %s to the InfluxDB readings synchronously', async (product, parameter) => {
+    const expected = { visualization: 'time-series', points: [] }
+    mocks.queryExisReadings.mockResolvedValue(expected)
+    const exis = { ...validGoesQuery, product, parameter }
+
+    const response = await GET(request(exis))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual(expected)
+    expect(mocks.queryExisReadings).toHaveBeenCalledWith(exis)
+    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
   })
 
   test('routes a valid ROSAC query only to the simulated adapter', async () => {
@@ -113,7 +150,7 @@ describe('GET /api/scientific-data', () => {
 
     expect(response.status).toBe(200)
     expect(mocks.queryMockScientificData).toHaveBeenCalledWith(rosacQuery)
-    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
+    expect(mocks.querySuviFrames).not.toHaveBeenCalled()
   })
 
   test('rejects invalid source/product combinations before querying a source', async () => {
@@ -123,13 +160,39 @@ describe('GET /api/scientific-data', () => {
     expect(await response.json()).toMatchObject({
       error: 'Los criterios de consulta no son válidos.',
     })
-    expect(mocks.queryNoaaScientificData).not.toHaveBeenCalled()
+    expect(mocks.querySuviFrames).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
 
+  test.each(availableProducts)(
+    'registers a provider for every available product: $source $instrument $product',
+    async ({ source, product, parameter }) => {
+      for (const adapter of Object.values(mocks)) adapter.mockResolvedValue({ points: [] })
+
+      const response = await GET(request({ ...validGoesQuery, source, product, parameter }))
+
+      expect(response.status).toBe(200)
+    },
+  )
+
+  test('returns a stable server error when a product has no registered provider', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.queryCiticScientificData.mockRejectedValue(
+      new UnsupportedScientificQueryError('No provider is registered for GOES product GEOF'),
+    )
+
+    const response = await GET(request(validGoesQuery))
+
+    expect(response.status).toBe(500)
+    expect(response.headers.get('Cache-Control')).toBe('no-store')
+    expect(await response.json()).toEqual({
+      error: 'La fuente científica no está disponible en este momento.',
+    })
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('No provider is registered'))
+    consoleError.mockRestore()
+  })
+
   test('returns a stable gateway error when CITIC is unavailable', async () => {
-    const { ScientificDataUpstreamError } =
-      await import('@/app/services/scientific-data/noaaScientificDataSource')
     mocks.queryCiticScientificData.mockRejectedValue(new ScientificDataUpstreamError('offline'))
 
     const response = await GET(request(validGoesQuery))

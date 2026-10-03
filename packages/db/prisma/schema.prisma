@@ -28,7 +28,7 @@ datasource db {
 
   // One Postgres schema per domain. `public` stays declared for whatever
   // non-domain-specific table comes next.
-  schemas = ["public", "research", "news", "auth", "gallery"]
+  schemas = ["public", "research", "news", "auth", "gallery",  "solar", "areas"]
 }
 
 /// Access level of a portal account. Self-registration always yields `visitor`;
@@ -46,24 +46,27 @@ enum UserRole {
 /// A portal account created through the public registration form at `/registro`
 /// (LASCE-SEC-008-071). Browser sessions live in `Session`, never in columns here.
 model User {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  fullName     String   @map("full_name")
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName     String    @map("full_name")
   /// Trimmed and lower-cased by the application before every write and lookup,
   /// so the unique index is case-insensitive without a citext extension.
-  email        String   @unique
+  email        String    @unique
   institution  String
   /// ISO 3166-1 alpha-2 code, e.g. "CR". Display names are derived at render time.
-  countryCode  String   @map("country_code") @db.Char(2)
+  countryCode  String    @map("country_code") @db.Char(2)
   /// Self-describing KDF string, `scrypt$<N>$<r>$<p>$<salt>$<hash>`. Produced and
   /// verified by apps/web/app/lib/auth/password.ts.
-  passwordHash String   @map("password_hash")
+  passwordHash String    @map("password_hash")
   /// Registration uses the default; administrators can replace or remove the assignment.
   role         UserRole? @default(VISITOR)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  sessions Session[]
-  nosotrosActivities NosotrosActivity[]
+  sessions            Session[]
+  resourceDownloads   ResourceDownload[]
+  nosotrosActivities  NosotrosActivity[]
+  researchers         Researcher[]
+  nosotrosResearchers NosotrosResearcher[]
 
   @@map("users")
   @@schema("auth")
@@ -109,7 +112,7 @@ model Publisher {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   researchRecords Research[]
 
@@ -135,15 +138,15 @@ model Research {
   publisherId     String        @map("publisher_id") @db.Uuid
   researchGroup   ResearchGroup @map("research_group")
   abstract        String        @db.Text
-  /// Link to the original source. Unique so the same paper can't be listed twice.
-  externalUrl     String        @unique @map("external_url")
+  /// Publications might not have a url.
+  externalUrl     String?       @unique @map("external_url")
   /// Digital Object Identifier, e.g. "10.1007/s11207-015-0677-0". Optional —
   /// not every record (institutional notes) has one — but unique when present.
   doi             String?       @unique
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime      @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  publisher Publisher           @relation(fields: [publisherId], references: [id], onDelete: Restrict)
+  publisher Publisher             @relation(fields: [publisherId], references: [id], onDelete: Restrict)
   authors   ResearchCrossAuthor[]
 
   @@index([publicationDate])
@@ -161,7 +164,7 @@ model ResearchAuthor {
   /// worth revisiting (an external id, ORCID, ...) if it becomes a real problem.
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   researchRecords ResearchCrossAuthor[]
 
@@ -192,7 +195,7 @@ model NewsSource {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   newsRecords News[]
 
@@ -203,19 +206,19 @@ model NewsSource {
 /// A public news item shown on `/noticias`: a media article, institutional note,
 /// or external coverage item linked to its source.
 model News {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
-  publishedAt DateTime?  @map("published_at") @db.Date
-  sourceId    String     @map("source_id") @db.Uuid
-  abstract    String     @db.Text
-  externalUrl String     @unique @map("external_url")
-  imageUrl    String     @map("image_url")
-  imageAlt    String     @map("image_alt")
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime   @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  publishedAt DateTime? @map("published_at") @db.Date
+  sourceId    String    @map("source_id") @db.Uuid
+  abstract    String    @db.Text
+  externalUrl String    @unique @map("external_url")
+  imageUrl    String    @map("image_url")
+  imageAlt    String    @map("image_alt")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  source      NewsSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
-  authors     NewsCrossAuthor[]
+  source  NewsSource        @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  authors NewsCrossAuthor[]
 
   @@index([publishedAt])
   @@map("news_records")
@@ -227,7 +230,7 @@ model NewsAuthor {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String   @unique
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   newsRecords NewsCrossAuthor[]
 
@@ -238,13 +241,13 @@ model NewsAuthor {
 /// Many-to-many join between `News` and `NewsAuthor`. Keeps `position` so a
 /// record's citation order can be reproduced on the public page.
 model NewsCrossAuthor {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  newsId       String     @map("news_id") @db.Uuid
-  newsAuthorId String     @map("news_author_id") @db.Uuid
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  newsId       String @map("news_id") @db.Uuid
+  newsAuthorId String @map("news_author_id") @db.Uuid
   position     Int
 
-  news         News       @relation(fields: [newsId], references: [id], onDelete: Cascade)
-  newsAuthor   NewsAuthor @relation(fields: [newsAuthorId], references: [id], onDelete: Cascade)
+  news       News       @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  newsAuthor NewsAuthor @relation(fields: [newsAuthorId], references: [id], onDelete: Cascade)
 
   @@unique([newsId, newsAuthorId])
   @@index([newsId, position])
@@ -268,20 +271,181 @@ enum NosotrosActivityIcon {
 }
 
 model NosotrosActivity {
-  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  icon        NosotrosActivityIcon
-  title       String
-  paragraph   String               @db.Text
+  id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  icon       NosotrosActivityIcon
+  title      String
+  paragraph  String               @db.Text
   /// Display order. Set once at creation and never touched by an edit, so
   /// saving a card's text doesn't also reorder it — `modifiedAt` alone can't
   /// serve as the sort key because editing changes it on purpose.
-  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
-  modifiedBy  String               @map("modified_by") @db.Uuid
-  modifiedAt  DateTime             @updatedAt @default(now()) @map("modified_at") @db.Timestamptz(3)
+  createdAt  DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy String               @map("modified_by") @db.Uuid
+  modifiedAt DateTime             @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
   modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
 
   @@map("nosotros_activities")
+  @@schema("public")
+}
+
+/// One SUVI L1b frame, catalogued from its FITS header. Written by the Python
+/// worker (apps/worker/app/services/process_headers.py), never by the web app.
+/// Photometric and CCD-health numbers are NOT here — they go to InfluxDB.
+model SuviFrame {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// FITS `DATE-OBS`, the official instant of the exposure.
+  observedAt   DateTime @map("observed_at") @db.Timestamptz(3)
+  /// FITS `WAVELNTH`, in angstroms.
+  wavelength   Float    @db.DoublePrecision
+  /// FITS `TELESCOP`, e.g. "G19".
+  satellite    String
+  /// Archive channel token, e.g. "Fe093". From the file name, not the header.
+  channel      String
+  fileName     String   @unique @map("file_name")
+  sourceUrl    String   @map("source_url")
+  /// FITS `EXPTIME`, seconds.
+  exposureTime Float?   @map("exposure_time") @db.DoublePrecision
+  /// FITS `CRPIX1`/`CRPIX2`: the Sun's centre in the 1280x1280 matrix.
+  sunCenterX   Float?   @map("sun_center_x") @db.DoublePrecision
+  sunCenterY   Float?   @map("sun_center_y") @db.DoublePrecision
+  /// FITS `RSUN`, solar radius in pixels. Needed to recompute the background mask.
+  sunRadiusPx  Float?   @map("sun_radius_px") @db.DoublePrecision
+  /// Bitfield: bit 0 = `CONT_FLG`, bit 1 = `ECLIPSE`. 0 means a clean capture.
+  qualityFlag  Int      @default(0) @map("quality_flag")
+  /// The whole FITS header, so a field not promoted to a column is still recoverable.
+  rawHeader    Json     @map("raw_header")
+  /// MinIO key of this frame's rendered PNG (illustrative only, not a scientific product).
+  /// Written by app.services.suvi_preview.publish_preview. Null only for a frame whose FITS HDU
+  /// carried no data array.
+  previewFile  String?  @map("preview_file")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([satellite, channel, observedAt])
+  @@index([observedAt])
+  @@map("suvi_frames")
+  @@schema("solar")
+}
+
+/// One daily EXIS L1b file (one product, one UTC day) whose readings are in InfluxDB.
+/// Written only by the worker's `exis-pipeline` job; the readings themselves live in the
+/// `exis_irradiance` InfluxDB measurement, not here.
+model ExisFile {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// NetCDF `platform_ID`, e.g. "G19".
+  satellite        String
+  /// "SFEU" or "SFXR".
+  product          String
+  /// The UTC day the file covers, from its name.
+  day              DateTime  @db.Date
+  fileName         String    @unique @map("file_name")
+  /// The `_vX-Y-Z` part of the file name, e.g. "0-0-0".
+  version          String
+  sourceUrl        String    @map("source_url")
+  /// The archive's `Last-Modified` when ingested. A newer one means NOAA republished the day.
+  sourceModifiedAt DateTime? @map("source_modified_at") @db.Timestamptz(3)
+  firstObservedAt  DateTime? @map("first_observed_at") @db.Timestamptz(3)
+  lastObservedAt   DateTime? @map("last_observed_at") @db.Timestamptz(3)
+  /// Points written to InfluxDB per channel code, e.g. {"0.1-0.8nm": 86112}.
+  pointCount       Json      @map("point_count")
+  /// The NetCDF global attributes, so provenance not promoted to a column is still recoverable.
+  attributes       Json
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([satellite, product, day])
+  @@map("exis_files")
+  @@schema("solar")
+}
+
+/// One file a signed-in user downloaded from `/datos`: a chart image or a data export. Written
+/// by `apps/web/app/services/downloads/downloadService.ts` only after the object reached the
+/// private downloads bucket, so every row names an object that existed. The object itself
+/// expires (bucket lifecycle); this row is the permanent record. The worker never writes here.
+model ResourceDownload {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Null once the account is deleted, so the audit trail outlives it.
+  userId     String?  @map("user_id") @db.Uuid
+  /// Codes from the catalogue in `apps/web/app/lib/scientific-data.ts`, e.g. "GOES" / "EXIS" /
+  /// "SFXR". Plain strings, like `RolePermission.permission`, so a new instrument needs no migration.
+  source     String
+  instrument String
+  product    String
+  /// A code from `DOWNLOAD_FORMATS` in `apps/web/app/lib/downloads/formats.ts`, e.g. "csv".
+  format     String
+  /// The query that produced the file: `parameter`, `date`, `startTime`, `endTime`.
+  params     Json
+  /// Key inside `MINIO_DOWNLOADS_BUCKET`.
+  objectKey  String   @map("object_key")
+  byteSize   Int      @map("byte_size")
+  /// Data rows exported; null for images.
+  rowCount   Int?     @map("row_count")
+  /// When the presigned link handed to the user stops working.
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([source, instrument, createdAt])
+  @@map("resource_downloads")
+  @@schema("public")
+}
+/// A researcher profile card shown on `/radioastronomia` (LASCE-CON-012-085).
+/// Distinct from `research.ResearchAuthor`: that one is only a citation name
+/// on a publication, this is the full public bio card — photo, role,
+/// institution, optional email, description.
+model Researcher {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Local path under `apps/web/public`, same convention `TeamMember.src` uses
+  /// today. Revisit once photo upload has a real storage-backed URL.
+  photoUrl    String   @map("photo_url")
+  role        String
+  name        String
+  institution String
+  /// Zero, one or two public addresses, each rendered as its own `mailto:`
+  /// link — capped at 2 by a CHECK constraint (see the migration), since
+  /// Prisma's schema language has no array-length attribute of its own. An
+  /// empty array means the researcher has none.
+  email       String[] @default([])
+  description String?  @db.Text
+  /// Display order. Set once at creation and never touched by an edit — same
+  /// reasoning as `NosotrosActivity.createdAt`.
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy  String   @map("modified_by") @db.Uuid
+  modifiedAt  DateTime @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
+
+  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+
+  @@map("researchers")
+  @@schema("public")
+}
+
+/// A researcher profile card shown on `/nosotros` (LASCE-CON-012-086 follow-up).
+/// Same shape as `Researcher`, but a deliberately separate table: the two pages
+/// show distinct, independently curated rosters (see the doc comment on
+/// `NosotrosContent.researchers` in `app/lib/nosotros.ts`), not one shared team.
+model NosotrosResearcher {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  photoUrl    String   @map("photo_url")
+  role        String
+  name        String
+  institution String
+  /// Zero, one or two public addresses, each rendered as its own `mailto:`
+  /// link — capped at 2 by a CHECK constraint (see the migration), since
+  /// Prisma's schema language has no array-length attribute of its own. An
+  /// empty array means the researcher has none.
+  email       String[] @default([])
+  description String?  @db.Text
+  /// Display order. Set once at creation and never touched by an edit — same
+  /// reasoning as `NosotrosActivity.createdAt`.
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy  String   @map("modified_by") @db.Uuid
+  modifiedAt  DateTime @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
+
+  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+
+  @@map("nosotros_researchers")
   @@schema("public")
 }
 
@@ -344,4 +508,15 @@ model GalleryMedia {
   @@map("gallery_media")
   @@schema("gallery")
 }
-
+/// An editable research area shown on the public investigation page.
+model ResearchArea {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String   @db.Text
+  src         String
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  
+  @@map("research_areas")
+  @@schema("areas")
+}

@@ -40,15 +40,17 @@ export function NewsCard({
         {abstract ? <p className="news-abstract">{abstract}</p> : null}
 
         {href ? (
-          <Button
-            href={href}
-            icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
-            rel="noopener noreferrer"
-            target="_blank"
-            variant="primary"
-          >
-            Abrir fuente
-          </Button>
+          <div className="news-card-footer">
+            <Button
+              href={href}
+              icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
+              rel="noopener noreferrer"
+              target="_blank"
+              variant="primary"
+            >
+              Abrir fuente
+            </Button>
+          </div>
         ) : null}
       </div>
     </article>

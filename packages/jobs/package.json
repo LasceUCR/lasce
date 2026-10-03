@@ -8,6 +8,7 @@
   },
   "scripts": {
     "register": "tsx --env-file-if-exists=../../.env scripts/register-schedules.ts",
+    "unregister": "tsx --env-file-if-exists=../../.env scripts/unregister-schedules.ts",
     "schedules": "tsx --env-file-if-exists=../../.env scripts/list-schedules.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

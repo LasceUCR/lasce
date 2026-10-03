@@ -200,7 +200,6 @@ export const registrationFormCopy = {
   successTitle: 'Cuenta creada',
   successBody: 'Tu cuenta quedó registrada. Ya puedes iniciar sesión.',
   successLink: 'Iniciar sesión',
-  successHref: '/acceso',
 } as const
 
 /** Heading of the registration card on the access page. */

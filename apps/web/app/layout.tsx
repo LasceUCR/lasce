@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" data-scroll-behavior="smooth">
+    <html lang="es" data-scroll-behavior="smooth" suppressHydrationWarning>
       <AnnotateWidget />
       <body>
         <EditModeProvider>{children}</EditModeProvider>

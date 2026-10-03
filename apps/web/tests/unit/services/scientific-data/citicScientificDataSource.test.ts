@@ -64,7 +64,12 @@ describe('CITIC historical query', () => {
     expect(result).toMatchObject({
       visualization: 'time-series',
       points: [{ timestamp: '2025-01-05T11:20:01Z', value: 0.001 }],
-      origin: { kind: 'observed', satellite: 18, provider: expect.stringContaining('CITIC') },
+      origin: {
+        kind: 'observed',
+        satellite: 18,
+        provider: 'GOES',
+        notice: expect.stringContaining('360 observaciones'),
+      },
     })
     expect(mocks.enqueue).not.toHaveBeenCalled()
   })
