@@ -59,5 +59,6 @@ working through Claude Code.
 | How are academic activities structured?              | [`docs/academic-activities.md`](docs/academic-activities.md)         |
 | How is the header/nav organized and responsive?      | [`docs/header-and-navigation.md`](docs/header-and-navigation.md)     |
 | How does the administration menu work?               | [`docs/admin-navigation.md`](docs/admin-navigation.md)               |
+| How do I add a translated string or a language?      | [`docs/internationalization.md`](docs/internationalization.md)       |
 
 When a change makes one of these wrong, update it in the same PR.

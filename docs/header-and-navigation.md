@@ -33,7 +33,12 @@ size that read as an afterthought. The tier in `globals.css` now:
 ## Menu organization (`PublicHeader.tsx`, `NavGroup.tsx`)
 
 The `navigation` array in `PublicHeader.tsx` is the single source for both the desktop bar and the
-mobile menu. It reaches every area of the homepage's "Áreas y accesos principales" section
+mobile menu. Each entry has an `id` and, for a link, an `href`; the label is the message with that
+id in the `nav` namespace of `apps/web/messages/`, so the table below shows the Spanish labels
+(see [`internationalization.md`](internationalization.md)). The mobile accordion tracks which
+groups are open by `id`, not by label, so the state survives a change of language. The header also
+renders the language switcher (`LanguageSwitcher.tsx`): in `.header-actions` on desktop and in
+`.mobile-language-section` in the mobile menu. It reaches every area of the homepage's "Áreas y accesos principales" section
 (`app/lib/work-areas.ts`) without a trip back to `/`:
 
 | Top bar entry | Kind     | Items                                                                                               |
