@@ -36,15 +36,17 @@ export function PublicationCard({
       </p>
 
       {href && (
-        <Button
-          href={href}
-          icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
-          rel="noopener noreferrer"
-          target="_blank"
-          variant="primary"
-        >
-          DOI / Enlace externo
-        </Button>
+        <div className="publication-card-footer">
+          <Button
+            href={href}
+            icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
+            rel="noopener noreferrer"
+            target="_blank"
+            variant="primary"
+          >
+            DOI / Enlace externo
+          </Button>
+        </div>
       )}
     </article>
   )

@@ -36,6 +36,19 @@ describe('PublicationCard', () => {
     expect(link).toHaveAttribute('target', '_blank')
   })
 
+  test('places the external link in a footer aligned to the right of the card', () => {
+    render(<PublicationCard {...defaultArgs} />)
+
+    const link = screen.getByRole('link', { name: /DOI \/ Enlace externo/ })
+    expect(link.parentElement).toHaveClass('publication-card-footer')
+  })
+
+  test('omits the footer when the publication has no external link', () => {
+    const { container } = render(<PublicationCard {...defaultArgs} href={undefined} />)
+
+    expect(container.querySelector('.publication-card-footer')).toBeNull()
+  })
+
   test('renders a non-scientific publication venue without truncating it', () => {
     render(<PublicationCard {...institutionalArgs} />)
 

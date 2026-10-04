@@ -2450,8 +2450,10 @@ a {
   line-clamp: unset;
 }
 
-.publication-card .button {
-  margin-top: 12px;
+.publication-card-footer {
+  padding-top: 12px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .publication-group {
