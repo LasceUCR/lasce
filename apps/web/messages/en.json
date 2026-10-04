@@ -105,7 +105,8 @@
     }
   },
   "common": {
-    "backToHome": "Back to home"
+    "backToHome": "Back to home",
+    "backToWorkAreas": "Back to the work areas"
   },
   "contact": {
     "meta": {
@@ -121,6 +122,55 @@
     "channels": {
       "phone": "Phone",
       "location": "Location"
+    }
+  },
+  "solarPhysics": {
+    "meta": {
+      "title": "Solar astrophysics | LASCE",
+      "description": "Learn how LASCE studies solar activity, the Sun-Earth relationship and its effects on the space environment from Costa Rica."
+    },
+    "hero": {
+      "kicker": "LASCE work area",
+      "title": "Solar astrophysics",
+      "introduction": "Solar activity does not end at the Sun. Its magnetic fields, its radiation and the stream of particles it releases extend across the Solar System and can change the space environment of the Earth."
+    },
+    "overview": {
+      "title": "What does solar astrophysics study?",
+      "intro": "This area seeks to understand the physical processes behind the Sun's activity and to explain how those variations connect with the interplanetary medium and the Earth's environment.",
+      "items": {
+        "activity": {
+          "title": "Solar activity",
+          "description": "It analyses eruptive phenomena such as flares, coronal mass ejections and solar radio emissions."
+        },
+        "magneticField": {
+          "title": "Magnetic field",
+          "description": "It studies how magnetic fields store energy, structure the solar atmosphere and take part in eruptive events."
+        },
+        "sunEarth": {
+          "title": "Sun-Earth relationship",
+          "description": "It relates solar disturbances to the solar wind, the interplanetary magnetic field and the ionosphere."
+        },
+        "analysis": {
+          "title": "Scientific analysis",
+          "description": "It brings together observations, satellite data, ground stations and computational processing tools."
+        }
+      },
+      "flow": {
+        "title": "Chain of study",
+        "caption": "LASCE connects data, models and analysis methods to study solar activity and its possible effects on the Earth and on technology.",
+        "steps": {
+          "sun": "Sun",
+          "disturbance": "Solar disturbance",
+          "terrestrial": "Earth's environment",
+          "analysis": "LASCE analysis"
+        }
+      }
+    },
+    "lasce": {
+      "title": "LASCE's work in solar astrophysics",
+      "p1": "The Solar Astrophysics and Space Weather Laboratory brings together research in solar astrophysics, astronomical observations and computational development to study solar activity and its interaction with the Earth's environment.",
+      "p2": "Its work combines data from different instruments, wavelengths and platforms to observe different links of a single chain: from the magnetic origin of a solar eruption to its manifestations near the Earth.",
+      "p3": "From the University of Costa Rica, LASCE seeks to strengthen national scientific capabilities for analysing the Sun-Earth relationship, to train talent and to foster collaborations in the study of space weather."
     }
   }
 }
