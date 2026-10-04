@@ -45,7 +45,7 @@ const areaCards = [
 const workAreaRoutes = [
   { path: '/fisica-solar', heading: 'Astrofísica solar' },
   { path: '/clima-espacial', heading: 'Clima espacial' },
-  { path: '/radioastronomia', heading: 'Radioastronomía' },
+  { path: '/radioastronomia', heading: 'Radio Observatorio de Santa Cruz (ROSAC)' },
 ] as const
 
 // Every header destination: the public routes above plus the work areas, which sit

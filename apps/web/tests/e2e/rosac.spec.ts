@@ -22,9 +22,11 @@ for (const viewport of [
     await rosacLink.click()
 
     await expect(page).toHaveURL(/\/radioastronomia$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeVisible()
     await expect(
-      page.getByRole('img', { name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)' }),
+      page.getByRole('heading', { level: 1, name: 'Radio Observatorio de Santa Cruz (ROSAC)' }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('img', { name: /con el logo de ROSAC/ }),
     ).toBeVisible()
     // The map loads on the client only, after the initial page content, so give it a
     // moment before checking that its own footprint does not cause horizontal overflow.
@@ -58,7 +60,7 @@ test('serves the general information and LASCE relationship directly without aut
   await expect(page.getByRole('main')).toHaveCount(1)
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
   await expect(
-    page.getByRole('img', { name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)' }),
+    page.getByRole('img', { name: /con el logo de ROSAC/ }),
   ).toBeVisible()
   await expect(page.getByRole('region', { name: '¿Qué es ROSAC?' })).toContainText(
     'observar el Sol y otras fuentes celestes',
@@ -122,7 +124,7 @@ test('links the scientific consultation to the ROSAC data source', async ({ page
 
   const consultation = page.getByRole('region', { name: 'Consulta científica' })
   await expect(consultation.getByText('Próximamente')).toHaveCount(0)
-  const link = consultation.getByRole('link', { name: 'Consultar información científica' })
+  const link = consultation.getByRole('link', { name: 'Explorar datos' })
   await expect(link).toHaveAttribute('href', '/datos?source=ROSAC#scientific-query-title')
 })
 
@@ -200,6 +202,8 @@ test('falls back to a text message if the map tiles cannot be loaded, keeping th
   await expect(location.getByRole('region', { name: /^Mapa de ubicación de/ })).toHaveCount(0)
 
   // The rest of the page is unaffected by the map failing.
-  await expect(page.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Radio Observatorio de Santa Cruz (ROSAC)' }),
+  ).toBeVisible()
   await expect(page.getByRole('region', { name: 'ROSAC y LASCE' })).toBeVisible()
 })

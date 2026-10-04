@@ -105,14 +105,15 @@ export interface RosacInfoContent {
   hero: {
     kicker: string
     title: string
-    lead: string
+    lead?: string
     image: {
       src: string
       alt: string
-      presentation: 'mark'
+      presentation: 'banner'
       width: number
       height: number
-      photo: { src: string; alt: string }
+      focus?: 'left' | 'center' | 'right'
+      mobileSrc?: string
     }
   }
   overview: RosacTextSection
@@ -168,18 +169,18 @@ export const rosacInfoContent = {
   instruments: rosacInstrumentsContent,
   hero: {
     kicker: 'Área de trabajo LASCE',
-    title: 'Radioastronomía',
-    lead: 'Radio Observatorio de Santa Cruz (ROSAC)',
+    // The observatory's full name is the heading, so no separate lead line repeats it.
+    title: 'Radio Observatorio de Santa Cruz (ROSAC)',
+    // The photo already carries the ROSAC logo in its lower left corner, so no separate mark is
+    // shown. Narrow screens switch to a version with the logo centered, cropped around the center.
     image: {
-      src: '/images/ROSAC/logo/ROSAC-YELLOW.png',
-      alt: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)',
-      presentation: 'mark',
-      width: 1209,
-      height: 615,
-      photo: {
-        src: '/images/ROSAC/antena-rosac.webp',
-        alt: 'Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control.',
-      },
+      src: '/images/ROSAC/rosac_home.jpg',
+      alt: 'Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control, con el logo de ROSAC.',
+      presentation: 'banner',
+      width: 1672,
+      height: 749,
+      focus: 'left',
+      mobileSrc: '/images/ROSAC/rosac_home_mob.png',
     },
   },
   overview: {
@@ -591,7 +592,7 @@ export const rosacInfoContent = {
     title: 'Consulta científica',
     description:
       'Explore las consultas de demostración de ROSAC en la sección de datos. Sus resultados son simulados mientras se define la integración de los instrumentos.',
-    buttonLabel: 'Consultar información científica',
+    buttonLabel: 'Explorar datos',
     href: '/datos?source=ROSAC#scientific-query-title',
   },
   backLink: {
