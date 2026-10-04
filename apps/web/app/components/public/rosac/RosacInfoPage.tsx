@@ -339,15 +339,15 @@ export function RosacInfoPage({
           ))}
         </div>
 
-        <div className={`topic-highlight ${styles.donationsCta}`}>
-          <div className={styles.donationsCtaText}>
+        <div className={`topic-highlight ${styles.ctaBox}`}>
+          <div className={styles.ctaText}>
             <h3>{content.donations.cta.title}</h3>
             <p>{content.donations.cta.description}</p>
           </div>
           <Button
             href={content.donations.cta.href}
             icon={<Mail aria-hidden="true" size={18} strokeWidth={1.8} />}
-            variant="secondary"
+            variant="primary"
           >
             {content.donations.cta.buttonLabel}
           </Button>
@@ -357,14 +357,18 @@ export function RosacInfoPage({
       <TopicSection
         title={content.scientificConsultation.title}
         titleId="rosac-science-title"
-        intro={content.scientificConsultation.description}
         wide
       >
-        <div className={styles.scientificAction}>
+        {/* Same call-to-action box as "¿Te gustaría ayudarnos?", so both primary actions on the
+            page share one format. */}
+        <div className={`topic-highlight ${styles.ctaBox}`}>
+          <div className={styles.ctaText}>
+            <p>{content.scientificConsultation.description}</p>
+          </div>
           <Button
             href={content.scientificConsultation.href}
             fullPageLoad
-            variant="secondary"
+            variant="primary"
             icon={<ChartNoAxesCombined aria-hidden="true" size={20} strokeWidth={1.8} />}
           >
             {content.scientificConsultation.buttonLabel}
