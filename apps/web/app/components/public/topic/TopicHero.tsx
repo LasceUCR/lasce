@@ -20,6 +20,26 @@ export type TopicHeroImage =
        */
       photo?: { src: string; alt: string }
     }
+  | {
+      src: string
+      alt: string
+      /**
+       * A wide photograph below the heading that already carries the page's logo, so no separate
+       * mark is shown. Wide screens show it whole at its own proportions; narrow screens crop it
+       * into a taller frame and keep `focus` in view.
+       */
+      presentation: 'banner'
+      width: number
+      height: number
+      /** Side kept visible when narrow screens crop the banner, e.g. where the logo sits. */
+      focus?: 'left' | 'center' | 'right'
+      /**
+       * Optional image for narrow screens (760px or less), e.g. a version with the logo centered.
+       * It replaces the main image there and is cropped around its center; `focus` then only
+       * applies to wider screens.
+       */
+      mobileSrc?: string
+    }
 
 export interface TopicHeroProps {
   kicker: string
@@ -44,13 +64,55 @@ export function TopicHero({
       className={[
         'topic-hero',
         !image && 'topic-hero-copy-only',
-        image?.presentation === 'mark' && 'topic-hero-with-mark',
+        (image?.presentation === 'mark' || image?.presentation === 'banner') &&
+          'topic-hero-with-mark',
         variant === 'compact' && 'topic-hero-compact',
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      {image?.presentation === 'mark' ? (
+      {image?.presentation === 'banner' ? (
+        <div className="topic-hero-mark-body">
+          <div className="topic-hero-mark-heading">
+            <p className="topic-kicker">{kicker}</p>
+            <h1>{title}</h1>
+          </div>
+          <div
+            className={[
+              'topic-hero-mark-photo',
+              'topic-hero-banner',
+              image.mobileSrc && 'topic-hero-banner-has-mobile',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            style={{ aspectRatio: `${image.width} / ${image.height}` }}
+          >
+            <Image
+              alt={image.alt}
+              className="topic-hero-mark-photo-image topic-hero-banner-main"
+              fill
+              priority
+              sizes="(max-width: 1332px) 100vw, 1332px"
+              src={image.src}
+              style={{ objectPosition: `${image.focus ?? 'center'} center` }}
+            />
+            {/* Only one of the two is displayed at a time (see globals.css). The hidden one is
+                display: none, so it is out of the accessibility tree and, being lazy, the mobile
+                image is not downloaded on wide screens. */}
+            {image.mobileSrc ? (
+              <Image
+                alt={image.alt}
+                className="topic-hero-mark-photo-image topic-hero-banner-mobile"
+                fill
+                sizes="100vw"
+                src={image.mobileSrc}
+              />
+            ) : null}
+          </div>
+          {lead ? <p className="topic-lead">{lead}</p> : null}
+          {notice ? <p className="topic-notice">{notice}</p> : null}
+        </div>
+      ) : image?.presentation === 'mark' ? (
         <div className="topic-hero-mark-body">
           <div className="topic-hero-mark-heading">
             <p className="topic-kicker">{kicker}</p>
