@@ -6,12 +6,14 @@ never text a visitor reads.
 
 ## State of things
 
-- The mechanism is in place and **Spanish (`es`) is the source language**. English (`en`) exists
-  as the second language.
-- Only the **site shell** reads from the message catalogues so far: the header navigation, the
-  footer, the skip link, the root page title and description, and the language switcher.
-- Everything else is still hardcoded Spanish and shows in Spanish in every language. Moving it is
-  the [migration backlog](#migration-backlog) below, page by page.
+- The mechanism is in place and **Spanish (`es`) is the source language**. English (`en`) is the
+  second language.
+- The **site shell** and the **static pages** read from the message catalogues and are translated
+  into English: the header navigation, the footer, the home page, Contacto, Física solar, Clima
+  espacial, Herramientas científicas, Colaboraciones e Iniciativas and the academic activity page.
+- The English text is a first draft. Nobody has reviewed its scientific terminology yet.
+- Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
+  list, page by page, is in [Translation status](#translation-status).
 - Database content ("Modo edición") is not translated. The design for it is in
   [Dynamic content](#dynamic-content-design-not-built-yet).
 
@@ -84,16 +86,24 @@ const t = await getTranslations('shell')
 return <a href="#main-content">{t('skipToContent')}</a>
 ```
 
-**Content built on the server and passed as props** (`app/lib/footer.ts`). This is the pattern for
-the `*Content` and `*Copy` objects in `app/lib/`: the constant becomes a function of the
-translator, and the component stays presentational.
+**Content built on the server and passed as props** (`app/lib/contact.ts`). This is the pattern
+for a page's content: the lib module keeps the structure (ids, order, links, icons, images) and a
+builder fills in the text from a slice of the catalogue. The component stays presentational.
 
 ```tsx
-export function getFooterContent(t: (key: FooterMessageKey) => string): PublicFooterContent
+// app/lib/contact.ts
+export function getContactContent({ contact, common }: ContactMessages): ContactContent
+export const contactContent = getContactContent(es) // Spanish, for stories and tests
 
-const footerT = await getTranslations('footer')
-<PublicFooter content={getFooterContent((key) => footerT(key))} />
+// app/(public)/contacto/page.tsx
+<ContactPage content={getContactContent(await getMessages())} />
 ```
+
+`getMessages` comes from `next-intl/server` and returns the request's catalogue. The Spanish
+constant keeps stories, lib tests and fixtures working without a provider. `app/lib/footer.ts`
+is an older variant of the same idea that takes a translator function instead of a slice.
+
+A page's `metadata` export becomes `generateMetadata()` reading `<namespace>.meta`.
 
 **Client Component** (`app/components/public/PublicHeader.tsx`):
 
@@ -110,6 +120,10 @@ Rules:
 - Identify things by a stable id, never by their label. The header's mobile accordion is keyed by
   `id` for this reason: a label changes with the language.
 - Proper nouns (institution names, people, places) and URLs are not messages.
+- **No arrays in a catalogue.** Messages are nested maps of strings, and the fallback to Spanish
+  works key by key. A list of cards is keyed by id (`items.magnetosphere.title`) and paragraphs
+  are `p1`, `p2`, ...; the lib module lists the ids in order.
+- Move Spanish text verbatim. The existing tests assert it, which makes them the regression check.
 - Use ICU arguments for values, `"greeting": "Hola, {name}"`, never string concatenation: word
   order differs between languages.
 - Keep `PascalCase.tsx` components presentational. `useTranslations` is fine for a component's
@@ -138,48 +152,81 @@ toolbar and the cookie validation all read `locales`, so nothing else changes.
 - `tests/e2e/language-switch.spec.ts` covers the switch end to end. The other specs run with no
   cookie, so they see Spanish.
 
-## Migration backlog
+## Translation status
 
-Not done yet, in suggested order. Each item is independent.
+Every route, and what is left. Sizes are approximate counts of user-facing strings, from an
+inventory taken when the static pages were migrated.
 
-1. **Page copy.** Inline JSX strings and the `*Meta`, `*Content`, `*Copy`, `*Messages` and
-   `*Labels` exports in `app/lib/` (about 27). Per-page `metadata` exports become
-   `generateMetadata`. Long structured content (`gallery.ts`, `academic-activities.ts`,
-   `collaborations.ts`, `rosac.ts`) is the exception: see the table in the next section.
-2. **Account menu and brand.** `accountMenuCopy` in `app/lib/auth/account.ts` ("Ingresar",
-   "Mi cuenta") and the logo alt texts in `Brand.tsx` are part of the header but still Spanish.
-3. **Formatting.** Nine `Intl.*` calls hardcode `'es-CR'` or `'es'` (dates and numbers in
-   `scientific-data/`, `lib/news.ts`, `cuenta/page.tsx`, `lib/auth/countries.ts`,
+### Translated
+
+| Route                                    | Namespace                            | Copy built in                                             |
+| ---------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
+| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                       |
+| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`                  |
+| `/contacto`                              | `contact`                            | `lib/contact.ts`                                          |
+| `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`                               |
+| `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`                                    |
+| `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                 |
+| `/colaboraciones-e-iniciativas`          | `collaborations`                     | `lib/collaborations.ts`, `lib/research-collaborations.ts` |
+| `/noticias/actividades/[slug]`           | `academicActivities`                 | `lib/academic-activities.ts`                              |
+
+The academic activities section and its cards on `/noticias` are translated too; the rest of
+that page is not.
+
+### Still to do
+
+| Route                                              | Copy lives in                                                              | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
+| -------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/galeria/**`                                      | `lib/gallery.ts`, `gallery/*`                                              | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
+| `/radioastronomia`                                 | `lib/rosac.ts`, `rosac-construction.ts`, `rosac-instruments.ts`, `rosac/*` | 126 in lib, 56 in components       | The team comes from the database. Instrument cards are built at module load from Spanish product names. `rosac-construction.ts` is imported by a Playwright spec                                                                                                                  |
+| `/nosotros`                                        | `lib/nosotros.ts`, `NosotrosPage`, `NosotrosActivityForm`                  | 20 in lib, 27 in components        | Activities and researchers come from the database                                                                                                                                                                                                                                 |
+| `/datos`                                           | `lib/scientific-data.ts`, `scientific-data/*`                              | 66 in lib, 98 in components        | 139 labels are generated in code from Spanish pieces. Product names also reach the CSV and PNG exports. Four formatters hardcode `es-CR`                                                                                                                                          |
+| `/noticias`, `/publicaciones`, `/investigacion/**` | `lib/news.ts`, `publications.ts`, `research-areas.ts` and their components | 23 in lib, 111 in components       | Mostly editing forms. Two hand-written plurals. Zod messages are repeated word for word on the client                                                                                                                                                                             |
+| `/acceso`, `/cuenta`                               | `lib/auth/login.ts`, `registration.ts`, `account.ts`                       | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
+| `/administracion/**`                               | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*`         | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
+| `(public)/[section]`                               | inline in the page                                                         | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
+
+### Not tied to one page
+
+1. **Validation and error messages**, about 50 distinct. Zod schemas with inline Spanish messages
+   (`lib/news.ts`, `lib/nosotros.ts`, `lib/auth/login.ts`, ...) become factories that take `t`.
+   Server Actions and route handlers under `app/api/` call `getTranslations`; the cookie is
+   available in both.
+2. **Formatting.** Nine `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
+   (`scientific-data/`, `lib/news.ts`, `cuenta/page.tsx`, `lib/auth/countries.ts`,
    `services/downloads/exporters/png.ts`, `UserRoleChangeDialog.tsx`). Replace them with
    next-intl's `useFormatter` / `getFormatter`, which follow the request's locale and time zone.
-4. **Validation and errors.** Zod schemas with inline Spanish messages (`lib/news.ts`,
-   `lib/nosotros.ts`, `lib/auth/login.ts`, ...) become factories that take `t`. Server Actions and
-   route handlers under `app/api/` call `getTranslations`; the cookie is available in both.
-5. **Administration panel.** `lib/admin-sections.ts` and the components under
-   `components/administracion/`.
+3. **Shared editing components** with their own text: `ConfirmDialog`, `EditableWrapper`,
+   `FileDropInput`, `Select`, `Carousel`, and the default label of `InfoCard`. Their strings
+   ("Confirmar", "Cancelar", "Eliminar", "Anterior", "Siguiente") are repeated across forms and
+   belong in the `common` namespace. Converting one means its tests, and the tests of everything
+   that renders it, move to `renderWithIntl`.
+4. **Brand.** The logo alt texts in `Brand.tsx`.
+5. **Scope the client provider.** The root layout passes the whole catalogue to the browser on
+   every page, about 15 KB per language now. Do this before migrating ROSAC, Nosotros or the
+   gallery, which would take it to 50 KB or more: pass `NextIntlClientProvider` only the
+   namespaces Client Components use. It needs a safeguard, because a namespace left out fails
+   only in the browser.
+6. **Review of the English text** by someone who knows the terminology.
+7. **Database content**, designed in the next section.
 
 ## Dynamic content (design, not built yet)
 
 Three kinds of text need three treatments:
 
-| Kind                              | Examples                                                                    | Where the translations live                |
-| --------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------ |
-| UI strings                        | Buttons, labels, errors                                                     | Message catalogues (above)                 |
-| Long static content in code       | `lib/gallery.ts`, `academic-activities.ts`, `collaborations.ts`, `rosac.ts` | One content module per language, see below |
-| Database content ("Modo edición") | News, publications, research areas, activities, researchers, gallery        | A translation table per entity, see below  |
+| Kind                              | Examples                                                             | Where the translations live                    |
+| --------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------- |
+| UI strings                        | Buttons, labels, errors                                              | Message catalogues (above)                     |
+| Long static content in code       | `lib/gallery.ts`, `lib/rosac.ts`                                     | Its own catalogue file per language, see below |
+| Database content ("Modo edición") | News, publications, research areas, activities, researchers, gallery | A translation table per entity, see below      |
 
 ### Long static content
 
-These modules hold hundreds of lines of structured content, too much for a flat catalogue. Each
-keeps its Spanish module and gains a sibling per language, behind one function:
-
-```ts
-// app/lib/gallery/index.ts
-export function getGalleryAlbums(locale: Locale): GalleryAlbum[]
-```
-
-Slugs, image paths and ids come from the Spanish module; a language module only overrides text,
-and anything it lacks falls back to Spanish. Pages pass `await getLocale()`.
+`lib/gallery.ts` and `lib/rosac.ts` hold hundreds of lines of structured content. The static
+pages showed that prose fits the catalogue well when the lib module keeps the structure and the
+catalogue holds keyed text, so the same pattern applies. What changes at that size is where the
+text is loaded: give each its own catalogue file per language (`messages/es/gallery.json`) so it
+is not sent with every page, and settle the provider scoping above first.
 
 ### Database content: a translation table per entity
 
