@@ -1,4 +1,6 @@
-import { footerContent } from './footer'
+import es from '@/messages/es.json' with { type: 'json' }
+
+import { INSTAGRAM_URL } from './footer'
 
 /**
  * Official contact channels for `/contacto`.
@@ -7,7 +9,12 @@ import { footerContent } from './footer'
  * Instagram reuses the profile already approved for the public footer.
  * A channel with an empty or placeholder value is dropped by
  * `availableContactChannels` and never rendered.
+ *
+ * The translatable text is in the `contact` namespace of `apps/web/messages/`. The phone number,
+ * the address and the Instagram handle are the same in every language and stay here.
  */
+
+// Matched against channel values, which are not translated, so Spanish words are enough.
 
 const placeholderValue =
   /^(n\/?a|pendiente|pr[oó]ximamente|por definir|contenido en preparaci[oó]n|ejemplo|placeholder|xxx+|-+)$/i
@@ -32,50 +39,43 @@ export interface ContactContent {
   backLink: { href: string; label: string }
 }
 
-export const contactMeta = {
-  title: 'Contacto | LASCE',
-  description:
-    'Canales oficiales para comunicarse con el Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-} as const
+/** The parts of a message catalogue the contact page reads. */
+export type ContactMessages = Pick<typeof es, 'contact' | 'common'>
 
-const instagram = footerContent.links.find((link) => link.label === 'Instagram' && link.external)
-
-export const contactContent: ContactContent = {
-  hero: {
-    kicker: 'Portal público LASCE',
-    title: 'Contacto',
-    lead: 'Canales oficiales del Laboratorio de Astrofísica Solar y Clima Espacial.',
-  },
-  channelsTitle: 'Información de contacto',
-  channels: [
-    {
-      id: 'phone',
-      label: 'Teléfono',
-      value: '2511-6566',
-      href: 'tel:+50625116566',
-    },
-    {
-      id: 'location',
-      label: 'Ubicación',
-      lines: [
-        'Universidad de Costa Rica, Sede Rodrigo Facio Brenes',
-        'Montes de Oca, San José, Costa Rica',
-      ],
-    },
-    ...(instagram
-      ? [
-          {
-            id: 'instagram',
-            label: 'Instagram',
-            value: '@lasce_ucr',
-            href: instagram.href,
-            external: true,
-          },
-        ]
-      : []),
-  ],
-  backLink: { href: '/', label: 'Volver al inicio' },
+/** The contact page in the language of `messages`. The route passes the request's catalogue. */
+export function getContactContent({ contact, common }: ContactMessages): ContactContent {
+  return {
+    hero: contact.hero,
+    channelsTitle: contact.channelsTitle,
+    channels: [
+      {
+        id: 'phone',
+        label: contact.channels.phone,
+        value: '2511-6566',
+        href: 'tel:+50625116566',
+      },
+      {
+        id: 'location',
+        label: contact.channels.location,
+        lines: [
+          'Universidad de Costa Rica, Sede Rodrigo Facio Brenes',
+          'Montes de Oca, San José, Costa Rica',
+        ],
+      },
+      {
+        id: 'instagram',
+        label: 'Instagram',
+        value: '@lasce_ucr',
+        href: INSTAGRAM_URL,
+        external: true,
+      },
+    ],
+    backLink: { href: '/', label: common.backToHome },
+  }
 }
+
+/** The contact page in Spanish, the source language. For stories and tests. */
+export const contactContent: ContactContent = getContactContent(es)
 
 function channelLines(channel: ContactChannel): string[] {
   return [channel.value, ...(channel.lines ?? [])].filter(

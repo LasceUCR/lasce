@@ -1,23 +1,34 @@
 import { ChartNoAxesCombined, Sun } from 'lucide-react'
 
-export const scientificToolsIntro =
-  'Accede a herramientas para el análisis de la actividad solar y el estudio del clima espacial.'
+import es from '@/messages/es.json' with { type: 'json' }
+
+/** The `scientificTools` namespace of a message catalogue. */
+export type ScientificToolsMessages = typeof es.scientificTools
 
 const SWAAT_URL = process.env.NEXT_PUBLIC_SWAAT_URL ?? 'https://swaat.up.railway.app/'
 
-export const scientificTools = [
-  {
-    title: 'SWAAT',
-    description:
-      'Analiza eventos solares mediante observaciones de rayos X de GOES y microondas de RSTN. Visualiza y compara su evolución temporal con gráficas estáticas e interactivas.',
-    href: SWAAT_URL,
-    icon: Sun,
-  },
-  {
-    title: 'SWAPRO',
-    description:
-      'Consulta y visualiza eventos solares en intervalos de tiempo específicos para apoyar el estudio de la actividad solar y el clima espacial.',
-    href: 'https://swapro.up.railway.app/',
-    icon: ChartNoAxesCombined,
-  },
-] as const
+/**
+ * The tools offered on `/herramientas-cientificas`, described in the language of `messages`.
+ * Their names are product names and are the same in every language.
+ */
+export function getScientificTools(messages: ScientificToolsMessages) {
+  return [
+    {
+      title: 'SWAAT',
+      description: messages.tools.swaat,
+      href: SWAAT_URL,
+      icon: Sun,
+    },
+    {
+      title: 'SWAPRO',
+      description: messages.tools.swapro,
+      href: 'https://swapro.up.railway.app/',
+      icon: ChartNoAxesCombined,
+    },
+  ] as const
+}
+
+/** The tools in Spanish, the source language. For stories and tests. */
+export const scientificTools = getScientificTools(es.scientificTools)
+
+export const scientificToolsIntro = es.scientificTools.hero.intro

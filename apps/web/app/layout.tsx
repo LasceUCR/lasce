@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
 import './globals.css'
@@ -6,29 +8,36 @@ import { siteUrl } from './lib/site'
 import { AnnotateWidget } from './components/utils/AnnotateWidget'
 import { EditModeProvider } from './components/public/cms/EditModeProvider'
 
-export const metadata: Metadata = {
-  metadataBase: siteUrl,
-  title: 'LASCE | Universidad de Costa Rica',
-  description:
-    'Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica: observación solar, radioastronomía, instrumentación y clima espacial.',
-  icons: {
-    icon: {
-      url: '/brand/ucr-favicon-square.png',
-      type: 'image/png',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('metadata')
+
+  return {
+    metadataBase: siteUrl,
+    title: t('title'),
+    description: t('description'),
+    icons: {
+      icon: {
+        url: '/brand/ucr-favicon-square.png',
+        type: 'image/png',
+      },
     },
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  }
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const locale = await getLocale()
+
   return (
-    <html lang="es" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
       <AnnotateWidget />
       <body>
-        <EditModeProvider>{children}</EditModeProvider>
+        <NextIntlClientProvider>
+          <EditModeProvider>{children}</EditModeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

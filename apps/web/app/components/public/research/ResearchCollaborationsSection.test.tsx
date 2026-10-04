@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import {
   ResearchCollaborationsSection,
@@ -12,7 +14,7 @@ const emptyArgs = Empty.args as ResearchCollaborationsSectionProps
 
 describe('ResearchCollaborationsSection', () => {
   test('renders the section title and description', () => {
-    render(<ResearchCollaborationsSection {...defaultArgs} />)
+    renderWithIntl(<ResearchCollaborationsSection {...defaultArgs} />)
 
     expect(
       screen.getByRole('heading', { level: 2, name: 'Colaboraciones de investigación' }),
@@ -23,7 +25,7 @@ describe('ResearchCollaborationsSection', () => {
   })
 
   test('renders all collaboration cards in default view', () => {
-    render(<ResearchCollaborationsSection {...defaultArgs} />)
+    renderWithIntl(<ResearchCollaborationsSection {...defaultArgs} />)
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
       defaultArgs.collaborations.length,
@@ -31,7 +33,7 @@ describe('ResearchCollaborationsSection', () => {
   })
 
   test('distinguishes between national and international collaborations', () => {
-    render(<ResearchCollaborationsSection {...defaultArgs} />)
+    renderWithIntl(<ResearchCollaborationsSection {...defaultArgs} />)
 
     const nationalBadges = screen.getAllByText('Nacional')
     const internationalBadges = screen.getAllByText('Internacional')
@@ -46,7 +48,7 @@ describe('ResearchCollaborationsSection', () => {
   })
 
   test('displays country information for collaborating partners', () => {
-    render(<ResearchCollaborationsSection {...defaultArgs} />)
+    renderWithIntl(<ResearchCollaborationsSection {...defaultArgs} />)
 
     expect(screen.getByText('Argentina')).toBeInTheDocument()
     expect(screen.getByText('Francia')).toBeInTheDocument()
@@ -56,7 +58,7 @@ describe('ResearchCollaborationsSection', () => {
   })
 
   test('displays empty message when no collaborations are configured', () => {
-    render(<ResearchCollaborationsSection {...emptyArgs} />)
+    renderWithIntl(<ResearchCollaborationsSection {...emptyArgs} />)
 
     expect(screen.getByRole('status')).toHaveTextContent(
       'No hay información de colaboraciones disponible actualmente.',
