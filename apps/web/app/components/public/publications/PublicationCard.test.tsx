@@ -107,7 +107,9 @@ describe('PublicationCard', () => {
     mockAbstractOverflow(true)
     render(<PublicationCard {...defaultArgs} />)
 
-    expect(screen.queryByRole('button', { name: /Leer resumen completo|Ocultar resumen/ })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: /Leer resumen completo|Ocultar resumen/ }),
+    ).toBeNull()
     expect(screen.getByRole('link', { name: /DOI \/ Enlace externo/ })).toBeInTheDocument()
   })
 
