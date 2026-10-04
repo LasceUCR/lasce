@@ -319,5 +319,40 @@
         }
       }
     }
+  },
+  "academicActivities": {
+    "section": {
+      "title": "Academic activities",
+      "description": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
+      "empty": "No academic activities are available at the moment."
+    },
+    "card": {
+      "badge": "Academic activity",
+      "details": "View the activity details"
+    },
+    "page": {
+      "metaTitle": "{title} | News | LASCE",
+      "kicker": "Academic activity",
+      "infoTitle": "General information",
+      "type": "Type of activity",
+      "date": "Date",
+      "location": "Place",
+      "descriptionTitle": "Description of the activity",
+      "resourcesTitle": "Resources and links of interest",
+      "backToNews": "Back to news"
+    },
+    "items": {
+      "machineLearningWorkshop": {
+        "category": "Workshop",
+        "date": "16-20 February 2026",
+        "abstract": "A workshop focused on the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather and GNSS systems.",
+        "p1": "As part of the LASCE project, the Workshop on Machine Learning Applied to Space Weather and Global Navigation Satellite Systems (GNSS) was held from 16 to 20 February 2026 in San José, Costa Rica. For five days the activity brought together students, early-career researchers and specialists to strengthen their skills in the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather.",
+        "p2": "The programme combined lectures, discussion sessions and computational practice devoted to ionospheric processes, the effects of space weather on GNSS systems, scientific computing and data analysis with machine learning tools. This approach made it possible to combine the physical understanding of solar and terrestrial phenomena with modern methods of processing, modelling and prediction, while also promoting the use of open data and reproducible procedures.",
+        "p3": "The workshop had 52 in-person participants from 17 countries; 37.2% were women and 70% came from developing countries. It was organised with the participation of the Space Research Center of the University of Costa Rica, the United Nations Office for Outer Space Affairs, the International Committee on GNSS, COSPAR, INGV and SCOSTEP, together with contributions from the National University of Tucumán and the Abdus Salam International Centre for Theoretical Physics.",
+        "p4": "This activity strengthened the international profile of LASCE, widened its networks of scientific collaboration and contributed to building regional capabilities for researching, monitoring and predicting the effects of space weather on the ionosphere and on technological systems. It also created a space for identifying new scientific challenges, opportunities for cooperation and future initiatives that combine space weather physics with advanced data analysis tools.",
+        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop",
+        "galleryLabel": "View the workshop photo gallery"
+      }
+    }
   }
 }
