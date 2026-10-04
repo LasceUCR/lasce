@@ -38,5 +38,70 @@
   },
   "languageSwitcher": {
     "label": "Language"
+  },
+  "home": {
+    "hero": {
+      "title": "We explore the Sun to understand space weather",
+      "lead": "We study solar activity and its effects on the interplanetary medium and the Earth through observations, instrumentation, data analysis and scientific development.",
+      "cta": "Learn more about LASCE"
+    },
+    "indicators": {
+      "title": "Geomagnetic indices for Costa Rica",
+      "demoNotice": "Demonstration data",
+      "kp": {
+        "label": "Kp index",
+        "value": "2 · Quiet"
+      },
+      "dst": {
+        "label": "Dst index",
+        "value": "-12 nT · Stable"
+      },
+      "ae": {
+        "label": "AE index",
+        "value": "75 nT · Low activity"
+      },
+      "ap": {
+        "label": "Ap index",
+        "value": "7 · Quiet"
+      }
+    },
+    "areas": {
+      "title": "Main areas and access points",
+      "subtitle": "Research, observe, analyse and share."
+    },
+    "observationBadge": {
+      "triggerLabel": "Live image of the Sun. Show the date and source of the observation.",
+      "live": "Live",
+      "close": "Close",
+      "panelTitle": "Real-time image of the Sun",
+      "observed": "Observed on <time></time>",
+      "updating": "Updating the latest image of the Sun…"
+    }
+  },
+  "workAreas": {
+    "solarPhysics": {
+      "title": "Solar physics",
+      "description": "Activity and observations"
+    },
+    "spaceWeather": {
+      "title": "Space weather",
+      "description": "Solar phenomena and their effects"
+    },
+    "rosac": {
+      "title": "ROSAC",
+      "description": "Radio telescope data"
+    },
+    "tools": {
+      "title": "Scientific tools",
+      "description": "Analysis and visualisation of solar events"
+    },
+    "data": {
+      "title": "Data and analysis",
+      "description": "Queries and downloads"
+    },
+    "outreach": {
+      "title": "Outreach",
+      "description": "News and resources"
+    }
   }
 }

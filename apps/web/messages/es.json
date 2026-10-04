@@ -38,5 +38,70 @@
   },
   "languageSwitcher": {
     "label": "Idioma"
+  },
+  "home": {
+    "hero": {
+      "title": "Exploramos el Sol para comprender el clima espacial",
+      "lead": "Investigamos la actividad solar y sus efectos en el medio interplanetario y la Tierra, mediante observaciones, instrumentación, análisis de datos y desarrollo científico.",
+      "cta": "Conoce más sobre LASCE"
+    },
+    "indicators": {
+      "title": "Índices geomagnéticos de Costa Rica",
+      "demoNotice": "Datos de demostración",
+      "kp": {
+        "label": "Índice Kp",
+        "value": "2 · Tranquilo"
+      },
+      "dst": {
+        "label": "Índice Dst",
+        "value": "-12 nT · Estable"
+      },
+      "ae": {
+        "label": "Índice AE",
+        "value": "75 nT · Actividad baja"
+      },
+      "ap": {
+        "label": "Índice Ap",
+        "value": "7 · Tranquilo"
+      }
+    },
+    "areas": {
+      "title": "Áreas y accesos principales",
+      "subtitle": "Investigar, observar, analizar y compartir."
+    },
+    "observationBadge": {
+      "triggerLabel": "Imagen del Sol en vivo. Mostrar fecha y fuente de la observación.",
+      "live": "En vivo",
+      "close": "Cerrar",
+      "panelTitle": "Imagen del Sol en tiempo real",
+      "observed": "Observado el <time></time>",
+      "updating": "Actualizando la imagen más reciente del Sol…"
+    }
+  },
+  "workAreas": {
+    "solarPhysics": {
+      "title": "Física solar",
+      "description": "Actividad y observaciones"
+    },
+    "spaceWeather": {
+      "title": "Clima espacial",
+      "description": "Fenómenos solares y sus efectos"
+    },
+    "rosac": {
+      "title": "ROSAC",
+      "description": "Datos del radiotelescopio"
+    },
+    "tools": {
+      "title": "Herramientas científicas",
+      "description": "Análisis y visualización de eventos solares"
+    },
+    "data": {
+      "title": "Datos y análisis",
+      "description": "Consulta y descargas"
+    },
+    "outreach": {
+      "title": "Divulgación",
+      "description": "Noticias y recursos"
+    }
   }
 }

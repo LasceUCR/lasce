@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
 
 import type { LatestSuviObservation } from '@/app/components/public/solar-astrophysics/useLatestSuviObservation'
@@ -18,6 +19,7 @@ export interface HeroObservationBadgeProps {
  * activating its own close button, on top of the native toggle behavior.
  */
 export function HeroObservationBadge({ observation }: HeroObservationBadgeProps) {
+  const t = useTranslations('home.observationBadge')
   const [isOpen, setIsOpen] = useState(false)
   const detailsRef = useRef<HTMLDetailsElement>(null)
 
@@ -55,32 +57,28 @@ export function HeroObservationBadge({ observation }: HeroObservationBadgeProps)
       open={isOpen}
       ref={detailsRef}
     >
-      <summary
-        aria-label="Imagen del Sol en vivo. Mostrar fecha y fuente de la observación."
-        className="hero-live-trigger"
-      >
+      <summary aria-label={t('triggerLabel')} className="hero-live-trigger">
         <span aria-hidden="true" className="hero-live-dot" />
-        En vivo
+        {t('live')}
       </summary>
       <div className="hero-live-panel">
         <button
-          aria-label="Cerrar"
+          aria-label={t('close')}
           className="hero-live-close"
           onClick={() => setIsOpen(false)}
           type="button"
         >
           ×
         </button>
-        <p className="hero-live-text hero-live-title">Imagen del Sol en tiempo real</p>
+        <p className="hero-live-text hero-live-title">{t('panelTitle')}</p>
         <p className="hero-live-text hero-observation-time">
-          {observation.status === 'ready' ? (
-            <>
-              Observado el{' '}
-              <time dateTime={observation.observedAtIso}>{observation.observedAtLabel}</time>
-            </>
-          ) : (
-            'Actualizando la imagen más reciente del Sol…'
-          )}
+          {observation.status === 'ready'
+            ? t.rich('observed', {
+                time: () => (
+                  <time dateTime={observation.observedAtIso}>{observation.observedAtLabel}</time>
+                ),
+              })
+            : t('updating')}
         </p>
         <p className="hero-live-text hero-observation-source">SUVI 195 Å · NOAA/GOES</p>
       </div>
