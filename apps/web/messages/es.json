@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "title": "LASCE | Universidad de Costa Rica",
+    "description": "Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica: observación solar, radioastronomía, instrumentación y clima espacial."
+  },
+  "shell": {
+    "skipToContent": "Saltar al contenido principal"
+  },
+  "nav": {
+    "goHome": "Ir al inicio",
+    "mainLabel": "Navegación principal",
+    "mobileLabel": "Navegación móvil",
+    "openMenu": "Abrir navegación",
+    "closeMenu": "Cerrar navegación",
+    "home": "Inicio",
+    "about": "Nosotros",
+    "whoWeAre": "Quiénes somos",
+    "collaborations": "Colaboraciones e Iniciativas",
+    "research": "Investigación",
+    "researchAreas": "Áreas de investigación",
+    "solarPhysics": "Física solar",
+    "spaceWeather": "Clima espacial",
+    "rosac": "ROSAC",
+    "data": "Datos",
+    "outreach": "Divulgación",
+    "news": "Noticias",
+    "gallery": "Galería",
+    "resources": "Recursos",
+    "publications": "Publicaciones",
+    "scientificTools": "Herramientas científicas",
+    "contact": "Contacto"
+  },
+  "footer": {
+    "institutionsLabel": "Instituciones",
+    "navigationLabel": "Enlaces del pie de página",
+    "contact": "Contacto",
+    "rightsReserved": "Todos los derechos reservados."
+  },
+  "languageSwitcher": {
+    "label": "Idioma"
+  }
+}
