@@ -6,58 +6,61 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import {
-  solarAstrophysicsBackLink,
-  solarAstrophysicsHero,
-  solarAstrophysicsLasce,
-  solarAstrophysicsOverview,
-} from '@/app/lib/solar-astrophysics'
+import type { SolarAstrophysicsContent, SolarOverviewItemId } from '@/app/lib/solar-astrophysics'
 
-const overviewIcons: LucideIcon[] = [Sun, Magnet, Layers, Activity]
+const overviewIcons: Record<SolarOverviewItemId, LucideIcon> = {
+  activity: Sun,
+  magneticField: Magnet,
+  sunEarth: Layers,
+  analysis: Activity,
+}
 
-export function SolarAstrophysicsPage() {
+export interface SolarAstrophysicsPageProps {
+  /** Every string the page shows, already in the visitor's language. */
+  content: SolarAstrophysicsContent
+}
+
+export function SolarAstrophysicsPage({ content }: SolarAstrophysicsPageProps) {
+  const { hero, overview, lasce, backLink } = content
+
   return (
     <article className="topic-page">
-      <TopicHero
-        kicker={solarAstrophysicsHero.kicker}
-        lead={solarAstrophysicsHero.introduction}
-        title={solarAstrophysicsHero.title}
-      />
+      <TopicHero kicker={hero.kicker} lead={hero.introduction} title={hero.title} />
 
       <TopicSection
         index="1"
-        intro={solarAstrophysicsOverview.intro}
-        title={solarAstrophysicsOverview.title}
+        intro={overview.intro}
+        title={overview.title}
         titleId="solar-overview-title"
       >
         <CardGrid equalHeight>
-          {solarAstrophysicsOverview.items.map((item, index) => {
-            const Icon = overviewIcons[index] ?? Sun
+          {overview.items.map((item) => {
+            const Icon = overviewIcons[item.id]
 
             return (
               <InfoCard
                 description={item.description}
                 icon={<Icon size={22} strokeWidth={1.8} />}
-                key={item.title}
+                key={item.id}
                 title={item.title}
               />
             )
           })}
         </CardGrid>
         <ConceptFlow
-          caption={solarAstrophysicsOverview.flow.caption}
-          steps={solarAstrophysicsOverview.flow.steps}
-          title={solarAstrophysicsOverview.flow.title}
+          caption={overview.flow.caption}
+          steps={overview.flow.steps}
+          title={overview.flow.title}
         />
       </TopicSection>
 
       <TopicSection
         featured
         className="topic-section-end"
-        title={solarAstrophysicsLasce.title}
+        title={lasce.title}
         titleId="solar-lasce-title"
       >
-        {solarAstrophysicsLasce.paragraphs.map((paragraph) => (
+        {lasce.paragraphs.map((paragraph) => (
           <p className="topic-intro" key={paragraph}>
             {paragraph}
           </p>
@@ -65,10 +68,7 @@ export function SolarAstrophysicsPage() {
       </TopicSection>
 
       <div className="topic-page-footer page-width">
-        <TopicBackLink
-          href={solarAstrophysicsBackLink.href}
-          label={solarAstrophysicsBackLink.label}
-        />
+        <TopicBackLink href={backLink.href} label={backLink.label} />
       </div>
     </article>
   )

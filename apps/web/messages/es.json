@@ -38,5 +38,321 @@
   },
   "languageSwitcher": {
     "label": "Idioma"
+  },
+  "home": {
+    "hero": {
+      "title": "Exploramos el Sol para comprender el clima espacial",
+      "lead": "Investigamos la actividad solar y sus efectos en el medio interplanetario y la Tierra, mediante observaciones, instrumentación, análisis de datos y desarrollo científico.",
+      "cta": "Conoce más sobre LASCE"
+    },
+    "indicators": {
+      "title": "Índices geomagnéticos de Costa Rica",
+      "demoNotice": "Datos de demostración",
+      "kp": {
+        "label": "Índice Kp",
+        "value": "2 · Tranquilo"
+      },
+      "dst": {
+        "label": "Índice Dst",
+        "value": "-12 nT · Estable"
+      },
+      "ae": {
+        "label": "Índice AE",
+        "value": "75 nT · Actividad baja"
+      },
+      "ap": {
+        "label": "Índice Ap",
+        "value": "7 · Tranquilo"
+      }
+    },
+    "areas": {
+      "title": "Áreas y accesos principales",
+      "subtitle": "Investigar, observar, analizar y compartir."
+    },
+    "observationBadge": {
+      "triggerLabel": "Imagen del Sol en vivo. Mostrar fecha y fuente de la observación.",
+      "live": "En vivo",
+      "close": "Cerrar",
+      "panelTitle": "Imagen del Sol en tiempo real",
+      "observed": "Observado el <time></time>",
+      "updating": "Actualizando la imagen más reciente del Sol…"
+    }
+  },
+  "workAreas": {
+    "solarPhysics": {
+      "title": "Física solar",
+      "description": "Actividad y observaciones"
+    },
+    "spaceWeather": {
+      "title": "Clima espacial",
+      "description": "Fenómenos solares y sus efectos"
+    },
+    "rosac": {
+      "title": "ROSAC",
+      "description": "Datos del radiotelescopio"
+    },
+    "tools": {
+      "title": "Herramientas científicas",
+      "description": "Análisis y visualización de eventos solares"
+    },
+    "data": {
+      "title": "Datos y análisis",
+      "description": "Consulta y descargas"
+    },
+    "outreach": {
+      "title": "Divulgación",
+      "description": "Noticias y recursos"
+    }
+  },
+  "common": {
+    "backToHome": "Volver al inicio",
+    "backToWorkAreas": "Volver a las áreas de trabajo"
+  },
+  "contact": {
+    "meta": {
+      "title": "Contacto | LASCE",
+      "description": "Canales oficiales para comunicarse con el Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Contacto",
+      "lead": "Canales oficiales del Laboratorio de Astrofísica Solar y Clima Espacial."
+    },
+    "channelsTitle": "Información de contacto",
+    "channels": {
+      "phone": "Teléfono",
+      "location": "Ubicación"
+    }
+  },
+  "solarPhysics": {
+    "meta": {
+      "title": "Astrofísica solar | LASCE",
+      "description": "Conozca cómo LASCE estudia la actividad solar, la relación Sol-Tierra y sus efectos sobre el entorno espacial desde Costa Rica."
+    },
+    "hero": {
+      "kicker": "Área de trabajo LASCE",
+      "title": "Astrofísica solar",
+      "introduction": "La actividad solar no termina en el Sol. Sus campos magnéticos, su radiación y el flujo de partículas que libera se extienden por el Sistema Solar y pueden modificar el entorno espacial de la Tierra."
+    },
+    "overview": {
+      "title": "¿Qué estudia la astrofísica solar?",
+      "intro": "Esta área busca comprender los procesos físicos que originan la actividad del Sol y explicar cómo esas variaciones se conectan con el medio interplanetario y el entorno terrestre.",
+      "items": {
+        "activity": {
+          "title": "Actividad solar",
+          "description": "Analiza fenómenos eruptivos como fulguraciones, eyecciones de masa coronal y emisiones solares de radio."
+        },
+        "magneticField": {
+          "title": "Campo magnético",
+          "description": "Estudia cómo los campos magnéticos almacenan energía, estructuran la atmósfera solar y participan en eventos eruptivos."
+        },
+        "sunEarth": {
+          "title": "Relación Sol-Tierra",
+          "description": "Relaciona perturbaciones solares con el viento solar, el campo magnético interplanetario y la ionosfera."
+        },
+        "analysis": {
+          "title": "Análisis científico",
+          "description": "Integra observaciones, datos de satélites, estaciones terrestres y herramientas computacionales de procesamiento."
+        }
+      },
+      "flow": {
+        "title": "Cadena de estudio",
+        "caption": "LASCE conecta datos, modelos y métodos de análisis para estudiar la actividad solar y sus posibles efectos sobre la Tierra y la tecnología.",
+        "steps": {
+          "sun": "Sol",
+          "disturbance": "Perturbación solar",
+          "terrestrial": "Entorno terrestre",
+          "analysis": "Análisis LASCE"
+        }
+      }
+    },
+    "lasce": {
+      "title": "El trabajo de LASCE en astrofísica solar",
+      "p1": "El Laboratorio de Astrofísica Solar y Clima Espacial reúne investigación en astrofísica solar, observaciones astronómicas y desarrollo computacional para estudiar la actividad solar y su interacción con el entorno terrestre.",
+      "p2": "Su trabajo integra datos de diferentes instrumentos, longitudes de onda y plataformas para observar distintos eslabones de una misma cadena: desde el origen magnético de una erupción solar hasta sus manifestaciones cerca de la Tierra.",
+      "p3": "Desde la Universidad de Costa Rica, LASCE busca fortalecer capacidades científicas nacionales para analizar la relación Sol-Tierra, formar talento e impulsar colaboraciones en el estudio del clima espacial."
+    }
+  },
+  "spaceWeather": {
+    "meta": {
+      "title": "Clima espacial | LASCE",
+      "description": "Qué es el clima espacial, cómo se relaciona con la actividad solar y por qué se estudia desde Costa Rica en el Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica."
+    },
+    "hero": {
+      "kicker": "Área de trabajo LASCE",
+      "title": "Clima espacial"
+    },
+    "definition": {
+      "title": "¿Qué es el clima espacial?",
+      "p1": "El clima espacial describe las condiciones variables del Sol, el viento solar y la ionosfera que pueden influir en las inmediaciones de la Tierra y en los sistemas tecnológicos. No es el clima atmosférico cotidiano: se origina principalmente en la actividad solar y se manifiesta en el entorno espacial de nuestro planeta."
+    },
+    "sunToEarth": {
+      "title": "Del Sol a la Tierra",
+      "items": {
+        "release": {
+          "title": "El Sol libera energía",
+          "description": "Los ‘flares’ producen incrementos intensos de radiación y se asocian al origen de las eyecciones de masa coronal (CMEs, por sus siglas en inglés), las cuales son grandes estructuras de plasma y campo magnético. Algunos de estos eventos aceleran partículas a altas energías."
+        },
+        "propagation": {
+          "title": "La perturbación se propaga",
+          "description": "La radiación electromagnética llega en unos ocho minutos, mientras que partículas y los CMEs viajan por el medio interplanetario en escalas de minutos y de horas a días, respectivamente."
+        },
+        "response": {
+          "title": "El entorno terrestre responde",
+          "description": "Si la perturbación alcanza la Tierra con condiciones apropiadas, puede producir tormentas geomagnéticas o alteraciones ionosféricas."
+        },
+        "technology": {
+          "title": "La tecnología puede verse afectada",
+          "description": "Entre los sistemas sensibles se encuentran las comunicaciones por radio, la navegación GNSS, los satélites, las redes eléctricas y las operaciones espaciales y aeronáuticas."
+        }
+      }
+    },
+    "costaRica": {
+      "title": "¿Por qué estudiarlo desde Costa Rica?",
+      "p1": "La respuesta de la ionosfera y el desempeño de sistemas tecnológicos pueden depender de la ubicación geográfica y geomagnética. Contar con observaciones y análisis realizados desde Costa Rica permite caracterizar mejor el entorno regional, aportar datos a redes globales y formar capacidades científicas propias. Para un país cada vez más dependiente de navegación satelital, telecomunicaciones e infraestructura digital, comprender el clima espacial es una inversión en conocimiento."
+    },
+    "components": {
+      "title": "¿Qué compone el clima espacial?",
+      "intro": "No es un solo fenómeno: es una cadena que empieza en el Sol y termina en la Tierra. Cada eslabón modifica al siguiente.",
+      "items": {
+        "solarActivity": {
+          "title": "Actividad solar",
+          "description": "El Sol no está quieto. Las manchas, las fulguraciones y las eyecciones de masa coronal liberan energía, partículas y campos magnéticos al espacio."
+        },
+        "solarWind": {
+          "title": "Viento solar",
+          "description": "Es un flujo continuo de plasma que sale de la corona solar. Su velocidad, densidad y campo magnético cambian según lo que ocurra en el Sol."
+        },
+        "magnetosphere": {
+          "title": "Magnetosfera",
+          "description": "El campo magnético terrestre desvía la mayor parte del viento solar. Cuando ese flujo se intensifica, la magnetosfera se comprime y puede perturbarse."
+        },
+        "ionosphere": {
+          "title": "Ionosfera",
+          "description": "Es la capa alta de la atmósfera, ionizada por la radiación solar. Los cambios en esa capa afectan radio, GPS y otras comunicaciones."
+        },
+        "storms": {
+          "title": "Tormentas geomagnéticas",
+          "description": "Surgen cuando el viento solar y el campo magnético interplanetario perturban con fuerza la magnetosfera. Pueden durar horas o días."
+        },
+        "particles": {
+          "title": "Radiación de partículas",
+          "description": "El Sol también puede enviar protones y otras partículas energéticas. Ese flujo es distinto del viento solar cotidiano y puede afectar satélites y vuelos polares."
+        }
+      },
+      "flow": {
+        "title": "Flujo conceptual",
+        "caption": "La actividad del Sol alimenta el viento solar; ese flujo golpea la magnetosfera y, desde ahí, se manifiestan efectos en la Tierra.",
+        "steps": {
+          "sun": "Sol",
+          "solarWind": "Viento solar",
+          "magnetosphere": "Magnetosfera",
+          "earth": "Tierra"
+        }
+      }
+    }
+  },
+  "scientificTools": {
+    "meta": {
+      "title": "Herramientas científicas | LASCE"
+    },
+    "hero": {
+      "kicker": "Recursos de LASCE",
+      "title": "Herramientas científicas",
+      "intro": "Accede a herramientas para el análisis de la actividad solar y el estudio del clima espacial."
+    },
+    "tools": {
+      "swaat": "Analiza eventos solares mediante observaciones de rayos X de GOES y microondas de RSTN. Visualiza y compara su evolución temporal con gráficas estáticas e interactivas.",
+      "swapro": "Consulta y visualiza eventos solares en intervalos de tiempo específicos para apoyar el estudio de la actividad solar y el clima espacial."
+    },
+    "list": {
+      "empty": "No hay herramientas científicas disponibles en este momento.",
+      "access": "Acceder a {title}",
+      "externalNotice": "Los enlaces se abren en una nueva pestaña y te llevan a sitios externos."
+    }
+  },
+  "collaborations": {
+    "meta": {
+      "title": "Colaboraciones e Iniciativas | LASCE",
+      "description": "Organizaciones que colaboran con el LASCE y las iniciativas internacionales de las que forma parte, entre ellas la ISWI y la Iniciativa VLBI Iberoamericana."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Colaboraciones e Iniciativas",
+      "lead": "Organizaciones que colaboran con el Laboratorio de Astrofísica Solar y Clima Espacial, y las iniciativas internacionales de las que forma parte."
+    },
+    "section": {
+      "title": "Colaboraciones de investigación",
+      "description": "Organizaciones y grupos que colaboran con el LASCE en investigación y desarrollo científico a nivel nacional e internacional.",
+      "empty": "No hay información de colaboraciones disponible actualmente."
+    },
+    "card": {
+      "national": "Nacional",
+      "international": "Internacional",
+      "acronym": "Siglas:"
+    },
+    "countries": {
+      "cr": "Costa Rica",
+      "ar": "Argentina",
+      "it": "Italia",
+      "fr": "Francia",
+      "mx": "México"
+    },
+    "initiatives": {
+      "title": "Iniciativas internacionales de las que LASCE forma parte",
+      "items": {
+        "iswi": {
+          "title": "Iniciativa Internacional de Clima Espacial (ISWI)",
+          "linkLabel": "Sitio oficial de la ISWI",
+          "logoAlt": "Logotipo de la Iniciativa Internacional de Clima Espacial (ISWI)",
+          "p1": "La Iniciativa Internacional de Clima Espacial (ISWI, por sus siglas en inglés) del Comité de las Naciones Unidas sobre la Utilización del Espacio Ultraterrestre con Fines Pacíficos se puso en marcha en 2009 y concluyó formalmente como tema de la agenda del Comité en 2012. Sin embargo, las actividades de la ISWI continuaron y, desde 2013, se tratan en el nuevo tema permanente de la agenda sobre clima espacial de la Subcomisión de Asuntos Científicos y Técnicos del Comité."
+        },
+        "ivia": {
+          "title": "Iniciativa VLBI Iberoamericana (IVIA)",
+          "linkLabel": "Sitio oficial de la IVIA",
+          "logoAlt": "Logotipo de la Iniciativa VLBI Iberoamericana (IVIA)",
+          "p1": "En 2019 surgió la Iniciativa VLBI Iberoamericana (IVIA), una instancia de trabajo conjunto orientada al desarrollo de la radioastronomía en Iberoamérica, tomando como eje conceptual el desarrollo de la radioastronomía en la región y la implementación de una red VLBI en Latinoamérica, en colaboración con España y Portugal.",
+          "p2": "En su conformación actual hay representantes de instituciones de Argentina, Brasil, Colombia, Costa Rica, Ecuador, México, Perú y Uruguay. Asimismo, se propone promover la participación de los demás países de la región. Participan también el Instituto Conjunto para VLBI (JIVE, con sede en Países Bajos, organización que centraliza el procesamiento de datos de la red europea de VLBI, llamada EVN), el Instituto Geográfico Nacional de España y el Instituto de Telecomunicações de Portugal.",
+          "p3": "La iniciativa implica un trabajo colaborativo en la conversión de antenas de telecomunicación en radiotelescopios y su adecuación para VLBI, y el desarrollo de todas las tecnologías relacionadas. Con la unión de los recursos de las instituciones participantes, se pretende alcanzar una masa crítica para aprovechar al máximo los recursos e infraestructura existente en cada país.",
+          "p4": "De esta forma, el objetivo final es crear un proyecto de colaboración internacional que tenga un gran impacto en el desarrollo integral de la región.",
+          "p5": "La iniciativa contribuye fuertemente a disminuir la brecha existente entre el número de observatorios radioastronómicos del Hemisferio Sur y los existentes en el Hemisferio Norte."
+        }
+      }
+    }
+  },
+  "academicActivities": {
+    "section": {
+      "title": "Actividades académicas",
+      "description": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
+      "empty": "No hay actividades académicas disponibles en este momento."
+    },
+    "card": {
+      "badge": "Actividad académica",
+      "details": "Ver detalles de la actividad"
+    },
+    "page": {
+      "metaTitle": "{title} | Noticias | LASCE",
+      "kicker": "Actividad académica",
+      "infoTitle": "Información general",
+      "type": "Tipo de actividad",
+      "date": "Fecha",
+      "location": "Lugar",
+      "descriptionTitle": "Descripción de la actividad",
+      "resourcesTitle": "Recursos y enlaces de interés",
+      "backToNews": "Volver a noticias"
+    },
+    "items": {
+      "machineLearningWorkshop": {
+        "category": "Taller",
+        "date": "16-20 febrero, 2026",
+        "abstract": "Taller enfocado en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial y los sistemas GNSS.",
+        "p1": "En el marco del proyecto LASCE se realizó, del 16 al 20 de febrero de 2026 en San José, Costa Rica, el Taller sobre Aprendizaje Automático Aplicado al Clima Espacial y a los Sistemas Globales de Navegación por Satélite (GNSS). La actividad reunió durante cinco días a estudiantes, jóvenes investigadores y especialistas para fortalecer sus capacidades en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial.",
+        "p2": "El programa combinó conferencias, sesiones de discusión y prácticas computacionales dedicadas a los procesos ionosféricos, los efectos del clima espacial sobre los sistemas GNSS, la computación científica y el análisis de datos mediante herramientas de aprendizaje automático. Este enfoque permitió integrar la comprensión física de los fenómenos solares y terrestres con métodos modernos de procesamiento, modelado y predicción, promoviendo además el uso de datos abiertos y procedimientos reproducibles.",
+        "p3": "El taller contó con 52 participantes presenciales procedentes de 17 países; el 37,2 % fueron mujeres y el 70 % provenía de países en desarrollo. Fue organizado con la participación del Centro de Investigaciones Espaciales de la Universidad de Costa Rica, la Oficina de las Naciones Unidas para Asuntos del Espacio Ultraterrestre, el Comité Internacional sobre los GNSS, COSPAR, INGV y SCOSTEP, junto con contribuciones de la Universidad Nacional de Tucumán y el Centro Internacional de Física Teórica Abdus Salam.",
+        "p4": "Esta actividad fortaleció la proyección internacional del LASCE, amplió las redes de colaboración científica y contribuyó a la formación de capacidades regionales para investigar, monitorear y predecir los efectos del clima espacial sobre la ionosfera y los sistemas tecnológicos. Asimismo, generó un espacio para identificar nuevos desafíos científicos, oportunidades de cooperación y futuras iniciativas que integren la física del clima espacial con herramientas avanzadas de análisis de datos.",
+        "imageAlt": "Comité y participantes junto al cartel oficial del taller de Machine Learning y clima espacial",
+        "galleryLabel": "Ver galería de fotos del taller"
+      }
+    }
   }
 }

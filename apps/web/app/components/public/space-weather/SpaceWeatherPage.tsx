@@ -6,19 +6,43 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import {
-  spaceWeatherBackLink,
-  spaceWeatherComponents,
-  spaceWeatherCostaRica,
-  spaceWeatherDefinition,
-  spaceWeatherHero,
-  spaceWeatherSunToEarth,
+import type {
+  SpaceWeatherComponentId,
+  SpaceWeatherContent,
+  SunToEarthItemId,
 } from '@/app/lib/space-weather'
 
-const sunToEarthIcons: LucideIcon[] = [Sun, Orbit, Magnet, Radio]
-const componentIcons: LucideIcon[] = [Sun, Wind, Magnet, Radio, Zap, Sparkles]
+const sunToEarthIcons: Record<SunToEarthItemId, LucideIcon> = {
+  release: Sun,
+  propagation: Orbit,
+  response: Magnet,
+  technology: Radio,
+}
 
-export function SpaceWeatherPage() {
+const componentIcons: Record<SpaceWeatherComponentId, LucideIcon> = {
+  solarActivity: Sun,
+  solarWind: Wind,
+  magnetosphere: Magnet,
+  ionosphere: Radio,
+  storms: Zap,
+  particles: Sparkles,
+}
+
+export interface SpaceWeatherPageProps {
+  /** Every string the page shows, already in the visitor's language. */
+  content: SpaceWeatherContent
+}
+
+export function SpaceWeatherPage({ content }: SpaceWeatherPageProps) {
+  const {
+    hero: spaceWeatherHero,
+    definition: spaceWeatherDefinition,
+    sunToEarth: spaceWeatherSunToEarth,
+    costaRica: spaceWeatherCostaRica,
+    components: spaceWeatherComponents,
+    backLink: spaceWeatherBackLink,
+  } = content
+
   return (
     <article className="topic-page">
       <TopicHero kicker={spaceWeatherHero.kicker} title={spaceWeatherHero.title} />
@@ -34,13 +58,13 @@ export function SpaceWeatherPage() {
       <TopicSection index="1" title={spaceWeatherSunToEarth.title} titleId="sw-sun-to-earth-title">
         <CardGrid columns={2} equalHeight>
           {spaceWeatherSunToEarth.items.map((item, index) => {
-            const Icon = sunToEarthIcons[index] ?? Sun
+            const Icon = sunToEarthIcons[item.id]
 
             return (
               <InfoCard
                 description={item.description}
                 icon={<Icon size={22} strokeWidth={1.8} />}
-                key={item.title}
+                key={item.id}
                 title={`${index + 1}. ${item.title}`}
               />
             )
@@ -56,14 +80,14 @@ export function SpaceWeatherPage() {
         wide
       >
         <CardGrid columns={3} equalHeight>
-          {spaceWeatherComponents.items.map((item, index) => {
-            const Icon = componentIcons[index] ?? Sun
+          {spaceWeatherComponents.items.map((item) => {
+            const Icon = componentIcons[item.id]
 
             return (
               <InfoCard
                 description={item.description}
                 icon={<Icon size={22} strokeWidth={1.8} />}
-                key={item.title}
+                key={item.id}
                 title={item.title}
               />
             )

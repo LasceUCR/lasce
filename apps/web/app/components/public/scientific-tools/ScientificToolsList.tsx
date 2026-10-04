@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
@@ -16,10 +17,12 @@ export interface ScientificToolsListProps {
 }
 
 export function ScientificToolsList({ tools }: ScientificToolsListProps) {
+  const t = useTranslations('scientificTools.list')
+
   if (tools.length === 0) {
     return (
       <p className="content-empty" role="status">
-        No hay herramientas científicas disponibles en este momento.
+        {t('empty')}
       </p>
     )
   }
@@ -44,15 +47,13 @@ export function ScientificToolsList({ tools }: ScientificToolsListProps) {
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                Acceder a {title}
+                {t('access', { title })}
               </Button>
             }
           />
         ))}
       </CardGrid>
-      <p className="topic-intro">
-        Los enlaces se abren en una nueva pestaña y te llevan a sitios externos.
-      </p>
+      <p className="topic-intro">{t('externalNotice')}</p>
     </>
   )
 }

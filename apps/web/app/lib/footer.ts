@@ -49,6 +49,9 @@ export interface PublicFooterContent {
   copyright: { holder: string; notice: string }
 }
 
+/** The laboratory's Instagram profile, also offered as a contact channel on `/contacto`. */
+export const INSTAGRAM_URL = 'https://www.instagram.com/lasce_ucr/'
+
 /** A key of the `footer` namespace in the message catalogues. */
 export type FooterMessageKey = keyof typeof es.footer
 
@@ -83,7 +86,7 @@ export function getFooterContent(t: (key: FooterMessageKey) => string): PublicFo
     navigationLabel: t('navigationLabel'),
     links: [
       { label: t('contact'), href: '/contacto' },
-      { label: 'Instagram', href: 'https://www.instagram.com/lasce_ucr/', external: true },
+      { label: 'Instagram', href: INSTAGRAM_URL, external: true },
     ],
     copyright: { holder: 'Universidad de Costa Rica', notice: t('rightsReserved') },
   }
