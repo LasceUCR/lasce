@@ -251,5 +251,24 @@
         }
       }
     }
+  },
+  "scientificTools": {
+    "meta": {
+      "title": "Scientific tools | LASCE"
+    },
+    "hero": {
+      "kicker": "LASCE resources",
+      "title": "Scientific tools",
+      "intro": "Access tools for analysing solar activity and studying space weather."
+    },
+    "tools": {
+      "swaat": "Analyse solar events using GOES X-ray and RSTN microwave observations. View and compare their evolution over time with static and interactive charts.",
+      "swapro": "Query and view solar events in specific time intervals to support the study of solar activity and space weather."
+    },
+    "list": {
+      "empty": "No scientific tools are available at the moment.",
+      "access": "Open {title}",
+      "externalNotice": "The links open in a new tab and take you to external sites."
+    }
   }
 }

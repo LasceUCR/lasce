@@ -251,5 +251,24 @@
         }
       }
     }
+  },
+  "scientificTools": {
+    "meta": {
+      "title": "Herramientas científicas | LASCE"
+    },
+    "hero": {
+      "kicker": "Recursos de LASCE",
+      "title": "Herramientas científicas",
+      "intro": "Accede a herramientas para el análisis de la actividad solar y el estudio del clima espacial."
+    },
+    "tools": {
+      "swaat": "Analiza eventos solares mediante observaciones de rayos X de GOES y microondas de RSTN. Visualiza y compara su evolución temporal con gráficas estáticas e interactivas.",
+      "swapro": "Consulta y visualiza eventos solares en intervalos de tiempo específicos para apoyar el estudio de la actividad solar y el clima espacial."
+    },
+    "list": {
+      "empty": "No hay herramientas científicas disponibles en este momento.",
+      "access": "Acceder a {title}",
+      "externalNotice": "Los enlaces se abren en una nueva pestaña y te llevan a sitios externos."
+    }
   }
 }
