@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'vitest'
 
+import { getMessages } from './i18n/messages'
 import {
+  getSpaceWeatherContent,
   spaceWeatherBackLink,
   spaceWeatherComponents,
+  spaceWeatherContent,
   spaceWeatherCostaRica,
   spaceWeatherDefinition,
   spaceWeatherHero,
@@ -26,5 +29,19 @@ describe('space-weather content', () => {
 
   test('covers the solar chain', () => {
     expect(spaceWeatherComponents.items.map((item) => item.title)).toContain('Actividad solar')
+  })
+
+  test('follows the catalogue it is given and keeps the same structure', () => {
+    const english = getSpaceWeatherContent(getMessages('en'))
+
+    expect(english.hero.title).toBe('Space weather')
+    expect(english.components.flow.steps).toEqual(['Sun', 'Solar wind', 'Magnetosphere', 'Earth'])
+    expect(english.sunToEarth.items.map((item) => item.id)).toEqual(
+      spaceWeatherContent.sunToEarth.items.map((item) => item.id),
+    )
+    expect(english.components.items.map((item) => item.id)).toEqual(
+      spaceWeatherContent.components.items.map((item) => item.id),
+    )
+    expect(english.backLink.href).toBe(spaceWeatherContent.backLink.href)
   })
 })

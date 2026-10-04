@@ -49,7 +49,8 @@ const loginButton = (page: Page) =>
 const loginAlert = (page: Page) => loginCard(page).getByRole('alert')
 const headerActions = (page: Page) => page.locator('.header-actions')
 async function openAccountMenu(page: Page) {
-  await headerActions(page).locator('summary').press('Enter')
+  // The header holds two disclosures, the language menu and the account menu.
+  await headerActions(page).locator('.account-menu summary').press('Enter')
   await expect(
     headerActions(page).getByRole('link', { name: accountMenuCopy.account }),
   ).toBeVisible()

@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
+import { getMessages, getTranslations } from 'next-intl/server'
 
 import { SolarAstrophysicsPage } from '@/app/components/public/solar-astrophysics/SolarAstrophysicsPage'
-import { solarAstrophysicsMeta } from '@/app/lib/solar-astrophysics'
+import { getSolarAstrophysicsContent } from '@/app/lib/solar-astrophysics'
 
-export const metadata: Metadata = {
-  title: solarAstrophysicsMeta.title,
-  description: solarAstrophysicsMeta.description,
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('solarPhysics.meta')
+
+  return { title: t('title'), description: t('description') }
 }
 
-export default function FisicaSolarRoute() {
-  return <SolarAstrophysicsPage />
+export default async function FisicaSolarRoute() {
+  return <SolarAstrophysicsPage content={getSolarAstrophysicsContent(await getMessages())} />
 }

@@ -1,0 +1,358 @@
+{
+  "metadata": {
+    "title": "LASCE | University of Costa Rica",
+    "description": "Space Sciences Laboratory of the University of Costa Rica: solar observation, radio astronomy, instrumentation and space weather."
+  },
+  "shell": {
+    "skipToContent": "Skip to main content"
+  },
+  "nav": {
+    "goHome": "Go to the home page",
+    "mainLabel": "Main navigation",
+    "mobileLabel": "Mobile navigation",
+    "openMenu": "Open navigation",
+    "closeMenu": "Close navigation",
+    "home": "Home",
+    "about": "About",
+    "whoWeAre": "Who we are",
+    "collaborations": "Collaborations and Initiatives",
+    "research": "Research",
+    "researchAreas": "Research areas",
+    "solarPhysics": "Solar physics",
+    "spaceWeather": "Space weather",
+    "rosac": "ROSAC",
+    "data": "Data",
+    "outreach": "Outreach",
+    "news": "News",
+    "gallery": "Gallery",
+    "resources": "Resources",
+    "publications": "Publications",
+    "scientificTools": "Scientific tools",
+    "contact": "Contact"
+  },
+  "footer": {
+    "institutionsLabel": "Institutions",
+    "navigationLabel": "Footer links",
+    "contact": "Contact",
+    "rightsReserved": "All rights reserved."
+  },
+  "languageSwitcher": {
+    "label": "Language"
+  },
+  "home": {
+    "hero": {
+      "title": "We explore the Sun to understand space weather",
+      "lead": "We study solar activity and its effects on the interplanetary medium and the Earth through observations, instrumentation, data analysis and scientific development.",
+      "cta": "Learn more about LASCE"
+    },
+    "indicators": {
+      "title": "Geomagnetic indices for Costa Rica",
+      "demoNotice": "Demonstration data",
+      "kp": {
+        "label": "Kp index",
+        "value": "2 · Quiet"
+      },
+      "dst": {
+        "label": "Dst index",
+        "value": "-12 nT · Stable"
+      },
+      "ae": {
+        "label": "AE index",
+        "value": "75 nT · Low activity"
+      },
+      "ap": {
+        "label": "Ap index",
+        "value": "7 · Quiet"
+      }
+    },
+    "areas": {
+      "title": "Main areas and access points",
+      "subtitle": "Research, observe, analyse and share."
+    },
+    "observationBadge": {
+      "triggerLabel": "Live image of the Sun. Show the date and source of the observation.",
+      "live": "Live",
+      "close": "Close",
+      "panelTitle": "Real-time image of the Sun",
+      "observed": "Observed on <time></time>",
+      "updating": "Updating the latest image of the Sun…"
+    }
+  },
+  "workAreas": {
+    "solarPhysics": {
+      "title": "Solar physics",
+      "description": "Activity and observations"
+    },
+    "spaceWeather": {
+      "title": "Space weather",
+      "description": "Solar phenomena and their effects"
+    },
+    "rosac": {
+      "title": "ROSAC",
+      "description": "Radio telescope data"
+    },
+    "tools": {
+      "title": "Scientific tools",
+      "description": "Analysis and visualisation of solar events"
+    },
+    "data": {
+      "title": "Data and analysis",
+      "description": "Queries and downloads"
+    },
+    "outreach": {
+      "title": "Outreach",
+      "description": "News and resources"
+    }
+  },
+  "common": {
+    "backToHome": "Back to home",
+    "backToWorkAreas": "Back to the work areas"
+  },
+  "contact": {
+    "meta": {
+      "title": "Contact | LASCE",
+      "description": "Official channels for reaching the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "Contact",
+      "lead": "Official channels of the Solar Astrophysics and Space Weather Laboratory."
+    },
+    "channelsTitle": "Contact information",
+    "channels": {
+      "phone": "Phone",
+      "location": "Location"
+    }
+  },
+  "solarPhysics": {
+    "meta": {
+      "title": "Solar astrophysics | LASCE",
+      "description": "Learn how LASCE studies solar activity, the Sun-Earth relationship and its effects on the space environment from Costa Rica."
+    },
+    "hero": {
+      "kicker": "LASCE work area",
+      "title": "Solar astrophysics",
+      "introduction": "Solar activity does not end at the Sun. Its magnetic fields, its radiation and the stream of particles it releases extend across the Solar System and can change the space environment of the Earth."
+    },
+    "overview": {
+      "title": "What does solar astrophysics study?",
+      "intro": "This area seeks to understand the physical processes behind the Sun's activity and to explain how those variations connect with the interplanetary medium and the Earth's environment.",
+      "items": {
+        "activity": {
+          "title": "Solar activity",
+          "description": "It analyses eruptive phenomena such as flares, coronal mass ejections and solar radio emissions."
+        },
+        "magneticField": {
+          "title": "Magnetic field",
+          "description": "It studies how magnetic fields store energy, structure the solar atmosphere and take part in eruptive events."
+        },
+        "sunEarth": {
+          "title": "Sun-Earth relationship",
+          "description": "It relates solar disturbances to the solar wind, the interplanetary magnetic field and the ionosphere."
+        },
+        "analysis": {
+          "title": "Scientific analysis",
+          "description": "It brings together observations, satellite data, ground stations and computational processing tools."
+        }
+      },
+      "flow": {
+        "title": "Chain of study",
+        "caption": "LASCE connects data, models and analysis methods to study solar activity and its possible effects on the Earth and on technology.",
+        "steps": {
+          "sun": "Sun",
+          "disturbance": "Solar disturbance",
+          "terrestrial": "Earth's environment",
+          "analysis": "LASCE analysis"
+        }
+      }
+    },
+    "lasce": {
+      "title": "LASCE's work in solar astrophysics",
+      "p1": "The Solar Astrophysics and Space Weather Laboratory brings together research in solar astrophysics, astronomical observations and computational development to study solar activity and its interaction with the Earth's environment.",
+      "p2": "Its work combines data from different instruments, wavelengths and platforms to observe different links of a single chain: from the magnetic origin of a solar eruption to its manifestations near the Earth.",
+      "p3": "From the University of Costa Rica, LASCE seeks to strengthen national scientific capabilities for analysing the Sun-Earth relationship, to train talent and to foster collaborations in the study of space weather."
+    }
+  },
+  "spaceWeather": {
+    "meta": {
+      "title": "Space weather | LASCE",
+      "description": "What space weather is, how it relates to solar activity and why it is studied from Costa Rica at the Space Sciences Laboratory of the University of Costa Rica."
+    },
+    "hero": {
+      "kicker": "LASCE work area",
+      "title": "Space weather"
+    },
+    "definition": {
+      "title": "What is space weather?",
+      "p1": "Space weather describes the changing conditions of the Sun, the solar wind and the ionosphere that can influence the Earth's surroundings and technological systems. It is not everyday atmospheric weather: it originates mainly in solar activity and shows itself in the space environment of our planet."
+    },
+    "sunToEarth": {
+      "title": "From the Sun to the Earth",
+      "items": {
+        "release": {
+          "title": "The Sun releases energy",
+          "description": "Flares produce intense increases in radiation and are associated with the origin of coronal mass ejections (CMEs), which are large structures of plasma and magnetic field. Some of these events accelerate particles to high energies."
+        },
+        "propagation": {
+          "title": "The disturbance propagates",
+          "description": "Electromagnetic radiation arrives in about eight minutes, while particles and CMEs travel through the interplanetary medium on scales of minutes and of hours to days, respectively."
+        },
+        "response": {
+          "title": "The Earth's environment responds",
+          "description": "If the disturbance reaches the Earth under the right conditions, it can produce geomagnetic storms or ionospheric disturbances."
+        },
+        "technology": {
+          "title": "Technology can be affected",
+          "description": "Sensitive systems include radio communications, GNSS navigation, satellites, power grids, and space and aviation operations."
+        }
+      }
+    },
+    "costaRica": {
+      "title": "Why study it from Costa Rica?",
+      "p1": "The response of the ionosphere and the performance of technological systems can depend on geographic and geomagnetic location. Having observations and analyses made from Costa Rica makes it possible to characterise the regional environment better, to contribute data to global networks and to build local scientific capabilities. For a country that depends more and more on satellite navigation, telecommunications and digital infrastructure, understanding space weather is an investment in knowledge."
+    },
+    "components": {
+      "title": "What makes up space weather?",
+      "intro": "It is not a single phenomenon: it is a chain that starts at the Sun and ends at the Earth. Each link changes the next one.",
+      "items": {
+        "solarActivity": {
+          "title": "Solar activity",
+          "description": "The Sun is not still. Sunspots, flares and coronal mass ejections release energy, particles and magnetic fields into space."
+        },
+        "solarWind": {
+          "title": "Solar wind",
+          "description": "It is a continuous stream of plasma leaving the solar corona. Its speed, density and magnetic field change according to what happens on the Sun."
+        },
+        "magnetosphere": {
+          "title": "Magnetosphere",
+          "description": "The Earth's magnetic field deflects most of the solar wind. When that stream intensifies, the magnetosphere is compressed and can be disturbed."
+        },
+        "ionosphere": {
+          "title": "Ionosphere",
+          "description": "It is the upper layer of the atmosphere, ionised by solar radiation. Changes in that layer affect radio, GPS and other communications."
+        },
+        "storms": {
+          "title": "Geomagnetic storms",
+          "description": "They arise when the solar wind and the interplanetary magnetic field strongly disturb the magnetosphere. They can last hours or days."
+        },
+        "particles": {
+          "title": "Particle radiation",
+          "description": "The Sun can also send protons and other energetic particles. That stream is different from the everyday solar wind and can affect satellites and polar flights."
+        }
+      },
+      "flow": {
+        "title": "Conceptual flow",
+        "caption": "The Sun's activity feeds the solar wind; that stream strikes the magnetosphere and, from there, effects appear on the Earth.",
+        "steps": {
+          "sun": "Sun",
+          "solarWind": "Solar wind",
+          "magnetosphere": "Magnetosphere",
+          "earth": "Earth"
+        }
+      }
+    }
+  },
+  "scientificTools": {
+    "meta": {
+      "title": "Scientific tools | LASCE"
+    },
+    "hero": {
+      "kicker": "LASCE resources",
+      "title": "Scientific tools",
+      "intro": "Access tools for analysing solar activity and studying space weather."
+    },
+    "tools": {
+      "swaat": "Analyse solar events using GOES X-ray and RSTN microwave observations. View and compare their evolution over time with static and interactive charts.",
+      "swapro": "Query and view solar events in specific time intervals to support the study of solar activity and space weather."
+    },
+    "list": {
+      "empty": "No scientific tools are available at the moment.",
+      "access": "Open {title}",
+      "externalNotice": "The links open in a new tab and take you to external sites."
+    }
+  },
+  "collaborations": {
+    "meta": {
+      "title": "Collaborations and Initiatives | LASCE",
+      "description": "Organisations that collaborate with LASCE and the international initiatives it is part of, including the ISWI and the Ibero-American VLBI Initiative."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "Collaborations and Initiatives",
+      "lead": "Organisations that collaborate with the Solar Astrophysics and Space Weather Laboratory, and the international initiatives it is part of."
+    },
+    "section": {
+      "title": "Research collaborations",
+      "description": "Organisations and groups that collaborate with LASCE in research and scientific development, nationally and internationally.",
+      "empty": "No collaboration information is available at the moment."
+    },
+    "card": {
+      "national": "National",
+      "international": "International",
+      "acronym": "Acronym:"
+    },
+    "countries": {
+      "cr": "Costa Rica",
+      "ar": "Argentina",
+      "it": "Italy",
+      "fr": "France",
+      "mx": "Mexico"
+    },
+    "initiatives": {
+      "title": "International initiatives LASCE is part of",
+      "items": {
+        "iswi": {
+          "title": "International Space Weather Initiative (ISWI)",
+          "linkLabel": "Official ISWI site",
+          "logoAlt": "Logo of the International Space Weather Initiative (ISWI)",
+          "p1": "The International Space Weather Initiative (ISWI) of the United Nations Committee on the Peaceful Uses of Outer Space was launched in 2009 and formally concluded as an item on the Committee's agenda in 2012. However, ISWI activities continued and, since 2013, they have been addressed under the new permanent agenda item on space weather of the Committee's Scientific and Technical Subcommittee."
+        },
+        "ivia": {
+          "title": "Ibero-American VLBI Initiative (IVIA)",
+          "linkLabel": "Official IVIA site",
+          "logoAlt": "Logo of the Ibero-American VLBI Initiative (IVIA)",
+          "p1": "The Ibero-American VLBI Initiative (IVIA) emerged in 2019 as a joint working body aimed at developing radio astronomy in Ibero-America. Its guiding ideas are the development of radio astronomy in the region and the implementation of a VLBI network in Latin America, in collaboration with Spain and Portugal.",
+          "p2": "It currently includes representatives of institutions from Argentina, Brazil, Colombia, Costa Rica, Ecuador, Mexico, Peru and Uruguay, and it aims to promote the participation of the other countries in the region. The Joint Institute for VLBI (JIVE, based in the Netherlands, the organisation that centralises data processing for the European VLBI Network, EVN), the Instituto Geográfico Nacional of Spain and the Instituto de Telecomunicações of Portugal also take part.",
+          "p3": "The initiative involves collaborative work on converting telecommunication antennas into radio telescopes and adapting them for VLBI, and on developing all the related technologies. By pooling the resources of the participating institutions, it aims to reach a critical mass that makes the most of the resources and infrastructure existing in each country.",
+          "p4": "The final goal is therefore to create an international collaboration project with a large impact on the overall development of the region.",
+          "p5": "The initiative contributes strongly to narrowing the gap between the number of radio astronomy observatories in the Southern Hemisphere and those in the Northern Hemisphere."
+        }
+      }
+    }
+  },
+  "academicActivities": {
+    "section": {
+      "title": "Academic activities",
+      "description": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
+      "empty": "No academic activities are available at the moment."
+    },
+    "card": {
+      "badge": "Academic activity",
+      "details": "View the activity details"
+    },
+    "page": {
+      "metaTitle": "{title} | News | LASCE",
+      "kicker": "Academic activity",
+      "infoTitle": "General information",
+      "type": "Type of activity",
+      "date": "Date",
+      "location": "Place",
+      "descriptionTitle": "Description of the activity",
+      "resourcesTitle": "Resources and links of interest",
+      "backToNews": "Back to news"
+    },
+    "items": {
+      "machineLearningWorkshop": {
+        "category": "Workshop",
+        "date": "16-20 February 2026",
+        "abstract": "A workshop focused on the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather and GNSS systems.",
+        "p1": "As part of the LASCE project, the Workshop on Machine Learning Applied to Space Weather and Global Navigation Satellite Systems (GNSS) was held from 16 to 20 February 2026 in San José, Costa Rica. For five days the activity brought together students, early-career researchers and specialists to strengthen their skills in the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather.",
+        "p2": "The programme combined lectures, discussion sessions and computational practice devoted to ionospheric processes, the effects of space weather on GNSS systems, scientific computing and data analysis with machine learning tools. This approach made it possible to combine the physical understanding of solar and terrestrial phenomena with modern methods of processing, modelling and prediction, while also promoting the use of open data and reproducible procedures.",
+        "p3": "The workshop had 52 in-person participants from 17 countries; 37.2% were women and 70% came from developing countries. It was organised with the participation of the Space Research Center of the University of Costa Rica, the United Nations Office for Outer Space Affairs, the International Committee on GNSS, COSPAR, INGV and SCOSTEP, together with contributions from the National University of Tucumán and the Abdus Salam International Centre for Theoretical Physics.",
+        "p4": "This activity strengthened the international profile of LASCE, widened its networks of scientific collaboration and contributed to building regional capabilities for researching, monitoring and predicting the effects of space weather on the ionosphere and on technological systems. It also created a space for identifying new scientific challenges, opportunities for cooperation and future initiatives that combine space weather physics with advanced data analysis tools.",
+        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop",
+        "galleryLabel": "View the workshop photo gallery"
+      }
+    }
+  }
+}

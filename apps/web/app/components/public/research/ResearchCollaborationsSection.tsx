@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl'
+
 import { CollaborationCard } from './CollaborationCard'
 import type { ResearchCollaboration } from '@/app/lib/research-collaborations'
 
@@ -10,6 +12,8 @@ export function ResearchCollaborationsSection({
   id = 'research-collaborations',
   collaborations,
 }: ResearchCollaborationsSectionProps) {
+  const t = useTranslations('collaborations.section')
+
   return (
     <section
       aria-labelledby="collaborations-title"
@@ -17,16 +21,13 @@ export function ResearchCollaborationsSection({
       id={id}
     >
       <div className="section-heading">
-        <h2 id="collaborations-title">Colaboraciones de investigación</h2>
-        <p className="research-collaborations-description">
-          Organizaciones y grupos que colaboran con el LASCE en investigación y desarrollo
-          científico a nivel nacional e internacional.
-        </p>
+        <h2 id="collaborations-title">{t('title')}</h2>
+        <p className="research-collaborations-description">{t('description')}</p>
       </div>
 
       {collaborations.length === 0 ? (
         <p className="content-empty" role="status">
-          No hay información de colaboraciones disponible actualmente.
+          {t('empty')}
         </p>
       ) : (
         <div className="collaborations-grid">
