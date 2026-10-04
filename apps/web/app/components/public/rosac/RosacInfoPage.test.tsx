@@ -121,7 +121,7 @@ describe('RosacInfoPage', () => {
   test('links the general consultation to the ROSAC simulations', () => {
     renderPage()
 
-    const consultation = screen.getByRole('region', { name: 'Consulta científica' })
+    const consultation = screen.getByRole('region', { name: '10. Consulta científica' })
     expect(within(consultation).queryByText('Próximamente')).not.toBeInTheDocument()
     const link = within(consultation).getByRole('link', {
       name: 'Explorar datos',

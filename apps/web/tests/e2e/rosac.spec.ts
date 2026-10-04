@@ -25,12 +25,12 @@ for (const viewport of [
     await expect(
       page.getByRole('heading', { level: 1, name: 'Radio Observatorio de Santa Cruz (ROSAC)' }),
     ).toBeVisible()
-    await expect(
-      page.getByRole('img', { name: /con el logo de ROSAC/ }),
-    ).toBeVisible()
+    await expect(page.getByRole('img', { name: /con el logo de ROSAC/ })).toBeVisible()
     // The map loads on the client only, after the initial page content, so give it a
     // moment before checking that its own footprint does not cause horizontal overflow.
-    await expect(page.getByRole('region', { name: /^Mapa de ubicación de/ })).toBeVisible()
+    await expect(page.getByRole('region', { name: /^Mapa de ubicación de/ })).toBeVisible({
+      timeout: 15000,
+    })
     const map = page.getByRole('region', { name: /^Mapa de ubicación de/ })
     const marker = map.getByRole('button', { name: 'ROSAC', exact: true })
     await expect(marker).toBeVisible()
@@ -59,9 +59,7 @@ test('serves the general information and LASCE relationship directly without aut
   await expect(page).toHaveURL(/\/radioastronomia$/)
   await expect(page.getByRole('main')).toHaveCount(1)
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
-  await expect(
-    page.getByRole('img', { name: /con el logo de ROSAC/ }),
-  ).toBeVisible()
+  await expect(page.getByRole('img', { name: /con el logo de ROSAC/ })).toBeVisible()
   await expect(page.getByRole('region', { name: '¿Qué es ROSAC?' })).toContainText(
     'observar el Sol y otras fuentes celestes',
   )
@@ -122,7 +120,7 @@ test('presents each ROSAC researcher card with public information', async ({ pag
 test('links the scientific consultation to the ROSAC data source', async ({ page }) => {
   await page.goto('/radioastronomia')
 
-  const consultation = page.getByRole('region', { name: 'Consulta científica' })
+  const consultation = page.getByRole('region', { name: '10. Consulta científica' })
   await expect(consultation.getByText('Próximamente')).toHaveCount(0)
   const link = consultation.getByRole('link', { name: 'Explorar datos' })
   await expect(link).toHaveAttribute('href', '/datos?source=ROSAC#scientific-query-title')
