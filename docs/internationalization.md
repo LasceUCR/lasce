@@ -20,18 +20,25 @@ never text a visitor reads.
 The library is [`next-intl`](https://next-intl.dev), set up **without locale routing**: the
 language is not part of the URL.
 
-| Piece                                        | Role                                                                           |
-| -------------------------------------------- | ------------------------------------------------------------------------------ |
-| `apps/web/messages/<locale>.json`            | One catalogue per language. `es.json` defines the keys                         |
-| `apps/web/app/lib/i18n/config.ts`            | `locales`, `defaultLocale`, `localeLabels`, the cookie name, the time zone     |
-| `apps/web/app/lib/i18n/locale.ts`            | `resolveLocale(cookieValue)`: a supported locale, or Spanish                   |
-| `apps/web/app/lib/i18n/messages.ts`          | `getMessages(locale)`: the catalogue, with Spanish filling untranslated keys   |
-| `apps/web/app/lib/i18n/request.ts`           | Per-request config for next-intl, registered in `next.config.ts`               |
-| `apps/web/app/lib/i18n/actions.ts`           | `setLocale`, the Server Action behind the language switcher                    |
-| `apps/web/app/lib/i18n/testing.tsx`          | `renderWithIntl` for component tests                                           |
-| `apps/web/global.d.ts`                       | Types `t()` keys against `es.json`                                             |
-| `apps/web/app/layout.tsx`                    | Sets `<html lang>` and mounts `NextIntlClientProvider`                         |
-| `app/components/public/LanguageSwitcher.tsx` | The control, rendered by `PublicHeader` in the desktop bar and the mobile menu |
+| Piece                                        | Role                                                                         |
+| -------------------------------------------- | ---------------------------------------------------------------------------- |
+| `apps/web/messages/<locale>.json`            | One catalogue per language. `es.json` defines the keys                       |
+| `apps/web/app/lib/i18n/config.ts`            | `locales`, `defaultLocale`, `localeLabels`, the cookie name, the time zone   |
+| `apps/web/app/lib/i18n/locale.ts`            | `resolveLocale(cookieValue)`: a supported locale, or Spanish                 |
+| `apps/web/app/lib/i18n/messages.ts`          | `getMessages(locale)`: the catalogue, with Spanish filling untranslated keys |
+| `apps/web/app/lib/i18n/request.ts`           | Per-request config for next-intl, registered in `next.config.ts`             |
+| `apps/web/app/lib/i18n/actions.ts`           | `setLocale`, the Server Action behind the language switcher                  |
+| `apps/web/app/lib/i18n/testing.tsx`          | `renderWithIntl` for component tests                                         |
+| `apps/web/global.d.ts`                       | Types `t()` keys against `es.json`                                           |
+| `apps/web/app/layout.tsx`                    | Sets `<html lang>` and mounts `NextIntlClientProvider`                       |
+| `app/components/public/LanguageMenu.tsx`     | The control in the desktop header, rendered by `PublicHeader`                |
+| `app/components/public/LanguageSwitcher.tsx` | The same choice as a native `<select>`, in the mobile menu                   |
+
+The desktop control is a dropdown like the nav groups and the account menu (`useDisclosure`,
+`.nav-group`): a globe and the current language's short label (`ES`, `EN`), opening a panel that
+lists each language by its own name and marks the current one. The short label is what fits beside
+the Spanish navigation just above the 1400px breakpoint; between 1401px and 1500px the navigation
+also closes up to make room (`.desktop-nav` in `globals.css`).
 
 A request goes like this:
 
@@ -115,7 +122,7 @@ Rules:
 3. Register it in `translations` in `app/lib/i18n/messages.ts`, and add it to the `test.each` list
    in `messages.test.ts`.
 
-TypeScript reports steps 1 and 3 if either is skipped. The language switcher, the Storybook
+TypeScript reports steps 1 and 3 if either is skipped. The language menu, the Storybook
 toolbar and the cookie validation all read `locales`, so nothing else changes.
 
 ## Test it

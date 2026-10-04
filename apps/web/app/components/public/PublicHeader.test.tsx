@@ -242,21 +242,28 @@ describe('PublicHeader', () => {
   test('offers the language choice in the header and in the mobile menu, on the current one', () => {
     renderHeader({ locale: 'en' })
 
-    const switchers = screen.getAllByRole('combobox', { name: 'Language', hidden: true })
-
-    expect(switchers).toHaveLength(2)
-    for (const switcher of switchers) {
-      expect(switcher).toHaveValue('en')
-    }
+    expect(screen.getByLabelText('Language: English')).toHaveTextContent('EN')
+    expect(screen.getByRole('combobox', { name: 'Language', hidden: true })).toHaveValue('en')
   })
 
-  test('stores the language the visitor chooses', async () => {
+  test('stores the language the visitor chooses from the header menu', async () => {
     const user = userEvent.setup()
     const setLocaleAction = vi.fn(async () => undefined)
     renderHeader({ setLocaleAction })
 
-    const [switcher] = screen.getAllByRole('combobox', { name: 'Idioma' })
-    await user.selectOptions(switcher!, within(switcher!).getByRole('option', { name: 'English' }))
+    await user.click(screen.getByLabelText('Idioma: Español'))
+    await user.click(screen.getByRole('button', { name: 'English' }))
+
+    await waitFor(() => expect(setLocaleAction).toHaveBeenCalledExactlyOnceWith('en'))
+  })
+
+  test('stores the language the visitor chooses from the mobile menu', async () => {
+    const user = userEvent.setup()
+    const setLocaleAction = vi.fn(async () => undefined)
+    renderHeader({ setLocaleAction })
+
+    await user.click(screen.getByLabelText('Abrir navegación'))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Idioma' }), 'English')
 
     await waitFor(() => expect(setLocaleAction).toHaveBeenCalledExactlyOnceWith('en'))
   })

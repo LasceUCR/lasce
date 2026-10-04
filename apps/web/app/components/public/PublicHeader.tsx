@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { localeLabels, locales, type Locale } from '@/app/lib/i18n/config'
 
 import { Brand } from './Brand'
+import { LanguageMenu } from './LanguageMenu'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { NavGroup, isActivePath } from './NavGroup'
 import { AccountLinks } from './auth/AccountLinks'
@@ -242,8 +243,7 @@ export function PublicHeader({ logoutAction, setLocaleAction }: PublicHeaderProp
       </nav>
 
       <div className="header-actions">
-        <LanguageSwitcher
-          compact
+        <LanguageMenu
           disabled={isChangingLocale}
           label={languageLabel}
           locale={locale}

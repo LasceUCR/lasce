@@ -15,8 +15,8 @@ export const Default: Story = {
     label: 'Idioma',
     locale: 'es',
     options: [
-      { value: 'es', label: 'Español', shortLabel: 'ES' },
-      { value: 'en', label: 'English', shortLabel: 'EN' },
+      { value: 'es', label: 'Español' },
+      { value: 'en', label: 'English' },
     ],
     onChange: () => undefined,
   },
@@ -24,11 +24,6 @@ export const Default: Story = {
 
 export const English: Story = {
   args: { ...Default.args, label: 'Language', locale: 'en' },
-}
-
-// As the desktop header shows it, where the full names do not fit beside the navigation.
-export const Compact: Story = {
-  args: { ...Default.args, compact: true },
 }
 
 // While the Server Action that stores the choice is running.

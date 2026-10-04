@@ -533,9 +533,51 @@ a {
   background: var(--white);
 }
 
-/* Same pill as .login-link beside it: centered in the taller .header-actions box. */
+/* The desktop language menu is a nav-group like the account menu beside it: same trigger,
+   same panel, same caret. Only the panel's rows differ, being buttons rather than links. */
+.language-menu summary {
+  gap: 5px;
+  font-weight: 700;
+}
+
+.language-menu .nav-group-panel {
+  min-width: 160px;
+}
+
+.language-menu-panel button {
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  background: none;
+  color: #42586b;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.language-menu-panel button:hover,
+.language-menu-panel button:focus-visible,
+.language-menu-panel button.active {
+  background: #eef6fa;
+  color: var(--blue-dark);
+}
+
+.language-menu-panel button.active {
+  font-weight: 700;
+}
+
+.language-menu-panel button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* The native control the mobile menu uses for the same choice. */
 .language-switcher {
-  align-self: center;
   min-height: 42px;
   padding: 0 8px;
   border: 1px solid var(--border);
@@ -543,8 +585,7 @@ a {
   background: var(--white);
   color: var(--blue-dark);
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
 }
 
@@ -572,7 +613,7 @@ a {
   gap: 10px;
 }
 
-/* From the 1400px mobile breakpoint up to 1500px the Spanish navigation, the language switcher
+/* From the 1400px mobile breakpoint up to 1500px the Spanish navigation, the language menu
    and the account links do not fit on one row at the default 28px spacing, so the navigation
    closes up there. */
 @media (min-width: 1401px) and (max-width: 1500px) {

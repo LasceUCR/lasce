@@ -8,7 +8,7 @@ test('renders in Spanish until the visitor chooses another language', async ({ p
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'es')
   await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible()
-  await expect(page.getByRole('banner').getByRole('combobox', { name: 'Idioma' })).toHaveValue('es')
+  await expect(page.getByRole('banner').getByLabel('Idioma: Español')).toHaveText('ES')
 })
 
 test('switches the site shell to English, remembers the choice and switches back', async ({
@@ -16,7 +16,8 @@ test('switches the site shell to English, remembers the choice and switches back
 }) => {
   await page.goto('/contacto')
 
-  await page.getByRole('banner').getByRole('combobox', { name: 'Idioma' }).selectOption('en')
+  await page.getByRole('banner').getByLabel('Idioma: Español').click()
+  await page.getByRole('banner').getByRole('button', { name: 'English' }).click()
 
   const navigation = page.getByRole('navigation', { name: 'Main navigation' })
   await expect(navigation.getByRole('link', { name: 'Home' })).toBeVisible()
@@ -41,7 +42,8 @@ test('switches the site shell to English, remembers the choice and switches back
 
   await expect(page).toHaveTitle('LASCE | University of Costa Rica')
 
-  await page.getByRole('banner').getByRole('combobox', { name: 'Language' }).selectOption('es')
+  await page.getByRole('banner').getByLabel('Language: English').click()
+  await page.getByRole('banner').getByRole('button', { name: 'Español' }).click()
 
   await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'es')
