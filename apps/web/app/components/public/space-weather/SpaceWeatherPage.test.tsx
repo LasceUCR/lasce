@@ -1,8 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
+import { getMessages } from '@/app/lib/i18n/messages'
 import {
+  getSpaceWeatherContent,
   spaceWeatherBackLink,
+  spaceWeatherContent,
   spaceWeatherDefinition,
   spaceWeatherHero,
 } from '@/app/lib/space-weather'
@@ -11,7 +14,7 @@ import { SpaceWeatherPage } from './SpaceWeatherPage'
 
 describe('SpaceWeatherPage', () => {
   test('introduces space weather without the LASCE work section', () => {
-    render(<SpaceWeatherPage />)
+    render(<SpaceWeatherPage content={spaceWeatherContent} />)
 
     expect(
       screen.getByRole('heading', { level: 1, name: spaceWeatherHero.title }),
@@ -29,13 +32,25 @@ describe('SpaceWeatherPage', () => {
   })
 
   test('explains the solar chain and links back to the work areas', () => {
-    render(<SpaceWeatherPage />)
+    render(<SpaceWeatherPage content={spaceWeatherContent} />)
 
     expect(screen.getByRole('heading', { name: '1. El Sol libera energía' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Actividad solar' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: spaceWeatherBackLink.label })).toHaveAttribute(
       'href',
       spaceWeatherBackLink.href,
+    )
+  })
+
+  test('shows the page in English when given the English content', () => {
+    render(<SpaceWeatherPage content={getSpaceWeatherContent(getMessages('en'))} />)
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Space weather' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '1. The Sun releases energy' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Geomagnetic storms' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to the work areas' })).toHaveAttribute(
+      'href',
+      '/#areas-de-trabajo',
     )
   })
 })

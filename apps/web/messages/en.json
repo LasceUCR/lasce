@@ -172,5 +172,84 @@
       "p2": "Its work combines data from different instruments, wavelengths and platforms to observe different links of a single chain: from the magnetic origin of a solar eruption to its manifestations near the Earth.",
       "p3": "From the University of Costa Rica, LASCE seeks to strengthen national scientific capabilities for analysing the Sun-Earth relationship, to train talent and to foster collaborations in the study of space weather."
     }
+  },
+  "spaceWeather": {
+    "meta": {
+      "title": "Space weather | LASCE",
+      "description": "What space weather is, how it relates to solar activity and why it is studied from Costa Rica at the Space Sciences Laboratory of the University of Costa Rica."
+    },
+    "hero": {
+      "kicker": "LASCE work area",
+      "title": "Space weather"
+    },
+    "definition": {
+      "title": "What is space weather?",
+      "p1": "Space weather describes the changing conditions of the Sun, the solar wind and the ionosphere that can influence the Earth's surroundings and technological systems. It is not everyday atmospheric weather: it originates mainly in solar activity and shows itself in the space environment of our planet."
+    },
+    "sunToEarth": {
+      "title": "From the Sun to the Earth",
+      "items": {
+        "release": {
+          "title": "The Sun releases energy",
+          "description": "Flares produce intense increases in radiation and are associated with the origin of coronal mass ejections (CMEs), which are large structures of plasma and magnetic field. Some of these events accelerate particles to high energies."
+        },
+        "propagation": {
+          "title": "The disturbance propagates",
+          "description": "Electromagnetic radiation arrives in about eight minutes, while particles and CMEs travel through the interplanetary medium on scales of minutes and of hours to days, respectively."
+        },
+        "response": {
+          "title": "The Earth's environment responds",
+          "description": "If the disturbance reaches the Earth under the right conditions, it can produce geomagnetic storms or ionospheric disturbances."
+        },
+        "technology": {
+          "title": "Technology can be affected",
+          "description": "Sensitive systems include radio communications, GNSS navigation, satellites, power grids, and space and aviation operations."
+        }
+      }
+    },
+    "costaRica": {
+      "title": "Why study it from Costa Rica?",
+      "p1": "The response of the ionosphere and the performance of technological systems can depend on geographic and geomagnetic location. Having observations and analyses made from Costa Rica makes it possible to characterise the regional environment better, to contribute data to global networks and to build local scientific capabilities. For a country that depends more and more on satellite navigation, telecommunications and digital infrastructure, understanding space weather is an investment in knowledge."
+    },
+    "components": {
+      "title": "What makes up space weather?",
+      "intro": "It is not a single phenomenon: it is a chain that starts at the Sun and ends at the Earth. Each link changes the next one.",
+      "items": {
+        "solarActivity": {
+          "title": "Solar activity",
+          "description": "The Sun is not still. Sunspots, flares and coronal mass ejections release energy, particles and magnetic fields into space."
+        },
+        "solarWind": {
+          "title": "Solar wind",
+          "description": "It is a continuous stream of plasma leaving the solar corona. Its speed, density and magnetic field change according to what happens on the Sun."
+        },
+        "magnetosphere": {
+          "title": "Magnetosphere",
+          "description": "The Earth's magnetic field deflects most of the solar wind. When that stream intensifies, the magnetosphere is compressed and can be disturbed."
+        },
+        "ionosphere": {
+          "title": "Ionosphere",
+          "description": "It is the upper layer of the atmosphere, ionised by solar radiation. Changes in that layer affect radio, GPS and other communications."
+        },
+        "storms": {
+          "title": "Geomagnetic storms",
+          "description": "They arise when the solar wind and the interplanetary magnetic field strongly disturb the magnetosphere. They can last hours or days."
+        },
+        "particles": {
+          "title": "Particle radiation",
+          "description": "The Sun can also send protons and other energetic particles. That stream is different from the everyday solar wind and can affect satellites and polar flights."
+        }
+      },
+      "flow": {
+        "title": "Conceptual flow",
+        "caption": "The Sun's activity feeds the solar wind; that stream strikes the magnetosphere and, from there, effects appear on the Earth.",
+        "steps": {
+          "sun": "Sun",
+          "solarWind": "Solar wind",
+          "magnetosphere": "Magnetosphere",
+          "earth": "Earth"
+        }
+      }
+    }
   }
 }
