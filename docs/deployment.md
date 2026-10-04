@@ -14,7 +14,8 @@ Two workflows, plus a scheduled one and a ruleset check.
 | --------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
 | `.github/workflows/ci.yml`        | Pull requests into `development` / `main`, and `workflow_call` | Verification only. Never writes anything.                     |
 | `.github/workflows/cd.yml`        | Push to `development` / `main`, or manual dispatch             | Calls `ci.yml`, publishes images to GHCR, deploys to Railway. |
-| `.github/workflows/cron-jobs.yml` | 03:00 UTC daily, or manual dispatch                            | Enqueues recurring jobs.                                      |
+| `.github/workflows/cron-jobs.yml` | Manual dispatch only                                           | Enqueues one job, once.                                       |
+| `.github/workflows/ops.yml`       | Manual dispatch only                                           | Registers schedules or seeds a database, by URL.              |
 | `.github/workflows/rulesets.yml`  | Pull requests into `main`, ruleset changes, 12:00 UTC daily    | Fails if the live branch rulesets differ from the JSON files. |
 
 `cd.yml` calls `ci.yml` as a reusable workflow rather than duplicating triggers,
@@ -262,24 +263,50 @@ curl -X POST "$APP_URL/api/jobs/ingest-readings/trigger" \
   -H 'Content-Type: application/json' -d '{}'
 ```
 
-Valid job names are in `JOB_NAMES` (`packages/contracts/src/jobs.ts`): `ingest-readings`.
+Valid job names are in `JOB_NAMES` (`packages/contracts/src/jobs.ts`). The body must satisfy
+that job's payload contract, or the route answers `422`.
 Poll the returned id at `GET /api/jobs/status/<id>`.
 
 Or through the pipeline: `gh workflow run cron-jobs.yml -f target=staging -f job=ingest-readings`.
+
+**Manual operations.** `ops.yml` runs `pnpm jobs:register` or `pnpm db:seed`
+against a store whose URL you pass as an input:
+
+```bash
+gh workflow run ops.yml -f task=register-schedules -f redis_url='<public Redis URL>'
+gh workflow run ops.yml -f task=seed-database -f database_url='<public Postgres URL>'
+```
+
+Pass the **public** proxy URL (`REDIS_PUBLIC_URL` / `DATABASE_PUBLIC_URL` on the
+Railway service), because a GitHub runner cannot reach `*.railway.internal`. The
+URL alone decides which environment is touched, and there is no approval gate.
+
+This repository is public, so its Actions logs are world-readable and both URLs
+carry a password. The workflow reads the inputs from the event payload and masks
+them before anything else runs, and never references them through
+`${{ inputs.* }}`. Do not change that. If a URL ever does show up in a log,
+rotate that password.
 
 **Logs.** `railway logs --service worker`. A healthy worker logs a `worker ready`
 line with its queue name and concurrency on boot.
 
 **Scheduling.** Recurring jobs are declared once in `packages/jobs/src/schedules.ts`
-and fired by `cron-jobs.yml`, not by BullMQ's internal scheduler, so
-`pnpm jobs:register` is **not** part of deployment. That script is a `tsx` file
-with workspace-relative imports and is not present in the standalone runtime
-image. Both mechanisms end at the same processors; see the docblock in
-`schedules.ts`.
+and fired by BullMQ's scheduler, which lives in Redis. The last step of the
+`deploy` job in `cd.yml` runs `pnpm jobs:register` against the deployed Redis on
+every deploy. The script is idempotent: it upserts every declared entry and
+removes any scheduler that is no longer declared, so editing `schedules.ts` and
+merging is all it takes to change what fires.
 
-Two caveats: GitHub runs `schedule` triggers **only from the default branch**, so
-`cron-jobs.yml` must be on `main` before it will ever fire; and scheduled
-workflows are auto-disabled after 60 days of repository inactivity.
+The step runs on the GitHub runner, not inside the image, because the script is
+a `tsx` file with workspace-relative imports and is not present in the
+standalone runtime image. Like `migrate.yml`, it reaches the store through
+`railway run --service redis` and uses `REDIS_PUBLIC_URL`, so the Redis service
+**must have TCP Proxy enabled** in each environment. Without it the step fails
+with a message saying so, after the new version is already live.
+
+`cron-jobs.yml` schedules nothing. It is a manual trigger that enqueues one job
+per run. To stop every schedule without a deploy, run `pnpm jobs:unregister`
+with `REDIS_URL` pointing at that environment's public Redis address.
 
 ## 9. Pending: UCR server migration
 
