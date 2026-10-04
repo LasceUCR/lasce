@@ -1,8 +1,10 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ACCOUNT_COOKIE, encodeAccountCookie, shortName } from '@/app/lib/auth/account'
+import type { Locale } from '@/app/lib/i18n/config'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { PublicHeader } from './PublicHeader'
 
@@ -12,13 +14,23 @@ function setAccountCookie(name: string, role: 'VISITOR' | 'ASSISTANT' | 'ADMIN' 
   document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(encodeAccountCookie({ name, role }))}; Path=/`
 }
 
+function renderHeader({
+  locale,
+  setLocaleAction = async () => undefined,
+}: { locale?: Locale; setLocaleAction?: (locale: Locale) => Promise<void> } = {}) {
+  return renderWithIntl(
+    <PublicHeader logoutAction={async () => undefined} setLocaleAction={setLocaleAction} />,
+    { locale },
+  )
+}
+
 afterEach(() => {
   document.cookie = `${ACCOUNT_COOKIE}=; Max-Age=0; Path=/`
 })
 
 describe('PublicHeader', () => {
   test('closes on touch outside even before the native toggle notification', () => {
-    render(<PublicHeader logoutAction={async () => undefined} />)
+    renderHeader()
     const trigger = screen.getByLabelText('Abrir navegación')
     const disclosure = trigger.closest('details')!
     disclosure.open = true
@@ -29,7 +41,7 @@ describe('PublicHeader', () => {
   })
 
   test('hides Administración when nobody is signed in', () => {
-    render(<PublicHeader logoutAction={async () => undefined} />)
+    renderHeader()
 
     expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
     expect(document.querySelector('details.account-menu')).not.toBeInTheDocument()
@@ -45,7 +57,7 @@ describe('PublicHeader', () => {
 
   test('hides Administración from a signed-in visitor', () => {
     setAccountCookie('Ana Pérez Rojas', 'VISITOR')
-    render(<PublicHeader logoutAction={async () => undefined} />)
+    renderHeader()
 
     expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
   })
@@ -53,7 +65,7 @@ describe('PublicHeader', () => {
   test('shows Administración to an assistant and an administrator, only inside the account menu', async () => {
     const user = userEvent.setup()
     setAccountCookie('Carlos Solís', 'ASSISTANT')
-    const { unmount } = render(<PublicHeader logoutAction={async () => undefined} />)
+    const { unmount } = renderHeader()
 
     expect(
       within(screen.getByRole('navigation', { name: 'Navegación principal' })).queryByRole('link', {
@@ -71,7 +83,7 @@ describe('PublicHeader', () => {
     unmount()
 
     setAccountCookie('Ana Pérez Rojas', 'ADMIN')
-    render(<PublicHeader logoutAction={async () => undefined} />)
+    renderHeader()
 
     const adminTrigger = screen.getByText(shortName('Ana Pérez Rojas'), { selector: 'summary' })
     await user.click(adminTrigger)
@@ -83,7 +95,7 @@ describe('PublicHeader', () => {
   })
 
   test('identifies UCR, CINESPA and LASCE in the header brand', () => {
-    render(<PublicHeader logoutAction={async () => undefined} />)
+    renderHeader()
 
     expect(screen.getByAltText('Universidad de Costa Rica')).toBeInTheDocument()
     expect(screen.getByAltText('Centro de Investigaciones Espaciales')).toBeInTheDocument()
@@ -118,7 +130,7 @@ describe('PublicHeader', () => {
     'groups the $group pages behind a disclosure on desktop, and behind an accordion on mobile',
     async ({ group, items }) => {
       const user = userEvent.setup()
-      render(<PublicHeader logoutAction={async () => undefined} />)
+      renderHeader()
 
       await user.click(screen.getByLabelText('Abrir navegación'))
 
@@ -151,7 +163,7 @@ describe('PublicHeader', () => {
   )
 
   test('links every page from the header exactly once', () => {
-    render(<PublicHeader logoutAction={async () => undefined} />)
+    renderHeader()
 
     for (const name of ['Navegación principal', 'Navegación móvil']) {
       const hrefs = within(screen.getByRole('navigation', { name }))
@@ -175,7 +187,7 @@ describe('PublicHeader', () => {
 
   test('groups the about pages behind Nosotros on desktop, and behind an accordion on mobile', async () => {
     const user = userEvent.setup()
-    render(<PublicHeader logoutAction={async () => undefined} />)
+    renderHeader()
 
     await user.click(screen.getByLabelText('Abrir navegación'))
 
@@ -210,5 +222,42 @@ describe('PublicHeader', () => {
       'href',
       '/colaboraciones-e-iniciativas',
     )
+  })
+
+  test('labels the navigation in English when the page is rendered in English', () => {
+    renderHeader({ locale: 'en' })
+
+    const desktop = within(screen.getByRole('navigation', { name: 'Main navigation' }))
+
+    expect(desktop.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
+    expect(desktop.getByRole('link', { name: 'Data' })).toHaveAttribute('href', '/datos')
+    expect(desktop.getByRole('link', { name: 'Space weather', hidden: true })).toHaveAttribute(
+      'href',
+      '/clima-espacial',
+    )
+    expect(screen.getByRole('navigation', { name: 'Mobile navigation' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Navegación principal' })).toBeNull()
+  })
+
+  test('offers the language choice in the header and in the mobile menu, on the current one', () => {
+    renderHeader({ locale: 'en' })
+
+    const switchers = screen.getAllByRole('combobox', { name: 'Language', hidden: true })
+
+    expect(switchers).toHaveLength(2)
+    for (const switcher of switchers) {
+      expect(switcher).toHaveValue('en')
+    }
+  })
+
+  test('stores the language the visitor chooses', async () => {
+    const user = userEvent.setup()
+    const setLocaleAction = vi.fn(async () => undefined)
+    renderHeader({ setLocaleAction })
+
+    const [switcher] = screen.getAllByRole('combobox', { name: 'Idioma' })
+    await user.selectOptions(switcher!, within(switcher!).getByRole('option', { name: 'English' }))
+
+    await waitFor(() => expect(setLocaleAction).toHaveBeenCalledExactlyOnceWith('en'))
   })
 })

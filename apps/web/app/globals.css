@@ -533,6 +533,31 @@ a {
   background: var(--white);
 }
 
+/* Same pill as .login-link beside it: centered in the taller .header-actions box. */
+.language-switcher {
+  align-self: center;
+  min-height: 42px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--blue-dark);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.language-switcher:hover,
+.language-switcher:focus-visible {
+  border-color: var(--action);
+}
+
+.language-switcher:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
 /* Both account links share the header's last grid cell. Same box model as
    .desktop-nav (height: 63px; align-items: stretch) so the account nav-group
    stretches to the exact same height "Recursos"/"Nosotros" do: their panels
@@ -545,6 +570,15 @@ a {
   display: flex;
   align-items: stretch;
   gap: 10px;
+}
+
+/* From the 1400px mobile breakpoint up to 1500px the Spanish navigation, the language switcher
+   and the account links do not fit on one row at the default 28px spacing, so the navigation
+   closes up there. */
+@media (min-width: 1401px) and (max-width: 1500px) {
+  .desktop-nav {
+    gap: 16px;
+  }
 }
 
 /* Just above the 1400px mobile breakpoint, up to 1440px, the navigation row
@@ -2925,6 +2959,14 @@ a {
     display: grid;
     margin-top: 4px;
     padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* The language choice sits apart from the page links, like the account links below it. */
+  .mobile-language-section {
+    display: grid;
+    margin-top: 4px;
+    padding: 8px 12px;
     border-top: 1px solid var(--border);
   }
 

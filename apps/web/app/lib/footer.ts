@@ -1,5 +1,11 @@
+// The import attribute is for Playwright: `tests/e2e/public-portal.spec.ts` imports this module
+// under Node's own ESM loader, which refuses a JSON module without it.
+import es from '@/messages/es.json' with { type: 'json' }
+
 /**
- * Every string the public footer shows. Edit here, not in `PublicFooter.tsx`.
+ * Everything the public footer shows. The translatable strings live in the `footer` namespace of
+ * `apps/web/messages/`; institution names, places and links are the same in every language and
+ * stay here. Edit either place, not `PublicFooter.tsx`.
  *
  * The institution links and the copyright wording were confirmed for LASCE-PUB-012. The LASCE
  * full name follows the approved "Nosotros" copy in `app/lib/nosotros.ts`; `app/layout.tsx`
@@ -43,33 +49,48 @@ export interface PublicFooterContent {
   copyright: { holder: string; notice: string }
 }
 
-export const footerContent: PublicFooterContent = {
-  institutions: [
-    { label: 'Universidad de Costa Rica', href: 'https://www.ucr.ac.cr/' },
-    {
-      label: 'CINESPA',
-      name: 'Centro de Investigaciones Espaciales',
-      href: 'https://cinespa.ucr.ac.cr/',
+/** A key of the `footer` namespace in the message catalogues. */
+export type FooterMessageKey = keyof typeof es.footer
+
+/**
+ * Builds the footer in the language of `t`. The layout passes the request's translator, which
+ * keeps `PublicFooter` presentational: it still receives plain strings.
+ */
+export function getFooterContent(t: (key: FooterMessageKey) => string): PublicFooterContent {
+  return {
+    institutions: [
+      { label: 'Universidad de Costa Rica', href: 'https://www.ucr.ac.cr/' },
+      {
+        label: 'CINESPA',
+        name: 'Centro de Investigaciones Espaciales',
+        href: 'https://cinespa.ucr.ac.cr/',
+      },
+      {
+        label: 'LASCE',
+        name: 'Laboratorio de Astrofísica Solar y Clima Espacial',
+        href: 'https://lasce.ucr.ac.cr/',
+      },
+    ],
+    institutionsLabel: t('institutionsLabel'),
+    location: 'San Pedro de Montes de Oca',
+    partnerLogo: {
+      name: 'International Space Weather Initiative (ISWI)',
+      href: 'https://www.iswi-secretariat.org/',
+      src: '/brand/logo-ISWI.png',
+      width: 300,
+      height: 192,
     },
-    {
-      label: 'LASCE',
-      name: 'Laboratorio de Astrofísica Solar y Clima Espacial',
-      href: 'https://lasce.ucr.ac.cr/',
-    },
-  ],
-  institutionsLabel: 'Instituciones',
-  location: 'San Pedro de Montes de Oca',
-  partnerLogo: {
-    name: 'International Space Weather Initiative (ISWI)',
-    href: 'https://www.iswi-secretariat.org/',
-    src: '/brand/logo-ISWI.png',
-    width: 300,
-    height: 192,
-  },
-  navigationLabel: 'Enlaces del pie de página',
-  links: [
-    { label: 'Contacto', href: '/contacto' },
-    { label: 'Instagram', href: 'https://www.instagram.com/lasce_ucr/', external: true },
-  ],
-  copyright: { holder: 'Universidad de Costa Rica', notice: 'Todos los derechos reservados.' },
+    navigationLabel: t('navigationLabel'),
+    links: [
+      { label: t('contact'), href: '/contacto' },
+      { label: 'Instagram', href: 'https://www.instagram.com/lasce_ucr/', external: true },
+    ],
+    copyright: { holder: 'Universidad de Costa Rica', notice: t('rightsReserved') },
+  }
 }
+
+/**
+ * The footer in Spanish, the source language. For stories, tests and callers that only need its
+ * language-independent parts; a page renders `getFooterContent` with the request's translator.
+ */
+export const footerContent: PublicFooterContent = getFooterContent((key) => es.footer[key])
