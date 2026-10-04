@@ -2443,9 +2443,12 @@ a {
   text-overflow: ellipsis;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
-.publication-abstract-full {
+.publication-abstract.is-expanded {
+  display: block;
+  overflow: visible;
   -webkit-line-clamp: unset;
   line-clamp: unset;
 }
@@ -2454,6 +2457,13 @@ a {
   padding-top: 12px;
   display: flex;
   justify-content: flex-end;
+}
+
+/* Same width for "DOI / Enlace externo" and the abstract toggle, so the toggle does not shrink
+   when its label changes and both actions line up across cards. Narrow screens make every
+   .button full width (see the 430px breakpoint). */
+.publication-card-footer .button {
+  min-width: min(16rem, 100%);
 }
 
 .publication-group {
