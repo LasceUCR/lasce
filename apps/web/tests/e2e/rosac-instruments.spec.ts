@@ -19,6 +19,9 @@ for (const width of [1440, 768, 390, 320]) {
     const images = section.getByRole('img', { name: /Imagen ilustrativa de la galería ROSAC/ })
     await expect(images).toHaveCount(3)
     await expect(section.getByRole('link')).toHaveCount(2)
+    await expect(
+      section.getByRole('button', { name: 'Consultar simulación del instrumento 3' }),
+    ).toBeDisabled()
     await expect(section.getByText(/integración en la sección de datos/)).toBeVisible()
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),

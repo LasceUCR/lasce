@@ -11,7 +11,8 @@ ROSAC instruments in `app/lib/scientific-data.ts`. Their card titles are "Instru
 "Instrumento 2", without pending-content labels. Their links open the matching simulation on
 `/datos?source=ROSAC&instrument=ROSAC-I1#scientific-query-title` (or `ROSAC-I2`). These are
 demonstrations, not confirmed hardware or observed data. Instrument 3 remains a pending card
-with no consultation link and is **not** added to the data catalog, contracts or backend.
+with a disabled "Consultar simulación del instrumento 3" button and no consultation link, and is
+**not** added to the data catalog, contracts or backend.
 All three cards temporarily use illustrative photos from the ROSAC construction gallery,
 identified as such in the section introduction and alternative text. They do not identify
 the mock instruments. The original gallery assets are reused through Next.js image optimization.
@@ -31,8 +32,10 @@ in `rosac-instruments.ts`, retaining its stable `id` and any existing consultati
 - `characteristics`: optional list of approved characteristics.
 - `citation`: optional citation exactly as supplied by LASCE. Omit when none is provided;
   it is rendered as plain text, with line breaks preserved.
-- `consultation`: optional `{ href, label, notice }`; only configure an available destination.
-  Retain the simulation notice until real data is integrated.
+- `consultation`: optional `{ href?, label, notice? }`. With `href` the button links to that
+  destination; only configure an available one, and retain the simulation notice until real data
+  is integrated. Without `href` the button is rendered disabled (pending instrument 3), so every
+  card shows the same action in the same position. Add the `href` and `notice` once it exists.
 
 Missing fields are omitted. Missing or failed images use a neutral placeholder while the
 card's text stays visible. Images load lazily through `next/image`, with responsive sizes,
@@ -53,7 +56,10 @@ outline. Interactive controls still show their keyboard focus indicators.
 
 Cards are named articles with level-three headings under the section's level-two heading.
 Links have distinct Spanish names and use the existing visible keyboard focus styles.
-The third card has no inactive button. Layout uses a responsive three-column grid aligned with
+The third card shows its consultation as a native disabled button: it cannot be focused or
+activated, assistive technology announces it as unavailable, and the visible pending message
+explains why. It uses a neutral fill and border with muted text instead of the action color, and
+keeps the same position and width as the enabled buttons. Layout uses a responsive three-column grid aligned with
 the other sections, compact padding and 16:9 image frames. Consultation links use solid blue
 action buttons.
 

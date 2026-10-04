@@ -79,12 +79,15 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
         </dl>
         {instrument.consultation ? (
           <div className={styles.consultation}>
-            <p>{instrument.consultation.notice}</p>
+            {instrument.consultation.notice ? <p>{instrument.consultation.notice}</p> : null}
+            {/* Without a destination the action stays visible but disabled, so every card keeps
+                the same button in the same place. The pending message explains why. */}
             <Button
-              href={instrument.consultation.href}
+              disabled={!instrument.consultation.href}
               fullPageLoad
-              variant="primary"
+              href={instrument.consultation.href}
               icon={<ArrowRight aria-hidden="true" size={18} />}
+              variant="primary"
             >
               {instrument.consultation.label}
             </Button>

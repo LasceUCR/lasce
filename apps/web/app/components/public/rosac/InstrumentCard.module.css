@@ -95,10 +95,21 @@
   font-size: 0.9375rem;
 }
 
-.consultation a {
+.consultation a,
+.consultation button {
   margin-top: auto;
   white-space: normal;
   text-align: center;
+}
+
+/* Unavailable action: neutral fill and border instead of the action color, readable muted text,
+   and no hover change, so it reads as inactive next to the enabled cards. */
+.consultation button:disabled,
+.consultation button:disabled:hover {
+  border-color: var(--border);
+  background: var(--page);
+  color: var(--muted);
+  cursor: not-allowed;
 }
 
 .consultation svg {

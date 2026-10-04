@@ -31,11 +31,15 @@ describe('InstrumentCard', () => {
     )
   })
 
-  test('keeps the third instrument pending without offering a query', () => {
-    render(<InstrumentCard {...(PendingIntegration.args as InstrumentCardProps)} />)
+  test('keeps the third instrument pending with its query action disabled', () => {
+    const args = PendingIntegration.args as InstrumentCardProps
+    render(<InstrumentCard {...args} />)
     expect(screen.getByText(/Información pendiente de confirmación e integración/)).toBeVisible()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    const button = screen.getByRole('button', { name: 'Consultar simulación del instrumento 3' })
+    expect(button).toBeDisabled()
+    expect(button).toHaveClass('button', 'button-primary')
+    expect(screen.queryByText(/Los resultados son simulados/)).not.toBeInTheDocument()
   })
 
   test('shows supplied information and citation directly in the card', () => {
