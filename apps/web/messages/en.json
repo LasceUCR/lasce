@@ -103,5 +103,24 @@
       "title": "Outreach",
       "description": "News and resources"
     }
+  },
+  "common": {
+    "backToHome": "Back to home"
+  },
+  "contact": {
+    "meta": {
+      "title": "Contact | LASCE",
+      "description": "Official channels for reaching the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "Contact",
+      "lead": "Official channels of the Solar Astrophysics and Space Weather Laboratory."
+    },
+    "channelsTitle": "Contact information",
+    "channels": {
+      "phone": "Phone",
+      "location": "Location"
+    }
   }
 }

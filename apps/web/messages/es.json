@@ -103,5 +103,24 @@
       "title": "Divulgación",
       "description": "Noticias y recursos"
     }
+  },
+  "common": {
+    "backToHome": "Volver al inicio"
+  },
+  "contact": {
+    "meta": {
+      "title": "Contacto | LASCE",
+      "description": "Canales oficiales para comunicarse con el Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Contacto",
+      "lead": "Canales oficiales del Laboratorio de Astrofísica Solar y Clima Espacial."
+    },
+    "channelsTitle": "Información de contacto",
+    "channels": {
+      "phone": "Teléfono",
+      "location": "Ubicación"
+    }
   }
 }
