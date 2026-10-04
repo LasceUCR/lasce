@@ -57,7 +57,7 @@ test('hides Administración from a signed-in visitor', async ({ page, context })
   try {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/')
-    await page.locator('.header-actions summary').press('Enter')
+    await page.locator('.header-actions .account-menu summary').press('Enter')
     await expect(
       page.locator('.header-actions').getByRole('link', {
         name: 'Administración',
@@ -79,13 +79,13 @@ test('reaches the section from the account menu and marks it as current', async 
     await page.goto('/')
 
     const navigation = page.locator('.header-actions')
-    await navigation.locator('summary').press('Enter')
+    await navigation.locator('.account-menu summary').press('Enter')
     const link = navigation.getByRole('link', { name: 'Administración', exact: true })
 
     await link.click()
 
     await expect(page).toHaveURL(/\/administracion$/)
-    await navigation.locator('summary').press('Enter')
+    await navigation.locator('.account-menu summary').press('Enter')
     await expect(link).toHaveAttribute('aria-current', 'page')
   } finally {
     await fixture.cleanup()
@@ -114,7 +114,7 @@ test('keeps the account menu link current while browsing the other sidebar secti
       'aria-current',
       'page',
     )
-    await page.locator('.header-actions summary').press('Enter')
+    await page.locator('.header-actions .account-menu summary').press('Enter')
     await expect(headerLink).toHaveAttribute('aria-current', 'page')
   } finally {
     await fixture.cleanup()
