@@ -30,6 +30,7 @@
 .ctaBox > :global(.button) {
   flex-shrink: 0;
   margin-left: auto;
+  min-width: 182px;
 }
 
 .ctaText h3 {
@@ -46,6 +47,25 @@
 .locationMapWrapper {
   overflow: hidden;
   padding: 0;
+  margin-top: 20px;
+}
+
+.donationsList {
+  margin-top: 20px;
+}
+
+.radioObservationSection {
+  padding-bottom: 0;
+}
+
+.relationshipSection {
+  padding-top: 0;
+  margin-top: 20px;
+}
+
+.pageFooter {
+  padding-top: 52px;
+  padding-bottom: 48px;
 }
 
 .locationMap {

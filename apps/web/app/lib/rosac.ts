@@ -442,7 +442,7 @@ export const rosacInfoContent = {
   },
   acknowledgments: {
     title: 'Agradecimientos ROSAC',
-    subtitle: 'Lista de instituciones a las que el ROSAC les extiende agradecimiento',
+    subtitle: 'Lista de instituciones a las que el ROSAC les extiende agradecimiento.',
     institutions: [
       {
         name: 'Vicerrectoría de Investigación, UCR',
