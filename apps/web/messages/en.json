@@ -270,5 +270,54 @@
       "access": "Open {title}",
       "externalNotice": "The links open in a new tab and take you to external sites."
     }
+  },
+  "collaborations": {
+    "meta": {
+      "title": "Collaborations and Initiatives | LASCE",
+      "description": "Organisations that collaborate with LASCE and the international initiatives it is part of, including the ISWI and the Ibero-American VLBI Initiative."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "Collaborations and Initiatives",
+      "lead": "Organisations that collaborate with the Solar Astrophysics and Space Weather Laboratory, and the international initiatives it is part of."
+    },
+    "section": {
+      "title": "Research collaborations",
+      "description": "Organisations and groups that collaborate with LASCE in research and scientific development, nationally and internationally.",
+      "empty": "No collaboration information is available at the moment."
+    },
+    "card": {
+      "national": "National",
+      "international": "International",
+      "acronym": "Acronym:"
+    },
+    "countries": {
+      "cr": "Costa Rica",
+      "ar": "Argentina",
+      "it": "Italy",
+      "fr": "France",
+      "mx": "Mexico"
+    },
+    "initiatives": {
+      "title": "International initiatives LASCE is part of",
+      "items": {
+        "iswi": {
+          "title": "International Space Weather Initiative (ISWI)",
+          "linkLabel": "Official ISWI site",
+          "logoAlt": "Logo of the International Space Weather Initiative (ISWI)",
+          "p1": "The International Space Weather Initiative (ISWI) of the United Nations Committee on the Peaceful Uses of Outer Space was launched in 2009 and formally concluded as an item on the Committee's agenda in 2012. However, ISWI activities continued and, since 2013, they have been addressed under the new permanent agenda item on space weather of the Committee's Scientific and Technical Subcommittee."
+        },
+        "ivia": {
+          "title": "Ibero-American VLBI Initiative (IVIA)",
+          "linkLabel": "Official IVIA site",
+          "logoAlt": "Logo of the Ibero-American VLBI Initiative (IVIA)",
+          "p1": "The Ibero-American VLBI Initiative (IVIA) emerged in 2019 as a joint working body aimed at developing radio astronomy in Ibero-America. Its guiding ideas are the development of radio astronomy in the region and the implementation of a VLBI network in Latin America, in collaboration with Spain and Portugal.",
+          "p2": "It currently includes representatives of institutions from Argentina, Brazil, Colombia, Costa Rica, Ecuador, Mexico, Peru and Uruguay, and it aims to promote the participation of the other countries in the region. The Joint Institute for VLBI (JIVE, based in the Netherlands, the organisation that centralises data processing for the European VLBI Network, EVN), the Instituto Geográfico Nacional of Spain and the Instituto de Telecomunicações of Portugal also take part.",
+          "p3": "The initiative involves collaborative work on converting telecommunication antennas into radio telescopes and adapting them for VLBI, and on developing all the related technologies. By pooling the resources of the participating institutions, it aims to reach a critical mass that makes the most of the resources and infrastructure existing in each country.",
+          "p4": "The final goal is therefore to create an international collaboration project with a large impact on the overall development of the region.",
+          "p5": "The initiative contributes strongly to narrowing the gap between the number of radio astronomy observatories in the Southern Hemisphere and those in the Northern Hemisphere."
+        }
+      }
+    }
   }
 }

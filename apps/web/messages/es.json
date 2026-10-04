@@ -270,5 +270,54 @@
       "access": "Acceder a {title}",
       "externalNotice": "Los enlaces se abren en una nueva pestaña y te llevan a sitios externos."
     }
+  },
+  "collaborations": {
+    "meta": {
+      "title": "Colaboraciones e Iniciativas | LASCE",
+      "description": "Organizaciones que colaboran con el LASCE y las iniciativas internacionales de las que forma parte, entre ellas la ISWI y la Iniciativa VLBI Iberoamericana."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Colaboraciones e Iniciativas",
+      "lead": "Organizaciones que colaboran con el Laboratorio de Astrofísica Solar y Clima Espacial, y las iniciativas internacionales de las que forma parte."
+    },
+    "section": {
+      "title": "Colaboraciones de investigación",
+      "description": "Organizaciones y grupos que colaboran con el LASCE en investigación y desarrollo científico a nivel nacional e internacional.",
+      "empty": "No hay información de colaboraciones disponible actualmente."
+    },
+    "card": {
+      "national": "Nacional",
+      "international": "Internacional",
+      "acronym": "Siglas:"
+    },
+    "countries": {
+      "cr": "Costa Rica",
+      "ar": "Argentina",
+      "it": "Italia",
+      "fr": "Francia",
+      "mx": "México"
+    },
+    "initiatives": {
+      "title": "Iniciativas internacionales de las que LASCE forma parte",
+      "items": {
+        "iswi": {
+          "title": "Iniciativa Internacional de Clima Espacial (ISWI)",
+          "linkLabel": "Sitio oficial de la ISWI",
+          "logoAlt": "Logotipo de la Iniciativa Internacional de Clima Espacial (ISWI)",
+          "p1": "La Iniciativa Internacional de Clima Espacial (ISWI, por sus siglas en inglés) del Comité de las Naciones Unidas sobre la Utilización del Espacio Ultraterrestre con Fines Pacíficos se puso en marcha en 2009 y concluyó formalmente como tema de la agenda del Comité en 2012. Sin embargo, las actividades de la ISWI continuaron y, desde 2013, se tratan en el nuevo tema permanente de la agenda sobre clima espacial de la Subcomisión de Asuntos Científicos y Técnicos del Comité."
+        },
+        "ivia": {
+          "title": "Iniciativa VLBI Iberoamericana (IVIA)",
+          "linkLabel": "Sitio oficial de la IVIA",
+          "logoAlt": "Logotipo de la Iniciativa VLBI Iberoamericana (IVIA)",
+          "p1": "En 2019 surgió la Iniciativa VLBI Iberoamericana (IVIA), una instancia de trabajo conjunto orientada al desarrollo de la radioastronomía en Iberoamérica, tomando como eje conceptual el desarrollo de la radioastronomía en la región y la implementación de una red VLBI en Latinoamérica, en colaboración con España y Portugal.",
+          "p2": "En su conformación actual hay representantes de instituciones de Argentina, Brasil, Colombia, Costa Rica, Ecuador, México, Perú y Uruguay. Asimismo, se propone promover la participación de los demás países de la región. Participan también el Instituto Conjunto para VLBI (JIVE, con sede en Países Bajos, organización que centraliza el procesamiento de datos de la red europea de VLBI, llamada EVN), el Instituto Geográfico Nacional de España y el Instituto de Telecomunicações de Portugal.",
+          "p3": "La iniciativa implica un trabajo colaborativo en la conversión de antenas de telecomunicación en radiotelescopios y su adecuación para VLBI, y el desarrollo de todas las tecnologías relacionadas. Con la unión de los recursos de las instituciones participantes, se pretende alcanzar una masa crítica para aprovechar al máximo los recursos e infraestructura existente en cada país.",
+          "p4": "De esta forma, el objetivo final es crear un proyecto de colaboración internacional que tenga un gran impacto en el desarrollo integral de la región.",
+          "p5": "La iniciativa contribuye fuertemente a disminuir la brecha existente entre el número de observatorios radioastronómicos del Hemisferio Sur y los existentes en el Hemisferio Norte."
+        }
+      }
+    }
   }
 }

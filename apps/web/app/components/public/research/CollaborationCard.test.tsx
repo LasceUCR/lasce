@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { CollaborationCard, type CollaborationCardProps } from './CollaborationCard'
 import { International, National, WithoutAcronym } from './CollaborationCard.stories'
@@ -10,7 +12,7 @@ const withoutAcronymArgs = WithoutAcronym.args as CollaborationCardProps
 
 describe('CollaborationCard', () => {
   test('renders national collaboration name, country and scope badge', () => {
-    render(<CollaborationCard {...nationalArgs} />)
+    renderWithIntl(<CollaborationCard {...nationalArgs} />)
 
     expect(screen.getByRole('heading', { level: 3, name: nationalArgs.name })).toBeInTheDocument()
     expect(screen.getByText('Nacional')).toBeInTheDocument()
@@ -19,7 +21,7 @@ describe('CollaborationCard', () => {
   })
 
   test('renders international collaboration details', () => {
-    render(<CollaborationCard {...internationalArgs} />)
+    renderWithIntl(<CollaborationCard {...internationalArgs} />)
 
     expect(
       screen.getByRole('heading', { level: 3, name: internationalArgs.name }),
@@ -30,7 +32,7 @@ describe('CollaborationCard', () => {
   })
 
   test('renders without acronym when not provided', () => {
-    render(<CollaborationCard {...withoutAcronymArgs} />)
+    renderWithIntl(<CollaborationCard {...withoutAcronymArgs} />)
 
     expect(
       screen.getByRole('heading', { level: 3, name: withoutAcronymArgs.name }),

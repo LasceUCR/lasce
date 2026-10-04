@@ -1,16 +1,27 @@
 import type { Metadata } from 'next'
+import { getMessages, getTranslations } from 'next-intl/server'
 
 import { CollaborationsPage } from '@/app/components/public/collaborations/CollaborationsPage'
-import { collaborationsContent, collaborationsMeta } from '@/app/lib/collaborations'
-import { researchCollaborations } from '@/app/lib/research-collaborations'
+import { getCollaborationsContent } from '@/app/lib/collaborations'
+import { getResearchCollaborations } from '@/app/lib/research-collaborations'
 
-export const metadata: Metadata = {
-  ...collaborationsMeta,
-  alternates: { canonical: '/colaboraciones-e-iniciativas' },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('collaborations.meta')
+
+  return {
+    title: t('title'),
+    description: t('description'),
+    alternates: { canonical: '/colaboraciones-e-iniciativas' },
+  }
 }
 
-export default function CollaborationsRoute() {
+export default async function CollaborationsRoute() {
+  const messages = await getMessages()
+
   return (
-    <CollaborationsPage collaborations={researchCollaborations} content={collaborationsContent} />
+    <CollaborationsPage
+      collaborations={getResearchCollaborations(messages.collaborations.countries)}
+      content={getCollaborationsContent(messages)}
+    />
   )
 }
