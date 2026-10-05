@@ -8,7 +8,11 @@ export interface RosacInstrumentCardContent {
   purpose?: string
   characteristics?: readonly string[]
   citation?: string
-  consultation?: { href: string; label: string; notice: string }
+  /**
+   * The card's action. Without `href` the destination is not available yet, so the button is
+   * rendered disabled; keep the `label` so all cards show the same action in the same place.
+   */
+  consultation?: { href?: string; label: string; notice?: string }
 }
 
 export interface RosacInstrumentsContent {
@@ -33,7 +37,10 @@ const instrumentImages = [
   },
 ] as const
 
-/** The first two cards describe the existing simulations; the third awaits integration. */
+/**
+ * The first two cards describe the existing simulations; the third awaits integration and shows
+ * its action disabled until a simulation exists.
+ */
 export const rosacInstrumentsContent: RosacInstrumentsContent = {
   title: 'Instrumentos científicos',
   intro:
@@ -54,6 +61,7 @@ export const rosacInstrumentsContent: RosacInstrumentsContent = {
       name: 'Instrumento 3 (por definir)',
       image: instrumentImages[2],
       pendingMessage: 'Información pendiente de confirmación e integración en la sección de datos.',
+      consultation: { label: 'Consultar simulación del instrumento 3' },
     },
   ],
 }

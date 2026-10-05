@@ -222,6 +222,7 @@ export function RosacInfoPage({
         title={content.radioObservation.title}
         titleId="rosac-radio-observation-title"
         index="5"
+        className={styles.radioObservationSection}
         wide
       >
         {content.radioObservation.paragraphs.map((paragraph) => (
@@ -231,7 +232,12 @@ export function RosacInfoPage({
         ))}
       </TopicSection>
 
-      <TopicSection title={content.relationship.title} titleId="rosac-relationship-title" featured>
+      <TopicSection
+        title={content.relationship.title}
+        titleId="rosac-relationship-title"
+        className={styles.relationshipSection}
+        featured
+      >
         {content.relationship.paragraphs.map((paragraph) => (
           <p className="topic-intro" key={paragraph}>
             {paragraph}
@@ -333,21 +339,21 @@ export function RosacInfoPage({
         titleId="rosac-donations-title"
         wide
       >
-        <div className="news-list">
+        <div className={`news-list ${styles.donationsList}`}>
           {content.donations.items.map((donation) => (
             <DonationCard donation={donation} key={donation.title} />
           ))}
         </div>
 
-        <div className={`topic-highlight ${styles.donationsCta}`}>
-          <div className={styles.donationsCtaText}>
+        <div className={`topic-highlight ${styles.ctaBox}`}>
+          <div className={styles.ctaText}>
             <h3>{content.donations.cta.title}</h3>
             <p>{content.donations.cta.description}</p>
           </div>
           <Button
             href={content.donations.cta.href}
             icon={<Mail aria-hidden="true" size={18} strokeWidth={1.8} />}
-            variant="secondary"
+            variant="primary"
           >
             {content.donations.cta.buttonLabel}
           </Button>
@@ -355,16 +361,21 @@ export function RosacInfoPage({
       </TopicSection>
 
       <TopicSection
+        index="10"
         title={content.scientificConsultation.title}
         titleId="rosac-science-title"
-        intro={content.scientificConsultation.description}
         wide
       >
-        <div className={styles.scientificAction}>
+        {/* Same call-to-action box as "¿Te gustaría ayudarnos?", so both primary actions on the
+            page share one format. */}
+        <div className={`topic-highlight ${styles.ctaBox}`}>
+          <div className={styles.ctaText}>
+            <p>{content.scientificConsultation.description}</p>
+          </div>
           <Button
             href={content.scientificConsultation.href}
             fullPageLoad
-            variant="secondary"
+            variant="primary"
             icon={<ChartNoAxesCombined aria-hidden="true" size={20} strokeWidth={1.8} />}
           >
             {content.scientificConsultation.buttonLabel}
@@ -372,7 +383,7 @@ export function RosacInfoPage({
         </div>
       </TopicSection>
 
-      <div className="topic-page-footer page-width">
+      <div className={`topic-page-footer page-width ${styles.pageFooter}`}>
         <TopicBackLink {...content.backLink} />
       </div>
     </article>

@@ -19,6 +19,9 @@ for (const width of [1440, 768, 390, 320]) {
     const images = section.getByRole('img', { name: /Imagen ilustrativa de la galería ROSAC/ })
     await expect(images).toHaveCount(3)
     await expect(section.getByRole('link')).toHaveCount(2)
+    await expect(
+      section.getByRole('button', { name: 'Consultar simulación del instrumento 3' }),
+    ).toBeDisabled()
     await expect(section.getByText(/integración en la sección de datos/)).toBeVisible()
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -56,16 +59,18 @@ for (const [number, product, parameter] of [
     await expect(page).toHaveURL(
       new RegExp(`/datos\\?source=ROSAC&instrument=ROSAC-I${number}#scientific-query-title$`),
     )
-    await expect(page.getByRole('combobox', { name: 'Fuente de datos' })).toContainText('ROSAC')
+    const source = page.getByRole('combobox', { name: 'Fuente de datos' })
+    await expect(source).toContainText('ROSAC')
+    await expect(source).toBeEnabled()
     const productSelect = page.getByRole('combobox', { name: 'Instrumento y producto' })
     await expect(productSelect).toContainText(product)
     await expect(page.getByRole('combobox', { name: 'Canal o parámetro' })).toContainText(parameter)
     const heading = page.getByRole('heading', { name: 'Configure los datos que desea visualizar' })
+    await heading.scrollIntoViewIfNeeded()
     await expect(heading).toBeInViewport()
     await heading.focus()
     await expect(heading).toHaveCSS('outline-style', 'none')
     await page.keyboard.press('Tab')
-    const source = page.getByRole('combobox', { name: 'Fuente de datos' })
     await expect(source).toBeFocused()
     await expect(source).not.toHaveCSS('outline-style', 'none')
     await expect(page.getByText(/todos los resultados de esta fuente son simulados/)).toBeVisible()

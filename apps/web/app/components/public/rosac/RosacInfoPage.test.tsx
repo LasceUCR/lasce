@@ -96,11 +96,15 @@ describe('RosacInfoPage', () => {
     renderPage()
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-    expect(screen.getByRole('heading', { level: 1, name: 'Radioastronomía' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: defaultArgs.content.hero.image.alt })).toHaveAttribute(
-      'src',
-      defaultArgs.content.hero.image.src,
-    )
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Radio Observatorio de Santa Cruz (ROSAC)' }),
+    ).toBeInTheDocument()
+    // The banner and its mobile version share one description; CSS shows only one at a time.
+    const [banner, mobileBanner] = screen.getAllByRole('img', {
+      name: defaultArgs.content.hero.image.alt,
+    })
+    expect(banner).toHaveAttribute('src', defaultArgs.content.hero.image.src)
+    expect(mobileBanner).toHaveAttribute('src', defaultArgs.content.hero.image.mobileSrc)
     expect(screen.getByRole('region', { name: '¿Qué es ROSAC?' })).toHaveTextContent(
       /observar el Sol y otras fuentes celestes/,
     )
@@ -117,12 +121,16 @@ describe('RosacInfoPage', () => {
   test('links the general consultation to the ROSAC simulations', () => {
     renderPage()
 
-    const consultation = screen.getByRole('region', { name: 'Consulta científica' })
+    const consultation = screen.getByRole('region', { name: '10. Consulta científica' })
     expect(within(consultation).queryByText('Próximamente')).not.toBeInTheDocument()
     const link = within(consultation).getByRole('link', {
-      name: 'Consultar información científica',
+      name: 'Explorar datos',
     })
     expect(link).toHaveAttribute('href', '/datos?source=ROSAC#scientific-query-title')
+    // Primary action inside the same highlighted box as the donations CTA.
+    expect(link).toHaveClass('button', 'button-primary')
+    expect(link.parentElement).toHaveClass('topic-highlight')
+    expect(consultation).toHaveTextContent(defaultArgs.content.scientificConsultation.description)
   })
 
   test('presents three instrument cards without authentication or edit permissions', () => {
@@ -151,6 +159,10 @@ describe('RosacInfoPage', () => {
     expect(
       within(donations).getByRole('link', { name: defaultArgs.content.donations.cta.buttonLabel }),
     ).toHaveAttribute('href', defaultArgs.content.donations.cta.href)
+    // The contact CTA is a primary action: the dark filled button, not the outlined secondary.
+    expect(
+      within(donations).getByRole('link', { name: defaultArgs.content.donations.cta.buttonLabel }),
+    ).toHaveClass('button', 'button-primary')
   })
 
   test('returns to the home access cards', () => {

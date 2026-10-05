@@ -3450,6 +3450,18 @@ a {
   object-position: center;
 }
 
+/* A banner already carries the logo, so it is shown whole: its height follows the aspect ratio
+   set inline from the image size instead of the fixed photo height above. Narrow screens give it
+   a taller frame again (see the 760px breakpoint), cropping the sides around its focus. */
+.topic-hero-mark-photo.topic-hero-banner {
+  height: auto;
+}
+
+/* A banner's narrow-screen image, swapped in at the 760px breakpoint. */
+.topic-hero-banner-mobile {
+  display: none;
+}
+
 .topic-hero-with-mark h1 {
   margin: 0;
 }
@@ -3888,8 +3900,17 @@ a {
     text-align: center;
   }
 
-  .topic-hero-mark-photo {
+  .topic-hero-mark-photo,
+  .topic-hero-mark-photo.topic-hero-banner {
     height: clamp(240px, 42vh, 360px);
+  }
+
+  .topic-hero-banner-has-mobile .topic-hero-banner-main {
+    display: none;
+  }
+
+  .topic-hero-banner-has-mobile .topic-hero-banner-mobile {
+    display: block;
   }
 
   .topic-lead {
@@ -4788,10 +4809,10 @@ a.gallery-tile:focus-visible {
 
 .researcher-card-photo {
   position: relative;
-  flex: 1 1 auto;
+  flex: 0 0 537px;
+  height: 537px;
   min-height: 0;
   overflow: hidden;
-  aspect-ratio: 1 / 1.15;
   border-radius: 8px;
   background: #e8f6fc;
 }
@@ -4935,6 +4956,12 @@ a.gallery-tile:focus-visible {
   .team-gallery-slide {
     width: 86vw;
     height: calc(86vw * 1.15 + 240px);
+  }
+
+  .researcher-card-photo {
+    flex: 1 1 auto;
+    height: auto;
+    aspect-ratio: 1 / 1.15;
   }
 }
 

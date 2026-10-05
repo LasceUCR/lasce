@@ -2,19 +2,14 @@
   text-align: start;
 }
 
-.scientificAction {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-/* Colors, border and radius come from the shared `:global(.topic-highlight)`
+/* Call-to-action box shared by the donations and scientific consultation sections: text on the
+   left, one primary button on the right, wrapping below on narrow screens.
+   Colors, border and radius come from the shared `:global(.topic-highlight)`
    (see globals.css) applied alongside this class — only layout lives here,
    so the CTA follows that style automatically if it ever changes. The
    `:global(.topic-highlight)` prefix raises this rule's specificity above
    that class's own padding, regardless of each stylesheet's load order. */
-:global(.topic-highlight).donationsCta {
+:global(.topic-highlight).ctaBox {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -24,12 +19,26 @@
   padding: 20px 24px;
 }
 
-.donationsCtaText h3 {
+/* The text takes the remaining width but can shrink, so a long description stays beside the
+   button instead of pushing it to the next line. */
+.ctaText {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+/* The button stays on the right, also when the box wraps it below the text on narrow screens. */
+.ctaBox > :global(.button) {
+  flex-shrink: 0;
+  margin-left: auto;
+  min-width: 182px;
+}
+
+.ctaText h3 {
   margin: 0 0 4px;
   font-size: 17px;
 }
 
-.donationsCtaText p {
+.ctaText p {
   margin: 0;
   color: var(--muted);
   font-size: 14px;
@@ -38,6 +47,25 @@
 .locationMapWrapper {
   overflow: hidden;
   padding: 0;
+  margin-top: 20px;
+}
+
+.donationsList {
+  margin-top: 20px;
+}
+
+.radioObservationSection {
+  padding-bottom: 0;
+}
+
+.relationshipSection {
+  padding-top: 0;
+  margin-top: 20px;
+}
+
+.pageFooter {
+  padding-top: 52px;
+  padding-bottom: 48px;
 }
 
 .locationMap {

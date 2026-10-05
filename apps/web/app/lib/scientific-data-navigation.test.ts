@@ -22,7 +22,7 @@ describe('scientific data navigation', () => {
     expect(rosacInstrumentsContent.items).toHaveLength(3)
     expect(rosacInstruments).toHaveLength(2)
     for (const card of rosacInstrumentsContent.items.slice(0, 2)) {
-      const url = new URL(card.consultation!.href, 'https://lasce.test')
+      const url = new URL(card.consultation!.href!, 'https://lasce.test')
       const query = getInitialScientificQuery(Object.fromEntries(url.searchParams), date)
       const instrument = rosacInstruments.find((item) => item.code === card.id)!
       expect(card.consultation!.notice).toContain(instrument.products[0]!.name)
@@ -34,7 +34,9 @@ describe('scientific data navigation', () => {
       expect(scientificDataQuerySchema.safeParse(query).success).toBe(true)
       expect(url.hash).toBe('#scientific-query-title')
     }
-    expect(rosacInstrumentsContent.items[2]!.consultation).toBeUndefined()
+    expect(rosacInstrumentsContent.items[2]!.consultation).toEqual({
+      label: 'Consultar simulación del instrumento 3',
+    })
   })
 
   test('selects the first simulation for the general ROSAC consultation link', () => {
