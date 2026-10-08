@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server'
+import { getLocale } from 'next-intl/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { createPublication, getPublications, publicationInputSchema } from '@/app/lib/publications'
+import { resolveLocale } from '@/app/lib/i18n/locale'
+import { createPublication, getPublications, publicationCreateSchema } from '@/app/lib/publications'
+
+import { internalError, invalidBody, invalidJson, ok, writeFailure } from './http'
 
 export const dynamic = 'force-dynamic'
 
+/** Public list, in the language of the request's `lasce_locale` cookie. Never editing data. */
 export async function GET(): Promise<NextResponse> {
-  const publications = await getPublications()
+  const publications = await getPublications(resolveLocale(await getLocale()))
 
   return NextResponse.json(
     { publications },
@@ -18,6 +23,11 @@ export async function GET(): Promise<NextResponse> {
   )
 }
 
+/**
+ * Creates a publication. The body needs `content.es` and `content.en` in full; see
+ * `publicationCreateSchema`. Answers 201 with the stored publication, including its
+ * `editing.version`.
+ */
 export async function POST(request: Request): Promise<NextResponse> {
   const guard = await requireApiPermission('create_components')
   if (!guard.ok) return guard.response
@@ -27,44 +37,18 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
+    return invalidJson()
   }
 
-  const parsed = publicationInputSchema.safeParse(body)
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
-  }
+  const parsed = publicationCreateSchema.safeParse(body)
+  if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const publication = await createPublication(parsed.data)
+    const result = await createPublication(parsed.data)
+    if (!result.ok) return writeFailure(null, result)
 
-    if (publication === 'duplicate-doi') {
-      return NextResponse.json(
-        { error: 'Ya existe una publicación con este DOI.' },
-        { status: 409 },
-      )
-    }
-
-    return NextResponse.json(
-      { publication },
-      {
-        status: 201,
-        headers: {
-          'Cache-Control': 'no-store',
-        },
-      },
-    )
-  } catch {
-    return NextResponse.json({ error: 'No se pudo crear la publicación.' }, { status: 500 })
+    return ok({ publication: result.publication }, 201)
+  } catch (error) {
+    return internalError('No se pudo crear la publicación.', error)
   }
 }

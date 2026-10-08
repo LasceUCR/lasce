@@ -3,12 +3,28 @@ import { NextResponse } from 'next/server'
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import {
   deletePublication,
-  publicationInputSchema,
+  publicationUpdateSchema,
   updatePublication,
 } from '@/app/lib/publications'
 
+import {
+  internalError,
+  invalidBody,
+  invalidId,
+  invalidJson,
+  isPublicationId,
+  notFound,
+  ok,
+  writeFailure,
+} from '../http'
+
 export const dynamic = 'force-dynamic'
 
+/**
+ * Updates a publication against the `version` the editor loaded. With `content` it is a
+ * bilingual content update; without it, only the shared fields present are written. See
+ * `publicationUpdateSchema`.
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -16,52 +32,28 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
+  const { id } = await params
+  if (!isPublicationId(id)) return invalidId()
+
   let body: unknown
 
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
+    return invalidJson()
   }
 
-  const parsed = publicationInputSchema.safeParse(body)
+  const parsed = publicationUpdateSchema.safeParse(body)
+  if (!parsed.success) return invalidBody(parsed.error)
 
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
+  try {
+    const result = await updatePublication(id, parsed.data)
+    if (!result.ok) return writeFailure(id, result)
+
+    return ok({ publication: result.publication })
+  } catch (error) {
+    return internalError('No se pudo guardar la publicación.', error)
   }
-
-  const { id } = await params
-
-  const publication = await updatePublication(id, parsed.data)
-
-  if (publication === 'duplicate-doi') {
-    return NextResponse.json({ error: 'Ya existe una publicación con este DOI.' }, { status: 409 })
-  }
-
-  if (!publication) {
-    return NextResponse.json(
-      { error: `No existe una publicación con id "${id}".` },
-      { status: 404 },
-    )
-  }
-
-  return NextResponse.json(
-    { publication },
-    {
-      headers: {
-        'Cache-Control': 'no-store',
-      },
-    },
-  )
 }
 
 export async function DELETE(
@@ -72,14 +64,13 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
+  if (!isPublicationId(id)) return invalidId()
 
-  const deleted = await deletePublication(id)
-
-  if (!deleted) {
-    return NextResponse.json(
-      { error: `No existe una publicación con id "${id}".` },
-      { status: 404 },
-    )
+  try {
+    const deleted = await deletePublication(id)
+    if (!deleted) return notFound(id)
+  } catch (error) {
+    return internalError('No se pudo eliminar la publicación.', error)
   }
 
   return new NextResponse(null, { status: 204 })
