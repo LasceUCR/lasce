@@ -28,37 +28,38 @@ working through Claude Code.
 
 ## Documentation map
 
-| Question                                             | File                                                                 |
-| ---------------------------------------------------- | -------------------------------------------------------------------- |
-| How do the two runtimes fit together?                | [`docs/architecture.md`](docs/architecture.md)                       |
-| How do I add a job across both languages?            | [`docs/add-a-job.md`](docs/add-a-job.md)                             |
-| How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                 |
-| How does the SUVI pipeline job orchestrate a run?    | [`docs/suvi-pipeline.md`](docs/suvi-pipeline.md)                     |
-| How does the EXIS pipeline job ingest a day?         | [`docs/exis-pipeline.md`](docs/exis-pipeline.md)                     |
-| How do `/datos` chart and data downloads work?       | [`docs/downloads.md`](docs/downloads.md)                             |
-| How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                 |
-| How do I isolate a widget that might crash the page? | [`docs/error-boundary.md`](docs/error-boundary.md)                   |
-| How do I make content editable in "Modo edición"?    | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)             |
-| Where does a test go, and what gates it?             | [`docs/testing.md`](docs/testing.md)                                 |
-| How do I write a component or service test?          | [`docs/tests/component_testing.md`](docs/tests/component_testing.md) |
-| Branches, commits, PRs, required checks              | [`docs/git-guidelines.md`](docs/git-guidelines.md)                   |
-| Pipelines, environments, secrets, rollback           | [`docs/deployment.md`](docs/deployment.md)                           |
-| File uploads and their known defects                 | [`docs/manage-assets.md`](docs/manage-assets.md)                     |
-| Running the stack without Docker                     | [`infra/docker/README.md`](infra/docker/README.md)                   |
-| What tables exist and how do they relate?            | [`docs/database-definition.md`](docs/database-definition.md)         |
-| How does the public gallery work?                    | [`docs/gallery.md`](docs/gallery.md)                                 |
-| How does the ROSAC location map work?                | [`docs/rosac-location.md`](docs/rosac-location.md)                   |
-| How is the research areas page built?                | [`docs/research.md`](docs/research.md)                               |
-| How is the collaborations page built?                | [`docs/collaborations.md`](docs/collaborations.md)                   |
-| How does a visitor see LASCE contact information?    | [`docs/contact.md`](docs/contact.md)                                 |
-| How does a visitor register an account?              | [`docs/registration.md`](docs/registration.md)                       |
-| How do users sign in, and how is a page protected?   | [`docs/sessions.md`](docs/sessions.md)                               |
-| How do I get an account to sign in locally?          | [`docs/user-administration.md`](docs/user-administration.md)         |
-| How are role permissions configured?                 | [`docs/role-permissions.md`](docs/role-permissions.md)               |
-| How do I gate a page or a control with a grant?      | [`docs/add-permissions.md`](docs/add-permissions.md)                 |
-| How are academic activities structured?              | [`docs/academic-activities.md`](docs/academic-activities.md)         |
-| How is the header/nav organized and responsive?      | [`docs/header-and-navigation.md`](docs/header-and-navigation.md)     |
-| How does the administration menu work?               | [`docs/admin-navigation.md`](docs/admin-navigation.md)               |
-| How do I add a translated string or a language?      | [`docs/internationalization.md`](docs/internationalization.md)       |
+| Question                                             | File                                                                       |
+| ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| How do the two runtimes fit together?                | [`docs/architecture.md`](docs/architecture.md)                             |
+| How do I add a job across both languages?            | [`docs/add-a-job.md`](docs/add-a-job.md)                                   |
+| How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                       |
+| How does the SUVI pipeline job orchestrate a run?    | [`docs/suvi-pipeline.md`](docs/suvi-pipeline.md)                           |
+| How does the EXIS pipeline job ingest a day?         | [`docs/exis-pipeline.md`](docs/exis-pipeline.md)                           |
+| How do `/datos` chart and data downloads work?       | [`docs/downloads.md`](docs/downloads.md)                                   |
+| How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                       |
+| How do I isolate a widget that might crash the page? | [`docs/error-boundary.md`](docs/error-boundary.md)                         |
+| How do I make content editable in "Modo edición"?    | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)                   |
+| Where does a test go, and what gates it?             | [`docs/testing.md`](docs/testing.md)                                       |
+| How do I write a component or service test?          | [`docs/tests/component_testing.md`](docs/tests/component_testing.md)       |
+| Branches, commits, PRs, required checks              | [`docs/git-guidelines.md`](docs/git-guidelines.md)                         |
+| Pipelines, environments, secrets, rollback           | [`docs/deployment.md`](docs/deployment.md)                                 |
+| File uploads and their known defects                 | [`docs/manage-assets.md`](docs/manage-assets.md)                           |
+| Running the stack without Docker                     | [`infra/docker/README.md`](infra/docker/README.md)                         |
+| What tables exist and how do they relate?            | [`docs/database-definition.md`](docs/database-definition.md)               |
+| How does the public gallery work?                    | [`docs/gallery.md`](docs/gallery.md)                                       |
+| How does the ROSAC location map work?                | [`docs/rosac-location.md`](docs/rosac-location.md)                         |
+| How is the research areas page built?                | [`docs/research.md`](docs/research.md)                                     |
+| How is the collaborations page built?                | [`docs/collaborations.md`](docs/collaborations.md)                         |
+| How does a visitor see LASCE contact information?    | [`docs/contact.md`](docs/contact.md)                                       |
+| How does a visitor register an account?              | [`docs/registration.md`](docs/registration.md)                             |
+| How do users sign in, and how is a page protected?   | [`docs/sessions.md`](docs/sessions.md)                                     |
+| How do I get an account to sign in locally?          | [`docs/user-administration.md`](docs/user-administration.md)               |
+| How are role permissions configured?                 | [`docs/role-permissions.md`](docs/role-permissions.md)                     |
+| How do I gate a page or a control with a grant?      | [`docs/add-permissions.md`](docs/add-permissions.md)                       |
+| How are academic activities structured?              | [`docs/academic-activities.md`](docs/academic-activities.md)               |
+| How is the header/nav organized and responsive?      | [`docs/header-and-navigation.md`](docs/header-and-navigation.md)           |
+| How does the administration menu work?               | [`docs/admin-navigation.md`](docs/admin-navigation.md)                     |
+| How do I add a translated string or a language?      | [`docs/internationalization.md`](docs/internationalization.md)             |
+| How do I make database content bilingual?            | [`docs/translate-database-content.md`](docs/translate-database-content.md) |
 
 When a change makes one of these wrong, update it in the same PR.

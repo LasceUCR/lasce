@@ -1,7 +1,8 @@
 # Internationalization (i18n)
 
-How the web app renders in more than one language, how to add a string or a language, and how
-database content will be translated later. This covers `apps/web` only: the worker produces codes,
+How the web app renders in more than one language and how to add a string or a language.
+Translating database content is covered in its own guide,
+[`translate-database-content.md`](translate-database-content.md). This covers `apps/web` only: the worker produces codes,
 never text a visitor reads.
 
 ## State of things
@@ -14,9 +15,10 @@ never text a visitor reads.
 - The English text is a first draft. Nobody has reviewed its scientific terminology yet.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
-- Database content ("Modo edición") is translated for **one entity only, as a proof of concept:
+- Database content ("Modo edición") has shared, reusable infrastructure, and **one entity uses it:
   the publications on `/publicaciones`** (title and abstract, in Spanish and English). Every other
-  editable entity is still single-language. See [Dynamic content](#dynamic-content).
+  editable entity is still single-language. See [Dynamic content](#dynamic-content) and
+  [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
 
@@ -212,7 +214,8 @@ language; the page's fixed copy (hero, filters, editor labels and messages) is s
    namespaces Client Components use. It needs a safeguard, because a namespace left out fails
    only in the browser.
 6. **Review of the English text** by someone who knows the terminology.
-7. **Database content** for every entity except publications, designed in the next section.
+7. **Database content** for every entity except publications, following
+   [`translate-database-content.md`](translate-database-content.md).
 
 ## Dynamic content
 
@@ -232,198 +235,25 @@ catalogue holds keyed text, so the same pattern applies. What changes at that si
 text is loaded: give each its own catalogue file per language (`messages/es/gallery.json`) so it
 is not sent with every page, and settle the provider scoping above first.
 
-### Database content: built for publications (proof of concept)
+### Database content
 
-Publications (`Research`, shown on `/publicaciones`) are the first and, so far, only entity whose
-database text is translated. It is a proof of concept for the pattern, not a migration of the
-site: news, research areas, activities, researchers and the gallery are still single-language.
+Editable content keeps Spanish on the entity's own table and every other language in a
+translation table per entity (`<entity>_translations`), and is read in the language of the
+`lasce_locale` cookie with a per-record fallback for records saved before the entity became
+bilingual. Shared modules handle the schemas, the cross-language review, reading and fallback,
+the editor's language tabs, transactions, optimistic concurrency and the API's error envelope.
 
-#### Storage
+- **How it works and how to make an entity bilingual:**
+  [`translate-database-content.md`](translate-database-content.md), with the publications as the
+  reference implementation, their API contract, the design decisions and the known limitations.
+- **Which entities are bilingual:** publications only. The same pattern is meant for `News`,
+  `ResearchArea`, `NosotrosActivity`, `Researcher`, `NosotrosResearcher`, `GalleryAlbum` and
+  `GalleryMedia`, each with its own translation table holding only its translatable columns
+  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
+- **Tables:** [`database-definition.md`](database-definition.md).
 
-```prisma
-model ResearchTranslation {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  researchId String   @map("research_id") @db.Uuid
-  locale     String   @db.VarChar(5)
-  title      String
-  abstract   String   @db.Text
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  research   Research @relation(fields: [researchId], references: [id], onDelete: Cascade)
-
-  @@unique([researchId, locale])
-  @@map("research_record_translations")
-  @@schema("research")
-}
-```
-
-- `research_records.title` and `abstract` keep the **Spanish** text; the translation table holds one
-  row per other language (today, `en`). Only `title` and `abstract` are translated: publishers and
-  authors are proper nouns.
-- The migration (`20261008014500_add_research_translations`) only adds the table. No existing row
-  was changed and nothing was copied between languages.
-- **Legacy records.** A record saved before this table existed has no translation row, and its
-  base text is in whatever language it was entered in; the seeded publications, for one, are in
-  English. Such a record is never assumed to be Spanish. The application treats "has a row for
-  every other language" as the sign that its base text was written or confirmed as Spanish.
-- `locale` is a string validated against `locales` in the app, so a new language needs no
-  migration. The table is mirrored in the worker (`ResearchTranslation` in
-  `apps/worker/app/db/models.py`), which does not use it.
-
-#### Reading and fallback
-
-`getPublications(locale, { includeEditingData })` in `app/lib/publications.ts`:
-
-- returns `title` and `abstract` in `locale` when the record has that translation, and the base
-  text otherwise;
-- sets `contentLocale` to the language actually shown, or to `null` for a legacy record whose base
-  text is shown, because that language is unknown;
-- adds `editing` (both languages, `isLegacy`, and the `version` to save against) only when asked.
-  The page asks only for a user with `edit_components`, so visitors never receive both languages.
-
-`/publicaciones` and `GET /api/publicaciones` read the language with `getLocale()` (the
-`lasce_locale` cookie the header switcher sets), so a reload keeps it and URLs do not change.
-`PublicationCard` puts `lang` on the title and abstract: the real language when known, and `lang=""`
-(unknown, per the HTML spec) for a legacy record, rather than claiming Spanish.
-
-#### Writing: the API contract
-
-Validation lives in `app/lib/publication-schema.ts`, a module with no server imports so the editor
-validates with exactly the rules the API enforces. Every schema is strict: an unknown key, such as
-an unsupported language or the old single-language `title`, is rejected.
-
-`POST /api/publicaciones` (`create_components`):
-
-```json
-{
-  "content": {
-    "es": { "title": "…", "abstract": "…" },
-    "en": { "title": "…", "abstract": "…" }
-  },
-  "authors": ["…"],
-  "venue": "…",
-  "date": "2026-10-08",
-  "researchGroup": "LASCE",
-  "DOI": "10.1234/example",
-  "href": "https://example.org/paper"
-}
-```
-
-- Both languages are required. Text is trimmed, and empty or whitespace-only text (spaces, tabs,
-  line breaks) is rejected. The same text in both languages is allowed: official titles and names
-  often stay the same.
-- `DOI` and `href` (external link) are optional: absent, `null`, empty or blank all store `null`.
-  A link must be an absolute `http`/`https` URL; a DOI must have the general form
-  `10.<registrant>/<suffix>` (deliberately looser than Crossref's pattern), without a resolver
-  prefix. Both stay unique.
-- `date` must be a date string or a `Date`; `null`, `0`, `false` or blank text are rejected instead
-  of becoming 1970-01-01.
-
-`PATCH /api/publicaciones/[id]` (`edit_components`) writes only the fields present:
-
-- `version` (required): the `editing.version` the editor loaded.
-- **With `content`**, it is a bilingual content update: both languages in full. When a title or
-  abstract changed in one language only, the same field in the other language must change too or
-  be listed in `confirmedUnchanged` (`[{ "locale": "en", "field": "title" }]`), meaning the editor
-  reviewed it in this operation. Confirmations are never stored. Completing a legacy record counts
-  the missing language as changed, so its base text has to be reviewed too.
-- **Without `content`**, it updates shared fields only (authors, venue, date, group, DOI, link).
-  Titles, abstracts and translations are not touched and a missing translation is not required, so
-  a legacy record can be corrected without translating it. `confirmedUnchanged` is rejected here.
-- For `DOI` and `href`, `null` or empty clears the value and leaving the key out keeps it. A body
-  with nothing to update is rejected.
-
-Errors carry a Spanish `error` and a stable `code`; validation errors list each problem with its
-full path (`content.en.title`):
-
-| Status | `code`                                                     | When                                              |
-| ------ | ---------------------------------------------------------- | ------------------------------------------------- |
-| 400    | `invalid-json`, `invalid-body`, `invalid-id`               | Malformed body or id (ids must be UUIDs)          |
-| 400    | `review-required` (+ `pending: [{ path, locale, field }]`) | One-sided change without its counterpart reviewed |
-| 401    | (from `requireApiPermission`)                              | No session                                        |
-| 403    | (from `requireApiPermission`)                              | Missing permission                                |
-| 404    | `not-found`                                                | The publication does not exist                    |
-| 409    | `conflict`                                                 | The record changed since the editor loaded it     |
-| 409    | `duplicate-doi`, `duplicate-external-url`                  | Unique violation                                  |
-| 500    | `internal-error`                                           | Anything else; details are only logged            |
-
-#### Atomicity and concurrency
-
-- `createPublication` and `updatePublication` write the base row, the translation rows, the
-  publisher and the author links in one Prisma interactive transaction: all or nothing.
-- Expected failures are raised inside the transaction and turned into results outside it, so
-  PostgreSQL never continues an aborted transaction. A unique violation is read from Prisma 7's
-  driver-adapter error shape as well as `meta.target`, to tell a DOI from a link.
-- **Optimistic concurrency**: `version` is the record's `updated_at`. The update is a conditional
-  `UPDATE … WHERE id = … AND updated_at = version` that also moves `updated_at` forward, so of two
-  editors who loaded the same version the second gets `conflict` instead of overwriting the first.
-  It applies to shared-field updates too. Deleting does not take a version.
-- Deleting a publication removes its translations and author links through `ON DELETE CASCADE`.
-
-#### The editor
-
-`PublicationForm` and `PublicationsExplorer` (`app/components/public/publications/`), with the
-rules in `app/lib/publication-form.ts`:
-
-- Title and abstract sit in one tab per language (Español, English), following the WAI-ARIA tabs
-  pattern of `AccessTabs` and reusing its styles; shared fields sit below, outside the tabs.
-- A tab whose fields have problems says so in its label (`English · 2 por revisar`), and trying to
-  save opens the first tab with a problem and focuses its first invalid field. Errors are linked to
-  their field with `aria-describedby`.
-- A one-sided change shows, under the other language's field, an explanation and a switch
-  ("El título en inglés sigue siendo correcto"); the switch resets as soon as either language of
-  that field changes again.
-- A legacy record opens with its base text on the Spanish tab, flagged as possibly not Spanish, and
-  an empty English tab (`English · Sin traducción`). In edit mode its card says the English version
-  is missing.
-- The explorer sends both languages only when a title or abstract changed; otherwise it sends just
-  the shared fields that changed, always with the version taken when the editor opened. Server
-  errors appear under their field and language; a conflict keeps what was typed and offers to
-  close and reload instead of retrying over someone else's change.
-
-#### Tests
-
-- `app/lib/publications.test.ts`, `app/lib/publication-form.test.ts`: persistence (with a mocked
-  Prisma client), schemas, the review rule, request bodies and error mapping.
-- `app/api/publicaciones/**/route.test.ts`: the HTTP contract, every status code above.
-- `app/components/public/publications/*.test.tsx`: tabs, validation, review switches, legacy
-  records, server errors and the save flow.
-- `tests/e2e/publications-i18n.spec.ts`: language switch and reload, create, shared-field edit of a
-  legacy record, cross-language confirmation, concurrent edit, delete with cascade, axe checks in
-  English and in the editor, and the editor from 320px to 1440px.
-
-#### How this differs from the original design
-
-- The original design had `PATCH` take an optional `locale` and write one language per request. The
-  POC requires both languages in the same request instead, so they are always saved together and
-  the cross-language review can be enforced by the server.
-- The rollout started with publications rather than news.
-
-### Known limitations of the POC
-
-- Only publications are translated. The page's fixed copy, and every other entity, are not.
-- Search on `/publicaciones` matches the text in the current language only.
-- An editor receives both languages of every publication with the page, which doubles that payload.
-- The English texts are written by editors; nothing is translated automatically and the existing
-  publications have no English version until someone adds one.
-- Publications have no language-specific URL or `hreflang` (the language is a cookie; see above).
-- Deleting does not check the version: a delete wins over a concurrent edit, which then gets `404`.
-
-### Design for the other entities (not built yet)
-
-The same shape applies to `News`, `ResearchArea`, `NosotrosActivity`, `Researcher`,
-`NosotrosResearcher`, `GalleryAlbum` and `GalleryMedia`: an `<Entity>Translation` table with the
-translatable columns only (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`,
-`yearsLabel`), the base table keeping Spanish, and the publications code as the reference for
-reading, writing, concurrency and the editor. Each one updates
-[`database-definition.md`](database-definition.md) in the same PR.
-
-Alternatives considered and rejected:
-
-- **JSON columns** (`title: { es, en }`): changes the type of every existing column, breaks the
-  SQLAlchemy mirror, and loses column constraints.
-- **One generic table** (`entity`, `entity_id`, `field`, `locale`, `value`): no foreign keys, no
-  typing, and every read becomes a pivot.
+The editor's language tabs only choose which translation is being edited; the header selector
+alone sets the language a visitor reads.
 
 ### What stays untranslated
 

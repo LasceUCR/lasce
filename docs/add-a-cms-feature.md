@@ -26,3 +26,19 @@ Say you are adding CMS editing to some list of `Widget`s.
 The only new component per feature is one `Editable<Widget>Card`, the piece that knows both the
 domain type and `useEditMode()` — see `EditableNewsCard.tsx` for the pattern: render the plain
 content when edit mode is off, `EditableWrapper` + an edit modal when it's on.
+
+## Making the content bilingual
+
+If the widget's text must exist in Spanish and English, keep everything above and follow
+[`translate-database-content.md`](translate-database-content.md). It adds, on top of these
+building blocks:
+
+- `LanguageTabs` and `TranslationReview` (`apps/web/app/components/public/cms/`): the editor's
+  language tabs and the cross-language review switch.
+- `apps/web/app/lib/i18n/content/`: the field definition, its Zod schema, the review rule,
+  reading with fallback and the form helpers.
+- `apps/web/app/lib/cms/`: the API's JSON error envelope, `runWrite` for transactions,
+  `updated_at` as the version for optimistic concurrency, and the client's `sendJson` and error
+  mapping. These are useful to a single-language feature too.
+
+Publications (`/publicaciones`) are the reference implementation.
