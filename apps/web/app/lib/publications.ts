@@ -1,16 +1,23 @@
-import { prisma, Prisma } from '@lasce/db'
+import { prisma, type Prisma } from '@lasce/db'
 
+import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+import {
+  baseContent,
+  resolveContent,
+  storedContentFrom,
+  translationRows,
+} from '@/app/lib/i18n/content/resolve'
 
 import {
   findPendingReviews,
+  publicationContent,
   translationLocales,
-  type LocalizedPublicationContent,
   type Publication,
   type PublicationCreateInput,
   type PublicationUpdateInput,
   type ReviewConfirmation,
-  type StoredPublicationContent,
 } from './publication-schema'
 
 export * from './publication-schema'
@@ -50,45 +57,22 @@ const recordInclude = {
     include: { researchAuthor: true },
   },
   translations: {
-    where: { locale: { in: translationLocales } },
+    where: { locale: { in: [...translationLocales] } },
     select: { locale: true, title: true, abstract: true },
   },
 } satisfies Prisma.ResearchInclude
 
 type ResearchRecord = Prisma.ResearchGetPayload<{ include: typeof recordInclude }>
 
-type StoredText = LocalizedPublicationContent & { locale?: string }
-
-function storedContent(base: StoredText, translations: StoredText[]): StoredPublicationContent {
-  const content = { [defaultLocale]: { title: base.title, abstract: base.abstract } } as Record<
-    Locale,
-    LocalizedPublicationContent | null
-  >
-
-  for (const locale of translationLocales) {
-    const row = translations.find((translation) => translation.locale === locale)
-    content[locale] = row ? { title: row.title, abstract: row.abstract } : null
-  }
-
-  return content as StoredPublicationContent
-}
-
-function isLegacyContent(content: StoredPublicationContent): boolean {
-  return translationLocales.some((locale) => content[locale] === null)
-}
-
 function toPublication(
   record: ResearchRecord,
   locale: Locale,
   includeEditingData: boolean,
 ): Publication {
-  const content = storedContent(record, record.translations)
-  const isLegacy = isLegacyContent(content)
-  const translated = locale === defaultLocale ? null : content[locale]
+  const content = storedContentFrom(publicationContent, record, record.translations)
   // A complete record's base text was written or confirmed as Spanish when it was saved. A legacy
   // record's base text was entered before languages existed, so its language is unknown.
-  const shown = translated ?? content[defaultLocale]
-  const contentLocale = translated ? locale : isLegacy ? null : defaultLocale
+  const { content: shown, contentLocale, isLegacy } = resolveContent(content, locale)
 
   return {
     slug: record.id,
@@ -103,7 +87,7 @@ function toPublication(
     researchGroup: record.researchGroup,
     contentLocale,
     ...(includeEditingData
-      ? { editing: { content, isLegacy, version: record.updatedAt.toISOString() } }
+      ? { editing: { content, isLegacy, version: toVersion(record.updatedAt) } }
       : {}),
   }
 }
@@ -132,72 +116,30 @@ export async function getPublications(
   return records.map((record) => toPublication(record, locale, includeEditingData))
 }
 
-/** Thrown inside a transaction to roll it back and report `failure` to the caller. */
-class PublicationWriteAbort extends Error {
-  constructor(readonly failure: PublicationWriteFailure) {
-    super(failure.reason)
-  }
-}
-
-function readPath(value: unknown, path: string[]): unknown {
-  let current = value
-
-  for (const key of path) {
-    if (typeof current !== 'object' || current === null) return undefined
-    current = (current as Record<string, unknown>)[key]
-  }
-
-  return current
-}
-
-function asStrings(value: unknown): string[] {
-  if (typeof value === 'string') return [value]
-  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string')
-  return []
-}
-
 /**
- * Which unique column a P2002 violated. With a driver adapter Prisma reports it under
- * `meta.driverAdapterError.cause.constraint.fields` as column names; without one, under
- * `meta.target`. Anything else is not a duplicate this module knows how to explain.
+ * Which unique column a violation names: `doi` and `external_url` are the publication's unique
+ * values. Any other violation is not one this module knows how to explain, and is rethrown.
  */
-function duplicateField(error: unknown): 'doi' | 'externalUrl' | null {
-  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
-    return null
+function duplicateFailure(columns: readonly string[]): PublicationWriteFailure | null {
+  if (columns.includes('doi')) return { ok: false, reason: 'duplicate', field: 'doi' }
+  if (columns.includes('external_url') || columns.includes('externalUrl')) {
+    return { ok: false, reason: 'duplicate', field: 'externalUrl' }
   }
-
-  const fields = [
-    ...asStrings(readPath(error.meta, ['target'])),
-    ...asStrings(readPath(error.meta, ['driverAdapterError', 'cause', 'constraint', 'fields'])),
-  ]
-
-  if (fields.includes('doi')) return 'doi'
-  if (fields.includes('external_url') || fields.includes('externalUrl')) return 'externalUrl'
-
   return null
 }
 
 /**
- * Runs a write transaction and turns its expected failures into results. Expected failures are
- * raised as `PublicationWriteAbort` or as a unique violation, so the transaction rolls back
- * before anything is reported: catching a database error inside an interactive transaction would
- * leave PostgreSQL's transaction aborted.
+ * Runs a write transaction (`runWrite`) and reports the stored record as a publication. Expected
+ * failures are raised as `WriteAbort` or as a unique violation, so the transaction rolls back
+ * before anything is reported.
  */
-async function runWrite(
+async function writePublication(
   write: (tx: Prisma.TransactionClient) => Promise<ResearchRecord>,
 ): Promise<PublicationWriteResult> {
-  try {
-    const record = await prisma.$transaction(write)
-
-    return { ok: true, publication: toPublication(record, defaultLocale, true) }
-  } catch (error) {
-    if (error instanceof PublicationWriteAbort) return error.failure
-
-    const field = duplicateField(error)
-    if (field) return { ok: false, reason: 'duplicate', field }
-
-    throw error
-  }
+  const result = await runWrite(write, duplicateFailure)
+  return result.ok
+    ? { ok: true, publication: toPublication(result.value, defaultLocale, true) }
+    : result
 }
 
 /** Publishers are shared between publications and normalized by name. */
@@ -232,21 +174,18 @@ async function replaceAuthors(tx: Prisma.TransactionClient, researchId: string, 
 export async function createPublication(
   input: PublicationCreateInput,
 ): Promise<PublicationWriteResult> {
-  return runWrite(async (tx) => {
+  return writePublication(async (tx) => {
     const publisher = await upsertPublisher(tx, input.venue)
 
     const research = await tx.research.create({
       data: {
-        title: input.content[defaultLocale].title,
-        abstract: input.content[defaultLocale].abstract,
+        ...baseContent(publicationContent, input.content),
         publicationDate: input.date,
         publisherId: publisher.id,
         externalUrl: input.href,
         doi: input.DOI,
         researchGroup: input.researchGroup,
-        translations: {
-          create: translationLocales.map((locale) => ({ locale, ...input.content[locale] })),
-        },
+        translations: { create: translationRows(publicationContent, input.content) },
       },
     })
 
@@ -274,9 +213,9 @@ export async function updatePublication(
   id: string,
   input: PublicationUpdateInput,
 ): Promise<PublicationWriteResult> {
-  const expectedUpdatedAt = new Date(input.version)
+  const expectedUpdatedAt = parseVersion(input.version)
 
-  return runWrite(async (tx) => {
+  return writePublication(async (tx) => {
     const current = await tx.research.findUnique({
       where: { id },
       select: {
@@ -287,23 +226,27 @@ export async function updatePublication(
       },
     })
 
-    if (!current) throw new PublicationWriteAbort({ ok: false, reason: 'not-found' })
+    if (!current) throw new WriteAbort<PublicationWriteFailure>({ ok: false, reason: 'not-found' })
 
-    if (current.updatedAt.getTime() !== expectedUpdatedAt.getTime()) {
-      throw new PublicationWriteAbort({ ok: false, reason: 'conflict' })
+    if (!isCurrentVersion(current.updatedAt, expectedUpdatedAt)) {
+      throw new WriteAbort<PublicationWriteFailure>({ ok: false, reason: 'conflict' })
     }
 
     const { content } = input
 
     if (content) {
       const pending = findPendingReviews(
-        storedContent(current, current.translations),
+        storedContentFrom(publicationContent, current, current.translations),
         content,
         input.confirmedUnchanged ?? [],
       )
 
       if (pending.length > 0) {
-        throw new PublicationWriteAbort({ ok: false, reason: 'review-required', pending })
+        throw new WriteAbort<PublicationWriteFailure>({
+          ok: false,
+          reason: 'review-required',
+          pending,
+        })
       }
     }
 
@@ -312,27 +255,26 @@ export async function updatePublication(
     const { count } = await tx.research.updateMany({
       where: { id, updatedAt: expectedUpdatedAt },
       data: {
-        ...(content
-          ? { title: content[defaultLocale].title, abstract: content[defaultLocale].abstract }
-          : {}),
+        ...(content ? baseContent(publicationContent, content) : {}),
         ...(input.date === undefined ? {} : { publicationDate: input.date }),
         ...(publisher === undefined ? {} : { publisherId: publisher.id }),
         ...(input.href === undefined ? {} : { externalUrl: input.href }),
         ...(input.DOI === undefined ? {} : { doi: input.DOI }),
         ...(input.researchGroup === undefined ? {} : { researchGroup: input.researchGroup }),
         // Strictly later than the version it replaces, even if two saves share a millisecond.
-        updatedAt: new Date(Math.max(Date.now(), expectedUpdatedAt.getTime() + 1)),
+        updatedAt: nextUpdatedAt(expectedUpdatedAt),
       },
     })
 
-    if (count === 0) throw new PublicationWriteAbort({ ok: false, reason: 'conflict' })
+    if (count === 0)
+      throw new WriteAbort<PublicationWriteFailure>({ ok: false, reason: 'conflict' })
 
     if (content) {
-      for (const locale of translationLocales) {
+      for (const { locale, ...text } of translationRows(publicationContent, content)) {
         await tx.researchTranslation.upsert({
           where: { researchId_locale: { researchId: id, locale } },
-          create: { researchId: id, locale, ...content[locale] },
-          update: content[locale],
+          create: { researchId: id, locale, ...text },
+          update: text,
         })
       }
     }

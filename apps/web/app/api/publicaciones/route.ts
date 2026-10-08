@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server'
 import { getLocale } from 'next-intl/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
+import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
 import { resolveLocale } from '@/app/lib/i18n/locale'
 import { createPublication, getPublications, publicationCreateSchema } from '@/app/lib/publications'
 
-import { internalError, invalidBody, invalidJson, ok, writeFailure } from './http'
+import { writeFailure } from './http'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,15 +33,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   const guard = await requireApiPermission('create_components')
   if (!guard.ok) return guard.response
 
-  let body: unknown
+  const json = await readJson(request)
+  if (!json.ok) return json.response
 
-  try {
-    body = await request.json()
-  } catch {
-    return invalidJson()
-  }
-
-  const parsed = publicationCreateSchema.safeParse(body)
+  const parsed = publicationCreateSchema.safeParse(json.body)
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {

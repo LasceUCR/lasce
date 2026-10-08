@@ -1,40 +1,57 @@
 import { z } from 'zod'
 
-import { defaultLocale, locales, type Locale } from '@/app/lib/i18n/config'
+import { versionSchema } from '@/app/lib/cms/version'
+import type { Locale } from '@/app/lib/i18n/config'
+import {
+  defineTranslatableContent,
+  type ContentInput,
+  type FieldOf,
+  type LocalizedContent,
+  type ReviewConfirmation as ContentReviewConfirmation,
+  type StoredContent,
+} from '@/app/lib/i18n/content/definition'
+import { findPendingReviews as findContentReviews } from '@/app/lib/i18n/content/review'
+
+export { translationLocales, type TranslationLocale } from '@/app/lib/i18n/content/definition'
 
 /**
  * The client-safe half of the publications module: types, the Zod contracts of the
  * `/api/publicaciones` endpoints and the bilingual review rule. It imports nothing from the
  * server, so the editor validates with exactly the rules the API enforces. Data access lives in
  * `publications.ts`, which re-exports everything here.
+ *
+ * The bilingual parts (content schema, stored content, review rule) come from the shared content
+ * core in `app/lib/i18n/content/`, configured by `publicationContent`. The names exported here
+ * are kept so the API, the editor and their tests do not depend on that core directly.
  */
 
 export type ResearchGroup = 'LASCE' | 'ROSAC'
 
+/**
+ * A publication's text, written once per language: both fields are required in every locale.
+ * Spanish lives on `research.research_records`; every other locale in
+ * `research.research_record_translations`.
+ */
+export const publicationContent = defineTranslatableContent({
+  title: { noun: { word: 'título', gender: 'm' }, required: true },
+  abstract: { noun: { word: 'resumen', gender: 'm' }, required: true },
+})
+
+type PublicationContentSpecs = typeof publicationContent.specs
+
 /** The fields of a publication that are written once per language. */
-export const translatableFields = ['title', 'abstract'] as const
+export const translatableFields = publicationContent.fields
 
-export type TranslatableField = (typeof translatableFields)[number]
+export type TranslatableField = FieldOf<PublicationContentSpecs>
 
-export type LocalizedPublicationContent = Record<TranslatableField, string>
-
-/** Every locale except the source one: the locales stored in `research_record_translations`. */
-export type TranslationLocale = Exclude<Locale, typeof defaultLocale>
-
-export const translationLocales = locales.filter(
-  (locale): locale is TranslationLocale => locale !== defaultLocale,
-)
+export type LocalizedPublicationContent = LocalizedContent<PublicationContentSpecs>
 
 /**
  * A publication's translatable text in every language, as stored. The source language lives on
  * the base row and is always present; another language is `null` when the record has no
  * translation row for it yet.
  */
-export type StoredPublicationContent = {
-  [L in Locale]: L extends typeof defaultLocale
-    ? LocalizedPublicationContent
-    : LocalizedPublicationContent | null
-}
+export type StoredPublicationContent = StoredContent<PublicationContentSpecs>
 
 /** What an editor needs that a visitor does not: both languages and the version to save against. */
 export type PublicationEditingData = {
@@ -68,35 +85,11 @@ export type Publication = {
   editing?: PublicationEditingData
 }
 
-/** Each language's name as it appears in validation messages. */
-const languageNames: Record<Locale, string> = { es: 'en español', en: 'en inglés' }
-
-function localizedContentSchema(locale: Locale) {
-  const language = languageNames[locale]
-
-  return z.strictObject(
-    {
-      title: z
-        .string({ error: `El título ${language} es obligatorio y debe ser texto.` })
-        .trim()
-        .min(1, `El título ${language} es obligatorio.`),
-      abstract: z
-        .string({ error: `El resumen ${language} es obligatorio y debe ser texto.` })
-        .trim()
-        .min(1, `El resumen ${language} es obligatorio.`),
-    },
-    { error: `Falta el contenido ${language} (title y abstract).` },
-  )
-}
-
-// `satisfies` makes adding a locale to `locales` a type error here until its content is required.
-export const contentSchema = z.strictObject(
-  {
-    es: localizedContentSchema('es'),
-    en: localizedContentSchema('en'),
-  } satisfies Record<Locale, ReturnType<typeof localizedContentSchema>>,
-  { error: 'El contenido (content) debe incluir los idiomas es y en.' },
-)
+/**
+ * Both languages' title and abstract, trimmed; blank text is rejected. Every supported locale is
+ * required, so adding one to `locales` makes its content required too.
+ */
+export const contentSchema = publicationContent.schema
 
 /**
  * The general DOI structure, `10.<registrant>/<suffix>`: a numeric registrant that may have
@@ -162,12 +155,7 @@ export const sharedFieldSchemas = {
 }
 
 /** A field whose text in one language is kept as is while its counterpart changed. */
-const reviewConfirmationSchema = z.strictObject({
-  locale: z.enum(locales),
-  field: z.enum(translatableFields),
-})
-
-export type ReviewConfirmation = z.infer<typeof reviewConfirmationSchema>
+export type ReviewConfirmation = ContentReviewConfirmation<TranslatableField>
 
 /**
  * Body of a create request. Both languages are required. `href` (external link) and `DOI` are
@@ -195,15 +183,11 @@ export const publicationCreateSchema = z.strictObject({
  */
 export const publicationUpdateSchema = z
   .strictObject({
-    version: z.iso.datetime({
-      offset: true,
-      error: 'La versión de la publicación es obligatoria y debe ser la que se cargó.',
-    }),
+    version: versionSchema(
+      'La versión de la publicación es obligatoria y debe ser la que se cargó.',
+    ),
     content: contentSchema.optional(),
-    confirmedUnchanged: z
-      .array(reviewConfirmationSchema)
-      .max(locales.length * translatableFields.length)
-      .optional(),
+    confirmedUnchanged: publicationContent.confirmationsSchema.optional(),
     authors: sharedFieldSchemas.authors.optional(),
     researchGroup: sharedFieldSchemas.researchGroup.optional(),
     venue: sharedFieldSchemas.venue.optional(),
@@ -232,38 +216,19 @@ export const publicationUpdateSchema = z
 
 export type PublicationCreateInput = z.infer<typeof publicationCreateSchema>
 export type PublicationUpdateInput = z.infer<typeof publicationUpdateSchema>
-export type PublicationContentInput = PublicationCreateInput['content']
+export type PublicationContentInput = ContentInput<PublicationContentSpecs>
 
 /**
  * The translatable fields that changed in some languages but not in others, minus the ones the
  * editor confirmed as still correct in this operation. A language with no stored text yet (a
  * legacy record) counts as changed, so completing a legacy record's English requires reviewing
- * its base text too: that text may not be Spanish at all.
+ * its base text too: that text may not be Spanish at all. The rule itself is the shared one
+ * (`app/lib/i18n/content/review.ts`); this binds it to the publication's fields.
  */
 export function findPendingReviews(
   current: StoredPublicationContent,
   next: PublicationContentInput,
   confirmed: ReviewConfirmation[],
 ): ReviewConfirmation[] {
-  const pending: ReviewConfirmation[] = []
-
-  for (const field of translatableFields) {
-    const changed = locales.filter(
-      (locale) => current[locale]?.[field].trim() !== next[locale][field].trim(),
-    )
-
-    if (changed.length === 0 || changed.length === locales.length) continue
-
-    for (const locale of locales) {
-      if (changed.includes(locale)) continue
-
-      const isConfirmed = confirmed.some(
-        (confirmation) => confirmation.locale === locale && confirmation.field === field,
-      )
-
-      if (!isConfirmed) pending.push({ locale, field })
-    }
-  }
-
-  return pending
+  return findContentReviews(publicationContent, current, next, confirmed)
 }

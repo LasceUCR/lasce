@@ -1,22 +1,14 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
+import { internalError, invalidBody, isUuid, ok, readJson } from '@/app/lib/cms/http'
 import {
   deletePublication,
   publicationUpdateSchema,
   updatePublication,
 } from '@/app/lib/publications'
 
-import {
-  internalError,
-  invalidBody,
-  invalidId,
-  invalidJson,
-  isPublicationId,
-  notFound,
-  ok,
-  writeFailure,
-} from '../http'
+import { invalidId, notFound, writeFailure } from '../http'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,17 +25,12 @@ export async function PATCH(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  if (!isPublicationId(id)) return invalidId()
+  if (!isUuid(id)) return invalidId()
 
-  let body: unknown
+  const json = await readJson(request)
+  if (!json.ok) return json.response
 
-  try {
-    body = await request.json()
-  } catch {
-    return invalidJson()
-  }
-
-  const parsed = publicationUpdateSchema.safeParse(body)
+  const parsed = publicationUpdateSchema.safeParse(json.body)
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
@@ -64,7 +51,7 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  if (!isPublicationId(id)) return invalidId()
+  if (!isUuid(id)) return invalidId()
 
   try {
     const deleted = await deletePublication(id)

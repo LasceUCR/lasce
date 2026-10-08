@@ -1,14 +1,34 @@
-import { defaultLocale, locales, type Locale } from '@/app/lib/i18n/config'
+import {
+  accessFailure,
+  FIELDS_MESSAGE,
+  invalidBodyFailure,
+  parseApiError,
+  reviewRequiredFailure,
+  unexpectedFailure,
+  type SaveFailure,
+} from '@/app/lib/cms/save'
+import { localeLabels, type Locale } from '@/app/lib/i18n/config'
+import {
+  draftFromStored,
+  emptyContentDraft,
+  hasContentChanges as hasTranslatableChanges,
+  isConfirmed,
+  isContentPath,
+  reviewsNeeded as translatableReviewsNeeded,
+  toContentInput,
+  validateContent,
+  type ContentDraft,
+  type FormErrors,
+} from '@/app/lib/i18n/content/form'
+import { editorCopy } from '@/app/lib/i18n/content/messages'
+import { isLegacyContent, storedContentFrom } from '@/app/lib/i18n/content/resolve'
 
 import {
-  contentSchema,
   doiSchema,
   externalUrlSchema,
-  findPendingReviews,
+  publicationContent,
   publicationDateSchema,
   sharedFieldSchemas,
-  translatableFields,
-  type LocalizedPublicationContent,
   type Publication,
   type ResearchGroup,
   type ReviewConfirmation,
@@ -16,20 +36,31 @@ import {
   type TranslatableField,
 } from './publication-schema'
 
+export { SAVE_ERROR_MESSAGE, type SaveFailure } from '@/app/lib/cms/save'
+export {
+  contentPath,
+  errorsByLocale,
+  resetConfirmations,
+  type FormErrors,
+} from '@/app/lib/i18n/content/form'
+
 /**
  * The editing logic behind `PublicationForm` and `PublicationsExplorer`, kept free of React so
  * every rule can be tested directly. Validation reuses the API's own Zod schemas, so the editor
  * and `/api/publicaciones` cannot disagree about what is valid.
+ *
+ * The title and abstract are handled by the shared bilingual form helpers
+ * (`app/lib/i18n/content/form.ts`), configured with `publicationContent`. What stays here is
+ * specific to publications: the shared fields (authors, venue, date, link, DOI, group), their
+ * validation, the request bodies and the meaning of each API error.
  */
 
 /** A field of the form, named by its path in the API body (`content.en.title`, `DOI`, ...). */
 export type FormFieldPath = string
 
-export type FormErrors = Record<FormFieldPath, string>
-
 /** Everything the editor holds while someone types. Text is kept as typed; it is trimmed on save. */
 export interface PublicationDraft {
-  content: Record<Locale, LocalizedPublicationContent>
+  content: ContentDraft<TranslatableField>
   authors: string[]
   venue: string
   /** `YYYY-MM-DD`, the value of the date input. */
@@ -50,25 +81,11 @@ export interface PublicationFormInitial {
   version: string | null
 }
 
-export const languageLabels: Record<Locale, string> = { es: 'Español', en: 'English' }
-
-/** "en español" / "en inglés", as the API's messages say it. */
-const inLanguage: Record<Locale, string> = { es: 'en español', en: 'en inglés' }
-
-const fieldNames: Record<TranslatableField, string> = { title: 'el título', abstract: 'el resumen' }
-
-export function contentPath(locale: Locale, field: TranslatableField): FormFieldPath {
-  return `content.${locale}.${field}`
-}
+/** Each language's name, as the tabs and the field labels show it. */
+export const languageLabels: Record<Locale, string> = localeLabels
 
 function toDateInput(date: Date): string {
   return date.toISOString().slice(0, 10)
-}
-
-function emptyContent(): Record<Locale, LocalizedPublicationContent> {
-  return Object.fromEntries(
-    locales.map((locale) => [locale, { title: '', abstract: '' }]),
-  ) as Record<Locale, LocalizedPublicationContent>
 }
 
 /** A blank form for a new publication, dated today in the editor's own time zone. */
@@ -77,7 +94,7 @@ export function emptyInitial(today = new Date()): PublicationFormInitial {
 
   return {
     draft: {
-      content: emptyContent(),
+      content: emptyContentDraft(publicationContent),
       authors: [],
       venue: '',
       date: toDateInput(local),
@@ -97,20 +114,13 @@ export function emptyInitial(today = new Date()): PublicationFormInitial {
  * copied across languages to look like a translation.
  */
 export function initialFromPublication(publication: Publication): PublicationFormInitial {
-  const stored: StoredPublicationContent = publication.editing?.content ?? {
-    es: { title: publication.title, abstract: publication.abstract },
-    en: null,
-  }
-
-  const content = emptyContent()
-  for (const locale of locales) {
-    const text = stored[locale]
-    if (text) content[locale] = { ...text }
-  }
+  // Without editing data, only the text shown is known: treat it as base text with no translation.
+  const stored: StoredPublicationContent =
+    publication.editing?.content ?? storedContentFrom(publicationContent, publication, [])
 
   return {
     draft: {
-      content,
+      content: draftFromStored(publicationContent, stored),
       authors: [...publication.authors],
       venue: publication.venue,
       date: toDateInput(publication.date),
@@ -119,7 +129,7 @@ export function initialFromPublication(publication: Publication): PublicationFor
       researchGroup: publication.researchGroup,
     },
     stored,
-    isLegacy: publication.editing?.isLegacy ?? stored.en === null,
+    isLegacy: publication.editing?.isLegacy ?? isLegacyContent(stored),
     version: publication.editing?.version ?? null,
   }
 }
@@ -130,14 +140,7 @@ function sameText(a: string | undefined, b: string | undefined): boolean {
 
 /** True when any title or abstract differs from what was stored. Always true when creating. */
 export function hasContentChanges(initial: PublicationFormInitial, draft: PublicationDraft) {
-  const { stored } = initial
-  if (!stored) return true
-
-  return locales.some((locale) =>
-    translatableFields.some(
-      (field) => !sameText(stored[locale]?.[field], draft.content[locale][field]),
-    ),
-  )
+  return hasTranslatableChanges(publicationContent, initial.stored, draft.content)
 }
 
 /**
@@ -148,48 +151,7 @@ export function reviewsNeeded(
   initial: PublicationFormInitial,
   draft: PublicationDraft,
 ): ReviewConfirmation[] {
-  if (!initial.stored || !hasContentChanges(initial, draft)) return []
-  return findPendingReviews(initial.stored, draft.content, [])
-}
-
-function isConfirmed(confirmed: ReviewConfirmation[], review: ReviewConfirmation) {
-  return confirmed.some(
-    (confirmation) => confirmation.locale === review.locale && confirmation.field === review.field,
-  )
-}
-
-/** Drops every confirmation of `field`: changing either language invalidates them. */
-export function resetConfirmations(
-  confirmed: ReviewConfirmation[],
-  field: TranslatableField,
-): ReviewConfirmation[] {
-  return confirmed.filter((confirmation) => confirmation.field !== field)
-}
-
-const languageNames: Record<Locale, string> = { es: 'español', en: 'inglés' }
-
-/**
- * Why `review` needs attention. When the other language had no text yet (a legacy record being
- * translated for the first time) nothing in it "changed": the point is that the base text may
- * not be in this language at all, so the message says that instead.
- */
-export function reviewMessage(
-  { locale, field }: ReviewConfirmation,
-  stored: StoredPublicationContent | null = null,
-): string {
-  const other = locales.find((candidate) => candidate !== locale) ?? defaultLocale
-  const name = fieldNames[field]
-
-  if (stored && stored[other] === null) {
-    return `Al agregar la versión en ${languageNames[other]}, revise ${name} ${inLanguage[locale]}: el texto original podría estar en otro idioma. Actualícelo o confirme que es correcto.`
-  }
-
-  return `Cambió ${name} ${inLanguage[other]}. Actualice ${name} ${inLanguage[locale]} o confirme que sigue siendo correcto.`
-}
-
-export function confirmationLabel({ locale, field }: ReviewConfirmation): string {
-  const name = fieldNames[field]
-  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${inLanguage[locale]} sigue siendo correcto`
+  return translatableReviewsNeeded(publicationContent, initial.stored, draft.content)
 }
 
 function sameAuthors(a: string[], b: string[]) {
@@ -232,23 +194,7 @@ export function validateDraft(
   draft: PublicationDraft,
   confirmed: ReviewConfirmation[],
 ): FormErrors {
-  const errors: FormErrors = {}
-
-  if (hasContentChanges(initial, draft)) {
-    const result = contentSchema.safeParse(draft.content)
-    if (!result.success) {
-      for (const issue of result.error.issues) {
-        const path = ['content', ...issue.path.map(String)].join('.')
-        errors[path] ??= issue.message
-      }
-    }
-
-    for (const review of reviewsNeeded(initial, draft)) {
-      if (!isConfirmed(confirmed, review)) {
-        errors[contentPath(review.locale, review.field)] ??= REVIEW_FIELD_MESSAGE
-      }
-    }
-  }
+  const errors = validateContent(publicationContent, initial.stored, draft.content, confirmed)
 
   const checks: Record<SharedField, () => string | null> = {
     authors: () => firstMessage(sharedFieldSchemas.authors.safeParse(draft.authors)),
@@ -266,28 +212,6 @@ export function validateDraft(
   }
 
   return errors
-}
-
-/** Error counts per language tab, for the indicator on each tab. */
-export function errorsByLocale(errors: FormErrors): Record<Locale, number> {
-  return Object.fromEntries(
-    locales.map((locale) => [
-      locale,
-      Object.keys(errors).filter((path) => path.startsWith(`content.${locale}.`)).length,
-    ]),
-  ) as Record<Locale, number>
-}
-
-function trimmedContent(draft: PublicationDraft) {
-  return Object.fromEntries(
-    locales.map((locale) => [
-      locale,
-      {
-        title: draft.content[locale].title.trim(),
-        abstract: draft.content[locale].abstract.trim(),
-      },
-    ]),
-  ) as Record<Locale, LocalizedPublicationContent>
 }
 
 function sharedValue(draft: PublicationDraft, field: SharedField) {
@@ -309,7 +233,9 @@ function sharedValue(draft: PublicationDraft, field: SharedField) {
 
 /** The body of `POST /api/publicaciones`. */
 export function buildCreateRequest(draft: PublicationDraft): Record<string, unknown> {
-  const body: Record<string, unknown> = { content: trimmedContent(draft) }
+  const body: Record<string, unknown> = {
+    content: toContentInput(publicationContent, draft.content),
+  }
   for (const field of changedSharedFields(emptyInitial(), draft)) {
     body[field] = sharedValue(draft, field)
   }
@@ -330,7 +256,7 @@ export function buildUpdateRequest(
   const body: Record<string, unknown> = { version: initial.version }
 
   if (hasContentChanges(initial, draft)) {
-    body.content = trimmedContent(draft)
+    body.content = toContentInput(publicationContent, draft.content)
     const confirmations = reviewsNeeded(initial, draft).filter((review) =>
       isConfirmed(confirmed, review),
     )
@@ -348,78 +274,19 @@ const sharedFormFields = new Set(['authors', 'venue', 'date', 'href', 'DOI', 're
 
 /** True for a path the form shows a message under. */
 export function isFormField(path: string): boolean {
-  if (sharedFormFields.has(path)) return true
-  const [root, locale, field] = path.split('.')
-  return (
-    root === 'content' &&
-    locales.some((each) => each === locale) &&
-    translatableFields.some((each) => each === field)
-  )
+  return sharedFormFields.has(path) || isContentPath(publicationContent, path)
 }
-
-export interface SaveFailure {
-  /** Shown above the form. */
-  message: string
-  /** Shown under the fields, keyed by path. */
-  fieldErrors: FormErrors
-  /** True when the form can no longer be saved as is and must be reopened. */
-  reopen: boolean
-}
-
-interface ErrorBody {
-  error?: unknown
-  code?: unknown
-  issues?: unknown
-  pending?: unknown
-}
-
-export const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
-
-const FIELDS_MESSAGE = 'Revise los campos marcados.'
 
 /** Shown under a field whose counterpart changed alone, next to the explanation and the switch. */
-export const REVIEW_FIELD_MESSAGE = 'Actualice este campo o confirme que sigue siendo correcto.'
-
-function listOf(value: unknown): Record<string, unknown>[] {
-  return Array.isArray(value)
-    ? value.filter(
-        (item): item is Record<string, unknown> => typeof item === 'object' && item !== null,
-      )
-    : []
-}
+export const REVIEW_FIELD_MESSAGE = editorCopy.fieldPending
 
 /** Turns an error response of `/api/publicaciones` into what the editor shows. */
-export function describeSaveFailure(status: number, body: ErrorBody | null): SaveFailure {
-  const serverMessage = typeof body?.error === 'string' ? body.error : null
-  const code = typeof body?.code === 'string' ? body.code : null
+export function describeSaveFailure(status: number, body: unknown): SaveFailure {
+  const error = parseApiError(body)
+  const { code, message: serverMessage } = error
 
-  if (code === 'invalid-body') {
-    const fieldErrors: FormErrors = {}
-    const general: string[] = []
-    for (const issue of listOf(body?.issues)) {
-      const path = typeof issue.path === 'string' ? issue.path : ''
-      const message = typeof issue.message === 'string' ? issue.message : FIELDS_MESSAGE
-      // Only a field the form shows can carry the message; anything else (`version`, the body
-      // itself) is said above the form, or it would be counted but never seen.
-      if (isFormField(path)) fieldErrors[path] ??= message
-      else general.push(message)
-    }
-    return {
-      message: general.length > 0 ? general.join(' ') : FIELDS_MESSAGE,
-      fieldErrors,
-      reopen: false,
-    }
-  }
-
-  if (code === 'review-required') {
-    const fieldErrors: FormErrors = {}
-    for (const pending of listOf(body?.pending)) {
-      if (typeof pending.path === 'string') {
-        fieldErrors[pending.path] = REVIEW_FIELD_MESSAGE
-      }
-    }
-    return { message: serverMessage ?? FIELDS_MESSAGE, fieldErrors, reopen: false }
-  }
+  if (code === 'invalid-body') return invalidBodyFailure(error, isFormField)
+  if (code === 'review-required') return reviewRequiredFailure(error, REVIEW_FIELD_MESSAGE)
 
   if (code === 'duplicate-doi' || code === 'duplicate-external-url') {
     const field = code === 'duplicate-doi' ? 'DOI' : 'href'
@@ -448,21 +315,5 @@ export function describeSaveFailure(status: number, body: ErrorBody | null): Sav
     }
   }
 
-  if (status === 401) {
-    return {
-      message: `${serverMessage ?? 'No ha iniciado sesión.'} Inicie sesión de nuevo para guardar; sus cambios siguen en el formulario.`,
-      fieldErrors: {},
-      reopen: false,
-    }
-  }
-
-  if (status === 403) {
-    return {
-      message: serverMessage ?? 'No tiene permisos para modificar este contenido.',
-      fieldErrors: {},
-      reopen: false,
-    }
-  }
-
-  return { message: serverMessage ?? SAVE_ERROR_MESSAGE, fieldErrors: {}, reopen: false }
+  return accessFailure(status, error) ?? unexpectedFailure(error)
 }

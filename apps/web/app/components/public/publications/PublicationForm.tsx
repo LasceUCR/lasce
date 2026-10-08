@@ -1,7 +1,7 @@
 'use client'
 
 import { Plus, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
@@ -9,15 +9,23 @@ import { FormField, type FormFieldOption } from '@/app/components/public/FormFie
 import { IconButton } from '@/app/components/public/IconButton'
 import { Modal } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
-import { Toggle } from '@/app/components/public/Toggle'
+import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
+import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import { defaultLocale, locales, type Locale } from '@/app/lib/i18n/config'
 import {
-  confirmationLabel,
+  confirmationsStillNeeded,
+  contentFieldLang,
+  errorSummary,
+  isConfirmed,
+  languageTabFlags,
+  tabWithErrors,
+  withConfirmation,
+} from '@/app/lib/i18n/content/form'
+import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import {
   contentPath,
-  errorsByLocale,
   languageLabels,
   resetConfirmations,
-  reviewMessage,
   reviewsNeeded,
   validateDraft,
   type FormErrors,
@@ -27,6 +35,7 @@ import {
 import {
   doiSchema,
   externalUrlSchema,
+  publicationContent,
   type ResearchGroup,
   type ReviewConfirmation,
   type TranslatableField,
@@ -54,21 +63,11 @@ export interface PublicationFormProps {
   serverErrors?: FormErrors
 }
 
-function sameReview(a: ReviewConfirmation, b: ReviewConfirmation) {
-  return a.locale === b.locale && a.field === b.field
-}
-
-/** The language tab to show for `errors`: the current one if it has any, else the first that does. */
-function tabWithErrors(errors: FormErrors, current: Locale): Locale | null {
-  const counts = errorsByLocale(errors)
-  if (counts[current] > 0) return null
-  return locales.find((locale) => counts[locale] > 0) ?? null
-}
-
 /**
  * Creates or edits a publication in both languages. Titles and abstracts sit in one tab per
- * language (WAI-ARIA tabs: roving focus, arrow keys, Home and End); the shared fields sit below,
- * outside the tabs. Both panels stay mounted, so switching tabs never loses what was typed.
+ * language (`LanguageTabs`: WAI-ARIA tabs with arrow keys, Home and End); the shared fields sit
+ * below, outside the tabs. Both panels stay mounted, so switching tabs never loses what was typed.
+ * The tabs only choose the translation being edited; they never change the site's language.
  *
  * When a title or abstract changes in one language only, the same field in the other language
  * must change too or be confirmed with a switch, in this edit: a confirmation is dropped as
@@ -89,7 +88,6 @@ export function PublicationForm({
 }: PublicationFormProps) {
   const formId = useId()
   const formRef = useRef<HTMLDivElement>(null)
-  const tabRefs = useRef<Partial<Record<Locale, HTMLButtonElement | null>>>({})
 
   const [draft, setDraft] = useState<PublicationDraft>(initial.draft)
   const [confirmed, setConfirmed] = useState<ReviewConfirmation[]>([])
@@ -127,7 +125,6 @@ export function PublicationForm({
     ...server.errors,
     ...(attempted ? validateDraft(initial, draft, confirmed) : {}),
   }
-  const errorCounts = errorsByLocale(errors)
 
   function clearServerErrors(paths: string[]) {
     if (!paths.some((path) => path in server.errors)) return
@@ -159,32 +156,8 @@ export function PublicationForm({
   }
 
   function setConfirmation(review: ReviewConfirmation, checked: boolean) {
-    setConfirmed((current) =>
-      checked
-        ? [...current.filter((each) => !sameReview(each, review)), review]
-        : current.filter((each) => !sameReview(each, review)),
-    )
+    setConfirmed((current) => withConfirmation(current, review, checked))
     clearServerErrors([contentPath(review.locale, review.field)])
-  }
-
-  function selectTab(locale: Locale, moveFocus = false) {
-    setTab(locale)
-    if (moveFocus) tabRefs.current[locale]?.focus()
-  }
-
-  function handleTabKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const index = locales.indexOf(tab)
-    const last = locales.length - 1
-    let target: Locale | undefined
-
-    if (event.key === 'ArrowRight') target = locales[index === last ? 0 : index + 1]
-    else if (event.key === 'ArrowLeft') target = locales[index === 0 ? last : index - 1]
-    else if (event.key === 'Home') target = locales[0]
-    else if (event.key === 'End') target = locales[last]
-
-    if (!target) return
-    event.preventDefault()
-    selectTab(target, true)
   }
 
   function openAddAuthor() {
@@ -226,24 +199,7 @@ export function PublicationForm({
 
   function handleConfirm() {
     setConfirmOpen(false)
-    onSave(
-      draft,
-      confirmed.filter((confirmation) => needed.some((review) => sameReview(review, confirmation))),
-    )
-  }
-
-  function tabFlag(locale: Locale): string | null {
-    const unconfirmed = needed.filter(
-      (review) => review.locale === locale && !confirmed.some((each) => sameReview(each, review)),
-    )
-    const count = new Set([
-      ...Object.keys(errors).filter((path) => path.startsWith(`content.${locale}.`)),
-      ...unconfirmed.map((review) => contentPath(review.locale, review.field)),
-    ]).size
-
-    if (count > 0) return count === 1 ? '1 por revisar' : `${count} por revisar`
-    if (locale !== defaultLocale && initial.stored?.[locale] === null) return 'Sin traducción'
-    return null
+    onSave(draft, confirmationsStillNeeded(confirmed, needed))
   }
 
   function reviewControl(locale: Locale, field: TranslatableField) {
@@ -251,107 +207,65 @@ export function PublicationForm({
     if (!review) return null
 
     return (
-      <div className="publication-form-review">
-        <Notice tone="warning">{reviewMessage(review, initial.stored)}</Notice>
-        <Toggle
-          checked={confirmed.some((each) => sameReview(each, review))}
-          id={`${formId}-${locale}-${field}-confirm`}
-          label={confirmationLabel(review)}
-          onChange={(checked) => setConfirmation(review, checked)}
-        />
-      </div>
+      <TranslationReview
+        checked={isConfirmed(confirmed, review)}
+        label={confirmationLabel(publicationContent, review)}
+        message={reviewMessage(publicationContent, review, initial.stored, draft.content)}
+        onChange={(checked) => setConfirmation(review, checked)}
+      />
     )
   }
 
-  const totalErrors = Object.keys(errors).length
-  const otherTabsWithErrors = locales.filter((locale) => locale !== tab && errorCounts[locale] > 0)
+  const summary = errorSummary(errors, tab)
 
   return (
     <div className="publication-form" ref={formRef}>
-      <div
-        aria-label="Idioma del contenido"
-        className="access-tabs"
-        onKeyDown={handleTabKeyDown}
-        role="tablist"
+      <LanguageTabs
+        flags={languageTabFlags(initial.stored, errors, needed, confirmed)}
+        onSelect={setTab}
+        selected={tab}
       >
-        {locales.map((locale) => {
-          const flag = tabFlag(locale)
+        {(locale) => (
+          <>
+            {initial.isLegacy && locale === defaultLocale ? (
+              <Notice>
+                Este texto se registró antes de que existieran las versiones por idioma y podría no
+                estar en español. Si cambia el título o el resumen, revíselo también.
+              </Notice>
+            ) : null}
 
-          return (
-            <button
-              aria-controls={`${formId}-${locale}-panel`}
-              aria-selected={tab === locale}
-              className="access-tab"
-              id={`${formId}-${locale}-tab`}
-              key={locale}
-              lang={locale}
-              onClick={() => selectTab(locale)}
-              ref={(element) => {
-                tabRefs.current[locale] = element
-              }}
-              role="tab"
-              tabIndex={tab === locale ? 0 : -1}
-              type="button"
-            >
-              {languageLabels[locale]}
-              {flag ? (
-                <>
-                  {' · '}
-                  <span className="publication-form-tab-flag" lang="es">
-                    {flag}
-                  </span>
-                </>
-              ) : null}
-            </button>
-          )
-        })}
-      </div>
+            {initial.isLegacy && locale !== defaultLocale ? (
+              <Notice tone="warning">
+                Esta publicación aún no tiene versión en inglés. Para cambiar el título o el resumen
+                debe completar ambos idiomas; los demás campos se pueden editar sin traducirla.
+              </Notice>
+            ) : null}
 
-      {locales.map((locale) => (
-        <div
-          aria-labelledby={`${formId}-${locale}-tab`}
-          className="publication-form-panel"
-          hidden={tab !== locale}
-          id={`${formId}-${locale}-panel`}
-          key={locale}
-          role="tabpanel"
-        >
-          {initial.isLegacy && locale === defaultLocale ? (
-            <Notice>
-              Este texto se registró antes de que existieran las versiones por idioma y podría no
-              estar en español. Si cambia el título o el resumen, revíselo también.
-            </Notice>
-          ) : null}
+            <FormField
+              error={errors[contentPath(locale, 'title')]}
+              id={`${formId}-${locale}-title`}
+              label={`Título (${languageLabels[locale]})`}
+              lang={contentFieldLang(initial.stored, locale)}
+              onChange={(value) => setContent(locale, 'title', value)}
+              required
+              value={draft.content[locale].title}
+            />
+            {reviewControl(locale, 'title')}
 
-          {initial.isLegacy && locale !== defaultLocale ? (
-            <Notice tone="warning">
-              Esta publicación aún no tiene versión en inglés. Para cambiar el título o el resumen
-              debe completar ambos idiomas; los demás campos se pueden editar sin traducirla.
-            </Notice>
-          ) : null}
-
-          <FormField
-            error={errors[contentPath(locale, 'title')]}
-            id={`${formId}-${locale}-title`}
-            label={`Título (${languageLabels[locale]})`}
-            onChange={(value) => setContent(locale, 'title', value)}
-            required
-            value={draft.content[locale].title}
-          />
-          {reviewControl(locale, 'title')}
-
-          <FormField
-            error={errors[contentPath(locale, 'abstract')]}
-            id={`${formId}-${locale}-abstract`}
-            label={`Resumen (${languageLabels[locale]})`}
-            multiline
-            onChange={(value) => setContent(locale, 'abstract', value)}
-            required
-            value={draft.content[locale].abstract}
-          />
-          {reviewControl(locale, 'abstract')}
-        </div>
-      ))}
+            <FormField
+              error={errors[contentPath(locale, 'abstract')]}
+              id={`${formId}-${locale}-abstract`}
+              label={`Resumen (${languageLabels[locale]})`}
+              lang={contentFieldLang(initial.stored, locale)}
+              multiline
+              onChange={(value) => setContent(locale, 'abstract', value)}
+              required
+              value={draft.content[locale].abstract}
+            />
+            {reviewControl(locale, 'abstract')}
+          </>
+        )}
+      </LanguageTabs>
 
       <FormField
         error={errors.date}
@@ -482,14 +396,9 @@ export function PublicationForm({
         value={draft.researchGroup}
       />
 
-      {totalErrors > 0 ? (
+      {summary ? (
         <Notice role="alert" tone="error">
-          {totalErrors === 1
-            ? 'Hay 1 campo por revisar.'
-            : `Hay ${totalErrors} campos por revisar.`}
-          {otherTabsWithErrors.length > 0
-            ? ` Revise también la pestaña ${otherTabsWithErrors.map((locale) => languageLabels[locale]).join(' y ')}.`
-            : ''}
+          {summary}
         </Notice>
       ) : null}
 

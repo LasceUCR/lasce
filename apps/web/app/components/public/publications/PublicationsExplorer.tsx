@@ -12,6 +12,8 @@ import { Modal } from '@/app/components/public/Modal'
 import { Button } from '@/app/components/public/Button'
 import { PublicationForm } from './PublicationForm'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
+import { parseApiError, sendJson } from '@/app/lib/cms/save'
+import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 import {
   buildCreateRequest,
   buildUpdateRequest,
@@ -37,29 +39,17 @@ function matches(value: string, query: string) {
 }
 
 /** Sends a JSON request and reads the failure, if any, the way the editor shows it. */
-async function send(url: string, method: string, body: unknown): Promise<SaveFailure | null> {
-  let response: Response
+async function send(
+  url: string,
+  method: 'POST' | 'PATCH',
+  body: unknown,
+): Promise<SaveFailure | null> {
+  const result = await sendJson(url, method, body)
 
-  try {
-    response = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-  } catch {
-    return { message: SAVE_ERROR_MESSAGE, fieldErrors: {}, reopen: false }
-  }
+  if (result.ok) return null
+  if (result.status === 0) return { message: SAVE_ERROR_MESSAGE, fieldErrors: {}, reopen: false }
 
-  if (response.ok) return null
-
-  const errorBody = await response.json().catch(() => null)
-  return describeSaveFailure(response.status, errorBody)
-}
-
-/** The language a card's title and abstract are in: `''` (unknown) for a legacy record. */
-function contentLang(publication: Publication): string | undefined {
-  if (publication.contentLocale === undefined) return undefined
-  return publication.contentLocale ?? ''
+  return describeSaveFailure(result.status, result.body)
 }
 
 interface Editing {
@@ -142,20 +132,10 @@ export function PublicationsExplorer({
   async function handleDeletePublication(id: string) {
     setDeleteError(null)
 
-    let response: Response
+    const result = await sendJson(`/api/publicaciones/${id}`, 'DELETE')
 
-    try {
-      response = await fetch(`/api/publicaciones/${id}`, {
-        method: 'DELETE',
-      })
-    } catch {
-      setDeleteError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setDeleteError(body?.error ?? SAVE_ERROR_MESSAGE)
+    if (!result.ok) {
+      setDeleteError(parseApiError(result.body).message ?? SAVE_ERROR_MESSAGE)
       return
     }
 
@@ -274,7 +254,7 @@ export function PublicationsExplorer({
               <PublicationCard
                 abstract={publication.abstract}
                 authors={publication.authors.join(', ')}
-                contentLang={contentLang(publication)}
+                contentLang={contentLangAttribute(publication.contentLocale)}
                 href={publication.href}
                 key={publication.slug}
                 researchGroup={publication.researchGroup}

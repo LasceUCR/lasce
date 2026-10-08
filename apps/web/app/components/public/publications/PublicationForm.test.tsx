@@ -451,3 +451,66 @@ describe('PublicationForm: authors', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
+
+describe('PublicationForm: content language', () => {
+  /** Every title and abstract field, including those on the hidden tab. */
+  function contentFields() {
+    return Object.fromEntries(
+      ['Título (Español)', 'Resumen (Español)', 'Título (English)', 'Resumen (English)'].map(
+        (label) => [
+          label,
+          screen.getByRole('textbox', {
+            name: new RegExp(`^${label.replace(/[()]/g, '\\$&')}`),
+            hidden: true,
+          }),
+        ],
+      ),
+    )
+  }
+
+  test('marks each language field with its language, on both tabs', () => {
+    render(<PublicationForm {...editArgs} />)
+
+    const fields = contentFields()
+    expect(fields['Título (Español)']).toHaveAttribute('lang', 'es')
+    expect(fields['Resumen (Español)']).toHaveAttribute('lang', 'es')
+    expect(fields['Título (English)']).toHaveAttribute('lang', 'en')
+    expect(fields['Resumen (English)']).toHaveAttribute('lang', 'en')
+  })
+
+  test('marks the fields of a new publication with their language', () => {
+    render(<PublicationForm {...createArgs} />)
+
+    const fields = contentFields()
+    expect(fields['Título (Español)']).toHaveAttribute('lang', 'es')
+    expect(fields['Título (English)']).toHaveAttribute('lang', 'en')
+  })
+
+  test('does not label the base text of a legacy record as Spanish', () => {
+    render(<PublicationForm {...legacyArgs} />)
+
+    const fields = contentFields()
+    expect(fields['Título (Español)']).toHaveAttribute('lang', '')
+    expect(fields['Resumen (Español)']).toHaveAttribute('lang', '')
+    expect(fields['Título (English)']).toHaveAttribute('lang', 'en')
+    expect(fields['Resumen (English)']).toHaveAttribute('lang', 'en')
+  })
+
+  test('leaves the editor copy and the shared fields in the surrounding language', () => {
+    render(<PublicationForm {...editArgs} />)
+
+    for (const panel of screen.getAllByRole('tabpanel', { hidden: true })) {
+      expect(panel).not.toHaveAttribute('lang')
+    }
+    expect(screen.getByText('Título (English)').closest('[lang]')).toBeNull()
+    expect(field('Revista/Publicación')).not.toHaveAttribute('lang')
+    expect(field('DOI')).not.toHaveAttribute('lang')
+  })
+
+  test('keeps the tabs named in their own language', () => {
+    render(<PublicationForm {...editArgs} />)
+
+    expect(tab(/^Español/)).toHaveAttribute('lang', 'es')
+    expect(tab(/^English/)).toHaveAttribute('lang', 'en')
+  })
+})
