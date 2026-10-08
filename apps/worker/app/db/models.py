@@ -19,6 +19,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    String,
     Text,
     UniqueConstraint,
     text,
@@ -117,6 +118,31 @@ class ResearchCrossAuthor(Base):
         UUID(as_uuid=True), ForeignKey("research.research_authors.id", ondelete="CASCADE")
     )
     position: Mapped[int] = mapped_column(Integer)
+
+
+class ResearchTranslation(Base):
+    """The ``title`` and ``abstract`` of a `Research` record in a language other
+    than the source one. One row per (record, locale); the source text stays on
+    ``research_records``.
+    """
+
+    __tablename__ = "research_record_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "research_id", "locale", name="research_record_translations_research_id_locale_key"
+        ),
+        {"schema": "research"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    research_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("research.research_records.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    abstract: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class NewsSource(Base):
