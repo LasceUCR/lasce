@@ -169,6 +169,37 @@ describe('content schema', () => {
     ])
   })
 
+  test('trims optional text before checking maxLength and normalizes blank values', () => {
+    const shortOptionalContent = defineTranslatableContent({
+      label: { noun: { word: 'etiqueta', gender: 'f' }, required: false, maxLength: 1 },
+    })
+
+    const trimmed = shortOptionalContent.schema.safeParse({
+      es: { label: '  x  ' },
+      en: { label: '  x  ' },
+    })
+    expect(trimmed).toMatchObject({
+      success: true,
+      data: { es: { label: 'x' }, en: { label: 'x' } },
+    })
+
+    expect(
+      shortOptionalContent.schema.safeParse({
+        es: { label: '  xx  ' },
+        en: { label: '  xx  ' },
+      }).success,
+    ).toBe(false)
+
+    for (const [es, en] of [[null, null], ['', ''], ['   ', '   ']]) {
+      expect(
+        shortOptionalContent.schema.safeParse({ es: { label: es }, en: { label: en } }),
+      ).toMatchObject({
+        success: true,
+        data: { es: { label: null }, en: { label: null } },
+      })
+    }
+  })
+
   test('requires an optional field in every locale once it is filled in one', () => {
     const result = eventContent.schema.safeParse({
       es: { name: 'Taller', summary: 'Sesión práctica.' },
