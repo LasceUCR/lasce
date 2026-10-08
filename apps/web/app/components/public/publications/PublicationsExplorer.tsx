@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PublicationCard } from './PublicationCard'
 import { Select } from '@/app/components/public/Select'
@@ -9,10 +9,21 @@ import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import type { Publication, ResearchGroup } from '@/app/lib/publications'
 import { Modal } from '@/app/components/public/Modal'
-import { PublicationForm, type PublicationFormValues } from './PublicationForm'
+import { Button } from '@/app/components/public/Button'
+import { PublicationForm } from './PublicationForm'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
-
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
+import {
+  buildCreateRequest,
+  buildUpdateRequest,
+  describeSaveFailure,
+  emptyInitial,
+  initialFromPublication,
+  SAVE_ERROR_MESSAGE,
+  type PublicationDraft,
+  type PublicationFormInitial,
+  type SaveFailure,
+} from '@/app/lib/publication-form'
+import type { ReviewConfirmation } from '@/app/lib/publication-schema'
 
 export interface PublicationsExplorerProps {
   publications: Publication[]
@@ -25,18 +36,36 @@ function matches(value: string, query: string) {
   return value.toLowerCase().includes(query.trim().toLowerCase())
 }
 
-/**
- * Blank starting point for a new publication.
- */
-const blankPublication: PublicationFormValues = {
-  abstract: ' ',
-  authors: [],
-  href: ' ',
-  DOI: ' ',
-  researchGroup: 'LASCE',
-  title: ' ',
-  venue: ' ',
-  date: new Date(),
+/** Sends a JSON request and reads the failure, if any, the way the editor shows it. */
+async function send(url: string, method: string, body: unknown): Promise<SaveFailure | null> {
+  let response: Response
+
+  try {
+    response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    return { message: SAVE_ERROR_MESSAGE, fieldErrors: {}, reopen: false }
+  }
+
+  if (response.ok) return null
+
+  const errorBody = await response.json().catch(() => null)
+  return describeSaveFailure(response.status, errorBody)
+}
+
+/** The language a card's title and abstract are in: `''` (unknown) for a legacy record. */
+function contentLang(publication: Publication): string | undefined {
+  if (publication.contentLocale === undefined) return undefined
+  return publication.contentLocale ?? ''
+}
+
+interface Editing {
+  publication: Publication
+  /** Taken when the editor opened, so a refresh behind it cannot change what it saves against. */
+  initial: PublicationFormInitial
 }
 
 export function PublicationsExplorer({
@@ -47,47 +76,45 @@ export function PublicationsExplorer({
 }: PublicationsExplorerProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
-  const [editingPublicationId, setEditingPublicationId] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [createError, setCreateError] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Editing | null>(null)
+  const [saveFailure, setSaveFailure] = useState<SaveFailure | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [createFailure, setCreateFailure] = useState<SaveFailure | null>(null)
+  const [createInitial, setCreateInitial] = useState<PublicationFormInitial>(() => emptyInitial())
+
+  // One save at a time: a second click while the first request is in flight would send the same
+  // version again and come back as a false conflict.
+  const saving = useRef(false)
 
   const [query, setQuery] = useState('')
 
   const [selectedGroup, setSelectedGroup] = useState<ResearchGroup | null>(null)
 
-  const editingPublication = publications.find(
-    (publication) => publication.slug === editingPublicationId,
-  )
-
-  function openEditor(id: string) {
-    setSaveError(null)
-    setEditingPublicationId(id)
+  function openEditor(publication: Publication) {
+    setSaveFailure(null)
+    setEditing({ publication, initial: initialFromPublication(publication) })
   }
 
   function closeEditor() {
-    setSaveError(null)
-    setEditingPublicationId(null)
+    setSaveFailure(null)
+    setEditing(null)
   }
 
-  async function handleSavePublication(values: PublicationFormValues) {
-    if (!editingPublicationId) return
+  async function handleSavePublication(draft: PublicationDraft, confirmed: ReviewConfirmation[]) {
+    if (!editing) return
 
-    let response: Response
-
-    try {
-      response = await fetch(`/api/publicaciones/${editingPublicationId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setSaveError(SAVE_ERROR_MESSAGE)
+    const body = buildUpdateRequest(editing.initial, draft, confirmed)
+    if (!body) {
+      closeEditor()
       return
     }
 
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
+    if (saving.current) return
+    saving.current = true
+    const failure = await send(`/api/publicaciones/${editing.publication.slug}`, 'PATCH', body)
+    saving.current = false
+    if (failure) {
+      setSaveFailure(failure)
       return
     }
 
@@ -95,34 +122,25 @@ export function PublicationsExplorer({
     router.refresh()
   }
 
-  async function handleCreatePublication(values: PublicationFormValues, close: () => void) {
-    setCreateError(null)
+  async function handleCreatePublication(draft: PublicationDraft, close: () => void) {
+    if (saving.current) return
+    saving.current = true
+    setCreateFailure(null)
 
-    let response: Response
-
-    try {
-      response = await fetch('/api/publicaciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setCreateError(SAVE_ERROR_MESSAGE)
+    const failure = await send('/api/publicaciones', 'POST', buildCreateRequest(draft))
+    saving.current = false
+    if (failure) {
+      setCreateFailure(failure)
       return
     }
 
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
+    setCreateInitial(emptyInitial())
     close()
     router.refresh()
   }
 
   async function handleDeletePublication(id: string) {
-    setSaveError(null)
+    setDeleteError(null)
 
     let response: Response
 
@@ -131,13 +149,13 @@ export function PublicationsExplorer({
         method: 'DELETE',
       })
     } catch {
-      setSaveError(SAVE_ERROR_MESSAGE)
+      setDeleteError(SAVE_ERROR_MESSAGE)
       return
     }
 
     if (!response.ok) {
       const body: { error?: string } | null = await response.json().catch(() => null)
-      setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
+      setDeleteError(body?.error ?? SAVE_ERROR_MESSAGE)
       return
     }
 
@@ -209,27 +227,42 @@ export function PublicationsExplorer({
 
       <h2 id="publications-title">Publicaciones recientes</h2>
 
+      {deleteError ? (
+        <p className="form-alert" role="alert">
+          {deleteError}
+        </p>
+      ) : null}
+
       {filtered.length === 0 ? (
         <p className="content-empty" role="status">
           {getEmptyMessage()}
         </p>
-      ) : (
+      ) : null}
+
+      {/* The add card stays available with nothing listed, so the first publication can be
+          created and a search with no results does not hide it. */}
+      {filtered.length > 0 || (editMode && canCreate) ? (
         <div className="publication-list">
           {editMode && canCreate ? (
             <AddItemCard label="Añadir">
               {({ close }) => (
                 <>
-                  {createError ? <p className="form-alert">{createError}</p> : null}
+                  {createFailure ? (
+                    <p className="form-alert" role="alert">
+                      {createFailure.message}
+                    </p>
+                  ) : null}
 
                   <PublicationForm
-                    publication={blankPublication}
                     confirmMessage="¿Desea agregar esta publicación?"
                     confirmTitle="Agregar publicación"
+                    initial={createInitial}
                     onCancel={() => {
-                      setCreateError(null)
+                      setCreateFailure(null)
                       close()
                     }}
-                    onSave={(values) => handleCreatePublication(values, close)}
+                    onSave={(draft) => handleCreatePublication(draft, close)}
+                    serverErrors={createFailure?.fieldErrors}
                   />
                 </>
               )}
@@ -237,21 +270,23 @@ export function PublicationsExplorer({
           ) : null}
 
           {filtered.map((publication) => {
+            const card = (
+              <PublicationCard
+                abstract={publication.abstract}
+                authors={publication.authors.join(', ')}
+                contentLang={contentLang(publication)}
+                href={publication.href}
+                key={publication.slug}
+                researchGroup={publication.researchGroup}
+                title={publication.title}
+                translationMissing={editMode && publication.editing?.isLegacy === true}
+                venue={publication.venue}
+                year={publication.year}
+              />
+            )
+
             const showEditor = editMode && (canEdit || canDelete)
-            if (!showEditor) {
-              return (
-                <PublicationCard
-                  abstract={publication.abstract}
-                  authors={publication.authors.join(', ')}
-                  href={publication.href}
-                  key={publication.slug}
-                  researchGroup={publication.researchGroup}
-                  title={publication.title}
-                  venue={publication.venue}
-                  year={publication.year}
-                />
-              )
-            }
+            if (!showEditor) return card
 
             return (
               <EditableWrapper
@@ -261,46 +296,44 @@ export function PublicationsExplorer({
                 deleteLabel={`Eliminar ${publication.title}`}
                 editLabel={`Editar ${publication.title}`}
                 onDelete={canDelete ? () => handleDeletePublication(publication.slug) : undefined}
-                onEdit={canEdit ? () => openEditor(publication.slug) : undefined}
+                onEdit={canEdit ? () => openEditor(publication) : undefined}
               >
-                <PublicationCard
-                  abstract={publication.abstract}
-                  authors={publication.authors.join(', ')}
-                  href={publication.href}
-                  key={publication.slug}
-                  researchGroup={publication.researchGroup}
-                  title={publication.title}
-                  venue={publication.venue}
-                  year={publication.year}
-                />
+                {card}
               </EditableWrapper>
             )
           })}
         </div>
-      )}
+      ) : null}
 
       <Modal
         onClose={closeEditor}
-        open={editingPublication !== undefined}
-        title={editingPublication ? `Editar "${editingPublication.title}"` : 'Editar publicación'}
+        open={editing !== null}
+        title={editing ? `Editar "${editing.publication.title}"` : 'Editar publicación'}
       >
-        {editingPublication ? (
+        {editing ? (
           <>
-            {saveError ? <p className="form-alert">{saveError}</p> : null}
+            {saveFailure ? (
+              <div className="form-alert" role="alert">
+                <p>{saveFailure.message}</p>
+                {saveFailure.reopen ? (
+                  <Button
+                    onClick={() => {
+                      closeEditor()
+                      router.refresh()
+                    }}
+                    variant="secondary"
+                  >
+                    Cerrar y cargar la versión actual
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
 
             <PublicationForm
-              publication={{
-                abstract: editingPublication.abstract,
-                authors: editingPublication.authors,
-                href: editingPublication.href ?? '',
-                DOI: editingPublication.DOI ?? '',
-                researchGroup: editingPublication.researchGroup,
-                title: editingPublication.title,
-                venue: editingPublication.venue,
-                date: editingPublication.date,
-              }}
+              initial={editing.initial}
               onCancel={closeEditor}
               onSave={handleSavePublication}
+              serverErrors={saveFailure?.fieldErrors}
             />
           </>
         ) : null}

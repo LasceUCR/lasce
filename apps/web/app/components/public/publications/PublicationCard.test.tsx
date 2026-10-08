@@ -118,4 +118,35 @@ describe('PublicationCard', () => {
 
     expect(screen.getByText(institutionalArgs.venue, { exact: false })).toBeInTheDocument()
   })
+
+  test('marks the title and abstract with the language they are written in', () => {
+    render(<PublicationCard {...defaultArgs} contentLang="en" />)
+
+    expect(screen.getByRole('heading', { level: 3 })).toHaveAttribute('lang', 'en')
+    expect(screen.getByText(defaultArgs.abstract)).toHaveAttribute('lang', 'en')
+  })
+
+  test('declares the language unknown for a legacy record instead of claiming Spanish', () => {
+    render(<PublicationCard {...defaultArgs} contentLang="" />)
+
+    expect(screen.getByRole('heading', { level: 3 })).toHaveAttribute('lang', '')
+  })
+
+  test('inherits the page language when no content language is given', () => {
+    render(<PublicationCard {...defaultArgs} />)
+
+    expect(screen.getByRole('heading', { level: 3 })).not.toHaveAttribute('lang')
+  })
+
+  test('tells editors that the English version is missing', () => {
+    render(<PublicationCard {...defaultArgs} translationMissing />)
+
+    expect(screen.getByRole('note')).toHaveTextContent('Sin versión en inglés.')
+  })
+
+  test('says nothing about translations by default', () => {
+    render(<PublicationCard {...defaultArgs} />)
+
+    expect(screen.queryByRole('note')).not.toBeInTheDocument()
+  })
 })

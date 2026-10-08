@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
 
 /** How long the field must sit idle after a change before `validate` runs. */
 const VALIDATION_DEBOUNCE_MS = 500
@@ -28,6 +28,11 @@ export interface FormFieldProps {
    * until the field is blurred again.
    */
   validate?: (value: string) => void
+  /**
+   * An error decided outside the field, such as a failed save or a rejection from the server.
+   * Shown instead of the field's own `validate` message while it is set.
+   */
+  error?: string | null
 }
 
 export function FormField({
@@ -41,8 +46,10 @@ export function FormField({
   required,
   id,
   validate,
+  error: externalError,
 }: FormFieldProps) {
   const [error, setError] = useState<string | null>(null)
+  const errorId = useId()
   // The value at mount, so the effect below can tell "still the pristine
   // value" from "the person changed it" with a plain comparison rather than a
   // flag it flips on its first run. A flag mutated inside the effect body is
@@ -83,7 +90,9 @@ export function FormField({
     onChange(event.target.value)
   }
 
-  const invalid = error !== null
+  const shownError = externalError || error
+  const invalid = Boolean(shownError)
+  const describedBy = shownError ? errorId : undefined
 
   return (
     <label className="cms-form-field" htmlFor={id}>
@@ -98,6 +107,7 @@ export function FormField({
       </span>
       {options ? (
         <select
+          aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           aria-required={required || undefined}
           id={id}
@@ -113,6 +123,7 @@ export function FormField({
         </select>
       ) : multiline ? (
         <textarea
+          aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           aria-required={required || undefined}
           id={id}
@@ -124,6 +135,7 @@ export function FormField({
         />
       ) : (
         <input
+          aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           aria-required={required || undefined}
           id={id}
@@ -134,7 +146,13 @@ export function FormField({
           value={value}
         />
       )}
-      {error ? <p className="form-field-error">{error}</p> : null}
+      {/* Inside the <label> for layout, so hidden from the field's name; `aria-describedby`
+          still announces it, once, as the field's description. */}
+      {shownError ? (
+        <p aria-hidden="true" className="form-field-error" id={errorId}>
+          {shownError}
+        </p>
+      ) : null}
     </label>
   )
 }

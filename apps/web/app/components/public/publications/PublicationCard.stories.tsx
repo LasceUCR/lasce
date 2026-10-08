@@ -39,3 +39,12 @@ export const InstitutionalReport: Story = {
     href: '#',
   },
 }
+
+/** An editor's view of a record saved before languages existed: language unknown, no English. */
+export const MissingTranslation: Story = {
+  args: {
+    ...Default.args,
+    contentLang: '',
+    translationMissing: true,
+  },
+}
