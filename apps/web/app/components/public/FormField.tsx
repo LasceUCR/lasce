@@ -33,6 +33,12 @@ export interface FormFieldProps {
    * Shown instead of the field's own `validate` message while it is set.
    */
   error?: string | null
+  /**
+   * The language of the text typed in a text box or text area, when it can differ from the page's,
+   * as in a bilingual editor: `'es'`, `'en'`, or `''` for text whose language is unknown. Set on
+   * the input itself, so the label and messages around it keep the language of their surroundings.
+   */
+  lang?: string
 }
 
 export function FormField({
@@ -47,6 +53,7 @@ export function FormField({
   id,
   validate,
   error: externalError,
+  lang,
 }: FormFieldProps) {
   const [error, setError] = useState<string | null>(null)
   const errorId = useId()
@@ -127,6 +134,7 @@ export function FormField({
           aria-invalid={invalid || undefined}
           aria-required={required || undefined}
           id={id}
+          lang={lang}
           onChange={handleChange}
           placeholder={placeholder}
           required={required}
@@ -139,6 +147,7 @@ export function FormField({
           aria-invalid={invalid || undefined}
           aria-required={required || undefined}
           id={id}
+          lang={lang}
           onChange={handleChange}
           placeholder={placeholder}
           required={required}
