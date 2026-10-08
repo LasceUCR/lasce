@@ -12,6 +12,7 @@
     "test": "vitest run --coverage",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "clean": "rm -rf .next .turbo node_modules",

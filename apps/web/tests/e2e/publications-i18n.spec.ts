@@ -379,3 +379,110 @@ test('keeps the bilingual editor inside the viewport from phones to desktops', a
     await account.cleanup()
   }
 })
+
+test('keeps the header language through client-side navigation and in the API', async ({
+  page,
+}) => {
+  const fixtures = await createFixtures()
+  try {
+    await page.goto('/')
+    await switchLanguage(page, 'Español', 'English')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+    // A flag on `window` survives only a client-side navigation, not a full page load.
+    await page.evaluate(() => {
+      ;(window as Window & { clientNavigation?: boolean }).clientNavigation = true
+    })
+    const navigation = page.getByRole('navigation', { name: 'Main navigation' })
+    await navigation.locator('summary', { hasText: 'Resources' }).click()
+    await navigation.getByRole('link', { name: 'Publications' }).click()
+
+    await expect(page).toHaveURL(/\/publicaciones$/)
+    await expect(
+      page.getByRole('heading', { name: `Bilingual publication ${fixtures.id}` }),
+    ).toHaveAttribute('lang', 'en')
+    await expect(page.getByRole('heading', { name: fixtures.legacy.title })).toHaveAttribute(
+      'lang',
+      '',
+    )
+    expect(
+      await page.evaluate(
+        () => (window as Window & { clientNavigation?: boolean }).clientNavigation,
+      ),
+    ).toBe(true)
+
+    // The public API reads the same cookie, falls back for legacy records and never sends
+    // editing data.
+    type Listed = { slug: string; title: string; contentLocale: string | null; editing?: unknown }
+    async function listed() {
+      const response = await page.request.get('/api/publicaciones')
+      expect(response.status()).toBe(200)
+      return ((await response.json()) as { publications: Listed[] }).publications
+    }
+
+    const english = await listed()
+    expect(english.find((each) => each.slug === fixtures.bilingual.id)).toMatchObject({
+      title: `Bilingual publication ${fixtures.id}`,
+      contentLocale: 'en',
+    })
+    expect(english.find((each) => each.slug === fixtures.legacy.id)).toMatchObject({
+      title: fixtures.legacy.title,
+      contentLocale: null,
+    })
+    expect(english.every((each) => each.editing === undefined)).toBe(true)
+
+    await switchLanguage(page, 'English', 'Español')
+    await expect(page.getByRole('heading', { name: fixtures.bilingual.title })).toBeVisible()
+    expect((await listed()).find((each) => each.slug === fixtures.bilingual.id)).toMatchObject({
+      title: fixtures.bilingual.title,
+      contentLocale: 'es',
+    })
+  } finally {
+    await fixtures.cleanup()
+  }
+})
+
+test('keeps the editor language tabs apart from the site language', async ({ page, context }) => {
+  const fixtures = await createFixtures()
+  const account = await createSignedInUser(context, 'ADMIN')
+  const siteLanguage = async () =>
+    (await context.cookies()).find((cookie) => cookie.name === 'lasce_locale')?.value
+
+  try {
+    await openEditMode(page)
+    await switchLanguage(page, 'Español', 'English')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+    // The site is in English; the editor still opens on the Spanish translation.
+    await page.getByRole('button', { name: `Editar Bilingual publication ${fixtures.id}` }).click()
+    const dialog = page.getByRole('dialog').first()
+    await expect(dialog.getByRole('tab', { name: 'Español' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    await dialog.getByRole('tab', { name: 'English' }).click()
+    await dialog.getByRole('tab', { name: 'English' }).press('ArrowLeft')
+    await dialog.getByRole('tab', { name: 'Español' }).press('End')
+    await expect(dialog.getByRole('tab', { name: 'English' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    expect(await siteLanguage()).toBe('en')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+    await expect(page.getByRole('banner').getByLabel('Language: English')).toBeAttached()
+
+    await dialog.getByRole('button', { name: 'Cancelar' }).click()
+    await switchLanguage(page, 'English', 'Español')
+
+    // The site is in Spanish; choosing the English tab leaves it in Spanish.
+    await page.getByRole('button', { name: `Editar ${fixtures.bilingual.title}` }).click()
+    await page.getByRole('dialog').first().getByRole('tab', { name: 'English' }).click()
+    expect(await siteLanguage()).toBe('es')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es')
+  } finally {
+    await fixtures.cleanup()
+    await account.cleanup()
+  }
+})
