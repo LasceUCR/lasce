@@ -59,7 +59,12 @@ linked to its original source rather than a hosted copy. The Prisma model is `Re
 | `updated_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed               |
 
 Relationships: belongs to one `publishers` row; has many `research_cross_authors` (its authors,
-through the join table below).
+through the join table below); has many `research_record_translations` (its text in other
+languages).
+
+`title` and `abstract` hold the source-language (Spanish) text. A record created before
+translations existed may hold text in another language here, often English; see
+`research_record_translations` below.
 
 ### `research_authors`
 
@@ -94,6 +99,34 @@ page instead of coming back in whatever order the join returns rows.
 
 Constraints: `UNIQUE (research_id, research_author_id)` (an author can't be credited twice on the
 same record); indexed on `(research_id, position)` for ordered author lookups.
+
+### `research_record_translations`
+
+The `title` and `abstract` of a `research_records` row in a language other than Spanish, one row
+per record and locale. The Prisma model is `ResearchTranslation`. Spanish stays on the base row,
+so a record with no row here still renders, in its base text. Only these two columns are
+translated: publishers and authors are proper nouns.
+
+| Column        | Prisma type | Postgres type    | Constraints                                                |
+| ------------- | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `research_id` | `String`    | `uuid`           | FK → `research_records.id`, `ON DELETE CASCADE`, not null  |
+| `locale`      | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es` |
+| `title`       | `String`    | `text`           | not null                                                   |
+| `abstract`    | `String`    | `text`           | not null                                                   |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+Constraints: `UNIQUE (research_id, locale)`.
+
+> `locale` is a plain string rather than an enum, validated by the application, so adding a
+> language needs no migration. The database does not require every record to have a row for every
+> language: records created before this table existed have none. The application requires both
+> languages on every create and on every update that changes a title or abstract; an update of
+> shared fields only (authors, venue, date, group, DOI, link) leaves this table untouched. A record
+> without a translation row is treated as legacy, whose base text's language is unknown.
+
+Relationships: belongs to one `research_records` row.
 
 ## `news` schema
 
@@ -422,9 +455,17 @@ format needs no migration.
 
 ## Where this is read and written
 
-`apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` (newest
-`publication_date` first, authors ordered by `position`) and maps each row to the `Publication`
-shape `/publicaciones` renders.
+`apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
+`research_record_translations` (newest `publication_date` first, authors ordered by `position`)
+and maps each row to the `Publication` shape `/publicaciones` renders, in the requested language.
+`createPublication()` and `updatePublication()` write the base row, its translations, its
+publisher and its author links in one transaction. `updatePublication()` writes only the fields
+it is given: with `content` it rewrites the base row's Spanish text and upserts the translations;
+without it, it changes shared columns only and leaves `research_record_translations` untouched.
+Either way it only writes while `updated_at` still equals the version the editor loaded, and moves
+it forward, so concurrent edits are rejected instead of overwritten. `deletePublication()` deletes
+the base row; its translations and author links cascade. The full contract is in
+[`internationalization.md`](internationalization.md#database-content-built-for-publications-proof-of-concept).
 
 `apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape

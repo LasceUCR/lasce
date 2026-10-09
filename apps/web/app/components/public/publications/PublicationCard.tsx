@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
+import { Notice } from '@/app/components/public/Notice'
 import type { ResearchGroup } from '@/app/lib/publications'
 
 export interface PublicationCardProps {
@@ -14,6 +15,13 @@ export interface PublicationCardProps {
   researchGroup: ResearchGroup
   abstract: string
   href?: string
+  /**
+   * The language `title` and `abstract` are written in, set as their `lang`. `''` means unknown
+   * (a record saved before languages existed); leave it out to inherit the page's language.
+   */
+  contentLang?: string
+  /** Shown to editors: the publication has no English version yet. */
+  translationMissing?: boolean
 }
 
 /**
@@ -31,6 +39,8 @@ export function PublicationCard({
   researchGroup,
   abstract,
   href,
+  contentLang,
+  translationMissing = false,
 }: PublicationCardProps) {
   const abstractId = useId()
   const abstractRef = useRef<HTMLParagraphElement>(null)
@@ -60,16 +70,22 @@ export function PublicationCard({
 
   return (
     <article className="surface-card publication-card">
-      <h3>{title}</h3>
+      <h3 lang={contentLang}>{title}</h3>
 
       <p className="publication-meta">
         {authors && `${authors} · `}
         {venue} · {year} · <strong className="publication-group">{researchGroup}</strong>
       </p>
 
-      <p className={abstractClassName} id={abstractId} ref={abstractRef}>
+      <p className={abstractClassName} id={abstractId} lang={contentLang} ref={abstractRef}>
         {abstract}
       </p>
+
+      {translationMissing ? (
+        <Notice tone="warning">
+          Sin versión en inglés. Al editar el título o el resumen se deben completar ambos idiomas.
+        </Notice>
+      ) : null}
 
       {href ? (
         <div className="publication-card-footer">

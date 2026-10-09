@@ -1,7 +1,8 @@
 # Internationalization (i18n)
 
-How the web app renders in more than one language, how to add a string or a language, and how
-database content will be translated later. This covers `apps/web` only: the worker produces codes,
+How the web app renders in more than one language and how to add a string or a language.
+Translating database content is covered in its own guide,
+[`translate-database-content.md`](translate-database-content.md). This covers `apps/web` only: the worker produces codes,
 never text a visitor reads.
 
 ## State of things
@@ -14,8 +15,10 @@ never text a visitor reads.
 - The English text is a first draft. Nobody has reviewed its scientific terminology yet.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
-- Database content ("Modo edición") is not translated. The design for it is in
-  [Dynamic content](#dynamic-content-design-not-built-yet).
+- Database content ("Modo edición") has shared, reusable infrastructure, and **one entity uses it:
+  the publications on `/publicaciones`** (title and abstract, in Spanish and English). Every other
+  editable entity is still single-language. See [Dynamic content](#dynamic-content) and
+  [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
 
@@ -173,6 +176,9 @@ inventory taken when the static pages were migrated.
 The academic activities section and its cards on `/noticias` are translated too; the rest of
 that page is not.
 
+On `/publicaciones` the publications themselves (database content) are shown in the chosen
+language; the page's fixed copy (hero, filters, editor labels and messages) is still Spanish.
+
 ### Still to do
 
 | Route                                              | Copy lives in                                                              | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
@@ -208,9 +214,10 @@ that page is not.
    namespaces Client Components use. It needs a safeguard, because a namespace left out fails
    only in the browser.
 6. **Review of the English text** by someone who knows the terminology.
-7. **Database content**, designed in the next section.
+7. **Database content** for every entity except publications, following
+   [`translate-database-content.md`](translate-database-content.md).
 
-## Dynamic content (design, not built yet)
+## Dynamic content
 
 Three kinds of text need three treatments:
 
@@ -228,55 +235,25 @@ catalogue holds keyed text, so the same pattern applies. What changes at that si
 text is loaded: give each its own catalogue file per language (`messages/es/gallery.json`) so it
 is not sent with every page, and settle the provider scoping above first.
 
-### Database content: a translation table per entity
+### Database content
 
-```prisma
-model NewsTranslation {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  newsId    String   @db.Uuid
-  locale    String   @db.VarChar(5)
-  title     String
-  abstract  String   @db.Text
-  imageAlt  String?
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(3)
-  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+Editable content keeps Spanish on the entity's own table and every other language in a
+translation table per entity (`<entity>_translations`), and is read in the language of the
+`lasce_locale` cookie with a per-record fallback for records saved before the entity became
+bilingual. Shared modules handle the schemas, the cross-language review, reading and fallback,
+the editor's language tabs, transactions, optimistic concurrency and the API's error envelope.
 
-  @@unique([newsId, locale])
-  @@map("news_record_translations")
-  @@schema("news")
-}
-```
+- **How it works and how to make an entity bilingual:**
+  [`translate-database-content.md`](translate-database-content.md), with the publications as the
+  reference implementation, their API contract, the design decisions and the known limitations.
+- **Which entities are bilingual:** publications only. The same pattern is meant for `News`,
+  `ResearchArea`, `NosotrosActivity`, `Researcher`, `NosotrosResearcher`, `GalleryAlbum` and
+  `GalleryMedia`, each with its own translation table holding only its translatable columns
+  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
+- **Tables:** [`database-definition.md`](database-definition.md).
 
-- **The base table keeps its Spanish columns**, as the source text and the fallback. Existing
-  rows, seeds and the worker's SQLAlchemy mirror stay valid, and there is no data migration.
-- Only translatable columns are repeated: `title`, `abstract`, `description`, `paragraph`, `role`,
-  `altText`, `yearsLabel`. Proper nouns (`Publisher.name`, author and researcher names) are not.
-- `locale` is a string validated against `locales` in the app, so a new language needs no
-  migration.
-- It follows the rules in [`database-definition.md`](database-definition.md): `gen_random_uuid()`
-  ids, `@updatedAt` with `@default(now())`, Prisma as the only migration source.
-
-Entities that would get one: `News`, `Research`, `ResearchArea`, `NosotrosActivity`, `Researcher`,
-`NosotrosResearcher`, `GalleryAlbum`, `GalleryMedia`.
-
-Alternatives considered and rejected:
-
-- **JSON columns** (`title: { es, en }`): changes the type of every existing column, breaks the
-  SQLAlchemy mirror, and loses column constraints.
-- **One generic table** (`entity`, `entity_id`, `field`, `locale`, `value`): no foreign keys, no
-  typing, and every read becomes a pivot.
-
-Reading, writing and editing:
-
-- **Read.** The lib functions take the locale, `getNews(locale)`. They include the translation
-  row for that locale and overlay it field by field on the base row.
-- **Write.** The existing `PATCH /api/<entity>/[id]` routes accept an optional `locale`. Absent or
-  `es` writes the base row as today; another locale upserts the translation row. The permission
-  stays `edit_components`.
-- **Editor.** The `Editable<X>Card` forms get a language tab. A tab other than Spanish shows the
-  Spanish text for reference and marks a row with no translation yet.
-- **Rollout.** One entity first (`News`), then the others reuse the pattern. Each one updates
-  `database-definition.md` in the same PR.
+The editor's language tabs only choose which translation is being edited; the header selector
+alone sets the language a visitor reads.
 
 ### What stays untranslated
 

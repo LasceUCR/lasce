@@ -15,12 +15,13 @@ where a test file belongs and what gates it.
 
 ## Where tests go
 
-| Kind                    | Location                          | Collected by                                                   |
-| ----------------------- | --------------------------------- | -------------------------------------------------------------- |
-| Web component or helper | `apps/web/app/**/*.test.tsx`      | `apps/web/vitest.config.ts`, `include: app/**/*.test.{ts,tsx}` |
-| Shared package          | `packages/<pkg>/src/**/*.test.ts` | that package's `vitest.config.ts`, `include: src/**/*.test.ts` |
-| End-to-end              | `apps/web/tests/e2e/*.spec.ts`    | `apps/web/playwright.config.ts`, `testDir: ./tests/e2e`        |
-| Python worker           | `apps/worker/tests/test_*.py`     | `apps/worker/pyproject.toml`, `testpaths = ["tests"]`          |
+| Kind                    | Location                               | Collected by                                                   |
+| ----------------------- | -------------------------------------- | -------------------------------------------------------------- |
+| Web component or helper | `apps/web/app/**/*.test.tsx`           | `apps/web/vitest.config.ts`, `include: app/**/*.test.{ts,tsx}` |
+| Shared package          | `packages/<pkg>/src/**/*.test.ts`      | that package's `vitest.config.ts`, `include: src/**/*.test.ts` |
+| End-to-end              | `apps/web/tests/e2e/*.spec.ts`         | `apps/web/playwright.config.ts`, `testDir: ./tests/e2e`        |
+| Database integration    | `apps/web/tests/integration/*.test.ts` | `apps/web/vitest.integration.config.ts`; not part of `test`    |
+| Python worker           | `apps/worker/tests/test_*.py`          | `apps/worker/pyproject.toml`, `testpaths = ["tests"]`          |
 
 The rule in one line: **TypeScript tests sit next to the code they test;
 Playwright and pytest live in their own `tests/` directory.**
@@ -73,6 +74,7 @@ and BullMQ clients, which ship no type information.
 pnpm turbo run test                  # every TypeScript workspace, with coverage
 pnpm --filter @lasce/web test:unit   # fast loop, no coverage
 pnpm --filter @lasce/web test:e2e    # Playwright, needs Postgres and Redis
+pnpm --filter @lasce/web test:integration  # real PostgreSQL; needs INTEGRATION_DATABASE_URL
 cd apps/worker && uv run pytest      # Python suite
 ```
 
@@ -148,3 +150,13 @@ meaningless, so these are excluded and gated elsewhere:
   ioredis and BullMQ clients and cannot run without a live Redis.
 - **`apps/worker` entry points and client wiring**, which reach out to Influx,
   MinIO and Redis and are covered by running the worker.
+
+## Database integration tests
+
+`apps/web/tests/integration/` runs services against a real PostgreSQL database: transactions,
+rollback, concurrent connections and constraints that a mocked Prisma client cannot show. They
+need a disposable database: `tests/integration/guard.ts` refuses to run unless
+`INTEGRATION_DATABASE_URL` is set, names a database ending in `_test` on a local host (or on
+`INTEGRATION_DATABASE_ALLOWED_HOST`), and is not `DATABASE_URL`. The tests clean up only the rows
+they created. They are not run by `pnpm test` or by CI yet. Setup and commands:
+[`translate-database-content.md`](translate-database-content.md#database-integration-tests).

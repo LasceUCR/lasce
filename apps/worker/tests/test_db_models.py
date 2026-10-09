@@ -4,6 +4,8 @@ Even though the worker doesn't have a job using these tables yet, the convention
 is to replicate everything here so the two languages never disagree about a column.
 """
 
+from sqlalchemy import UniqueConstraint
+
 from app.db import (
     ExisFile,
     GalleryAlbum,
@@ -16,6 +18,7 @@ from app.db import (
     Research,
     ResearchAuthor,
     ResearchCrossAuthor,
+    ResearchTranslation,
     ResourceDownload,
     RolePermission,
     SuviFrame,
@@ -26,7 +29,7 @@ from app.db import (
 
 
 def test_research_tables_live_in_the_research_schema() -> None:
-    for model in (Publisher, Research, ResearchAuthor, ResearchCrossAuthor):
+    for model in (Publisher, Research, ResearchAuthor, ResearchCrossAuthor, ResearchTranslation):
         assert model.__table__.schema == "research"
 
 
@@ -47,6 +50,29 @@ def test_research_record_matches_the_prisma_columns() -> None:
     assert columns["external_url"].unique
     assert columns["doi"].nullable
     assert not columns["title"].nullable
+
+
+def test_research_translation_matches_the_prisma_columns() -> None:
+    columns = ResearchTranslation.__table__.columns
+    (research_fk,) = columns["research_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "research_id",
+        "locale",
+        "title",
+        "abstract",
+        "created_at",
+        "updated_at",
+    }
+    assert research_fk.target_fullname == "research.research_records.id"
+    assert research_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"research_id", "locale"}
+        for constraint in ResearchTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
 
 
 def test_research_cross_author_links_research_and_authors() -> None:

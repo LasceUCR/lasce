@@ -1,5 +1,26 @@
-import { prisma, Prisma } from '@lasce/db'
-import { z } from 'zod'
+import { prisma, type Prisma } from '@lasce/db'
+
+import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
+import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+import {
+  baseContent,
+  resolveContent,
+  storedContentFrom,
+  translationRows,
+} from '@/app/lib/i18n/content/resolve'
+
+import {
+  findPendingReviews,
+  publicationContent,
+  translationLocales,
+  type Publication,
+  type PublicationCreateInput,
+  type PublicationUpdateInput,
+  type ReviewConfirmation,
+} from './publication-schema'
+
+export * from './publication-schema'
 
 export const publicacionesMeta = {
   title: 'Publicaciones | LASCE',
@@ -18,251 +39,255 @@ export const publicacionesBackLink = {
   label: 'Volver al inicio',
 } as const
 
-export type ResearchGroup = 'LASCE' | 'ROSAC'
+export type PublicationWriteFailure =
+  | { ok: false; reason: 'not-found' }
+  /** The record changed since the editor loaded it. */
+  | { ok: false; reason: 'conflict' }
+  | { ok: false; reason: 'duplicate'; field: 'doi' | 'externalUrl' }
+  /** Fields changed in one language whose counterpart was neither changed nor confirmed. */
+  | { ok: false; reason: 'review-required'; pending: ReviewConfirmation[] }
 
-export type Publication = {
-  slug: string
-  title: string
-  authors: string[]
-  venue: string
-  year: string
-  date: Date
-  abstract: string
-  href?: string
-  DOI?: string
-  researchGroup: ResearchGroup
+export type PublicationWriteResult =
+  { ok: true; publication: Publication } | PublicationWriteFailure
+
+const recordInclude = {
+  publisher: true,
+  authors: {
+    orderBy: { position: 'asc' },
+    include: { researchAuthor: true },
+  },
+  translations: {
+    where: { locale: { in: [...translationLocales] } },
+    select: { locale: true, title: true, abstract: true },
+  },
+} satisfies Prisma.ResearchInclude
+
+type ResearchRecord = Prisma.ResearchGetPayload<{ include: typeof recordInclude }>
+
+function toPublication(
+  record: ResearchRecord,
+  locale: Locale,
+  includeEditingData: boolean,
+): Publication {
+  const content = storedContentFrom(publicationContent, record, record.translations)
+  // A complete record's base text was written or confirmed as Spanish when it was saved. A legacy
+  // record's base text was entered before languages existed, so its language is unknown.
+  const { content: shown, contentLocale, isLegacy } = resolveContent(content, locale)
+
+  return {
+    slug: record.id,
+    title: shown.title,
+    authors: record.authors.map((author) => author.researchAuthor.name),
+    venue: record.publisher.name,
+    year: String(record.publicationDate.getUTCFullYear()),
+    date: record.publicationDate,
+    abstract: shown.abstract,
+    href: record.externalUrl || undefined,
+    DOI: record.doi || '',
+    researchGroup: record.researchGroup,
+    contentLocale,
+    ...(includeEditingData
+      ? { editing: { content, isLegacy, version: toVersion(record.updatedAt) } }
+      : {}),
+  }
 }
-
-export const publicationInputSchema = z.object({
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  abstract: z.string().trim().min(1, 'El resumen es obligatorio.'),
-  authors: z
-    .array(z.string().trim().min(1, 'El nombre del autor es obligatorio.'))
-    .min(1, 'Debe existir al menos un autor.'),
-  href: z.string().trim(),
-  DOI: z.string().trim(),
-  researchGroup: z.enum(['LASCE', 'ROSAC'], {
-    error: 'Seleccione un grupo de investigación válido.',
-  }),
-  venue: z.string().trim().min(1, 'La publicación es obligatoria.'),
-  date: z.coerce.date(),
-})
-
-export type PublicationInput = z.infer<typeof publicationInputSchema>
 
 /**
  * Loads publications from the `research` schema (`packages/db/prisma/schema.prisma`)
  * and maps each record to the shape `PublicationsExplorer` renders.
  *
+ * `title` and `abstract` are in `locale` when the record has that translation, and fall back to
+ * the base text otherwise; `contentLocale` says which one was used. Pass `includeEditingData`
+ * only for someone who can edit, because it sends every language to the browser.
+ *
  * Ordered newest first. Author order within a record follows
  * `ResearchCrossAuthor.position`, so a citation reads the same as its source
  * rather than in whatever order the join happens to return rows.
  */
-export async function getPublications(): Promise<Publication[]> {
+export async function getPublications(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<Publication[]> {
   const records = await prisma.research.findMany({
     orderBy: { publicationDate: 'desc' },
-    include: {
-      publisher: true,
-      authors: {
-        orderBy: { position: 'asc' },
-        include: { researchAuthor: true },
-      },
-    },
+    include: recordInclude,
   })
 
-  return records.map((record) => ({
-    slug: record.id,
-    title: record.title,
-    authors: record.authors.map((author) => author.researchAuthor.name),
-    venue: record.publisher.name,
-    year: String(record.publicationDate.getUTCFullYear()),
-    date: record.publicationDate,
-    abstract: record.abstract,
-    href: record.externalUrl || undefined,
-    DOI: record.doi || '',
-    researchGroup: record.researchGroup,
-  }))
+  return records.map((record) => toPublication(record, locale, includeEditingData))
 }
 
 /**
- * Creates a publication together with its publisher, authors,
- * and ordered author relationships.
+ * Which unique column a violation names: `doi` and `external_url` are the publication's unique
+ * values. Any other violation is not one this module knows how to explain, and is rethrown.
  */
-export async function createPublication(data: PublicationInput) {
-  return prisma.$transaction(async (tx) => {
-    // Publishers are normalized by name.
-    const publisher = await tx.publisher.upsert({
-      where: {
-        name: data.venue,
-      },
+function duplicateFailure(columns: readonly string[]): PublicationWriteFailure | null {
+  if (columns.includes('doi')) return { ok: false, reason: 'duplicate', field: 'doi' }
+  if (columns.includes('external_url') || columns.includes('externalUrl')) {
+    return { ok: false, reason: 'duplicate', field: 'externalUrl' }
+  }
+  return null
+}
+
+/**
+ * Runs a write transaction (`runWrite`) and reports the stored record as a publication. Expected
+ * failures are raised as `WriteAbort` or as a unique violation, so the transaction rolls back
+ * before anything is reported.
+ */
+async function writePublication(
+  write: (tx: Prisma.TransactionClient) => Promise<ResearchRecord>,
+): Promise<PublicationWriteResult> {
+  const result = await runWrite(write, duplicateFailure)
+  return result.ok
+    ? { ok: true, publication: toPublication(result.value, defaultLocale, true) }
+    : result
+}
+
+/** Publishers are shared between publications and normalized by name. */
+function upsertPublisher(tx: Prisma.TransactionClient, name: string) {
+  return tx.publisher.upsert({ where: { name }, update: {}, create: { name } })
+}
+
+/**
+ * Replaces a record's author list, keeping the order supplied. Only the join rows are deleted:
+ * an author may be credited on other publications.
+ */
+async function replaceAuthors(tx: Prisma.TransactionClient, researchId: string, names: string[]) {
+  await tx.researchCrossAuthor.deleteMany({ where: { researchId } })
+
+  for (const [position, name] of names.entries()) {
+    const author = await tx.researchAuthor.upsert({
+      where: { name },
       update: {},
-      create: {
-        name: data.venue,
+      create: { name },
+    })
+
+    await tx.researchCrossAuthor.create({
+      data: { researchId, researchAuthorId: author.id, position },
+    })
+  }
+}
+
+/**
+ * Creates a publication in every language at once, together with its publisher and its ordered
+ * authors. Either all of it is stored or none of it is.
+ */
+export async function createPublication(
+  input: PublicationCreateInput,
+): Promise<PublicationWriteResult> {
+  return writePublication(async (tx) => {
+    const publisher = await upsertPublisher(tx, input.venue)
+
+    const research = await tx.research.create({
+      data: {
+        ...baseContent(publicationContent, input.content),
+        publicationDate: input.date,
+        publisherId: publisher.id,
+        externalUrl: input.href,
+        doi: input.DOI,
+        researchGroup: input.researchGroup,
+        translations: { create: translationRows(publicationContent, input.content) },
       },
     })
 
-    // Create the publication itself.
-    let research
-    try {
-      research = await tx.research.create({
-        data: {
-          title: data.title,
-          publicationDate: data.date,
-          publisherId: publisher.id,
-          abstract: data.abstract,
-          externalUrl: data.href || null,
-          doi: data.DOI || null,
-          researchGroup: data.researchGroup,
-        },
-      })
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        return 'duplicate-doi'
-      }
+    await replaceAuthors(tx, research.id, input.authors)
 
-      throw error
-    }
-
-    // Create/reuse each author and preserve their order.
-    for (const [position, name] of data.authors.entries()) {
-      const author = await tx.researchAuthor.upsert({
-        where: {
-          name,
-        },
-        update: {},
-        create: {
-          name,
-        },
-      })
-
-      await tx.researchCrossAuthor.create({
-        data: {
-          researchId: research.id,
-          researchAuthorId: author.id,
-          position,
-        },
-      })
-    }
-
-    // Return the complete publication, including its relations.
-    return tx.research.findUniqueOrThrow({
-      where: {
-        id: research.id,
-      },
-      include: {
-        publisher: true,
-        authors: {
-          orderBy: {
-            position: 'asc',
-          },
-          include: {
-            researchAuthor: true,
-          },
-        },
-      },
-    })
+    return tx.research.findUniqueOrThrow({ where: { id: research.id }, include: recordInclude })
   })
 }
 
-export async function updatePublication(id: string, data: PublicationInput) {
-  return prisma.$transaction(async (tx) => {
-    // Check that the publication exists.
-    const existing = await tx.research.findUnique({
+/**
+ * Updates the fields present in `input`, all at once: either everything is stored or nothing is.
+ *
+ * With `content` it is a bilingual content update: both languages are written, after checking
+ * that every one-sided change has its counterpart changed or confirmed (`findPendingReviews`).
+ * Without `content` it updates shared fields only, and titles, abstracts and translations are
+ * left exactly as they are, so a legacy record can be corrected without being translated first.
+ *
+ * Optimistic concurrency applies to both kinds: `input.version` is the `updated_at` the editor
+ * loaded. The base row is updated only while it still has that value, and every save moves it
+ * forward, so of two editors who loaded the same version the second one gets `conflict` instead
+ * of silently overwriting the first. The conditional `UPDATE` also locks the row until commit,
+ * which closes the gap between the check and the write.
+ */
+export async function updatePublication(
+  id: string,
+  input: PublicationUpdateInput,
+): Promise<PublicationWriteResult> {
+  const expectedUpdatedAt = parseVersion(input.version)
+
+  return writePublication(async (tx) => {
+    const current = await tx.research.findUnique({
       where: { id },
+      select: {
+        title: true,
+        abstract: true,
+        updatedAt: true,
+        translations: recordInclude.translations,
+      },
     })
 
-    if (!existing) {
-      return null
+    if (!current) throw new WriteAbort<PublicationWriteFailure>({ ok: false, reason: 'not-found' })
+
+    if (!isCurrentVersion(current.updatedAt, expectedUpdatedAt)) {
+      throw new WriteAbort<PublicationWriteFailure>({ ok: false, reason: 'conflict' })
     }
 
-    // Publishers are shared between publications, so find or create
-    // the publisher instead of creating a duplicate.
-    const publisher = await tx.publisher.upsert({
-      where: {
-        name: data.venue,
-      },
-      update: {},
-      create: {
-        name: data.venue,
-      },
-    })
+    const { content } = input
 
-    // Update the actual publication record.
-    try {
-      await tx.research.update({
-        where: {
-          id,
-        },
-        data: {
-          title: data.title,
-          publicationDate: data.date,
-          publisherId: publisher.id,
-          abstract: data.abstract,
-          externalUrl: data.href || null,
-          doi: data.DOI || null,
-          researchGroup: data.researchGroup,
-        },
-      })
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        return 'duplicate-doi'
+    if (content) {
+      const pending = findPendingReviews(
+        storedContentFrom(publicationContent, current, current.translations),
+        content,
+        input.confirmedUnchanged ?? [],
+      )
+
+      if (pending.length > 0) {
+        throw new WriteAbort<PublicationWriteFailure>({
+          ok: false,
+          reason: 'review-required',
+          pending,
+        })
       }
-
-      throw error
     }
 
-    // Remove the current author relationships.
-    // only delete the cross-author rows, NOT the researchAuthor
-    // records themselves, because those authors may belong to other
-    // publications.
-    await tx.researchCrossAuthor.deleteMany({
-      where: {
-        researchId: id,
+    const publisher = input.venue === undefined ? undefined : await upsertPublisher(tx, input.venue)
+
+    const { count } = await tx.research.updateMany({
+      where: { id, updatedAt: expectedUpdatedAt },
+      data: {
+        ...(content ? baseContent(publicationContent, content) : {}),
+        ...(input.date === undefined ? {} : { publicationDate: input.date }),
+        ...(publisher === undefined ? {} : { publisherId: publisher.id }),
+        ...(input.href === undefined ? {} : { externalUrl: input.href }),
+        ...(input.DOI === undefined ? {} : { doi: input.DOI }),
+        ...(input.researchGroup === undefined ? {} : { researchGroup: input.researchGroup }),
+        // Strictly later than the version it replaces, even if two saves share a millisecond.
+        updatedAt: nextUpdatedAt(expectedUpdatedAt),
       },
     })
 
-    // Recreate the author relationships using the order supplied
-    // by the form.
-    for (const [position, name] of data.authors.entries()) {
-      const author = await tx.researchAuthor.upsert({
-        where: {
-          name,
-        },
-        update: {},
-        create: {
-          name,
-        },
-      })
+    if (count === 0)
+      throw new WriteAbort<PublicationWriteFailure>({ ok: false, reason: 'conflict' })
 
-      await tx.researchCrossAuthor.create({
-        data: {
-          researchId: id,
-          researchAuthorId: author.id,
-          position,
-        },
-      })
+    if (content) {
+      for (const { locale, ...text } of translationRows(publicationContent, content)) {
+        await tx.researchTranslation.upsert({
+          where: { researchId_locale: { researchId: id, locale } },
+          create: { researchId: id, locale, ...text },
+          update: text,
+        })
+      }
     }
 
-    // Return the updated publication with its relations.
-    return tx.research.findUniqueOrThrow({
-      where: {
-        id,
-      },
-      include: {
-        publisher: true,
-        authors: {
-          orderBy: {
-            position: 'asc',
-          },
-          include: {
-            researchAuthor: true,
-          },
-        },
-      },
-    })
+    if (input.authors !== undefined) {
+      await replaceAuthors(tx, id, input.authors)
+    }
+
+    return tx.research.findUniqueOrThrow({ where: { id }, include: recordInclude })
   })
 }
 
+/** Deletes a publication. Its translations and author links go with it (`ON DELETE CASCADE`). */
 export async function deletePublication(id: string): Promise<boolean> {
   const existing = await prisma.research.findUnique({
     where: { id },

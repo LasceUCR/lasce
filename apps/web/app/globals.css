@@ -2545,6 +2545,42 @@ a {
   font-weight: 700;
 }
 
+/* --- Bilingual editors (LanguageTabs, TranslationReview) --------------------- */
+
+/* The language tabs reuse .access-tabs / .access-tab; this is the "2 por revisar" or
+   "Sin traducción" note a tab carries, so a problem on the hidden tab stays visible. */
+.cms-language-tab-flag {
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cms-language-panel > .ui-notice:first-child {
+  margin-top: 0;
+}
+
+/* The explanation and the "sigue siendo correcto" switch under a field whose counterpart
+   changed in the other language. */
+.cms-translation-review {
+  margin: -4px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cms-translation-review .ui-notice {
+  margin-top: 0;
+}
+
+/* The save error can carry a "Cerrar y cargar la versión actual" action below its text. */
+.form-alert > p {
+  margin: 0;
+}
+
+.form-alert > .button {
+  margin-top: 12px;
+}
+
 .publications-kpi {
   display: flex;
   align-items: center;
