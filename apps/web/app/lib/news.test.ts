@@ -149,6 +149,10 @@ describe('newsInputSchema', () => {
   test('allows a null published date', () => {
     expect(newsInputSchema.safeParse({ ...validInput, publishedAt: null }).success).toBe(true)
   })
+
+  test('allows an empty imageUrl when image is not provided', () => {
+    expect(newsInputSchema.safeParse({ ...validInput, imageUrl: '' }).success).toBe(true)
+  })
 })
 
 describe('createNews', () => {
