@@ -16,11 +16,16 @@ export interface ModalProps {
 const modalStack: HTMLDialogElement[] = []
 
 function updateModalStackVisibility() {
+  const top = modalStack[modalStack.length - 1]
   for (let i = 0; i < modalStack.length; i++) {
     const isTop = i === modalStack.length - 1
     const d = modalStack[i]
     if (d) {
       if (isTop) {
+        d.style.visibility = ''
+        d.removeAttribute('aria-hidden')
+      } else if (top && d.contains(top)) {
+        // d contains top: keeping d visible and without aria-hidden prevents hiding top
         d.style.visibility = ''
         d.removeAttribute('aria-hidden')
       } else {
