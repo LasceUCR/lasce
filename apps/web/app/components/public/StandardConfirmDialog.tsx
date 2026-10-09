@@ -5,7 +5,6 @@ import type { ReactNode } from 'react'
 
 import { Button, type ButtonVariant } from './Button'
 import { Modal, type ModalSize } from './Modal'
-import styles from './StandardConfirmDialog.module.css'
 
 export type ConfirmationSeverity = 'danger' | 'warning' | 'info'
 
@@ -48,24 +47,24 @@ function resolveIcon(severity: ConfirmationSeverity) {
 function resolveIconClass(severity: ConfirmationSeverity) {
   switch (severity) {
     case 'danger':
-      return styles.iconDanger
+      return 'std-confirm-icon-danger'
     case 'warning':
-      return styles.iconWarning
+      return 'std-confirm-icon-warning'
     case 'info':
     default:
-      return styles.iconInfo
+      return 'std-confirm-icon-info'
   }
 }
 
 function resolveConsequenceClass(severity: ConfirmationSeverity) {
   switch (severity) {
     case 'danger':
-      return styles.consequenceDanger
+      return 'std-confirm-consequence-danger'
     case 'warning':
-      return styles.consequenceWarning
+      return 'std-confirm-consequence-warning'
     case 'info':
     default:
-      return styles.consequenceInfo
+      return 'std-confirm-consequence-info'
   }
 }
 
@@ -111,18 +110,18 @@ export function StandardConfirmDialog({
 
   return (
     <Modal onClose={isSubmitting ? () => {} : onCancel} open={open} size={size} title={title}>
-      <div className={styles.dialogContent}>
-        <div className={styles.headerRow}>
-          <div className={`${styles.iconContainer} ${iconClass}`}>{icon}</div>
-          <div className={styles.textContent}>
-            <p className={styles.message}>{message}</p>
+      <div className="std-confirm-dialog">
+        <div className="std-confirm-header">
+          <div className={`std-confirm-icon ${iconClass}`}>{icon}</div>
+          <div className="std-confirm-body">
+            <p className="std-confirm-message">{message}</p>
           </div>
         </div>
 
         {targetEntity ? (
           <div
-            className={`${styles.targetEntityCard} ${
-              severity === 'danger' ? styles.targetEntityCardDanger : ''
+            className={`std-confirm-target-card ${
+              severity === 'danger' ? 'std-confirm-target-card-danger' : ''
             }`}
           >
             <strong>Elemento: </strong>
@@ -131,27 +130,27 @@ export function StandardConfirmDialog({
         ) : null}
 
         {consequence ? (
-          <div className={`${styles.consequenceBox} ${consequenceClass}`} role="note">
+          <div className={`std-confirm-consequence ${consequenceClass}`} role="note">
             <span>{consequence}</span>
           </div>
         ) : null}
 
         {errorMessage ? (
-          <p className={styles.errorMessage} role="alert">
+          <p className="std-confirm-error" role="alert">
             {errorMessage}
           </p>
         ) : null}
 
         {children}
 
-        <div className={styles.actions}>
+        <div className="std-confirm-actions">
           <Button disabled={isSubmitting} onClick={onCancel} variant="secondary">
             {cancelLabel}
           </Button>
           <Button disabled={isSubmitting} onClick={onConfirm} variant={effectiveConfirmVariant}>
             {isSubmitting ? (
               <>
-                <Loader2 aria-hidden="true" className={styles.spinner} size={16} />
+                <Loader2 aria-hidden="true" className="btn-spinner" size={16} />
                 <span>{submittingLabel}</span>
               </>
             ) : (

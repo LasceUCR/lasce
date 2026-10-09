@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { Button } from './Button'
 import { Modal } from './Modal'
 import { StandardConfirmDialog } from './StandardConfirmDialog'
-import styles from './ManagementModal.module.css'
 
 export interface ManagementRecordValues {
   name: string
@@ -212,9 +211,9 @@ export function ManagementModal({
         size="medium"
         title={title}
       >
-        <div className={styles.container}>
+        <div className="mgmt-form-container">
           {savedSuccessfully ? (
-            <div className={styles.successNotice} role="status">
+            <div className="mgmt-form-success" role="status">
               <CheckCircle2 aria-hidden="true" size={20} />
               <span>
                 <strong>¡Cambios guardados con éxito!</strong> El registro fue actualizado en el
@@ -223,19 +222,19 @@ export function ManagementModal({
             </div>
           ) : null}
 
-          <div className={styles.formGrid}>
+          <div className="mgmt-form-grid">
             {/* Foto uploader */}
-            <div className={styles.fieldGroup}>
-              <span className={styles.label}>
-                Fotografía del investigador <span className={styles.requiredStar}>*</span>
+            <div className="mgmt-form-group">
+              <span className="mgmt-form-label">
+                Fotografía del investigador <span className="mgmt-form-required">*</span>
               </span>
 
               {hasPhoto ? (
-                <div className={styles.photoPreview}>
+                <div className="mgmt-photo-preview">
                   <ImageIcon aria-hidden="true" size={20} />
-                  <span className={styles.photoBadge}>investigador_perfil.jpg (cargado)</span>
+                  <span className="mgmt-photo-badge">investigador_perfil.jpg (cargado)</span>
                   <button
-                    className={styles.removePhotoBtn}
+                    className="mgmt-photo-remove"
                     onClick={() => setHasPhoto(false)}
                     type="button"
                   >
@@ -245,22 +244,20 @@ export function ManagementModal({
               ) : (
                 <button
                   aria-invalid={photoError ? 'true' : undefined}
-                  className={`${styles.photoUploadBox} ${
-                    photoError ? styles.photoUploadBoxError : ''
-                  }`}
+                  className={`mgmt-photo-upload ${photoError ? 'mgmt-photo-upload-error' : ''}`}
                   id="mgmt-photo"
                   onClick={() => setHasPhoto(true)}
                   type="button"
                 >
                   <Upload aria-hidden="true" size={24} />
-                  <span className={styles.photoUploadText}>
+                  <span className="mgmt-photo-upload-text">
                     Haga clic aquí para seleccionar o soltar una imagen
                   </span>
-                  <span className={styles.photoUploadHint}>PNG o JPEG (máx. 2MB)</span>
+                  <span className="mgmt-photo-upload-hint">PNG o JPEG (máx. 2MB)</span>
                 </button>
               )}
               {photoError ? (
-                <p className={styles.fieldErrorText} role="alert">
+                <p className="mgmt-form-error-text" role="alert">
                   <AlertCircle aria-hidden="true" size={14} />
                   <span>{photoError.message}</span>
                 </p>
@@ -268,14 +265,14 @@ export function ManagementModal({
             </div>
 
             {/* Nombre */}
-            <div className={styles.fieldGroup}>
-              <label className={styles.label} htmlFor="mgmt-name">
-                Nombre completo <span className={styles.requiredStar}>*</span>
+            <div className="mgmt-form-group">
+              <label className="mgmt-form-label" htmlFor="mgmt-name">
+                Nombre completo <span className="mgmt-form-required">*</span>
               </label>
               <input
                 aria-invalid={nameError ? 'true' : undefined}
                 aria-required="true"
-                className={`${styles.input} ${nameError ? styles.inputError : ''}`}
+                className={`mgmt-form-input ${nameError ? 'mgmt-form-input-error' : ''}`}
                 id="mgmt-name"
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ej. Dra. Carolina Salas"
@@ -283,7 +280,7 @@ export function ManagementModal({
                 value={name}
               />
               {nameError ? (
-                <p className={styles.fieldErrorText} role="alert">
+                <p className="mgmt-form-error-text" role="alert">
                   <AlertCircle aria-hidden="true" size={14} />
                   <span>{nameError.message}</span>
                 </p>
@@ -291,14 +288,14 @@ export function ManagementModal({
             </div>
 
             {/* Rol */}
-            <div className={styles.fieldGroup}>
-              <label className={styles.label} htmlFor="mgmt-role">
-                Rol o especialidad <span className={styles.requiredStar}>*</span>
+            <div className="mgmt-form-group">
+              <label className="mgmt-form-label" htmlFor="mgmt-role">
+                Rol o especialidad <span className="mgmt-form-required">*</span>
               </label>
               <input
                 aria-invalid={roleError ? 'true' : undefined}
                 aria-required="true"
-                className={`${styles.input} ${roleError ? styles.inputError : ''}`}
+                className={`mgmt-form-input ${roleError ? 'mgmt-form-input-error' : ''}`}
                 id="mgmt-role"
                 onChange={(e) => setRole(e.target.value)}
                 placeholder="Ej. Astrofísica Solar e Investigadora Principal"
@@ -306,7 +303,7 @@ export function ManagementModal({
                 value={role}
               />
               {roleError ? (
-                <p className={styles.fieldErrorText} role="alert">
+                <p className="mgmt-form-error-text" role="alert">
                   <AlertCircle aria-hidden="true" size={14} />
                   <span>{roleError.message}</span>
                 </p>
@@ -314,14 +311,14 @@ export function ManagementModal({
             </div>
 
             {/* Institución */}
-            <div className={styles.fieldGroup}>
-              <label className={styles.label} htmlFor="mgmt-institution">
-                Institución o afiliación <span className={styles.requiredStar}>*</span>
+            <div className="mgmt-form-group">
+              <label className="mgmt-form-label" htmlFor="mgmt-institution">
+                Institución o afiliación <span className="mgmt-form-required">*</span>
               </label>
               <input
                 aria-invalid={institutionError ? 'true' : undefined}
                 aria-required="true"
-                className={`${styles.input} ${institutionError ? styles.inputError : ''}`}
+                className={`mgmt-form-input ${institutionError ? 'mgmt-form-input-error' : ''}`}
                 id="mgmt-institution"
                 onChange={(e) => setInstitution(e.target.value)}
                 placeholder="Ej. Escuela de Física, Universidad de Costa Rica"
@@ -329,7 +326,7 @@ export function ManagementModal({
                 value={institution}
               />
               {institutionError ? (
-                <p className={styles.fieldErrorText} role="alert">
+                <p className="mgmt-form-error-text" role="alert">
                   <AlertCircle aria-hidden="true" size={14} />
                   <span>{institutionError.message}</span>
                 </p>
@@ -337,13 +334,13 @@ export function ManagementModal({
             </div>
 
             {/* Correo */}
-            <div className={styles.fieldGroup}>
-              <label className={styles.label} htmlFor="mgmt-email">
+            <div className="mgmt-form-group">
+              <label className="mgmt-form-label" htmlFor="mgmt-email">
                 Correo electrónico institucional (opcional)
               </label>
               <input
                 aria-invalid={emailError ? 'true' : undefined}
-                className={`${styles.input} ${emailError ? styles.inputError : ''}`}
+                className={`mgmt-form-input ${emailError ? 'mgmt-form-input-error' : ''}`}
                 id="mgmt-email"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ejemplo@ucr.ac.cr"
@@ -351,7 +348,7 @@ export function ManagementModal({
                 value={email}
               />
               {emailError ? (
-                <p className={styles.fieldErrorText} role="alert">
+                <p className="mgmt-form-error-text" role="alert">
                   <AlertCircle aria-hidden="true" size={14} />
                   <span>{emailError.message}</span>
                 </p>
@@ -359,12 +356,12 @@ export function ManagementModal({
             </div>
 
             {/* Biografía */}
-            <div className={styles.fieldGroup}>
-              <label className={styles.label} htmlFor="mgmt-bio">
+            <div className="mgmt-form-group">
+              <label className="mgmt-form-label" htmlFor="mgmt-bio">
                 Descripción / Líneas de trabajo (opcional)
               </label>
               <textarea
-                className={styles.textarea}
+                className="mgmt-form-textarea"
                 id="mgmt-bio"
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Resumen del trabajo de investigación y contribuciones..."
@@ -375,7 +372,7 @@ export function ManagementModal({
           </div>
 
           {/* Barra de acciones */}
-          <div className={styles.actionsBar}>
+          <div className="mgmt-form-actions">
             <Button
               icon={<Trash2 aria-hidden="true" size={16} />}
               onClick={() => setConfirmDeleteOpen(true)}
@@ -384,7 +381,7 @@ export function ManagementModal({
               Eliminar registro
             </Button>
 
-            <div className={styles.rightActions}>
+            <div className="mgmt-form-actions-right">
               <Button onClick={handleCancelClick} variant="secondary">
                 Cancelar
               </Button>
