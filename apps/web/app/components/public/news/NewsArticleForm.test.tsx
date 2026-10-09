@@ -142,13 +142,11 @@ describe('NewsArticleForm', () => {
     expect(screen.getByText('Debe indicar al menos un autor.')).toBeInTheDocument()
     expect(screen.getByText('La fuente es obligatoria.')).toBeInTheDocument()
     expect(screen.getByText('El resumen es obligatorio.')).toBeInTheDocument()
-    expect(
-      screen.queryByText('Debe seleccionar una imagen para la noticia.'),
-    ).not.toBeInTheDocument()
+    expect(screen.getByText('La imagen es obligatoria.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('successfully saves a new article without providing an image', async () => {
+  test('displays error when attempting to save without an image', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<NewsArticleForm {...addArgs} onSave={onSave} />)
@@ -161,12 +159,8 @@ describe('NewsArticleForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Noticia sin imagen',
-        imageUrl: '',
-      }),
-    )
+    expect(screen.getByText('La imagen es obligatoria.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
   })
 
   test('prompts discard confirmation when clicking Cancel with modifications, and cancels upon confirmation', async () => {

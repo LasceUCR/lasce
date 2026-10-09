@@ -150,8 +150,9 @@ describe('newsInputSchema', () => {
     expect(newsInputSchema.safeParse({ ...validInput, publishedAt: null }).success).toBe(true)
   })
 
-  test('allows an empty imageUrl when image is not provided', () => {
-    expect(newsInputSchema.safeParse({ ...validInput, imageUrl: '' }).success).toBe(true)
+  test('rejects a blank imageUrl', () => {
+    const result = newsInputSchema.safeParse({ ...validInput, imageUrl: '' })
+    expect(result.success).toBe(false)
   })
 })
 

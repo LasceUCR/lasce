@@ -99,13 +99,17 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   const abstractError =
     hasAttemptedSubmit && abstract.trim() === '' ? 'El resumen es obligatorio.' : null
 
+  const hasImage = imageFile !== null || (Boolean(article?.imageUrl) && !imageRemoved)
+  const imageError = hasAttemptedSubmit && !hasImage ? 'La imagen es obligatoria.' : null
+
   const isFormValid =
     title.trim() !== '' &&
     splitAuthors(authors).length > 0 &&
     source.trim() !== '' &&
     externalUrl.trim() !== '' &&
     urlError === null &&
-    abstract.trim() !== ''
+    abstract.trim() !== '' &&
+    hasImage
 
   // Check if form is dirty for discard confirmation
   const isDirty =
@@ -256,6 +260,7 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
           setImageRemoved(file === null)
         }}
       />
+      {imageError ? <p className="form-field-error">{imageError}</p> : null}
 
       {uploadError ? <p className="form-alert">{uploadError}</p> : null}
 

@@ -91,7 +91,7 @@ export const newsInputSchema = z.object({
   publishedAt: z.string().date().nullable(),
   externalUrl: z.string().trim().url('El enlace debe ser una URL válida.'),
   abstract: z.string().trim().min(1, 'El resumen es obligatorio.'),
-  imageUrl: z.string().trim(),
+  imageUrl: z.string().trim().min(1, 'La imagen es obligatoria.'),
   imageAlt: z.string().trim(),
 })
 
