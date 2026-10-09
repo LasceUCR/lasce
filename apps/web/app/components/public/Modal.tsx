@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useId, useRef, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
 
 export type ModalSize = 'small' | 'medium' | 'large'
 
@@ -77,11 +76,11 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
     }
   }, [open])
 
-  if (!open || typeof document === 'undefined') {
+  if (!open) {
     return null
   }
 
-  return createPortal(
+  return (
     <dialog
       aria-labelledby={titleId}
       className={`modal modal-${size}`}
@@ -111,7 +110,6 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
     >
       <h2 id={titleId}>{title}</h2>
       <div className="modal-body">{children}</div>
-    </dialog>,
-    document.body,
+    </dialog>
   )
 }

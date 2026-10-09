@@ -6042,7 +6042,6 @@ a.gallery-tile:focus-visible {
   padding: 32px 40px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--white);
@@ -6105,9 +6104,9 @@ a.gallery-tile:focus-visible {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-gutter: auto;
+  /* Reserves the scrollbar's own width up front, so content doesn't sit
+     flush against it (or get nudged/clipped) only once scrolling kicks in. */
+  scrollbar-gutter: stable;
   /* `.modal`'s own padding sits outside this scroll container, so it does
      nothing for what happens at *this* box's edges. A full-width field's
      focus outline paints a couple pixels past its own border — with zero
