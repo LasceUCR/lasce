@@ -253,14 +253,15 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       <FormField label="Texto alternativo de la imagen" onChange={setImageAlt} value={imageAlt} />
 
       <FileDropInput
+        errorMessage={imageError}
         existingImageUrl={imageRemoved ? undefined : article?.imageUrl}
         label="Imagen"
         onFileSelect={(file) => {
           setImageFile(file)
           setImageRemoved(file === null)
         }}
+        required
       />
-      {imageError ? <p className="form-field-error">{imageError}</p> : null}
 
       {uploadError ? <p className="form-alert">{uploadError}</p> : null}
 

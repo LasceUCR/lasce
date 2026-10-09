@@ -5812,6 +5812,17 @@ a.gallery-tile:focus-visible {
   background: #f4fafd;
 }
 
+.file-drop.file-drop-error,
+.file-drop[aria-invalid='true'] {
+  border-color: var(--danger);
+  background: #fff8f8;
+}
+
+.file-drop.file-drop-error:hover,
+.file-drop[aria-invalid='true']:hover {
+  background: #fff1f1;
+}
+
 .file-drop-icon {
   flex-shrink: 0;
   width: 56px;
@@ -6042,6 +6053,7 @@ a.gallery-tile:focus-visible {
   padding: 32px 40px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--white);
