@@ -37,6 +37,11 @@ export async function PATCH(
 
   const { id } = await params
   const article = await updateNews(id, parsed.data)
+
+  if (article === 'duplicate-url') {
+    return NextResponse.json({ error: 'Ya existe una noticia con este enlace.' }, { status: 409 })
+  }
+
   if (!article) {
     return NextResponse.json({ error: `No existe una noticia con id "${id}".` }, { status: 404 })
   }
