@@ -6078,8 +6078,6 @@ a.gallery-tile:focus-visible {
 
 .modal::backdrop {
   background: rgba(13, 39, 55, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 @keyframes spin {
