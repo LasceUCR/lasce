@@ -118,13 +118,19 @@ describe('RosacInfoPage', () => {
     expect(relationship).toHaveTextContent('ROSAC aporta infraestructura nacional')
   })
 
-  test('does not offer a general scientific consultation section', () => {
+  test('links the general consultation to the ROSAC simulations', () => {
     renderPage()
 
-    expect(screen.queryByRole('region', { name: /Consulta científica/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Explorar datos' })).not.toBeInTheDocument()
-    const sections = screen.getAllByRole('heading', { level: 2 })
-    expect(sections.at(-1)).toHaveTextContent('9. Donaciones ROSAC')
+    const consultation = screen.getByRole('region', { name: '10. Consulta científica' })
+    expect(within(consultation).queryByText('Próximamente')).not.toBeInTheDocument()
+    const link = within(consultation).getByRole('link', {
+      name: 'Explorar datos',
+    })
+    expect(link).toHaveAttribute('href', '/datos?source=ROSAC#scientific-query-title')
+    // Primary action inside the same highlighted box as the donations CTA.
+    expect(link).toHaveClass('button', 'button-primary')
+    expect(link.parentElement).toHaveClass('topic-highlight')
+    expect(consultation).toHaveTextContent(defaultArgs.content.scientificConsultation.description)
   })
 
   test('presents three instrument cards without authentication or edit permissions', () => {

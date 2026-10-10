@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
+  ChartNoAxesCombined,
   Crosshair,
   GraduationCap,
   Mail,
@@ -355,6 +356,29 @@ export function RosacInfoPage({
             variant="primary"
           >
             {content.donations.cta.buttonLabel}
+          </Button>
+        </div>
+      </TopicSection>
+
+      <TopicSection
+        index="10"
+        title={content.scientificConsultation.title}
+        titleId="rosac-science-title"
+        wide
+      >
+        {/* Same call-to-action box as "¿Te gustaría ayudarnos?", so both primary actions on the
+            page share one format. */}
+        <div className={`topic-highlight ${styles.ctaBox}`}>
+          <div className={styles.ctaText}>
+            <p>{content.scientificConsultation.description}</p>
+          </div>
+          <Button
+            href={content.scientificConsultation.href}
+            fullPageLoad
+            variant="primary"
+            icon={<ChartNoAxesCombined aria-hidden="true" size={20} strokeWidth={1.8} />}
+          >
+            {content.scientificConsultation.buttonLabel}
           </Button>
         </div>
       </TopicSection>
