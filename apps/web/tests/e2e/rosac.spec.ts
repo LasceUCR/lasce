@@ -117,13 +117,11 @@ test('presents each ROSAC researcher card with public information', async ({ pag
   }
 })
 
-test('links the scientific consultation to the ROSAC data source', async ({ page }) => {
+test('does not render a general scientific consultation section', async ({ page }) => {
   await page.goto('/radioastronomia')
 
-  const consultation = page.getByRole('region', { name: '10. Consulta científica' })
-  await expect(consultation.getByText('Próximamente')).toHaveCount(0)
-  const link = consultation.getByRole('link', { name: 'Explorar datos' })
-  await expect(link).toHaveAttribute('href', '/datos?source=ROSAC#scientific-query-title')
+  await expect(page.getByRole('region', { name: /Consulta científica/ })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Explorar datos' })).toHaveCount(0)
 })
 
 test('keeps ROSAC access out of the shared navigation and scientific tools', async ({ page }) => {

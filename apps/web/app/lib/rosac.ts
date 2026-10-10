@@ -142,12 +142,6 @@ export interface RosacInfoContent {
     items: readonly RosacDonation[]
     cta: { title: string; description: string; buttonLabel: string; href: string }
   }
-  scientificConsultation: {
-    title: string
-    description: string
-    buttonLabel: string
-    href: string
-  }
   backLink: { href: string; label: string }
 }
 
@@ -587,13 +581,6 @@ export const rosacInfoContent = {
       buttonLabel: 'Contáctanos',
       href: '/contacto',
     },
-  },
-  scientificConsultation: {
-    title: 'Consulta científica',
-    description:
-      'Explore las consultas de demostración de ROSAC en la sección de datos. Sus resultados son simulados mientras se define la integración de los instrumentos.',
-    buttonLabel: 'Explorar datos',
-    href: '/datos?source=ROSAC#scientific-query-title',
   },
   backLink: {
     href: '/#areas-de-trabajo',
