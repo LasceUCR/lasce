@@ -11,7 +11,7 @@ ROSAC instruments in `app/lib/scientific-data.ts`. Their card titles are "ROSAC-
 "ROSAC-MIRA 9GHz", with their frequency bands in characteristics. Their links open the matching simulation on
 `/datos?source=ROSAC&instrument=ROSAC-I1#scientific-query-title` (or `ROSAC-I2`). These are
 demonstrations, not confirmed hardware or observed data. Instrument 3 is "ROSAC-HIROS" and remains a pending card
-with a disabled "Consultar simulación del instrumento 3" button and no consultation link, and is
+with a disabled "Consultar simulación del ROSAC-HIROS" button and no consultation link, and is
 **not** added to the data catalog, contracts or backend.
 All three cards temporarily use illustrative photos from the ROSAC construction gallery,
 identified as such in the section introduction and alternative text. They do not identify

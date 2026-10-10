@@ -23,7 +23,7 @@ for (const width of [1440, 768, 390, 320]) {
     await expect(images).toHaveCount(3)
     await expect(section.getByRole('link')).toHaveCount(2)
     await expect(
-      section.getByRole('button', { name: 'Consultar simulación del instrumento 3' }),
+      section.getByRole('button', { name: 'Consultar simulación del ROSAC-HIROS' }),
     ).toBeDisabled()
     await expect(section.getByText(/integración en la sección de datos/)).toBeVisible()
     expect(
@@ -48,17 +48,16 @@ for (const width of [1440, 768, 390, 320]) {
   })
 }
 
-for (const [number, product, parameter] of [
-  [1, 'Serie temporal de prueba', 'Intensidad simulada'],
-  [2, 'Espectro dinámico de prueba', 'Intensidad espectral simulada'],
+for (const [code, product, parameter] of [
+  ['ROSAC-SABER', 'Serie temporal de prueba', 'Intensidad simulada'],
+  ['ROSAC-MIRA 9GHz', 'Espectro dinámico de prueba', 'Intensidad espectral simulada'],
 ] as const) {
-  test(`opens the query with ROSAC instrument ${number} selected using the keyboard`, async ({
-    page,
-  }) => {
+  test(`opens the query with ${code} selected using the keyboard`, async ({ page }) => {
     await page.goto('/radioastronomia')
-    const link = page.getByRole('link', { name: `Consultar simulación del instrumento ${number}` })
+    const link = page.getByRole('link', { name: `Consultar simulación del ${code}` })
     await link.focus()
     await page.keyboard.press('Enter')
+    const number = code === 'ROSAC-SABER' ? 1 : 2
     await expect(page).toHaveURL(
       new RegExp(`/datos\\?source=ROSAC&instrument=ROSAC-I${number}#scientific-query-title$`),
     )

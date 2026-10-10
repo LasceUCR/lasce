@@ -53,7 +53,7 @@ export const rosacInstrumentsContent: RosacInstrumentsContent = {
       image: instrumentImages[0],
       consultation: {
         href: `/datos?source=ROSAC&instrument=${rosacInstruments[0]!.code}#scientific-query-title`,
-        label: 'Consultar simulación del instrumento 1',
+        label: 'Consultar simulación del ROSAC-SABER',
         notice: `${rosacInstruments[0]!.products[0]!.name}. Los resultados son simulados; no corresponden a observaciones del instrumento.`,
       },
     },
@@ -64,7 +64,7 @@ export const rosacInstrumentsContent: RosacInstrumentsContent = {
       image: instrumentImages[1],
       consultation: {
         href: `/datos?source=ROSAC&instrument=${rosacInstruments[1]!.code}#scientific-query-title`,
-        label: 'Consultar simulación del instrumento 2',
+        label: 'Consultar simulación del ROSAC-MIRA 9GHz',
         notice: `${rosacInstruments[1]!.products[0]!.name}. Los resultados son simulados; no corresponden a observaciones del instrumento.`,
       },
     },
@@ -74,7 +74,7 @@ export const rosacInstrumentsContent: RosacInstrumentsContent = {
       characteristics: ['Observación del hidrógeno neutro a 1,4 GHz'],
       image: instrumentImages[2],
       pendingMessage: 'Información pendiente de confirmación e integración en la sección de datos.',
-      consultation: { label: 'Consultar simulación del instrumento 3' },
+      consultation: { label: 'Consultar simulación del ROSAC-HIROS' },
     },
   ],
 }
