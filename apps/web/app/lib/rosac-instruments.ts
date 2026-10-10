@@ -46,19 +46,32 @@ export const rosacInstrumentsContent: RosacInstrumentsContent = {
   intro:
     'Explore las simulaciones de los instrumentos de ROSAC. Las fotografías son ilustrativas y provienen de la galería del observatorio.',
   items: [
-    ...rosacInstruments.map((instrument, index) => ({
-      id: instrument.code,
-      name: `Instrumento ${index + 1}`,
-      image: instrumentImages[index],
+    {
+      id: rosacInstruments[0]!.code,
+      name: 'ROSAC-SABER',
+      characteristics: ['Banda entre 100 y 1000 MHz'],
+      image: instrumentImages[0],
       consultation: {
-        href: `/datos?source=ROSAC&instrument=${instrument.code}#scientific-query-title`,
-        label: `Consultar simulación del instrumento ${index + 1}`,
-        notice: `${instrument.products[0]!.name}. Los resultados son simulados; no corresponden a observaciones del instrumento.`,
+        href: `/datos?source=ROSAC&instrument=${rosacInstruments[0]!.code}#scientific-query-title`,
+        label: 'Consultar simulación del instrumento 1',
+        notice: `${rosacInstruments[0]!.products[0]!.name}. Los resultados son simulados; no corresponden a observaciones del instrumento.`,
       },
-    })),
+    },
+    {
+      id: rosacInstruments[1]!.code,
+      name: 'ROSAC-MIRA 9GHz',
+      characteristics: ['Banda de los 9 GHz'],
+      image: instrumentImages[1],
+      consultation: {
+        href: `/datos?source=ROSAC&instrument=${rosacInstruments[1]!.code}#scientific-query-title`,
+        label: 'Consultar simulación del instrumento 2',
+        notice: `${rosacInstruments[1]!.products[0]!.name}. Los resultados son simulados; no corresponden a observaciones del instrumento.`,
+      },
+    },
     {
       id: 'rosac-instrument-3',
-      name: 'Instrumento 3 (por definir)',
+      name: 'ROSAC-HIROS',
+      characteristics: ['Observación del hidrógeno neutro a 1,4 GHz'],
       image: instrumentImages[2],
       pendingMessage: 'Información pendiente de confirmación e integración en la sección de datos.',
       consultation: { label: 'Consultar simulación del instrumento 3' },

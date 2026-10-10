@@ -7,10 +7,10 @@ No account or separate detail page is required. `app/lib/rosac-instruments.ts` o
 editorial content; `InstrumentCard` only renders props.
 
 The first two entries reuse the identifiers and simulated product information of the existing
-ROSAC instruments in `app/lib/scientific-data.ts`. Their card titles are "Instrumento 1" and
-"Instrumento 2", without pending-content labels. Their links open the matching simulation on
+ROSAC instruments in `app/lib/scientific-data.ts`. Their card titles are "ROSAC-SABER" and
+"ROSAC-MIRA 9GHz", with their frequency bands in characteristics. Their links open the matching simulation on
 `/datos?source=ROSAC&instrument=ROSAC-I1#scientific-query-title` (or `ROSAC-I2`). These are
-demonstrations, not confirmed hardware or observed data. Instrument 3 remains a pending card
+demonstrations, not confirmed hardware or observed data. Instrument 3 is "ROSAC-HIROS" and remains a pending card
 with a disabled "Consultar simulación del instrumento 3" button and no consultation link, and is
 **not** added to the data catalog, contracts or backend.
 All three cards temporarily use illustrative photos from the ROSAC construction gallery,
@@ -22,7 +22,7 @@ the mock instruments. The original gallery assets are reused through Next.js ima
 Only publish instrument content supplied or approved by LASCE. Update the appropriate entry
 in `rosac-instruments.ts`, retaining its stable `id` and any existing consultation link.
 
-- `name`: approved instrument name; the first two currently use numbered mock identities.
+- `name`: approved instrument name (ROSAC-SABER, ROSAC-MIRA 9GHz, ROSAC-HIROS).
 - `pendingMessage`: keep while information is pending; omit when the card is complete.
 - `image`: optional `{ src, alt }`. Use an optimized web image under `apps/web/public/images/ROSAC/`
   and an informative Spanish description of that same instrument. External URLs require a
