@@ -61,4 +61,10 @@ describe('NewsCard', () => {
 
     expect(screen.getByAltText('')).toHaveAttribute('src')
   })
+
+  test('renders without image element when imageUrl is empty', () => {
+    render(<NewsCard {...defaultArgs} imageUrl="" />)
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
 })

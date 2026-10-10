@@ -1,10 +1,12 @@
 'use client'
 
+import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { uploadNewsImage, type UploadNewsImageResult } from '@/app/(public)/noticias/actions'
 import type { NewsArticle } from '@/app/lib/news'
 
@@ -68,19 +70,94 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
+  // Standards: Validation & Confirmation States
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
+
+  // Compute field errors for display
+  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
+  const authorsError =
+    hasAttemptedSubmit && splitAuthors(authors).length === 0
+      ? 'Debe indicar al menos un autor.'
+      : null
+  const sourceError =
+    hasAttemptedSubmit && source.trim() === '' ? 'La fuente es obligatoria.' : null
+
+  let urlError: string | null = null
+  if (hasAttemptedSubmit) {
+    if (externalUrl.trim() === '') {
+      urlError = 'El enlace es obligatorio.'
+    } else {
+      try {
+        new URL(externalUrl)
+      } catch {
+        urlError = 'El enlace debe ser una URL válida.'
+      }
+    }
+  }
+
+  const abstractError =
+    hasAttemptedSubmit && abstract.trim() === '' ? 'El resumen es obligatorio.' : null
+
   const hasImage = imageFile !== null || (Boolean(article?.imageUrl) && !imageRemoved)
-  const canSave =
+  const imageError = hasAttemptedSubmit && !hasImage ? 'La imagen es obligatoria.' : null
+
+  const isFormValid =
     title.trim() !== '' &&
     splitAuthors(authors).length > 0 &&
     source.trim() !== '' &&
     externalUrl.trim() !== '' &&
+    urlError === null &&
     abstract.trim() !== '' &&
     hasImage
 
-  async function handleSave() {
-    if (!canSave || isUploading) return
+  // Check if form is dirty for discard confirmation
+  const isDirty =
+    hasAttemptedSubmit ||
+    title !== (article?.title ?? '') ||
+    authors !== (article?.authors ?? '') ||
+    source !== (article?.source ?? '') ||
+    publishedAt !== (article?.publishedAt ?? '') ||
+    externalUrl !== (article?.href ?? '') ||
+    abstract !== (article?.abstract ?? '') ||
+    imageAlt !== (article?.imageAlt ?? '') ||
+    imageFile !== null ||
+    imageRemoved
 
-    let imageUrl = article?.imageUrl ?? ''
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+    } else {
+      onCancel()
+    }
+  }
+
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
+  }
+
+  async function handleSave() {
+    setHasAttemptedSubmit(true)
+
+    if (!isFormValid) {
+      if (title.trim() === '') {
+        document.getElementById('news-title-input')?.focus()
+      } else if (splitAuthors(authors).length === 0) {
+        document.getElementById('news-authors-input')?.focus()
+      } else if (source.trim() === '') {
+        document.getElementById('news-source-input')?.focus()
+      } else if (externalUrl.trim() === '') {
+        document.getElementById('news-url-input')?.focus()
+      } else if (abstract.trim() === '') {
+        document.getElementById('news-abstract-input')?.focus()
+      }
+      return
+    }
+
+    if (isUploading) return
+
+    let imageUrl = imageRemoved ? '' : (article?.imageUrl ?? '')
     if (imageFile) {
       setUploadError(null)
       setIsUploading(true)
@@ -119,6 +196,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   return (
     <div className="news-article-form">
       <FormField
+        errorMessage={titleError}
+        id="news-title-input"
         label="Título"
         onChange={setTitle}
         required
@@ -128,6 +207,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
 
       <div className="news-article-form-row">
         <FormField
+          errorMessage={authorsError}
+          id="news-authors-input"
           label="Autores"
           onChange={setAuthors}
           required
@@ -135,6 +216,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
           value={authors}
         />
         <FormField
+          errorMessage={sourceError}
+          id="news-source-input"
           label="Fuente"
           onChange={setSource}
           required
@@ -146,6 +229,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       <div className="news-article-form-row">
         <FormField label="Fecha" onChange={setPublishedAt} type="date" value={publishedAt} />
         <FormField
+          errorMessage={urlError}
+          id="news-url-input"
           label="Enlace"
           onChange={setExternalUrl}
           required
@@ -156,6 +241,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       </div>
 
       <FormField
+        errorMessage={abstractError}
+        id="news-abstract-input"
         label="Resumen"
         multiline
         onChange={setAbstract}
@@ -164,25 +251,46 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
         value={abstract}
       />
       <FormField label="Texto alternativo de la imagen" onChange={setImageAlt} value={imageAlt} />
+
       <FileDropInput
-        existingImageUrl={article?.imageUrl}
+        errorMessage={imageError}
+        existingImageUrl={imageRemoved ? undefined : article?.imageUrl}
         label="Imagen"
         onFileSelect={(file) => {
           setImageFile(file)
           setImageRemoved(file === null)
         }}
+        required
       />
 
       {uploadError ? <p className="form-alert">{uploadError}</p> : null}
 
       <div className="news-article-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button disabled={isUploading} onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
-        <Button disabled={!canSave || isUploading} onClick={handleSave} variant="primary">
-          {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
+        <Button disabled={isUploading} onClick={handleSave} variant="primary">
+          {isUploading ? (
+            <>
+              <Loader2 aria-hidden="true" className="btn-spinner" size={16} />
+              <span>Subiendo imagen...</span>
+            </>
+          ) : (
+            'Confirmar'
+          )}
         </Button>
       </div>
+
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
+      />
     </div>
   )
 }

@@ -5812,6 +5812,17 @@ a.gallery-tile:focus-visible {
   background: #f4fafd;
 }
 
+.file-drop.file-drop-error,
+.file-drop[aria-invalid='true'] {
+  border-color: var(--danger);
+  background: #fff8f8;
+}
+
+.file-drop.file-drop-error:hover,
+.file-drop[aria-invalid='true']:hover {
+  background: #fff1f1;
+}
+
 .file-drop-icon {
   flex-shrink: 0;
   width: 56px;
@@ -6042,6 +6053,7 @@ a.gallery-tile:focus-visible {
   padding: 32px 40px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--white);
@@ -6051,7 +6063,7 @@ a.gallery-tile:focus-visible {
 
 /* Confirmation dialogs — a title, a line of text and two buttons. */
 .modal-small {
-  width: min(92vw, 420px);
+  width: min(92vw, 490px);
 }
 
 /* Most forms — the default. */
@@ -6065,7 +6077,24 @@ a.gallery-tile:focus-visible {
 }
 
 .modal::backdrop {
-  background: rgba(13, 39, 55, 0.45);
+  background: rgba(13, 39, 55, 0.55);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-spinner {
+  animation: spin 0.85s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
 }
 
 .modal h2 {
@@ -6139,4 +6168,340 @@ a.gallery-tile:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* ==========================================================================
+   Standard Confirmation Dialog — .std-confirm-*
+   ========================================================================== */
+
+.std-confirm-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.std-confirm-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.std-confirm-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.std-confirm-icon-danger {
+  background: #fef2f2;
+  color: var(--danger, #dc2626);
+  border: 1px solid #fee2e2;
+}
+
+.std-confirm-icon-warning {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fef3c7;
+}
+
+.std-confirm-icon-info {
+  background: #f0f9ff;
+  color: var(--blue, #087fbd);
+  border: 1px solid #e0f2fe;
+}
+
+.std-confirm-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.std-confirm-title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--navy-deep, #0d2737);
+  line-height: 1.3;
+}
+
+.std-confirm-message {
+  margin: 0;
+  color: var(--ink, #0d2737);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.std-confirm-target-card {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--page, #eef4f7);
+  border-radius: 6px;
+  border-left: 4px solid var(--blue, #087fbd);
+  font-size: 0.9rem;
+  color: var(--navy-deep, #0d2737);
+  word-break: break-word;
+}
+
+.std-confirm-target-card-danger {
+  border-left-color: var(--danger, #dc2626);
+  background: #fff8f8;
+}
+
+.std-confirm-consequence {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.std-confirm-consequence-danger {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
+}
+
+.std-confirm-consequence-warning {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fef3c7;
+}
+
+.std-confirm-consequence-info {
+  background: #f0f9ff;
+  color: #075985;
+  border: 1px solid #e0f2fe;
+}
+
+.std-confirm-error {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.std-confirm-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 600px) {
+  .std-confirm-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .std-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .std-confirm-actions button {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   Management Modal — .mgmt-form-*
+   ========================================================================== */
+
+.mgmt-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mgmt-form-intro {
+  margin: 0 0 6px;
+  color: var(--muted, #536a7c);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.mgmt-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mgmt-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mgmt-form-label {
+  font-weight: 500;
+  font-size: 0.92rem;
+  color: var(--navy-deep, #0d2737);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mgmt-form-required {
+  color: var(--input-error, #b42318);
+}
+
+.mgmt-form-input,
+.mgmt-form-select,
+.mgmt-form-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border, #d6e1e8);
+  border-radius: 6px;
+  background: var(--white, #ffffff);
+  color: var(--ink, #0d2737);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mgmt-form-input:focus,
+.mgmt-form-select:focus,
+.mgmt-form-textarea:focus {
+  outline: none;
+  border-color: var(--blue, #087fbd);
+  box-shadow: 0 0 0 3px rgba(8, 127, 189, 0.15);
+}
+
+.mgmt-form-input-error {
+  border-color: var(--input-error, #b42318) !important;
+  background: #fff8f8;
+}
+
+.mgmt-form-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.18) !important;
+}
+
+.mgmt-form-error-text {
+  margin: 2px 0 0;
+  color: var(--input-error, #b42318);
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mgmt-photo-upload {
+  border: 2px dashed var(--border, #d6e1e8);
+  border-radius: 8px;
+  padding: 18px;
+  text-align: center;
+  background: var(--page, #eef4f7);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mgmt-photo-upload:hover {
+  border-color: var(--blue, #087fbd);
+  background: #e6f1f8;
+}
+
+.mgmt-photo-upload-error {
+  border-color: var(--input-error, #b42318) !important;
+  background: #fff5f5 !important;
+}
+
+.mgmt-photo-upload-text {
+  font-size: 0.88rem;
+  color: var(--navy-deep, #0d2737);
+}
+
+.mgmt-photo-upload-hint {
+  font-size: 0.78rem;
+  color: var(--muted, #536a7c);
+}
+
+.mgmt-photo-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--white, #ffffff);
+  border: 1px solid var(--border, #d6e1e8);
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mgmt-photo-badge {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--blue, #087fbd);
+  flex: 1;
+  text-align: left;
+}
+
+.mgmt-photo-remove {
+  background: none;
+  border: none;
+  color: var(--danger, #dc2626);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.82rem;
+}
+
+.mgmt-photo-remove:hover {
+  text-decoration: underline;
+}
+
+.mgmt-form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border, #d6e1e8);
+}
+
+.mgmt-form-actions-right {
+  display: flex;
+  gap: 10px;
+}
+
+.mgmt-form-success {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .mgmt-form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .mgmt-form-actions-right {
+    flex-direction: column-reverse;
+  }
 }

@@ -13,6 +13,29 @@ export interface ModalProps {
   size?: ModalSize
 }
 
+const modalStack: HTMLDialogElement[] = []
+
+function updateModalStackVisibility() {
+  const top = modalStack[modalStack.length - 1]
+  for (let i = 0; i < modalStack.length; i++) {
+    const isTop = i === modalStack.length - 1
+    const d = modalStack[i]
+    if (d) {
+      if (isTop) {
+        d.style.visibility = ''
+        d.removeAttribute('aria-hidden')
+      } else if (top && d.contains(top)) {
+        // d contains top: keeping d visible and without aria-hidden prevents hiding top
+        d.style.visibility = ''
+        d.removeAttribute('aria-hidden')
+      } else {
+        d.style.visibility = 'hidden'
+        d.setAttribute('aria-hidden', 'true')
+      }
+    }
+  }
+}
+
 export function Modal({ open, title, onClose, children, size = 'medium' }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -40,6 +63,21 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       dialog.showModal()
     } else {
       dialog.setAttribute('open', '')
+    }
+
+    if (!modalStack.includes(dialog)) {
+      modalStack.push(dialog)
+    }
+    updateModalStackVisibility()
+
+    return () => {
+      const index = modalStack.indexOf(dialog)
+      if (index !== -1) {
+        modalStack.splice(index, 1)
+      }
+      dialog.style.visibility = ''
+      dialog.removeAttribute('aria-hidden')
+      updateModalStackVisibility()
     }
   }, [open])
 

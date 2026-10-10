@@ -37,5 +37,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const article = await createNews(parsed.data)
 
+  if (article === 'duplicate-url') {
+    return NextResponse.json({ error: 'Ya existe una noticia con este enlace.' }, { status: 409 })
+  }
+
   return NextResponse.json({ article }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
 }
