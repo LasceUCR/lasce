@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import Image from 'next/image'
 
 export type TopicHeroImage =
@@ -85,7 +86,14 @@ export function TopicHero({
             ]
               .filter(Boolean)
               .join(' ')}
-            style={{ aspectRatio: `${image.width} / ${image.height}` }}
+            style={
+              {
+                aspectRatio: `${image.width} / ${image.height}`,
+                // Lets the stylesheet cap the banner's height by narrowing it in proportion, so
+                // the whole image stays visible instead of being cropped.
+                '--topic-hero-banner-ratio': image.width / image.height,
+              } as CSSProperties
+            }
           >
             <Image
               alt={image.alt}

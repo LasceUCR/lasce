@@ -3454,7 +3454,11 @@ a {
    set inline from the image size instead of the fixed photo height above. Narrow screens give it
    a taller frame again (see the 760px breakpoint), cropping the sides around its focus. */
 .topic-hero-mark-photo.topic-hero-banner {
+  align-self: center;
   height: auto;
+  /* Never taller than the framed photo above. Capping the width (height x ratio, the ratio set
+     inline) rather than the height keeps the image whole and undistorted. */
+  max-width: calc(clamp(300px, 46vh, 520px) * var(--topic-hero-banner-ratio, 2));
 }
 
 /* A banner's narrow-screen image, swapped in at the 760px breakpoint. */
@@ -3902,6 +3906,7 @@ a {
 
   .topic-hero-mark-photo,
   .topic-hero-mark-photo.topic-hero-banner {
+    max-width: none;
     height: clamp(240px, 42vh, 360px);
   }
 
