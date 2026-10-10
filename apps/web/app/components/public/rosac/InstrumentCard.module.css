@@ -97,7 +97,10 @@
 
 .consultation a,
 .consultation button {
+  display: block;
   margin-top: auto;
+  padding: 10px 16px;
+  line-height: 1.35;
   white-space: normal;
   text-align: center;
 }
@@ -113,5 +116,9 @@
 }
 
 .consultation svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 9px;
+  margin-top: -2px;
   flex-shrink: 0;
 }
