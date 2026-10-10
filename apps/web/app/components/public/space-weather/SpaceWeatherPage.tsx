@@ -108,7 +108,7 @@ export function SpaceWeatherPage({ content }: SpaceWeatherPageProps) {
         ))}
       </TopicSection>
 
-      <div className="topic-page-footer page-width">
+      <div className="topic-page-footer space-weather-footer page-width">
         <TopicBackLink href={spaceWeatherBackLink.href} label={spaceWeatherBackLink.label} />
       </div>
     </article>

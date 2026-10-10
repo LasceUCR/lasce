@@ -3822,6 +3822,11 @@ a {
   padding: 8px 0 48px;
 }
 
+.space-weather-footer {
+  padding-top: 52px;
+  padding-bottom: 48px;
+}
+
 .info-card-content a {
   color: var(--blue-accent-text);
   text-decoration: underline;
