@@ -347,10 +347,9 @@ function labelled(label: string) {
   return screen.getByRole('textbox', { name: new RegExp(`^${escaped}`) })
 }
 
-async function confirmAndSave(user: User, title = 'Guardar cambios') {
+/** Saving asks for no confirmation: "Confirmar" saves straight away once the form is valid. */
+async function save(user: User) {
   await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-  const dialog = screen.getByRole('dialog', { name: title })
-  await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 }
 
 afterEach(() => {
@@ -389,8 +388,8 @@ describe('PublicationsExplorer: saving', () => {
     const user = renderEditor()
     respond(201, { publication: bilingual })
 
-    await user.click(screen.getByRole('button', { name: 'Añadir' }))
-    const dialog = screen.getByRole('dialog', { name: 'Añadir' })
+    await user.click(screen.getByRole('button', { name: 'Agregar publicación' }))
+    const dialog = screen.getByRole('dialog', { name: 'Agregar publicación' })
     await user.type(within(dialog).getByRole('textbox', { name: /^Título \(Español\)/ }), 'Nuevo')
     await user.type(
       within(dialog).getByRole('textbox', { name: /^Resumen \(Español\)/ }),
@@ -407,7 +406,7 @@ describe('PublicationsExplorer: saving', () => {
     await user.type(within(authorDialog).getByRole('textbox', { name: 'Nombre del autor' }), 'Ana')
     await user.click(within(authorDialog).getByRole('button', { name: 'Añadir' }))
     await user.type(within(dialog).getByRole('textbox', { name: /^Revista/ }), 'Solar Physics')
-    await confirmAndSave(user, 'Agregar publicación')
+    await save(user)
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/publicaciones',
@@ -433,7 +432,7 @@ describe('PublicationsExplorer: saving', () => {
 
     await user.click(screen.getByRole('button', { name: 'Editar Non-thermal electrons' }))
     await user.type(labelled('DOI'), '10.5555/fixed')
-    await confirmAndSave(user)
+    await save(user)
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/publicaciones/${legacy.slug}`,
@@ -454,7 +453,7 @@ describe('PublicationsExplorer: saving', () => {
     await user.click(
       screen.getByRole('switch', { name: 'El título en inglés sigue siendo correcto' }),
     )
-    await confirmAndSave(user)
+    await save(user)
 
     expect(requestBody()).toEqual({
       version: VERSION,
@@ -473,12 +472,12 @@ describe('PublicationsExplorer: saving', () => {
     await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
     await user.selectOptions(screen.getByRole('combobox', { name: 'Grupo' }), 'ROSAC')
     await user.clear(labelled('Enlace externo'))
-    await confirmAndSave(user)
+    await save(user)
 
     expect(requestBody()).toEqual({ version: VERSION, href: null, researchGroup: 'ROSAC' })
   })
 
-  test('sends one request even if save is confirmed twice while it is in flight', async () => {
+  test('sends one request even if save is clicked twice while it is in flight', async () => {
     const user = renderEditor()
     let finish: (response: Response) => void = () => {}
     fetchMock.mockReturnValue(new Promise<Response>((resolve) => (finish = resolve)))
@@ -486,8 +485,8 @@ describe('PublicationsExplorer: saving', () => {
     await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
     await user.clear(labelled('Revista/Publicación'))
     await user.type(labelled('Revista/Publicación'), 'Nature')
-    await confirmAndSave(user)
-    await confirmAndSave(user)
+    await save(user)
+    await save(user)
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
@@ -499,7 +498,7 @@ describe('PublicationsExplorer: saving', () => {
     const user = renderEditor()
 
     await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
-    await confirmAndSave(user)
+    await save(user)
 
     expect(fetchMock).not.toHaveBeenCalled()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -512,7 +511,7 @@ describe('PublicationsExplorer: saving', () => {
     await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
     await user.clear(labelled('Revista/Publicación'))
     await user.type(labelled('Revista/Publicación'), 'Nature')
-    await confirmAndSave(user)
+    await save(user)
 
     expect(screen.getByText(/Otra persona guardó cambios en esta publicación/)).toBeInTheDocument()
     expect(labelled('Revista/Publicación')).toHaveValue('Nature')
@@ -535,7 +534,7 @@ describe('PublicationsExplorer: saving', () => {
     await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
     await user.clear(labelled('Revista/Publicación'))
     await user.type(labelled('Revista/Publicación'), 'Nature')
-    await confirmAndSave(user)
+    await save(user)
 
     expect(screen.getByRole('tab', { name: /^English/ })).toHaveAttribute('aria-selected', 'true')
     expect(labelled('Resumen (English)')).toHaveAccessibleDescription(
@@ -550,7 +549,7 @@ describe('PublicationsExplorer: saving', () => {
     await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
     await user.clear(labelled('DOI'))
     await user.type(labelled('DOI'), '10.1234/taken')
-    await confirmAndSave(user)
+    await save(user)
 
     expect(labelled('DOI')).toHaveAccessibleDescription('Ya existe una publicación con este DOI.')
   })
@@ -571,7 +570,7 @@ describe('PublicationsExplorer: saving', () => {
     await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
     await user.clear(labelled('Revista/Publicación'))
     await user.type(labelled('Revista/Publicación'), 'Nature')
-    await confirmAndSave(user)
+    await save(user)
 
     expect(screen.getByText(message)).toBeInTheDocument()
     expect(labelled('Revista/Publicación')).toHaveValue('Nature')
@@ -584,7 +583,7 @@ describe('PublicationsExplorer: saving', () => {
     await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
     await user.clear(labelled('Revista/Publicación'))
     await user.type(labelled('Revista/Publicación'), 'Nature')
-    await confirmAndSave(user)
+    await save(user)
 
     expect(
       screen.getByText('No se pudo guardar el cambio. Inténtelo de nuevo.'),
@@ -597,11 +596,84 @@ describe('PublicationsExplorer: saving', () => {
     respond(403, { error: 'No tiene permisos para modificar este contenido.' })
 
     await user.click(screen.getByRole('button', { name: 'Eliminar Actividad solar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar publicacion' })
-    await user.click(within(dialog).getByRole('button', { name: /Eliminar|Confirmar/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar publicación' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(screen.getByRole('alert')).toHaveTextContent(
       'No tiene permisos para modificar este contenido.',
+    )
+  })
+})
+
+describe('PublicationsExplorer: closing and deleting', () => {
+  test('opens the editor under the standard title', async () => {
+    const user = renderEditor()
+
+    await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
+
+    expect(screen.getByRole('dialog', { name: 'Editar publicación' })).toBeInTheDocument()
+  })
+
+  test('asks before Escape discards an edit, and keeps the editor open to continue', async () => {
+    const user = renderEditor()
+
+    await user.click(screen.getByRole('button', { name: 'Editar Actividad solar' }))
+    await user.clear(labelled('Revista/Publicación'))
+    await user.type(labelled('Revista/Publicación'), 'Nature')
+    await user.keyboard('{Escape}')
+
+    const discard = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    await user.click(within(discard).getByRole('button', { name: 'Seguir editando' }))
+
+    expect(labelled('Revista/Publicación')).toHaveValue('Nature')
+
+    await user.keyboard('{Escape}')
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  test('closes an untouched editor with Escape without asking', async () => {
+    const user = renderEditor()
+
+    await user.click(screen.getByRole('button', { name: 'Agregar publicación' }))
+    // A browser moves focus into the dialog it opens; jsdom does not.
+    await user.click(labelled('Título (Español)'))
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('asks before Escape discards a new publication', async () => {
+    const user = renderEditor()
+
+    await user.click(screen.getByRole('button', { name: 'Agregar publicación' }))
+    await user.type(labelled('Título (Español)'), 'Borrador')
+    await user.keyboard('{Escape}')
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+  })
+
+  test('names the publication in the delete confirmation and deletes it', async () => {
+    const user = renderEditor()
+    respond(200, {})
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar Actividad solar' }))
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar publicación' })
+
+    expect(dialog).toHaveTextContent(
+      'Esta acción no se puede deshacer y borrará la publicación del catálogo público.',
+    )
+    expect(dialog).toHaveTextContent('Elemento: Actividad solar')
+
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/publicaciones/${bilingual.slug}`,
+      expect.objectContaining({ method: 'DELETE' }),
     )
   })
 })
@@ -611,7 +683,7 @@ describe('PublicationsExplorer: adding with nothing listed', () => {
     renderEditor([])
 
     expect(screen.getByText('No hay publicaciones disponibles.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Agregar publicación' })).toBeInTheDocument()
   })
 
   test('offers to add a publication when a filter matches none', async () => {
@@ -620,19 +692,19 @@ describe('PublicationsExplorer: adding with nothing listed', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'zzz')
 
     expect(screen.getByRole('status')).toHaveTextContent('No se encontraron publicaciones')
-    expect(screen.getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Agregar publicación' })).toBeInTheDocument()
   })
 
   test('does not offer to add without the create permission', () => {
     navigation.editMode = true
     render(<PublicationsExplorer canEdit publications={[]} />)
 
-    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Agregar publicación' })).not.toBeInTheDocument()
   })
 
   test('does not offer to add outside edit mode', () => {
     render(<PublicationsExplorer canCreate publications={[]} />)
 
-    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Agregar publicación' })).not.toBeInTheDocument()
   })
 })

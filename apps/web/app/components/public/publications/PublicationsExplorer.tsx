@@ -10,7 +10,7 @@ import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import type { Publication, ResearchGroup } from '@/app/lib/publications'
 import { Modal } from '@/app/components/public/Modal'
 import { Button } from '@/app/components/public/Button'
-import { PublicationForm } from './PublicationForm'
+import { PublicationForm, type PublicationFormHandle } from './PublicationForm'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { parseApiError, sendJson } from '@/app/lib/cms/save'
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
@@ -75,6 +75,10 @@ export function PublicationsExplorer({
   // One save at a time: a second click while the first request is in flight would send the same
   // version again and come back as a false conflict.
   const saving = useRef(false)
+
+  // The open forms, so the modal's close button and Escape ask before discarding their changes.
+  const createForm = useRef<PublicationFormHandle>(null)
+  const editForm = useRef<PublicationFormHandle>(null)
 
   const [query, setQuery] = useState('')
 
@@ -224,7 +228,13 @@ export function PublicationsExplorer({
       {filtered.length > 0 || (editMode && canCreate) ? (
         <div className="publication-list">
           {editMode && canCreate ? (
-            <AddItemCard label="Añadir">
+            <AddItemCard
+              label="Agregar publicación"
+              onRequestClose={(close) => {
+                if (createForm.current) createForm.current.requestCancel()
+                else close()
+              }}
+            >
               {({ close }) => (
                 <>
                   {createFailure ? (
@@ -234,14 +244,13 @@ export function PublicationsExplorer({
                   ) : null}
 
                   <PublicationForm
-                    confirmMessage="¿Desea agregar esta publicación?"
-                    confirmTitle="Agregar publicación"
                     initial={createInitial}
                     onCancel={() => {
                       setCreateFailure(null)
                       close()
                     }}
                     onSave={(draft) => handleCreatePublication(draft, close)}
+                    ref={createForm}
                     serverErrors={createFailure?.fieldErrors}
                   />
                 </>
@@ -271,9 +280,10 @@ export function PublicationsExplorer({
             return (
               <EditableWrapper
                 key={publication.slug}
-                deleteConfirmMessage={`¿Desea eliminar "${publication.title}"? Esta acción no se puede deshacer.`}
-                deleteConfirmTitle="Eliminar publicacion"
+                deleteConfirmMessage="Esta acción no se puede deshacer y borrará la publicación del catálogo público."
+                deleteConfirmTitle="Eliminar publicación"
                 deleteLabel={`Eliminar ${publication.title}`}
+                deleteTargetEntity={publication.title}
                 editLabel={`Editar ${publication.title}`}
                 onDelete={canDelete ? () => handleDeletePublication(publication.slug) : undefined}
                 onEdit={canEdit ? () => openEditor(publication) : undefined}
@@ -286,9 +296,12 @@ export function PublicationsExplorer({
       ) : null}
 
       <Modal
-        onClose={closeEditor}
+        onClose={() => {
+          if (editForm.current) editForm.current.requestCancel()
+          else closeEditor()
+        }}
         open={editing !== null}
-        title={editing ? `Editar "${editing.publication.title}"` : 'Editar publicación'}
+        title="Editar publicación"
       >
         {editing ? (
           <>
@@ -313,6 +326,7 @@ export function PublicationsExplorer({
               initial={editing.initial}
               onCancel={closeEditor}
               onSave={handleSavePublication}
+              ref={editForm}
               serverErrors={saveFailure?.fieldErrors}
             />
           </>

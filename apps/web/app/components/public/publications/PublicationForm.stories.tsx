@@ -79,8 +79,6 @@ export const Create: Story = {
   args: {
     ...Default.args,
     initial: emptyInitial(new Date('2026-10-08T12:00:00')),
-    confirmTitle: 'Agregar publicación',
-    confirmMessage: '¿Desea agregar esta publicación?',
   },
 }
 

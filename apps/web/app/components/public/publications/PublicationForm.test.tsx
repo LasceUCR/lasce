@@ -1,8 +1,13 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createRef } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
-import { PublicationForm, type PublicationFormProps } from './PublicationForm'
+import {
+  PublicationForm,
+  type PublicationFormHandle,
+  type PublicationFormProps,
+} from './PublicationForm'
 import { Create, Default, Legacy, ServerErrors } from './PublicationForm.stories'
 
 const editArgs = Default.args as PublicationFormProps
@@ -35,10 +40,9 @@ async function addAuthor(user: User, name: string) {
   await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
 }
 
-async function confirmSave(user: User, title = 'Guardar cambios') {
+/** Saving asks for no confirmation: "Confirmar" saves straight away once the form is valid. */
+async function save(user: User) {
   await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-  const dialog = screen.getByRole('dialog', { name: title })
-  await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 }
 
 async function fillNewPublication(user: User) {
@@ -116,6 +120,70 @@ describe('PublicationForm: tabs and pre-filled values', () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
+
+  test('saves without asking for confirmation', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<PublicationForm {...editArgs} onSave={onSave} />)
+
+    await replace(user, 'Revista/Publicación', 'Solar Physics')
+    await save(user)
+
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
+describe('PublicationForm: discarding changes', () => {
+  const discardTitle = 'Descartar cambios no guardados'
+
+  test('asks before discarding what was typed, and keeps it on "Seguir editando"', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<PublicationForm {...createArgs} onCancel={onCancel} />)
+
+    await user.type(field('Título (Español)'), 'Borrador')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    const dialog = screen.getByRole('dialog', { name: discardTitle })
+    expect(dialog).toHaveTextContent(
+      'Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.',
+    )
+    await user.click(within(dialog).getByRole('button', { name: 'Seguir editando' }))
+
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog', { name: discardTitle })).not.toBeInTheDocument()
+    expect(field('Título (Español)')).toHaveValue('Borrador')
+  })
+
+  test('closes the form once the changes are discarded', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<PublicationForm {...editArgs} onCancel={onCancel} />)
+
+    await addAuthor(user, 'Luis Pérez')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    const dialog = screen.getByRole('dialog', { name: discardTitle })
+    await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
+
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same when the modal around it is closed through requestCancel', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    const handle = createRef<PublicationFormHandle>()
+    render(<PublicationForm {...editArgs} onCancel={onCancel} ref={handle} />)
+
+    act(() => handle.current?.requestCancel())
+    expect(onCancel).toHaveBeenCalledTimes(1)
+
+    await replace(user, 'DOI', '')
+    act(() => handle.current?.requestCancel())
+
+    expect(onCancel).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('dialog', { name: discardTitle })).toBeInTheDocument()
+  })
 })
 
 describe('PublicationForm: creating', () => {
@@ -175,7 +243,7 @@ describe('PublicationForm: creating', () => {
     render(<PublicationForm {...createArgs} onSave={onSave} />)
 
     await fillNewPublication(user)
-    await confirmSave(user, 'Agregar publicación')
+    await save(user)
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -204,7 +272,7 @@ describe('PublicationForm: creating', () => {
     await user.type(field('Resumen (English)'), 'Radio Observatorio de Santa Cruz.')
     await addAuthor(user, 'LASCE')
     await user.type(field('Revista/Publicación'), 'Nota institucional')
-    await confirmSave(user, 'Agregar publicación')
+    await save(user)
 
     expect(onSave).toHaveBeenCalledTimes(1)
   })
@@ -269,7 +337,7 @@ describe('PublicationForm: bilingual review when editing', () => {
     await user.click(
       screen.getByRole('switch', { name: 'El título en inglés sigue siendo correcto' }),
     )
-    await confirmSave(user)
+    await save(user)
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -305,7 +373,7 @@ describe('PublicationForm: bilingual review when editing', () => {
 
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()
 
-    await confirmSave(user)
+    await save(user)
 
     expect(onSave).toHaveBeenCalledWith(expect.anything(), [])
   })
@@ -354,7 +422,7 @@ describe('PublicationForm: legacy records', () => {
     render(<PublicationForm {...legacyArgs} onSave={onSave} />)
 
     await replace(user, 'DOI', '10.5555/fixed')
-    await confirmSave(user)
+    await save(user)
 
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ DOI: '10.5555/fixed' }), [])
   })
@@ -437,18 +505,11 @@ describe('PublicationForm: authors', () => {
     ).not.toBeInTheDocument()
   })
 
-  test('does not save when the confirmation is cancelled', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<PublicationForm {...editArgs} onSave={onSave} />)
+  test('marks the authors as required', () => {
+    render(<PublicationForm {...createArgs} />)
 
-    await replace(user, 'Revista/Publicación', 'Solar Physics')
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    const label = screen.getByText('Autores', { selector: '.cms-form-field-label' })
+    expect(label).toHaveTextContent('Autores *')
   })
 })
 

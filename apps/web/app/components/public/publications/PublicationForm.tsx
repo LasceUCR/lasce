@@ -1,14 +1,14 @@
 'use client'
 
 import { Plus, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import { IconButton } from '@/app/components/public/IconButton'
 import { Modal } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import { defaultLocale, locales, type Locale } from '@/app/lib/i18n/config'
@@ -24,6 +24,7 @@ import {
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
 import {
   contentPath,
+  hasUnsavedChanges,
   languageLabels,
   resetConfirmations,
   reviewsNeeded,
@@ -48,19 +49,25 @@ const researchGroupOptions: FormFieldOption[] = [
 
 type SharedTextField = 'venue' | 'date' | 'href' | 'DOI'
 
+/** What a parent can ask of the form: the modal around it routes its close button here. */
+export interface PublicationFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface PublicationFormProps {
   /** What the form opens with: from `emptyInitial()` or `initialFromPublication()`. */
   initial: PublicationFormInitial
-  /** Called once the edit is valid and confirmed, with the confirmations it still needs. */
+  /** Called once the edit is valid, with the confirmations it still needs. */
   onSave: (draft: PublicationDraft, confirmed: ReviewConfirmation[]) => void
+  /** Called to close the form, once any unsaved changes have been discarded. */
   onCancel: () => void
-  confirmTitle?: string
-  confirmMessage?: string
   /**
    * Errors the server returned for the last save, keyed by field path (`content.en.title`).
    * Each one stays until its field changes.
    */
   serverErrors?: FormErrors
+  ref?: Ref<PublicationFormHandle>
 }
 
 /**
@@ -77,14 +84,16 @@ export interface PublicationFormProps {
  * A legacy record (saved before languages existed) opens with its base text on the Spanish tab,
  * flagged as possibly not Spanish, and an empty English tab: nothing is copied across to look
  * like a translation. Its shared fields can be saved without translating it.
+ *
+ * Saving asks for no confirmation; closing with unsaved changes does, from "Cancelar" or, through
+ * `ref`'s `requestCancel`, from the modal's own close button and Escape.
  */
 export function PublicationForm({
   initial,
   onSave,
   onCancel,
-  confirmTitle = 'Guardar cambios',
-  confirmMessage = '¿Desea guardar los cambios en esta publicación?',
   serverErrors,
+  ref,
 }: PublicationFormProps) {
   const formId = useId()
   const formRef = useRef<HTMLDivElement>(null)
@@ -96,7 +105,7 @@ export function PublicationForm({
     () => tabWithErrors(serverErrors ?? {}, defaultLocale) ?? defaultLocale,
   )
   const [focusRequest, setFocusRequest] = useState(0)
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [discardOpen, setDiscardOpen] = useState(false)
 
   const [isAddingAuthor, setIsAddingAuthor] = useState(false)
   const [newAuthor, setNewAuthor] = useState('')
@@ -119,6 +128,13 @@ export function PublicationForm({
       .find((element) => !element.closest('[hidden]'))
       ?.focus()
   }, [focusRequest])
+
+  function requestCancel() {
+    if (hasUnsavedChanges(initial, draft)) setDiscardOpen(true)
+    else onCancel()
+  }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   const needed = reviewsNeeded(initial, draft)
   const errors: FormErrors = {
@@ -188,18 +204,13 @@ export function PublicationForm({
     const found = validateDraft(initial, draft, confirmed)
 
     if (Object.keys(found).length === 0) {
-      setConfirmOpen(true)
+      onSave(draft, confirmationsStillNeeded(confirmed, needed))
       return
     }
 
     const target = tabWithErrors(found, tab)
     if (target) setTab(target)
     setFocusRequest((current) => current + 1)
-  }
-
-  function handleConfirm() {
-    setConfirmOpen(false)
-    onSave(draft, confirmationsStillNeeded(confirmed, needed))
   }
 
   function reviewControl(locale: Locale, field: TranslatableField) {
@@ -280,6 +291,10 @@ export function PublicationForm({
       <div className="cms-form-field">
         <span className="cms-form-field-label" id={`${formId}-authors-label`}>
           Autores
+          <span aria-hidden="true" className="cms-form-field-required">
+            {' '}
+            *
+          </span>
         </span>
 
         <div
@@ -403,7 +418,7 @@ export function PublicationForm({
       ) : null}
 
       <div className="nosotros-activity-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           Cancelar
         </Button>
         <Button onClick={handleSave} variant="primary">
@@ -411,12 +426,18 @@ export function PublicationForm({
         </Button>
       </div>
 
-      <ConfirmDialog
-        message={confirmMessage}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={handleConfirm}
-        open={confirmOpen}
-        title={confirmTitle}
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setDiscardOpen(false)}
+        onConfirm={() => {
+          setDiscardOpen(false)
+          onCancel()
+        }}
+        open={discardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
       />
     </div>
   )

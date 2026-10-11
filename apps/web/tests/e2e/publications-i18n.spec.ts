@@ -90,9 +90,9 @@ function field(page: Page, name: string) {
   return page.getByRole('dialog').getByRole('textbox', { name: new RegExp(`^${escaped}`) })
 }
 
-async function confirmSave(page: Page, title = 'Guardar cambios') {
+/** Saving asks for no confirmation: "Confirmar" saves straight away once the form is valid. */
+async function save(page: Page) {
   await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-  await page.getByRole('dialog', { name: title }).getByRole('button', { name: 'Confirmar' }).click()
 }
 
 test('shows each publication in the language chosen in the header, and remembers it', async ({
@@ -137,9 +137,9 @@ test('creates a publication in both languages from the editor', async ({ page, c
   const account = await createSignedInUser(context, 'ADMIN')
   try {
     await openEditMode(page)
-    await page.getByRole('button', { name: 'Añadir' }).click()
+    await page.getByRole('button', { name: 'Agregar publicación' }).click()
 
-    const dialog = page.getByRole('dialog', { name: 'Añadir' })
+    const dialog = page.getByRole('dialog', { name: 'Agregar publicación' })
     await field(page, 'Título (Español)').fill(`Nueva publicación ${fixtures.id}`)
     await field(page, 'Resumen (Español)').fill('Resumen nuevo.')
     await dialog.getByRole('tab', { name: /^English/ }).click()
@@ -155,7 +155,7 @@ test('creates a publication in both languages from the editor', async ({ page, c
       .getByRole('button', { name: 'Añadir' })
       .click()
     await field(page, 'Revista/Publicación').fill(PUBLISHER)
-    await confirmSave(page, 'Agregar publicación')
+    await save(page)
 
     await expect(
       page.getByRole('heading', { name: `Nueva publicación ${fixtures.id}` }),
@@ -186,11 +186,11 @@ test('corrects a shared field of a legacy record without translating it', async 
     await openEditMode(page)
     await page.getByRole('button', { name: `Editar ${fixtures.legacy.title}` }).click()
 
-    const dialog = page.getByRole('dialog', { name: `Editar "${fixtures.legacy.title}"` })
+    const dialog = page.getByRole('dialog', { name: 'Editar publicación' })
     await expect(dialog.getByRole('tab', { name: 'English · Sin traducción' })).toBeVisible()
 
     await field(page, 'DOI').fill(`10.9999/e2e-${fixtures.id}-legacy`)
-    await confirmSave(page)
+    await save(page)
     await expect(dialog).toBeHidden()
 
     const stored = await fixtures.prisma.research.findUniqueOrThrow({
@@ -216,7 +216,7 @@ test('asks to confirm the other language before saving a one-sided change', asyn
     await openEditMode(page)
     await page.getByRole('button', { name: `Editar ${fixtures.bilingual.title}` }).click()
 
-    const dialog = page.getByRole('dialog', { name: `Editar "${fixtures.bilingual.title}"` })
+    const dialog = page.getByRole('dialog', { name: 'Editar publicación' })
     await field(page, 'Título (Español)').fill(`Publicación revisada ${fixtures.id}`)
     await dialog.getByRole('button', { name: 'Confirmar' }).click()
 
@@ -225,7 +225,7 @@ test('asks to confirm the other language before saving a one-sided change', asyn
       'true',
     )
     await dialog.getByRole('switch', { name: 'El título en inglés sigue siendo correcto' }).click()
-    await confirmSave(page)
+    await save(page)
     await expect(dialog).toBeHidden()
 
     const stored = await fixtures.prisma.research.findUniqueOrThrow({
@@ -254,9 +254,9 @@ test('refuses to overwrite a change another editor saved meanwhile', async ({ pa
       data: { abstract: 'Cambio de otra persona.' },
     })
 
-    await confirmSave(page)
+    await save(page)
 
-    const dialog = page.getByRole('dialog', { name: `Editar "${fixtures.bilingual.title}"` })
+    const dialog = page.getByRole('dialog', { name: 'Editar publicación' })
     await expect(dialog.getByText(/Otra persona guardó cambios/)).toBeVisible()
     await expect(field(page, 'Revista/Publicación')).toHaveValue('Revista que no debe guardarse')
 
@@ -272,16 +272,55 @@ test('refuses to overwrite a change another editor saved meanwhile', async ({ pa
   }
 })
 
+test('asks before discarding an edit, showing one popup at a time', async ({ page, context }) => {
+  const fixtures = await createFixtures()
+  const account = await createSignedInUser(context, 'ADMIN')
+  try {
+    await openEditMode(page)
+    await page.getByRole('button', { name: `Editar ${fixtures.bilingual.title}` }).click()
+
+    const editor = page.getByRole('dialog', { name: 'Editar publicación' })
+    const discard = page.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    await field(page, 'Revista/Publicación').fill('Revista sin guardar')
+    await page.keyboard.press('Escape')
+
+    await expect(discard).toBeVisible()
+    await expect(editor).toBeHidden()
+
+    await discard.getByRole('button', { name: 'Seguir editando' }).click()
+    await expect(discard).toBeHidden()
+    await expect(field(page, 'Revista/Publicación')).toHaveValue('Revista sin guardar')
+
+    await editor.getByRole('button', { name: 'Añadir autor' }).click()
+    await expect(page.getByRole('dialog', { name: 'Añadir autor' })).toBeVisible()
+    await expect(editor).toBeHidden()
+    await page.keyboard.press('Escape')
+    await expect(editor).toBeVisible()
+
+    await editor.getByRole('button', { name: 'Cancelar' }).click()
+    await discard.getByRole('button', { name: 'Descartar' }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    const stored = await fixtures.prisma.research.findUniqueOrThrow({
+      where: { id: fixtures.bilingual.id },
+      include: { publisher: true },
+    })
+    expect(stored.publisher.name).toBe(PUBLISHER)
+  } finally {
+    await fixtures.cleanup()
+    await account.cleanup()
+  }
+})
+
 test('deletes a publication together with its translation', async ({ page, context }) => {
   const fixtures = await createFixtures()
   const account = await createSignedInUser(context, 'ADMIN')
   try {
     await openEditMode(page)
     await page.getByRole('button', { name: `Eliminar ${fixtures.bilingual.title}` }).click()
-    await page
-      .getByRole('dialog', { name: 'Eliminar publicacion' })
-      .getByRole('button', { name: /Eliminar|Confirmar/ })
-      .click()
+    const confirm = page.getByRole('dialog', { name: 'Eliminar publicación' })
+    await expect(confirm).toContainText(`Elemento: ${fixtures.bilingual.title}`)
+    await confirm.getByRole('button', { name: 'Confirmar' }).click()
 
     await expect(page.getByRole('heading', { name: fixtures.bilingual.title })).toBeHidden()
     await expect
@@ -311,7 +350,7 @@ test('meets WCAG A and AA automated checks in English and in the bilingual edito
 
     await openEditMode(page)
     await page.getByRole('button', { name: `Editar ${fixtures.legacy.title}` }).click()
-    const dialog = page.getByRole('dialog', { name: `Editar "${fixtures.legacy.title}"` })
+    const dialog = page.getByRole('dialog', { name: 'Editar publicación' })
     expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
 
     // With errors, a pending review and its switch on screen.
@@ -340,7 +379,7 @@ test('keeps the bilingual editor inside the viewport from phones to desktops', a
   try {
     await openEditMode(page)
     await page.getByRole('button', { name: `Editar ${fixtures.legacy.title}` }).click()
-    const dialog = page.getByRole('dialog', { name: `Editar "${fixtures.legacy.title}"` })
+    const dialog = page.getByRole('dialog', { name: 'Editar publicación' })
 
     // Put the longest labels on screen: a flag on both tabs, errors and a review switch.
     await field(page, 'Título (Español)').fill('Título traducido')
