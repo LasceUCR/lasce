@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 export type ModalSize = 'small' | 'medium' | 'large'
 
@@ -16,16 +17,11 @@ export interface ModalProps {
 const modalStack: HTMLDialogElement[] = []
 
 function updateModalStackVisibility() {
-  const top = modalStack[modalStack.length - 1]
   for (let i = 0; i < modalStack.length; i++) {
     const isTop = i === modalStack.length - 1
     const d = modalStack[i]
     if (d) {
       if (isTop) {
-        d.style.visibility = ''
-        d.removeAttribute('aria-hidden')
-      } else if (top && d.contains(top)) {
-        // d contains top: keeping d visible and without aria-hidden prevents hiding top
         d.style.visibility = ''
         d.removeAttribute('aria-hidden')
       } else {
@@ -85,7 +81,7 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
     return null
   }
 
-  return (
+  const dialog = (
     <dialog
       aria-labelledby={titleId}
       className={`modal modal-${size}`}
@@ -117,4 +113,10 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       <div className="modal-body">{children}</div>
     </dialog>
   )
+
+  if (typeof document !== 'undefined') {
+    return createPortal(dialog, document.body)
+  }
+
+  return dialog
 }

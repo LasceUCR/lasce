@@ -91,4 +91,65 @@ describe('Modal', () => {
 
     expect(onClose).not.toHaveBeenCalled()
   })
+
+  test('hides lower dialogs in the stack when a new modal opens, and restores them when it closes', () => {
+    function StackTestComponent({ showSecond }: { showSecond: boolean }) {
+      return (
+        <>
+          <Modal onClose={vi.fn()} open={true} title="First Modal">
+            <p>First content</p>
+          </Modal>
+          {showSecond ? (
+            <Modal onClose={vi.fn()} open={true} title="Second Modal">
+              <p>Second content</p>
+            </Modal>
+          ) : null}
+        </>
+      )
+    }
+
+    const { rerender } = render(<StackTestComponent showSecond={false} />)
+    const firstDialog = screen.getByRole('dialog', { name: 'First Modal' })
+    expect(firstDialog.style.visibility).toBe('')
+    expect(firstDialog).not.toHaveAttribute('aria-hidden')
+
+    rerender(<StackTestComponent showSecond={true} />)
+    const secondDialog = screen.getByRole('dialog', { name: 'Second Modal' })
+    expect(secondDialog.style.visibility).toBe('')
+    expect(firstDialog.style.visibility).toBe('hidden')
+    expect(firstDialog).toHaveAttribute('aria-hidden', 'true')
+
+    rerender(<StackTestComponent showSecond={false} />)
+    expect(firstDialog.style.visibility).toBe('')
+    expect(firstDialog).not.toHaveAttribute('aria-hidden')
+  })
+
+  test('hides parent dialog when a nested modal (like confirmation dialog) opens inside its children', () => {
+    function NestedTestComponent({ showConfirm }: { showConfirm: boolean }) {
+      return (
+        <Modal onClose={vi.fn()} open={true} title="Form Modal">
+          <p>Form fields</p>
+          {showConfirm ? (
+            <Modal onClose={vi.fn()} open={true} size="small" title="Confirm Dialog">
+              <p>Confirm action</p>
+            </Modal>
+          ) : null}
+        </Modal>
+      )
+    }
+
+    const { rerender } = render(<NestedTestComponent showConfirm={false} />)
+    const formDialog = screen.getByRole('dialog', { name: 'Form Modal' })
+    expect(formDialog.style.visibility).toBe('')
+
+    rerender(<NestedTestComponent showConfirm={true} />)
+    const confirmDialog = screen.getByRole('dialog', { name: 'Confirm Dialog' })
+    expect(confirmDialog.style.visibility).toBe('')
+    expect(formDialog.style.visibility).toBe('hidden')
+    expect(formDialog).toHaveAttribute('aria-hidden', 'true')
+
+    rerender(<NestedTestComponent showConfirm={false} />)
+    expect(formDialog.style.visibility).toBe('')
+    expect(formDialog).not.toHaveAttribute('aria-hidden')
+  })
 })
