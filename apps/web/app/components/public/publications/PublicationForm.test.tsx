@@ -8,6 +8,7 @@ import {
   type PublicationFormHandle,
   type PublicationFormProps,
 } from './PublicationForm'
+import { Modal } from '@/app/components/public/Modal'
 import { Create, Default, Legacy, ServerErrors } from './PublicationForm.stories'
 
 const editArgs = Default.args as PublicationFormProps
@@ -131,6 +132,29 @@ describe('PublicationForm: tabs and pre-filled values', () => {
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
+describe('PublicationForm: in a modal', () => {
+  test('puts the language tabs beside the modal title', () => {
+    render(
+      <Modal onClose={() => {}} open title="Editar publicación">
+        <PublicationForm {...editArgs} />
+      </Modal>,
+    )
+
+    const header = screen.getByRole('heading', { name: 'Editar publicación' }).parentElement
+    expect(header).toContainElement(screen.getByRole('tablist'))
+    expect(screen.getByRole('tabpanel', { name: 'Español' })).toBeVisible()
+  })
+
+  test('keeps the tabs above the fields outside a modal', () => {
+    render(<PublicationForm {...editArgs} />)
+
+    const tablist = screen.getByRole('tablist')
+    const panel = screen.getByRole('tabpanel', { name: 'Español' })
+    expect(tablist.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(tablist.parentElement).toBe(panel.parentElement)
   })
 })
 

@@ -230,6 +230,7 @@ export function PublicationsExplorer({
           {editMode && canCreate ? (
             <AddItemCard
               label="Agregar publicación"
+              size="large"
               onRequestClose={(close) => {
                 if (createForm.current) createForm.current.requestCancel()
                 else close()
@@ -301,6 +302,7 @@ export function PublicationsExplorer({
           else closeEditor()
         }}
         open={editing !== null}
+        size="large"
         title="Editar publicación"
       >
         {editing ? (

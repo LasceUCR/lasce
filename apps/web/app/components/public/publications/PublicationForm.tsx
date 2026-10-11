@@ -6,7 +6,7 @@ import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } fro
 import { Button } from '@/app/components/public/Button'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import { IconButton } from '@/app/components/public/IconButton'
-import { Modal } from '@/app/components/public/Modal'
+import { Modal, useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
@@ -96,6 +96,8 @@ export function PublicationForm({
   ref,
 }: PublicationFormProps) {
   const formId = useId()
+  // In a modal, the language tabs sit beside its title and stay in view while the form scrolls.
+  const headerSlot = useModalHeaderSlot()
   const formRef = useRef<HTMLDivElement>(null)
 
   const [draft, setDraft] = useState<PublicationDraft>(initial.draft)
@@ -235,6 +237,7 @@ export function PublicationForm({
         flags={languageTabFlags(initial.stored, errors, needed, confirmed)}
         onSelect={setTab}
         selected={tab}
+        tablistContainer={headerSlot}
       >
         {(locale) => (
           <>
@@ -278,57 +281,61 @@ export function PublicationForm({
         )}
       </LanguageTabs>
 
-      <FormField
-        error={errors.date}
-        id={`${formId}-date`}
-        label="Fecha de publicación"
-        onChange={(value) => setShared('date', value)}
-        required
-        type="date"
-        value={draft.date}
-      />
+      <div className="cms-form-row">
+        <FormField
+          error={errors.date}
+          id={`${formId}-date`}
+          label="Fecha de publicación"
+          onChange={(value) => setShared('date', value)}
+          required
+          type="date"
+          value={draft.date}
+        />
 
-      <div className="cms-form-field">
-        <span className="cms-form-field-label" id={`${formId}-authors-label`}>
-          Autores
-          <span aria-hidden="true" className="cms-form-field-required">
-            {' '}
-            *
-          </span>
-        </span>
-
-        <div
-          aria-describedby={errors.authors ? `${formId}-authors-error` : undefined}
-          aria-labelledby={`${formId}-authors-label`}
-          className={`email-chip-field${errors.authors ? ' form-field-error' : ''}`}
-          role="group"
-        >
-          {draft.authors.map((author) => (
-            <span className="email-chip" key={author}>
-              {author}
-
-              <IconButton
-                className="email-chip-remove"
-                icon={<X size={12} strokeWidth={2} />}
-                label={`Eliminar ${author}`}
-                onClick={() => setAuthors(draft.authors.filter((existing) => existing !== author))}
-              />
+        <div className="cms-form-field">
+          <span className="cms-form-field-label" id={`${formId}-authors-label`}>
+            Autores
+            <span aria-hidden="true" className="cms-form-field-required">
+              {' '}
+              *
             </span>
-          ))}
+          </span>
 
-          <IconButton
-            className="email-chip-add"
-            icon={<Plus size={14} strokeWidth={2} />}
-            label="Añadir autor"
-            onClick={openAddAuthor}
-          />
+          <div
+            aria-describedby={errors.authors ? `${formId}-authors-error` : undefined}
+            aria-labelledby={`${formId}-authors-label`}
+            className={`email-chip-field${errors.authors ? ' form-field-error' : ''}`}
+            role="group"
+          >
+            {draft.authors.map((author) => (
+              <span className="email-chip" key={author}>
+                {author}
+
+                <IconButton
+                  className="email-chip-remove"
+                  icon={<X size={12} strokeWidth={2} />}
+                  label={`Eliminar ${author}`}
+                  onClick={() =>
+                    setAuthors(draft.authors.filter((existing) => existing !== author))
+                  }
+                />
+              </span>
+            ))}
+
+            <IconButton
+              className="email-chip-add"
+              icon={<Plus size={14} strokeWidth={2} />}
+              label="Añadir autor"
+              onClick={openAddAuthor}
+            />
+          </div>
+
+          {errors.authors ? (
+            <p className="form-field-error" id={`${formId}-authors-error`}>
+              {errors.authors}
+            </p>
+          ) : null}
         </div>
-
-        {errors.authors ? (
-          <p className="form-field-error" id={`${formId}-authors-error`}>
-            {errors.authors}
-          </p>
-        ) : null}
       </div>
 
       <Modal
@@ -364,52 +371,56 @@ export function PublicationForm({
         </div>
       </Modal>
 
-      <FormField
-        error={errors.href}
-        id={`${formId}-href`}
-        label="Enlace externo"
-        onChange={(value) => setShared('href', value)}
-        type="url"
-        validate={(value) => {
-          const result = externalUrlSchema.safeParse(value)
-          if (!result.success) throw new Error(result.error.issues[0]?.message)
-        }}
-        value={draft.href}
-      />
+      <div className="cms-form-row">
+        <FormField
+          error={errors.href}
+          id={`${formId}-href`}
+          label="Enlace externo"
+          onChange={(value) => setShared('href', value)}
+          type="url"
+          validate={(value) => {
+            const result = externalUrlSchema.safeParse(value)
+            if (!result.success) throw new Error(result.error.issues[0]?.message)
+          }}
+          value={draft.href}
+        />
 
-      <FormField
-        error={errors.DOI}
-        id={`${formId}-doi`}
-        label="DOI"
-        onChange={(value) => setShared('DOI', value)}
-        placeholder="10.1234/ejemplo"
-        validate={(value) => {
-          const result = doiSchema.safeParse(value)
-          if (!result.success) throw new Error(result.error.issues[0]?.message)
-        }}
-        value={draft.DOI}
-      />
+        <FormField
+          error={errors.DOI}
+          id={`${formId}-doi`}
+          label="DOI"
+          onChange={(value) => setShared('DOI', value)}
+          placeholder="10.1234/ejemplo"
+          validate={(value) => {
+            const result = doiSchema.safeParse(value)
+            if (!result.success) throw new Error(result.error.issues[0]?.message)
+          }}
+          value={draft.DOI}
+        />
+      </div>
 
-      <FormField
-        error={errors.venue}
-        id={`${formId}-venue`}
-        label="Revista/Publicación"
-        onChange={(value) => setShared('venue', value)}
-        required
-        value={draft.venue}
-      />
+      <div className="cms-form-row">
+        <FormField
+          error={errors.venue}
+          id={`${formId}-venue`}
+          label="Revista/Publicación"
+          onChange={(value) => setShared('venue', value)}
+          required
+          value={draft.venue}
+        />
 
-      <FormField
-        error={errors.researchGroup}
-        id={`${formId}-research-group`}
-        label="Grupo"
-        onChange={(value) => {
-          setDraft((current) => ({ ...current, researchGroup: value as ResearchGroup }))
-          clearServerErrors(['researchGroup'])
-        }}
-        options={researchGroupOptions}
-        value={draft.researchGroup}
-      />
+        <FormField
+          error={errors.researchGroup}
+          id={`${formId}-research-group`}
+          label="Grupo"
+          onChange={(value) => {
+            setDraft((current) => ({ ...current, researchGroup: value as ResearchGroup }))
+            clearServerErrors(['researchGroup'])
+          }}
+          options={researchGroupOptions}
+          value={draft.researchGroup}
+        />
+      </div>
 
       {summary ? (
         <Notice role="alert" tone="error">

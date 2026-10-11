@@ -5941,6 +5941,11 @@ a.gallery-tile:focus-visible {
   font-size: 14px;
 }
 
+/* Taller only: a text area dragged wider would spill out of the form and its modal. */
+.cms-form-field textarea {
+  resize: vertical;
+}
+
 .cms-form-field [aria-invalid='true'] {
   border-color: var(--danger);
 }
@@ -6033,13 +6038,15 @@ a.gallery-tile:focus-visible {
 /* Pairs of fields sit side by side once there's room for both — on a
    narrower modal (small screens) each still wraps onto its own full-width
    row, same as an unpaired field. */
-.news-article-form-row {
+.news-article-form-row,
+.cms-form-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0 16px;
 }
 
-.news-article-form-row .cms-form-field {
+.news-article-form-row .cms-form-field,
+.cms-form-row .cms-form-field {
   /* Flex items default to `min-width: auto`, which floors their shrinking at
      the input's content size — on a narrower modal that pushed the pair
      wider than the row and clipped the overflow. This lets them actually
@@ -6137,6 +6144,36 @@ a.gallery-tile:focus-visible {
   flex-shrink: 0;
   margin: 0 0 10px;
   font-size: 18px;
+}
+
+/* The title, and beside it whatever a form puts in its slot (`useModalHeaderSlot`), such as
+   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the slot
+   wraps under the title. */
+.modal-header {
+  flex-shrink: 0;
+  /* Mirrors `.modal-body` below: the same scrollbar gutter and the same padding cancelled by a
+     negative margin, so the tabs end where the fields do and a tab's focus outline has room. */
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  padding: 4px 6px;
+  margin: -4px -6px 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 24px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.modal-header-slot:empty {
+  display: none;
+}
+
+.modal-header-slot .access-tabs {
+  margin: 0;
 }
 
 /* Scrolls on its own once the form/content grows past the dialog's
