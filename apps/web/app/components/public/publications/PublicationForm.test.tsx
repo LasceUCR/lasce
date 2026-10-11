@@ -37,10 +37,8 @@ async function replace(user: User, name: string, value: string) {
 }
 
 async function addAuthor(user: User, name: string) {
-  await user.click(screen.getByRole('button', { name: 'Añadir autor' }))
-  const dialog = screen.getByRole('dialog', { name: 'Añadir autor' })
-  await user.type(within(dialog).getByRole('textbox', { name: 'Nombre del autor' }), name)
-  await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
+  await user.type(screen.getByRole('textbox', { name: 'Nombre del autor' }), name)
+  await user.click(screen.getByRole('button', { name: 'Agregar' }))
 }
 
 /** Saving asks for no confirmation: "Confirmar" saves straight away once the form is valid. */
@@ -508,6 +506,10 @@ describe('PublicationForm: authors', () => {
 
     await addAuthor(user, 'Luis Vargas')
 
+    // A fourth author waits behind "+1 más" until the list is expanded.
+    expect(screen.getByText('4 autores')).toBeInTheDocument()
+    expect(screen.getByText('+1 más')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Ver todos los autores/ }))
     expect(screen.getByRole('button', { name: 'Eliminar Luis Vargas' })).toBeInTheDocument()
   })
 
@@ -536,6 +538,39 @@ describe('PublicationForm: authors', () => {
 
     const label = screen.getByText('Autores', { selector: '.cms-form-field-label' })
     expect(label).toHaveTextContent('Autores *')
+  })
+
+  test('focuses the author box when saving without authors', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(<PublicationForm {...createArgs} />)
+
+    await user.type(field('Título (Español)'), 'Título')
+    await user.type(field('Resumen (Español)'), 'Resumen')
+    await user.click(tab(/^English/))
+    await user.type(field('Título (English)'), 'Title')
+    await user.type(field('Resumen (English)'), 'Abstract')
+    await user.type(field('Revista/Publicación'), 'Solar Physics')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.getByRole('textbox', { name: 'Nombre del autor' })).toHaveFocus()
+    expect(screen.getByRole('textbox', { name: 'Nombre del autor' })).toHaveAccessibleDescription(
+      'Debe existir al menos un autor.',
+    )
+  })
+
+  test('lays the metadata out in a row of three and a row of two, before the authors', () => {
+    const { container } = renderWithIntl(<PublicationForm {...editArgs} />)
+
+    const rows = Array.from(container.querySelectorAll('.cms-form-grid')).map((row) =>
+      Array.from(row.querySelectorAll('.cms-form-field-label')).map((label) =>
+        label.textContent?.replace(' *', ''),
+      ),
+    )
+    expect(rows).toEqual([
+      ['Fecha de publicación', 'DOI', 'Grupo'],
+      ['Enlace externo', 'Revista/Publicación'],
+    ])
+    expect(container.querySelector('.cms-form-grid-2 + .publication-authors')).not.toBeNull()
   })
 })
 
@@ -619,7 +654,7 @@ describe('PublicationForm: in English, the language the site is shown in', () =>
     expect(screen.getByLabelText(/^Publication date/)).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Authors' })).toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'Group' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Add author' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
   })
@@ -684,20 +719,13 @@ describe('PublicationForm: in English, the language the site is shown in', () =>
     const onCancel = vi.fn()
     renderInEnglish({ ...createArgs, onCancel })
 
-    await user.click(screen.getByRole('button', { name: 'Add author' }))
-    const authorDialog = screen.getByRole('dialog', { name: 'Add author' })
-    await user.type(within(authorDialog).getByRole('textbox', { name: 'Author name' }), 'Ana')
-    await user.click(within(authorDialog).getByRole('button', { name: 'Add' }))
+    await user.type(screen.getByRole('textbox', { name: 'Author name' }), 'Ana{Enter}')
     expect(screen.getByRole('button', { name: 'Remove Ana' })).toBeInTheDocument()
+    expect(screen.getByText('1 author')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Add author' }))
-    const again = screen.getByRole('dialog', { name: 'Add author' })
-    await user.type(within(again).getByRole('textbox', { name: 'Author name' }), 'ana')
-    await user.click(within(again).getByRole('button', { name: 'Add' }))
-    expect(within(again).getByRole('alert')).toHaveTextContent(
-      'That author has already been added.',
-    )
-    await user.click(within(again).getByRole('button', { name: 'Cancel' }))
+    await user.type(screen.getByRole('textbox', { name: 'Author name' }), 'ana')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('That author has already been added.')
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
     const discard = screen.getByRole('dialog', { name: 'Discard unsaved changes' })

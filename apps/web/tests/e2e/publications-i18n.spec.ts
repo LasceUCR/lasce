@@ -145,15 +145,8 @@ test('creates a publication in both languages from the editor', async ({ page, c
     await dialog.getByRole('tab', { name: /^English/ }).click()
     await field(page, 'Título (English)').fill(`New publication ${fixtures.id}`)
     await field(page, 'Resumen (English)').fill('New abstract.')
-    await dialog.getByRole('button', { name: 'Añadir autor' }).click()
-    await page
-      .getByRole('dialog', { name: 'Añadir autor' })
-      .getByRole('textbox', { name: 'Nombre del autor' })
-      .fill('Autora E2E')
-    await page
-      .getByRole('dialog', { name: 'Añadir autor' })
-      .getByRole('button', { name: 'Añadir' })
-      .click()
+    await dialog.getByRole('textbox', { name: 'Nombre del autor' }).fill('Autora E2E')
+    await dialog.getByRole('button', { name: 'Agregar', exact: true }).click()
     await field(page, 'Revista/Publicación').fill(PUBLISHER)
     await save(page)
 
@@ -291,12 +284,6 @@ test('asks before discarding an edit, showing one popup at a time', async ({ pag
     await expect(discard).toBeHidden()
     await expect(field(page, 'Revista/Publicación')).toHaveValue('Revista sin guardar')
 
-    await editor.getByRole('button', { name: 'Añadir autor' }).click()
-    await expect(page.getByRole('dialog', { name: 'Añadir autor' })).toBeVisible()
-    await expect(editor).toBeHidden()
-    await page.keyboard.press('Escape')
-    await expect(editor).toBeVisible()
-
     await editor.getByRole('button', { name: 'Cancelar' }).click()
     await discard.getByRole('button', { name: 'Descartar' }).click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
@@ -425,6 +412,40 @@ test('keeps the bilingual editor inside the viewport from phones to desktops', a
         })
       }
     }
+  } finally {
+    await fixtures.cleanup()
+    await account.cleanup()
+  }
+})
+
+test('keeps the page behind the editor from scrolling while it is open', async ({
+  page,
+  context,
+}) => {
+  const fixtures = await createFixtures()
+  const account = await createSignedInUser(context, 'ADMIN')
+  try {
+    await openEditMode(page)
+    await page.getByRole('button', { name: `Editar ${fixtures.legacy.title}` }).click()
+    const dialog = page.getByRole('dialog', { name: 'Editar publicación' })
+    await expect(dialog).toBeVisible()
+    const before = await page.evaluate(() => window.scrollY)
+
+    // Over the backdrop, and over the form once its content has nothing left to scroll.
+    await page.mouse.move(20, 450)
+    await page.mouse.wheel(0, 1500)
+    const box = await dialog.boundingBox()
+    if (!box) throw new Error('The editor has no box')
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.wheel(0, 3000)
+    await page.mouse.wheel(0, 3000)
+    await page.waitForTimeout(300)
+    expect(await page.evaluate(() => window.scrollY)).toBe(before)
+
+    await dialog.getByRole('button', { name: 'Cancelar' }).click()
+    await expect(dialog).toBeHidden()
+    await page.mouse.wheel(0, 600)
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before)
   } finally {
     await fixtures.cleanup()
     await account.cleanup()

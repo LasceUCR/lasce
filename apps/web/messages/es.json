@@ -393,9 +393,6 @@
       "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o el resumen, revíselo también.",
       "legacyNoTranslation": "Esta publicación aún no tiene versión en inglés. Para cambiar el título o el resumen debe completar ambos idiomas; los demás campos se pueden editar sin traducirla.",
       "date": "Fecha de publicación",
-      "authors": "Autores",
-      "addAuthor": "Añadir autor",
-      "removeAuthor": "Eliminar {name}",
       "href": "Enlace externo",
       "doi": "DOI",
       "doiPlaceholder": "10.1234/ejemplo",
@@ -405,11 +402,18 @@
       "save": "Confirmar",
       "reload": "Cerrar y cargar la versión actual"
     },
-    "authorDialog": {
-      "title": "Añadir autor",
-      "name": "Nombre del autor",
-      "cancel": "Cancelar",
-      "add": "Añadir",
+    "authors": {
+      "label": "Autores",
+      "inputLabel": "Nombre del autor",
+      "placeholder": "Escribir un autor...",
+      "placeholderAnother": "Escribir otro autor...",
+      "add": "Agregar",
+      "remove": "Eliminar {name}",
+      "count": "{count, plural, =0 {Sin autores} one {1 autor} other {# autores}}",
+      "more": "+{count} más",
+      "showAll": "Ver todos los autores",
+      "showLess": "Mostrar menos",
+      "list": "Autores seleccionados",
       "required": "El nombre del autor es obligatorio.",
       "duplicate": "Ese autor ya fue agregado."
     },

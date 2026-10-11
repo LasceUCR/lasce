@@ -6038,21 +6038,180 @@ a.gallery-tile:focus-visible {
 /* Pairs of fields sit side by side once there's room for both — on a
    narrower modal (small screens) each still wraps onto its own full-width
    row, same as an unpaired field. */
-.news-article-form-row,
-.cms-form-row {
+.news-article-form-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0 16px;
 }
 
-.news-article-form-row .cms-form-field,
-.cms-form-row .cms-form-field {
+.news-article-form-row .cms-form-field {
   /* Flex items default to `min-width: auto`, which floors their shrinking at
      the input's content size — on a narrower modal that pushed the pair
      wider than the row and clipped the overflow. This lets them actually
      shrink (or wrap fully) inside the available width instead. */
   flex: 1 1 200px;
   min-width: 0;
+}
+
+/* Columns of equal width for short fields, such as a date, an identifier and a group: three or
+   two across on a wide form, fewer on a narrow one. Aligned to the top, so a message under one
+   field does not push its neighbours down. */
+.cms-form-grid {
+  display: grid;
+  gap: 0 16px;
+  align-items: start;
+}
+
+.cms-form-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cms-form-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Text boxes, date pickers and selects side by side share one height. */
+.cms-form-grid .cms-form-field :is(input, select) {
+  height: 42px;
+}
+
+@media (max-width: 760px) {
+  .cms-form-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .cms-form-grid-3,
+  .cms-form-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The publication editor's actions stay at the bottom of the modal while the form scrolls. */
+.publication-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: 14px 0 2px;
+  background: var(--white);
+}
+
+/* On a phone the two buttons share one row instead of stacking, so the pinned bar stays short. */
+@media (max-width: 520px) {
+  .nosotros-activity-form-actions.publication-form-actions {
+    flex-wrap: nowrap;
+  }
+
+  .publication-form-actions .button {
+    flex: 1 1 0;
+    width: auto;
+    padding: 0 12px;
+  }
+}
+
+/* Authors as a tag input: one box with the names as chips and, below them, a quiet text box
+   with an "Agregar" button. The box draws the only border; the text box inside has none. */
+.publication-authors {
+  margin-top: 4px;
+}
+
+.publication-authors-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.publication-authors-count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.publication-authors-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 6px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.publication-authors-box.is-invalid {
+  border-color: var(--danger);
+}
+
+/* The focus ring sits on the whole box, where the text box's own border would have been. */
+.publication-authors-box:has(input:focus-visible) {
+  outline: 3px solid var(--action);
+  outline-offset: 3px;
+}
+
+.publication-authors-list {
+  margin: 0;
+  padding: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+}
+
+/* Expanded, a long list scrolls within a few rows instead of stretching the form. */
+.publication-authors-list.is-expanded {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.publication-authors .email-chip {
+  padding: 2px 2px 2px 10px;
+  font-size: 12.5px;
+}
+
+.publication-authors-toggle {
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--blue-dark);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.publication-authors-toggle:hover,
+.publication-authors-toggle:focus-visible {
+  border-color: var(--border);
+  background: var(--page);
+}
+
+.publication-authors-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cms-form-field .publication-authors-entry input {
+  flex: 1 1 auto;
+  height: 32px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+}
+
+.cms-form-field .publication-authors-entry input:focus-visible {
+  outline: none;
+}
+
+.publication-authors-entry .button.publication-authors-add {
+  width: auto;
+  min-height: 32px;
+  flex: none;
+  padding: 0 14px;
+  font-size: 13px;
 }
 
 .news-article-form-actions {
@@ -6187,6 +6346,8 @@ a.gallery-tile:focus-visible {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Reaching the end of the content does not hand the scroll over to the page behind. */
+  overscroll-behavior: contain;
   /* Reserves the scrollbar's own width up front, so content doesn't sit
      flush against it (or get nudged/clipped) only once scrolling kicks in. */
   scrollbar-gutter: stable;

@@ -393,9 +393,6 @@
       "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the abstract, check it as well.",
       "legacyNoTranslation": "This publication has no English version yet. To change the title or the abstract you must complete both languages; the other fields can be edited without translating it.",
       "date": "Publication date",
-      "authors": "Authors",
-      "addAuthor": "Add author",
-      "removeAuthor": "Remove {name}",
       "href": "External link",
       "doi": "DOI",
       "doiPlaceholder": "10.1234/example",
@@ -405,11 +402,18 @@
       "save": "Confirm",
       "reload": "Close and load the current version"
     },
-    "authorDialog": {
-      "title": "Add author",
-      "name": "Author name",
-      "cancel": "Cancel",
+    "authors": {
+      "label": "Authors",
+      "inputLabel": "Author name",
+      "placeholder": "Type an author...",
+      "placeholderAnother": "Type another author...",
       "add": "Add",
+      "remove": "Remove {name}",
+      "count": "{count, plural, =0 {No authors} one {1 author} other {# authors}}",
+      "more": "+{count} more",
+      "showAll": "Show all authors",
+      "showLess": "Show less",
+      "list": "Selected authors",
       "required": "The author name is required.",
       "duplicate": "That author has already been added."
     },

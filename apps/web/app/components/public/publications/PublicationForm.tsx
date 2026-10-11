@@ -1,13 +1,11 @@
 'use client'
 
-import { Plus, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
-import { IconButton } from '@/app/components/public/IconButton'
-import { Modal, useModalHeaderSlot } from '@/app/components/public/Modal'
+import { useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
@@ -41,6 +39,7 @@ import {
   type TranslatableField,
 } from '@/app/lib/publication-schema'
 
+import { PublicationAuthorsField } from './PublicationAuthorsField'
 import { usePublicationEditorLanguage } from './usePublicationEditorLanguage'
 
 const researchGroupOptions: FormFieldOption[] = [
@@ -114,10 +113,6 @@ export function PublicationForm({
   const [focusRequest, setFocusRequest] = useState(0)
   const [discardOpen, setDiscardOpen] = useState(false)
 
-  const [isAddingAuthor, setIsAddingAuthor] = useState(false)
-  const [newAuthor, setNewAuthor] = useState('')
-  const [newAuthorError, setNewAuthorError] = useState<string | null>(null)
-
   // New server errors replace the previous ones and open the tab they point at. Adjusted while
   // rendering rather than in an effect, so the errors and the tab change in the same render.
   const [server, setServer] = useState({ source: serverErrors, errors: serverErrors ?? {} })
@@ -181,29 +176,6 @@ export function PublicationForm({
   function setConfirmation(review: ReviewConfirmation, checked: boolean) {
     setConfirmed((current) => withConfirmation(current, review, checked))
     clearServerErrors([contentPath(review.locale, review.field)])
-  }
-
-  function openAddAuthor() {
-    setNewAuthor('')
-    setNewAuthorError(null)
-    setIsAddingAuthor(true)
-  }
-
-  function handleAddAuthor() {
-    const trimmed = newAuthor.trim()
-
-    if (!trimmed) {
-      setNewAuthorError(t('authorDialog.required'))
-      return
-    }
-
-    if (draft.authors.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
-      setNewAuthorError(t('authorDialog.duplicate'))
-      return
-    }
-
-    setAuthors([...draft.authors, trimmed])
-    setIsAddingAuthor(false)
   }
 
   function handleSave() {
@@ -282,7 +254,8 @@ export function PublicationForm({
         )}
       </LanguageTabs>
 
-      <div className="cms-form-row">
+      {/* Metadata: date, DOI and group in one row; link and journal in the next. */}
+      <div className="cms-form-grid cms-form-grid-3">
         <FormField
           error={errors.date}
           id={`${formId}-date`}
@@ -291,99 +264,6 @@ export function PublicationForm({
           required
           type="date"
           value={draft.date}
-        />
-
-        <div className="cms-form-field">
-          <span className="cms-form-field-label" id={`${formId}-authors-label`}>
-            {t('editor.authors')}
-            <span aria-hidden="true" className="cms-form-field-required">
-              {' '}
-              *
-            </span>
-          </span>
-
-          <div
-            aria-describedby={errors.authors ? `${formId}-authors-error` : undefined}
-            aria-labelledby={`${formId}-authors-label`}
-            className={`email-chip-field${errors.authors ? ' form-field-error' : ''}`}
-            role="group"
-          >
-            {draft.authors.map((author) => (
-              <span className="email-chip" key={author}>
-                {author}
-
-                <IconButton
-                  className="email-chip-remove"
-                  icon={<X size={12} strokeWidth={2} />}
-                  label={t('editor.removeAuthor', { name: author })}
-                  onClick={() =>
-                    setAuthors(draft.authors.filter((existing) => existing !== author))
-                  }
-                />
-              </span>
-            ))}
-
-            <IconButton
-              className="email-chip-add"
-              icon={<Plus size={14} strokeWidth={2} />}
-              label={t('editor.addAuthor')}
-              onClick={openAddAuthor}
-            />
-          </div>
-
-          {errors.authors ? (
-            <p className="form-field-error" id={`${formId}-authors-error`}>
-              {errors.authors}
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      <Modal
-        onClose={() => setIsAddingAuthor(false)}
-        open={isAddingAuthor}
-        size="small"
-        title={t('authorDialog.title')}
-      >
-        <FormField
-          id={`${formId}-new-author`}
-          label={t('authorDialog.name')}
-          onChange={(value) => {
-            setNewAuthor(value)
-            setNewAuthorError(null)
-          }}
-          value={newAuthor}
-        />
-
-        {newAuthorError ? (
-          <p className="form-alert" role="alert">
-            {newAuthorError}
-          </p>
-        ) : null}
-
-        <div className="cms-form-actions">
-          <Button onClick={() => setIsAddingAuthor(false)} variant="secondary">
-            {t('authorDialog.cancel')}
-          </Button>
-
-          <Button disabled={newAuthor.trim() === ''} onClick={handleAddAuthor} variant="primary">
-            {t('authorDialog.add')}
-          </Button>
-        </div>
-      </Modal>
-
-      <div className="cms-form-row">
-        <FormField
-          error={errors.href}
-          id={`${formId}-href`}
-          label={t('editor.href')}
-          onChange={(value) => setShared('href', value)}
-          type="url"
-          validate={(value) => {
-            const result = language.fieldSchemas.externalUrl.safeParse(value)
-            if (!result.success) throw new Error(result.error.issues[0]?.message)
-          }}
-          value={draft.href}
         />
 
         <FormField
@@ -397,17 +277,6 @@ export function PublicationForm({
             if (!result.success) throw new Error(result.error.issues[0]?.message)
           }}
           value={draft.DOI}
-        />
-      </div>
-
-      <div className="cms-form-row">
-        <FormField
-          error={errors.venue}
-          id={`${formId}-venue`}
-          label={t('editor.venue')}
-          onChange={(value) => setShared('venue', value)}
-          required
-          value={draft.venue}
         />
 
         <FormField
@@ -423,13 +292,44 @@ export function PublicationForm({
         />
       </div>
 
+      <div className="cms-form-grid cms-form-grid-2">
+        <FormField
+          error={errors.href}
+          id={`${formId}-href`}
+          label={t('editor.href')}
+          onChange={(value) => setShared('href', value)}
+          type="url"
+          validate={(value) => {
+            const result = language.fieldSchemas.externalUrl.safeParse(value)
+            if (!result.success) throw new Error(result.error.issues[0]?.message)
+          }}
+          value={draft.href}
+        />
+
+        <FormField
+          error={errors.venue}
+          id={`${formId}-venue`}
+          label={t('editor.venue')}
+          onChange={(value) => setShared('venue', value)}
+          required
+          value={draft.venue}
+        />
+      </div>
+
+      <PublicationAuthorsField
+        authors={draft.authors}
+        error={errors.authors}
+        onChange={setAuthors}
+        required
+      />
+
       {summary ? (
         <Notice role="alert" tone="error">
           {summary}
         </Notice>
       ) : null}
 
-      <div className="nosotros-activity-form-actions">
+      <div className="nosotros-activity-form-actions publication-form-actions">
         <Button onClick={requestCancel} variant="secondary">
           {t('editor.cancel')}
         </Button>

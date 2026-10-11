@@ -405,10 +405,8 @@ describe('PublicationsExplorer: saving', () => {
       within(dialog).getByRole('textbox', { name: /^Resumen \(English\)/ }),
       'Abstract',
     )
-    await user.click(within(dialog).getByRole('button', { name: 'Añadir autor' }))
-    const authorDialog = screen.getByRole('dialog', { name: 'Añadir autor' })
-    await user.type(within(authorDialog).getByRole('textbox', { name: 'Nombre del autor' }), 'Ana')
-    await user.click(within(authorDialog).getByRole('button', { name: 'Añadir' }))
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre del autor' }), 'Ana')
+    await user.click(within(dialog).getByRole('button', { name: 'Agregar' }))
     await user.type(within(dialog).getByRole('textbox', { name: /^Revista/ }), 'Solar Physics')
     await save(user)
 
