@@ -185,10 +185,11 @@ behaviour rather than desired behaviour. Fix them before putting a caller in fro
 7. **`MINIO_PUBLIC_ENDPOINT` is not implemented.** There is one client, used for both signing and
    transfer, so a URL signed inside Docker Compose points at the internal host.
 8. **`InvalidFileTypeError` imports `MAX_ASSET_BYTES` and never uses it.**
-9. **An uploaded image outlives a failed save.** `NewsArticleForm` uploads the image first, then
-   saves the article. If the save then fails (a duplicate link, the database is down) or the admin
-   cancels, the object stays in the bucket with nothing pointing at it. Retrying uploads it again.
-   A cleanup would need `delete` to be safe first (gap 3).
+9. **News images left in the bucket.** News items no longer have images (LASCE-PUB-002-272): the
+   `20261010120000_drop_news_images` migration dropped `news_records.image_url` and `image_alt`.
+   The objects already uploaded for news stay in the bucket with nothing pointing at them, and
+   cannot be told apart from other assets by key. Removing them is a manual clean-up, and a
+   scripted one would need `delete` to be safe first (gap 3).
 
 ## Testing
 
