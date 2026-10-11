@@ -130,6 +130,23 @@ describe('LanguageTabs', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
+  test('renders the tab list in the given container, still controlling the panels', async () => {
+    const user = userEvent.setup()
+    const header = document.createElement('div')
+    document.body.append(header)
+    render(<Harness tablistContainer={header} />)
+
+    expect(header).toContainElement(screen.getByRole('tablist'))
+    await user.click(screen.getByRole('tab', { name: 'English' }))
+
+    expect(screen.getByRole('tabpanel', { name: 'English' })).toBeVisible()
+    expect(screen.getByRole('tab', { name: 'English' })).toHaveAttribute(
+      'aria-controls',
+      screen.getByRole('tabpanel', { name: 'English' }).id,
+    )
+    header.remove()
+  })
+
   test('never changes the site language', async () => {
     const user = userEvent.setup()
     document.cookie = `${LOCALE_COOKIE}=es; path=/`

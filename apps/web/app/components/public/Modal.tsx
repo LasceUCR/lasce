@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 
 export type ModalSize = 'small' | 'medium' | 'large'
 
@@ -14,6 +22,18 @@ export interface ModalProps {
 }
 
 const modalStack: HTMLDialogElement[] = []
+
+const HeaderSlotContext = createContext<HTMLElement | null>(null)
+
+/**
+ * The element beside the modal's title, for a control that belongs to the whole dialog rather
+ * than to one field, such as an editor's language tabs: render it there with `createPortal`.
+ * It stays in view while the content below scrolls. `null` outside a modal, or before the modal
+ * has rendered, so the caller can fall back to rendering the control in place.
+ */
+export function useModalHeaderSlot(): HTMLElement | null {
+  return useContext(HeaderSlotContext)
+}
 
 /**
  * Only the most recent dialog is shown: popups never sit on top of each other. Every dialog below
@@ -52,6 +72,7 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
   // backdrop click — so target alone can't tell them apart. Requiring the
   // press to have started on the backdrop as well does.
   const pressStartedOnBackdrop = useRef(false)
+  const [headerSlot, setHeaderSlot] = useState<HTMLDivElement | null>(null)
 
   // The dialog only exists in the DOM while `open` is true (see the early
   // return below), so the `<dialog>` ref is only ever non-null right after
@@ -138,8 +159,13 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       }}
       ref={dialogRef}
     >
-      <h2 id={titleId}>{title}</h2>
-      <div className="modal-body">{children}</div>
+      <div className="modal-header">
+        <h2 id={titleId}>{title}</h2>
+        <div className="modal-header-slot" ref={setHeaderSlot} />
+      </div>
+      <div className="modal-body">
+        <HeaderSlotContext value={headerSlot}>{children}</HeaderSlotContext>
+      </div>
     </dialog>
   )
 }

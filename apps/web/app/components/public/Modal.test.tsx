@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
-import { Modal, type ModalProps } from './Modal'
+import { Modal, useModalHeaderSlot, type ModalProps } from './Modal'
 import { Open } from './Modal.stories'
 
 const openArgs = Open.args as ModalProps
@@ -12,6 +12,27 @@ describe('Modal', () => {
     render(<Modal {...openArgs} />)
 
     expect(screen.getByRole('dialog', { name: openArgs.title })).toBeInTheDocument()
+  })
+
+  test('offers the slot beside its title to its content, and nothing outside a modal', () => {
+    let inside: HTMLElement | null = null
+    let outside: HTMLElement | null = document.body
+    function Probe({ onSlot }: { onSlot: (slot: HTMLElement | null) => void }) {
+      onSlot(useModalHeaderSlot())
+      return null
+    }
+    render(
+      <>
+        <Probe onSlot={(slot) => (outside = slot)} />
+        <Modal onClose={() => {}} open title="Editar">
+          <Probe onSlot={(slot) => (inside = slot)} />
+        </Modal>
+      </>,
+    )
+
+    expect(outside).toBeNull()
+    expect(inside).not.toBeNull()
+    expect(screen.getByRole('heading', { name: 'Editar' }).parentElement).toContainElement(inside)
   })
 
   test('defaults to the medium size when none is given', () => {

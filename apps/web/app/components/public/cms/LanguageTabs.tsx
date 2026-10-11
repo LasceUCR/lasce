@@ -1,6 +1,7 @@
 'use client'
 
 import { useId, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 import { defaultLocale, localeLabels, locales, type Locale } from '@/app/lib/i18n/config'
 
@@ -17,6 +18,11 @@ export interface LanguageTabsProps {
   label?: string
   /** The fields of one language. Rendered for every language; only the selected one shows. */
   children: (locale: Locale) => ReactNode
+  /**
+   * Where to render the tab list instead of above the panels, such as the slot beside a modal's
+   * title (`useModalHeaderSlot`). The tabs keep controlling the panels wherever they are.
+   */
+  tablistContainer?: Element | null
 }
 
 /**
@@ -39,6 +45,7 @@ export function LanguageTabs({
   flags = {},
   label = 'Idioma del contenido',
   children,
+  tablistContainer,
 }: LanguageTabsProps) {
   const id = useId()
   const tabRefs = useRef<Partial<Record<Locale, HTMLButtonElement | null>>>({})
@@ -63,42 +70,46 @@ export function LanguageTabs({
     select(target, true)
   }
 
+  const tablist = (
+    <div aria-label={label} className="access-tabs" onKeyDown={handleKeyDown} role="tablist">
+      {locales.map((locale) => {
+        const flag = flags[locale]
+
+        return (
+          <button
+            aria-controls={`${id}-${locale}-panel`}
+            aria-selected={selected === locale}
+            className="access-tab"
+            id={`${id}-${locale}-tab`}
+            key={locale}
+            lang={locale}
+            onClick={() => select(locale, false)}
+            ref={(element) => {
+              tabRefs.current[locale] = element
+            }}
+            role="tab"
+            tabIndex={selected === locale ? 0 : -1}
+            type="button"
+          >
+            {localeLabels[locale]}
+            {flag ? (
+              <>
+                {' · '}
+                {/* The note is editor copy, written in the source language. */}
+                <span className="cms-language-tab-flag" lang={defaultLocale}>
+                  {flag}
+                </span>
+              </>
+            ) : null}
+          </button>
+        )
+      })}
+    </div>
+  )
+
   return (
     <>
-      <div aria-label={label} className="access-tabs" onKeyDown={handleKeyDown} role="tablist">
-        {locales.map((locale) => {
-          const flag = flags[locale]
-
-          return (
-            <button
-              aria-controls={`${id}-${locale}-panel`}
-              aria-selected={selected === locale}
-              className="access-tab"
-              id={`${id}-${locale}-tab`}
-              key={locale}
-              lang={locale}
-              onClick={() => select(locale, false)}
-              ref={(element) => {
-                tabRefs.current[locale] = element
-              }}
-              role="tab"
-              tabIndex={selected === locale ? 0 : -1}
-              type="button"
-            >
-              {localeLabels[locale]}
-              {flag ? (
-                <>
-                  {' · '}
-                  {/* The note is editor copy, written in the source language. */}
-                  <span className="cms-language-tab-flag" lang={defaultLocale}>
-                    {flag}
-                  </span>
-                </>
-              ) : null}
-            </button>
-          )
-        })}
-      </div>
+      {tablistContainer ? createPortal(tablist, tablistContainer) : tablist}
 
       {locales.map((locale) => (
         <div
