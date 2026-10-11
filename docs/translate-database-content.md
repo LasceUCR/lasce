@@ -137,12 +137,12 @@ Everything shared is opt-in and composable: an entity that is not bilingual can 
 
 **The header locale cookie is a display preference, never authorization.** Use existing CMS permissions on the server for each write route, and check the edit permission on the server before supplying the `editing` object. A hidden Edit button in React does not protect the data or API.
 
-| Request or data | Allowed to expose | Required check |
-|---|---|---|
-| Public page / public GET | Resolved public text for the chosen locale, plus an accurate `contentLocale` | Locale resolution; do **not** include hidden `editing` data |
-| `editing.content`, `editing.version`, unpublished editorial state if any | Only to users authorized to edit this entity | Server-side permission check; do not rely on a client flag |
-| POST / PATCH / DELETE | Only to the relevant authorized CMS roles | `requireApiPermission` on **each** write endpoint, plus input validation |
-| Error response | Stable public `error`, `code`, and safe `issues` / `pending` fields | Never expose Prisma queries, database errors, stacks or secrets |
+| Request or data                                                          | Allowed to expose                                                            | Required check                                                           |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Public page / public GET                                                 | Resolved public text for the chosen locale, plus an accurate `contentLocale` | Locale resolution; do **not** include hidden `editing` data              |
+| `editing.content`, `editing.version`, unpublished editorial state if any | Only to users authorized to edit this entity                                 | Server-side permission check; do not rely on a client flag               |
+| POST / PATCH / DELETE                                                    | Only to the relevant authorized CMS roles                                    | `requireApiPermission` on **each** write endpoint, plus input validation |
+| Error response                                                           | Stable public `error`, `code`, and safe `issues` / `pending` fields          | Never expose Prisma queries, database errors, stacks or secrets          |
 
 For routes serving editor-only data, confirm that caching does not inadvertently share the authorized response with public requests; follow the existing project's server and cache conventions. If a public API already has consumers, list them before making a breaking change. Keep every field needed by a public page separate from data that exists only to power editing.
 
@@ -214,7 +214,7 @@ Translatable strings can be displayed within entity-specific components, and the
 
 ### Step 2. Define the translatable fields
 
-*Real API.* One call, at module scope, in a client-safe module next to your other schemas (for example `app/lib/event-schema.ts`):
+_Real API._ One call, at module scope, in a client-safe module next to your other schemas (for example `app/lib/event-schema.ts`):
 
 ```ts
 import { defineTranslatableContent } from '@/app/lib/i18n/content/definition'
@@ -234,7 +234,7 @@ export const eventContent = defineTranslatableContent({
 
 ### Step 3. Write the entity's Zod schemas
 
-*Illustrative.* Compose the definition's schemas with your shared fields. Keep the schemas strict and in the client-safe module, so the editor validates with exactly the API's rules.
+_Illustrative._ Compose the definition's schemas with your shared fields. Keep the schemas strict and in the client-safe module, so the editor validates with exactly the API's rules.
 
 ```ts
 import { z } from 'zod'
@@ -273,7 +273,7 @@ export const eventUpdateSchema = z
 
 ### Step 4. Add the Prisma translation model and migration
 
-*Illustrative.* Prisma is the only migration source (see `AGENTS.md`). Leave the base model as it is and add the translation model next to it, following its `@@schema` and naming conventions. The example's `@@schema("news")` is **illustrative only**; keep the schema used by your actual entity and confirm that it is registered in the Prisma datasource:
+_Illustrative._ Prisma is the only migration source (see `AGENTS.md`). Leave the base model as it is and add the translation model next to it, following its `@@schema` and naming conventions. The example's `@@schema("news")` is **illustrative only**; keep the schema used by your actual entity and confirm that it is registered in the Prisma datasource:
 
 ```prisma
 model Event {
@@ -311,7 +311,7 @@ model EventTranslation {
 
 ### Step 5. Read localized content
 
-*Illustrative, using real API.* Load the translation rows with the record, in the same query, and let the shared helpers decide what to show:
+_Illustrative, using real API._ Load the translation rows with the record, in the same query, and let the shared helpers decide what to show:
 
 ```ts
 import { prisma, type Prisma } from '@lasce/db'
@@ -359,7 +359,7 @@ export async function getEvents(
 
 ### Step 6. Create and update in every language
 
-*Illustrative, using real API.* `baseContent` gives the Spanish columns, `translationRows` one row per other language:
+_Illustrative, using real API._ `baseContent` gives the Spanish columns, `translationRows` one row per other language:
 
 ```ts
 import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
@@ -391,7 +391,7 @@ On an update, write the Spanish columns and upsert the translations **only when 
 
 ### Step 7. Atomic transactions and optimistic concurrency
 
-*Illustrative, using real API.* The pattern for every update:
+_Illustrative, using real API._ The pattern for every update:
 
 ```ts
 import { isCurrentVersion, nextUpdatedAt, parseVersion } from '@/app/lib/cms/version'
@@ -481,7 +481,7 @@ they belong to one save, and a conflict means confirming again after reloading.
 
 ### Step 9. HTTP responses and client error handling
 
-*Illustrative, using real API.* A route handler: guard, id, JSON, schema, service, mapped result.
+_Illustrative, using real API._ A route handler: guard, id, JSON, schema, service, mapped result.
 
 Messages that name the entity stay in your route.
 
@@ -590,7 +590,7 @@ async function save(id: string, body: unknown): Promise<SaveFailure | null> {
 
 ### Step 10. Build the editor with `LanguageTabs` and `TranslationReview`
 
-*Illustrative, using real API.* The translatable fields go inside the tabs; shared fields, relations and media go below them, laid out as your entity needs. State stays in your component; the helpers are pure functions.
+_Illustrative, using real API._ The translatable fields go inside the tabs; shared fields, relations and media go below them, laid out as your entity needs. State stays in your component; the helpers are pure functions.
 
 ```tsx
 'use client'
@@ -736,21 +736,23 @@ What the shared pieces give you, and what to keep:
 
 - **Server errors**: merge `SaveFailure.fieldErrors` into what you show under the fields, and open the tab that holds one with `tabWithErrors`.
 
-- Use your entity's existing CMS wiring (`EditModeProvider`, `EditableWrapper`, `AddItemCard`, `Modal`, `ConfirmDialog`) exactly as in [`add-a-cms-feature.md`](add-a-cms-feature.md).
+- Use your entity's existing CMS wiring (`EditModeProvider`, `EditableWrapper`, `AddItemCard`, `Modal`, `StandardConfirmDialog`) exactly as in [`add-a-cms-feature.md`](add-a-cms-feature.md).
+
+- **Popups**: follow the standard the Publications editor uses. "Confirmar" saves without a confirmation; only deleting asks (`EditableWrapper` does it). Closing with unsaved changes asks first, through a `StandardConfirmDialog` with the warning severity, from "Cancelar" and from the modal's close button and Escape (`PublicationForm` exposes `requestCancel` for the modal to call; `AddItemCard` takes `onRequestClose`). `Modal` shows one popup at a time: a confirmation hides the form below it until it closes.
 
 ### Putting Steps 2–10 together: file-to-file wiring
 
 This is the **integration map** the illustrative snippets assume. It shows where each part belongs and how requests move between them; it is not a new framework.
 
-| File you own (example only) | Imports or calls | Contract it must satisfy |
-|---|---|---|
-| `app/lib/event-schema.ts` | `defineTranslatableContent`, `versionSchema`, `z.strictObject` | Exports strict create/update schemas and event-specific shared-field rules |
-| `packages/db/prisma/schema.prisma` | `Event` and `EventTranslation` | Translatable base fields + one translation row per other locale; FK, uniqueness, cascade |
-| `app/lib/events.ts` | `storedContentFrom`, `resolveContent`, `baseContent`, `translationRows`, `findPendingReviews`, `runWrite`, version helpers | Owns Prisma reads, transaction, relations, conditional update, and `editing` projection |
-| `app/api/events/route.ts` / `[id]/route.ts` | `requireApiPermission`, `readJson`, `invalidBody`, `reviewRequired`, `conflict`, `internalError` | Guard and validate on the server; map domain failures to safe responses |
-| `app/components/public/events/EventForm.tsx` | `LanguageTabs`, `TranslationReview`, `FormField`, content form helpers | Owns local ES/EN draft, confirmations, shared fields, errors, `lang` per text field |
-| `app/components/public/events/EventsExplorer.tsx` | Existing CMS wrapper, `sendJson`, entity-specific failure mapping | Creates/edits/deletes with double-submit protection, preserves drafts on failure |
-| `app/(public)/eventos/page.tsx` and event cards | `getLocale`, `resolveLocale`, server permission checks, `contentLangAttribute` | Sends localized public content; supplies `editing` only to authorized editors |
+| File you own (example only)                       | Imports or calls                                                                                                           | Contract it must satisfy                                                                 |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `app/lib/event-schema.ts`                         | `defineTranslatableContent`, `versionSchema`, `z.strictObject`                                                             | Exports strict create/update schemas and event-specific shared-field rules               |
+| `packages/db/prisma/schema.prisma`                | `Event` and `EventTranslation`                                                                                             | Translatable base fields + one translation row per other locale; FK, uniqueness, cascade |
+| `app/lib/events.ts`                               | `storedContentFrom`, `resolveContent`, `baseContent`, `translationRows`, `findPendingReviews`, `runWrite`, version helpers | Owns Prisma reads, transaction, relations, conditional update, and `editing` projection  |
+| `app/api/events/route.ts` / `[id]/route.ts`       | `requireApiPermission`, `readJson`, `invalidBody`, `reviewRequired`, `conflict`, `internalError`                           | Guard and validate on the server; map domain failures to safe responses                  |
+| `app/components/public/events/EventForm.tsx`      | `LanguageTabs`, `TranslationReview`, `FormField`, content form helpers                                                     | Owns local ES/EN draft, confirmations, shared fields, errors, `lang` per text field      |
+| `app/components/public/events/EventsExplorer.tsx` | Existing CMS wrapper, `sendJson`, entity-specific failure mapping                                                          | Creates/edits/deletes with double-submit protection, preserves drafts on failure         |
+| `app/(public)/eventos/page.tsx` and event cards   | `getLocale`, `resolveLocale`, server permission checks, `contentLangAttribute`                                             | Sends localized public content; supplies `editing` only to authorized editors            |
 
 **Create flow (`POST`).** Validate `content` in every locale and entity-specific shared fields; authorize `create_components`; within one transaction create the base row, non-default translation rows and relationships; return the normal entity response. `Event` has no real route—the only production-ready reference for this contract is the existing Publications route.
 
@@ -764,7 +766,7 @@ This is the **integration map** the illustrative snippets assume. It shows where
 
 ### Step 11. Integrate with the header language selector
 
-*Illustrative, using real API.* Nothing to build: read the request's locale on the server and mark the language of what you render.
+_Illustrative, using real API._ Nothing to build: read the request's locale on the server and mark the language of what you render.
 
 ```tsx
 // app/(public)/eventos/page.tsx
@@ -832,9 +834,7 @@ For a new bilingual entity `X`:
 **Database**
 
 - [ ] `XTranslation` model: id, `xId`, `locale` (`VarChar(5)`), the translatable columns only,
-
       timestamps, `@@unique([xId, locale])`, `onDelete: Cascade`, same `@@map`/`@@schema`
-
       conventions. Base model unchanged and with `updatedAt` as `Timestamptz(3)`.
 
 - [ ] Migration that only creates the table, generated with `pnpm db:migrate`.
@@ -844,24 +844,19 @@ For a new bilingual entity `X`:
 
 - [ ] `xContent = defineTranslatableContent({...})` with nouns, genders, `required`, `maxLength`.
 - [ ] Strict create and update schemas; `content: xContent.schema`; `version: versionSchema(...)`;
-
       `confirmedUnchanged: xContent.confirmationsSchema.optional()`; your shared fields.
 
 - [ ] Reads include the translation rows; `storedContentFrom` + `resolveContent`; `editing` only
-
       for editors, with `toVersion(updatedAt)`.
 
 - [ ] Writes in `runWrite`; expected failures as `WriteAbort`; `baseContent` + `translationRows`;
-
       `findPendingReviews` inside the transaction; `isCurrentVersion` + conditional `updateMany` +
-
       `nextUpdatedAt`; translations upserted only when `content` is sent.
 
 **Routes** (`app/api/x/route.ts`, `app/api/x/[id]/route.ts`)
 
 - [ ] Existing permissions through `requireApiPermission`.
 - [ ] `isUuid`, `readJson`, `invalidBody`, then your service; failures mapped with `notFound`,
-
       `conflict`, `duplicate`, `reviewRequired`; `internalError` around the call.
 
 - [ ] Entity messages in the routes, in Spanish, naming the entity.
@@ -869,11 +864,9 @@ For a new bilingual entity `X`:
 **Editor and page**
 
 - [ ] Translatable fields inside `LanguageTabs`, `TranslationReview` under each field,
-
       shared fields outside the tabs.
 
 - [ ] Form helpers from `lib/i18n/content/form.ts`; save failures from `lib/cms/save.ts`; one save
-
       at a time; version captured on open; conflicts keep the input and offer to reload.
 
 - [ ] Page reads `resolveLocale(await getLocale())`; cards set `lang` with `contentLangAttribute`.
@@ -882,7 +875,6 @@ For a new bilingual entity `X`:
 **Tests and docs**
 
 - [ ] Contract tests pinning messages and paths; service tests (mocked Prisma); route tests;
-
       component tests and stories; E2E with axe; a database integration file.
 
 - [ ] `internationalization.md` translation status and this guide's status line updated.
@@ -914,12 +906,12 @@ Publications are the working example of every step above.
 | `research.research_records` (`Research`)                            | Shared fields and the **Spanish** `title` and `abstract`                                 |
 | `research.research_record_translations` (`ResearchTranslation`)     | One row per record and other language (today only `en`): `title`, `abstract`, timestamps |
 | `research.publishers`, `research_authors`, `research_cross_authors` | Shared by both languages                                                                 |
-| Operation              | `research_records`                                 | `research_record_translations`  | Authors / publisher            |
-| ---------------------- | -------------------------------------------------- | ------------------------------- | ------------------------------ |
-| Create                 | Insert, with the Spanish text                      | Insert one row per other locale | Upsert publisher, link authors |
-| Edit with `content`    | Update the Spanish text and any shared fields sent | Upsert one row per other locale | Only if sent                   |
-| Edit without `content` | Update only the shared fields sent                 | **Untouched**                   | Only if sent                   |
-| Delete                 | Delete                                             | Deleted by `ON DELETE CASCADE`  | Links cascade; authors stay    |
+| Operation                                                           | `research_records`                                                                       | `research_record_translations`  | Authors / publisher            |
+| ----------------------                                              | --------------------------------------------------                                       | ------------------------------- | ------------------------------ |
+| Create                                                              | Insert, with the Spanish text                                                            | Insert one row per other locale | Upsert publisher, link authors |
+| Edit with `content`                                                 | Update the Spanish text and any shared fields sent                                       | Upsert one row per other locale | Only if sent                   |
+| Edit without `content`                                              | Update only the shared fields sent                                                       | **Untouched**                   | Only if sent                   |
+| Delete                                                              | Delete                                                                                   | Deleted by `ON DELETE CASCADE`  | Links cascade; authors stay    |
 
 ```sql
 -- Every publication with its English version, if any.
@@ -1041,17 +1033,17 @@ To add a file for your entity, put it in `apps/web/tests/integration/`, tag ever
 
 A teammate should not mark a new entity complete until there is evidence for **all applicable** conditions below. Use existing project test conventions; adapt the data model and error messages to the entity.
 
-| Area | Minimum expected proof |
-|---|---|
-| Fields and validation | Required values rejected when blank; optional all-or-none applied; strict `content.<locale>.<field>` issue paths; unexpected keys rejected |
-| Permissions and privacy | Public readers never receive `editing`; every POST/PATCH/DELETE checks permissions on the server; no stack traces, credentials or database details in errors |
-| Persistence | Create and update save base, translations and relationships atomically; forced failure rolls back all changes; unique/FK constraints behave as intended |
-| Review rule | Editing either language independently requires a counterpart change or fresh explicit confirmation; confirmations aren't stored as durable editorial state |
-| Concurrency | Two simultaneous PATCH requests using one version cannot overwrite one another; stale saves return a conflict without partial translations |
-| Shared-only changes | Updating an unrelated field on a legacy row succeeds without translating or modifying text |
-| Locale reads | Header ES/EN selection and reload return the correct public text; API GET resolves the same locale; legacy source text is not falsely labeled Spanish |
-| Accessibility and responsive | Editor tabs support keyboard and focus; errors reach their fields; text inputs and rendered text have accurate `lang`; axe and key mobile/desktop flows pass |
-| Compatibility and documentation | API consumers and worker mirrors updated where needed; no unrelated CMS behavior changed; new entity and constraints documented |
+| Area                            | Minimum expected proof                                                                                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Fields and validation           | Required values rejected when blank; optional all-or-none applied; strict `content.<locale>.<field>` issue paths; unexpected keys rejected                   |
+| Permissions and privacy         | Public readers never receive `editing`; every POST/PATCH/DELETE checks permissions on the server; no stack traces, credentials or database details in errors |
+| Persistence                     | Create and update save base, translations and relationships atomically; forced failure rolls back all changes; unique/FK constraints behave as intended      |
+| Review rule                     | Editing either language independently requires a counterpart change or fresh explicit confirmation; confirmations aren't stored as durable editorial state   |
+| Concurrency                     | Two simultaneous PATCH requests using one version cannot overwrite one another; stale saves return a conflict without partial translations                   |
+| Shared-only changes             | Updating an unrelated field on a legacy row succeeds without translating or modifying text                                                                   |
+| Locale reads                    | Header ES/EN selection and reload return the correct public text; API GET resolves the same locale; legacy source text is not falsely labeled Spanish        |
+| Accessibility and responsive    | Editor tabs support keyboard and focus; errors reach their fields; text inputs and rendered text have accurate `lang`; axe and key mobile/desktop flows pass |
+| Compatibility and documentation | API consumers and worker mirrors updated where needed; no unrelated CMS behavior changed; new entity and constraints documented                              |
 
 For an existing single-language entity, **capture a before/after regression baseline**. A successful build alone does not prove CRUD, data migration compatibility, accessibility or fallback correctness. Database integration tests need an explicit disposable database; they are not currently in CI. Include the required CI follow-up in the team's backlog rather than silently assuming coverage.
 
@@ -1081,7 +1073,7 @@ Known limitations of the current implementation:
 
 ## 8. Shared API reference
 
-*Real API.* Signatures as exported; see each file's comments for details.
+_Real API._ Signatures as exported; see each file's comments for details.
 
 `@/app/lib/i18n/content/definition`
 
@@ -1212,19 +1204,19 @@ accessFailure(status, error): SaveFailure | null · unexpectedFailure(error)
 
 ## 9. Troubleshooting
 
-| Symptom | Most likely area | What to verify first |
-|---|---|---|
-| Header switches to English, but cards remain Spanish | Server reads / locale plumbing | Confirm the page and GET route call `resolveLocale(await getLocale())`, pass that locale to the service, and actually call `resolveContent`; check the `lasce_locale` cookie. Legacy records intentionally show source text in both languages. |
-| Editor tabs switch the entire site's language | Incorrect coupling | `LanguageTabs` should only update local `selected` state; it must not call the header's locale action, write the cookie or trigger router refresh. |
-| `400 invalid-body` with a path like `content.en.name` | Schema validation / request body | Check both locales, field names, optional all-or-none policy, trimming and the shape of the current frontend payload. Older tabs may be using a pre-deploy contract. |
-| `400 review-required` | Cross-language confirmation | A field changed on one side, but the counterpart stayed the same without a fresh `confirmedUnchanged` acknowledgment. Show the requested field and locale in the UI; don't bypass the check. |
-| `409 conflict` on PATCH | Optimistic concurrency | The stored `updated_at` no longer matches the editor's version. Keep the user's draft visible, reload current data and ask the editor to review changes. Don't blindly retry the stale payload. |
-| "Sin traducción" or original text appears in both languages | Legacy handling | Inspect whether all non-default translation rows exist; `isLegacyContent` intentionally falls back to unknown-language base text. Do not clone it into missing locales. |
-| API responds `500` for duplicate values | Unique constraint / entity-specific mapping | Check `uniqueViolationColumns` and each entity's `onUniqueViolation` mapping. Ensure expected duplicates become a controlled 409, not a database error shown to the client. |
-| Validation appears on the wrong tab or focus is lost | Form paths / UI wiring | Verify full dotted Zod paths, `errorsByLocale`, `tabWithErrors`, ARIA tab selection and focus-first-invalid logic. |
-| Editor text is pronounced in the wrong language | Text-field semantics | Use `lang={contentFieldLang(stored, locale)}` on each translated `FormField`; leave Spanish admin labels outside language overrides. A legacy base string of unknown language gets `lang=""`. |
-| Tests refuse to start or a migration is missing | PostgreSQL test isolation | Check `INTEGRATION_DATABASE_URL`, local/allowed host, `_test` suffix, database inequality and previously applied migrations. Never work around the safety guard with staging/production credentials. |
-| E2E fails in ROSAC/Datos despite no changes there | Baseline / infrastructure | Compare with `development`, rerun affected specs without concurrent resource-heavy tasks, and distinguish environmental failures from regressions. Do not suppress a reproducible new failure. |
+| Symptom                                                     | Most likely area                            | What to verify first                                                                                                                                                                                                                           |
+| ----------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Header switches to English, but cards remain Spanish        | Server reads / locale plumbing              | Confirm the page and GET route call `resolveLocale(await getLocale())`, pass that locale to the service, and actually call `resolveContent`; check the `lasce_locale` cookie. Legacy records intentionally show source text in both languages. |
+| Editor tabs switch the entire site's language               | Incorrect coupling                          | `LanguageTabs` should only update local `selected` state; it must not call the header's locale action, write the cookie or trigger router refresh.                                                                                             |
+| `400 invalid-body` with a path like `content.en.name`       | Schema validation / request body            | Check both locales, field names, optional all-or-none policy, trimming and the shape of the current frontend payload. Older tabs may be using a pre-deploy contract.                                                                           |
+| `400 review-required`                                       | Cross-language confirmation                 | A field changed on one side, but the counterpart stayed the same without a fresh `confirmedUnchanged` acknowledgment. Show the requested field and locale in the UI; don't bypass the check.                                                   |
+| `409 conflict` on PATCH                                     | Optimistic concurrency                      | The stored `updated_at` no longer matches the editor's version. Keep the user's draft visible, reload current data and ask the editor to review changes. Don't blindly retry the stale payload.                                                |
+| "Sin traducción" or original text appears in both languages | Legacy handling                             | Inspect whether all non-default translation rows exist; `isLegacyContent` intentionally falls back to unknown-language base text. Do not clone it into missing locales.                                                                        |
+| API responds `500` for duplicate values                     | Unique constraint / entity-specific mapping | Check `uniqueViolationColumns` and each entity's `onUniqueViolation` mapping. Ensure expected duplicates become a controlled 409, not a database error shown to the client.                                                                    |
+| Validation appears on the wrong tab or focus is lost        | Form paths / UI wiring                      | Verify full dotted Zod paths, `errorsByLocale`, `tabWithErrors`, ARIA tab selection and focus-first-invalid logic.                                                                                                                             |
+| Editor text is pronounced in the wrong language             | Text-field semantics                        | Use `lang={contentFieldLang(stored, locale)}` on each translated `FormField`; leave Spanish admin labels outside language overrides. A legacy base string of unknown language gets `lang=""`.                                                  |
+| Tests refuse to start or a migration is missing             | PostgreSQL test isolation                   | Check `INTEGRATION_DATABASE_URL`, local/allowed host, `_test` suffix, database inequality and previously applied migrations. Never work around the safety guard with staging/production credentials.                                           |
+| E2E fails in ROSAC/Datos despite no changes there           | Baseline / infrastructure                   | Compare with `development`, rerun affected specs without concurrent resource-heavy tasks, and distinguish environmental failures from regressions. Do not suppress a reproducible new failure.                                                 |
 
 ### Where to look next
 
