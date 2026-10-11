@@ -418,7 +418,7 @@ describe('NosotrosPage', () => {
     expect(
       screen.queryByRole('dialog', { name: `Editar "${firstActivity?.title}"` }),
     ).not.toBeInTheDocument()
-    expect(await screen.findByText('Cambios guardados correctamente.')).toBeInTheDocument()
+    expect(await screen.findByText('Actividad actualizada correctamente.')).toBeInTheDocument()
   })
 
   test('explains a failed edit inside the open modal and keeps what was saved before', async () => {
@@ -439,7 +439,7 @@ describe('NosotrosPage', () => {
     )
     const activities = screen.getByRole('region', { name: /Qué hacemos/ })
     expect(within(activities).getByText(firstActivity?.title as string)).toBeInTheDocument()
-    expect(screen.queryByText('Cambios guardados correctamente.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Actividad actualizada correctamente.')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 

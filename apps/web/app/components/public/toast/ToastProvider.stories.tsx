@@ -13,7 +13,7 @@ function ToastDemo() {
 
   return (
     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-      <Button onClick={() => toast.show('success', 'Cambios guardados correctamente.')}>
+      <Button onClick={() => toast.show('success', 'Actividad actualizada correctamente.')}>
         Mostrar éxito
       </Button>
       <Button

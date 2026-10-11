@@ -21,8 +21,7 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import { useToast } from '@/app/components/public/toast/ToastProvider'
-import { readFailureReason } from '@/app/lib/api-feedback'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
@@ -57,11 +56,9 @@ export function NosotrosPage({
 }: NosotrosPageProps) {
   const router = useRouter()
   const t = useTranslations('nosotros.activities')
-  const toast = useToast()
+  const sendWithFeedback = useRequestFeedback()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
-  // The error toast from the last failed create, edit or delete, replaced by the next attempt.
-  const activityErrorToast = useRef<number | null>(null)
   const [researcherCreateError, setResearcherCreateError] = useState<string | null>(null)
   const [researcherListError, setResearcherListError] = useState<string | null>(null)
   const researcherCreateErrorRef = useRef<HTMLParagraphElement>(null)
@@ -84,88 +81,54 @@ export function NosotrosPage({
     setEditingActivityId(null)
   }
 
-  /**
-   * Sends a create, edit or delete and reports a failure in a toast that states the server's
-   * reason when it gave one. Nothing changes on the page until the request succeeds: a create or
-   * edit keeps its modal open with the admin's input. Returns whether the request succeeded.
-   */
-  async function sendActivityRequest(
-    url: string,
-    init: RequestInit,
-    fallback: 'errors.unknown' | 'errors.deleteUnknown',
-  ): Promise<boolean> {
-    if (activityErrorToast.current !== null) {
-      toast.dismiss(activityErrorToast.current)
-      activityErrorToast.current = null
+  function jsonRequest(method: 'POST' | 'PATCH', values: NosotrosActivityFormValues) {
+    return {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values),
     }
-
-    let response: Response
-    try {
-      response = await fetch(url, init)
-    } catch {
-      activityErrorToast.current = toast.show('error', t('errors.network'))
-      return false
-    }
-
-    if (!response.ok) {
-      const reason =
-        (await readFailureReason(response)) ??
-        (response.status >= 500 ? t('errors.server') : t(fallback))
-      activityErrorToast.current = toast.show('error', reason)
-      return false
-    }
-
-    return true
-  }
-
-  function submitActivity(
-    url: string,
-    method: 'POST' | 'PATCH',
-    values: NosotrosActivityFormValues,
-  ) {
-    return sendActivityRequest(
-      url,
-      { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) },
-      'errors.unknown',
-    )
   }
 
   async function handleSaveActivity(values: NosotrosActivityFormValues) {
     if (!editingActivityId) return
 
-    const saved = await submitActivity(
+    await sendWithFeedback(
       `/api/nosotros/activities/${editingActivityId}`,
-      'PATCH',
-      values,
+      jsonRequest('PATCH', values),
+      {
+        success: t('updated'),
+        fallback: t('errors.unknown'),
+        onSuccess: () => {
+          closeEditor()
+          // Re-runs the server component's `getNosotrosActivities()` so the page
+          // reflects the saved change immediately, without an optimistic guess.
+          router.refresh()
+        },
+      },
     )
-    if (!saved) return
-
-    closeEditor()
-    // Re-runs the server component's `getNosotrosActivities()` so the page
-    // reflects the saved change immediately, without an optimistic guess.
-    router.refresh()
-    toast.show('success', t('updated'))
   }
 
   async function handleCreateActivity(values: NosotrosActivityFormValues, close: () => void) {
-    const saved = await submitActivity('/api/nosotros/activities', 'POST', values)
-    if (!saved) return
-
-    close()
-    router.refresh()
-    toast.show('success', t('created'))
+    await sendWithFeedback('/api/nosotros/activities', jsonRequest('POST', values), {
+      success: t('created'),
+      fallback: t('errors.unknown'),
+      onSuccess: () => {
+        close()
+        router.refresh()
+      },
+    })
   }
 
   async function handleDeleteActivity(id: string) {
-    const deleted = await sendActivityRequest(
+    await sendWithFeedback(
       `/api/nosotros/activities/${id}`,
       { method: 'DELETE' },
-      'errors.deleteUnknown',
+      {
+        success: t('deleted'),
+        fallback: t('errors.deleteUnknown'),
+        onSuccess: () => router.refresh(),
+      },
     )
-    if (!deleted) return
-
-    router.refresh()
-    toast.show('success', t('deleted'))
   }
 
   async function handleSaveResearcher(
