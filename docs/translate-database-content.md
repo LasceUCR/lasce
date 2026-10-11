@@ -122,7 +122,7 @@ The dashed arrows represent conditional/editor-only data or error paths; the nor
 | `app/lib/i18n/content/resolve.ts`                 | Base row + translation rows → stored content; locale resolution and fallback; legacy detection; `lang` attribute; rows to write                                  | Both                           |
 | `app/lib/i18n/content/review.ts`                  | The cross-language review rule and its messages                                                                                                                  | Both                           |
 | `app/lib/i18n/content/form.ts`                    | Editor logic without React: drafts, change detection, validation, tab flags, error summary, request content                                                      | Both                           |
-| `app/lib/i18n/content/messages.ts`                | The Spanish wording of all of the above, built from each field's noun and gender                                                                                 | Both                           |
+| `app/lib/i18n/content/messages.ts`                | The wording of all of the above: Spanish for the API, and `contentCopy[uiLocale]` for an editor in the site's language, built from each field's names            | Both                           |
 | `app/components/public/cms/LanguageTabs.tsx`      | Accessible language tabs for the translatable fields of a form                                                                                                   | Client                         |
 | `app/components/public/cms/TranslationReview.tsx` | The review explanation and its confirmation switch                                                                                                               | Client                         |
 | `app/lib/cms/http.ts`                             | The JSON error envelope, issue paths, `readJson`, `isUuid`, common responses                                                                                     | Server (`next/server`)         |
@@ -151,6 +151,7 @@ For routes serving editor-only data, confirm that caching does not inadvertently
 - The **header selector** (ES/EN) chooses the language a visitor reads. It writes the `lasce_locale` cookie through a Server Action; `next-intl` resolves it per request and `getLocale()` returns it. URLs never carry the language, so a reload keeps it.
 
 - The **editor tabs** (`LanguageTabs`) choose which translation an editor is typing. They are local form state: they never call `setLocale`, never write the cookie and never refresh the router. An editor reading the site in English still opens the form on the Spanish tab.
+- The **editor's own text** (labels, buttons, notices, popups, validation and save errors) follows the site's language, like the rest of the page. In English the publications editor says "Title (Español)", "The Spanish title is required." and "Discard unsaved changes". The API always answers in Spanish, so an editor in another language shows its own messages instead of the server's (`withoutServerText` in `app/lib/cms/save.ts`).
 
 ### Why each entity has its own translation table
 
@@ -225,6 +226,7 @@ export const eventContent = defineTranslatableContent({
 ```
 
 - `noun` is how messages name the field. The gender drives the article and the agreement, so the messages read "El nombre en inglés es obligatorio." and "La descripción en español es obligatoria porque se completó en inglés."
+- `nouns` names the field in the other interface languages, `{ en: 'name' }`, so an editor shown in English reads "The English name is required.". Without it, English messages fall back to the Spanish word. The API is unaffected: it always uses the Spanish messages.
 
 - `required: false` makes the field optional and **all-or-none** across languages: absent, `null`, empty or blank text becomes `null`, and a value in one language makes it required in the others.
 
@@ -1064,7 +1066,7 @@ For an existing single-language entity, **capture a before/after regression base
 
 Known limitations of the current implementation:
 
-- Only publications use it. The fixed copy of `/publicaciones` (hero, filters, editor labels) is still Spanish.
+- Only publications use it. The rest of `/publicaciones` (its fixed copy and the editor) follows the site's language too, from the `publications` namespace of the message catalogue.
 
 - Search on `/publicaciones` matches the text in the current language only.
 - An editor receives every language of every publication with the page; there is no pagination.
@@ -1078,7 +1080,7 @@ _Real API._ Signatures as exported; see each file's comments for details.
 `@/app/lib/i18n/content/definition`
 
 ```ts
-interface TranslatableFieldSpec { noun: SpanishNoun; required: boolean; maxLength?: number }
+interface TranslatableFieldSpec { noun: SpanishNoun; nouns?: { en?: string }; required: boolean; maxLength?: number }
 function defineTranslatableContent<const S extends FieldSpecs>(specs: S): TranslatableContent<S>
 // TranslatableContent<S>: { specs; fields; schema; confirmationSchema; confirmationsSchema }
 type LocalizedContent<S>   // required fields: string; optional: string | null
@@ -1135,7 +1137,7 @@ errorSummary(errors, currentTab): string | null
 toContentInput(definition, draft): ContentInput<S>
 ```
 
-`@/app/lib/i18n/content/messages`: `inLanguage`, `languageNames`, `joinSpanish`, `withArticle`, `contentMessages`, `reviewCopy`, `editorCopy` (`fieldPending`, `pending`, `missingTranslation`, `errorSummary`).
+`@/app/lib/i18n/content/messages`: `inLanguage`, `languageNames`, `joinSpanish`, `withArticle`, `contentMessages`, `reviewCopy`, `editorCopy` (`fieldPending`, `pending`, `missingTranslation`, `errorSummary`), all in Spanish; `contentCopy[uiLocale]`, the same texts in each interface language (`englishLanguageNames`, `joinEnglish` for English). `definition.schemaIn(uiLocale)`, and the optional `uiLocale` last argument of `validateContent`, `languageTabFlags`, `errorSummary`, `reviewMessage` and `confirmationLabel`, give an editor its messages in the site's language.
 
 `@/app/components/public/cms/LanguageTabs`
 
