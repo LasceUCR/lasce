@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Code, GraduationCap, Satellite, Sun, Users, Waves, type LucideIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
+import { Notice } from '@/app/components/public/Notice'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
@@ -53,10 +55,12 @@ export function NosotrosPage({
   canDelete = false,
 }: NosotrosPageProps) {
   const router = useRouter()
+  const t = useTranslations('nosotros.activities')
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [createSuccess, setCreateSuccess] = useState(false)
   const [listError, setListError] = useState<string | null>(null)
   const [researcherCreateError, setResearcherCreateError] = useState<string | null>(null)
   const [researcherListError, setResearcherListError] = useState<string | null>(null)
@@ -74,6 +78,7 @@ export function NosotrosPage({
 
   function openEditor(id: string) {
     setSaveError(null)
+    setCreateSuccess(false)
     setEditingActivityId(id)
   }
 
@@ -111,6 +116,7 @@ export function NosotrosPage({
 
   async function handleCreateActivity(values: NosotrosActivityFormValues, close: () => void) {
     setCreateError(null)
+    setCreateSuccess(false)
 
     let response: Response
     try {
@@ -132,10 +138,12 @@ export function NosotrosPage({
 
     close()
     router.refresh()
+    setCreateSuccess(true)
   }
 
   async function handleDeleteActivity(id: string) {
     setListError(null)
+    setCreateSuccess(false)
 
     let response: Response
     try {
@@ -246,6 +254,12 @@ export function NosotrosPage({
           </p>
         ) : null}
 
+        {createSuccess ? (
+          <Notice role="status" tone="info">
+            {t('created')}
+          </Notice>
+        ) : null}
+
         {editMode && canCreate && content.activities.items.length === 0 ? (
           <p className="topic-intro">
             Haga clic en &quot;Añadir&quot; para agregar alguna actividad.
@@ -295,13 +309,12 @@ export function NosotrosPage({
                   ) : null}
                   <NosotrosActivityForm
                     activity={blankActivity}
-                    confirmMessage="¿Desea agregar esta actividad?"
-                    confirmTitle="Agregar actividad"
                     onCancel={() => {
                       setCreateError(null)
                       close()
                     }}
                     onSave={(values) => handleCreateActivity(values, close)}
+                    requireConfirmation={false}
                   />
                 </>
               )}

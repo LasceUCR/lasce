@@ -354,5 +354,10 @@
         "galleryLabel": "Ver galería de fotos del taller"
       }
     }
+  },
+  "nosotros": {
+    "activities": {
+      "created": "Actividad agregada correctamente."
+    }
   }
 }
