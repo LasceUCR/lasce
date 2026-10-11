@@ -33,41 +33,86 @@ toast.dismiss(id)
   usually has to be read and acted on, so it is not put on a timer (WCAG 2.2.1).
 - Messages are plain text. Put new client-side copy in the message catalogue.
 
+## Sending a request: `useRequestFeedback`
+
+Most toasts report the outcome of a request to a route handler. Do not write that flow by hand:
+`useRequestFeedback()` (`toast/useRequestFeedback.ts`) does it the same way for every section.
+
+```tsx
+const t = useTranslations('news')
+const sendWithFeedback = useRequestFeedback()
+
+async function handleCreate(values: NewsArticleFormValues, close: () => void) {
+  await sendWithFeedback('/api/news', jsonRequest('POST', values), {
+    success: t('created'),
+    fallback: t('errors.saveUnknown'),
+    onSuccess: () => {
+      close()
+      router.refresh()
+    },
+  })
+}
+```
+
+What it does, in order:
+
+1. Dismisses the error toast its previous attempt left, so retries do not pile up.
+2. Sends the request.
+3. On success, runs `onSuccess` (close the form, refresh the page), then shows `success`.
+   Closing first means the success toast appears once, on the page, rather than inside a modal
+   that is about to disappear.
+4. On failure, shows an error toast and does nothing else, so the form stays open with the user's
+   input and the page is not refreshed. The message is, in order of preference:
+   - the reason the server gave, from `readFailureReason` (below);
+   - `common.feedback.network` when the request never reached the server;
+   - `common.feedback.server` for a 5xx with no usable body;
+   - your `fallback` for anything else.
+
+It resolves to whether the request succeeded. `NewsExplorer.tsx` and `NosotrosPage.tsx` use it for
+create, edit and delete.
+
+A component that hands the request to its parent takes a `close` callback rather than deciding
+for itself when to close: see `onSave(values, close)` on `EditableNewsCard`, the same contract
+`AddItemCard` gives its children.
+
 ## Saying why something failed
 
 An error toast should explain the failure, not just say that it happened. Route handlers here
 answer a failure with `{ error }`, and a validation failure adds `issues`
 (`parsed.error.flatten().fieldErrors`). `readFailureReason(response)` in
 `app/lib/api-feedback.ts` turns that into one sentence, field messages included, and returns
-`null` when the body says nothing usable (not JSON, an HTML error page). Fall back to a
-translated message chosen by what went wrong:
+`null` when the body says nothing usable (not JSON, an HTML error page).
+`useRequestFeedback` calls it for you; call it yourself only outside that hook.
 
-```ts
-let response: Response
-try {
-  response = await fetch(url, { method: 'POST', body: JSON.stringify(values) })
-} catch {
-  toast.show('error', t('errors.network')) // the request never reached the server
-  return
-}
+For the server to have a reason to give, a route handler:
 
-if (!response.ok) {
-  const reason =
-    (await readFailureReason(response)) ??
-    (response.status >= 500 ? t('errors.server') : t('errors.unknown'))
-  toast.show('error', reason)
-  return
-}
-```
+- catches a database failure and answers with a JSON 500 that says so, rather than letting the
+  throw become Next's HTML error page;
+- answers a conflict the user can fix with its own status and message, such as a 409 for a news
+  link that is already used;
+- validates an id before querying, so a malformed one is a 404 rather than a Prisma error;
+- writes a record and its relations in one transaction, so a failure leaves the saved record
+  unchanged.
 
-For the server side to have a reason to give, a route handler catches a database failure and
-answers with a JSON 500 that says so, rather than letting the throw become Next's HTML error
-page. `app/api/nosotros/activities/` does both.
+`app/api/news/` and `app/lib/news.ts` do all four. A Server Action does the same through its
+result: `uploadNewsImage` returns `{ ok: false, error }` with a reason in the admin's terms instead
+of throwing or passing on a developer-facing message.
 
-Keep the form open on failure, with the user's input in it, and only close it and call
-`router.refresh()` once the request succeeded. If the user can retry, dismiss the previous error
-before the next attempt so errors do not pile up. `NosotrosPage.tsx` (`submitActivity`) is the
-reference implementation.
+## Wording
+
+Success messages name the thing and the outcome, in the same shape everywhere:
+
+| Action | Pattern                                | Example                              |
+| ------ | -------------------------------------- | ------------------------------------ |
+| Create | `<Entidad> agregada correctamente.`    | Noticia agregada correctamente.      |
+| Edit   | `<Entidad> actualizada correctamente.` | Actividad actualizada correctamente. |
+| Delete | `<Entidad> eliminada correctamente.`   | Noticia eliminada correctamente.     |
+
+A fallback error says what could not be done and invites a retry: "No se pudo guardar la noticia.
+Inténtelo de nuevo." A server reason says why, and when it can, what to do next: "Ya existe una
+noticia con este enlace. Use otro enlace o edite la noticia existente." The network and server
+fallbacks are shared in `common.feedback`; per-section messages live under the section's
+namespace (`news.*`, `nosotros.activities.*`).
 
 ## Why there is an outlet inside `Modal`
 

@@ -14,8 +14,9 @@ working through Claude Code.
   `development` first. `.vscode/settings.json` sets
   `git.branchProtectionPrompt: alwaysCommitToNewBranch`, so a commit made on a protected branch is
   moved to a new one instead of failing later at push time.
-- Report the outcome of a user action with a toast (`useToast`), not an inline message. The rule
-  and its exceptions are under **Feedback** in `AGENTS.md`.
+- Report the outcome of a user action with a toast, not an inline message: send the request
+  through `useRequestFeedback()`. The rule and its exceptions are under **Feedback** in
+  `AGENTS.md`.
 - Only commit or push when asked. When you do, use the commit format from
   [`docs/git-guidelines.md`](docs/git-guidelines.md): `<type>(<module>): <description>`.
 - Prefer `pnpm turbo run <task>` over calling a workspace's tool directly. Several tasks depend
