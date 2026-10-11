@@ -62,6 +62,33 @@ function updateModalStackVisibility() {
   }
 }
 
+/** The page's own styles from before the first dialog locked its scrolling. */
+let pageScrollLock: { overflow: string; paddingRight: string } | null = null
+
+/**
+ * The page behind an open dialog does not scroll: wheel, touch and keys only move the dialog's
+ * content. `showModal()` makes the page inert but still lets it scroll, so the page is locked
+ * while any dialog is open and released once the last one closes. The scrollbar's width is kept
+ * as padding, so the page does not shift sideways when its scrollbar disappears.
+ */
+function updatePageScrollLock() {
+  const { body } = document
+
+  if (modalStack.length > 0 && !pageScrollLock) {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    pageScrollLock = { overflow: body.style.overflow, paddingRight: body.style.paddingRight }
+    body.style.overflow = 'hidden'
+    if (scrollbarWidth > 0) {
+      const padding = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0
+      body.style.paddingRight = `${padding + scrollbarWidth}px`
+    }
+  } else if (modalStack.length === 0 && pageScrollLock) {
+    body.style.overflow = pageScrollLock.overflow
+    body.style.paddingRight = pageScrollLock.paddingRight
+    pageScrollLock = null
+  }
+}
+
 export function Modal({ open, title, onClose, children, size = 'medium' }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -100,6 +127,7 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       modalStack.push(dialog)
     }
     updateModalStackVisibility()
+    updatePageScrollLock()
 
     return () => {
       const index = modalStack.indexOf(dialog)
@@ -109,6 +137,7 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       dialog.style.visibility = ''
       dialog.removeAttribute('aria-hidden')
       updateModalStackVisibility()
+      updatePageScrollLock()
       if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true })
     }
   }, [open])

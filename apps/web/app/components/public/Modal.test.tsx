@@ -220,6 +220,41 @@ describe('Modal', () => {
     expect(screen.getByText('Lo que se escribió')).toBeVisible()
   })
 
+  test('keeps the page behind from scrolling while a dialog is open, and restores it after', () => {
+    document.body.style.overflow = 'auto'
+    const { rerender } = render(<Modal {...openArgs} open={false} />)
+
+    rerender(<Modal {...openArgs} open />)
+    expect(document.body).toHaveStyle({ overflow: 'hidden' })
+
+    rerender(<Modal {...openArgs} open={false} />)
+    expect(document.body.style.overflow).toBe('auto')
+    document.body.style.overflow = ''
+  })
+
+  test('keeps the page locked until the last of several dialogs closes', () => {
+    function Two({ first, second }: { first: boolean; second: boolean }) {
+      return (
+        <>
+          <Modal onClose={() => {}} open={first} title="Primero">
+            Formulario
+          </Modal>
+          <Modal onClose={() => {}} open={second} size="small" title="Segundo">
+            Confirmación
+          </Modal>
+        </>
+      )
+    }
+    const { rerender } = render(<Two first second={false} />)
+    rerender(<Two first second />)
+
+    rerender(<Two first second={false} />)
+    expect(document.body).toHaveStyle({ overflow: 'hidden' })
+
+    rerender(<Two first={false} second={false} />)
+    expect(document.body.style.overflow).toBe('')
+  })
+
   test('does not close when a text selection started inside the content ends past its edge', () => {
     const onClose = vi.fn()
     render(<Modal {...openArgs} onClose={onClose} />)
