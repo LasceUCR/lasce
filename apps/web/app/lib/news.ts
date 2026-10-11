@@ -1,5 +1,4 @@
-import { prisma } from '@lasce/db'
-import type { Prisma } from '@lasce/db'
+import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
 const newsRecordInclude = {
@@ -137,25 +136,45 @@ async function syncNewsAuthors(newsId: string, authors: readonly string[]): Prom
   })
 }
 
+export type CreateNewsResult = NewsArticle | 'duplicate-url'
+export type UpdateNewsResult = NewsArticle | 'duplicate-url' | null
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'P2002'
+  )
+}
+
 /** Creates a news item and its author links. */
-export async function createNews(data: NewsInput): Promise<NewsArticle> {
+export async function createNews(data: NewsInput): Promise<CreateNewsResult> {
   const source = await prisma.newsSource.upsert({
     where: { name: data.source },
     update: {},
     create: { name: data.source },
   })
 
-  const record = await prisma.news.create({
-    data: {
-      title: data.title,
-      publishedAt: toPublishedAtDate(data.publishedAt),
-      sourceId: source.id,
-      abstract: data.abstract,
-      externalUrl: data.externalUrl,
-      imageUrl: data.imageUrl,
-      imageAlt: data.imageAlt,
-    },
-  })
+  let record
+  try {
+    record = await prisma.news.create({
+      data: {
+        title: data.title,
+        publishedAt: toPublishedAtDate(data.publishedAt),
+        sourceId: source.id,
+        abstract: data.abstract,
+        externalUrl: data.externalUrl,
+        imageUrl: data.imageUrl,
+        imageAlt: data.imageAlt,
+      },
+    })
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return 'duplicate-url'
+    }
+    throw error
+  }
 
   await syncNewsAuthors(record.id, data.authors)
 
@@ -167,7 +186,7 @@ export async function createNews(data: NewsInput): Promise<NewsArticle> {
  * so the route handler can turn that into a 404 — same pre-check pattern as
  * `updateNosotrosActivity`.
  */
-export async function updateNews(id: string, data: NewsInput): Promise<NewsArticle | null> {
+export async function updateNews(id: string, data: NewsInput): Promise<UpdateNewsResult> {
   const existing = await prisma.news.findUnique({ where: { id } })
   if (!existing) return null
 
@@ -177,18 +196,25 @@ export async function updateNews(id: string, data: NewsInput): Promise<NewsArtic
     create: { name: data.source },
   })
 
-  await prisma.news.update({
-    where: { id },
-    data: {
-      title: data.title,
-      publishedAt: toPublishedAtDate(data.publishedAt),
-      sourceId: source.id,
-      abstract: data.abstract,
-      externalUrl: data.externalUrl,
-      imageUrl: data.imageUrl,
-      imageAlt: data.imageAlt,
-    },
-  })
+  try {
+    await prisma.news.update({
+      where: { id },
+      data: {
+        title: data.title,
+        publishedAt: toPublishedAtDate(data.publishedAt),
+        sourceId: source.id,
+        abstract: data.abstract,
+        externalUrl: data.externalUrl,
+        imageUrl: data.imageUrl,
+        imageAlt: data.imageAlt,
+      },
+    })
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return 'duplicate-url'
+    }
+    throw error
+  }
 
   await syncNewsAuthors(id, data.authors)
 

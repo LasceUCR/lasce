@@ -26,9 +26,11 @@ export function NewsCard({
 }: NewsCardProps) {
   return (
     <article className="surface-card news-card">
-      <div className={`news-card-image${imageAlt === '' ? ' news-card-image-decorative' : ''}`}>
-        <Image alt={imageAlt} fill sizes="(max-width: 768px) 100vw, 320px" src={imageUrl} />
-      </div>
+      {imageUrl ? (
+        <div className={`news-card-image${imageAlt === '' ? ' news-card-image-decorative' : ''}`}>
+          <Image alt={imageAlt} fill sizes="(max-width: 768px) 100vw, 320px" src={imageUrl} />
+        </div>
+      ) : null}
 
       <div className="news-card-content">
         <h3>{title}</h3>

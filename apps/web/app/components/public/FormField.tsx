@@ -34,6 +34,11 @@ export interface FormFieldProps {
    */
   error?: string | null
   /**
+   * An error owned entirely by the parent form. Whenever it is passed, even as `null`, it replaces
+   * the field's own `validate` message, so the parent decides when an error shows.
+   */
+  errorMessage?: string | null
+  /**
    * The language of the text typed in a text box or text area, when it can differ from the page's,
    * as in a bilingual editor: `'es'`, `'en'`, or `''` for text whose language is unknown. Set on
    * the input itself, so the label and messages around it keep the language of their surroundings.
@@ -53,6 +58,7 @@ export function FormField({
   id,
   validate,
   error: externalError,
+  errorMessage,
   lang,
 }: FormFieldProps) {
   const [error, setError] = useState<string | null>(null)
@@ -97,7 +103,7 @@ export function FormField({
     onChange(event.target.value)
   }
 
-  const shownError = externalError || error
+  const shownError = errorMessage !== undefined ? errorMessage : externalError || error
   const invalid = Boolean(shownError)
   const describedBy = shownError ? errorId : undefined
 
