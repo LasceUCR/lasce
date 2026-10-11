@@ -190,7 +190,11 @@ describe('content schema', () => {
       }).success,
     ).toBe(false)
 
-    for (const [es, en] of [[null, null], ['', ''], ['   ', '   ']]) {
+    for (const [es, en] of [
+      [null, null],
+      ['', ''],
+      ['   ', '   '],
+    ]) {
       expect(
         shortOptionalContent.schema.safeParse({ es: { label: es }, en: { label: en } }),
       ).toMatchObject({
