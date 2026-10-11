@@ -79,4 +79,19 @@ describe('InstrumentCard', () => {
     expect(screen.getByRole('img')).toBeVisible()
     expect(screen.queryByText('Imagen no disponible')).not.toBeInTheDocument()
   })
+
+  test('renders multiple characteristics even when duplicate values exist', () => {
+    const args = WithInformation.args as InstrumentCardProps
+    render(
+      <InstrumentCard
+        {...args}
+        instrument={{
+          ...args.instrument,
+          characteristics: ['Característica duplicada', 'Característica duplicada'],
+        }}
+      />,
+    )
+    const items = screen.getAllByText('Característica duplicada')
+    expect(items).toHaveLength(2)
+  })
 })
