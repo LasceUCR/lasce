@@ -14,6 +14,8 @@ working through Claude Code.
   `development` first. `.vscode/settings.json` sets
   `git.branchProtectionPrompt: alwaysCommitToNewBranch`, so a commit made on a protected branch is
   moved to a new one instead of failing later at push time.
+- Report the outcome of a user action with a toast (`useToast`), not an inline message. The rule
+  and its exceptions are under **Feedback** in `AGENTS.md`.
 - Only commit or push when asked. When you do, use the commit format from
   [`docs/git-guidelines.md`](docs/git-guidelines.md): `<type>(<module>): <description>`.
 - Prefer `pnpm turbo run <task>` over calling a workspace's tool directly. Several tasks depend
@@ -38,6 +40,7 @@ working through Claude Code.
 | How do `/datos` chart and data downloads work?       | [`docs/downloads.md`](docs/downloads.md)                             |
 | How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                 |
 | How do I isolate a widget that might crash the page? | [`docs/error-boundary.md`](docs/error-boundary.md)                   |
+| How do I show a success or error toast?              | [`docs/toasts.md`](docs/toasts.md)                                   |
 | How do I make content editable in "Modo edición"?    | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)             |
 | Where does a test go, and what gates it?             | [`docs/testing.md`](docs/testing.md)                                 |
 | How do I write a component or service test?          | [`docs/tests/component_testing.md`](docs/tests/component_testing.md) |
