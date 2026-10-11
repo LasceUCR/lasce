@@ -15,23 +15,29 @@ export interface ModalProps {
 
 const modalStack: HTMLDialogElement[] = []
 
+/**
+ * Only the most recent dialog is shown: popups never sit on top of each other. Every dialog below
+ * it is hidden until it is the most recent again, keeping whatever was typed in it.
+ *
+ * A dialog opened from inside another one (a confirmation rendered by a form, say) is that
+ * dialog's descendant, and `visibility` is inherited, so the top dialog is set back to `visible`
+ * explicitly. Such an ancestor is not given `aria-hidden`, which a descendant cannot undo and
+ * would hide the top dialog from assistive technology too; `showModal()` already makes it inert.
+ */
 function updateModalStackVisibility() {
   const top = modalStack[modalStack.length - 1]
-  for (let i = 0; i < modalStack.length; i++) {
-    const isTop = i === modalStack.length - 1
-    const d = modalStack[i]
-    if (d) {
-      if (isTop) {
-        d.style.visibility = ''
-        d.removeAttribute('aria-hidden')
-      } else if (top && d.contains(top)) {
-        // d contains top: keeping d visible and without aria-hidden prevents hiding top
-        d.style.visibility = ''
-        d.removeAttribute('aria-hidden')
-      } else {
-        d.style.visibility = 'hidden'
-        d.setAttribute('aria-hidden', 'true')
-      }
+  for (const dialog of modalStack) {
+    if (dialog === top) {
+      dialog.style.visibility = modalStack.some((other) => other !== top && other.contains(top))
+        ? 'visible'
+        : ''
+      dialog.removeAttribute('aria-hidden')
+    } else if (top && dialog.contains(top)) {
+      dialog.style.visibility = 'hidden'
+      dialog.removeAttribute('aria-hidden')
+    } else {
+      dialog.style.visibility = 'hidden'
+      dialog.setAttribute('aria-hidden', 'true')
     }
   }
 }
@@ -59,6 +65,10 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
     const dialog = dialogRef.current
     if (!dialog) return
 
+    // Where focus goes back to once this dialog closes, as a native `close()` would do. Without
+    // it, closing a confirmation leaves focus on the page's body instead of in the form below.
+    const opener = document.activeElement
+
     if (typeof dialog.showModal === 'function') {
       dialog.showModal()
     } else {
@@ -78,6 +88,7 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       dialog.style.visibility = ''
       dialog.removeAttribute('aria-hidden')
       updateModalStackVisibility()
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true })
     }
   }, [open])
 
@@ -96,8 +107,22 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
         // not the dialog, so only react to a `cancel` fired on the dialog
         // itself (a real Escape press while it's the topmost modal).
         if (event.target === dialogRef.current) {
+          // `open` decides whether the dialog is shown, not the browser: `onClose` may keep it
+          // open, to ask before discarding changes, and a natively closed dialog would vanish.
+          event.preventDefault()
           onClose()
         }
+      }}
+      onKeyDown={(event) => {
+        // Escape is handled here rather than left to the browser, which only lets `cancel` be
+        // prevented after a fresh user interaction: a second Escape would close the dialog
+        // natively even when `onClose` keeps it open. Only the dialog the key was pressed in
+        // reacts; a dialog opened inside this one handles its own Escape first.
+        if (event.key !== 'Escape' || event.defaultPrevented) return
+        if (!(event.target instanceof Element)) return
+        if (event.target.closest('dialog') !== dialogRef.current) return
+        event.preventDefault()
+        onClose()
       }}
       onClick={(event) => {
         // A click on the backdrop fires with the dialog itself as the
