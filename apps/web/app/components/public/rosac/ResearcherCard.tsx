@@ -108,7 +108,7 @@ export function ResearcherCard({
             {emails.length > 0 ? (
               <p className="researcher-card-emails">
                 {emails.map((address, index) => (
-                  <Fragment key={address}>
+                  <Fragment key={`${index}-${address}`}>
                     {index > 0 ? ', ' : null}
                     <a className="researcher-card-email" href={`mailto:${address}`}>
                       {address}
