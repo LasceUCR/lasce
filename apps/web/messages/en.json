@@ -436,6 +436,7 @@
       "authorRequired": "The author name is required.",
       "authorsNotList": "The authors are required and must be a list.",
       "authorsRequired": "There must be at least one author.",
+      "authorsDuplicate": "An author cannot be listed twice.",
       "group": "Select a valid research group.",
       "venue": "The journal or publication is required."
     },

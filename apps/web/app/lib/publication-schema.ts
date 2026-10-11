@@ -143,7 +143,13 @@ export function publicationFieldSchemas(messages: PublicationFieldMessages) {
       .array(z.string({ error: messages.authorNotText }).trim().min(1, messages.authorRequired), {
         error: messages.authorsNotList,
       })
-      .min(1, messages.authorsRequired),
+      .min(1, messages.authorsRequired)
+      // Each author is linked once per publication; the same name twice, after trimming and in
+      // any case, would break that link's uniqueness. The editor already refuses it.
+      .refine(
+        (names) => new Set(names.map((name) => name.toLocaleLowerCase())).size === names.length,
+        messages.authorsDuplicate,
+      ),
     researchGroup: z.enum(['LASCE', 'ROSAC'], { error: messages.group }),
     venue: z.string({ error: messages.venue }).trim().min(1, messages.venue),
   }

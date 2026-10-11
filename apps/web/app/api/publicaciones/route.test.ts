@@ -258,6 +258,17 @@ describe('POST /api/publicaciones: validation', () => {
       expect.arrayContaining(['authors', 'venue', 'researchGroup', 'date']),
     )
   })
+
+  test('rejects the same author twice, after trimming and in any case, instead of failing', async () => {
+    const { response, body } = await post({ ...validBody, authors: ['Ana Mora', ' ana mora '] })
+
+    expect(response.status).toBe(400)
+    expect(body.issues).toContainEqual({
+      path: 'authors',
+      message: 'No se puede repetir un autor.',
+    })
+    expect(mocks.createPublication).not.toHaveBeenCalled()
+  })
 })
 
 describe('POST /api/publicaciones: publication date', () => {

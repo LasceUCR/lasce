@@ -436,6 +436,7 @@
       "authorRequired": "El nombre del autor es obligatorio.",
       "authorsNotList": "Los autores son obligatorios y deben ser una lista.",
       "authorsRequired": "Debe existir al menos un autor.",
+      "authorsDuplicate": "No se puede repetir un autor.",
       "group": "Seleccione un grupo de investigación válido.",
       "venue": "La publicación es obligatoria."
     },

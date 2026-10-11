@@ -366,6 +366,16 @@ describe('in English, the language the site is shown in', () => {
     })
   })
 
+  test('refuses the same author twice, in English', () => {
+    const initial = initialFromPublication(bilingual)
+    const draft = edit(initial.draft, { authors: ['Ana', 'ana'] })
+
+    expect(validateDraft(initial, draft, [], english).authors).toBe(
+      'An author cannot be listed twice.',
+    )
+    expect(validateDraft(initial, draft, []).authors).toBe('No se puede repetir un autor.')
+  })
+
   test('applies exactly the rules the Spanish editor applies', () => {
     const initial = initialFromPublication(legacy)
     const draft = withContent(initial.draft, 'es', 'Nuevo título')

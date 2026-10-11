@@ -136,6 +136,16 @@ describe('PATCH /api/publicaciones/[id]: validation', () => {
     expect(body.code).toBe('invalid-json')
   })
 
+  test('rejects the same author twice instead of failing', async () => {
+    const { response, body } = await patch({ version: contentBody.version, authors: ['A', 'A'] })
+
+    expect(response.status).toBe(400)
+    expect(body.issues).toContainEqual({
+      path: 'authors',
+      message: 'No se puede repetir un autor.',
+    })
+  })
+
   test('requires the version the editor loaded', async () => {
     const { version: _version, ...rest } = contentBody
 
