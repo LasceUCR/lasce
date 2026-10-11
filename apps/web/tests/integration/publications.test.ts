@@ -416,4 +416,16 @@ describe('integrity', () => {
     ).not.toBeNull()
     expect(await deletePublication(publication.slug)).toBe(false)
   })
+
+  test('two concurrent deletes of one publication: one deletes it, the other finds nothing', async () => {
+    const publication = stored(await create())
+
+    const results = await Promise.all([
+      deletePublication(publication.slug),
+      deletePublication(publication.slug),
+    ])
+
+    expect([...results].sort()).toEqual([false, true])
+    expect(await prisma.research.count({ where: { id: publication.slug } })).toBe(0)
+  })
 })

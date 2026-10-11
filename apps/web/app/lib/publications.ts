@@ -272,18 +272,9 @@ export async function updatePublication(
 
 /** Deletes a publication. Its translations and author links go with it (`ON DELETE CASCADE`). */
 export async function deletePublication(id: string): Promise<boolean> {
-  const existing = await prisma.research.findUnique({
-    where: { id },
-    select: { id: true },
-  })
-
-  if (!existing) {
-    return false
-  }
-
-  await prisma.research.delete({
-    where: { id },
-  })
-
-  return true
+  // One statement that reports how many rows it removed: a concurrent delete of the same
+  // publication finds nothing and answers "not found", instead of failing between a check and
+  // the delete. Translations and author links go with it (`onDelete: Cascade`).
+  const { count } = await prisma.research.deleteMany({ where: { id } })
+  return count > 0
 }

@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => {
   }
 
   const prisma = {
-    research: { findMany: vi.fn(), findUnique: vi.fn(), delete: vi.fn() },
+    research: { findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
   }
 
@@ -808,17 +808,16 @@ describe('updatePublication: changes started from English', () => {
 })
 
 describe('deletePublication', () => {
-  test('deletes an existing publication', async () => {
-    prisma.research.findUnique.mockResolvedValue({ id: 'research-1' })
+  test('deletes an existing publication in a single statement', async () => {
+    prisma.research.deleteMany.mockResolvedValue({ count: 1 })
 
     await expect(deletePublication('research-1')).resolves.toBe(true)
-    expect(prisma.research.delete).toHaveBeenCalledWith({ where: { id: 'research-1' } })
+    expect(prisma.research.deleteMany).toHaveBeenCalledWith({ where: { id: 'research-1' } })
   })
 
-  test('reports a publication that does not exist', async () => {
-    prisma.research.findUnique.mockResolvedValue(null)
+  test('reports a publication that does not exist, or was just deleted by someone else', async () => {
+    prisma.research.deleteMany.mockResolvedValue({ count: 0 })
 
     await expect(deletePublication('missing')).resolves.toBe(false)
-    expect(prisma.research.delete).not.toHaveBeenCalled()
   })
 })

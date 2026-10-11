@@ -760,7 +760,7 @@ This is the **integration map** the illustrative snippets assume. It shows where
 
 **Edit flow (`PATCH`).** Require an opaque `version`, validate body, authorize `edit_components`, read current data inside the transaction, enforce review confirmations when `content` is present, conditionally update the base row by version, then upsert the non-default translation rows. A shared-only PATCH never writes translations. Return a conflict rather than silently retrying somebody else's changes.
 
-**Delete flow (`DELETE`).** Authorize `delete_components` and use the entity's existing deletion workflow. The translations are removed by the entity-specific foreign key's `onDelete: Cascade`. The current Publications deletion flow has no version precondition; do not assume it solves concurrent deletes automatically.
+**Delete flow (`DELETE`).** Authorize `delete_components` and use the entity's existing deletion workflow. The translations are removed by the entity-specific foreign key's `onDelete: Cascade`. Delete in one statement that reports what it removed (Publications uses `deleteMany({ where: { id } })` and answers 404 when the count is 0), so two concurrent deletes give one success and one "not found" instead of a 500. It takes no version: a delete does not check whether someone edited the record since it was opened.
 
 **Public reads.** Pass the resolved header locale into the service. The returned record contains the selected language only; add an `editing` block **only after a server-side edit permission check**. Use `contentLangAttribute` for visible translated content and `contentFieldLang` for text inputs in the editor.
 
