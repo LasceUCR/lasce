@@ -1,7 +1,7 @@
-import { locales, type Locale } from '@/app/lib/i18n/config'
+import { defaultLocale, locales, type Locale } from '@/app/lib/i18n/config'
 
 import type { ReviewConfirmation, TranslatableFieldSpec } from './definition'
-import { reviewCopy } from './messages'
+import { contentCopy } from './messages'
 
 /**
  * The cross-language review rule. When a translatable field changes in some locales but not in
@@ -91,17 +91,20 @@ export function findPendingReviews<F extends string>(
 }
 
 /**
- * Why `review` needs attention, in Spanish. When the changed locales had no stored text yet (a
- * legacy record getting its translations), nothing in them "changed": the message says instead
- * that the text being reviewed may not be in its locale at all.
+ * Why `review` needs attention, in `uiLocale` (the language the editor is shown in). When the
+ * changed locales had no stored text yet (a legacy record getting its translations), nothing in
+ * them "changed": the message says instead that the text being reviewed may not be in its
+ * locale at all.
  */
 export function reviewMessage<F extends string>(
   definition: ReviewedFields<F>,
   review: ReviewConfirmation<NoInfer<F>>,
   stored: StoredValues<NoInfer<F>> | null,
   next: ContentValues<NoInfer<F>>,
+  uiLocale: Locale = defaultLocale,
 ): string {
-  const { noun } = definition.specs[review.field]
+  const field = definition.specs[review.field]
+  const copy = contentCopy[uiLocale]
   const others = locales.filter((locale) => locale !== review.locale)
   const changedOthers = changedLocales(review.field, stored, next).filter((locale) =>
     others.includes(locale),
@@ -111,14 +114,15 @@ export function reviewMessage<F extends string>(
   const added = changed.filter((locale) => stored !== null && stored[locale] === null)
 
   return added.length > 0
-    ? reviewCopy.versionAdded(noun, review.locale, added)
-    : reviewCopy.counterpartChanged(noun, review.locale, changed)
+    ? copy.versionAdded(field, review.locale, added)
+    : copy.counterpartChanged(field, review.locale, changed)
 }
 
-/** The label of the switch that confirms `review`. */
+/** The label of the switch that confirms `review`, in `uiLocale`. */
 export function confirmationLabel<F extends string>(
   definition: ReviewedFields<F>,
   review: ReviewConfirmation<NoInfer<F>>,
+  uiLocale: Locale = defaultLocale,
 ): string {
-  return reviewCopy.confirmation(definition.specs[review.field].noun, review.locale)
+  return contentCopy[uiLocale].confirmation(definition.specs[review.field], review.locale)
 }

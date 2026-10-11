@@ -8,7 +8,7 @@ import type {
   ReviewConfirmation,
   TranslatableContent,
 } from './definition'
-import { editorCopy } from './messages'
+import { contentCopy } from './messages'
 import { isLegacyContent } from './resolve'
 import { findPendingReviews, sameReview, type StoredValues } from './review'
 
@@ -157,19 +157,21 @@ export function confirmationsStillNeeded<F extends string>(
 /**
  * Every problem with the translatable fields, keyed by path. Nothing is checked while the content
  * is unchanged, so a record can be saved for its shared fields alone. Otherwise the draft goes
- * through the entity's own content schema, so the editor shows exactly the API's messages, and
- * every needed review that is not confirmed is flagged on its field.
+ * through the entity's own content schema, so the editor applies exactly the API's rules (with
+ * its messages in `uiLocale`, the language the editor is shown in), and every needed review that
+ * is not confirmed is flagged on its field.
  */
 export function validateContent<S extends FieldSpecs>(
   definition: TranslatableContent<S>,
   stored: StoredValues<FieldOf<S>> | null,
   draft: ContentDraft<FieldOf<S>>,
   confirmed: readonly ReviewConfirmation<FieldOf<S>>[],
+  uiLocale: Locale = defaultLocale,
 ): FormErrors {
   const errors: FormErrors = {}
   if (!hasContentChanges(definition, stored, draft)) return errors
 
-  const result = definition.schema.safeParse(draft)
+  const result = definition.schemaIn(uiLocale).safeParse(draft)
   if (!result.success) {
     for (const issue of result.error.issues) {
       const path = ['content', ...issue.path.map(String)].join('.')
@@ -179,7 +181,7 @@ export function validateContent<S extends FieldSpecs>(
 
   for (const review of reviewsNeeded(definition, stored, draft)) {
     if (!isConfirmed(confirmed, review)) {
-      errors[contentPath(review.locale, review.field)] ??= editorCopy.fieldPending
+      errors[contentPath(review.locale, review.field)] ??= contentCopy[uiLocale].fieldPending
     }
   }
 
@@ -209,14 +211,17 @@ export function tabWithErrors(errors: FormErrors, current: Locale): Locale | nul
 /**
  * The note each language tab carries, so a problem on a hidden tab stays visible: how many of
  * its fields have an error or an unconfirmed review, or, with nothing to fix, that the record
- * has no text in that language yet.
+ * has no text in that language yet. The notes are in `uiLocale`, the language the editor is
+ * shown in.
  */
 export function languageTabFlags<F extends string>(
   stored: StoredValues<F> | null,
   errors: FormErrors,
   needed: readonly ReviewConfirmation<NoInfer<F>>[],
   confirmed: readonly ReviewConfirmation<NoInfer<F>>[],
+  uiLocale: Locale = defaultLocale,
 ): Record<Locale, string | null> {
+  const copy = contentCopy[uiLocale]
   return Object.fromEntries(
     locales.map((locale) => {
       const count = new Set([
@@ -226,9 +231,9 @@ export function languageTabFlags<F extends string>(
           .map((review) => contentPath(review.locale, review.field)),
       ]).size
 
-      if (count > 0) return [locale, editorCopy.pending(count)]
+      if (count > 0) return [locale, copy.pending(count)]
       if (locale !== defaultLocale && stored?.[locale] === null) {
-        return [locale, editorCopy.missingTranslation]
+        return [locale, copy.missingTranslation]
       }
       return [locale, null]
     }),
@@ -237,9 +242,14 @@ export function languageTabFlags<F extends string>(
 
 /**
  * The summary shown above the actions while anything is invalid, or `null` when nothing is.
- * `errors` may include the entity's shared fields; tabs are named only for content errors.
+ * `errors` may include the entity's shared fields; tabs are named only for content errors, by
+ * their own labels. In `uiLocale`, the language the editor is shown in.
  */
-export function errorSummary(errors: FormErrors, currentTab: Locale): string | null {
+export function errorSummary(
+  errors: FormErrors,
+  currentTab: Locale,
+  uiLocale: Locale = defaultLocale,
+): string | null {
   const total = Object.keys(errors).length
   if (total === 0) return null
 
@@ -248,7 +258,7 @@ export function errorSummary(errors: FormErrors, currentTab: Locale): string | n
     .filter((locale) => locale !== currentTab && counts[locale] > 0)
     .map((locale) => localeLabels[locale])
 
-  return editorCopy.errorSummary(total, otherTabs)
+  return contentCopy[uiLocale].errorSummary(total, otherTabs)
 }
 
 /**

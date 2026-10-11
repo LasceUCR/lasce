@@ -306,3 +306,51 @@ describe('contentFieldLang', () => {
     expect(contentFieldLang(legacy, 'en')).toBe('en')
   })
 })
+
+describe('in another interface language', () => {
+  test('validates with the same rules and English messages', () => {
+    const draft = {
+      es: { name: '  ', summary: 'Sesión.' },
+      en: { name: 'x'.repeat(81), summary: '' },
+    }
+
+    expect(validateContent(eventContent, null, draft, [], 'en')).toEqual({
+      'content.es.name': 'The Spanish name is required.',
+      'content.en.name': 'The English name cannot be longer than 80 characters.',
+      'content.en.summary':
+        'The English summary is required because the Spanish summary was filled in.',
+    })
+  })
+
+  test('flags an unconfirmed review in English', () => {
+    const draft = { ...opened(), en: { ...opened().en, name: 'Advanced workshop' } }
+
+    expect(validateContent(eventContent, stored, draft, [], 'en')).toEqual({
+      'content.es.name': 'Update this field or confirm that it is still correct.',
+    })
+  })
+
+  test('falls back to the Spanish word for a field without an English name', () => {
+    expect(
+      validateContent(
+        altTextContent,
+        null,
+        { es: { altText: '' }, en: { altText: 'x' } },
+        [],
+        'en',
+      ),
+    ).toEqual({ 'content.es.altText': 'The Spanish texto alternativo is required.' })
+  })
+
+  test('writes the tab notes and the summary in English, naming tabs by their own label', () => {
+    expect(languageTabFlags(stored, { 'content.en.name': 'x' }, [], [], 'en')).toEqual({
+      es: null,
+      en: '1 to review',
+    })
+    expect(languageTabFlags(legacy, {}, [], [], 'en')).toEqual({ es: null, en: 'No translation' })
+    expect(errorSummary({ startsAt: 'z' }, 'es', 'en')).toBe('There is 1 field to review.')
+    expect(errorSummary({ 'content.en.name': 'x', startsAt: 'z' }, 'es', 'en')).toBe(
+      'There are 2 fields to review. Also check the English tab.',
+    )
+  })
+})

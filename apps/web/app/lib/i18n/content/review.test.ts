@@ -223,3 +223,32 @@ describe('confirmationLabel', () => {
     )
   })
 })
+
+describe('in another interface language', () => {
+  test('explains a review in English', () => {
+    const next = { es: spanish, en: { ...english, summary: 'A practical session.' } }
+
+    expect(
+      reviewMessage(eventContent, { locale: 'es', field: 'summary' }, stored, next, 'en'),
+    ).toBe(
+      'The English summary changed. Update the Spanish summary or confirm that it is still correct.',
+    )
+  })
+
+  test('explains in English that the base text may be in another language', () => {
+    const next = {
+      es: { name: 'Workshop', summary: null },
+      en: { name: 'Workshop', summary: null },
+    }
+
+    expect(reviewMessage(eventContent, { locale: 'es', field: 'name' }, legacy, next, 'en')).toBe(
+      'Since you are adding the English version, check the Spanish name: the original text may be in another language. Update it or confirm that it is correct.',
+    )
+  })
+
+  test('labels the switch in English', () => {
+    expect(confirmationLabel(eventContent, { locale: 'en', field: 'summary' }, 'en')).toBe(
+      'The English summary is still correct',
+    )
+  })
+})

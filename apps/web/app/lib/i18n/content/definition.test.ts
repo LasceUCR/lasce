@@ -31,6 +31,18 @@ describe('defineTranslatableContent', () => {
     expect(profileContent.fields).toEqual(['role', 'biography', 'motto'])
   })
 
+  test('builds one schema per interface language, the Spanish one being the API schema', () => {
+    expect(eventContent.schemaIn(defaultLocale)).toBe(eventContent.schema)
+    expect(eventContent.schemaIn('en')).toBe(eventContent.schemaIn('en'))
+
+    const blank = { es: { name: '', summary: null }, en: { name: 'Workshop', summary: null } }
+    const issue = (locale: 'es' | 'en') =>
+      eventContent.schemaIn(locale).safeParse(blank).error?.issues[0]?.message
+
+    expect(issue('es')).toBe('El nombre en español es obligatorio.')
+    expect(issue('en')).toBe('The Spanish name is required.')
+  })
+
   test('returns a frozen definition', () => {
     expect(Object.isFrozen(eventContent)).toBe(true)
     expect(Object.isFrozen(eventContent.fields)).toBe(true)

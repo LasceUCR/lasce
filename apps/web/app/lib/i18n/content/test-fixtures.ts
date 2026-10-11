@@ -7,13 +7,22 @@ import { defineTranslatableContent } from './definition'
  * assuming particular fields.
  */
 
-/** A required field with a length limit and an optional feminine field. */
+/** A required field with a length limit and an optional feminine field, both named in English. */
 export const eventContent = defineTranslatableContent({
-  name: { noun: { word: 'nombre', gender: 'm' }, required: true, maxLength: 80 },
-  summary: { noun: { word: 'descripción', gender: 'f' }, required: false },
+  name: {
+    noun: { word: 'nombre', gender: 'm' },
+    nouns: { en: 'name' },
+    required: true,
+    maxLength: 80,
+  },
+  summary: {
+    noun: { word: 'descripción', gender: 'f' },
+    nouns: { en: 'summary' },
+    required: false,
+  },
 })
 
-/** A single required field with a multi-word noun. */
+/** A single required field with a multi-word noun and no English name. */
 export const altTextContent = defineTranslatableContent({
   altText: { noun: { word: 'texto alternativo', gender: 'm' }, required: true },
 })

@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { defaultLocale, locales, type Locale } from '@/app/lib/i18n/config'
 
-import { contentMessages, type SpanishNoun } from './messages'
+import { contentCopy, type ContentCopy, type FieldNaming, type SpanishNoun } from './messages'
 
 /**
  * Translatable database content: the fields an entity writes once per language, and the Zod
@@ -16,7 +16,7 @@ import { contentMessages, type SpanishNoun } from './messages'
  */
 
 /** One field written once per language. */
-export interface TranslatableFieldSpec {
+export interface TranslatableFieldSpec extends FieldNaming {
   /** How messages name the field: `{ word: 'título', gender: 'm' }`. */
   readonly noun: SpanishNoun
   /**
@@ -70,6 +70,11 @@ export interface TranslatableContent<S extends FieldSpecs> {
    * optional field filled in some locales only is rejected at the empty locales' paths.
    */
   readonly schema: z.ZodType<ContentInput<S>>
+  /**
+   * The same schema with its messages in `uiLocale`, for an editor shown in that language.
+   * `schemaIn(defaultLocale)` is `schema`.
+   */
+  readonly schemaIn: (uiLocale: Locale) => z.ZodType<ContentInput<S>>
   readonly confirmationSchema: z.ZodType<ReviewConfirmation<FieldOf<S>>>
   /** A list of confirmations, no longer than the number of locale and field pairs. */
   readonly confirmationsSchema: z.ZodType<ReviewConfirmation<FieldOf<S>>[]>
@@ -83,53 +88,72 @@ function specOf<S extends FieldSpecs>(specs: S, field: FieldOf<S>): Translatable
 /** Field names become paths such as `content.en.name`, so they cannot contain dots. */
 const FIELD_NAME = /^[A-Za-z][A-Za-z0-9]*$/
 
-function requiredText(noun: SpanishNoun, locale: Locale, maxLength: number | undefined) {
+function requiredText(
+  copy: ContentCopy,
+  field: FieldNaming,
+  locale: Locale,
+  maxLength: number | undefined,
+) {
   const text = z
-    .string({ error: contentMessages.requiredNotText(noun, locale) })
+    .string({ error: copy.requiredNotText(field, locale) })
     .trim()
-    .min(1, contentMessages.required(noun, locale))
+    .min(1, copy.required(field, locale))
 
   return maxLength === undefined
     ? text
-    : text.max(maxLength, contentMessages.tooLong(noun, locale, maxLength))
+    : text.max(maxLength, copy.tooLong(field, locale, maxLength))
 }
 
 /** Absent, `null`, empty and whitespace-only all become `null`; other text is trimmed. */
-function optionalText(noun: SpanishNoun, locale: Locale, maxLength: number | undefined) {
+function optionalText(
+  copy: ContentCopy,
+  field: FieldNaming,
+  locale: Locale,
+  maxLength: number | undefined,
+) {
   const text =
     maxLength === undefined
       ? z.string()
-      : z.string().max(maxLength, contentMessages.tooLong(noun, locale, maxLength))
+      : z.string().max(maxLength, copy.tooLong(field, locale, maxLength))
 
   return z
-    .union([z.null(), z.string()], { error: contentMessages.optionalNotText(noun, locale) })
+    .union([z.null(), z.string()], { error: copy.optionalNotText(field, locale) })
     .optional()
     .transform((value) => value?.trim() || null)
     .pipe(text.nullable())
 }
 
 function localeSchema<S extends FieldSpecs>(
+  copy: ContentCopy,
   specs: S,
   fields: readonly FieldOf<S>[],
   locale: Locale,
 ) {
   const shape = Object.fromEntries(
     fields.map((field) => {
-      const { noun, required, maxLength } = specOf(specs, field)
+      const spec = specOf(specs, field)
       return [
         field,
-        required ? requiredText(noun, locale, maxLength) : optionalText(noun, locale, maxLength),
+        spec.required
+          ? requiredText(copy, spec, locale, spec.maxLength)
+          : optionalText(copy, spec, locale, spec.maxLength),
       ]
     }),
   )
 
-  return z.strictObject(shape, { error: contentMessages.missingLocale(locale, fields) })
+  return z.strictObject(shape, { error: copy.missingLocale(locale, fields) })
 }
 
-function contentSchema<S extends FieldSpecs>(specs: S, fields: readonly FieldOf<S>[]) {
+function contentSchema<S extends FieldSpecs>(
+  copy: ContentCopy,
+  specs: S,
+  fields: readonly FieldOf<S>[],
+) {
   const schema = z.strictObject(
-    Object.fromEntries(locales.map((locale) => [locale, localeSchema(specs, fields, locale)])),
-    { error: contentMessages.missingContent(locales) },
+    Object.fromEntries(
+      locales.map((locale) => [locale, localeSchema(copy, specs, fields, locale)]),
+    ),
+    { error: copy.missingContent(locales) },
   )
 
   const optionalFields = fields.filter((field) => !specOf(specs, field).required)
@@ -147,11 +171,7 @@ function contentSchema<S extends FieldSpecs>(specs: S, fields: readonly FieldOf<
         context.addIssue({
           code: 'custom',
           path: [locale, field],
-          message: contentMessages.requiredWithCounterpart(
-            specOf(specs, field).noun,
-            locale,
-            filled,
-          ),
+          message: copy.requiredWithCounterpart(specOf(specs, field), locale, filled),
         })
       }
     }
@@ -202,10 +222,24 @@ export function defineTranslatableContent<const S extends FieldSpecs>(
     field: z.enum(fields as [FieldOf<S>, ...FieldOf<S>[]]),
   })
 
+  // One schema per interface language, built the first time it is asked for.
+  const schemas = new Map<Locale, z.ZodType<ContentInput<S>>>()
+  function schemaIn(uiLocale: Locale): z.ZodType<ContentInput<S>> {
+    let schema = schemas.get(uiLocale)
+    if (!schema) {
+      schema = contentSchema(contentCopy[uiLocale], specs, fields) as unknown as z.ZodType<
+        ContentInput<S>
+      >
+      schemas.set(uiLocale, schema)
+    }
+    return schema
+  }
+
   return Object.freeze({
     specs,
     fields: Object.freeze([...fields]),
-    schema: contentSchema(specs, fields) as unknown as z.ZodType<ContentInput<S>>,
+    schema: schemaIn(defaultLocale),
+    schemaIn,
     confirmationSchema: confirmationSchema as z.ZodType<ReviewConfirmation<FieldOf<S>>>,
     confirmationsSchema: z
       .array(confirmationSchema)
