@@ -52,6 +52,42 @@ describe('PublicationForm', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  test('prompts discard confirmation when clicking Cancel with modifications, and cancels upon confirmation', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+
+    render(<PublicationForm {...defaultArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), ' (borrador)')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('does not cancel when discard confirmation is dismissed', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+
+    render(<PublicationForm {...defaultArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), ' (borrador)')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(
+      screen.queryByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).not.toBeInTheDocument()
+  })
+
   test('allows saving when the DOI is blank, since it is optional', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
@@ -60,9 +96,6 @@ describe('PublicationForm', () => {
 
     await user.clear(screen.getByRole('textbox', { name: 'DOI' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ DOI: '' }))
   })
@@ -167,20 +200,7 @@ describe('PublicationForm', () => {
     ).not.toBeInTheDocument()
   })
 
-  test('asks for confirmation before saving', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-
-    render(<PublicationForm {...defaultArgs} onSave={onSave} />)
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
-
-    expect(screen.getByRole('dialog', { name: 'Guardar cambios' })).toBeInTheDocument()
-  })
-
-  test('saves the edited values once the confirmation is accepted', async () => {
+  test('saves the edited values directly when Confirmar is clicked, without asking again', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
 
@@ -217,18 +237,7 @@ describe('PublicationForm', () => {
     expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue('Nuevo título')
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
 
-    // Confirm the form
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    const dialog = screen.getByRole('dialog', {
-      name: 'Guardar cambios',
-    })
-
-    await user.click(
-      within(dialog).getByRole('button', {
-        name: 'Confirmar',
-      }),
-    )
 
     expect(onSave).toHaveBeenCalledWith({
       title: 'Nuevo título',
@@ -241,24 +250,6 @@ describe('PublicationForm', () => {
       date: new Date('2026-09-17T00:00:00'),
     })
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
-
-  test('does not save when the confirmation is cancelled', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-
-    render(<PublicationForm {...defaultArgs} onSave={onSave} />)
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    const dialog = screen.getByRole('dialog', {
-      name: 'Guardar cambios',
-    })
-
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
