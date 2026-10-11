@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import {
@@ -14,6 +15,12 @@ import {
  * the write path the public GET sibling deliberately has none of.
  */
 export const dynamic = 'force-dynamic'
+
+/** Ids are Postgres uuids. Anything else cannot match a row, and Prisma would throw on it. */
+const activityIdSchema = z.uuid()
+
+const ACTIVITY_GONE_MESSAGE =
+  'Esta actividad ya no existe. Es posible que otra persona la haya eliminado; recargue la página.'
 
 export async function PATCH(
   request: Request,
@@ -44,9 +51,25 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const activity = await updateNosotrosActivity(id, parsed.data, guard.user.id)
+  if (!activityIdSchema.safeParse(id).success) {
+    return NextResponse.json({ error: ACTIVITY_GONE_MESSAGE }, { status: 404 })
+  }
+
+  let activity: Awaited<ReturnType<typeof updateNosotrosActivity>>
+  try {
+    activity = await updateNosotrosActivity(id, parsed.data, guard.user.id)
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          'No se pudieron guardar los cambios: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+      },
+      { status: 500 },
+    )
+  }
+
   if (!activity) {
-    return NextResponse.json({ error: `No existe una actividad con id "${id}".` }, { status: 404 })
+    return NextResponse.json({ error: ACTIVITY_GONE_MESSAGE }, { status: 404 })
   }
 
   return NextResponse.json({ activity }, { headers: { 'Cache-Control': 'no-store' } })
@@ -60,9 +83,25 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  const deleted = await deleteNosotrosActivity(id)
+  if (!activityIdSchema.safeParse(id).success) {
+    return NextResponse.json({ error: ACTIVITY_GONE_MESSAGE }, { status: 404 })
+  }
+
+  let deleted: boolean
+  try {
+    deleted = await deleteNosotrosActivity(id)
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          'No se pudo eliminar la actividad: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+      },
+      { status: 500 },
+    )
+  }
+
   if (!deleted) {
-    return NextResponse.json({ error: `No existe una actividad con id "${id}".` }, { status: 404 })
+    return NextResponse.json({ error: ACTIVITY_GONE_MESSAGE }, { status: 404 })
   }
 
   return new NextResponse(null, { status: 204 })
