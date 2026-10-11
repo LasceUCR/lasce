@@ -106,7 +106,10 @@
   },
   "common": {
     "backToHome": "Back to home",
-    "backToWorkAreas": "Back to the work areas"
+    "backToWorkAreas": "Back to the work areas",
+    "toast": {
+      "dismiss": "Dismiss notification"
+    }
   },
   "contact": {
     "meta": {

@@ -106,7 +106,10 @@
   },
   "common": {
     "backToHome": "Volver al inicio",
-    "backToWorkAreas": "Volver a las áreas de trabajo"
+    "backToWorkAreas": "Volver a las áreas de trabajo",
+    "toast": {
+      "dismiss": "Cerrar notificación"
+    }
   },
   "contact": {
     "meta": {
