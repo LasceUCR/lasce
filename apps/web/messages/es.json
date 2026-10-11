@@ -379,8 +379,7 @@
     "deleted": "Noticia eliminada correctamente.",
     "errors": {
       "saveUnknown": "No se pudo guardar la noticia. Inténtelo de nuevo.",
-      "deleteUnknown": "No se pudo eliminar la noticia. Inténtelo de nuevo.",
-      "upload": "No se pudo subir la imagen. Inténtelo de nuevo."
+      "deleteUnknown": "No se pudo eliminar la noticia. Inténtelo de nuevo."
     }
   }
 }

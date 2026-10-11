@@ -1,13 +1,9 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
-import { useToast } from '@/app/components/public/toast/ToastProvider'
-import { uploadNewsImage, type UploadNewsImageResult } from '@/app/(public)/noticias/actions'
 import type { NewsArticle } from '@/app/lib/news'
 
 /** The editable fields of a news article, as `/api/news` expects them. */
@@ -18,8 +14,6 @@ export interface NewsArticleFormValues {
   publishedAt: string | null
   externalUrl: string
   abstract: string
-  imageUrl: string
-  imageAlt: string
 }
 
 export interface NewsArticleFormProps {
@@ -64,53 +58,16 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   const [publishedAt, setPublishedAt] = useState(article?.publishedAt ?? '')
   const [externalUrl, setExternalUrl] = useState(article?.href ?? '')
   const [abstract, setAbstract] = useState(article?.abstract ?? '')
-  const [imageAlt, setImageAlt] = useState(article?.imageAlt ?? '')
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imageRemoved, setImageRemoved] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const t = useTranslations('news.errors')
-  const toast = useToast()
-  // The toast from the last failed upload, replaced by the next attempt.
-  const uploadErrorToast = useRef<number | null>(null)
 
-  const hasImage = imageFile !== null || (Boolean(article?.imageUrl) && !imageRemoved)
   const canSave =
     title.trim() !== '' &&
     splitAuthors(authors).length > 0 &&
     source.trim() !== '' &&
     externalUrl.trim() !== '' &&
-    abstract.trim() !== '' &&
-    hasImage
+    abstract.trim() !== ''
 
-  async function handleSave() {
-    if (!canSave || isUploading) return
-
-    let imageUrl = article?.imageUrl ?? ''
-    if (imageFile) {
-      if (uploadErrorToast.current !== null) {
-        toast.dismiss(uploadErrorToast.current)
-        uploadErrorToast.current = null
-      }
-      setIsUploading(true)
-
-      let result: UploadNewsImageResult
-      try {
-        const formData = new FormData()
-        formData.set('file', imageFile)
-        result = await uploadNewsImage(formData)
-      } catch {
-        setIsUploading(false)
-        uploadErrorToast.current = toast.show('error', t('upload'))
-        return
-      }
-      setIsUploading(false)
-
-      if (!result.ok) {
-        uploadErrorToast.current = toast.show('error', result.error)
-        return
-      }
-      imageUrl = result.imageUrl
-    }
+  function handleSave() {
+    if (!canSave) return
 
     onSave({
       title,
@@ -119,8 +76,6 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       publishedAt: publishedAt === '' ? null : publishedAt,
       externalUrl,
       abstract,
-      imageUrl,
-      imageAlt,
     })
   }
 
@@ -171,22 +126,13 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
         validate={requireNonEmpty('El resumen es obligatorio.')}
         value={abstract}
       />
-      <FormField label="Texto alternativo de la imagen" onChange={setImageAlt} value={imageAlt} />
-      <FileDropInput
-        existingImageUrl={article?.imageUrl}
-        label="Imagen"
-        onFileSelect={(file) => {
-          setImageFile(file)
-          setImageRemoved(file === null)
-        }}
-      />
 
       <div className="news-article-form-actions">
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
-        <Button disabled={!canSave || isUploading} onClick={handleSave} variant="primary">
-          {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
+        <Button disabled={!canSave} onClick={handleSave} variant="primary">
+          Confirmar
         </Button>
       </div>
     </div>
