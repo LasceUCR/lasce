@@ -1,5 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { PublicationCard, type PublicationCardProps } from './PublicationCard'
 import { Default, InstitutionalReport } from './PublicationCard.stories'
@@ -36,7 +38,7 @@ afterEach(() => {
 
 describe('PublicationCard', () => {
   test('shows the title, authors, venue, year and research group it was given', () => {
-    const { container } = render(<PublicationCard {...defaultArgs} />)
+    const { container } = renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     expect(screen.getByRole('heading', { name: defaultArgs.title })).toBeInTheDocument()
 
@@ -49,14 +51,14 @@ describe('PublicationCard', () => {
   })
 
   test('shows the abstract with the clamp class applied', () => {
-    render(<PublicationCard {...defaultArgs} />)
+    renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     const abstract = screen.getByText(defaultArgs.abstract)
     expect(abstract).toHaveClass('publication-abstract')
   })
 
   test('links out through the DOI / external link action', () => {
-    render(<PublicationCard {...defaultArgs} />)
+    renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     const link = screen.getByRole('link', { name: /DOI \/ Enlace externo/ })
     expect(link).toHaveAttribute('href', defaultArgs.href)
@@ -64,7 +66,7 @@ describe('PublicationCard', () => {
   })
 
   test('places the external link in a footer aligned to the right of the card', () => {
-    render(<PublicationCard {...defaultArgs} />)
+    renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     const link = screen.getByRole('link', { name: /DOI \/ Enlace externo/ })
     expect(link.parentElement).toHaveClass('publication-card-footer')
@@ -72,14 +74,14 @@ describe('PublicationCard', () => {
 
   test('omits the footer when there is no link and the abstract fits', () => {
     mockAbstractOverflow(false)
-    const { container } = render(<PublicationCard {...defaultArgs} href={undefined} />)
+    const { container } = renderWithIntl(<PublicationCard {...defaultArgs} href={undefined} />)
 
     expect(container.querySelector('.publication-card-footer')).toBeNull()
   })
 
   test('offers a "Leer resumen completo" button when a publication without a link overflows', () => {
     mockAbstractOverflow(true)
-    render(<PublicationCard {...defaultArgs} href={undefined} />)
+    renderWithIntl(<PublicationCard {...defaultArgs} href={undefined} />)
 
     const abstract = screen.getByText(defaultArgs.abstract)
     const toggle = screen.getByRole('button', { name: 'Leer resumen completo' })
@@ -105,7 +107,7 @@ describe('PublicationCard', () => {
 
   test('never offers the abstract toggle on a publication with an external link', () => {
     mockAbstractOverflow(true)
-    render(<PublicationCard {...defaultArgs} />)
+    renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     expect(
       screen.queryByRole('button', { name: /Leer resumen completo|Ocultar resumen/ }),
@@ -114,39 +116,53 @@ describe('PublicationCard', () => {
   })
 
   test('renders a non-scientific publication venue without truncating it', () => {
-    render(<PublicationCard {...institutionalArgs} />)
+    renderWithIntl(<PublicationCard {...institutionalArgs} />)
 
     expect(screen.getByText(institutionalArgs.venue, { exact: false })).toBeInTheDocument()
   })
 
   test('marks the title and abstract with the language they are written in', () => {
-    render(<PublicationCard {...defaultArgs} contentLang="en" />)
+    renderWithIntl(<PublicationCard {...defaultArgs} contentLang="en" />)
 
     expect(screen.getByRole('heading', { level: 3 })).toHaveAttribute('lang', 'en')
     expect(screen.getByText(defaultArgs.abstract)).toHaveAttribute('lang', 'en')
   })
 
   test('declares the language unknown for a legacy record instead of claiming Spanish', () => {
-    render(<PublicationCard {...defaultArgs} contentLang="" />)
+    renderWithIntl(<PublicationCard {...defaultArgs} contentLang="" />)
 
     expect(screen.getByRole('heading', { level: 3 })).toHaveAttribute('lang', '')
   })
 
   test('inherits the page language when no content language is given', () => {
-    render(<PublicationCard {...defaultArgs} />)
+    renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     expect(screen.getByRole('heading', { level: 3 })).not.toHaveAttribute('lang')
   })
 
   test('tells editors that the English version is missing', () => {
-    render(<PublicationCard {...defaultArgs} translationMissing />)
+    renderWithIntl(<PublicationCard {...defaultArgs} translationMissing />)
 
     expect(screen.getByRole('note')).toHaveTextContent('Sin versión en inglés.')
   })
 
   test('says nothing about translations by default', () => {
-    render(<PublicationCard {...defaultArgs} />)
+    renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
+  })
+
+  test('shows its buttons and note in the language the site is shown in', () => {
+    renderWithIntl(
+      <PublicationCard {...defaultArgs} href="https://example.org/a" translationMissing />,
+      { locale: 'en' },
+    )
+
+    expect(screen.getByRole('link', { name: 'DOI / External link' })).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'No English version. Editing the title or the abstract requires completing both languages.',
+      ),
+    ).toBeInTheDocument()
   })
 })

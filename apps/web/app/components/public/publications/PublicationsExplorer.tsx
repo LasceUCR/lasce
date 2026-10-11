@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PublicationCard } from './PublicationCard'
@@ -12,20 +13,23 @@ import { Modal } from '@/app/components/public/Modal'
 import { Button } from '@/app/components/public/Button'
 import { PublicationForm, type PublicationFormHandle } from './PublicationForm'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
-import { parseApiError, sendJson } from '@/app/lib/cms/save'
+import { sendJson } from '@/app/lib/cms/save'
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 import {
   buildCreateRequest,
   buildUpdateRequest,
+  describeDeleteFailure,
   describeSaveFailure,
   emptyInitial,
   initialFromPublication,
-  SAVE_ERROR_MESSAGE,
+  type EditorLanguage,
   type PublicationDraft,
   type PublicationFormInitial,
   type SaveFailure,
 } from '@/app/lib/publication-form'
 import type { ReviewConfirmation } from '@/app/lib/publication-schema'
+
+import { usePublicationEditorLanguage } from './usePublicationEditorLanguage'
 
 export interface PublicationsExplorerProps {
   publications: Publication[]
@@ -43,13 +47,16 @@ async function send(
   url: string,
   method: 'POST' | 'PATCH',
   body: unknown,
+  language: EditorLanguage,
 ): Promise<SaveFailure | null> {
   const result = await sendJson(url, method, body)
 
   if (result.ok) return null
-  if (result.status === 0) return { message: SAVE_ERROR_MESSAGE, fieldErrors: {}, reopen: false }
+  if (result.status === 0) {
+    return { message: language.saveErrors.generic, fieldErrors: {}, reopen: false }
+  }
 
-  return describeSaveFailure(result.status, result.body)
+  return describeSaveFailure(result.status, result.body, language)
 }
 
 interface Editing {
@@ -66,6 +73,9 @@ export function PublicationsExplorer({
 }: PublicationsExplorerProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
+  // The editing controls and messages follow the site's language.
+  const t = useTranslations('publications')
+  const language = usePublicationEditorLanguage()
   const [editing, setEditing] = useState<Editing | null>(null)
   const [saveFailure, setSaveFailure] = useState<SaveFailure | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -105,7 +115,12 @@ export function PublicationsExplorer({
 
     if (saving.current) return
     saving.current = true
-    const failure = await send(`/api/publicaciones/${editing.publication.slug}`, 'PATCH', body)
+    const failure = await send(
+      `/api/publicaciones/${editing.publication.slug}`,
+      'PATCH',
+      body,
+      language,
+    )
     saving.current = false
     if (failure) {
       setSaveFailure(failure)
@@ -121,7 +136,7 @@ export function PublicationsExplorer({
     saving.current = true
     setCreateFailure(null)
 
-    const failure = await send('/api/publicaciones', 'POST', buildCreateRequest(draft))
+    const failure = await send('/api/publicaciones', 'POST', buildCreateRequest(draft), language)
     saving.current = false
     if (failure) {
       setCreateFailure(failure)
@@ -139,7 +154,7 @@ export function PublicationsExplorer({
     const result = await sendJson(`/api/publicaciones/${id}`, 'DELETE')
 
     if (!result.ok) {
-      setDeleteError(parseApiError(result.body).message ?? SAVE_ERROR_MESSAGE)
+      setDeleteError(describeDeleteFailure(result.status, result.body, language))
       return
     }
 
@@ -162,18 +177,18 @@ export function PublicationsExplorer({
 
   function getEmptyMessage() {
     if (selectedGroup !== null && query.trim() !== '') {
-      return `No se encontraron publicaciones de ${selectedGroup} para “${query}”.`
+      return t('page.emptyGroupAndQuery', { group: selectedGroup, query })
     }
 
     if (selectedGroup !== null) {
-      return `No hay publicaciones de ${selectedGroup}.`
+      return t('page.emptyGroup', { group: selectedGroup })
     }
 
     if (query.trim() !== '') {
-      return `No se encontraron publicaciones para “${query}”.`
+      return t('page.emptyQuery', { query })
     }
 
-    return 'No hay publicaciones disponibles.'
+    return t('page.empty')
   }
 
   return (
@@ -181,19 +196,19 @@ export function PublicationsExplorer({
       <div className="publications-toolbar">
         <SearchBar
           className="publications-search"
-          label="Buscar publicaciones"
+          label={t('page.searchLabel')}
           onQueryChange={setQuery}
-          placeholder="Buscar por título, autor o palabra clave..."
+          placeholder={t('page.searchPlaceholder')}
           query={query}
         />
 
         <div className="publications-group-filter">
           <Select
             id="publication-research-group"
-            label="Grupo de investigación"
+            label={t('page.groupLabel')}
             onChange={(value) => setSelectedGroup(value === '' ? null : (value as ResearchGroup))}
             options={[
-              { value: '', label: 'Todas las publicaciones' },
+              { value: '', label: t('page.allGroups') },
               { value: 'LASCE', label: 'LASCE' },
               { value: 'ROSAC', label: 'ROSAC' },
             ]}
@@ -201,15 +216,17 @@ export function PublicationsExplorer({
           />
         </div>
 
-        <div aria-label="Cantidad de publicaciones" aria-live="polite" className="publications-kpi">
+        <div aria-label={t('page.countLabel')} aria-live="polite" className="publications-kpi">
           <strong>{filtered.length}</strong>
           <span>
-            {selectedGroup ? `publicaciones (${selectedGroup})` : 'publicaciones en total'}
+            {selectedGroup
+              ? t('page.countInGroup', { count: filtered.length, group: selectedGroup })
+              : t('page.countTotal', { count: filtered.length })}
           </span>
         </div>
       </div>
 
-      <h2 id="publications-title">Publicaciones recientes</h2>
+      <h2 id="publications-title">{t('page.recent')}</h2>
 
       {deleteError ? (
         <p className="form-alert" role="alert">
@@ -229,7 +246,7 @@ export function PublicationsExplorer({
         <div className="publication-list">
           {editMode && canCreate ? (
             <AddItemCard
-              label="Agregar publicación"
+              label={t('editor.addCard')}
               size="large"
               onRequestClose={(close) => {
                 if (createForm.current) createForm.current.requestCancel()
@@ -281,11 +298,14 @@ export function PublicationsExplorer({
             return (
               <EditableWrapper
                 key={publication.slug}
-                deleteConfirmMessage="Esta acción no se puede deshacer y borrará la publicación del catálogo público."
-                deleteConfirmTitle="Eliminar publicación"
-                deleteLabel={`Eliminar ${publication.title}`}
+                deleteCancelLabel={t('deleteDialog.cancel')}
+                deleteConfirmLabel={t('deleteDialog.confirm')}
+                deleteConfirmMessage={t('deleteDialog.message')}
+                deleteConfirmTitle={t('deleteDialog.title')}
+                deleteLabel={t('editor.deleteLabel', { title: publication.title })}
                 deleteTargetEntity={publication.title}
-                editLabel={`Editar ${publication.title}`}
+                deleteTargetLabel={t('deleteDialog.target')}
+                editLabel={t('editor.editLabel', { title: publication.title })}
                 onDelete={canDelete ? () => handleDeletePublication(publication.slug) : undefined}
                 onEdit={canEdit ? () => openEditor(publication) : undefined}
               >
@@ -303,7 +323,7 @@ export function PublicationsExplorer({
         }}
         open={editing !== null}
         size="large"
-        title="Editar publicación"
+        title={t('editor.editTitle')}
       >
         {editing ? (
           <>
@@ -318,7 +338,7 @@ export function PublicationsExplorer({
                     }}
                     variant="secondary"
                   >
-                    Cerrar y cargar la versión actual
+                    {t('editor.reload')}
                   </Button>
                 ) : null}
               </div>

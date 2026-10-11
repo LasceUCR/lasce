@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import es from '@/messages/es.json' with { type: 'json' }
+
 import { versionSchema } from '@/app/lib/cms/version'
 import type { Locale } from '@/app/lib/i18n/config'
 import {
@@ -33,8 +35,8 @@ export type ResearchGroup = 'LASCE' | 'ROSAC'
  * `research.research_record_translations`.
  */
 export const publicationContent = defineTranslatableContent({
-  title: { noun: { word: 'título', gender: 'm' }, required: true },
-  abstract: { noun: { word: 'resumen', gender: 'm' }, required: true },
+  title: { noun: { word: 'título', gender: 'm' }, nouns: { en: 'title' }, required: true },
+  abstract: { noun: { word: 'resumen', gender: 'm' }, nouns: { en: 'abstract' }, required: true },
 })
 
 type PublicationContentSpecs = typeof publicationContent.specs
@@ -99,58 +101,67 @@ export const contentSchema = publicationContent.schema
 const DOI_PATTERN = /^10\.\d+(?:\.\d+)*\/\S+$/
 
 /**
- * An optional text field: absent, `null`, empty or whitespace-only all mean "no value" and
- * become `null`; anything else is trimmed and must match `format`.
+ * The messages of the shared fields' rules, from the `publications.validation` namespace of
+ * `apps/web/messages/`. They are plain text, read with `t.raw` in the editor: no ICU arguments.
  */
-function optionalText(format: z.ZodType<string, string>) {
-  return z
-    .union([z.null(), z.string({ error: 'Debe ser texto o null.' })])
-    .transform((value) => value?.trim() || null)
-    .pipe(z.union([z.null(), format]))
-}
-
-export const externalUrlSchema = optionalText(
-  z.url({
-    protocol: /^https?$/,
-    error: 'El enlace externo debe ser una URL absoluta que empiece con http:// o https://.',
-  }),
-)
-
-export const doiSchema = optionalText(
-  z
-    .string()
-    .regex(DOI_PATTERN, 'El DOI debe tener la forma 10.<registrante>/<sufijo>, sin prefijos.'),
-)
-
-const DATE_REQUIRED = 'La fecha de publicación es obligatoria.'
+export type PublicationFieldMessages = typeof es.publications.validation
 
 /**
- * The publication date: a date string (`2026-01-31` or a full ISO timestamp) or a `Date`.
- * Required and never cleared. Only text or a `Date` reaches the coercion, because coercing
- * `null`, `0` or `false` would silently produce 1970-01-01, and blank text is rejected as
- * missing rather than parsed.
+ * The shared fields' rules, with their messages in one language. The API uses the Spanish ones
+ * (the exports below); the editor builds its own in the language the site is shown in, so it
+ * applies the same rules and says so in that language.
  */
-export const publicationDateSchema = z
-  .union([z.string().trim().min(1, DATE_REQUIRED), z.date()], { error: DATE_REQUIRED })
-  .pipe(z.coerce.date({ error: 'La fecha de publicación no es válida.' }))
+export function publicationFieldSchemas(messages: PublicationFieldMessages) {
+  /**
+   * An optional text field: absent, `null`, empty or whitespace-only all mean "no value" and
+   * become `null`; anything else is trimmed and must match `format`.
+   */
+  function optionalText(format: z.ZodType<string, string>) {
+    return z
+      .union([z.null(), z.string({ error: messages.textOrNull })])
+      .transform((value) => value?.trim() || null)
+      .pipe(z.union([z.null(), format]))
+  }
+
+  /**
+   * The publication date: a date string (`2026-01-31` or a full ISO timestamp) or a `Date`.
+   * Required and never cleared. Only text or a `Date` reaches the coercion, because coercing
+   * `null`, `0` or `false` would silently produce 1970-01-01, and blank text is rejected as
+   * missing rather than parsed.
+   */
+  const date = z
+    .union([z.string().trim().min(1, messages.dateRequired), z.date()], {
+      error: messages.dateRequired,
+    })
+    .pipe(z.coerce.date({ error: messages.dateInvalid }))
+
+  return {
+    externalUrl: optionalText(z.url({ protocol: /^https?$/, error: messages.href })),
+    doi: optionalText(z.string().regex(DOI_PATTERN, messages.doi)),
+    date,
+    authors: z
+      .array(z.string({ error: messages.authorNotText }).trim().min(1, messages.authorRequired), {
+        error: messages.authorsNotList,
+      })
+      .min(1, messages.authorsRequired),
+    researchGroup: z.enum(['LASCE', 'ROSAC'], { error: messages.group }),
+    venue: z.string({ error: messages.venue }).trim().min(1, messages.venue),
+  }
+}
+
+/** The API's rules, in Spanish. */
+const apiFieldSchemas = publicationFieldSchemas(es.publications.validation)
+
+export const externalUrlSchema = apiFieldSchemas.externalUrl
+
+export const doiSchema = apiFieldSchemas.doi
+
+export const publicationDateSchema = apiFieldSchemas.date
 
 export const sharedFieldSchemas = {
-  authors: z
-    .array(
-      z
-        .string({ error: 'El nombre del autor debe ser texto.' })
-        .trim()
-        .min(1, 'El nombre del autor es obligatorio.'),
-      { error: 'Los autores son obligatorios y deben ser una lista.' },
-    )
-    .min(1, 'Debe existir al menos un autor.'),
-  researchGroup: z.enum(['LASCE', 'ROSAC'], {
-    error: 'Seleccione un grupo de investigación válido.',
-  }),
-  venue: z
-    .string({ error: 'La publicación es obligatoria.' })
-    .trim()
-    .min(1, 'La publicación es obligatoria.'),
+  authors: apiFieldSchemas.authors,
+  researchGroup: apiFieldSchemas.researchGroup,
+  venue: apiFieldSchemas.venue,
   date: publicationDateSchema,
 }
 

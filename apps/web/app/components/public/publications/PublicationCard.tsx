@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useEffect, useId, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
@@ -42,6 +43,8 @@ export function PublicationCard({
   contentLang,
   translationMissing = false,
 }: PublicationCardProps) {
+  // The card's own buttons and note follow the site's language; its content arrives in props.
+  const t = useTranslations('publications.card')
   const abstractId = useId()
   const abstractRef = useRef<HTMLParagraphElement>(null)
   const [expanded, setExpanded] = useState(false)
@@ -81,11 +84,7 @@ export function PublicationCard({
         {abstract}
       </p>
 
-      {translationMissing ? (
-        <Notice tone="warning">
-          Sin versión en inglés. Al editar el título o el resumen se deben completar ambos idiomas.
-        </Notice>
-      ) : null}
+      {translationMissing ? <Notice tone="warning">{t('translationMissing')}</Notice> : null}
 
       {href ? (
         <div className="publication-card-footer">
@@ -96,7 +95,7 @@ export function PublicationCard({
             target="_blank"
             variant="primary"
           >
-            DOI / Enlace externo
+            {t('externalLink')}
           </Button>
         </div>
       ) : null}
@@ -116,7 +115,7 @@ export function PublicationCard({
             onClick={() => setExpanded((current) => !current)}
             variant="primary"
           >
-            {expanded ? 'Ocultar resumen' : 'Leer resumen completo'}
+            {expanded ? t('readLess') : t('readMore')}
           </Button>
         </div>
       ) : null}

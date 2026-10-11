@@ -1,9 +1,13 @@
 import { describe, expect, test } from 'vitest'
 
+import en from '@/messages/en.json' with { type: 'json' }
+
 import {
   buildCreateRequest,
   buildUpdateRequest,
+  describeDeleteFailure,
   describeSaveFailure,
+  editorLanguage,
   emptyInitial,
   errorsByLocale,
   hasContentChanges,
@@ -338,5 +342,88 @@ describe('describeSaveFailure', () => {
       fieldErrors: {},
       reopen: false,
     })
+  })
+})
+
+describe('in English, the language the site is shown in', () => {
+  const english = editorLanguage('en', en.publications)
+
+  test('validates with the same rules and English messages', () => {
+    const initial = emptyInitial()
+    const draft = edit(withContent(initial.draft, 'es', 'Título'), {
+      href: 'ftp://example.com',
+      DOI: 'doi:10.1/x',
+    })
+
+    expect(validateDraft(initial, draft, [], english)).toEqual({
+      'content.es.abstract': 'The Spanish abstract is required.',
+      'content.en.title': 'The English title is required.',
+      'content.en.abstract': 'The English abstract is required.',
+      authors: 'There must be at least one author.',
+      venue: 'The journal or publication is required.',
+      href: 'The external link must be an absolute URL starting with http:// or https://.',
+      DOI: 'The DOI must have the form 10.<registrant>/<suffix>, without prefixes.',
+    })
+  })
+
+  test('applies exactly the rules the Spanish editor applies', () => {
+    const initial = initialFromPublication(legacy)
+    const draft = withContent(initial.draft, 'es', 'Nuevo título')
+
+    expect(Object.keys(validateDraft(initial, draft, [], english))).toEqual(
+      Object.keys(validateDraft(initial, draft, [])),
+    )
+  })
+
+  test('shows its own messages instead of the server, which speaks Spanish', () => {
+    expect(
+      describeSaveFailure(
+        400,
+        {
+          code: 'invalid-body',
+          issues: [{ path: 'DOI', message: 'El DOI no es válido.' }],
+        },
+        english,
+      ),
+    ).toEqual({
+      message: 'Check the highlighted fields.',
+      fieldErrors: { DOI: 'Check the highlighted fields.' },
+      reopen: false,
+    })
+    expect(
+      describeSaveFailure(409, { code: 'duplicate-doi', error: 'Ya existe.' }, english).fieldErrors,
+    ).toEqual({ DOI: 'A publication with this DOI already exists.' })
+    expect(
+      describeSaveFailure(
+        400,
+        { code: 'review-required', pending: [{ path: 'content.es.title' }] },
+        english,
+      ).fieldErrors,
+    ).toEqual({ 'content.es.title': 'Update this field or confirm that it is still correct.' })
+    expect(describeSaveFailure(409, { code: 'conflict' }, english).message).toMatch(
+      /^Someone else saved changes/,
+    )
+    expect(describeSaveFailure(401, { error: 'No ha iniciado sesión.' }, english).message).toBe(
+      'You are not signed in. Sign in again to save; your changes are still in the form.',
+    )
+    expect(describeSaveFailure(502, null, english).message).toBe(
+      'The change could not be saved. Please try again.',
+    )
+  })
+
+  test('explains a failed delete in English', () => {
+    expect(describeDeleteFailure(403, { error: 'No tiene permisos.' }, english)).toBe(
+      'You do not have permission to modify this content.',
+    )
+    expect(describeDeleteFailure(500, null, english)).toBe(
+      'The publication could not be deleted. Please try again.',
+    )
+  })
+
+  test('keeps the server message in Spanish', () => {
+    expect(describeDeleteFailure(403, { error: 'No tiene permisos.' })).toBe('No tiene permisos.')
+    expect(describeDeleteFailure(500, null)).toBe(
+      'No se pudo eliminar la publicación. Inténtelo de nuevo.',
+    )
   })
 })

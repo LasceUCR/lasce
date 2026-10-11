@@ -346,23 +346,35 @@ test('meets WCAG A and AA automated checks in English and in the bilingual edito
     await page.goto('/publicaciones')
     await switchLanguage(page, 'Español', 'English')
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Scientific publications' }),
+    ).toBeVisible()
+    await expect(page.getByRole('searchbox', { name: 'Search publications' })).toBeVisible()
+    await expect(page).toHaveTitle('Publications | LASCE')
     expect((await axe().analyze()).violations).toEqual([])
 
+    // The editor follows the site's language: everything it says is in English.
     await openEditMode(page)
-    await page.getByRole('button', { name: `Editar ${fixtures.legacy.title}` }).click()
-    const dialog = page.getByRole('dialog', { name: 'Editar publicación' })
+    await page.getByRole('button', { name: `Edit ${fixtures.legacy.title}` }).click()
+    const dialog = page.getByRole('dialog', { name: 'Edit publication' })
+    await expect(dialog.getByText(/may not be in Spanish/)).toBeVisible()
     expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
 
     // With errors, a pending review and its switch on screen.
-    await field(page, 'Título (Español)').fill('Título nuevo')
-    await dialog.getByRole('button', { name: 'Confirmar' }).click()
+    await field(page, 'Title (Español)').fill('Título nuevo')
+    await dialog.getByRole('button', { name: 'Confirm' }).click()
     await expect(
-      dialog.getByRole('switch', { name: 'El resumen en español sigue siendo correcto' }),
+      dialog.getByRole('switch', { name: 'The Spanish abstract is still correct' }),
     ).toBeVisible()
     expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
 
     await dialog.getByRole('tab', { name: /^English/ }).click()
-    await expect(dialog.getByText('El título en inglés es obligatorio.')).toBeVisible()
+    await expect(dialog.getByText('The English title is required.')).toBeVisible()
+    expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
+
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
+    const discard = page.getByRole('dialog', { name: 'Discard unsaved changes' })
+    await expect(discard.getByRole('button', { name: 'Keep editing' })).toBeVisible()
     expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
   } finally {
     await fixtures.cleanup()
@@ -492,8 +504,8 @@ test('keeps the editor language tabs apart from the site language', async ({ pag
     await switchLanguage(page, 'Español', 'English')
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
 
-    // The site is in English; the editor still opens on the Spanish translation.
-    await page.getByRole('button', { name: `Editar Bilingual publication ${fixtures.id}` }).click()
+    // The site is in English; the editor speaks English and still opens on the Spanish translation.
+    await page.getByRole('button', { name: `Edit Bilingual publication ${fixtures.id}` }).click()
     const dialog = page.getByRole('dialog').first()
     await expect(dialog.getByRole('tab', { name: 'Español' })).toHaveAttribute(
       'aria-selected',
@@ -512,7 +524,7 @@ test('keeps the editor language tabs apart from the site language', async ({ pag
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await expect(page.getByRole('banner').getByLabel('Language: English')).toBeAttached()
 
-    await dialog.getByRole('button', { name: 'Cancelar' }).click()
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
     await switchLanguage(page, 'English', 'Español')
 
     // The site is in Spanish; choosing the English tab leaves it in Spanish.

@@ -22,23 +22,6 @@ import {
 
 export * from './publication-schema'
 
-export const publicacionesMeta = {
-  title: 'Publicaciones | LASCE',
-  description:
-    'Publicaciones científicas del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-} as const
-
-export const publicacionesHero = {
-  kicker: 'Portal público LASCE',
-  title: 'Publicaciones científicas',
-  lead: 'Publicaciones y contribuciones científicas del LASCE y ROSAC.',
-} as const
-
-export const publicacionesBackLink = {
-  href: '/',
-  label: 'Volver al inicio',
-} as const
-
 export type PublicationWriteFailure =
   | { ok: false; reason: 'not-found' }
   /** The record changed since the editor loaded it. */

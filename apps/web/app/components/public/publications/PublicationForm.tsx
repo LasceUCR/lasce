@@ -1,6 +1,7 @@
 'use client'
 
 import { Plus, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 
 import { Button } from '@/app/components/public/Button'
@@ -34,13 +35,13 @@ import {
   type PublicationFormInitial,
 } from '@/app/lib/publication-form'
 import {
-  doiSchema,
-  externalUrlSchema,
   publicationContent,
   type ResearchGroup,
   type ReviewConfirmation,
   type TranslatableField,
 } from '@/app/lib/publication-schema'
+
+import { usePublicationEditorLanguage } from './usePublicationEditorLanguage'
 
 const researchGroupOptions: FormFieldOption[] = [
   { value: 'LASCE', label: 'LASCE' },
@@ -96,6 +97,10 @@ export function PublicationForm({
   ref,
 }: PublicationFormProps) {
   const formId = useId()
+  // Everything the editor says follows the site's language; the tabs only pick the translation.
+  const t = useTranslations('publications')
+  const language = usePublicationEditorLanguage()
+  const { uiLocale } = language
   // In a modal, the language tabs sit beside its title and stay in view while the form scrolls.
   const headerSlot = useModalHeaderSlot()
   const formRef = useRef<HTMLDivElement>(null)
@@ -141,7 +146,7 @@ export function PublicationForm({
   const needed = reviewsNeeded(initial, draft)
   const errors: FormErrors = {
     ...server.errors,
-    ...(attempted ? validateDraft(initial, draft, confirmed) : {}),
+    ...(attempted ? validateDraft(initial, draft, confirmed, language) : {}),
   }
 
   function clearServerErrors(paths: string[]) {
@@ -188,12 +193,12 @@ export function PublicationForm({
     const trimmed = newAuthor.trim()
 
     if (!trimmed) {
-      setNewAuthorError('El nombre del autor es obligatorio.')
+      setNewAuthorError(t('authorDialog.required'))
       return
     }
 
     if (draft.authors.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
-      setNewAuthorError('Ese autor ya fue agregado.')
+      setNewAuthorError(t('authorDialog.duplicate'))
       return
     }
 
@@ -203,7 +208,7 @@ export function PublicationForm({
 
   function handleSave() {
     setAttempted(true)
-    const found = validateDraft(initial, draft, confirmed)
+    const found = validateDraft(initial, draft, confirmed, language)
 
     if (Object.keys(found).length === 0) {
       onSave(draft, confirmationsStillNeeded(confirmed, needed))
@@ -222,19 +227,21 @@ export function PublicationForm({
     return (
       <TranslationReview
         checked={isConfirmed(confirmed, review)}
-        label={confirmationLabel(publicationContent, review)}
-        message={reviewMessage(publicationContent, review, initial.stored, draft.content)}
+        label={confirmationLabel(publicationContent, review, uiLocale)}
+        message={reviewMessage(publicationContent, review, initial.stored, draft.content, uiLocale)}
         onChange={(checked) => setConfirmation(review, checked)}
       />
     )
   }
 
-  const summary = errorSummary(errors, tab)
+  const summary = errorSummary(errors, tab, uiLocale)
 
   return (
     <div className="publication-form" ref={formRef}>
       <LanguageTabs
-        flags={languageTabFlags(initial.stored, errors, needed, confirmed)}
+        copyLang={uiLocale}
+        flags={languageTabFlags(initial.stored, errors, needed, confirmed, uiLocale)}
+        label={t('editor.languageTabs')}
         onSelect={setTab}
         selected={tab}
         tablistContainer={headerSlot}
@@ -242,23 +249,17 @@ export function PublicationForm({
         {(locale) => (
           <>
             {initial.isLegacy && locale === defaultLocale ? (
-              <Notice>
-                Este texto se registró antes de que existieran las versiones por idioma y podría no
-                estar en español. Si cambia el título o el resumen, revíselo también.
-              </Notice>
+              <Notice>{t('editor.legacyBaseText')}</Notice>
             ) : null}
 
             {initial.isLegacy && locale !== defaultLocale ? (
-              <Notice tone="warning">
-                Esta publicación aún no tiene versión en inglés. Para cambiar el título o el resumen
-                debe completar ambos idiomas; los demás campos se pueden editar sin traducirla.
-              </Notice>
+              <Notice tone="warning">{t('editor.legacyNoTranslation')}</Notice>
             ) : null}
 
             <FormField
               error={errors[contentPath(locale, 'title')]}
               id={`${formId}-${locale}-title`}
-              label={`Título (${languageLabels[locale]})`}
+              label={t('editor.titleField', { language: languageLabels[locale] })}
               lang={contentFieldLang(initial.stored, locale)}
               onChange={(value) => setContent(locale, 'title', value)}
               required
@@ -269,7 +270,7 @@ export function PublicationForm({
             <FormField
               error={errors[contentPath(locale, 'abstract')]}
               id={`${formId}-${locale}-abstract`}
-              label={`Resumen (${languageLabels[locale]})`}
+              label={t('editor.abstractField', { language: languageLabels[locale] })}
               lang={contentFieldLang(initial.stored, locale)}
               multiline
               onChange={(value) => setContent(locale, 'abstract', value)}
@@ -285,7 +286,7 @@ export function PublicationForm({
         <FormField
           error={errors.date}
           id={`${formId}-date`}
-          label="Fecha de publicación"
+          label={t('editor.date')}
           onChange={(value) => setShared('date', value)}
           required
           type="date"
@@ -294,7 +295,7 @@ export function PublicationForm({
 
         <div className="cms-form-field">
           <span className="cms-form-field-label" id={`${formId}-authors-label`}>
-            Autores
+            {t('editor.authors')}
             <span aria-hidden="true" className="cms-form-field-required">
               {' '}
               *
@@ -314,7 +315,7 @@ export function PublicationForm({
                 <IconButton
                   className="email-chip-remove"
                   icon={<X size={12} strokeWidth={2} />}
-                  label={`Eliminar ${author}`}
+                  label={t('editor.removeAuthor', { name: author })}
                   onClick={() =>
                     setAuthors(draft.authors.filter((existing) => existing !== author))
                   }
@@ -325,7 +326,7 @@ export function PublicationForm({
             <IconButton
               className="email-chip-add"
               icon={<Plus size={14} strokeWidth={2} />}
-              label="Añadir autor"
+              label={t('editor.addAuthor')}
               onClick={openAddAuthor}
             />
           </div>
@@ -342,11 +343,11 @@ export function PublicationForm({
         onClose={() => setIsAddingAuthor(false)}
         open={isAddingAuthor}
         size="small"
-        title="Añadir autor"
+        title={t('authorDialog.title')}
       >
         <FormField
           id={`${formId}-new-author`}
-          label="Nombre del autor"
+          label={t('authorDialog.name')}
           onChange={(value) => {
             setNewAuthor(value)
             setNewAuthorError(null)
@@ -362,11 +363,11 @@ export function PublicationForm({
 
         <div className="cms-form-actions">
           <Button onClick={() => setIsAddingAuthor(false)} variant="secondary">
-            Cancelar
+            {t('authorDialog.cancel')}
           </Button>
 
           <Button disabled={newAuthor.trim() === ''} onClick={handleAddAuthor} variant="primary">
-            Añadir
+            {t('authorDialog.add')}
           </Button>
         </div>
       </Modal>
@@ -375,11 +376,11 @@ export function PublicationForm({
         <FormField
           error={errors.href}
           id={`${formId}-href`}
-          label="Enlace externo"
+          label={t('editor.href')}
           onChange={(value) => setShared('href', value)}
           type="url"
           validate={(value) => {
-            const result = externalUrlSchema.safeParse(value)
+            const result = language.fieldSchemas.externalUrl.safeParse(value)
             if (!result.success) throw new Error(result.error.issues[0]?.message)
           }}
           value={draft.href}
@@ -388,11 +389,11 @@ export function PublicationForm({
         <FormField
           error={errors.DOI}
           id={`${formId}-doi`}
-          label="DOI"
+          label={t('editor.doi')}
           onChange={(value) => setShared('DOI', value)}
-          placeholder="10.1234/ejemplo"
+          placeholder={t('editor.doiPlaceholder')}
           validate={(value) => {
-            const result = doiSchema.safeParse(value)
+            const result = language.fieldSchemas.doi.safeParse(value)
             if (!result.success) throw new Error(result.error.issues[0]?.message)
           }}
           value={draft.DOI}
@@ -403,7 +404,7 @@ export function PublicationForm({
         <FormField
           error={errors.venue}
           id={`${formId}-venue`}
-          label="Revista/Publicación"
+          label={t('editor.venue')}
           onChange={(value) => setShared('venue', value)}
           required
           value={draft.venue}
@@ -412,7 +413,7 @@ export function PublicationForm({
         <FormField
           error={errors.researchGroup}
           id={`${formId}-research-group`}
-          label="Grupo"
+          label={t('editor.group')}
           onChange={(value) => {
             setDraft((current) => ({ ...current, researchGroup: value as ResearchGroup }))
             clearServerErrors(['researchGroup'])
@@ -430,17 +431,17 @@ export function PublicationForm({
 
       <div className="nosotros-activity-form-actions">
         <Button onClick={requestCancel} variant="secondary">
-          Cancelar
+          {t('editor.cancel')}
         </Button>
         <Button onClick={handleSave} variant="primary">
-          Confirmar
+          {t('editor.save')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
         onCancel={() => setDiscardOpen(false)}
         onConfirm={() => {
           setDiscardOpen(false)
@@ -448,7 +449,7 @@ export function PublicationForm({
         }}
         open={discardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardDialog.title')}
       />
     </div>
   )

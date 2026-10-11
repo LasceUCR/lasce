@@ -1,13 +1,14 @@
 import {
   accessFailure,
-  FIELDS_MESSAGE,
   invalidBodyFailure,
   parseApiError,
   reviewRequiredFailure,
   unexpectedFailure,
+  withoutServerText,
+  type ApiError,
   type SaveFailure,
 } from '@/app/lib/cms/save'
-import { localeLabels, type Locale } from '@/app/lib/i18n/config'
+import { defaultLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
 import {
   draftFromStored,
   emptyContentDraft,
@@ -20,16 +21,15 @@ import {
   type ContentDraft,
   type FormErrors,
 } from '@/app/lib/i18n/content/form'
-import { editorCopy } from '@/app/lib/i18n/content/messages'
+import { contentCopy, editorCopy } from '@/app/lib/i18n/content/messages'
+import es from '@/messages/es.json' with { type: 'json' }
 import { isLegacyContent, storedContentFrom } from '@/app/lib/i18n/content/resolve'
 
 import {
-  doiSchema,
-  externalUrlSchema,
   publicationContent,
-  publicationDateSchema,
-  sharedFieldSchemas,
+  publicationFieldSchemas,
   type Publication,
+  type PublicationFieldMessages,
   type ResearchGroup,
   type ReviewConfirmation,
   type StoredPublicationContent,
@@ -80,6 +80,39 @@ export interface PublicationFormInitial {
   /** The concurrency token to save against; `null` when creating. */
   version: string | null
 }
+
+/** The texts of a failed save, from the `publications.saveErrors` namespace: plain text. */
+export type PublicationSaveMessages = typeof es.publications.saveErrors
+
+/**
+ * The language the editor is shown in, which is the site's (the header's selector), and what it
+ * says in it. The API speaks Spanish; an editor in another language applies the same rules with
+ * its own messages, and shows its own text instead of the server's.
+ */
+export interface EditorLanguage {
+  uiLocale: Locale
+  /** The shared fields' rules, with their messages in `uiLocale`. */
+  fieldSchemas: ReturnType<typeof publicationFieldSchemas>
+  saveErrors: PublicationSaveMessages
+}
+
+/**
+ * The editor in `uiLocale`, from its `publications.validation` and `publications.saveErrors`
+ * messages (plain text: read them with `t.raw`).
+ */
+export function editorLanguage(
+  uiLocale: Locale,
+  messages: { validation: PublicationFieldMessages; saveErrors: PublicationSaveMessages },
+): EditorLanguage {
+  return {
+    uiLocale,
+    fieldSchemas: publicationFieldSchemas(messages.validation),
+    saveErrors: messages.saveErrors,
+  }
+}
+
+/** The editor in Spanish, the source language: the default of the functions below. */
+export const SPANISH_EDITOR: EditorLanguage = editorLanguage(defaultLocale, es.publications)
 
 /** Each language's name, as the tabs and the field labels show it. */
 export const languageLabels: Record<Locale, string> = localeLabels
@@ -218,17 +251,24 @@ export function validateDraft(
   initial: PublicationFormInitial,
   draft: PublicationDraft,
   confirmed: ReviewConfirmation[],
+  language: EditorLanguage = SPANISH_EDITOR,
 ): FormErrors {
-  const errors = validateContent(publicationContent, initial.stored, draft.content, confirmed)
+  const errors = validateContent(
+    publicationContent,
+    initial.stored,
+    draft.content,
+    confirmed,
+    language.uiLocale,
+  )
+  const schemas = language.fieldSchemas
 
   const checks: Record<SharedField, () => string | null> = {
-    authors: () => firstMessage(sharedFieldSchemas.authors.safeParse(draft.authors)),
-    venue: () => firstMessage(sharedFieldSchemas.venue.safeParse(draft.venue)),
-    date: () => firstMessage(publicationDateSchema.safeParse(draft.date)),
-    href: () => firstMessage(externalUrlSchema.safeParse(draft.href)),
-    DOI: () => firstMessage(doiSchema.safeParse(draft.DOI)),
-    researchGroup: () =>
-      firstMessage(sharedFieldSchemas.researchGroup.safeParse(draft.researchGroup)),
+    authors: () => firstMessage(schemas.authors.safeParse(draft.authors)),
+    venue: () => firstMessage(schemas.venue.safeParse(draft.venue)),
+    date: () => firstMessage(schemas.date.safeParse(draft.date)),
+    href: () => firstMessage(schemas.externalUrl.safeParse(draft.href)),
+    DOI: () => firstMessage(schemas.doi.safeParse(draft.DOI)),
+    researchGroup: () => firstMessage(schemas.researchGroup.safeParse(draft.researchGroup)),
   }
 
   for (const field of changedSharedFields(initial, draft)) {
@@ -305,40 +345,55 @@ export function isFormField(path: string): boolean {
 /** Shown under a field whose counterpart changed alone, next to the explanation and the switch. */
 export const REVIEW_FIELD_MESSAGE = editorCopy.fieldPending
 
-/** Turns an error response of `/api/publicaciones` into what the editor shows. */
-export function describeSaveFailure(status: number, body: unknown): SaveFailure {
+/** The answer's error, with the server's Spanish texts only when the editor is in Spanish too. */
+function readError(body: unknown, language: EditorLanguage): ApiError {
   const error = parseApiError(body)
+  return language.uiLocale === defaultLocale ? error : withoutServerText(error)
+}
+
+/** Turns an error response of `/api/publicaciones` into what the editor shows, in its language. */
+export function describeSaveFailure(
+  status: number,
+  body: unknown,
+  language: EditorLanguage = SPANISH_EDITOR,
+): SaveFailure {
+  const error = readError(body, language)
+  const messages = language.saveErrors
   const { code, message: serverMessage } = error
 
-  if (code === 'invalid-body') return invalidBodyFailure(error, isFormField)
-  if (code === 'review-required') return reviewRequiredFailure(error, REVIEW_FIELD_MESSAGE)
+  if (code === 'invalid-body') return invalidBodyFailure(error, isFormField, messages)
+  if (code === 'review-required') {
+    return reviewRequiredFailure(error, contentCopy[language.uiLocale].fieldPending, messages)
+  }
 
   if (code === 'duplicate-doi' || code === 'duplicate-external-url') {
-    const field = code === 'duplicate-doi' ? 'DOI' : 'href'
+    const doi = code === 'duplicate-doi'
     return {
-      message: FIELDS_MESSAGE,
-      fieldErrors: { [field]: serverMessage ?? 'Ya existe una publicación con este valor.' },
+      message: messages.fields,
+      fieldErrors: {
+        [doi ? 'DOI' : 'href']:
+          serverMessage ?? (doi ? messages.duplicateDoi : messages.duplicateLink),
+      },
       reopen: false,
     }
   }
 
-  if (status === 409) {
-    return {
-      message:
-        'Otra persona guardó cambios en esta publicación después de que usted la abrió. Sus cambios no se guardaron, para no sobrescribir los de esa persona. Copie lo que necesite, cierre el editor y vuelva a abrir la publicación.',
-      fieldErrors: {},
-      reopen: true,
-    }
-  }
+  if (status === 409) return { message: messages.conflict, fieldErrors: {}, reopen: true }
+  if (status === 404) return { message: messages.notFound, fieldErrors: {}, reopen: true }
 
-  if (status === 404) {
-    return {
-      message:
-        'Esta publicación ya no existe; es posible que otra persona la haya eliminado. Sus cambios no se guardaron.',
-      fieldErrors: {},
-      reopen: true,
-    }
-  }
+  return accessFailure(status, error, messages) ?? unexpectedFailure(error, messages)
+}
 
-  return accessFailure(status, error) ?? unexpectedFailure(error)
+/** Why deleting a publication failed, in the editor's language. */
+export function describeDeleteFailure(
+  status: number,
+  body: unknown,
+  language: EditorLanguage = SPANISH_EDITOR,
+): string {
+  const { message } = readError(body, language)
+  const messages = language.saveErrors
+
+  if (status === 401) return message ?? messages.notSignedIn
+  if (status === 403) return message ?? messages.forbidden
+  return message ?? messages.deleteFailed
 }
