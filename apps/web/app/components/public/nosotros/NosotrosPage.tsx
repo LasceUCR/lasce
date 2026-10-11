@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
-import { Notice } from '@/app/components/public/Notice'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
@@ -22,6 +21,8 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
+import { readFailureReason } from '@/app/lib/api-feedback'
 import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
@@ -56,12 +57,11 @@ export function NosotrosPage({
 }: NosotrosPageProps) {
   const router = useRouter()
   const t = useTranslations('nosotros.activities')
+  const toast = useToast()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [createSuccess, setCreateSuccess] = useState(false)
-  const [listError, setListError] = useState<string | null>(null)
+  // The error toast from the last failed create, edit or delete, replaced by the next attempt.
+  const activityErrorToast = useRef<number | null>(null)
   const [researcherCreateError, setResearcherCreateError] = useState<string | null>(null)
   const [researcherListError, setResearcherListError] = useState<string | null>(null)
   const researcherCreateErrorRef = useRef<HTMLParagraphElement>(null)
@@ -77,89 +77,95 @@ export function NosotrosPage({
   const editingActivity = content.activities.items.find((item) => item.id === editingActivityId)
 
   function openEditor(id: string) {
-    setSaveError(null)
-    setCreateSuccess(false)
     setEditingActivityId(id)
   }
 
   function closeEditor() {
-    setSaveError(null)
     setEditingActivityId(null)
+  }
+
+  /**
+   * Sends a create, edit or delete and reports a failure in a toast that states the server's
+   * reason when it gave one. Nothing changes on the page until the request succeeds: a create or
+   * edit keeps its modal open with the admin's input. Returns whether the request succeeded.
+   */
+  async function sendActivityRequest(
+    url: string,
+    init: RequestInit,
+    fallback: 'errors.unknown' | 'errors.deleteUnknown',
+  ): Promise<boolean> {
+    if (activityErrorToast.current !== null) {
+      toast.dismiss(activityErrorToast.current)
+      activityErrorToast.current = null
+    }
+
+    let response: Response
+    try {
+      response = await fetch(url, init)
+    } catch {
+      activityErrorToast.current = toast.show('error', t('errors.network'))
+      return false
+    }
+
+    if (!response.ok) {
+      const reason =
+        (await readFailureReason(response)) ??
+        (response.status >= 500 ? t('errors.server') : t(fallback))
+      activityErrorToast.current = toast.show('error', reason)
+      return false
+    }
+
+    return true
+  }
+
+  function submitActivity(
+    url: string,
+    method: 'POST' | 'PATCH',
+    values: NosotrosActivityFormValues,
+  ) {
+    return sendActivityRequest(
+      url,
+      { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) },
+      'errors.unknown',
+    )
   }
 
   async function handleSaveActivity(values: NosotrosActivityFormValues) {
     if (!editingActivityId) return
 
-    let response: Response
-    try {
-      response = await fetch(`/api/nosotros/activities/${editingActivityId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setSaveError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
+    const saved = await submitActivity(
+      `/api/nosotros/activities/${editingActivityId}`,
+      'PATCH',
+      values,
+    )
+    if (!saved) return
 
     closeEditor()
     // Re-runs the server component's `getNosotrosActivities()` so the page
     // reflects the saved change immediately, without an optimistic guess.
     router.refresh()
+    toast.show('success', t('updated'))
   }
 
   async function handleCreateActivity(values: NosotrosActivityFormValues, close: () => void) {
-    setCreateError(null)
-    setCreateSuccess(false)
-
-    let response: Response
-    try {
-      response = await fetch('/api/nosotros/activities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setCreateError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
+    const saved = await submitActivity('/api/nosotros/activities', 'POST', values)
+    if (!saved) return
 
     close()
     router.refresh()
-    setCreateSuccess(true)
+    toast.show('success', t('created'))
   }
 
   async function handleDeleteActivity(id: string) {
-    setListError(null)
-    setCreateSuccess(false)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/nosotros/activities/${id}`, { method: 'DELETE' })
-    } catch {
-      setListError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setListError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
+    const deleted = await sendActivityRequest(
+      `/api/nosotros/activities/${id}`,
+      { method: 'DELETE' },
+      'errors.deleteUnknown',
+    )
+    if (!deleted) return
 
     router.refresh()
+    toast.show('success', t('deleted'))
   }
 
   async function handleSaveResearcher(
@@ -248,18 +254,6 @@ export function NosotrosPage({
       </TopicSection>
 
       <TopicSection title={content.activities.title} titleId="nosotros-activities-title" index="1">
-        {listError ? (
-          <p className="form-alert" role="alert">
-            {listError}
-          </p>
-        ) : null}
-
-        {createSuccess ? (
-          <Notice role="status" tone="info">
-            {t('created')}
-          </Notice>
-        ) : null}
-
         {editMode && canCreate && content.activities.items.length === 0 ? (
           <p className="topic-intro">
             Haga clic en &quot;Añadir&quot; para agregar alguna actividad.
@@ -301,22 +295,12 @@ export function NosotrosPage({
           {editMode && canCreate ? (
             <AddItemCard label="Añadir">
               {({ close }) => (
-                <>
-                  {createError ? (
-                    <p className="form-alert" role="alert">
-                      {createError}
-                    </p>
-                  ) : null}
-                  <NosotrosActivityForm
-                    activity={blankActivity}
-                    onCancel={() => {
-                      setCreateError(null)
-                      close()
-                    }}
-                    onSave={(values) => handleCreateActivity(values, close)}
-                    requireConfirmation={false}
-                  />
-                </>
+                <NosotrosActivityForm
+                  activity={blankActivity}
+                  onCancel={close}
+                  onSave={(values) => handleCreateActivity(values, close)}
+                  requireConfirmation={false}
+                />
               )}
             </AddItemCard>
           ) : null}
@@ -409,18 +393,11 @@ export function NosotrosPage({
         title={editingActivity ? `Editar "${editingActivity.title}"` : 'Editar actividad'}
       >
         {editingActivity ? (
-          <>
-            {saveError ? (
-              <p className="form-alert" role="alert">
-                {saveError}
-              </p>
-            ) : null}
-            <NosotrosActivityForm
-              activity={editingActivity}
-              onCancel={closeEditor}
-              onSave={handleSaveActivity}
-            />
-          </>
+          <NosotrosActivityForm
+            activity={editingActivity}
+            onCancel={closeEditor}
+            onSave={handleSaveActivity}
+          />
         ) : null}
       </Modal>
     </article>

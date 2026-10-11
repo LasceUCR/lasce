@@ -360,7 +360,15 @@
   },
   "nosotros": {
     "activities": {
-      "created": "Actividad agregada correctamente."
+      "created": "Actividad agregada correctamente.",
+      "updated": "Cambios guardados correctamente.",
+      "deleted": "Actividad eliminada correctamente.",
+      "errors": {
+        "network": "No se pudo conectar con el servidor. Revise su conexión e inténtelo de nuevo.",
+        "server": "El servidor no pudo completar la operación. Inténtelo de nuevo en unos minutos.",
+        "unknown": "No se pudo guardar la actividad. Inténtelo de nuevo.",
+        "deleteUnknown": "No se pudo eliminar la actividad. Inténtelo de nuevo."
+      }
     }
   }
 }
