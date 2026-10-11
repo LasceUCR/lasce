@@ -372,5 +372,15 @@
         "deleteUnknown": "The activity could not be deleted. Try again."
       }
     }
+  },
+  "news": {
+    "created": "News item added successfully.",
+    "updated": "News item updated successfully.",
+    "deleted": "News item deleted successfully.",
+    "errors": {
+      "saveUnknown": "The news item could not be saved. Try again.",
+      "deleteUnknown": "The news item could not be deleted. Try again.",
+      "upload": "The image could not be uploaded. Try again."
+    }
   }
 }

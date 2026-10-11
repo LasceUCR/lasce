@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadNewsImage, type UploadNewsImageResult } from '@/app/(public)/noticias/actions'
 import type { NewsArticle } from '@/app/lib/news'
 
@@ -66,7 +68,10 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageRemoved, setImageRemoved] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const t = useTranslations('news.errors')
+  const toast = useToast()
+  // The toast from the last failed upload, replaced by the next attempt.
+  const uploadErrorToast = useRef<number | null>(null)
 
   const hasImage = imageFile !== null || (Boolean(article?.imageUrl) && !imageRemoved)
   const canSave =
@@ -82,7 +87,10 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
 
     let imageUrl = article?.imageUrl ?? ''
     if (imageFile) {
-      setUploadError(null)
+      if (uploadErrorToast.current !== null) {
+        toast.dismiss(uploadErrorToast.current)
+        uploadErrorToast.current = null
+      }
       setIsUploading(true)
 
       let result: UploadNewsImageResult
@@ -92,13 +100,13 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
         result = await uploadNewsImage(formData)
       } catch {
         setIsUploading(false)
-        setUploadError('No se pudo subir la imagen. Inténtelo de nuevo.')
+        uploadErrorToast.current = toast.show('error', t('upload'))
         return
       }
       setIsUploading(false)
 
       if (!result.ok) {
-        setUploadError(result.error)
+        uploadErrorToast.current = toast.show('error', result.error)
         return
       }
       imageUrl = result.imageUrl
@@ -172,8 +180,6 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
           setImageRemoved(file === null)
         }}
       />
-
-      {uploadError ? <p className="form-alert">{uploadError}</p> : null}
 
       <div className="news-article-form-actions">
         <Button onClick={onCancel} variant="secondary">
