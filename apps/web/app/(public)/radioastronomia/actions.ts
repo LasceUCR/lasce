@@ -39,3 +39,63 @@ export async function uploadResearcherImage(
     throw error
   }
 }
+
+export type UploadInstrumentImageResult =
+  { ok: true; imageUrl: string } | { ok: false; error: string }
+
+export async function uploadInstrumentImage(
+  formData: FormData,
+): Promise<UploadInstrumentImageResult> {
+  const [canCreate, canEdit] = await Promise.all([
+    userHasPermission('create_components'),
+    userHasPermission('edit_components'),
+  ])
+  if (!canCreate && !canEdit) {
+    return { ok: false, error: 'No tiene permisos para subir imágenes.' }
+  }
+
+  const file = formData.get('file')
+  if (!(file instanceof File)) {
+    return { ok: false, error: 'No se proporcionó ninguna imagen.' }
+  }
+
+  try {
+    const objectKey = await assetStorage.createUpload(file)
+    return { ok: true, imageUrl: assetStorage.getPublicUrl(objectKey) }
+  } catch (error) {
+    if (error instanceof InvalidFileSizeError || error instanceof InvalidFileTypeError) {
+      return { ok: false, error: error.message }
+    }
+    throw error
+  }
+}
+
+export type UploadAcknowledgmentLogoResult =
+  { ok: true; imageUrl: string } | { ok: false; error: string }
+
+export async function uploadAcknowledgmentLogo(
+  formData: FormData,
+): Promise<UploadAcknowledgmentLogoResult> {
+  const [canCreate, canEdit] = await Promise.all([
+    userHasPermission('create_components'),
+    userHasPermission('edit_components'),
+  ])
+  if (!canCreate && !canEdit) {
+    return { ok: false, error: 'No tiene permisos para subir imágenes.' }
+  }
+
+  const file = formData.get('file')
+  if (!(file instanceof File)) {
+    return { ok: false, error: 'No se proporcionó ninguna imagen.' }
+  }
+
+  try {
+    const objectKey = await assetStorage.createUpload(file)
+    return { ok: true, imageUrl: assetStorage.getPublicUrl(objectKey) }
+  } catch (error) {
+    if (error instanceof InvalidFileSizeError || error instanceof InvalidFileTypeError) {
+      return { ok: false, error: error.message }
+    }
+    throw error
+  }
+}
