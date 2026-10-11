@@ -144,6 +144,31 @@ export function hasContentChanges(initial: PublicationFormInitial, draft: Public
 }
 
 /**
+ * True once anything in the form differs from what it opened with, so closing it would lose
+ * work and asks first. Compared as typed, unlike the save rules, which trim: whatever someone
+ * typed counts as their work, even a space.
+ */
+export function hasUnsavedChanges(initial: PublicationFormInitial, draft: PublicationDraft) {
+  const before = initial.draft
+  const contentChanged = Object.entries(draft.content).some(([locale, fields]) =>
+    Object.entries(fields).some(
+      ([field, value]) =>
+        value !== (before.content[locale as Locale]?.[field as TranslatableField] ?? ''),
+    ),
+  )
+
+  return (
+    contentChanged ||
+    !sameAuthors(before.authors, draft.authors) ||
+    before.venue !== draft.venue ||
+    before.date !== draft.date ||
+    before.href !== draft.href ||
+    before.DOI !== draft.DOI ||
+    before.researchGroup !== draft.researchGroup
+  )
+}
+
+/**
  * The fields to update or confirm because their counterpart changed alone, whether or not they
  * have been confirmed yet. Same rule as the API (`findPendingReviews`).
  */

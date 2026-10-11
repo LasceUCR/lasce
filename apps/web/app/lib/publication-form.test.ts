@@ -7,6 +7,7 @@ import {
   emptyInitial,
   errorsByLocale,
   hasContentChanges,
+  hasUnsavedChanges,
   initialFromPublication,
   isFormField,
   REVIEW_FIELD_MESSAGE,
@@ -118,6 +119,49 @@ describe('content changes and reviews', () => {
   test('creating never asks for reviews', () => {
     const create = emptyInitial()
     expect(reviewsNeeded(create, withContent(create.draft, 'es', 'x'))).toEqual([])
+  })
+})
+
+describe('hasUnsavedChanges', () => {
+  test('an untouched form, new or existing, has nothing to lose', () => {
+    const create = emptyInitial()
+    const existing = initialFromPublication(bilingual)
+
+    expect(hasUnsavedChanges(create, create.draft)).toBe(false)
+    expect(hasUnsavedChanges(existing, existing.draft)).toBe(false)
+    expect(hasUnsavedChanges(existing, { ...existing.draft, authors: ['Ana'] })).toBe(false)
+  })
+
+  test('any typed text counts, in either language, even whitespace', () => {
+    const create = emptyInitial()
+    const existing = initialFromPublication(bilingual)
+
+    expect(hasUnsavedChanges(create, withContent(create.draft, 'en', 'T'))).toBe(true)
+    expect(hasUnsavedChanges(existing, withContent(existing.draft, 'es', 'Título '))).toBe(true)
+  })
+
+  test('a change to any shared field counts', () => {
+    const initial = initialFromPublication(bilingual)
+    const changes: Partial<PublicationDraft>[] = [
+      { authors: ['Ana', 'Luis'] },
+      { authors: [] },
+      { venue: 'Otra revista' },
+      { date: '2025-03-05' },
+      { href: '' },
+      { DOI: '10.1234/b' },
+      { researchGroup: 'ROSAC' },
+    ]
+
+    for (const change of changes) {
+      expect(hasUnsavedChanges(initial, edit(initial.draft, change))).toBe(true)
+    }
+  })
+
+  test('typing English text into a legacy record counts', () => {
+    const initial = initialFromPublication(legacy)
+
+    expect(hasUnsavedChanges(initial, initial.draft)).toBe(false)
+    expect(hasUnsavedChanges(initial, withContent(initial.draft, 'en', 'English'))).toBe(true)
   })
 })
 
