@@ -149,6 +149,11 @@ describe('newsInputSchema', () => {
   test('allows a null published date', () => {
     expect(newsInputSchema.safeParse({ ...validInput, publishedAt: null }).success).toBe(true)
   })
+
+  test('rejects a blank imageUrl', () => {
+    const result = newsInputSchema.safeParse({ ...validInput, imageUrl: '' })
+    expect(result.success).toBe(false)
+  })
 })
 
 describe('createNews', () => {
@@ -181,7 +186,7 @@ describe('createNews', () => {
       update: { position: 0 },
       create: { newsId: 'news-1', newsAuthorId: 'author-1', position: 0 },
     })
-    expect(article.slug).toBe('news-1')
+    expect(article).toEqual(expect.objectContaining({ slug: 'news-1' }))
   })
 
   // Prisma's client rejects a bare `yyyy-mm-dd` string for a DateTime/@db.Date field
@@ -211,14 +216,34 @@ describe('createNews', () => {
       expect.objectContaining({ data: expect.objectContaining({ publishedAt: null }) }),
     )
   })
+
+  test('returns "duplicate-url" when the external URL already exists', async () => {
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    create.mockRejectedValueOnce({ code: 'P2002' })
+
+    const result = await createNews(validInput)
+
+    expect(result).toBe('duplicate-url')
+  })
 })
 
 describe('updateNews', () => {
   test('returns null when the article does not exist', async () => {
-    findUnique.mockResolvedValue(null)
+    findUnique.mockResolvedValue({ id: 'missing' })
+    findUnique.mockResolvedValueOnce(null)
 
     expect(await updateNews('missing', validInput)).toBeNull()
     expect(update).not.toHaveBeenCalled()
+  })
+
+  test('returns "duplicate-url" when updating to an external URL that already exists', async () => {
+    findUnique.mockResolvedValue({ id: 'news-1' })
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    update.mockRejectedValueOnce({ code: 'P2002' })
+
+    const result = await updateNews('news-1', validInput)
+
+    expect(result).toBe('duplicate-url')
   })
 
   test('drops cross-author rows for authors no longer in the list', async () => {
