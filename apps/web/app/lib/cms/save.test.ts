@@ -8,7 +8,10 @@ import {
   reviewRequiredFailure,
   SAVE_ERROR_MESSAGE,
   sendJson,
+  SPANISH_SAVE_MESSAGES,
   unexpectedFailure,
+  withoutServerText,
+  type SaveMessages,
 } from './save'
 
 const fetchMock = vi.fn()
@@ -182,6 +185,46 @@ describe('failures', () => {
       fieldErrors: {},
       reopen: false,
     })
+    expect(unexpectedFailure(parseApiError(null)).message).toBe(SAVE_ERROR_MESSAGE)
+  })
+})
+
+describe('in another interface language', () => {
+  const english: SaveMessages = {
+    generic: 'Could not save.',
+    fields: 'Check the fields.',
+    notSignedIn: 'Not signed in.',
+    signInAgain: 'Sign in again.',
+    forbidden: 'Not allowed.',
+  }
+
+  test('drops the server texts so the editor speaks its own language', () => {
+    const error = withoutServerText(
+      parseApiError({
+        error: 'No ha iniciado sesión.',
+        code: 'invalid-body',
+        issues: [{ path: 'name', message: 'Obligatorio.' }],
+      }),
+    )
+
+    expect(error).toEqual({
+      message: null,
+      code: 'invalid-body',
+      issues: [{ path: 'name', message: null }],
+      pending: [],
+    })
+    expect(invalidBodyFailure(error, () => true, english)).toEqual({
+      message: 'Check the fields.',
+      fieldErrors: { name: 'Check the fields.' },
+      reopen: false,
+    })
+    expect(accessFailure(401, error, english)?.message).toBe('Not signed in. Sign in again.')
+    expect(accessFailure(403, error, english)?.message).toBe('Not allowed.')
+    expect(unexpectedFailure(error, english).message).toBe('Could not save.')
+  })
+
+  test('uses Spanish by default', () => {
+    expect(SPANISH_SAVE_MESSAGES.generic).toBe(SAVE_ERROR_MESSAGE)
     expect(unexpectedFailure(parseApiError(null)).message).toBe(SAVE_ERROR_MESSAGE)
   })
 })

@@ -115,6 +115,21 @@ describe('LanguageTabs', () => {
     expect(screen.getByText('2 por revisar')).toHaveAttribute('lang', 'es')
   })
 
+  test('marks the flags with the editor language it is given, not the tab language', () => {
+    render(
+      <LanguageTabs
+        {...(WithFlags.args as LanguageTabsProps)}
+        copyLang="en"
+        flags={{ en: '2 to review' }}
+        label="Content language"
+      />,
+    )
+
+    expect(screen.getByRole('tablist', { name: 'Content language' })).toBeInTheDocument()
+    expect(screen.getByText('2 to review')).toHaveAttribute('lang', 'en')
+    expect(screen.getByRole('tab', { name: 'English · 2 to review' })).toHaveAttribute('lang', 'en')
+  })
+
   test('gives every editor on the page its own ids', () => {
     render(
       <>

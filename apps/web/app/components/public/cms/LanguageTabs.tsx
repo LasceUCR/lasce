@@ -16,6 +16,11 @@ export interface LanguageTabsProps {
   flags?: Partial<Record<Locale, string | null>>
   /** Accessible name of the tab list. */
   label?: string
+  /**
+   * The language `flags` are written in: the editor's, which is the site's. Defaults to Spanish,
+   * the source language. Each tab is named in its own language regardless.
+   */
+  copyLang?: Locale
   /** The fields of one language. Rendered for every language; only the selected one shows. */
   children: (locale: Locale) => ReactNode
   /**
@@ -44,6 +49,7 @@ export function LanguageTabs({
   onSelect,
   flags = {},
   label = 'Idioma del contenido',
+  copyLang = defaultLocale,
   children,
   tablistContainer,
 }: LanguageTabsProps) {
@@ -95,8 +101,8 @@ export function LanguageTabs({
             {flag ? (
               <>
                 {' · '}
-                {/* The note is editor copy, written in the source language. */}
-                <span className="cms-language-tab-flag" lang={defaultLocale}>
+                {/* The note is editor copy, in the editor's language, not the tab's. */}
+                <span className="cms-language-tab-flag" lang={copyLang}>
                   {flag}
                 </span>
               </>
