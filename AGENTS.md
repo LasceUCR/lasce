@@ -33,6 +33,12 @@ language, not inline in a component. Most existing copy is still hardcoded Spani
 moved page by page. See [`docs/internationalization.md`](docs/internationalization.md). Keep
 code, comments and commits in English.
 
+Editable database content ("Modo edición") is made bilingual with a translation table per entity
+and shared helpers, not with the catalogues: follow
+[`docs/translate-database-content.md`](docs/translate-database-content.md), whose reference
+implementation is `/publicaciones`. An editor's own labels, popups and messages follow the site's
+language like any other copy.
+
 ## Commands
 
 ```bash
