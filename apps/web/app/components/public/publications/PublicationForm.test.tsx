@@ -52,17 +52,19 @@ describe('PublicationForm', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('disables saving when the DOI is blank', async () => {
+  test('allows saving when the DOI is blank, since it is optional', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
 
     render(<PublicationForm {...defaultArgs} onSave={onSave} />)
 
     await user.clear(screen.getByRole('textbox', { name: 'DOI' }))
-
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(onSave).not.toHaveBeenCalled()
+    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ DOI: '' }))
   })
 
   test('disables saving when there are no authors', async () => {
@@ -83,6 +85,27 @@ describe('PublicationForm', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('shows an author-specific message when there are no authors, never a DOI one', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <PublicationForm
+        {...defaultArgs}
+        publication={{
+          ...defaultArgs.publication,
+          authors: [],
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      screen.getByText('Se requiere al menos un autor para la publicación.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/el doi es obligatorio/i)).not.toBeInTheDocument()
   })
 
   test('adds an author', async () => {
