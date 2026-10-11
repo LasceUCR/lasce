@@ -1,5 +1,4 @@
-import { prisma } from '@lasce/db'
-import type { Prisma } from '@lasce/db'
+import { prisma, Prisma } from '@lasce/db'
 import { z } from 'zod'
 
 const newsRecordInclude = {
@@ -111,88 +110,140 @@ function toPublishedAtDate(publishedAt: string | null): Date | null {
 /**
  * Replaces a news item's author list with `authors`, in order. Upserts each name (shared
  * `NewsAuthor` rows, same as the seed script) and drops cross-author rows for names no longer
- * present — the one relation `NosotrosActivity`'s CRUD doesn't have to deal with.
+ * present — the one relation `NosotrosActivity`'s CRUD doesn't have to deal with. Runs inside the
+ * caller's transaction, one query at a time, since a transaction holds a single connection.
  */
-async function syncNewsAuthors(newsId: string, authors: readonly string[]): Promise<void> {
-  const authorIds = await Promise.all(
-    authors.map(async (name, index) => {
-      const author = await prisma.newsAuthor.upsert({
-        where: { name },
-        update: {},
-        create: { name },
-      })
+async function syncNewsAuthors(
+  tx: Prisma.TransactionClient,
+  newsId: string,
+  authors: readonly string[],
+): Promise<void> {
+  const authorIds: string[] = []
 
-      await prisma.newsCrossAuthor.upsert({
-        where: { newsId_newsAuthorId: { newsId, newsAuthorId: author.id } },
-        update: { position: index },
-        create: { newsId, newsAuthorId: author.id, position: index },
-      })
+  for (const [index, name] of authors.entries()) {
+    const author = await tx.newsAuthor.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    })
 
-      return author.id
-    }),
-  )
+    await tx.newsCrossAuthor.upsert({
+      where: { newsId_newsAuthorId: { newsId, newsAuthorId: author.id } },
+      update: { position: index },
+      create: { newsId, newsAuthorId: author.id, position: index },
+    })
 
-  await prisma.newsCrossAuthor.deleteMany({
+    authorIds.push(author.id)
+  }
+
+  await tx.newsCrossAuthor.deleteMany({
     where: { newsId, newsAuthorId: { notIn: authorIds } },
   })
 }
 
-/** Creates a news item and its author links. */
-export async function createNews(data: NewsInput): Promise<NewsArticle> {
-  const source = await prisma.newsSource.upsert({
-    where: { name: data.source },
-    update: {},
-    create: { name: data.source },
-  })
+/** What a create or update returns when another news item already uses the same link. */
+export const DUPLICATE_NEWS_LINK = 'duplicate-link'
 
-  const record = await prisma.news.create({
-    data: {
-      title: data.title,
-      publishedAt: toPublishedAtDate(data.publishedAt),
-      sourceId: source.id,
-      abstract: data.abstract,
-      externalUrl: data.externalUrl,
-      imageUrl: data.imageUrl,
-      imageAlt: data.imageAlt,
-    },
-  })
+export const DUPLICATE_NEWS_LINK_MESSAGE =
+  'Ya existe una noticia con este enlace. Use otro enlace o edite la noticia existente.'
 
-  await syncNewsAuthors(record.id, data.authors)
+/**
+ * Thrown from inside a write transaction when `externalUrl` (the one unique column on `News`
+ * besides its id) is already taken, so the whole transaction rolls back. Only the `news` write
+ * itself is wrapped: a unique violation from a concurrent source or author upsert is a different
+ * failure and must not be reported as a duplicate link.
+ */
+class DuplicateNewsLinkError extends Error {}
 
-  return findNewsArticle(record.id)
+async function writeNewsRow<T>(write: () => Promise<T>): Promise<T> {
+  try {
+    return await write()
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      throw new DuplicateNewsLinkError()
+    }
+    throw error
+  }
+}
+
+function newsRowData(data: NewsInput, sourceId: string) {
+  return {
+    title: data.title,
+    publishedAt: toPublishedAtDate(data.publishedAt),
+    sourceId,
+    abstract: data.abstract,
+    externalUrl: data.externalUrl,
+    imageUrl: data.imageUrl,
+    imageAlt: data.imageAlt,
+  }
 }
 
 /**
- * Updates one news item. Returns `null` when `id` does not match any row, rather than throwing,
- * so the route handler can turn that into a 404 — same pre-check pattern as
- * `updateNosotrosActivity`.
+ * Creates a news item and its author links in one transaction, so a failure part way leaves
+ * nothing behind. Returns `DUPLICATE_NEWS_LINK` when the link is already used.
  */
-export async function updateNews(id: string, data: NewsInput): Promise<NewsArticle | null> {
-  const existing = await prisma.news.findUnique({ where: { id } })
-  if (!existing) return null
+export async function createNews(
+  data: NewsInput,
+): Promise<NewsArticle | typeof DUPLICATE_NEWS_LINK> {
+  let id: string
+  try {
+    id = await prisma.$transaction(async (tx) => {
+      const source = await tx.newsSource.upsert({
+        where: { name: data.source },
+        update: {},
+        create: { name: data.source },
+      })
 
-  const source = await prisma.newsSource.upsert({
-    where: { name: data.source },
-    update: {},
-    create: { name: data.source },
-  })
+      const record = await writeNewsRow(() =>
+        tx.news.create({ data: newsRowData(data, source.id) }),
+      )
 
-  await prisma.news.update({
-    where: { id },
-    data: {
-      title: data.title,
-      publishedAt: toPublishedAtDate(data.publishedAt),
-      sourceId: source.id,
-      abstract: data.abstract,
-      externalUrl: data.externalUrl,
-      imageUrl: data.imageUrl,
-      imageAlt: data.imageAlt,
-    },
-  })
-
-  await syncNewsAuthors(id, data.authors)
+      await syncNewsAuthors(tx, record.id, data.authors)
+      return record.id
+    })
+  } catch (error) {
+    if (error instanceof DuplicateNewsLinkError) return DUPLICATE_NEWS_LINK
+    throw error
+  }
 
   return findNewsArticle(id)
+}
+
+/**
+ * Updates one news item and its author links in one transaction, so a failure part way leaves
+ * the saved article as it was. Returns `null` when `id` does not match any row, rather than
+ * throwing, so the route handler can turn that into a 404 — same pre-check pattern as
+ * `updateNosotrosActivity`. Returns `DUPLICATE_NEWS_LINK` when another item uses the link.
+ */
+export async function updateNews(
+  id: string,
+  data: NewsInput,
+): Promise<NewsArticle | typeof DUPLICATE_NEWS_LINK | null> {
+  let found: boolean
+  try {
+    found = await prisma.$transaction(async (tx) => {
+      const existing = await tx.news.findUnique({ where: { id } })
+      if (!existing) return false
+
+      const source = await tx.newsSource.upsert({
+        where: { name: data.source },
+        update: {},
+        create: { name: data.source },
+      })
+
+      await writeNewsRow(() =>
+        tx.news.update({ where: { id }, data: newsRowData(data, source.id) }),
+      )
+
+      await syncNewsAuthors(tx, id, data.authors)
+      return true
+    })
+  } catch (error) {
+    if (error instanceof DuplicateNewsLinkError) return DUPLICATE_NEWS_LINK
+    throw error
+  }
+
+  return found ? findNewsArticle(id) : null
 }
 
 /**

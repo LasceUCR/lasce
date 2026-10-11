@@ -11,14 +11,30 @@ const authorUpsert = vi.fn()
 const crossAuthorUpsert = vi.fn()
 const crossAuthorDeleteMany = vi.fn()
 
-vi.mock('@lasce/db', () => ({
-  prisma: {
+// Stands in for `Prisma.PrismaClientKnownRequestError`: the real class lives in the generated
+// client, which this mock replaces. Same constructor shape, so `instanceof` and `code` behave.
+const { KnownRequestError } = vi.hoisted(() => ({
+  KnownRequestError: class extends Error {
+    code: string
+    constructor(message: string, { code }: { code: string }) {
+      super(message)
+      this.code = code
+    }
+  },
+}))
+
+vi.mock('@lasce/db', () => {
+  const prisma = {
     news: { findMany, findUnique, findUniqueOrThrow, create, update, delete: deleteNews },
     newsSource: { upsert: sourceUpsert },
     newsAuthor: { upsert: authorUpsert },
     newsCrossAuthor: { upsert: crossAuthorUpsert, deleteMany: crossAuthorDeleteMany },
-  },
-}))
+    // An interactive transaction hands its callback a client with the same delegates. Passing the
+    // mock itself keeps every assertion below valid while still exercising the transaction path.
+    $transaction: (callback: (tx: unknown) => Promise<unknown>) => callback(prisma),
+  }
+  return { prisma, Prisma: { PrismaClientKnownRequestError: KnownRequestError } }
+})
 
 const {
   getNews,
@@ -26,7 +42,14 @@ const {
   createNews,
   updateNews,
   deleteNews: deleteNewsArticle,
+  DUPLICATE_NEWS_LINK,
 } = await import('./news')
+
+function uniqueViolation() {
+  return new KnownRequestError('Unique constraint failed on the fields: (`external_url`)', {
+    code: 'P2002',
+  })
+}
 
 function newsRow(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -181,7 +204,33 @@ describe('createNews', () => {
       update: { position: 0 },
       create: { newsId: 'news-1', newsAuthorId: 'author-1', position: 0 },
     })
-    expect(article.slug).toBe('news-1')
+    expect(article).toMatchObject({ slug: 'news-1' })
+  })
+
+  test('reports a duplicate link instead of throwing when the link is already used', async () => {
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    create.mockRejectedValue(uniqueViolation())
+
+    expect(await createNews(validInput)).toBe(DUPLICATE_NEWS_LINK)
+    expect(authorUpsert).not.toHaveBeenCalled()
+    expect(findUniqueOrThrow).not.toHaveBeenCalled()
+  })
+
+  test('lets a unique violation from an author upsert through rather than blaming the link', async () => {
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    create.mockResolvedValue({ id: 'news-1' })
+    authorUpsert.mockRejectedValue(uniqueViolation())
+
+    await expect(createNews(validInput)).rejects.toBeInstanceOf(KnownRequestError)
+  })
+
+  test('rejects out of the transaction when linking the authors fails, returning no article', async () => {
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    create.mockResolvedValue({ id: 'news-1' })
+    authorUpsert.mockRejectedValue(new Error('connection lost'))
+
+    await expect(createNews(validInput)).rejects.toThrow('connection lost')
+    expect(findUniqueOrThrow).not.toHaveBeenCalled()
   })
 
   // Prisma's client rejects a bare `yyyy-mm-dd` string for a DateTime/@db.Date field
@@ -232,6 +281,25 @@ describe('updateNews', () => {
     expect(crossAuthorDeleteMany).toHaveBeenCalledWith({
       where: { newsId: 'news-1', newsAuthorId: { notIn: ['author-1'] } },
     })
+  })
+
+  test('reports a duplicate link when another article already uses it', async () => {
+    findUnique.mockResolvedValue({ id: 'news-1' })
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    update.mockRejectedValue(uniqueViolation())
+
+    expect(await updateNews('news-1', validInput)).toBe(DUPLICATE_NEWS_LINK)
+    expect(authorUpsert).not.toHaveBeenCalled()
+  })
+
+  test('rejects out of the transaction when syncing the authors fails', async () => {
+    findUnique.mockResolvedValue({ id: 'news-1' })
+    sourceUpsert.mockResolvedValue({ id: 'source-1' })
+    update.mockResolvedValue({ id: 'news-1' })
+    authorUpsert.mockRejectedValue(new Error('connection lost'))
+
+    await expect(updateNews('news-1', validInput)).rejects.toThrow('connection lost')
+    expect(findUniqueOrThrow).not.toHaveBeenCalled()
   })
 })
 
