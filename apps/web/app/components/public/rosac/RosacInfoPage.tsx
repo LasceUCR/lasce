@@ -27,22 +27,30 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
+import type { RosacAcknowledgment, RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 import type { ConstructionStage } from '@/app/lib/rosac-construction'
+import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import styles from './RosacInfoPage.module.css'
 import { AcknowledgmentsGallery } from './AcknowledgmentsGallery'
 import { ConstructionCarousel } from './ConstructionCarousel'
 import { DonationCard } from './DonationCard'
+import { EditableAcknowledgmentCard } from './EditableAcknowledgmentCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { InstrumentCard } from './InstrumentCard'
+import { InstrumentsGallery } from './InstrumentsGallery'
 import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
+import {
+  RosacAcknowledgmentForm,
+  type RosacAcknowledgmentFormValues,
+} from './RosacAcknowledgmentForm'
 import { RosacActivityForm, type RosacActivityFormValues } from './RosacActivityForm'
 import {
   RosacCharacteristicForm,
   type RosacCharacteristicFormValues,
 } from './RosacCharacteristicForm'
+import { RosacInstrumentForm, type RosacInstrumentFormValues } from './RosacInstrumentForm'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
 import { RosacStageForm, type RosacStageFormValues } from './RosacStageForm'
 import { TeamGallery } from './TeamGallery'
@@ -72,12 +80,26 @@ export interface RosacInfoPageProps {
   ) => Promise<string | null> | void
   onSaveActivity?: (id: string, values: RosacActivityFormValues) => Promise<string | null> | void
   onSaveStage?: (id: string, values: RosacStageFormValues) => Promise<string | null> | void
+  onCreateInstrument?: (values: RosacInstrumentFormValues) => Promise<string | null> | void
+  onSaveInstrument?: (
+    id: string,
+    values: RosacInstrumentFormValues,
+  ) => Promise<string | null> | void
+  onDeleteInstrument?: (id: string) => Promise<string | null> | void
+  onCreateAcknowledgment?: (values: RosacAcknowledgmentFormValues) => Promise<string | null> | void
+  onSaveAcknowledgment?: (
+    id: string,
+    values: RosacAcknowledgmentFormValues,
+  ) => Promise<string | null> | void
+  onDeleteAcknowledgment?: (id: string) => Promise<string | null> | void
 }
 
 const ROSAC_STORAGE_KEYS = {
   characteristics: 'lasce_rosac_characteristics_v1',
   activities: 'lasce_rosac_activities_v1',
   stages: 'lasce_rosac_stages_v1',
+  instruments: 'lasce_rosac_instruments_v1',
+  acknowledgments: 'lasce_rosac_acknowledgments_v1',
 } as const
 
 function saveToLocalStorage<T>(key: string, data: T) {
@@ -96,6 +118,12 @@ export function RosacInfoPage({
   onSaveCharacteristic,
   onSaveActivity,
   onSaveStage,
+  onCreateInstrument,
+  onSaveInstrument,
+  onDeleteInstrument,
+  onCreateAcknowledgment,
+  onSaveAcknowledgment,
+  onDeleteAcknowledgment,
 }: RosacInfoPageProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
@@ -115,14 +143,36 @@ export function RosacInfoPage({
   const [editingStageId, setEditingStageId] = useState<string | null>(null)
   const [stageSaveError, setStageSaveError] = useState<string | null>(null)
 
+  // --- Section 6: Instruments State (Create, Edit, Delete) ---
+  const [instruments, setInstruments] = useState(content.instruments.items)
+  const [editingInstrumentId, setEditingInstrumentId] = useState<string | null>(null)
+  const [instrumentSaveError, setInstrumentSaveError] = useState<string | null>(null)
+  const [instrumentCreateError, setInstrumentCreateError] = useState<string | null>(null)
+  const [instrumentListError, setInstrumentListError] = useState<string | null>(null)
+
   // --- Section 7: Researchers State (Existing logic preserved) ---
   const [createError, setCreateError] = useState<string | null>(null)
   const [listError, setListError] = useState<string | null>(null)
   const createErrorRef = useRef<HTMLParagraphElement>(null)
 
+  // --- Section 8: Acknowledgments State (Create, Edit, Delete) ---
+  const [acknowledgments, setAcknowledgments] = useState<RosacAcknowledgment[]>(() =>
+    content.acknowledgments.institutions.map((inst, index) => ({
+      id: inst.id ?? `ack-${index}`,
+      ...inst,
+    })),
+  )
+  const [acknowledgmentCreateError, setAcknowledgmentCreateError] = useState<string | null>(null)
+  const [acknowledgmentListError, setAcknowledgmentListError] = useState<string | null>(null)
+
   // Restore persisted state on mount from localStorage if available
   useEffect(() => {
     try {
+      const storedInstruments = localStorage.getItem(ROSAC_STORAGE_KEYS.instruments)
+      if (storedInstruments) {
+        const parsed = JSON.parse(storedInstruments)
+        if (Array.isArray(parsed)) setInstruments(parsed)
+      }
       const storedCharacteristics = localStorage.getItem(ROSAC_STORAGE_KEYS.characteristics)
       if (storedCharacteristics) {
         const parsed = JSON.parse(storedCharacteristics)
@@ -139,6 +189,11 @@ export function RosacInfoPage({
         if (Array.isArray(parsed)) {
           setConstructionStages(parsed as unknown as typeof content.construction.stages)
         }
+      }
+      const storedAcknowledgments = localStorage.getItem(ROSAC_STORAGE_KEYS.acknowledgments)
+      if (storedAcknowledgments) {
+        const parsed = JSON.parse(storedAcknowledgments)
+        if (Array.isArray(parsed)) setAcknowledgments(parsed)
       }
     } catch {
       // ignore storage errors
@@ -268,6 +323,88 @@ export function RosacInfoPage({
     closeStageEditor()
   }
 
+  // --- Section 6: Instruments handlers ---
+  const editingInstrument = instruments.find((inst) => inst.id === editingInstrumentId)
+
+  function openInstrumentEditor(id: string) {
+    setInstrumentSaveError(null)
+    setEditingInstrumentId(id)
+  }
+
+  function closeInstrumentEditor() {
+    setInstrumentSaveError(null)
+    setEditingInstrumentId(null)
+  }
+
+  async function handleSaveInstrument(values: RosacInstrumentFormValues) {
+    if (!editingInstrumentId) return
+
+    if (onSaveInstrument) {
+      const err = await onSaveInstrument(editingInstrumentId, values)
+      if (err) {
+        setInstrumentSaveError(err)
+        return
+      }
+    }
+
+    const updated = instruments.map((inst) =>
+      inst.id === editingInstrumentId
+        ? {
+            ...inst,
+            name: values.name,
+            pendingMessage: undefined,
+            image: values.image ?? inst.image,
+            consultation: values.consultation ?? inst.consultation,
+          }
+        : inst,
+    )
+    setInstruments(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.instruments, updated)
+    closeInstrumentEditor()
+  }
+
+  async function handleCreateInstrument(values: RosacInstrumentFormValues, close: () => void) {
+    setInstrumentCreateError(null)
+
+    if (onCreateInstrument) {
+      const err = await onCreateInstrument(values)
+      if (err) {
+        setInstrumentCreateError(err)
+        return
+      }
+    }
+
+    const newId = `instrument-${Date.now()}`
+    const newInstrument: RosacInstrumentCardContent = {
+      id: newId,
+      name: values.name,
+      pendingMessage: values.pendingMessage,
+      image: values.image,
+      consultation: values.consultation,
+    }
+
+    const updated = [...instruments, newInstrument]
+    setInstruments(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.instruments, updated)
+    close()
+  }
+
+  async function handleDeleteInstrument(id: string) {
+    setInstrumentListError(null)
+
+    if (onDeleteInstrument) {
+      const err = await onDeleteInstrument(id)
+      if (err) {
+        setInstrumentListError(err)
+        return
+      }
+    }
+
+    const updated = instruments.filter((inst) => inst.id !== id)
+    setInstruments(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.instruments, updated)
+  }
+
   // --- Section 7: Researcher Handlers (Preserved unchanged) ---
   async function handleSaveResearcher(
     id: string,
@@ -336,6 +473,75 @@ export function RosacInfoPage({
     }
 
     router.refresh()
+  }
+
+  // --- Section 8: Acknowledgments Handlers ---
+  async function handleSaveAcknowledgment(
+    id: string,
+    values: RosacAcknowledgmentFormValues,
+  ): Promise<string | null> {
+    if (onSaveAcknowledgment) {
+      const err = await onSaveAcknowledgment(id, values)
+      if (err) {
+        return err
+      }
+    }
+
+    const updated = acknowledgments.map((inst) =>
+      inst.id === id
+        ? {
+            ...inst,
+            name: values.name,
+            logo: values.logo,
+          }
+        : inst,
+    )
+    setAcknowledgments(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
+    return null
+  }
+
+  async function handleCreateAcknowledgment(
+    values: RosacAcknowledgmentFormValues,
+    close: () => void,
+  ) {
+    setAcknowledgmentCreateError(null)
+
+    if (onCreateAcknowledgment) {
+      const err = await onCreateAcknowledgment(values)
+      if (err) {
+        setAcknowledgmentCreateError(err)
+        return
+      }
+    }
+
+    const newId = `ack-${Date.now()}`
+    const newInstitution: RosacAcknowledgment = {
+      id: newId,
+      name: values.name,
+      logo: values.logo,
+    }
+
+    const updated = [...acknowledgments, newInstitution]
+    setAcknowledgments(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
+    close()
+  }
+
+  async function handleDeleteAcknowledgment(id: string) {
+    setAcknowledgmentListError(null)
+
+    if (onDeleteAcknowledgment) {
+      const err = await onDeleteAcknowledgment(id)
+      if (err) {
+        setAcknowledgmentListError(err)
+        return
+      }
+    }
+
+    const updated = acknowledgments.filter((inst) => inst.id !== id)
+    setAcknowledgments(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
   }
 
   return (
@@ -470,6 +676,7 @@ export function RosacInfoPage({
         ))}
       </TopicSection>
 
+      {/* SECCIÓN 6: Instrumentos científicos (CREAR, EDITAR Y ELIMINAR) */}
       <TopicSection
         id="instrumentos"
         index="6"
@@ -479,11 +686,86 @@ export function RosacInfoPage({
         className={styles.instrumentsSection}
         wide
       >
-        <CardGrid columns={3} equalHeight>
-          {content.instruments.items.map((instrument) => (
-            <InstrumentCard key={instrument.id} instrument={instrument} />
-          ))}
-        </CardGrid>
+        {instrumentListError ? (
+          <p className="form-alert" role="alert">
+            {instrumentListError}
+          </p>
+        ) : null}
+
+        {instruments.length > 3 || (editMode && canCreate) ? (
+          <InstrumentsGallery
+            label={content.instruments.title}
+            trailingSlide={
+              editMode && canCreate ? (
+                <AddItemCard label="Añadir instrumento">
+                  {({ close }) => (
+                    <>
+                      {instrumentCreateError ? (
+                        <p className="form-alert" role="alert">
+                          {instrumentCreateError}
+                        </p>
+                      ) : null}
+                      <RosacInstrumentForm
+                        instrument={null}
+                        onCancel={() => {
+                          setInstrumentCreateError(null)
+                          close()
+                        }}
+                        onSave={(values) => handleCreateInstrument(values, close)}
+                      />
+                    </>
+                  )}
+                </AddItemCard>
+              ) : undefined
+            }
+          >
+            {instruments.map((instrument) => {
+              const showEditor = editMode && (canEdit || canDelete)
+
+              if (!showEditor) {
+                return <InstrumentCard key={instrument.id} instrument={instrument} />
+              }
+
+              return (
+                <EditableWrapper
+                  key={instrument.id}
+                  deleteConfirmMessage="Esta acción no se puede deshacer y borrará el instrumento científico."
+                  deleteConfirmTitle="Eliminar instrumento"
+                  deleteLabel={`Eliminar ${instrument.name}`}
+                  editLabel={`Editar ${instrument.name}`}
+                  onDelete={canDelete ? () => handleDeleteInstrument(instrument.id) : undefined}
+                  onEdit={canEdit ? () => openInstrumentEditor(instrument.id) : undefined}
+                >
+                  <InstrumentCard instrument={instrument} />
+                </EditableWrapper>
+              )
+            })}
+          </InstrumentsGallery>
+        ) : (
+          <CardGrid columns={3} equalHeight>
+            {instruments.map((instrument) => {
+              const showEditor = editMode && (canEdit || canDelete)
+
+              if (!showEditor) {
+                return <InstrumentCard key={instrument.id} instrument={instrument} />
+              }
+
+              return (
+                <EditableWrapper
+                  key={instrument.id}
+                  deleteConfirmMessage="Esta acción no se puede deshacer y borrará el instrumento científico."
+                  deleteConfirmTitle="Eliminar instrumento"
+                  deleteLabel={`Eliminar ${instrument.name}`}
+                  editLabel={`Editar ${instrument.name}`}
+                  onDelete={canDelete ? () => handleDeleteInstrument(instrument.id) : undefined}
+                  onEdit={canEdit ? () => openInstrumentEditor(instrument.id) : undefined}
+                >
+                  <InstrumentCard instrument={instrument} />
+                </EditableWrapper>
+              )
+            })}
+          </CardGrid>
+        )}
       </TopicSection>
 
       {/* SECCIÓN 7: Investigadores (Preservada sin modificaciones) */}
@@ -551,9 +833,44 @@ export function RosacInfoPage({
         titleId="rosac-acknowledgments-title"
         wide
       >
+        {acknowledgmentListError ? (
+          <p className="form-alert" role="alert">
+            {acknowledgmentListError}
+          </p>
+        ) : null}
+
         <AcknowledgmentsGallery
-          institutions={content.acknowledgments.institutions}
+          institutions={acknowledgments}
           label={content.acknowledgments.title}
+          renderInstitution={(institution) => (
+            <EditableAcknowledgmentCard
+              canDelete={canDelete}
+              canEdit={canEdit}
+              institution={institution}
+              onDelete={() => handleDeleteAcknowledgment(institution.id!)}
+              onSave={(values) => handleSaveAcknowledgment(institution.id!, values)}
+            />
+          )}
+          trailingSlide={
+            editMode && canCreate ? (
+              <AddItemCard label="Añadir institución">
+                {({ close }) => (
+                  <>
+                    {acknowledgmentCreateError ? (
+                      <p className="form-alert" role="alert">
+                        {acknowledgmentCreateError}
+                      </p>
+                    ) : null}
+                    <RosacAcknowledgmentForm
+                      institution={null}
+                      onCancel={close}
+                      onSave={(values) => handleCreateAcknowledgment(values, close)}
+                    />
+                  </>
+                )}
+              </AddItemCard>
+            ) : undefined
+          }
         />
       </TopicSection>
 
@@ -676,6 +993,29 @@ export function RosacInfoPage({
               onCancel={closeStageEditor}
               onSave={handleSaveStage}
               stage={editingStage}
+            />
+          </>
+        ) : null}
+      </Modal>
+
+      {/* Edit modal for Section 6: Instruments */}
+      <Modal
+        onClose={closeInstrumentEditor}
+        open={editingInstrument !== undefined}
+        size="large"
+        title={editingInstrument ? `Editar "${editingInstrument.name}"` : 'Editar instrumento'}
+      >
+        {editingInstrument ? (
+          <>
+            {instrumentSaveError ? (
+              <p className="form-alert" role="alert">
+                {instrumentSaveError}
+              </p>
+            ) : null}
+            <RosacInstrumentForm
+              instrument={editingInstrument}
+              onCancel={closeInstrumentEditor}
+              onSave={handleSaveInstrument}
             />
           </>
         ) : null}
