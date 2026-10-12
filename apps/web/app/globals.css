@@ -6368,6 +6368,16 @@ a.gallery-tile:focus-visible {
   margin: 0 -6px;
 }
 
+/* Confirmation dialogs pin a button to each side (or a pair to the end).
+   `scrollbar-gutter: stable` above reserves a classic scrollbar on the end
+   side even when the dialog does not overflow, so that end button sat a
+   scrollbar-width further in than the title and the start button. These
+   dialogs are short; skip the reservation so both edges share the title's
+   inset. */
+.modal:has(.std-confirm-dialog, .modal-actions) .modal-body {
+  scrollbar-gutter: auto;
+}
+
 .modal-actions {
   margin-top: 20px;
   display: flex;
