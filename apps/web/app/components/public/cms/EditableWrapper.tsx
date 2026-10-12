@@ -3,8 +3,8 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { IconButton } from '@/app/components/public/IconButton'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 
 export interface EditableWrapperProps {
   children: ReactNode
@@ -14,6 +14,8 @@ export interface EditableWrapperProps {
   deleteLabel?: string
   deleteConfirmTitle?: string
   deleteConfirmMessage?: string
+  deleteTargetEntity?: string
+  deleteConsequence?: string
   className?: string
 }
 
@@ -31,6 +33,8 @@ export function EditableWrapper({
   deleteLabel = 'Eliminar',
   deleteConfirmTitle = 'Eliminar elemento',
   deleteConfirmMessage = '¿Desea eliminar este elemento? Esta acción no se puede deshacer.',
+  deleteTargetEntity,
+  deleteConsequence,
   className,
 }: EditableWrapperProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -60,8 +64,10 @@ export function EditableWrapper({
       </div>
 
       {onDelete ? (
-        <ConfirmDialog
-          confirmVariant="danger"
+        <StandardConfirmDialog
+          cancelLabel="Cancelar"
+          confirmLabel="Confirmar"
+          consequence={deleteConsequence}
           message={deleteConfirmMessage}
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
@@ -69,6 +75,8 @@ export function EditableWrapper({
             onDelete()
           }}
           open={confirmOpen}
+          severity="danger"
+          targetEntity={deleteTargetEntity}
           title={deleteConfirmTitle}
         />
       ) : null}

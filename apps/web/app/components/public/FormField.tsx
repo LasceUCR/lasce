@@ -28,6 +28,8 @@ export interface FormFieldProps {
    * until the field is blurred again.
    */
   validate?: (value: string) => void
+  /** Explicit error message passed by the parent form (overrides debounced validation). */
+  errorMessage?: string | null
 }
 
 export function FormField({
@@ -41,6 +43,7 @@ export function FormField({
   required,
   id,
   validate,
+  errorMessage,
 }: FormFieldProps) {
   const [error, setError] = useState<string | null>(null)
   // The value at mount, so the effect below can tell "still the pristine
@@ -83,7 +86,8 @@ export function FormField({
     onChange(event.target.value)
   }
 
-  const invalid = error !== null
+  const currentError = errorMessage !== undefined ? errorMessage : error
+  const invalid = currentError !== null && currentError !== undefined
 
   return (
     <label className="cms-form-field" htmlFor={id}>
@@ -134,7 +138,7 @@ export function FormField({
           value={value}
         />
       )}
-      {error ? <p className="form-field-error">{error}</p> : null}
+      {currentError ? <p className="form-field-error">{currentError}</p> : null}
     </label>
   )
 }

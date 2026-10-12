@@ -172,6 +172,11 @@ describe('newsInputSchema', () => {
   test('allows a null published date', () => {
     expect(newsInputSchema.safeParse({ ...validInput, publishedAt: null }).success).toBe(true)
   })
+
+  test('rejects a blank imageUrl', () => {
+    const result = newsInputSchema.safeParse({ ...validInput, imageUrl: '' })
+    expect(result.success).toBe(false)
+  })
 })
 
 describe('createNews', () => {
@@ -264,7 +269,8 @@ describe('createNews', () => {
 
 describe('updateNews', () => {
   test('returns null when the article does not exist', async () => {
-    findUnique.mockResolvedValue(null)
+    findUnique.mockResolvedValue({ id: 'missing' })
+    findUnique.mockResolvedValueOnce(null)
 
     expect(await updateNews('missing', validInput)).toBeNull()
     expect(update).not.toHaveBeenCalled()
