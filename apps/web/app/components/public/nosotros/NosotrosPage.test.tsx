@@ -75,7 +75,7 @@ async function deleteFirstActivity(user: User) {
   const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar / })
   await user.click(firstDeleteButton as HTMLElement)
   const confirmDialog = screen.getByRole('dialog', { name: 'Eliminar actividad' })
-  await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+  await user.click(within(confirmDialog).getByRole('button', { name: 'Eliminar' }))
 }
 
 /** Edits the first card's title and accepts the "Guardar cambios" confirmation. */
@@ -759,7 +759,7 @@ describe('NosotrosPage', () => {
     const [firstDeleteButton] = within(researchers).getAllByRole('button', { name: /^Eliminar a/ })
     await user.click(firstDeleteButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Eliminar investigador' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(`/api/nosotros/researchers/${firstResearcher?.id}`, {
       method: 'DELETE',
