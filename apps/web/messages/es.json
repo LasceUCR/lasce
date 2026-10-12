@@ -374,6 +374,18 @@
     }
   },
   "news": {
+    "page": {
+      "metaTitle": "{title} | Noticias | LASCE",
+      "kicker": "Noticia",
+      "infoTitle": "Información general",
+      "authors": "Autores",
+      "source": "Fuente",
+      "date": "Fecha",
+      "descriptionTitle": "Descripción de la noticia",
+      "resourcesTitle": "Recursos y enlaces de interés",
+      "openSource": "Abrir fuente original",
+      "backToNews": "Volver a noticias"
+    },
     "created": "Noticia agregada correctamente.",
     "updated": "Noticia actualizada correctamente.",
     "deleted": "Noticia eliminada correctamente.",

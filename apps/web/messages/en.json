@@ -374,6 +374,18 @@
     }
   },
   "news": {
+    "page": {
+      "metaTitle": "{title} | News | LASCE",
+      "kicker": "News",
+      "infoTitle": "General information",
+      "authors": "Authors",
+      "source": "Source",
+      "date": "Date",
+      "descriptionTitle": "Description of the news item",
+      "resourcesTitle": "Resources and links of interest",
+      "openSource": "Open original source",
+      "backToNews": "Back to news"
+    },
     "created": "News item added successfully.",
     "updated": "News item updated successfully.",
     "deleted": "News item deleted successfully.",
