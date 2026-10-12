@@ -122,6 +122,17 @@ Server Actions or `@lasce/*`. A component may call `useTranslations` for its own
 content still arrives through props. Co-locate a `.stories.tsx` with one story per meaningful state.
 See [`docs/add-a-component.md`](docs/add-a-component.md).
 
+**Feedback.** The outcome of a user action (create, edit, delete, upload) is reported with a toast
+from `useToast()` (`app/components/public/toast/`): `success` for what worked, `error` for what
+failed. Do not add a new inline success or error message for an action outcome. Send the request
+through `useRequestFeedback()`, which shows the server's reason (`readFailureReason`) or a
+translated fallback, never a bare "something went wrong", and keeps the form open on failure.
+Success messages follow "<Entidad> agregada / actualizada / eliminada correctamente.". Toasts render inside an open `Modal` automatically, so show them from the handler and keep
+the modal open on failure. Field-level validation next to an input stays inline (`FormField`), and
+so do page states such as empty lists and loading (`Notice`, `content-empty`). Older sections
+still use inline alerts and are moved over when they are next touched. See
+[`docs/toasts.md`](docs/toasts.md).
+
 ## Tests
 
 Full rules in [`docs/testing.md`](docs/testing.md) and

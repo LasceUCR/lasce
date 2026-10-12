@@ -160,9 +160,12 @@ follows under `research`.
 | `source_id`    | `String`    | `uuid`           | FK → `news_sources.id`, `ON DELETE RESTRICT`, not null |
 | `abstract`     | `String`    | `text`           | not null                                               |
 | `external_url` | `String`    | `text`           | `UNIQUE`, not null — link to the original source       |
-| `image_url`    | `String`    | `text`           | not null                                               |
 | `created_at`   | `DateTime`  | `timestamptz(3)` | not null, default `now()`                              |
 | `updated_at`   | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                 |
+
+> News items have no image. The cards on `/noticias` are text only (LASCE-PUB-002-272), and the
+> `20261010120000_drop_news_images` migration dropped the former `image_url` and `image_alt`
+> columns.
 
 > `published_at` is nullable rather than defaulted to a sentinel date: some coverage (e.g.
 > corporate blog posts) doesn't carry a publish date at all. `getNews()` renders these as

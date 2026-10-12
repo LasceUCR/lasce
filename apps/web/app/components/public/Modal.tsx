@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from 'react'
 
+import { ToastOutlet } from '@/app/components/public/toast/ToastOutlet'
+
 export type ModalSize = 'small' | 'medium' | 'large'
 
 export interface ModalProps {
@@ -195,6 +197,8 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       <div className="modal-body">
         <HeaderSlotContext value={headerSlot}>{children}</HeaderSlotContext>
       </div>
+      {/* Toasts must stay inside the active dialog to remain accessible. */}
+      <ToastOutlet />
     </dialog>
   )
 }

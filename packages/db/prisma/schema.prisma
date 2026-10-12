@@ -28,7 +28,7 @@ datasource db {
 
   // One Postgres schema per domain. `public` stays declared for whatever
   // non-domain-specific table comes next.
-  schemas = ["public", "research", "news", "auth", "gallery",  "solar", "areas"]
+  schemas = ["public", "research", "news", "auth", "gallery", "solar", "areas"]
 }
 
 /// Access level of a portal account. Self-registration always yields `visitor`;
@@ -238,8 +238,6 @@ model News {
   sourceId    String    @map("source_id") @db.Uuid
   abstract    String    @db.Text
   externalUrl String    @unique @map("external_url")
-  imageUrl    String    @map("image_url")
-  imageAlt    String    @map("image_alt")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -345,7 +343,7 @@ model SuviFrame {
   /// carried no data array.
   previewFile  String?  @map("preview_file")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@unique([satellite, channel, observedAt])
   @@index([observedAt])
@@ -377,7 +375,7 @@ model ExisFile {
   /// The NetCDF global attributes, so provenance not promoted to a column is still recoverable.
   attributes       Json
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt        DateTime  @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@unique([satellite, product, day])
   @@map("exis_files")
@@ -417,6 +415,7 @@ model ResourceDownload {
   @@map("resource_downloads")
   @@schema("public")
 }
+
 /// A researcher profile card shown on `/radioastronomia` (LASCE-CON-012-085).
 /// Distinct from `research.ResearchAuthor`: that one is only a citation name
 /// on a publication, this is the full public bio card — photo, role,
@@ -509,7 +508,7 @@ model GalleryMedia {
   title        String
   description  String   @db.Text
   /// Required accessibility text for the image/video still, required from
-  /// creation. Precedent: news_records.image_alt.
+  /// creation.
   altText      String   @map("alt_text")
   /// Key returned by IAssetStorage.createUpload(); the storage layer itself
   /// tracks no metadata, so this is the only place the file is findable from.
@@ -534,6 +533,7 @@ model GalleryMedia {
   @@map("gallery_media")
   @@schema("gallery")
 }
+
 /// An editable research area shown on the public investigation page.
 model ResearchArea {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -541,8 +541,8 @@ model ResearchArea {
   description String   @db.Text
   src         String
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @default(now()) @map("updated_at") @db.Timestamptz(3)
-  
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
   @@map("research_areas")
   @@schema("areas")
 }
