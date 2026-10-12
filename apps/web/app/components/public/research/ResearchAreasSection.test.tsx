@@ -214,4 +214,11 @@ describe('ResearchAreasSection', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
+
+  test('renders no heading and names the list by label when no title is given', () => {
+    renderSection({ ...defaultArgs, title: undefined, subtitle: undefined, label: 'Áreas' })
+
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Áreas' })).toBeInTheDocument()
+  })
 })
