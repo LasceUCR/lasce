@@ -911,12 +911,14 @@ a {
 
 .button-primary {
   background: var(--action);
+  border-color: var(--action);
   color: var(--on-action);
 }
 
 .button-primary:hover,
 .button-primary:focus-visible {
   background: var(--action-hover);
+  border-color: var(--action-hover);
 }
 
 .button-secondary {
@@ -969,12 +971,14 @@ a {
 
 .button-danger {
   background: var(--danger);
+  border-color: var(--danger);
   color: var(--white);
 }
 
 .button-danger:hover,
 .button-danger:focus-visible {
   background: var(--danger-dark);
+  border-color: var(--danger-dark);
 }
 
 .home-content {
@@ -6541,12 +6545,21 @@ a.gallery-tile:focus-visible {
 
 .std-confirm-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
   margin-top: 12px;
   width: 100%;
   flex-wrap: nowrap;
+}
+
+/* The pair shares one width and one height. A content-sized label ("Cancelar"
+   vs "Confirmar") otherwise leaves the shorter button narrower, and a solid
+   button with a transparent border paints smaller than the outlined one. */
+.std-confirm-actions .button {
+  flex: 1 1 0;
+  height: 43px;
+  min-height: 43px;
+  line-height: 1;
 }
 
 @media (max-width: 600px) {
@@ -6559,7 +6572,8 @@ a.gallery-tile:focus-visible {
     flex-direction: column-reverse;
   }
 
-  .std-confirm-actions button {
+  .std-confirm-actions .button {
+    flex: 0 0 auto;
     width: 100%;
   }
 }
