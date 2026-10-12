@@ -89,4 +89,13 @@ describe('NewsCard', () => {
     expect(screen.getByRole('heading', { name: args.title })).toBeInTheDocument()
     expect(screen.getByText(args.abstract)).toBeInTheDocument()
   })
+
+  test('renders a detail page link when detailHref is provided', () => {
+    render(<NewsCard {...defaultArgs} detailHref="/noticias/test-id" />)
+
+    const detailLink = screen.getByRole('link', {
+      name: `Conozca más sobre esta noticia (${defaultArgs.title})`,
+    })
+    expect(detailLink).toHaveAttribute('href', '/noticias/test-id')
+  })
 })

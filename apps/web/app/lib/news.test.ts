@@ -38,6 +38,7 @@ vi.mock('@lasce/db', () => {
 
 const {
   getNews,
+  getNewsById,
   newsInputSchema,
   createNews,
   updateNews,
@@ -145,6 +146,42 @@ describe('getNews', () => {
     const [article] = await getNews()
 
     expect(article?.authors).toBe('LASCE')
+  })
+})
+
+describe('getNewsById', () => {
+  const validUuid = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+
+  test('returns null when the id is not a valid UUID without calling Prisma', async () => {
+    const article = await getNewsById('not-a-uuid')
+
+    expect(article).toBeNull()
+    expect(findUnique).not.toHaveBeenCalled()
+  })
+
+  test('returns null when the news record is not found', async () => {
+    findUnique.mockResolvedValue(null)
+
+    const article = await getNewsById(validUuid)
+
+    expect(article).toBeNull()
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { id: validUuid },
+      include: expect.any(Object),
+    })
+  })
+
+  test('maps and returns the news article when found', async () => {
+    findUnique.mockResolvedValue(newsRow({ id: validUuid }))
+
+    const article = await getNewsById(validUuid)
+
+    expect(article).toEqual(
+      expect.objectContaining({
+        slug: validUuid,
+        title: 'UCR pone en funcionamiento radiotelescopio para investigar el Sol',
+      }),
+    )
   })
 })
 

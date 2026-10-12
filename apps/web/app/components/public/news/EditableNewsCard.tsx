@@ -38,7 +38,7 @@ export function EditableNewsCard({
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
 
-  const card = <NewsCard {...article} />
+  const card = <NewsCard {...article} detailHref={`/noticias/${article.slug}`} />
 
   function close() {
     setIsEditing(false)

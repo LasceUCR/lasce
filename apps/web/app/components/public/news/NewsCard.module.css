@@ -47,6 +47,8 @@
   padding-top: 12px;
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* Matches `.publication-card-footer .button`. Narrow screens make every `.button` full width
