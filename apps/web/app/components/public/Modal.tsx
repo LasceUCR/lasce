@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
+import { ToastOutlet } from '@/app/components/public/toast/ToastOutlet'
+
 export type ModalSize = 'small' | 'medium' | 'large'
 
 export interface ModalProps {
@@ -111,6 +113,8 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
     >
       <h2 id={titleId}>{title}</h2>
       <div className="modal-body">{children}</div>
+      {/* Outside the dialog everything is inert, so toasts shown while it is open render here. */}
+      <ToastOutlet />
     </dialog>
   )
 

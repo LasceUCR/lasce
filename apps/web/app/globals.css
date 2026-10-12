@@ -2793,6 +2793,11 @@ a {
   gap: 16px;
 }
 
+/* The news list itself is denser than the shared list (ROSAC's donations also use `.news-list`). */
+.news .news-list {
+  gap: 12px;
+}
+
 .surface-card.news-card {
   width: 100%;
   display: grid;

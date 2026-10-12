@@ -145,7 +145,6 @@ class News(Base):
     )
     abstract: Mapped[str] = mapped_column(Text)
     external_url: Mapped[str] = mapped_column(Text, unique=True)
-    image_url: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

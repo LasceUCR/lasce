@@ -1,14 +1,15 @@
 import type { Preview } from '@storybook/nextjs-vite'
 import { NextIntlClientProvider } from 'next-intl'
 
+import { ToastProvider } from '../app/components/public/toast/ToastProvider'
 import { defaultLocale, localeLabels, locales, timeZone } from '../app/lib/i18n/config'
 import { resolveLocale } from '../app/lib/i18n/locale'
 import { getMessages } from '../app/lib/i18n/messages'
 import '../app/globals.css'
 
 const preview: Preview = {
-  // The toolbar's language menu. Every story renders inside the provider below, so a component
-  // that calls `useTranslations` needs no decorator of its own.
+  // The toolbar's language menu. Every story renders inside the providers below, so a component
+  // that calls `useTranslations` or `useToast` needs no decorator of its own.
   globalTypes: {
     locale: {
       description: 'Idioma',
@@ -26,7 +27,9 @@ const preview: Preview = {
 
       return (
         <NextIntlClientProvider locale={locale} messages={getMessages(locale)} timeZone={timeZone}>
-          <Story />
+          <ToastProvider>
+            <Story />
+          </ToastProvider>
         </NextIntlClientProvider>
       )
     },

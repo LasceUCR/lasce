@@ -98,17 +98,16 @@ test.describe('responsive native controls', () => {
               rect.right > innerWidth ||
               rect.top < 0 ||
               rect.bottom > innerHeight ||
-              // The file picker is intentionally visually hidden behind its drop zone.
-              Array.from(
-                element.querySelectorAll('input:not([type="file"]), textarea, select, button'),
-              ).some((control) => {
-                const bounds = control.getBoundingClientRect()
-                return (
-                  bounds.left < rect.left ||
-                  bounds.right > rect.right ||
-                  control.scrollWidth > control.clientWidth
-                )
-              })
+              Array.from(element.querySelectorAll('input, textarea, select, button')).some(
+                (control) => {
+                  const bounds = control.getBoundingClientRect()
+                  return (
+                    bounds.left < rect.left ||
+                    bounds.right > rect.right ||
+                    control.scrollWidth > control.clientWidth
+                  )
+                },
+              )
             )
           })
           expect(overflow).toBe(false)
