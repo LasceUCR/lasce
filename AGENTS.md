@@ -118,10 +118,10 @@ See [`docs/add-a-component.md`](docs/add-a-component.md).
 
 **Feedback.** The outcome of a user action (create, edit, delete, upload) is reported with a toast
 from `useToast()` (`app/components/public/toast/`): `success` for what worked, `error` for what
-failed. Do not add a new inline success or error message for an action outcome. An error toast
-states the reason when the server gives one: read it with `readFailureReason(response)`
-(`app/lib/api-feedback.ts`) and fall back to a translated message, never to a bare "something went
-wrong". Toasts render inside an open `Modal` automatically, so show them from the handler and keep
+failed. Do not add a new inline success or error message for an action outcome. Send the request
+through `useRequestFeedback()`, which shows the server's reason (`readFailureReason`) or a
+translated fallback, never a bare "something went wrong", and keeps the form open on failure.
+Success messages follow "<Entidad> agregada / actualizada / eliminada correctamente.". Toasts render inside an open `Modal` automatically, so show them from the handler and keep
 the modal open on failure. Field-level validation next to an input stays inline (`FormField`), and
 so do page states such as empty lists and loading (`Notice`, `content-empty`). Older sections
 still use inline alerts and are moved over when they are next touched. See

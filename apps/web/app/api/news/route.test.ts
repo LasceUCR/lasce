@@ -103,4 +103,28 @@ describe('POST /api/news', () => {
     expect(await response.json()).toEqual({ article: created })
     expect(mocks.createNews).toHaveBeenCalledWith(validBody)
   })
+
+  test('returns 409 when another article already uses the link', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.createNews.mockResolvedValue('duplicate-link')
+
+    const response = await POST(postRequest(validBody))
+
+    expect(response.status).toBe(409)
+    expect((await response.json()).error).toBe(
+      'Ya existe una noticia con este enlace. Use otro enlace o edite la noticia existente.',
+    )
+  })
+
+  test('explains a database failure instead of throwing', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.createNews.mockRejectedValue(new Error('connection refused'))
+
+    const response = await POST(postRequest(validBody))
+
+    expect(response.status).toBe(500)
+    expect((await response.json()).error).toBe(
+      'No se pudo guardar la noticia: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+    )
+  })
 })

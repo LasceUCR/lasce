@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 vi.mock('@/app/(public)/noticias/actions', () => ({
   uploadNewsImage: vi.fn(),
@@ -16,10 +18,12 @@ const editArgs = EditModeOn.args as EditableNewsCardProps
 const assistantArgs = AssistantMode.args as EditableNewsCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableNewsCardProps) {
-  return render(
-    <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
-      <EditableNewsCard {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
+        <EditableNewsCard {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -64,31 +68,36 @@ describe('EditableNewsCard', () => {
     expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument()
   })
 
-  test('saves and closes the modal when the form save succeeds', async () => {
+  test('closes the modal once onSave reports the edit as saved', async () => {
     const user = userEvent.setup()
-    const onSave = vi.fn().mockResolvedValue(null)
+    const onSave = vi.fn((_values: unknown, close: () => void) => close())
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: 'Editar' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ title: editArgs.article.title }),
+      expect.any(Function),
+    )
     expect(await screen.findByRole('heading', { name: editArgs.article.title })).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('shows the error and keeps the modal open when the form save fails', async () => {
+  test('keeps the modal open with the input when the save does not succeed', async () => {
     const user = userEvent.setup()
-    const onSave = vi.fn().mockResolvedValue('No se pudo guardar el cambio. Inténtelo de nuevo.')
+    const onSave = vi.fn()
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: 'Editar' }))
+    const titleInput = screen.getByRole('textbox', { name: 'Título' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Título editado')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(
-      await screen.findByText('No se pudo guardar el cambio. Inténtelo de nuevo.'),
-    ).toBeInTheDocument()
+    expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('dialog', { name: 'Editar noticia' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue('Título editado')
   })
 
   test('confirms and calls onDelete when the delete action is confirmed', async () => {
