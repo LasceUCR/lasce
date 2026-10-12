@@ -1,13 +1,13 @@
 'use client'
 
 import { useId, useState } from 'react'
+import { Plus, X } from 'lucide-react'
 
 import { Button } from '@/app/components/public/Button'
-import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
-import { Plus, X } from 'lucide-react'
 import { IconButton } from '@/app/components/public/IconButton'
 import { Modal } from '@/app/components/public/Modal'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import type { ResearchGroup } from '@/app/lib/publications'
 
 const researchGroupOptions: FormFieldOption[] = [
@@ -30,72 +30,60 @@ export interface PublicationFormProps {
   publication: PublicationFormValues
   onSave: (values: PublicationFormValues) => void
   onCancel: () => void
-  confirmTitle?: string
-  confirmMessage?: string
 }
 
-export function PublicationForm({
-  publication,
-  onSave,
-  onCancel,
-  confirmTitle = 'Guardar cambios',
-  confirmMessage = '¿Desea guardar los cambios en esta publicación?',
-}: PublicationFormProps) {
+export function PublicationForm({ publication, onSave, onCancel }: PublicationFormProps) {
   const formId = useId()
+  const initialDate = publication.date.toISOString().slice(0, 10)
 
   const [title, setTitle] = useState(publication.title)
   const [authors, setAuthors] = useState<string[]>(publication.authors)
   const [venue, setVenue] = useState(publication.venue)
-  const [date, setDate] = useState(publication.date.toISOString().slice(0, 10))
+  const [date, setDate] = useState(initialDate)
   const [abstract, setAbstract] = useState(publication.abstract)
-  const [href, setHref] = useState(publication.href || '')
-  const [DOI, setDOI] = useState(publication.DOI || '')
+  const [href, setHref] = useState(publication.href ?? '')
+  const [DOI, setDOI] = useState(publication.DOI ?? '')
   const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
 
   const [isAddingAuthor, setIsAddingAuthor] = useState(false)
   const [newAuthor, setNewAuthor] = useState('')
   const [newAuthorError, setNewAuthorError] = useState<string | null>(null)
-  const [showAuthorValidation, setShowAuthorValidation] = useState(false)
 
-  const [confirmOpen, setConfirmOpen] = useState(false)
+  // Standards: validation only runs once "Confirmar" is pressed, same as
+  // NewsArticleForm — a message appearing before anyone has finished filling
+  // the form in reads as premature nagging.
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
 
-  function validateTitle(value: string) {
-    if (value.trim() === '') {
-      throw new Error('Es necesario un título.')
-    }
-  }
+  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'Es necesario un título.' : null
+  const dateError =
+    hasAttemptedSubmit && date === '' ? 'Debe establecer la fecha de publicación.' : null
+  const authorsError =
+    hasAttemptedSubmit && authors.length === 0
+      ? 'Se requiere al menos un autor para la publicación.'
+      : null
+  const venueError =
+    hasAttemptedSubmit && venue.trim() === '' ? 'Debe tener revista o medio de publicación.' : null
+  const abstractError =
+    hasAttemptedSubmit && abstract.trim() === '' ? 'Debe tener un resumen.' : null
+  const researchGroupError =
+    hasAttemptedSubmit && researchGroup.trim() === ''
+      ? 'Debe tener un grupo de investigación.'
+      : null
 
-  const validateDate = (value: string) => {
-    if (value === '') {
-      throw new Error('Debe establecer la fecha de publicación.')
-    }
-  }
-
-  const validateVenue = (value: string) => {
-    if (value.trim() === '') {
-      throw new Error('Debe tener revista o medio de publicación.')
-    }
-  }
-
-  const validateAbstract = (value: string) => {
-    if (value.trim() === '') {
-      throw new Error('Debe tener un resumen.')
-    }
-  }
-
-  const validateResearchGroup = (value: string) => {
-    if (value.trim() === '') {
-      throw new Error('Debe tener un grupo de investigación.')
-    }
-  }
-
-  const canSave =
-    title.trim() !== '' &&
-    authors.length > 0 &&
-    venue.trim() !== '' &&
-    date !== '' &&
-    abstract.trim() !== '' &&
-    researchGroup.trim() !== ''
+  // Same reasoning as NewsArticleForm: discarding a form nobody has changed
+  // yet reads as an odd extra click, so the warning only shows up once
+  // something was actually typed (or a submit was attempted and failed).
+  const isDirty =
+    hasAttemptedSubmit ||
+    title !== publication.title ||
+    JSON.stringify(authors) !== JSON.stringify(publication.authors) ||
+    venue !== publication.venue ||
+    date !== initialDate ||
+    abstract !== publication.abstract ||
+    href !== (publication.href ?? '') ||
+    DOI !== (publication.DOI ?? '') ||
+    researchGroup !== publication.researchGroup
 
   function openAddAuthor() {
     setNewAuthor('')
@@ -128,23 +116,45 @@ export function PublicationForm({
     setAuthors(authors.filter((existing) => existing !== author))
   }
 
-  function validateFields() {
-    setTitle(title.trim())
-    setVenue(venue.trim())
-    setDate(date.trim())
-    setHref(href?.trim() ?? '')
-    setDOI(DOI?.trim() ?? '')
-    setNewAuthor(newAuthor.trim())
-    setAbstract(abstract.trim())
-    setShowAuthorValidation(true)
-
-    if (canSave) {
-      setConfirmOpen(true)
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+    } else {
+      onCancel()
     }
   }
 
-  function handleSubmit() {
-    setConfirmOpen(false)
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
+  }
+
+  function handleConfirmClick() {
+    setHasAttemptedSubmit(true)
+
+    if (title.trim() === '') {
+      document.getElementById(`${formId}-title`)?.focus()
+      return
+    }
+    if (authors.length === 0) {
+      return
+    }
+    if (venue.trim() === '') {
+      document.getElementById('publication-venue')?.focus()
+      return
+    }
+    if (date === '') {
+      document.getElementById('publication-date')?.focus()
+      return
+    }
+    if (abstract.trim() === '') {
+      document.getElementById('publication-abstract')?.focus()
+      return
+    }
+    if (researchGroup.trim() === '') {
+      document.getElementById('publication-research-group')?.focus()
+      return
+    }
 
     onSave({
       title,
@@ -161,21 +171,21 @@ export function PublicationForm({
   return (
     <div className="publication-form">
       <FormField
+        errorMessage={titleError}
         id={`${formId}-title`}
         label="Título"
         onChange={setTitle}
         required
-        validate={validateTitle}
         value={title}
       />
 
       <FormField
+        errorMessage={dateError}
         id="publication-date"
         label="Fecha de publicación"
         onChange={setDate}
         required
         type="date"
-        validate={validateDate}
         value={date}
       />
 
@@ -186,7 +196,7 @@ export function PublicationForm({
 
         <div
           aria-labelledby="publication-authors-label"
-          className={`email-chip-field${showAuthorValidation && authors.length === 0 ? ' form-field-error' : ''}`}
+          className={`email-chip-field${authorsError ? ' form-field-error' : ''}`}
           role="group"
         >
           {authors.map((author) => (
@@ -210,9 +220,7 @@ export function PublicationForm({
           />
         </div>
 
-        {showAuthorValidation && authors.length === 0 && (
-          <p className="form-field-error">Se requiere al menos un autor para la publicación.</p>
-        )}
+        {authorsError ? <p className="form-field-error">{authorsError}</p> : null}
       </div>
 
       <Modal onClose={closeAddAuthor} open={isAddingAuthor} size="small" title="Añadir autor">
@@ -243,53 +251,56 @@ export function PublicationForm({
         </div>
       </Modal>
 
-      <FormField id={`publication-href`} label="Enlace externo" onChange={setHref} value={href} />
+      <FormField id="publication-href" label="Enlace externo" onChange={setHref} value={href} />
 
-      <FormField id={`publication-doi`} label="DOI" onChange={setDOI} value={DOI} />
+      <FormField id="publication-doi" label="DOI" onChange={setDOI} value={DOI} />
 
       <FormField
-        id={`publication-venue-venue`}
+        errorMessage={venueError}
+        id="publication-venue"
         label="Revista/Publicación"
         onChange={setVenue}
         required
-        validate={validateVenue}
         value={venue}
       />
 
       <FormField
+        errorMessage={abstractError}
         id="publication-abstract"
         label="Resumen"
         multiline
         onChange={setAbstract}
         required
-        validate={validateAbstract}
         value={abstract}
       />
 
       <FormField
+        errorMessage={researchGroupError}
         id="publication-research-group"
         label="Grupo"
         onChange={(value) => setResearchGroup(value as ResearchGroup)}
         options={researchGroupOptions}
-        validate={validateResearchGroup}
         value={researchGroup}
       />
 
       <div className="nosotros-activity-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
-        <Button onClick={validateFields} variant="primary">
+        <Button onClick={handleConfirmClick} variant="primary">
           Confirmar
         </Button>
       </div>
 
-      <ConfirmDialog
-        message={confirmMessage}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={handleSubmit}
-        open={confirmOpen}
-        title={confirmTitle}
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="info"
+        title="Descartar cambios no guardados"
       />
     </div>
   )
