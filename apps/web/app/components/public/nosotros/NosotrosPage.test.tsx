@@ -296,7 +296,9 @@ describe('NosotrosPage', () => {
       ),
     ).toBeInTheDocument()
     await user.click(
-      within(researchers).getByRole('button', { name: 'Ver descripción de Dr. Felipe Meza Obando' }),
+      within(researchers).getByRole('button', {
+        name: 'Ver descripción de Dr. Felipe Meza Obando',
+      }),
     )
     expect(
       within(researchers).getByText(
