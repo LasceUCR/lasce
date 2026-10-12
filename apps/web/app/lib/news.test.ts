@@ -256,7 +256,8 @@ describe('createNews', () => {
 
 describe('updateNews', () => {
   test('returns null when the article does not exist', async () => {
-    findUnique.mockResolvedValue(null)
+    findUnique.mockResolvedValue({ id: 'missing' })
+    findUnique.mockResolvedValueOnce(null)
 
     expect(await updateNews('missing', validInput)).toBeNull()
     expect(update).not.toHaveBeenCalled()

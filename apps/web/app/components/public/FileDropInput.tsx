@@ -11,6 +11,8 @@ export interface FileDropInputProps {
   existingImageUrl?: string
   onFileSelect: (file: File | null) => void
   helperText?: string
+  required?: boolean
+  errorMessage?: string | null
 }
 
 export function FileDropInput({
@@ -19,6 +21,8 @@ export function FileDropInput({
   existingImageUrl,
   onFileSelect,
   helperText,
+  required = false,
+  errorMessage,
 }: FileDropInputProps) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -70,15 +74,25 @@ export function FileDropInput({
     selectFile(null)
   }
 
+  const isInvalid = Boolean(errorMessage)
+
   return (
     <div className="file-drop-field">
       <span className="cms-form-field-label" id={`${inputId}-label`}>
         {label}
+        {required ? <span className="cms-form-field-required"> *</span> : null}
       </span>
 
       <div
+        aria-invalid={isInvalid || undefined}
         aria-labelledby={`${inputId}-label`}
-        className={['file-drop', isDraggingOver && 'file-drop-active'].filter(Boolean).join(' ')}
+        className={[
+          'file-drop',
+          isDraggingOver && 'file-drop-active',
+          isInvalid && 'file-drop-error',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         onClick={() => inputRef.current?.click()}
         onDragLeave={() => setIsDraggingOver(false)}
         onDragOver={(event) => {
@@ -134,6 +148,7 @@ export function FileDropInput({
         ref={inputRef}
         type="file"
       />
+      {errorMessage ? <p className="form-field-error">{errorMessage}</p> : null}
     </div>
   )
 }

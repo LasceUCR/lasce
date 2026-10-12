@@ -74,18 +74,29 @@ describe('NewsArticleForm', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('starts blank for a new article and enables save once the required text fields are filled', async () => {
+  test('starts blank for a new article and explains the missing fields instead of saving', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<NewsArticleForm {...addArgs} onSave={onSave} />)
 
     expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue('')
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
 
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Un título')
-    // A title alone is not enough.
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
+    // A title alone is not enough.
+    expect(screen.getByText('Debe indicar al menos un autor.')).toBeInTheDocument()
+    expect(screen.getByText('La fuente es obligatoria.')).toBeInTheDocument()
+    expect(screen.getByText('El resumen es obligatorio.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('saves a new article once the required text fields are filled', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<NewsArticleForm {...addArgs} onSave={onSave} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Un título')
     await user.type(screen.getByRole('textbox', { name: 'Autores' }), 'Ana Pérez')
     await user.type(screen.getByRole('textbox', { name: 'Fuente' }), 'La Nación')
     await user.type(screen.getByRole('textbox', { name: 'Enlace' }), 'https://example.com/nota')
@@ -100,5 +111,38 @@ describe('NewsArticleForm', () => {
       externalUrl: 'https://example.com/nota',
       abstract: 'Un resumen.',
     })
+  })
+
+  test('prompts discard confirmation when clicking Cancel with modifications, and cancels upon confirmation', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<NewsArticleForm {...addArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Borrador')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    // Discard confirm dialog appears
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('does not cancel when discard confirmation is dismissed', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<NewsArticleForm {...addArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Borrador')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(
+      screen.queryByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).not.toBeInTheDocument()
   })
 })

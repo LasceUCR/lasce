@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField } from '@/app/components/public/FormField'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import type { NewsArticle } from '@/app/lib/news'
 
 /** The editable fields of a news article, as `/api/news` expects them. */
@@ -59,15 +60,83 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   const [externalUrl, setExternalUrl] = useState(article?.href ?? '')
   const [abstract, setAbstract] = useState(article?.abstract ?? '')
 
-  const canSave =
+  // Standards: Validation & Confirmation States
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
+
+  // Compute field errors for display
+  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
+  const authorsError =
+    hasAttemptedSubmit && splitAuthors(authors).length === 0
+      ? 'Debe indicar al menos un autor.'
+      : null
+  const sourceError =
+    hasAttemptedSubmit && source.trim() === '' ? 'La fuente es obligatoria.' : null
+
+  let urlError: string | null = null
+  if (hasAttemptedSubmit) {
+    if (externalUrl.trim() === '') {
+      urlError = 'El enlace es obligatorio.'
+    } else {
+      try {
+        new URL(externalUrl)
+      } catch {
+        urlError = 'El enlace debe ser una URL válida.'
+      }
+    }
+  }
+
+  const abstractError =
+    hasAttemptedSubmit && abstract.trim() === '' ? 'El resumen es obligatorio.' : null
+
+  const isFormValid =
     title.trim() !== '' &&
     splitAuthors(authors).length > 0 &&
     source.trim() !== '' &&
     externalUrl.trim() !== '' &&
+    urlError === null &&
     abstract.trim() !== ''
 
+  // Check if form is dirty for discard confirmation
+  const isDirty =
+    hasAttemptedSubmit ||
+    title !== (article?.title ?? '') ||
+    authors !== (article?.authors ?? '') ||
+    source !== (article?.source ?? '') ||
+    publishedAt !== (article?.publishedAt ?? '') ||
+    externalUrl !== (article?.href ?? '') ||
+    abstract !== (article?.abstract ?? '')
+
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+    } else {
+      onCancel()
+    }
+  }
+
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
+  }
+
   function handleSave() {
-    if (!canSave) return
+    setHasAttemptedSubmit(true)
+
+    if (!isFormValid) {
+      if (title.trim() === '') {
+        document.getElementById('news-title-input')?.focus()
+      } else if (splitAuthors(authors).length === 0) {
+        document.getElementById('news-authors-input')?.focus()
+      } else if (source.trim() === '') {
+        document.getElementById('news-source-input')?.focus()
+      } else if (externalUrl.trim() === '') {
+        document.getElementById('news-url-input')?.focus()
+      } else if (abstract.trim() === '') {
+        document.getElementById('news-abstract-input')?.focus()
+      }
+      return
+    }
 
     onSave({
       title,
@@ -82,6 +151,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   return (
     <div className="news-article-form">
       <FormField
+        errorMessage={titleError}
+        id="news-title-input"
         label="Título"
         onChange={setTitle}
         required
@@ -91,6 +162,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
 
       <div className="news-article-form-row">
         <FormField
+          errorMessage={authorsError}
+          id="news-authors-input"
           label="Autores"
           onChange={setAuthors}
           required
@@ -98,6 +171,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
           value={authors}
         />
         <FormField
+          errorMessage={sourceError}
+          id="news-source-input"
           label="Fuente"
           onChange={setSource}
           required
@@ -109,6 +184,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       <div className="news-article-form-row">
         <FormField label="Fecha" onChange={setPublishedAt} type="date" value={publishedAt} />
         <FormField
+          errorMessage={urlError}
+          id="news-url-input"
           label="Enlace"
           onChange={setExternalUrl}
           required
@@ -119,6 +196,8 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       </div>
 
       <FormField
+        errorMessage={abstractError}
+        id="news-abstract-input"
         label="Resumen"
         multiline
         onChange={setAbstract}
@@ -128,13 +207,24 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       />
 
       <div className="news-article-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
-        <Button disabled={!canSave} onClick={handleSave} variant="primary">
+        <Button onClick={handleSave} variant="primary">
           Confirmar
         </Button>
       </div>
+
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
+      />
     </div>
   )
 }
