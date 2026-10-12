@@ -14,7 +14,6 @@ import { defaultLocale, locales, type Locale } from '@/app/lib/i18n/config'
 import {
   confirmationsStillNeeded,
   contentFieldLang,
-  errorSummary,
   isConfirmed,
   languageTabFlags,
   tabWithErrors,
@@ -206,8 +205,6 @@ export function PublicationForm({
     )
   }
 
-  const summary = errorSummary(errors, tab, uiLocale)
-
   return (
     <div className="publication-form" ref={formRef}>
       <LanguageTabs
@@ -322,12 +319,6 @@ export function PublicationForm({
         onChange={setAuthors}
         required
       />
-
-      {summary ? (
-        <Notice role="alert" tone="error">
-          {summary}
-        </Notice>
-      ) : null}
 
       <div className="nosotros-activity-form-actions publication-form-actions">
         <Button onClick={requestCancel} variant="secondary">

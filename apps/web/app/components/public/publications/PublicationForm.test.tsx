@@ -252,13 +252,14 @@ describe('PublicationForm: creating', () => {
     expect(screen.getByText('El título en inglés es obligatorio.')).toBeInTheDocument()
   })
 
-  test('says which other tab still has problems', async () => {
+  test('flags the other tab without an additional error summary', async () => {
     const user = userEvent.setup()
     renderWithIntl(<PublicationForm {...createArgs} />)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Revise también la pestaña English.')
+    expect(tab(/^English/)).toHaveTextContent('2 por revisar')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   test('saves a new publication in both languages without a DOI or link', async () => {
@@ -675,9 +676,7 @@ describe('PublicationForm: in English, the language the site is shown in', () =>
     expect(screen.getByText('There must be at least one author.')).toBeInTheDocument()
     expect(screen.getByText('The journal or publication is required.')).toBeInTheDocument()
     expect(tab(/^English · 2 to review$/)).toBeInTheDocument()
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'There are 6 fields to review. Also check the English tab.',
-    )
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
 
