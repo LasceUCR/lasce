@@ -16,6 +16,8 @@ export interface StandardConfirmDialogProps {
   consequence?: string
   /** Highlights the specific entity name being modified or deleted. */
   targetEntity?: string
+  /** What `targetEntity` is called before its name, in the page's language. */
+  targetLabel?: string
   confirmLabel?: string
   cancelLabel?: string
   severity?: ConfirmationSeverity
@@ -91,6 +93,7 @@ export function StandardConfirmDialog({
   message,
   consequence,
   targetEntity,
+  targetLabel = 'Elemento',
   confirmLabel = 'Confirmar',
   cancelLabel = 'Cancelar',
   severity = 'info',
@@ -124,7 +127,7 @@ export function StandardConfirmDialog({
               severity === 'danger' ? 'std-confirm-target-card-danger' : ''
             }`}
           >
-            <strong>Elemento: </strong>
+            <strong>{targetLabel}: </strong>
             <span>{targetEntity}</span>
           </div>
         ) : null}

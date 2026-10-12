@@ -146,12 +146,38 @@ model Research {
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  publisher Publisher             @relation(fields: [publisherId], references: [id], onDelete: Restrict)
-  authors   ResearchCrossAuthor[]
+  publisher    Publisher             @relation(fields: [publisherId], references: [id], onDelete: Restrict)
+  authors      ResearchCrossAuthor[]
+  translations ResearchTranslation[]
 
   @@index([publicationDate])
   @@index([researchGroup])
   @@map("research_records")
+  @@schema("research")
+}
+
+/// The translatable text of a `Research` record in a language other than the
+/// source one (see "Dynamic content" in docs/internationalization.md). The base row keeps
+/// the source-language `title` and `abstract`; this table holds one row per
+/// additional locale. Only `title` and `abstract` are translated: publishers and
+/// authors are proper nouns.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a
+/// language needs no migration. A record created before translations existed has
+/// no row here, and its base text is in whatever language it was entered in.
+model ResearchTranslation {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  researchId String   @map("research_id") @db.Uuid
+  locale     String   @db.VarChar(5)
+  title      String
+  abstract   String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  research Research @relation(fields: [researchId], references: [id], onDelete: Cascade)
+
+  @@unique([researchId, locale])
+  @@map("research_record_translations")
   @@schema("research")
 }
 

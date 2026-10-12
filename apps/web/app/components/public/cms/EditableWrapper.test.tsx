@@ -77,4 +77,27 @@ describe('EditableWrapper', () => {
       screen.getByRole('button', { name: 'Eliminar Fenómenos solares eruptivos' }),
     ).toBeInTheDocument()
   })
+
+  test('labels the delete confirmation in the language it is given', async () => {
+    const user = userEvent.setup()
+    render(
+      <EditableWrapper
+        {...defaultArgs}
+        deleteCancelLabel="Cancel"
+        deleteConfirmLabel="Confirm"
+        deleteConfirmMessage="This cannot be undone."
+        deleteConfirmTitle="Delete item"
+        deleteLabel="Delete"
+        deleteTargetEntity="Solar activity"
+        deleteTargetLabel="Item"
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    const dialog = screen.getByRole('dialog', { name: 'Delete item' })
+
+    expect(dialog).toHaveTextContent('Item: Solar activity')
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+  })
 })
