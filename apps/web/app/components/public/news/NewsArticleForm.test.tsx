@@ -128,16 +128,71 @@ describe('NewsArticleForm', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('starts blank for a new article and disables save until the required fields and an image are present', async () => {
+  test('starts blank for a new article and displays validation errors when attempting to save with missing fields', async () => {
     const user = userEvent.setup()
-    render(<NewsArticleForm {...addArgs} />)
+    const onSave = vi.fn()
+    render(<NewsArticleForm {...addArgs} onSave={onSave} />)
 
     expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue('')
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
 
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Un título')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    // Still disabled: a title alone isn't enough without the other required fields and an image.
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    // Shows validation error messages for missing required fields
+    expect(screen.getByText('Debe indicar al menos un autor.')).toBeInTheDocument()
+    expect(screen.getByText('La fuente es obligatoria.')).toBeInTheDocument()
+    expect(screen.getByText('El resumen es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('La imagen es obligatoria.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('displays error when attempting to save without an image', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<NewsArticleForm {...addArgs} onSave={onSave} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Noticia sin imagen')
+    await user.type(screen.getByRole('textbox', { name: 'Autores' }), 'Autor Uno')
+    await user.type(screen.getByRole('textbox', { name: 'Fuente' }), 'UCR')
+    await user.type(screen.getByRole('textbox', { name: 'Enlace' }), 'https://ucr.ac.cr/noticia')
+    await user.type(screen.getByRole('textbox', { name: 'Resumen' }), 'Resumen de prueba')
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.getByText('La imagen es obligatoria.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('prompts discard confirmation when clicking Cancel with modifications, and cancels upon confirmation', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<NewsArticleForm {...addArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Borrador')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    // Discard confirm dialog appears
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('does not cancel when discard confirmation is dismissed', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<NewsArticleForm {...addArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Borrador')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(
+      screen.queryByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).not.toBeInTheDocument()
   })
 })
