@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import {
   uploadResearchAreaImage,
   type UploadResearchAreaImageResult,
@@ -49,6 +50,7 @@ export function ResearchAreaForm({
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const uploadErrorRef = useRef<HTMLParagraphElement>(null)
@@ -62,6 +64,22 @@ export function ResearchAreaForm({
   const hasPhoto = photoFile !== null || (Boolean(area?.src) && !photoRemoved)
   const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
   const imageError = hasAttemptedSubmit && !hasPhoto ? 'La imagen es obligatoria.' : null
+
+  const isDirty =
+    title !== area.title || description !== area.description || photoFile !== null || photoRemoved
+
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+      return
+    }
+    onCancel()
+  }
+
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
+  }
 
   function handleConfirmClick() {
     setHasAttemptedSubmit(true)
@@ -148,7 +166,7 @@ export function ResearchAreaForm({
       ) : null}
 
       <div className="cms-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
 
@@ -163,6 +181,17 @@ export function ResearchAreaForm({
         onConfirm={handleConfirmSave}
         open={confirmOpen}
         title={confirmTitle}
+      />
+
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
       />
     </div>
   )

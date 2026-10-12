@@ -320,4 +320,34 @@ describe('ResearcherForm', () => {
     expect(screen.getByRole('button', { name: 'Confirmar' })).not.toBeDisabled()
     expect(onSave).not.toHaveBeenCalled()
   })
+
+  test('asks before discarding unsaved changes and closes once confirmed', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...editArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    expect(onCancel).not.toHaveBeenCalled()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('keeps the form open when discard is dismissed', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...editArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(
+      screen.queryByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).not.toBeInTheDocument()
+  })
 })

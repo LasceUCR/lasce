@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import type { NosotrosCardIcon } from '@/app/lib/nosotros'
 
@@ -63,8 +64,25 @@ export function NosotrosActivityForm({
   const [title, setTitle] = useState(activity.title)
   const [description, setDescription] = useState(activity.description)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const formId = useId()
+
+  const isDirty =
+    icon !== activity.icon || title !== activity.title || description !== activity.description
+
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+      return
+    }
+    onCancel()
+  }
+
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
+  }
 
   const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
   const descriptionError =
@@ -120,7 +138,7 @@ export function NosotrosActivityForm({
       />
 
       <div className="cms-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
         <Button onClick={handleConfirmClick} variant="primary">
@@ -140,6 +158,17 @@ export function NosotrosActivityForm({
           title={confirmTitle}
         />
       ) : null}
+
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
+      />
     </div>
   )
 }

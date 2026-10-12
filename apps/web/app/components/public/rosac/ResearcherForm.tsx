@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { IconButton } from '@/app/components/public/IconButton'
@@ -104,6 +105,7 @@ export function ResearcherForm({
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -124,6 +126,33 @@ export function ResearcherForm({
   const nameError = hasAttemptedSubmit && name.trim() === '' ? 'El nombre es obligatorio.' : null
   const institutionError =
     hasAttemptedSubmit && institution.trim() === '' ? 'La institución es obligatoria.' : null
+
+  const initialEmails = parseEmails(researcher?.email)
+  const emailsChanged =
+    emails.length !== initialEmails.length ||
+    emails.some((address, index) => address !== initialEmails[index])
+  const isDirty =
+    role !== (researcher?.role ?? '') ||
+    name !== (researcher?.name ?? '') ||
+    institution !== (researcher?.institution ?? '') ||
+    description !== (researcher?.description ?? '') ||
+    emailsChanged ||
+    newEmail.trim() !== '' ||
+    photoFile !== null ||
+    photoRemoved
+
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+      return
+    }
+    onCancel()
+  }
+
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
+  }
 
   // Field errors appear once "Confirmar" is pressed, then clear on their own
   // as each field becomes valid — same as the news article form.
@@ -318,7 +347,7 @@ export function ResearcherForm({
       ) : null}
 
       <div className="cms-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
@@ -332,6 +361,17 @@ export function ResearcherForm({
         onConfirm={handleConfirm}
         open={confirmOpen}
         title={confirmTitle}
+      />
+
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
       />
     </div>
   )
