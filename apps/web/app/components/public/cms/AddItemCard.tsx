@@ -14,6 +14,12 @@ export interface AddItemCardProps {
   children: (helpers: AddItemCardHelpers) => ReactNode
   /** Forwarded to the modal wrapping `children`. Defaults to `Modal`'s own default. */
   size?: ModalSize
+  /**
+   * Called instead of closing when the modal's close button, Escape or backdrop is used, so the
+   * form inside can ask before discarding what was typed. It calls `close` to actually close.
+   * Without it, those close the modal straight away.
+   */
+  onRequestClose?: (close: () => void) => void
 }
 
 /**
@@ -23,7 +29,7 @@ export interface AddItemCardProps {
  * about news articles (or any other content type) — any form component can
  * be dropped in.
  */
-export function AddItemCard({ label, children, size }: AddItemCardProps) {
+export function AddItemCard({ label, children, size, onRequestClose }: AddItemCardProps) {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
 
@@ -40,7 +46,12 @@ export function AddItemCard({ label, children, size }: AddItemCardProps) {
         {label}
       </button>
 
-      <Modal onClose={close} open={open} size={size} title={label}>
+      <Modal
+        onClose={onRequestClose ? () => onRequestClose(close) : close}
+        open={open}
+        size={size}
+        title={label}
+      >
         {children({ close })}
       </Modal>
     </>
