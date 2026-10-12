@@ -7,6 +7,14 @@ import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import type { NosotrosCardIcon } from '@/app/lib/nosotros'
 
+/** Messages match `nosotrosActivityInputSchema` so a rejection reads the same
+ * whether it's caught here or by the server after submission. */
+function requireNonEmpty(message: string) {
+  return (value: string) => {
+    if (value.trim() === '') throw new Error(message)
+  }
+}
+
 const iconOptions: FormFieldOption[] = [
   { value: 'sun', label: 'Sol' },
   { value: 'waves', label: 'Ondas' },
@@ -55,9 +63,30 @@ export function NosotrosActivityForm({
   const [title, setTitle] = useState(activity.title)
   const [description, setDescription] = useState(activity.description)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const formId = useId()
 
-  const canSave = title.trim() !== '' && description.trim() !== ''
+  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
+  const descriptionError =
+    hasAttemptedSubmit && description.trim() === '' ? 'El texto es obligatorio.' : null
+
+  function handleConfirmClick() {
+    setHasAttemptedSubmit(true)
+    if (title.trim() === '' || description.trim() === '') {
+      if (title.trim() === '') {
+        document.getElementById(`${formId}-title`)?.focus()
+      } else {
+        document.getElementById(`${formId}-description`)?.focus()
+      }
+      return
+    }
+
+    if (requireConfirmation) {
+      setConfirmOpen(true)
+    } else {
+      onSave({ icon, title, description })
+    }
+  }
 
   return (
     <div className="cms-form">
@@ -69,14 +98,24 @@ export function NosotrosActivityForm({
         value={icon}
       />
 
-      <FormField id={`${formId}-title`} label="Título" onChange={setTitle} required value={title} />
+      <FormField
+        errorMessage={titleError}
+        id={`${formId}-title`}
+        label="Título"
+        onChange={setTitle}
+        required
+        validate={requireNonEmpty('El título es obligatorio.')}
+        value={title}
+      />
 
       <FormField
+        errorMessage={descriptionError}
         id={`${formId}-description`}
         label="Texto"
         multiline
         onChange={setDescription}
         required
+        validate={requireNonEmpty('El texto es obligatorio.')}
         value={description}
       />
 
@@ -84,13 +123,7 @@ export function NosotrosActivityForm({
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
-        <Button
-          disabled={!canSave}
-          onClick={() =>
-            requireConfirmation ? setConfirmOpen(true) : onSave({ icon, title, description })
-          }
-          variant="primary"
-        >
+        <Button onClick={handleConfirmClick} variant="primary">
           Confirmar
         </Button>
       </div>

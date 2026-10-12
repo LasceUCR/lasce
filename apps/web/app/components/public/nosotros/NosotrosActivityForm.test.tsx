@@ -30,13 +30,29 @@ describe('NosotrosActivityForm', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('disables saving when the title is cleared', async () => {
+  test('shows a field error and does not confirm when the title is cleared', async () => {
     const user = userEvent.setup()
-    render(<NosotrosActivityForm {...defaultArgs} />)
+    const onSave = vi.fn()
+    render(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
 
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    expect(screen.getByText('El título es obligatorio.')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('shows a field error for each empty field when creating an activity', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<NosotrosActivityForm {...createArgs} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.getByText('El título es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('El texto es obligatorio.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
   })
 
   test('asks for confirmation before saving', async () => {
