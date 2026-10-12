@@ -223,8 +223,6 @@ export function PublicationsExplorer({
 
                   <PublicationForm
                     publication={blankPublication}
-                    confirmMessage="¿Desea agregar esta publicación?"
-                    confirmTitle="Agregar publicación"
                     onCancel={() => {
                       setCreateError(null)
                       close()
