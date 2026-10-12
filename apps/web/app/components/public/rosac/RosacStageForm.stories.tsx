@@ -17,6 +17,16 @@ export const Default: Story = {
       title: 'Preparación para el montaje',
       description:
         'Antes del montaje principal se realizaron trabajos de preparación del sitio y de los componentes que posteriormente formarían parte de la estructura.',
+      images: [
+        {
+          src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_1.jpg',
+          alt: 'Personas sobre y alrededor de una base de concreto, con una antena al fondo.',
+        },
+        {
+          src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_2.jpg',
+          alt: 'Camión con grúa y componentes metálicos junto al sitio de la antena.',
+        },
+      ],
     },
     onCancel: fn(),
     onSave: fn(),
