@@ -85,7 +85,6 @@ def test_news_record_matches_the_prisma_columns() -> None:
         "source_id",
         "abstract",
         "external_url",
-        "image_url",
         "created_at",
         "updated_at",
     }
