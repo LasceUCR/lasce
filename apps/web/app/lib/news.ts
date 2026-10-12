@@ -36,8 +36,6 @@ export type NewsArticle = {
   publishedAt: string | null
   abstract: string
   href: string
-  imageUrl: string
-  imageAlt: string
 }
 
 /**
@@ -78,8 +76,6 @@ function toNewsArticle(record: NewsRecord): NewsArticle {
     publishedAt: record.publishedAt ? record.publishedAt.toISOString().slice(0, 10) : null,
     abstract: record.abstract,
     href: record.externalUrl,
-    imageUrl: record.imageUrl,
-    imageAlt: record.imageAlt,
   }
 }
 
@@ -91,8 +87,6 @@ export const newsInputSchema = z.object({
   publishedAt: z.string().date().nullable(),
   externalUrl: z.string().trim().url('El enlace debe ser una URL válida.'),
   abstract: z.string().trim().min(1, 'El resumen es obligatorio.'),
-  imageUrl: z.string().trim().min(1, 'La imagen es obligatoria.'),
-  imageAlt: z.string().trim(),
 })
 
 export type NewsInput = z.infer<typeof newsInputSchema>
@@ -173,8 +167,6 @@ function newsRowData(data: NewsInput, sourceId: string) {
     sourceId,
     abstract: data.abstract,
     externalUrl: data.externalUrl,
-    imageUrl: data.imageUrl,
-    imageAlt: data.imageAlt,
   }
 }
 

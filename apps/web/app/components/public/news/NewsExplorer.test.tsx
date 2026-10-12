@@ -8,23 +8,14 @@ import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
-  uploadNewsImage: vi.fn(),
 }))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
 }))
 
-vi.mock('@/app/(public)/noticias/actions', () => ({
-  uploadNewsImage: mocks.uploadNewsImage,
-}))
-
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
-
-// jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
-URL.createObjectURL = vi.fn(() => 'blob:mock-url')
-URL.revokeObjectURL = vi.fn()
 
 import { NewsExplorer, type NewsExplorerProps } from './NewsExplorer'
 
@@ -40,8 +31,6 @@ const defaultArgs: NewsExplorerProps = {
       abstract:
         'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
       href: 'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
-      imageUrl: '/images/news/el-norte-hoy-1.png',
-      imageAlt: 'Radiotelescopio ROSAC.',
     },
     {
       slug: 'ucr-contara-con-radiotelescopio-explorar-cosmos',
@@ -53,9 +42,6 @@ const defaultArgs: NewsExplorerProps = {
       abstract:
         'Un proyecto de investigación de la UCR estudia la transformación de una gran antena instalada en la Finca Experimental de Santa Cruz en un radiotelescopio para estudiar los astros.',
       href: 'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
-      imageUrl: '/images/news/ucr-3.png',
-      imageAlt:
-        'Antena instalada en la Finca Experimental de Santa Cruz (FESC) de la Universidad de Costa Rica.',
     },
   ],
 }
@@ -92,12 +78,8 @@ function failedResponse(status: number, body: unknown) {
   return { ok: false, status, json: async () => body }
 }
 
-/** Opens "Agregar noticia", fills in a valid article with an image and submits it. */
+/** Opens "Agregar noticia", fills in a valid article and submits it. */
 async function submitNewArticle(user: User) {
-  mocks.uploadNewsImage.mockResolvedValue({
-    ok: true,
-    imageUrl: 'https://s3.example/lasce/foto.png',
-  })
   await user.click(screen.getByRole('button', { name: 'Agregar noticia' }))
   const dialog = screen.getByRole('dialog', { name: 'Agregar noticia' })
   await user.type(within(dialog).getByRole('textbox', { name: 'Título' }), 'Artículo nuevo')
@@ -108,8 +90,6 @@ async function submitNewArticle(user: User) {
     'https://example.com/nuevo',
   )
   await user.type(within(dialog).getByRole('textbox', { name: 'Resumen' }), 'Resumen nuevo.')
-  const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
-  await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
   await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
   return dialog
 }
@@ -244,6 +224,39 @@ describe('NewsExplorer', () => {
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
   })
 
+  test('keeps the order it was given, which getNews sets (newest first, undated last)', () => {
+    renderExplorer()
+
+    const titles = screen
+      .getAllByRole('heading', { level: 3 })
+      .map((heading) => heading.textContent)
+    expect(titles).toEqual(defaultArgs.news.map((article) => article.title))
+  })
+
+  test('keeps that order when a search narrows the list', async () => {
+    const user = userEvent.setup()
+    renderExplorer({
+      ...defaultArgs,
+      news: [
+        { ...defaultArgs.news[0]!, slug: 'a', title: 'Zafiro, primera nota' },
+        { ...defaultArgs.news[1]!, slug: 'b', title: 'Otra noticia' },
+        { ...defaultArgs.news[0]!, slug: 'c', title: 'Zafiro, segunda nota' },
+      ],
+    })
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), 'Zafiro')
+
+    expect(
+      screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent),
+    ).toEqual(['Zafiro, primera nota', 'Zafiro, segunda nota'])
+  })
+
+  test('shows no images in the listing', () => {
+    renderExplorer()
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
   test('renders "Sin fecha" for articles without a published date', () => {
     renderExplorer({
       news: [
@@ -256,8 +269,6 @@ describe('NewsExplorer', () => {
           publishedAt: null,
           abstract: 'Resumen.',
           href: 'https://example.com',
-          imageUrl: '/images/decorative/Solar-Flare.png',
-          imageAlt: '',
         },
       ],
     })
@@ -424,12 +435,18 @@ describe('NewsExplorer', () => {
 
     await submitNewArticle(user)
 
-    expect(mocks.uploadNewsImage).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/news',
       expect.objectContaining({
         method: 'POST',
-        body: expect.stringContaining('https://s3.example/lasce/foto.png'),
+        body: JSON.stringify({
+          title: 'Artículo nuevo',
+          authors: ['Autor Nuevo'],
+          source: 'Fuente Nueva',
+          publishedAt: null,
+          externalUrl: 'https://example.com/nuevo',
+          abstract: 'Resumen nuevo.',
+        }),
       }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
@@ -494,28 +511,5 @@ describe('NewsExplorer', () => {
     expect(
       await within(dialog).findByText('No se pudo guardar la noticia. Inténtelo de nuevo.'),
     ).toBeInTheDocument()
-  })
-
-  test('shows the upload error inside the modal and does not create the article', async () => {
-    const user = userEvent.setup()
-    renderExplorerInEditMode()
-
-    await user.click(screen.getByRole('button', { name: 'Agregar noticia' }))
-    mocks.uploadNewsImage.mockResolvedValue({ ok: false, error: 'La imagen es demasiado grande.' })
-    const dialog = screen.getByRole('dialog', { name: 'Agregar noticia' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Título' }), 'Artículo nuevo')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Autores' }), 'Autor Nuevo')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Fuente' }), 'Fuente Nueva')
-    await user.type(
-      within(dialog).getByRole('textbox', { name: 'Enlace' }),
-      'https://example.com/nuevo',
-    )
-    await user.type(within(dialog).getByRole('textbox', { name: 'Resumen' }), 'Resumen nuevo.')
-    const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-
-    expect(await within(dialog).findByText('La imagen es demasiado grande.')).toBeInTheDocument()
-    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

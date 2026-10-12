@@ -60,8 +60,6 @@ function newsRow(overrides: Partial<Record<string, unknown>> = {}) {
       'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
     externalUrl:
       'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
-    imageUrl: '/images/news/el-norte-hoy-1.png',
-    imageAlt: 'Radiotelescopio ROSAC.',
     source: { name: 'El Norte Hoy' },
     authors: [{ newsAuthor: { name: 'Gerardo Quesada A.' } }],
     ...overrides,
@@ -75,8 +73,6 @@ const validInput = {
   publishedAt: '2026-05-24',
   externalUrl: 'https://www.nacion.com/articulo',
   abstract: 'Resumen del artículo.',
-  imageUrl: '/images/news/example.png',
-  imageAlt: 'Descripción de la imagen.',
 }
 
 beforeEach(() => {
@@ -100,8 +96,6 @@ describe('getNews', () => {
         abstract:
           'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
         href: 'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
-        imageUrl: '/images/news/el-norte-hoy-1.png',
-        imageAlt: 'Radiotelescopio ROSAC.',
       },
     ])
   })
@@ -172,11 +166,6 @@ describe('newsInputSchema', () => {
   test('allows a null published date', () => {
     expect(newsInputSchema.safeParse({ ...validInput, publishedAt: null }).success).toBe(true)
   })
-
-  test('rejects a blank imageUrl', () => {
-    const result = newsInputSchema.safeParse({ ...validInput, imageUrl: '' })
-    expect(result.success).toBe(false)
-  })
 })
 
 describe('createNews', () => {
@@ -200,8 +189,6 @@ describe('createNews', () => {
         sourceId: 'source-1',
         abstract: validInput.abstract,
         externalUrl: validInput.externalUrl,
-        imageUrl: validInput.imageUrl,
-        imageAlt: validInput.imageAlt,
       },
     })
     expect(crossAuthorUpsert).toHaveBeenCalledWith({

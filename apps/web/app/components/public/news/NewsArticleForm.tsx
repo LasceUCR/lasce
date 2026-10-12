@@ -1,15 +1,10 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
-import { useToast } from '@/app/components/public/toast/ToastProvider'
-import { uploadNewsImage, type UploadNewsImageResult } from '@/app/(public)/noticias/actions'
 import type { NewsArticle } from '@/app/lib/news'
 
 /** The editable fields of a news article, as `/api/news` expects them. */
@@ -20,8 +15,6 @@ export interface NewsArticleFormValues {
   publishedAt: string | null
   externalUrl: string
   abstract: string
-  imageUrl: string
-  imageAlt: string
 }
 
 export interface NewsArticleFormProps {
@@ -66,14 +59,6 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   const [publishedAt, setPublishedAt] = useState(article?.publishedAt ?? '')
   const [externalUrl, setExternalUrl] = useState(article?.href ?? '')
   const [abstract, setAbstract] = useState(article?.abstract ?? '')
-  const [imageAlt, setImageAlt] = useState(article?.imageAlt ?? '')
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imageRemoved, setImageRemoved] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const t = useTranslations('news.errors')
-  const toast = useToast()
-  // The toast from the last failed upload, replaced by the next attempt.
-  const uploadErrorToast = useRef<number | null>(null)
 
   // Standards: Validation & Confirmation States
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
@@ -104,17 +89,13 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
   const abstractError =
     hasAttemptedSubmit && abstract.trim() === '' ? 'El resumen es obligatorio.' : null
 
-  const hasImage = imageFile !== null || (Boolean(article?.imageUrl) && !imageRemoved)
-  const imageError = hasAttemptedSubmit && !hasImage ? 'La imagen es obligatoria.' : null
-
   const isFormValid =
     title.trim() !== '' &&
     splitAuthors(authors).length > 0 &&
     source.trim() !== '' &&
     externalUrl.trim() !== '' &&
     urlError === null &&
-    abstract.trim() !== '' &&
-    hasImage
+    abstract.trim() !== ''
 
   // Check if form is dirty for discard confirmation
   const isDirty =
@@ -124,10 +105,7 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
     source !== (article?.source ?? '') ||
     publishedAt !== (article?.publishedAt ?? '') ||
     externalUrl !== (article?.href ?? '') ||
-    abstract !== (article?.abstract ?? '') ||
-    imageAlt !== (article?.imageAlt ?? '') ||
-    imageFile !== null ||
-    imageRemoved
+    abstract !== (article?.abstract ?? '')
 
   function handleCancelClick() {
     if (isDirty) {
@@ -142,7 +120,7 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
     onCancel()
   }
 
-  async function handleSave() {
+  function handleSave() {
     setHasAttemptedSubmit(true)
 
     if (!isFormValid) {
@@ -160,35 +138,6 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       return
     }
 
-    if (isUploading) return
-
-    let imageUrl = imageRemoved ? '' : (article?.imageUrl ?? '')
-    if (imageFile) {
-      if (uploadErrorToast.current !== null) {
-        toast.dismiss(uploadErrorToast.current)
-        uploadErrorToast.current = null
-      }
-      setIsUploading(true)
-
-      let result: UploadNewsImageResult
-      try {
-        const formData = new FormData()
-        formData.set('file', imageFile)
-        result = await uploadNewsImage(formData)
-      } catch {
-        setIsUploading(false)
-        uploadErrorToast.current = toast.show('error', t('upload'))
-        return
-      }
-      setIsUploading(false)
-
-      if (!result.ok) {
-        uploadErrorToast.current = toast.show('error', result.error)
-        return
-      }
-      imageUrl = result.imageUrl
-    }
-
     onSave({
       title,
       authors: splitAuthors(authors),
@@ -196,8 +145,6 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
       publishedAt: publishedAt === '' ? null : publishedAt,
       externalUrl,
       abstract,
-      imageUrl,
-      imageAlt,
     })
   }
 
@@ -258,32 +205,13 @@ export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormPr
         validate={requireNonEmpty('El resumen es obligatorio.')}
         value={abstract}
       />
-      <FormField label="Texto alternativo de la imagen" onChange={setImageAlt} value={imageAlt} />
-
-      <FileDropInput
-        errorMessage={imageError}
-        existingImageUrl={imageRemoved ? undefined : article?.imageUrl}
-        label="Imagen"
-        onFileSelect={(file) => {
-          setImageFile(file)
-          setImageRemoved(file === null)
-        }}
-        required
-      />
 
       <div className="news-article-form-actions">
-        <Button disabled={isUploading} onClick={handleCancelClick} variant="secondary">
+        <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
-        <Button disabled={isUploading} onClick={handleSave} variant="primary">
-          {isUploading ? (
-            <>
-              <Loader2 aria-hidden="true" className="btn-spinner" size={16} />
-              <span>Subiendo imagen...</span>
-            </>
-          ) : (
-            'Confirmar'
-          )}
+        <Button onClick={handleSave} variant="primary">
+          Confirmar
         </Button>
       </div>
 

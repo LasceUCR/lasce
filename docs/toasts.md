@@ -95,8 +95,9 @@ For the server to have a reason to give, a route handler:
   unchanged.
 
 `app/api/news/` and `app/lib/news.ts` do all four. A Server Action does the same through its
-result: `uploadNewsImage` returns `{ ok: false, error }` with a reason in the admin's terms instead
-of throwing or passing on a developer-facing message.
+result: return `{ ok: false, error }` with a reason in the user's terms, instead of throwing (which
+reaches the client as an opaque failure) or passing on a developer-facing message such as a
+storage error's English text with byte counts.
 
 ## Wording
 

@@ -33,8 +33,6 @@ const validBody = {
   publishedAt: '2026-05-24',
   externalUrl: 'https://www.nacion.com/articulo',
   abstract: 'Resumen del artículo.',
-  imageUrl: '/images/news/example.png',
-  imageAlt: 'Descripción de la imagen.',
 }
 
 function postRequest(body: unknown) {

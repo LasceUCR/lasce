@@ -6,10 +6,6 @@ import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
-vi.mock('@/app/(public)/noticias/actions', () => ({
-  uploadNewsImage: vi.fn(),
-}))
-
 import { EditableNewsCard, type EditableNewsCardProps } from './EditableNewsCard'
 import { AssistantMode, EditModeOn, ViewMode } from './EditableNewsCard.stories'
 
