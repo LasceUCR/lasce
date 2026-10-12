@@ -57,7 +57,8 @@ describe('ResearchAreaForm', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Falta completar: Foto, Título.')
+    expect(screen.getByText('La imagen es obligatoria.')).toBeInTheDocument()
+    expect(screen.getByText('El título es obligatorio.')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })

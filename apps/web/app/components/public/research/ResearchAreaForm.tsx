@@ -12,6 +12,14 @@ import {
 import { FormField } from '@/app/components/public/FormField'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
+/** Messages match `researchAreaInputSchema` so a rejection reads the same
+ * whether it's caught here or by the server after submission. */
+function requireNonEmpty(message: string) {
+  return (value: string) => {
+    if (value.trim() === '') throw new Error(message)
+  }
+}
+
 export interface ResearchAreaFormValues {
   title: string
   description: string
@@ -39,12 +47,11 @@ export function ResearchAreaForm({
   const [description, setDescription] = useState(area.description)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
-  const [validationError, setValidationError] = useState<string | null>(null)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const uploadErrorRef = useRef<HTMLParagraphElement>(null)
-  const validationErrorRef = useRef<HTMLParagraphElement>(null)
 
   useEffect(() => {
     if (uploadError) {
@@ -52,35 +59,19 @@ export function ResearchAreaForm({
     }
   }, [uploadError])
 
-  useEffect(() => {
-    if (validationError) {
-      scrollIntoViewIfSupported(validationErrorRef.current)
-    }
-  }, [validationError])
-
   const hasPhoto = photoFile !== null || (Boolean(area?.src) && !photoRemoved)
-
-  function validateTitle(value: string) {
-    if (value.trim() === '') {
-      throw new Error('Es necesario un título.')
-    }
-  }
-
-  function missingFields(): string[] {
-    const missing: string[] = []
-    if (!hasPhoto) missing.push('Foto')
-    if (title.trim() === '') missing.push('Título')
-    return missing
-  }
+  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
+  const imageError = hasAttemptedSubmit && !hasPhoto ? 'La imagen es obligatoria.' : null
 
   function handleConfirmClick() {
-    const missing = missingFields()
-    if (missing.length > 0) {
-      setValidationError(`Falta completar: ${missing.join(', ')}.`)
+    setHasAttemptedSubmit(true)
+    if (!hasPhoto || title.trim() === '') {
+      if (title.trim() === '') {
+        document.getElementById('area-title')?.focus()
+      }
       return
     }
 
-    setValidationError(null)
     handleConfirmSave()
   }
 
@@ -121,25 +112,24 @@ export function ResearchAreaForm({
   return (
     <div className="research-area-form">
       <FileDropInput
+        errorMessage={imageError}
         existingImageUrl={area?.src}
         helperText="Imagen ilustrativa para el área de investigación, en formato JPG o PNG."
         label="Foto"
         onFileSelect={(file) => {
           setPhotoFile(file)
           setPhotoRemoved(file === null)
-          setValidationError(null)
         }}
+        required
       />
 
       <FormField
+        errorMessage={titleError}
         id="area-title"
         label="Título"
-        onChange={(value) => {
-          setTitle(value)
-          setValidationError(null)
-        }}
+        onChange={setTitle}
         required
-        validate={validateTitle}
+        validate={requireNonEmpty('El título es obligatorio.')}
         value={title}
       />
 
@@ -154,12 +144,6 @@ export function ResearchAreaForm({
       {uploadError ? (
         <p className="form-alert" ref={uploadErrorRef} role="alert">
           {uploadError}
-        </p>
-      ) : null}
-
-      {validationError ? (
-        <p className="form-alert" ref={validationErrorRef} role="alert">
-          {validationError}
         </p>
       ) : null}
 
