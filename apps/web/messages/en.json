@@ -354,5 +354,10 @@
         "galleryLabel": "View the workshop photo gallery"
       }
     }
+  },
+  "nosotros": {
+    "activities": {
+      "created": "Activity added successfully."
+    }
   }
 }

@@ -1,8 +1,9 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 // `NosotrosPage.stories` pulls in `nosotrosContent` from `@/app/lib/nosotros`,
 // which imports `prisma` at module scope — this stubs it out so loading that
@@ -31,7 +32,7 @@ const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
 function renderPage(props: NosotrosPageProps = defaultArgs) {
-  return render(
+  return renderWithIntl(
     <EditModeProvider>
       <NosotrosPage {...props} />
     </EditModeProvider>,
@@ -41,7 +42,7 @@ function renderPage(props: NosotrosPageProps = defaultArgs) {
 const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
 
 function renderPageInEditMode(props: Partial<NosotrosPageProps> = {}) {
-  return render(
+  return renderWithIntl(
     <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
       <NosotrosPage {...defaultArgs} {...adminGrants} {...props} />
     </EditModeContext.Provider>,
@@ -457,9 +458,7 @@ describe('NosotrosPage', () => {
     await user.type(within(addDialog).getByRole('textbox', { name: 'Texto' }), 'Texto de prueba')
     await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
 
-    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar actividad' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
-
+    expect(screen.queryByRole('dialog', { name: 'Agregar actividad' })).not.toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/nosotros/activities',
       expect.objectContaining({
@@ -473,6 +472,28 @@ describe('NosotrosPage', () => {
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog', { name: 'Añadir' })).not.toBeInTheDocument()
+    const activities = screen.getByRole('region', { name: /Qué hacemos/ })
+    expect(await within(activities).findByRole('status')).toHaveTextContent(
+      'Actividad agregada correctamente.',
+    )
+  })
+
+  test('clears the "activity added" message once another card is opened for editing', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ activity: {} }) })
+    renderPageInEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir' })
+    await user.type(within(addDialog).getByRole('textbox', { name: 'Título' }), 'Actividad nueva')
+    await user.type(within(addDialog).getByRole('textbox', { name: 'Texto' }), 'Texto de prueba')
+    await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
+    expect(await screen.findByText('Actividad agregada correctamente.')).toBeInTheDocument()
+
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
+    await user.click(firstEditButton as HTMLElement)
+
+    expect(screen.queryByText('Actividad agregada correctamente.')).not.toBeInTheDocument()
   })
 
   test('shows the server error inside "Añadir" and keeps it open when creating fails', async () => {
@@ -488,11 +509,10 @@ describe('NosotrosPage', () => {
     await user.type(within(addDialog).getByRole('textbox', { name: 'Título' }), 'Actividad nueva')
     await user.type(within(addDialog).getByRole('textbox', { name: 'Texto' }), 'Texto de prueba')
     await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar actividad' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo crear la actividad.')
     expect(screen.getByRole('dialog', { name: 'Añadir' })).toBeInTheDocument()
+    expect(screen.queryByText('Actividad agregada correctamente.')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
