@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { NewsArticlePage, type NewsArticlePageProps } from './NewsArticlePage'
 import { Default, MinimalDetails } from './NewsArticlePage.stories'
@@ -8,8 +10,8 @@ const defaultArgs = Default.args as NewsArticlePageProps
 const minimalArgs = MinimalDetails.args as NewsArticlePageProps
 
 describe('NewsArticlePage', () => {
-  test('renders the news title as an h1 and the abstract as lead', () => {
-    render(<NewsArticlePage {...defaultArgs} />)
+  test('renders the news title as an h1 and the abstract in the description section', () => {
+    renderWithIntl(<NewsArticlePage {...defaultArgs} />)
 
     expect(
       screen.getByRole('heading', {
@@ -18,11 +20,11 @@ describe('NewsArticlePage', () => {
       }),
     ).toBeInTheDocument()
 
-    expect(screen.getAllByText(defaultArgs.article.abstract).length).toBeGreaterThan(0)
+    expect(screen.getByText(defaultArgs.article.abstract)).toBeInTheDocument()
   })
 
   test('renders metadata cards for authors, source, and date', () => {
-    render(<NewsArticlePage {...defaultArgs} />)
+    renderWithIntl(<NewsArticlePage {...defaultArgs} />)
 
     expect(screen.getByText('Autores')).toBeInTheDocument()
     expect(screen.getByText(defaultArgs.article.authors)).toBeInTheDocument()
@@ -35,7 +37,7 @@ describe('NewsArticlePage', () => {
   })
 
   test('renders external source button when href is present', () => {
-    render(<NewsArticlePage {...defaultArgs} />)
+    renderWithIntl(<NewsArticlePage {...defaultArgs} />)
 
     const externalLink = screen.getByRole('link', { name: 'Abrir fuente original' })
     expect(externalLink).toHaveAttribute('href', defaultArgs.article.href)
@@ -44,7 +46,7 @@ describe('NewsArticlePage', () => {
   })
 
   test('renders back link to the news listing', () => {
-    render(<NewsArticlePage {...defaultArgs} />)
+    renderWithIntl(<NewsArticlePage {...defaultArgs} />)
 
     const backLink = screen.getByRole('link', {
       name: defaultArgs.backLabel!,
@@ -53,7 +55,7 @@ describe('NewsArticlePage', () => {
   })
 
   test('renders cleanly with minimal article data', () => {
-    render(<NewsArticlePage {...minimalArgs} />)
+    renderWithIntl(<NewsArticlePage {...minimalArgs} />)
 
     expect(
       screen.getByRole('heading', {

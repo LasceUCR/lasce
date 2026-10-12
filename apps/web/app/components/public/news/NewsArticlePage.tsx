@@ -1,4 +1,5 @@
 import { Calendar, ExternalLink, Newspaper, User } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
@@ -11,53 +12,55 @@ import type { NewsArticle } from '@/app/lib/news'
 export interface NewsArticlePageProps {
   article: NewsArticle
   backHref?: string
+  /** Defaults to "Volver a noticias" in the visitor's language. */
   backLabel?: string
 }
 
 /**
- * Dedicated detail page for a single news article, following the same pattern as
- * `ResearchAreaPage` and `AcademicActivityPage`.
+ * Dedicated detail page for a single news article, following the same pattern
+ * and structure as `AcademicActivityPage`.
  */
 export function NewsArticlePage({
   article,
   backHref = '/noticias',
-  backLabel = 'Volver a noticias',
+  backLabel,
 }: NewsArticlePageProps) {
+  const t = useTranslations('news.page')
   const hasMetadata = Boolean(article.authors || article.source || article.date)
 
   return (
     <article className="topic-page">
-      <TopicHero kicker="Noticia" lead={article.abstract} title={article.title} />
+      <TopicHero kicker={t('kicker')} title={article.title} />
 
       {hasMetadata ? (
-        <TopicSection title="Información general" titleId="news-info-title">
+        <TopicSection title={t('infoTitle')} titleId="news-info-title">
           <CardGrid columns={3} equalHeight>
             {article.authors ? (
               <InfoCard
                 description={article.authors}
                 icon={<User size={22} strokeWidth={1.8} />}
-                title="Autores"
+                title={t('authors')}
               />
             ) : null}
             {article.source ? (
               <InfoCard
                 description={article.source}
                 icon={<Newspaper size={22} strokeWidth={1.8} />}
-                title="Fuente"
+                title={t('source')}
               />
             ) : null}
             {article.date ? (
               <InfoCard
                 description={article.date}
                 icon={<Calendar size={22} strokeWidth={1.8} />}
-                title="Fecha"
+                title={t('date')}
               />
             ) : null}
           </CardGrid>
         </TopicSection>
       ) : null}
 
-      <TopicSection title="Descripción" titleId="news-description-title" wide>
+      <TopicSection title={t('descriptionTitle')} titleId="news-description-title" wide>
         {article.abstract.split('\n\n').map((paragraph, index) => (
           <p className="topic-intro" key={index}>
             {paragraph}
@@ -66,7 +69,7 @@ export function NewsArticlePage({
       </TopicSection>
 
       {article.href ? (
-        <TopicSection title="Fuente de la noticia" titleId="news-source-title" wide>
+        <TopicSection title={t('resourcesTitle')} titleId="news-source-title" wide>
           <div className="activity-resources-action">
             <Button
               href={article.href}
@@ -75,14 +78,14 @@ export function NewsArticlePage({
               target="_blank"
               variant="primary"
             >
-              Abrir fuente original
+              {t('openSource')}
             </Button>
           </div>
         </TopicSection>
       ) : null}
 
-      <div className="topic-page-footer page-width">
-        <TopicBackLink href={backHref} label={backLabel} />
+      <div className="topic-page-footer topic-detail-footer page-width">
+        <TopicBackLink href={backHref} label={backLabel ?? t('backToNews')} />
       </div>
     </article>
   )

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 
 import { NewsArticlePage } from '@/app/components/public/news/NewsArticlePage'
 import { getNewsById } from '@/app/lib/news'
@@ -18,8 +19,10 @@ export async function generateMetadata({ params }: NewsArticleRouteProps): Promi
     return {}
   }
 
+  const t = await getTranslations('news.page')
+
   return {
-    title: `${article.title} | Noticias | LASCE`,
+    title: t('metaTitle', { title: article.title }),
     description: article.abstract,
   }
 }
