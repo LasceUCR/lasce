@@ -49,17 +49,26 @@ export function useModalHeaderSlot(): HTMLElement | null {
 function updateModalStackVisibility() {
   const top = modalStack[modalStack.length - 1]
   for (const dialog of modalStack) {
-    if (dialog === top) {
-      dialog.style.visibility = modalStack.some((other) => other !== top && other.contains(top))
-        ? 'visible'
-        : ''
-      dialog.removeAttribute('aria-hidden')
-    } else if (top && dialog.contains(top)) {
-      dialog.style.visibility = 'hidden'
+    if (!dialog) continue
+
+    const isTop = dialog === top
+    // A confirmation opened from a form is nested inside that form's dialog.
+    // `visibility` is inherited, so the dialog in front sets `visible` and stays
+    // on screen while every dialog behind it is covered. `aria-hidden` cannot
+    // go on a dialog that still contains the one in front, or the confirmation
+    // would leave the accessibility tree with it.
+    if (isTop) {
+      dialog.classList.remove('modal-covered')
+      dialog.style.visibility = 'visible'
       dialog.removeAttribute('aria-hidden')
     } else {
-      dialog.style.visibility = 'hidden'
-      dialog.setAttribute('aria-hidden', 'true')
+      dialog.classList.add('modal-covered')
+      dialog.style.visibility = ''
+      if (top && dialog.contains(top)) {
+        dialog.removeAttribute('aria-hidden')
+      } else {
+        dialog.setAttribute('aria-hidden', 'true')
+      }
     }
   }
 }
@@ -136,6 +145,7 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       if (index !== -1) {
         modalStack.splice(index, 1)
       }
+      dialog.classList.remove('modal-covered')
       dialog.style.visibility = ''
       dialog.removeAttribute('aria-hidden')
       updateModalStackVisibility()

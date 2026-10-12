@@ -6291,6 +6291,17 @@ a.gallery-tile:focus-visible {
   background: rgba(13, 39, 55, 0.55);
 }
 
+/* A dialog opened on top of another (discard, save, delete) keeps the one
+   behind mounted, so its fields survive, but only the front dialog is shown. */
+.modal.modal-covered {
+  visibility: hidden;
+}
+
+.modal.modal-covered::backdrop {
+  background: transparent;
+  pointer-events: none;
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
