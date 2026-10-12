@@ -2,69 +2,91 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import { NewsCard, type NewsCardProps } from './NewsCard'
+import { Default, LongText, Undated, WithoutLink, WithoutSummary } from './NewsCard.stories'
 
-const defaultArgs: NewsCardProps = {
-  title: 'UCR pone en funcionamiento radiotelescopio para investigar el Sol',
-  authors: 'Gerardo Quesada A.',
-  source: 'El Norte Hoy',
-  date: '2023',
-  abstract:
-    'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
-  href: 'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
-  imageUrl: '/images/news/el-norte-hoy-1.png',
-  imageAlt: 'Radiotelescopio ROSAC.',
-}
+const defaultArgs = Default.args as NewsCardProps
 
 describe('NewsCard', () => {
-  test('shows the title, authors, source and date it was given', () => {
+  test('leads with the title as a heading', () => {
     render(<NewsCard {...defaultArgs} />)
 
-    expect(screen.getByRole('heading', { name: defaultArgs.title })).toBeInTheDocument()
-
-    expect(
-      screen.getByText(`${defaultArgs.authors} · ${defaultArgs.source} · ${defaultArgs.date}`),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: defaultArgs.title })).toBeInTheDocument()
   })
 
-  test('shows the abstract', () => {
+  test('shows authors, source and date on one line, with a machine-readable date', () => {
+    render(<NewsCard {...defaultArgs} />)
+
+    const meta = screen.getByText(defaultArgs.source, { exact: false })
+    expect(meta).toHaveTextContent(
+      `${defaultArgs.authors} · ${defaultArgs.source} · ${defaultArgs.date}`,
+    )
+    expect(screen.getByText(defaultArgs.date)).toHaveAttribute('datetime', '2026-05-24')
+  })
+
+  test('shows "Sin fecha" as plain text for an undated item', () => {
+    render(<NewsCard {...(Undated.args as NewsCardProps)} />)
+
+    expect(screen.getByText(/Sin fecha/)).toBeInTheDocument()
+    expect(document.querySelector('time')).toBeNull()
+  })
+
+  test('leaves the authors out of the line when there are none', () => {
+    render(<NewsCard {...defaultArgs} authors="" />)
+
+    expect(screen.getByText(defaultArgs.source, { exact: false })).toHaveTextContent(
+      `${defaultArgs.source} · ${defaultArgs.date}`,
+    )
+  })
+
+  test('shows the summary when there is one', () => {
     render(<NewsCard {...defaultArgs} />)
 
     expect(screen.getByText(defaultArgs.abstract)).toBeInTheDocument()
   })
 
-  test('links out through the external source action', () => {
+  test('omits the summary paragraph when there is none', () => {
+    const args = WithoutSummary.args as NewsCardProps
+    const { container } = render(<NewsCard {...args} />)
+
+    expect(container.querySelectorAll('p')).toHaveLength(1)
+  })
+
+  test('shows no image', () => {
     render(<NewsCard {...defaultArgs} />)
 
-    const link = screen.getByRole('link', {
-      name: `Abrir fuente`,
-    })
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
 
+  test('opens the external article, which is the item’s detail view, in a new tab', () => {
+    render(<NewsCard {...defaultArgs} />)
+
+    const link = screen.getByRole('link', { name: /^Abrir fuente/ })
     expect(link).toHaveAttribute('href', defaultArgs.href)
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
   })
 
-  test('applies the abstract clamp class', () => {
+  test('names the link after its article and says it opens a new tab', () => {
     render(<NewsCard {...defaultArgs} />)
 
-    expect(screen.getByText(defaultArgs.abstract)).toHaveClass('news-abstract')
+    expect(
+      screen.getByRole('link', {
+        name: `Abrir fuente de «${defaultArgs.title}» (se abre en una pestaña nueva)`,
+      }),
+    ).toBeInTheDocument()
   })
 
-  test('uses the provided alt text for informative news images', () => {
-    render(<NewsCard {...defaultArgs} />)
+  test('renders no link when the item has none', () => {
+    render(<NewsCard {...(WithoutLink.args as NewsCardProps)} />)
 
-    expect(screen.getByAltText(defaultArgs.imageAlt)).toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
-  test('uses an empty alt for decorative news images', () => {
-    render(<NewsCard {...defaultArgs} imageAlt="" />)
+  test('renders long text in full for the layout to wrap', () => {
+    const args = LongText.args as NewsCardProps
+    render(<NewsCard {...args} />)
 
-    expect(screen.getByAltText('')).toHaveAttribute('src')
-  })
-
-  test('renders without image element when imageUrl is empty', () => {
-    render(<NewsCard {...defaultArgs} imageUrl="" />)
-
-    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: args.title })).toBeInTheDocument()
+    expect(screen.getByText(args.abstract)).toBeInTheDocument()
   })
 })

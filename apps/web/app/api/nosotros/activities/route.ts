@@ -45,7 +45,20 @@ export async function POST(request: Request): Promise<NextResponse> {
     )
   }
 
-  const activity = await createNosotrosActivity(parsed.data, guard.user.id)
+  try {
+    const activity = await createNosotrosActivity(parsed.data, guard.user.id)
 
-  return NextResponse.json({ activity }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json(
+      { activity },
+      { status: 201, headers: { 'Cache-Control': 'no-store' } },
+    )
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          'No se pudo guardar la actividad: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+      },
+      { status: 500 },
+    )
+  }
 }

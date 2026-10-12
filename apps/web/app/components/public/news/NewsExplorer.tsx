@@ -2,16 +2,16 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 import { SearchBar } from '@/app/components/public/SearchBar'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import type { NewsArticle } from '@/app/lib/news'
 
 import { EditableNewsCard } from './EditableNewsCard'
 import { NewsArticleForm, type NewsArticleFormValues } from './NewsArticleForm'
-
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
 
 export interface NewsExplorerProps {
   news: NewsArticle[]
@@ -24,9 +24,12 @@ function matches(value: string, query: string) {
   return value.toLowerCase().includes(query.trim().toLowerCase())
 }
 
-async function errorFromResponse(response: Response): Promise<string> {
-  const body: { error?: string } | null = await response.json().catch(() => null)
-  return body?.error ?? SAVE_ERROR_MESSAGE
+function jsonRequest(method: 'POST' | 'PATCH', values: NewsArticleFormValues): RequestInit {
+  return {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(values),
+  }
 }
 
 export function NewsExplorer({
@@ -36,9 +39,9 @@ export function NewsExplorer({
   canDelete = false,
 }: NewsExplorerProps) {
   const router = useRouter()
+  const t = useTranslations('news')
+  const sendWithFeedback = useRequestFeedback()
   const [query, setQuery] = useState('')
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [listError, setListError] = useState<string | null>(null)
   const { editMode } = useEditMode()
 
   const filtered = useMemo(() => {
@@ -57,69 +60,43 @@ export function NewsExplorer({
 
   const hasQuery = query.trim() !== ''
 
-  async function handleSave(id: string, values: NewsArticleFormValues): Promise<string | null> {
-    let response: Response
-    try {
-      response = await fetch(`/api/news/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      return SAVE_ERROR_MESSAGE
-    }
+  // Each handler reports its outcome in a toast through `useRequestFeedback`. On failure nothing
+  // else happens: the form stays open with the admin's input and the list is not refreshed.
+  // `router.refresh()` re-runs the server component's `getNews()` so the list reflects a saved
+  // change immediately, without an optimistic guess.
 
-    if (!response.ok) {
-      return errorFromResponse(response)
-    }
-
-    // Re-runs the server component's `getNews()` so the page reflects the saved change
-    // immediately, without an optimistic guess.
-    router.refresh()
-    return null
+  async function handleSave(id: string, values: NewsArticleFormValues, close: () => void) {
+    await sendWithFeedback(`/api/news/${id}`, jsonRequest('PATCH', values), {
+      success: t('updated'),
+      fallback: t('errors.saveUnknown'),
+      onSuccess: () => {
+        close()
+        router.refresh()
+      },
+    })
   }
 
   async function handleCreate(values: NewsArticleFormValues, close: () => void) {
-    setCreateError(null)
-
-    let response: Response
-    try {
-      response = await fetch('/api/news', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setCreateError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      setCreateError(await errorFromResponse(response))
-      return
-    }
-
-    close()
-    router.refresh()
+    await sendWithFeedback('/api/news', jsonRequest('POST', values), {
+      success: t('created'),
+      fallback: t('errors.saveUnknown'),
+      onSuccess: () => {
+        close()
+        router.refresh()
+      },
+    })
   }
 
   async function handleDelete(id: string) {
-    setListError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/news/${id}`, { method: 'DELETE' })
-    } catch {
-      setListError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      setListError(await errorFromResponse(response))
-      return
-    }
-
-    router.refresh()
+    await sendWithFeedback(
+      `/api/news/${id}`,
+      { method: 'DELETE' },
+      {
+        success: t('deleted'),
+        fallback: t('errors.deleteUnknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
   return (
@@ -141,8 +118,6 @@ export function NewsExplorer({
         </p>
       ) : null}
 
-      {listError ? <p className="form-alert">{listError}</p> : null}
-
       {filtered.length === 0 && !editMode ? (
         <p className="content-empty" role="status">
           {hasQuery
@@ -154,17 +129,11 @@ export function NewsExplorer({
           {editMode && canCreate && (
             <AddItemCard label="Agregar noticia" size="large">
               {({ close }) => (
-                <>
-                  {createError ? <p className="form-alert">{createError}</p> : null}
-                  <NewsArticleForm
-                    article={null}
-                    onCancel={() => {
-                      setCreateError(null)
-                      close()
-                    }}
-                    onSave={(values) => handleCreate(values, close)}
-                  />
-                </>
+                <NewsArticleForm
+                  article={null}
+                  onCancel={close}
+                  onSave={(values) => handleCreate(values, close)}
+                />
               )}
             </AddItemCard>
           )}
@@ -176,7 +145,7 @@ export function NewsExplorer({
               canEdit={canEdit}
               key={article.slug}
               onDelete={() => handleDelete(article.slug)}
-              onSave={(values) => handleSave(article.slug, values)}
+              onSave={(values, close) => handleSave(article.slug, values, close)}
             />
           ))}
         </div>

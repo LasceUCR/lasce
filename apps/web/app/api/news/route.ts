@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { createNews, newsInputSchema } from '@/app/lib/news'
+import {
+  createNews,
+  DUPLICATE_NEWS_LINK,
+  DUPLICATE_NEWS_LINK_MESSAGE,
+  newsInputSchema,
+} from '@/app/lib/news'
 
 /**
  * Creates a news item. Requires `create_components` — the public `/noticias` page reads
@@ -35,10 +40,21 @@ export async function POST(request: Request): Promise<NextResponse> {
     )
   }
 
-  const article = await createNews(parsed.data)
+  let article: Awaited<ReturnType<typeof createNews>>
+  try {
+    article = await createNews(parsed.data)
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          'No se pudo guardar la noticia: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+      },
+      { status: 500 },
+    )
+  }
 
-  if (article === 'duplicate-url') {
-    return NextResponse.json({ error: 'Ya existe una noticia con este enlace.' }, { status: 409 })
+  if (article === DUPLICATE_NEWS_LINK) {
+    return NextResponse.json({ error: DUPLICATE_NEWS_LINK_MESSAGE }, { status: 409 })
   }
 
   return NextResponse.json({ article }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
