@@ -634,6 +634,8 @@ describe('NosotrosPage', () => {
     const addDialog = await submitNewActivity(user)
     await within(addDialog).findByText('No tiene permisos.')
     await user.click(within(addDialog).getByRole('button', { name: 'Cancelar' }))
+    const discard = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    await user.click(within(discard).getByRole('button', { name: 'Descartar' }))
 
     expect(screen.queryByRole('dialog', { name: 'Añadir' })).not.toBeInTheDocument()
     expect(screen.queryByText('No tiene permisos.')).not.toBeInTheDocument()
