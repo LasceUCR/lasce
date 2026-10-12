@@ -263,8 +263,6 @@ describe('RosacInfoPage', () => {
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/researchers/${firstPerson?.id}`,
@@ -316,8 +314,6 @@ describe('RosacInfoPage', () => {
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar investigador' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(mocks.uploadResearcherImage).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(

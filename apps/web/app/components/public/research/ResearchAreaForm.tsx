@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import {
   uploadResearchAreaImage,
@@ -24,23 +23,14 @@ export interface ResearchAreaFormProps {
   area: ResearchAreaFormValues
   onSave: (values: ResearchAreaFormValues) => void
   onCancel: () => void
-  confirmTitle?: string
-  confirmMessage?: string
 }
 
-export function ResearchAreaForm({
-  area,
-  onSave,
-  onCancel,
-  confirmTitle = 'Guardar cambios',
-  confirmMessage = '¿Desea guardar los cambios en esta área de investigación?',
-}: ResearchAreaFormProps) {
+export function ResearchAreaForm({ area, onSave, onCancel }: ResearchAreaFormProps) {
   const [title, setTitle] = useState(area.title)
   const [description, setDescription] = useState(area.description)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
-  const [confirmOpen, setConfirmOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const uploadErrorRef = useRef<HTMLParagraphElement>(null)
@@ -85,7 +75,6 @@ export function ResearchAreaForm({
   }
 
   async function handleConfirmSave() {
-    setConfirmOpen(false)
     setUploadError(null)
 
     let src = area?.src ?? ''
@@ -172,14 +161,6 @@ export function ResearchAreaForm({
           {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
         </Button>
       </div>
-
-      <ConfirmDialog
-        message={confirmMessage}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={handleConfirmSave}
-        open={confirmOpen}
-        title={confirmTitle}
-      />
     </div>
   )
 }

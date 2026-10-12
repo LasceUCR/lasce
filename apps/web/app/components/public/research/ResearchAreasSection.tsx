@@ -165,8 +165,6 @@ export function ResearchAreasSection({
                 ) : null}
                 <ResearchAreaForm
                   area={blankArea}
-                  confirmMessage="¿Desea agregar esta área?"
-                  confirmTitle="Agregar área"
                   onCancel={() => {
                     setCreateError(null)
                     close()
@@ -220,8 +218,6 @@ export function ResearchAreasSection({
                 description: editingArea.description,
                 src: editingArea.src ?? '',
               }}
-              confirmMessage="¿Desea guardar los cambios?"
-              confirmTitle="Editar área"
               onCancel={closeEditor}
               onSave={handleSaveArea}
             />

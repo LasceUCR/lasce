@@ -78,7 +78,7 @@ async function deleteFirstActivity(user: User) {
   await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 }
 
-/** Edits the first card's title and accepts the "Guardar cambios" confirmation. */
+/** Edits the first card's title and and submits it. */
 async function submitActivityEdit(user: User) {
   const [firstActivity] = defaultArgs.content.activities.items
   const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
@@ -88,8 +88,6 @@ async function submitActivityEdit(user: User) {
   await user.clear(titleInput)
   await user.type(titleInput, 'Título editado')
   await user.click(within(editDialog).getByRole('button', { name: 'Confirmar' }))
-  const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-  await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
   return editDialog
 }
 
@@ -738,8 +736,6 @@ describe('NosotrosPage', () => {
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/nosotros/researchers/${firstResearcher?.id}`,
@@ -791,8 +787,6 @@ describe('NosotrosPage', () => {
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar investigador' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/nosotros/researchers',

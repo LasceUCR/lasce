@@ -52,7 +52,7 @@ describe('PublicationForm', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('disables saving when the DOI is blank', async () => {
+  test('saves without a DOI, since it is optional', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
 
@@ -62,7 +62,7 @@ describe('PublicationForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(onSave).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ DOI: '' }))
   })
 
   test('disables saving when there are no authors', async () => {
@@ -144,20 +144,7 @@ describe('PublicationForm', () => {
     ).not.toBeInTheDocument()
   })
 
-  test('asks for confirmation before saving', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-
-    render(<PublicationForm {...defaultArgs} onSave={onSave} />)
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
-
-    expect(screen.getByRole('dialog', { name: 'Guardar cambios' })).toBeInTheDocument()
-  })
-
-  test('saves the edited values once the confirmation is accepted', async () => {
+  test('saves the edited values straight away, without asking for confirmation', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
 
@@ -197,16 +184,6 @@ describe('PublicationForm', () => {
     // Confirm the form
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    const dialog = screen.getByRole('dialog', {
-      name: 'Guardar cambios',
-    })
-
-    await user.click(
-      within(dialog).getByRole('button', {
-        name: 'Confirmar',
-      }),
-    )
-
     expect(onSave).toHaveBeenCalledWith({
       title: 'Nuevo título',
       abstract: defaultArgs.publication.abstract,
@@ -218,24 +195,6 @@ describe('PublicationForm', () => {
       date: new Date('2026-09-17T00:00:00'),
     })
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
-
-  test('does not save when the confirmation is cancelled', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-
-    render(<PublicationForm {...defaultArgs} onSave={onSave} />)
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    const dialog = screen.getByRole('dialog', {
-      name: 'Guardar cambios',
-    })
-
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

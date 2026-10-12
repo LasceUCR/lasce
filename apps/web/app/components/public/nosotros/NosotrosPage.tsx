@@ -262,7 +262,6 @@ export function NosotrosPage({
                   activity={blankActivity}
                   onCancel={close}
                   onSave={(values) => handleCreateActivity(values, close)}
-                  requireConfirmation={false}
                 />
               )}
             </AddItemCard>
@@ -309,8 +308,6 @@ export function NosotrosPage({
                       </p>
                     ) : null}
                     <ResearcherForm
-                      confirmMessage="¿Desea agregar este investigador?"
-                      confirmTitle="Agregar investigador"
                       onCancel={() => {
                         setResearcherCreateError(null)
                         close()

@@ -3,7 +3,6 @@
 import { useId, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import { Plus, X } from 'lucide-react'
 import { IconButton } from '@/app/components/public/IconButton'
@@ -30,17 +29,9 @@ export interface PublicationFormProps {
   publication: PublicationFormValues
   onSave: (values: PublicationFormValues) => void
   onCancel: () => void
-  confirmTitle?: string
-  confirmMessage?: string
 }
 
-export function PublicationForm({
-  publication,
-  onSave,
-  onCancel,
-  confirmTitle = 'Guardar cambios',
-  confirmMessage = '¿Desea guardar los cambios en esta publicación?',
-}: PublicationFormProps) {
+export function PublicationForm({ publication, onSave, onCancel }: PublicationFormProps) {
   const formId = useId()
 
   const [title, setTitle] = useState(publication.title)
@@ -56,8 +47,6 @@ export function PublicationForm({
   const [newAuthor, setNewAuthor] = useState('')
   const [newAuthorError, setNewAuthorError] = useState<string | null>(null)
   const [showAuthorValidation, setShowAuthorValidation] = useState(false)
-
-  const [confirmOpen, setConfirmOpen] = useState(false)
 
   function validateTitle(value: string) {
     if (value.trim() === '') {
@@ -139,13 +128,11 @@ export function PublicationForm({
     setShowAuthorValidation(true)
 
     if (canSave) {
-      setConfirmOpen(true)
+      handleSubmit()
     }
   }
 
   function handleSubmit() {
-    setConfirmOpen(false)
-
     onSave({
       title,
       authors,
@@ -283,14 +270,6 @@ export function PublicationForm({
           Confirmar
         </Button>
       </div>
-
-      <ConfirmDialog
-        message={confirmMessage}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={handleSubmit}
-        open={confirmOpen}
-        title={confirmTitle}
-      />
     </div>
   )
 }

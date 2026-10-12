@@ -4,7 +4,6 @@ import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { IconButton } from '@/app/components/public/IconButton'
@@ -47,9 +46,6 @@ export interface ResearcherFormProps {
   researcher: PersonProfile | null
   onSave: (values: ResearcherFormValues) => void
   onCancel: () => void
-  /** Overrides the confirmation dialog's copy — a new researcher reads oddly as "save changes". */
-  confirmTitle?: string
-  confirmMessage?: string
 }
 
 /** Matches the database CHECK constraint on both `researchers.email` and
@@ -70,21 +66,15 @@ function parseEmails(email: PersonProfile['email']): string[] {
 /**
  * Creates or edits one ROSAC researcher profile (photo, role, name, contacto,
  * institución, descripción) — `researcher` is `null` for a new profile, or
- * pre-filled for an existing one. Saving asks for confirmation first, same as
- * `EditableWrapper`'s delete action.
+ * pre-filled for an existing one. Saving goes straight through; only deleting
+ * asks for confirmation.
  *
  * The photo uploads to the real asset store through `uploadResearcherImage`
  * (the same `assetStorage` MinIO backend `NewsArticleForm` already uses)
  * before `onSave` runs, so `onSave` always receives a permanent URL rather
  * than a local `File`.
  */
-export function ResearcherForm({
-  researcher,
-  onSave,
-  onCancel,
-  confirmTitle = 'Guardar cambios',
-  confirmMessage = '¿Desea guardar los cambios en este investigador?',
-}: ResearcherFormProps) {
+export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormProps) {
   const [role, setRole] = useState(researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
@@ -95,7 +85,6 @@ export function ResearcherForm({
   const [description, setDescription] = useState(researcher?.description ?? '')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
-  const [confirmOpen, setConfirmOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -140,11 +129,10 @@ export function ResearcherForm({
     }
 
     setValidationError(null)
-    setConfirmOpen(true)
+    void handleConfirm()
   }
 
   async function handleConfirm() {
-    setConfirmOpen(false)
     setUploadError(null)
 
     let src = researcher?.src ?? ''
@@ -336,14 +324,6 @@ export function ResearcherForm({
           {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
         </Button>
       </div>
-
-      <ConfirmDialog
-        message={confirmMessage}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={handleConfirm}
-        open={confirmOpen}
-        title={confirmTitle}
-      />
     </div>
   )
 }

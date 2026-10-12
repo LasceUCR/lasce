@@ -300,8 +300,6 @@ export function RosacInfoPage({
                       </p>
                     ) : null}
                     <ResearcherForm
-                      confirmMessage="¿Desea agregar este investigador?"
-                      confirmTitle="Agregar investigador"
                       onCancel={() => {
                         setCreateError(null)
                         close()

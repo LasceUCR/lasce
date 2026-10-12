@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -39,18 +39,7 @@ describe('NosotrosActivityForm', () => {
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
   })
 
-  test('asks for confirmation before saving', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
-    expect(screen.getByRole('dialog', { name: 'Guardar cambios' })).toBeInTheDocument()
-  })
-
-  test('saves the edited values once the confirmation is accepted', async () => {
+  test('saves the edited values straight away, without asking for confirmation', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
@@ -60,9 +49,6 @@ describe('NosotrosActivityForm', () => {
     await user.selectOptions(screen.getByRole('combobox', { name: 'Ícono' }), 'waves')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-
     expect(onSave).toHaveBeenCalledWith({
       icon: 'waves',
       title: 'Nuevo título',
@@ -71,21 +57,7 @@ describe('NosotrosActivityForm', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('does not save when the confirmation is cancelled', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-  })
-
-  test('saves straight away, without a confirmation dialog, when confirmation is not required', async () => {
+  test('saves a new activity straight away', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<NosotrosActivityForm {...createArgs} onSave={onSave} />)

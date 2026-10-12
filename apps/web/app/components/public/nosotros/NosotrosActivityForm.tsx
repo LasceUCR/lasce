@@ -3,7 +3,6 @@
 import { useId, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import type { NosotrosCardIcon } from '@/app/lib/nosotros'
 
@@ -27,34 +26,17 @@ export interface NosotrosActivityFormProps {
   activity: NosotrosActivityFormValues
   onSave: (values: NosotrosActivityFormValues) => void
   onCancel: () => void
-  /**
-   * Whether "Confirmar" opens a confirmation dialog before calling `onSave`. Editing keeps it,
-   * since there is no undo yet; creating a card turns it off and saves straight away.
-   */
-  requireConfirmation?: boolean
-  /** Overrides the confirmation dialog's copy. */
-  confirmTitle?: string
-  confirmMessage?: string
 }
 
 /**
  * Creates or edits one Nosotros activity flashcard (icon, title, text) —
  * `activity` starts blank for a new card, or pre-filled for an existing one.
- * Saving asks for confirmation first unless `requireConfirmation` is false,
- * same as `EditableWrapper`'s delete action, since there is no undo yet.
+ * Saving goes straight to `onSave`; only deleting asks for confirmation.
  */
-export function NosotrosActivityForm({
-  activity,
-  onSave,
-  onCancel,
-  requireConfirmation = true,
-  confirmTitle = 'Guardar cambios',
-  confirmMessage = '¿Desea guardar los cambios en esta actividad?',
-}: NosotrosActivityFormProps) {
+export function NosotrosActivityForm({ activity, onSave, onCancel }: NosotrosActivityFormProps) {
   const [icon, setIcon] = useState<NosotrosCardIcon>(activity.icon)
   const [title, setTitle] = useState(activity.title)
   const [description, setDescription] = useState(activity.description)
-  const [confirmOpen, setConfirmOpen] = useState(false)
   const formId = useId()
 
   const canSave = title.trim() !== '' && description.trim() !== ''
@@ -86,27 +68,12 @@ export function NosotrosActivityForm({
         </Button>
         <Button
           disabled={!canSave}
-          onClick={() =>
-            requireConfirmation ? setConfirmOpen(true) : onSave({ icon, title, description })
-          }
+          onClick={() => onSave({ icon, title, description })}
           variant="primary"
         >
           Confirmar
         </Button>
       </div>
-
-      {requireConfirmation ? (
-        <ConfirmDialog
-          message={confirmMessage}
-          onCancel={() => setConfirmOpen(false)}
-          onConfirm={() => {
-            setConfirmOpen(false)
-            onSave({ icon, title, description })
-          }}
-          open={confirmOpen}
-          title={confirmTitle}
-        />
-      ) : null}
     </div>
   )
 }

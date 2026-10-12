@@ -28,7 +28,6 @@ export const Default: Story = {
 export const Create: Story = {
   args: {
     activity: { icon: 'sun', title: '', description: '' },
-    requireConfirmation: false,
     onCancel: () => {},
     onSave: () => {},
   },
