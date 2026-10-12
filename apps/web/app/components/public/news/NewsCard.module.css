@@ -1,0 +1,70 @@
+/* Same metrics as `.publication-card` (globals.css), so `/noticias` and `/publicaciones` read as
+   one family. Kept in a module rather than on `.news-card`, which `AcademicActivityCard` and
+   `DonationCard` still use for their image layout. */
+
+.card {
+  width: 100%;
+  min-width: 0;
+  padding: 16px 20px;
+  border-radius: 10px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* `EditableWrapper` places its edit and delete buttons in the top-right corner. */
+:global(.editable) .title {
+  padding-right: 68px;
+}
+
+.meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.abstract {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.footer {
+  padding-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Matches `.publication-card-footer .button`. Narrow screens make every `.button` full width
+   (see the 430px breakpoint in globals.css). */
+.footer :global(.button) {
+  min-width: min(16rem, 100%);
+}
+
+/* The public shell justifies every paragraph (`.public-shell-content p`). On a one-line meta and a
+   two-line clamped summary that opens wide gaps between words at phone widths, so the card stays
+   ragged-right. Two classes, to outrank that rule. */
+.card .meta,
+.card .abstract {
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .card {
+    padding: 14px 16px;
+  }
+}

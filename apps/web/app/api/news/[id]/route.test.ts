@@ -27,7 +27,11 @@ vi.mock('@/app/lib/news', async (importOriginal) => {
 
 import { DELETE, PATCH } from './route'
 
-const params = Promise.resolve({ id: 'abc' })
+const newsId = '0b9c3a52-7d1e-4f8a-9b6c-5e4d3c2b1a09'
+const params = Promise.resolve({ id: newsId })
+const badParams = Promise.resolve({ id: 'abc' })
+const NEWS_GONE =
+  'Esta noticia ya no existe. Es posible que otra persona la haya eliminado; recargue la página.'
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
 const validBody = {
   title: 'Artículo actualizado',
@@ -36,19 +40,17 @@ const validBody = {
   publishedAt: '2026-05-24',
   externalUrl: 'https://www.nacion.com/articulo',
   abstract: 'Resumen actualizado.',
-  imageUrl: '/images/news/example.png',
-  imageAlt: 'Descripción de la imagen.',
 }
 
 function patchRequest(body: unknown) {
-  return new Request('http://localhost/api/news/abc', {
+  return new Request(`http://localhost/api/news/${newsId}`, {
     method: 'PATCH',
     body: typeof body === 'string' ? body : JSON.stringify(body),
   })
 }
 
 function deleteRequest() {
-  return new Request('http://localhost/api/news/abc', { method: 'DELETE' })
+  return new Request(`http://localhost/api/news/${newsId}`, { method: 'DELETE' })
 }
 
 function deniedResponse(status: number) {
@@ -96,19 +98,53 @@ describe('PATCH /api/news/[id]', () => {
     expect(mocks.updateNews).not.toHaveBeenCalled()
   })
 
-  test('returns 404 when the article does not exist', async () => {
+  test('returns 404 when the article does not exist, saying it may have been deleted', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     mocks.updateNews.mockResolvedValue(null)
 
     const response = await PATCH(patchRequest(validBody), { params })
 
     expect(response.status).toBe(404)
+    expect((await response.json()).error).toBe(NEWS_GONE)
+  })
+
+  test('returns 404 for an id that is not a uuid, without querying the database', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+
+    const response = await PATCH(patchRequest(validBody), { params: badParams })
+
+    expect(response.status).toBe(404)
+    expect(mocks.updateNews).not.toHaveBeenCalled()
+  })
+
+  test('returns 409 when another article already uses the link', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateNews.mockResolvedValue('duplicate-link')
+
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(409)
+    expect((await response.json()).error).toBe(
+      'Ya existe una noticia con este enlace. Use otro enlace o edite la noticia existente.',
+    )
+  })
+
+  test('explains a database failure instead of throwing', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateNews.mockRejectedValue(new Error('connection refused'))
+
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(500)
+    expect((await response.json()).error).toBe(
+      'No se pudieron guardar los cambios de la noticia: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+    )
   })
 
   test('saves the change', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     const saved = {
-      slug: 'abc',
+      slug: newsId,
       ...validBody,
       date: '24 de mayo de 2026',
       href: validBody.externalUrl,
@@ -119,7 +155,7 @@ describe('PATCH /api/news/[id]', () => {
 
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ article: saved })
-    expect(mocks.updateNews).toHaveBeenCalledWith('abc', validBody)
+    expect(mocks.updateNews).toHaveBeenCalledWith(newsId, validBody)
   })
 })
 
@@ -135,13 +171,35 @@ describe('DELETE /api/news/[id]', () => {
     expect(mocks.deleteNews).not.toHaveBeenCalled()
   })
 
-  test('returns 404 when the article does not exist', async () => {
+  test('returns 404 when the article does not exist, saying it may have been deleted', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     mocks.deleteNews.mockResolvedValue(false)
 
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(404)
+    expect((await response.json()).error).toBe(NEWS_GONE)
+  })
+
+  test('returns 404 for an id that is not a uuid, without querying the database', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+
+    const response = await DELETE(deleteRequest(), { params: badParams })
+
+    expect(response.status).toBe(404)
+    expect(mocks.deleteNews).not.toHaveBeenCalled()
+  })
+
+  test('explains a database failure instead of throwing', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.deleteNews.mockRejectedValue(new Error('connection refused'))
+
+    const response = await DELETE(deleteRequest(), { params })
+
+    expect(response.status).toBe(500)
+    expect((await response.json()).error).toBe(
+      'No se pudo eliminar la noticia: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+    )
   })
 
   test('deletes the article and returns no content', async () => {
@@ -151,6 +209,6 @@ describe('DELETE /api/news/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteNews).toHaveBeenCalledWith('abc')
+    expect(mocks.deleteNews).toHaveBeenCalledWith(newsId)
   })
 })

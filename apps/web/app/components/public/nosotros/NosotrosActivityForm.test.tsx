@@ -3,9 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { NosotrosActivityForm, type NosotrosActivityFormProps } from './NosotrosActivityForm'
-import { Default } from './NosotrosActivityForm.stories'
+import { Create, Default } from './NosotrosActivityForm.stories'
 
 const defaultArgs = Default.args as NosotrosActivityFormProps
+const createArgs = Create.args as NosotrosActivityFormProps
 
 describe('NosotrosActivityForm', () => {
   test('starts pre-filled with the activity being edited', () => {
@@ -81,6 +82,23 @@ describe('NosotrosActivityForm', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
 
     expect(onSave).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('saves straight away, without a confirmation dialog, when confirmation is not required', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<NosotrosActivityForm {...createArgs} onSave={onSave} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Actividad nueva')
+    await user.type(screen.getByRole('textbox', { name: 'Texto' }), 'Texto de prueba')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith({
+      icon: 'sun',
+      title: 'Actividad nueva',
+      description: 'Texto de prueba',
+    })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
