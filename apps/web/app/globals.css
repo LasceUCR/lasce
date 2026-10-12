@@ -6382,6 +6382,18 @@ a.gallery-tile:focus-visible {
   scrollbar-gutter: auto;
 }
 
+/* Multiline boxes only grow downward. A sideways drag used to shrink them
+   narrower than the dialog or past its edge. The minimum height keeps the
+   first typed line in view. */
+.modal textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  resize: vertical;
+  min-height: calc(1.4em + 22px);
+}
+
 .modal-actions {
   margin-top: 20px;
   display: flex;
