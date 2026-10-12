@@ -542,7 +542,8 @@ describe('PublicationForm: authors', () => {
 
   test('focuses the author box when saving without authors', async () => {
     const user = userEvent.setup()
-    renderWithIntl(<PublicationForm {...createArgs} />)
+    const onSave = vi.fn()
+    renderWithIntl(<PublicationForm {...createArgs} onSave={onSave} />)
 
     await user.type(field('Título (Español)'), 'Título')
     await user.type(field('Resumen (Español)'), 'Resumen')
@@ -556,6 +557,10 @@ describe('PublicationForm: authors', () => {
     expect(screen.getByRole('textbox', { name: 'Nombre del autor' })).toHaveAccessibleDescription(
       'Debe existir al menos un autor.',
     )
+    expect(field('DOI')).toHaveValue('')
+    expect(field('DOI')).not.toHaveAttribute('aria-invalid', 'true')
+    expect(field('DOI')).not.toHaveAttribute('aria-describedby')
+    expect(onSave).not.toHaveBeenCalled()
   })
 
   test('lays the metadata out in a row of three and a row of two, before the authors', () => {
