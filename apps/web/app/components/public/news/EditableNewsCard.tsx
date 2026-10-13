@@ -14,8 +14,12 @@ export interface EditableNewsCardProps {
   article: NewsArticle
   canEdit?: boolean
   canDelete?: boolean
-  /** Persists the edit; resolves to an error message on failure, or `null` on success. */
-  onSave: (values: NewsArticleFormValues) => Promise<string | null>
+  /**
+   * Persists the edit. Calls `close` once it is saved, so the modal shuts before any success
+   * message; on failure it leaves the modal open with the admin's input and reports the reason
+   * itself (a toast, which renders inside the open modal).
+   */
+  onSave: (values: NewsArticleFormValues, close: () => void) => void | Promise<void>
   onDelete: () => void
 }
 
@@ -33,38 +37,19 @@ export function EditableNewsCard({
 }: EditableNewsCardProps) {
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
 
   const card = <NewsCard {...article} />
 
-  async function handleFormSave(values: NewsArticleFormValues) {
-    const error = await onSave(values)
-    if (error) {
-      setSaveError(error)
-      return
-    }
-    setSaveError(null)
+  function close() {
     setIsEditing(false)
   }
 
   const editModal = (
-    <Modal
-      onClose={() => {
-        setSaveError(null)
-        setIsEditing(false)
-      }}
-      open={isEditing}
-      size="large"
-      title="Editar noticia"
-    >
-      {saveError ? <p className="form-alert">{saveError}</p> : null}
+    <Modal onClose={close} open={isEditing} size="large" title="Editar noticia">
       <NewsArticleForm
         article={article}
-        onCancel={() => {
-          setSaveError(null)
-          setIsEditing(false)
-        }}
-        onSave={handleFormSave}
+        onCancel={close}
+        onSave={(values) => onSave(values, close)}
       />
     </Modal>
   )
@@ -78,7 +63,8 @@ export function EditableNewsCard({
   return (
     <>
       <EditableWrapper
-        deleteConfirmMessage={`¿Desea eliminar "${article.title}"? Esta acción no se puede deshacer.`}
+        deleteConfirmLabel="Eliminar"
+        deleteConfirmMessage="Esta acción no se puede deshacer y borrará la noticia del catálogo público."
         deleteConfirmTitle="Eliminar noticia"
         onDelete={canDelete ? onDelete : undefined}
         onEdit={canEdit ? () => setIsEditing(true) : undefined}

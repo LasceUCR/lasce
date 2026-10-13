@@ -178,3 +178,45 @@ describe('FormField', () => {
     }, 10000)
   })
 })
+
+describe('FormField: content language', () => {
+  test('marks the language of a text box and a text area on the field itself', () => {
+    render(
+      <>
+        <FormField {...textArgs} id="title-en" lang="en" />
+        <FormField {...multilineArgs} id="abstract-en" lang="en" />
+      </>,
+    )
+
+    expect(screen.getByRole('textbox', { name: textArgs.label })).toHaveAttribute('lang', 'en')
+    expect(screen.getByRole('textbox', { name: multilineArgs.label })).toHaveAttribute('lang', 'en')
+  })
+
+  test('keeps the label and its error in the surrounding language', () => {
+    const { container } = render(
+      <FormField {...textArgs} error="El título en inglés es obligatorio." lang="en" />,
+    )
+
+    const label = container.querySelector('label')
+    expect(label).not.toHaveAttribute('lang')
+    expect(screen.getByText('El título en inglés es obligatorio.').closest('[lang]')).toBeNull()
+  })
+
+  test('marks text of unknown language with an empty lang', () => {
+    render(<FormField {...textArgs} lang="" />)
+
+    expect(screen.getByRole('textbox', { name: textArgs.label })).toHaveAttribute('lang', '')
+  })
+
+  test('sets no lang unless given one', () => {
+    render(
+      <>
+        <FormField {...textArgs} />
+        <FormField {...selectArgs} />
+      </>,
+    )
+
+    expect(screen.getByRole('textbox', { name: textArgs.label })).not.toHaveAttribute('lang')
+    expect(screen.getByRole('combobox', { name: selectArgs.label })).not.toHaveAttribute('lang')
+  })
+})

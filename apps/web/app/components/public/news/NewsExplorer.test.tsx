@@ -1,28 +1,21 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
-  uploadNewsImage: vi.fn(),
 }))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
 }))
 
-vi.mock('@/app/(public)/noticias/actions', () => ({
-  uploadNewsImage: mocks.uploadNewsImage,
-}))
-
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
-
-// jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
-URL.createObjectURL = vi.fn(() => 'blob:mock-url')
-URL.revokeObjectURL = vi.fn()
 
 import { NewsExplorer, type NewsExplorerProps } from './NewsExplorer'
 
@@ -38,8 +31,6 @@ const defaultArgs: NewsExplorerProps = {
       abstract:
         'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
       href: 'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
-      imageUrl: '/images/news/el-norte-hoy-1.png',
-      imageAlt: 'Radiotelescopio ROSAC.',
     },
     {
       slug: 'ucr-contara-con-radiotelescopio-explorar-cosmos',
@@ -51,9 +42,6 @@ const defaultArgs: NewsExplorerProps = {
       abstract:
         'Un proyecto de investigación de la UCR estudia la transformación de una gran antena instalada en la Finca Experimental de Santa Cruz en un radiotelescopio para estudiar los astros.',
       href: 'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
-      imageUrl: '/images/news/ucr-3.png',
-      imageAlt:
-        'Antena instalada en la Finca Experimental de Santa Cruz (FESC) de la Universidad de Costa Rica.',
     },
   ],
 }
@@ -65,20 +53,71 @@ const emptyArgs: NewsExplorerProps = {
 const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
 
 function renderExplorer(props: NewsExplorerProps = defaultArgs) {
-  return render(
-    <EditModeProvider>
-      <NewsExplorer {...props} />
-    </EditModeProvider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeProvider>
+        <NewsExplorer {...props} />
+      </EditModeProvider>
+    </ToastProvider>,
   )
 }
 
 function renderExplorerInEditMode(props: Partial<NewsExplorerProps> = {}) {
-  return render(
-    <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
-      <NewsExplorer {...defaultArgs} {...adminGrants} {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+        <NewsExplorer {...defaultArgs} {...adminGrants} {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
+
+type User = ReturnType<typeof userEvent.setup>
+
+function failedResponse(status: number, body: unknown) {
+  return { ok: false, status, json: async () => body }
+}
+
+/** Opens "Agregar noticia", fills in a valid article and submits it. */
+async function submitNewArticle(user: User) {
+  await user.click(screen.getByRole('button', { name: 'Agregar noticia' }))
+  const dialog = screen.getByRole('dialog', { name: 'Agregar noticia' })
+  await user.type(within(dialog).getByRole('textbox', { name: 'Título' }), 'Artículo nuevo')
+  await user.type(within(dialog).getByRole('textbox', { name: 'Autores' }), 'Autor Nuevo')
+  await user.type(within(dialog).getByRole('textbox', { name: 'Fuente' }), 'Fuente Nueva')
+  await user.type(
+    within(dialog).getByRole('textbox', { name: 'Enlace' }),
+    'https://example.com/nuevo',
+  )
+  await user.type(within(dialog).getByRole('textbox', { name: 'Resumen' }), 'Resumen nuevo.')
+  await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+  return dialog
+}
+
+/** Edits the first article's title and submits it. */
+async function submitArticleEdit(user: User) {
+  const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+  await user.click(firstEditButton as HTMLElement)
+  const dialog = screen.getByRole('dialog', { name: 'Editar noticia' })
+  const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
+  await user.clear(titleInput)
+  await user.type(titleInput, 'Título editado')
+  await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+  return dialog
+}
+
+/** Deletes the first article, accepting the "Eliminar noticia" confirmation. */
+async function deleteFirstArticle(user: User) {
+  const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
+  await user.click(firstDeleteButton as HTMLElement)
+  const dialog = screen.getByRole('dialog', { name: 'Eliminar noticia' })
+  await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
+}
+
+const NEWS_GONE =
+  'Esta noticia ya no existe. Es posible que otra persona la haya eliminado; recargue la página.'
+const DUPLICATE_LINK =
+  'Ya existe una noticia con este enlace. Use otro enlace o edite la noticia existente.'
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -185,6 +224,39 @@ describe('NewsExplorer', () => {
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
   })
 
+  test('keeps the order it was given, which getNews sets (newest first, undated last)', () => {
+    renderExplorer()
+
+    const titles = screen
+      .getAllByRole('heading', { level: 3 })
+      .map((heading) => heading.textContent)
+    expect(titles).toEqual(defaultArgs.news.map((article) => article.title))
+  })
+
+  test('keeps that order when a search narrows the list', async () => {
+    const user = userEvent.setup()
+    renderExplorer({
+      ...defaultArgs,
+      news: [
+        { ...defaultArgs.news[0]!, slug: 'a', title: 'Zafiro, primera nota' },
+        { ...defaultArgs.news[1]!, slug: 'b', title: 'Otra noticia' },
+        { ...defaultArgs.news[0]!, slug: 'c', title: 'Zafiro, segunda nota' },
+      ],
+    })
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), 'Zafiro')
+
+    expect(
+      screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent),
+    ).toEqual(['Zafiro, primera nota', 'Zafiro, segunda nota'])
+  })
+
+  test('shows no images in the listing', () => {
+    renderExplorer()
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
   test('renders "Sin fecha" for articles without a published date', () => {
     renderExplorer({
       news: [
@@ -197,8 +269,6 @@ describe('NewsExplorer', () => {
           publishedAt: null,
           abstract: 'Resumen.',
           href: 'https://example.com',
-          imageUrl: '/images/decorative/Solar-Flare.png',
-          imageAlt: '',
         },
       ],
     })
@@ -238,116 +308,208 @@ describe('NewsExplorer', () => {
     expect(screen.queryByRole('button', { name: 'Agregar noticia' })).not.toBeInTheDocument()
   })
 
-  test('PATCHes the article and refreshes the page once saving succeeds', async () => {
+  test('PATCHes the article, refreshes the page and confirms it was updated', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ article: {} }) })
     renderExplorerInEditMode()
     const [firstArticle] = defaultArgs.news
 
-    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
-    await user.click(firstEditButton as HTMLElement)
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await submitArticleEdit(user)
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/news/${firstArticle?.slug}`,
-      expect.objectContaining({ method: 'PATCH' }),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('Título editado'),
+      }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog', { name: 'Editar noticia' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Noticia actualizada correctamente.')).toBeInTheDocument()
   })
 
-  test('shows the server error and keeps the modal open when saving fails', async () => {
+  test('explains a failed edit inside the open modal and keeps what was saved before', async () => {
     const user = userEvent.setup()
-    fetchMock.mockResolvedValue({
-      ok: false,
-      json: async () => ({ error: 'No tiene permisos para modificar este contenido.' }),
-    })
-    renderExplorerInEditMode()
-
-    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
-    await user.click(firstEditButton as HTMLElement)
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    expect(
-      await screen.findByText('No tiene permisos para modificar este contenido.'),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('dialog', { name: 'Editar noticia' })).toBeInTheDocument()
-    expect(mocks.refresh).not.toHaveBeenCalled()
-  })
-
-  test('DELETEs the article and refreshes the page once removal succeeds', async () => {
-    const user = userEvent.setup()
-    fetchMock.mockResolvedValue({ ok: true })
+    fetchMock.mockResolvedValue(
+      failedResponse(403, { error: 'No tiene permisos para modificar este contenido.' }),
+    )
     renderExplorerInEditMode()
     const [firstArticle] = defaultArgs.news
 
-    const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
-    await user.click(firstDeleteButton as HTMLElement)
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar noticia' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    const dialog = await submitArticleEdit(user)
+
+    expect(
+      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
+    expect(within(dialog).getByRole('textbox', { name: 'Título' })).toHaveValue('Título editado')
+    expect(screen.getByRole('heading', { name: firstArticle?.title as string })).toBeInTheDocument()
+    expect(screen.queryByText('Noticia actualizada correctamente.')).not.toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('says the link is already used when an edit duplicates another article', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(failedResponse(409, { error: DUPLICATE_LINK }))
+    renderExplorerInEditMode()
+
+    const dialog = await submitArticleEdit(user)
+
+    expect(await within(dialog).findByText(DUPLICATE_LINK)).toBeInTheDocument()
+  })
+
+  test('says the article no longer exists when it was deleted while being edited', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(failedResponse(404, { error: NEWS_GONE }))
+    renderExplorerInEditMode()
+
+    const dialog = await submitArticleEdit(user)
+
+    expect(await within(dialog).findByText(NEWS_GONE)).toBeInTheDocument()
+  })
+
+  test('lists the fields to fix when the server rejects an edit', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(
+      failedResponse(400, {
+        error: 'Faltan campos obligatorios o no son válidos.',
+        issues: { externalUrl: ['El enlace debe ser una URL válida.'] },
+      }),
+    )
+    renderExplorerInEditMode()
+
+    const dialog = await submitArticleEdit(user)
+
+    expect(
+      await within(dialog).findByText(
+        'Faltan campos obligatorios o no son válidos: El enlace debe ser una URL válida.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  test('DELETEs the article, refreshes the page and confirms it was deleted', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+    renderExplorerInEditMode()
+    const [firstArticle] = defaultArgs.news
+
+    await deleteFirstArticle(user)
 
     expect(fetchMock).toHaveBeenCalledWith(`/api/news/${firstArticle?.slug}`, {
       method: 'DELETE',
     })
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(await screen.findByText('Noticia eliminada correctamente.')).toBeInTheDocument()
   })
 
-  test('POSTs a new article and refreshes the page once creation succeeds', async () => {
+  test('explains a failed deletion and keeps the article listed', async () => {
     const user = userEvent.setup()
-    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ article: {} }) })
-    mocks.uploadNewsImage.mockResolvedValue({
-      ok: true,
-      imageUrl: 'https://s3.example/lasce/foto.png',
-    })
+    const reason =
+      'No se pudo eliminar la noticia: la base de datos no respondió. Inténtelo de nuevo en unos minutos.'
+    fetchMock.mockResolvedValue(failedResponse(500, { error: reason }))
+    renderExplorerInEditMode()
+    const [firstArticle] = defaultArgs.news
+
+    await deleteFirstArticle(user)
+
+    expect(await screen.findByText(reason)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: firstArticle?.title as string })).toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('falls back to a deletion-specific explanation when a failure carries no reason', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(failedResponse(409, {}))
     renderExplorerInEditMode()
 
-    await user.click(screen.getByRole('button', { name: 'Agregar noticia' }))
-    const dialog = screen.getByRole('dialog', { name: 'Agregar noticia' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Título' }), 'Artículo nuevo')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Autores' }), 'Autor Nuevo')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Fuente' }), 'Fuente Nueva')
-    await user.type(
-      within(dialog).getByRole('textbox', { name: 'Enlace' }),
-      'https://example.com/nuevo',
-    )
-    await user.type(within(dialog).getByRole('textbox', { name: 'Resumen' }), 'Resumen nuevo.')
-    const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
+    await deleteFirstArticle(user)
 
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    expect(
+      await screen.findByText('No se pudo eliminar la noticia. Inténtelo de nuevo.'),
+    ).toBeInTheDocument()
+  })
 
-    expect(mocks.uploadNewsImage).toHaveBeenCalledTimes(1)
+  test('POSTs a new article, refreshes the page and confirms it was added', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, status: 201, json: async () => ({ article: {} }) })
+    renderExplorerInEditMode()
+
+    await submitNewArticle(user)
+
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/news',
       expect.objectContaining({
         method: 'POST',
-        body: expect.stringContaining('https://s3.example/lasce/foto.png'),
+        body: JSON.stringify({
+          title: 'Artículo nuevo',
+          authors: ['Autor Nuevo'],
+          source: 'Fuente Nueva',
+          publishedAt: null,
+          externalUrl: 'https://example.com/nuevo',
+          abstract: 'Resumen nuevo.',
+        }),
       }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog', { name: 'Agregar noticia' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Noticia agregada correctamente.')).toBeInTheDocument()
   })
 
-  test('shows the upload error and does not create the article when the image upload fails', async () => {
+  test('says the link is already used and keeps the form filled in when creating', async () => {
     const user = userEvent.setup()
-    mocks.uploadNewsImage.mockResolvedValue({ ok: false, error: 'La imagen es demasiado grande.' })
+    fetchMock.mockResolvedValue(failedResponse(409, { error: DUPLICATE_LINK }))
     renderExplorerInEditMode()
 
-    await user.click(screen.getByRole('button', { name: 'Agregar noticia' }))
-    const dialog = screen.getByRole('dialog', { name: 'Agregar noticia' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Título' }), 'Artículo nuevo')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Autores' }), 'Autor Nuevo')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Fuente' }), 'Fuente Nueva')
-    await user.type(
-      within(dialog).getByRole('textbox', { name: 'Enlace' }),
-      'https://example.com/nuevo',
-    )
-    await user.type(within(dialog).getByRole('textbox', { name: 'Resumen' }), 'Resumen nuevo.')
-    const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
+    const dialog = await submitNewArticle(user)
 
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    expect(await within(dialog).findByText(DUPLICATE_LINK)).toBeInTheDocument()
+    expect(within(dialog).getByRole('textbox', { name: 'Título' })).toHaveValue('Artículo nuevo')
+    expect(screen.queryByText('Noticia agregada correctamente.')).not.toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
 
-    expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
-    expect(fetchMock).not.toHaveBeenCalled()
+  test('says the server could not be reached when the request never arrives', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    renderExplorerInEditMode()
+
+    const dialog = await submitNewArticle(user)
+
+    expect(
+      await within(dialog).findByText(
+        'No se pudo conectar con el servidor. Revise su conexión e inténtelo de nuevo.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  test('falls back to a server-side explanation when a 500 carries no reason', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: async () => {
+        throw new SyntaxError('Unexpected token <')
+      },
+    })
+    renderExplorerInEditMode()
+
+    const dialog = await submitNewArticle(user)
+
+    expect(
+      await within(dialog).findByText(
+        'El servidor no pudo completar la operación. Inténtelo de nuevo en unos minutos.',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  test('falls back to a save-specific explanation when another failure carries no reason', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(failedResponse(422, {}))
+    renderExplorerInEditMode()
+
+    const dialog = await submitNewArticle(user)
+
+    expect(
+      await within(dialog).findByText('No se pudo guardar la noticia. Inténtelo de nuevo.'),
+    ).toBeInTheDocument()
   })
 })

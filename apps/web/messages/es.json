@@ -106,7 +106,14 @@
   },
   "common": {
     "backToHome": "Volver al inicio",
-    "backToWorkAreas": "Volver a las áreas de trabajo"
+    "backToWorkAreas": "Volver a las áreas de trabajo",
+    "toast": {
+      "dismiss": "Cerrar notificación"
+    },
+    "feedback": {
+      "network": "No se pudo conectar con el servidor. Revise su conexión e inténtelo de nuevo.",
+      "server": "El servidor no pudo completar la operación. Inténtelo de nuevo en unos minutos."
+    }
   },
   "contact": {
     "meta": {
@@ -353,6 +360,129 @@
         "imageAlt": "Comité y participantes junto al cartel oficial del taller de Machine Learning y clima espacial",
         "galleryLabel": "Ver galería de fotos del taller"
       }
+    }
+  },
+  "publications": {
+    "page": {
+      "metaTitle": "Publicaciones | LASCE",
+      "metaDescription": "Publicaciones científicas del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
+      "kicker": "Portal público LASCE",
+      "title": "Publicaciones científicas",
+      "lead": "Publicaciones y contribuciones científicas del LASCE y ROSAC.",
+      "searchLabel": "Buscar publicaciones",
+      "searchPlaceholder": "Buscar por título, autor o palabra clave...",
+      "groupLabel": "Grupo de investigación",
+      "allGroups": "Todas las publicaciones",
+      "countLabel": "Cantidad de publicaciones",
+      "countTotal": "{count, plural, one {publicación en total} other {publicaciones en total}}",
+      "countInGroup": "{count, plural, one {publicación} other {publicaciones}} ({group})",
+      "recent": "Publicaciones recientes",
+      "emptyGroupAndQuery": "No se encontraron publicaciones de {group} para “{query}”.",
+      "emptyGroup": "No hay publicaciones de {group}.",
+      "emptyQuery": "No se encontraron publicaciones para “{query}”.",
+      "empty": "No hay publicaciones disponibles."
+    },
+    "card": {
+      "externalLink": "DOI / Enlace externo",
+      "readMore": "Leer resumen completo",
+      "readLess": "Ocultar resumen",
+      "translationMissing": "Sin versión en inglés. Al editar el título o el resumen se deben completar ambos idiomas."
+    },
+    "editor": {
+      "addCard": "Agregar publicación",
+      "createTitle": "Agregar publicación",
+      "editTitle": "Editar publicación",
+      "editLabel": "Editar {title}",
+      "deleteLabel": "Eliminar {title}",
+      "languageTabs": "Idioma del contenido",
+      "titleField": "Título ({language})",
+      "abstractField": "Resumen ({language})",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o el resumen, revíselo también.",
+      "legacyNoTranslation": "Esta publicación aún no tiene versión en inglés. Para cambiar el título o el resumen debe completar ambos idiomas; los demás campos se pueden editar sin traducirla.",
+      "date": "Fecha de publicación",
+      "href": "Enlace externo",
+      "doi": "DOI",
+      "doiPlaceholder": "10.1234/ejemplo",
+      "venue": "Revista/Publicación",
+      "group": "Grupo",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "reload": "Cerrar y cargar la versión actual"
+    },
+    "authors": {
+      "label": "Autores",
+      "inputLabel": "Nombre del autor",
+      "placeholder": "Escribir un autor...",
+      "placeholderAnother": "Escribir otro autor...",
+      "add": "Agregar",
+      "remove": "Eliminar {name}",
+      "count": "{count, plural, =0 {Sin autores} one {1 autor} other {# autores}}",
+      "more": "+{count} más",
+      "showAll": "Ver todos los autores",
+      "showLess": "Mostrar menos",
+      "list": "Autores seleccionados",
+      "required": "El nombre del autor es obligatorio.",
+      "duplicate": "Ese autor ya fue agregado."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
+    },
+    "deleteDialog": {
+      "title": "Eliminar publicación",
+      "message": "Esta acción no se puede deshacer y borrará la publicación del catálogo público.",
+      "target": "Elemento",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar"
+    },
+    "validation": {
+      "textOrNull": "Debe ser texto o null.",
+      "href": "El enlace externo debe ser una URL absoluta que empiece con http:// o https://.",
+      "doi": "El DOI debe tener la forma 10.<registrante>/<sufijo>, sin prefijos.",
+      "dateRequired": "La fecha de publicación es obligatoria.",
+      "dateInvalid": "La fecha de publicación no es válida.",
+      "authorNotText": "El nombre del autor debe ser texto.",
+      "authorRequired": "El nombre del autor es obligatorio.",
+      "authorsNotList": "Los autores son obligatorios y deben ser una lista.",
+      "authorsRequired": "Debe existir al menos un autor.",
+      "authorsDuplicate": "No se puede repetir un autor.",
+      "group": "Seleccione un grupo de investigación válido.",
+      "venue": "La publicación es obligatoria."
+    },
+    "saveErrors": {
+      "generic": "No se pudo guardar el cambio. Inténtelo de nuevo.",
+      "fields": "Revise los campos marcados.",
+      "notSignedIn": "No ha iniciado sesión.",
+      "signInAgain": "Inicie sesión de nuevo para guardar; sus cambios siguen en el formulario.",
+      "forbidden": "No tiene permisos para modificar este contenido.",
+      "duplicate": "Ya existe una publicación con este valor.",
+      "duplicateDoi": "Ya existe una publicación con este DOI.",
+      "duplicateLink": "Ya existe una publicación con este enlace externo.",
+      "conflict": "Otra persona guardó cambios en esta publicación después de que usted la abrió. Sus cambios no se guardaron, para no sobrescribir los de esa persona. Copie lo que necesite, cierre el editor y vuelva a abrir la publicación.",
+      "notFound": "Esta publicación ya no existe; es posible que otra persona la haya eliminado. Sus cambios no se guardaron.",
+      "deleteFailed": "No se pudo eliminar la publicación. Inténtelo de nuevo."
+    }
+  },
+  "nosotros": {
+    "activities": {
+      "created": "Actividad agregada correctamente.",
+      "updated": "Actividad actualizada correctamente.",
+      "deleted": "Actividad eliminada correctamente.",
+      "errors": {
+        "unknown": "No se pudo guardar la actividad. Inténtelo de nuevo.",
+        "deleteUnknown": "No se pudo eliminar la actividad. Inténtelo de nuevo."
+      }
+    }
+  },
+  "news": {
+    "created": "Noticia agregada correctamente.",
+    "updated": "Noticia actualizada correctamente.",
+    "deleted": "Noticia eliminada correctamente.",
+    "errors": {
+      "saveUnknown": "No se pudo guardar la noticia. Inténtelo de nuevo.",
+      "deleteUnknown": "No se pudo eliminar la noticia. Inténtelo de nuevo."
     }
   }
 }

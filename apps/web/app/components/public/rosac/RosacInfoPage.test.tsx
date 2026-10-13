@@ -69,8 +69,8 @@ describe('RosacInfoPage', () => {
       '5. ¿Por qué observar en radio?',
       '6. Instrumentos científicos',
       '7. Investigadores',
-      '8. Agradecimientos ROSAC',
-      '9. Donaciones ROSAC',
+      '8. Donaciones ROSAC',
+      '9. Agradecimientos ROSAC',
     ])
     expect(screen.getByRole('region', { name: '4. Construcción del ROSAC' })).toHaveTextContent(
       defaultArgs.content.construction.intro,
@@ -124,7 +124,7 @@ describe('RosacInfoPage', () => {
     expect(screen.queryByRole('region', { name: /Consulta científica/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Explorar datos' })).not.toBeInTheDocument()
     const sections = screen.getAllByRole('heading', { level: 2 })
-    expect(sections.at(-1)).toHaveTextContent('9. Donaciones ROSAC')
+    expect(sections.at(-1)).toHaveTextContent('9. Agradecimientos ROSAC')
   })
 
   test('presents three instrument cards without authentication or edit permissions', () => {
@@ -146,7 +146,7 @@ describe('RosacInfoPage', () => {
   test('invites visitors to help and links the donations CTA to the contact page', () => {
     renderPage()
 
-    const donations = screen.getByRole('region', { name: '9. Donaciones ROSAC' })
+    const donations = screen.getByRole('region', { name: '8. Donaciones ROSAC' })
     expect(
       within(donations).getByRole('heading', { name: defaultArgs.content.donations.cta.title }),
     ).toBeInTheDocument()
@@ -277,7 +277,7 @@ describe('RosacInfoPage', () => {
     const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar a/ })
     await user.click(firstDeleteButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Eliminar investigador' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(`/api/researchers/${firstPerson?.id}`, {
       method: 'DELETE',
