@@ -225,7 +225,7 @@ describe('NosotrosPage', () => {
       within(researchers).getByRole('heading', { name: 'MSc. Ivannia Calvo' }),
     ).toBeInTheDocument()
     expect(
-      within(researchers).getByRole('heading', { name: 'Dr. Felipe Meza' }),
+      within(researchers).getByRole('heading', { name: 'Dr. Felipe Meza Obando' }),
     ).toBeInTheDocument()
     expect(
       within(researchers).getByRole('heading', { name: 'MSc. Alonso Vega' }),
@@ -294,7 +294,9 @@ describe('NosotrosPage', () => {
       ),
     ).toBeInTheDocument()
     await user.click(
-      within(researchers).getByRole('button', { name: 'Ver descripción de Dr. Felipe Meza' }),
+      within(researchers).getByRole('button', {
+        name: 'Ver descripción de Dr. Felipe Meza Obando',
+      }),
     )
     expect(
       within(researchers).getByText(
