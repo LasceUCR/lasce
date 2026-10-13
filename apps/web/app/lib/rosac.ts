@@ -151,9 +151,14 @@ export interface RosacInfoContent {
   backLink: { href: string; label: string }
 }
 
-/** One acknowledged institution — a logo, kept square and undistorted, plus its name. */
+/**
+ * One acknowledged institution — a logo, kept square and undistorted, plus its name.
+ * `href` is omitted for an institution whose official site hasn't been confirmed yet;
+ * its card then renders as a plain, non-interactive tile instead of guessing a URL.
+ */
 export interface RosacAcknowledgment {
   name: string
+  href?: string
   logo: { src: string; alt: string }
 }
 
@@ -446,6 +451,7 @@ export const rosacInfoContent = {
     institutions: [
       {
         name: 'Vicerrectoría de Investigación, UCR',
+        href: 'https://vinv.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
           alt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
@@ -453,6 +459,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+        href: 'https://cinespa.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/cinespa.webp',
           alt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
@@ -460,6 +467,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Escuela de Física, UCR',
+        href: 'https://fisica.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/efis.webp',
           alt: 'Logo de la Escuela de Física, UCR',
@@ -467,6 +475,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Escuela de Ingeniería Mecánica, UCR',
+        href: 'https://www.ucr.ac.cr/directorio/escuela-de-ingenieria-mecanica.html',
         logo: {
           src: '/images/ROSAC/acknowledgments/eim.webp',
           alt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
@@ -474,6 +483,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Escuela de Ingeniería Topográfica, UCR',
+        href: 'https://eit.ucr.ac.cr/',
         logo: {
           src: '/images/ROSAC/acknowledgments/eit.webp',
           alt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
@@ -481,6 +491,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Escuela de Ingeniería Eléctrica, UCR',
+        href: 'https://eie.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/eie.webp',
           alt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
@@ -488,6 +499,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Recinto de Santa Cruz',
+        href: 'https://www.ucr.ac.cr/directorio/recinto-universitario-de-santa-cruz/',
         logo: {
           src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
           alt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
@@ -495,6 +507,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Oficina de Servicios Generales (OSG), UCR',
+        href: 'https://osg.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/osg.webp',
           alt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
@@ -502,6 +515,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR), UCR',
+        href: 'https://www.lanamme.ucr.ac.cr/',
         logo: {
           src: '/images/ROSAC/acknowledgments/lanamme.webp',
           alt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
@@ -509,6 +523,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Radiográfica Costarricense S.A. (RACSA)',
+        href: 'https://www.racsa.go.cr/',
         logo: {
           src: '/images/ROSAC/acknowledgments/racsa.webp',
           alt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
@@ -516,6 +531,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Bomberos de Costa Rica',
+        href: 'https://www.bomberos.go.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
           alt: 'Logo de Bomberos de Costa Rica',
@@ -523,6 +539,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Instituto Geográfico Nacional',
+        href: 'https://www.snitcr.go.cr/ign_ign',
         logo: {
           src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
           alt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
@@ -530,12 +547,14 @@ export const rosacInfoContent = {
       },
       {
         name: 'INDI CR',
+        href: 'https://www.indicr.com/',
         logo: {
           src: '/images/ROSAC/acknowledgments/indi.webp',
           alt: 'Logo de INDI, Ingeniería y Diseño',
         },
       },
       {
+        // No confirmed URL yet — renders as a plain, non-interactive tile until one is supplied.
         name: 'Prysmian Group',
         logo: {
           src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
@@ -544,6 +563,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'EATON Costa Rica',
+        href: 'https://www.eaton.com/cr/es-mx/company.html',
         logo: {
           src: '/images/ROSAC/acknowledgments/eaton.webp',
           alt: 'Logo de EATON Costa Rica',
@@ -551,6 +571,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), México',
+        href: 'https://www.inaoep.mx',
         logo: {
           src: '/images/ROSAC/acknowledgments/inaoe.webp',
           alt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
@@ -558,6 +579,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+        href: 'https://www.gob.mx/amexcid',
         logo: {
           src: '/images/ROSAC/acknowledgments/amexcid.webp',
           alt: 'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
