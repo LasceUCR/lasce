@@ -579,6 +579,15 @@ export const rosacInfoContent = {
           alt: 'Equipo de ROSAC junto a representantes de Eaton y el tablero eléctrico donado',
         },
       },
+      {
+        title: 'Donación Prysmian',
+        description:
+          'La organización ROSAC recibió una donación de equipo por parte de la empresa Prysmian, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.',
+        image: {
+          src: '/images/ROSAC/donations/prysmian.webp',
+          alt: 'Representante de Prysmian conversando con un miembro del equipo de ROSAC frente a la antena del observatorio',
+        },
+      },
     ],
     cta: {
       title: '¿Te gustaría ayudarnos?',
