@@ -5007,8 +5007,9 @@ a.gallery-tile:focus-visible {
 }
 
 .acknowledgments-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
   margin: 32px 0 0;
   padding: 0;
@@ -5016,7 +5017,8 @@ a.gallery-tile:focus-visible {
 }
 
 .acknowledgments-tile {
-  display: flex;
+  flex: 1 1 160px;
+  max-width: 200px;
 }
 
 .acknowledgments-card {
