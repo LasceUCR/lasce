@@ -157,6 +157,7 @@ export interface RosacInfoContent {
  * its card then renders as a plain, non-interactive tile instead of guessing a URL.
  */
 export interface RosacAcknowledgment {
+  id?: string
   name: string
   href?: string
   logo: { src: string; alt: string }
