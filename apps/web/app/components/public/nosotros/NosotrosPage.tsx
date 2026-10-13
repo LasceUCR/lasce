@@ -243,6 +243,7 @@ export function NosotrosPage({
             return (
               <EditableWrapper
                 key={item.id}
+                deleteConfirmLabel="Eliminar"
                 deleteConfirmMessage={`¿Desea eliminar "${item.title}"? Esta acción no se puede deshacer.`}
                 deleteConfirmTitle="Eliminar actividad"
                 deleteLabel={`Eliminar ${item.title}`}

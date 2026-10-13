@@ -80,7 +80,12 @@ export function FileDropInput({
     <div className="file-drop-field">
       <span className="cms-form-field-label" id={`${inputId}-label`}>
         {label}
-        {required ? <span className="cms-form-field-required"> *</span> : null}
+        {required ? (
+          <span aria-hidden="true" className="cms-form-field-required">
+            {' '}
+            *
+          </span>
+        ) : null}
       </span>
 
       <div

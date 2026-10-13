@@ -281,7 +281,7 @@ describe('RosacInfoPage', () => {
     const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar a/ })
     await user.click(firstDeleteButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Eliminar investigador' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(`/api/researchers/${firstPerson?.id}`, {
       method: 'DELETE',

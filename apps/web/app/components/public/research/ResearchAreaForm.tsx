@@ -4,12 +4,21 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import {
   uploadResearchAreaImage,
   type UploadResearchAreaImageResult,
 } from '@/app/(public)/investigacion/actions'
 import { FormField } from '@/app/components/public/FormField'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
+
+/** Messages match `researchAreaInputSchema` so a rejection reads the same
+ * whether it's caught here or by the server after submission. */
+function requireNonEmpty(message: string) {
+  return (value: string) => {
+    if (value.trim() === '') throw new Error(message)
+  }
+}
 
 export interface ResearchAreaFormValues {
   title: string
@@ -30,11 +39,11 @@ export function ResearchAreaForm({ area, onSave, onCancel }: ResearchAreaFormPro
   const [description, setDescription] = useState(area.description)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
-  const [validationError, setValidationError] = useState<string | null>(null)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const uploadErrorRef = useRef<HTMLParagraphElement>(null)
-  const validationErrorRef = useRef<HTMLParagraphElement>(null)
 
   useEffect(() => {
     if (uploadError) {
@@ -42,35 +51,35 @@ export function ResearchAreaForm({ area, onSave, onCancel }: ResearchAreaFormPro
     }
   }, [uploadError])
 
-  useEffect(() => {
-    if (validationError) {
-      scrollIntoViewIfSupported(validationErrorRef.current)
-    }
-  }, [validationError])
-
   const hasPhoto = photoFile !== null || (Boolean(area?.src) && !photoRemoved)
+  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
+  const imageError = hasAttemptedSubmit && !hasPhoto ? 'La imagen es obligatoria.' : null
 
-  function validateTitle(value: string) {
-    if (value.trim() === '') {
-      throw new Error('Es necesario un título.')
+  const isDirty =
+    title !== area.title || description !== area.description || photoFile !== null || photoRemoved
+
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+      return
     }
+    onCancel()
   }
 
-  function missingFields(): string[] {
-    const missing: string[] = []
-    if (!hasPhoto) missing.push('Foto')
-    if (title.trim() === '') missing.push('Título')
-    return missing
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
   }
 
   function handleConfirmClick() {
-    const missing = missingFields()
-    if (missing.length > 0) {
-      setValidationError(`Falta completar: ${missing.join(', ')}.`)
+    setHasAttemptedSubmit(true)
+    if (!hasPhoto || title.trim() === '') {
+      if (title.trim() === '') {
+        document.getElementById('area-title')?.focus()
+      }
       return
     }
 
-    setValidationError(null)
     handleConfirmSave()
   }
 
@@ -110,25 +119,24 @@ export function ResearchAreaForm({ area, onSave, onCancel }: ResearchAreaFormPro
   return (
     <div className="research-area-form">
       <FileDropInput
+        errorMessage={imageError}
         existingImageUrl={area?.src}
         helperText="Imagen ilustrativa para el área de investigación, en formato JPG o PNG."
         label="Foto"
         onFileSelect={(file) => {
           setPhotoFile(file)
           setPhotoRemoved(file === null)
-          setValidationError(null)
         }}
+        required
       />
 
       <FormField
+        errorMessage={titleError}
         id="area-title"
         label="Título"
-        onChange={(value) => {
-          setTitle(value)
-          setValidationError(null)
-        }}
+        onChange={setTitle}
         required
-        validate={validateTitle}
+        validate={requireNonEmpty('El título es obligatorio.')}
         value={title}
       />
 
@@ -146,14 +154,8 @@ export function ResearchAreaForm({ area, onSave, onCancel }: ResearchAreaFormPro
         </p>
       ) : null}
 
-      {validationError ? (
-        <p className="form-alert" ref={validationErrorRef} role="alert">
-          {validationError}
-        </p>
-      ) : null}
-
       <div className="cms-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
 
@@ -161,6 +163,16 @@ export function ResearchAreaForm({ area, onSave, onCancel }: ResearchAreaFormPro
           {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
         </Button>
       </div>
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
+      />
     </div>
   )
 }

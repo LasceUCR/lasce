@@ -111,7 +111,7 @@ async function deleteFirstArticle(user: User) {
   const [firstDeleteButton] = screen.getAllByRole('button', { name: 'Eliminar' })
   await user.click(firstDeleteButton as HTMLElement)
   const dialog = screen.getByRole('dialog', { name: 'Eliminar noticia' })
-  await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+  await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 }
 
 const NEWS_GONE =
