@@ -75,4 +75,13 @@ describe('StandardConfirmDialog', () => {
     )
     expect(screen.getByText('Descartar y salir')).toBeInTheDocument()
   })
+
+  test('names the target entity with the label it is given', () => {
+    render(
+      <StandardConfirmDialog {...defaultArgs} targetLabel="Item" targetEntity="Solar activity" />,
+    )
+
+    expect(screen.getByText('Item:')).toBeInTheDocument()
+    expect(screen.getByText('Solar activity')).toBeInTheDocument()
+  })
 })

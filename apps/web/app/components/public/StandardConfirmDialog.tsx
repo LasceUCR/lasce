@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertCircle, AlertTriangle, Info, Loader2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import { Button, type ButtonVariant } from './Button'
 import { Modal, type ModalSize } from './Modal'
@@ -11,6 +12,12 @@ export interface StandardConfirmDialogProps {
   open: boolean
   title: string
   message: string
+  /** Explains critical consequences (e.g., "Esta acción no se puede deshacer"). */
+  consequence?: string
+  /** Highlights the specific entity name being modified or deleted. */
+  targetEntity?: string
+  /** What `targetEntity` is called before its name, in the page's language. */
+  targetLabel?: string
   confirmLabel?: string
   cancelLabel?: string
   severity?: ConfirmationSeverity
@@ -24,6 +31,7 @@ export interface StandardConfirmDialogProps {
   size?: ModalSize
   onConfirm: () => void | Promise<void>
   onCancel: () => void
+  children?: ReactNode
 }
 
 function resolveIcon(severity: ConfirmationSeverity) {
@@ -50,6 +58,18 @@ function resolveIconClass(severity: ConfirmationSeverity) {
   }
 }
 
+function resolveConsequenceClass(severity: ConfirmationSeverity) {
+  switch (severity) {
+    case 'danger':
+      return 'std-confirm-consequence-danger'
+    case 'warning':
+      return 'std-confirm-consequence-warning'
+    case 'info':
+    default:
+      return 'std-confirm-consequence-info'
+  }
+}
+
 function resolveDefaultConfirmVariant(severity: ConfirmationSeverity): ButtonVariant {
   switch (severity) {
     case 'danger':
@@ -63,13 +83,17 @@ function resolveDefaultConfirmVariant(severity: ConfirmationSeverity): ButtonVar
 
 /**
  * Standardized confirmation modal for management actions in LASCE.
- * Enforces a strictly consistent layout across all modules: icon, title, message,
- * and standard action buttons without ad-hoc custom fields.
+ * Provides clear visual hierarchy for destructive (danger), caution (warning),
+ * and standard (info) operations, with native support for target entity previews,
+ * consequence warnings, and asynchronous loading states.
  */
 export function StandardConfirmDialog({
   open,
   title,
   message,
+  consequence,
+  targetEntity,
+  targetLabel = 'Elemento',
   confirmLabel = 'Confirmar',
   cancelLabel = 'Cancelar',
   severity = 'info',
@@ -80,9 +104,11 @@ export function StandardConfirmDialog({
   size = 'small',
   onConfirm,
   onCancel,
+  children,
 }: StandardConfirmDialogProps) {
   const icon = resolveIcon(severity)
   const iconClass = resolveIconClass(severity)
+  const consequenceClass = resolveConsequenceClass(severity)
   const effectiveConfirmVariant = confirmVariant ?? resolveDefaultConfirmVariant(severity)
 
   return (
@@ -95,11 +121,30 @@ export function StandardConfirmDialog({
           </div>
         </div>
 
+        {targetEntity ? (
+          <div
+            className={`std-confirm-target-card ${
+              severity === 'danger' ? 'std-confirm-target-card-danger' : ''
+            }`}
+          >
+            <strong>{targetLabel}: </strong>
+            <span>{targetEntity}</span>
+          </div>
+        ) : null}
+
+        {consequence ? (
+          <div className={`std-confirm-consequence ${consequenceClass}`} role="note">
+            <span>{consequence}</span>
+          </div>
+        ) : null}
+
         {errorMessage ? (
           <p className="std-confirm-error" role="alert">
             {errorMessage}
           </p>
         ) : null}
+
+        {children}
 
         <div className="std-confirm-actions">
           <Button disabled={isSubmitting} onClick={onCancel} variant="secondary">
