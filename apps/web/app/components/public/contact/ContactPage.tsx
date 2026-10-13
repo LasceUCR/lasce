@@ -13,6 +13,8 @@ import {
   type ContactContent,
 } from '@/app/lib/contact'
 
+import styles from './ContactPage.module.css'
+
 /** lucide-react 1.34 does not export an Instagram icon. Same stroke style as Phone. */
 function InstagramIcon() {
   return (
@@ -68,8 +70,17 @@ export function ContactPage({ content }: ContactPageProps) {
   const channels = availableContactChannels(content.channels)
 
   return (
-    <article className="topic-page">
+    <article className={`topic-page ${styles.page}`}>
       <TopicHero {...content.hero} />
+      <TopicSection
+        className={styles.location}
+        id="ubicacion"
+        intro={content.location.intro}
+        title={content.location.title}
+        titleId="ubicacion-titulo"
+      >
+        <RosacLocationMapLoader labels={content.location.labels} location={content.location} />
+      </TopicSection>
       {channels.length > 0 ? (
         <TopicSection
           id="informacion-de-contacto"
@@ -88,14 +99,6 @@ export function ContactPage({ content }: ContactPageProps) {
           </CardGrid>
         </TopicSection>
       ) : null}
-      <TopicSection
-        id="ubicacion"
-        intro={content.location.intro}
-        title={content.location.title}
-        titleId="ubicacion-titulo"
-      >
-        <RosacLocationMapLoader labels={content.location.labels} location={content.location} />
-      </TopicSection>
       <div className="topic-page-footer page-width">
         <TopicBackLink {...content.backLink} />
       </div>

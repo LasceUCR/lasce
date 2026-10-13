@@ -17,8 +17,8 @@ describe('ContactPage', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: 'Contacto' })).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Información de contacto' }),
-    ).toBeInTheDocument()
+      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent?.trim()),
+    ).toEqual(['Ubicación', 'Información de contacto'])
     expect(screen.getByRole('heading', { level: 3, name: 'Teléfono' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '2511-6566' })).toHaveAttribute(
       'href',
@@ -66,8 +66,8 @@ describe('ContactPage', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Contact' })).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Contact information' }),
-    ).toBeInTheDocument()
+      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent?.trim()),
+    ).toEqual(['Location', 'Contact information'])
     expect(screen.getByRole('heading', { level: 3, name: 'Phone' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Location' })).toHaveTextContent(
       content.location.address,

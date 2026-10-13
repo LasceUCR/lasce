@@ -16,13 +16,13 @@ section route remains only for a work area that does not have its own page yet.
 ```
 /contacto                         page.tsx              article.topic-page
   ├─ TopicHero                    h1 "Contacto"
+  ├─ TopicSection                 h2 "Ubicación"
+  │    ├─ intro                   the CIGEFI address, readable if the map fails
+  │    └─ RosacLocationMapLoader  satellite map, marker "CIGEFI"
   ├─ TopicSection                 h2 "Información de contacto"
   │    └─ CardGrid columns=2      equal height, same grid as other InfoCards
   │         ├─ InfoCard Teléfono  Phone icon, tel link
   │         └─ InfoCard Instagram camera icon, profile in a new tab
-  ├─ TopicSection                 h2 "Ubicación"
-  │    ├─ intro                   the CIGEFI address, readable if the map fails
-  │    └─ RosacLocationMapLoader  satellite map, marker "CIGEFI"
   └─ .topic-page-footer           TopicBackLink "Volver al inicio"
 ```
 
