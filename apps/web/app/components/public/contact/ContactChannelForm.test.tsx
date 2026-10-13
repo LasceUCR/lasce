@@ -6,6 +6,11 @@ import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { ContactChannelForm } from './ContactChannelForm'
 
+async function chooseSymbol(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(screen.getByRole('combobox', { name: 'Símbolo' }))
+  await user.click(screen.getByRole('option', { name }))
+}
+
 function field(label: string) {
   return screen.getByRole('textbox', { name: new RegExp(`^${label}`) })
 }
@@ -30,7 +35,7 @@ describe('ContactChannelForm', () => {
     const onSave = vi.fn()
     renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={onSave} />)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Símbolo' }), 'instagram')
+    await chooseSymbol(user, 'Instagram')
     await user.type(field('Título'), 'Instagram')
     await user.type(field('Descripción'), '@lasce_ucr')
     await user.type(field('Enlace'), 'https://www.instagram.com/lasce_ucr/')
@@ -55,10 +60,10 @@ describe('ContactChannelForm', () => {
     const user = userEvent.setup({ delay: null })
     renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={vi.fn()} />)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Símbolo' }), 'facebook')
+    await chooseSymbol(user, 'Facebook')
     expect(field('Enlace')).toBeInTheDocument()
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Símbolo' }), 'email')
+    await chooseSymbol(user, 'Correo')
     expect(screen.queryByRole('textbox', { name: 'Enlace' })).not.toBeInTheDocument()
   })
 })

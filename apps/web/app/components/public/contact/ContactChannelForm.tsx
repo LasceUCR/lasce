@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField } from '@/app/components/public/FormField'
+import { Select } from '@/app/components/public/Select'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import type { Locale } from '@/app/lib/i18n/config'
@@ -48,6 +49,7 @@ export interface ContactChannelFormProps {
 export function ContactChannelForm({ card, onSave, onCancel }: ContactChannelFormProps) {
   const t = useTranslations('contact.cards')
   const uiLocale = useLocale() as Locale
+  const iconFieldId = useId()
   const [icon, setIcon] = useState<ContactChannelIcon>(card?.icon ?? 'phone')
   const [href, setHref] = useState(card?.href ?? '')
   const [selected, setSelected] = useState<Locale>(uiLocale)
@@ -106,12 +108,20 @@ export function ContactChannelForm({ card, onSave, onCancel }: ContactChannelFor
 
   return (
     <div className="cms-form">
-      <FormField
-        label={t('icon')}
-        onChange={(value) => setIcon(value as ContactChannelIcon)}
-        options={CONTACT_CHANNEL_ICONS.map((value) => ({ value, label: t(`icons.${value}`) }))}
-        value={icon}
-      />
+      <label className="cms-form-field" htmlFor={iconFieldId}>
+        <span className="cms-form-field-label">{t('icon')}</span>
+        <Select
+          id={iconFieldId}
+          label={t('icon')}
+          onChange={(value) => {
+            if ((CONTACT_CHANNEL_ICONS as readonly string[]).includes(value)) {
+              setIcon(value as ContactChannelIcon)
+            }
+          }}
+          options={CONTACT_CHANNEL_ICONS.map((value) => ({ value, label: t(`icons.${value}`) }))}
+          value={icon}
+        />
+      </label>
 
       <LanguageTabs label={t('language')} onSelect={setSelected} selected={selected}>
         {(locale) => (
