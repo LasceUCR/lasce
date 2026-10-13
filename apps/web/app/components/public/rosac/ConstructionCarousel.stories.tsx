@@ -19,3 +19,11 @@ type Story = StoryObj<typeof ConstructionCarousel>
 export const Default: Story = {
   args: { stages: rosacConstructionContent.stages },
 }
+
+export const EditMode: Story = {
+  args: {
+    stages: rosacConstructionContent.stages,
+    canEdit: true,
+    onEditStage: () => {},
+  },
+}

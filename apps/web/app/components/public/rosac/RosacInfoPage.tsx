@@ -18,7 +18,9 @@ import {
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/components/public/Button'
+import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
+import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
@@ -26,6 +28,7 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
+import type { ConstructionStage } from '@/app/lib/rosac-construction'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import styles from './RosacInfoPage.module.css'
@@ -35,7 +38,13 @@ import { DonationCard } from './DonationCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { InstrumentCard } from './InstrumentCard'
 import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
+import { RosacActivityForm, type RosacActivityFormValues } from './RosacActivityForm'
+import {
+  RosacCharacteristicForm,
+  type RosacCharacteristicFormValues,
+} from './RosacCharacteristicForm'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
+import { RosacStageForm, type RosacStageFormValues } from './RosacStageForm'
 import { TeamGallery } from './TeamGallery'
 
 const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
@@ -57,6 +66,26 @@ export interface RosacInfoPageProps {
   canCreate?: boolean
   canEdit?: boolean
   canDelete?: boolean
+  onSaveCharacteristic?: (
+    id: string,
+    values: RosacCharacteristicFormValues,
+  ) => Promise<string | null> | void
+  onSaveActivity?: (id: string, values: RosacActivityFormValues) => Promise<string | null> | void
+  onSaveStage?: (id: string, values: RosacStageFormValues) => Promise<string | null> | void
+}
+
+const ROSAC_STORAGE_KEYS = {
+  characteristics: 'lasce_rosac_characteristics_v1',
+  activities: 'lasce_rosac_activities_v1',
+  stages: 'lasce_rosac_stages_v1',
+} as const
+
+function saveToLocalStorage<T>(key: string, data: T) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data))
+  } catch {
+    // ignore storage errors
+  }
 }
 
 export function RosacInfoPage({
@@ -64,21 +93,186 @@ export function RosacInfoPage({
   canCreate = false,
   canEdit = false,
   canDelete = false,
+  onSaveCharacteristic,
+  onSaveActivity,
+  onSaveStage,
 }: RosacInfoPageProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
+
+  // --- Section 1: Characteristics State (Edit only, fixed 4 cards) ---
+  const [characteristics, setCharacteristics] = useState(content.characteristics.items)
+  const [editingCharacteristicId, setEditingCharacteristicId] = useState<string | null>(null)
+  const [characteristicSaveError, setCharacteristicSaveError] = useState<string | null>(null)
+
+  // --- Section 3: Activities State (Edit only, fixed 3 cards) ---
+  const [activities, setActivities] = useState(content.activities.items)
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
+  const [activitySaveError, setActivitySaveError] = useState<string | null>(null)
+
+  // --- Section 4: Construction Stages State (Edit only, fixed 5 stages) ---
+  const [constructionStages, setConstructionStages] = useState(content.construction.stages)
+  const [editingStageId, setEditingStageId] = useState<string | null>(null)
+  const [stageSaveError, setStageSaveError] = useState<string | null>(null)
+
+  // --- Section 7: Researchers State (Existing logic preserved) ---
   const [createError, setCreateError] = useState<string | null>(null)
   const [listError, setListError] = useState<string | null>(null)
   const createErrorRef = useRef<HTMLParagraphElement>(null)
 
-  // Scrolls the "Añadir investigador" error into view as soon as it appears —
-  // same reasoning as `ResearcherForm`'s own upload error.
+  // Restore persisted state on mount from localStorage if available
+  useEffect(() => {
+    try {
+      const storedCharacteristics = localStorage.getItem(ROSAC_STORAGE_KEYS.characteristics)
+      if (storedCharacteristics) {
+        const parsed = JSON.parse(storedCharacteristics)
+        if (Array.isArray(parsed)) setCharacteristics(parsed)
+      }
+      const storedActivities = localStorage.getItem(ROSAC_STORAGE_KEYS.activities)
+      if (storedActivities) {
+        const parsed = JSON.parse(storedActivities)
+        if (Array.isArray(parsed)) setActivities(parsed)
+      }
+      const storedStages = localStorage.getItem(ROSAC_STORAGE_KEYS.stages)
+      if (storedStages) {
+        const parsed = JSON.parse(storedStages)
+        if (Array.isArray(parsed)) {
+          setConstructionStages(parsed as unknown as typeof content.construction.stages)
+        }
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [content.construction.stages])
+
+  // Scrolls the "Añadir investigador" error into view as soon as it appears
   useEffect(() => {
     if (createError) {
       scrollIntoViewIfSupported(createErrorRef.current)
     }
   }, [createError])
 
+  // --- Section 1: Characteristics handlers ---
+  const editingCharacteristic = characteristics.find((item) => item.id === editingCharacteristicId)
+
+  function openCharacteristicEditor(id: string) {
+    setCharacteristicSaveError(null)
+    setEditingCharacteristicId(id)
+  }
+
+  function closeCharacteristicEditor() {
+    setCharacteristicSaveError(null)
+    setEditingCharacteristicId(null)
+  }
+
+  async function handleSaveCharacteristic(values: RosacCharacteristicFormValues) {
+    if (!editingCharacteristicId) return
+
+    if (onSaveCharacteristic) {
+      const err = await onSaveCharacteristic(editingCharacteristicId, values)
+      if (err) {
+        setCharacteristicSaveError(err)
+        return
+      }
+    }
+
+    const updated = characteristics.map((item) =>
+      item.id === editingCharacteristicId
+        ? {
+            ...item,
+            icon: values.icon,
+            title: values.title,
+            description: values.description,
+          }
+        : item,
+    )
+    setCharacteristics(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.characteristics, updated)
+    closeCharacteristicEditor()
+  }
+
+  // --- Section 3: Activities handlers ---
+  const editingActivity = activities.find((item) => item.id === editingActivityId)
+
+  function openActivityEditor(id: string) {
+    setActivitySaveError(null)
+    setEditingActivityId(id)
+  }
+
+  function closeActivityEditor() {
+    setActivitySaveError(null)
+    setEditingActivityId(null)
+  }
+
+  async function handleSaveActivity(values: RosacActivityFormValues) {
+    if (!editingActivityId) return
+
+    if (onSaveActivity) {
+      const err = await onSaveActivity(editingActivityId, values)
+      if (err) {
+        setActivitySaveError(err)
+        return
+      }
+    }
+
+    const updated = activities.map((item) =>
+      item.id === editingActivityId
+        ? {
+            ...item,
+            icon: values.icon,
+            title: values.title,
+            description: values.description,
+          }
+        : item,
+    )
+    setActivities(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.activities, updated)
+    closeActivityEditor()
+  }
+
+  // --- Section 4: Construction stages handlers ---
+  const editingStage = constructionStages.find((s) => s.id === editingStageId)
+
+  function openStageEditor(id: string) {
+    setStageSaveError(null)
+    setEditingStageId(id)
+  }
+
+  function closeStageEditor() {
+    setStageSaveError(null)
+    setEditingStageId(null)
+  }
+
+  async function handleSaveStage(values: RosacStageFormValues) {
+    if (!editingStageId) return
+
+    if (onSaveStage) {
+      const err = await onSaveStage(editingStageId, values)
+      if (err) {
+        setStageSaveError(err)
+        return
+      }
+    }
+
+    const updated = constructionStages.map((s) =>
+      s.id === editingStageId
+        ? ({
+            ...s,
+            title: values.title,
+            description: values.description,
+            images:
+              values.images && values.images.length > 0
+                ? (values.images as unknown as typeof s.images)
+                : s.images,
+          } as ConstructionStage)
+        : s,
+    )
+    setConstructionStages(updated as unknown as typeof constructionStages)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.stages, updated)
+    closeStageEditor()
+  }
+
+  // --- Section 7: Researcher Handlers (Preserved unchanged) ---
   async function handleSaveResearcher(
     id: string,
     values: ResearcherFormValues,
@@ -99,8 +293,6 @@ export function RosacInfoPage({
       return body?.error ?? SAVE_ERROR_MESSAGE
     }
 
-    // Re-runs the server component's `getResearchers()` so the page reflects the saved
-    // change immediately, without an optimistic guess.
     router.refresh()
     return null
   }
@@ -162,21 +354,37 @@ export function RosacInfoPage({
         ))}
       </TopicSection>
 
+      {/* SECCIÓN 1: Características principales (SOLO EDITAR CONTENIDO, 4 tarjetas fijas) */}
       <TopicSection
         title={content.characteristics.title}
         titleId="rosac-characteristics-title"
         index="1"
       >
         <CardGrid columns={4} equalHeight>
-          {content.characteristics.items.map((item) => {
+          {characteristics.map((item) => {
             const Icon = icons[item.icon]
+            const icon = <Icon size={22} strokeWidth={1.8} />
+            const showEditor = editMode && canEdit
+
+            if (!showEditor) {
+              return (
+                <InfoCard
+                  key={item.id}
+                  title={item.title}
+                  description={item.description}
+                  icon={icon}
+                />
+              )
+            }
+
             return (
-              <InfoCard
+              <EditableWrapper
                 key={item.id}
-                title={item.title}
-                description={item.description}
-                icon={<Icon size={22} strokeWidth={1.8} />}
-              />
+                editLabel={`Editar ${item.title}`}
+                onEdit={() => openCharacteristicEditor(item.id)}
+              >
+                <InfoCard title={item.title} description={item.description} icon={icon} />
+              </EditableWrapper>
             )
           })}
         </CardGrid>
@@ -191,22 +399,39 @@ export function RosacInfoPage({
         <RosacLocationMapLoader location={content.location} />
       </TopicSection>
 
+      {/* SECCIÓN 3: Actividades científicas (SOLO EDITAR CONTENIDO, 3 tarjetas fijas) */}
       <TopicSection title={content.activities.title} titleId="rosac-activities-title" index="3">
         <CardGrid columns={3} equalHeight>
-          {content.activities.items.map((item) => {
+          {activities.map((item) => {
             const Icon = icons[item.icon]
+            const icon = <Icon size={22} strokeWidth={1.8} />
+            const showEditor = editMode && canEdit
+
+            if (!showEditor) {
+              return (
+                <InfoCard
+                  key={item.id}
+                  title={item.title}
+                  description={item.description}
+                  icon={icon}
+                />
+              )
+            }
+
             return (
-              <InfoCard
+              <EditableWrapper
                 key={item.id}
-                title={item.title}
-                description={item.description}
-                icon={<Icon size={22} strokeWidth={1.8} />}
-              />
+                editLabel={`Editar ${item.title}`}
+                onEdit={() => openActivityEditor(item.id)}
+              >
+                <InfoCard title={item.title} description={item.description} icon={icon} />
+              </EditableWrapper>
             )
           })}
         </CardGrid>
       </TopicSection>
 
+      {/* SECCIÓN 4: Construcción y desarrollo (SOLO EDITAR CONTENIDO, 5 etapas fijas) */}
       <TopicSection
         id="construccion"
         title={content.construction.title}
@@ -215,7 +440,11 @@ export function RosacInfoPage({
         index="4"
         wide
       >
-        <ConstructionCarousel stages={content.construction.stages} />
+        <ConstructionCarousel
+          canEdit={editMode && canEdit}
+          onEditStage={(stage) => openStageEditor(stage.id)}
+          stages={constructionStages}
+        />
       </TopicSection>
 
       <TopicSection
@@ -261,6 +490,7 @@ export function RosacInfoPage({
         </CardGrid>
       </TopicSection>
 
+      {/* SECCIÓN 7: Investigadores (Preservada sin modificaciones) */}
       <TopicSection
         id="investigadores"
         index="7"
@@ -364,8 +594,6 @@ export function RosacInfoPage({
         titleId="rosac-science-title"
         wide
       >
-        {/* Same call-to-action box as "¿Te gustaría ayudarnos?", so both primary actions on the
-            page share one format. */}
         <div className={`topic-highlight ${styles.ctaBox}`}>
           <div className={styles.ctaText}>
             <p>{content.scientificConsultation.description}</p>
@@ -384,6 +612,76 @@ export function RosacInfoPage({
       <div className={`topic-page-footer page-width ${styles.pageFooter}`}>
         <TopicBackLink {...content.backLink} />
       </div>
+
+      {/* Edit modal for Section 1: Characteristics */}
+      <Modal
+        onClose={closeCharacteristicEditor}
+        open={editingCharacteristic !== undefined}
+        title={
+          editingCharacteristic
+            ? `Editar "${editingCharacteristic.title}"`
+            : 'Editar característica'
+        }
+      >
+        {editingCharacteristic ? (
+          <>
+            {characteristicSaveError ? (
+              <p className="form-alert" role="alert">
+                {characteristicSaveError}
+              </p>
+            ) : null}
+            <RosacCharacteristicForm
+              characteristic={editingCharacteristic}
+              onCancel={closeCharacteristicEditor}
+              onSave={handleSaveCharacteristic}
+            />
+          </>
+        ) : null}
+      </Modal>
+
+      {/* Edit modal for Section 3: Activities */}
+      <Modal
+        onClose={closeActivityEditor}
+        open={editingActivity !== undefined}
+        title={editingActivity ? `Editar "${editingActivity.title}"` : 'Editar actividad'}
+      >
+        {editingActivity ? (
+          <>
+            {activitySaveError ? (
+              <p className="form-alert" role="alert">
+                {activitySaveError}
+              </p>
+            ) : null}
+            <RosacActivityForm
+              activity={editingActivity}
+              onCancel={closeActivityEditor}
+              onSave={handleSaveActivity}
+            />
+          </>
+        ) : null}
+      </Modal>
+
+      {/* Edit modal for Section 4: Construction stages */}
+      <Modal
+        onClose={closeStageEditor}
+        open={editingStage !== undefined}
+        title={editingStage ? `Editar "${editingStage.title}"` : 'Editar etapa'}
+      >
+        {editingStage ? (
+          <>
+            {stageSaveError ? (
+              <p className="form-alert" role="alert">
+                {stageSaveError}
+              </p>
+            ) : null}
+            <RosacStageForm
+              onCancel={closeStageEditor}
+              onSave={handleSaveStage}
+              stage={editingStage}
+            />
+          </>
+        ) : null}
+      </Modal>
     </article>
   )
 }
