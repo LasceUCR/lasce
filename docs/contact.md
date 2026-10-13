@@ -90,3 +90,4 @@ The footer still shows the shorter location "San Pedro de Montes de Oca". That l
 footer identity, not this address. Changing one does not change the other.
 
 The hero lead is "Canales oficiales del Laboratorio de Astrofísica Solar y Clima Espacial."
+That name stays in Spanish in every language, including the meta description and the location intro.

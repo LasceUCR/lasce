@@ -28,7 +28,7 @@ describe('contact content', () => {
     expect(english.channelsTitle).toBe('Contact information')
     expect(english.location.title).toBe('Location')
     expect(english.location.intro).toBe(
-      'The Solar Astrophysics and Space Weather Laboratory is on the south side of the Planetario de la Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica.',
+      'The Laboratorio de Astrofísica Solar y Clima Espacial is on the south side of the Planetario de la Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica.',
     )
     expect(english.location.labels.zoomInTitle).toBe('Zoom in')
     expect(english.backLink).toEqual({ href: '/', label: 'Back to home' })
