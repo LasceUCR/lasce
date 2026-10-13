@@ -1,0 +1,82 @@
+.viewport {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 1000;
+  display: grid;
+  width: min(24rem, calc(100vw - 3rem));
+  /* The empty stack must not swallow clicks on the page beneath it. */
+  pointer-events: none;
+}
+
+.stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.stack:not(:empty) + .stack:not(:empty) {
+  margin-top: 0.75rem;
+}
+
+.toast {
+  --toast-accent: var(--teal);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.5rem 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--toast-accent);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  box-shadow: 0 12px 32px rgb(13 39 55 / 18%);
+  pointer-events: auto;
+}
+
+.success {
+  --toast-accent: var(--teal);
+}
+
+.error {
+  --toast-accent: var(--feedback-error);
+}
+
+.icon {
+  margin-top: 0.1rem;
+  color: var(--toast-accent);
+}
+
+.message {
+  margin: 0;
+  padding-top: 0.05rem;
+  overflow-wrap: anywhere;
+}
+
+.dismiss {
+  margin: -0.25rem 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    animation: toast-in 160ms ease-out;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@media (max-width: 760px) {
+  .viewport {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    width: auto;
+  }
+}
