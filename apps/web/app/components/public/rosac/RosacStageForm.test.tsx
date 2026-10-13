@@ -45,9 +45,7 @@ describe('RosacStageForm', () => {
     expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(
       defaultArgs.stage.description,
     )
-    expect(
-      screen.getByRole('button', { name: 'Editar fotografías de la etapa' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Editar fotografías' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Añadir fotografía' })).toBeInTheDocument()
     expect(screen.getByText('2 fotografías registradas')).toBeInTheDocument()
   })
@@ -118,9 +116,9 @@ describe('RosacStageForm', () => {
     const onSave = vi.fn()
     render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
 
-    await user.click(screen.getByRole('button', { name: 'Editar fotografías de la etapa' }))
+    await user.click(screen.getByRole('button', { name: 'Editar fotografías' }))
 
-    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías' })
     expect(editDialog).toBeInTheDocument()
 
     const altInput = within(editDialog).getByRole('textbox', {
@@ -130,9 +128,7 @@ describe('RosacStageForm', () => {
     await user.type(altInput, 'Nueva descripción accesible')
 
     await user.click(within(editDialog).getByRole('button', { name: 'Guardar fotografías' }))
-    expect(
-      screen.queryByRole('dialog', { name: 'Editar fotografías de la etapa' }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Editar fotografías' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -148,23 +144,28 @@ describe('RosacStageForm', () => {
     )
   })
 
-  test('allows removing a photo when more than one photo exists via the edit photos modal', async () => {
+  test('prompts to confirm deletion and removes a photo via the edit photos modal', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
 
-    await user.click(screen.getByRole('button', { name: 'Editar fotografías de la etapa' }))
+    await user.click(screen.getByRole('button', { name: 'Editar fotografías' }))
 
-    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías' })
     const deleteButton = within(editDialog).getByRole('button', {
       name: 'Eliminar fotografía 1',
     })
     await user.click(deleteButton)
 
+    // Confirm dialog must appear
+    const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar fotografía' })
+    expect(deleteConfirmDialog).toBeInTheDocument()
+
+    await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Eliminar' }))
+    expect(screen.queryByRole('dialog', { name: 'Eliminar fotografía' })).not.toBeInTheDocument()
+
     await user.click(within(editDialog).getByRole('button', { name: 'Guardar fotografías' }))
-    expect(
-      screen.queryByRole('dialog', { name: 'Editar fotografías de la etapa' }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Editar fotografías' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -173,6 +174,30 @@ describe('RosacStageForm', () => {
         images: [sampleImages[1]],
       }),
     )
+  })
+
+  test('cancels photo deletion when dismissed from confirmation dialog', async () => {
+    const user = userEvent.setup()
+    render(<RosacStageForm {...defaultArgs} />)
+
+    await user.click(screen.getByRole('button', { name: 'Editar fotografías' }))
+
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías' })
+    const deleteButton = within(editDialog).getByRole('button', {
+      name: 'Eliminar fotografía 1',
+    })
+    await user.click(deleteButton)
+
+    const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar fotografía' })
+    expect(deleteConfirmDialog).toBeInTheDocument()
+
+    await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Cancelar' }))
+    expect(screen.queryByRole('dialog', { name: 'Eliminar fotografía' })).not.toBeInTheDocument()
+
+    // Photo 1 is still present
+    expect(
+      within(editDialog).getByRole('textbox', { name: 'Texto alternativo de la fotografía 1' }),
+    ).toBeInTheDocument()
   })
 
   test('allows adding a new photo with custom alt text via the add photo modal', async () => {

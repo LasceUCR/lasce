@@ -48,6 +48,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
   const [isEditPhotosOpen, setIsEditPhotosOpen] = useState(false)
   const [draftEditImages, setDraftEditImages] = useState<EditableImageItem[]>([])
   const [confirmDiscardEditPhotos, setConfirmDiscardEditPhotos] = useState(false)
+  const [imageToDelete, setImageToDelete] = useState<string | null>(null)
 
   // Sub-modal 2: Añadir fotografía
   const [isAddPhotoOpen, setIsAddPhotoOpen] = useState(false)
@@ -107,9 +108,16 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
     setIsEditPhotosOpen(false)
   }
 
-  function handleRemoveDraftImage(id: string) {
+  function handleRequestDeleteDraftImage(id: string) {
     if (draftEditImages.length <= 1) return
-    setDraftEditImages((prev) => prev.filter((img) => img.id !== id))
+    setImageToDelete(id)
+  }
+
+  function handleConfirmDeleteDraftImage() {
+    if (imageToDelete) {
+      setDraftEditImages((prev) => prev.filter((img) => img.id !== imageToDelete))
+      setImageToDelete(null)
+    }
   }
 
   function handleUpdateDraftImageAlt(id: string, alt: string) {
@@ -288,7 +296,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
             type="button"
             variant="secondary"
           >
-            Editar fotografías de la etapa
+            Editar fotografías
           </Button>
           <Button
             icon={<Plus aria-hidden="true" size={16} />}
@@ -317,12 +325,12 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         </Button>
       </div>
 
-      {/* Sub-modal 1: Editar fotografías de la etapa */}
+      {/* Sub-modal 1: Editar fotografías */}
       <Modal
         onClose={handleCloseEditPhotosClick}
         open={isEditPhotosOpen}
         size="medium"
-        title="Editar fotografías de la etapa"
+        title="Editar fotografías"
       >
         <div className="cms-form">
           <p style={{ margin: '0 0 12px', fontSize: '0.9rem', color: 'var(--muted)' }}>
@@ -408,7 +416,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
                   <button
                     aria-label={`Eliminar fotografía ${index + 1}`}
                     disabled={draftEditImages.length <= 1}
-                    onClick={() => handleRemoveDraftImage(img.id)}
+                    onClick={() => handleRequestDeleteDraftImage(img.id)}
                     style={{
                       border: 'none',
                       background: 'transparent',
@@ -484,6 +492,18 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
           </div>
         </div>
       </Modal>
+
+      {/* Confirmación de eliminación: Fotografía */}
+      <StandardConfirmDialog
+        cancelLabel="Cancelar"
+        confirmLabel="Eliminar"
+        message="¿Está seguro de que desea eliminar esta fotografía de la etapa?"
+        onCancel={() => setImageToDelete(null)}
+        onConfirm={handleConfirmDeleteDraftImage}
+        open={imageToDelete !== null}
+        severity="danger"
+        title="Eliminar fotografía"
+      />
 
       {/* Confirmación de descarte: General */}
       <StandardConfirmDialog
