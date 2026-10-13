@@ -69,8 +69,8 @@ describe('RosacInfoPage', () => {
       '5. ¿Por qué observar en radio?',
       '6. Instrumentos científicos',
       '7. Investigadores',
-      '8. Agradecimientos ROSAC',
-      '9. Donaciones ROSAC',
+      '8. Donaciones ROSAC',
+      '9. Agradecimientos ROSAC',
     ])
     expect(screen.getByRole('region', { name: '4. Construcción del ROSAC' })).toHaveTextContent(
       defaultArgs.content.construction.intro,
@@ -167,7 +167,7 @@ describe('RosacInfoPage', () => {
   test('invites visitors to help and links the donations CTA to the contact page', () => {
     renderPage()
 
-    const donations = screen.getByRole('region', { name: '9. Donaciones ROSAC' })
+    const donations = screen.getByRole('region', { name: '8. Donaciones ROSAC' })
     expect(
       within(donations).getByRole('heading', { name: defaultArgs.content.donations.cta.title }),
     ).toBeInTheDocument()
