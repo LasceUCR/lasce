@@ -186,3 +186,28 @@ jobs:
           echo "::error::/api/health never returned 200 after 5 minutes."
           cat /tmp/health.json || true
           exit 1
+
+      # Recurring jobs are declared in packages/jobs/src/schedules.ts and fired
+      # by BullMQ's scheduler, which lives in Redis. This syncs the declared
+      # list into the deployed Redis: upserts every entry and removes any that
+      # is no longer declared, so it is safe to run on every deploy. It runs
+      # after the smoke test so the worker that consumes them is already up.
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: 'false'
+
+      # Same approach as migrate.yml: `railway run` injects the Redis service's
+      # own variables and we pick the public proxy address, because a GitHub
+      # runner cannot reach `*.railway.internal`. The setup action wrote a .env
+      # from .env.example, but an already-set variable wins over the file.
+      # QUEUE_NAME must match the web and worker services in .railway/railway.ts.
+      # The timeout matters: ioredis retries an unreachable host forever.
+      - name: Register job schedules
+        timeout-minutes: 5
+        run: |
+          railway run --service redis -- sh -c '
+            REDIS_URL="${REDIS_PUBLIC_URL:?Redis has no public proxy; enable TCP Proxy on the service}" \
+            QUEUE_NAME=lasce \
+              pnpm jobs:register
+          '

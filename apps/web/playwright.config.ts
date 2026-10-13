@@ -18,6 +18,21 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'webkit-responsive',
+      testMatch: '**/responsive-controls.spec.ts',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-safari-responsive',
+      testMatch: '**/responsive-controls.spec.ts',
+      use: { ...devices['iPhone 13'] },
+    },
+    {
+      name: 'android-responsive',
+      testMatch: '**/responsive-controls.spec.ts',
+      use: { ...devices['Pixel 5'] },
+    },
   ],
   webServer: {
     command: 'node ./node_modules/next/dist/bin/next dev',

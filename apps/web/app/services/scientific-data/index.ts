@@ -1,9 +1,10 @@
 import { queryCiticScientificData } from './citicScientificDataSource'
+import { queryExisReadings } from './exisReadingsDataSource'
 import { createInstrumentRoutedDataSource } from './instrumentRoutedDataSource'
 import { queryMockScientificData } from './mockScientificDataSource'
-import { queryNoaaScientificData } from './noaaScientificDataSource'
 import type { ScientificDataProvider } from './scientificDataSource'
 import { ScientificDataSourceManager } from './scientificDataSourceManager'
+import { querySuviFrames } from './suviFrameDataSource'
 
 /*
  * The one place that decides which backend serves which product. To replace a backend (for
@@ -11,8 +12,12 @@ import { ScientificDataSourceManager } from './scientificDataSourceManager'
  * the entry below; the route and the other sources are unaffected.
  */
 
-const noaaSuvi: ScientificDataProvider = {
-  query: ({ query }) => queryNoaaScientificData(query),
+const suviArchive: ScientificDataProvider = {
+  query: ({ query }) => querySuviFrames(query),
+}
+
+const exisReadings: ScientificDataProvider = {
+  query: ({ query }) => queryExisReadings(query),
 }
 
 const citicArchive: ScientificDataProvider = {
@@ -25,8 +30,8 @@ const rosacSimulation: ScientificDataProvider = {
 
 export const scientificDataSources = new ScientificDataSourceManager([
   createInstrumentRoutedDataSource('GOES', {
-    SUVI: noaaSuvi,
-    EXIS: citicArchive,
+    SUVI: suviArchive,
+    EXIS: exisReadings,
     MAG: citicArchive,
     SEISS: citicArchive,
   }),

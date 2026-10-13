@@ -1,6 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
+import { getContactContent } from '@/app/lib/contact'
+import { getMessages } from '@/app/lib/i18n/messages'
+
 import { ContactPage, type ContactPageProps } from './ContactPage'
 import { Default, OmitsIncompleteChannels } from './ContactPage.stories'
 
@@ -55,5 +58,16 @@ describe('ContactPage', () => {
     render(<ContactPage {...defaultArgs} />)
 
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
+  })
+
+  test('shows the channels in English when given the English content', () => {
+    render(<ContactPage content={getContactContent(getMessages('en'))} />)
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Contact' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Contact information' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: 'Phone' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
   })
 })

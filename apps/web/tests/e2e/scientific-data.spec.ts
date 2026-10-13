@@ -1,10 +1,19 @@
 import { expect, test, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { findScientificProduct, type ScientificProductCode } from '../../app/lib/scientific-data'
+import { createSignedInUser } from './helpers/admin-users'
+
+const SUVI_FRAME_PREFIX = '/api/suvi/frames/5f0c2a52-8a51-4c7e-9d5b-'
+
+/** A stable, uuid-shaped frame path per SUVI product and image position. */
+function suviFrameUrl(product: string, index: number) {
+  const channel = ['Fe093', 'Fe131', 'Fe171', 'Fe195', 'Fe284', 'He303'].indexOf(product)
+  return `${SUVI_FRAME_PREFIX}${channel.toString(16).padStart(2, '0')}${index.toString(16).padStart(10, '0')}`
+}
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/_next/image?**', async (route) => {
-    if (!new URL(route.request().url()).searchParams.get('url')?.includes('test-suvi')) {
+    if (!new URL(route.request().url()).searchParams.get('url')?.startsWith(SUVI_FRAME_PREFIX)) {
       return route.fallback()
     }
     await route.fulfill({
@@ -41,7 +50,7 @@ test.beforeEach(async ({ page }) => {
             ? []
             : Array.from({ length: 8 }, (_, index) => ({
                 timestamp: new Date(start + ((end - start) * index) / 7).toISOString(),
-                imageUrl: `https://services.swpc.noaa.gov/images/animations/suvi/primary/test-suvi-${selection.product.code}-${index}.png`,
+                imageUrl: suviFrameUrl(selection.product.code, index),
                 alt: `Imagen solar de GOES: ${selection.product.wavelength}`,
               })),
       },
@@ -161,9 +170,7 @@ for (const width of [320, 768, 1440]) {
   })
 }
 
-test('limits solar dates and UTC times while retaining historical series dates', async ({
-  page,
-}) => {
+test('limits GOES dates to today and lets SUVI use historical dates', async ({ page }) => {
   await page.goto('/datos')
   await selectHistoricalXrays(page)
   const date = page.getByLabel('Fecha', { exact: true })
@@ -173,24 +180,11 @@ test('limits solar dates and UTC times while retaining historical series dates',
   await product.click()
   await page.getByRole('treeitem', { name: /^SUVI/ }).click()
   await page.getByRole('treeitem', { name: /171 Å/ }).click()
-  const today = (await date.getAttribute('max'))!
-  const yesterday = new Date(`${today}T00:00:00Z`)
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1)
-  await expect(date).toHaveAttribute('min', yesterday.toISOString().slice(0, 10))
-  await expect(page.getByText(/Últimas 24 horas \(UTC\):/)).toBeVisible()
-  await date.fill(yesterday.toISOString().slice(0, 10))
-  const minimum = (await page.getByLabel('Hora de inicio').getAttribute('min'))!
-  expect(minimum).toMatch(/^\d{2}:\d{2}$/)
-  await expect(page.getByLabel('Hora de fin')).toHaveAttribute('max', '23:59')
-  if (minimum > '00:00') {
-    await page.getByLabel('Hora de inicio').fill('00:00')
-    await page.getByRole('button', { name: 'Consultar datos' }).click()
-    await expect(page.getByRole('alert').filter({ hasText: /últimas 24 horas/ })).toBeVisible()
-  }
-  await selectHistoricalXrays(page)
   await expect(date).not.toHaveAttribute('min')
-  await date.fill('2025-01-05')
+  await expect(date).toHaveAttribute('max', /^\d{4}-\d{2}-\d{2}$/)
   await expect(date).toHaveValue('2025-01-05')
+  await expect(page.getByLabel('Hora de inicio')).not.toHaveAttribute('min')
+  await expect(page.getByLabel('Hora de fin')).not.toHaveAttribute('max')
 })
 
 async function mockObservedXrays(page: Page, points = true, pending = false) {
@@ -304,7 +298,103 @@ test('queries and visualizes historical GOES data publicly', async ({ page }) =>
   await expect(results.getByText('08:00–09:00 UTC')).toBeVisible()
   await expect(results.getByText(/Observaciones históricas/)).toBeVisible()
   await expect(results.getByRole('link')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /descargar/i })).toHaveCount(0)
+  await expect(results.getByRole('button', { name: /CSV/ })).toHaveCount(0)
+  await results.getByRole('button', { name: 'Inicie sesión para descargar la gráfica' }).click()
+  await expect(page).toHaveURL(/\/acceso\?next=%2Fdatos&reason=auth$/)
+})
+
+test.describe('downloads', () => {
+  async function queryRosacSpectrum(page: Page) {
+    await page.goto('/datos')
+    await page.getByRole('combobox', { name: 'Fuente de datos' }).click()
+    await page.getByRole('option', { name: /ROSAC/ }).click()
+    await page.getByRole('combobox', { name: 'Instrumento y producto' }).click()
+    await page.getByRole('treeitem', { name: /^ROSAC-I2/ }).click()
+    await page.getByRole('treeitem', { name: /Espectro dinámico/ }).click()
+    await page.getByLabel('Hora de inicio').fill('08:00')
+    await page.getByLabel('Hora de fin').fill('08:20')
+    await page.getByRole('button', { name: 'Consultar datos' }).click()
+    return page.getByRole('region', { name: /Espectro dinámico de prueba/ })
+  }
+
+  /** Serves a fixed SFXR series, so these tests do not depend on what InfluxDB has ingested. */
+  async function queryHistoricalXrays(page: Page) {
+    const selection = findScientificProduct('GOES', 'SFXR')!
+    await page.route('**/api/scientific-data?**', async (route) => {
+      const parameters = new URL(route.request().url()).searchParams
+      if (parameters.get('product') !== 'SFXR') return route.fallback()
+      await route.fulfill({
+        json: {
+          query: Object.fromEntries(parameters),
+          instrument: { code: selection.instrument.code, name: selection.instrument.name },
+          product: { code: selection.product.code, name: selection.product.name },
+          parameter: selection.product.parameters.find(
+            (parameter) => parameter.code === parameters.get('parameter'),
+          ),
+          origin: { kind: 'observed', provider: 'GOES', notice: 'Fuente: GOES.', satellite: 19 },
+          visualization: 'time-series',
+          points: [
+            { timestamp: '2025-01-05T08:00:00Z', value: 1e-7 },
+            { timestamp: '2025-01-05T08:30:00Z', value: 3e-7 },
+            { timestamp: '2025-01-05T09:00:00Z', value: 2e-7 },
+          ],
+        },
+      })
+    })
+    await page.goto('/datos')
+    await selectHistoricalXrays(page)
+    await page.getByLabel('Fecha', { exact: true }).fill('2025-01-05')
+    await page.getByLabel('Hora de inicio').fill('08:00')
+    await page.getByLabel('Hora de fin').fill('09:00')
+    await page.getByRole('button', { name: 'Consultar datos' }).click()
+    return page.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+  }
+
+  test('lets a visitor download ROSAC data but not GOES data', async ({ page, context }) => {
+    const fixture = await createSignedInUser(context, 'VISITOR')
+    try {
+      const rosac = await queryRosacSpectrum(page)
+      await expect(rosac.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
+      await expect(rosac.getByRole('button', { name: 'Descargar datos (CSV)' })).toBeEnabled()
+
+      const goes = await queryHistoricalXrays(page)
+      await expect(goes.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
+      await expect(goes.getByRole('button', { name: 'Descargar datos (CSV)' })).toHaveCount(0)
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
+  test('lets an administrator download GOES data', async ({ page, context }) => {
+    const fixture = await createSignedInUser(context, 'ADMIN')
+    try {
+      const goes = await queryHistoricalXrays(page)
+      await expect(goes.getByRole('button', { name: 'Descargar datos (CSV)' })).toBeEnabled()
+    } finally {
+      await fixture.cleanup()
+    }
+  })
+
+  test('offers no download for SUVI images, even to an administrator', async ({
+    page,
+    context,
+  }) => {
+    const fixture = await createSignedInUser(context, 'ADMIN')
+    try {
+      await page.goto('/datos')
+      await page.getByRole('combobox', { name: 'Instrumento y producto' }).click()
+      await page.getByRole('treeitem', { name: /^SUVI/ }).click()
+      await page.getByRole('treeitem', { name: /Fe171/ }).click()
+      await page.getByRole('button', { name: 'Consultar datos' }).click()
+
+      const results = page.getByRole('region', { name: /Imágenes solares: 171 Å/ })
+      await expect(results.getByRole('img').first()).toBeVisible()
+      await expect(results.getByRole('heading', { name: 'Descargas' })).toHaveCount(0)
+      await expect(results.getByRole('button', { name: /descargar/i })).toHaveCount(0)
+    } finally {
+      await fixture.cleanup()
+    }
+  })
 })
 
 test('exposes ROSAC as a clearly simulated dynamic-spectrum source', async ({ page }) => {
@@ -461,7 +551,11 @@ test('changes the daily band and range without modifying the lower query or relo
 
 test('replaces broken daily images while preserving the manual consultation', async ({ page }) => {
   await page.route('**/_next/image?**', async (route) => {
-    if (route.request().url().includes('test-suvi-Fe195'))
+    if (
+      decodeURIComponent(route.request().url()).includes(
+        suviFrameUrl('Fe195', 0).slice(0, SUVI_FRAME_PREFIX.length + 2),
+      )
+    )
       return route.fulfill({ status: 404, body: '' })
     return route.fallback()
   })

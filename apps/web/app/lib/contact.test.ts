@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest'
 
 import { footerContent } from './footer'
+import { getMessages } from './i18n/messages'
 import {
   availableContactChannels,
   contactContent,
+  getContactContent,
   isAvailableContactChannel,
   type ContactChannel,
 } from './contact'
@@ -24,6 +26,28 @@ describe('contact content', () => {
     expect(availableContactChannels(contactContent.channels)).toHaveLength(
       contactContent.channels.length,
     )
+  })
+
+  test('is Spanish by default and follows the catalogue it is given', () => {
+    const english = getContactContent(getMessages('en'))
+
+    expect(contactContent.hero.title).toBe('Contacto')
+    expect(contactContent.backLink).toEqual({ href: '/', label: 'Volver al inicio' })
+    expect(english.hero.title).toBe('Contact')
+    expect(english.channels.map((channel) => channel.label)).toEqual([
+      'Phone',
+      'Location',
+      'Instagram',
+    ])
+    expect(english.backLink).toEqual({ href: '/', label: 'Back to home' })
+  })
+
+  test('keeps the phone, the address and the links the same in every language', () => {
+    const english = getContactContent(getMessages('en'))
+    const values = (content: typeof contactContent) =>
+      content.channels.map(({ id, value, lines, href }) => ({ id, value, lines, href }))
+
+    expect(values(english)).toEqual(values(contactContent))
   })
 
   test('drops a channel whose value or link is missing or still a placeholder', () => {

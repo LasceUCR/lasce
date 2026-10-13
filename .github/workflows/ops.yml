@@ -1,0 +1,102 @@
+name: Manual operations
+
+# Runs one operational command against a store whose connection URL is passed in
+# as a workflow input:
+#
+#   register-schedules   REDIS_URL=... QUEUE_NAME=... pnpm jobs:register
+#   seed-database        DATABASE_URL=... pnpm db:seed
+#
+# cd.yml already registers the schedules on every deploy; this is the manual
+# counterpart, and the only pipeline path for the seed.
+#
+# SECURITY: this repository is public, so these logs are world-readable, and both
+# URLs embed a password. The URL inputs are therefore NEVER referenced through
+# `${{ inputs.* }}` or an `env:` block, either of which would print them in clear
+# text. The first step reads them from the event payload, masks them, and only
+# then exports them. Keep it that way when editing this file. Pass the PUBLIC
+# proxy URL: a GitHub runner cannot reach `*.railway.internal`.
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: What to run
+        type: choice
+        options: [register-schedules, seed-database]
+        required: true
+      redis_url:
+        description: Public Redis URL (required for register-schedules)
+        type: string
+        required: false
+      database_url:
+        description: Public PostgreSQL URL (required for seed-database)
+        type: string
+        required: false
+      queue_name:
+        description: BullMQ queue name; must match the web and worker services
+        type: string
+        default: lasce
+
+permissions:
+  contents: read
+
+concurrency:
+  # Two runs of the same task must not overlap on one store.
+  group: ops-${{ inputs.task }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    name: ${{ inputs.task }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Must stay the first step, so nothing can log a URL before it is masked.
+      - name: Mask and export the connection URLs
+        shell: bash
+        run: |
+          task=$(jq -r '.inputs.task // ""' "$GITHUB_EVENT_PATH")
+          redis_url=$(jq -r '.inputs.redis_url // ""' "$GITHUB_EVENT_PATH")
+          database_url=$(jq -r '.inputs.database_url // ""' "$GITHUB_EVENT_PATH")
+
+          if [ -n "$redis_url" ]; then echo "::add-mask::$redis_url"; fi
+          if [ -n "$database_url" ]; then echo "::add-mask::$database_url"; fi
+
+          if [ "$task" = "register-schedules" ] && [ -z "$redis_url" ]; then
+            echo "::error::register-schedules needs the redis_url input."
+            exit 1
+          fi
+          if [ "$task" = "seed-database" ] && [ -z "$database_url" ]; then
+            echo "::error::seed-database needs the database_url input."
+            exit 1
+          fi
+
+          # Export only the URL the chosen task uses. An already-set variable
+          # wins over the .env the setup action writes from .env.example.
+          if [ "$task" = "register-schedules" ]; then
+            echo "REDIS_URL=$redis_url" >> "$GITHUB_ENV"
+          else
+            echo "DATABASE_URL=$database_url" >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: 'false'
+
+      # Upserts every entry in packages/jobs/src/schedules.ts and removes any
+      # scheduler no longer declared. The timeout matters: ioredis retries an
+      # unreachable host forever.
+      - name: Register job schedules
+        if: inputs.task == 'register-schedules'
+        timeout-minutes: 5
+        env:
+          QUEUE_NAME: ${{ inputs.queue_name }}
+        run: pnpm jobs:register
+
+      # The seed imports the generated Prisma client, so generate it first. It
+      # is upsert-based, so running it again is safe.
+      - name: Seed the database
+        if: inputs.task == 'seed-database'
+        run: |
+          pnpm db:generate
+          pnpm db:seed

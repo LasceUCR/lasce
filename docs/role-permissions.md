@@ -39,6 +39,7 @@ configurable without letting an administrator lock themselves out.
 | JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                  |
 | Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)     |
 | Resource downloads                            | `/administracion/descargas` (`download_resources`)                            |
+| `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)               |
 | Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md) |
 
 The administration panel admits only `ASSISTANT` and `ADMIN` (the `administracion` layout turns

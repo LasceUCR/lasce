@@ -444,6 +444,10 @@ const scientificOriginSchema = z.object({
   notice: z.string(),
   satellite: z.number().int().optional(),
 })
+/** An absolute URL, or a same-origin path such as `/api/suvi/frames/<id>` (never `//host`). */
+const imageUrlSchema = z
+  .string()
+  .refine((value) => /^\/(?!\/)/.test(value) || URL.canParse(value), 'Invalid image URL')
 const scientificResultBaseSchema = z.object({
   query: scientificDataQuerySchema,
   instrument: z.object({ code: z.enum(SCIENTIFIC_INSTRUMENT_CODES), name: z.string() }),
@@ -462,7 +466,7 @@ export const scientificDataResultSchema: z.ZodType<ScientificDataResult> = z.dis
     scientificResultBaseSchema.extend({
       visualization: z.literal('image-sequence'),
       images: z.array(
-        z.object({ timestamp: z.string(), imageUrl: z.string().url(), alt: z.string() }),
+        z.object({ timestamp: z.string(), imageUrl: imageUrlSchema, alt: z.string() }),
       ),
     }),
     scientificResultBaseSchema.extend({

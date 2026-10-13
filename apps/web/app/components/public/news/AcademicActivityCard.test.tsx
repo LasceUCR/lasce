@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AcademicActivityCard, type AcademicActivityCardProps } from './AcademicActivityCard'
 import { Default } from './AcademicActivityCard.stories'
@@ -8,7 +10,7 @@ const defaultArgs = Default.args as AcademicActivityCardProps
 
 describe('AcademicActivityCard', () => {
   test('renders the activity title, category badge, and metadata', () => {
-    render(<AcademicActivityCard {...defaultArgs} />)
+    renderWithIntl(<AcademicActivityCard {...defaultArgs} />)
 
     expect(
       screen.getByRole('heading', { level: 3, name: defaultArgs.activity.title }),
@@ -19,13 +21,13 @@ describe('AcademicActivityCard', () => {
   })
 
   test('renders the abstract text', () => {
-    render(<AcademicActivityCard {...defaultArgs} />)
+    renderWithIntl(<AcademicActivityCard {...defaultArgs} />)
 
     expect(screen.getByText(defaultArgs.activity.abstract)).toBeInTheDocument()
   })
 
   test('links to the activity detail page', () => {
-    render(<AcademicActivityCard {...defaultArgs} />)
+    renderWithIntl(<AcademicActivityCard {...defaultArgs} />)
 
     const link = screen.getByRole('link', { name: /Ver detalles de la actividad/i })
     expect(link).toHaveAttribute('href', `/noticias/actividades/${defaultArgs.activity.slug}`)

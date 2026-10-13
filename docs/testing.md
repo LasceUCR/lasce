@@ -6,7 +6,7 @@ on every Pull Request:
 | Suite           | CI job   | Runner                                     |
 | --------------- | -------- | ------------------------------------------ |
 | TypeScript unit | `test`   | Vitest                                     |
-| End-to-end      | `e2e`    | Playwright, Chromium                       |
+| End-to-end      | `e2e`    | Playwright, Chromium and WebKit            |
 | Python worker   | `worker` | pytest, plus ruff and mypy in the same job |
 
 For how to write a UI component test specifically, see
@@ -15,12 +15,13 @@ where a test file belongs and what gates it.
 
 ## Where tests go
 
-| Kind                    | Location                          | Collected by                                                   |
-| ----------------------- | --------------------------------- | -------------------------------------------------------------- |
-| Web component or helper | `apps/web/app/**/*.test.tsx`      | `apps/web/vitest.config.ts`, `include: app/**/*.test.{ts,tsx}` |
-| Shared package          | `packages/<pkg>/src/**/*.test.ts` | that package's `vitest.config.ts`, `include: src/**/*.test.ts` |
-| End-to-end              | `apps/web/tests/e2e/*.spec.ts`    | `apps/web/playwright.config.ts`, `testDir: ./tests/e2e`        |
-| Python worker           | `apps/worker/tests/test_*.py`     | `apps/worker/pyproject.toml`, `testpaths = ["tests"]`          |
+| Kind                    | Location                               | Collected by                                                   |
+| ----------------------- | -------------------------------------- | -------------------------------------------------------------- |
+| Web component or helper | `apps/web/app/**/*.test.tsx`           | `apps/web/vitest.config.ts`, `include: app/**/*.test.{ts,tsx}` |
+| Shared package          | `packages/<pkg>/src/**/*.test.ts`      | that package's `vitest.config.ts`, `include: src/**/*.test.ts` |
+| End-to-end              | `apps/web/tests/e2e/*.spec.ts`         | `apps/web/playwright.config.ts`, `testDir: ./tests/e2e`        |
+| Database integration    | `apps/web/tests/integration/*.test.ts` | `apps/web/vitest.integration.config.ts`; not part of `test`    |
+| Python worker           | `apps/worker/tests/test_*.py`          | `apps/worker/pyproject.toml`, `testpaths = ["tests"]`          |
 
 The rule in one line: **TypeScript tests sit next to the code they test;
 Playwright and pytest live in their own `tests/` directory.**
@@ -73,12 +74,43 @@ and BullMQ clients, which ship no type information.
 pnpm turbo run test                  # every TypeScript workspace, with coverage
 pnpm --filter @lasce/web test:unit   # fast loop, no coverage
 pnpm --filter @lasce/web test:e2e    # Playwright, needs Postgres and Redis
+pnpm --filter @lasce/web test:integration  # real PostgreSQL; needs INTEGRATION_DATABASE_URL
 cd apps/worker && uv run pytest      # Python suite
+```
+
+Playwright needs its browsers installed once, after `pnpm install`:
+
+```bash
+cd apps/web && pnpm exec playwright install chromium webkit
 ```
 
 `test` is the unit suite in every workspace and never starts a browser or a
 dev server. The `e2e` job runs Playwright against `next dev` with real Postgres
 and Redis service containers, applying migrations first.
+
+## Responsive checks
+
+`apps/web/playwright.config.ts` defines four projects. `chromium` runs every
+spec on Desktop Chrome. The other three run only
+`tests/e2e/responsive-controls.spec.ts`:
+
+| Project                    | Device profile | Engine   |
+| -------------------------- | -------------- | -------- |
+| `webkit-responsive`        | Desktop Safari | WebKit   |
+| `mobile-safari-responsive` | iPhone 13      | WebKit   |
+| `android-responsive`       | Pixel 5        | Chromium |
+
+That spec covers the mobile navigation (closing on a pointer or touch outside
+the panel, scrolling to the last option in landscape), the news modal and the
+`/datos` date and time controls. It checks the widths 320, 375, 390, 760, 768,
+820 and 1440 px in portrait and landscape: no horizontal page overflow,
+controls inside their container, a minimum height of 44 px, and the time range
+side by side only when the group is at least 336 px wide.
+
+Device profiles emulate viewport, touch and user agent, but not the native
+iOS or Android date and time pickers. Check a change to those controls on a
+real phone as well. To reach the dev server from a phone on the same network,
+see [Testing on a phone](../README.md#testing-on-a-phone).
 
 ## Coverage floors
 
@@ -118,3 +150,13 @@ meaningless, so these are excluded and gated elsewhere:
   ioredis and BullMQ clients and cannot run without a live Redis.
 - **`apps/worker` entry points and client wiring**, which reach out to Influx,
   MinIO and Redis and are covered by running the worker.
+
+## Database integration tests
+
+`apps/web/tests/integration/` runs services against a real PostgreSQL database: transactions,
+rollback, concurrent connections and constraints that a mocked Prisma client cannot show. They
+need a disposable database: `tests/integration/guard.ts` refuses to run unless
+`INTEGRATION_DATABASE_URL` is set, names a database ending in `_test` on a local host (or on
+`INTEGRATION_DATABASE_ALLOWED_HOST`), and is not `DATABASE_URL`. The tests clean up only the rows
+they created. They are not run by `pnpm test` or by CI yet. Setup and commands:
+[`translate-database-content.md`](translate-database-content.md#database-integration-tests).

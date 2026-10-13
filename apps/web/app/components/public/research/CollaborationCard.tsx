@@ -1,4 +1,5 @@
 import { Globe, MapPin } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import type { CollaborationScope } from '@/app/lib/research-collaborations'
 
@@ -10,13 +11,14 @@ export interface CollaborationCardProps {
 }
 
 export function CollaborationCard({ name, acronym, country, scope }: CollaborationCardProps) {
+  const t = useTranslations('collaborations.card')
   const isNational = scope === 'national'
 
   return (
     <article className="surface-card collaboration-card">
       <div className="collaboration-card-header">
         <span className={`collaboration-badge collaboration-badge-${scope}`} data-scope={scope}>
-          {isNational ? 'Nacional' : 'Internacional'}
+          {t(scope)}
         </span>
         <span className="collaboration-country">
           {isNational ? (
@@ -32,7 +34,7 @@ export function CollaborationCard({ name, acronym, country, scope }: Collaborati
 
       {acronym ? (
         <p className="collaboration-acronym">
-          <strong>Siglas:</strong> {acronym}
+          <strong>{t('acronym')}</strong> {acronym}
         </p>
       ) : null}
     </article>

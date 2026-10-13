@@ -1,5 +1,10 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
+
+import { getCollaborationsContent } from '@/app/lib/collaborations'
+import { getMessages } from '@/app/lib/i18n/messages'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { getResearchCollaborations } from '@/app/lib/research-collaborations'
 
 import { CollaborationsPage, type CollaborationsPageProps } from './CollaborationsPage'
 import { Default } from './CollaborationsPage.stories'
@@ -8,7 +13,7 @@ const defaultArgs = Default.args as CollaborationsPageProps
 
 describe('CollaborationsPage', () => {
   test('presents collaborations and international initiatives under one heading', () => {
-    render(<CollaborationsPage {...defaultArgs} />)
+    renderWithIntl(<CollaborationsPage {...defaultArgs} />)
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(
@@ -56,8 +61,37 @@ describe('CollaborationsPage', () => {
   })
 
   test('returns to the public landing page', () => {
-    render(<CollaborationsPage {...defaultArgs} />)
+    renderWithIntl(<CollaborationsPage {...defaultArgs} />)
 
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
+  })
+
+  test('shows the page in English when it is rendered in English', () => {
+    const messages = getMessages('en')
+    renderWithIntl(
+      <CollaborationsPage
+        collaborations={getResearchCollaborations(messages.collaborations.countries)}
+        content={getCollaborationsContent(messages)}
+      />,
+      { locale: 'en' },
+    )
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Collaborations and Initiatives' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Research collaborations' }),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText('International').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Italy')).toHaveLength(2)
+    // Organization names are proper nouns and stay as they are.
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Instituto Tecnológico de Costa Rica' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Official IVIA site' })).toHaveAttribute(
+      'href',
+      'https://oaq.epn.edu.ec/ivia-net/index.php/es/',
+    )
+    expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
   })
 })

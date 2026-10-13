@@ -44,6 +44,7 @@ services:
   influxdb:
     image: influxdb:3-core
     restart: unless-stopped
+    user: "${UID}:${GID}"
     environment:
       INFLUXDB3_NODE_ID: lasce-node-0
       INFLUXDB3_OBJECT_STORE: file
@@ -57,6 +58,25 @@ services:
       - "8181:8181"
     volumes:
       - influxdb-data:/var/lib/influxdb3/data
+    networks:
+      - monitoring-net
+  
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000" # Mapeado al puerto 3001 del host (3001:puerto_interno_3000)
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=influxdata-flightsql-datasource # Instala de forma automática el conector Flight SQL para InfluxDB 3
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - influxdb
+    networks:
+      - monitoring-net
 
   minio:
     image: quay.io/minio/minio
@@ -94,6 +114,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-lasce}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-lasce-secret}
       MINIO_BUCKET: ${MINIO_BUCKET:-lasce-files}
+      MINIO_DOWNLOADS_BUCKET: ${MINIO_DOWNLOADS_BUCKET:-lasce-downloads}
       MINIO_USE_SSL: "false"
     ports:
       - "3000:3000"
@@ -138,3 +159,8 @@ volumes:
   redis-data:
   influxdb-data:
   minio-data:
+  grafana-data:
+
+networks:
+  monitoring-net:
+    driver: bridge

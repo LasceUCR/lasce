@@ -1,4 +1,7 @@
+import { useTranslations } from 'next-intl'
+
 import type { AcademicActivity } from '@/app/lib/academic-activities'
+
 import { AcademicActivityCard } from './AcademicActivityCard'
 
 export interface AcademicActivitiesSectionProps {
@@ -10,6 +13,8 @@ export function AcademicActivitiesSection({
   activities,
   id = 'academic-activities',
 }: AcademicActivitiesSectionProps) {
+  const t = useTranslations('academicActivities.section')
+
   return (
     <section
       aria-labelledby="academic-activities-title"
@@ -17,16 +22,13 @@ export function AcademicActivitiesSection({
       id={id}
     >
       <div className="section-heading">
-        <h2 id="academic-activities-title">Actividades académicas</h2>
-        <p className="academic-activities-description">
-          Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas
-          al LASCE.
-        </p>
+        <h2 id="academic-activities-title">{t('title')}</h2>
+        <p className="academic-activities-description">{t('description')}</p>
       </div>
 
       {activities.length === 0 ? (
         <p className="content-empty" role="status">
-          No hay actividades académicas disponibles en este momento.
+          {t('empty')}
         </p>
       ) : (
         <div className="academic-activities-list">

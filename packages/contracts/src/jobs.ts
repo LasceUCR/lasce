@@ -12,6 +12,8 @@ import { z } from 'zod'
 export const JOB_NAMES = {
   ingestReadings: 'ingest-readings',
   queryGoesArchive: 'query-goes-archive',
+  suviPipeline: 'suvi-pipeline',
+  exisPipeline: 'exis-pipeline',
 } as const
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES]
@@ -34,10 +36,30 @@ export const queryGoesArchivePayload = z.object({
   endTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
 })
 
+/** Fetch the most recent SUVI L1b frame for one channel. */
+export const suviPipelinePayload = z.object({
+  channel: z.enum(['Fe093', 'Fe131', 'Fe171', 'Fe195', 'Fe284', 'He303']),
+  spacecraft: z.union([z.literal(16), z.literal(17), z.literal(18), z.literal(19)]).default(19),
+  lookbackMinutes: z.number().int().min(1).max(1440).default(10),
+})
+
+/**
+ * Ingest one daily EXIS L1b file (every channel of one product) into InfluxDB.
+ * Without `date`, the newest day within `lookbackDays` is used.
+ */
+export const exisPipelinePayload = z.object({
+  product: z.enum(['SFEU', 'SFXR']),
+  spacecraft: z.union([z.literal(16), z.literal(17), z.literal(18), z.literal(19)]).default(19),
+  lookbackDays: z.number().int().min(1).max(31).default(3),
+  date: z.iso.date().optional(),
+})
+
 /** Lookup table used by `enqueue()` and by the HTTP trigger route to validate input. */
 export const jobPayloads = {
   [JOB_NAMES.ingestReadings]: ingestReadingsPayload,
   [JOB_NAMES.queryGoesArchive]: queryGoesArchivePayload,
+  [JOB_NAMES.suviPipeline]: suviPipelinePayload,
+  [JOB_NAMES.exisPipeline]: exisPipelinePayload,
 } as const satisfies Record<JobName, z.ZodType>
 
 export type JobPayloads = {

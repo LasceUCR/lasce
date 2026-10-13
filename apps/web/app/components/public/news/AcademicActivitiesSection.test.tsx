@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import {
   AcademicActivitiesSection,
@@ -12,7 +14,7 @@ const emptyArgs = Empty.args as AcademicActivitiesSectionProps
 
 describe('AcademicActivitiesSection', () => {
   test('renders the section title and description', () => {
-    render(<AcademicActivitiesSection {...defaultArgs} />)
+    renderWithIntl(<AcademicActivitiesSection {...defaultArgs} />)
 
     expect(
       screen.getByRole('heading', { level: 2, name: 'Actividades académicas' }),
@@ -23,7 +25,7 @@ describe('AcademicActivitiesSection', () => {
   })
 
   test('renders academic activity cards', () => {
-    render(<AcademicActivitiesSection {...defaultArgs} />)
+    renderWithIntl(<AcademicActivitiesSection {...defaultArgs} />)
 
     for (const activity of defaultArgs.activities) {
       expect(screen.getByRole('heading', { level: 3, name: activity.title })).toBeInTheDocument()
@@ -31,7 +33,7 @@ describe('AcademicActivitiesSection', () => {
   })
 
   test('renders empty message when no activities are available', () => {
-    render(<AcademicActivitiesSection {...emptyArgs} />)
+    renderWithIntl(<AcademicActivitiesSection {...emptyArgs} />)
 
     expect(
       screen.getByText('No hay actividades académicas disponibles en este momento.'),

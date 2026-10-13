@@ -23,6 +23,10 @@ export interface ButtonProps {
   type?: 'button' | 'submit'
   disabled?: boolean
   onClick?: () => void
+  /** Forwarded to the `<button>` when it toggles a region (a "Ver más" disclosure). */
+  ariaControls?: string
+  /** Forwarded to the `<button>` when it toggles a region (a "Ver más" disclosure). */
+  ariaExpanded?: boolean
 }
 
 export function Button({
@@ -37,6 +41,8 @@ export function Button({
   type = 'button',
   disabled,
   onClick,
+  ariaControls,
+  ariaExpanded,
 }: ButtonProps) {
   const classes = ['button', `button-${variant}`, className].filter(Boolean).join(' ')
   const content = (
@@ -63,7 +69,14 @@ export function Button({
   }
 
   return (
-    <button className={classes} disabled={disabled} onClick={onClick} type={type}>
+    <button
+      aria-controls={ariaControls}
+      aria-expanded={ariaExpanded}
+      className={classes}
+      disabled={disabled}
+      onClick={onClick}
+      type={type}
+    >
       {content}
     </button>
   )

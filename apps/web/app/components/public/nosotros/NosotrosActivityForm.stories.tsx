@@ -23,3 +23,13 @@ export const Default: Story = {
     onSave: () => {},
   },
 }
+
+/** A blank form for a new card. "Confirmar" saves straight away, with no confirmation dialog. */
+export const Create: Story = {
+  args: {
+    activity: { icon: 'sun', title: '', description: '' },
+    requireConfirmation: false,
+    onCancel: () => {},
+    onSave: () => {},
+  },
+}

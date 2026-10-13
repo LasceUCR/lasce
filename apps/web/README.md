@@ -8,7 +8,7 @@ The public pages are available without authentication. The header includes an **
 
 - Node.js 22 or newer
 - pnpm 10.34.5, managed through Corepack
-- Chromium for the Playwright end-to-end tests
+- Chromium and WebKit for the Playwright end-to-end tests
 
 ## Installation
 
@@ -154,11 +154,11 @@ The automated accessibility suite uses `@axe-core/playwright` with WCAG A and AA
 
 ## Automated Tests
 
-Install the Playwright Chromium browser once after installing dependencies:
+Install the Playwright Chromium and WebKit browsers once after installing dependencies:
 
 ```powershell
 Set-Location apps/web
-.\node_modules\.bin\playwright.cmd install chromium
+.\node_modules\.bin\playwright.cmd install chromium webkit
 Set-Location ../..
 ```
 
@@ -187,6 +187,7 @@ The Playwright configuration starts the web development server automatically whe
 - Keyboard navigation and the skip link
 - Automated WCAG A and AA checks
 - Public indexing metadata, `robots.txt`, and `sitemap.xml`
+- Responsive controls on Desktop Safari, iPhone 13, and Pixel 5 profiles: mobile navigation, the news modal, and the `/datos` date and time fields at 320 to 1440 px in both orientations (see [`docs/testing.md`](../../docs/testing.md#responsive-checks))
 
 ## Quality Commands
 

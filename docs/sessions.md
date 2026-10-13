@@ -136,7 +136,9 @@ correctness; the admin panel gate (#83) may add one for a faster redirect.
   `requireUser` and reads `auth.role_permissions` for `SessionUser.role` on each request.
 - Download gating (#81): send anonymous visitors to `loginRedirectPath(<resource path>)` so login
   returns them to the resource. Signed-in access already checks `download_resources` on
-  `/administracion/descargas`.
+  `/administracion/descargas`. `/datos` follows this pattern: the page stays public, passes
+  `loginRedirectPath('/datos')` to its download buttons, and its Server Action reads
+  `getSessionUser()` itself ([downloads.md](downloads.md)).
 - Admin panel: the `administracion` layout calls `requireUser('/administracion')`, turns
   visitors away with Acceso denegado, and offers only the menu sections the account's grants
   unlock ([admin-navigation.md](admin-navigation.md)). Individual sections still check their own

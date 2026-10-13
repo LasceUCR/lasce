@@ -26,8 +26,18 @@ Redis queue:
 Stores: PostgreSQL (relational), Redis (queue transport), InfluxDB 3 (time series, worker only),
 MinIO (files).
 
-The public site is **in Spanish** (`<html lang="es">`, routes like `/clima-espacial`,
-`/investigacion`). Keep user-facing copy in Spanish; keep code, comments and commits in English.
+The public site is **in Spanish by default** (routes like `/clima-espacial`, `/investigacion`) and
+can be switched to English; the language is a cookie, not part of the URL. New user-facing copy
+goes in the message catalogues under `apps/web/messages/`, with Spanish (`es.json`) as the source
+language, not inline in a component. Most existing copy is still hardcoded Spanish and is being
+moved page by page. See [`docs/internationalization.md`](docs/internationalization.md). Keep
+code, comments and commits in English.
+
+Editable database content ("Modo edición") is made bilingual with a translation table per entity
+and shared helpers, not with the catalogues: follow
+[`docs/translate-database-content.md`](docs/translate-database-content.md), whose reference
+implementation is `/publicaciones`. An editor's own labels, popups and messages follow the site's
+language like any other copy.
 
 ## Commands
 
@@ -108,8 +118,20 @@ pushed onto threads in `app/clients/`. Do not call a blocking SDK directly from 
 
 **Components.** `apps/web/app/components/`, one `PascalCase.tsx` per component. Keep them
 presentational: data and callbacks arrive through props rather than the component reaching into
-Server Actions or `@lasce/*`. Co-locate a `.stories.tsx` with one story per meaningful state.
+Server Actions or `@lasce/*`. A component may call `useTranslations` for its own fixed UI text;
+content still arrives through props. Co-locate a `.stories.tsx` with one story per meaningful state.
 See [`docs/add-a-component.md`](docs/add-a-component.md).
+
+**Feedback.** The outcome of a user action (create, edit, delete, upload) is reported with a toast
+from `useToast()` (`app/components/public/toast/`): `success` for what worked, `error` for what
+failed. Do not add a new inline success or error message for an action outcome. Send the request
+through `useRequestFeedback()`, which shows the server's reason (`readFailureReason`) or a
+translated fallback, never a bare "something went wrong", and keeps the form open on failure.
+Success messages follow "<Entidad> agregada / actualizada / eliminada correctamente.". Toasts render inside an open `Modal` automatically, so show them from the handler and keep
+the modal open on failure. Field-level validation next to an input stays inline (`FormField`), and
+so do page states such as empty lists and loading (`Notice`, `content-empty`). Older sections
+still use inline alerts and are moved over when they are next touched. See
+[`docs/toasts.md`](docs/toasts.md).
 
 ## Tests
 
@@ -129,6 +151,8 @@ Full rules in [`docs/testing.md`](docs/testing.md) and
 - Assert roles and user-visible text (`getByRole`, `getByText`), not CSS classes or DOM shape.
 - **Mock** the Server Action boundary and `fetch`; for services, mock the **SDK** at the module
   boundary. **Never mock `@lasce/contracts`**, because real validation is the entire point of it.
+- A component that calls `useTranslations` is rendered with `renderWithIntl` from
+  `@/app/lib/i18n/testing`, which provides the real message catalogue. Do not mock `next-intl`.
 - Reuse a story's `args` as the test fixture. Do not use Storybook's `composeStories`; the
   portable-stories runtime needs a Vite plugin the Vitest config does not load.
 - Coverage floors gate every suite, so adding code without tests can break the build even when
@@ -157,7 +181,9 @@ Adding or changing a job means all of these, in order
 Recurring jobs are _declared_ in `packages/jobs/src/schedules.ts`. How they fire (BullMQ's
 scheduler via `pnpm jobs:register`, or an external cron hitting
 `POST /api/jobs/[name]/trigger` with `Authorization: Bearer $CRON_SECRET`) is a deliberately
-open decision. Both are wired. Changing the mechanism must change nothing in the processors.
+open decision. Both are wired. The deployed environments currently use the first: the `deploy`
+job in `cd.yml` runs `pnpm jobs:register` on every deploy. Changing the mechanism must change
+nothing in the processors.
 
 ## Database ownership
 

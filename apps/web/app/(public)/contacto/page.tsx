@@ -1,13 +1,19 @@
 import type { Metadata } from 'next'
+import { getMessages, getTranslations } from 'next-intl/server'
 
 import { ContactPage } from '@/app/components/public/contact/ContactPage'
-import { contactContent, contactMeta } from '@/app/lib/contact'
+import { getContactContent } from '@/app/lib/contact'
 
-export const metadata: Metadata = {
-  ...contactMeta,
-  alternates: { canonical: '/contacto' },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('contact.meta')
+
+  return {
+    title: t('title'),
+    description: t('description'),
+    alternates: { canonical: '/contacto' },
+  }
 }
 
-export default function ContactRoute() {
-  return <ContactPage content={contactContent} />
+export default async function ContactRoute() {
+  return <ContactPage content={getContactContent(await getMessages())} />
 }

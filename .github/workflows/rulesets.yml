@@ -1,0 +1,56 @@
+name: Ruleset drift
+
+# Fails when the rulesets live on GitHub differ from .github/rulesets/*.json.
+# Applying them needs an admin token, so it stays manual (see
+# .github/rulesets/README.md); this only reads. It exists because #130 changed
+# main.json to merge-only and nobody applied it, so the sprint 2 release (#131)
+# could only be squashed and the sprint 3 release conflicted on every file.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [development, main]
+    paths: ['.github/rulesets/**']
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: ruleset drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          sparse-checkout: .github/rulesets
+
+      - name: Compare live rulesets with the committed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=0
+          live=$(gh api "repos/$GITHUB_REPOSITORY/rulesets")
+          for file in .github/rulesets/*.json; do
+            name=$(jq -r .name "$file")
+            id=$(jq -r --arg n "$name" '.[] | select(.name == $n) | .id' <<<"$live")
+            if [ -z "$id" ]; then
+              echo "::error file=$file::No ruleset named \"$name\" exists on GitHub"
+              status=1
+              continue
+            fi
+            # GitHub adds these two with their defaults; the files omit them.
+            if ! diff -u \
+              <(jq -S '{enforcement, conditions, rules}' "$file") \
+              <(gh api "repos/$GITHUB_REPOSITORY/rulesets/$id" | jq -S '
+                  {enforcement, conditions, rules}
+                  | del(.rules[].parameters.dismissal_restriction?,
+                        .rules[].parameters.required_reviewers?)'); then
+              echo "::error file=$file::Ruleset \"$name\" ($id) differs from $file. An admin must apply it: see .github/rulesets/README.md#applying"
+              status=1
+            fi
+          done
+          exit $status

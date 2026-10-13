@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { getMessages, getTranslations } from 'next-intl/server'
 
 import { Button } from '@/app/components/public/Button'
 import { GoesSolarAnimation } from '@/app/components/public/GoesSolarAnimation'
@@ -7,12 +8,14 @@ import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
 import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
 import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@/app/lib/work-areas'
 
+// Demonstration values until the geomagnetic indices are read from a real source. The label and
+// the value of each one are in the `home.indicators` namespace.
 const indicators = [
-  { label: 'Índice Kp', value: '2 · Tranquilo', tone: 'teal' },
-  { label: 'Índice Dst', value: '-12 nT · Estable', tone: 'cyan' },
-  { label: 'Índice AE', value: '75 nT · Actividad baja', tone: 'blue' },
-  { label: 'Índice Ap', value: '7 · Tranquilo', tone: 'teal' },
-]
+  { id: 'kp', tone: 'teal' },
+  { id: 'dst', tone: 'cyan' },
+  { id: 'ae', tone: 'blue' },
+  { id: 'ap', tone: 'teal' },
+] as const
 
 function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
   return areas.map((area) => {
@@ -27,7 +30,10 @@ function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
   })
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const t = await getTranslations('home')
+  const messages = await getMessages()
+
   return (
     <>
       <section className="hero" id="inicio">
@@ -35,14 +41,11 @@ export default function HomePage() {
           <GoesSolarAnimation />
         </div>
         <div className="hero-content page-width">
-          <h1>Exploramos el Sol para comprender el clima espacial</h1>
+          <h1>{t('hero.title')}</h1>
           <span className="hero-rule" aria-hidden="true" />
-          <p>
-            Investigamos la actividad solar y sus efectos en el medio interplanetario y la Tierra,
-            mediante observaciones, instrumentación, análisis de datos y desarrollo científico.
-          </p>
+          <p>{t('hero.lead')}</p>
           <div className="hero-actions">
-            <Button href="/nosotros">Conoce más sobre LASCE</Button>
+            <Button href="/nosotros">{t('hero.cta')}</Button>
           </div>
         </div>
         <HeroSolarObservation />
@@ -51,14 +54,14 @@ export default function HomePage() {
       <div className="home-content">
         <section className="indicators page-width" id="datos" aria-labelledby="indicators-title">
           <div className="indicator-heading">
-            <h2 id="indicators-title">Índices geomagnéticos de Costa Rica</h2>
-            <span>Datos de demostración</span>
+            <h2 id="indicators-title">{t('indicators.title')}</h2>
+            <span>{t('indicators.demoNotice')}</span>
           </div>
           <div className="indicator-grid">
             {indicators.map((indicator) => (
-              <article className={`indicator indicator-${indicator.tone}`} key={indicator.label}>
-                <p>{indicator.label}</p>
-                <strong>{indicator.value}</strong>
+              <article className={`indicator indicator-${indicator.tone}`} key={indicator.id}>
+                <p>{t(`indicators.${indicator.id}.label`)}</p>
+                <strong>{t(`indicators.${indicator.id}.value`)}</strong>
               </article>
             ))}
           </div>
@@ -66,9 +69,9 @@ export default function HomePage() {
 
         <WorkAreasSection
           id={workAreasSectionId}
-          title="Áreas y accesos principales"
-          subtitle="Investigar, observar, analizar y compartir."
-          areas={toWorkAreaItems(getHomeAreaCards())}
+          title={t('areas.title')}
+          subtitle={t('areas.subtitle')}
+          areas={toWorkAreaItems(getHomeAreaCards(messages.workAreas))}
         />
       </div>
     </>

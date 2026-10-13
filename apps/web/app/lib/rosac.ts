@@ -2,6 +2,7 @@ import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
 import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
+import { rosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
 
 // Built once and reused in both `location.intro` (as flowing prose) and `location.address`
 // (as its own field, kept for anything that needs the bare address rather than a sentence),
@@ -104,14 +105,15 @@ export interface RosacInfoContent {
   hero: {
     kicker: string
     title: string
-    lead: string
+    lead?: string
     image: {
       src: string
       alt: string
-      presentation: 'mark'
+      presentation: 'banner'
       width: number
       height: number
-      photo: { src: string; alt: string }
+      focus?: 'left' | 'center' | 'right'
+      mobileSrc?: string
     }
   }
   overview: RosacTextSection
@@ -119,6 +121,7 @@ export interface RosacInfoContent {
   location: RosacLocationContent
   activities: RosacCardSection
   construction: ConstructionContent
+  instruments: RosacInstrumentsContent
   radioObservation: RosacTextSection
   relationship: RosacTextSection
   team: {
@@ -133,36 +136,57 @@ export interface RosacInfoContent {
     subtitle: string
     institutions: readonly RosacAcknowledgment[]
   }
+  donations: {
+    title: string
+    subtitle: string
+    items: readonly RosacDonation[]
+    cta: { title: string; description: string; buttonLabel: string; href: string }
+  }
   scientificConsultation: {
     title: string
     description: string
     buttonLabel: string
+    href: string
   }
   backLink: { href: string; label: string }
 }
 
-/** One acknowledged institution — a logo, kept square and undistorted, plus its name. */
+/**
+ * One acknowledged institution — a logo, kept square and undistorted, plus its name.
+ * `href` is omitted for an institution whose official site hasn't been confirmed yet;
+ * its card then renders as a plain, non-interactive tile instead of guessing a URL.
+ */
 export interface RosacAcknowledgment {
+  id?: string
   name: string
+  href?: string
   logo: { src: string; alt: string }
+}
+
+/** One donation announcement — a photo and a short write-up of the contribution. */
+export interface RosacDonation {
+  title: string
+  description: string
+  image: { src: string; alt: string }
 }
 
 export const rosacInfoContent = {
   construction: rosacConstructionContent,
+  instruments: rosacInstrumentsContent,
   hero: {
     kicker: 'Área de trabajo LASCE',
-    title: 'Radioastronomía',
-    lead: 'Radio Observatorio de Santa Cruz (ROSAC)',
+    // The observatory's full name is the heading, so no separate lead line repeats it.
+    title: 'Radio Observatorio de Santa Cruz (ROSAC)',
+    // The photo already carries the ROSAC logo in its lower left corner, so no separate mark is
+    // shown. Narrow screens switch to a version with the logo centered, cropped around the center.
     image: {
-      src: '/images/ROSAC/logo/ROSAC-YELLOW.png',
-      alt: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)',
-      presentation: 'mark',
-      width: 1209,
-      height: 615,
-      photo: {
-        src: '/images/ROSAC/antena-rosac.webp',
-        alt: 'Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control.',
-      },
+      src: '/images/ROSAC/rosac_home.jpg',
+      alt: 'Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control, con el logo de ROSAC.',
+      presentation: 'banner',
+      width: 1672,
+      height: 749,
+      focus: 'left',
+      mobileSrc: '/images/ROSAC/rosac_home_mob.png',
     },
   },
   overview: {
@@ -424,10 +448,11 @@ export const rosacInfoContent = {
   },
   acknowledgments: {
     title: 'Agradecimientos ROSAC',
-    subtitle: 'Lista de instituciones a las que el ROSAC les extiende agradecimiento',
+    subtitle: 'Lista de instituciones a las que el ROSAC les extiende agradecimiento.',
     institutions: [
       {
         name: 'Vicerrectoría de Investigación, UCR',
+        href: 'https://vinv.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
           alt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
@@ -435,6 +460,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+        href: 'https://cinespa.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/cinespa.webp',
           alt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
@@ -442,6 +468,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Escuela de Física, UCR',
+        href: 'https://fisica.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/efis.webp',
           alt: 'Logo de la Escuela de Física, UCR',
@@ -449,6 +476,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Escuela de Ingeniería Mecánica, UCR',
+        href: 'https://www.ucr.ac.cr/directorio/escuela-de-ingenieria-mecanica.html',
         logo: {
           src: '/images/ROSAC/acknowledgments/eim.webp',
           alt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
@@ -456,6 +484,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Escuela de Ingeniería Topográfica, UCR',
+        href: 'https://eit.ucr.ac.cr/',
         logo: {
           src: '/images/ROSAC/acknowledgments/eit.webp',
           alt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
@@ -463,6 +492,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Escuela de Ingeniería Eléctrica, UCR',
+        href: 'https://eie.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/eie.webp',
           alt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
@@ -470,6 +500,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Recinto de Santa Cruz',
+        href: 'https://www.ucr.ac.cr/directorio/recinto-universitario-de-santa-cruz/',
         logo: {
           src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
           alt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
@@ -477,6 +508,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Oficina de Servicios Generales (OSG), UCR',
+        href: 'https://osg.ucr.ac.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/osg.webp',
           alt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
@@ -484,6 +516,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR), UCR',
+        href: 'https://www.lanamme.ucr.ac.cr/',
         logo: {
           src: '/images/ROSAC/acknowledgments/lanamme.webp',
           alt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
@@ -491,6 +524,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Radiográfica Costarricense S.A. (RACSA)',
+        href: 'https://www.racsa.go.cr/',
         logo: {
           src: '/images/ROSAC/acknowledgments/racsa.webp',
           alt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
@@ -498,6 +532,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Bomberos de Costa Rica',
+        href: 'https://www.bomberos.go.cr',
         logo: {
           src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
           alt: 'Logo de Bomberos de Costa Rica',
@@ -505,6 +540,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Instituto Geográfico Nacional',
+        href: 'https://www.snitcr.go.cr/ign_ign',
         logo: {
           src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
           alt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
@@ -512,12 +548,14 @@ export const rosacInfoContent = {
       },
       {
         name: 'INDI CR',
+        href: 'https://www.indicr.com/',
         logo: {
           src: '/images/ROSAC/acknowledgments/indi.webp',
           alt: 'Logo de INDI, Ingeniería y Diseño',
         },
       },
       {
+        // No confirmed URL yet — renders as a plain, non-interactive tile until one is supplied.
         name: 'Prysmian Group',
         logo: {
           src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
@@ -526,6 +564,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'EATON Costa Rica',
+        href: 'https://www.eaton.com/cr/es-mx/company.html',
         logo: {
           src: '/images/ROSAC/acknowledgments/eaton.webp',
           alt: 'Logo de EATON Costa Rica',
@@ -533,6 +572,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), México',
+        href: 'https://www.inaoep.mx',
         logo: {
           src: '/images/ROSAC/acknowledgments/inaoe.webp',
           alt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
@@ -540,6 +580,7 @@ export const rosacInfoContent = {
       },
       {
         name: 'Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+        href: 'https://www.gob.mx/amexcid',
         logo: {
           src: '/images/ROSAC/acknowledgments/amexcid.webp',
           alt: 'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
@@ -547,11 +588,35 @@ export const rosacInfoContent = {
       },
     ],
   },
+  donations: {
+    title: 'Donaciones ROSAC',
+    subtitle:
+      'El apoyo de empresas y organizaciones que hacen posible seguir creciendo y desarrollando nuestra labor.',
+    items: [
+      {
+        title: 'Donaciones Eaton',
+        description:
+          'La organización ROSAC recibió dos donaciones de equipo por parte de la empresa Eaton, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.',
+        image: {
+          src: '/images/ROSAC/donations/eaton.webp',
+          alt: 'Equipo de ROSAC junto a representantes de Eaton y el tablero eléctrico donado',
+        },
+      },
+    ],
+    cta: {
+      title: '¿Te gustaría ayudarnos?',
+      description:
+        'Escríbenos y conversemos sobre cómo tu empresa u organización puede apoyar a ROSAC.',
+      buttonLabel: 'Contáctanos',
+      href: '/contacto',
+    },
+  },
   scientificConsultation: {
     title: 'Consulta científica',
     description:
-      'La consulta de información científica de ROSAC estará disponible en una sección independiente de esta presentación del observatorio.',
-    buttonLabel: 'Consultar información científica',
+      'Explore las consultas de demostración de ROSAC en la sección de datos. Sus resultados son simulados mientras se define la integración de los instrumentos.',
+    buttonLabel: 'Explorar datos',
+    href: '/datos?source=ROSAC#scientific-query-title',
   },
   backLink: {
     href: '/#areas-de-trabajo',

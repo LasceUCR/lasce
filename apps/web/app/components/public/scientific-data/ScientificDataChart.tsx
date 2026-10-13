@@ -1,5 +1,6 @@
 import { useId } from 'react'
 
+import { layoutTimeSeries, TIME_SERIES_CHART as chart } from '@/app/lib/charts/timeSeriesLayout'
 import type { ScientificDataPoint } from '@/app/lib/scientific-data'
 
 export interface ScientificDataChartProps {
@@ -7,15 +8,6 @@ export interface ScientificDataChartProps {
   label: string
   points: ScientificDataPoint[]
   unit: string
-}
-
-const chart = {
-  height: 320,
-  width: 760,
-  top: 28,
-  right: 28,
-  bottom: 54,
-  left: 74,
 }
 
 const numberFormatter = new Intl.NumberFormat('es-CR', {
@@ -34,36 +26,26 @@ function formatTime(timestamp: string) {
 export function ScientificDataChart({ caption, label, points, unit }: ScientificDataChartProps) {
   const titleId = useId()
   const descriptionId = useId()
-  if (!points.length) {
+  const layout = layoutTimeSeries(points)
+  if (!layout) {
     return (
       <p className="content-empty" role="status">
         No hay valores para graficar.
       </p>
     )
   }
-  const values = points.map((point) => point.value)
-  const minimum = Math.min(...values)
-  const maximum = Math.max(...values)
-  const valueRange = maximum - minimum || Math.abs(maximum) * 0.1 || 1
-  const plotWidth = chart.width - chart.left - chart.right
-  const plotHeight = chart.height - chart.top - chart.bottom
-
-  const firstInstant = Date.parse(points[0]!.timestamp)
-  const lastInstant = Date.parse(points.at(-1)!.timestamp)
-  const duration = lastInstant - firstInstant
-  const coordinates = points.map((point) => {
-    const x =
-      chart.left +
-      (duration === 0
-        ? plotWidth / 2
-        : ((Date.parse(point.timestamp) - firstInstant) / duration) * plotWidth)
-    const y =
-      chart.top + ((maximum - point.value + valueRange * 0.08) / (valueRange * 1.16)) * plotHeight
-    return { ...point, x, y }
-  })
-
-  const path = coordinates.map(({ x, y }) => `${x},${y}`).join(' ')
-  const middleTimestamp = new Date(firstInstant + duration / 2).toISOString()
+  const {
+    coordinates,
+    firstTimestamp,
+    gridLines,
+    lastTimestamp,
+    maximum,
+    middleTimestamp,
+    minimum,
+    path,
+    plotWidth,
+    pointRadius,
+  } = layout
 
   return (
     <figure className="data-chart-figure">
@@ -82,35 +64,25 @@ export function ScientificDataChart({ caption, label, points, unit }: Scientific
         >
           <title id={titleId}>Gráfica de {label}</title>
           <desc id={descriptionId}>
-            Serie de {points.length} mediciones entre {formatTime(points[0]!.timestamp)} y{' '}
-            {formatTime(points.at(-1)!.timestamp)} UTC. El valor mínimo es {formatValue(minimum)} y
-            el máximo es {formatValue(maximum)} {unit}.
+            Serie de {points.length} mediciones entre {formatTime(firstTimestamp)} y{' '}
+            {formatTime(lastTimestamp)} UTC. El valor mínimo es {formatValue(minimum)} y el máximo
+            es {formatValue(maximum)} {unit}.
           </desc>
 
-          {[0, 0.5, 1].map((ratio) => {
-            const y = chart.top + ratio * plotHeight
-            const value = maximum + valueRange * 0.08 - ratio * valueRange * 1.16
-
-            return (
-              <g aria-hidden="true" key={ratio}>
-                <line
-                  className="data-chart-grid"
-                  x1={chart.left}
-                  x2={chart.width - chart.right}
-                  y1={y}
-                  y2={y}
-                />
-                <text
-                  className="data-chart-axis-text"
-                  textAnchor="end"
-                  x={chart.left - 12}
-                  y={y + 4}
-                >
-                  {formatValue(value)}
-                </text>
-              </g>
-            )
-          })}
+          {gridLines.map(({ ratio, y, value }) => (
+            <g aria-hidden="true" key={ratio}>
+              <line
+                className="data-chart-grid"
+                x1={chart.left}
+                x2={chart.width - chart.right}
+                y1={y}
+                y2={y}
+              />
+              <text className="data-chart-axis-text" textAnchor="end" x={chart.left - 12} y={y + 4}>
+                {formatValue(value)}
+              </text>
+            </g>
+          ))}
 
           <line
             aria-hidden="true"
@@ -137,7 +109,7 @@ export function ScientificDataChart({ caption, label, points, unit }: Scientific
               cx={x}
               cy={y}
               key={timestamp}
-              r={points.length > 60 ? '1.5' : '3'}
+              r={pointRadius}
             >
               <title>
                 {formatTime(timestamp)} UTC: {formatValue(value)} {unit}
@@ -147,13 +119,13 @@ export function ScientificDataChart({ caption, label, points, unit }: Scientific
 
           <g aria-hidden="true" className="data-chart-axis-text">
             <text textAnchor="start" x={chart.left} y={chart.height - 20}>
-              {formatTime(points[0]!.timestamp)}
+              {formatTime(firstTimestamp)}
             </text>
             <text textAnchor="middle" x={chart.left + plotWidth / 2} y={chart.height - 20}>
               {formatTime(middleTimestamp)}
             </text>
             <text textAnchor="end" x={chart.width - chart.right} y={chart.height - 20}>
-              {formatTime(points.at(-1)!.timestamp)} UTC
+              {formatTime(lastTimestamp)} UTC
             </text>
           </g>
         </svg>
