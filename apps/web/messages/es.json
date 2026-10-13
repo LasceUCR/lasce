@@ -127,8 +127,17 @@
     },
     "channelsTitle": "Información de contacto",
     "channels": {
-      "phone": "Teléfono",
-      "location": "Ubicación"
+      "phone": "Teléfono"
+    },
+    "location": {
+      "title": "Ubicación",
+      "intro": "El Laboratorio de Astrofísica Solar y Clima Espacial se ubica en el {address}.",
+      "unavailable": "No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.",
+      "mapRegion": "Mapa de ubicación de {label}",
+      "mapInteractive": "Mapa interactivo de {label}",
+      "mapInstructions": "Use las flechas para desplazar el mapa y las teclas más y menos para cambiar el zoom. Presione Tab para salir del mapa.",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar"
     }
   },
   "solarPhysics": {
