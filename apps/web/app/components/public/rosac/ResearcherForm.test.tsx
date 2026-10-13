@@ -62,7 +62,10 @@ describe('ResearcherForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByText('Falta completar: Foto, Rol, Nombre, Institución.')).toBeInTheDocument()
+    expect(screen.getByText('La foto es obligatoria.')).toBeInTheDocument()
+    expect(screen.getByText('El rol es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('El nombre es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('La institución es obligatoria.')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
@@ -74,21 +77,21 @@ describe('ResearcherForm', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Nombre' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByText('Falta completar: Nombre.')).toBeInTheDocument()
+    expect(screen.getByText('El nombre es obligatorio.')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('clears the missing-fields message once the field is filled back in', async () => {
+  test('clears the field error once the field is filled back in', async () => {
     const user = userEvent.setup()
     render(<ResearcherForm {...editArgs} />)
 
     await user.clear(screen.getByRole('textbox', { name: 'Nombre' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    expect(screen.getByText('Falta completar: Nombre.')).toBeInTheDocument()
+    expect(screen.getByText('El nombre es obligatorio.')).toBeInTheDocument()
 
-    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Alguien')
+    await user.type(screen.getByRole('textbox', { name: /Nombre/ }), 'Alguien')
 
-    expect(screen.queryByText('Falta completar: Nombre.')).not.toBeInTheDocument()
+    expect(screen.queryByText('El nombre es obligatorio.')).not.toBeInTheDocument()
   })
 
   test('does not require contacto — it is optional', async () => {
@@ -204,7 +207,7 @@ describe('ResearcherForm', () => {
     await user.click(screen.getByRole('button', { name: 'Quitar imagen' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByText('Falta completar: Foto.')).toBeInTheDocument()
+    expect(screen.getByText('La foto es obligatoria.')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -316,5 +319,35 @@ describe('ResearcherForm', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirmar' })).not.toBeDisabled()
     expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('asks before discarding unsaved changes and closes once confirmed', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...editArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    expect(onCancel).not.toHaveBeenCalled()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('keeps the form open when discard is dismissed', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...editArgs} onCancel={onCancel} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(
+      screen.queryByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).not.toBeInTheDocument()
   })
 })

@@ -1,10 +1,11 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, ImageOff } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ImageOff, Pencil } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
+import { IconButton } from '@/app/components/public/IconButton'
 
 import styles from './Carousel.module.css'
 
@@ -39,6 +40,10 @@ export interface CarouselProps {
   nextPhotoLabel?: string
   /** Shown in place of a photo that fails to load; the rest of the carousel stays usable. */
   imageUnavailableMessage?: string
+  /** Optional callback to edit the current group (e.g. when edit mode is on). */
+  onEditGroup?: (group: CarouselGroup) => void
+  /** Label for the edit button when onEditGroup is provided. */
+  editGroupLabel?: string
 }
 
 /**
@@ -62,6 +67,8 @@ export function Carousel({
   previousPhotoLabel = 'Fotografía anterior',
   nextPhotoLabel = 'Fotografía siguiente',
   imageUnavailableMessage = 'No fue posible cargar esta fotografía.',
+  onEditGroup,
+  editGroupLabel,
 }: CarouselProps) {
   const [{ groupIndex, imageIndex }, setPosition] = useState({ groupIndex: 0, imageIndex: 0 })
   const [failedImages, setFailedImages] = useState<ReadonlySet<string>>(() => new Set())
@@ -134,6 +141,7 @@ export function Carousel({
             {photoNoun} {imageIndex + 1} de {group.images.length}
           </p>
           <div className={styles.actions}>
+            <div className={styles.actionSpacer} aria-hidden="true" />
             <div className={styles.groupControls}>
               <Button
                 variant="secondary"
@@ -153,6 +161,16 @@ export function Carousel({
               >
                 {nextGroupLabel}
               </Button>
+            </div>
+            <div className={styles.editSlot}>
+              {onEditGroup ? (
+                <IconButton
+                  className={styles.editButton}
+                  icon={<Pencil aria-hidden="true" size={18} strokeWidth={1.8} />}
+                  label={editGroupLabel ?? `Editar ${group.title}`}
+                  onClick={() => onEditGroup(group)}
+                />
+              ) : null}
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
@@ -271,5 +272,46 @@ describe('Modal', () => {
     dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }))
 
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  test('hides the modal behind a confirmation opened on top of it', async () => {
+    const user = userEvent.setup()
+
+    function Stack() {
+      const [confirming, setConfirming] = useState(false)
+      return (
+        <Modal onClose={() => {}} open title="Editar actividad">
+          <button onClick={() => setConfirming(true)} type="button">
+            Cancelar
+          </button>
+          <Modal
+            onClose={() => setConfirming(false)}
+            open={confirming}
+            title="Descartar cambios no guardados"
+          >
+            <button onClick={() => setConfirming(false)} type="button">
+              Seguir editando
+            </button>
+          </Modal>
+        </Modal>
+      )
+    }
+
+    render(<Stack />)
+    const editor = screen.getByRole('dialog', { name: 'Editar actividad' })
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    const discard = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    expect(editor).toHaveClass('modal-covered')
+    expect(discard).toHaveStyle({ visibility: 'visible' })
+    expect(discard).not.toHaveClass('modal-covered')
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    expect(editor).not.toHaveClass('modal-covered')
+    expect(
+      screen.queryByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).not.toBeInTheDocument()
   })
 })
