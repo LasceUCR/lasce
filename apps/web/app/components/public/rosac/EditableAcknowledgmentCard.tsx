@@ -17,17 +17,13 @@ import {
 export interface EditableAcknowledgmentCardProps {
   institution: RosacAcknowledgment
   canEdit?: boolean
-  canDelete?: boolean
   onSave: (values: RosacAcknowledgmentFormValues) => Promise<string | null> | void
-  onDelete: () => void
 }
 
 export function EditableAcknowledgmentCard({
   institution,
   canEdit = false,
-  canDelete = false,
   onSave,
-  onDelete,
 }: EditableAcknowledgmentCardProps) {
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
@@ -103,7 +99,7 @@ export function EditableAcknowledgmentCard({
     </Modal>
   )
 
-  const showEditor = editMode && (canEdit || canDelete)
+  const showEditor = editMode && canEdit
 
   if (!showEditor) {
     return card
@@ -112,11 +108,7 @@ export function EditableAcknowledgmentCard({
   return (
     <>
       <EditableWrapper
-        deleteConfirmMessage={`¿Desea eliminar la institución "${institution.name}" de los agradecimientos? Esta acción no se puede deshacer.`}
-        deleteConfirmTitle="Eliminar institución"
-        deleteLabel={`Eliminar ${institution.name}`}
         editLabel={`Editar ${institution.name}`}
-        onDelete={canDelete ? onDelete : undefined}
         onEdit={canEdit ? () => setIsEditing(true) : undefined}
       >
         {card}

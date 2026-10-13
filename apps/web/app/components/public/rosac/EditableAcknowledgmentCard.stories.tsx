@@ -28,7 +28,6 @@ const mockInstitution: RosacAcknowledgment = {
 export const ViewMode: Story = {
   args: {
     institution: mockInstitution,
-    onDelete: () => {},
     onSave: async () => null,
   },
   decorators: [
@@ -44,25 +43,6 @@ export const EditModeOn: Story = {
   args: {
     institution: mockInstitution,
     canEdit: true,
-    canDelete: true,
-    onDelete: () => {},
-    onSave: async () => null,
-  },
-  decorators: [
-    (Story) => (
-      <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
-        <Story />
-      </EditModeContext.Provider>
-    ),
-  ],
-}
-
-export const AssistantMode: Story = {
-  args: {
-    institution: mockInstitution,
-    canEdit: true,
-    canDelete: false,
-    onDelete: () => {},
     onSave: async () => null,
   },
   decorators: [
