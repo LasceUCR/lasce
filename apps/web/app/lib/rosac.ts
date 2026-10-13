@@ -147,6 +147,7 @@ export interface RosacInfoContent {
 
 /** One acknowledged institution — a logo, kept square and undistorted, plus its name. */
 export interface RosacAcknowledgment {
+  id?: string
   name: string
   logo: { src: string; alt: string }
 }
