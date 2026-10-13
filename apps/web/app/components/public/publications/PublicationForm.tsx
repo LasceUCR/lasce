@@ -1,306 +1,346 @@
 'use client'
 
-import { useId, useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
-import { IconButton } from '@/app/components/public/IconButton'
-import { Modal } from '@/app/components/public/Modal'
+import { useModalHeaderSlot } from '@/app/components/public/Modal'
+import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
-import type { ResearchGroup } from '@/app/lib/publications'
+import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
+import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
+import { defaultLocale, locales, type Locale } from '@/app/lib/i18n/config'
+import {
+  confirmationsStillNeeded,
+  contentFieldLang,
+  isConfirmed,
+  languageTabFlags,
+  tabWithErrors,
+  withConfirmation,
+} from '@/app/lib/i18n/content/form'
+import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import {
+  contentPath,
+  hasUnsavedChanges,
+  languageLabels,
+  resetConfirmations,
+  reviewsNeeded,
+  validateDraft,
+  type FormErrors,
+  type PublicationDraft,
+  type PublicationFormInitial,
+} from '@/app/lib/publication-form'
+import {
+  publicationContent,
+  type ResearchGroup,
+  type ReviewConfirmation,
+  type TranslatableField,
+} from '@/app/lib/publication-schema'
+
+import { PublicationAuthorsField } from './PublicationAuthorsField'
+import { usePublicationEditorLanguage } from './usePublicationEditorLanguage'
 
 const researchGroupOptions: FormFieldOption[] = [
   { value: 'LASCE', label: 'LASCE' },
   { value: 'ROSAC', label: 'ROSAC' },
 ]
 
-export interface PublicationFormValues {
-  title: string
-  authors: string[]
-  venue: string
-  date: Date
-  abstract: string
-  href?: string
-  DOI?: string
-  researchGroup: ResearchGroup
+type SharedTextField = 'venue' | 'date' | 'href' | 'DOI'
+
+/** What a parent can ask of the form: the modal around it routes its close button here. */
+export interface PublicationFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
 }
 
 export interface PublicationFormProps {
-  publication: PublicationFormValues
-  onSave: (values: PublicationFormValues) => void
+  /** What the form opens with: from `emptyInitial()` or `initialFromPublication()`. */
+  initial: PublicationFormInitial
+  /** Called once the edit is valid, with the confirmations it still needs. */
+  onSave: (draft: PublicationDraft, confirmed: ReviewConfirmation[]) => void
+  /** Called to close the form, once any unsaved changes have been discarded. */
   onCancel: () => void
+  /**
+   * Errors the server returned for the last save, keyed by field path (`content.en.title`).
+   * Each one stays until its field changes.
+   */
+  serverErrors?: FormErrors
+  ref?: Ref<PublicationFormHandle>
 }
 
-export function PublicationForm({ publication, onSave, onCancel }: PublicationFormProps) {
+/**
+ * Creates or edits a publication in both languages. Titles and abstracts sit in one tab per
+ * language (`LanguageTabs`: WAI-ARIA tabs with arrow keys, Home and End); the shared fields sit
+ * below, outside the tabs. Both panels stay mounted, so switching tabs never loses what was typed.
+ * The tabs only choose the translation being edited; they never change the site's language.
+ *
+ * When a title or abstract changes in one language only, the same field in the other language
+ * must change too or be confirmed with a switch, in this edit: a confirmation is dropped as
+ * soon as either language of that field changes again. A tab with problems says so in its
+ * label, and trying to save opens the first tab that has one.
+ *
+ * A legacy record (saved before languages existed) opens with its base text on the Spanish tab,
+ * flagged as possibly not Spanish, and an empty English tab: nothing is copied across to look
+ * like a translation. Its shared fields can be saved without translating it.
+ *
+ * Saving asks for no confirmation; closing with unsaved changes does, from "Cancelar" or, through
+ * `ref`'s `requestCancel`, from the modal's own close button and Escape.
+ */
+export function PublicationForm({
+  initial,
+  onSave,
+  onCancel,
+  serverErrors,
+  ref,
+}: PublicationFormProps) {
   const formId = useId()
-  const initialDate = publication.date.toISOString().slice(0, 10)
+  // Everything the editor says follows the site's language; the tabs only pick the translation.
+  const t = useTranslations('publications')
+  const language = usePublicationEditorLanguage()
+  const { uiLocale } = language
+  // In a modal, the language tabs sit beside its title and stay in view while the form scrolls.
+  const headerSlot = useModalHeaderSlot()
+  const formRef = useRef<HTMLDivElement>(null)
 
-  const [title, setTitle] = useState(publication.title)
-  const [authors, setAuthors] = useState<string[]>(publication.authors)
-  const [venue, setVenue] = useState(publication.venue)
-  const [date, setDate] = useState(initialDate)
-  const [abstract, setAbstract] = useState(publication.abstract)
-  const [href, setHref] = useState(publication.href ?? '')
-  const [DOI, setDOI] = useState(publication.DOI ?? '')
-  const [researchGroup, setResearchGroup] = useState<ResearchGroup>(publication.researchGroup)
+  const [draft, setDraft] = useState<PublicationDraft>(initial.draft)
+  const [confirmed, setConfirmed] = useState<ReviewConfirmation[]>([])
+  const [attempted, setAttempted] = useState(false)
+  const [tab, setTab] = useState<Locale>(
+    () => tabWithErrors(serverErrors ?? {}, defaultLocale) ?? defaultLocale,
+  )
+  const [focusRequest, setFocusRequest] = useState(0)
+  const [discardOpen, setDiscardOpen] = useState(false)
 
-  const [isAddingAuthor, setIsAddingAuthor] = useState(false)
-  const [newAuthor, setNewAuthor] = useState('')
-  const [newAuthorError, setNewAuthorError] = useState<string | null>(null)
-
-  // Standards: validation only runs once "Confirmar" is pressed, same as
-  // NewsArticleForm — a message appearing before anyone has finished filling
-  // the form in reads as premature nagging.
-  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
-  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
-
-  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'Es necesario un título.' : null
-  const dateError =
-    hasAttemptedSubmit && date === '' ? 'Debe establecer la fecha de publicación.' : null
-  const authorsError =
-    hasAttemptedSubmit && authors.length === 0
-      ? 'Se requiere al menos un autor para la publicación.'
-      : null
-  const venueError =
-    hasAttemptedSubmit && venue.trim() === '' ? 'Debe tener revista o medio de publicación.' : null
-  const abstractError =
-    hasAttemptedSubmit && abstract.trim() === '' ? 'Debe tener un resumen.' : null
-  const researchGroupError =
-    hasAttemptedSubmit && researchGroup.trim() === ''
-      ? 'Debe tener un grupo de investigación.'
-      : null
-
-  // Same reasoning as NewsArticleForm: discarding a form nobody has changed
-  // yet reads as an odd extra click, so the warning only shows up once
-  // something was actually typed (or a submit was attempted and failed).
-  const isDirty =
-    hasAttemptedSubmit ||
-    title !== publication.title ||
-    JSON.stringify(authors) !== JSON.stringify(publication.authors) ||
-    venue !== publication.venue ||
-    date !== initialDate ||
-    abstract !== publication.abstract ||
-    href !== (publication.href ?? '') ||
-    DOI !== (publication.DOI ?? '') ||
-    researchGroup !== publication.researchGroup
-
-  function openAddAuthor() {
-    setNewAuthor('')
-    setNewAuthorError(null)
-    setIsAddingAuthor(true)
+  // New server errors replace the previous ones and open the tab they point at. Adjusted while
+  // rendering rather than in an effect, so the errors and the tab change in the same render.
+  const [server, setServer] = useState({ source: serverErrors, errors: serverErrors ?? {} })
+  if (serverErrors !== server.source) {
+    const errors = serverErrors ?? {}
+    setServer({ source: serverErrors, errors })
+    const target = tabWithErrors(errors, tab)
+    if (target) setTab(target)
   }
 
-  function closeAddAuthor() {
-    setIsAddingAuthor(false)
+  useEffect(() => {
+    if (focusRequest === 0) return
+    const invalid = formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? []
+    Array.from(invalid)
+      .find((element) => !element.closest('[hidden]'))
+      ?.focus()
+  }, [focusRequest])
+
+  function requestCancel() {
+    if (hasUnsavedChanges(initial, draft)) setDiscardOpen(true)
+    else onCancel()
   }
 
-  function handleAddAuthor() {
-    const trimmed = newAuthor.trim()
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
-    if (!trimmed) {
-      setNewAuthorError('El nombre del autor es obligatorio.')
-      return
-    }
-
-    if (authors.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
-      setNewAuthorError('Ese autor ya fue agregado.')
-      return
-    }
-
-    setAuthors([...authors, trimmed])
-    closeAddAuthor()
+  const needed = reviewsNeeded(initial, draft)
+  const errors: FormErrors = {
+    ...server.errors,
+    ...(attempted ? validateDraft(initial, draft, confirmed, language) : {}),
   }
 
-  function handleRemoveAuthor(author: string) {
-    setAuthors(authors.filter((existing) => existing !== author))
+  function clearServerErrors(paths: string[]) {
+    if (!paths.some((path) => path in server.errors)) return
+    setServer((current) => ({
+      ...current,
+      errors: Object.fromEntries(
+        Object.entries(current.errors).filter(([path]) => !paths.includes(path)),
+      ),
+    }))
   }
 
-  function handleCancelClick() {
-    if (isDirty) {
-      setConfirmDiscardOpen(true)
-    } else {
-      onCancel()
-    }
+  function setContent(locale: Locale, field: TranslatableField, value: string) {
+    setDraft((current) => ({
+      ...current,
+      content: { ...current.content, [locale]: { ...current.content[locale], [field]: value } },
+    }))
+    setConfirmed((current) => resetConfirmations(current, field))
+    clearServerErrors(locales.map((each) => contentPath(each, field)))
   }
 
-  function handleConfirmDiscard() {
-    setConfirmDiscardOpen(false)
-    onCancel()
+  function setShared(field: SharedTextField, value: string) {
+    setDraft((current) => ({ ...current, [field]: value }))
+    clearServerErrors([field])
   }
 
-  function handleConfirmClick() {
-    setHasAttemptedSubmit(true)
+  function setAuthors(authors: string[]) {
+    setDraft((current) => ({ ...current, authors }))
+    clearServerErrors(['authors'])
+  }
 
-    if (title.trim() === '') {
-      document.getElementById(`${formId}-title`)?.focus()
-      return
-    }
-    if (authors.length === 0) {
-      return
-    }
-    if (venue.trim() === '') {
-      document.getElementById('publication-venue')?.focus()
-      return
-    }
-    if (date === '') {
-      document.getElementById('publication-date')?.focus()
-      return
-    }
-    if (abstract.trim() === '') {
-      document.getElementById('publication-abstract')?.focus()
-      return
-    }
-    if (researchGroup.trim() === '') {
-      document.getElementById('publication-research-group')?.focus()
+  function setConfirmation(review: ReviewConfirmation, checked: boolean) {
+    setConfirmed((current) => withConfirmation(current, review, checked))
+    clearServerErrors([contentPath(review.locale, review.field)])
+  }
+
+  function handleSave() {
+    setAttempted(true)
+    const found = validateDraft(initial, draft, confirmed, language)
+
+    if (Object.keys(found).length === 0) {
+      onSave(draft, confirmationsStillNeeded(confirmed, needed))
       return
     }
 
-    onSave({
-      title,
-      authors,
-      venue,
-      date: new Date(`${date}T00:00:00`),
-      abstract,
-      href,
-      DOI,
-      researchGroup,
-    })
+    const target = tabWithErrors(found, tab)
+    if (target) setTab(target)
+    setFocusRequest((current) => current + 1)
+  }
+
+  function reviewControl(locale: Locale, field: TranslatableField) {
+    const review = needed.find((each) => each.locale === locale && each.field === field)
+    if (!review) return null
+
+    return (
+      <TranslationReview
+        checked={isConfirmed(confirmed, review)}
+        label={confirmationLabel(publicationContent, review, uiLocale)}
+        message={reviewMessage(publicationContent, review, initial.stored, draft.content, uiLocale)}
+        onChange={(checked) => setConfirmation(review, checked)}
+      />
+    )
   }
 
   return (
-    <div className="publication-form">
-      <FormField
-        errorMessage={titleError}
-        id={`${formId}-title`}
-        label="Título"
-        onChange={setTitle}
-        required
-        value={title}
-      />
+    <div className="publication-form" ref={formRef}>
+      <LanguageTabs
+        copyLang={uiLocale}
+        flags={languageTabFlags(initial.stored, errors, needed, confirmed, uiLocale)}
+        label={t('editor.languageTabs')}
+        onSelect={setTab}
+        selected={tab}
+        tablistContainer={headerSlot}
+      >
+        {(locale) => (
+          <>
+            {initial.isLegacy && locale === defaultLocale ? (
+              <Notice>{t('editor.legacyBaseText')}</Notice>
+            ) : null}
 
-      <FormField
-        errorMessage={dateError}
-        id="publication-date"
-        label="Fecha de publicación"
-        onChange={setDate}
-        required
-        type="date"
-        value={date}
-      />
+            {initial.isLegacy && locale !== defaultLocale ? (
+              <Notice tone="warning">{t('editor.legacyNoTranslation')}</Notice>
+            ) : null}
 
-      <div className="cms-form-field">
-        <span className="cms-form-field-label" id="publication-authors-label">
-          Autores
-        </span>
+            <FormField
+              error={errors[contentPath(locale, 'title')]}
+              id={`${formId}-${locale}-title`}
+              label={t('editor.titleField', { language: languageLabels[locale] })}
+              lang={contentFieldLang(initial.stored, locale)}
+              onChange={(value) => setContent(locale, 'title', value)}
+              required
+              value={draft.content[locale].title}
+            />
+            {reviewControl(locale, 'title')}
 
-        <div
-          aria-labelledby="publication-authors-label"
-          className={`email-chip-field${authorsError ? ' form-field-error' : ''}`}
-          role="group"
-        >
-          {authors.map((author) => (
-            <span className="email-chip" key={author}>
-              {author}
+            <FormField
+              error={errors[contentPath(locale, 'abstract')]}
+              id={`${formId}-${locale}-abstract`}
+              label={t('editor.abstractField', { language: languageLabels[locale] })}
+              lang={contentFieldLang(initial.stored, locale)}
+              multiline
+              onChange={(value) => setContent(locale, 'abstract', value)}
+              required
+              value={draft.content[locale].abstract}
+            />
+            {reviewControl(locale, 'abstract')}
+          </>
+        )}
+      </LanguageTabs>
 
-              <IconButton
-                className="email-chip-remove"
-                icon={<X size={12} strokeWidth={2} />}
-                label={`Eliminar ${author}`}
-                onClick={() => handleRemoveAuthor(author)}
-              />
-            </span>
-          ))}
-
-          <IconButton
-            className="email-chip-add"
-            icon={<Plus size={14} strokeWidth={2} />}
-            label="Añadir autor"
-            onClick={openAddAuthor}
-          />
-        </div>
-
-        {authorsError ? <p className="form-field-error">{authorsError}</p> : null}
-      </div>
-
-      <Modal onClose={closeAddAuthor} open={isAddingAuthor} size="small" title="Añadir autor">
+      {/* Metadata: date, DOI and group in one row; link and journal in the next. */}
+      <div className="cms-form-grid cms-form-grid-3">
         <FormField
-          id={`${formId}-new-author`}
-          label="Nombre del autor"
-          onChange={(value) => {
-            setNewAuthor(value)
-            setNewAuthorError(null)
-          }}
-          value={newAuthor}
+          error={errors.date}
+          id={`${formId}-date`}
+          label={t('editor.date')}
+          onChange={(value) => setShared('date', value)}
+          required
+          type="date"
+          value={draft.date}
         />
 
-        {newAuthorError ? (
-          <p className="form-alert" role="alert">
-            {newAuthorError}
-          </p>
-        ) : null}
+        <FormField
+          error={errors.DOI}
+          id={`${formId}-doi`}
+          label={t('editor.doi')}
+          onChange={(value) => setShared('DOI', value)}
+          placeholder={t('editor.doiPlaceholder')}
+          validate={(value) => {
+            const result = language.fieldSchemas.doi.safeParse(value)
+            if (!result.success) throw new Error(result.error.issues[0]?.message)
+          }}
+          value={draft.DOI}
+        />
 
-        <div className="cms-form-actions">
-          <Button onClick={closeAddAuthor} variant="secondary">
-            Cancelar
-          </Button>
+        <FormField
+          error={errors.researchGroup}
+          id={`${formId}-research-group`}
+          label={t('editor.group')}
+          onChange={(value) => {
+            setDraft((current) => ({ ...current, researchGroup: value as ResearchGroup }))
+            clearServerErrors(['researchGroup'])
+          }}
+          options={researchGroupOptions}
+          value={draft.researchGroup}
+        />
+      </div>
 
-          <Button disabled={newAuthor.trim() === ''} onClick={handleAddAuthor} variant="primary">
-            Añadir
-          </Button>
-        </div>
-      </Modal>
+      <div className="cms-form-grid cms-form-grid-2">
+        <FormField
+          error={errors.href}
+          id={`${formId}-href`}
+          label={t('editor.href')}
+          onChange={(value) => setShared('href', value)}
+          type="url"
+          validate={(value) => {
+            const result = language.fieldSchemas.externalUrl.safeParse(value)
+            if (!result.success) throw new Error(result.error.issues[0]?.message)
+          }}
+          value={draft.href}
+        />
 
-      <FormField id="publication-href" label="Enlace externo" onChange={setHref} value={href} />
+        <FormField
+          error={errors.venue}
+          id={`${formId}-venue`}
+          label={t('editor.venue')}
+          onChange={(value) => setShared('venue', value)}
+          required
+          value={draft.venue}
+        />
+      </div>
 
-      <FormField id="publication-doi" label="DOI" onChange={setDOI} value={DOI} />
-
-      <FormField
-        errorMessage={venueError}
-        id="publication-venue"
-        label="Revista/Publicación"
-        onChange={setVenue}
+      <PublicationAuthorsField
+        authors={draft.authors}
+        error={errors.authors}
+        onChange={setAuthors}
         required
-        value={venue}
       />
 
-      <FormField
-        errorMessage={abstractError}
-        id="publication-abstract"
-        label="Resumen"
-        multiline
-        onChange={setAbstract}
-        required
-        value={abstract}
-      />
-
-      <FormField
-        errorMessage={researchGroupError}
-        id="publication-research-group"
-        label="Grupo"
-        onChange={(value) => setResearchGroup(value as ResearchGroup)}
-        options={researchGroupOptions}
-        value={researchGroup}
-      />
-
-      <div className="nosotros-activity-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
+      <div className="nosotros-activity-form-actions publication-form-actions">
+        <Button onClick={requestCancel} variant="secondary">
+          {t('editor.cancel')}
         </Button>
-        <Button onClick={handleConfirmClick} variant="primary">
-          Confirmar
+        <Button onClick={handleSave} variant="primary">
+          {t('editor.save')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
-        onCancel={() => setConfirmDiscardOpen(false)}
-        onConfirm={handleConfirmDiscard}
-        open={confirmDiscardOpen}
-        severity="info"
-        title="Descartar cambios no guardados"
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
+        onCancel={() => setDiscardOpen(false)}
+        onConfirm={() => {
+          setDiscardOpen(false)
+          onCancel()
+        }}
+        open={discardOpen}
+        severity="warning"
+        title={t('discardDialog.title')}
       />
     </div>
   )

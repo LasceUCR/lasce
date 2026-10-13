@@ -196,6 +196,7 @@ export function ResearchAreasSection({
                   key={area.id}
                   onEdit={canEdit ? () => openEditor(area.id) : undefined}
                   onDelete={canDelete ? () => handleDeleteArea(area.id) : undefined}
+                  deleteConfirmLabel="Eliminar"
                   deleteConfirmTitle="Eliminar área"
                 >
                   <ResearchAreaCard

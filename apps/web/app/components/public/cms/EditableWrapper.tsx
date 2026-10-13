@@ -15,7 +15,12 @@ export interface EditableWrapperProps {
   deleteConfirmTitle?: string
   deleteConfirmMessage?: string
   deleteTargetEntity?: string
+  /** What `deleteTargetEntity` is called before its name: `'Elemento'` by default. */
+  deleteTargetLabel?: string
   deleteConsequence?: string
+  /** The delete confirmation's buttons, in the page's language. */
+  deleteConfirmLabel?: string
+  deleteCancelLabel?: string
   className?: string
 }
 
@@ -34,7 +39,10 @@ export function EditableWrapper({
   deleteConfirmTitle = 'Eliminar elemento',
   deleteConfirmMessage = '¿Desea eliminar este elemento? Esta acción no se puede deshacer.',
   deleteTargetEntity,
+  deleteTargetLabel,
   deleteConsequence,
+  deleteConfirmLabel = 'Confirmar',
+  deleteCancelLabel = 'Cancelar',
   className,
 }: EditableWrapperProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -65,8 +73,8 @@ export function EditableWrapper({
 
       {onDelete ? (
         <StandardConfirmDialog
-          cancelLabel="Cancelar"
-          confirmLabel="Confirmar"
+          cancelLabel={deleteCancelLabel}
+          confirmLabel={deleteConfirmLabel}
           consequence={deleteConsequence}
           message={deleteConfirmMessage}
           onCancel={() => setConfirmOpen(false)}
@@ -77,6 +85,7 @@ export function EditableWrapper({
           open={confirmOpen}
           severity="danger"
           targetEntity={deleteTargetEntity}
+          targetLabel={deleteTargetLabel}
           title={deleteConfirmTitle}
         />
       ) : null}

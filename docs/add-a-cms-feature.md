@@ -21,11 +21,29 @@ Say you are adding CMS editing to some list of `Widget`s.
   content with edit/delete affordances. Content-agnostic: it takes `onEdit`/`onDelete` callbacks
   and doesn't know what `children` is. Delete asks for confirmation first; there's no undo yet.
   Creating does not confirm: the "Añadir" form saves on "Confirmar". Editing a Nosotros activity
-  still confirms ("Guardar cambios"). Report the outcome of a create, edit or delete with a toast
-  that says what happened, or why it failed: see [`toasts.md`](toasts.md).
+  still confirms ("Guardar cambios"). Cancel on a form that has unsaved changes asks first
+  ("Descartar cambios no guardados"); an untouched form closes immediately. Report the outcome of
+  a create, edit or delete with a toast that says what happened, or why it failed: see
+  [`toasts.md`](toasts.md).
 - `AddItemCard` (`apps/web/app/components/public/cms/AddItemCard.tsx`) — a "+" card that opens
   whatever form you pass it in a modal. Also content-agnostic.
 
 The only new component per feature is one `Editable<Widget>Card`, the piece that knows both the
 domain type and `useEditMode()` — see `EditableNewsCard.tsx` for the pattern: render the plain
 content when edit mode is off, `EditableWrapper` + an edit modal when it's on.
+
+## Making the content bilingual
+
+If the widget's text must exist in Spanish and English, keep everything above and follow
+[`translate-database-content.md`](translate-database-content.md). It adds, on top of these
+building blocks:
+
+- `LanguageTabs` and `TranslationReview` (`apps/web/app/components/public/cms/`): the editor's
+  language tabs and the cross-language review switch.
+- `apps/web/app/lib/i18n/content/`: the field definition, its Zod schema, the review rule,
+  reading with fallback and the form helpers.
+- `apps/web/app/lib/cms/`: the API's JSON error envelope, `runWrite` for transactions,
+  `updated_at` as the version for optimistic concurrency, and the client's `sendJson` and error
+  mapping. These are useful to a single-language feature too.
+
+Publications (`/publicaciones`) are the reference implementation.

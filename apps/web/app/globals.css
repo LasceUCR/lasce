@@ -911,12 +911,14 @@ a {
 
 .button-primary {
   background: var(--action);
+  border-color: var(--action);
   color: var(--on-action);
 }
 
 .button-primary:hover,
 .button-primary:focus-visible {
   background: var(--action-hover);
+  border-color: var(--action-hover);
 }
 
 .button-secondary {
@@ -969,12 +971,14 @@ a {
 
 .button-danger {
   background: var(--danger);
+  border-color: var(--danger);
   color: var(--white);
 }
 
 .button-danger:hover,
 .button-danger:focus-visible {
   background: var(--danger-dark);
+  border-color: var(--danger-dark);
 }
 
 .home-content {
@@ -2543,6 +2547,42 @@ a {
 
 .publication-group {
   font-weight: 700;
+}
+
+/* --- Bilingual editors (LanguageTabs, TranslationReview) --------------------- */
+
+/* The language tabs reuse .access-tabs / .access-tab; this is the "2 por revisar" or
+   "Sin traducción" note a tab carries, so a problem on the hidden tab stays visible. */
+.cms-language-tab-flag {
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cms-language-panel > .ui-notice:first-child {
+  margin-top: 0;
+}
+
+/* The explanation and the "sigue siendo correcto" switch under a field whose counterpart
+   changed in the other language. */
+.cms-translation-review {
+  margin: -4px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cms-translation-review .ui-notice {
+  margin-top: 0;
+}
+
+/* The save error can carry a "Cerrar y cargar la versión actual" action below its text. */
+.form-alert > p {
+  margin: 0;
+}
+
+.form-alert > .button {
+  margin-top: 12px;
 }
 
 .publications-kpi {
@@ -5910,6 +5950,11 @@ a.gallery-tile:focus-visible {
   font-size: 14px;
 }
 
+/* Taller only: a text area dragged wider would spill out of the form and its modal. */
+.cms-form-field textarea {
+  resize: vertical;
+}
+
 .cms-form-field [aria-invalid='true'] {
   border-color: var(--danger);
 }
@@ -6017,6 +6062,167 @@ a.gallery-tile:focus-visible {
   min-width: 0;
 }
 
+/* Columns of equal width for short fields, such as a date, an identifier and a group: three or
+   two across on a wide form, fewer on a narrow one. Aligned to the top, so a message under one
+   field does not push its neighbours down. */
+.cms-form-grid {
+  display: grid;
+  gap: 0 16px;
+  align-items: start;
+}
+
+.cms-form-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cms-form-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Text boxes, date pickers and selects side by side share one height. */
+.cms-form-grid .cms-form-field :is(input, select) {
+  height: 42px;
+}
+
+@media (max-width: 760px) {
+  .cms-form-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .cms-form-grid-3,
+  .cms-form-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The publication editor's actions stay at the bottom of the modal while the form scrolls. */
+.publication-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: 14px 0 2px;
+  background: var(--white);
+}
+
+/* On a phone the two buttons share one row instead of stacking, so the pinned bar stays short. */
+@media (max-width: 520px) {
+  .nosotros-activity-form-actions.publication-form-actions {
+    flex-wrap: nowrap;
+  }
+
+  .publication-form-actions .button {
+    flex: 1 1 0;
+    width: auto;
+    padding: 0 12px;
+  }
+}
+
+/* Authors as a tag input: one box with the names as chips and, below them, a quiet text box
+   with an "Agregar" button. The box draws the only border; the text box inside has none. */
+.publication-authors {
+  margin-top: 4px;
+}
+
+.publication-authors-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.publication-authors-count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.publication-authors-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 6px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.publication-authors-box.is-invalid {
+  border-color: var(--danger);
+}
+
+/* The focus ring sits on the whole box, where the text box's own border would have been. */
+.publication-authors-box:has(input:focus-visible) {
+  outline: 3px solid var(--action);
+  outline-offset: 3px;
+}
+
+.publication-authors-list {
+  margin: 0;
+  padding: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+}
+
+/* Expanded, a long list scrolls within a few rows instead of stretching the form. */
+.publication-authors-list.is-expanded {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.publication-authors .email-chip {
+  padding: 2px 2px 2px 10px;
+  font-size: 12.5px;
+}
+
+.publication-authors-toggle {
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--blue-dark);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.publication-authors-toggle:hover,
+.publication-authors-toggle:focus-visible {
+  border-color: var(--border);
+  background: var(--page);
+}
+
+.publication-authors-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cms-form-field .publication-authors-entry input {
+  flex: 1 1 auto;
+  height: 32px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+}
+
+.cms-form-field .publication-authors-entry input:focus-visible {
+  outline: none;
+}
+
+.publication-authors-entry .button.publication-authors-add {
+  width: auto;
+  min-height: 32px;
+  flex: none;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
 .news-article-form-actions {
   margin-top: 20px;
   display: flex;
@@ -6085,6 +6291,17 @@ a.gallery-tile:focus-visible {
   background: rgba(13, 39, 55, 0.55);
 }
 
+/* A dialog opened on top of another (discard, save, delete) keeps the one
+   behind mounted, so its fields survive, but only the front dialog is shown. */
+.modal.modal-covered {
+  visibility: hidden;
+}
+
+.modal.modal-covered::backdrop {
+  background: transparent;
+  pointer-events: none;
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -6108,6 +6325,36 @@ a.gallery-tile:focus-visible {
   font-size: 18px;
 }
 
+/* The title, and beside it whatever a form puts in its slot (`useModalHeaderSlot`), such as
+   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the slot
+   wraps under the title. */
+.modal-header {
+  flex-shrink: 0;
+  /* Mirrors `.modal-body` below: the same scrollbar gutter and the same padding cancelled by a
+     negative margin, so the tabs end where the fields do and a tab's focus outline has room. */
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  padding: 4px 6px;
+  margin: -4px -6px 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 24px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.modal-header-slot:empty {
+  display: none;
+}
+
+.modal-header-slot .access-tabs {
+  margin: 0;
+}
+
 /* Scrolls on its own once the form/content grows past the dialog's
    max-height, while the title above stays put rather than scrolling away
    with it. `flex: 1` is the part that actually makes that possible — without
@@ -6119,6 +6366,8 @@ a.gallery-tile:focus-visible {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Reaching the end of the content does not hand the scroll over to the page behind. */
+  overscroll-behavior: contain;
   /* Reserves the scrollbar's own width up front, so content doesn't sit
      flush against it (or get nudged/clipped) only once scrolling kicks in. */
   scrollbar-gutter: stable;
@@ -6132,6 +6381,28 @@ a.gallery-tile:focus-visible {
      need it. */
   padding: 0 6px;
   margin: 0 -6px;
+}
+
+/* Confirmation dialogs pin a button to each side (or a pair to the end).
+   `scrollbar-gutter: stable` above reserves a classic scrollbar on the end
+   side even when the dialog does not overflow, so that end button sat a
+   scrollbar-width further in than the title and the start button. These
+   dialogs are short; skip the reservation so both edges share the title's
+   inset. */
+.modal:has(.std-confirm-dialog, .modal-actions) .modal-body {
+  scrollbar-gutter: auto;
+}
+
+/* Multiline boxes only grow downward. A sideways drag used to shrink them
+   narrower than the dialog or past its edge. The minimum height keeps the
+   first typed line in view. */
+.modal textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  resize: vertical;
+  min-height: calc(1.4em + 22px);
 }
 
 .modal-actions {
@@ -6297,12 +6568,26 @@ a.gallery-tile:focus-visible {
 
 .std-confirm-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 16px;
   width: 100%;
-  flex-wrap: nowrap;
+}
+
+/* Each button takes half the row, so a short label and a long one share one
+   size. The row itself is the full content width, which keeps the same inset
+   on the left and the right. */
+.std-confirm-actions .button {
+  flex: 1 1 0;
+  width: 0;
+  height: 43px;
+  min-height: 43px;
+  margin: 0;
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  line-height: 1;
 }
 
 @media (max-width: 600px) {
@@ -6315,7 +6600,8 @@ a.gallery-tile:focus-visible {
     flex-direction: column-reverse;
   }
 
-  .std-confirm-actions button {
+  .std-confirm-actions .button {
+    flex: 0 0 auto;
     width: 100%;
   }
 }
