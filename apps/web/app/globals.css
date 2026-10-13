@@ -727,6 +727,15 @@ a {
   justify-content: center;
 }
 
+.hero .hero-institution {
+  max-width: 610px;
+  margin: 0 0 14px;
+  color: var(--white);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .hero h1 {
   max-width: 610px;
   margin: 0;
@@ -3204,6 +3213,12 @@ a {
     justify-content: flex-start;
   }
 
+  .hero .hero-institution {
+    max-width: 520px;
+    margin-bottom: 12px;
+    font-size: 16px;
+  }
+
   .hero h1 {
     max-width: 520px;
     font-size: 38px;
@@ -4098,6 +4113,10 @@ a {
 
   .brand-divider {
     height: 24px;
+  }
+
+  .hero .hero-institution {
+    font-size: 15px;
   }
 
   .hero h1 {
