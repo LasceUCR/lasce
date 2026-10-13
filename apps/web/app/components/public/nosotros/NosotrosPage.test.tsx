@@ -75,7 +75,7 @@ async function deleteFirstActivity(user: User) {
   const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar / })
   await user.click(firstDeleteButton as HTMLElement)
   const confirmDialog = screen.getByRole('dialog', { name: 'Eliminar actividad' })
-  await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+  await user.click(within(confirmDialog).getByRole('button', { name: 'Eliminar' }))
 }
 
 /** Edits the first card's title and accepts the "Guardar cambios" confirmation. */
@@ -227,7 +227,7 @@ describe('NosotrosPage', () => {
       within(researchers).getByRole('heading', { name: 'MSc. Ivannia Calvo' }),
     ).toBeInTheDocument()
     expect(
-      within(researchers).getByRole('heading', { name: 'Dr. Felipe Meza' }),
+      within(researchers).getByRole('heading', { name: 'Dr. Felipe Meza Obando' }),
     ).toBeInTheDocument()
     expect(
       within(researchers).getByRole('heading', { name: 'MSc. Alonso Vega' }),
@@ -296,7 +296,9 @@ describe('NosotrosPage', () => {
       ),
     ).toBeInTheDocument()
     await user.click(
-      within(researchers).getByRole('button', { name: 'Ver descripción de Dr. Felipe Meza' }),
+      within(researchers).getByRole('button', {
+        name: 'Ver descripción de Dr. Felipe Meza Obando',
+      }),
     )
     expect(
       within(researchers).getByText(
@@ -634,6 +636,8 @@ describe('NosotrosPage', () => {
     const addDialog = await submitNewActivity(user)
     await within(addDialog).findByText('No tiene permisos.')
     await user.click(within(addDialog).getByRole('button', { name: 'Cancelar' }))
+    const discard = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    await user.click(within(discard).getByRole('button', { name: 'Descartar' }))
 
     expect(screen.queryByRole('dialog', { name: 'Añadir' })).not.toBeInTheDocument()
     expect(screen.queryByText('No tiene permisos.')).not.toBeInTheDocument()
@@ -759,7 +763,7 @@ describe('NosotrosPage', () => {
     const [firstDeleteButton] = within(researchers).getAllByRole('button', { name: /^Eliminar a/ })
     await user.click(firstDeleteButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Eliminar investigador' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(`/api/nosotros/researchers/${firstResearcher?.id}`, {
       method: 'DELETE',

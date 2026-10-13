@@ -63,6 +63,7 @@ export function EditableNewsCard({
   return (
     <>
       <EditableWrapper
+        deleteConfirmLabel="Eliminar"
         deleteConfirmMessage="Esta acción no se puede deshacer y borrará la noticia del catálogo público."
         deleteConfirmTitle="Eliminar noticia"
         onDelete={canDelete ? onDelete : undefined}
