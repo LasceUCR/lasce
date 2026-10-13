@@ -69,8 +69,8 @@ describe('RosacInfoPage', () => {
       '5. ¿Por qué observar en radio?',
       '6. Instrumentos científicos',
       '7. Investigadores',
-      '8. Agradecimientos ROSAC',
-      '9. Donaciones ROSAC',
+      '8. Donaciones ROSAC',
+      '9. Agradecimientos ROSAC',
     ])
     expect(screen.getByRole('region', { name: '4. Construcción del ROSAC' })).toHaveTextContent(
       defaultArgs.content.construction.intro,
@@ -152,7 +152,7 @@ describe('RosacInfoPage', () => {
   test('invites visitors to help and links the donations CTA to the contact page', () => {
     renderPage()
 
-    const donations = screen.getByRole('region', { name: '9. Donaciones ROSAC' })
+    const donations = screen.getByRole('region', { name: '8. Donaciones ROSAC' })
     expect(
       within(donations).getByRole('heading', { name: defaultArgs.content.donations.cta.title }),
     ).toBeInTheDocument()
@@ -328,5 +328,76 @@ describe('RosacInfoPage', () => {
       }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  test('offers editing but strictly NO add or delete on characteristics (Section 1)', () => {
+    renderEditMode()
+    const section = screen.getByRole('region', { name: '1. Características principales' })
+    const editButtons = within(section).getAllByRole('button', { name: /^Editar / })
+    expect(editButtons).toHaveLength(4)
+    expect(within(section).queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()
+    expect(within(section).queryByRole('button', { name: /Añadir/ })).not.toBeInTheDocument()
+  })
+
+  test('edits a characteristic and updates it in place (Section 1)', async () => {
+    const user = userEvent.setup()
+    renderEditMode()
+    const section = screen.getByRole('region', { name: '1. Características principales' })
+    const [firstEditBtn] = within(section).getAllByRole('button', { name: /^Editar / })
+    await user.click(firstEditBtn as HTMLElement)
+
+    const dialog = screen.getByRole('dialog', { name: 'Editar "Antena de 11 metros"' })
+    const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Antena Actualizada')
+
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(within(section).getByRole('heading', { name: 'Antena Actualizada' })).toBeInTheDocument()
+  })
+
+  test('offers editing but strictly NO add or delete on scientific activities (Section 3)', async () => {
+    const user = userEvent.setup()
+    renderEditMode()
+    const section = screen.getByRole('region', { name: '3. ¿Qué desarrollamos en ROSAC?' })
+    expect(within(section).getAllByRole('button', { name: /^Editar / })).toHaveLength(
+      defaultArgs.content.activities.items.length,
+    )
+    expect(within(section).queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()
+    expect(within(section).queryByRole('button', { name: /Añadir/ })).not.toBeInTheDocument()
+
+    // Edit an activity
+    const firstActivity = defaultArgs.content.activities.items[0]!
+    await user.click(within(section).getByRole('button', { name: `Editar ${firstActivity.title}` }))
+    const dialog = screen.getByRole('dialog', { name: `Editar "${firstActivity.title}"` })
+    const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Radioastronomía Avanzada')
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      within(section).getByRole('heading', { name: 'Radioastronomía Avanzada' }),
+    ).toBeInTheDocument()
+  })
+
+  test('offers editing but strictly NO add or delete on construction stages (Section 4)', async () => {
+    const user = userEvent.setup()
+    renderEditMode()
+    const section = screen.getByRole('region', { name: '4. Construcción del ROSAC' })
+    expect(within(section).getByRole('button', { name: 'Editar etapa' })).toBeInTheDocument()
+    expect(within(section).queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()
+    expect(within(section).queryByRole('button', { name: /Añadir/ })).not.toBeInTheDocument()
+
+    // Edit current stage
+    await user.click(within(section).getByRole('button', { name: 'Editar etapa' }))
+    const dialog = screen.getByRole('dialog', { name: 'Editar "Preparación para el montaje"' })
+    const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Preparación Avanzada')
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      within(section).getByRole('heading', { name: 'Preparación Avanzada' }),
+    ).toBeInTheDocument()
   })
 })

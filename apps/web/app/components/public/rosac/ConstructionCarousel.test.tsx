@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, test, vi } from 'vitest'
 
 import { rosacConstructionContent } from '@/app/lib/rosac-construction'
 
@@ -26,5 +27,18 @@ describe('ConstructionCarousel', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       `Etapa 1 de ${stages.length}: ${stages[0].title}. Fotografía 1 de ${stages[0].images.length}.`,
     )
+  })
+
+  test('offers an edit button for the current stage when canEdit is true', async () => {
+    const stages = rosacConstructionContent.stages
+    const onEditStage = vi.fn()
+    render(<ConstructionCarousel canEdit onEditStage={onEditStage} stages={stages} />)
+
+    const editBtn = screen.getByRole('button', { name: 'Editar etapa' })
+    expect(editBtn).toBeInTheDocument()
+
+    const user = userEvent.setup()
+    await user.click(editBtn)
+    expect(onEditStage).toHaveBeenCalledWith(stages[0])
   })
 })
