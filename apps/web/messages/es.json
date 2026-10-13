@@ -140,8 +140,34 @@
       "lead": "Canales oficiales del Laboratorio de Astrofísica Solar y Clima Espacial."
     },
     "channelsTitle": "Información de contacto",
-    "channels": {
-      "phone": "Teléfono"
+    "cards": {
+      "add": "Agregar canal de contacto",
+      "editTitle": "Editar canal de contacto",
+      "icon": "Símbolo",
+      "title": "Título",
+      "description": "Descripción",
+      "link": "Enlace",
+      "language": "Idioma del texto",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "invalid": "Revise los campos del canal de contacto.",
+      "review": "Confirme el texto que no cambió en el otro idioma.",
+      "edit": "Editar {title}",
+      "delete": "Eliminar {title}",
+      "deleteTitle": "Eliminar canal de contacto",
+      "deleteMessage": "¿Desea eliminar {title}? Esta acción no se puede deshacer.",
+      "created": "Canal de contacto agregado correctamente.",
+      "updated": "Canal de contacto actualizado correctamente.",
+      "deleted": "Canal de contacto eliminado correctamente.",
+      "saveFailed": "No se pudo guardar el canal de contacto.",
+      "deleteFailed": "No se pudo eliminar el canal de contacto.",
+      "icons": {
+        "phone": "Teléfono",
+        "instagram": "Instagram",
+        "location": "Ubicación",
+        "email": "Correo",
+        "facebook": "Facebook"
+      }
     },
     "location": {
       "title": "Ubicación",

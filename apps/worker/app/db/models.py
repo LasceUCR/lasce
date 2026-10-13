@@ -558,3 +558,61 @@ class GeomagneticIndexTranslation(Base):
     description: Mapped[str] = mapped_column(String(15))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ContactChannelIcon(enum.StrEnum):
+    """Icon of a `/contacto` card. Database values match the Prisma ``@map`` names."""
+
+    PHONE = "phone"
+    INSTAGRAM = "instagram"
+    LOCATION = "location"
+    EMAIL = "email"
+    FACEBOOK = "facebook"
+
+
+class ContactChannel(Base):
+    """One card in the contact page's channel list. Spanish text lives here."""
+
+    __tablename__ = "contact_channels"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    icon: Mapped[ContactChannelIcon] = mapped_column(
+        ENUM(
+            ContactChannelIcon,
+            name="contact_channel_icon",
+            schema="public",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        )
+    )
+    href: Mapped[str | None] = mapped_column(Text, nullable=True)
+    position: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ContactChannelTranslation(Base):
+    """Title and description of a contact card in a language other than Spanish."""
+
+    __tablename__ = "contact_channel_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "contact_channel_id",
+            "locale",
+            name="contact_channel_translations_contact_channel_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    contact_channel_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.contact_channels.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

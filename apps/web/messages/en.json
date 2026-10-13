@@ -140,8 +140,34 @@
       "lead": "Official channels of the Solar Astrophysics and Space Weather Laboratory."
     },
     "channelsTitle": "Contact information",
-    "channels": {
-      "phone": "Phone"
+    "cards": {
+      "add": "Add contact channel",
+      "editTitle": "Edit contact channel",
+      "icon": "Symbol",
+      "title": "Title",
+      "description": "Description",
+      "link": "Link",
+      "language": "Text language",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "invalid": "Check the contact channel fields.",
+      "review": "Confirm the text that did not change in the other language.",
+      "edit": "Edit {title}",
+      "delete": "Delete {title}",
+      "deleteTitle": "Delete contact channel",
+      "deleteMessage": "Do you want to delete {title}? This action cannot be undone.",
+      "created": "Contact channel added successfully.",
+      "updated": "Contact channel updated successfully.",
+      "deleted": "Contact channel deleted successfully.",
+      "saveFailed": "The contact channel could not be saved.",
+      "deleteFailed": "The contact channel could not be deleted.",
+      "icons": {
+        "phone": "Phone",
+        "instagram": "Instagram",
+        "location": "Location",
+        "email": "Email",
+        "facebook": "Facebook"
+      }
     },
     "location": {
       "title": "Location",
