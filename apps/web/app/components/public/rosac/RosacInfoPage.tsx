@@ -306,6 +306,10 @@ export function RosacInfoPage({
             ...s,
             title: values.title,
             description: values.description,
+            images:
+              values.images && values.images.length > 0
+                ? (values.images as unknown as typeof s.images)
+                : s.images,
           } as ConstructionStage)
         : s,
     )
