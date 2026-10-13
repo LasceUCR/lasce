@@ -63,7 +63,7 @@ function updateModalStackVisibility() {
       dialog.removeAttribute('aria-hidden')
     } else {
       dialog.classList.add('modal-covered')
-      dialog.style.visibility = ''
+      dialog.style.visibility = 'hidden'
       if (top && dialog.contains(top)) {
         dialog.removeAttribute('aria-hidden')
       } else {
