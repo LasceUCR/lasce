@@ -11,7 +11,7 @@ const defaultArgs = Default.args as ContactPageProps
 const incompleteArgs = OmitsIncompleteChannels.args as ContactPageProps
 
 describe('ContactPage', () => {
-  test('shows the official channels under a single page heading', () => {
+  test('shows the official channels under a single page heading', async () => {
     render(<ContactPage {...defaultArgs} />)
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
@@ -24,11 +24,11 @@ describe('ContactPage', () => {
       'href',
       'tel:+50625116566',
     )
-    expect(screen.getByRole('heading', { level: 3, name: 'Ubicación' })).toBeInTheDocument()
+    const location = screen.getByRole('region', { name: 'Ubicación' })
+    expect(location).toHaveTextContent(defaultArgs.content.location.address)
     expect(
-      screen.getByText('Universidad de Costa Rica, Sede Rodrigo Facio Brenes'),
+      await screen.findByRole('region', { name: 'Mapa de ubicación de CIGEFI' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Montes de Oca, San José, Costa Rica')).toBeInTheDocument()
     expect(screen.queryByText(/código postal/i)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '@lasce_ucr' })).toHaveAttribute(
       'href',
@@ -60,14 +60,22 @@ describe('ContactPage', () => {
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
   })
 
-  test('shows the channels in English when given the English content', () => {
-    render(<ContactPage content={getContactContent(getMessages('en'))} />)
+  test('shows the channels in English when given the English content', async () => {
+    const content = getContactContent(getMessages('en'))
+    render(<ContactPage content={content} />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Contact' })).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { level: 2, name: 'Contact information' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 3, name: 'Phone' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Location' })).toHaveTextContent(
+      content.location.address,
+    )
+    expect(
+      await screen.findByRole('region', { name: 'Location map of CIGEFI' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Zoom in' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
   })
 })

@@ -1,6 +1,7 @@
-import { MapPin, Phone } from 'lucide-react'
+import { Phone } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { RosacLocationMapLoader } from '@/app/components/public/rosac/RosacLocationMapLoader'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
@@ -12,7 +13,7 @@ import {
   type ContactContent,
 } from '@/app/lib/contact'
 
-/** lucide-react 1.34 does not export an Instagram icon. Same stroke style as Phone and MapPin. */
+/** lucide-react 1.34 does not export an Instagram icon. Same stroke style as Phone. */
 function InstagramIcon() {
   return (
     <svg
@@ -35,7 +36,6 @@ function InstagramIcon() {
 
 function channelIcon(id: string): ReactNode {
   if (id === 'phone') return <Phone size={22} strokeWidth={1.8} />
-  if (id === 'location') return <MapPin size={22} strokeWidth={1.8} />
   if (id === 'instagram') return <InstagramIcon />
   return null
 }
@@ -76,7 +76,7 @@ export function ContactPage({ content }: ContactPageProps) {
           title={content.channelsTitle}
           titleId="informacion-de-contacto-titulo"
         >
-          <CardGrid columns={3} equalHeight>
+          <CardGrid columns={2} equalHeight>
             {channels.map((channel) => (
               <InfoCard
                 description={channelBody(channel)}
@@ -88,6 +88,14 @@ export function ContactPage({ content }: ContactPageProps) {
           </CardGrid>
         </TopicSection>
       ) : null}
+      <TopicSection
+        id="ubicacion"
+        intro={content.location.intro}
+        title={content.location.title}
+        titleId="ubicacion-titulo"
+      >
+        <RosacLocationMapLoader labels={content.location.labels} location={content.location} />
+      </TopicSection>
       <div className="topic-page-footer page-width">
         <TopicBackLink {...content.backLink} />
       </div>
