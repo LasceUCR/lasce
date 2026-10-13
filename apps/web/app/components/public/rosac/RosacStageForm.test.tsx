@@ -46,8 +46,10 @@ describe('RosacStageForm', () => {
       defaultArgs.stage.description,
     )
     expect(
-      screen.getByRole('textbox', { name: 'Texto alternativo de la fotografía 1' }),
-    ).toHaveValue(sampleImages[0].alt)
+      screen.getByRole('button', { name: 'Editar fotografías de la etapa' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir fotografía' })).toBeInTheDocument()
+    expect(screen.getByText('2 fotografías registradas')).toBeInTheDocument()
   })
 
   test('calls onCancel directly when untouched', async () => {
@@ -111,14 +113,26 @@ describe('RosacStageForm', () => {
     })
   })
 
-  test('allows editing alt text of an existing photo', async () => {
+  test('allows editing alt text of an existing photo via the edit photos modal', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
 
-    const altInput = screen.getByRole('textbox', { name: 'Texto alternativo de la fotografía 1' })
+    await user.click(screen.getByRole('button', { name: 'Editar fotografías de la etapa' }))
+
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
+    expect(editDialog).toBeInTheDocument()
+
+    const altInput = within(editDialog).getByRole('textbox', {
+      name: 'Texto alternativo de la fotografía 1',
+    })
     await user.clear(altInput)
     await user.type(altInput, 'Nueva descripción accesible')
+
+    await user.click(within(editDialog).getByRole('button', { name: 'Guardar fotografías' }))
+    expect(
+      screen.queryByRole('dialog', { name: 'Editar fotografías de la etapa' }),
+    ).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -134,13 +148,23 @@ describe('RosacStageForm', () => {
     )
   })
 
-  test('allows removing a photo when more than one photo exists', async () => {
+  test('allows removing a photo when more than one photo exists via the edit photos modal', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
 
-    const deleteButton = screen.getByRole('button', { name: 'Eliminar fotografía 1' })
+    await user.click(screen.getByRole('button', { name: 'Editar fotografías de la etapa' }))
+
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
+    const deleteButton = within(editDialog).getByRole('button', {
+      name: 'Eliminar fotografía 1',
+    })
     await user.click(deleteButton)
+
+    await user.click(within(editDialog).getByRole('button', { name: 'Guardar fotografías' }))
+    expect(
+      screen.queryByRole('dialog', { name: 'Editar fotografías de la etapa' }),
+    ).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -151,7 +175,7 @@ describe('RosacStageForm', () => {
     )
   })
 
-  test('allows adding a new photo with custom alt text', async () => {
+  test('allows adding a new photo with custom alt text via the add photo modal', async () => {
     const user = userEvent.setup()
     mocks.uploadConstructionStageImage.mockResolvedValueOnce({
       ok: true,
@@ -162,18 +186,22 @@ describe('RosacStageForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
 
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
+    expect(addDialog).toBeInTheDocument()
+
     const file = new File(['fake-image'], 'foto.jpg', { type: 'image/jpeg' })
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, file)
 
-    const newAltInput = screen.getByRole('textbox', {
+    const newAltInput = within(addDialog).getByRole('textbox', {
       name: 'Texto alternativo accesible (alt)',
     })
     await user.type(newAltInput, 'Foto de la nueva grúa')
 
-    await user.click(screen.getByRole('button', { name: 'Guardar foto en la etapa' }))
+    await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
+    expect(screen.queryByRole('dialog', { name: 'Añadir fotografía' })).not.toBeInTheDocument()
 
-    expect(screen.getByText('Fotografías de la etapa (3)')).toBeInTheDocument()
+    expect(screen.getByText('3 fotografías registradas')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
