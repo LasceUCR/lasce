@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -102,7 +102,8 @@ describe('EditableNewsCard', () => {
     renderWithEditMode(true, { ...editArgs, onDelete })
 
     await user.click(screen.getByRole('button', { name: 'Eliminar' }))
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar noticia' })
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(onDelete).toHaveBeenCalledTimes(1)
   })

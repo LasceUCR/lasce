@@ -911,12 +911,14 @@ a {
 
 .button-primary {
   background: var(--action);
+  border-color: var(--action);
   color: var(--on-action);
 }
 
 .button-primary:hover,
 .button-primary:focus-visible {
   background: var(--action-hover);
+  border-color: var(--action-hover);
 }
 
 .button-secondary {
@@ -969,12 +971,14 @@ a {
 
 .button-danger {
   background: var(--danger);
+  border-color: var(--danger);
   color: var(--white);
 }
 
 .button-danger:hover,
 .button-danger:focus-visible {
   background: var(--danger-dark);
+  border-color: var(--danger-dark);
 }
 
 .home-content {
@@ -6287,6 +6291,17 @@ a.gallery-tile:focus-visible {
   background: rgba(13, 39, 55, 0.55);
 }
 
+/* A dialog opened on top of another (discard, save, delete) keeps the one
+   behind mounted, so its fields survive, but only the front dialog is shown. */
+.modal.modal-covered {
+  visibility: hidden;
+}
+
+.modal.modal-covered::backdrop {
+  background: transparent;
+  pointer-events: none;
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -6366,6 +6381,28 @@ a.gallery-tile:focus-visible {
      need it. */
   padding: 0 6px;
   margin: 0 -6px;
+}
+
+/* Confirmation dialogs pin a button to each side (or a pair to the end).
+   `scrollbar-gutter: stable` above reserves a classic scrollbar on the end
+   side even when the dialog does not overflow, so that end button sat a
+   scrollbar-width further in than the title and the start button. These
+   dialogs are short; skip the reservation so both edges share the title's
+   inset. */
+.modal:has(.std-confirm-dialog, .modal-actions) .modal-body {
+  scrollbar-gutter: auto;
+}
+
+/* Multiline boxes only grow downward. A sideways drag used to shrink them
+   narrower than the dialog or past its edge. The minimum height keeps the
+   first typed line in view. */
+.modal textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  resize: vertical;
+  min-height: calc(1.4em + 22px);
 }
 
 .modal-actions {
@@ -6531,12 +6568,26 @@ a.gallery-tile:focus-visible {
 
 .std-confirm-actions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 16px;
   width: 100%;
-  flex-wrap: nowrap;
+}
+
+/* Each button takes half the row, so a short label and a long one share one
+   size. The row itself is the full content width, which keeps the same inset
+   on the left and the right. */
+.std-confirm-actions .button {
+  flex: 1 1 0;
+  width: 0;
+  height: 43px;
+  min-height: 43px;
+  margin: 0;
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  line-height: 1;
 }
 
 @media (max-width: 600px) {
@@ -6549,7 +6600,8 @@ a.gallery-tile:focus-visible {
     flex-direction: column-reverse;
   }
 
-  .std-confirm-actions button {
+  .std-confirm-actions .button {
+    flex: 0 0 auto;
     width: 100%;
   }
 }
