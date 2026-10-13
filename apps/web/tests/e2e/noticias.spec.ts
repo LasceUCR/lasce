@@ -190,7 +190,7 @@ test('allows an admin to create, view, edit, and delete a news article', async (
     await editedItem.getByRole('button', { name: 'Eliminar' }).click()
     const confirmDeleteDialog = page.getByRole('dialog', { name: 'Eliminar noticia' })
     await expect(confirmDeleteDialog).toBeVisible()
-    await confirmDeleteDialog.getByRole('button', { name: 'Confirmar' }).click()
+    await confirmDeleteDialog.getByRole('button', { name: 'Eliminar' }).click()
 
     await expect(page.getByText('Noticia eliminada correctamente.')).toBeVisible()
     await expect(confirmDeleteDialog).toBeHidden()
