@@ -39,6 +39,8 @@ export interface CarouselProps {
   nextPhotoLabel?: string
   /** Shown in place of a photo that fails to load; the rest of the carousel stays usable. */
   imageUnavailableMessage?: string
+  /** Preposition between current and total photo count, e.g. "de" or "of". */
+  ofPreposition?: string
 }
 
 /**
@@ -62,6 +64,7 @@ export function Carousel({
   previousPhotoLabel = 'Fotografía anterior',
   nextPhotoLabel = 'Fotografía siguiente',
   imageUnavailableMessage = 'No fue posible cargar esta fotografía.',
+  ofPreposition = 'de',
 }: CarouselProps) {
   const [{ groupIndex, imageIndex }, setPosition] = useState({ groupIndex: 0, imageIndex: 0 })
   const [failedImages, setFailedImages] = useState<ReadonlySet<string>>(() => new Set())
@@ -131,7 +134,7 @@ export function Carousel({
           <h3>{group.title}</h3>
           <p className={styles.description}>{group.description}</p>
           <p className={styles.photoPosition} aria-hidden="true">
-            {photoNoun} {imageIndex + 1} de {group.images.length}
+            {photoNoun} {imageIndex + 1} {ofPreposition} {group.images.length}
           </p>
           <div className={styles.actions}>
             <div className={styles.groupControls}>
@@ -158,8 +161,8 @@ export function Carousel({
         </div>
       </div>
       <p className={styles.srOnly} role="status" aria-atomic="true">
-        {groupNoun} {groupIndex + 1} de {groups.length}: {group.title}. {photoNoun} {imageIndex + 1}{' '}
-        de {group.images.length}.
+        {groupNoun} {groupIndex + 1} {ofPreposition} {groups.length}: {group.title}. {photoNoun}{' '}
+        {imageIndex + 1} {ofPreposition} {group.images.length}.
       </p>
     </div>
   )

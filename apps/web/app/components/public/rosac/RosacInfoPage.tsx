@@ -215,7 +215,10 @@ export function RosacInfoPage({
         index="4"
         wide
       >
-        <ConstructionCarousel stages={content.construction.stages} />
+        <ConstructionCarousel
+          carousel={content.construction.carousel}
+          stages={content.construction.stages}
+        />
       </TopicSection>
 
       <TopicSection

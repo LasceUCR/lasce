@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useId, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
+import type { InstrumentCardLabels, RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 
 import styles from './InstrumentCard.module.css'
 
@@ -15,9 +15,10 @@ export interface InstrumentCardProps {
 
 interface InstrumentImageProps {
   image?: RosacInstrumentCardContent['image']
+  labels?: InstrumentCardLabels
 }
 
-function InstrumentImage({ image }: InstrumentImageProps) {
+function InstrumentImage({ image, labels }: InstrumentImageProps) {
   const [failed, setFailed] = useState(false)
 
   return (
@@ -33,7 +34,11 @@ function InstrumentImage({ image }: InstrumentImageProps) {
       ) : (
         <div className={styles.placeholder}>
           <ImageIcon aria-hidden="true" size={36} strokeWidth={1.2} />
-          <span>{failed ? 'Imagen no disponible' : 'Imagen pendiente'}</span>
+          <span>
+            {failed
+              ? (labels?.imageUnavailable ?? 'Imagen no disponible')
+              : (labels?.imagePending ?? 'Imagen pendiente')}
+          </span>
         </div>
       )}
     </div>
@@ -42,10 +47,11 @@ function InstrumentImage({ image }: InstrumentImageProps) {
 
 export function InstrumentCard({ instrument }: InstrumentCardProps) {
   const titleId = useId()
+  const labels = instrument.labels
 
   return (
     <article aria-labelledby={titleId} className={styles.card}>
-      <InstrumentImage key={instrument.image?.src} image={instrument.image} />
+      <InstrumentImage key={instrument.image?.src} image={instrument.image} labels={labels} />
       <div className={styles.content}>
         <h3 id={titleId}>{instrument.name}</h3>
         {instrument.pendingMessage ? (
@@ -54,13 +60,13 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
         <dl className={styles.details}>
           {instrument.purpose ? (
             <div>
-              <dt>Propósito</dt>
+              <dt>{labels?.purpose ?? 'Propósito'}</dt>
               <dd>{instrument.purpose}</dd>
             </div>
           ) : null}
           {instrument.characteristics?.length ? (
             <div>
-              <dt>Características</dt>
+              <dt>{labels?.characteristics ?? 'Características'}</dt>
               <dd>
                 <ul>
                   {instrument.characteristics.map((characteristic) => (
@@ -72,7 +78,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
           ) : null}
           {instrument.citation ? (
             <div>
-              <dt>Cómo citar</dt>
+              <dt>{labels?.citation ?? 'Cómo citar'}</dt>
               <dd>{instrument.citation}</dd>
             </div>
           ) : null}

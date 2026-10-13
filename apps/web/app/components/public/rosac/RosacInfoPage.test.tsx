@@ -27,6 +27,9 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
+import { getMessages } from '@/app/lib/i18n/messages'
+import { getRosacInfoContent } from '@/app/lib/rosac'
+
 import { institutionPreview } from './ResearcherCard'
 import { RosacInfoPage, type RosacInfoPageProps } from './RosacInfoPage'
 import { Default, EditMode } from './RosacInfoPage.stories'
@@ -328,5 +331,25 @@ describe('RosacInfoPage', () => {
       }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  test('renders the page in English when provided English content', () => {
+    const englishContent = getRosacInfoContent(getMessages('en'))
+    renderPage({ ...defaultArgs, content: englishContent })
+
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Santa Cruz Radio Observatory (ROSAC)',
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '1. Main characteristics' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '2. Location' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: '3. What do we develop at ROSAC?' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '4. ROSAC construction' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '5. Why observe in radio?' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '6. Scientific instruments' })).toBeInTheDocument()
   })
 })
