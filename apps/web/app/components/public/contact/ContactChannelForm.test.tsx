@@ -112,6 +112,36 @@ describe('ContactChannelForm', () => {
     expect(onCancel).toHaveBeenCalledOnce()
   })
 
+  test('asks to confirm an unchanged translation in the same warning notice', async () => {
+    const user = userEvent.setup({ delay: null })
+    const card: ContactCard = {
+      id: 'instagram',
+      icon: 'instagram',
+      title: 'Instagram',
+      description: '@lasce_ucr',
+      href: 'https://hola.com',
+      lang: 'es',
+      editing: {
+        isLegacy: false,
+        version: '2026-01-01T00:00:00.000Z',
+        content: {
+          es: { title: 'Instagram', description: '@lasce_ucr' },
+          en: { title: 'Instagram', description: '@lasce_ucr' },
+        },
+      },
+    }
+    renderWithIntl(<ContactChannelForm card={card} onCancel={vi.fn()} onSave={vi.fn()} />)
+
+    const description = screen.getAllByRole('textbox', { name: /^Descripción/ })[0]
+    await user.clear(description)
+    await user.type(description, 'Nuevo texto')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    const notice = screen.getByRole('alert')
+    expect(notice).toHaveTextContent('Confirme el texto que no cambió en el otro idioma.')
+    expect(notice).toHaveClass('ui-notice-warning')
+  })
+
   test('asks from the add card before the modal closes', async () => {
     const user = userEvent.setup({ delay: null })
     renderWithIntl(

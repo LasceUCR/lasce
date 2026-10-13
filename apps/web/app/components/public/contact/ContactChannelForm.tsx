@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/app/components/public/Button'
 import { FormField } from '@/app/components/public/FormField'
 import { useModalHeaderSlot } from '@/app/components/public/Modal'
+import { Notice } from '@/app/components/public/Notice'
 import { Select } from '@/app/components/public/Select'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
@@ -211,7 +212,13 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
         />
       ) : null}
 
-      {error ? <p role="alert">{error}</p> : null}
+      {error === t('review') ? (
+        <Notice role="alert" tone="warning">
+          {error}
+        </Notice>
+      ) : error ? (
+        <p role="alert">{error}</p>
+      ) : null}
 
       <div className="cms-form-actions">
         <Button onClick={requestCancel} variant="secondary">
