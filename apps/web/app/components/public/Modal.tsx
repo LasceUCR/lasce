@@ -9,7 +9,6 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { createPortal } from 'react-dom'
 
 import { ToastOutlet } from '@/app/components/public/toast/ToastOutlet'
 
@@ -149,7 +148,7 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
     return null
   }
 
-  const dialog = (
+  return (
     <dialog
       aria-labelledby={titleId}
       className={`modal modal-${size}`}
@@ -202,10 +201,4 @@ export function Modal({ open, title, onClose, children, size = 'medium' }: Modal
       <ToastOutlet />
     </dialog>
   )
-
-  if (typeof document !== 'undefined') {
-    return createPortal(dialog, document.body)
-  }
-
-  return dialog
 }
