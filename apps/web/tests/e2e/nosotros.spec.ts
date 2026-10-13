@@ -51,7 +51,7 @@ test('explains what LASCE is and what its purpose is', async ({ page }) => {
     researchers.getByRole('heading', { name: 'Dr. Luis Gustavo Esquivel Quirós' }),
   ).toBeVisible()
   await expect(researchers.getByRole('heading', { name: 'MSc. Ivannia Calvo' })).toBeVisible()
-  await expect(researchers.getByRole('heading', { name: 'Dr. Felipe Meza' })).toBeVisible()
+  await expect(researchers.getByRole('heading', { name: 'Dr. Felipe Meza Obando' })).toBeVisible()
   await expect(researchers.getByRole('heading', { name: 'MSc. Alonso Vega' })).toBeVisible()
   await expect(researchers.getByRole('heading', { name: 'Dra. Graciela Molina' })).toBeVisible()
   await expect(

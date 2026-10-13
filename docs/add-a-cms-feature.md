@@ -21,8 +21,10 @@ Say you are adding CMS editing to some list of `Widget`s.
   content with edit/delete affordances. Content-agnostic: it takes `onEdit`/`onDelete` callbacks
   and doesn't know what `children` is. Delete asks for confirmation first; there's no undo yet.
   Creating does not confirm: the "Añadir" form saves on "Confirmar". Editing a Nosotros activity
-  still confirms ("Guardar cambios"). Report the outcome of a create, edit or delete with a toast
-  that says what happened, or why it failed: see [`toasts.md`](toasts.md).
+  still confirms ("Guardar cambios"). Cancel on a form that has unsaved changes asks first
+  ("Descartar cambios no guardados"); an untouched form closes immediately. Report the outcome of
+  a create, edit or delete with a toast that says what happened, or why it failed: see
+  [`toasts.md`](toasts.md).
 - `AddItemCard` (`apps/web/app/components/public/cms/AddItemCard.tsx`) — a "+" card that opens
   whatever form you pass it in a modal. Also content-agnostic.
 

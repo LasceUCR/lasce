@@ -774,29 +774,8 @@ export function RosacInfoPage({
       </TopicSection>
 
       <TopicSection
-        id="agradecimientos"
-        index="8"
-        intro={content.acknowledgments.subtitle}
-        title={content.acknowledgments.title}
-        titleId="rosac-acknowledgments-title"
-        wide
-      >
-        <AcknowledgmentsGallery
-          institutions={acknowledgments}
-          label={content.acknowledgments.title}
-          renderInstitution={(institution) => (
-            <EditableAcknowledgmentCard
-              canEdit={canEdit}
-              institution={institution}
-              onSave={(values) => handleSaveAcknowledgment(institution.id!, values)}
-            />
-          )}
-        />
-      </TopicSection>
-
-      <TopicSection
         id="donaciones"
-        index="9"
+        index="8"
         intro={content.donations.subtitle}
         title={content.donations.title}
         titleId="rosac-donations-title"
@@ -821,6 +800,27 @@ export function RosacInfoPage({
             {content.donations.cta.buttonLabel}
           </Button>
         </div>
+      </TopicSection>
+
+      <TopicSection
+        id="agradecimientos"
+        index="9"
+        intro={content.acknowledgments.subtitle}
+        title={content.acknowledgments.title}
+        titleId="rosac-acknowledgments-title"
+        wide
+      >
+        <AcknowledgmentsGallery
+          institutions={acknowledgments}
+          label={content.acknowledgments.title}
+          renderInstitution={(institution) => (
+            <EditableAcknowledgmentCard
+              canEdit={canEdit}
+              institution={institution}
+              onSave={(values) => handleSaveAcknowledgment(institution.id!, values)}
+            />
+          )}
+        />
       </TopicSection>
 
       <TopicSection

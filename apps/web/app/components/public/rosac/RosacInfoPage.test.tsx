@@ -73,8 +73,8 @@ describe('RosacInfoPage', () => {
       '5. ¿Por qué observar en radio?',
       '6. Instrumentos científicos',
       '7. Investigadores',
-      '8. Agradecimientos ROSAC',
-      '9. Donaciones ROSAC',
+      '8. Donaciones ROSAC',
+      '9. Agradecimientos ROSAC',
     ])
     expect(screen.getByRole('region', { name: '4. Construcción del ROSAC' })).toHaveTextContent(
       defaultArgs.content.construction.intro,
@@ -156,7 +156,7 @@ describe('RosacInfoPage', () => {
   test('invites visitors to help and links the donations CTA to the contact page', () => {
     renderPage()
 
-    const donations = screen.getByRole('region', { name: '9. Donaciones ROSAC' })
+    const donations = screen.getByRole('region', { name: '8. Donaciones ROSAC' })
     expect(
       within(donations).getByRole('heading', { name: defaultArgs.content.donations.cta.title }),
     ).toBeInTheDocument()
@@ -287,7 +287,7 @@ describe('RosacInfoPage', () => {
     const [firstDeleteButton] = screen.getAllByRole('button', { name: /^Eliminar a/ })
     await user.click(firstDeleteButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Eliminar investigador' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(`/api/researchers/${firstPerson?.id}`, {
       method: 'DELETE',
@@ -449,10 +449,10 @@ describe('RosacInfoPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  test('offers editing but strictly NO add or delete on acknowledgments (Section 8)', async () => {
+  test('offers editing but strictly NO add or delete on acknowledgments', async () => {
     const user = userEvent.setup()
     renderEditMode()
-    const section = screen.getByRole('region', { name: '8. Agradecimientos ROSAC' })
+    const section = screen.getByRole('region', { name: '9. Agradecimientos ROSAC' })
     const initialCount = defaultArgs.content.acknowledgments.institutions.length
     expect(within(section).getAllByRole('button', { name: /^Editar / })).toHaveLength(initialCount)
     expect(within(section).queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()

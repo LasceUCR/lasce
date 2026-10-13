@@ -192,7 +192,8 @@ describe('ResearchAreasSection', () => {
 
     renderEditableSection()
     clickFirstButton('Eliminar')
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
     expect(fetchMock).toHaveBeenCalledWith(`/api/research-areas/${firstArea.id}`, {
@@ -209,7 +210,8 @@ describe('ResearchAreasSection', () => {
 
     renderEditableSection()
     clickFirstButton('Eliminar')
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
     expect(mocks.refresh).not.toHaveBeenCalled()
