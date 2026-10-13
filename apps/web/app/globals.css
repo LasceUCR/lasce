@@ -2317,7 +2317,7 @@ a {
   flex-wrap: wrap;
 }
 
-.solar-today h2 {
+.solar-today-heading h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
