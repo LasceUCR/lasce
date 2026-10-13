@@ -33,6 +33,12 @@ language, not inline in a component. Most existing copy is still hardcoded Spani
 moved page by page. See [`docs/internationalization.md`](docs/internationalization.md). Keep
 code, comments and commits in English.
 
+Editable database content ("Modo edición") is made bilingual with a translation table per entity
+and shared helpers, not with the catalogues: follow
+[`docs/translate-database-content.md`](docs/translate-database-content.md), whose reference
+implementation is `/publicaciones`. An editor's own labels, popups and messages follow the site's
+language like any other copy.
+
 ## Commands
 
 ```bash
@@ -115,6 +121,17 @@ presentational: data and callbacks arrive through props rather than the componen
 Server Actions or `@lasce/*`. A component may call `useTranslations` for its own fixed UI text;
 content still arrives through props. Co-locate a `.stories.tsx` with one story per meaningful state.
 See [`docs/add-a-component.md`](docs/add-a-component.md).
+
+**Feedback.** The outcome of a user action (create, edit, delete, upload) is reported with a toast
+from `useToast()` (`app/components/public/toast/`): `success` for what worked, `error` for what
+failed. Do not add a new inline success or error message for an action outcome. Send the request
+through `useRequestFeedback()`, which shows the server's reason (`readFailureReason`) or a
+translated fallback, never a bare "something went wrong", and keeps the form open on failure.
+Success messages follow "<Entidad> agregada / actualizada / eliminada correctamente.". Toasts render inside an open `Modal` automatically, so show them from the handler and keep
+the modal open on failure. Field-level validation next to an input stays inline (`FormField`), and
+so do page states such as empty lists and loading (`Notice`, `content-empty`). Older sections
+still use inline alerts and are moved over when they are next touched. See
+[`docs/toasts.md`](docs/toasts.md).
 
 ## Tests
 

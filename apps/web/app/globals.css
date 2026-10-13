@@ -911,12 +911,14 @@ a {
 
 .button-primary {
   background: var(--action);
+  border-color: var(--action);
   color: var(--on-action);
 }
 
 .button-primary:hover,
 .button-primary:focus-visible {
   background: var(--action-hover);
+  border-color: var(--action-hover);
 }
 
 .button-secondary {
@@ -969,12 +971,14 @@ a {
 
 .button-danger {
   background: var(--danger);
+  border-color: var(--danger);
   color: var(--white);
 }
 
 .button-danger:hover,
 .button-danger:focus-visible {
   background: var(--danger-dark);
+  border-color: var(--danger-dark);
 }
 
 .home-content {
@@ -2545,6 +2549,42 @@ a {
   font-weight: 700;
 }
 
+/* --- Bilingual editors (LanguageTabs, TranslationReview) --------------------- */
+
+/* The language tabs reuse .access-tabs / .access-tab; this is the "2 por revisar" or
+   "Sin traducción" note a tab carries, so a problem on the hidden tab stays visible. */
+.cms-language-tab-flag {
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cms-language-panel > .ui-notice:first-child {
+  margin-top: 0;
+}
+
+/* The explanation and the "sigue siendo correcto" switch under a field whose counterpart
+   changed in the other language. */
+.cms-translation-review {
+  margin: -4px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cms-translation-review .ui-notice {
+  margin-top: 0;
+}
+
+/* The save error can carry a "Cerrar y cargar la versión actual" action below its text. */
+.form-alert > p {
+  margin: 0;
+}
+
+.form-alert > .button {
+  margin-top: 12px;
+}
+
 .publications-kpi {
   display: flex;
   align-items: center;
@@ -2791,6 +2831,11 @@ a {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* The news list itself is denser than the shared list (ROSAC's donations also use `.news-list`). */
+.news .news-list {
+  gap: 12px;
 }
 
 .surface-card.news-card {
@@ -5817,6 +5862,17 @@ a.gallery-tile:focus-visible {
   background: #f4fafd;
 }
 
+.file-drop.file-drop-error,
+.file-drop[aria-invalid='true'] {
+  border-color: var(--danger);
+  background: #fff8f8;
+}
+
+.file-drop.file-drop-error:hover,
+.file-drop[aria-invalid='true']:hover {
+  background: #fff1f1;
+}
+
 .file-drop-icon {
   flex-shrink: 0;
   width: 56px;
@@ -5897,6 +5953,11 @@ a.gallery-tile:focus-visible {
   color: var(--ink);
   font-family: inherit;
   font-size: 14px;
+}
+
+/* Taller only: a text area dragged wider would spill out of the form and its modal. */
+.cms-form-field textarea {
+  resize: vertical;
 }
 
 .cms-form-field [aria-invalid='true'] {
@@ -6006,6 +6067,167 @@ a.gallery-tile:focus-visible {
   min-width: 0;
 }
 
+/* Columns of equal width for short fields, such as a date, an identifier and a group: three or
+   two across on a wide form, fewer on a narrow one. Aligned to the top, so a message under one
+   field does not push its neighbours down. */
+.cms-form-grid {
+  display: grid;
+  gap: 0 16px;
+  align-items: start;
+}
+
+.cms-form-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cms-form-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Text boxes, date pickers and selects side by side share one height. */
+.cms-form-grid .cms-form-field :is(input, select) {
+  height: 42px;
+}
+
+@media (max-width: 760px) {
+  .cms-form-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .cms-form-grid-3,
+  .cms-form-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The publication editor's actions stay at the bottom of the modal while the form scrolls. */
+.publication-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: 14px 0 2px;
+  background: var(--white);
+}
+
+/* On a phone the two buttons share one row instead of stacking, so the pinned bar stays short. */
+@media (max-width: 520px) {
+  .nosotros-activity-form-actions.publication-form-actions {
+    flex-wrap: nowrap;
+  }
+
+  .publication-form-actions .button {
+    flex: 1 1 0;
+    width: auto;
+    padding: 0 12px;
+  }
+}
+
+/* Authors as a tag input: one box with the names as chips and, below them, a quiet text box
+   with an "Agregar" button. The box draws the only border; the text box inside has none. */
+.publication-authors {
+  margin-top: 4px;
+}
+
+.publication-authors-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.publication-authors-count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.publication-authors-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 6px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.publication-authors-box.is-invalid {
+  border-color: var(--danger);
+}
+
+/* The focus ring sits on the whole box, where the text box's own border would have been. */
+.publication-authors-box:has(input:focus-visible) {
+  outline: 3px solid var(--action);
+  outline-offset: 3px;
+}
+
+.publication-authors-list {
+  margin: 0;
+  padding: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+}
+
+/* Expanded, a long list scrolls within a few rows instead of stretching the form. */
+.publication-authors-list.is-expanded {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.publication-authors .email-chip {
+  padding: 2px 2px 2px 10px;
+  font-size: 12.5px;
+}
+
+.publication-authors-toggle {
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--blue-dark);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.publication-authors-toggle:hover,
+.publication-authors-toggle:focus-visible {
+  border-color: var(--border);
+  background: var(--page);
+}
+
+.publication-authors-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cms-form-field .publication-authors-entry input {
+  flex: 1 1 auto;
+  height: 32px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+}
+
+.cms-form-field .publication-authors-entry input:focus-visible {
+  outline: none;
+}
+
+.publication-authors-entry .button.publication-authors-add {
+  width: auto;
+  min-height: 32px;
+  flex: none;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
 .news-article-form-actions {
   margin-top: 20px;
   display: flex;
@@ -6047,6 +6269,7 @@ a.gallery-tile:focus-visible {
   padding: 32px 40px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--white);
@@ -6056,7 +6279,7 @@ a.gallery-tile:focus-visible {
 
 /* Confirmation dialogs — a title, a line of text and two buttons. */
 .modal-small {
-  width: min(92vw, 420px);
+  width: min(92vw, 490px);
 }
 
 /* Most forms — the default. */
@@ -6070,13 +6293,71 @@ a.gallery-tile:focus-visible {
 }
 
 .modal::backdrop {
-  background: rgba(13, 39, 55, 0.45);
+  background: rgba(13, 39, 55, 0.55);
+}
+
+/* A dialog opened on top of another (discard, save, delete) keeps the one
+   behind mounted, so its fields survive, but only the front dialog is shown. */
+.modal.modal-covered {
+  visibility: hidden;
+}
+
+.modal.modal-covered::backdrop {
+  background: transparent;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-spinner {
+  animation: spin 0.85s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
 }
 
 .modal h2 {
   flex-shrink: 0;
   margin: 0 0 10px;
   font-size: 18px;
+}
+
+/* The title, and beside it whatever a form puts in its slot (`useModalHeaderSlot`), such as
+   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the slot
+   wraps under the title. */
+.modal-header {
+  flex-shrink: 0;
+  /* Mirrors `.modal-body` below: the same scrollbar gutter and the same padding cancelled by a
+     negative margin, so the tabs end where the fields do and a tab's focus outline has room. */
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  padding: 4px 6px;
+  margin: -4px -6px 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 24px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.modal-header-slot:empty {
+  display: none;
+}
+
+.modal-header-slot .access-tabs {
+  margin: 0;
 }
 
 /* Scrolls on its own once the form/content grows past the dialog's
@@ -6090,6 +6371,8 @@ a.gallery-tile:focus-visible {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Reaching the end of the content does not hand the scroll over to the page behind. */
+  overscroll-behavior: contain;
   /* Reserves the scrollbar's own width up front, so content doesn't sit
      flush against it (or get nudged/clipped) only once scrolling kicks in. */
   scrollbar-gutter: stable;
@@ -6103,6 +6386,28 @@ a.gallery-tile:focus-visible {
      need it. */
   padding: 0 6px;
   margin: 0 -6px;
+}
+
+/* Confirmation dialogs pin a button to each side (or a pair to the end).
+   `scrollbar-gutter: stable` above reserves a classic scrollbar on the end
+   side even when the dialog does not overflow, so that end button sat a
+   scrollbar-width further in than the title and the start button. These
+   dialogs are short; skip the reservation so both edges share the title's
+   inset. */
+.modal:has(.std-confirm-dialog, .modal-actions) .modal-body {
+  scrollbar-gutter: auto;
+}
+
+/* Multiline boxes only grow downward. A sideways drag used to shrink them
+   narrower than the dialog or past its edge. The minimum height keeps the
+   first typed line in view. */
+.modal textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  resize: vertical;
+  min-height: calc(1.4em + 22px);
 }
 
 .modal-actions {
@@ -6144,4 +6449,355 @@ a.gallery-tile:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* ==========================================================================
+   Standard Confirmation Dialog — .std-confirm-*
+   ========================================================================== */
+
+.std-confirm-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.std-confirm-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.std-confirm-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.std-confirm-icon-danger {
+  background: #fef2f2;
+  color: var(--danger, #dc2626);
+  border: 1px solid #fee2e2;
+}
+
+.std-confirm-icon-warning {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fef3c7;
+}
+
+.std-confirm-icon-info {
+  background: #f0f9ff;
+  color: var(--blue, #087fbd);
+  border: 1px solid #e0f2fe;
+}
+
+.std-confirm-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.std-confirm-title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--navy-deep, #0d2737);
+  line-height: 1.3;
+}
+
+.std-confirm-message {
+  margin: 0;
+  color: var(--ink, #0d2737);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.std-confirm-target-card {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--page, #eef4f7);
+  border-radius: 6px;
+  border-left: 4px solid var(--blue, #087fbd);
+  font-size: 0.9rem;
+  color: var(--navy-deep, #0d2737);
+  word-break: break-word;
+}
+
+.std-confirm-target-card-danger {
+  border-left-color: var(--danger, #dc2626);
+  background: #fff8f8;
+}
+
+.std-confirm-consequence {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.std-confirm-consequence-danger {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
+}
+
+.std-confirm-consequence-warning {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fef3c7;
+}
+
+.std-confirm-consequence-info {
+  background: #f0f9ff;
+  color: #075985;
+  border: 1px solid #e0f2fe;
+}
+
+.std-confirm-error {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.std-confirm-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+/* Each button takes half the row, so a short label and a long one share one
+   size. The row itself is the full content width, which keeps the same inset
+   on the left and the right. */
+.std-confirm-actions .button {
+  flex: 1 1 0;
+  width: 0;
+  height: 43px;
+  min-height: 43px;
+  margin: 0;
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .std-confirm-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .std-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .std-confirm-actions .button {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   Management Modal — .mgmt-form-*
+   ========================================================================== */
+
+.mgmt-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mgmt-form-intro {
+  margin: 0 0 6px;
+  color: var(--muted, #536a7c);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.mgmt-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mgmt-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mgmt-form-label {
+  font-weight: 500;
+  font-size: 0.92rem;
+  color: var(--navy-deep, #0d2737);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mgmt-form-required {
+  color: var(--input-error, #b42318);
+}
+
+.mgmt-form-input,
+.mgmt-form-select,
+.mgmt-form-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border, #d6e1e8);
+  border-radius: 6px;
+  background: var(--white, #ffffff);
+  color: var(--ink, #0d2737);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mgmt-form-input:focus,
+.mgmt-form-select:focus,
+.mgmt-form-textarea:focus {
+  outline: none;
+  border-color: var(--blue, #087fbd);
+  box-shadow: 0 0 0 3px rgba(8, 127, 189, 0.15);
+}
+
+.mgmt-form-input-error {
+  border-color: var(--input-error, #b42318) !important;
+  background: #fff8f8;
+}
+
+.mgmt-form-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.18) !important;
+}
+
+.mgmt-form-error-text {
+  margin: 2px 0 0;
+  color: var(--input-error, #b42318);
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mgmt-photo-upload {
+  border: 2px dashed var(--border, #d6e1e8);
+  border-radius: 8px;
+  padding: 18px;
+  text-align: center;
+  background: var(--page, #eef4f7);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mgmt-photo-upload:hover {
+  border-color: var(--blue, #087fbd);
+  background: #e6f1f8;
+}
+
+.mgmt-photo-upload-error {
+  border-color: var(--input-error, #b42318) !important;
+  background: #fff5f5 !important;
+}
+
+.mgmt-photo-upload-text {
+  font-size: 0.88rem;
+  color: var(--navy-deep, #0d2737);
+}
+
+.mgmt-photo-upload-hint {
+  font-size: 0.78rem;
+  color: var(--muted, #536a7c);
+}
+
+.mgmt-photo-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--white, #ffffff);
+  border: 1px solid var(--border, #d6e1e8);
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mgmt-photo-badge {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--blue, #087fbd);
+  flex: 1;
+  text-align: left;
+}
+
+.mgmt-photo-remove {
+  background: none;
+  border: none;
+  color: var(--danger, #dc2626);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.82rem;
+}
+
+.mgmt-photo-remove:hover {
+  text-decoration: underline;
+}
+
+.mgmt-form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border, #d6e1e8);
+}
+
+.mgmt-form-actions-right {
+  display: flex;
+  gap: 10px;
+}
+
+.mgmt-form-success {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .mgmt-form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .mgmt-form-actions-right {
+    flex-direction: column-reverse;
+  }
 }

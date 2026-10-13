@@ -27,16 +27,13 @@ const mockArticle: NewsArticle = {
   abstract:
     'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
   href: 'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
-  imageUrl: '/images/news/la-nacion-1.png',
-  imageAlt:
-    'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
 }
 
 export const ViewMode: Story = {
   args: {
     article: mockArticle,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: (_values, close) => close(),
   },
   decorators: [
     (Story) => (
@@ -53,7 +50,7 @@ export const EditModeOn: Story = {
     canEdit: true,
     canDelete: true,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: (_values, close) => close(),
   },
   decorators: [
     (Story) => (
@@ -71,7 +68,7 @@ export const AssistantMode: Story = {
     canEdit: true,
     canDelete: false,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: (_values, close) => close(),
   },
   decorators: [
     (Story) => (

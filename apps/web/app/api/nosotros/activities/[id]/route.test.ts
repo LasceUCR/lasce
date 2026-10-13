@@ -28,19 +28,20 @@ vi.mock('@/app/lib/nosotros', async (importOriginal) => {
 
 import { DELETE, PATCH } from './route'
 
-const params = Promise.resolve({ id: 'abc' })
+const activityId = '5f0b1c9e-3d2a-4f6b-9c8d-7e6f5a4b3c2d'
+const params = Promise.resolve({ id: activityId })
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
 const validBody = { icon: 'waves', title: 'Nuevo título', description: 'Nuevo texto' }
 
 function patchRequest(body: unknown) {
-  return new Request('http://localhost/api/nosotros/activities/abc', {
+  return new Request(`http://localhost/api/nosotros/activities/${activityId}`, {
     method: 'PATCH',
     body: typeof body === 'string' ? body : JSON.stringify(body),
   })
 }
 
 function deleteRequest() {
-  return new Request('http://localhost/api/nosotros/activities/abc', { method: 'DELETE' })
+  return new Request(`http://localhost/api/nosotros/activities/${activityId}`, { method: 'DELETE' })
 }
 
 function deniedResponse(status: number) {
@@ -88,25 +89,51 @@ describe('PATCH /api/nosotros/activities/[id]', () => {
     expect(mocks.updateNosotrosActivity).not.toHaveBeenCalled()
   })
 
-  test('returns 404 when the activity does not exist', async () => {
+  test('returns 404 when the activity does not exist, saying it may have been deleted', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     mocks.updateNosotrosActivity.mockResolvedValue(null)
 
     const response = await PATCH(patchRequest(validBody), { params })
 
     expect(response.status).toBe(404)
+    expect((await response.json()).error).toBe(
+      'Esta actividad ya no existe. Es posible que otra persona la haya eliminado; recargue la página.',
+    )
+  })
+
+  test('returns 404 for an id that is not a uuid, without querying the database', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+
+    const response = await PATCH(patchRequest(validBody), {
+      params: Promise.resolve({ id: 'abc' }),
+    })
+
+    expect(response.status).toBe(404)
+    expect(mocks.updateNosotrosActivity).not.toHaveBeenCalled()
+  })
+
+  test('explains a database failure instead of throwing', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateNosotrosActivity.mockRejectedValue(new Error('connection refused'))
+
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(500)
+    expect((await response.json()).error).toBe(
+      'No se pudieron guardar los cambios: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+    )
   })
 
   test('saves the change and stamps modifiedBy with the current admin', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    const saved = { id: 'abc', ...validBody, modifiedAt: '2026-01-01T00:00:00.000Z' }
+    const saved = { id: activityId, ...validBody, modifiedAt: '2026-01-01T00:00:00.000Z' }
     mocks.updateNosotrosActivity.mockResolvedValue(saved)
 
     const response = await PATCH(patchRequest(validBody), { params })
 
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ activity: saved })
-    expect(mocks.updateNosotrosActivity).toHaveBeenCalledWith('abc', validBody, adminUser.id)
+    expect(mocks.updateNosotrosActivity).toHaveBeenCalledWith(activityId, validBody, adminUser.id)
   })
 })
 
@@ -120,6 +147,27 @@ describe('DELETE /api/nosotros/activities/[id]', () => {
     expect(response).toBe(denied)
     expect(mocks.requireApiPermission).toHaveBeenCalledWith('delete_components')
     expect(mocks.deleteNosotrosActivity).not.toHaveBeenCalled()
+  })
+
+  test('returns 404 for an id that is not a uuid, without querying the database', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+
+    const response = await DELETE(deleteRequest(), { params: Promise.resolve({ id: 'abc' }) })
+
+    expect(response.status).toBe(404)
+    expect(mocks.deleteNosotrosActivity).not.toHaveBeenCalled()
+  })
+
+  test('explains a database failure instead of throwing', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.deleteNosotrosActivity.mockRejectedValue(new Error('connection refused'))
+
+    const response = await DELETE(deleteRequest(), { params })
+
+    expect(response.status).toBe(500)
+    expect((await response.json()).error).toBe(
+      'No se pudo eliminar la actividad: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
+    )
   })
 
   test('returns 404 when the activity does not exist', async () => {
@@ -138,6 +186,6 @@ describe('DELETE /api/nosotros/activities/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteNosotrosActivity).toHaveBeenCalledWith('abc')
+    expect(mocks.deleteNosotrosActivity).toHaveBeenCalledWith(activityId)
   })
 })

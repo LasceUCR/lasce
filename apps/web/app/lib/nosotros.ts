@@ -138,7 +138,7 @@ export const nosotrosContent = {
       {
         id: 'felipe-meza',
         src: '/images/Researchers/FelipeMeza.jpg',
-        name: 'Dr. Felipe Meza',
+        name: 'Dr. Felipe Meza Obando',
         role: 'Investigador colaborador',
         email: 'felipe.mezaobando@ucr.ac.cr',
         institution:
