@@ -548,22 +548,8 @@ export function RosacInfoPage({
       </TopicSection>
 
       <TopicSection
-        id="agradecimientos"
-        index="8"
-        intro={content.acknowledgments.subtitle}
-        title={content.acknowledgments.title}
-        titleId="rosac-acknowledgments-title"
-        wide
-      >
-        <AcknowledgmentsGallery
-          institutions={content.acknowledgments.institutions}
-          label={content.acknowledgments.title}
-        />
-      </TopicSection>
-
-      <TopicSection
         id="donaciones"
-        index="9"
+        index="8"
         intro={content.donations.subtitle}
         title={content.donations.title}
         titleId="rosac-donations-title"
@@ -588,6 +574,20 @@ export function RosacInfoPage({
             {content.donations.cta.buttonLabel}
           </Button>
         </div>
+      </TopicSection>
+
+      <TopicSection
+        id="agradecimientos"
+        index="9"
+        intro={content.acknowledgments.subtitle}
+        title={content.acknowledgments.title}
+        titleId="rosac-acknowledgments-title"
+        wide
+      >
+        <AcknowledgmentsGallery
+          institutions={content.acknowledgments.institutions}
+          label={content.acknowledgments.title}
+        />
       </TopicSection>
 
       <TopicSection
