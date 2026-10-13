@@ -161,6 +161,14 @@
       "deleted": "Contact channel deleted successfully.",
       "saveFailed": "The contact channel could not be saved.",
       "deleteFailed": "The contact channel could not be deleted.",
+      "deleteConfirm": "Confirm",
+      "deleteCancel": "Cancel",
+      "discardDialog": {
+        "title": "Discard unsaved changes",
+        "message": "If you discard now, all the data entered that has not been saved will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
       "icons": {
         "phone": "Phone",
         "instagram": "Instagram",

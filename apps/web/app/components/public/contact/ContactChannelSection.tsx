@@ -1,7 +1,7 @@
 'use client'
 
 import { Mail, MapPin, Phone, type LucideIcon } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 
@@ -19,7 +19,7 @@ import {
   type ContactCard,
   type ContactChannelIcon,
 } from '@/app/lib/contact-channel-schema'
-import { ContactChannelForm, type ContactChannelSaveBody } from './ContactChannelForm'
+import { ContactChannelForm, type ContactChannelFormHandle, type ContactChannelSaveBody } from './ContactChannelForm'
 
 function FacebookIcon() {
   return (
@@ -108,6 +108,8 @@ export function ContactChannelSection({
   const { editMode } = useEditMode()
   const router = useRouter()
   const sendWithFeedback = useRequestFeedback()
+  const createForm = useRef<ContactChannelFormHandle>(null)
+  const editForm = useRef<ContactChannelFormHandle>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const visible = cards.filter(isVisibleContactCard)
   const editing = visible.find((card) => card.id === editingId) ?? null
@@ -160,6 +162,8 @@ export function ContactChannelSection({
 
           return (
             <EditableWrapper
+              deleteCancelLabel={t('deleteCancel')}
+              deleteConfirmLabel={t('deleteConfirm')}
               deleteConfirmMessage={t('deleteMessage', { title: card.title })}
               deleteConfirmTitle={t('deleteTitle')}
               deleteLabel={t('delete', { title: card.title })}
@@ -187,7 +191,13 @@ export function ContactChannelSection({
           )
         })}
         {editMode && canCreate ? (
-          <AddItemCard label={t('add')}>
+          <AddItemCard
+            label={t('add')}
+            onRequestClose={(close) => {
+              if (createForm.current) createForm.current.requestCancel()
+              else close()
+            }}
+          >
             {({ close }) => (
               <ContactChannelForm
                 card={null}
@@ -195,13 +205,21 @@ export function ContactChannelSection({
                 onSave={(body) => {
                   void save('/api/contacto/canales', 'POST', body, close)
                 }}
+                ref={createForm}
               />
             )}
           </AddItemCard>
         ) : null}
       </CardGrid>
 
-      <Modal onClose={() => setEditingId(null)} open={editing !== null} title={t('editTitle')}>
+      <Modal
+        onClose={() => {
+          if (editForm.current) editForm.current.requestCancel()
+          else setEditingId(null)
+        }}
+        open={editing !== null}
+        title={t('editTitle')}
+      >
         {editing ? (
           <ContactChannelForm
             card={editing}
@@ -211,6 +229,7 @@ export function ContactChannelSection({
                 setEditingId(null),
               )
             }}
+            ref={editForm}
           />
         ) : null}
       </Modal>

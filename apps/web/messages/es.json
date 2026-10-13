@@ -161,6 +161,14 @@
       "deleted": "Canal de contacto eliminado correctamente.",
       "saveFailed": "No se pudo guardar el canal de contacto.",
       "deleteFailed": "No se pudo eliminar el canal de contacto.",
+      "deleteConfirm": "Confirmar",
+      "deleteCancel": "Cancelar",
+      "discardDialog": {
+        "title": "Descartar cambios no guardados",
+        "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+        "keepEditing": "Seguir editando",
+        "discard": "Descartar"
+      },
       "icons": {
         "phone": "Teléfono",
         "instagram": "Instagram",

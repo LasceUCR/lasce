@@ -2,6 +2,8 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
+import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
+import type { ContactCard } from '@/app/lib/contact-channel-schema'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { ContactChannelForm } from './ContactChannelForm'
@@ -54,6 +56,103 @@ describe('ContactChannelForm', () => {
         },
       }),
     )
+  })
+
+  test('asks before closing a new card, even before anything is typed', async () => {
+    const user = userEvent.setup({ delay: null })
+    const onCancel = vi.fn()
+    renderWithIntl(<ContactChannelForm card={null} onCancel={onCancel} onSave={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+    expect(onCancel).toHaveBeenCalledOnce()
+  })
+
+  test('asks before closing an existing card', async () => {
+    const user = userEvent.setup({ delay: null })
+    const onCancel = vi.fn()
+    const card: ContactCard = {
+      id: 'phone',
+      icon: 'phone',
+      title: 'Teléfono',
+      description: '2511-6566',
+      href: null,
+      lang: 'es',
+      editing: {
+        isLegacy: false,
+        version: '2026-01-01T00:00:00.000Z',
+        content: {
+          es: { title: 'Teléfono', description: '2511-6566' },
+          en: { title: 'Phone', description: '2511-6566' },
+        },
+      },
+    }
+    renderWithIntl(<ContactChannelForm card={card} onCancel={onCancel} onSave={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(onCancel).not.toHaveBeenCalled()
+    const dialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    expect(dialog).toHaveTextContent(
+      'Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.',
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(field('Título')).toHaveValue('Teléfono')
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+    expect(onCancel).toHaveBeenCalledOnce()
+  })
+
+  test('asks from the add card before the modal closes', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderWithIntl(
+      <AddItemCard label="Agregar canal de contacto">
+        {({ close }) => <ContactChannelForm card={null} onCancel={close} onSave={vi.fn()} />}
+      </AddItemCard>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Agregar canal de contacto' }))
+    await user.type(field('Título'), 'Correo')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Agregar canal de contacto' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+  })
+
+  test('asks before discarding a title that was typed', async () => {
+    const user = userEvent.setup({ delay: null })
+    const onCancel = vi.fn()
+    renderWithIntl(<ContactChannelForm card={null} onCancel={onCancel} onSave={vi.fn()} />)
+
+    await user.type(field('Título'), 'Correo')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+    expect(onCancel).not.toHaveBeenCalled()
+    expect(field('Título')).toHaveValue('Correo')
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+    expect(onCancel).toHaveBeenCalledOnce()
   })
 
   test('hides the link again when the symbol is not a social network', async () => {

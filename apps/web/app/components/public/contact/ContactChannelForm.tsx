@@ -1,11 +1,13 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField } from '@/app/components/public/FormField'
+import { useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Select } from '@/app/components/public/Select'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import type { Locale } from '@/app/lib/i18n/config'
@@ -39,31 +41,49 @@ export interface ContactChannelSaveBody {
   confirmedUnchanged?: ContactChannelReview[]
 }
 
+export interface ContactChannelFormHandle {
+  /** Closes through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface ContactChannelFormProps {
   /** `null` starts a new card. An existing card opens pre-filled, in both languages. */
   card: ContactCard | null
   onSave: (body: ContactChannelSaveBody) => void
   onCancel: () => void
+  /** The modal's close button and Escape call this, the same way "Cancelar" does. */
+  ref?: Ref<ContactChannelFormHandle>
 }
 
-export function ContactChannelForm({ card, onSave, onCancel }: ContactChannelFormProps) {
+export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChannelFormProps) {
   const t = useTranslations('contact.cards')
   const uiLocale = useLocale() as Locale
+  const headerSlot = useModalHeaderSlot()
   const iconFieldId = useId()
-  const [icon, setIcon] = useState<ContactChannelIcon>(card?.icon ?? 'phone')
-  const [href, setHref] = useState(card?.href ?? '')
-  const [selected, setSelected] = useState<Locale>(uiLocale)
-  const [draft, setDraft] = useState<ContentDraft<ContactChannelField>>(() =>
-    card?.editing
+  const initial = useRef({
+    icon: (card?.icon ?? 'phone') as ContactChannelIcon,
+    href: card?.href ?? '',
+    draft: card?.editing
       ? draftFromStored(contactChannelContent, card.editing.content)
       : emptyContentDraft(contactChannelContent),
-  )
+  })
+  const [icon, setIcon] = useState<ContactChannelIcon>(initial.current.icon)
+  const [href, setHref] = useState(initial.current.href)
+  const [selected, setSelected] = useState<Locale>(uiLocale)
+  const [draft, setDraft] = useState<ContentDraft<ContactChannelField>>(initial.current.draft)
   const [confirmed, setConfirmed] = useState<ContactChannelReview[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [discardOpen, setDiscardOpen] = useState(false)
 
   const stored = card?.editing?.content ?? null
   const pending = reviewsNeeded(contactChannelContent, stored, draft)
   const social = isSocialChannelIcon(icon)
+
+  function requestCancel() {
+    setDiscardOpen(true)
+  }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function setField(locale: Locale, field: ContactChannelField, value: string) {
     setDraft((current) => ({
@@ -123,7 +143,13 @@ export function ContactChannelForm({ card, onSave, onCancel }: ContactChannelFor
         />
       </label>
 
-      <LanguageTabs label={t('language')} onSelect={setSelected} selected={selected}>
+      <LanguageTabs
+        copyLang={uiLocale}
+        label={t('language')}
+        onSelect={setSelected}
+        selected={selected}
+        tablistContainer={headerSlot}
+      >
         {(locale) => (
           <>
             <FormField
@@ -188,13 +214,27 @@ export function ContactChannelForm({ card, onSave, onCancel }: ContactChannelFor
       {error ? <p role="alert">{error}</p> : null}
 
       <div className="cms-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('cancel')}
         </Button>
         <Button onClick={save} variant="primary">
           {t('confirm')}
         </Button>
       </div>
+
+      <StandardConfirmDialog
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
+        onCancel={() => setDiscardOpen(false)}
+        onConfirm={() => {
+          setDiscardOpen(false)
+          onCancel()
+        }}
+        open={discardOpen}
+        severity="warning"
+        title={t('discardDialog.title')}
+      />
     </div>
   )
 }
