@@ -39,3 +39,33 @@ export async function uploadResearcherImage(
     throw error
   }
 }
+
+export type UploadConstructionStageImageResult =
+  { ok: true; imageUrl: string } | { ok: false; error: string }
+
+export async function uploadConstructionStageImage(
+  formData: FormData,
+): Promise<UploadConstructionStageImageResult> {
+  const [canCreate, canEdit] = await Promise.all([
+    userHasPermission('create_components'),
+    userHasPermission('edit_components'),
+  ])
+  if (!canCreate && !canEdit) {
+    return { ok: false, error: 'No tiene permisos para subir imágenes.' }
+  }
+
+  const file = formData.get('file')
+  if (!(file instanceof File)) {
+    return { ok: false, error: 'No se proporcionó ninguna imagen.' }
+  }
+
+  try {
+    const objectKey = await assetStorage.createUpload(file)
+    return { ok: true, imageUrl: assetStorage.getPublicUrl(objectKey) }
+  } catch (error) {
+    if (error instanceof InvalidFileSizeError || error instanceof InvalidFileTypeError) {
+      return { ok: false, error: error.message }
+    }
+    throw error
+  }
+}
