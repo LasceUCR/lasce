@@ -1,8 +1,10 @@
-import { Carousel } from '@/app/components/public/Carousel'
-import type { ConstructionContent } from '@/app/lib/rosac-construction'
+import { Carousel, type CarouselGroup } from '@/app/components/public/Carousel'
+import type { ConstructionContent, ConstructionStage } from '@/app/lib/rosac-construction'
 
 export interface ConstructionCarouselProps {
   stages: ConstructionContent['stages']
+  canEdit?: boolean
+  onEditStage?: (stage: ConstructionStage) => void
 }
 
 /**
@@ -11,6 +13,23 @@ export interface ConstructionCarouselProps {
  * ROSAC-specific accessible name. Every other label keeps the `Carousel`
  * defaults, which already match the copy this section shipped with.
  */
-export function ConstructionCarousel({ stages }: ConstructionCarouselProps) {
-  return <Carousel ariaLabel="Proceso de construcción del ROSAC" groups={stages} />
+export function ConstructionCarousel({
+  stages,
+  canEdit = false,
+  onEditStage,
+}: ConstructionCarouselProps) {
+  function handleEditGroup(group: CarouselGroup) {
+    if (!onEditStage) return
+    const stage = stages.find((s) => s.id === group.id) ?? (group as unknown as ConstructionStage)
+    onEditStage(stage)
+  }
+
+  return (
+    <Carousel
+      ariaLabel="Proceso de construcción del ROSAC"
+      groups={stages}
+      onEditGroup={canEdit && onEditStage ? handleEditGroup : undefined}
+      editGroupLabel="Editar etapa"
+    />
+  )
 }

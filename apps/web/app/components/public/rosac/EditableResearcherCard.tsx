@@ -105,6 +105,7 @@ export function EditableResearcherCard({
   return (
     <>
       <EditableWrapper
+        deleteConfirmLabel="Eliminar"
         deleteConfirmMessage={`¿Desea eliminar a "${researcher.name}"? Esta acción no se puede deshacer.`}
         deleteConfirmTitle="Eliminar investigador"
         deleteLabel={`Eliminar a ${researcher.name}`}

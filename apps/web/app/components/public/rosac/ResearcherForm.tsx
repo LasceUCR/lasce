@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { IconButton } from '@/app/components/public/IconButton'
@@ -52,6 +53,14 @@ export interface ResearcherFormProps {
   confirmMessage?: string
 }
 
+/** Messages match `researcherInputSchema` / `nosotrosResearcherInputSchema`
+ * so a rejection reads the same whether it's caught here or by the server. */
+function requireNonEmpty(message: string) {
+  return (value: string) => {
+    if (value.trim() === '') throw new Error(message)
+  }
+}
+
 /** Matches the database CHECK constraint on both `researchers.email` and
  * `nosotros_researchers.email` — never send more than this many. */
 const MAX_EMAILS = 2
@@ -96,14 +105,14 @@ export function ResearcherForm({
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [validationError, setValidationError] = useState<string | null>(null)
   const uploadErrorRef = useRef<HTMLParagraphElement>(null)
-  const validationErrorRef = useRef<HTMLParagraphElement>(null)
 
-  // Scrolls the error into view as soon as it appears — the modal this form
-  // usually sits in can be taller than the viewport, and a message added
+  // Scrolls the upload error into view as soon as it appears — the modal this
+  // form usually sits in can be taller than the viewport, and a message added
   // below the last field is otherwise easy to miss without scrolling down.
   useEffect(() => {
     if (uploadError) {
@@ -111,35 +120,55 @@ export function ResearcherForm({
     }
   }, [uploadError])
 
-  useEffect(() => {
-    if (validationError) {
-      scrollIntoViewIfSupported(validationErrorRef.current)
-    }
-  }, [validationError])
-
   const hasPhoto = photoFile !== null || (Boolean(researcher?.src) && !photoRemoved)
+  const photoError = hasAttemptedSubmit && !hasPhoto ? 'La foto es obligatoria.' : null
+  const roleError = hasAttemptedSubmit && role.trim() === '' ? 'El rol es obligatorio.' : null
+  const nameError = hasAttemptedSubmit && name.trim() === '' ? 'El nombre es obligatorio.' : null
+  const institutionError =
+    hasAttemptedSubmit && institution.trim() === '' ? 'La institución es obligatoria.' : null
 
-  /** Only computed when "Confirmar" is pressed — see the note on the button below. */
-  function missingFields(): string[] {
-    const missing: string[] = []
-    if (!hasPhoto) missing.push('Foto')
-    if (role.trim() === '') missing.push('Rol')
-    if (name.trim() === '') missing.push('Nombre')
-    if (institution.trim() === '') missing.push('Institución')
-    return missing
+  const initialEmails = parseEmails(researcher?.email)
+  const emailsChanged =
+    emails.length !== initialEmails.length ||
+    emails.some((address, index) => address !== initialEmails[index])
+  const isDirty =
+    role !== (researcher?.role ?? '') ||
+    name !== (researcher?.name ?? '') ||
+    institution !== (researcher?.institution ?? '') ||
+    description !== (researcher?.description ?? '') ||
+    emailsChanged ||
+    newEmail.trim() !== '' ||
+    photoFile !== null ||
+    photoRemoved
+
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+      return
+    }
+    onCancel()
   }
 
-  // Validates only when "Confirmar" is pressed, not as the person types —
-  // same reasoning as the add-contact modal: a message that appears before
-  // anyone has finished filling the form in reads as premature nagging.
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
+  }
+
+  // Field errors appear once "Confirmar" is pressed, then clear on their own
+  // as each field becomes valid — same as the news article form.
   function handleConfirmClick() {
-    const missing = missingFields()
-    if (missing.length > 0) {
-      setValidationError(`Falta completar: ${missing.join(', ')}.`)
+    setHasAttemptedSubmit(true)
+    if (!hasPhoto || role.trim() === '' || name.trim() === '' || institution.trim() === '') {
+      if (role.trim() === '') {
+        document.getElementById('researcher-role')?.focus()
+      } else if (name.trim() === '') {
+        document.getElementById('researcher-name')?.focus()
+      } else if (institution.trim() === '') {
+        document.getElementById('researcher-institution')?.focus()
+      }
       return
     }
 
-    setValidationError(null)
     setConfirmOpen(true)
   }
 
@@ -209,35 +238,34 @@ export function ResearcherForm({
   return (
     <div className="cms-form">
       <FileDropInput
+        errorMessage={photoError}
         existingImageUrl={researcher?.src}
         helperText="Retrato del investigador, en formato JPG o PNG."
         label="Foto"
         onFileSelect={(file) => {
           setPhotoFile(file)
           setPhotoRemoved(file === null)
-          setValidationError(null)
         }}
+        required
       />
 
       <FormField
+        errorMessage={roleError}
         id="researcher-role"
         label="Rol"
-        onChange={(value) => {
-          setRole(value)
-          setValidationError(null)
-        }}
+        onChange={setRole}
         required
+        validate={requireNonEmpty('El rol es obligatorio.')}
         value={role}
       />
 
       <FormField
+        errorMessage={nameError}
         id="researcher-name"
         label="Nombre"
-        onChange={(value) => {
-          setName(value)
-          setValidationError(null)
-        }}
+        onChange={setName}
         required
+        validate={requireNonEmpty('El nombre es obligatorio.')}
         value={name}
       />
 
@@ -295,13 +323,12 @@ export function ResearcherForm({
       </Modal>
 
       <FormField
+        errorMessage={institutionError}
         id="researcher-institution"
         label="Institución"
-        onChange={(value) => {
-          setInstitution(value)
-          setValidationError(null)
-        }}
+        onChange={setInstitution}
         required
+        validate={requireNonEmpty('La institución es obligatoria.')}
         value={institution}
       />
 
@@ -309,10 +336,7 @@ export function ResearcherForm({
         id="researcher-description"
         label="Descripción"
         multiline
-        onChange={(value) => {
-          setDescription(value)
-          setValidationError(null)
-        }}
+        onChange={setDescription}
         value={description}
       />
 
@@ -322,14 +346,8 @@ export function ResearcherForm({
         </p>
       ) : null}
 
-      {validationError ? (
-        <p className="form-alert" ref={validationErrorRef} role="alert">
-          {validationError}
-        </p>
-      ) : null}
-
       <div className="cms-form-actions">
-        <Button onClick={onCancel} variant="secondary">
+        <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
@@ -343,6 +361,17 @@ export function ResearcherForm({
         onConfirm={handleConfirm}
         open={confirmOpen}
         title={confirmTitle}
+      />
+
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
       />
     </div>
   )
