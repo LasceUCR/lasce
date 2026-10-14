@@ -7,6 +7,9 @@ is to replicate everything here so the two languages never disagree about a colu
 from sqlalchemy import UniqueConstraint
 
 from app.db import (
+    Collaboration,
+    CollaborationScope,
+    CollaborationTranslation,
     ExisFile,
     GalleryAlbum,
     GalleryMedia,
@@ -26,6 +29,34 @@ from app.db import (
     UserRole,
     UserSession,
 )
+
+
+def test_collaboration_classification_and_defaults_match_prisma() -> None:
+    columns = Collaboration.__table__.columns
+    assert Collaboration.__table__.schema == "research"
+    assert columns["acronym"].nullable
+    assert not columns["country"].nullable
+    assert columns["id"].server_default is not None
+    assert columns["updated_at"].server_default is not None
+    assert [member.value for member in CollaborationScope] == ["national", "international"]
+    assert columns["scope"].type.enums == ["national", "international"]
+    assert columns["scope"].type.schema == "research"
+    assert columns["scope"].type.create_type is False
+
+
+def test_collaboration_translations_are_owned_by_one_record_per_locale() -> None:
+    columns = CollaborationTranslation.__table__.columns
+    (parent_fk,) = columns["collaboration_id"].foreign_keys
+    assert CollaborationTranslation.__table__.schema == "research"
+    assert parent_fk.target_fullname == "research.collaborations.id"
+    assert parent_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert not columns["country"].nullable
+    assert any(
+        {column.name for column in constraint.columns} == {"collaboration_id", "locale"}
+        for constraint in CollaborationTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
 
 
 def test_research_tables_live_in_the_research_schema() -> None:
