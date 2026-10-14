@@ -490,15 +490,15 @@ on the base row. The base row's `modified_at` is the version an editor saves aga
 `description` is optional on the base row and all-or-none across languages: null in every
 language, or filled in every language.
 
-| Column          | Prisma type | Postgres type    | Constraints                                                      |
-| --------------- | ----------- | ---------------- | ---------------------------------------------------------------- |
-| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                          |
-| `researcher_id` | `String`    | `uuid`           | FK → `nosotros_researchers.id`, `ON DELETE CASCADE`, not null    |
-| `locale`        | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es`        |
-| `role`          | `String`    | `text`           | not null                                                         |
-| `description`   | `String?`   | `text`           | nullable                                                         |
-| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                        |
-| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                           |
+| Column          | Prisma type | Postgres type    | Constraints                                                   |
+| --------------- | ----------- | ---------------- | ------------------------------------------------------------- |
+| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                       |
+| `researcher_id` | `String`    | `uuid`           | FK → `nosotros_researchers.id`, `ON DELETE CASCADE`, not null |
+| `locale`        | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es`     |
+| `role`          | `String`    | `text`           | not null                                                      |
+| `description`   | `String?`   | `text`           | nullable                                                      |
+| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                     |
+| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                        |
 
 Constraints: `UNIQUE (researcher_id, locale)`. Researchers created before this table existed have
 no row and are shown as they are, with an unknown content language. See

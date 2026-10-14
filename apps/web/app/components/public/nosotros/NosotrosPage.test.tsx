@@ -1031,10 +1031,7 @@ describe('NosotrosPage', () => {
       'Investigador',
     )
     await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
-    await user.type(
-      within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ }),
-      'Researcher',
-    )
+    await user.type(within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ }), 'Researcher')
     const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
 
@@ -1108,10 +1105,7 @@ describe('NosotrosPage', () => {
       'Investigador',
     )
     await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
-    await user.type(
-      within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ }),
-      'Researcher',
-    )
+    await user.type(within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ }), 'Researcher')
     const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))

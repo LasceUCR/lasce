@@ -46,9 +46,7 @@ describe('ResearcherContentFields', () => {
 
     expect(tab(/^Español/)).toHaveAttribute('aria-selected', 'true')
     expect(field('Rol (Español)')).toHaveValue(defaultArgs.editing?.content.es.role)
-    expect(field('Descripción (Español)')).toHaveValue(
-      defaultArgs.editing?.content.es.description,
-    )
+    expect(field('Descripción (Español)')).toHaveValue(defaultArgs.editing?.content.es.description)
     expect(screen.queryByRole('textbox', { name: /^Rol \(English\)/ })).not.toBeInTheDocument()
   })
 

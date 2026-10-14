@@ -26,8 +26,7 @@ interface EditableResearcherCardBaseProps {
 }
 
 /** The single-language card (ROSAC). */
-export interface SingleLanguageEditableResearcherCardProps
-  extends EditableResearcherCardBaseProps {
+export interface SingleLanguageEditableResearcherCardProps extends EditableResearcherCardBaseProps {
   translation?: undefined
   /** Persists the edit; resolves to an error message on failure, or `null` on success. */
   onSave: (values: ResearcherFormValues) => Promise<string | null>
@@ -47,8 +46,7 @@ export interface BilingualEditableResearcherCardProps extends EditableResearcher
 }
 
 export type EditableResearcherCardProps =
-  | SingleLanguageEditableResearcherCardProps
-  | BilingualEditableResearcherCardProps
+  SingleLanguageEditableResearcherCardProps | BilingualEditableResearcherCardProps
 
 /**
  * The one piece that knows both about a person's profile and about "Modo
