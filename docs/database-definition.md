@@ -545,16 +545,16 @@ the base row; every other language is a translation row. `icon`, `href` and `pos
 shared. `href` is set only for Instagram and Facebook. Phone and email links are derived from
 the description when the page renders. See [`contact.md`](contact.md).
 
-| Column        | Prisma type          | Postgres type          | Constraints                                                         |
-| ------------- | -------------------- | ---------------------- | ------------------------------------------------------------------- |
-| `id`          | `String`             | `uuid`                 | PK, `gen_random_uuid()`                                             |
-| `icon`        | `ContactChannelIcon` | `contact_channel_icon` | not null; `phone`, `instagram`, `location`, `email`, `facebook`     |
-| `href`        | `String?`            | `text`                 | nullable                                                            |
-| `position`    | `Int`                | `integer`              | not null; display order                                             |
-| `title`       | `String`             | `text`                 | not null; Spanish                                                   |
-| `description` | `String`             | `text`                 | not null; Spanish                                                   |
-| `created_at`  | `DateTime`           | `timestamptz(3)`       | not null, default `now()`                                           |
-| `updated_at`  | `DateTime`           | `timestamptz(3)`       | not null, default `now()`, app-managed                              |
+| Column        | Prisma type          | Postgres type          | Constraints                                                     |
+| ------------- | -------------------- | ---------------------- | --------------------------------------------------------------- |
+| `id`          | `String`             | `uuid`                 | PK, `gen_random_uuid()`                                         |
+| `icon`        | `ContactChannelIcon` | `contact_channel_icon` | not null; `phone`, `instagram`, `location`, `email`, `facebook` |
+| `href`        | `String?`            | `text`                 | nullable                                                        |
+| `position`    | `Int`                | `integer`              | not null; display order                                         |
+| `title`       | `String`             | `text`                 | not null; Spanish                                               |
+| `description` | `String`             | `text`                 | not null; Spanish                                               |
+| `created_at`  | `DateTime`           | `timestamptz(3)`       | not null, default `now()`                                       |
+| `updated_at`  | `DateTime`           | `timestamptz(3)`       | not null, default `now()`, app-managed                          |
 
 `contact_channel_translations`: `id`, `contact_channel_id` (FK, `ON DELETE CASCADE`), `locale`
 (`varchar(5)`), `title`, `description`, timestamps. Unique on `(contact_channel_id, locale)`.

@@ -28,17 +28,17 @@ section route remains only for a work area that does not have its own page yet.
   └─ .topic-page-footer           TopicBackLink "Volver al inicio"
 ```
 
-| Piece           | File                                                     | Covered by                                           |
-| --------------- | -------------------------------------------------------- | ---------------------------------------------------- |
-| Page shell      | `app/lib/contact.ts`                                     | `app/lib/contact.test.ts`                            |
-| Cards           | `app/lib/contact-channels.ts`, `contact-channel-schema`  | `contact-channels.test.ts`, `contact-channel-schema.test.ts` |
-| Editor          | `ContactChannelForm.tsx`, `ContactChannelSection.tsx`    | `ContactChannelForm.test.tsx`, `ContactPage.test.tsx` |
-| Location map    | `RosacLocationMapLoader`                                 | `ContactPage.test.tsx`, `tests/e2e/contacto.spec.ts` |
-| Page            | `app/components/public/contact/ContactPage.tsx`          | `ContactPage.test.tsx`, `ContactPage.stories.tsx`    |
-| Route           | `app/(public)/contacto/page.tsx`                         | `tests/e2e/contacto.spec.ts`                         |
-| API             | `app/api/contacto/canales`                               | the route handlers                                   |
-| Sitemap and SEO | `app/lib/site.ts` (`publicPaths`)                        | `tests/e2e/accessibility-seo.spec.ts`                |
-| Header link     | `app/components/public/PublicHeader.tsx`                 | `tests/e2e/public-portal.spec.ts`                    |
+| Piece           | File                                                    | Covered by                                                   |
+| --------------- | ------------------------------------------------------- | ------------------------------------------------------------ |
+| Page shell      | `app/lib/contact.ts`                                    | `app/lib/contact.test.ts`                                    |
+| Cards           | `app/lib/contact-channels.ts`, `contact-channel-schema` | `contact-channels.test.ts`, `contact-channel-schema.test.ts` |
+| Editor          | `ContactChannelForm.tsx`, `ContactChannelSection.tsx`   | `ContactChannelForm.test.tsx`, `ContactPage.test.tsx`        |
+| Location map    | `RosacLocationMapLoader`                                | `ContactPage.test.tsx`, `tests/e2e/contacto.spec.ts`         |
+| Page            | `app/components/public/contact/ContactPage.tsx`         | `ContactPage.test.tsx`, `ContactPage.stories.tsx`            |
+| Route           | `app/(public)/contacto/page.tsx`                        | `tests/e2e/contacto.spec.ts`                                 |
+| API             | `app/api/contacto/canales`                              | the route handlers                                           |
+| Sitemap and SEO | `app/lib/site.ts` (`publicPaths`)                       | `tests/e2e/accessibility-seo.spec.ts`                        |
+| Header link     | `app/components/public/PublicHeader.tsx`                | `tests/e2e/public-portal.spec.ts`                            |
 
 `Contacto` is its own item in the header, after **Recursos**. The footer also links to `/contacto`.
 The footer element itself uses `id="contacto"` on every page. The section on this page uses

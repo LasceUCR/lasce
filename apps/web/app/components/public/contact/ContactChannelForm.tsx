@@ -87,9 +87,9 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
   const [attempted, setAttempted] = useState(false)
   const [focusRequest, setFocusRequest] = useState(0)
   const [discardOpen, setDiscardOpen] = useState(false)
-  const [descriptionOverLimit, setDescriptionOverLimit] = useState<Partial<Record<Locale, boolean>>>(
-    {},
-  )
+  const [descriptionOverLimit, setDescriptionOverLimit] = useState<
+    Partial<Record<Locale, boolean>>
+  >({})
 
   const stored = card?.editing?.content ?? null
   const pending = reviewsNeeded(contactChannelContent, stored, draft)
@@ -171,11 +171,7 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
       value.length > CONTACT_CHANNEL_DESCRIPTION_MAX &&
       previous.length <= CONTACT_CHANNEL_DESCRIPTION_MAX
     setDescriptionOverLimit((current) => ({ ...current, [locale]: over }))
-    setField(
-      locale,
-      'description',
-      over ? value.slice(0, CONTACT_CHANNEL_DESCRIPTION_MAX) : value,
-    )
+    setField(locale, 'description', over ? value.slice(0, CONTACT_CHANNEL_DESCRIPTION_MAX) : value)
   }
 
   function setPhone(value: string) {

@@ -73,9 +73,9 @@ describe('contact channel schema', () => {
     expect(isSinglePhoneNumber('2511-6566, 2222-3333')).toBe(false)
     expect(isSinglePhoneNumber('2511-6566 y 2222-3333')).toBe(false)
 
-    expect(contactChannelCreateSchema.safeParse({ icon: 'phone', href: null, content }).success).toBe(
-      true,
-    )
+    expect(
+      contactChannelCreateSchema.safeParse({ icon: 'phone', href: null, content }).success,
+    ).toBe(true)
     expect(
       contactChannelCreateSchema.safeParse({
         icon: 'phone',

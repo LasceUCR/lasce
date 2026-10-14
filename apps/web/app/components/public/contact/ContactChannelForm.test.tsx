@@ -247,6 +247,7 @@ describe('ContactChannelForm', () => {
     renderWithIntl(<ContactChannelForm card={card} onCancel={vi.fn()} onSave={vi.fn()} />)
 
     const description = screen.getAllByRole('textbox', { name: /^Descripción/ })[0]
+    if (!description) throw new Error('Expected a description field')
     await user.clear(description)
     await user.type(description, 'Nuevo texto')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))

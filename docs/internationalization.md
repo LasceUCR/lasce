@@ -167,7 +167,7 @@ inventory taken when the static pages were migrated.
 | ---------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
 | Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                       |
 | `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`                  |
-| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`            |
+| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`             |
 | `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`                               |
 | `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`                                    |
 | `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                 |
