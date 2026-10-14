@@ -497,7 +497,20 @@
       "add": "Add researcher",
       "createConfirmTitle": "Add researcher",
       "createConfirmMessage": "Do you want to add this researcher?",
-      "saveError": "The change could not be saved. Try again."
+      "form": {
+        "languageTabs": "Content language",
+        "roleIn": "Role ({language})",
+        "descriptionIn": "Description ({language})",
+        "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the role or the description, check it as well.",
+        "legacyNoTranslation": "This researcher has no English version yet. To change the role or the description you must complete both languages; the other details can be changed without translating it."
+      },
+      "created": "Researcher added successfully.",
+      "updated": "Researcher updated successfully.",
+      "deleted": "Researcher deleted successfully.",
+      "errors": {
+        "unknown": "The researcher could not be saved. Try again.",
+        "deleteUnknown": "The researcher could not be deleted. Try again."
+      }
     },
     "activities": {
       "title": "What do we do?",
