@@ -16,10 +16,13 @@ test('displays official contact information without authentication', async ({ pa
     'tel:+50625116566',
   )
   const location = page.getByRole('region', { name: 'Ubicación' })
-  await expect(location).toContainText('Centro de Investigaciones Geofísicas (CIGEFI)')
+  await expect(location).toContainText(
+    'se encuentra al costado sur del Planetario de la Universidad de Costa Rica',
+  )
   await expect(location).toContainText('Ciudad de la Investigación')
-  await expect(location.getByRole('region', { name: 'Mapa de ubicación de CIGEFI' })).toBeVisible()
-  await expect(location.getByText('CIGEFI', { exact: true })).toBeVisible()
+  await expect(location).toContainText('San Pedro de Montes de Oca, San José, Costa Rica')
+  await expect(location.getByRole('region', { name: 'Mapa de ubicación de LASCE' })).toBeVisible()
+  await expect(location.getByText('LASCE', { exact: true })).toBeVisible()
   await expect(page.getByText(/código postal/i)).toHaveCount(0)
   await expect(page.getByRole('link', { name: '@lasce_ucr' })).toHaveAttribute(
     'href',

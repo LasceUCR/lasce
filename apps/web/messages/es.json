@@ -131,7 +131,7 @@
     },
     "location": {
       "title": "Ubicación",
-      "intro": "El Laboratorio de Astrofísica Solar y Clima Espacial se ubica en el {address}.",
+      "intro": "El Laboratorio de Astrofísica Solar y Clima Espacial se encuentra al costado sur del {address}.",
       "unavailable": "No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.",
       "mapRegion": "Mapa de ubicación de {label}",
       "mapInteractive": "Mapa interactivo de {label}",

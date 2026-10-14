@@ -7,25 +7,25 @@ import { locationMapProvider, type LocationMapLabels } from './location-map'
  * Official contact channels for `/contacto`.
  *
  * The phone number was provided by LASCE. Instagram reuses the profile already approved for
- * the public footer. The laboratory sits at CIGEFI, in the Ciudad de la Investigación; the
- * pin is the OpenStreetMap node for that building (9.93646, -84.0449), the same point the
- * public maps use, not a surveyed GPS reading.
+ * the public footer. The laboratory is on the south side of the Planetario de la Universidad
+ * de Costa Rica. The pin is the marked point on that building's roof (9.936990, -84.045073),
+ * not a surveyed GPS reading.
  * A channel with an empty or placeholder value is dropped by
  * `availableContactChannels` and never rendered.
  *
  * The translatable text is in the `contact` namespace of `apps/web/messages/`. The phone
- * number, the CIGEFI address and the Instagram handle are the same in every language and
- * stay here.
+ * number, the place name and the Instagram handle are the same in every language and stay here.
  */
 
 /**
- * Bare address, folded into the location intro so it stays readable when the map fails.
- * "Centro" is masculine, so the Spanish intro says "en el {address}".
+ * Place name folded into the location intro, so the sentence stays readable when the map
+ * fails. Each catalogue supplies the words around it ("al costado sur del" / "on the south
+ * side of the").
  */
-const cigefiAddress =
-  'Centro de Investigaciones Geofísicas (CIGEFI), Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica'
+const planetariumAddress =
+  'Planetario de la Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica'
 
-const cigefiMarker = 'CIGEFI'
+const locationMarker = 'LASCE'
 
 // Matched against channel values, which are not translated, so Spanish words are enough.
 
@@ -97,18 +97,18 @@ export function getContactContent({ contact, common }: ContactMessages): Contact
     ],
     location: {
       title: contact.location.title,
-      intro: fill(contact.location.intro, { address: cigefiAddress }),
-      address: cigefiAddress,
-      coordinates: { latitude: 9.93646, longitude: -84.0449 },
+      intro: fill(contact.location.intro, { address: planetariumAddress }),
+      address: planetariumAddress,
+      coordinates: { latitude: 9.93699, longitude: -84.045073 },
       zoom: 17,
       tileUrl: locationMapProvider.tileUrl,
       attribution: locationMapProvider.attribution,
       loadTimeoutMs: locationMapProvider.loadTimeoutMs,
-      markerLabel: cigefiMarker,
+      markerLabel: locationMarker,
       unavailableMessage: contact.location.unavailable,
       labels: {
-        regionName: fill(contact.location.mapRegion, { label: cigefiMarker }),
-        interactiveName: fill(contact.location.mapInteractive, { label: cigefiMarker }),
+        regionName: fill(contact.location.mapRegion, { label: locationMarker }),
+        interactiveName: fill(contact.location.mapInteractive, { label: locationMarker }),
         instructions: contact.location.mapInstructions,
         zoomInTitle: contact.location.zoomIn,
         zoomOutTitle: contact.location.zoomOut,

@@ -2,7 +2,7 @@
 
 How `/contacto` shows the official ways to reach LASCE. The page is public: it does not read a
 session and it does not redirect to `/acceso`. The copy is static. Nothing here is read from
-PostgreSQL. Changing a phone number, the CIGEFI address or the Instagram handle means editing
+PostgreSQL. Changing a phone number, the planetarium location or the Instagram handle means editing
 [`apps/web/app/lib/contact.ts`](../apps/web/app/lib/contact.ts) and deploying. The map itself is
 the one documented in [`rosac-location.md`](rosac-location.md).
 
@@ -17,8 +17,8 @@ section route remains only for a work area that does not have its own page yet.
 /contacto                         page.tsx              article.topic-page
   ├─ TopicHero                    h1 "Contacto"
   ├─ TopicSection                 h2 "Ubicación"
-  │    ├─ intro                   the CIGEFI address, readable if the map fails
-  │    └─ RosacLocationMapLoader  satellite map, marker "CIGEFI"
+  │    ├─ intro                   south side of the planetarium, readable if the map fails
+  │    └─ RosacLocationMapLoader  satellite map, marker "LASCE"
   ├─ TopicSection                 h2 "Información de contacto"
   │    └─ CardGrid columns=2      equal height, same grid as other InfoCards
   │         ├─ InfoCard Teléfono  Phone icon, tel link
@@ -64,10 +64,12 @@ The address is not a card. It is its own section, the same pattern as the ROSAC 
 tiles fail. The map's accessible names follow the site language; ROSAC itself keeps the
 Spanish defaults.
 
-The place is the Centro de Investigaciones Geofísicas (CIGEFI), Universidad de Costa Rica,
-Ciudad de la Investigación, San Pedro de Montes de Oca. The pin is the OpenStreetMap node for
-that building (9.93646, -84.0449). It is a published map point, not a surveyed GPS reading.
-The address does not include a postal code. The marker reads `CIGEFI`.
+The laboratory is on the south side of the Planetario de la Universidad de Costa Rica, in the
+Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica. The Spanish
+sentence is "se encuentra al costado sur del Planetario de la Universidad de Costa Rica,
+Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica." The pin is the
+marked point on that building's roof (9.936990, -84.045073). It is a published map point, not a
+surveyed GPS reading. The address does not include a postal code. The marker reads `LASCE`.
 
 The footer still shows the shorter location "San Pedro de Montes de Oca". That line is the
 footer identity, not this address. Changing one does not change the other.

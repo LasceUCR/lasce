@@ -131,7 +131,7 @@
     },
     "location": {
       "title": "Location",
-      "intro": "The Solar Astrophysics and Space Weather Laboratory is located at the {address}.",
+      "intro": "The Solar Astrophysics and Space Weather Laboratory is on the south side of the {address}.",
       "unavailable": "The map could not be loaded. The address above is still available.",
       "mapRegion": "Location map of {label}",
       "mapInteractive": "Interactive map of {label}",

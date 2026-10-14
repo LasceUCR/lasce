@@ -27,7 +27,7 @@ describe('ContactPage', () => {
     const location = screen.getByRole('region', { name: 'Ubicación' })
     expect(location).toHaveTextContent(defaultArgs.content.location.address)
     expect(
-      await screen.findByRole('region', { name: 'Mapa de ubicación de CIGEFI' }),
+      await screen.findByRole('region', { name: 'Mapa de ubicación de LASCE' }),
     ).toBeInTheDocument()
     expect(screen.queryByText(/código postal/i)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '@lasce_ucr' })).toHaveAttribute(
@@ -72,9 +72,7 @@ describe('ContactPage', () => {
     expect(screen.getByRole('region', { name: 'Location' })).toHaveTextContent(
       content.location.address,
     )
-    expect(
-      await screen.findByRole('region', { name: 'Location map of CIGEFI' }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Location map of LASCE' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zoom in' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
   })
