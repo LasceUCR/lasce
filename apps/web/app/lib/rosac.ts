@@ -1,6 +1,7 @@
 import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
+import { locationMapProvider } from './location-map'
 import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
 import { rosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
 
@@ -142,12 +143,6 @@ export interface RosacInfoContent {
     items: readonly RosacDonation[]
     cta: { title: string; description: string; buttonLabel: string; href: string }
   }
-  scientificConsultation: {
-    title: string
-    description: string
-    buttonLabel: string
-    href: string
-  }
   backLink: { href: string; label: string }
 }
 
@@ -235,11 +230,9 @@ export const rosacInfoContent = {
     address: rosacLocationAddress,
     coordinates: { latitude: 10.2840093, longitude: -85.5959871 },
     zoom: 16,
-    tileUrl:
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution:
-      'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
-    loadTimeoutMs: 15_000,
+    tileUrl: locationMapProvider.tileUrl,
+    attribution: locationMapProvider.attribution,
+    loadTimeoutMs: locationMapProvider.loadTimeoutMs,
     markerLabel: 'ROSAC',
     unavailableMessage:
       'No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.',
@@ -610,13 +603,6 @@ export const rosacInfoContent = {
       buttonLabel: 'Contáctanos',
       href: '/contacto',
     },
-  },
-  scientificConsultation: {
-    title: 'Consulta científica',
-    description:
-      'Explore las consultas de demostración de ROSAC en la sección de datos. Sus resultados son simulados mientras se define la integración de los instrumentos.',
-    buttonLabel: 'Explorar datos',
-    href: '/datos?source=ROSAC#scientific-query-title',
   },
   backLink: {
     href: '/#areas-de-trabajo',
