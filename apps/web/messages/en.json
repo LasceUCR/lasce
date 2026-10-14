@@ -76,6 +76,11 @@
       "panelTitle": "Real-time image of the Sun",
       "observed": "Observed on <time></time>",
       "updating": "Updating the latest image of the Sun…"
+    },
+    "validation": {
+      "valueNotText": "The value must be text.",
+      "valueRequired": "The value is required.",
+      "valueTooLong": "The value cannot be longer than 15 characters."
     }
   },
   "workAreas": {
