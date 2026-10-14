@@ -52,8 +52,11 @@ export function Select({
   const enabled = options.filter((option) => !option.disabled)
   // A menu on `document.body` is inert while a modal dialog is open, so hover and clicks never
   // reach it. Inside the dialog it can become a popover and join the top layer.
+  // `HTMLDialogElement` exists only in the browser; this component is also rendered on the
+  // server, where looking the name up throws.
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
-  const inDialog = portalRoot instanceof HTMLDialogElement
+  const inDialog =
+    typeof HTMLDialogElement !== 'undefined' && portalRoot instanceof HTMLDialogElement
 
   function showMenu(next = value) {
     setPortalRoot(trigger.current?.closest('dialog') ?? document.body)
