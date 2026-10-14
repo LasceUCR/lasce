@@ -1,5 +1,6 @@
 import { prisma, type Prisma } from '@lasce/db'
 
+import { toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import { translationLocales } from '@/app/lib/i18n/content/definition'
 import { resolveContent, storedContentFrom } from '@/app/lib/i18n/content/resolve'
@@ -12,6 +13,8 @@ const recordSelect = {
   acronym: true,
   scope: true,
   country: true,
+  websiteUrl: true,
+  updatedAt: true,
   translations: {
     where: { locale: { in: [...translationLocales] } },
     select: { locale: true, country: true },
@@ -23,9 +26,10 @@ const scopes = {
   INTERNATIONAL: 'international',
 } as const
 
-/** Public content only, resolved per request with the same legacy fallback as publications. */
+/** Editing metadata is included only after the caller checks edit permission. */
 export async function getCollaborationRecords(
   locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
 ): Promise<ResearchCollaboration[]> {
   const records = await prisma.collaboration.findMany({
     orderBy: [{ position: 'asc' }, { id: 'asc' }],
@@ -34,7 +38,7 @@ export async function getCollaborationRecords(
 
   return records.map((record) => {
     const stored = storedContentFrom(collaborationContent, record, record.translations)
-    const { content, contentLocale } = resolveContent(stored, locale)
+    const { content, contentLocale, isLegacy } = resolveContent(stored, locale)
 
     return {
       id: record.id,
@@ -43,6 +47,10 @@ export async function getCollaborationRecords(
       scope: scopes[record.scope],
       country: content.country,
       countryLocale: contentLocale,
+      ...(record.websiteUrl ? { websiteUrl: record.websiteUrl } : {}),
+      ...(includeEditingData
+        ? { editing: { content: stored, isLegacy, version: toVersion(record.updatedAt) } }
+        : {}),
     }
   })
 }

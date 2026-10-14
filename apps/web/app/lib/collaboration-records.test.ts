@@ -102,7 +102,7 @@ describe('getCollaborationRecords', () => {
     ])
   })
 
-  test('requests stable display order and only public fields in one query', async () => {
+  test('requests stable display order and supported translations in one query', async () => {
     await getCollaborationRecords('en')
 
     expect(findMany).toHaveBeenCalledExactlyOnceWith({
@@ -113,6 +113,8 @@ describe('getCollaborationRecords', () => {
         acronym: true,
         scope: true,
         country: true,
+        websiteUrl: true,
+        updatedAt: true,
         translations: {
           where: { locale: { in: ['en'] } },
           select: { locale: true, country: true },
@@ -145,5 +147,28 @@ describe('collaboration content', () => {
       collaborationContent.schema.safeParse({ es: { country: 'Italia' }, en: { country: ' ' } })
         .success,
     ).toBe(false)
+  })
+})
+
+describe('collaboration editing metadata', () => {
+  test('includes versions and all countries only for authorized editing reads', async () => {
+    findMany.mockResolvedValue([
+      {
+        ...organizations[1],
+        updatedAt: new Date('2026-10-14T12:00:00.000Z'),
+        websiteUrl: 'https://example.com',
+      },
+    ])
+    const publicRecords = await getCollaborationRecords('en')
+    expect(publicRecords[0]).not.toHaveProperty('editing')
+    expect(publicRecords[0]).toMatchObject({
+      websiteUrl: 'https://example.com',
+    })
+    const editable = await getCollaborationRecords('en', { includeEditingData: true })
+    expect(editable[0]?.editing).toEqual({
+      content: { es: { country: 'Italia' }, en: { country: 'Italy' } },
+      isLegacy: false,
+      version: '2026-10-14T12:00:00.000Z',
+    })
   })
 })
