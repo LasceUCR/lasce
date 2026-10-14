@@ -1,3 +1,4 @@
+import styles from './CollaborationCard.module.css'
 import { Globe, MapPin } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
@@ -8,6 +9,7 @@ import type { CollaborationScope } from '@/app/lib/research-collaborations'
 export interface CollaborationCardProps {
   name: string
   acronym?: string
+  websiteUrl?: string
   country: string
   countryLocale?: Locale | null
   scope: CollaborationScope
@@ -16,6 +18,7 @@ export interface CollaborationCardProps {
 export function CollaborationCard({
   name,
   acronym,
+  websiteUrl,
   country,
   countryLocale,
   scope,
@@ -45,6 +48,11 @@ export function CollaborationCard({
         <p className="collaboration-acronym">
           <strong>{t('acronym')}</strong> {acronym}
         </p>
+      ) : null}
+      {websiteUrl ? (
+        <a className={styles.website} href={websiteUrl} rel="noopener noreferrer" target="_blank">
+          {t('website')}
+        </a>
       ) : null}
     </article>
   )
