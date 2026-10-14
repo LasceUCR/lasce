@@ -1,29 +1,47 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const findMany = vi.fn()
-const findUnique = vi.fn()
-const update = vi.fn()
-const create = vi.fn()
-const del = vi.fn()
+const mocks = vi.hoisted(() => {
+  /** Stands in for Prisma's error class, which the transaction helper checks with `instanceof`. */
+  class PrismaClientKnownRequestError extends Error {}
 
-const researcherFindMany = vi.fn()
-const researcherFindUnique = vi.fn()
-const researcherUpdate = vi.fn()
-const researcherCreate = vi.fn()
-const researcherDelete = vi.fn()
+  const tx = {
+    nosotrosActivity: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    nosotrosActivityTranslation: { upsert: vi.fn() },
+  }
+
+  const prisma = {
+    nosotrosActivity: { findMany: vi.fn(), deleteMany: vi.fn() },
+    nosotrosResearcher: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+    },
+    $transaction: vi.fn(),
+  }
+
+  return { tx, prisma, PrismaClientKnownRequestError }
+})
 
 vi.mock('@lasce/db', () => ({
-  prisma: {
-    nosotrosActivity: { findMany, findUnique, update, create, delete: del },
-    nosotrosResearcher: {
-      findMany: researcherFindMany,
-      findUnique: researcherFindUnique,
-      update: researcherUpdate,
-      create: researcherCreate,
-      delete: researcherDelete,
-    },
-  },
+  prisma: mocks.prisma,
+  Prisma: { PrismaClientKnownRequestError: mocks.PrismaClientKnownRequestError },
 }))
+
+const { tx, prisma } = mocks
+const { findMany, deleteMany } = prisma.nosotrosActivity
+
+const researcherFindMany = prisma.nosotrosResearcher.findMany
+const researcherFindUnique = prisma.nosotrosResearcher.findUnique
+const researcherUpdate = prisma.nosotrosResearcher.update
+const researcherCreate = prisma.nosotrosResearcher.create
+const researcherDelete = prisma.nosotrosResearcher.delete
 
 const {
   createNosotrosActivity,
@@ -33,7 +51,7 @@ const {
   deleteNosotrosResearcher,
   getNosotrosActivities,
   getNosotrosResearchers,
-  nosotrosActivityInputSchema,
+  nosotrosActivityFixtures,
   nosotrosResearcherInputSchema,
   updateNosotrosActivity,
   updateNosotrosResearcher,
@@ -56,6 +74,8 @@ function researcherRow(overrides: Partial<Record<string, unknown>> = {}) {
   }
 }
 
+const VERSION = '2026-01-01T00:00:00.000Z'
+
 function activityRow(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     id: 'activity-1',
@@ -63,18 +83,47 @@ function activityRow(overrides: Partial<Record<string, unknown>> = {}) {
     title: 'Fenómenos solares eruptivos',
     paragraph: "Analizamos fenómenos solares eruptivos, como 'flares'.",
     createdAt: new Date('2025-12-01T00:00:00.000Z'),
-    modifiedAt: new Date('2026-01-01T00:00:00.000Z'),
+    modifiedAt: new Date(VERSION),
+    translations: [],
     ...overrides,
   }
 }
 
+const bilingualRow = activityRow({
+  translations: [
+    {
+      locale: 'en',
+      title: 'Eruptive solar phenomena',
+      paragraph: 'We analyze eruptive solar phenomena.',
+    },
+  ],
+})
+
+const bilingualContent = {
+  es: {
+    title: 'Fenómenos solares eruptivos',
+    description: "Analizamos fenómenos solares eruptivos, como 'flares'.",
+  },
+  en: { title: 'Eruptive solar phenomena', description: 'We analyze eruptive solar phenomena.' },
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
+  prisma.$transaction.mockImplementation((write: (client: typeof tx) => unknown) => write(tx))
+  tx.nosotrosActivity.create.mockResolvedValue(bilingualRow)
+  tx.nosotrosActivity.findUnique.mockResolvedValue({
+    title: 'Fenómenos solares eruptivos',
+    paragraph: "Analizamos fenómenos solares eruptivos, como 'flares'.",
+    modifiedAt: new Date(VERSION),
+    translations: bilingualRow.translations,
+  })
+  tx.nosotrosActivity.updateMany.mockResolvedValue({ count: 1 })
+  tx.nosotrosActivity.findUniqueOrThrow.mockResolvedValue(bilingualRow)
 })
 
 describe('getNosotrosActivities', () => {
   test('maps each row to the public shape, lowercasing the icon', async () => {
-    findMany.mockResolvedValue([activityRow()])
+    findMany.mockResolvedValue([bilingualRow])
 
     const activities = await getNosotrosActivities()
 
@@ -84,134 +133,298 @@ describe('getNosotrosActivities', () => {
         icon: 'sun',
         title: 'Fenómenos solares eruptivos',
         description: "Analizamos fenómenos solares eruptivos, como 'flares'.",
-        modifiedAt: '2026-01-01T00:00:00.000Z',
+        modifiedAt: VERSION,
+        contentLocale: 'es',
       },
     ])
   })
 
-  test('orders by createdAt, so editing a card never reorders it', async () => {
+  test('orders by createdAt and loads the translations, so editing never reorders a card', async () => {
     findMany.mockResolvedValue([])
 
     await getNosotrosActivities()
 
-    expect(findMany).toHaveBeenCalledWith({ orderBy: { createdAt: 'asc' } })
-  })
-})
-
-describe('nosotrosActivityInputSchema', () => {
-  test('accepts a well-formed input', () => {
-    const result = nosotrosActivityInputSchema.safeParse({
-      icon: 'waves',
-      title: 'Nuevo título',
-      description: 'Nuevo texto',
-    })
-
-    expect(result.success).toBe(true)
-  })
-
-  test('rejects an unknown icon', () => {
-    const result = nosotrosActivityInputSchema.safeParse({
-      icon: 'moon',
-      title: 'Nuevo título',
-      description: 'Nuevo texto',
-    })
-
-    expect(result.success).toBe(false)
-  })
-
-  test('rejects an empty title or description', () => {
-    const result = nosotrosActivityInputSchema.safeParse({
-      icon: 'sun',
-      title: '  ',
-      description: '  ',
-    })
-
-    expect(result.success).toBe(false)
-  })
-})
-
-describe('updateNosotrosActivity', () => {
-  const updateInput = { icon: 'waves' as const, title: 'Nuevo título', description: 'Nuevo texto' }
-
-  test('returns null without writing when the id does not exist', async () => {
-    findUnique.mockResolvedValue(null)
-
-    const result = await updateNosotrosActivity('missing-id', updateInput, 'admin-1')
-
-    expect(result).toBeNull()
-    expect(update).not.toHaveBeenCalled()
-  })
-
-  test('persists the change and stamps modifiedBy with the given user', async () => {
-    findUnique.mockResolvedValue(activityRow())
-    update.mockResolvedValue(
-      activityRow({ icon: 'WAVES', title: 'Nuevo título', paragraph: 'Nuevo texto' }),
-    )
-
-    const result = await updateNosotrosActivity('activity-1', updateInput, 'admin-1')
-
-    expect(update).toHaveBeenCalledWith({
-      where: { id: 'activity-1' },
-      data: {
-        icon: 'WAVES',
-        title: 'Nuevo título',
-        paragraph: 'Nuevo texto',
-        modifiedBy: 'admin-1',
+    expect(findMany).toHaveBeenCalledWith({
+      orderBy: { createdAt: 'asc' },
+      include: {
+        translations: {
+          where: { locale: { in: ['en'] } },
+          select: { locale: true, title: true, paragraph: true },
+        },
       },
     })
-    expect(result).toEqual({
-      id: 'activity-1',
-      icon: 'waves',
-      title: 'Nuevo título',
-      description: 'Nuevo texto',
-      modifiedAt: '2026-01-01T00:00:00.000Z',
+  })
+
+  test('shows the English translation when the site is read in English', async () => {
+    findMany.mockResolvedValue([bilingualRow])
+
+    const [activity] = await getNosotrosActivities('en')
+
+    expect(activity).toMatchObject({
+      title: 'Eruptive solar phenomena',
+      description: 'We analyze eruptive solar phenomena.',
+      contentLocale: 'en',
     })
+  })
+
+  test('shows the base text as Spanish for a complete card read in Spanish', async () => {
+    findMany.mockResolvedValue([bilingualRow])
+
+    const [activity] = await getNosotrosActivities('es')
+
+    expect(activity).toMatchObject({ title: 'Fenómenos solares eruptivos', contentLocale: 'es' })
+  })
+
+  test('shows a legacy card as it is, in an unknown language, whatever the site language', async () => {
+    findMany.mockResolvedValue([activityRow()])
+
+    const [activity] = await getNosotrosActivities('en')
+
+    expect(activity).toMatchObject({ title: 'Fenómenos solares eruptivos', contentLocale: null })
+  })
+
+  test('sends no editing data unless it is asked for', async () => {
+    findMany.mockResolvedValue([bilingualRow])
+
+    const [activity] = await getNosotrosActivities('es')
+
+    expect(activity).not.toHaveProperty('editing')
+  })
+
+  test('sends both languages and the version to an editor', async () => {
+    findMany.mockResolvedValue([bilingualRow])
+
+    const [activity] = await getNosotrosActivities('es', { includeEditingData: true })
+
+    expect(activity?.editing).toEqual({
+      content: bilingualContent,
+      isLegacy: false,
+      version: VERSION,
+    })
+  })
+
+  test('marks a card without a translation row as legacy for an editor', async () => {
+    findMany.mockResolvedValue([activityRow()])
+
+    const [activity] = await getNosotrosActivities('es', { includeEditingData: true })
+
+    expect(activity?.editing).toEqual({
+      content: {
+        es: bilingualContent.es,
+        en: null,
+      },
+      isLegacy: true,
+      version: VERSION,
+    })
+  })
+})
+
+describe('nosotrosActivityFixtures', () => {
+  test('carry both languages so the editor can open them', () => {
+    for (const fixture of nosotrosActivityFixtures) {
+      expect(fixture.editing?.isLegacy).toBe(false)
+      expect(fixture.editing?.content.en).not.toBeNull()
+    }
   })
 })
 
 describe('createNosotrosActivity', () => {
-  test('creates the activity, authored by the given user', async () => {
-    const createInput = { icon: 'code' as const, title: 'Actividad nueva', description: 'Texto' }
-    create.mockResolvedValue(
-      activityRow({ icon: 'CODE', title: 'Actividad nueva', paragraph: 'Texto' }),
-    )
+  const createInput = {
+    icon: 'code' as const,
+    content: {
+      es: { title: 'Actividad nueva', description: 'Texto' },
+      en: { title: 'New activity', description: 'Text' },
+    },
+  }
 
-    const result = await createNosotrosActivity(createInput, 'admin-1')
+  test('creates the card with its translations in one transaction, authored by the given user', async () => {
+    await createNosotrosActivity(createInput, 'admin-1')
 
-    expect(create).toHaveBeenCalledWith({
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+    expect(tx.nosotrosActivity.create).toHaveBeenCalledWith({
       data: {
         icon: 'CODE',
         title: 'Actividad nueva',
         paragraph: 'Texto',
         modifiedBy: 'admin-1',
+        translations: { create: [{ locale: 'en', title: 'New activity', paragraph: 'Text' }] },
       },
+      include: expect.any(Object),
     })
-    expect(result).toEqual({
+  })
+
+  test('returns the stored card with its editing data', async () => {
+    tx.nosotrosActivity.create.mockResolvedValue(
+      activityRow({
+        icon: 'CODE',
+        title: 'Actividad nueva',
+        paragraph: 'Texto',
+        translations: [{ locale: 'en', title: 'New activity', paragraph: 'Text' }],
+      }),
+    )
+
+    const result = await createNosotrosActivity(createInput, 'admin-1')
+
+    expect(result).toMatchObject({
       id: 'activity-1',
       icon: 'code',
       title: 'Actividad nueva',
       description: 'Texto',
-      modifiedAt: '2026-01-01T00:00:00.000Z',
+      contentLocale: 'es',
+      editing: { isLegacy: false, version: VERSION },
     })
   })
 })
 
+describe('updateNosotrosActivity', () => {
+  const updateInput = { version: VERSION, content: bilingualContent }
+
+  test('reports not-found without writing when the id does not exist', async () => {
+    tx.nosotrosActivity.findUnique.mockResolvedValue(null)
+
+    const result = await updateNosotrosActivity('missing-id', updateInput, 'admin-1')
+
+    expect(result).toEqual({ ok: false, reason: 'not-found' })
+    expect(tx.nosotrosActivity.updateMany).not.toHaveBeenCalled()
+  })
+
+  test('reports a conflict without writing when the card changed since it was loaded', async () => {
+    tx.nosotrosActivity.findUnique.mockResolvedValue({
+      title: 'Otro título',
+      paragraph: 'Otro texto',
+      modifiedAt: new Date('2026-02-01T00:00:00.000Z'),
+      translations: [],
+    })
+
+    const result = await updateNosotrosActivity('activity-1', updateInput, 'admin-1')
+
+    expect(result).toEqual({ ok: false, reason: 'conflict' })
+    expect(tx.nosotrosActivity.updateMany).not.toHaveBeenCalled()
+  })
+
+  test('reports a conflict when another save wins between the check and the write', async () => {
+    tx.nosotrosActivity.updateMany.mockResolvedValue({ count: 0 })
+
+    const result = await updateNosotrosActivity('activity-1', updateInput, 'admin-1')
+
+    expect(result).toEqual({ ok: false, reason: 'conflict' })
+    expect(tx.nosotrosActivityTranslation.upsert).not.toHaveBeenCalled()
+  })
+
+  test('asks to review the language left unchanged when only one language changed', async () => {
+    const result = await updateNosotrosActivity(
+      'activity-1',
+      {
+        version: VERSION,
+        content: { ...bilingualContent, es: { ...bilingualContent.es, title: 'Nuevo título' } },
+      },
+      'admin-1',
+    )
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'review-required',
+      pending: [{ locale: 'en', field: 'title' }],
+    })
+    expect(tx.nosotrosActivity.updateMany).not.toHaveBeenCalled()
+  })
+
+  test('accepts a one-sided change that the editor confirmed', async () => {
+    const result = await updateNosotrosActivity(
+      'activity-1',
+      {
+        version: VERSION,
+        content: { ...bilingualContent, es: { ...bilingualContent.es, title: 'Nuevo título' } },
+        confirmedUnchanged: [{ locale: 'en', field: 'title' }],
+      },
+      'admin-1',
+    )
+
+    expect(result.ok).toBe(true)
+  })
+
+  test('writes the base text, the version and the translations, stamping modifiedBy', async () => {
+    const content = {
+      es: { title: 'Nuevo título', description: 'Nuevo texto' },
+      en: { title: 'New title', description: 'New text' },
+    }
+
+    const result = await updateNosotrosActivity(
+      'activity-1',
+      { version: VERSION, content, icon: 'waves' },
+      'admin-1',
+    )
+
+    expect(tx.nosotrosActivity.updateMany).toHaveBeenCalledWith({
+      where: { id: 'activity-1', modifiedAt: new Date(VERSION) },
+      data: {
+        title: 'Nuevo título',
+        paragraph: 'Nuevo texto',
+        icon: 'WAVES',
+        modifiedBy: 'admin-1',
+        modifiedAt: expect.any(Date),
+      },
+    })
+    const { data } = tx.nosotrosActivity.updateMany.mock.calls[0]?.[0] as {
+      data: { modifiedAt: Date }
+    }
+    expect(data.modifiedAt.getTime()).toBeGreaterThan(new Date(VERSION).getTime())
+    expect(tx.nosotrosActivityTranslation.upsert).toHaveBeenCalledWith({
+      where: { activityId_locale: { activityId: 'activity-1', locale: 'en' } },
+      create: { activityId: 'activity-1', locale: 'en', title: 'New title', paragraph: 'New text' },
+      update: { title: 'New title', paragraph: 'New text' },
+    })
+    expect(result).toMatchObject({ ok: true, activity: { id: 'activity-1' } })
+  })
+
+  test('changes only the icon, leaving the text and the translations alone, without content', async () => {
+    const result = await updateNosotrosActivity(
+      'activity-1',
+      { version: VERSION, icon: 'waves' },
+      'admin-1',
+    )
+
+    expect(tx.nosotrosActivity.updateMany).toHaveBeenCalledWith({
+      where: { id: 'activity-1', modifiedAt: new Date(VERSION) },
+      data: { icon: 'WAVES', modifiedBy: 'admin-1', modifiedAt: expect.any(Date) },
+    })
+    expect(tx.nosotrosActivityTranslation.upsert).not.toHaveBeenCalled()
+    expect(result.ok).toBe(true)
+  })
+
+  test('updates the icon of a legacy card without asking for a translation', async () => {
+    tx.nosotrosActivity.findUnique.mockResolvedValue({
+      title: 'Eruptive solar phenomena',
+      paragraph: 'We analyze eruptive solar phenomena.',
+      modifiedAt: new Date(VERSION),
+      translations: [],
+    })
+
+    const result = await updateNosotrosActivity(
+      'activity-1',
+      { version: VERSION, icon: 'code' },
+      'admin-1',
+    )
+
+    expect(result.ok).toBe(true)
+  })
+})
+
 describe('deleteNosotrosActivity', () => {
-  test('returns false without deleting when the id does not exist', async () => {
-    findUnique.mockResolvedValue(null)
+  test('returns false when no row was deleted', async () => {
+    deleteMany.mockResolvedValue({ count: 0 })
 
     const result = await deleteNosotrosActivity('missing-id')
 
+    expect(deleteMany).toHaveBeenCalledWith({ where: { id: 'missing-id' } })
     expect(result).toBe(false)
-    expect(del).not.toHaveBeenCalled()
   })
 
-  test('deletes the row and returns true when it exists', async () => {
-    findUnique.mockResolvedValue(activityRow())
+  test('returns true when the row was deleted', async () => {
+    deleteMany.mockResolvedValue({ count: 1 })
 
     const result = await deleteNosotrosActivity('activity-1')
 
-    expect(del).toHaveBeenCalledWith({ where: { id: 'activity-1' } })
     expect(result).toBe(true)
   })
 })
