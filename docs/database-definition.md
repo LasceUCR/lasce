@@ -9,7 +9,7 @@ migration source; the worker mirrors these tables in SQLAlchemy
 
 | Postgres schema | Used for                                                  | Populated today |
 | --------------- | --------------------------------------------------------- | --------------- |
-| `public`        | Default, for anything not domain-specific                 | Yes             |
+| `public`        | Default, for anything not domain-specific; home page CMS  | Yes             |
 | `research`      | Public research/publications shown on `/publicaciones`    | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`           | Yes             |
 | `auth`          | Portal accounts created through `/acceso`                 | Yes             |
@@ -456,6 +456,86 @@ Indexes: `(user_id, created_at)` for a user's history, `(source, instrument, cre
 usage per instrument. Codes are plain strings, as in `role_permissions`, so a new instrument or
 format needs no migration.
 
+## `public` schema (home page)
+
+The editable content of the home page (`/`). Seeded by the
+migration `20261014101056_add_home_content`; nothing is created or deleted from the CMS.
+
+### `home_hero`
+
+The hero banner's Spanish title and subtitle. One row. The Prisma model is `HomeHero`.
+
+| Column       | Prisma type | Postgres type    | Constraints                            |
+| ------------ | ----------- | ---------------- | -------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `title`      | `String`    | `text`           | not null                               |
+| `lead`       | `String`    | `text`           | not null — the subtitle                |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+Relationships: has many `home_hero_translations`.
+
+### `home_hero_translations`
+
+The banner's `title` and `lead` in a language other than Spanish. The Prisma model is
+`HomeHeroTranslation`.
+
+| Column         | Prisma type | Postgres type    | Constraints                                                |
+| -------------- | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`           | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `home_hero_id` | `String`    | `uuid`           | FK → `home_hero.id`, `ON DELETE CASCADE`, not null         |
+| `locale`       | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es` |
+| `title`        | `String`    | `text`           | not null                                                   |
+| `lead`         | `String`    | `text`           | not null                                                   |
+| `created_at`   | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at`   | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+Constraints: `UNIQUE (home_hero_id, locale)`.
+
+### `geomagnetic_index_source` (enum)
+
+Who wrote an index's current value: `manual` (an editor) or `automatic` (a future loading job).
+
+### `geomagnetic_indices`
+
+One geomagnetic index card on the home page. The Prisma model is `GeomagneticIndex`.
+
+| Column        | Prisma type              | Postgres type              | Constraints                                                                                                            |
+| ------------- | ------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `id`          | `String`                 | `uuid`                     | PK, `gen_random_uuid()`                                                                                                |
+| `code`        | `String`                 | `varchar(8)`               | `UNIQUE`, not null — `kp`, `dst`, `ae`, `ap`; names the label                                                          |
+| `value`       | `String`                 | `varchar(15)`              | not null — shared by every language, e.g. `-12 nT`                                                                     |
+| `description` | `String`                 | `varchar(15)`              | not null — Spanish                                                                                                     |
+| `position`    | `Int`                    | `integer`                  | `UNIQUE`, not null, default `nextval('geomagnetic_indices_position_seq')` — display order, written only by the reorder |
+| `source`      | `GeomagneticIndexSource` | `geomagnetic_index_source` | not null, default `manual`                                                                                             |
+| `observed_at` | `DateTime?`              | `timestamptz(3)`           | nullable — null while values are entered by hand                                                                       |
+| `created_at`  | `DateTime`               | `timestamptz(3)`           | not null, default `now()`                                                                                              |
+| `updated_at`  | `DateTime`               | `timestamptz(3)`           | not null, default `now()`, app-managed                                                                                 |
+
+Relationships: has many `geomagnetic_index_translations`.
+
+> `position` is unique, so a reorder writes in two passes inside one transaction: every row moves
+> to a temporary negative position first, then to its new one. A row inserted without a position
+> takes the next number of `geomagnetic_indices_position_seq` (Prisma's
+> `@default(autoincrement())`), which the migration `20261015120000_make_geomagnetic_position_unique`
+> started after the seeded positions, so a new index lands last.
+
+### `geomagnetic_index_translations`
+
+An index's `description` in a language other than Spanish. The Prisma model is
+`GeomagneticIndexTranslation`.
+
+| Column                 | Prisma type | Postgres type    | Constraints                                                  |
+| ---------------------- | ----------- | ---------------- | ------------------------------------------------------------ |
+| `id`                   | `String`    | `uuid`           | PK, `gen_random_uuid()`                                      |
+| `geomagnetic_index_id` | `String`    | `uuid`           | FK → `geomagnetic_indices.id`, `ON DELETE CASCADE`, not null |
+| `locale`               | `String`    | `varchar(5)`     | not null — never `es`                                        |
+| `description`          | `String`    | `varchar(15)`    | not null                                                     |
+| `created_at`           | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                    |
+| `updated_at`           | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                       |
+
+Constraints: `UNIQUE (geomagnetic_index_id, locale)`.
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
@@ -469,6 +549,13 @@ Either way it only writes while `updated_at` still equals the version the editor
 it forward, so concurrent edits are rejected instead of overwritten. `deletePublication()` deletes
 the base row; its translations and author links cascade. The full contract is in
 [`internationalization.md`](internationalization.md#database-content-built-for-publications-proof-of-concept).
+
+`apps/web/app/lib/home.ts` owns the home page tables: `getHomeContent()` reads `home_hero` and
+`geomagnetic_indices` with their translations, in the requested language; `updateHero()` and
+`updateIndicator()` write a base row and its translations in one transaction against the version
+the editor loaded; `reorderIndicators()` rewrites `geomagnetic_indices.position`. Nothing in the
+worker writes them yet: a future job would upsert the indices by `code`, set `source` and
+`observed_at`, and leave `position` alone.
 
 `apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
