@@ -41,7 +41,10 @@ import { EditableResearcherCard } from './EditableResearcherCard'
 import { InstrumentCard } from './InstrumentCard'
 import { InstrumentsGallery } from './InstrumentsGallery'
 import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
-import type { RosacAcknowledgmentFormValues } from './RosacAcknowledgmentForm'
+import {
+  RosacAcknowledgmentForm,
+  type RosacAcknowledgmentFormValues,
+} from './RosacAcknowledgmentForm'
 import { RosacActivityForm, type RosacActivityFormValues } from './RosacActivityForm'
 import {
   RosacCharacteristicForm,
@@ -83,10 +86,12 @@ export interface RosacInfoPageProps {
     values: RosacInstrumentFormValues,
   ) => Promise<string | null> | void
   onDeleteInstrument?: (id: string) => Promise<string | null> | void
+  onCreateAcknowledgment?: (values: RosacAcknowledgmentFormValues) => Promise<string | null> | void
   onSaveAcknowledgment?: (
     id: string,
     values: RosacAcknowledgmentFormValues,
   ) => Promise<string | null> | void
+  onDeleteAcknowledgment?: (id: string) => Promise<string | null> | void
 }
 
 const ROSAC_STORAGE_KEYS = {
@@ -116,7 +121,9 @@ export function RosacInfoPage({
   onCreateInstrument,
   onSaveInstrument,
   onDeleteInstrument,
+  onCreateAcknowledgment,
   onSaveAcknowledgment,
+  onDeleteAcknowledgment,
 }: RosacInfoPageProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
@@ -148,13 +155,15 @@ export function RosacInfoPage({
   const [listError, setListError] = useState<string | null>(null)
   const createErrorRef = useRef<HTMLParagraphElement>(null)
 
-  // --- Section 8: Acknowledgments State (Edit only) ---
+  // --- Section 8: Acknowledgments State (Create, Edit, Delete) ---
   const [acknowledgments, setAcknowledgments] = useState<RosacAcknowledgment[]>(() =>
     content.acknowledgments.institutions.map((inst, index) => ({
       id: inst.id ?? `ack-${index}`,
       ...inst,
     })),
   )
+  const [acknowledgmentCreateError, setAcknowledgmentCreateError] = useState<string | null>(null)
+  const [acknowledgmentListError, setAcknowledgmentListError] = useState<string | null>(null)
 
   // Restore persisted state on mount from localStorage if available
   useEffect(() => {
@@ -496,6 +505,49 @@ export function RosacInfoPage({
     return null
   }
 
+  async function handleCreateAcknowledgment(
+    values: RosacAcknowledgmentFormValues,
+    close: () => void,
+  ) {
+    setAcknowledgmentCreateError(null)
+
+    if (onCreateAcknowledgment) {
+      const err = await onCreateAcknowledgment(values)
+      if (err) {
+        setAcknowledgmentCreateError(err)
+        return
+      }
+    }
+
+    const newId = `ack-${Date.now()}`
+    const newInstitution: RosacAcknowledgment = {
+      id: newId,
+      name: values.name,
+      logo: values.logo,
+    }
+
+    const updated = [...acknowledgments, newInstitution]
+    setAcknowledgments(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
+    close()
+  }
+
+  async function handleDeleteAcknowledgment(id: string) {
+    setAcknowledgmentListError(null)
+
+    if (onDeleteAcknowledgment) {
+      const err = await onDeleteAcknowledgment(id)
+      if (err) {
+        setAcknowledgmentListError(err)
+        return
+      }
+    }
+
+    const updated = acknowledgments.filter((inst) => inst.id !== id)
+    setAcknowledgments(updated)
+    saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
+  }
+
   return (
     <article className="topic-page">
       <TopicHero {...content.hero} />
@@ -814,16 +866,47 @@ export function RosacInfoPage({
         titleId="rosac-acknowledgments-title"
         wide
       >
+        {acknowledgmentListError ? (
+          <p className="form-alert" role="alert">
+            {acknowledgmentListError}
+          </p>
+        ) : null}
+
         <AcknowledgmentsGallery
           institutions={acknowledgments}
           label={content.acknowledgments.title}
           renderInstitution={(institution) => (
             <EditableAcknowledgmentCard
+              canDelete={canDelete}
               canEdit={canEdit}
               institution={institution}
+              onDelete={() => handleDeleteAcknowledgment(institution.id!)}
               onSave={(values) => handleSaveAcknowledgment(institution.id!, values)}
             />
           )}
+          trailingSlide={
+            editMode && canCreate ? (
+              <AddItemCard label="Añadir institución">
+                {({ close }) => (
+                  <>
+                    {acknowledgmentCreateError ? (
+                      <p className="form-alert" role="alert">
+                        {acknowledgmentCreateError}
+                      </p>
+                    ) : null}
+                    <RosacAcknowledgmentForm
+                      institution={null}
+                      onCancel={() => {
+                        setAcknowledgmentCreateError(null)
+                        close()
+                      }}
+                      onSave={(values) => handleCreateAcknowledgment(values, close)}
+                    />
+                  </>
+                )}
+              </AddItemCard>
+            ) : undefined
+          }
         />
       </TopicSection>
 

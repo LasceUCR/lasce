@@ -449,16 +449,18 @@ describe('RosacInfoPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  test('offers editing but strictly NO add or delete on acknowledgments', async () => {
+  test('offers create, edit and delete on acknowledgments', async () => {
     const user = userEvent.setup()
     renderEditMode()
     const section = screen.getByRole('region', { name: '9. Agradecimientos ROSAC' })
     const initialCount = defaultArgs.content.acknowledgments.institutions.length
     expect(within(section).getAllByRole('button', { name: /^Editar / })).toHaveLength(initialCount)
-    expect(within(section).queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()
-    expect(within(section).queryByRole('button', { name: /Añadir/ })).not.toBeInTheDocument()
+    expect(within(section).getAllByRole('button', { name: /^Eliminar / })).toHaveLength(
+      initialCount,
+    )
+    expect(within(section).getByRole('button', { name: 'Añadir institución' })).toBeInTheDocument()
 
-    // Edit an existing acknowledgment
+    // 1. Edit an existing acknowledgment
     const firstInst = defaultArgs.content.acknowledgments.institutions[0]!
     await user.click(within(section).getByRole('button', { name: `Editar ${firstInst.name}` }))
     const editDialog = screen.getByRole('dialog', { name: 'Editar institución' })
@@ -472,5 +474,31 @@ describe('RosacInfoPage', () => {
     expect(
       within(section).getByText('Vicerrectoría de Investigación Actualizada'),
     ).toBeInTheDocument()
+
+    // 2. Add an acknowledgment using preset logo and custom name
+    await user.click(within(section).getByRole('button', { name: 'Añadir institución' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir institución' })
+    const select = within(addDialog).getByRole('combobox', {
+      name: 'Escoger un logo personalizado o seleccionar uno de la lista',
+    })
+    await user.selectOptions(select, '1')
+    const addNameInput = within(addDialog).getByRole('textbox', {
+      name: 'Nombre de la institución',
+    })
+    await user.clear(addNameInput)
+    await user.type(addNameInput, 'Institución Adicional de Prueba')
+    await user.click(within(addDialog).getByRole('button', { name: 'Agregar institución' }))
+
+    expect(within(section).getByText('Institución Adicional de Prueba')).toBeInTheDocument()
+
+    // 3. Delete the newly added acknowledgment
+    const deleteBtn = within(section).getByRole('button', {
+      name: 'Eliminar Institución Adicional de Prueba',
+    })
+    await user.click(deleteBtn)
+    const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar institución' })
+    await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(within(section).queryByText('Institución Adicional de Prueba')).not.toBeInTheDocument()
   })
 })

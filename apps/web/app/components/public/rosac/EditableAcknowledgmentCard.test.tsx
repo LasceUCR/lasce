@@ -12,10 +12,11 @@ import {
   EditableAcknowledgmentCard,
   type EditableAcknowledgmentCardProps,
 } from './EditableAcknowledgmentCard'
-import { EditModeOn, ViewMode } from './EditableAcknowledgmentCard.stories'
+import { AssistantMode, EditModeOn, ViewMode } from './EditableAcknowledgmentCard.stories'
 
 const viewArgs = ViewMode.args as EditableAcknowledgmentCardProps
 const editArgs = EditModeOn.args as EditableAcknowledgmentCardProps
+const assistantArgs = AssistantMode.args as EditableAcknowledgmentCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableAcknowledgmentCardProps) {
   return render(
@@ -33,14 +34,25 @@ describe('EditableAcknowledgmentCard', () => {
     expect(screen.queryByRole('button', { name: /^Editar/ })).not.toBeInTheDocument()
   })
 
-  test('shows edit action but strictly no delete action when edit mode is on', () => {
+  test('shows edit and delete actions when edit mode is on with full grants', () => {
     renderWithEditMode(true, editArgs)
 
     expect(
       screen.getByRole('button', { name: `Editar ${editArgs.institution.name}` }),
     ).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: `Eliminar ${editArgs.institution.name}` }),
+      screen.getByRole('button', { name: `Eliminar ${editArgs.institution.name}` }),
+    ).toBeInTheDocument()
+  })
+
+  test('shows only the edit action for an account without delete_components', () => {
+    renderWithEditMode(true, assistantArgs)
+
+    expect(
+      screen.getByRole('button', { name: `Editar ${assistantArgs.institution.name}` }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: `Eliminar ${assistantArgs.institution.name}` }),
     ).not.toBeInTheDocument()
   })
 
@@ -66,5 +78,16 @@ describe('EditableAcknowledgmentCard', () => {
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('confirms and calls onDelete when the delete action is confirmed', async () => {
+    const user = userEvent.setup()
+    const onDelete = vi.fn()
+    renderWithEditMode(true, { ...editArgs, onDelete })
+
+    await user.click(screen.getByRole('button', { name: `Eliminar ${editArgs.institution.name}` }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onDelete).toHaveBeenCalledTimes(1)
   })
 })
