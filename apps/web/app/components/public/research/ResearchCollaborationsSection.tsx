@@ -35,6 +35,7 @@ export function ResearchCollaborationsSection({
             <CollaborationCard
               acronym={collaboration.acronym}
               country={collaboration.country}
+              countryLocale={collaboration.countryLocale}
               key={collaboration.id}
               name={collaboration.name}
               scope={collaboration.scope}
