@@ -77,8 +77,23 @@ function failedResponse(status: number, body: unknown) {
 async function submitNewActivity(user: User) {
   await user.click(screen.getByRole('button', { name: 'Añadir' }))
   const addDialog = screen.getByRole('dialog', { name: 'Añadir' })
-  await user.type(within(addDialog).getByRole('textbox', { name: 'Título' }), 'Actividad nueva')
-  await user.type(within(addDialog).getByRole('textbox', { name: 'Texto' }), 'Texto de prueba')
+  await user.type(
+    within(addDialog).getByRole('textbox', { name: /^Título \(Español\)/ }),
+    'Actividad nueva',
+  )
+  await user.type(
+    within(addDialog).getByRole('textbox', { name: /^Descripción \(Español\)/ }),
+    'Texto de prueba',
+  )
+  await user.click(within(addDialog).getByRole('tab', { name: /^English/ }))
+  await user.type(
+    within(addDialog).getByRole('textbox', { name: /^Título \(English\)/ }),
+    'New activity',
+  )
+  await user.type(
+    within(addDialog).getByRole('textbox', { name: /^Descripción \(English\)/ }),
+    'Test text',
+  )
   await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
   return addDialog
 }
@@ -91,15 +106,24 @@ async function deleteFirstActivity(user: User) {
   await user.click(within(confirmDialog).getByRole('button', { name: 'Eliminar' }))
 }
 
-/** Edits the first card's title and accepts the "Guardar cambios" confirmation. */
+/**
+ * Edits the first card's title in both languages, so no translation needs reviewing, and accepts
+ * the "Guardar cambios" confirmation.
+ */
 async function submitActivityEdit(user: User) {
   const [firstActivity] = defaultArgs.content.activities.items
   const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
   await user.click(firstEditButton as HTMLElement)
   const editDialog = screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` })
-  const titleInput = within(editDialog).getByRole('textbox', { name: 'Título' })
+  const titleInput = within(editDialog).getByRole('textbox', { name: /^Título \(Español\)/ })
   await user.clear(titleInput)
   await user.type(titleInput, 'Título editado')
+  await user.click(within(editDialog).getByRole('tab', { name: /^English/ }))
+  const englishTitleInput = within(editDialog).getByRole('textbox', {
+    name: /^Título \(English\)/,
+  })
+  await user.clear(englishTitleInput)
+  await user.type(englishTitleInput, 'Edited title')
   await user.click(within(editDialog).getByRole('button', { name: 'Confirmar' }))
   const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
   await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
@@ -401,7 +425,7 @@ describe('NosotrosPage', () => {
     await user.click(firstEditButton as HTMLElement)
 
     const dialog = screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` })
-    expect(within(dialog).getByRole('textbox', { name: 'Título' })).toHaveValue(
+    expect(within(dialog).getByRole('textbox', { name: /^Título \(Español\)/ })).toHaveValue(
       firstActivity?.title,
     )
     expect(within(dialog).getByRole('combobox', { name: 'Ícono' })).toHaveValue(firstActivity?.icon)
@@ -417,6 +441,48 @@ describe('NosotrosPage', () => {
     expect(screen.getByRole('dialog', { name: 'Eliminar actividad' })).toBeInTheDocument()
   })
 
+  test('marks each card with the language of its text', () => {
+    renderPage()
+
+    const heading = screen.getByRole('heading', { name: 'Fenómenos solares eruptivos' })
+    expect(heading.closest('[lang]')).toHaveAttribute('lang', 'es')
+  })
+
+  test('leaves the language of a legacy card unknown', () => {
+    renderPage({
+      content: {
+        ...defaultArgs.content,
+        activities: {
+          ...defaultArgs.content.activities,
+          items: defaultArgs.content.activities.items.map((item, index) =>
+            index === 0 ? { ...item, contentLocale: null } : item,
+          ),
+        },
+      },
+    })
+
+    const heading = screen.getByRole('heading', { name: 'Fenómenos solares eruptivos' })
+    expect(heading.closest('[lang]')).toHaveAttribute('lang', '')
+  })
+
+  test('offers no edit button for a card that came without editing data', () => {
+    renderPageInEditMode({
+      content: {
+        ...defaultArgs.content,
+        activities: {
+          ...defaultArgs.content.activities,
+          items: defaultArgs.content.activities.items.map(({ editing: _editing, ...item }) => item),
+        },
+      },
+    })
+
+    const activities = screen.getByRole('region', { name: /Qué hacemos/ })
+    expect(within(activities).queryByRole('button', { name: /^Editar / })).not.toBeInTheDocument()
+    expect(within(activities).getAllByRole('button', { name: /^Eliminar / })).toHaveLength(
+      defaultArgs.content.activities.items.length,
+    )
+  })
+
   test('PATCHes the activity, refreshes the page and confirms the change was saved', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ activity: {} }) })
@@ -429,6 +495,21 @@ describe('NosotrosPage', () => {
       `/api/nosotros/activities/${firstActivity?.id}`,
       expect.objectContaining({ method: 'PATCH' }),
     )
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(init.body as string)).toEqual({
+      version: firstActivity?.editing?.version,
+      content: {
+        es: {
+          title: 'Título editado',
+          description: firstActivity?.editing?.content.es.description,
+        },
+        en: {
+          title: 'Edited title',
+          description: firstActivity?.editing?.content.en?.description,
+        },
+      },
+      confirmedUnchanged: [],
+    })
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(
       screen.queryByRole('dialog', { name: `Editar "${firstActivity?.title}"` }),
@@ -449,9 +530,9 @@ describe('NosotrosPage', () => {
     expect(
       await within(editDialog).findByText('No tiene permisos para modificar este contenido.'),
     ).toBeInTheDocument()
-    expect(within(editDialog).getByRole('textbox', { name: 'Título' })).toHaveValue(
-      'Título editado',
-    )
+    expect(
+      within(editDialog).getByRole('textbox', { name: /^Título \(English\)/ }),
+    ).toHaveValue('Edited title')
     const activities = screen.getByRole('region', { name: /Qué hacemos/ })
     expect(within(activities).getByText(firstActivity?.title as string)).toBeInTheDocument()
     expect(screen.queryByText('Actividad actualizada correctamente.')).not.toBeInTheDocument()
@@ -463,7 +544,7 @@ describe('NosotrosPage', () => {
     fetchMock.mockResolvedValue(
       failedResponse(400, {
         error: 'Faltan campos obligatorios o no son válidos.',
-        issues: { title: ['El título es obligatorio.'] },
+        issues: [{ path: 'content.es.title', message: 'El título en español es obligatorio.' }],
       }),
     )
     renderPageInEditMode()
@@ -472,7 +553,7 @@ describe('NosotrosPage', () => {
 
     expect(
       await within(editDialog).findByText(
-        'Faltan campos obligatorios o no son válidos: El título es obligatorio.',
+        'Faltan campos obligatorios o no son válidos: El título en español es obligatorio.',
       ),
     ).toBeInTheDocument()
   })
@@ -546,8 +627,10 @@ describe('NosotrosPage', () => {
         method: 'POST',
         body: JSON.stringify({
           icon: 'sun',
-          title: 'Actividad nueva',
-          description: 'Texto de prueba',
+          content: {
+            es: { title: 'Actividad nueva', description: 'Texto de prueba' },
+            en: { title: 'New activity', description: 'Test text' },
+          },
         }),
       }),
     )
@@ -573,9 +656,9 @@ describe('NosotrosPage', () => {
         'No se pudo guardar la actividad: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
       ),
     ).toBeInTheDocument()
-    expect(within(addDialog).getByRole('textbox', { name: 'Título' })).toHaveValue(
-      'Actividad nueva',
-    )
+    expect(
+      within(addDialog).getByRole('textbox', { name: /^Título \(English\)/ }),
+    ).toHaveValue('New activity')
     expect(screen.queryByText('Actividad agregada correctamente.')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
