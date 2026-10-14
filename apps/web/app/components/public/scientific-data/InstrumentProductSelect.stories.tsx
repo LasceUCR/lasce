@@ -52,3 +52,41 @@ export const Default: Story = {
     ],
   },
 }
+
+const seiss = 'SEISS — Suite ambiental espacial in situ'
+const suvi = 'SUVI — Generador de imágenes solares ultravioleta'
+
+/** Groups taller than the 320 px menu, where expanding one has to scroll the menu. */
+export const LargeGroups: Story = {
+  args: {
+    ...Default.args,
+    value: 'MPSH',
+    options: [
+      ...(Default.args?.options ?? []).filter((option) => option.group !== seiss),
+      { value: 'EHIS', label: 'Iones pesados energéticos (EHIS)', group: seiss },
+      {
+        value: 'MPSL',
+        label: 'Electrones y protones magnetosféricos: baja energía (MPSL)',
+        group: seiss,
+      },
+      {
+        value: 'MPSH',
+        label: 'Electrones y protones magnetosféricos: energía media y alta (MPSH)',
+        group: seiss,
+      },
+      { value: 'SGPS', label: 'Protones solares y galácticos (SGPS)', group: seiss },
+      ...[
+        ['Fe093', '94 Å'],
+        ['Fe131', '131 Å'],
+        ['Fe171', '171 Å'],
+        ['Fe195', '195 Å'],
+        ['Fe284', '284 Å'],
+        ['He303', '304 Å'],
+      ].map(([code, wavelength]) => ({
+        value: code!,
+        label: `Imágenes solares: ${wavelength} (${code})`,
+        group: suvi,
+      })),
+    ],
+  },
+}
