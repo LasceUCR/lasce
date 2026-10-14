@@ -209,14 +209,16 @@ enum CollaborationScope {
 /// Partner organizations shown on `/colaboraciones-e-iniciativas`. Official names,
 /// acronyms, classification and display order are shared across languages.
 model Collaboration {
-  id        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  acronym   String?
-  country   String
-  scope     CollaborationScope
-  position  Int                @default(0)
-  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  acronym    String?
+  country    String
+  logoUrl    String?            @map("logo_url")
+  websiteUrl String?            @map("website_url")
+  scope      CollaborationScope
+  position   Int                @default(0)
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   translations CollaborationTranslation[]
 
