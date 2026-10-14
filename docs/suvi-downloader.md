@@ -175,7 +175,8 @@ The decoded matrix does not stop at `ProcessHeaders`. Once the header is persist
 `suvi_pipeline.py` hands the matrix straight to `apps/worker/app/services/suvi_preview.py`'s
 `publish_preview`. Stakeholders confirmed these images are illustrative only, not a scientific
 product, so there is no compression, quantisation or delta-encoding step — `render_webp` stretches
-the matrix with `log1p` normalised to its own maximum, encodes it as an 8-bit grayscale image and
+the matrix with `log1p` normalised to its own maximum, maps it through the channel's colour table
+into an 8-bit RGB image (a port of SunPy's SUVI/AIA colormaps, grayscale for an unknown channel) and
 saves it as **lossy WebP** (`WEBP_QUALITY = 80`) rather than PNG, purely for size: a lossless
 format buys nothing for an illustration that already discards precision in the log stretch.
 

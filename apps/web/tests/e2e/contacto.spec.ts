@@ -15,11 +15,15 @@ test('displays official contact information without authentication', async ({ pa
     'href',
     'tel:+50625116566',
   )
-  await expect(
-    contact.getByText('Universidad de Costa Rica, Sede Rodrigo Facio Brenes'),
-  ).toBeVisible()
-  await expect(contact.getByText('Montes de Oca, San José, Costa Rica')).toBeVisible()
-  await expect(contact.getByText(/código postal/i)).toHaveCount(0)
+  const location = page.getByRole('region', { name: 'Ubicación' })
+  await expect(location).toContainText(
+    'se encuentra al costado sur del Planetario de la Universidad de Costa Rica',
+  )
+  await expect(location).toContainText('Ciudad de la Investigación')
+  await expect(location).toContainText('San Pedro de Montes de Oca, San José, Costa Rica')
+  await expect(location.getByRole('region', { name: 'Mapa de ubicación de LASCE' })).toBeVisible()
+  await expect(location.getByText('LASCE', { exact: true })).toBeVisible()
+  await expect(page.getByText(/código postal/i)).toHaveCount(0)
   await expect(page.getByRole('link', { name: '@lasce_ucr' })).toHaveAttribute(
     'href',
     'https://www.instagram.com/lasce_ucr/',

@@ -17,6 +17,10 @@ const indicators = [
   { id: 'ap', tone: 'teal' },
 ] as const
 
+// The laboratory's official name. It is a proper noun, so it is not a message: it reads the same
+// in every language (docs/internationalization.md, "Add a string").
+const institutionName = 'Laboratorio de Astrofísica Solar y Clima Espacial'
+
 function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
   return areas.map((area) => {
     const AreaIcon: LucideIcon = area.icon
@@ -41,6 +45,9 @@ export default async function HomePage() {
           <GoesSolarAnimation />
         </div>
         <div className="hero-content page-width">
+          <p className="hero-institution" lang="es">
+            {institutionName}
+          </p>
           <h1>{t('hero.title')}</h1>
           <span className="hero-rule" aria-hidden="true" />
           <p>{t('hero.lead')}</p>
