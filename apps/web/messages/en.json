@@ -296,7 +296,8 @@
     "card": {
       "national": "National",
       "international": "International",
-      "acronym": "Acronym:"
+      "acronym": "Acronym:",
+      "website": "Official website"
     },
     "countries": {
       "cr": "Costa Rica",
@@ -325,6 +326,50 @@
           "p5": "The initiative contributes strongly to narrowing the gap between the number of radio astronomy observatories in the Southern Hemisphere and those in the Northern Hemisphere."
         }
       }
+    },
+    "validation": {
+      "name": "The name is required and must contain at most 300 characters.",
+      "scope": "Select National or International.",
+      "acronym": "The acronym must contain at most 100 characters.",
+      "url": "Enter a valid HTTP or HTTPS URL without credentials and at most 2048 characters."
+    },
+    "editor": {
+      "add": "Add collaboration",
+      "edit": "Edit collaboration",
+      "editNamed": "Edit {name}",
+      "deleteNamed": "Delete {name}",
+      "name": "Organization name",
+      "acronym": "Acronym (optional)",
+      "scope": "Classification",
+      "country": "Country ({language})",
+      "languages": "Country language",
+      "websiteUrl": "Website (optional)",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "legacy": "This record has text in an unknown language. When changing its country, complete and review both languages."
+    },
+    "feedback": {
+      "created": "Collaboration added successfully.",
+      "updated": "Collaboration updated successfully.",
+      "deleted": "Collaboration deleted successfully.",
+      "failed": "The operation could not be completed. Check the fields and try again.",
+      "conflict": "The collaboration changed. Reopen the form to load the current version.",
+      "notFound": "The collaboration no longer exists. Refresh the page.",
+      "forbidden": "You do not have permission for this operation. Check your session.",
+      "review": "Update the country in both languages or confirm that the translation is still correct."
+    },
+    "delete": {
+      "title": "Delete collaboration",
+      "message": "Delete this collaboration? It will be removed from the public page and this action cannot be undone.",
+      "entity": "Collaboration",
+      "confirm": "Delete"
+    },
+    "discard": {
+      "title": "Discard unsaved changes",
+      "message": "Any changes you have not saved will be lost.",
+      "confirm": "Discard",
+      "keepEditing": "Keep editing"
     }
   },
   "academicActivities": {

@@ -296,7 +296,8 @@
     "card": {
       "national": "Nacional",
       "international": "Internacional",
-      "acronym": "Siglas:"
+      "acronym": "Siglas:",
+      "website": "Sitio web oficial"
     },
     "countries": {
       "cr": "Costa Rica",
@@ -325,6 +326,50 @@
           "p5": "La iniciativa contribuye fuertemente a disminuir la brecha existente entre el número de observatorios radioastronómicos del Hemisferio Sur y los existentes en el Hemisferio Norte."
         }
       }
+    },
+    "validation": {
+      "name": "El nombre es obligatorio y debe tener hasta 300 caracteres.",
+      "scope": "Seleccione Nacional o Internacional.",
+      "acronym": "Las siglas deben tener hasta 100 caracteres.",
+      "url": "Ingrese una URL HTTP o HTTPS válida, sin credenciales y de hasta 2048 caracteres."
+    },
+    "editor": {
+      "add": "Añadir colaboración",
+      "edit": "Editar colaboración",
+      "editNamed": "Editar {name}",
+      "deleteNamed": "Eliminar {name}",
+      "name": "Nombre de la organización",
+      "acronym": "Siglas (opcional)",
+      "scope": "Clasificación",
+      "country": "País ({language})",
+      "languages": "Idioma del país",
+      "websiteUrl": "Sitio web (opcional)",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando...",
+      "legacy": "Este registro tiene texto de idioma desconocido. Al cambiar el país, complete y revise ambos idiomas."
+    },
+    "feedback": {
+      "created": "Colaboración agregada correctamente.",
+      "updated": "Colaboración actualizada correctamente.",
+      "deleted": "Colaboración eliminada correctamente.",
+      "failed": "No se pudo completar la operación. Revise los campos e inténtelo de nuevo.",
+      "conflict": "La colaboración cambió. Vuelva a abrir el formulario para cargar la versión actual.",
+      "notFound": "La colaboración ya no existe. Actualice la página.",
+      "forbidden": "No tiene permisos para esta operación. Compruebe su sesión.",
+      "review": "Actualice el país en ambos idiomas o confirme que la traducción sigue siendo correcta."
+    },
+    "delete": {
+      "title": "Eliminar colaboración",
+      "message": "¿Desea eliminar esta colaboración? Se quitará de la página pública y esta acción no se puede deshacer.",
+      "entity": "Colaboración",
+      "confirm": "Eliminar"
+    },
+    "discard": {
+      "title": "Descartar cambios no guardados",
+      "message": "Se perderán los datos ingresados que no se hayan guardado.",
+      "confirm": "Descartar",
+      "keepEditing": "Seguir editando"
     }
   },
   "academicActivities": {
