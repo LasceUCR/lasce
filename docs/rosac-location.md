@@ -1,6 +1,6 @@
 # ROSAC location map
 
-The public `/radioastronomia` page embeds one ROSAC location map and keeps the address in server-rendered text outside the map. Directions, geolocation and administration are outside this feature's scope.
+The public `/radioastronomia` page embeds one ROSAC location map and keeps the address in server-rendered text outside the map. `/contacto` reuses the same loader for the LASCE pin and passes its own accessible names, so the contact page can follow the site language. Directions, geolocation and administration are outside this feature's scope.
 
 ## Ownership and configuration
 
