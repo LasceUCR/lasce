@@ -5,6 +5,24 @@ import { useEffect, useId, useRef, useState, type ChangeEvent, type DragEvent } 
 
 import { IconButton } from './IconButton'
 
+const DEFAULT_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif'
+
+/** Mirrors MINIO service's 25 MiB cap so an oversize file is refused before it is sent. */
+const MAX_FILE_BYTES = 25 * 1024 * 1024
+
+function isAccepted(file: File, accept: string): boolean {
+  const allowed = accept.split(',').map((entry) => entry.trim().toLowerCase())
+  const type = file.type.toLowerCase()
+  const name = file.name.toLowerCase()
+  return allowed.some((entry) =>
+    entry.startsWith('.')
+      ? name.endsWith(entry)
+      : entry.endsWith('/*')
+        ? type.startsWith(entry.slice(0, -1))
+        : type === entry,
+  )
+}
+
 export interface FileDropInputProps {
   label: string
   accept?: string
@@ -17,7 +35,7 @@ export interface FileDropInputProps {
 
 export function FileDropInput({
   label,
-  accept = 'image/*',
+  accept = DEFAULT_ACCEPT,
   existingImageUrl,
   onFileSelect,
   helperText,
@@ -29,6 +47,7 @@ export function FileDropInput({
   const objectUrlRef = useRef<string | null>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(existingImageUrl)
+  const [rejection, setRejection] = useState<string | null>(null)
 
   // Revoke the last object URL whenever a new one replaces it, and on unmount,
   // so a form left open doesn't leak blob URLs.
@@ -41,6 +60,18 @@ export function FileDropInput({
   }, [])
 
   function selectFile(file: File | null) {
+    if (file && !isAccepted(file, accept)) {
+      setRejection('Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.')
+      if (inputRef.current) inputRef.current.value = ''
+      return
+    }
+    if (file && file.size > MAX_FILE_BYTES) {
+      setRejection('La imagen supera el tamaño máximo de 25 MB.')
+      if (inputRef.current) inputRef.current.value = ''
+      return
+    }
+    setRejection(null)
+
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current)
       objectUrlRef.current = null
@@ -74,7 +105,8 @@ export function FileDropInput({
     selectFile(null)
   }
 
-  const isInvalid = Boolean(errorMessage)
+  const shownError = errorMessage ?? rejection
+  const isInvalid = Boolean(shownError)
 
   return (
     <div className="file-drop-field">
@@ -153,7 +185,7 @@ export function FileDropInput({
         ref={inputRef}
         type="file"
       />
-      {errorMessage ? <p className="form-field-error">{errorMessage}</p> : null}
+      {shownError ? <p className="form-field-error">{shownError}</p> : null}
     </div>
   )
 }
