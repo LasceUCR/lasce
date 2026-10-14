@@ -34,8 +34,8 @@ export function EditableAcknowledgmentCard({
   const [imageFailed, setImageFailed] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  const card = (
-    <div className="acknowledgments-card">
+  const logoContent = (
+    <>
       <div className="acknowledgments-logo">
         {institution.logo.src && !imageFailed ? (
           <Image
@@ -59,13 +59,35 @@ export function EditableAcknowledgmentCard({
             }}
           >
             <Building2 aria-hidden="true" size={36} strokeWidth={1.5} />
-            <span style={{ fontSize: '0.75rem' }}>Logo no disponible</span>
+            <span style={{ fontSize: '0.75rem', textAlign: 'center' }}>Logo no disponible</span>
           </div>
         )}
       </div>
-      <p className="acknowledgments-name">{institution.name}</p>
-    </div>
+      <span className="sr-only">{institution.name}</span>
+    </>
   )
+
+  const showEditor = editMode && (canEdit || canDelete)
+
+  const card =
+    !showEditor && institution.href ? (
+      <a
+        className="acknowledgments-card"
+        href={institution.href}
+        rel="noopener noreferrer"
+        target="_blank"
+        title={institution.name}
+      >
+        {logoContent}
+      </a>
+    ) : (
+      <div
+        className={`acknowledgments-card ${!showEditor && !institution.href ? 'acknowledgments-card-static' : ''}`.trim()}
+        title={institution.name}
+      >
+        {logoContent}
+      </div>
+    )
 
   async function handleFormSave(values: RosacAcknowledgmentFormValues) {
     const error = await onSave(values)
@@ -102,8 +124,6 @@ export function EditableAcknowledgmentCard({
       />
     </Modal>
   )
-
-  const showEditor = editMode && (canEdit || canDelete)
 
   if (!showEditor) {
     return card
