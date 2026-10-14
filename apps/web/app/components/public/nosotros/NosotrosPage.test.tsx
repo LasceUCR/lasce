@@ -5,6 +5,8 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { getNosotrosContent } from '@/app/lib/nosotros'
+import en from '@/messages/en.json' with { type: 'json' }
 
 // `NosotrosPage.stories` pulls in `nosotrosContent` from `@/app/lib/nosotros`,
 // which imports `prisma` at module scope — this stubs it out so loading that
@@ -28,6 +30,17 @@ import { NosotrosPage, type NosotrosPageProps } from './NosotrosPage'
 import { Default, ProvisionalCopy } from './NosotrosPage.stories'
 
 const defaultArgs = Default.args as NosotrosPageProps
+
+function getNosotrosPageEnglishProps(): NosotrosPageProps {
+  return { content: { ...getNosotrosContent(en), ...pickDatabaseContent(defaultArgs) } }
+}
+
+function pickDatabaseContent({ content }: NosotrosPageProps) {
+  return {
+    researchers: { ...getNosotrosContent(en).researchers, people: content.researchers.people },
+    activities: { ...getNosotrosContent(en).activities, items: content.activities.items },
+  }
+}
 const provisionalArgs = ProvisionalCopy.args as NosotrosPageProps
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
@@ -803,5 +816,20 @@ describe('NosotrosPage', () => {
       expect.objectContaining({ method: 'POST' }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  test('renders the fixed copy in English', () => {
+    renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <NosotrosPage {...getNosotrosPageEnglishProps()} />
+        </EditModeProvider>
+      </ToastProvider>,
+      { locale: 'en' },
+    )
+
+    expect(screen.getByRole('heading', { level: 1, name: 'About us' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /What do we do\?/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Our vision' })).toBeInTheDocument()
   })
 })
