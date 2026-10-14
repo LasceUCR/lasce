@@ -87,6 +87,8 @@ to cancel). The wrapper only makes the item sortable; the list around it owns th
 - In `onDragEnd`, move the item in local state at once, save the new order, and put it back if
   the save fails. Report the outcome with a toast through `useRequestFeedback`.
 - Give `DndContext` an `id` from `useId()` and announcements in the page's language.
+- `GeomagneticIndicators.tsx` (the home page's indices, [`home-page.md`](home-page.md)) is the
+  working example.
 
 ## Making the content bilingual
 

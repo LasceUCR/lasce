@@ -2,7 +2,7 @@
 
 A practical guide to managing editable Spanish/English content in PostgreSQL through LASCE's existing CMS, and to implementing the same pattern in another entity **without copying the Publications implementation**.
 
-- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) and the **home page** (its hero banner and geomagnetic indices) are integrated with it. News, research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
+- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) and the **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)) are integrated with it. News, research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
 
   is a different problem, handled by the message catalogues in [`internationalization.md`](internationalization.md).
 
