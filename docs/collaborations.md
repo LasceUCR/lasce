@@ -7,8 +7,8 @@ helpers. The ISWI and IVIA copy and the fixed interface text remain in `apps/web
 [`collaborations.ts`](../apps/web/app/lib/collaborations.ts) keeps initiative structure, logos
 and external URLs. Both Spanish and English are supported.
 
-This is the public reading and persistence portion of LASCE-PUB-002. There is no collaboration
-admin form or CRUD API in this branch. The static organization list in
+The public reading and persistence portion of LASCE-PUB-002 is extended by the collaboration CMS
+(LASCE-CON-012). Authorized editors manage organizations in place through Modo edición. The static organization list in
 [`research-collaborations.ts`](../apps/web/app/lib/research-collaborations.ts) is a fixture for
 stories and tests, not a second public data source.
 
@@ -24,10 +24,10 @@ stories and tests, not a second public data source.
 | Initiative logo files and external URLs                      | `lib/collaborations.ts`                                                             | Shared, never translated                                                   |
 | Back link label                                              | `common.backToHome`                                                                 | Spanish/English catalogues                                                 |
 
-Country is the only translatable text field in the current organization card. There is no
-organization description, logo or website field to translate; the existing logos and websites
-belong to the initiatives. `collaborationContent` defines the country with
-`defineTranslatableContent`, so a future editor can use the same bilingual validation and review
+Country is the only translatable text field in the current organization card. The optional
+organization website URL is a shared field; initiative logos and
+websites remain independent. `collaborationContent` defines the country with
+`defineTranslatableContent`, so the editor uses the same bilingual validation and review
 helpers as publications without treating official organization names as translated text.
 
 The public query fetches the directory and its supported translations in one Prisma call and
@@ -40,7 +40,8 @@ URL; neither organization identity nor classification depends on translated labe
 
 ## Migration and validation
 
-Apply `20261013120000_add_collaboration_translations` before running the updated page:
+Apply `20261013120000_add_collaboration_translations` and
+`20261014120000_add_collaboration_media` before running the updated page:
 
 ```bash
 pnpm db:generate
@@ -49,7 +50,10 @@ pnpm db:migrate:deploy
 
 The migration creates the two tables and copies the eight existing organizations, their order,
 and their existing Spanish/English country labels in one transaction. No separate seed run is
-needed. Translation rows are unique by `(collaboration_id, locale)` and are deleted with their
+needed. The media migration adds nullable `logo_url` and `website_url` columns without
+changing existing records. The `logo_url` column is reserved and currently unused by the CMS.
+Restart `pnpm dev` after generating Prisma so its cached client
+knows the new fields. Translation rows are unique by `(collaboration_id, locale)` and are deleted with their
 organization. Existing data in other tables is untouched. Prisma owns the migration; the worker
 has matching SQLAlchemy models.
 
@@ -129,10 +133,43 @@ The directory reads `Collaboration` records. An organization has:
 - `scope`: Prisma `NATIONAL` or `INTERNATIONAL`, mapped to the existing card scope.
 - `position`: display order, independent of language.
 - `acronym`: optional. A null value omits the "Siglas" line.
+- `websiteUrl`: optional HTTP(S) URL; empty values are stored as null.
+
+Organization logos are deferred. A later implementation will allow image uploads (such as PNG)
+and display them on organization cards; the current editor does not accept a logo URL.
 
 New organizations and changed translations appear on the next request without editing the
-catalogues or deploying. A future management UI must follow the bilingual write, permission,
-transaction and review rules in `translate-database-content.md`; this PBI adds no admin CRUD.
+catalogues or deploying. Management follows the bilingual write, permission, transaction and review rules in
+`translate-database-content.md`.
+
+## Managing organizations
+
+Enable **Modo edición** and open `/colaboraciones-e-iniciativas`. The server supplies create,
+edit and delete permissions independently, using the existing `*_components` permission matrix.
+Only users with edit permission receive bilingual editing metadata and the version token.
+
+`CollaborationsManager` connects the existing `AddItemCard`, `EditableWrapper`, `Modal` and
+`useRequestFeedback`. `CollaborationForm` is shared by creation and editing and uses `FormField`,
+`LanguageTabs`, `TranslationReview` and `StandardConfirmDialog`. Cancelling a changed form asks
+before discarding; a failed request leaves its values intact and reports the reason in a toast.
+The editor labels, validation and feedback follow the site's language. Countries are entered
+in Spanish and English; official organization names and acronyms are shared.
+
+`/api/collaborations` provides public GET and guarded POST; `/api/collaborations/[id]` provides
+guarded PATCH and DELETE. Server validation rejects blank required values, invalid scope,
+unsupported properties, and URLs outside HTTP(S) or containing credentials. A shared-only PATCH
+leaves omitted fields and translations untouched. Empty optional fields clear the stored value.
+Creates and edits are transactional, edits require the loaded `updatedAt` version, and one-sided
+country changes require review. Deletion cascades to translations, with confirmation in the UI.
+
+The public cards retain their responsive layout, order and national/international classification.
+External links use `noopener noreferrer`. ISWI and IVIA
+remain outside this CMS.
+
+Validation lives beside the form, routes, schema and writes. `collaboration-cms.test.ts` in the
+integration suite checks real persistence, concurrent edits and rollback on translation failure
+against a disposable `*_test` database. `collaboration-cms.spec.ts` exercises the CRUD workflow,
+permission boundaries, accessibility and mobile editing in Playwright.
 
 ## Adding an initiative
 
