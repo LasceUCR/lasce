@@ -15,10 +15,10 @@ never text a visitor reads.
 - The English text is a first draft. Nobody has reviewed its scientific terminology yet.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
-- Database content ("Modo edición") has shared, reusable infrastructure, and **two entities use it:
-  the publications on `/publicaciones`** (title and abstract) **and the "¿Qué hacemos?" cards on
-  `/nosotros`** (title and description), in Spanish and English. Every other editable entity is
-  still single-language. See [Dynamic content](#dynamic-content) and
+- Database content ("Modo edición") has shared, reusable infrastructure, and **three entities use
+  it: the publications on `/publicaciones`** (title and abstract), **the "¿Qué hacemos?" cards on
+  `/nosotros`** (title and description) **and the researcher profiles on `/nosotros`** (role and
+  description), in Spanish and English. Every other editable entity is still single-language. See [Dynamic content](#dynamic-content) and
   [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
@@ -185,12 +185,14 @@ cards' buttons (`card`), the editor of "Modo edición" with its popups, validati
 messages (`editor`, `authorDialog`, `discardDialog`, `deleteDialog`, `validation`, `saveErrors`),
 and the publications themselves, which are database content.
 
-`/nosotros` is translated except for its database content: the fixed copy, the editor labels and
-dialogs of the activity cards (`nosotros.activities.form`) and the researcher add button and
-messages (`nosotros.researchers`). The activity cards and researcher profiles are still
-single-language, the shared ROSAC researcher components (`ResearcherForm`,
-`EditableResearcherCard`, `TeamGallery`) still show Spanish, and the API's own error messages are
-still Spanish.
+`/nosotros` is translated, database content included: the fixed copy, the editor labels and
+dialogs of the activity cards (`nosotros.activities.form`) and the researcher messages and the
+labels of the bilingual part of the researcher editor (`nosotros.researchers`, `form`). The
+activity cards and the role and description of the researcher profiles are bilingual. The rest of
+the researcher editor (photo, name, contact, institution and its dialogs) comes from the
+components shared with ROSAC (`ResearcherForm`, `EditableResearcherCard`, `TeamGallery`), which
+still show Spanish; they turn the bilingual part on only when `/nosotros` passes `translation`.
+The API's own error messages are still Spanish.
 
 ### Still to do
 
@@ -226,8 +228,8 @@ still Spanish.
    namespaces Client Components use. It needs a safeguard, because a namespace left out fails
    only in the browser.
 6. **Review of the English text** by someone who knows the terminology.
-7. **Database content** for every entity except publications and the Nosotros activity cards,
-   following
+7. **Database content** for every entity except publications and the Nosotros activity cards and
+   researchers, following
    [`translate-database-content.md`](translate-database-content.md).
 
 ## Dynamic content
@@ -259,9 +261,11 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
 - **How it works and how to make an entity bilingual:**
   [`translate-database-content.md`](translate-database-content.md), with the publications as the
   reference implementation, their API contract, the design decisions and the known limitations.
-- **Which entities are bilingual:** publications and `NosotrosActivity` (the "¿Qué hacemos?"
-  cards on `/nosotros`: `title` and `description`, stored as `paragraph`). The same pattern is
-  meant for `News`, `ResearchArea`, `Researcher`, `NosotrosResearcher`, `GalleryAlbum` and
+- **Which entities are bilingual:** publications, `NosotrosActivity` (the "¿Qué hacemos?"
+  cards on `/nosotros`: `title` and `description`, stored as `paragraph`) and
+  `NosotrosResearcher` (the researcher profiles on `/nosotros`: `role` and an optional
+  `description`; the name, institution, addresses and photo are shared). The same pattern is
+  meant for `News`, `ResearchArea`, `Researcher` (ROSAC), `GalleryAlbum` and
   `GalleryMedia`, each with its own translation table holding only its translatable columns
   (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
 - **Tables:** [`database-definition.md`](database-definition.md).
