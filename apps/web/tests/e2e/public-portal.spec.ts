@@ -34,7 +34,7 @@ const publicRoutes: { label: string; path: string; heading: string; group?: stri
 ]
 
 const areaCards = [
-  { name: 'Física solar', path: '/fisica-solar' },
+  { name: 'Física Solar', path: '/fisica-solar' },
   { name: 'Clima espacial', path: '/clima-espacial' },
   { name: 'ROSAC', path: '/radioastronomia' },
   { name: 'Herramientas científicas', path: '/herramientas-cientificas' },
@@ -43,7 +43,7 @@ const areaCards = [
 ] as const
 
 const workAreaRoutes = [
-  { path: '/fisica-solar', heading: 'Astrofísica solar' },
+  { path: '/fisica-solar', heading: 'Física Solar' },
   { path: '/clima-espacial', heading: 'Clima espacial' },
   { path: '/radioastronomia', heading: 'Radio Observatorio de Santa Cruz (ROSAC)' },
 ] as const
@@ -52,7 +52,7 @@ const workAreaRoutes = [
 // behind the Investigación disclosure.
 const navigationRoutes: { label: string; path: string; group?: string }[] = [
   ...publicRoutes,
-  { label: 'Física solar', path: '/fisica-solar', group: 'Investigación' },
+  { label: 'Física Solar', path: '/fisica-solar', group: 'Investigación' },
   { label: 'Clima espacial', path: '/clima-espacial', group: 'Investigación' },
   { label: 'ROSAC', path: '/radioastronomia', group: 'Investigación' },
 ]
@@ -207,14 +207,14 @@ test('displays solar astrophysics information without authentication', async ({ 
   expect(new URL(page.url()).pathname).toBe('/fisica-solar')
   expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 
-  await expect(page.getByRole('heading', { level: 1, name: 'Astrofísica solar' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Física Solar' })).toBeVisible()
   await expect(
-    page.getByRole('heading', { name: /Qué estudia la astrofísica solar/ }),
+    page.getByRole('heading', { name: /Qué estudia la Física Solar/ }),
   ).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Relación Sol-Tierra' })).toBeVisible()
   await expect(
-    page.getByRole('heading', { name: 'El trabajo de LASCE en astrofísica solar' }),
+    page.getByRole('heading', { name: 'El trabajo de LASCE en Física Solar' }),
   ).toBeVisible()
   await expect(page.getByText(/Laboratorio de Astrofísica Solar y Clima Espacial/)).toBeVisible()
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
