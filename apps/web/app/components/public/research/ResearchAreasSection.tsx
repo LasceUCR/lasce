@@ -27,8 +27,11 @@ export interface ResearchArea {
 }
 
 export interface ResearchAreasSectionProps {
-  title: string
-  subtitle: string
+  /** Visible heading. Omit it when the page already shows the title, and pass `label`. */
+  title?: string
+  subtitle?: string
+  /** Accessible name for the list when there is no visible `title`. */
+  label?: string
   id?: string
   areas: ResearchArea[]
   canCreate?: boolean
@@ -40,6 +43,7 @@ export function ResearchAreasSection({
   id,
   title,
   subtitle,
+  label,
   areas,
   canCreate = false,
   canEdit = false,
@@ -142,10 +146,12 @@ export function ResearchAreasSection({
 
   return (
     <section className="research-areas page-width" id={id}>
-      <header className="research-areas-header">
-        <h2 id={titleId}>{title}</h2>
-        <p>{subtitle}</p>
-      </header>
+      {title || subtitle ? (
+        <header className="research-areas-header">
+          {title ? <h2 id={titleId}>{title}</h2> : null}
+          {subtitle ? <p>{subtitle}</p> : null}
+        </header>
+      ) : null}
 
       {deleteError ? (
         <p className="form-alert" role="alert">
@@ -177,7 +183,11 @@ export function ResearchAreasSection({
         ) : null}
 
         {areas.length > 0 ? (
-          <ul className="research-area-list" aria-labelledby={titleId}>
+          <ul
+            className="research-area-list"
+            aria-label={title ? undefined : label}
+            aria-labelledby={title ? titleId : undefined}
+          >
             {areas.map((area) => (
               <li key={area.id}>
                 <EditableWrapper
