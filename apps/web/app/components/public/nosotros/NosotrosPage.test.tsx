@@ -530,9 +530,9 @@ describe('NosotrosPage', () => {
     expect(
       await within(editDialog).findByText('No tiene permisos para modificar este contenido.'),
     ).toBeInTheDocument()
-    expect(
-      within(editDialog).getByRole('textbox', { name: /^Título \(English\)/ }),
-    ).toHaveValue('Edited title')
+    expect(within(editDialog).getByRole('textbox', { name: /^Título \(English\)/ })).toHaveValue(
+      'Edited title',
+    )
     const activities = screen.getByRole('region', { name: /Qué hacemos/ })
     expect(within(activities).getByText(firstActivity?.title as string)).toBeInTheDocument()
     expect(screen.queryByText('Actividad actualizada correctamente.')).not.toBeInTheDocument()
@@ -656,9 +656,9 @@ describe('NosotrosPage', () => {
         'No se pudo guardar la actividad: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
       ),
     ).toBeInTheDocument()
-    expect(
-      within(addDialog).getByRole('textbox', { name: /^Título \(English\)/ }),
-    ).toHaveValue('New activity')
+    expect(within(addDialog).getByRole('textbox', { name: /^Título \(English\)/ })).toHaveValue(
+      'New activity',
+    )
     expect(screen.queryByText('Actividad agregada correctamente.')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
