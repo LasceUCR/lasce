@@ -218,15 +218,13 @@ describe('ContactChannelForm', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(screen.getByRole('tab', { name: /^English · 1 por revisar$/ })).toBeInTheDocument()
-    const notice = screen.getByRole('note')
-    expect(notice).toHaveTextContent(
-      'Cambió la descripción en español. Actualice la descripción en inglés o confirme que sigue siendo correcta.',
-    )
-    expect(notice).toHaveClass('ui-notice-warning')
+    expect(screen.queryByRole('note')).not.toBeInTheDocument()
     expect(
       screen.getByRole('switch', { name: 'La descripción en inglés sigue siendo correcta' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Actualice este campo o confirme que sigue siendo correcto.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Actualice este campo o confirme que sigue siendo correcto.'),
+    ).toBeInTheDocument()
   })
 
   test('asks from the add card before the modal closes', async () => {

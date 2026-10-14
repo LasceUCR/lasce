@@ -27,7 +27,7 @@ import {
   type ContentDraft,
   type FormErrors,
 } from '@/app/lib/i18n/content/form'
-import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import { confirmationLabel } from '@/app/lib/i18n/content/review'
 import {
   CONTACT_CHANNEL_ICONS,
   CONTACT_CHANNEL_DESCRIPTION_MAX,
@@ -214,7 +214,6 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
       <TranslationReview
         checked={isConfirmed(confirmed, review)}
         label={confirmationLabel(contactChannelContent, review, uiLocale)}
-        message={reviewMessage(contactChannelContent, review, stored, draft, uiLocale)}
         onChange={(checked) =>
           setConfirmed((current) => withConfirmation(current, review, checked))
         }
