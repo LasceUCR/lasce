@@ -23,6 +23,7 @@ import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
  * roster without either page's content module depending on the other.
  */
 export interface PersonProfile {
+  /** `''` means the researcher has no photo. */
   src: string
   role: string
   name: string
@@ -39,7 +40,8 @@ export interface ResearcherFormValues {
   email: string
   institution: string
   description: string
-  /** The photo's permanent URL — already uploaded by the time `onSave` runs. */
+  /** The photo's permanent URL — already uploaded by the time `onSave` runs. `''` means no
+   * photo: the photo is optional, and the card shows a default portrait instead. */
   src: string
 }
 
@@ -120,8 +122,6 @@ export function ResearcherForm({
     }
   }, [uploadError])
 
-  const hasPhoto = photoFile !== null || (Boolean(researcher?.src) && !photoRemoved)
-  const photoError = hasAttemptedSubmit && !hasPhoto ? 'La foto es obligatoria.' : null
   const roleError = hasAttemptedSubmit && role.trim() === '' ? 'El rol es obligatorio.' : null
   const nameError = hasAttemptedSubmit && name.trim() === '' ? 'El nombre es obligatorio.' : null
   const institutionError =
@@ -158,7 +158,7 @@ export function ResearcherForm({
   // as each field becomes valid — same as the news article form.
   function handleConfirmClick() {
     setHasAttemptedSubmit(true)
-    if (!hasPhoto || role.trim() === '' || name.trim() === '' || institution.trim() === '') {
+    if (role.trim() === '' || name.trim() === '' || institution.trim() === '') {
       if (role.trim() === '') {
         document.getElementById('researcher-role')?.focus()
       } else if (name.trim() === '') {
@@ -176,7 +176,8 @@ export function ResearcherForm({
     setConfirmOpen(false)
     setUploadError(null)
 
-    let src = researcher?.src ?? ''
+    // An untouched photo is kept as is; a removed one is saved as `''`, which means no photo.
+    let src = photoRemoved ? '' : (researcher?.src ?? '')
     if (photoFile) {
       setIsUploading(true)
 
@@ -238,15 +239,13 @@ export function ResearcherForm({
   return (
     <div className="cms-form">
       <FileDropInput
-        errorMessage={photoError}
-        existingImageUrl={researcher?.src}
-        helperText="Retrato del investigador, en formato JPG o PNG."
+        existingImageUrl={researcher?.src || undefined}
+        helperText="Opcional. Retrato del investigador, en formato JPG o PNG."
         label="Foto"
         onFileSelect={(file) => {
           setPhotoFile(file)
           setPhotoRemoved(file === null)
         }}
-        required
       />
 
       <FormField

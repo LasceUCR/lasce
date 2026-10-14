@@ -11,9 +11,10 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 }))
 
 import { ResearcherForm, type ResearcherFormProps } from './ResearcherForm'
-import { AddNew, EditExisting } from './ResearcherForm.stories'
+import { AddNew, EditExisting, EditWithoutPhoto } from './ResearcherForm.stories'
 
 const editArgs = EditExisting.args as ResearcherFormProps
+const editWithoutPhotoArgs = EditWithoutPhoto.args as ResearcherFormProps
 const addArgs = AddNew.args as ResearcherFormProps
 
 // jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
@@ -62,7 +63,7 @@ describe('ResearcherForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByText('La foto es obligatoria.')).toBeInTheDocument()
+    expect(screen.queryByText('La foto es obligatoria.')).not.toBeInTheDocument()
     expect(screen.getByText('El rol es obligatorio.')).toBeInTheDocument()
     expect(screen.getByText('El nombre es obligatorio.')).toBeInTheDocument()
     expect(screen.getByText('La institución es obligatoria.')).toBeInTheDocument()
@@ -200,15 +201,52 @@ describe('ResearcherForm', () => {
     )
   })
 
-  test('reports the photo as missing once the existing one is removed', async () => {
+  test('creates a researcher without a photo and shows no photo error', async () => {
     const user = userEvent.setup()
-    render(<ResearcherForm {...editArgs} />)
+    const onSave = vi.fn()
+    render(<ResearcherForm {...addArgs} onSave={onSave} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
+    await user.type(screen.getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.queryByText('La foto es obligatoria.')).not.toBeInTheDocument()
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+
+    expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Persona Nueva', src: '' }))
+  })
+
+  test('saves an edit of a researcher who has no photo without asking for one', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...editWithoutPhotoArgs} onSave={onSave} />)
+
+    await user.clear(screen.getByRole('textbox', { name: 'Rol' }))
+    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador asociado')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+
+    expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ role: 'Investigador asociado', src: '' }),
+    )
+  })
+
+  test('saves without a photo once the existing one is removed', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...editArgs} onSave={onSave} />)
 
     await user.click(screen.getByRole('button', { name: 'Quitar imagen' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByText('La foto es obligatoria.')).toBeInTheDocument()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByText('La foto es obligatoria.')).not.toBeInTheDocument()
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+
+    expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ src: '' }))
   })
 
   test('asks for confirmation before saving', async () => {
