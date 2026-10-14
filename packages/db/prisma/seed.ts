@@ -11,48 +11,6 @@ import { config as loadEnv } from 'dotenv'
 loadEnv({ path: fileURLToPath(new URL('../../../.env', import.meta.url)), quiet: true })
 
 const { prisma } = await import('../src/index.js')
-const { galleryAlbumList } = await import('../../../apps/web/app/lib/gallery.js')
-
-const galleryMonthNumbers: Record<string, number> = {
-  ene: 0,
-  feb: 1,
-  mar: 2,
-  abr: 3,
-  may: 4,
-  jun: 5,
-  jul: 6,
-  ago: 7,
-  sep: 8,
-  set: 8,
-  oct: 9,
-  nov: 10,
-  dic: 11,
-}
-
-function galleryCapturedAt(label: string): Date {
-  const match = /^(\d{1,2})(?:-\d{1,2})?\s+([a-záéíóú]+)\s+(\d{4})$/i.exec(label)
-  const [, day, monthLabel, year] = match ?? []
-
-  if (day === undefined || monthLabel === undefined || year === undefined) {
-    throw new Error(`Unsupported gallery capture date: ${label}`)
-  }
-
-  const month = galleryMonthNumbers[monthLabel.toLowerCase()]
-  if (month === undefined) {
-    throw new Error(`Unsupported gallery capture date: ${label}`)
-  }
-
-  const capturedAt = new Date(Date.UTC(Number(year), month, Number(day)))
-  if (
-    capturedAt.getUTCFullYear() !== Number(year) ||
-    capturedAt.getUTCMonth() !== month ||
-    capturedAt.getUTCDate() !== Number(day)
-  ) {
-    throw new Error(`Invalid gallery capture date: ${label}`)
-  }
-
-  return capturedAt
-}
 
 type SeedText = { title: string; abstract: string }
 
@@ -848,82 +806,1290 @@ for (const researcher of nosotrosResearchers) {
   })
 }
 
-async function seedGalleryMedia(
-  albumId: string,
-  media: (typeof galleryAlbumList)[number]['media'][number],
-  position: number,
-): Promise<void> {
-  if (!media.src) {
-    throw new Error(`Gallery media "${media.title}" has no public asset path`)
-  }
-
-  const data = {
-    albumId,
-    title: media.title,
-    description: media.description,
-    altText: media.alt,
-    objectKey: media.src,
-    format: media.format,
-    isVideo: media.isVideo,
-    colSpan: media.colSpan,
-    rowSpan: media.rowSpan,
-    capturedAt: galleryCapturedAt(media.date),
-    uploaderName: media.uploader,
-    position,
-  }
-
-  await prisma.galleryMedia.upsert({
-    where: { objectKey: media.src },
-    update: data,
-    create: data,
-  })
+const galleryImageBase = '/images/galeria'
+ 
+const galleryMediaDefaults = {
+  format: 'JPG',
+  isVideo: false,
+  uploaderName: 'LASCE',
+  capturedAt: new Date('2026-02-16'),
 }
+ 
+type SeedGalleryMedia = {
+  src: string
+  colSpan: 1 | 2 | 3 | 4
+  rowSpan: 1 | 2 | 3 | 4
+  title: string
+  description: string
+  alt: string
+}
+ 
+type SeedGalleryAlbum = {
+  slug: string
+  title: string
+  description: string
+  yearsLabel?: string
+  cover: string
+  media: SeedGalleryMedia[]
+  subAlbums?: SeedGalleryAlbum[]
+}
+ 
+const galleryAlbums: SeedGalleryAlbum[] = [
+  {
+    slug: 'rosac',
+    title: 'Fotos del ROSAC',
+    description:
+      'Documentación fotográfica del desarrollo, montaje y adecuación del Radio Observatorio de Santa Cruz (ROSAC).',
+    yearsLabel: '2019–2023',
+    cover: 'rosac/8.jpg',
+    media: [
+      {
+        src: 'rosac/1.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Trabajos nocturnos en el radiotelescopio',
+        description:
+          'Vista nocturna de las antenas del observatorio con una plataforma elevadora realizando labores técnicas en la antena principal.',
+        alt: 'Antena parabólica de radiotelescopio iluminada de noche junto a un elevador hidráulico y otra antena secundaria.',
+      },
+      {
+        src: 'rosac/2.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Ajuste de paneles en el plato reflector',
+        description:
+          'Dos técnicos realizando trabajos de ensamblaje y calibración sobre la superficie del plato de la antena.',
+        alt: 'Dos personas con sombreros trabajando en el interior del plato reflector cerca del anillo central.',
+      },
+      {
+        src: 'rosac/3.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Inspección de la base de concreto',
+        description:
+          'Personal técnico sobre la zapata de cimentación y los pernos de anclaje de la antena.',
+        alt: 'Tres operarios de pie sobre la base circular de hormigón con pernos de anclaje y antena al fondo bajo cielo azul.',
+      },
+      {
+        src: 'rosac/4.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Descarga y transporte de estructuras',
+        description:
+          'Camión grúa transportando componentes y vigas metálicas para el ensamblaje en el sitio del observatorio.',
+        alt: 'Camión blanco con brazo articulado rojo transportando estructuras metálicas junto a una antena y caseta.',
+      },
+      {
+        src: 'rosac/5.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Maniobra de izaje del pedestal metálico',
+        description:
+          'Grúa posicionando el pedestal cilíndrico metálico mientras los operarios guían el anclaje.',
+        alt: 'Operario sobre el cilindro metálico sostenido por cadenas de grúa durante las maniobras de montaje.',
+      },
+      {
+        src: 'rosac/6.jpg',
+        colSpan: 2,
+        rowSpan: 1,
+        title: 'Montaje de la plataforma superior de azimut',
+        description:
+          'Izaje de la plataforma y mecanismo motriz superior sobre el pedestal del radiotelescopio con supervisión en tierra.',
+        alt: 'Estructura superior de la antena suspendida por grúa sobre el pedestal metálico mientras el equipo supervisa abajo.',
+      },
+      {
+        src: 'rosac/7.jpg',
+        colSpan: 1,
+        rowSpan: 2,
+        title: 'Instalación del armazón estructural posterior',
+        description:
+          'Técnico en plataforma elevadora ajustando la estructura reticular de soporte del reflector.',
+        alt: 'Brazo articulado amarillo elevando a un técnico hacia la estructura de celosía metálica posterior del plato.',
+      },
+      {
+        src: 'rosac/8.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Equipo de trabajo en la torre del radiotelescopio',
+        description:
+          'Integrantes del equipo técnico y colaboradores, incluida la Dra. Carolina Salas Matamoros, posando en la estructura de la antena.',
+        alt: 'Grupo de personas y una mascota posando en las diferentes plataformas y niveles de la estructura del radiotelescopio.',
+      },
+      {
+        src: 'rosac/9.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Colocación de panel reflector con brazo elevador',
+        description:
+          'Maniobra de elevación de un gajo del reflector parabólico para su acople en la estructura de soporte.',
+        alt: 'Plataforma elevadora izando un panel metálico hacia la parábola del radiotelescopio asistida por operarios.',
+      },
+      {
+        src: 'rosac/10.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Inspección del sistema de motores y engranajes',
+        description:
+          'Revisión técnica de los motores de elevación y contrapesos en el cabezal del mecanismo de orientación.',
+        alt: 'Especialista sonriendo junto al motor eléctrico y el contrapeso del mecanismo de movimiento de la antena.',
+      },
+      {
+        src: 'rosac/11.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Fotografía grupal del equipo frente a la torre',
+        description:
+          'Investigadores, ingenieros y colaboradores, junto a la Dra. Carolina Salas Matamoros, al pie de la torre de la antena.',
+        alt: 'Grupo de once personas del equipo posando de pie y en la base frente a la torre del radiotelescopio.',
+      },
+      {
+        src: 'rosac/12.jpg',
+        colSpan: 2,
+        rowSpan: 1,
+        title: 'Tendido de cableado eléctrico y de control',
+        description:
+          'Personal técnico realizando la canalización y conexionado subterráneo desde la caseta de control hacia la antena.',
+        alt: 'Tres operarios manipulando rollos de cables en una arqueta exterior junto a la caseta y la antena al fondo.',
+      },
+      {
+        src: 'rosac/13.jpg',
+        colSpan: 1,
+        rowSpan: 2,
+        title: 'Instalación del panel de protección eléctrica',
+        description:
+          'Técnico trabajando en la conexión del tablero eléctrico y dispositivos de supresión de sobretensiones.',
+        alt: 'Primer plano de un operario conectando cables en un tablero eléctrico exterior con protecciones y disyuntores.',
+      },
+      {
+        src: 'rosac/14.jpg',
+        colSpan: 2,
+        rowSpan: 1,
+        title: 'Mantenimiento y cableado en la plataforma superior',
+        description:
+          'Técnicos realizando el guiado y tendido de cables a través del conducto central bajo el plato reflector.',
+        alt: 'Dos operarios en la pasarela circular superior de la antena introduciendo cables por la abertura central.',
+      },
+      {
+        src: 'rosac/15.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Entrega y recepción de equipo eléctrico',
+        description:
+          'Representantes del proyecto, incluida la Dra. Carolina Salas Matamoros, posando junto a tableros y equipos eléctricos donados.',
+        alt: 'Seis personas posando en interiores junto a tableros de distribución eléctrica y material técnico.',
+      },
+      {
+        src: 'rosac/16.JPG',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'El ROSAC durante el atardecer',
+        description:
+          'Perspectiva en contrapicado del ROSAC y su armazón estructural al atardecer, con una antena secundaria visible en segundo plano.',
+        alt: 'Vista angular de la antena parabólica y el pedestal del ROSAC bajo el cielo dorado del atardecer.',
+      },
+    ],
+    subAlbums: [
+      {
+        slug: 'previos-montaje',
+        title: 'Trabajos previos al montaje',
+        description:
+          'Preparación del sitio, cimentación y adecuación logística de los componentes del observatorio.',
+        cover: 'rosac/previos-montaje/1.jpg',
+        media: [
+          {
+            src: 'rosac/previos-montaje/1.jpg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Almacenamiento de base y mecanismo azimutal',
+            description:
+              'Piezas mecánicas principales y base de rotación resguardadas en bodega antes de su traslado a sitio.',
+            alt: 'Estructura mecánica de soporte y montaje almacenada en bodega industrial.',
+          },
+          {
+            src: 'rosac/previos-montaje/2.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Columna cilíndrica del pedestal en bodega',
+            description:
+              'Cuerpo cilíndrico de soporte estructural de la antena protegido y ubicado en el área de almacenamiento.',
+            alt: 'Gran cilindro metálico con bridas reforzadas apoyado horizontalmente en una nave industrial.',
+          },
+          {
+            src: 'rosac/previos-montaje/3.jpg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Traslado del pedestal principal con montacargas',
+            description:
+              'Supervisión del movimiento y traslado del pedestal cilíndrico por parte de la Dra. Carolina Salas Matamoros.',
+            alt: 'Montacargas transportando la columna cilíndrica del radiotelescopio en exteriores.',
+          },
+          {
+            src: 'rosac/previos-montaje/4.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Inspección de cimientos y pernos de anclaje',
+            description:
+              'Revisión preliminar de la cimentación de concreto y el círculo de pernos de fijación en el terreno.',
+            alt: 'Persona con sombrero observando la base de concreto circular con pernos de anclaje.',
+          },
+          {
+            src: 'rosac/previos-montaje/5.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Detalle de base de cimentación y corona de pernos',
+            description:
+              'Vista de la placa guía circular y los pernos de fijación embebidos en el pedestal de concreto.',
+            alt: 'Base cilíndrica de concreto con anillo metálico y pernos de anclaje con antena al fondo.',
+          },
+          {
+            src: 'rosac/previos-montaje/6.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Personal técnico inspeccionando la base estructural',
+            description:
+              'Equipo técnico verificando niveles y alineación de pernos en la base de concreto previo a la instalación.',
+            alt: 'Tres trabajadores revisando los pernos de la base de concreto sobre el terreno.',
+          },
+          {
+            src: 'rosac/previos-montaje/7.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Primer plano de pernos roscados de nivelación',
+            description:
+              'Aproximación a los pernos de alta resistencia y placas de nivelación en la superficie de la base.',
+            alt: 'Detalle en primer plano de pernos de anclaje roscados y arandelas de soporte.',
+          },
+          {
+            src: 'rosac/previos-montaje/8.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Inspección interna de la columna de soporte',
+            description:
+              'Técnico examinando el interior y las uniones de la columna cilíndrica en el área de resguardo.',
+            alt: 'Operario inspeccionando la parte interior del cilindro metálico en el almacén.',
+          },
+          {
+            src: 'rosac/previos-montaje/9.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Transporte de equipo topográfico en almacén',
+            description:
+              'Personal trasladando instrumentos de medición y escaneo cerca de las partes estructurales.',
+            alt: 'Persona transportando estuche de estación total o escáner en nave industrial junto al pedestal.',
+          },
+          {
+            src: 'rosac/previos-montaje/10.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Módulo azimutal asegurado en transporte terrestre',
+            description:
+              'Conjunto del mecanismo de rotación y base de soporte fijado con fajas en el contenedor del camión.',
+            alt: 'Plataforma mecánica de la antena amarrada dentro del furgón de un camión de carga.',
+          },
+          {
+            src: 'rosac/previos-montaje/11.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Maniobra de carga de la columna estructural',
+            description:
+              'Operación de transporte con montacargas del tramo cilíndrico de soporte en vías externas.',
+            alt: 'Montacargas movilizando el cilindro estructural metálico sobre asfalto.',
+          },
+          {
+            src: 'rosac/previos-montaje/12.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Equipo colaborador en visita técnica a reflectores',
+            description:
+              'Dra. Carolina Salas Matamoros y colaboradores durante una jornada de inspección en las instalaciones.',
+            alt: 'Tres investigadores posando en el área exterior junto a las estructuras de antenas.',
+          },
+          {
+            src: 'rosac/previos-montaje/13.JPG',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Llegada de camión grúa con componentes estructurales',
+            description:
+              'Arribo de transporte pesado con brazo hidráulico cargado de elementos metálicos al sitio de montaje.',
+            alt: 'Camión blanco con grúa hidráulica estacionado en el campo junto a la antena.',
+          },
+          {
+            src: 'rosac/previos-montaje/14.JPG',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Detalle de ensamble de anillo de rodamiento y piezas',
+            description:
+              'Anillo metálico circular con pernos pasantes y piezas angulares organizadas en la estructura de soporte.',
+            alt: 'Vista cercana de anillo circular de montaje con herrajes y pernos de ajuste.',
+          },
+        ],
+      },
+      {
+        slug: 'fotogrametria',
+        title: 'Trabajos de fotogrametría para calibrar la parábola',
+        description:
+          'Estudios iniciales, levantamiento métrico y documentación de la geometría del reflector.',
+        cover: 'rosac/fotogrametria/1.jpg',
+        media: [
+          {
+            src: 'rosac/fotogrametria/1.jpg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Preparación de equipo e iluminación nocturna en la antena',
+            description:
+              'Vista nocturna de la estructura de la antena con iluminación de apoyo y plataforma de elevación durante trabajos técnicos.',
+            alt: 'Antena parabólica iluminada en la noche con una grúa canastilla al lado.',
+          },
+          {
+            src: 'rosac/fotogrametria/2.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Silueta del radiotelescopio al atardecer',
+            description:
+              'Estructura del plato orientada hacia el cenit con plataforma de elevación en el área de trabajo durante el atardecer.',
+            alt: 'Silueta de la antena parabólica y plataforma elevadora contra el cielo al atardecer.',
+          },
+          {
+            src: 'rosac/fotogrametria/3.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Trabajos de medición y colocación de dianas en el plato',
+            description:
+              'Personal técnico realizando labores de medición y ajuste de referencias sobre los paneles del plato reflector.',
+            alt: 'Dos técnicos trabajando en el interior del plato reflector de la antena utilizando equipo de medición.',
+          },
+          {
+            src: 'rosac/fotogrametria/4.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Labores técnicas en el anillo central del reflector',
+            description:
+              'Personal realizando mediciones e inspección de paneles y puntos de control en la superficie de la antena.',
+            alt: 'Técnicos realizando labores de inspección y fijación de puntos de referencia en la antena.',
+          },
+          {
+            src: 'rosac/fotogrametria/5.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Herramientas y equipo manual de trabajo',
+            description:
+              'Disposición de herramientas manuales, llaves, dados y nivel utilizados durante las labores de montaje o ajuste.',
+            alt: 'Juego de herramientas mecánicas manuales ordenadas sobre el piso.',
+          },
+        ],
+      },
+      {
+        slug: 'montaje',
+        title: 'Montaje de la estructura',
+        description:
+          'Posicionamiento, elevación y ensamblaje de los componentes estructurales del radiotelescopio.',
+        cover: 'rosac/montaje/1.jpeg',
+        media: [
+          {
+            src: 'rosac/montaje/1.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Equipo en la estructura de la antena',
+            description:
+              'Integrantes del equipo de trabajo sobre la plataforma y base de la antena durante las labores de montaje.',
+            alt: 'Miembros del equipo posando en la estructura metálica y base de la antena bajo cielo despejado.',
+          },
+          {
+            src: 'rosac/montaje/2.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Transporte de componente estructural',
+            description:
+              'Traslado en camión de carga de una sección cilíndrica de la base de la antena hacia el sitio de instalación.',
+            alt: 'Camión de plataforma transportando una gran pieza metálica cilíndrica asegurada con cadenas por carretera.',
+          },
+          {
+            src: 'rosac/montaje/3.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Llegada de componentes al sitio',
+            description:
+              'Parte del equipo reunido junto al camión de transporte que traslada la base metálica al terreno del proyecto.',
+            alt: 'Grupo de personas posando frente al camión de carga con la estructura metálica en el terreno del observatorio.',
+          },
+          {
+            src: 'rosac/montaje/4.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Inspección de mecanismos y motores',
+            description:
+              'Personal técnico realizando ajustes y revisión en el sistema motriz y plataforma de la antena.',
+            alt: 'Dos técnicos inspeccionando motores y mecanismos de transmisión sobre la plataforma metálica de la base.',
+          },
+          {
+            src: 'rosac/montaje/5.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Preparación de maniobras con grúa',
+            description:
+              'Alineación y preparación de cables de izaje junto a la base metálica y la edificación del observatorio.',
+            alt: 'Operario preparando eslingas y gancho de grúa en el terreno cerca de la estructura metálica.',
+          },
+          {
+            src: 'rosac/montaje/6.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Trabajos en altura sobre la estructura',
+            description:
+              'Uso de plataforma elevadora articulada para acceder a la armadura posterior del reflector parabólico.',
+            alt: 'Brazo mecánico elevador con personal trabajando en la estructura reticular de la antena de radio.',
+          },
+          {
+            src: 'rosac/montaje/7.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Aseguramiento de panel reflector',
+            description:
+              'Preparación en tierra de un panel reflector para su elevación hacia la armadura de la antena.',
+            alt: 'Operarios preparando un panel metálico triangular con cadenas de izaje junto a la plataforma elevadora.',
+          },
+          {
+            src: 'rosac/montaje/8.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Izaje y guía de panel reflector',
+            description:
+              'Perspectiva en picada del guiado de un segmento del reflector sujeto a la cesta de elevación.',
+            alt: 'Vista aérea de un operario en la canasta elevadora dirigiendo el ascenso de un panel metálico triangular.',
+          },
+          {
+            src: 'rosac/montaje/9.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Colaboradores junto a panel y andamio',
+            description:
+              'Personal técnico junto al panel del plato y el andamio de soporte en el terreno de montaje.',
+            alt: 'Cuatro trabajadores posando de pie cerca de un panel del reflector y la estructura de andamiaje.',
+          },
+          {
+            src: 'rosac/montaje/10.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Vista superior de plataforma elevadora',
+            description:
+              'Toma cenital desde la antena mostrando la plataforma móvil y personal técnico en tierra.',
+            alt: 'Vista desde lo alto de la plataforma elevadora con dos personas en la cesta sobre el césped.',
+          },
+          {
+            src: 'rosac/montaje/11.jpg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Grúa telescópica y base en el sitio',
+            description:
+              'Grúa de carga pesada y camión de soporte ubicados junto a la base metálica del telescopio.',
+            alt: 'Grúa telescópica amarilla estacionada cerca de la base cilíndrica y un árbol frondoso en el terreno.',
+          },
+          {
+            src: 'rosac/montaje/12.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Elevación de sección del reflector',
+            description:
+              'Maniobra de izaje de un panel del plato hacia la estructura montada sobre el pedestal cilíndrico.',
+            alt: 'Brazo de elevación izando un segmento de panel hacia la estructura parabólica parcialmente ensamblada.',
+          },
+          {
+            src: 'rosac/montaje/13.jpg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Equipo técnico en la estructura',
+            description:
+              'La Dra. Carolina Salas Matamoros junto a integrantes del equipo en la estructura metálica de la antena con equipo de seguridad.',
+            alt: 'Tres personas con arneses de seguridad posan en el interior de la estructura metálica.',
+          },
+          {
+            src: 'rosac/montaje/14.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Instalación de paneles en el plato',
+            description:
+              'Técnicos fijando secciones del reflector sobre el entramado estructural de la antena.',
+            alt: 'Personal sobre andamios y plataforma elevadora ajustando paneles metálicos en el armazón del plato.',
+          },
+          {
+            src: 'rosac/montaje/15.jpg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Recepción nocturna de componentes',
+            description:
+              'La Dra. Carolina Salas Matamoros junto a colaboradores sobre la base metálica transportada durante la jornada nocturna.',
+            alt: 'Grupo de personas sentadas sobre el cilindro metálico en la plataforma del camión durante la noche.',
+          },
+          {
+            src: 'rosac/montaje/16.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Montaje de superficie reflectora',
+            description:
+              'Colaboradores trabajando en la fijación de las piezas del reflector sobre la estructura de soporte.',
+            alt: 'Técnicos asegurando paneles metálicos a la estructura reticular de la antena desde andamios.',
+          },
+          {
+            src: 'rosac/montaje/17.jpg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Colaboradores en la base de la antena',
+            description:
+              'La Dra. Carolina Salas Matamoros sentada en la barandilla de la torre junto a miembros del equipo de trabajo.',
+            alt: 'Tres colaboradores sonríen junto a la barandilla de la torre de la antena.',
+          },
+          {
+            src: 'rosac/montaje/18.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Colocación del pedestal sobre cimiento',
+            description:
+              'Base cilíndrica de la antena posicionada sobre la zapata circular de concreto en el terreno.',
+            alt: 'Pedestal metálico cilíndrico anclado a la base de concreto con operarios trabajando en la plataforma superior.',
+          },
+          {
+            src: 'rosac/montaje/19.jpg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Alineación de segmento de plato',
+            description:
+              'Maniobra de aproximación de un panel reflector hacia la estructura circular con asistencia de plataforma elevadora.',
+            alt: 'Plataforma elevando un panel triangular hacia la armadura metálica donde operarios esperan para fijarlo.',
+          },
+          {
+            src: 'rosac/montaje/20.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Personal de apoyo en el área de montaje',
+            description:
+              'Colaborador con equipo de protección personal junto al pedestal cilíndrico de la antena.',
+            alt: 'Joven con arnés de seguridad de pie junto a la base metálica cilíndrica y la grúa de soporte.',
+          },
+          {
+            src: 'rosac/montaje/21.jpg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Equipo de trabajo junto a la base',
+            description:
+              'La Dra. Carolina Salas Matamoros y colaboradores compartiendo en la base de concreto de la antena.',
+            alt: 'Cuatro personas posan sonriendo sentadas y de pie en el cimiento de concreto de la antena.',
+          },
+          {
+            src: 'rosac/montaje/22.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Fijación inferior de panel',
+            description:
+              'Detalle de las labores de empernado y fijación del panel a la estructura soporte del plato.',
+            alt: 'Operarios sobre andamio asegurando la parte inferior de un panel metálico a las vigas de soporte.',
+          },
+          {
+            src: 'rosac/montaje/23.jpg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Labores bajo la estructura del plato',
+            description:
+              'La Dra. Carolina Salas Matamoros y un colega sobre andamios bajo el armazón del reflector parabólico.',
+            alt: 'Dos personas sobre el andamiaje metálico directamente debajo de la estructura radial del plato.',
+          },
+          {
+            src: 'rosac/montaje/24.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Instalación del pedestal con grúa',
+            description:
+              'Montaje del cuerpo cilíndrico del pedestal sobre la zapata de concreto al atardecer mediante grúa.',
+            alt: 'Grúa telescópica sosteniendo la base metálica cilíndrica mientras operarios guían su apoyo en el cimiento.',
+          },
+          {
+            src: 'rosac/montaje/25.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Revisión técnica de la plataforma motriz',
+            description:
+              'Detalle de los mecanismos mecánicos y motores de orientación sobre la plataforma antes del ensamblaje.',
+            alt: 'Técnicos realizando inspección en el módulo de motores y rodamientos sobre la plataforma de la base.',
+          },
+          {
+            src: 'rosac/montaje/26.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Izaje de plataforma motriz',
+            description:
+              'Maniobra de grúa levantando la plataforma de mecanismos para colocarla sobre el pedestal cilíndrico.',
+            alt: 'Plataforma circular con barandilla suspendida por cables de grúa directamente sobre la torre cilíndrica.',
+          },
+          {
+            src: 'rosac/montaje/27.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Acoplamiento de plataforma al pedestal',
+            description:
+              'Guía manual y descenso de la plataforma de giro sobre la parte superior del pedestal de la antena.',
+            alt: 'Operarios sobre una escalera ajustando la unión entre la plataforma suspendida y el cilindro base.',
+          },
+          {
+            src: 'rosac/montaje/28.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Estructura radial de la antena',
+            description:
+              'Perspectiva vertical hacia el eje central y las vigas radiales del plato con personal en la torre.',
+            alt: 'Vista en contrapicada del centro de la antena y sus vigas radiales con técnicos trabajando en lo alto.',
+          },
+        ],
+      },
+      {
+        slug: 'instalacion-electrica',
+        title: 'Instalación eléctrica de los motores y de control',
+        description:
+          'Conexión de sistemas eléctricos, cableado de potencia y acondicionamiento de gabinetes de control.',
+        cover: 'rosac/instalacion-electrica/1.jpeg',
+        media: [
+          {
+            src: 'rosac/instalacion-electrica/1.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Técnico trabajando en la estructura del pedestal',
+            description:
+              'Un técnico equipado con casco y arnés de seguridad realiza labores de cableado e instalación en la parte superior del pedestal.',
+            alt: 'Técnico con arnés y casco azul sujetando cables sobre la estructura metálica del pedestal de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/2.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Trabajos en el sistema motriz de la antena',
+            description:
+              'Técnicos revisando el ensamble del motor y la transmisión mecánica en la plataforma superior del radiotelescopio.',
+            alt: 'Dos técnicos inspeccionando y ajustando componentes mecánicos y de accionamiento en la plataforma de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/3.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Organización de herramientas al pie de la estructura',
+            description:
+              'Preparación de instrumental, cajas de herramientas y equipo de nivelación para los trabajos de montaje eléctrico y mecánico.',
+            alt: 'Miembro del equipo junto a cajas de herramientas y equipo técnico al pie de la torre de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/4.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Inspección de canalizaciones en el pedestal',
+            description:
+              'Técnico verificando el tendido y las conexiones de canalización eléctrica sobre la estructura soporte de la antena.',
+            alt: 'Técnico inclinado sobre la estructura metálica inspeccionando elementos de conexión y canalización.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/5.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Fijación y perforación de soportes en plataforma',
+            description:
+              'Uso de herramienta eléctrica para fijar soportes y herrajes metálicos sobre la plataforma del radiotelescopio.',
+            alt: 'Técnico utilizando un taladro en una placa metálica sobre la plataforma elevada de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/6.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Alineación de tubería conduit en la base',
+            description:
+              'Revisión del guiado de tubería conduit rígida para el paso seguro de cableado de fuerza y control.',
+            alt: 'Técnico ajustando tubería de canalización eléctrica que desciende por la estructura de la torre.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/7.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Canalización eléctrica en la base de la torre',
+            description:
+              'Técnicos coordinando la instalación de ductos y registros en la parte inferior de la estructura soporte.',
+            alt: 'Técnicos trabajando al pie del pedestal en el montaje de ductos y tuberías de alimentación eléctrica.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/8.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Montaje de canalizaciones en altura media',
+            description:
+              'Personal técnico utilizando escaleras para acoplar tuberías conduit a las abrazaderas de la torre.',
+            alt: 'Dos técnicos asegurando canalizaciones eléctricas en la estructura metálica con apoyo de una escalera.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/9.JPG',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Supervisión técnica con la Dra. Carolina Salas Matamoros',
+            description:
+              'La Dra. Carolina Salas Matamoros supervisando junto a un miembro del equipo los avances en los mecanismos del pedestal.',
+            alt: 'Dra. Carolina Salas Matamoros y un técnico examinando los mecanismos de rotación y soporte de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/10.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Acceso a la parte superior del pedestal',
+            description:
+              'Técnico ascendiendo por escalera para realizar ajustes en la tornillería y cajas de conexiones superiores.',
+            alt: 'Técnico sobre escalera trabajando en la articulación mecánica del pedestal de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/11.JPG',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Dra. Carolina Salas Matamoros y equipo en la plataforma',
+            description:
+              'La Dra. Carolina Salas Matamoros y colaboradores en la plataforma de trabajo durante una pausa en la instalación.',
+            alt: 'Dra. Carolina Salas Matamoros sonriendo junto a colaboradores sobre la plataforma de la estructura.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/12.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Revisión conjunta en la plataforma de la antena',
+            description:
+              'La Dra. Carolina Salas Matamoros y el equipo técnico revisando detalles del ensamblaje en lo alto del pedestal.',
+            alt: 'Dra. Carolina Salas Matamoros y personal técnico dialogando sobre la plataforma de servicio de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/13.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Ajuste de ensamblajes en la torre soporte',
+            description:
+              'Miembros del equipo coordinando el ajuste manual de pernos y fijaciones estructurales en la plataforma.',
+            alt: 'Integrantes del equipo técnico trabajando en las uniones mecánicas de la plataforma del radiotelescopio.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/14.JPG',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Dra. Carolina Salas Matamoros y colaboradores frente al plato',
+            description:
+              'La Dra. Carolina Salas Matamoros y miembros del equipo en la plataforma con el reflector parabólico de fondo.',
+            alt: 'Dra. Carolina Salas Matamoros posando en la plataforma superior junto a tres colaboradores frente al plato.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/15.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Coordinación técnica sobre el pedestal',
+            description:
+              'La Dra. Carolina Salas Matamoros y parte del grupo técnico organizando las siguientes etapas de montaje en la estructura.',
+            alt: 'Dra. Carolina Salas Matamoros y miembros del equipo técnico reunidos en la plataforma de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/16.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Verificación de sensores e interruptores de fin de carrera',
+            description:
+              'Inspección técnica de los mecanismos de final de carrera y cableado de detección en el eje de la antena.',
+            alt: 'Técnicos verificando topes mecánicos y sensores eléctricos de recorrido en la montura de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/17.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Ajuste de cables de alimentación en el motorreductor',
+            description:
+              'Conexión y fijación de acometida y terminales en la unidad de motorización del pedestal.',
+            alt: 'Técnicos manipulando cables y terminales junto al motor eléctrico de accionamiento.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/18.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Revisión de caja de conexiones y terminales',
+            description:
+              'Técnico examinando el conexionado interno dentro de una caja de derivación en la estructura.',
+            alt: 'Técnico revisando cables y borneras dentro de una caja de derivación metálica montada en la estructura.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/19.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Aseguramiento de conductos en el soporte estructural',
+            description:
+              'Fijación final de abrazaderas y guías de cableado a lo largo del soporte metálico principal.',
+            alt: 'Técnico apretando abrazaderas para sujetar las tuberías de cableado a la viga de soporte.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/20.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Preparación de módulo de radiofrecuencia en mesa de trabajo',
+            description:
+              'Miembro del equipo mostrando una placa de circuito electrónico de RF con conectores SMA y cableado en el taller.',
+            alt: 'Miembro del equipo sonriendo en el área de trabajo sosteniendo un circuito impreso de radiofrecuencia con conectores.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/21.jpg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Fotografía grupal en exteriores con la Dra. Carolina Salas Matamoros',
+            description:
+              'El equipo del proyecto junto a la Dra. Carolina Salas Matamoros reunidos frente a las instalaciones con el radiotelescopio de fondo.',
+            alt: 'Grupo de trabajo y la Dra. Carolina Salas Matamoros sentados frente al edificio de control con la antena detrás.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/22.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Reunión nocturna del equipo con la Dra. Carolina Salas Matamoros',
+            description:
+              'La Dra. Carolina Salas Matamoros y miembros del equipo compartiendo en la terraza tras concluir la jornada de trabajo.',
+            alt: 'La Dra. Carolina Salas Matamoros, colaboradores y una mascota comparten en el patio durante la noche.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/23.jpg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Lubricación y sellado de brida del motor',
+            description:
+              'Técnicos aplicando lubricante y sellador en el acople y rodamiento del motorreductor sobre la plataforma.',
+            alt: 'Dos técnicos aplicando compuesto de sellado y grasa a la brida de unión de un motor en la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/24.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Fotografía del equipo en áreas verdes con la Dra. Carolina Salas Matamoros',
+            description:
+              'La Dra. Carolina Salas Matamoros y colaboradores sentados en el césped con la gran antena parabólica en segundo plano.',
+            alt: 'Dra. Carolina Salas Matamoros y cinco integrantes del equipo sentados en el jardín frente al radiotelescopio.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/25.jpg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Mantenimiento y ensamblaje de motor eléctrico en laboratorio',
+            description:
+              'Técnicos equipados con guantes protectores instalando la cubierta y el ventilador en un motorreductor industrial.',
+            alt: 'Dos técnicos armando la carcasa y la tapa de ventilación de un motor eléctrico sobre una mesa de trabajo.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/26.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Equipo de trabajo junto a la Dra. Carolina Salas Matamoros en la base de la torre',
+            description:
+              'Fotografía grupal de la Dra. Carolina Salas Matamoros y el equipo alrededor del pedestal de concreto y las canalizaciones.',
+            alt: 'Dra. Carolina Salas Matamoros y colaboradores posando de pie alrededor de la base cilíndrica de concreto del radiotelescopio.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/27.jpg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Inspección de engranajes y transmisión de elevación',
+            description:
+              'Técnicos señalando y evaluando el acople mecánico y la holgura en el mecanismo de accionamiento de elevación.',
+            alt: 'Técnicos en la plataforma señalando el eje y el sistema de engranajes del mecanismo de elevación.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/28.jpg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Supervisión de engranajes reductores con la Dra. Carolina Salas Matamoros',
+            description:
+              'Vista detallada de los engranajes helicoidales lubricados con grasa, observados por la Dra. Carolina Salas Matamoros.',
+            alt: 'Engranajes internos de la caja reductora cubiertos de grasa observados por la Dra. Carolina Salas Matamoros al fondo.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/29.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Descanso del equipo en la sala de operaciones',
+            description:
+              'Miembros del equipo descansando dentro del recinto de control tras una jornada intensiva de trabajo.',
+            alt: 'Cinco colaboradores sentados en sofás y sillas dentro de la sala de control al atardecer.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/30.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Dra. Carolina Salas Matamoros y colaboradores en la barandilla de la torre',
+            description:
+              'La Dra. Carolina Salas Matamoros y cinco integrantes del equipo sentados a lo largo de la barandilla de la plataforma circular.',
+            alt: 'Dra. Carolina Salas Matamoros y colaboradores sentados sobre la barandilla de seguridad de la torre de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/31.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Ajuste de soporte y sensor en la estructura de la antena',
+            description:
+              'Técnico calibrando un soporte metálico para sensor en una de las secciones estructurales del telescopio.',
+            alt: 'Técnico ajustando un soporte mecánico con sensor en una barra metálica de la estructura de la antena.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/32.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Ajuste mecánico del motorreductor con llave de carraca',
+            description:
+              'Técnicos asegurando la pernería del motorreductor sobre su base en la plataforma de la antena.',
+            alt: 'Técnicos utilizando llave de carraca para ajustar los pernos de fijación de un motor eléctrico sobre el pedestal.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/33.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Bobinado de cobre y rotor de motor eléctrico abierto',
+            description:
+              'Detalle en primer plano del estator con devanados de cobre, rodamiento y eje del rotor durante tareas de mantenimiento.',
+            alt: 'Primer plano del bobinado de cobre, eje y rodamiento de un motor eléctrico industrial destapado.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/34.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Dra. Carolina Salas Matamoros en la zona de motores del pedestal',
+            description:
+              'Fotografía de la Dra. Carolina Salas Matamoros junto a los motores de accionamiento y herramientas de mantenimiento en la plataforma.',
+            alt: 'Dra. Carolina Salas Matamoros en plano cercano con los motores y herramientas de mantenimiento en la plataforma del pedestal.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/35.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Cableado de tablero eléctrico de distribución exterior',
+            description:
+              'Técnico electricista organizando y conectando conductores de potencia de distintos colores en el panel de distribución.',
+            alt: 'Técnico trabajando en la conexión de cables eléctricos de colores en un tablero de distribución a la intemperie.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/36.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Tendido de conductores desde caja de registro subterránea',
+            description:
+              'Técnicos guiando y jalando cables eléctricos desde una arqueta subterránea hacia el tablero exterior.',
+            alt: 'Miembros del equipo manipulando rollos de cables eléctricos entre una zanja abierta y el tablero de distribución.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/37.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Técnico dentro de pozo de registro subterráneo',
+            description:
+              'Operario ubicado dentro del pozo de registro eléctrico supervisando la entrada de ductos hacia la antena.',
+            alt: 'Técnico de pie dentro de una arqueta subterránea abierta inspeccionando la llegada de tuberías conduit.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/38.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Punto de acometida eléctrica y cajas de cable',
+            description:
+              'Vista cenital del registro subterráneo, cajas de conductor eléctrico EcoPlus y el tablero de interruptores abierto.',
+            alt: 'Cajas de cable conductor y manguera junto a la arqueta subterránea y el tablero eléctrico abierto.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/39.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Trabajos en pasarela bajo el plato parabólico',
+            description:
+              'Perspectiva ascendente de técnicos realizando maniobras en la escalera y pasarela de servicio bajo la parábola.',
+            alt: 'Vista en contrapicado de dos técnicos trabajando sobre la pasarela metálica bajo la estructura del plato parabólico.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/40.jpeg',
+            colSpan: 1,
+            rowSpan: 1,
+            title: 'Soldadura de precisión de conector DB-9 en laboratorio',
+            description:
+              'Operación de estañado y soldadura de conductores en pines de un conector serie con estación de soldar Aoyue.',
+            alt: 'Vista superior de manos utilizando cautín para soldar cables en los pines de un conector tipo DB-9 sobre mesa de trabajo.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/41.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Motorreductor industrial para posicionamiento',
+            description:
+              'Motorreductor eléctrico industrial con brida y carcasa gris preparado para su instalación.',
+            alt: 'Motorreductor eléctrico gris sobre base de cartón en el suelo del laboratorio.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/42.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Revisión interna de devanados y rodamiento del motor',
+            description:
+              'Desensamble del motorreductor para verificar el estado de los devanados del estator y el rodamiento del eje.',
+            alt: 'Técnicos con guantes amarillos trabajando sobre el motor abierto mostrando el bobinado y rodamiento del eje.',
+          },
+          {
+            src: 'rosac/instalacion-electrica/43.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Inspección de tren de engranajes y lubricación',
+            description:
+              'Técnico examinando los engranajes helicoidales con grasa lubricante de la etapa reductora del motor.',
+            alt: 'Técnico con gafas observando de cerca los engranajes helicoidales engrasados de la reductora de velocidad.',
+          },
+        ],
+      },
+      {
+        slug: 'donaciones',
+        title: 'Donación EATON para ROSAC',
+        description:
+          'Equipamiento y tableros eléctricos recibidos para la infraestructura energética del radiotelescopio.',
+        cover: 'rosac/donaciones/3.jpeg',
+        media: [
+          {
+            src: 'rosac/donaciones/1.jpeg',
+            colSpan: 2,
+            rowSpan: 2,
+            title: 'Fotografía grupal oficial de entrega de donación',
+            description:
+              'Equipo de trabajo ampliado y la Dra. Carolina Salas Matamoros reunidos con el equipamiento eléctrico donado.',
+            alt: 'Seis participantes posando en grupo junto a los gabinetes y tableros eléctricos.',
+          },
+          {
+            src: 'rosac/donaciones/2.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Muestra de equipo de distribución y medición eléctrica',
+            description:
+              'La Dra. Carolina Salas Matamoros y colaboradores exhibiendo el equipo eléctrico y panel de control donados.',
+            alt: 'Toma vertical de cuatro personas sonriendo junto al equipo de control eléctrico donado.',
+          },
+          {
+            src: 'rosac/donaciones/3.jpeg',
+            colSpan: 2,
+            rowSpan: 1,
+            title: 'Comprobación de componentes de tablero eléctrico donado',
+            description:
+              'Encuadre amplio de la entrega de equipos de conmutación y medición de energía eléctrica.',
+            alt: 'Cuatro personas junto a módulos de paneles eléctricos industriales en un pasillo.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'workshop-ml-2026',
+    title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+    description:
+      'Taller enfocado en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial y los sistemas GNSS.',
+    yearsLabel: 'febrero 2026',
+    cover: 'workshop-ml-2026/1.jpg',
+    media: [
+      {
+        src: 'workshop-ml-2026/1.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Comité y participantes junto al cartel oficial',
+        description:
+          'Miembros de la organización y participantes, incluida la Dra. Carolina Salas Matamoros, posando junto al banner del evento.',
+        alt: 'Grupo de personas posando de pie frente al banner del taller de Machine Learning y clima espacial.',
+      },
+      {
+        src: 'workshop-ml-2026/2.jpg',
+        colSpan: 1,
+        rowSpan: 2,
+        title: 'Intervención de la Dra. Carolina Salas Matamoros',
+        description:
+          'La Dra. Carolina Salas Matamoros dirigiéndose al público desde el podio durante una de las sesiones del taller.',
+        alt: 'Dra. Carolina Salas Matamoros hablando ante el micrófono en el podio de la Universidad de Costa Rica.',
+      },
+      {
+        src: 'workshop-ml-2026/3.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Palabras de la Dra. Carolina Salas Matamoros',
+        description:
+          'Momento de la intervención de la Dra. Carolina Salas Matamoros durante las actividades del evento académico.',
+        alt: 'Primer plano de la Dra. Carolina Salas Matamoros sonriendo mientras se dirige a la audiencia desde el podio.',
+      },
+      {
+        src: 'workshop-ml-2026/4.jpg',
+        colSpan: 2,
+        rowSpan: 1,
+        title: 'Conferencia sobre fenómenos solares',
+        description:
+          'Sesión académica en el auditorio con proyección de láminas explicativas sobre física solar y fulguraciones.',
+        alt: 'Expositor en el escenario del auditorio proyectando una lámina informativa sobre erupciones solares.',
+      },
+      {
+        src: 'workshop-ml-2026/5.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Sesión práctica de análisis y programación',
+        description:
+          'Participantes trabajando con sus computadoras portátiles durante una sesión práctica interactiva.',
+        alt: 'Asistentes en el auditorio con computadoras portátiles abiertas siguiendo una sesión práctica proyectada en pantalla.',
+      },
+      {
+        src: 'workshop-ml-2026/6.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Fotografía grupal en el auditorio',
+        description:
+          'Participantes, ponentes y organizadores reunidos en el escenario principal del auditorio.',
+        alt: 'Grupo general de asistentes y organizadores del taller posando en el escenario del auditorio.',
+      },
+      {
+        src: 'workshop-ml-2026/7.jpg',
+        colSpan: 2,
+        rowSpan: 1,
+        title: 'Recorrido por áreas exteriores',
+        description:
+          'Grupo de participantes recorriendo senderos y jardines durante una actividad al aire libre.',
+        alt: 'Participantes del evento caminando en grupo por un sendero rodeado de vegetación y flores.',
+      },
+      {
+        src: 'workshop-ml-2026/8.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Banner oficial del taller',
+        description:
+          'Identidad visual y cartel informativo del taller internacional sobre Machine Learning y Clima Espacial.',
+        alt: 'Cartel vertical del evento con logotipos de las entidades organizadoras y el título del taller.',
+      },
+      {
+        src: 'workshop-ml-2026/9.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Participantes y colaboradoras junto al cartel del evento',
+        description:
+          'Asistentes y colaboradoras, entre ellas la Dra. Carolina Salas Matamoros, posando junto al banner institucional.',
+        alt: 'Tres participantes posando sonrientes de pie frente al banner oficial del taller.',
+      },
+      {
+        src: 'workshop-ml-2026/10.jpg',
+        colSpan: 2,
+        rowSpan: 1,
+        title: 'Presentación sobre el Radio Observatorio de Santa Cruz',
+        description:
+          'La Dra. Carolina Salas Matamoros exponiendo detalles y avances vinculados al Radio Observatorio de Santa Cruz (ROSAC).',
+        alt: 'Dra. Carolina Salas Matamoros en el podio presentando diapositivas sobre el Radio Observatorio de Santa Cruz.',
+      },
+      {
+        src: 'workshop-ml-2026/11.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Exposición magistral de la Dra. Carolina Salas Matamoros',
+        description:
+          'La Dra. Carolina Salas Matamoros durante el desarrollo de una conferencia magistral desde el podio.',
+        alt: 'Dra. Carolina Salas Matamoros dirigiéndose al auditorio con gestos explicativos desde el podio.',
+      },
+      {
+        src: 'workshop-ml-2026/12.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Ponencia sobre modelado y Machine Learning',
+        description:
+          'Presentación técnica sobre el desarrollo de emuladores y modelos de aprendizaje automático en estudios ionosféricos.',
+        alt: 'Expositor presentando diapositivas técnicas de machine learning aplicadas a irregularidades ionosféricas.',
+      },
+      {
+        src: 'workshop-ml-2026/13.jpg',
+        colSpan: 2,
+        rowSpan: 1,
+        title: 'Audiencia y participantes en el auditorio',
+        description:
+          'Vista general de los asistentes y participantes siguiendo con atención las exposiciones del programa.',
+        alt: 'Participantes sentados en las butacas del auditorio escuchando una de las ponencias del evento.',
+      },
+      {
+        src: 'workshop-ml-2026/14.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Charla técnica sobre clima espacial y eyecciones de masa',
+        description:
+          'Presentación académica en el auditorio con datos observacionales sobre eventos y dinámica solar.',
+        alt: 'Expositor en el escenario junto a la pantalla que proyecta gráficas e imágenes de datos solares.',
+      },
+      {
+        src: 'workshop-ml-2026/15.jpg',
+        colSpan: 2,
+        rowSpan: 2,
+        title: 'Visita grupal al Jardín Botánico Lankester',
+        description:
+          'Fotografía de recuerdo de los participantes durante una visita al Jardín Botánico Lankester.',
+        alt: 'Grupo de participantes posando en el exterior junto al rótulo del Jardín Botánico Lankester.',
+      },
+      {
+        src: 'workshop-ml-2026/16.jpg',
+        colSpan: 1,
+        rowSpan: 2,
+        title: 'Intervención protocolaria en el podio',
+        description:
+          'La Dra. Carolina Salas Matamoros en el atril durante una sesión protocolaria o de apertura.',
+        alt: 'Dra. Carolina Salas Matamoros atenta a sus notas en el podio institucional junto a la bandera nacional.',
+      },
+      {
+        src: 'workshop-ml-2026/17.jpg',
+        colSpan: 1,
+        rowSpan: 1,
+        title: 'Vista panorámica del escenario durante la sesión técnica',
+        description:
+          'Perspectiva amplia del auditorio y el escenario durante la exposición de resultados científicos.',
+        alt: 'Toma panorámica del escenario del auditorio con el ponente en el atril y la presentación proyectada en pantalla.',
+      },
+      {
+        src: 'workshop-ml-2026/18.jpg',
+        colSpan: 4,
+        rowSpan: 2,
+        title: 'Encuentro social en Restaurante y Mirador Ram Luna',
+        description:
+          'Participantes y organizadores reunidos durante una velada social con vista panorámica a la ciudad.',
+        alt: 'Grupo de participantes reunidos de noche en el Restaurante y Mirador Ram Luna con la ciudad iluminada de fondo.',
+      },
+    ],
+  },
+]
+ 
 
-for (const album of galleryAlbumList) {
+await prisma.galleryMedia.deleteMany()
+ 
+async function seedGalleryAlbum(
+  album: SeedGalleryAlbum,
+  parentAlbumId: string | null = null,
+): Promise<void> {
+  const fields = {
+    title: album.title,
+    description: album.description,
+    yearsLabel: album.yearsLabel ?? null,
+    parentAlbumId,
+    coverObjectKey: `${galleryImageBase}/${album.cover}`,
+  }
+ 
   const databaseAlbum = await prisma.galleryAlbum.upsert({
     where: { slug: album.slug },
-    update: {
-      title: album.title,
-      description: album.description,
-      yearsLabel: album.years,
-      parentAlbumId: null,
-      coverObjectKey: album.src ?? null,
-    },
-    create: {
-      slug: album.slug,
-      title: album.title,
-      description: album.description,
-      yearsLabel: album.years,
-      coverObjectKey: album.src ?? null,
-    },
+    update: fields,
+    create: { slug: album.slug, ...fields },
   })
-
-  for (const [position, media] of album.media.entries()) {
-    await seedGalleryMedia(databaseAlbum.id, media, position)
-  }
-
-  for (const subAlbum of album.subAlbums) {
-    const databaseSubAlbum = await prisma.galleryAlbum.upsert({
-      where: { slug: subAlbum.slug },
-      update: {
-        title: subAlbum.title,
-        description: subAlbum.description,
-        parentAlbumId: databaseAlbum.id,
-        coverObjectKey: subAlbum.src ?? null,
-      },
-      create: {
-        slug: subAlbum.slug,
-        title: subAlbum.title,
-        description: subAlbum.description,
-        parentAlbumId: databaseAlbum.id,
-        coverObjectKey: subAlbum.src ?? null,
-      },
-    })
-
-    for (const [position, media] of subAlbum.media.entries()) {
-      await seedGalleryMedia(databaseSubAlbum.id, media, position)
-    }
+ 
+  await prisma.galleryMedia.createMany({
+    data: album.media.map((item, position) => ({
+      ...galleryMediaDefaults,
+      albumId: databaseAlbum.id,
+      title: item.title,
+      description: item.description,
+      altText: item.alt,
+      objectKey: `${galleryImageBase}/${item.src}`,
+      colSpan: item.colSpan,
+      rowSpan: item.rowSpan,
+      position,
+    })),
+  })
+ 
+  for (const subAlbum of album.subAlbums ?? []) {
+    await seedGalleryAlbum(subAlbum, databaseAlbum.id)
   }
 }
+ 
+for (const album of galleryAlbums) {
+  await seedGalleryAlbum(album)
+}
+
 
 await prisma.$disconnect()
