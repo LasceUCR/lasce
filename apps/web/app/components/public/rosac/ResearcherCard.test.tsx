@@ -8,11 +8,19 @@ import { describe, expect, test, vi } from 'vitest'
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
 import { ResearcherCard, institutionPreview, type ResearcherCardProps } from './ResearcherCard'
-import { Default, WithoutDescription, WithoutEmail } from './ResearcherCard.stories'
+import {
+  Default,
+  WithContentLang,
+  WithUnknownContentLang,
+  WithoutDescription,
+  WithoutEmail,
+} from './ResearcherCard.stories'
 
 const defaultArgs = Default.args as ResearcherCardProps
 const withoutEmailArgs = WithoutEmail.args as ResearcherCardProps
 const withoutDescriptionArgs = WithoutDescription.args as ResearcherCardProps
+const contentLangArgs = WithContentLang.args as ResearcherCardProps
+const unknownContentLangArgs = WithUnknownContentLang.args as ResearcherCardProps
 
 function isOnHiddenFace(text: string) {
   const element = screen.getByText(text)
@@ -227,5 +235,39 @@ describe('ResearcherCard', () => {
     expect(image).toHaveAttribute('alt', '')
     expect(image).toHaveAttribute('src', defaultArgs.src)
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  test('sets no language on the role and description by default', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherCard {...defaultArgs} />)
+
+    expect(screen.getByText(defaultArgs.role)).not.toHaveAttribute('lang')
+
+    await user.click(screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }))
+    expect(screen.getByText(defaultArgs.description as string)).not.toHaveAttribute('lang')
+  })
+
+  test('marks the role and the description with the language of their text', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherCard {...contentLangArgs} />)
+
+    expect(screen.getByText(contentLangArgs.role)).toHaveAttribute('lang', 'es')
+
+    await user.click(
+      screen.getByRole('button', { name: `Ver descripción de ${contentLangArgs.name}` }),
+    )
+    expect(screen.getByText(contentLangArgs.description as string)).toHaveAttribute('lang', 'es')
+  })
+
+  test('leaves the name and the institution without a language of their own', () => {
+    render(<ResearcherCard {...contentLangArgs} />)
+
+    expect(screen.getByRole('heading', { name: contentLangArgs.name })).not.toHaveAttribute('lang')
+  })
+
+  test('marks the text of a legacy record as being in an unknown language', () => {
+    render(<ResearcherCard {...unknownContentLangArgs} />)
+
+    expect(screen.getByText(unknownContentLangArgs.role)).toHaveAttribute('lang', '')
   })
 })

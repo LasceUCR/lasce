@@ -90,6 +90,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
               renderPerson(person, index)
             ) : (
               <ResearcherCard
+                contentLang={person.contentLang}
                 description={person.description}
                 email={person.email}
                 name={person.name}

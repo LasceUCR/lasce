@@ -23,6 +23,12 @@ export interface ResearcherCardProps {
   description?: string
   /** One address, or several when LASCE supplied more than one. */
   email?: string | readonly string[]
+  /**
+   * The `lang` of `role` and `description`, for a roster whose text is bilingual (`/nosotros`).
+   * `''` marks text in an unknown language. Left out, no `lang` is set, as for ROSAC. It is not
+   * applied to the name or the institution, which are the same in every language.
+   */
+  contentLang?: string
 }
 
 /**
@@ -39,6 +45,7 @@ export function ResearcherCard({
   institution,
   description,
   email,
+  contentLang,
 }: ResearcherCardProps) {
   const [flipped, setFlipped] = useState(false)
   const descriptionId = useId()
@@ -102,7 +109,9 @@ export function ResearcherCard({
           <div className="researcher-card-photo">
             <Image alt="" fill sizes="(max-width: 760px) 86vw, 440px" src={src} />
           </div>
-          <p className="researcher-card-role">{role}</p>
+          <p className="researcher-card-role" lang={contentLang}>
+            {role}
+          </p>
           <h3 className="researcher-card-name">{name}</h3>
           <div className="researcher-card-meta">
             {emails.length > 0 ? (
@@ -155,7 +164,9 @@ export function ResearcherCard({
                 role="region"
                 tabIndex={flipped ? 0 : -1}
               >
-                <p className="researcher-card-description">{description}</p>
+                <p className="researcher-card-description" lang={contentLang}>
+                  {description}
+                </p>
               </div>
             ) : null}
           </div>

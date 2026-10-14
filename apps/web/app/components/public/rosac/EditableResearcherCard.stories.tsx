@@ -75,3 +75,30 @@ export const AssistantMode: Story = {
     ),
   ],
 }
+
+/** The opt-in bilingual card of `/nosotros`: its form has a tab per language. */
+export const BilingualEditMode: Story = {
+  args: {
+    researcher: mockResearcher,
+    canEdit: true,
+    canDelete: true,
+    contentLang: 'es',
+    translation: {
+      editing: {
+        content: {
+          es: { role: mockResearcher.role, description: mockResearcher.description ?? null },
+          en: {
+            role: 'Principal investigator',
+            description:
+              'In charge of the strategic planning of the resources needed to assemble and install the radio telescope.',
+          },
+        },
+        isLegacy: false,
+        version: '2026-10-15T15:00:00.000Z',
+      },
+    },
+    onDelete: () => {},
+    onSave: async () => true,
+  },
+  decorators: EditModeOn.decorators,
+}
