@@ -24,6 +24,16 @@ export const Default: Story = {
   },
 }
 
+/** Database content shown in a bilingual site marks the language its text is actually in. */
+export const WithContentLanguage: Story = {
+  args: {
+    ...Default.args,
+    title: 'Solar activity',
+    description: 'Sunspots, flares and coronal mass ejections release energy into space.',
+    lang: 'en',
+  },
+}
+
 export const WithMoreInformation: Story = {
   args: {
     title: 'Telecomunicaciones',
