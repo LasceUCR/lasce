@@ -475,7 +475,66 @@
     }
   },
   "nosotros": {
+    "meta": {
+      "title": "Quiénes somos | LASCE",
+      "description": "El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE), vinculado al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica: qué es y qué investiga."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Quiénes somos",
+      "lead": "Laboratorio de Astrofísica Solar y Clima Espacial, vinculado al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica."
+    },
+    "overview": {
+      "title": "¿Quiénes somos?",
+      "p1": "El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE) es una iniciativa científica vinculada al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica. Reúne investigación en astrofísica solar, observaciones astronómicas y desarrollo computacional para estudiar la actividad solar, su interacción con el medio interplanetario y el entorno terrestre.",
+      "p2": "LASCE parte de una idea sencilla pero poderosa: para comprender el clima espacial se necesita observar distintos eslabones de una misma cadena, desde el origen magnético de una erupción solar hasta sus manifestaciones en el espacio cercano a la Tierra. Por ello, en el LASCE se realiza investigación científica integrando datos de diferentes instrumentos, longitudes de onda y plataformas."
+    },
+    "researchers": {
+      "title": "Investigadores LASCE",
+      "intro": "Las personas que investigan y desarrollan el Laboratorio de Astrofísica Solar y Clima Espacial (LASCE).",
+      "hint": "Haga clic en una ficha para ver más información.",
+      "empty": "No hay información de investigadores disponible en este momento.",
+      "add": "Añadir investigador",
+      "createConfirmTitle": "Agregar investigador",
+      "createConfirmMessage": "¿Desea agregar este investigador?",
+      "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo."
+    },
     "activities": {
+      "title": "¿Qué hacemos?",
+      "emptyHint": "Haga clic en \"Añadir\" para agregar alguna actividad.",
+      "add": "Añadir",
+      "editTitle": "Editar \"{title}\"",
+      "editFallback": "Editar actividad",
+      "editLabel": "Editar {title}",
+      "deleteLabel": "Eliminar {title}",
+      "deleteTitle": "Eliminar actividad",
+      "deleteMessage": "¿Desea eliminar \"{title}\"? Esta acción no se puede deshacer.",
+      "deleteConfirm": "Eliminar",
+      "form": {
+        "icon": "Ícono",
+        "title": "Título",
+        "text": "Texto",
+        "titleRequired": "El título es obligatorio.",
+        "textRequired": "El texto es obligatorio.",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "confirmTitle": "Guardar cambios",
+        "confirmMessage": "¿Desea guardar los cambios en esta actividad?",
+        "icons": {
+          "sun": "Sol",
+          "waves": "Ondas",
+          "satellite": "Satélite",
+          "code": "Código",
+          "collaboration": "Colaboración",
+          "education": "Educación"
+        },
+        "discard": {
+          "title": "Descartar cambios no guardados",
+          "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+          "confirm": "Descartar",
+          "cancel": "Seguir editando"
+        }
+      },
       "created": "Actividad agregada correctamente.",
       "updated": "Actividad actualizada correctamente.",
       "deleted": "Actividad eliminada correctamente.",
@@ -483,6 +542,14 @@
         "unknown": "No se pudo guardar la actividad. Inténtelo de nuevo.",
         "deleteUnknown": "No se pudo eliminar la actividad. Inténtelo de nuevo."
       }
+    },
+    "contribution": {
+      "title": "Aporte distintivo",
+      "p1": "LASCE busca que Costa Rica no sea únicamente usuaria de información internacional, sino también productora de datos, conocimiento y soluciones adaptadas a su ubicación y sus necesidades."
+    },
+    "vision": {
+      "title": "Nuestra visión",
+      "p1": "Consolidar en Costa Rica un referente regional para la observación del Sol, el estudio de la relación Sol-Tierra y el desarrollo de herramientas de monitoreo y predicción del clima espacial. Esta visión combina excelencia científica, tecnología desarrollada con participación nacional, cooperación internacional, formación de talento y comunicación pública de la ciencia."
     }
   },
   "news": {

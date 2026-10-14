@@ -475,7 +475,66 @@
     }
   },
   "nosotros": {
+    "meta": {
+      "title": "About us | LASCE",
+      "description": "The Solar Astrophysics and Space Weather Laboratory (LASCE), part of the Space Research Center (CINESPA) at the Universidad de Costa Rica: what it is and what it researches."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "About us",
+      "lead": "Solar Astrophysics and Space Weather Laboratory, part of the Space Research Center (CINESPA) at the Universidad de Costa Rica."
+    },
+    "overview": {
+      "title": "Who are we?",
+      "p1": "The Solar Astrophysics and Space Weather Laboratory (LASCE) is a scientific initiative linked to the Space Research Center (CINESPA) of the Universidad de Costa Rica. It brings together solar astrophysics research, astronomical observations and computational development to study solar activity, its interaction with the interplanetary medium and the terrestrial environment.",
+      "p2": "LASCE starts from a simple but powerful idea: to understand space weather, you need to observe different links in the same chain, from the magnetic origin of a solar eruption to its manifestations in near-Earth space. For this reason, LASCE carries out scientific research that integrates data from different instruments, wavelengths and platforms."
+    },
+    "researchers": {
+      "title": "LASCE researchers",
+      "intro": "The people who research and develop the Solar Astrophysics and Space Weather Laboratory (LASCE).",
+      "hint": "Click a card to see more information.",
+      "empty": "No researcher information is available at the moment.",
+      "add": "Add researcher",
+      "createConfirmTitle": "Add researcher",
+      "createConfirmMessage": "Do you want to add this researcher?",
+      "saveError": "The change could not be saved. Try again."
+    },
     "activities": {
+      "title": "What do we do?",
+      "emptyHint": "Click \"Add\" to add an activity.",
+      "add": "Add",
+      "editTitle": "Edit \"{title}\"",
+      "editFallback": "Edit activity",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "deleteTitle": "Delete activity",
+      "deleteMessage": "Do you want to delete \"{title}\"? This action cannot be undone.",
+      "deleteConfirm": "Delete",
+      "form": {
+        "icon": "Icon",
+        "title": "Title",
+        "text": "Text",
+        "titleRequired": "The title is required.",
+        "textRequired": "The text is required.",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "confirmTitle": "Save changes",
+        "confirmMessage": "Do you want to save the changes to this activity?",
+        "icons": {
+          "sun": "Sun",
+          "waves": "Waves",
+          "satellite": "Satellite",
+          "code": "Code",
+          "collaboration": "Collaboration",
+          "education": "Education"
+        },
+        "discard": {
+          "title": "Discard unsaved changes",
+          "message": "If you discard now, all data entered that has not been saved will be lost.",
+          "confirm": "Discard",
+          "cancel": "Keep editing"
+        }
+      },
       "created": "Activity added successfully.",
       "updated": "Activity updated successfully.",
       "deleted": "Activity deleted successfully.",
@@ -483,6 +542,14 @@
         "unknown": "The activity could not be saved. Try again.",
         "deleteUnknown": "The activity could not be deleted. Try again."
       }
+    },
+    "contribution": {
+      "title": "Distinctive contribution",
+      "p1": "LASCE aims for Costa Rica to be not only a user of international information, but also a producer of data, knowledge and solutions adapted to its location and its needs."
+    },
+    "vision": {
+      "title": "Our vision",
+      "p1": "To establish in Costa Rica a regional reference for observing the Sun, studying the Sun-Earth relationship and developing tools for monitoring and predicting space weather. This vision combines scientific excellence, technology developed with national participation, international cooperation, talent training and public communication of science."
     }
   },
   "news": {
