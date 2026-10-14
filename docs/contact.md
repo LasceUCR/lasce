@@ -94,7 +94,7 @@ The laboratory is on the south side of the Planetario de la Universidad de Costa
 Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica. The Spanish
 sentence is "se encuentra al costado sur del Planetario de la Universidad de Costa Rica,
 Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica." The pin is the
-marked point on that building's roof (9.936990, -84.045073). It is a published map point, not a
+marked point on that building's roof (9.936990, -84.045073). The map opens at zoom 18. It is a published map point, not a
 surveyed GPS reading. The address does not include a postal code. The marker reads `LASCE`.
 
 The footer still shows the shorter location "San Pedro de Montes de Oca". That line is the

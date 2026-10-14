@@ -16,6 +16,7 @@ describe('contact content', () => {
       longitude: -84.045073,
     })
     expect(contactContent.location.markerLabel).toBe('LASCE')
+    expect(contactContent.location.zoom).toBe(18)
     expect(contactContent.channelsTitle).toBe('Información de contacto')
   })
 

@@ -63,7 +63,7 @@ export function getContactContent({ contact, common }: ContactMessages): Contact
       intro: fill(contact.location.intro, { address: planetariumAddress }),
       address: planetariumAddress,
       coordinates: { latitude: 9.93699, longitude: -84.045073 },
-      zoom: 17,
+      zoom: 18,
       tileUrl: locationMapProvider.tileUrl,
       attribution: locationMapProvider.attribution,
       loadTimeoutMs: locationMapProvider.loadTimeoutMs,
