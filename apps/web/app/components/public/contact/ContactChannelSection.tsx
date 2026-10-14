@@ -177,8 +177,6 @@ export function ContactChannelSection({
               deleteConfirmLabel={t('deleteConfirm')}
               deleteConfirmMessage={t('deleteMessage')}
               deleteConfirmTitle={t('deleteTitle')}
-              deleteTargetEntity={card.title}
-              deleteTargetLabel={t('deleteTarget')}
               deleteLabel={t('delete', { title: card.title })}
               editLabel={t('edit', { title: card.title })}
               key={card.id}

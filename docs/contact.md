@@ -70,8 +70,8 @@ and live in `contact.cards`. A save reports "Canal de contacto agregado / actual
 eliminado correctamente." A failure reports the server's reason, or "No se pudo guardar /
 eliminar el canal de contacto. Inténtelo de nuevo." Field problems appear on the field and on
 the language tab that holds them, the same way as the publication editor. Saving asks for no
-second confirmation. Deleting asks first, through `EditableWrapper`, and names the channel in
-the confirmation. Closing a new card, or an existing one with unsaved changes, asks first,
+second confirmation. Deleting asks first, through `EditableWrapper`. Closing a new card, or an
+existing one with unsaved changes, asks first,
 through `StandardConfirmDialog` with the warning severity, from Cancelar and from the modal's
 close button and Escape
 (`ContactChannelForm` exposes `requestCancel`; `AddItemCard` takes `onRequestClose`). In a

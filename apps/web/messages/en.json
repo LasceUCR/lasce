@@ -160,7 +160,6 @@
       "delete": "Delete {title}",
       "deleteTitle": "Delete contact channel",
       "deleteMessage": "This action cannot be undone and will remove the contact channel from the page.",
-      "deleteTarget": "Item",
       "created": "Contact channel added successfully.",
       "updated": "Contact channel updated successfully.",
       "deleted": "Contact channel deleted successfully.",
