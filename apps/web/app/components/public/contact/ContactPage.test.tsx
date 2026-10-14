@@ -72,9 +72,7 @@ describe('ContactPage', () => {
     expect(screen.getByRole('region', { name: 'Location' })).toHaveTextContent(
       content.location.address,
     )
-    expect(
-      await screen.findByRole('region', { name: 'Location map of LASCE' }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Location map of LASCE' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zoom in' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
   })
