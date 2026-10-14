@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import {
+  CONTACT_CHANNEL_DESCRIPTION_MAX,
   contactCardLink,
   contactChannelCreateSchema,
   isSinglePhoneNumber,
@@ -95,6 +96,20 @@ describe('contact channel schema', () => {
         },
       }).success,
     ).toBe(true)
+  })
+
+  test('rejects a description longer than a card can show', () => {
+    const description = 'a'.repeat(CONTACT_CHANNEL_DESCRIPTION_MAX + 1)
+    expect(
+      contactChannelCreateSchema.safeParse({
+        icon: 'location',
+        href: null,
+        content: {
+          es: { title: 'Lugar', description },
+          en: { title: 'Place', description },
+        },
+      }).success,
+    ).toBe(false)
   })
 
   test('hides a card whose title or description is blank or a placeholder', () => {

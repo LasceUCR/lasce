@@ -117,6 +117,24 @@ describe('ContactChannelForm', () => {
     )
   })
 
+  test('says so only when a 121st character is typed', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={vi.fn()} />)
+
+    await chooseSymbol(user, 'Correo')
+    const description = field('Descripción')
+    await user.click(description)
+    await user.paste('a'.repeat(120))
+
+    expect(description).toHaveValue('a'.repeat(120))
+    expect(screen.queryByText('Se alcanzó el máximo de 120 caracteres.')).not.toBeInTheDocument()
+
+    await user.type(description, 'b')
+
+    expect(description).toHaveValue('a'.repeat(120))
+    expect(screen.getByText('Se alcanzó el máximo de 120 caracteres.')).toBeInTheDocument()
+  })
+
   test('shows an invalid link on the link field', async () => {
     const user = userEvent.setup({ delay: null })
     const onSave = vi.fn()

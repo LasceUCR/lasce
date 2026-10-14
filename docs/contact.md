@@ -47,7 +47,9 @@ The footer element itself uses `id="contacto"` on every page. The section on thi
 ## Cards
 
 Each channel is an `InfoCard` inside `CardGrid` (`columns={3}`, `equalHeight`): icon tile, `h3`
-title, description. A card whose title or description is blank or a placeholder (`próximamente`,
+title, description. The description is at most 120 characters. The field says so only when another character is typed past that limit, and that character is not added. The card shows at most three
+lines, so one long text cannot stretch the row. A card whose title or description is blank or a
+placeholder (`próximamente`,
 `por definir`, `contenido en preparación`, `ejemplo`, `n/a`) is not rendered.
 
 The icon is chosen first, then the title, then the description, in both languages, using
@@ -56,8 +58,7 @@ Facebook. Instagram and Facebook may also store an `https` link; the description
 link in a new tab. A phone card stores one number, the same in both languages: eight local
 digits, or those digits with the 506 country code. That number becomes `tel:+506` plus the
 local digits. An email description that contains `@` becomes `mailto:`. Location has no link.
-Changing the icon
-away from Instagram or Facebook clears a stored link.
+Changing the icon away from Instagram or Facebook clears a stored link.
 
 Spanish title and description live on `public.contact_channels`. English lives on
 `public.contact_channel_translations`. The icon, the link and the position are shared. The

@@ -30,6 +30,7 @@ import {
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
 import {
   CONTACT_CHANNEL_ICONS,
+  CONTACT_CHANNEL_DESCRIPTION_MAX,
   contactChannelContent,
   contactChannelCreateSchema,
   isSinglePhoneNumber,
@@ -84,6 +85,9 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
   const [attempted, setAttempted] = useState(false)
   const [focusRequest, setFocusRequest] = useState(0)
   const [discardOpen, setDiscardOpen] = useState(false)
+  const [descriptionOverLimit, setDescriptionOverLimit] = useState<Partial<Record<Locale, boolean>>>(
+    {},
+  )
 
   const stored = card?.editing?.content ?? null
   const pending = reviewsNeeded(contactChannelContent, stored, draft)
@@ -153,6 +157,19 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
       [locale]: { ...current[locale], [field]: value },
     }))
     setConfirmed((current) => current.filter((review) => review.field !== field))
+  }
+
+  function setDescription(locale: Locale, value: string) {
+    const previous = draft[locale].description
+    const over =
+      value.length > CONTACT_CHANNEL_DESCRIPTION_MAX &&
+      previous.length <= CONTACT_CHANNEL_DESCRIPTION_MAX
+    setDescriptionOverLimit((current) => ({ ...current, [locale]: over }))
+    setField(
+      locale,
+      'description',
+      over ? value.slice(0, CONTACT_CHANNEL_DESCRIPTION_MAX) : value,
+    )
   }
 
   function setPhone(value: string) {
@@ -244,11 +261,15 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
             {icon === 'phone' ? null : (
               <>
                 <FormField
-                  error={errors[contentPath(locale, 'description')]}
+                  error={
+                    descriptionOverLimit[locale]
+                      ? t('descriptionMax', { max: CONTACT_CHANNEL_DESCRIPTION_MAX })
+                      : errors[contentPath(locale, 'description')]
+                  }
                   label={t('description')}
                   lang={contentFieldLang(stored, locale)}
                   multiline
-                  onChange={(value) => setField(locale, 'description', value)}
+                  onChange={(value) => setDescription(locale, value)}
                   required
                   value={draft[locale].description}
                 />

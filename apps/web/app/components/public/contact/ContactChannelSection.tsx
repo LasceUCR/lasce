@@ -19,7 +19,12 @@ import {
   type ContactCard,
   type ContactChannelIcon,
 } from '@/app/lib/contact-channel-schema'
-import { ContactChannelForm, type ContactChannelFormHandle, type ContactChannelSaveBody } from './ContactChannelForm'
+import {
+  ContactChannelForm,
+  type ContactChannelFormHandle,
+  type ContactChannelSaveBody,
+} from './ContactChannelForm'
+import styles from './ContactChannelSection.module.css'
 
 function FacebookIcon() {
   return (
@@ -74,10 +79,16 @@ function channelIcon(icon: ContactChannelIcon): ReactNode {
 
 function channelBody(card: ContactCard): ReactNode {
   const link = contactCardLink(card.icon, card.description, card.href)
-  if (!link) return <p lang={card.lang}>{card.description}</p>
+  if (!link) {
+    return (
+      <p className={styles.description} lang={card.lang}>
+        {card.description}
+      </p>
+    )
+  }
 
   return (
-    <p lang={card.lang}>
+    <p className={styles.description} lang={card.lang}>
       <a
         href={link.href}
         rel={link.external ? 'noreferrer' : undefined}

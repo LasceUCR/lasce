@@ -32,6 +32,9 @@ export function isSocialChannelIcon(icon: ContactChannelIcon): boolean {
  * Title and description, required in every language. Spanish lives on `contact_channels`;
  * English lives in `contact_channel_translations`.
  */
+/** Long enough for an email or a short address, short enough that a card stays a few lines. */
+export const CONTACT_CHANNEL_DESCRIPTION_MAX = 120
+
 export const contactChannelContent = defineTranslatableContent({
   title: {
     noun: { word: 'título', gender: 'm' },
@@ -43,7 +46,7 @@ export const contactChannelContent = defineTranslatableContent({
     noun: { word: 'descripción', gender: 'f' },
     nouns: { en: 'description' },
     required: true,
-    maxLength: 500,
+    maxLength: CONTACT_CHANNEL_DESCRIPTION_MAX,
   },
 })
 

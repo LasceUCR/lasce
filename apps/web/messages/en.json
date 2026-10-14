@@ -146,6 +146,7 @@
       "icon": "Symbol",
       "title": "Title",
       "description": "Description",
+      "descriptionMax": "The maximum of {max} characters has been reached.",
       "phoneNumber": "Number",
       "phoneRequired": "The number is required.",
       "phoneSingle": "Enter a single phone number.",
