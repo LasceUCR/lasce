@@ -11,17 +11,23 @@ import {
 } from './contact'
 
 describe('contact content', () => {
-  test('publishes the LASCE phone, the Rodrigo Facio address and the approved Instagram profile', () => {
+  test('publishes the LASCE phone, the planetarium location and the approved Instagram profile', () => {
     const phone = contactContent.channels.find((channel) => channel.id === 'phone')
-    const location = contactContent.channels.find((channel) => channel.id === 'location')
     const instagram = contactContent.channels.find((channel) => channel.id === 'instagram')
     const footerInstagram = footerContent.links.find((link) => link.label === 'Instagram')
 
     expect(phone).toMatchObject({ value: '2511-6566', href: 'tel:+50625116566' })
-    expect(location?.lines).toEqual([
-      'Universidad de Costa Rica, Sede Rodrigo Facio Brenes',
-      'Montes de Oca, San José, Costa Rica',
-    ])
+    expect(contactContent.location.address).toBe(
+      'Planetario de la Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica',
+    )
+    expect(contactContent.location.intro).toBe(
+      'El Laboratorio de Astrofísica Solar y Clima Espacial se encuentra al costado sur del Planetario de la Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica.',
+    )
+    expect(contactContent.location.coordinates).toEqual({
+      latitude: 9.93699,
+      longitude: -84.045073,
+    })
+    expect(contactContent.location.markerLabel).toBe('LASCE')
     expect(instagram?.href).toBe(footerInstagram?.href)
     expect(availableContactChannels(contactContent.channels)).toHaveLength(
       contactContent.channels.length,
@@ -34,11 +40,12 @@ describe('contact content', () => {
     expect(contactContent.hero.title).toBe('Contacto')
     expect(contactContent.backLink).toEqual({ href: '/', label: 'Volver al inicio' })
     expect(english.hero.title).toBe('Contact')
-    expect(english.channels.map((channel) => channel.label)).toEqual([
-      'Phone',
-      'Location',
-      'Instagram',
-    ])
+    expect(english.channels.map((channel) => channel.label)).toEqual(['Phone', 'Instagram'])
+    expect(english.location.title).toBe('Location')
+    expect(english.location.intro).toBe(
+      'The Solar Astrophysics and Space Weather Laboratory is on the south side of the Planetario de la Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica.',
+    )
+    expect(english.location.labels.zoomInTitle).toBe('Zoom in')
     expect(english.backLink).toEqual({ href: '/', label: 'Back to home' })
   })
 
@@ -48,6 +55,9 @@ describe('contact content', () => {
       content.channels.map(({ id, value, lines, href }) => ({ id, value, lines, href }))
 
     expect(values(english)).toEqual(values(contactContent))
+    expect(english.location.address).toBe(contactContent.location.address)
+    expect(english.location.coordinates).toEqual(contactContent.location.coordinates)
+    expect(english.location.markerLabel).toBe(contactContent.location.markerLabel)
   })
 
   test('drops a channel whose value or link is missing or still a placeholder', () => {
