@@ -40,8 +40,9 @@ URL; neither organization identity nor classification depends on translated labe
 
 ## Migration and validation
 
-Apply `20261013120000_add_collaboration_translations` and
-`20261014120000_add_collaboration_media` before running the updated page:
+Apply `20261013120000_add_collaboration_translations`,
+`20261014120000_add_collaboration_media`, and
+`20261014130000_drop_collaboration_logo_url` before running the updated page:
 
 ```bash
 pnpm db:generate
@@ -50,8 +51,10 @@ pnpm db:migrate:deploy
 
 The migration creates the two tables and copies the eight existing organizations, their order,
 and their existing Spanish/English country labels in one transaction. No separate seed run is
-needed. The media migration adds nullable `logo_url` and `website_url` columns without
-changing existing records. The `logo_url` column is reserved and currently unused by the CMS.
+needed. The media migration originally added nullable `logo_url` and `website_url` columns.
+The follow-up migration removes the unused `logo_url` column while retaining `website_url`.
+It also removes any values stored in that placeholder column. The earlier migration remains
+unchanged to preserve migration history; collaboration logo uploads are deferred.
 Restart `pnpm dev` after generating Prisma so its cached client
 knows the new fields. Translation rows are unique by `(collaboration_id, locale)` and are deleted with their
 organization. Existing data in other tables is untouched. Prisma owns the migration; the worker
@@ -137,6 +140,8 @@ The directory reads `Collaboration` records. An organization has:
 
 Organization logos are deferred. A later implementation will allow image uploads (such as PNG)
 and display them on organization cards; the current editor does not accept a logo URL.
+The existing gallery storage pattern keeps the file in MinIO and stores its object key as text
+in the database. That key identifies an uploaded file; it is not a URL entered by an editor.
 
 New organizations and changed translations appear on the next request without editing the
 catalogues or deploying. Management follows the bilingual write, permission, transaction and review rules in

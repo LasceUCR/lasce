@@ -213,7 +213,6 @@ model Collaboration {
   name       String
   acronym    String?
   country    String
-  logoUrl    String?            @map("logo_url")
   websiteUrl String?            @map("website_url")
   scope      CollaborationScope
   position   Int                @default(0)
