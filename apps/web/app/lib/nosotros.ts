@@ -1,8 +1,34 @@
 import { prisma } from '@lasce/db'
-import type { NosotrosActivityIcon } from '@lasce/db'
+import type { NosotrosActivityIcon, Prisma } from '@lasce/db'
 import { z } from 'zod'
 
 import es from '@/messages/es.json' with { type: 'json' }
+
+import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
+import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+import {
+  translationLocales,
+  type ReviewConfirmation as ContentReviewConfirmation,
+} from '@/app/lib/i18n/content/definition'
+import {
+  baseContent,
+  resolveContent,
+  storedContentFrom,
+  translationRows,
+} from '@/app/lib/i18n/content/resolve'
+import { findPendingReviews } from '@/app/lib/i18n/content/review'
+
+import {
+  nosotrosActivityContent,
+  type NosotrosActivityCreateInput,
+  type NosotrosActivityEditingData,
+  type NosotrosActivityField,
+  type NosotrosActivityUpdateInput,
+  type NosotrosCardIcon,
+} from './nosotros-activity-schema'
+
+export * from './nosotros-activity-schema'
 
 /**
  * Editorial source: institutional text supplied by LASCE, transcribed verbatim except where
@@ -29,9 +55,6 @@ import es from '@/messages/es.json' with { type: 'json' }
  * portrait use `User.png`. This is a separate, independently curated roster from the ROSAC team on
  * `/radioastronomia` — see `app/lib/rosac.ts` — not the same people re-shown here.
  */
-export type NosotrosCardIcon =
-  'sun' | 'waves' | 'satellite' | 'code' | 'collaboration' | 'education'
-
 interface NosotrosTextSection {
   title: string
   paragraphs: readonly string[]
@@ -51,6 +74,22 @@ export interface NosotrosResearcher {
   description?: string
 }
 
+/** One "¿Qué hacemos?" card, in the language it is shown in. */
+export interface NosotrosActivityItem {
+  id: string
+  icon: NosotrosCardIcon
+  title: string
+  description: string
+  /**
+   * The language `title` and `description` are actually in. `null` when the card is legacy and
+   * its base text is shown, because that text's language is unknown. Set by
+   * `getNosotrosActivities`; absent on fixtures, which sets no `lang`.
+   */
+  contentLocale?: Locale | null
+  /** Present only when loaded with `includeEditingData`. */
+  editing?: NosotrosActivityEditingData
+}
+
 export interface NosotrosContent {
   hero: { kicker: string; title: string; lead: string }
   /** Provisional copy banner. Absent now that LASCE has supplied the approved text. */
@@ -65,12 +104,7 @@ export interface NosotrosContent {
   }
   activities: {
     title: string
-    items: readonly {
-      id: string
-      icon: NosotrosCardIcon
-      title: string
-      description: string
-    }[]
+    items: readonly NosotrosActivityItem[]
   }
   contribution: NosotrosTextSection
   vision: NosotrosTextSection
@@ -203,50 +237,113 @@ export const nosotrosResearcherFixtures: readonly NosotrosResearcher[] = [
   },
 ]
 
+type FixtureText = { title: string; description: string }
+
+/**
+ * A fixture card shown in Spanish, with both languages in its editing data as a complete card
+ * has them. The editing data is only read by the editor, so a visitor's page ignores it.
+ */
+function fixtureActivity(
+  id: string,
+  icon: NosotrosCardIcon,
+  es: FixtureText,
+  en: FixtureText,
+): NosotrosActivityItem {
+  return {
+    id,
+    icon,
+    ...es,
+    contentLocale: 'es',
+    editing: { content: { es, en }, isLegacy: false, version: '2026-09-17T15:00:00.000Z' },
+  }
+}
+
 /** Spanish stand-ins for the `nosotros_activities` rows, for Storybook and tests. */
 export const nosotrosActivityFixtures: NosotrosContent['activities']['items'] = [
-  {
-    id: 'eruptive-phenomena',
-    icon: 'sun',
-    title: 'Fenómenos solares eruptivos',
-    description:
-      "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
-  },
-  {
-    id: 'solar-terrestrial',
-    icon: 'waves',
-    title: 'Perturbaciones y relación Sol-Tierra',
-    description:
-      'Estudiamos la evolución de perturbaciones solares y su relación con el viento solar, el campo magnético interplanetario y local, y la ionosfera.',
-  },
-  {
-    id: 'observations',
-    icon: 'satellite',
-    title: 'Integración de observaciones',
-    description:
-      'Integramos mediciones propias con imágenes y datos de satélites, estaciones terrestres y observatorios internacionales.',
-  },
-  {
-    id: 'computational-tools',
-    icon: 'code',
-    title: 'Herramientas computacionales',
-    description:
-      'Implementamos y desarrollamos herramientas computacionales para procesar datos, reconocer patrones y apoyar a la investigación en la predicción del clima espacial y su impacto en nuestro país.',
-  },
-  {
-    id: 'collaboration',
-    icon: 'collaboration',
-    title: 'Colaboración interdisciplinaria',
-    description:
-      'Promovemos proyectos interdisciplinarios y colaboraciones nacionales e internacionales.',
-  },
-  {
-    id: 'training',
-    icon: 'education',
-    title: 'Formación de estudiantes',
-    description:
-      'Creamos oportunidades de formación práctica para estudiantes mediante investigación, instrumentación, programación y análisis de datos.',
-  },
+  fixtureActivity(
+    'eruptive-phenomena',
+    'sun',
+    {
+      title: 'Fenómenos solares eruptivos',
+      description:
+        "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
+    },
+    {
+      title: 'Eruptive solar phenomena',
+      description:
+        'We analyze eruptive solar phenomena, such as flares, coronal mass ejections (CMEs) and solar radio emissions.',
+    },
+  ),
+  fixtureActivity(
+    'solar-terrestrial',
+    'waves',
+    {
+      title: 'Perturbaciones y relación Sol-Tierra',
+      description:
+        'Estudiamos la evolución de perturbaciones solares y su relación con el viento solar, el campo magnético interplanetario y local, y la ionosfera.',
+    },
+    {
+      title: 'Disturbances and the Sun-Earth relationship',
+      description:
+        'We study the evolution of solar disturbances and their relationship with the solar wind, the interplanetary and local magnetic field, and the ionosphere.',
+    },
+  ),
+  fixtureActivity(
+    'observations',
+    'satellite',
+    {
+      title: 'Integración de observaciones',
+      description:
+        'Integramos mediciones propias con imágenes y datos de satélites, estaciones terrestres y observatorios internacionales.',
+    },
+    {
+      title: 'Integration of observations',
+      description:
+        'We integrate our own measurements with images and data from satellites, ground stations and international observatories.',
+    },
+  ),
+  fixtureActivity(
+    'computational-tools',
+    'code',
+    {
+      title: 'Herramientas computacionales',
+      description:
+        'Implementamos y desarrollamos herramientas computacionales para procesar datos, reconocer patrones y apoyar a la investigación en la predicción del clima espacial y su impacto en nuestro país.',
+    },
+    {
+      title: 'Computational tools',
+      description:
+        'We implement and develop computational tools to process data, recognize patterns and support research on space weather prediction and its impact on our country.',
+    },
+  ),
+  fixtureActivity(
+    'collaboration',
+    'collaboration',
+    {
+      title: 'Colaboración interdisciplinaria',
+      description:
+        'Promovemos proyectos interdisciplinarios y colaboraciones nacionales e internacionales.',
+    },
+    {
+      title: 'Interdisciplinary collaboration',
+      description:
+        'We promote interdisciplinary projects and national and international collaborations.',
+    },
+  ),
+  fixtureActivity(
+    'training',
+    'education',
+    {
+      title: 'Formación de estudiantes',
+      description:
+        'Creamos oportunidades de formación práctica para estudiantes mediante investigación, instrumentación, programación y análisis de datos.',
+    },
+    {
+      title: 'Student training',
+      description:
+        'We create hands-on training opportunities for students through research, instrumentation, programming and data analysis.',
+    },
+  ),
 ]
 
 /** The page in Spanish with the database stand-ins filled in. For stories and tests. */
@@ -284,111 +381,241 @@ const ICON_FROM_DB: Record<NosotrosActivityIcon, NosotrosCardIcon> = {
   EDUCATION: 'education',
 }
 
-export interface NosotrosActivityRecord {
-  id: string
-  icon: NosotrosCardIcon
-  title: string
-  description: string
+export interface NosotrosActivityRecord extends NosotrosActivityItem {
   modifiedAt: string
 }
 
-type NosotrosActivityRow = {
-  id: string
-  icon: NosotrosActivityIcon
-  title: string
-  paragraph: string
-  modifiedAt: Date
+export type NosotrosActivityWriteFailure =
+  | { ok: false; reason: 'not-found' }
+  /** The card changed since the editor loaded it. */
+  | { ok: false; reason: 'conflict' }
+  /** Fields changed in one language whose counterpart was neither changed nor confirmed. */
+  | {
+      ok: false
+      reason: 'review-required'
+      pending: ContentReviewConfirmation<NosotrosActivityField>[]
+    }
+
+export type NosotrosActivityWriteResult =
+  { ok: true; activity: NosotrosActivityRecord } | NosotrosActivityWriteFailure
+
+const activityInclude = {
+  translations: {
+    where: { locale: { in: [...translationLocales] } },
+    select: { locale: true, title: true, paragraph: true },
+  },
+} satisfies Prisma.NosotrosActivityInclude
+
+type NosotrosActivityRow = Prisma.NosotrosActivityGetPayload<{ include: typeof activityInclude }>
+
+type ActivityText = { title: string; paragraph: string }
+
+/**
+ * A card's text in every language, from its base row and its translation rows. The content
+ * definition calls the text `description`; both kinds of row store it as `paragraph`.
+ */
+function storedContentOf(
+  base: ActivityText,
+  translations: readonly (ActivityText & { locale: string })[],
+) {
+  return storedContentFrom(
+    nosotrosActivityContent,
+    { title: base.title, description: base.paragraph },
+    translations.map(({ locale, title, paragraph }) => ({
+      locale,
+      title,
+      description: paragraph,
+    })),
+  )
 }
 
-function toActivityRecord(row: NosotrosActivityRow): NosotrosActivityRecord {
+function toActivityRecord(
+  row: NosotrosActivityRow,
+  locale: Locale,
+  includeEditingData: boolean,
+): NosotrosActivityRecord {
+  const content = storedContentOf(row, row.translations)
+  // A complete card's base text was written or confirmed as Spanish when it was saved. A legacy
+  // card's base text was entered before languages existed, so its language is unknown.
+  const { content: shown, contentLocale, isLegacy } = resolveContent(content, locale)
+
   return {
     id: row.id,
     icon: ICON_FROM_DB[row.icon],
-    title: row.title,
-    description: row.paragraph,
+    title: shown.title,
+    description: shown.description,
     modifiedAt: row.modifiedAt.toISOString(),
+    contentLocale,
+    ...(includeEditingData
+      ? { editing: { content, isLegacy, version: toVersion(row.modifiedAt) } }
+      : {}),
   }
+}
+
+/** The base row's columns for a content input: `description` is stored as `paragraph`. */
+function baseColumns(content: NosotrosActivityCreateInput['content']) {
+  const { title, description } = baseContent(nosotrosActivityContent, content)
+  return { title, paragraph: description }
+}
+
+/** One translation row per other language, with `description` stored as `paragraph`. */
+function translationColumns(content: NosotrosActivityCreateInput['content']) {
+  return translationRows(nosotrosActivityContent, content).map(
+    ({ locale, title, description }) => ({ locale, title, paragraph: description }),
+  )
 }
 
 /**
  * Loads the activity flashcards from Postgres, in display order. Ordered by
  * `createdAt` rather than `modifiedAt` on purpose — editing a card's text
  * updates `modifiedAt` too, and that must not also move the card.
+ *
+ * `title` and `description` are in `locale` when the card has that translation, and fall back to
+ * the base text otherwise; `contentLocale` says which one was used. Pass `includeEditingData`
+ * only for someone who can edit, because it sends every language to the browser.
  */
-export async function getNosotrosActivities(): Promise<NosotrosActivityRecord[]> {
-  const rows = await prisma.nosotrosActivity.findMany({ orderBy: { createdAt: 'asc' } })
-  return rows.map(toActivityRecord)
+export async function getNosotrosActivities(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<NosotrosActivityRecord[]> {
+  const rows = await prisma.nosotrosActivity.findMany({
+    orderBy: { createdAt: 'asc' },
+    include: activityInclude,
+  })
+  return rows.map((row) => toActivityRecord(row, locale, includeEditingData))
 }
 
-/** Shared by both create and update: an activity is always icon + title + text. */
-export const nosotrosActivityInputSchema = z.object({
-  icon: z.enum(['sun', 'waves', 'satellite', 'code', 'collaboration', 'education'], {
-    error: 'Seleccione un ícono válido.',
-  }),
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  description: z.string().trim().min(1, 'El texto es obligatorio.'),
-})
-
-export type NosotrosActivityInput = z.infer<typeof nosotrosActivityInputSchema>
+/**
+ * Runs a write transaction (`runWrite`) and reports the stored card. Expected failures are
+ * raised as `WriteAbort`, so the transaction rolls back before anything is reported.
+ */
+async function writeActivity(
+  write: (tx: Prisma.TransactionClient) => Promise<NosotrosActivityRow>,
+): Promise<NosotrosActivityWriteResult> {
+  const result = await runWrite<NosotrosActivityRow, NosotrosActivityWriteFailure>(write)
+  return result.ok
+    ? { ok: true, activity: toActivityRecord(result.value, defaultLocale, true) }
+    : result
+}
 
 /**
- * Updates one activity flashcard and stamps `modifiedBy` with the admin who
- * made the change. Returns `null` when `id` does not match any row, rather
- * than throwing, so the route handler can turn that into a 404.
+ * Creates a new activity flashcard in every language at once, authored by the admin who
+ * submitted it. `createdAt` defaults to now, which — since the list is ordered by it — puts the
+ * new card at the end, same place `AddItemCard` prompted from. A create has no expected failure.
+ */
+export async function createNosotrosActivity(
+  input: NosotrosActivityCreateInput,
+  modifiedBy: string,
+): Promise<NosotrosActivityRecord> {
+  const result = await runWrite<NosotrosActivityRow, never>((tx) =>
+    tx.nosotrosActivity.create({
+      data: {
+        icon: ICON_TO_DB[input.icon],
+        ...baseColumns(input.content),
+        modifiedBy,
+        translations: { create: translationColumns(input.content) },
+      },
+      include: activityInclude,
+    }),
+  )
+
+  return toActivityRecord(result.value, defaultLocale, true)
+}
+
+/**
+ * Updates the fields present in `input` and stamps `modifiedBy` with the admin who made the
+ * change, all at once: either everything is stored or nothing is.
+ *
+ * With `content` it is a bilingual content update: both languages are written, after checking
+ * that every one-sided change has its counterpart changed or confirmed (`findPendingReviews`).
+ * Without `content` it updates the icon only, and titles, descriptions and translations are left
+ * exactly as they are, so a legacy card can be corrected without being translated first.
+ *
+ * Optimistic concurrency applies to both kinds: `input.version` is the `modified_at` the editor
+ * loaded. The base row is updated only while it still has that value, and every save moves it
+ * forward, so of two editors who loaded the same version the second one gets `conflict` instead
+ * of silently overwriting the first.
  */
 export async function updateNosotrosActivity(
   id: string,
-  data: NosotrosActivityInput,
+  input: NosotrosActivityUpdateInput,
   modifiedBy: string,
-): Promise<NosotrosActivityRecord | null> {
-  const existing = await prisma.nosotrosActivity.findUnique({ where: { id } })
-  if (!existing) return null
+): Promise<NosotrosActivityWriteResult> {
+  const expectedModifiedAt = parseVersion(input.version)
 
-  const row = await prisma.nosotrosActivity.update({
-    where: { id },
-    data: {
-      icon: ICON_TO_DB[data.icon],
-      title: data.title,
-      paragraph: data.description,
-      modifiedBy,
-    },
+  return writeActivity(async (tx) => {
+    const current = await tx.nosotrosActivity.findUnique({
+      where: { id },
+      select: {
+        title: true,
+        paragraph: true,
+        modifiedAt: true,
+        translations: activityInclude.translations,
+      },
+    })
+
+    if (!current) {
+      throw new WriteAbort<NosotrosActivityWriteFailure>({ ok: false, reason: 'not-found' })
+    }
+
+    if (!isCurrentVersion(current.modifiedAt, expectedModifiedAt)) {
+      throw new WriteAbort<NosotrosActivityWriteFailure>({ ok: false, reason: 'conflict' })
+    }
+
+    const { content } = input
+
+    if (content) {
+      const pending = findPendingReviews(
+        nosotrosActivityContent,
+        storedContentOf(current, current.translations),
+        content,
+        input.confirmedUnchanged ?? [],
+      )
+
+      if (pending.length > 0) {
+        throw new WriteAbort<NosotrosActivityWriteFailure>({
+          ok: false,
+          reason: 'review-required',
+          pending,
+        })
+      }
+    }
+
+    const { count } = await tx.nosotrosActivity.updateMany({
+      where: { id, modifiedAt: expectedModifiedAt },
+      data: {
+        ...(content ? baseColumns(content) : {}),
+        ...(input.icon === undefined ? {} : { icon: ICON_TO_DB[input.icon] }),
+        modifiedBy,
+        // Strictly later than the version it replaces, even if two saves share a millisecond.
+        modifiedAt: nextUpdatedAt(expectedModifiedAt),
+      },
+    })
+
+    if (count === 0) {
+      throw new WriteAbort<NosotrosActivityWriteFailure>({ ok: false, reason: 'conflict' })
+    }
+
+    if (content) {
+      for (const { locale, ...text } of translationColumns(content)) {
+        await tx.nosotrosActivityTranslation.upsert({
+          where: { activityId_locale: { activityId: id, locale } },
+          create: { activityId: id, locale, ...text },
+          update: text,
+        })
+      }
+    }
+
+    return tx.nosotrosActivity.findUniqueOrThrow({ where: { id }, include: activityInclude })
   })
-
-  return toActivityRecord(row)
 }
 
-/**
- * Creates a new activity flashcard, authored by the admin who submitted it.
- * `createdAt` defaults to now, which — since the list is ordered by it —
- * puts the new card at the end, same place `AddItemCard` prompted from.
- */
-export async function createNosotrosActivity(
-  data: NosotrosActivityInput,
-  modifiedBy: string,
-): Promise<NosotrosActivityRecord> {
-  const row = await prisma.nosotrosActivity.create({
-    data: {
-      icon: ICON_TO_DB[data.icon],
-      title: data.title,
-      paragraph: data.description,
-      modifiedBy,
-    },
-  })
-
-  return toActivityRecord(row)
-}
-
-/**
- * Deletes one activity flashcard. Returns `false` when `id` does not match
- * any row, rather than throwing, so the route handler can turn that into a
- * 404 — same pre-check pattern as `updateNosotrosActivity`.
- */
+/** Deletes one activity flashcard. Its translations go with it (`ON DELETE CASCADE`). */
 export async function deleteNosotrosActivity(id: string): Promise<boolean> {
-  const existing = await prisma.nosotrosActivity.findUnique({ where: { id } })
-  if (!existing) return false
-
-  await prisma.nosotrosActivity.delete({ where: { id } })
-  return true
+  // One statement that reports how many rows it removed: a concurrent delete of the same card
+  // finds nothing and answers "not found", instead of failing between a check and the delete.
+  const { count } = await prisma.nosotrosActivity.deleteMany({ where: { id } })
+  return count > 0
 }
 
 /**
