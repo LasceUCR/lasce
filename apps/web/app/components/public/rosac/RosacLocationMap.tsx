@@ -9,6 +9,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { MapContainer, Marker, TileLayer, Tooltip, ZoomControl } from 'react-leaflet'
 
 import { ErrorBoundary } from '@/app/components/public/ErrorBoundary'
+import { spanishLocationMapLabels, type LocationMapLabels } from '@/app/lib/location-map'
 import type { RosacLocationContent } from '@/app/lib/rosac'
 
 import styles from './RosacInfoPage.module.css'
@@ -30,11 +31,14 @@ const markerIcon = L.icon({
 
 export interface RosacLocationMapProps {
   location: RosacLocationContent
+  /** Accessible names. Omitted on ROSAC, which keeps the Spanish defaults. */
+  labels?: LocationMapLabels
   /** Testing seam: called with the underlying Leaflet map once it mounts. */
   onMapReady?: (map: L.Map | null) => void
 }
 
-export function RosacLocationMap({ location, onMapReady }: RosacLocationMapProps) {
+export function RosacLocationMap({ location, labels, onMapReady }: RosacLocationMapProps) {
+  const names = labels ?? spanishLocationMapLabels(location.markerLabel)
   const [isUnavailable, setIsUnavailable] = useState(false)
   const hasLoadedATile = useRef(false)
   const instructionsId = useId()
@@ -54,22 +58,19 @@ export function RosacLocationMap({ location, onMapReady }: RosacLocationMapProps
   return (
     <ErrorBoundary fallback={<LocationUnavailable message={location.unavailableMessage} />}>
       <div
-        aria-label={`Mapa de ubicación de ${location.markerLabel}`}
+        aria-label={names.regionName}
         className={`${styles.locationMapWrapper} surface-card`}
         role="region"
       >
         <p id={instructionsId} className="sr-only">
-          Use las flechas para desplazar el mapa y las teclas más y menos para cambiar el zoom.
-          Presione Tab para salir del mapa.
+          {names.instructions}
         </p>
         <MapContainer
           center={position}
           className={styles.locationMap}
           ref={(map) => {
             if (map) {
-              map
-                .getContainer()
-                .setAttribute('aria-label', `Mapa interactivo de ${location.markerLabel}`)
+              map.getContainer().setAttribute('aria-label', names.interactiveName)
               map.getContainer().setAttribute('aria-describedby', instructionsId)
             }
             onMapReady?.(map)
@@ -81,7 +82,7 @@ export function RosacLocationMap({ location, onMapReady }: RosacLocationMapProps
           zoom={location.zoom}
           zoomControl={false}
         >
-          <ZoomControl zoomInTitle="Acercar" zoomOutTitle="Alejar" />
+          <ZoomControl zoomInTitle={names.zoomInTitle} zoomOutTitle={names.zoomOutTitle} />
           <TileLayer
             eventHandlers={{
               tileload: () => {

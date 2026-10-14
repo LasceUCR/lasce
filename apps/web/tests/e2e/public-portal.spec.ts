@@ -77,6 +77,56 @@ test('loads the public landing page without authentication', async ({ page }) =>
   expect(new URL(page.url()).pathname).toBe('/')
 })
 
+const institutionName = 'Laboratorio de Astrofísica Solar y Clima Espacial'
+
+for (const viewport of [
+  { name: 'desktop', width: 1440, height: 900 },
+  { name: 'tablet', width: 820, height: 1180 },
+  { name: 'mobile', width: 390, height: 844 },
+]) {
+  test(`shows the full name of LASCE above the home title on ${viewport.name}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height })
+    await page.goto('/')
+
+    const hero = page.locator('.hero-content')
+    const name = hero.getByText(institutionName, { exact: true })
+    const title = hero.getByRole('heading', {
+      level: 1,
+      name: 'Exploramos el Sol para comprender el clima espacial',
+    })
+
+    await expect(name).toBeVisible()
+    await expect(name).toHaveCount(1)
+    await expect(title).toBeVisible()
+    // The name is its own text, not part of the h1, and the hero does not repeat the acronym:
+    // the LASCE logo in the header carries it.
+    await expect(title).not.toContainText(institutionName)
+    await expect(hero.getByText('LASCE', { exact: true })).toHaveCount(0)
+    await expect(page.getByRole('banner').locator('.lasce-logo')).toBeVisible()
+
+    const nameBox = await name.boundingBox()
+    const titleBox = await title.boundingBox()
+    const heroBox = await hero.boundingBox()
+    expect(nameBox && titleBox && heroBox).toBeTruthy()
+    if (!nameBox || !titleBox || !heroBox) return
+    // Above the title, aligned with it on the left, and inside the hero.
+    expect(nameBox.y + nameBox.height).toBeLessThanOrEqual(titleBox.y)
+    expect(Math.abs(nameBox.x - titleBox.x)).toBeLessThanOrEqual(1)
+    expect(nameBox.x + nameBox.width).toBeLessThanOrEqual(heroBox.x + heroBox.width + 1)
+    // Smaller than the title.
+    const fontSize = (locator: typeof name) =>
+      locator.evaluate((element) => parseFloat(getComputedStyle(element).fontSize))
+    expect(await fontSize(name)).toBeLessThan(await fontSize(title))
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    )
+    expect(overflow).toBeLessThanOrEqual(0)
+  })
+}
+
 for (const route of workAreaRoutes) {
   test(`opens ${route.path} directly without a login redirect`, async ({ page }) => {
     const response = await page.goto(route.path)
