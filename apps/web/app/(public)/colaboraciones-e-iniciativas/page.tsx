@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { getMessages, getTranslations } from 'next-intl/server'
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { CollaborationsPage } from '@/app/components/public/collaborations/CollaborationsPage'
+import { getCollaborationRecords } from '@/app/lib/collaboration-records'
 import { getCollaborationsContent } from '@/app/lib/collaborations'
-import { getResearchCollaborations } from '@/app/lib/research-collaborations'
+import { resolveLocale } from '@/app/lib/i18n/locale'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('collaborations.meta')
@@ -16,11 +17,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CollaborationsRoute() {
-  const messages = await getMessages()
+  const [messages, locale] = await Promise.all([getMessages(), getLocale()])
+  const collaborations = await getCollaborationRecords(resolveLocale(locale))
 
   return (
     <CollaborationsPage
-      collaborations={getResearchCollaborations(messages.collaborations.countries)}
+      collaborations={collaborations}
       content={getCollaborationsContent(messages)}
     />
   )
