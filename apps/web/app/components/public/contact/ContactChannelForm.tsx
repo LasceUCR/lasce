@@ -29,10 +29,12 @@ import {
 } from '@/app/lib/i18n/content/form'
 import { confirmationLabel } from '@/app/lib/i18n/content/review'
 import {
+  ADDABLE_CONTACT_CHANNEL_ICONS,
   CONTACT_CHANNEL_ICONS,
   CONTACT_CHANNEL_DESCRIPTION_MAX,
   contactChannelContent,
   contactChannelCreateSchema,
+  contactChannelUpdateSchema,
   isSinglePhoneNumber,
   isSocialChannelIcon,
   type ContactCard,
@@ -92,6 +94,10 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
   const stored = card?.editing?.content ?? null
   const pending = reviewsNeeded(contactChannelContent, stored, draft)
   const social = isSocialChannelIcon(icon)
+  const symbolOptions =
+    icon === 'location'
+      ? (['location', ...ADDABLE_CONTACT_CHANNEL_ICONS] as const)
+      : ADDABLE_CONTACT_CHANNEL_ICONS
   const errors: FormErrors = attempted ? fieldErrors() : {}
 
   useEffect(() => {
@@ -191,11 +197,18 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
       return
     }
 
-    const parsed = contactChannelCreateSchema.safeParse({
+    const body = {
       icon,
       href: social ? href : null,
       content: toContentInput(contactChannelContent, withSharedPhone(draft)),
-    })
+    }
+    const parsed = card?.editing
+      ? contactChannelUpdateSchema.safeParse({
+          ...body,
+          version: card.editing.version,
+          confirmedUnchanged: confirmed,
+        })
+      : contactChannelCreateSchema.safeParse(body)
     if (!parsed.success) return
 
     onSave({
@@ -229,11 +242,14 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
           id={iconFieldId}
           label={t('icon')}
           onChange={(value) => {
-            if ((CONTACT_CHANNEL_ICONS as readonly string[]).includes(value)) {
+            if (
+              (CONTACT_CHANNEL_ICONS as readonly string[]).includes(value) &&
+              value !== 'location'
+            ) {
               setIcon(value as ContactChannelIcon)
             }
           }}
-          options={CONTACT_CHANNEL_ICONS.map((value) => ({ value, label: t(`icons.${value}`) }))}
+          options={symbolOptions.map((value) => ({ value, label: t(`icons.${value}`) }))}
           value={icon}
         />
       </label>

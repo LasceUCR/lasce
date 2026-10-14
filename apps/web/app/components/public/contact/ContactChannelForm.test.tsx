@@ -31,6 +31,16 @@ describe('ContactChannelForm', () => {
     expect(screen.queryByRole('textbox', { name: 'Enlace' })).not.toBeInTheDocument()
   })
 
+  test('does not offer a location symbol', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={vi.fn()} />)
+
+    await user.click(screen.getByRole('combobox', { name: 'Símbolo' }))
+
+    expect(screen.queryByRole('option', { name: 'Ubicación' })).not.toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Teléfono' })).toBeInTheDocument()
+  })
+
   test('offers a link only for Instagram and Facebook and sends it with both languages', async () => {
     const user = userEvent.setup({ delay: null })
     const onSave = vi.fn()

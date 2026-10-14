@@ -88,21 +88,24 @@ describe('contact channel schema', () => {
     ).toBe(false)
     expect(
       contactChannelCreateSchema.safeParse({
-        icon: 'location',
+        icon: 'email',
         href: null,
         content: {
-          es: { title: 'Lugar', description: 'Dos números: 2511-6566 y 2222-3333' },
-          en: { title: 'Place', description: 'Two numbers: 2511-6566 and 2222-3333' },
+          es: { title: 'Correo', description: 'Dos números: 2511-6566 y 2222-3333' },
+          en: { title: 'Email', description: 'Two numbers: 2511-6566 and 2222-3333' },
         },
       }).success,
     ).toBe(true)
+    expect(
+      contactChannelCreateSchema.safeParse({ icon: 'location', href: null, content }).success,
+    ).toBe(false)
   })
 
   test('rejects a description longer than a card can show', () => {
     const description = 'a'.repeat(CONTACT_CHANNEL_DESCRIPTION_MAX + 1)
     expect(
       contactChannelCreateSchema.safeParse({
-        icon: 'location',
+        icon: 'email',
         href: null,
         content: {
           es: { title: 'Lugar', description },

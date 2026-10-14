@@ -53,12 +53,12 @@ placeholder (`próximamente`,
 `por definir`, `contenido en preparación`, `ejemplo`, `n/a`) is not rendered.
 
 The icon is chosen first, then the title, then the description, in both languages, using
-`LanguageTabs` and `TranslationReview`. The choices are phone, Instagram, location, email and
-Facebook. Instagram and Facebook may also store an `https` link; the description then opens that
-link in a new tab. A phone card stores one number, the same in both languages: eight local
-digits, or those digits with the 506 country code. That number becomes `tel:+506` plus the
-local digits. An email description that contains `@` becomes `mailto:`. Location has no link.
-Changing the icon away from Instagram or Facebook clears a stored link.
+`LanguageTabs` and `TranslationReview`. The choices are phone, Instagram, email and Facebook. A location icon is not offered; the
+laboratory's place is the map section. Instagram and Facebook may also store an `https` link;
+the description then opens that link in a new tab. A phone card stores one number, the same in
+both languages: eight local digits, or those digits with the 506 country code. That number
+becomes `tel:+506` plus the local digits. An email description that contains `@` becomes
+`mailto:`. Changing the icon away from Instagram or Facebook clears a stored link.
 
 Spanish title and description live on `public.contact_channels`. English lives on
 `public.contact_channel_translations`. The icon, the link and the position are shared. The

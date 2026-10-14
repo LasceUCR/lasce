@@ -21,6 +21,14 @@ export const CONTACT_CHANNEL_ICONS = [
 
 export type ContactChannelIcon = (typeof CONTACT_CHANNEL_ICONS)[number]
 
+/** Icons a new card may use. Location stays readable on cards saved earlier, but it is not offered. */
+export const ADDABLE_CONTACT_CHANNEL_ICONS = [
+  'phone',
+  'instagram',
+  'email',
+  'facebook',
+] as const satisfies readonly ContactChannelIcon[]
+
 /** Icons that may carry a clickable https link. The other icons do not. */
 export const SOCIAL_CHANNEL_ICONS = ['instagram', 'facebook'] as const
 
@@ -74,7 +82,7 @@ const hrefField = z
 
 export const contactChannelCreateSchema = z
   .strictObject({
-    icon: z.enum(CONTACT_CHANNEL_ICONS, { error: 'Elija un ícono.' }),
+    icon: z.enum(ADDABLE_CONTACT_CHANNEL_ICONS, { error: 'Elija un ícono.' }),
     href: hrefField,
     content: contactChannelContent.schema,
   })
