@@ -1,12 +1,11 @@
 'use client'
 
-import { useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField } from '@/app/components/public/FormField'
 import { useModalHeaderSlot } from '@/app/components/public/Modal'
-import { Notice } from '@/app/components/public/Notice'
 import { Select } from '@/app/components/public/Select'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
@@ -14,12 +13,19 @@ import { TranslationReview } from '@/app/components/public/cms/TranslationReview
 import type { Locale } from '@/app/lib/i18n/config'
 import {
   contentFieldLang,
+  contentPath,
   draftFromStored,
   emptyContentDraft,
+  hasContentChanges,
+  isConfirmed,
+  languageTabFlags,
   reviewsNeeded,
+  tabWithErrors,
   toContentInput,
+  validateContent,
   withConfirmation,
   type ContentDraft,
+  type FormErrors,
 } from '@/app/lib/i18n/content/form'
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
 import {
@@ -60,6 +66,7 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
   const t = useTranslations('contact.cards')
   const uiLocale = useLocale() as Locale
   const headerSlot = useModalHeaderSlot()
+  const formRef = useRef<HTMLDivElement>(null)
   const iconFieldId = useId()
   const initial = useRef({
     icon: (card?.icon ?? 'phone') as ContactChannelIcon,
@@ -73,15 +80,50 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
   const [selected, setSelected] = useState<Locale>(uiLocale)
   const [draft, setDraft] = useState<ContentDraft<ContactChannelField>>(initial.current.draft)
   const [confirmed, setConfirmed] = useState<ContactChannelReview[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [attempted, setAttempted] = useState(false)
+  const [focusRequest, setFocusRequest] = useState(0)
   const [discardOpen, setDiscardOpen] = useState(false)
 
   const stored = card?.editing?.content ?? null
   const pending = reviewsNeeded(contactChannelContent, stored, draft)
   const social = isSocialChannelIcon(icon)
+  const errors: FormErrors = attempted ? fieldErrors() : {}
+
+  useEffect(() => {
+    if (focusRequest === 0) return
+    const invalid = formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? []
+    Array.from(invalid)
+      .find((element) => !element.closest('[hidden]'))
+      ?.focus()
+  }, [focusRequest])
+
+  function linkError(): string | null {
+    if (!social) return null
+    const trimmed = href.trim()
+    if (trimmed === '') return null
+    if (trimmed.length > 500) return t('linkTooLong')
+    if (!/^https:\/\/\S+$/i.test(trimmed)) return t('linkHttps')
+    return null
+  }
+
+  function fieldErrors(): FormErrors {
+    const found = validateContent(contactChannelContent, stored, draft, confirmed, uiLocale)
+    const link = linkError()
+    if (link) found.href = link
+    return found
+  }
+
+  function isDirty() {
+    return (
+      icon !== initial.current.icon ||
+      href.trim() !== initial.current.href.trim() ||
+      hasContentChanges(contactChannelContent, stored, draft)
+    )
+  }
 
   function requestCancel() {
-    setDiscardOpen(true)
+    if (isDirty()) setDiscardOpen(true)
+    else onCancel()
   }
 
   useImperativeHandle(ref, () => ({ requestCancel }))
@@ -95,30 +137,23 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
   }
 
   function save() {
+    setAttempted(true)
+    const found = fieldErrors()
+
+    if (Object.keys(found).length > 0) {
+      const target = tabWithErrors(found, selected)
+      if (target) setSelected(target)
+      setFocusRequest((current) => current + 1)
+      return
+    }
+
     const parsed = contactChannelCreateSchema.safeParse({
       icon,
       href: social ? href : null,
       content: toContentInput(contactChannelContent, draft),
     })
+    if (!parsed.success) return
 
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? t('invalid'))
-      const locale = parsed.error.issues[0]?.path[1]
-      if (locale === 'es' || locale === 'en') setSelected(locale)
-      return
-    }
-
-    const stillPending = pending.filter(
-      (review) =>
-        !confirmed.some((item) => item.locale === review.locale && item.field === review.field),
-    )
-    if (stillPending[0]) {
-      setSelected(stillPending[0].locale)
-      setError(t('review'))
-      return
-    }
-
-    setError(null)
     onSave({
       icon: parsed.data.icon,
       href: parsed.data.href,
@@ -127,8 +162,24 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
     })
   }
 
+  function reviewControl(locale: Locale, field: ContactChannelField) {
+    const review = pending.find((each) => each.locale === locale && each.field === field)
+    if (!review) return null
+
+    return (
+      <TranslationReview
+        checked={isConfirmed(confirmed, review)}
+        label={confirmationLabel(contactChannelContent, review, uiLocale)}
+        message={reviewMessage(contactChannelContent, review, stored, draft, uiLocale)}
+        onChange={(checked) =>
+          setConfirmed((current) => withConfirmation(current, review, checked))
+        }
+      />
+    )
+  }
+
   return (
-    <div className="cms-form">
+    <div className="cms-form" ref={formRef}>
       <label className="cms-form-field" htmlFor={iconFieldId}>
         <span className="cms-form-field-label">{t('icon')}</span>
         <Select
@@ -146,6 +197,7 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
 
       <LanguageTabs
         copyLang={uiLocale}
+        flags={languageTabFlags(stored, errors, pending, confirmed, uiLocale)}
         label={t('language')}
         onSelect={setSelected}
         selected={selected}
@@ -154,28 +206,16 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
         {(locale) => (
           <>
             <FormField
+              error={errors[contentPath(locale, 'title')]}
               label={t('title')}
               lang={contentFieldLang(stored, locale)}
               onChange={(value) => setField(locale, 'title', value)}
               required
               value={draft[locale].title}
             />
-            {pending
-              .filter((review) => review.locale === locale && review.field === 'title')
-              .map((review) => (
-                <TranslationReview
-                  checked={confirmed.some(
-                    (item) => item.locale === review.locale && item.field === review.field,
-                  )}
-                  key={`${review.locale}-${review.field}`}
-                  label={confirmationLabel(contactChannelContent, review, uiLocale)}
-                  message={reviewMessage(contactChannelContent, review, stored, draft, uiLocale)}
-                  onChange={(checked) =>
-                    setConfirmed((current) => withConfirmation(current, review, checked))
-                  }
-                />
-              ))}
+            {reviewControl(locale, 'title')}
             <FormField
+              error={errors[contentPath(locale, 'description')]}
               label={t('description')}
               lang={contentFieldLang(stored, locale)}
               multiline
@@ -183,41 +223,20 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
               required
               value={draft[locale].description}
             />
-            {pending
-              .filter((review) => review.locale === locale && review.field === 'description')
-              .map((review) => (
-                <TranslationReview
-                  checked={confirmed.some(
-                    (item) => item.locale === review.locale && item.field === review.field,
-                  )}
-                  key={`${review.locale}-${review.field}`}
-                  label={confirmationLabel(contactChannelContent, review, uiLocale)}
-                  message={reviewMessage(contactChannelContent, review, stored, draft, uiLocale)}
-                  onChange={(checked) =>
-                    setConfirmed((current) => withConfirmation(current, review, checked))
-                  }
-                />
-              ))}
+            {reviewControl(locale, 'description')}
           </>
         )}
       </LanguageTabs>
 
       {social ? (
         <FormField
+          error={errors.href}
           label={t('link')}
           onChange={setHref}
           placeholder="https://"
           type="url"
           value={href}
         />
-      ) : null}
-
-      {error === t('review') ? (
-        <Notice role="alert" tone="warning">
-          {error}
-        </Notice>
-      ) : error ? (
-        <p role="alert">{error}</p>
       ) : null}
 
       <div className="cms-form-actions">

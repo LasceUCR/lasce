@@ -74,7 +74,38 @@ describe('ContactChannelForm', () => {
     expect(onCancel).toHaveBeenCalledOnce()
   })
 
-  test('asks before closing an existing card', async () => {
+  test('shows each empty field on its own and flags the other language', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(field('Título')).toBeInvalid()
+    expect(screen.getByText('El título en español es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('La descripción en español es obligatoria.')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^English · 2 por revisar$/ })).toBeInTheDocument()
+  })
+
+  test('shows an invalid link on the link field', async () => {
+    const user = userEvent.setup({ delay: null })
+    const onSave = vi.fn()
+    renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={onSave} />)
+
+    await chooseSymbol(user, 'Instagram')
+    await user.type(field('Título'), 'Instagram')
+    await user.type(field('Descripción'), '@lasce_ucr')
+    await user.click(screen.getByRole('tab', { name: /^English/ }))
+    await user.type(field('Título'), 'Instagram')
+    await user.type(field('Descripción'), '@lasce_ucr')
+    await user.type(field('Enlace'), 'instagram.com/lasce_ucr')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(field('Enlace')).toBeInvalid()
+    expect(screen.getByText('El enlace debe empezar por https://.')).toBeInTheDocument()
+  })
+
+  test('closes an unchanged card without asking', async () => {
     const user = userEvent.setup({ delay: null })
     const onCancel = vi.fn()
     const card: ContactCard = {
@@ -96,6 +127,11 @@ describe('ContactChannelForm', () => {
     renderWithIntl(<ContactChannelForm card={card} onCancel={onCancel} onSave={vi.fn()} />)
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(onCancel).toHaveBeenCalledOnce()
+
+    onCancel.mockClear()
+    await user.type(field('Título'), ' institucional')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(onCancel).not.toHaveBeenCalled()
     const dialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
@@ -104,15 +140,10 @@ describe('ContactChannelForm', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
-    expect(onCancel).not.toHaveBeenCalled()
-    expect(field('Título')).toHaveValue('Teléfono')
-
-    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
-    await user.click(screen.getByRole('button', { name: 'Descartar' }))
-    expect(onCancel).toHaveBeenCalledOnce()
+    expect(field('Título')).toHaveValue('Teléfono institucional')
   })
 
-  test('asks to confirm an unchanged translation in the same warning notice', async () => {
+  test('flags the other language until its unchanged text is confirmed', async () => {
     const user = userEvent.setup({ delay: null })
     const card: ContactCard = {
       id: 'instagram',
@@ -137,9 +168,16 @@ describe('ContactChannelForm', () => {
     await user.type(description, 'Nuevo texto')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    const notice = screen.getByRole('alert')
-    expect(notice).toHaveTextContent('Confirme el texto que no cambió en el otro idioma.')
+    expect(screen.getByRole('tab', { name: /^English · 1 por revisar$/ })).toBeInTheDocument()
+    const notice = screen.getByRole('note')
+    expect(notice).toHaveTextContent(
+      'Cambió la descripción en español. Actualice la descripción en inglés o confirme que sigue siendo correcta.',
+    )
     expect(notice).toHaveClass('ui-notice-warning')
+    expect(
+      screen.getByRole('switch', { name: 'La descripción en inglés sigue siendo correcta' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Actualice este campo o confirme que sigue siendo correcto.')).toBeInTheDocument()
   })
 
   test('asks from the add card before the modal closes', async () => {

@@ -64,9 +64,12 @@ migration seeds the two cards the page already showed: phone `2511-6566` and Ins
 
 The editor's own labels (the symbol names, the buttons, the toasts) follow the site language
 and live in `contact.cards`. A save reports "Canal de contacto agregado / actualizado /
-eliminado correctamente." Saving asks for no second confirmation. Deleting asks first, through
-`EditableWrapper`. Closing asks first, both when adding a card and when editing one, through
-`StandardConfirmDialog` with the warning severity, from Cancelar and from the modal's
+eliminado correctamente." A failure reports the server's reason, or "No se pudo guardar /
+eliminar el canal de contacto. Inténtelo de nuevo." Field problems appear on the field and on
+the language tab that holds them, the same way as the publication editor. Saving asks for no
+second confirmation. Deleting asks first, through `EditableWrapper`, and names the channel in
+the confirmation. Closing a new card, or an existing one with unsaved changes, asks first,
+through `StandardConfirmDialog` with the warning severity, from Cancelar and from the modal's
 close button and Escape
 (`ContactChannelForm` exposes `requestCancel`; `AddItemCard` takes `onRequestClose`). In a
 modal, the language tabs sit beside the title.

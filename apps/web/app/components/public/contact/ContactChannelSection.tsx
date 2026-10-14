@@ -164,8 +164,10 @@ export function ContactChannelSection({
             <EditableWrapper
               deleteCancelLabel={t('deleteCancel')}
               deleteConfirmLabel={t('deleteConfirm')}
-              deleteConfirmMessage={t('deleteMessage', { title: card.title })}
+              deleteConfirmMessage={t('deleteMessage')}
               deleteConfirmTitle={t('deleteTitle')}
+              deleteTargetEntity={card.title}
+              deleteTargetLabel={t('deleteTarget')}
               deleteLabel={t('delete', { title: card.title })}
               editLabel={t('edit', { title: card.title })}
               key={card.id}
