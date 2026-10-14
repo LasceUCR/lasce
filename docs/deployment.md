@@ -83,8 +83,9 @@ Two consequences worth knowing:
   is inlined by the Next compiler, and `app/lib/site.ts` feeds `NEXT_PUBLIC_APP_URL`
   into `metadataBase`, `robots.ts` and `sitemap.ts`, all evaluated during
   `next build`. The URL is baked into the image, so `cd.yml` builds the web image
-  per target with the right `--build-arg`. The worker image has no build-time
-  configuration and is environment-agnostic.
+  per target with the right `--build-arg`. The same goes for the storage host that
+  `next/image` is allowed to load from (see [Uploaded images](#uploaded-images)).
+  The worker image has no build-time configuration and is environment-agnostic.
 
 Authentication uses the workflow's own `GITHUB_TOKEN` with `packages: write`.
 No personal access token is stored in CI.
@@ -155,6 +156,7 @@ CI: it would grant write access to every project.
 | -------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
 | Variable | `APP_URL_STAGING`, `APP_URL_PRODUCTION`         | `cd.yml` (`context` job, which runs before the approval gate) and `cron-jobs.yml` |
 | Variable | `WEBDOTS_API_URL`                               | `cd.yml` (`images` job). Unset means the annotation widget is off everywhere.     |
+| Variable | `MINIO_ENDPOINT`, `MINIO_USE_SSL`               | `cd.yml` (`images` job). Build args that feed the `next/image` allowlist.         |
 | Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION` | `cron-jobs.yml`                                                                   |
 | Secret   | `WEBDOTS_API_KEY`                               | `cd.yml` (`images` job). Public in the client bundle once set.                    |
 
@@ -171,6 +173,37 @@ schemeless value up front so the failure is immediate and explicit.
 
 The `CRON_SECRET_*` values duplicate the `CRON_SECRET` set on each Railway web
 service. **Rotating one without the other yields silent 401s.**
+
+### Uploaded images
+
+Uploading an image and displaying it use two different configurations, which is why one can
+work while the other fails:
+
+- **Upload** is a Server Action calling the storage service. It reads `MINIO_ENDPOINT`,
+  `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` and the bucket names from the **runtime**
+  environment, so the variables set on the web service are enough.
+- **Display** goes through `next/image`, which only fetches hosts listed in
+  `images.remotePatterns`. `next.config.ts` builds that list from `MINIO_ENDPOINT` and
+  `MINIO_USE_SSL` while `next build` runs, and the result is baked into the image. Setting
+  them on the running service does nothing.
+
+The CI build has no `.env` (it is gitignored and in `.dockerignore`), so unless the values
+arrive as build args the allowlist is empty and every uploaded photo fails with
+`url parameter is not allowed` (`/_next/image` answers 400) even though the upload
+succeeded. `cd.yml` passes both from repository variables, and `web.Dockerfile` exposes them
+as `ARG`/`ENV` in the builder stage.
+
+Set the repository variables `MINIO_ENDPOINT` and `MINIO_USE_SSL` to **the same values the web
+service has**, then redeploy so a new image is built. They hold only the host and
+a flag, never credentials: do not pass `MINIO_ACCESS_KEY` or `MINIO_SECRET_KEY` as build args,
+because build args can be read from the image metadata and build logs.
+
+The variables are repository-level, so staging and production share one storage host. If they
+ever use different hosts, move them to GitHub Environments.
+
+If images still fail after the rebuild, open the raw image URL. A `403` means the bucket does
+not allow anonymous reads; the upload path sets a public-read policy on every upload, but a
+hosted bucket may refuse it.
 
 ### The annotation widget
 

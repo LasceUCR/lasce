@@ -1,10 +1,10 @@
 """Renders a decoded SUVI matrix as a WebP image and stores it — the illustration is the product.
 
 Stakeholders confirmed these images are purely illustrative, so this is deliberately the simplest
-possible rendering: `log1p` stretch normalised to the frame's own maximum, 8-bit grayscale, no
-colormap, no resizing, no scientific-precision storage behind it. WebP (lossy, ``WEBP_QUALITY``)
-is chosen over PNG purely for size — a lossless format buys nothing here since the source is
-already an illustration, not the archived signal.
+possible rendering: `log1p` stretch normalised to the frame's own maximum, mapped through the
+channel's SunPy SUVI colormap to an 8-bit RGB image, no resizing, no scientific-precision storage
+behind it. WebP (lossy, ``WEBP_QUALITY``) is chosen over PNG purely for size — a lossless format
+buys nothing here since the source is already an illustration, not the archived signal.
 
 Each frame gets two copies of the same WebP image in MinIO:
 
@@ -39,6 +39,54 @@ _SLUG_PATTERN = re.compile(r"[^a-z0-9-]")
 WEBP_QUALITY = 80
 
 
+def _ramp(start: int, end: int) -> np.ndarray:
+    """A 256-entry ramp from 0 at ``start`` to 255 at ``end``, floored to integers.
+
+    Reproduces the channels of IDL colour table 3 (Red Temperature), which SunPy ships as a CSV;
+    this closed form matches that file exactly for all 256 entries of each channel.
+    """
+    steps = np.clip((np.arange(256) - start) / (end - start), 0, 1)
+    return np.floor(steps * 255).astype(np.float32)
+
+
+# Ported from SunPy's `sunpy.visualization.colormaps.color_tables` (`create_aia_wave_dict`), which
+# in turn follows aia_lct.pro by Karel Schrijver. Ported rather than imported: SunPy and matplotlib
+# are heavy and this worker only needs six 256x3 tables.
+_R0 = _ramp(0, 176)
+_G0 = _ramp(120, 255)
+_B0 = _ramp(190, 255)
+_C0 = np.arange(256, dtype=np.float32)
+_C1 = (np.sqrt(_C0) * np.sqrt(255.0)).astype(np.float32)
+_C2 = (np.arange(256) ** 2 / 255.0).astype(np.float32)
+_C3 = ((_C1 + _C2 / 2.0) * 255.0 / (_C1.max() + _C2.max() / 2.0)).astype(np.float32)
+
+
+def _table(red: np.ndarray, green: np.ndarray, blue: np.ndarray) -> np.ndarray:
+    return np.rint(np.stack([red, green, blue], axis=1)).clip(0, 255).astype(np.uint8)
+
+
+# Keyed by `SuviChannel`. SunPy's `suvi_color_table` reuses the AIA tables, mapping SUVI 195 A to
+# AIA 193 A and SUVI 284 A to AIA 335 A; the other four channels share their AIA wavelength.
+_COLOR_TABLES: dict[str, np.ndarray] = {
+    "Fe093": _table(_C2, _C3, _C0),  # AIA 94
+    "Fe131": _table(_G0, _R0, _R0),  # AIA 131
+    "Fe171": _table(_R0, _C0, _B0),  # AIA 171
+    "Fe195": _table(_C1, _C0, _C2),  # AIA 193
+    "Fe284": _table(_C2, _C0, _C1),  # AIA 335
+    "He303": _table(_R0, _G0, _B0),  # AIA 304
+}
+
+_GRAYSCALE_TABLE = np.repeat(np.arange(256, dtype=np.uint8)[:, None], 3, axis=1)
+
+
+def color_table(channel: str) -> np.ndarray:
+    """The ``(256, 3)`` uint8 RGB lookup table for ``channel``.
+
+    An unknown channel gets a grayscale ramp, so a new passband renders instead of failing.
+    """
+    return _COLOR_TABLES.get(channel, _GRAYSCALE_TABLE)
+
+
 def slug(value: str) -> str:
     """Lowercase ``value`` and replace anything outside ``[a-z0-9-]`` with ``-``."""
     return _SLUG_PATTERN.sub("-", value.lower())
@@ -55,8 +103,9 @@ def frame_key(satellite: str, channel: str, observed_at: datetime) -> str:
     return f"suvi/{slug(satellite)}/{slug(channel)}/{stamp}.webp"
 
 
-def render_webp(matrix: np.ndarray) -> bytes:
-    """A pixel matrix -> an 8-bit grayscale WebP, log-stretched to its own maximum.
+def render_webp(matrix: np.ndarray, channel: str) -> bytes:
+    """A pixel matrix -> an 8-bit RGB WebP, log-stretched to its own maximum and coloured with
+    the SunPy SUVI colormap of ``channel`` (grayscale for an unknown channel).
 
     Pure and CPU-bound (no I/O); the caller runs it in a worker thread. Negative pixels (raw FITS
     radiance carries background noise below zero) are clipped to zero first — `log1p` of anything
@@ -72,7 +121,8 @@ def render_webp(matrix: np.ndarray) -> bytes:
         pixels = (values / peak * 255).astype(np.uint8)
 
     buffer = io.BytesIO()
-    Image.fromarray(pixels, mode="L").save(buffer, format="WEBP", quality=WEBP_QUALITY)
+    rgb = color_table(channel)[pixels]
+    Image.fromarray(rgb, mode="RGB").save(buffer, format="WEBP", quality=WEBP_QUALITY)
     return buffer.getvalue()
 
 
@@ -92,7 +142,7 @@ async def publish_preview(
 
     Returns the archival frame key, which is also written back onto the frame's row.
     """
-    image = await asyncio.to_thread(render_webp, matrix)
+    image = await asyncio.to_thread(render_webp, matrix, fields.channel)
     archival_key = frame_key(fields.satellite, fields.channel, fields.observed_at)
     latest_key = preview_key(fields.satellite, fields.channel)
     await storage.put_object(archival_key, image, content_type="image/webp")

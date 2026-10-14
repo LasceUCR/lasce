@@ -56,6 +56,14 @@ ENV NEXT_PUBLIC_WEBDOTS_API_KEY=$NEXT_PUBLIC_WEBDOTS_API_KEY
 ARG NEXT_PUBLIC_WEBDOTS_DISABLED=
 ENV NEXT_PUBLIC_WEBDOTS_DISABLED=$NEXT_PUBLIC_WEBDOTS_DISABLED
 
+# `next.config.ts` turns these into `images.remotePatterns`, which `next build` bakes into
+# the server: without them `next/image` answers "url parameter is not allowed" for every
+# uploaded photo, whatever the runtime environment says. Hosts only, no credentials.
+ARG MINIO_ENDPOINT=
+ENV MINIO_ENDPOINT=$MINIO_ENDPOINT
+ARG MINIO_USE_SSL=
+ENV MINIO_USE_SSL=$MINIO_USE_SSL
+
 # packages/db constructs its PrismaClient at module scope, and `next build`
 # imports every route module to read its segment config, so these have to be
 # present and parseable. Nothing ever connects to them.
