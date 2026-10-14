@@ -466,15 +466,15 @@ in a language other than Spanish, one row per card and locale. The Prisma model 
 renders, in its base text. `icon` is shared and stays on the base row. The base row's
 `modified_at` is the version an editor saves against.
 
-| Column        | Prisma type | Postgres type    | Constraints                                                      |
-| ------------- | ----------- | ---------------- | ---------------------------------------------------------------- |
-| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                          |
-| `activity_id` | `String`    | `uuid`           | FK → `nosotros_activities.id`, `ON DELETE CASCADE`, not null     |
-| `locale`      | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es`        |
-| `title`       | `String`    | `text`           | not null                                                         |
-| `paragraph`   | `String`    | `text`           | not null                                                         |
-| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                        |
-| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                           |
+| Column        | Prisma type | Postgres type    | Constraints                                                  |
+| ------------- | ----------- | ---------------- | ------------------------------------------------------------ |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                      |
+| `activity_id` | `String`    | `uuid`           | FK → `nosotros_activities.id`, `ON DELETE CASCADE`, not null |
+| `locale`      | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es`    |
+| `title`       | `String`    | `text`           | not null                                                     |
+| `paragraph`   | `String`    | `text`           | not null                                                     |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                    |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                       |
 
 Constraints: `UNIQUE (activity_id, locale)`. Cards created before this table existed have no row
 and are shown as they are, with an unknown content language. See

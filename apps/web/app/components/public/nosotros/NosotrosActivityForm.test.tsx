@@ -36,9 +36,7 @@ describe('NosotrosActivityForm: tabs and pre-filled values', () => {
     expect(tab(/^Español/)).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('combobox', { name: 'Ícono' })).toHaveValue('sun')
     expect(field('Título (Español)')).toHaveValue('Fenómenos solares eruptivos')
-    expect(field('Descripción (Español)')).toHaveValue(
-      defaultArgs.editing?.content.es.description,
-    )
+    expect(field('Descripción (Español)')).toHaveValue(defaultArgs.editing?.content.es.description)
     expect(screen.queryByRole('textbox', { name: /^Título \(English\)/ })).not.toBeInTheDocument()
   })
 
