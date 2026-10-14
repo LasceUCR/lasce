@@ -2,14 +2,14 @@
 
 A practical guide to managing editable Spanish/English content in PostgreSQL through LASCE's existing CMS, and to implementing the same pattern in another entity **without copying the Publications implementation**.
 
-- **Status.** The shared infrastructure is in place and **publications** (`/publicaciones`) are the only entity currently integrated with it. News, research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
+- **Status.** The shared infrastructure is in place and **publications** (`/publicaciones`) and the **Nosotros activity cards** ("¿Qué hacemos?" on `/nosotros`) are the entities currently integrated with it. News, research areas, academic activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
 
   is a different problem, handled by the message catalogues in [`internationalization.md`](internationalization.md).
 
 - **Who this is for.** A developer adding bilingual editing to an entity they own. You should not need to read the publications code to follow it; it is listed in [section 5](#5-reference-implementation-publications) as a working example.
 
 - **Examples.** **Real API** means the named import/function exists in the shared implementation. **Illustrative** means an incomplete or entity-specific example that must be adapted and connected before it can run. The fictitious `Event` entity (`name`, optional `summary`, shared `startsAt`) has **no Prisma model, route or page** in LASCE. Do not paste the snippets as one ready-made feature.
-- **Scope.** Only `/publicaciones` has been integrated with the shared infrastructure. The remaining managed sections belong to their respective owners. This guide documents **how** to extend the pattern; it does not implement those features.
+- **Scope.** Only `/publicaciones` and the "¿Qué hacemos?" cards of `/nosotros` (`NosotrosActivity`, whose `description` is stored in the `paragraph` column; see `app/lib/nosotros-activity-schema.ts`) have been integrated with the shared infrastructure. The remaining managed sections belong to their respective owners. This guide documents **how** to extend the pattern; it does not implement those features.
 - **Release status.** Documentation of a completed local implementation does not imply that this branch has been merged into `development` or deployed to production.
 - **Source of truth.** If this guide and the code disagree, verify the actual exported signatures and existing tests, then fix the guide in the same PR. The snippets below were derived from the supplied implementation guide, not recompiled against the user's current working tree as part of this document edit.
 
@@ -886,6 +886,13 @@ For a new bilingual entity `X`:
 ## 5. Reference implementation: publications
 
 Publications are the working example of every step above.
+
+A smaller second example is the "¿Qué hacemos?" cards of `/nosotros` (`NosotrosActivity`): a
+shared `icon`, a translatable `title` and `description` (the `paragraph` column, mapped in
+`app/lib/nosotros.ts`), no external relations and no unique columns. Its pieces are
+`app/lib/nosotros-activity-schema.ts`, `app/lib/nosotros.ts`, `app/api/nosotros/activities/**`,
+`NosotrosActivityForm.tsx` and the `nosotros_activity_translations` table. Its version token is
+the base row's `modified_at`.
 
 ### Where the code lives
 
