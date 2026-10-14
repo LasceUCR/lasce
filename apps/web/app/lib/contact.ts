@@ -1,18 +1,31 @@
 import es from '@/messages/es.json' with { type: 'json' }
 
 import { INSTAGRAM_URL } from './footer'
+import { locationMapProvider, type LocationMapLabels } from './location-map'
 
 /**
  * Official contact channels for `/contacto`.
  *
- * The phone number and the Rodrigo Facio address were provided by LASCE.
- * Instagram reuses the profile already approved for the public footer.
+ * The phone number was provided by LASCE. Instagram reuses the profile already approved for
+ * the public footer. The laboratory is on the south side of the Planetario de la Universidad
+ * de Costa Rica. The pin is the marked point on that building's roof (9.936990, -84.045073),
+ * not a surveyed GPS reading.
  * A channel with an empty or placeholder value is dropped by
  * `availableContactChannels` and never rendered.
  *
- * The translatable text is in the `contact` namespace of `apps/web/messages/`. The phone number,
- * the address and the Instagram handle are the same in every language and stay here.
+ * The translatable text is in the `contact` namespace of `apps/web/messages/`. The phone
+ * number, the place name and the Instagram handle are the same in every language and stay here.
  */
+
+/**
+ * Place name folded into the location intro, so the sentence stays readable when the map
+ * fails. Each catalogue supplies the words around it ("al costado sur del" / "on the south
+ * side of the").
+ */
+const planetariumAddress =
+  'Planetario de la Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica'
+
+const locationMarker = 'LASCE'
 
 // Matched against channel values, which are not translated, so Spanish words are enough.
 
@@ -32,11 +45,31 @@ export interface ContactChannel {
   external?: boolean
 }
 
+export interface ContactLocation {
+  title: string
+  intro: string
+  /** The address on its own, the same string the intro already contains. */
+  address: string
+  coordinates: { latitude: number; longitude: number }
+  zoom: number
+  tileUrl: string
+  attribution: string
+  loadTimeoutMs: number
+  markerLabel: string
+  unavailableMessage: string
+  labels: LocationMapLabels
+}
+
 export interface ContactContent {
   hero: { kicker: string; title: string; lead: string }
   channelsTitle: string
   channels: readonly ContactChannel[]
+  location: ContactLocation
   backLink: { href: string; label: string }
+}
+
+function fill(template: string, values: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (match, key: string) => values[key] ?? match)
 }
 
 /** The parts of a message catalogue the contact page reads. */
@@ -55,14 +88,6 @@ export function getContactContent({ contact, common }: ContactMessages): Contact
         href: 'tel:+50625116566',
       },
       {
-        id: 'location',
-        label: contact.channels.location,
-        lines: [
-          'Universidad de Costa Rica, Sede Rodrigo Facio Brenes',
-          'Montes de Oca, San José, Costa Rica',
-        ],
-      },
-      {
         id: 'instagram',
         label: 'Instagram',
         value: '@lasce_ucr',
@@ -70,6 +95,25 @@ export function getContactContent({ contact, common }: ContactMessages): Contact
         external: true,
       },
     ],
+    location: {
+      title: contact.location.title,
+      intro: fill(contact.location.intro, { address: planetariumAddress }),
+      address: planetariumAddress,
+      coordinates: { latitude: 9.93699, longitude: -84.045073 },
+      zoom: 17,
+      tileUrl: locationMapProvider.tileUrl,
+      attribution: locationMapProvider.attribution,
+      loadTimeoutMs: locationMapProvider.loadTimeoutMs,
+      markerLabel: locationMarker,
+      unavailableMessage: contact.location.unavailable,
+      labels: {
+        regionName: fill(contact.location.mapRegion, { label: locationMarker }),
+        interactiveName: fill(contact.location.mapInteractive, { label: locationMarker }),
+        instructions: contact.location.mapInstructions,
+        zoomInTitle: contact.location.zoomIn,
+        zoomOutTitle: contact.location.zoomOut,
+      },
+    },
     backLink: { href: '/', label: common.backToHome },
   }
 }

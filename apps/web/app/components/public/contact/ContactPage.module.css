@@ -1,0 +1,9 @@
+/* The shared topic hero and the first section each keep their own padding, which stacks
+   into a large gap under a hero that is only a title and one line. Pull them together. */
+.page :global(.topic-hero) {
+  padding-bottom: 4px;
+}
+
+.page :global(.topic-section).location {
+  padding-top: 8px;
+}

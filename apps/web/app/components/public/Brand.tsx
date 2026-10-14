@@ -48,10 +48,10 @@ export function Brand({ light = false }: BrandProps) {
       <span className="brand-divider" aria-hidden="true" />
       <Image
         className="lasce-logo"
-        src="/brand/Logo_Lasce.jpg"
+        src="/brand/lasce_original.png"
         alt="Laboratorio de Ciencias Espaciales"
-        width={188}
-        height={52}
+        width={1672}
+        height={480}
         priority
       />
     </div>

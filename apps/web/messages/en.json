@@ -127,8 +127,17 @@
     },
     "channelsTitle": "Contact information",
     "channels": {
-      "phone": "Phone",
-      "location": "Location"
+      "phone": "Phone"
+    },
+    "location": {
+      "title": "Location",
+      "intro": "The Solar Astrophysics and Space Weather Laboratory is on the south side of the {address}.",
+      "unavailable": "The map could not be loaded. The address above is still available.",
+      "mapRegion": "Location map of {label}",
+      "mapInteractive": "Interactive map of {label}",
+      "mapInstructions": "Use the arrow keys to move the map and the plus and minus keys to change the zoom. Press Tab to leave the map.",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
     }
   },
   "solarPhysics": {
