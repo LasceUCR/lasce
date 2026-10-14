@@ -26,9 +26,8 @@ vi.mock('@lasce/db', () => ({
   Prisma: { PrismaClientKnownRequestError: mocks.PrismaClientKnownRequestError },
 }))
 
-const { getSolarPhysicsSection, updateSolarPhysicsSection } = await import(
-  './solar-physics-section'
-)
+const { getSolarPhysicsSection, updateSolarPhysicsSection } =
+  await import('./solar-physics-section')
 
 const { tx, prisma } = mocks
 

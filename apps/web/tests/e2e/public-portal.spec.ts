@@ -208,9 +208,7 @@ test('displays solar astrophysics information without authentication', async ({ 
   expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Física Solar' })).toBeVisible()
-  await expect(
-    page.getByRole('heading', { name: /Qué estudia la Física Solar/ }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Qué estudia la Física Solar/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Relación Sol-Tierra' })).toBeVisible()
   await expect(

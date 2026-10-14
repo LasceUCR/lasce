@@ -14,9 +14,7 @@ describe('SolarAstrophysicsPage', () => {
     render(<SolarAstrophysicsPage {...defaultArgs} />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Física Solar' })).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: /Qué estudia la Física Solar/ }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Qué estudia la Física Solar/ })).toBeInTheDocument()
     for (const title of [
       'Actividad solar',
       'Campo magnético',
