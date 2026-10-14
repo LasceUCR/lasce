@@ -546,3 +546,92 @@ model ResearchArea {
   @@map("research_areas")
   @@schema("areas")
 }
+
+/// The hero banner of the public home page (LASCE-CON-012-150): its title and
+/// subtitle (`lead`), editable in "Modo edición". A single row, seeded by its
+/// migration. The base row holds the Spanish text; every other language lives in
+/// `HomeHeroTranslation` (docs/translate-database-content.md).
+model HomeHero {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  lead      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations HomeHeroTranslation[]
+
+  @@map("home_hero")
+  @@schema("public")
+}
+
+/// The `title` and `lead` of the `HomeHero` in a language other than Spanish.
+/// `locale` is a plain string validated against `locales` in apps/web.
+model HomeHeroTranslation {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  homeHeroId String   @map("home_hero_id") @db.Uuid
+  locale     String   @db.VarChar(5)
+  title      String
+  lead       String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  homeHero HomeHero @relation(fields: [homeHeroId], references: [id], onDelete: Cascade)
+
+  @@unique([homeHeroId, locale])
+  @@map("home_hero_translations")
+  @@schema("public")
+}
+
+/// Who wrote a geomagnetic index's current value: an editor in "Modo edición"
+/// or, once it exists, a worker job that loads it from a real source.
+enum GeomagneticIndexSource {
+  MANUAL    @map("manual")
+  AUTOMATIC @map("automatic")
+
+  @@map("geomagnetic_index_source")
+  @@schema("public")
+}
+
+/// One geomagnetic index card on the home page (Kp, Dst, AE, Ap). Indices are
+/// fixed: they are edited and reordered, never created or deleted from the CMS.
+///
+/// `code` is the stable key: apps/web reads the card's label and tone from it
+/// (`home.indicators.<code>`), and a future loading job upserts by it. `value`
+/// is shared by every language ("-12 nT"); `description` is the Spanish text,
+/// with the other languages in `GeomagneticIndexTranslation`. `position` is the
+/// editorial display order: unique, written only by the reorder, and given the
+/// next number of its sequence when a row is inserted without one, so a new
+/// index lands last.
+model GeomagneticIndex {
+  id          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String                 @unique @db.VarChar(8)
+  value       String                 @db.VarChar(15)
+  description String                 @db.VarChar(15)
+  position    Int                    @unique @default(autoincrement())
+  source      GeomagneticIndexSource @default(MANUAL)
+  /// When the value was observed. Null while values are entered by hand.
+  observedAt  DateTime?              @map("observed_at") @db.Timestamptz(3)
+  createdAt   DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations GeomagneticIndexTranslation[]
+
+  @@map("geomagnetic_indices")
+  @@schema("public")
+}
+
+/// The `description` of a `GeomagneticIndex` in a language other than Spanish.
+model GeomagneticIndexTranslation {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  geomagneticIndexId String   @map("geomagnetic_index_id") @db.Uuid
+  locale             String   @db.VarChar(5)
+  description        String   @db.VarChar(15)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  geomagneticIndex GeomagneticIndex @relation(fields: [geomagneticIndexId], references: [id], onDelete: Cascade)
+
+  @@unique([geomagneticIndexId, locale])
+  @@map("geomagnetic_index_translations")
+  @@schema("public")
+}
