@@ -90,6 +90,25 @@ for (const { path, heading, title } of translatedPages) {
   })
 }
 
+test('keeps the official name of LASCE in Spanish on the English home page', async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
+
+  await page.goto('/')
+
+  const hero = page.locator('.hero-content')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(
+    hero.getByRole('heading', { level: 1, name: 'We explore the Sun to understand space weather' }),
+  ).toBeVisible()
+  const name = hero.getByText('Laboratorio de Astrofísica Solar y Clima Espacial', { exact: true })
+  await expect(name).toBeVisible()
+  // Marked as Spanish so a screen reader pronounces it correctly inside the English page.
+  await expect(name).toHaveAttribute('lang', 'es')
+})
+
 test('shows an academic activity in English and keeps the official event title', async ({
   context,
   page,

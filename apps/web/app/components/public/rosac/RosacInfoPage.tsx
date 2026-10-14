@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  ChartNoAxesCombined,
   Crosshair,
   GraduationCap,
   Mail,
@@ -590,28 +589,6 @@ export function RosacInfoPage({
           label={content.acknowledgments.title}
         />
       </TopicSection>
-
-      <TopicSection
-        index="10"
-        title={content.scientificConsultation.title}
-        titleId="rosac-science-title"
-        wide
-      >
-        <div className={`topic-highlight ${styles.ctaBox}`}>
-          <div className={styles.ctaText}>
-            <p>{content.scientificConsultation.description}</p>
-          </div>
-          <Button
-            href={content.scientificConsultation.href}
-            fullPageLoad
-            variant="primary"
-            icon={<ChartNoAxesCombined aria-hidden="true" size={20} strokeWidth={1.8} />}
-          >
-            {content.scientificConsultation.buttonLabel}
-          </Button>
-        </div>
-      </TopicSection>
-
       <div className={`topic-page-footer page-width ${styles.pageFooter}`}>
         <TopicBackLink {...content.backLink} />
       </div>

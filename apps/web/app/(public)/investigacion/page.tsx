@@ -38,8 +38,7 @@ export default async function InvestigacionPage() {
         canEdit={canEdit}
         areas={areas}
         id="research-areas"
-        subtitle="Principales temas de investigación desarrollados por el LASCE."
-        title="Áreas de investigación"
+        label={investigacionHero.title}
       />
 
       <div className="topic-page-footer page-width">

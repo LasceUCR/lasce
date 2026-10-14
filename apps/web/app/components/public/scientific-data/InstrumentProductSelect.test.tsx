@@ -6,7 +6,7 @@ import {
   InstrumentProductSelect,
   type InstrumentProductSelectProps,
 } from './InstrumentProductSelect'
-import { Default } from './InstrumentProductSelect.stories'
+import { Default, LargeGroups } from './InstrumentProductSelect.stories'
 
 const groupedArgs = Default.args as InstrumentProductSelectProps
 
@@ -72,5 +72,54 @@ describe('InstrumentProductSelect', () => {
     expect(screen.queryByRole('tree')).not.toBeInTheDocument()
     await user.click(trigger)
     expect(screen.queryByRole('tree')).not.toBeInTheDocument()
+  })
+
+  test('scrolls the menu along with a long group while it expands', async () => {
+    const frames = new Map<number, FrameRequestCallback>()
+    let nextFrame = 0
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      frames.set(++nextFrame, callback)
+      return nextFrame
+    })
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((frame) => frames.delete(frame))
+    const runFrames = () => {
+      const pending = [...frames]
+      frames.clear()
+      pending.forEach(([, callback]) => callback(0))
+    }
+    const user = userEvent.setup()
+    render(<InstrumentProductSelect {...(LargeGroups.args as InstrumentProductSelectProps)} />)
+    await user.click(screen.getByRole('combobox'))
+
+    // jsdom has no layout: place SEISS below the fold and let its height grow by hand.
+    const menu = screen.getByRole('tree')
+    const seiss = screen.getByRole('treeitem', { name: /^SEISS/ })
+    let scrollTop = 0
+    let height = 44
+    Object.defineProperties(menu, {
+      clientHeight: { value: 320 },
+      scrollTop: { get: () => scrollTop, set: (value: number) => (scrollTop = value) },
+    })
+    Object.defineProperties(seiss, {
+      offsetTop: { value: 100 },
+      offsetHeight: { get: () => height },
+    })
+    Object.defineProperties(seiss.firstElementChild!, {
+      offsetTop: { value: 100 },
+      offsetHeight: { value: 44 },
+    })
+
+    await user.click(seiss)
+    expect(scrollTop).toBe(0)
+    height = 300
+    runFrames()
+    expect(scrollTop).toBe(80)
+    height = 500
+    runFrames()
+    expect(scrollTop).toBe(100)
+
+    fireEvent.transitionEnd(seiss.lastElementChild!, { propertyName: 'grid-template-rows' })
+    expect(frames.size).toBe(0)
+    vi.restoreAllMocks()
   })
 })

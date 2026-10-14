@@ -331,8 +331,7 @@ describe('rosac content', () => {
     expect(rosacInfoContent.acknowledgments.title).toBe('Agradecimientos ROSAC')
     expect(rosacInfoContent.acknowledgments.institutions.length).toBeGreaterThan(0)
     expect(rosacInfoContent.donations.title).toBe('Donaciones ROSAC')
-    expect(rosacInfoContent.donations.items).toHaveLength(1)
-    expect(rosacInfoContent.scientificConsultation.title).toBe('Consulta científica')
+    expect(rosacInfoContent.donations.items).toHaveLength(2)
     expect(rosacInfoContent.backLink.href).toBe('/#areas-de-trabajo')
     expect(rosacInfoContent.backLink.label).toBe('Volver a las áreas')
   })
@@ -357,8 +356,6 @@ describe('rosac content', () => {
     expect(english.acknowledgments.title).toBe('ROSAC acknowledgments')
     expect(english.donations.title).toBe('ROSAC donations')
     expect(english.donations.cta.buttonLabel).toBe('Contact us')
-    expect(english.scientificConsultation.title).toBe('Scientific query')
-    expect(english.scientificConsultation.buttonLabel).toBe('Explore data')
     expect(english.backLink.label).toBe('Back to work areas')
   })
 

@@ -727,6 +727,15 @@ a {
   justify-content: center;
 }
 
+.hero .hero-institution {
+  max-width: 610px;
+  margin: 0 0 14px;
+  color: var(--white);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .hero h1 {
   max-width: 610px;
   margin: 0;
@@ -3208,6 +3217,12 @@ a {
     justify-content: flex-start;
   }
 
+  .hero .hero-institution {
+    max-width: 520px;
+    margin-bottom: 12px;
+    font-size: 16px;
+  }
+
   .hero h1 {
     max-width: 520px;
     font-size: 38px;
@@ -3881,6 +3896,11 @@ a {
   padding: 8px 0 48px;
 }
 
+.space-weather-footer {
+  padding-top: 52px;
+  padding-bottom: 48px;
+}
+
 .info-card-content a {
   color: var(--blue-accent-text);
   text-decoration: underline;
@@ -4125,6 +4145,10 @@ a {
 
   .brand-divider {
     height: 24px;
+  }
+
+  .hero .hero-institution {
+    font-size: 15px;
   }
 
   .hero h1 {
@@ -5033,36 +5057,19 @@ a.gallery-tile:focus-visible {
   }
 }
 
-.acknowledgments-gallery {
-  margin-top: 20px;
-}
-
-.acknowledgments-track {
+.acknowledgments-grid {
   display: flex;
-  align-items: stretch;
-  justify-content: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
-  margin: 0;
-  padding: 4px 4px 12px;
-  overflow-x: auto;
-  overflow-anchor: none;
+  margin: 32px 0 0;
+  padding: 0;
   list-style: none;
-  scroll-snap-type: x mandatory;
-  scroll-padding-left: 4px;
 }
 
-.acknowledgments-track:focus-visible {
-  outline: 3px solid var(--action);
-  outline-offset: 2px;
-}
-
-.acknowledgments-slide {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 200px;
-  width: 200px;
-  scroll-snap-align: start;
+.acknowledgments-tile {
+  flex: 1 1 160px;
+  max-width: 200px;
 }
 
 .acknowledgments-slide > * {
@@ -5099,15 +5106,32 @@ a.gallery-tile:focus-visible {
 
 .acknowledgments-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 14px;
-  height: 100%;
+  justify-content: center;
+  width: 100%;
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--white);
-  text-align: center;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+a.acknowledgments-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(21, 52, 76, 0.08);
+  border-color: var(--action);
+}
+
+a.acknowledgments-card:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
+.acknowledgments-card-static {
+  opacity: 0.85;
 }
 
 .acknowledgments-logo {
@@ -5121,24 +5145,7 @@ a.gallery-tile:focus-visible {
   object-position: center;
 }
 
-/* `.public-shell-content p` justifies every paragraph on the public site;
-   this name is short and center-aligned by design, so it needs the extra
-   specificity to win over that rule rather than inherit justify. */
-.acknowledgments-card .acknowledgments-name {
-  margin: 0;
-  color: var(--blue-dark);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.4;
-  text-align: center;
-}
-
 @media (max-width: 760px) {
-  .acknowledgments-slide {
-    flex: 0 0 42vw;
-    width: 42vw;
-  }
-
   .acknowledgments-logo {
     width: 100px;
     height: 100px;
