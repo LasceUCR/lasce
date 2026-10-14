@@ -53,8 +53,10 @@ title, description. A card whose title or description is blank or a placeholder 
 The icon is chosen first, then the title, then the description, in both languages, using
 `LanguageTabs` and `TranslationReview`. The choices are phone, Instagram, location, email and
 Facebook. Instagram and Facebook may also store an `https` link; the description then opens that
-link in a new tab. A phone description made of digits becomes `tel:+506` plus those digits. An
-email description that contains `@` becomes `mailto:`. Location has no link. Changing the icon
+link in a new tab. A phone card stores one number, the same in both languages: eight local
+digits, or those digits with the 506 country code. That number becomes `tel:+506` plus the
+local digits. An email description that contains `@` becomes `mailto:`. Location has no link.
+Changing the icon
 away from Instagram or Facebook clears a stored link.
 
 Spanish title and description live on `public.contact_channels`. English lives on

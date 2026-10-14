@@ -32,6 +32,7 @@ import {
   CONTACT_CHANNEL_ICONS,
   contactChannelContent,
   contactChannelCreateSchema,
+  isSinglePhoneNumber,
   isSocialChannelIcon,
   type ContactCard,
   type ContactChannelContentInput,
@@ -106,8 +107,26 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
     return null
   }
 
+  function withSharedPhone(current: ContentDraft<ContactChannelField>) {
+    if (icon !== 'phone') return current
+    const number = current.es.description
+    return {
+      ...current,
+      es: { ...current.es, description: number },
+      en: { ...current.en, description: number },
+    }
+  }
+
   function fieldErrors(): FormErrors {
-    const found = validateContent(contactChannelContent, stored, draft, confirmed, uiLocale)
+    const content = withSharedPhone(draft)
+    const found = validateContent(contactChannelContent, stored, content, confirmed, uiLocale)
+    if (icon === 'phone') {
+      delete found[contentPath('es', 'description')]
+      delete found[contentPath('en', 'description')]
+      const number = content.es.description.trim()
+      if (number === '') found.phone = t('phoneRequired')
+      else if (!isSinglePhoneNumber(number)) found.phone = t('phoneSingle')
+    }
     const link = linkError()
     if (link) found.href = link
     return found
@@ -136,6 +155,14 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
     setConfirmed((current) => current.filter((review) => review.field !== field))
   }
 
+  function setPhone(value: string) {
+    setDraft((current) => ({
+      es: { ...current.es, description: value },
+      en: { ...current.en, description: value },
+    }))
+    setConfirmed((current) => current.filter((review) => review.field !== 'description'))
+  }
+
   function save() {
     setAttempted(true)
     const found = fieldErrors()
@@ -150,7 +177,7 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
     const parsed = contactChannelCreateSchema.safeParse({
       icon,
       href: social ? href : null,
-      content: toContentInput(contactChannelContent, draft),
+      content: toContentInput(contactChannelContent, withSharedPhone(draft)),
     })
     if (!parsed.success) return
 
@@ -214,19 +241,35 @@ export function ContactChannelForm({ card, onSave, onCancel, ref }: ContactChann
               value={draft[locale].title}
             />
             {reviewControl(locale, 'title')}
-            <FormField
-              error={errors[contentPath(locale, 'description')]}
-              label={t('description')}
-              lang={contentFieldLang(stored, locale)}
-              multiline
-              onChange={(value) => setField(locale, 'description', value)}
-              required
-              value={draft[locale].description}
-            />
-            {reviewControl(locale, 'description')}
+            {icon === 'phone' ? null : (
+              <>
+                <FormField
+                  error={errors[contentPath(locale, 'description')]}
+                  label={t('description')}
+                  lang={contentFieldLang(stored, locale)}
+                  multiline
+                  onChange={(value) => setField(locale, 'description', value)}
+                  required
+                  value={draft[locale].description}
+                />
+                {reviewControl(locale, 'description')}
+              </>
+            )}
           </>
         )}
       </LanguageTabs>
+
+      {icon === 'phone' ? (
+        <FormField
+          error={errors.phone}
+          label={t('phoneNumber')}
+          onChange={setPhone}
+          placeholder="2511-6566"
+          required
+          type="tel"
+          value={draft.es.description}
+        />
+      ) : null}
 
       {social ? (
         <FormField

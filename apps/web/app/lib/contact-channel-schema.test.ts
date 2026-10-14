@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
   contactCardLink,
   contactChannelCreateSchema,
+  isSinglePhoneNumber,
   isVisibleContactCard,
   storedHref,
 } from './contact-channel-schema'
@@ -28,6 +29,11 @@ describe('contact channel schema', () => {
       href: 'tel:+50625116566',
       external: false,
     })
+    expect(contactCardLink('phone', '+506 2511-6566', null)).toEqual({
+      href: 'tel:+50625116566',
+      external: false,
+    })
+    expect(contactCardLink('phone', '2511-6566, 2222-3333', null)).toBeNull()
     expect(contactCardLink('email', 'lasce@ucr.ac.cr', null)).toEqual({
       href: 'mailto:lasce@ucr.ac.cr',
       external: false,
@@ -57,6 +63,37 @@ describe('contact channel schema', () => {
     ).toBe(true)
     expect(
       contactChannelCreateSchema.safeParse({ icon: 'instagram', href: '  ', content }).success,
+    ).toBe(true)
+  })
+
+  test('accepts one phone number and rejects a second or other text', () => {
+    expect(isSinglePhoneNumber('2511-6566')).toBe(true)
+    expect(isSinglePhoneNumber('+506 2511-6566')).toBe(true)
+    expect(isSinglePhoneNumber('2511-6566, 2222-3333')).toBe(false)
+    expect(isSinglePhoneNumber('2511-6566 y 2222-3333')).toBe(false)
+
+    expect(contactChannelCreateSchema.safeParse({ icon: 'phone', href: null, content }).success).toBe(
+      true,
+    )
+    expect(
+      contactChannelCreateSchema.safeParse({
+        icon: 'phone',
+        href: null,
+        content: {
+          es: { title: 'Teléfono', description: '2511-6566 / 2222-3333' },
+          en: { title: 'Phone', description: '2511-6566 / 2222-3333' },
+        },
+      }).success,
+    ).toBe(false)
+    expect(
+      contactChannelCreateSchema.safeParse({
+        icon: 'location',
+        href: null,
+        content: {
+          es: { title: 'Lugar', description: 'Dos números: 2511-6566 y 2222-3333' },
+          en: { title: 'Place', description: 'Two numbers: 2511-6566 and 2222-3333' },
+        },
+      }).success,
     ).toBe(true)
   })
 

@@ -75,7 +75,10 @@ export const contactChannelCreateSchema = z
     href: hrefField,
     content: contactChannelContent.schema,
   })
-  .superRefine((value, context) => refineHref(value.icon, value.href, context))
+  .superRefine((value, context) => {
+    refineHref(value.icon, value.href, context)
+    refinePhone(value.icon, value.content, context)
+  })
 
 export const contactChannelUpdateSchema = z
   .strictObject({
@@ -85,11 +88,46 @@ export const contactChannelUpdateSchema = z
     version: versionSchema('La versión del canal no es válida.'),
     confirmedUnchanged: contactChannelContent.confirmationsSchema.optional(),
   })
-  .superRefine((value, context) => refineHref(value.icon, value.href, context))
+  .superRefine((value, context) => {
+    refineHref(value.icon, value.href, context)
+    refinePhone(value.icon, value.content, context)
+  })
 
 export type ContactChannelCreateInput = z.infer<typeof contactChannelCreateSchema>
 
 export type ContactChannelUpdateInput = z.infer<typeof contactChannelUpdateSchema>
+
+/**
+ * One telephone number: eight local digits, or those eight with the 506 country code.
+ * Spaces, hyphens, dots and parentheses may group that number. A second number, or any
+ * other text, does not match.
+ */
+export function isSinglePhoneNumber(value: string): boolean {
+  const trimmed = value.trim()
+  if (trimmed === '' || /[^\d\s.()+-]/.test(trimmed)) return false
+  const digits = trimmed.replace(/\D/g, '')
+  return digits.length === 8 || (digits.length === 11 && digits.startsWith('506'))
+}
+
+const phoneNumberMessage = 'Escriba un solo número de teléfono.'
+
+function refinePhone(
+  icon: ContactChannelIcon,
+  content: ContactChannelContentInput,
+  context: z.RefinementCtx,
+): void {
+  if (icon !== 'phone') return
+
+  for (const locale of ['es', 'en'] as const) {
+    if (!isSinglePhoneNumber(content[locale].description)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['content', locale, 'description'],
+        message: phoneNumberMessage,
+      })
+    }
+  }
+}
 
 function refineHref(icon: ContactChannelIcon, href: string | null, context: z.RefinementCtx): void {
   if (!isSocialChannelIcon(icon)) return
@@ -121,9 +159,10 @@ export function contactCardLink(
 ): { href: string; external: boolean } | null {
   if (isSocialChannelIcon(icon) && href) return { href, external: true }
 
-  if (icon === 'phone') {
+  if (icon === 'phone' && isSinglePhoneNumber(description)) {
     const digits = description.replace(/\D/g, '')
-    if (digits.length >= 8) return { href: `tel:+506${digits}`, external: false }
+    const local = digits.length === 11 && digits.startsWith('506') ? digits.slice(3) : digits
+    return { href: `tel:+506${local}`, external: false }
   }
 
   if (icon === 'email' && description.includes('@')) {

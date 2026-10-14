@@ -18,17 +18,16 @@ function field(label: string) {
 }
 
 describe('ContactChannelForm', () => {
-  test('asks for the symbol first, then the title and the description', () => {
+  test('asks for the symbol first, then the title and one phone number', () => {
     renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={vi.fn()} />)
 
     const symbol = screen.getByRole('combobox', { name: 'Símbolo' })
     const title = field('Título')
-    const description = field('Descripción')
+    const number = field('Número')
 
     expect(symbol.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(
-      title.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
+    expect(title.compareDocumentPosition(number) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.queryByRole('textbox', { name: /^Descripción/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: 'Enlace' })).not.toBeInTheDocument()
   })
 
@@ -81,9 +80,41 @@ describe('ContactChannelForm', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(field('Título')).toBeInvalid()
+    expect(field('Número')).toBeInvalid()
     expect(screen.getByText('El título en español es obligatorio.')).toBeInTheDocument()
-    expect(screen.getByText('La descripción en español es obligatoria.')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /^English · 2 por revisar$/ })).toBeInTheDocument()
+    expect(screen.getByText('El número es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^English · 1 por revisar$/ })).toBeInTheDocument()
+  })
+
+  test('saves one phone number in both languages and rejects a second', async () => {
+    const user = userEvent.setup({ delay: null })
+    const onSave = vi.fn()
+    renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={onSave} />)
+
+    await user.type(field('Título'), 'Teléfono')
+    await user.type(field('Número'), '2511-6566, 2222-3333')
+    await user.click(screen.getByRole('tab', { name: /^English/ }))
+    await user.type(field('Título'), 'Phone')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(field('Número')).toBeInvalid()
+    expect(screen.getByText('Escriba un solo número de teléfono.')).toBeInTheDocument()
+
+    await user.clear(field('Número'))
+    await user.type(field('Número'), '2511-6566')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: 'phone',
+        href: null,
+        content: {
+          es: { title: 'Teléfono', description: '2511-6566' },
+          en: { title: 'Phone', description: '2511-6566' },
+        },
+      }),
+    )
   })
 
   test('shows an invalid link on the link field', async () => {
