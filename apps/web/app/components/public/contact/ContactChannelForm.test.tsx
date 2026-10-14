@@ -31,6 +31,30 @@ describe('ContactChannelForm', () => {
     expect(screen.queryByRole('textbox', { name: 'Enlace' })).not.toBeInTheDocument()
   })
 
+  test('uses the site language for the editor, including English', async () => {
+    const user = userEvent.setup({ delay: null })
+    renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={vi.fn()} />, {
+      locale: 'en',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Confirm' }))
+
+    expect(field('Title')).toBeInvalid()
+    expect(screen.getByText('The English title is required.')).toBeInTheDocument()
+    expect(screen.getByText('The number is required.')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^Español · 1 to review$/ })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('combobox', { name: 'Symbol' }))
+    await user.click(screen.getByRole('option', { name: 'Email' }))
+    const description = field('Description')
+    await user.click(description)
+    await user.paste('a'.repeat(120))
+    await user.type(description, 'b')
+
+    expect(description).toHaveValue('a'.repeat(120))
+    expect(screen.getByText('The maximum of 120 characters has been reached.')).toBeInTheDocument()
+  })
+
   test('does not offer a location symbol', async () => {
     const user = userEvent.setup({ delay: null })
     renderWithIntl(<ContactChannelForm card={null} onCancel={vi.fn()} onSave={vi.fn()} />)
