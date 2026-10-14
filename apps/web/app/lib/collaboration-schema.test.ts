@@ -40,9 +40,11 @@ describe('collaboration input', () => {
         websiteUrl: 'https://example.com',
       }),
     ).toMatchObject({ websiteUrl: 'https://example.com' })
-    expect(
-      collaborationUpdateSchema.parse({ version, websiteUrl: null, acronym: '  ' }),
-    ).toEqual({ version, websiteUrl: null, acronym: null })
+    expect(collaborationUpdateSchema.parse({ version, websiteUrl: null, acronym: '  ' })).toEqual({
+      version,
+      websiteUrl: null,
+      acronym: null,
+    })
   })
   test('preserves omitted fields in shared-only edits and requires a version and a change', () => {
     expect(collaborationUpdateSchema.parse({ version, name: 'New name' })).toEqual({
