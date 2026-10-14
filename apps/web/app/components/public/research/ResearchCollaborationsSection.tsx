@@ -1,3 +1,4 @@
+import { Fragment, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { CollaborationCard } from './CollaborationCard'
@@ -6,11 +7,15 @@ import type { ResearchCollaboration } from '@/app/lib/research-collaborations'
 export interface ResearchCollaborationsSectionProps {
   id?: string
   collaborations: ResearchCollaboration[]
+  renderCard?: (collaboration: ResearchCollaboration) => ReactNode
+  addCard?: ReactNode
 }
 
 export function ResearchCollaborationsSection({
   id = 'research-collaborations',
   collaborations,
+  renderCard,
+  addCard,
 }: ResearchCollaborationsSectionProps) {
   const t = useTranslations('collaborations.section')
 
@@ -29,20 +34,28 @@ export function ResearchCollaborationsSection({
         <p className="content-empty" role="status">
           {t('empty')}
         </p>
-      ) : (
+      ) : null}
+      {collaborations.length > 0 || addCard ? (
         <div className="collaborations-grid">
+          {addCard}
           {collaborations.map((collaboration) => (
-            <CollaborationCard
-              acronym={collaboration.acronym}
-              country={collaboration.country}
-              countryLocale={collaboration.countryLocale}
-              key={collaboration.id}
-              name={collaboration.name}
-              scope={collaboration.scope}
-            />
+            <Fragment key={collaboration.id}>
+              {renderCard ? (
+                renderCard(collaboration)
+              ) : (
+                <CollaborationCard
+                  acronym={collaboration.acronym}
+                  country={collaboration.country}
+                  countryLocale={collaboration.countryLocale}
+                  websiteUrl={collaboration.websiteUrl}
+                  name={collaboration.name}
+                  scope={collaboration.scope}
+                />
+              )}
+            </Fragment>
           ))}
         </div>
-      )}
+      ) : null}
     </section>
   )
 }
