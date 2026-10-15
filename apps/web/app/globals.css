@@ -6008,6 +6008,22 @@ a.acknowledgments-card:focus-visible {
   gap: 6px;
 }
 
+/* `EditableWrapper drag`: the handle is an `icon-button` among the actions. */
+.editable-drag-handle {
+  cursor: grab;
+  /* The touch sensor needs the browser not to scroll while a finger drags the handle. */
+  touch-action: none;
+}
+
+.editable-dragging {
+  z-index: 2;
+  opacity: 0.85;
+}
+
+.editable-dragging .editable-drag-handle {
+  cursor: grabbing;
+}
+
 .file-drop-field {
   margin: 14px 0;
   display: flex;
