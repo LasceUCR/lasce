@@ -126,6 +126,14 @@ describe('ResearchAreasSection', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
+  test('offers no editing controls outside edit mode', () => {
+    renderSection(editArgs)
+
+    expect(
+      screen.queryByRole('button', { name: /Editar|Eliminar|Agregar/ }),
+    ).not.toBeInTheDocument()
+  })
+
   test('posts a new area in both languages, closes the form and says so', async () => {
     const fetchMock = vi.fn().mockResolvedValue(answer(201, { area: { id: 'new' } }))
     vi.stubGlobal('fetch', fetchMock)

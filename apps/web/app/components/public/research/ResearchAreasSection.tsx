@@ -197,6 +197,9 @@ export function ResearchAreasSection({
                 />
               )
 
+              // The editing controls only show in "Modo edición", for an account allowed to use them.
+              if (!editMode || (!canEdit && !canDelete)) return <li key={area.id}>{card}</li>
+
               return (
                 <li key={area.id}>
                   <EditableWrapper
