@@ -16,7 +16,8 @@ them. Wiring in a real source (Postgres rows plus MinIO objects) is a change to 
   │    └─ ul.card-grid › li       AlbumTile          h3, cover alt=""
   └─ TopicSection "Fotografías…"  h2
        └─ ul.media-grid › li      AlbumMediaGrid     button per file, image alt=""
-            └─ MediaLightbox      native <dialog>    h2 + figure/figcaption, real alt
+            └─ MediaLightbox      composes Lightbox  h2 + figure/figcaption, real alt
+                 └─ Lightbox      native <dialog>    shared shell, also used by /datos
 ```
 
 | Piece                 | File                                            | Covered by                     |
@@ -29,6 +30,7 @@ them. Wiring in a real source (Postgres rows plus MinIO objects) is a change to 
 | Masonry grid          | `…/AlbumMediaGrid.tsx`                          | `AlbumMediaGrid.test.tsx`      |
 | Framed image          | `…/MediaFrame.tsx`                              | `MediaFrame.test.tsx`          |
 | Full-screen view      | `…/MediaLightbox.tsx`                           | `MediaLightbox.test.tsx`       |
+| Dialog shell          | `app/components/public/Lightbox.tsx`            | `Lightbox.test.tsx`            |
 
 Routes, the sitemap and the axe sweep all derive their album lists from `galleryAlbumList`, so a new
 album is picked up by `app/lib/site.ts` and `tests/e2e/accessibility-seo.spec.ts` without any edit
@@ -73,7 +75,10 @@ These are deliberate. Please do not "fix" them back.
 - **The lightbox is a native `<dialog>` opened with `showModal()`.** The focus trap, Escape, the
   inert background and the stacking all come from the top layer instead of being hand-rolled. Arrow
   key paging is the only keyboard behaviour this component implements itself. `showModal` is absent
-  in jsdom, so the component falls back to setting the `open` attribute and the tests stub it.
+  in jsdom, so the component falls back to setting the `open` attribute and the tests stub it. That
+  behaviour lives in the shared `Lightbox` shell, which takes all of its copy as props;
+  `MediaLightbox` supplies the gallery's Spanish wording and the stage, and `/datos` reuses the
+  shell for solar images (`SolarImageLightbox`).
 - **Focus rings are not styled here.** `globals.css` sets one global
   `:focus-visible { outline: 3px solid var(--action) }`, and `--action` is inherited from the
   surface, so the ring is amber inside the lightbox and dark blue on the index. See
