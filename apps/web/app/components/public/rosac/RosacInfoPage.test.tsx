@@ -141,10 +141,25 @@ describe('RosacInfoPage', () => {
     expect(
       instruments.getAllByRole('img', { name: /Imagen ilustrativa de la galería ROSAC/ }),
     ).toHaveLength(3)
-    for (const name of ['Instrumento 1', 'Instrumento 2']) {
+    for (const name of ['ROSAC-SABER', 'ROSAC-MIRA 9GHz']) {
       const card = within(instruments.getByRole('article', { name }))
       expect(card.queryByText(/pendiente|por definir/i)).not.toBeInTheDocument()
     }
+    expect(
+      within(instruments.getByRole('article', { name: 'ROSAC-SABER' })).getByText(
+        'Banda entre 100 y 1000 MHz',
+      ),
+    ).toBeVisible()
+    expect(
+      within(instruments.getByRole('article', { name: 'ROSAC-MIRA 9GHz' })).getByText(
+        'Banda de los 9 GHz',
+      ),
+    ).toBeVisible()
+    expect(
+      within(instruments.getByRole('article', { name: 'ROSAC-HIROS' })).getByText(
+        'Observación del hidrógeno neutro a 1,4 GHz',
+      ),
+    ).toBeVisible()
     expect(instruments.getAllByRole('link')).toHaveLength(2)
     expect(instruments.getByText(/integración en la sección de datos/)).toBeVisible()
   })
