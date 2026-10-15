@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server'
+import type { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { createGalleryMedia, galleryIdSchema, galleryMediaInputSchema } from '@/app/lib/gallery'
+import { internalError, invalidBody, isUuid, ok, readJson } from '@/app/lib/cms/http'
+import { createGalleryMedia, galleryMediaInputSchema } from '@/app/lib/gallery'
+
+import { invalidAlbumId, mediaWriteFailure } from '../../../http'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,44 +16,20 @@ export async function POST(
   if (!guard.ok) return guard.response
 
   const { albumId } = await params
-  if (!galleryIdSchema.safeParse(albumId).success) {
-    return NextResponse.json({ error: 'El id del álbum no es válido.' }, { status: 400 })
-  }
+  if (!isUuid(albumId)) return invalidAlbumId()
 
-  let body: unknown
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = galleryMediaInputSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
+    const result = await createGalleryMedia(albumId, parsed.data)
+    if (!result.ok) return mediaWriteFailure(result)
 
-  const parsed = galleryMediaInputSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
+    return ok({ media: result.media }, 201)
+  } catch (error) {
+    return internalError('No se pudo agregar el archivo.', error)
   }
-
-  const result = await createGalleryMedia(albumId, parsed.data)
-  if (!result.ok) {
-    if (result.reason === 'album-not-found') {
-      return NextResponse.json({ error: 'No existe el álbum indicado.' }, { status: 404 })
-    }
-    return NextResponse.json(
-      { error: 'El archivo ya existe o se modificó el álbum. Inténtelo de nuevo.' },
-      { status: 409 },
-    )
-  }
-
-  return NextResponse.json(
-    { media: result.media },
-    { status: 201, headers: { 'Cache-Control': 'no-store' } },
-  )
 }

@@ -1,45 +1,33 @@
 import { randomUUID } from 'node:crypto'
 
-import { prisma } from '@lasce/db'
-import { z } from 'zod'
+import { prisma, type Prisma } from '@lasce/db'
+
+import { runWrite, WriteAbort, type WriteFailure } from '@/app/lib/cms/transaction'
+import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
+import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+import {
+  baseContent,
+  resolveContent,
+  storedContentFrom,
+  translationRows,
+} from '@/app/lib/i18n/content/resolve'
 
 import {
+  albumContent,
+  findPendingReviews,
+  translationLocales,
+  type AlbumCreateInput,
+  type AlbumUpdateInput,
   type GalleryAlbum,
   type GalleryMedia,
   type GalleryMediaInput,
   type GalleryMediaUpdate,
   type GallerySubAlbum,
+  type ReviewConfirmation,
+  type SubAlbumCreateInput,
 } from './gallery-schema'
 
 export * from './gallery-schema'
-
-const galleryAlbumFields = {
-  slug: z
-    .string()
-    .trim()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'El slug debe usar letras minúsculas, números y guiones.'),
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
-  yearsLabel: z.string().trim().min(1).nullable().optional(),
-  coverObjectKey: z.string().trim().min(1).nullable().optional(),
-}
-
-export const galleryTopLevelAlbumInputSchema = z.object(galleryAlbumFields).strict()
-
-export const gallerySubAlbumInputSchema = z.object(galleryAlbumFields).strict()
-
-export const galleryAlbumUpdateSchema = z
-  .object(galleryAlbumFields)
-  .partial()
-  .strict()
-  .refine(
-    (data) => Object.keys(data).length > 0,
-    'Debe proporcionar al menos un campo para editar.',
-  )
-
-export type GalleryTopLevelAlbumInput = z.infer<typeof galleryTopLevelAlbumInputSchema>
-export type GallerySubAlbumInput = z.infer<typeof gallerySubAlbumInputSchema>
-export type GalleryAlbumUpdate = z.infer<typeof galleryAlbumUpdateSchema>
 
 /**
  * Real content for the public gallery.
@@ -2040,74 +2028,302 @@ function toGalleryMedia(media: DatabaseGalleryMedia): GalleryMedia {
   }
 }
 
-/** Loads top-level albums and their nested albums/media in display order, including database IDs. */
-export async function getGalleryAlbums(): Promise<GalleryAlbum[]> {
-  const albums = await prisma.galleryAlbum.findMany({
+export type GalleryAlbumWriteFailure =
+  | { ok: false; reason: 'not-found' }
+  /** The album changed since the editor loaded it. */
+  | { ok: false; reason: 'conflict' }
+  | { ok: false; reason: 'duplicate-slug' }
+  /** Fields changed in one language whose counterpart was neither changed nor confirmed. */
+  | { ok: false; reason: 'review-required'; pending: ReviewConfirmation[] }
+
+export type GalleryAlbumWriteResult =
+  { ok: true; album: GallerySubAlbum } | GalleryAlbumWriteFailure
+
+export type GallerySubAlbumCreateFailure =
+  GalleryAlbumWriteFailure | { ok: false; reason: 'parent-not-found' | 'parent-not-top-level' }
+
+export type GalleryMediaWriteFailure = {
+  ok: false
+  reason: 'not-found' | 'album-not-found' | 'conflict'
+}
+
+export type GalleryMediaWriteResult = { ok: true; media: GalleryMedia } | GalleryMediaWriteFailure
+
+const translationsInclude = {
+  where: { locale: { in: [...translationLocales] } },
+  select: { locale: true, title: true, description: true },
+} satisfies Prisma.GalleryAlbum$translationsArgs
+
+const mediaInclude = { orderBy: { position: 'asc' } } satisfies Prisma.GalleryAlbum$mediaArgs
+
+const albumInclude = {
+  media: mediaInclude,
+  translations: translationsInclude,
+} satisfies Prisma.GalleryAlbumInclude
+
+const topLevelAlbumInclude = {
+  ...albumInclude,
+  subAlbums: { orderBy: { createdAt: 'asc' }, include: albumInclude },
+} satisfies Prisma.GalleryAlbumInclude
+
+type AlbumRecord = Prisma.GalleryAlbumGetPayload<{ include: typeof albumInclude }>
+type TopLevelAlbumRecord = Prisma.GalleryAlbumGetPayload<{
+  include: typeof topLevelAlbumInclude
+}>
+
+function toSubAlbum(
+  record: AlbumRecord,
+  locale: Locale,
+  includeEditingData: boolean,
+): GallerySubAlbum {
+  const content = storedContentFrom(albumContent, record, record.translations)
+  // A complete record's base text was written or confirmed as Spanish when it was saved. A legacy
+  // record's base text was entered before languages existed, so its language is unknown.
+  const { content: shown, contentLocale, isLegacy } = resolveContent(content, locale)
+  const src = publicGallerySource(record.coverObjectKey)
+
+  return {
+    id: record.id,
+    slug: record.slug,
+    title: shown.title,
+    description: shown.description,
+    ...(record.yearsLabel !== null ? { yearsLabel: record.yearsLabel } : {}),
+    coverObjectKey: record.coverObjectKey ?? undefined,
+    ...(src ? { src } : {}),
+    contentLocale,
+    media: record.media.map(toGalleryMedia),
+    ...(includeEditingData
+      ? { editing: { content, isLegacy, version: toVersion(record.updatedAt) } }
+      : {}),
+  }
+}
+
+function toGalleryAlbum(
+  record: TopLevelAlbumRecord,
+  locale: Locale,
+  includeEditingData: boolean,
+): GalleryAlbum {
+  return {
+    ...toSubAlbum(record, locale, includeEditingData),
+    years: record.yearsLabel ?? '',
+    subAlbums: record.subAlbums.map((subAlbum) => toSubAlbum(subAlbum, locale, includeEditingData)),
+  }
+}
+
+/**
+ * Loads top-level albums and their nested albums/media in display order, including database IDs.
+ *
+ * `title` and `description` are in `locale` when the album has that translation, and fall back to
+ * the base text otherwise; `contentLocale` says which one was used. Pass `includeEditingData`
+ * only for someone who can edit, because it sends every language to the browser.
+ */
+export async function getGalleryAlbums(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<GalleryAlbum[]> {
+  const records = await prisma.galleryAlbum.findMany({
     where: { parentAlbumId: null },
     orderBy: { createdAt: 'asc' },
-    include: {
-      media: { orderBy: { position: 'asc' } },
-      subAlbums: {
-        orderBy: { createdAt: 'asc' },
-        include: { media: { orderBy: { position: 'asc' } } },
-      },
-    },
+    include: topLevelAlbumInclude,
   })
 
-  return albums.map((album) => {
-    const src = publicGallerySource(album.coverObjectKey)
+  return records.map((record) => toGalleryAlbum(record, locale, includeEditingData))
+}
 
-    return {
-      id: album.id,
-      slug: album.slug,
-      title: album.title,
-      description: album.description,
-      years: album.yearsLabel ?? '',
-      coverObjectKey: album.coverObjectKey ?? undefined,
-      ...(src ? { src } : {}),
-      subAlbums: album.subAlbums.map((subAlbum) => {
-        const subAlbumSrc = publicGallerySource(subAlbum.coverObjectKey)
+/** Only the slug is a unique value of an album that this module knows how to explain. */
+function duplicateSlugFailure(columns: readonly string[]): GalleryAlbumWriteFailure | null {
+  return columns.includes('slug') ? { ok: false, reason: 'duplicate-slug' } : null
+}
 
-        return {
-          id: subAlbum.id,
-          slug: subAlbum.slug,
-          title: subAlbum.title,
-          description: subAlbum.description,
-          ...(subAlbum.yearsLabel !== null && subAlbum.yearsLabel !== undefined
-            ? { yearsLabel: subAlbum.yearsLabel }
-            : {}),
-          coverObjectKey: subAlbum.coverObjectKey ?? undefined,
-          ...(subAlbumSrc ? { src: subAlbumSrc } : {}),
-          media: subAlbum.media.map(toGalleryMedia),
-        }
-      }),
-      media: album.media.map(toGalleryMedia),
-    }
+/**
+ * Runs a write transaction (`runWrite`) and reports the stored record as an album. Expected
+ * failures are raised as `WriteAbort` or as a unique violation, so the transaction rolls back
+ * before anything is reported.
+ */
+async function writeAlbum<F extends WriteFailure>(
+  write: (tx: Prisma.TransactionClient) => Promise<AlbumRecord>,
+  onUniqueViolation: (columns: readonly string[]) => F | null,
+): Promise<{ ok: true; album: GallerySubAlbum } | F> {
+  const result = await runWrite(write, onUniqueViolation)
+  return result.ok ? { ok: true, album: toSubAlbum(result.value, defaultLocale, true) } : result
+}
+
+function createAlbumRecord(
+  tx: Prisma.TransactionClient,
+  input: AlbumCreateInput,
+  parentAlbumId: string | null,
+): Promise<AlbumRecord> {
+  return tx.galleryAlbum.create({
+    data: {
+      ...baseContent(albumContent, input.content),
+      slug: input.slug,
+      yearsLabel: input.yearsLabel,
+      coverObjectKey: input.coverObjectKey,
+      parentAlbumId,
+      translations: { create: translationRows(albumContent, input.content) },
+    },
+    include: albumInclude,
   })
 }
 
-type CreateGalleryMediaResult =
-  { ok: true; media: GalleryMedia } | { ok: false; reason: 'album-not-found' | 'conflict' }
+/**
+ * Creates a top-level album in every language at once. When the slug is taken, the album is
+ * created under the slug with a unique suffix; only a second collision is reported.
+ */
+export async function createTopLevelGalleryAlbum(
+  input: AlbumCreateInput,
+): Promise<GalleryAlbumWriteResult> {
+  const first = await writeAlbum((tx) => createAlbumRecord(tx, input, null), duplicateSlugFailure)
+  if (first.ok || first.reason !== 'duplicate-slug') return first
+
+  return writeAlbum(
+    (tx) => createAlbumRecord(tx, { ...input, slug: `${input.slug}-${randomUUID()}` }, null),
+    duplicateSlugFailure,
+  )
+}
+
+/** Creates a sub-album under a top-level album, in every language at once. */
+export async function createGallerySubAlbum(
+  parentAlbumId: string,
+  input: SubAlbumCreateInput,
+): Promise<{ ok: true; album: GallerySubAlbum } | GallerySubAlbumCreateFailure> {
+  return writeAlbum<GallerySubAlbumCreateFailure>(async (tx) => {
+    const parent = await tx.galleryAlbum.findUnique({
+      where: { id: parentAlbumId },
+      select: { id: true, parentAlbumId: true },
+    })
+
+    if (!parent) {
+      throw new WriteAbort<GallerySubAlbumCreateFailure>({ ok: false, reason: 'parent-not-found' })
+    }
+    if (parent.parentAlbumId !== null) {
+      throw new WriteAbort<GallerySubAlbumCreateFailure>({
+        ok: false,
+        reason: 'parent-not-top-level',
+      })
+    }
+
+    return createAlbumRecord(tx, input, parent.id)
+  }, duplicateSlugFailure)
+}
+
+/**
+ * Updates the fields present in `input`, all at once: either everything is stored or nothing is.
+ *
+ * With `content` it is a bilingual content update: both languages are written, after checking
+ * that every one-sided change has its counterpart changed or confirmed (`findPendingReviews`).
+ * Without `content` it updates shared fields only and leaves every translation as it is.
+ *
+ * Optimistic concurrency: `input.version` is the `updated_at` the editor loaded. The base row is
+ * updated only while it still has that value, and every save moves it forward, so of two editors
+ * who loaded the same version the second one gets `conflict` instead of overwriting the first.
+ */
+export async function updateGalleryAlbum(
+  albumId: string,
+  input: AlbumUpdateInput,
+): Promise<GalleryAlbumWriteResult> {
+  const expectedUpdatedAt = parseVersion(input.version)
+
+  return writeAlbum(async (tx) => {
+    const current = await tx.galleryAlbum.findUnique({
+      where: { id: albumId },
+      select: {
+        title: true,
+        description: true,
+        updatedAt: true,
+        translations: translationsInclude,
+      },
+    })
+
+    if (!current) throw new WriteAbort<GalleryAlbumWriteFailure>({ ok: false, reason: 'not-found' })
+
+    if (!isCurrentVersion(current.updatedAt, expectedUpdatedAt)) {
+      throw new WriteAbort<GalleryAlbumWriteFailure>({ ok: false, reason: 'conflict' })
+    }
+
+    const { content } = input
+
+    if (content) {
+      const pending = findPendingReviews(
+        storedContentFrom(albumContent, current, current.translations),
+        content,
+        input.confirmedUnchanged ?? [],
+      )
+
+      if (pending.length > 0) {
+        throw new WriteAbort<GalleryAlbumWriteFailure>({
+          ok: false,
+          reason: 'review-required',
+          pending,
+        })
+      }
+    }
+
+    const { count } = await tx.galleryAlbum.updateMany({
+      where: { id: albumId, updatedAt: expectedUpdatedAt },
+      data: {
+        ...(content ? baseContent(albumContent, content) : {}),
+        ...(input.slug === undefined ? {} : { slug: input.slug }),
+        ...(input.yearsLabel === undefined ? {} : { yearsLabel: input.yearsLabel }),
+        ...(input.coverObjectKey === undefined ? {} : { coverObjectKey: input.coverObjectKey }),
+        // Strictly later than the version it replaces, even if two saves share a millisecond.
+        updatedAt: nextUpdatedAt(expectedUpdatedAt),
+      },
+    })
+
+    if (count === 0)
+      throw new WriteAbort<GalleryAlbumWriteFailure>({ ok: false, reason: 'conflict' })
+
+    if (content) {
+      for (const { locale, ...text } of translationRows(albumContent, content)) {
+        await tx.galleryAlbumTranslation.upsert({
+          where: { albumId_locale: { albumId, locale } },
+          create: { albumId, locale, ...text },
+          update: text,
+        })
+      }
+    }
+
+    return tx.galleryAlbum.findUniqueOrThrow({ where: { id: albumId }, include: albumInclude })
+  }, duplicateSlugFailure)
+}
+
+/** Deletes an album. Its translations, sub-albums and media records go with it (`ON DELETE CASCADE`). */
+export async function deleteGalleryAlbum(albumId: string): Promise<boolean> {
+  const { count } = await prisma.galleryAlbum.deleteMany({ where: { id: albumId } })
+  return count > 0
+}
+
+/** Any unique violation on media is a clash with the file key or the position it was given. */
+function mediaConflict(): GalleryMediaWriteFailure {
+  return { ok: false, reason: 'conflict' }
+}
+
+async function writeMedia(
+  write: (tx: Prisma.TransactionClient) => Promise<DatabaseGalleryMedia>,
+): Promise<GalleryMediaWriteResult> {
+  const result = await runWrite(write, mediaConflict)
+  return result.ok ? { ok: true, media: toGalleryMedia(result.value) } : result
+}
 
 /** Adds media to an album at the next position without uploading or deleting the asset itself. */
 export async function createGalleryMedia(
   albumId: string,
   data: GalleryMediaInput,
-): Promise<CreateGalleryMediaResult> {
-  const album = await prisma.galleryAlbum.findUnique({
-    where: { id: albumId },
-    select: { id: true },
-  })
-  if (!album) return { ok: false, reason: 'album-not-found' }
+): Promise<GalleryMediaWriteResult> {
+  return writeMedia(async (tx) => {
+    const album = await tx.galleryAlbum.findUnique({ where: { id: albumId }, select: { id: true } })
+    if (!album) {
+      throw new WriteAbort<GalleryMediaWriteFailure>({ ok: false, reason: 'album-not-found' })
+    }
 
-  const lastMedia = await prisma.galleryMedia.findFirst({
-    where: { albumId },
-    orderBy: { position: 'desc' },
-    select: { position: true },
-  })
+    const lastMedia = await tx.galleryMedia.findFirst({
+      where: { albumId },
+      orderBy: { position: 'desc' },
+      select: { position: true },
+    })
 
-  try {
-    const media = await prisma.galleryMedia.create({
+    return tx.galleryMedia.create({
       data: {
         albumId,
         title: data.title,
@@ -2123,157 +2339,42 @@ export async function createGalleryMedia(
         position: (lastMedia?.position ?? -1) + 1,
       },
     })
-    return { ok: true, media: toGalleryMedia(media) }
-  } catch (error) {
-    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'conflict' }
-    if (hasPrismaErrorCode(error, 'P2003')) return { ok: false, reason: 'album-not-found' }
-    throw error
-  }
+  })
 }
-
-type UpdateGalleryMediaResult =
-  { ok: true; media: GalleryMedia } | { ok: false; reason: 'not-found' | 'conflict' }
 
 /** Updates supplied media metadata fields; the stored asset is never modified here. */
 export async function updateGalleryMedia(
   mediaId: string,
   data: GalleryMediaUpdate,
-): Promise<UpdateGalleryMediaResult> {
-  const updateData = {
-    ...(data.title !== undefined ? { title: data.title } : {}),
-    ...(data.description !== undefined ? { description: data.description } : {}),
-    ...(data.alt !== undefined ? { altText: data.alt } : {}),
-    ...(data.objectKey !== undefined ? { objectKey: data.objectKey } : {}),
-    ...(data.format !== undefined ? { format: data.format } : {}),
-    ...(data.isVideo !== undefined ? { isVideo: data.isVideo } : {}),
-    ...(data.colSpan !== undefined ? { colSpan: data.colSpan } : {}),
-    ...(data.rowSpan !== undefined ? { rowSpan: data.rowSpan } : {}),
-    ...(data.date !== undefined ? { capturedAt: new Date(`${data.date}T00:00:00.000Z`) } : {}),
-    ...(data.uploader !== undefined ? { uploaderName: data.uploader } : {}),
-  }
-
-  try {
-    const media = await prisma.galleryMedia.update({
+): Promise<GalleryMediaWriteResult> {
+  return writeMedia(async (tx) => {
+    const existing = await tx.galleryMedia.findUnique({
       where: { id: mediaId },
-      data: updateData,
+      select: { id: true },
     })
-    return { ok: true, media: toGalleryMedia(media) }
-  } catch (error) {
-    if (hasPrismaErrorCode(error, 'P2025')) return { ok: false, reason: 'not-found' }
-    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'conflict' }
-    throw error
-  }
+    if (!existing)
+      throw new WriteAbort<GalleryMediaWriteFailure>({ ok: false, reason: 'not-found' })
+
+    return tx.galleryMedia.update({
+      where: { id: mediaId },
+      data: {
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.alt !== undefined ? { altText: data.alt } : {}),
+        ...(data.objectKey !== undefined ? { objectKey: data.objectKey } : {}),
+        ...(data.format !== undefined ? { format: data.format } : {}),
+        ...(data.isVideo !== undefined ? { isVideo: data.isVideo } : {}),
+        ...(data.colSpan !== undefined ? { colSpan: data.colSpan } : {}),
+        ...(data.rowSpan !== undefined ? { rowSpan: data.rowSpan } : {}),
+        ...(data.date !== undefined ? { capturedAt: new Date(`${data.date}T00:00:00.000Z`) } : {}),
+        ...(data.uploader !== undefined ? { uploaderName: data.uploader } : {}),
+      },
+    })
+  })
 }
 
 /** Deletes the media database record only; the associated asset is left untouched. */
 export async function deleteGalleryMedia(mediaId: string): Promise<boolean> {
-  const result = await prisma.galleryMedia.deleteMany({ where: { id: mediaId } })
-  return result.count > 0
-}
-
-type GalleryAlbumFields = GallerySubAlbumInput
-
-type CreateTopLevelAlbumResult =
-  | { ok: true; album: Awaited<ReturnType<typeof prisma.galleryAlbum.create>> }
-  | { ok: false; reason: 'duplicate-slug' }
-
-export async function createTopLevelGalleryAlbum(
-  data: GalleryTopLevelAlbumInput,
-): Promise<CreateTopLevelAlbumResult> {
-  try {
-    const album = await prisma.galleryAlbum.create({
-      data: toAlbumCreateData(data, null),
-    })
-    return { ok: true, album }
-  } catch (error) {
-    if (!hasPrismaErrorCode(error, 'P2002')) throw error
-  }
-
-  try {
-    const album = await prisma.galleryAlbum.create({
-      data: toAlbumCreateData({ ...data, slug: `${data.slug}-${randomUUID()}` }, null),
-    })
-    return { ok: true, album }
-  } catch (error) {
-    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'duplicate-slug' }
-    throw error
-  }
-}
-
-type UpdateGalleryAlbumResult =
-  | { ok: true; album: Awaited<ReturnType<typeof prisma.galleryAlbum.update>> }
-  | { ok: false; reason: 'not-found' | 'duplicate-slug' }
-
-/** Updates supplied album fields without changing its parent or contents. */
-export async function updateGalleryAlbum(
-  albumId: string,
-  data: GalleryAlbumUpdate,
-): Promise<UpdateGalleryAlbumResult> {
-  const updateData = {
-    ...(data.slug !== undefined ? { slug: data.slug } : {}),
-    ...(data.title !== undefined ? { title: data.title } : {}),
-    ...(data.description !== undefined ? { description: data.description } : {}),
-    ...(data.yearsLabel !== undefined ? { yearsLabel: data.yearsLabel } : {}),
-    ...(data.coverObjectKey !== undefined ? { coverObjectKey: data.coverObjectKey } : {}),
-  }
-
-  try {
-    const album = await prisma.galleryAlbum.update({
-      where: { id: albumId },
-      data: updateData,
-    })
-    return { ok: true, album }
-  } catch (error) {
-    if (hasPrismaErrorCode(error, 'P2025')) return { ok: false, reason: 'not-found' }
-    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'duplicate-slug' }
-    throw error
-  }
-}
-
-/** Deletes an album and its cascading database records*/
-export async function deleteGalleryAlbum(albumId: string): Promise<boolean> {
-  const result = await prisma.galleryAlbum.deleteMany({ where: { id: albumId } })
-  return result.count > 0
-}
-
-type CreateSubAlbumResult =
-  | { ok: true; album: Awaited<ReturnType<typeof prisma.galleryAlbum.create>> }
-  | { ok: false; reason: 'parent-not-found' | 'parent-not-top-level' | 'duplicate-slug' }
-
-export async function createGallerySubAlbum(
-  parentAlbumId: string,
-  data: GallerySubAlbumInput,
-): Promise<CreateSubAlbumResult> {
-  const parent = await prisma.galleryAlbum.findUnique({
-    where: { id: parentAlbumId },
-    select: { id: true, parentAlbumId: true },
-  })
-  if (!parent) return { ok: false, reason: 'parent-not-found' }
-  if (parent.parentAlbumId !== null) return { ok: false, reason: 'parent-not-top-level' }
-
-  try {
-    const album = await prisma.galleryAlbum.create({
-      data: toAlbumCreateData(data, parent.id),
-    })
-    return { ok: true, album }
-  } catch (error) {
-    if (hasPrismaErrorCode(error, 'P2002')) return { ok: false, reason: 'duplicate-slug' }
-    if (hasPrismaErrorCode(error, 'P2003')) return { ok: false, reason: 'parent-not-found' }
-    throw error
-  }
-}
-
-function toAlbumCreateData(data: GalleryAlbumFields, parentAlbumId: string | null) {
-  return {
-    slug: data.slug,
-    title: data.title,
-    description: data.description,
-    yearsLabel: data.yearsLabel ?? null,
-    coverObjectKey: data.coverObjectKey ?? null,
-    parentAlbumId,
-  }
-}
-
-function hasPrismaErrorCode(error: unknown, code: string): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === code
+  const { count } = await prisma.galleryMedia.deleteMany({ where: { id: mediaId } })
+  return count > 0
 }

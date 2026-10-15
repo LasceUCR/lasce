@@ -8,7 +8,7 @@ import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { Modal } from '@/app/components/public/Modal'
 import { AlbumForm, type AlbumFormValues } from '@/app/components/public/gallery/forms/AlbumForm'
-import type { GalleryAlbum } from '@/app/lib/gallery-schema'
+import type { GalleryAlbum, ReviewConfirmation } from '@/app/lib/gallery-schema'
 
 const SAVE_ERROR_MESSAGE = 'No se pudo guardar el álbum. Inténtelo de nuevo.'
 const DELETE_ERROR_MESSAGE = 'No se pudo eliminar el álbum. Inténtelo de nuevo.'
@@ -96,8 +96,12 @@ export function GalleryGroupSection({
     setIsEditing(false)
   }
 
-  async function handleSave(values: AlbumFormValues): Promise<void> {
-    if (!album.id || saveInProgress.current) return
+  async function handleSave(
+    values: AlbumFormValues,
+    confirmed: ReviewConfirmation[],
+  ): Promise<void> {
+    const version = album.editing?.version
+    if (!album.id || !version || saveInProgress.current) return
 
     saveInProgress.current = true
     setIsSaving(true)
@@ -108,8 +112,8 @@ export function GalleryGroupSection({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: values.title,
-          description: values.description,
+          version,
+          ...(values.content ? { content: values.content, confirmedUnchanged: confirmed } : {}),
           yearsLabel: values.yearsLabel.trim() || null,
           coverObjectKey: values.coverObjectKey || null,
         }),
@@ -194,6 +198,7 @@ export function GalleryGroupSection({
         ) : null}
         {isSaving ? <p role="status">Guardando álbum...</p> : null}
         <AlbumForm
+          stored={album.editing?.content}
           album={{
             title: album.title,
             description: album.description,

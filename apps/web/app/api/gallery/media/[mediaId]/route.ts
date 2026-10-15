@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import {
-  deleteGalleryMedia,
-  galleryIdSchema,
-  galleryMediaUpdateSchema,
-  updateGalleryMedia,
-} from '@/app/lib/gallery'
+import { internalError, invalidBody, isUuid, ok, readJson } from '@/app/lib/cms/http'
+import { deleteGalleryMedia, galleryMediaUpdateSchema, updateGalleryMedia } from '@/app/lib/gallery'
+
+import { invalidMediaId, mediaNotFound, mediaWriteFailure } from '../../http'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,40 +16,22 @@ export async function PATCH(
   if (!guard.ok) return guard.response
 
   const { mediaId } = await params
-  if (!galleryIdSchema.safeParse(mediaId).success) {
-    return NextResponse.json({ error: 'El id del archivo no es válido.' }, { status: 400 })
-  }
+  if (!isUuid(mediaId)) return invalidMediaId()
 
-  let body: unknown
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = galleryMediaUpdateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
+    const result = await updateGalleryMedia(mediaId, parsed.data)
+    if (!result.ok) return mediaWriteFailure(result)
 
-  const parsed = galleryMediaUpdateSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
+    return ok({ media: result.media })
+  } catch (error) {
+    return internalError('No se pudo guardar el archivo.', error)
   }
-
-  const result = await updateGalleryMedia(mediaId, parsed.data)
-  if (!result.ok) {
-    if (result.reason === 'not-found') {
-      return NextResponse.json({ error: 'No existe el archivo indicado.' }, { status: 404 })
-    }
-    return NextResponse.json({ error: 'La clave del archivo ya está en uso.' }, { status: 409 })
-  }
-
-  return NextResponse.json({ media: result.media }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
 export async function DELETE(
@@ -62,17 +42,14 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { mediaId } = await params
-  if (!galleryIdSchema.safeParse(mediaId).success) {
-    return NextResponse.json({ error: 'El id del archivo no es válido.' }, { status: 400 })
+  if (!isUuid(mediaId)) return invalidMediaId()
+
+  try {
+    const deleted = await deleteGalleryMedia(mediaId)
+    if (!deleted) return mediaNotFound()
+  } catch (error) {
+    return internalError('No se pudo eliminar el archivo.', error)
   }
 
-  const deleted = await deleteGalleryMedia(mediaId)
-  if (!deleted) {
-    return NextResponse.json({ error: 'No existe el archivo indicado.' }, { status: 404 })
-  }
-
-  return new NextResponse(null, {
-    status: 204,
-    headers: { 'Cache-Control': 'no-store' },
-  })
+  return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
 }

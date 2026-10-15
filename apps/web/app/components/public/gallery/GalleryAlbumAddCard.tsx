@@ -59,8 +59,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug,
-          title: values.title,
-          description: values.description,
+          content: values.content,
           yearsLabel: values.yearsLabel.trim() || null,
           coverObjectKey: values.coverObjectKey,
         }),

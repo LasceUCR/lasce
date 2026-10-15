@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
+import { internalError, invalidBody, isUuid, ok, readJson } from '@/app/lib/cms/http'
 import {
+  albumUpdateSchema,
   createGallerySubAlbum,
   deleteGalleryAlbum,
-  galleryIdSchema,
-  galleryAlbumUpdateSchema,
-  gallerySubAlbumInputSchema,
+  subAlbumCreateSchema,
   updateGalleryAlbum,
 } from '@/app/lib/gallery'
+
+import { albumNotFound, albumWriteFailure, invalidAlbumId } from '../../http'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,21 +22,23 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { albumId } = await params
-  if (!galleryIdSchema.safeParse(albumId).success) {
-    return NextResponse.json({ error: 'El id del álbum no es válido.' }, { status: 400 })
+  if (!isUuid(albumId)) return invalidAlbumId()
+
+  try {
+    const deleted = await deleteGalleryAlbum(albumId)
+    if (!deleted) return albumNotFound()
+  } catch (error) {
+    return internalError('No se pudo eliminar el álbum.', error)
   }
 
-  const deleted = await deleteGalleryAlbum(albumId)
-  if (!deleted) {
-    return NextResponse.json({ error: 'No existe el álbum indicado.' }, { status: 404 })
-  }
-
-  return new NextResponse(null, {
-    status: 204,
-    headers: { 'Cache-Control': 'no-store' },
-  })
+  return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
 }
 
+/**
+ * Updates an album or sub-album against the `version` the editor loaded. With `content` it is a
+ * bilingual content update; without it, only the shared fields present are written. See
+ * `albumUpdateSchema`.
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ albumId: string }> },
@@ -43,42 +47,25 @@ export async function PATCH(
   if (!guard.ok) return guard.response
 
   const { albumId } = await params
-  if (!galleryIdSchema.safeParse(albumId).success) {
-    return NextResponse.json({ error: 'El id del álbum no es válido.' }, { status: 400 })
-  }
+  if (!isUuid(albumId)) return invalidAlbumId()
 
-  let body: unknown
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = albumUpdateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
+    const result = await updateGalleryAlbum(albumId, parsed.data)
+    if (!result.ok) return albumWriteFailure(result)
 
-  const parsed = galleryAlbumUpdateSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
+    return ok({ album: result.album })
+  } catch (error) {
+    return internalError('No se pudo guardar el álbum.', error)
   }
-
-  const result = await updateGalleryAlbum(albumId, parsed.data)
-  if (!result.ok) {
-    if (result.reason === 'not-found') {
-      return NextResponse.json({ error: 'No existe el álbum indicado.' }, { status: 404 })
-    }
-    return NextResponse.json({ error: 'Ya existe un álbum con este slug.' }, { status: 409 })
-  }
-
-  return NextResponse.json({ album: result.album }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
+/** Creates a sub-album under the top-level album in the URL; see `subAlbumCreateSchema`. */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ albumId: string }> },
@@ -87,47 +74,20 @@ export async function POST(
   if (!guard.ok) return guard.response
 
   const { albumId: parentAlbumId } = await params
-  if (!galleryIdSchema.safeParse(parentAlbumId).success) {
-    return NextResponse.json({ error: 'El id del álbum no es válido.' }, { status: 400 })
-  }
+  if (!isUuid(parentAlbumId)) return invalidAlbumId()
 
-  let body: unknown
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = subAlbumCreateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
+    const result = await createGallerySubAlbum(parentAlbumId, parsed.data)
+    if (!result.ok) return albumWriteFailure(result)
 
-  const parsed = gallerySubAlbumInputSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
+    return ok({ album: result.album }, 201)
+  } catch (error) {
+    return internalError('No se pudo crear el subálbum.', error)
   }
-
-  const result = await createGallerySubAlbum(parentAlbumId, parsed.data)
-  if (!result.ok) {
-    if (result.reason === 'parent-not-found') {
-      return NextResponse.json({ error: 'No existe el álbum padre indicado.' }, { status: 404 })
-    }
-    if (result.reason === 'parent-not-top-level') {
-      return NextResponse.json(
-        { error: 'No se pueden crear subálbumes dentro de otro subálbum.' },
-        { status: 400 },
-      )
-    }
-    return NextResponse.json({ error: 'Ya existe un álbum con este slug.' }, { status: 409 })
-  }
-
-  return NextResponse.json(
-    { album: result.album },
-    { status: 201, headers: { 'Cache-Control': 'no-store' } },
-  )
 }

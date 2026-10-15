@@ -288,6 +288,29 @@ class GalleryAlbum(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
+class GalleryAlbumTranslation(Base):
+    """The ``title`` and ``description`` of a `GalleryAlbum` in a language other
+    than the source one. One row per (album, locale); the source text stays on
+    ``gallery_albums``.
+    """
+
+    __tablename__ = "gallery_album_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "album_id", "locale", name="gallery_album_translations_album_id_locale_key"
+        ),
+        {"schema": "gallery"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    album_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("gallery.gallery_albums.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 class GalleryMedia(Base):
     """One photo or video shown in an album's masonry grid and lightbox. Lives in

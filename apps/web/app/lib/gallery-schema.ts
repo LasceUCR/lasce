@@ -185,6 +185,8 @@ export const albumUpdateSchema = z
     confirmedUnchanged: albumContent.confirmationsSchema.optional(),
     ...albumSharedFields,
     slug: albumSharedFields.slug.optional(),
+    yearsLabel: z.string().trim().min(1).nullable().optional(),
+    coverObjectKey: z.string().trim().min(1).nullable().optional(),
   })
   .superRefine((input, context) => {
     if (input.confirmedUnchanged && !input.content) {

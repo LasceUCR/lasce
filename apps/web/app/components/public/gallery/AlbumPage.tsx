@@ -13,7 +13,7 @@ import { AlbumForm, type AlbumFormValues } from '@/app/components/public/gallery
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import type { GalleryMedia, GallerySubAlbum } from '@/app/lib/gallery-schema'
+import type { GalleryMedia, GallerySubAlbum, ReviewConfirmation } from '@/app/lib/gallery-schema'
 
 const blankAlbum: AlbumFormValues = {
   title: '',
@@ -118,8 +118,7 @@ export function AlbumPage({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug,
-          title: values.title,
-          description: values.description,
+          content: values.content,
           yearsLabel: values.yearsLabel.trim() || null,
           coverObjectKey: values.coverObjectKey,
         }),
@@ -175,9 +174,13 @@ export function AlbumPage({
     setEditingSubAlbum(null)
   }
 
-  async function handleSave(values: AlbumFormValues): Promise<void> {
+  async function handleSave(
+    values: AlbumFormValues,
+    confirmed: ReviewConfirmation[],
+  ): Promise<void> {
     const albumId = editingSubAlbum?.id
-    if (!albumId || saveInProgress.current) return
+    const version = editingSubAlbum?.editing?.version
+    if (!albumId || !version || saveInProgress.current) return
 
     saveInProgress.current = true
     setIsSaving(true)
@@ -188,8 +191,8 @@ export function AlbumPage({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: values.title,
-          description: values.description,
+          version,
+          ...(values.content ? { content: values.content, confirmedUnchanged: confirmed } : {}),
           yearsLabel: values.yearsLabel.trim() || null,
           coverObjectKey: values.coverObjectKey || null,
         }),
@@ -239,8 +242,6 @@ export function AlbumPage({
                       {isCreating ? <p role="status">Creando subálbum...</p> : null}
                       <AlbumForm
                         album={blankAlbum}
-                        confirmTitle="Crear subálbum"
-                        confirmMessage="¿Desea crear este subálbum?"
                         onCancel={() => {
                           setCreateError(null)
                           close()
@@ -320,6 +321,7 @@ export function AlbumPage({
         {isSaving ? <p role="status">Guardando subálbum...</p> : null}
         {editingSubAlbum ? (
           <AlbumForm
+            stored={editingSubAlbum.editing?.content}
             album={{
               title: editingSubAlbum.title,
               description: editingSubAlbum.description,
