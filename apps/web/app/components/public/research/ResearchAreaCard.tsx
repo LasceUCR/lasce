@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 import { useId } from 'react'
 
 import { Button } from '@/app/components/public/Button'
+import { TruncatedText } from '@/app/components/public/TruncatedText'
 import { MediaFrame } from '@/app/components/public/gallery/MediaFrame'
 
 export interface ResearchAreaCardProps {
@@ -49,9 +50,10 @@ export function ResearchAreaCard({
           {title}
         </h3>
 
-        <p className="research-area-card-description" lang={contentLang}>
+        {/* Three lines keep every card the same height; "Leer más" shows the rest in place. */}
+        <TruncatedText className="research-area-card-description" lang={contentLang} lines={3}>
           {description}
-        </p>
+        </TruncatedText>
 
         <div className="research-area-card-action">
           <Button

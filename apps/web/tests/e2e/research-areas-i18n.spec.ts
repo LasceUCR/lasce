@@ -297,3 +297,49 @@ test('meets WCAG A and AA automated checks in the editor, in English', async ({
     await account.cleanup()
   }
 })
+
+test('shows a long description in full with "Leer más", leaving short ones as they are', async ({
+  page,
+}) => {
+  const { prisma } = await import('@lasce/db')
+  const id = randomUUID().slice(0, 8)
+  const longDescription = `${'Diseña y desarrolla plataformas informáticas para capturar y consultar datos solares. '.repeat(8)}Fin ${id}.`
+  const long = await prisma.researchArea.create({
+    data: {
+      title: `Área extensa ${id}`,
+      description: longDescription,
+      src: '/images/research/geomagnetismo-costa-rica.jpg',
+    },
+  })
+  const short = await prisma.researchArea.create({
+    data: {
+      title: `Área breve ${id}`,
+      description: 'Una línea.',
+      src: '/images/research/geomagnetismo-costa-rica.jpg',
+    },
+  })
+  try {
+    await page.goto('/investigacion')
+
+    const longCard = page.getByRole('article', { name: `Área extensa ${id}` })
+    const description = longCard.getByText(longDescription)
+    const clampedHeight = (await description.boundingBox())?.height ?? 0
+    const toggle = longCard.getByRole('button', { name: 'Leer más' })
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await toggle.click()
+    await expect(longCard.getByRole('button', { name: 'Leer menos' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+    expect((await description.boundingBox())?.height ?? 0).toBeGreaterThan(clampedHeight + 10)
+
+    await expect(
+      page
+        .getByRole('article', { name: `Área breve ${id}` })
+        .getByRole('button', { name: 'Leer más' }),
+    ).toHaveCount(0)
+  } finally {
+    await prisma.researchArea.deleteMany({ where: { id: { in: [long.id, short.id] } } })
+  }
+})

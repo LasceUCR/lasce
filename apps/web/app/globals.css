@@ -4745,16 +4745,10 @@ a.gallery-tile:focus-visible {
 
 /* Clamped so every card keeps one height; the full text is the detail page's lead. */
 .research-area-card-description {
-  display: -webkit-box;
-  overflow: hidden;
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
 }
 
 /* Bottom-right corner of the card, so every button lines up down the right edge of the list. */

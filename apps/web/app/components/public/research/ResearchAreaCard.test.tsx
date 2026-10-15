@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
@@ -78,5 +79,50 @@ describe('ResearchAreaCard', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByText('Research area image')).toBeInTheDocument()
+  })
+})
+
+describe('ResearchAreaCard: long descriptions', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  /** jsdom lays nothing out: report the description as taller than its three clamped lines. */
+  function overflowDescriptions() {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(private readonly callback: () => void) {}
+        observe() {
+          this.callback()
+        }
+        disconnect() {}
+      },
+    )
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(60)
+  }
+
+  test('clamps a long description to three lines and shows the rest with "Leer más"', async () => {
+    overflowDescriptions()
+    const user = userEvent.setup()
+    renderWithIntl(<ResearchAreaCard {...longArgs} />)
+
+    const description = screen.getByText(longArgs.description)
+    expect(description.style.getPropertyValue('-webkit-line-clamp')).toBe('3')
+
+    await user.click(screen.getByRole('button', { name: 'Leer más' }))
+
+    expect(description.style.getPropertyValue('-webkit-line-clamp')).toBe('')
+    expect(screen.getByRole('button', { name: 'Leer menos' })).toBeInTheDocument()
+    // The detail page is still the card's one link.
+    expect(screen.getAllByRole('link')).toHaveLength(1)
+  })
+
+  test('shows no "Leer más" for a description that fits', () => {
+    renderWithIntl(<ResearchAreaCard {...defaultArgs} />)
+
+    expect(screen.queryByRole('button', { name: 'Leer más' })).not.toBeInTheDocument()
   })
 })
