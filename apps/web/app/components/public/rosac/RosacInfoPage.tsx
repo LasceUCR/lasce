@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Crosshair,
   GraduationCap,
@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { Modal } from '@/app/components/public/Modal'
@@ -26,10 +27,10 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import type { RosacAcknowledgment, RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 import type { ConstructionStage } from '@/app/lib/rosac-construction'
 import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
-import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import styles from './RosacInfoPage.module.css'
 import { AcknowledgmentsGallery } from './AcknowledgmentsGallery'
@@ -126,6 +127,8 @@ export function RosacInfoPage({
 }: RosacInfoPageProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
+  const tResearchers = useTranslations('researchers')
+  const sendWithFeedback = useRequestFeedback()
 
   // --- Section 1: Characteristics State (Edit only, fixed 4 cards) ---
   const [characteristics, setCharacteristics] = useState(content.characteristics.items)
@@ -149,10 +152,8 @@ export function RosacInfoPage({
   const [instrumentCreateError, setInstrumentCreateError] = useState<string | null>(null)
   const [instrumentListError, setInstrumentListError] = useState<string | null>(null)
 
-  // --- Section 7: Researchers State (Existing logic preserved) ---
-  const [createError, setCreateError] = useState<string | null>(null)
+  // --- Section 7: Researchers State ---
   const [listError, setListError] = useState<string | null>(null)
-  const createErrorRef = useRef<HTMLParagraphElement>(null)
 
   // --- Section 8: Acknowledgments State (Create, Edit, Delete) ---
   const [acknowledgments, setAcknowledgments] = useState<RosacAcknowledgment[]>(() =>
@@ -198,13 +199,6 @@ export function RosacInfoPage({
       // ignore storage errors
     }
   }, [content.construction.stages])
-
-  // Scrolls the "Añadir investigador" error into view as soon as it appears
-  useEffect(() => {
-    if (createError) {
-      scrollIntoViewIfSupported(createErrorRef.current)
-    }
-  }, [createError])
 
   // --- Section 1: Characteristics handlers ---
   const editingCharacteristic = characteristics.find((item) => item.id === editingCharacteristicId)
@@ -408,54 +402,43 @@ export function RosacInfoPage({
     saveToLocalStorage(ROSAC_STORAGE_KEYS.instruments, updated)
   }
 
-  // --- Section 7: Researcher Handlers (Preserved unchanged) ---
-  async function handleSaveResearcher(
-    id: string,
-    values: ResearcherFormValues,
-  ): Promise<string | null> {
-    let response: Response
-    try {
-      response = await fetch(`/api/researchers/${id}`, {
+  // --- Section 7: Researcher Handlers ---
+  // Reports the outcome in a toast once the request is done, then refreshes the team.
+  async function handleSaveResearcher(id: string, values: ResearcherFormValues): Promise<boolean> {
+    return sendWithFeedback(
+      `/api/researchers/${id}`,
+      {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
-      })
-    } catch {
-      return SAVE_ERROR_MESSAGE
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      return body?.error ?? SAVE_ERROR_MESSAGE
-    }
-
-    router.refresh()
-    return null
+      },
+      {
+        success: tResearchers('updated'),
+        fallback: tResearchers('errors.unknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
+  // Reports the outcome in a toast once the request is done. On success the "Añadir" modal
+  // closes and the page refreshes; on failure it stays open with what was typed.
   async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
-    setCreateError(null)
-
-    let response: Response
-    try {
-      response = await fetch('/api/researchers', {
+    await sendWithFeedback(
+      '/api/researchers',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
-      })
-    } catch {
-      setCreateError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    close()
-    router.refresh()
+      },
+      {
+        success: tResearchers('created'),
+        fallback: tResearchers('errors.unknown'),
+        onSuccess: () => {
+          close()
+          router.refresh()
+        },
+      },
+    )
   }
 
   async function handleDeleteResearcher(id: string) {
@@ -804,23 +787,11 @@ export function RosacInfoPage({
             editMode && canCreate ? (
               <AddItemCard label="Añadir investigador">
                 {({ close }) => (
-                  <>
-                    {createError ? (
-                      <p className="form-alert" ref={createErrorRef} role="alert">
-                        {createError}
-                      </p>
-                    ) : null}
-                    <ResearcherForm
-                      confirmMessage="¿Desea agregar este investigador?"
-                      confirmTitle="Agregar investigador"
-                      onCancel={() => {
-                        setCreateError(null)
-                        close()
-                      }}
-                      onSave={(values) => handleCreateResearcher(values, close)}
-                      researcher={null}
-                    />
-                  </>
+                  <ResearcherForm
+                    onCancel={close}
+                    onSave={(values) => handleCreateResearcher(values, close)}
+                    researcher={null}
+                  />
                 )}
               </AddItemCard>
             ) : undefined
