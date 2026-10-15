@@ -19,8 +19,6 @@ export interface FormFieldProps {
   placeholder?: string
   required?: boolean
   id?: string
-  /** Stops the input once this many characters are typed. */
-  maxLength?: number
   /**
    * Checks `value` once it's sat idle for `VALIDATION_DEBOUNCE_MS`, throwing
    * an `Error` whose `message` is shown below the field. Doesn't throw → no
@@ -65,7 +63,6 @@ export function FormField({
   error: externalError,
   errorMessage,
   lang,
-  maxLength,
 }: FormFieldProps) {
   const [error, setError] = useState<string | null>(null)
   const errorId = useId()
