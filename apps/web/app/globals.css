@@ -4271,6 +4271,16 @@ a {
   flex: 1;
 }
 
+/* In edit mode the album's cover tile fix. */
+.gallery-grid > li > .gallery-grid-editable {
+  display: flex;
+  flex: 1;
+}
+
+.gallery-grid-editable > .gallery-tile {
+  flex: 1;
+}
+
 .gallery-subalbum-add {
   min-height: 260px;
 }
