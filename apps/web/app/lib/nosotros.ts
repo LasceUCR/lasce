@@ -305,7 +305,7 @@ const englishResearcherText: Record<string, ResearcherFixtureText> = {
  * it.
  */
 function fixtureResearcher(person: NosotrosResearcher): NosotrosResearcher {
-  const en = englishResearcherText[person.id]
+  const en = englishResearcherText[person.id] ?? null
   const es: ResearcherFixtureText = {
     role: person.role,
     description: person.description ?? null,

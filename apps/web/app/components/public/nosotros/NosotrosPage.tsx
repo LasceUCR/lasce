@@ -336,7 +336,9 @@ export function NosotrosPage({
               canEdit={canEdit}
               contentLang={contentLangAttribute(person.contentLocale)}
               onDelete={() => handleDeleteResearcher(person.id)}
-              onSave={(values) => handleSaveResearcher(person, values)}
+              onSave={(values: BilingualResearcherFormValues) =>
+                handleSaveResearcher(person, values)
+              }
               researcher={person}
               translation={{ editing: person.editing ?? null }}
             />
@@ -349,7 +351,9 @@ export function NosotrosPage({
                     confirmMessage={tResearchers('createConfirmMessage')}
                     confirmTitle={tResearchers('createConfirmTitle')}
                     onCancel={close}
-                    onSave={(values) => handleCreateResearcher(values, close)}
+                    onSave={(values: BilingualResearcherFormValues) =>
+                      handleCreateResearcher(values, close)
+                    }
                     researcher={null}
                     translation={{ editing: null }}
                   />
