@@ -9,6 +9,9 @@ import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 
+import type { ResearchArea } from '@/app/lib/research-area-schema'
+import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
+
 import { ResearchAreaForm, type ResearchAreaFormValues } from './ResearchAreaForm'
 
 const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
@@ -19,12 +22,7 @@ const blankArea: ResearchAreaFormValues = {
   src: '',
 }
 
-export interface ResearchArea {
-  id: string
-  title: string
-  description: string
-  src?: string
-}
+export type { ResearchArea } from '@/app/lib/research-area-schema'
 
 export interface ResearchAreasSectionProps {
   /** Visible heading. Omit it when the page already shows the title, and pass `label`. */
@@ -200,6 +198,7 @@ export function ResearchAreasSection({
                   deleteConfirmTitle="Eliminar área"
                 >
                   <ResearchAreaCard
+                    contentLang={contentLangAttribute(area.contentLocale)}
                     description={area.description}
                     href={`/investigacion/areas/${area.id}`}
                     src={area.src}

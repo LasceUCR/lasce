@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { ResearchAreasSection, type ResearchAreasSectionProps } from './ResearchAreasSection'
 import { Default, Empty } from './ResearchAreasSection.stories'
@@ -42,7 +44,7 @@ const firstArea = defaultArgs.areas[0]
 if (!firstArea) throw new Error('The default research areas story must contain an area.')
 
 function renderCreateSection() {
-  return render(
+  return renderWithIntl(
     <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
       <ResearchAreasSection
         areas={[]}
@@ -55,7 +57,7 @@ function renderCreateSection() {
 }
 
 function renderSection(props: ResearchAreasSectionProps) {
-  return render(
+  return renderWithIntl(
     <EditModeContext.Provider value={{ editMode: false, setEditMode: vi.fn() }}>
       <ResearchAreasSection {...props} />
     </EditModeContext.Provider>,
@@ -63,7 +65,7 @@ function renderSection(props: ResearchAreasSectionProps) {
 }
 
 function renderEditableSection() {
-  return render(
+  return renderWithIntl(
     <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
       <ResearchAreasSection {...defaultArgs} canDelete canEdit />
     </EditModeContext.Provider>,
@@ -88,6 +90,19 @@ describe('ResearchAreasSection', () => {
     const list = screen.getByRole('list')
 
     expect(within(list).getAllByRole('listitem')).toHaveLength(defaultArgs.areas.length)
+  })
+
+  test('marks each card with the language its text is in', () => {
+    renderSection({
+      ...defaultArgs,
+      areas: [
+        { ...firstArea, contentLocale: 'en' },
+        { ...firstArea, id: 'legacy-area', title: 'Área sin traducción', contentLocale: null },
+      ],
+    })
+
+    expect(screen.getByRole('heading', { name: firstArea.title })).toHaveAttribute('lang', 'en')
+    expect(screen.getByRole('heading', { name: 'Área sin traducción' })).toHaveAttribute('lang', '')
   })
 
   test('shows every research area with its title and description', () => {

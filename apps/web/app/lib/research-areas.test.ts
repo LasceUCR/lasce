@@ -1,15 +1,52 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-const mocks = vi.hoisted(() => ({ findUnique: vi.fn(), update: vi.fn(), delete: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+  findMany: vi.fn(),
+  findUnique: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+}))
 
 vi.mock('@lasce/db', () => ({
   prisma: {
-    researchArea: { findUnique: mocks.findUnique, update: mocks.update, delete: mocks.delete },
+    researchArea: {
+      findMany: mocks.findMany,
+      findUnique: mocks.findUnique,
+      update: mocks.update,
+      delete: mocks.delete,
+    },
   },
 }))
 
-import { getResearchAreaById, researchAreaIds, researchAreas } from './research-areas'
+import {
+  getResearchAreaById,
+  getResearchAreas,
+  researchAreaIds,
+  researchAreas,
+} from './research-areas'
 import { deleteResearchArea, updateResearchArea } from './research-areas'
+
+/** The translation rows every read loads with an area, for the supported locales. */
+const areaInclude = {
+  translations: {
+    where: { locale: { in: ['en'] } },
+    select: { locale: true, title: true, description: true },
+  },
+}
+
+const bilingualRow = {
+  id: '00000000-0000-4000-8000-000000000001',
+  title: 'Geomagnetismo en Costa Rica',
+  description: 'Estudia el campo magnético.',
+  src: '/images/research/geomagnetismo.jpg',
+  translations: [
+    {
+      locale: 'en',
+      title: 'Geomagnetism in Costa Rica',
+      description: 'Studies the magnetic field.',
+    },
+  ],
+}
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -21,17 +58,54 @@ describe('research-areas', () => {
     expect(new Set(researchAreaIds).size).toBe(researchAreaIds.length)
   })
 
-  test('loads a research area by its UUID', async () => {
-    const row = {
-      id: '00000000-0000-4000-8000-000000000001',
-      title: 'Área de prueba',
-      description: 'Descripción.',
-      src: null,
-    }
-    mocks.findUnique.mockResolvedValue(row)
+  test('loads a research area by its UUID, in Spanish by default', async () => {
+    mocks.findUnique.mockResolvedValue(bilingualRow)
 
-    await expect(getResearchAreaById(row.id)).resolves.toEqual({ ...row, src: undefined })
-    expect(mocks.findUnique).toHaveBeenCalledWith({ where: { id: row.id } })
+    await expect(getResearchAreaById(bilingualRow.id)).resolves.toEqual({
+      id: bilingualRow.id,
+      title: 'Geomagnetismo en Costa Rica',
+      description: 'Estudia el campo magnético.',
+      src: '/images/research/geomagnetismo.jpg',
+      contentLocale: 'es',
+    })
+    expect(mocks.findUnique).toHaveBeenCalledWith({
+      where: { id: bilingualRow.id },
+      include: areaInclude,
+    })
+  })
+
+  test('loads a research area in the requested language when it has it', async () => {
+    mocks.findUnique.mockResolvedValue(bilingualRow)
+
+    await expect(getResearchAreaById(bilingualRow.id, 'en')).resolves.toMatchObject({
+      title: 'Geomagnetism in Costa Rica',
+      description: 'Studies the magnetic field.',
+      contentLocale: 'en',
+    })
+  })
+
+  test('shows an area without its translation in its base text, in an unknown language', async () => {
+    mocks.findUnique.mockResolvedValue({ ...bilingualRow, src: null, translations: [] })
+
+    await expect(getResearchAreaById(bilingualRow.id, 'en')).resolves.toEqual({
+      id: bilingualRow.id,
+      title: 'Geomagnetismo en Costa Rica',
+      description: 'Estudia el campo magnético.',
+      src: undefined,
+      contentLocale: null,
+    })
+  })
+
+  test('lists every area oldest first in the requested language', async () => {
+    mocks.findMany.mockResolvedValue([bilingualRow])
+
+    const areas = await getResearchAreas('en')
+
+    expect(areas.map((area) => area.title)).toEqual(['Geomagnetism in Costa Rica'])
+    expect(mocks.findMany).toHaveBeenCalledWith({
+      include: areaInclude,
+      orderBy: { createdAt: 'asc' },
+    })
   })
 
   test('returns null for an unknown UUID', async () => {
@@ -49,10 +123,14 @@ describe('research-areas', () => {
     const id = '00000000-0000-4000-8000-000000000001'
     const input = { title: 'Nuevo título', description: 'Nueva descripción.', src: '/nueva.jpg' }
     mocks.findUnique.mockResolvedValue({ id })
-    mocks.update.mockResolvedValue({ id, ...input })
+    mocks.update.mockResolvedValue({ id, ...input, translations: [] })
 
-    await expect(updateResearchArea(id, input)).resolves.toEqual({ id, ...input })
-    expect(mocks.update).toHaveBeenCalledWith({ where: { id }, data: input })
+    await expect(updateResearchArea(id, input)).resolves.toEqual({
+      id,
+      ...input,
+      contentLocale: null,
+    })
+    expect(mocks.update).toHaveBeenCalledWith({ where: { id }, data: input, include: areaInclude })
   })
 
   test('returns null without updating a missing research area', async () => {

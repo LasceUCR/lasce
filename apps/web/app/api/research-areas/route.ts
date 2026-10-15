@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import { getLocale } from 'next-intl/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
+import { resolveLocale } from '@/app/lib/i18n/locale'
 import {
   createResearchArea,
   getResearchAreas,
@@ -9,8 +11,9 @@ import {
 
 export const dynamic = 'force-dynamic'
 
+/** Public list, in the language of the request's `lasce_locale` cookie. */
 export async function GET(): Promise<NextResponse> {
-  const areas = await getResearchAreas()
+  const areas = await getResearchAreas(resolveLocale(await getLocale()))
 
   return NextResponse.json({ areas }, { headers: { 'Cache-Control': 'no-store' } })
 }

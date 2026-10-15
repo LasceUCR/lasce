@@ -1,0 +1,133 @@
+import { randomUUID } from 'node:crypto'
+
+import AxeBuilder from '@axe-core/playwright'
+import { expect, test, type Page } from '@playwright/test'
+
+// Wide enough for the desktop header, where the language menu lives above 1400px.
+test.use({ viewport: { width: 1600, height: 900 } })
+
+/**
+ * Two research areas of its own per test, deleted afterwards, so the seed is never touched: one
+ * with both languages and one legacy area (no translation row).
+ */
+async function createFixtures() {
+  const { prisma } = await import('@lasce/db')
+  const id = randomUUID().slice(0, 8)
+
+  const bilingual = await prisma.researchArea.create({
+    data: {
+      title: `Área bilingüe ${id}`,
+      description: `Descripción en español del área ${id}.`,
+      src: '/images/research/geomagnetismo-costa-rica.jpg',
+      translations: {
+        create: {
+          locale: 'en',
+          title: `Bilingual area ${id}`,
+          description: `English description of area ${id}.`,
+        },
+      },
+    },
+  })
+
+  const legacy = await prisma.researchArea.create({
+    data: {
+      title: `Área heredada ${id}`,
+      description: `Guardada antes de que existieran los idiomas ${id}.`,
+      src: '/images/research/geomagnetismo-costa-rica.jpg',
+    },
+  })
+
+  return {
+    id,
+    bilingual,
+    legacy,
+    cleanup: () =>
+      prisma.researchArea.deleteMany({ where: { id: { in: [bilingual.id, legacy.id] } } }),
+  }
+}
+
+/** The header's language menu is labelled in the current language: "Idioma" or "Language". */
+const languageMenuLabel = { Español: 'Idioma: Español', English: 'Language: English' } as const
+
+async function switchLanguage(page: Page, from: 'Español' | 'English', to: 'Español' | 'English') {
+  await page.getByRole('banner').getByLabel(languageMenuLabel[from]).click()
+  await page.getByRole('banner').getByRole('button', { name: to }).click()
+}
+
+test('shows each research area in the language chosen in the header, and remembers it', async ({
+  page,
+}) => {
+  const fixtures = await createFixtures()
+  try {
+    await page.goto('/investigacion')
+
+    const spanishTitle = page.getByRole('heading', { name: fixtures.bilingual.title })
+    await expect(spanishTitle).toHaveAttribute('lang', 'es')
+    // A legacy area is shown as stored, without claiming any language.
+    await expect(page.getByRole('heading', { name: fixtures.legacy.title })).toHaveAttribute(
+      'lang',
+      '',
+    )
+
+    await switchLanguage(page, 'Español', 'English')
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+    await expect(page.getByRole('heading', { level: 1, name: 'Research areas' })).toBeVisible()
+    const englishTitle = page.getByRole('heading', { name: `Bilingual area ${fixtures.id}` })
+    await expect(englishTitle).toHaveAttribute('lang', 'en')
+    await expect(page.getByText(`English description of area ${fixtures.id}.`)).toBeVisible()
+    // No translation: the base text stays, and nothing shows a raw key.
+    await expect(page.getByRole('heading', { name: fixtures.legacy.title })).toBeVisible()
+    await expect(page).toHaveURL(/\/investigacion$/)
+
+    await page.reload()
+    await expect(englishTitle).toBeVisible()
+
+    await switchLanguage(page, 'English', 'Español')
+    await expect(spanishTitle).toBeVisible()
+  } finally {
+    await fixtures.cleanup()
+  }
+})
+
+test('opens an area in English from its card and reads it in that language', async ({
+  context,
+  page,
+}) => {
+  const fixtures = await createFixtures()
+  try {
+    await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
+    await page.goto('/investigacion')
+
+    await page
+      .getByRole('link', { name: `Learn more about this area (Bilingual area ${fixtures.id})` })
+      .click()
+
+    await expect(page).toHaveURL(new RegExp(`/investigacion/areas/${fixtures.bilingual.id}$`))
+    const heading = page.getByRole('heading', { level: 1, name: `Bilingual area ${fixtures.id}` })
+    await expect(heading).toHaveAttribute('lang', 'en')
+    await expect(page.getByText('Research area', { exact: true })).toBeVisible()
+    await expect(page).toHaveTitle(`Bilingual area ${fixtures.id} | Research | LASCE`)
+    await expect(page.getByRole('link', { name: 'Back to research areas' })).toBeVisible()
+  } finally {
+    await fixtures.cleanup()
+  }
+})
+
+test('meets WCAG A and AA automated checks in English', async ({ context, page }) => {
+  const fixtures = await createFixtures()
+  const axe = () => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+  try {
+    await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
+
+    await page.goto('/investigacion')
+    await expect(page.getByRole('heading', { level: 1, name: 'Research areas' })).toBeVisible()
+    expect((await axe().analyze()).violations).toEqual([])
+
+    await page.goto(`/investigacion/areas/${fixtures.legacy.id}`)
+    await expect(page.getByRole('heading', { level: 1, name: fixtures.legacy.title })).toBeVisible()
+    expect((await axe().analyze()).violations).toEqual([])
+  } finally {
+    await fixtures.cleanup()
+  }
+})

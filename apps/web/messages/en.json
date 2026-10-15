@@ -493,5 +493,23 @@
       "saveUnknown": "The news item could not be saved. Try again.",
       "deleteUnknown": "The news item could not be deleted. Try again."
     }
+  },
+  "researchAreas": {
+    "page": {
+      "metaTitle": "Research | LASCE",
+      "metaDescription": "Research areas of the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
+      "kicker": "LASCE public portal",
+      "title": "Research areas",
+      "lead": "Main research branches developed by LASCE."
+    },
+    "card": {
+      "readMore": "Learn more about this area",
+      "imagePlaceholder": "Research area image"
+    },
+    "detail": {
+      "metaTitle": "{title} | Research | LASCE",
+      "kicker": "Research area",
+      "back": "Back to research areas"
+    }
   }
 }

@@ -1,24 +1,19 @@
-import { prisma } from '@lasce/db'
-import type { ResearchArea } from '@/app/components/public/research/ResearchAreasSection'
+import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
-export const investigacionMeta = {
-  title: 'Investigación | LASCE',
-  description:
-    'Áreas de investigación del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-} as const
+import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+import { translationLocales } from '@/app/lib/i18n/content/definition'
+import { resolveContent, storedContentFrom } from '@/app/lib/i18n/content/resolve'
 
-export const investigacionHero = {
-  kicker: 'Portal público LASCE',
-  title: 'Áreas de investigación',
-  lead: 'Principales ramas de investigación desarrolladas por el LASCE.',
-} as const
+import { researchAreaContent, type ResearchArea } from './research-area-schema'
 
-export const investigacionBackLink = {
-  href: '/',
-  label: 'Volver al inicio',
-} as const
+export * from './research-area-schema'
 
+/**
+ * Fixture areas for stories and tests, in Spanish only. The public pages read the areas from the
+ * database (`getResearchAreas`), where `packages/db/prisma/seed.ts` writes them in both
+ * languages.
+ */
 export const researchAreas: ResearchArea[] = [
   {
     id: 'radioastronomia-solar-evolucion-flares-cmes',
@@ -81,33 +76,52 @@ export const researchAreaInputSchema = z.object({
 
 export type ResearchAreaInput = z.infer<typeof researchAreaInputSchema>
 
-type ResearchAreaRow = {
-  id: string
-  title: string
-  description: string
-  src: string | null
-}
+/** The translation rows read with an area, for the locales the site supports. */
+const areaInclude = {
+  translations: {
+    where: { locale: { in: [...translationLocales] } },
+    select: { locale: true, title: true, description: true },
+  },
+} satisfies Prisma.ResearchAreaInclude
 
-function toResearchArea(row: ResearchAreaRow): ResearchArea {
+type ResearchAreaRecord = Prisma.ResearchAreaGetPayload<{ include: typeof areaInclude }>
+
+/**
+ * An area in `locale`, falling back per record to its base text: a complete area shows Spanish
+ * when it has no row for `locale`, and an area saved before translations existed shows its base
+ * text in an unknown language (`contentLocale: null`).
+ */
+function toResearchArea(record: ResearchAreaRecord, locale: Locale): ResearchArea {
+  const stored = storedContentFrom(researchAreaContent, record, record.translations)
+  const { content, contentLocale } = resolveContent(stored, locale)
+
   return {
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    src: row.src ?? undefined,
+    id: record.id,
+    title: content.title,
+    description: content.description,
+    src: record.src ?? undefined,
+    contentLocale,
   }
 }
 
-export async function getResearchAreas(): Promise<ResearchArea[]> {
-  const rows = await prisma.researchArea.findMany({ orderBy: { createdAt: 'asc' } })
+/** Every area, oldest first, in `locale` (the language of the request's `lasce_locale` cookie). */
+export async function getResearchAreas(locale: Locale = defaultLocale): Promise<ResearchArea[]> {
+  const records = await prisma.researchArea.findMany({
+    include: areaInclude,
+    orderBy: { createdAt: 'asc' },
+  })
 
-  return rows.map(toResearchArea)
+  return records.map((record) => toResearchArea(record, locale))
 }
 
-export async function getResearchAreaById(id: string): Promise<ResearchArea | null> {
+export async function getResearchAreaById(
+  id: string,
+  locale: Locale = defaultLocale,
+): Promise<ResearchArea | null> {
   if (!z.uuid().safeParse(id).success) return null
 
-  const row = await prisma.researchArea.findUnique({ where: { id } })
-  return row ? toResearchArea(row) : null
+  const record = await prisma.researchArea.findUnique({ where: { id }, include: areaInclude })
+  return record ? toResearchArea(record, locale) : null
 }
 
 export async function createResearchArea(data: ResearchAreaInput) {
@@ -129,16 +143,17 @@ export async function updateResearchArea(
   const existing = await prisma.researchArea.findUnique({ where: { id } })
   if (!existing) return null
 
-  const row = await prisma.researchArea.update({
+  const record = await prisma.researchArea.update({
     where: { id },
     data: {
       title: data.title,
       description: data.description,
       src: data.src,
     },
+    include: areaInclude,
   })
 
-  return toResearchArea(row)
+  return toResearchArea(record, defaultLocale)
 }
 
 export async function deleteResearchArea(id: string): Promise<boolean> {
