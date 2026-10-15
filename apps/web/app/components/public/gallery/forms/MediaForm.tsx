@@ -8,6 +8,7 @@ import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import { useModalHeaderSlot } from '@/app/components/public/Modal'
+import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
@@ -68,6 +69,8 @@ export interface MediaFormProps {
   /** The text as stored in every language, and the version it was loaded at, when editing. */
   stored?: StoredMediaContent | null
   version?: string
+  /** True when the file predates translations, so its base text may not be in Spanish. */
+  isLegacy?: boolean
   /** The album the image is added to. */
   albumId: string
   /** The signed-in user's name, recorded as the uploader. */
@@ -93,11 +96,13 @@ export function MediaForm({
   media,
   stored = null,
   version,
+  isLegacy = false,
   onSaved,
   onCancel,
 }: MediaFormProps) {
   const isEdit = media !== undefined
   const t = useTranslations('publications')
+  const tGallery = useTranslations('gallery')
   const uiLocale = useLocale() as Locale
   const formId = useId()
   const headerSlot = useModalHeaderSlot()
@@ -252,9 +257,9 @@ export function MediaForm({
     <div className="gallery-media-form">
       <FileDropInput
         existingImageUrl={media?.src}
-        helperText="Imagen en formato JPG o PNG."
-        label="Imagen"
-        errorMessage={hasAttemptedSubmit && missingFile ? 'Es necesaria una imagen.' : null}
+        helperText={tGallery('editor.mediaHelperText')}
+        label={tGallery('editor.mediaField')}
+        errorMessage={hasAttemptedSubmit && missingFile ? tGallery('editor.mediaRequired') : null}
         onFileSelect={setFile}
         required={!isEdit}
       />
@@ -269,10 +274,18 @@ export function MediaForm({
       >
         {(locale) => (
           <>
+            {isLegacy && locale === defaultLocale ? (
+              <Notice>{tGallery('editor.mediaLegacyBaseText')}</Notice>
+            ) : null}
+
+            {isLegacy && locale !== defaultLocale ? (
+              <Notice tone="warning">{tGallery('editor.mediaLegacyNoTranslation')}</Notice>
+            ) : null}
+
             <FormField
               error={errors[contentPath(locale, 'title')]}
               id={`${formId}-${locale}-title`}
-              label={`Título (${languageLabels[locale]})`}
+              label={t('editor.titleField', { language: languageLabels[locale] })}
               lang={contentFieldLang(stored, locale)}
               onChange={(value) => updateContent(locale, 'title', value)}
               required
@@ -283,7 +296,7 @@ export function MediaForm({
             <FormField
               error={errors[contentPath(locale, 'description')]}
               id={`${formId}-${locale}-description`}
-              label={`Descripción (${languageLabels[locale]})`}
+              label={t('editor.descriptionField', { language: languageLabels[locale] })}
               lang={contentFieldLang(stored, locale)}
               multiline
               onChange={(value) => updateContent(locale, 'description', value)}
@@ -295,7 +308,7 @@ export function MediaForm({
             <FormField
               error={errors[contentPath(locale, 'altText')]}
               id={`${formId}-${locale}-alt`}
-              label={`Texto alternativo (${languageLabels[locale]})`}
+              label={t('editor.altTextField', { language: languageLabels[locale] })}
               lang={contentFieldLang(stored, locale)}
               onChange={(value) => updateContent(locale, 'altText', value)}
               required
@@ -308,7 +321,7 @@ export function MediaForm({
 
       <FormField
         id="media-date"
-        label="Fecha"
+        label={t('editor.date')}
         onChange={setDate}
         required
         type="date"
@@ -318,7 +331,7 @@ export function MediaForm({
       <div className="cms-form-grid cms-form-grid-2">
         <FormField
           id={`${formId}-gallery-width`}
-          label={'Ancho en la galeria (columnas)'}
+          label={tGallery('editor.galleryWidth')}
           onChange={(value) => {
             setColSpan(value as string)
           }}
@@ -328,7 +341,7 @@ export function MediaForm({
 
         <FormField
           id={`${formId}-gallery-height`}
-          label={'Alto en la galeria (filas)'}
+          label={tGallery('editor.galleryHeight')}
           onChange={(value) => {
             setRowSpan(value as string)
           }}
@@ -339,17 +352,17 @@ export function MediaForm({
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
+          {t('editor.cancel')}
         </Button>
         <Button disabled={isSaving} onClick={handleSubmit} variant="primary">
-          {isSaving ? 'Subiendo imagen...' : 'Confirmar'}
+          {isSaving ? <>{t('editor.uploadingImage')}</> : <>{t('editor.save')}</>}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={() => {
           setConfirmDiscardOpen(false)
@@ -357,7 +370,7 @@ export function MediaForm({
         }}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardDialog.title')}
       />
     </div>
   )

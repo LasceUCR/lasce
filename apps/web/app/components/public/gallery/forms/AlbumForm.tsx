@@ -7,6 +7,7 @@ import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { useModalHeaderSlot } from '@/app/components/public/Modal'
+import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
@@ -63,14 +64,23 @@ export interface AlbumFormProps {
    * one, which needs both languages in full.
    */
   stored?: StoredAlbumContent | null
+  /** True when the album predates translations, so its base text may not be in Spanish. */
+  isLegacy?: boolean
   /** Called once the form is valid, with the confirmations the save still needs. */
   onSave: (values: AlbumFormSaveValues, confirmed: ReviewConfirmation[]) => void
   onCancel: () => void
 }
 
-export function AlbumForm({ album, stored = null, onSave, onCancel }: AlbumFormProps) {
+export function AlbumForm({
+  album,
+  stored = null,
+  isLegacy = false,
+  onSave,
+  onCancel,
+}: AlbumFormProps) {
   // Everything the editor says follows the site's language; the tabs only pick the translation.
   const t = useTranslations('publications')
+  const tGallery = useTranslations('gallery')
   const uiLocale = useLocale() as Locale
   const formId = useId()
   // In a modal, the language tabs sit beside its title and stay in view while the form scrolls.
@@ -226,11 +236,11 @@ export function AlbumForm({ album, stored = null, onSave, onCancel }: AlbumFormP
     <div className="gallery-album-form">
       <FileDropInput
         existingImageUrl={album.coverObjectKey}
-        helperText="Imagen de portada del álbum, en formato JPG o PNG."
+        helperText={tGallery('editor.albumCoverHelperText')}
         errorMessage={
-          hasAttemptedSubmit && !hasCover ? 'Es necesaria una imagen de portada.' : null
+          hasAttemptedSubmit && !hasCover ? tGallery('editor.albumCoverRequired') : null
         }
-        label="Imagen de portada"
+        label={tGallery('editor.albumCoverField')}
         onFileSelect={(file) => {
           setCoverFile(file)
           setCoverRemoved(file === null)
@@ -247,9 +257,17 @@ export function AlbumForm({ album, stored = null, onSave, onCancel }: AlbumFormP
       >
         {(locale) => (
           <>
+            {isLegacy && locale === defaultLocale ? (
+              <Notice>{tGallery('editor.legacyBaseText')}</Notice>
+            ) : null}
+
+            {isLegacy && locale !== defaultLocale ? (
+              <Notice tone="warning">{tGallery('editor.legacyNoTranslation')}</Notice>
+            ) : null}
+
             <FormField
               id={`${formId}-${locale}-title`}
-              label={`Título (${languageLabels[locale]})`}
+              label={t('editor.titleField', { language: languageLabels[locale] })}
               lang={contentFieldLang(stored, locale)}
               onChange={(value) => updateContent(locale, 'title', value)}
               required
@@ -260,7 +278,7 @@ export function AlbumForm({ album, stored = null, onSave, onCancel }: AlbumFormP
 
             <FormField
               id={`${formId}-${locale}-description`}
-              label={`Descripción (${languageLabels[locale]})`}
+              label={t('editor.descriptionField', { language: languageLabels[locale] })}
               lang={contentFieldLang(stored, locale)}
               multiline
               onChange={(value) => updateContent(locale, 'description', value)}
@@ -275,7 +293,7 @@ export function AlbumForm({ album, stored = null, onSave, onCancel }: AlbumFormP
 
       <FormField
         id="album-years-label"
-        label="Años"
+        label={t('editor.yearsLabel')}
         onChange={(value) => setYearsLabel(value)}
         value={yearsLabel}
       />
@@ -288,22 +306,22 @@ export function AlbumForm({ album, stored = null, onSave, onCancel }: AlbumFormP
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
+          {t('editor.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
-          {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
+          {isUploading ? <>{t('editor.uploadingImage')}</> : <>{t('editor.save')}</>}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={handleConfirmDiscard}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardDialog.title')}
       />
     </div>
   )

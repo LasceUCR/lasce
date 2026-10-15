@@ -84,7 +84,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
   return (
     <ul className="gallery-grid tile-list">
       <li className="gallery-grid-add">
-        <AddItemCard label="Añadir álbum">
+        <AddItemCard label="Añadir álbum" size="large">
           {({ close }) => (
             <>
               {createError ? (

@@ -394,6 +394,7 @@
       "editTitle": "Edit publication",
       "editLabel": "Edit {title}",
       "deleteLabel": "Delete {title}",
+      "descriptionField": "Description ({language})",
       "languageTabs": "Content language",
       "titleField": "Title ({language})",
       "abstractField": "Abstract ({language})",
@@ -407,7 +408,10 @@
       "group": "Group",
       "cancel": "Cancel",
       "save": "Confirm",
-      "reload": "Close and load the current version"
+      "reload": "Close and load the current version",
+      "yearsLabel": "Time span",
+      "uploadingImage": "Uploading image...",
+      "altTextField": "Alternative text ({language})"
     },
     "authors": {
       "label": "Authors",
@@ -463,6 +467,22 @@
       "conflict": "Someone else saved changes to this publication after you opened it. Your changes were not saved, so as not to overwrite theirs. Copy what you need, close the editor and open the publication again.",
       "notFound": "This publication no longer exists; someone else may have deleted it. Your changes were not saved.",
       "deleteFailed": "The publication could not be deleted. Please try again."
+    }
+  },
+  "gallery": {
+    "editor": {
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the description, check it as well.",
+      "legacyNoTranslation": "This album has no English version yet. To change the title or the description you must complete both languages; the other fields can be edited without translating it.",
+      "mediaLegacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title, the description or the alt text, check it as well.",
+      "mediaLegacyNoTranslation": "This file has no English version yet. To change the title, the description or the alt text you must complete both languages; the other fields can be edited without translating it.",
+      "albumCoverField": "Album cover image",
+      "albumCoverHelperText": "Album cover image, in JPG, PNG, or WEBP format.",
+      "albumCoverRequired": "An album cover image is required.",
+      "mediaField": "Media",
+      "mediaHelperText": "Media upload, in JPG, PNG, WEBP, or MP4 format.",
+      "mediaRequired": "A media upload is required.",
+      "galleryWidth": "Gallery width (columns)",
+      "galleryHeight": "Gallery height (rows)"
     }
   },
   "nosotros": {

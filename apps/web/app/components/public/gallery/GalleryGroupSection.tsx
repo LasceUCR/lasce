@@ -190,7 +190,7 @@ export function GalleryGroupSection({
         ))}
       </ul>
 
-      <Modal onClose={closeEditor} open={isEditing} title={`Editar "${album.title}"`}>
+      <Modal onClose={closeEditor} open={isEditing} title={`Editar "${album.title}"`} size="large">
         {saveError ? (
           <p className="form-alert" role="alert">
             {saveError}
@@ -199,6 +199,7 @@ export function GalleryGroupSection({
         {isSaving ? <p role="status">Guardando álbum...</p> : null}
         <AlbumForm
           stored={album.editing?.content}
+          isLegacy={album.editing?.isLegacy}
           album={{
             title: album.title,
             description: album.description,

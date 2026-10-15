@@ -231,7 +231,7 @@ export function AlbumPage({
           <ul className="card-grid card-grid-3 tile-list gallery-subalbum-list">
             {editMode && canCreate && parentAlbumId ? (
               <li className="gallery-subalbum-add">
-                <AddItemCard label="Añadir subálbum">
+                <AddItemCard label="Añadir subálbum" size="large">
                   {({ close }) => (
                     <>
                       {createError ? (
@@ -311,6 +311,7 @@ export function AlbumPage({
       <Modal
         onClose={closeEditor}
         open={isEditing && editingSubAlbum !== null}
+        size="large"
         title={`Editar "${editingSubAlbum?.title ?? ''}"`}
       >
         {saveError ? (
@@ -322,6 +323,7 @@ export function AlbumPage({
         {editingSubAlbum ? (
           <AlbumForm
             stored={editingSubAlbum.editing?.content}
+            isLegacy={editingSubAlbum.editing?.isLegacy}
             album={{
               title: editingSubAlbum.title,
               description: editingSubAlbum.description,

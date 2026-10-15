@@ -4406,8 +4406,17 @@ a.gallery-tile:focus-visible {
   pointer-events: none;
 }
 
-.media-tile-editable .editable-actions {
+.media-tile-editable .editable-actions,
+.media-tile-editable dialog {
   pointer-events: auto;
+}
+
+/* The confirmation renders inside the dark tile, so it takes the light theme back. */
+.media-tile-editable dialog {
+  --action: var(--deep-space-blue-2);
+  --action-hover: var(--deep-space-blue);
+  --on-action: var(--white);
+  color: var(--ink);
 }
 
 .media-tile-button {

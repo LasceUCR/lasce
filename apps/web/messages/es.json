@@ -393,6 +393,7 @@
       "createTitle": "Agregar publicación",
       "editTitle": "Editar publicación",
       "editLabel": "Editar {title}",
+      "descriptionField": "Descripción ({language})",
       "deleteLabel": "Eliminar {title}",
       "languageTabs": "Idioma del contenido",
       "titleField": "Título ({language})",
@@ -407,7 +408,10 @@
       "group": "Grupo",
       "cancel": "Cancelar",
       "save": "Confirmar",
-      "reload": "Cerrar y cargar la versión actual"
+      "reload": "Cerrar y cargar la versión actual",
+      "yearsLabel": "Años",
+      "uploadingImage": "Subiendo imagen...",
+      "altTextField": "Texto alternativo ({language})"
     },
     "authors": {
       "label": "Autores",
@@ -463,6 +467,22 @@
       "conflict": "Otra persona guardó cambios en esta publicación después de que usted la abrió. Sus cambios no se guardaron, para no sobrescribir los de esa persona. Copie lo que necesite, cierre el editor y vuelva a abrir la publicación.",
       "notFound": "Esta publicación ya no existe; es posible que otra persona la haya eliminado. Sus cambios no se guardaron.",
       "deleteFailed": "No se pudo eliminar la publicación. Inténtelo de nuevo."
+    }
+  },
+  "gallery": {
+    "editor": {
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o la descripción, revíselo también.",
+      "legacyNoTranslation": "Este álbum aún no tiene versión en inglés. Para cambiar el título o la descripción debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",
+      "mediaLegacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título, la descripción o el texto alternativo, revíselo también.",
+      "mediaLegacyNoTranslation": "Este archivo aún no tiene versión en inglés. Para cambiar el título, la descripción o el texto alternativo debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",
+      "albumCoverField": "Imagen de portada del álbum",
+      "albumCoverHelperText": "Imagen de portada del álbum, en formato JPG, PNG o WEBP.",
+      "albumCoverRequired": "Se requiere una imagen de portada para el álbum.",
+      "mediaField": "Contenido",
+      "mediaHelperText": "Subida de contenido, en formato JPG, PNG, WEBP o MP4.",
+      "mediaRequired": "Se requiere subir un contenido.",
+      "galleryWidth": "Ancho en la galeria (columnas)",
+      "galleryHeight": "Alto en la galeria (filas)"
     }
   },
   "nosotros": {

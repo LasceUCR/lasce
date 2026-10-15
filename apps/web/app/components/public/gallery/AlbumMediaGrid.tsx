@@ -91,7 +91,7 @@ export function AlbumMediaGrid({
       <ul className="media-grid tile-list">
         {showAddCard ? (
           <li className="media-grid-add">
-            <AddItemCard label="Añadir archivo">
+            <AddItemCard label="Añadir archivo" size="large">
               {({ close }) => (
                 <MediaForm
                   albumId={albumId}
@@ -180,6 +180,7 @@ export function AlbumMediaGrid({
       <Modal
         onClose={() => setEditingId(null)}
         open={editingItem !== null && editingItem !== undefined}
+        size="large"
         title="Editar archivo"
       >
         {editingItem && albumId !== undefined ? (
@@ -198,6 +199,7 @@ export function AlbumMediaGrid({
             }}
             stored={editingItem.editing?.content ?? null}
             version={editingItem.editing?.version}
+            isLegacy={editingItem.editing?.isLegacy}
             onCancel={() => setEditingId(null)}
             onSaved={() => {
               setEditingId(null)
