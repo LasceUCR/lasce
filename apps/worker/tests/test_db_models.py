@@ -7,6 +7,8 @@ is to replicate everything here so the two languages never disagree about a colu
 from sqlalchemy import UniqueConstraint
 
 from app.db import (
+    ContactChannel,
+    ContactChannelTranslation,
     ExisFile,
     GalleryAlbum,
     GalleryMedia,
@@ -376,6 +378,35 @@ def test_resource_download_matches_the_prisma_columns() -> None:
     assert columns["user_id"].nullable
     assert columns["row_count"].nullable
     assert not columns["object_key"].nullable
+
+
+def test_contact_channels_live_in_the_public_schema() -> None:
+    assert ContactChannel.__table__.schema == "public"
+    assert ContactChannelTranslation.__table__.schema == "public"
+
+
+def test_contact_channel_matches_the_prisma_columns() -> None:
+    columns = ContactChannel.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "icon",
+        "href",
+        "position",
+        "title",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["href"].nullable
+    assert not columns["title"].nullable
+
+
+def test_contact_channel_translation_cascades_with_its_channel() -> None:
+    (channel_fk,) = ContactChannelTranslation.__table__.columns["contact_channel_id"].foreign_keys
+
+    assert channel_fk.target_fullname == "public.contact_channels.id"
+    assert channel_fk.ondelete == "CASCADE"
 
 
 def test_resource_download_outlives_its_user() -> None:

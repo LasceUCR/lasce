@@ -1,5 +1,7 @@
 from app.db.models import (
     Base,
+    ContactChannel,
+    ContactChannelTranslation,
     ExisFile,
     GalleryAlbum,
     GalleryMedia,
@@ -27,6 +29,8 @@ from app.db.models import (
 
 __all__ = [
     "Base",
+    "ContactChannel",
+    "ContactChannelTranslation",
     "ExisFile",
     "GalleryAlbum",
     "GalleryMedia",

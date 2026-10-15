@@ -637,3 +637,53 @@ model GeomagneticIndexTranslation {
   @@map("geomagnetic_index_translations")
   @@schema("public")
 }
+
+/// Icon of a contact card on `/contacto`. The database values are the lowercase
+/// names the form sends; Prisma's members stay uppercase.
+enum ContactChannelIcon {
+  PHONE     @map("phone")
+  INSTAGRAM @map("instagram")
+  LOCATION  @map("location")
+  EMAIL     @map("email")
+  FACEBOOK  @map("facebook")
+
+  @@map("contact_channel_icon")
+  @@schema("public")
+}
+
+/// One card in "Información de contacto". Spanish title and description live here;
+/// every other language is a `ContactChannelTranslation`. `href` is only set for
+/// Instagram and Facebook. The phone and email links are derived from the description.
+model ContactChannel {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  icon        ContactChannelIcon
+  href        String?
+  position    Int
+  title       String
+  description String             @db.Text
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations ContactChannelTranslation[]
+
+  @@index([position])
+  @@map("contact_channels")
+  @@schema("public")
+}
+
+/// Title and description of a contact card in a language other than Spanish.
+model ContactChannelTranslation {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contactChannelId String   @map("contact_channel_id") @db.Uuid
+  locale           String   @db.VarChar(5)
+  title            String
+  description      String   @db.Text
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  channel ContactChannel @relation(fields: [contactChannelId], references: [id], onDelete: Cascade)
+
+  @@unique([contactChannelId, locale])
+  @@map("contact_channel_translations")
+  @@schema("public")
+}
