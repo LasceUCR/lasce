@@ -1,8 +1,10 @@
-import { act, render, screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadResearcherImage: vi.fn(),
@@ -16,10 +18,12 @@ const editArgs = EditModeOn.args as EditableResearcherCardProps
 const assistantArgs = AssistantMode.args as EditableResearcherCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableResearcherCardProps) {
-  return render(
-    <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
-      <EditableResearcherCard {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
+        <EditableResearcherCard {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
