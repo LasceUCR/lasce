@@ -2521,6 +2521,46 @@ a {
   font-size: 12px;
 }
 
+/* `TruncatedText`: clamped to the `lines` it is given (set inline as `line-clamp`) until expanded. */
+.truncated-text {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+}
+
+.truncated-text.is-expanded {
+  display: block;
+  overflow: visible;
+}
+
+/* A quiet text button under the text, so it does not compete with a card's own actions. */
+.truncated-text-toggle {
+  margin-top: 4px;
+  padding: 2px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.truncated-text-toggle:hover {
+  text-decoration: underline;
+}
+
+.truncated-text-toggle:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .publication-abstract {
   display: -webkit-box;
   overflow: hidden;
