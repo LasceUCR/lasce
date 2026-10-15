@@ -4373,7 +4373,6 @@ a.gallery-tile:focus-visible {
   display: flex;
 }
 
-
 .media-tile {
   position: relative;
   grid-column: span var(--media-col-span, 1);

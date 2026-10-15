@@ -3,7 +3,7 @@ import { GalleryAlbumAddCard } from './GalleryAlbumAddCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { galeriaHero } from '@/app/lib/gallery'
-import type { GalleryAlbum } from '@/app/lib/gallery'
+import type { GalleryAlbum } from '@/app/lib/gallery-schema'
 
 export interface GalleryPageProps {
   albums: readonly GalleryAlbum[]

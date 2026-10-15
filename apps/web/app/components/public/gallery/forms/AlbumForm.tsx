@@ -1,14 +1,17 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
+import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 
 import { uploadGalleryImage, type UploadGalleryImageResult } from '@/app/(public)/galeria/actions'
+import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 
 export interface AlbumFormValues {
   title: string
@@ -34,11 +37,15 @@ export function AlbumForm({
   confirmTitle = 'Guardar cambios',
   confirmMessage = '¿Desea guardar los cambios en este álbum?',
 }: AlbumFormProps) {
+  // Everything the editor says follows the site's language; the tabs only pick the translation.
+  const t = useTranslations('publications')
+
   const [title, setTitle] = useState(album.title)
   const [description, setDescription] = useState(album.description)
   const [yearsLabel, setYearsLabel] = useState(album.yearsLabel)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverRemoved, setCoverRemoved] = useState(false)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
 
   const [validationError, setValidationError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -47,6 +54,18 @@ export function AlbumForm({
 
   const uploadErrorRef = useRef<HTMLParagraphElement>(null)
   const validationErrorRef = useRef<HTMLParagraphElement>(null)
+
+  // Visibility state for the discard confirmation dialog
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
+
+  // Track whether unsaved changes exist
+  const isDirty =
+    hasAttemptedSubmit ||
+    title !== (album.title ?? '') ||
+    description !== (album.description ?? '') ||
+    yearsLabel !== (album.yearsLabel ?? '') ||
+    coverFile !== null ||
+    coverRemoved
 
   useEffect(() => {
     if (uploadError) {
@@ -61,6 +80,19 @@ export function AlbumForm({
   }, [validationError])
 
   const hasCover = coverFile !== null || (Boolean(album.coverObjectKey) && !coverRemoved)
+
+  function handleCancelClick() {
+    if (isDirty) {
+      setConfirmDiscardOpen(true)
+    } else {
+      onCancel()
+    }
+  }
+
+  function handleConfirmDiscard() {
+    setConfirmDiscardOpen(false)
+    onCancel()
+  }
 
   function validateTitle(value: string) {
     if (value.trim() === '') {
@@ -86,6 +118,7 @@ export function AlbumForm({
 
   function handleConfirmClick() {
     const missing = missingFields()
+    setHasAttemptedSubmit(true)
 
     if (missing.length > 0) {
       setValidationError(`Falta completar: ${missing.join(', ')}.`)
@@ -199,18 +232,20 @@ export function AlbumForm({
         <Button onClick={onCancel} variant="secondary">
           Cancelar
         </Button>
-
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
           {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
         </Button>
       </div>
 
-      <ConfirmDialog
-        message={confirmMessage}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={handleConfirmSave}
-        open={confirmOpen}
-        title={confirmTitle}
+      <StandardConfirmDialog
+        cancelLabel="Seguir editando"
+        confirmLabel="Descartar"
+        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        onCancel={() => setConfirmDiscardOpen(false)}
+        onConfirm={handleConfirmDiscard}
+        open={confirmDiscardOpen}
+        severity="warning"
+        title="Descartar cambios no guardados"
       />
     </div>
   )

@@ -1,14 +1,18 @@
 'use client'
 
 import { Play } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { MediaFrame } from './MediaFrame'
 import { MediaLightbox } from './MediaLightbox'
+import { Modal } from '@/app/components/public/Modal'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
-import type { GalleryMedia } from '@/app/lib/gallery'
+import { MediaForm } from '@/app/components/public/gallery/forms/MediaForm'
+import type { GalleryMedia } from '@/app/lib/gallery-schema'
 
 function mediaPlaceholder(item: GalleryMedia): string {
   return `${item.isVideo ? 'Video' : 'Foto'}: ${item.title}`
@@ -21,6 +25,10 @@ export interface AlbumMediaGridProps {
   canEdit?: boolean
   canDelete?: boolean
   canCreate?: boolean
+  /** Database id of the album the media belongs to. Required to add files. */
+  albumId?: string
+  /** Name of the signed-in user, recorded as the uploader of new files. */
+  uploader?: string
 }
 
 const closed = -1
@@ -36,17 +44,30 @@ export function AlbumMediaGrid({
   canEdit = false,
   canDelete = false,
   canCreate = false,
+  albumId,
+  uploader,
 }: AlbumMediaGridProps) {
+  const router = useRouter()
+  const sendWithFeedback = useRequestFeedback()
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [openIndex, setOpenIndex] = useState(closed)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
   const showEditor = editMode && (canEdit || canDelete || canCreate)
-  const showAddCard = editMode && canCreate
+  const showAddCard = editMode && canCreate && albumId !== undefined && uploader !== undefined
 
-  function handleCreate(): void {}
+  async function handleDelete(id: string): Promise<void> {
+    await sendWithFeedback(
+      `/api/gallery/media/${id}`,
+      { method: 'DELETE' },
+      {
+        success: 'Archivo eliminado correctamente.',
+        fallback: 'No se pudo eliminar el archivo.',
+        onSuccess: () => router.refresh(),
+      },
+    )
+  }
 
-  function handleDelete(id: string): void {}
-
-  function handleUpdate(id: string): void {}
+  const editingItem = editingId === null ? null : media.find((item) => item.id === editingId)
 
   const close = useCallback(() => {
     // The dialog closes itself natively before this runs, so the document is no
@@ -68,19 +89,19 @@ export function AlbumMediaGrid({
   return (
     <>
       <ul className="media-grid tile-list">
-        {editMode && canCreate ? (
+        {showAddCard ? (
           <li className="media-grid-add">
-            <AddItemCard label="Añadir contenido">
+            <AddItemCard label="Añadir archivo">
               {({ close }) => (
-                <button
-                  onClick={() => {
-                    handleCreate()
+                <MediaForm
+                  albumId={albumId}
+                  onCancel={close}
+                  onSaved={() => {
                     close()
+                    router.refresh()
                   }}
-                  type="button"
-                >
-                  Crear contenido
-                </button>
+                  uploader={uploader}
+                />
               )}
             </AddItemCard>
           </li>
@@ -112,7 +133,7 @@ export function AlbumMediaGrid({
                   deleteConfirmMessage={`¿Desea eliminar "${item.title}"? Esta acción no se puede deshacer.`}
                   editLabel={`Editar ${item.title}`}
                   onDelete={canDelete ? () => handleDelete(item.id) : undefined}
-                  onEdit={canEdit ? () => handleUpdate(item.id) : undefined}
+                  onEdit={canEdit ? () => setEditingId(item.id) : undefined}
                 >
                   {frame}
                 </EditableWrapper>
@@ -155,6 +176,35 @@ export function AlbumMediaGrid({
           )
         })}
       </ul>
+
+      <Modal
+        onClose={() => setEditingId(null)}
+        open={editingItem !== null && editingItem !== undefined}
+        title="Editar archivo"
+      >
+        {editingItem && albumId !== undefined ? (
+          <MediaForm
+            albumId={albumId}
+            media={{
+              id: editingItem.id,
+              title: editingItem.title,
+              description: editingItem.description,
+              alt: editingItem.alt,
+              date: editingItem.date,
+              colSpan: String(editingItem.colSpan),
+              rowSpan: String(editingItem.rowSpan),
+              src: editingItem.src,
+              format: editingItem.format,
+            }}
+            onCancel={() => setEditingId(null)}
+            onSaved={() => {
+              setEditingId(null)
+              router.refresh()
+            }}
+            uploader={uploader ?? ''}
+          />
+        ) : null}
+      </Modal>
 
       {openItem ? (
         <MediaLightbox

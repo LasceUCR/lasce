@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { AlbumPage } from '@/app/components/public/gallery/AlbumPage'
+import { getSessionUser } from '@/app/lib/auth/session'
 import { userHasPermission } from '@/app/lib/auth/authorization'
 import { albumPath, getGalleryAlbums } from '@/app/lib/gallery'
 
@@ -29,11 +30,12 @@ export async function generateMetadata({ params }: SubAlbumRouteProps): Promise<
 
 export default async function SubAlbumRoute({ params }: SubAlbumRouteProps) {
   const { slug, subalbum } = await params
-  const [albums, canCreate, canEdit, canDelete] = await Promise.all([
+  const [albums, canCreate, canEdit, canDelete, user] = await Promise.all([
     getGalleryAlbums(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
+    getSessionUser(),
   ])
   const album = albums.find((item) => item.slug === slug)
   const subAlbum = album?.subAlbums.find((item) => item.slug === subalbum)
@@ -44,6 +46,8 @@ export default async function SubAlbumRoute({ params }: SubAlbumRouteProps) {
 
   return (
     <AlbumPage
+      albumId={subAlbum.id}
+      uploader={user?.fullName}
       backHref={albumPath(album.slug)}
       backLabel={`Volver a ${album.title}`}
       canCreate={canCreate}

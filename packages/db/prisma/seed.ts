@@ -807,14 +807,14 @@ for (const researcher of nosotrosResearchers) {
 }
 
 const galleryImageBase = '/images/galeria'
- 
+
 const galleryMediaDefaults = {
   format: 'JPG',
   isVideo: false,
   uploaderName: 'LASCE',
   capturedAt: new Date('2026-02-16'),
 }
- 
+
 type SeedGalleryMedia = {
   src: string
   colSpan: 1 | 2 | 3 | 4
@@ -823,7 +823,7 @@ type SeedGalleryMedia = {
   description: string
   alt: string
 }
- 
+
 type SeedGalleryAlbum = {
   slug: string
   title: string
@@ -833,7 +833,7 @@ type SeedGalleryAlbum = {
   media: SeedGalleryMedia[]
   subAlbums?: SeedGalleryAlbum[]
 }
- 
+
 const galleryAlbums: SeedGalleryAlbum[] = [
   {
     slug: 'rosac',
@@ -1675,7 +1675,8 @@ const galleryAlbums: SeedGalleryAlbum[] = [
             src: 'rosac/instalacion-electrica/26.jpg',
             colSpan: 1,
             rowSpan: 1,
-            title: 'Equipo de trabajo junto a la Dra. Carolina Salas Matamoros en la base de la torre',
+            title:
+              'Equipo de trabajo junto a la Dra. Carolina Salas Matamoros en la base de la torre',
             description:
               'Fotografía grupal de la Dra. Carolina Salas Matamoros y el equipo alrededor del pedestal de concreto y las canalizaciones.',
             alt: 'Dra. Carolina Salas Matamoros y colaboradores posando de pie alrededor de la base cilíndrica de concreto del radiotelescopio.',
@@ -2046,10 +2047,9 @@ const galleryAlbums: SeedGalleryAlbum[] = [
     ],
   },
 ]
- 
 
 await prisma.galleryMedia.deleteMany()
- 
+
 async function seedGalleryAlbum(
   album: SeedGalleryAlbum,
   parentAlbumId: string | null = null,
@@ -2061,13 +2061,13 @@ async function seedGalleryAlbum(
     parentAlbumId,
     coverObjectKey: `${galleryImageBase}/${album.cover}`,
   }
- 
+
   const databaseAlbum = await prisma.galleryAlbum.upsert({
     where: { slug: album.slug },
     update: fields,
     create: { slug: album.slug, ...fields },
   })
- 
+
   await prisma.galleryMedia.createMany({
     data: album.media.map((item, position) => ({
       ...galleryMediaDefaults,
@@ -2081,15 +2081,14 @@ async function seedGalleryAlbum(
       position,
     })),
   })
- 
+
   for (const subAlbum of album.subAlbums ?? []) {
     await seedGalleryAlbum(subAlbum, databaseAlbum.id)
   }
 }
- 
+
 for (const album of galleryAlbums) {
   await seedGalleryAlbum(album)
 }
-
 
 await prisma.$disconnect()

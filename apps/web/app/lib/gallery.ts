@@ -3,7 +3,15 @@ import { randomUUID } from 'node:crypto'
 import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
-export const galleryIdSchema = z.uuid()
+import {
+  type GalleryAlbum,
+  type GalleryMedia,
+  type GalleryMediaInput,
+  type GalleryMediaUpdate,
+  type GallerySubAlbum,
+} from './gallery-schema'
+
+export * from './gallery-schema'
 
 const galleryAlbumFields = {
   slug: z
@@ -29,42 +37,9 @@ export const galleryAlbumUpdateSchema = z
     'Debe proporcionar al menos un campo para editar.',
   )
 
-const galleryMediaFields = {
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
-  alt: z.string().trim().min(1, 'El texto alternativo es obligatorio.'),
-  objectKey: z.string().trim().min(1, 'La clave del archivo es obligatoria.'),
-  format: z.string().trim().min(1, 'El formato es obligatorio.'),
-  isVideo: z.boolean(),
-  colSpan: z.number().int().min(1).max(4),
-  rowSpan: z.number().int().min(1).max(4),
-  date: z.string().date(),
-  uploader: z.string().trim().min(1, 'El nombre de quien subió el archivo es obligatorio.'),
-}
-
-export const galleryMediaInputSchema = z
-  .object({
-    ...galleryMediaFields,
-    isVideo: galleryMediaFields.isVideo.default(false),
-    colSpan: galleryMediaFields.colSpan.default(1),
-    rowSpan: galleryMediaFields.rowSpan.default(1),
-  })
-  .strict()
-
-export const galleryMediaUpdateSchema = z
-  .object(galleryMediaFields)
-  .partial()
-  .strict()
-  .refine(
-    (data) => Object.keys(data).length > 0,
-    'Debe proporcionar al menos un campo para editar.',
-  )
-
 export type GalleryTopLevelAlbumInput = z.infer<typeof galleryTopLevelAlbumInputSchema>
 export type GallerySubAlbumInput = z.infer<typeof gallerySubAlbumInputSchema>
 export type GalleryAlbumUpdate = z.infer<typeof galleryAlbumUpdateSchema>
-export type GalleryMediaInput = z.infer<typeof galleryMediaInputSchema>
-export type GalleryMediaUpdate = z.infer<typeof galleryMediaUpdateSchema>
 
 /**
  * Real content for the public gallery.
@@ -78,59 +53,6 @@ export type GalleryMediaUpdate = z.infer<typeof galleryMediaUpdateSchema>
  */
 
 const imageBase = '/images/galeria'
-
-export interface GalleryMedia {
-  id: string
-  title: string
-  description: string
-  /**
-   * What the image actually shows, for anyone who cannot see it. Read by the
-   * lightbox, where the file is the content; the grid and the album tiles
-   * render their images decoratively because a control already names them.
-   */
-  alt: string
-  /** Capture date, already formatted for display in Spanish. */
-  date: string
-  /** File format as shown to visitors: JPG, JPEG, MP4, PNG… */
-  format: string
-  uploader: string
-  isVideo: boolean
-  /** Tile footprint in the masonry grid. */
-  colSpan: 1 | 2 | 3 | 4
-  rowSpan: 1 | 2 | 3 | 4
-  /** Optional: a file still awaiting upload renders the placeholder frame. */
-  src?: string
-  /** MinIO object key when the media record comes from PostgreSQL. */
-  objectKey?: string
-}
-
-export interface GallerySubAlbum {
-  /** Database id, present for records loaded from PostgreSQL. */
-  id?: string
-  slug: string
-  title: string
-  description: string
-  yearsLabel?: string
-  media: readonly GalleryMedia[]
-  src?: string
-  /** MinIO object key when the album record comes from PostgreSQL. */
-  coverObjectKey?: string
-}
-
-export interface GalleryAlbum {
-  /** Database id, present for records loaded from PostgreSQL. */
-  id?: string
-  slug: string
-  title: string
-  description: string
-  /** Period the album covers, e.g. '2023–2025'. Part of the summary line. */
-  years: string
-  subAlbums: readonly GallerySubAlbum[]
-  media: readonly GalleryMedia[]
-  src?: string
-  /** MinIO object key when the album record comes from PostgreSQL. */
-  coverObjectKey?: string
-}
 
 export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
 

@@ -8,7 +8,7 @@ import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { Modal } from '@/app/components/public/Modal'
 import { AlbumForm, type AlbumFormValues } from '@/app/components/public/gallery/forms/AlbumForm'
-import type { GalleryAlbum } from '@/app/lib/gallery'
+import type { GalleryAlbum } from '@/app/lib/gallery-schema'
 
 const SAVE_ERROR_MESSAGE = 'No se pudo guardar el álbum. Inténtelo de nuevo.'
 const DELETE_ERROR_MESSAGE = 'No se pudo eliminar el álbum. Inténtelo de nuevo.'
