@@ -145,6 +145,69 @@ class ResearchTranslation(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class CollaborationScope(enum.StrEnum):
+    """Language-independent classification of a partner organization."""
+
+    NATIONAL = "national"
+    INTERNATIONAL = "international"
+
+
+class Collaboration(Base):
+    """Partner organization; the base country is the source-language text."""
+
+    __tablename__ = "collaborations"
+    __table_args__ = {"schema": "research"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(Text)
+    acronym: Mapped[str | None] = mapped_column(Text)
+    website_url: Mapped[str | None] = mapped_column(Text)
+    country: Mapped[str] = mapped_column(Text)
+    scope: Mapped[CollaborationScope] = mapped_column(
+        ENUM(
+            CollaborationScope,
+            name="collaboration_scope",
+            schema="research",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        )
+    )
+    position: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+
+
+class CollaborationTranslation(Base):
+    """Country in an additional locale, owned by the corresponding collaboration."""
+
+    __tablename__ = "collaboration_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "collaboration_id",
+            "locale",
+            name="collaboration_translations_collaboration_id_locale_key",
+        ),
+        {"schema": "research"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    collaboration_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("research.collaborations.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    country: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+
+
 class NewsSource(Base):
     """An outlet where a news item was published. Lives in the ``news`` Postgres schema."""
 
@@ -556,5 +619,63 @@ class GeomagneticIndexTranslation(Base):
     )
     locale: Mapped[str] = mapped_column(String(5))
     description: Mapped[str] = mapped_column(String(15))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ContactChannelIcon(enum.StrEnum):
+    """Icon of a `/contacto` card. Database values match the Prisma ``@map`` names."""
+
+    PHONE = "phone"
+    INSTAGRAM = "instagram"
+    LOCATION = "location"
+    EMAIL = "email"
+    FACEBOOK = "facebook"
+
+
+class ContactChannel(Base):
+    """One card in the contact page's channel list. Spanish text lives here."""
+
+    __tablename__ = "contact_channels"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    icon: Mapped[ContactChannelIcon] = mapped_column(
+        ENUM(
+            ContactChannelIcon,
+            name="contact_channel_icon",
+            schema="public",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        )
+    )
+    href: Mapped[str | None] = mapped_column(Text, nullable=True)
+    position: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ContactChannelTranslation(Base):
+    """Title and description of a contact card in a language other than Spanish."""
+
+    __tablename__ = "contact_channel_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "contact_channel_id",
+            "locale",
+            name="contact_channel_translations_contact_channel_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    contact_channel_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.contact_channels.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

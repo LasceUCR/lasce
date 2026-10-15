@@ -1,5 +1,10 @@
 from app.db.models import (
     Base,
+    Collaboration,
+    CollaborationScope,
+    CollaborationTranslation,
+    ContactChannel,
+    ContactChannelTranslation,
     ExisFile,
     GalleryAlbum,
     GalleryMedia,
@@ -27,6 +32,11 @@ from app.db.models import (
 
 __all__ = [
     "Base",
+    "Collaboration",
+    "CollaborationScope",
+    "CollaborationTranslation",
+    "ContactChannel",
+    "ContactChannelTranslation",
     "ExisFile",
     "GalleryAlbum",
     "GalleryMedia",
