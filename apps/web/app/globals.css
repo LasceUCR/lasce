@@ -2544,12 +2544,15 @@ a {
 .publication-card-footer {
   padding-top: 12px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 8px;
 }
 
 /* Same width for "DOI / Enlace externo" and the abstract toggle, so the toggle does not shrink
-   when its label changes and both actions line up across cards. Narrow screens make every
-   .button full width (see the 430px breakpoint). */
+   when its label changes and both actions line up across cards — including when a card shows
+   both at once, side by side via `.publication-card-footer`'s wrap. Narrow screens make every
+   .button full width (see the 430px breakpoint), which stacks them instead. */
 .publication-card-footer .button {
   min-width: min(16rem, 100%);
 }

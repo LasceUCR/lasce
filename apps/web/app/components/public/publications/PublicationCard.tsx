@@ -27,10 +27,11 @@ export interface PublicationCardProps {
 
 /**
  * The abstract is clamped to two lines (see `.publication-abstract` in globals.css) and ends with
- * an ellipsis. A publication with an external link sends the reader there for the full text. One
- * without a link has nowhere else to read it, so when the clamp actually hides text, a "Leer
- * resumen completo" button takes the link's place in the footer and expands the abstract in place. Overflow is
- * measured with a ResizeObserver, so the button appears or disappears as the card width changes.
+ * an ellipsis. An external link (DOI or otherwise) doesn't necessarily lead back to this abstract
+ * — it might go to a paywall, a journal's own summary, or nothing at all — so a "Leer resumen
+ * completo" button appears in the footer, alongside the link when there is one, whenever the
+ * clamp actually hides text, and expands the abstract in place. Overflow is measured with a
+ * ResizeObserver, so the button appears or disappears as the card width changes.
  */
 export function PublicationCard({
   title,
@@ -54,7 +55,7 @@ export function PublicationCard({
     const element = abstractRef.current
 
     // While expanded the clamp is off, so a measurement would always report no overflow.
-    if (href || !element || expanded || typeof ResizeObserver === 'undefined') {
+    if (!element || expanded || typeof ResizeObserver === 'undefined') {
       return
     }
 
@@ -64,9 +65,9 @@ export function PublicationCard({
     observer.observe(element)
 
     return () => observer.disconnect()
-  }, [abstract, expanded, href])
+  }, [abstract, expanded])
 
-  const canExpand = !href && (overflows || expanded)
+  const canExpand = overflows || expanded
   const abstractClassName = ['publication-abstract', expanded ? 'is-expanded' : '']
     .filter(Boolean)
     .join(' ')
@@ -86,37 +87,37 @@ export function PublicationCard({
 
       {translationMissing ? <Notice tone="warning">{t('translationMissing')}</Notice> : null}
 
-      {href ? (
+      {href || canExpand ? (
         <div className="publication-card-footer">
-          <Button
-            href={href}
-            icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
-            rel="noopener noreferrer"
-            target="_blank"
-            variant="primary"
-          >
-            {t('externalLink')}
-          </Button>
-        </div>
-      ) : null}
+          {href ? (
+            <Button
+              href={href}
+              icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
+              rel="noopener noreferrer"
+              target="_blank"
+              variant="primary"
+            >
+              {t('externalLink')}
+            </Button>
+          ) : null}
 
-      {canExpand ? (
-        <div className="publication-card-footer">
-          <Button
-            ariaControls={abstractId}
-            ariaExpanded={expanded}
-            icon={
-              expanded ? (
-                <ChevronUp aria-hidden="true" size={16} strokeWidth={1.8} />
-              ) : (
-                <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} />
-              )
-            }
-            onClick={() => setExpanded((current) => !current)}
-            variant="primary"
-          >
-            {expanded ? t('readLess') : t('readMore')}
-          </Button>
+          {canExpand ? (
+            <Button
+              ariaControls={abstractId}
+              ariaExpanded={expanded}
+              icon={
+                expanded ? (
+                  <ChevronUp aria-hidden="true" size={16} strokeWidth={1.8} />
+                ) : (
+                  <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} />
+                )
+              }
+              onClick={() => setExpanded((current) => !current)}
+              variant="primary"
+            >
+              {expanded ? t('readLess') : t('readMore')}
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </article>

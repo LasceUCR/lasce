@@ -105,8 +105,21 @@ describe('PublicationCard', () => {
     expect(abstract).not.toHaveClass('is-expanded')
   })
 
-  test('never offers the abstract toggle on a publication with an external link', () => {
+  test('offers the abstract toggle alongside the external link when the abstract overflows', () => {
     mockAbstractOverflow(true)
+    renderWithIntl(<PublicationCard {...defaultArgs} />)
+
+    const link = screen.getByRole('link', { name: /DOI \/ Enlace externo/ })
+    const toggle = screen.getByRole('button', { name: 'Leer resumen completo' })
+
+    // Both actions share one footer — the link doesn't necessarily lead back to this abstract.
+    expect(link.parentElement).toHaveClass('publication-card-footer')
+    expect(toggle.parentElement).toHaveClass('publication-card-footer')
+    expect(link.parentElement).toBe(toggle.parentElement)
+  })
+
+  test('omits the abstract toggle on a publication with an external link when it fits', () => {
+    mockAbstractOverflow(false)
     renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     expect(
