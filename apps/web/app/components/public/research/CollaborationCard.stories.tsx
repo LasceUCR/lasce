@@ -35,3 +35,13 @@ export const WithoutAcronym: Story = {
     scope: 'international',
   },
 }
+
+export const TranslatedCountry: Story = {
+  globals: { locale: 'en' },
+  args: { ...WithoutAcronym.args, country: 'France', countryLocale: 'en' },
+}
+
+export const LegacyCountry: Story = {
+  globals: { locale: 'en' },
+  args: { ...WithoutAcronym.args, countryLocale: null },
+}

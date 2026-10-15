@@ -179,8 +179,8 @@ export const rosacInfoContent = {
       alt: 'Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control, con el logo de ROSAC.',
       presentation: 'banner',
       width: 1672,
-      height: 749,
-      focus: 'left',
+      height: 580,
+      focus: 'center',
       mobileSrc: '/images/ROSAC/rosac_home_mob.png',
     },
   },
@@ -628,7 +628,7 @@ export const rosacInfoContent = {
  */
 type ResearcherRow = {
   id: string
-  photoUrl: string
+  photoUrl: string | null
   role: string
   name: string
   institution: string
@@ -639,7 +639,9 @@ type ResearcherRow = {
 function toTeamMember(row: ResearcherRow): TeamMember {
   return {
     id: row.id,
-    src: row.photoUrl,
+    // A researcher without a photo is stored as `null` and reaches the UI as `''`, the same
+    // "no photo" value `ResearcherForm` uses.
+    src: row.photoUrl ?? '',
     role: row.role,
     name: row.name,
     institution: row.institution,
@@ -666,7 +668,8 @@ function normalizeOptional(value: string | undefined): string | null {
  * by both this schema and a database CHECK constraint.
  */
 export const researcherInputSchema = z.object({
-  src: z.string().trim().min(1, 'La foto es obligatoria.'),
+  /** Optional: `''` or a missing value means the researcher has no photo. */
+  src: z.string().trim().optional(),
   role: z.string().trim().min(1, 'El rol es obligatorio.'),
   name: z.string().trim().min(1, 'El nombre es obligatorio.'),
   email: z
@@ -703,7 +706,7 @@ export async function createResearcher(
 ): Promise<TeamMember> {
   const row = await prisma.researcher.create({
     data: {
-      photoUrl: data.src,
+      photoUrl: normalizeOptional(data.src),
       role: data.role,
       name: data.name,
       email: data.email ?? [],
@@ -732,7 +735,7 @@ export async function updateResearcher(
   const row = await prisma.researcher.update({
     where: { id },
     data: {
-      photoUrl: data.src,
+      photoUrl: normalizeOptional(data.src),
       role: data.role,
       name: data.name,
       email: data.email ?? [],

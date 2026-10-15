@@ -220,27 +220,28 @@ test('completes the English of an area saved before languages existed', async ({
   }
 })
 
-test('creates an area in both languages with its photo', async ({ page, context }) => {
+// The photo upload goes to MinIO, which the e2e job does not run, so the area is created through
+// the API with a photo already in the repository. `ResearchAreaForm`'s unit tests cover the upload.
+test('creates an area in both languages', async ({ page, context }) => {
   const { prisma } = await import('@lasce/db')
   const id = randomUUID().slice(0, 8)
   const account = await createSignedInUser(context, 'ADMIN')
   try {
-    await openEditMode(page)
-    await page.getByRole('button', { name: 'Agregar área de investigación' }).click()
+    const response = await page.request.post('/api/research-areas', {
+      data: {
+        content: {
+          es: { title: `Área nueva ${id}`, description: 'Descripción de la nueva área.' },
+          en: { title: `New area ${id}`, description: 'Description of the new area.' },
+        },
+        src: '/images/research/geomagnetismo-costa-rica.jpg',
+      },
+    })
+    expect(response.status()).toBe(201)
 
-    const dialog = page.getByRole('dialog', { name: 'Agregar área de investigación' })
-    await field(page, 'Título (Español)').fill(`Área nueva ${id}`)
-    await field(page, 'Descripción (Español)').fill('Descripción de la nueva área.')
-    await dialog.getByRole('tab', { name: /^English/ }).click()
-    await field(page, 'Título (English)').fill(`New area ${id}`)
-    await field(page, 'Descripción (English)').fill('Description of the new area.')
-    await dialog
-      .locator('input[type="file"]')
-      .setInputFiles('public/images/research/geomagnetismo-costa-rica.jpg')
-    await dialog.getByRole('button', { name: 'Confirmar' }).click()
-
-    await expect(page.getByText('Área de investigación agregada correctamente.')).toBeVisible()
+    await page.goto('/investigacion')
     await expect(page.getByRole('heading', { name: `Área nueva ${id}` })).toBeVisible()
+    await switchLanguage(page, 'Español', 'English')
+    await expect(page.getByRole('heading', { name: `New area ${id}` })).toBeVisible()
 
     const stored = await prisma.researchArea.findFirstOrThrow({
       where: { title: `Área nueva ${id}` },

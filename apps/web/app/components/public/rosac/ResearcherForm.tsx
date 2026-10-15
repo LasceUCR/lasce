@@ -1,10 +1,9 @@
 'use client'
 
 import { Plus, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
-import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
@@ -14,7 +13,7 @@ import {
   uploadResearcherImage,
   type UploadResearcherImageResult,
 } from '@/app/(public)/radioastronomia/actions'
-import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 
 /**
  * The shape this form needs from a person record — deliberately not imported
@@ -23,6 +22,7 @@ import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
  * roster without either page's content module depending on the other.
  */
 export interface PersonProfile {
+  /** `''` means the researcher has no photo. */
   src: string
   role: string
   name: string
@@ -39,7 +39,8 @@ export interface ResearcherFormValues {
   email: string
   institution: string
   description: string
-  /** The photo's permanent URL — already uploaded by the time `onSave` runs. */
+  /** The photo's permanent URL — already uploaded by the time `onSave` runs. `''` means no
+   * photo: the photo is optional, and the card shows a default portrait instead. */
   src: string
 }
 
@@ -48,9 +49,6 @@ export interface ResearcherFormProps {
   researcher: PersonProfile | null
   onSave: (values: ResearcherFormValues) => void
   onCancel: () => void
-  /** Overrides the confirmation dialog's copy — a new researcher reads oddly as "save changes". */
-  confirmTitle?: string
-  confirmMessage?: string
 }
 
 /** Messages match `researcherInputSchema` / `nosotrosResearcherInputSchema`
@@ -60,6 +58,9 @@ function requireNonEmpty(message: string) {
     if (value.trim() === '') throw new Error(message)
   }
 }
+
+/** Same wording `ResearchAreaForm` uses when an image upload cannot reach the server. */
+const UPLOAD_ERROR_MESSAGE = 'No se pudo subir la imagen. Inténtelo de nuevo.'
 
 /** Matches the database CHECK constraint on both `researchers.email` and
  * `nosotros_researchers.email` — never send more than this many. */
@@ -79,21 +80,15 @@ function parseEmails(email: PersonProfile['email']): string[] {
 /**
  * Creates or edits one ROSAC researcher profile (photo, role, name, contacto,
  * institución, descripción) — `researcher` is `null` for a new profile, or
- * pre-filled for an existing one. Saving asks for confirmation first, same as
- * `EditableWrapper`'s delete action.
+ * pre-filled for an existing one. "Confirmar" is the save action itself: creating and editing
+ * save straight away, with no second confirmation dialog.
  *
  * The photo uploads to the real asset store through `uploadResearcherImage`
  * (the same `assetStorage` MinIO backend `NewsArticleForm` already uses)
  * before `onSave` runs, so `onSave` always receives a permanent URL rather
  * than a local `File`.
  */
-export function ResearcherForm({
-  researcher,
-  onSave,
-  onCancel,
-  confirmTitle = 'Guardar cambios',
-  confirmMessage = '¿Desea guardar los cambios en este investigador?',
-}: ResearcherFormProps) {
+export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormProps) {
   const [role, setRole] = useState(researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
@@ -104,24 +99,15 @@ export function ResearcherForm({
   const [description, setDescription] = useState(researcher?.description ?? '')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
-  const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const uploadErrorRef = useRef<HTMLParagraphElement>(null)
+  const toast = useToast()
+  // A failed upload is an action outcome, so it is reported with a toast (see "Feedback" in
+  // `AGENTS.md`). The previous attempt's toast is dismissed on retry so errors do not pile up,
+  // the same way `useRequestFeedback` handles the save request.
+  const uploadErrorToast = useRef<number | null>(null)
 
-  // Scrolls the upload error into view as soon as it appears — the modal this
-  // form usually sits in can be taller than the viewport, and a message added
-  // below the last field is otherwise easy to miss without scrolling down.
-  useEffect(() => {
-    if (uploadError) {
-      scrollIntoViewIfSupported(uploadErrorRef.current)
-    }
-  }, [uploadError])
-
-  const hasPhoto = photoFile !== null || (Boolean(researcher?.src) && !photoRemoved)
-  const photoError = hasAttemptedSubmit && !hasPhoto ? 'La foto es obligatoria.' : null
   const roleError = hasAttemptedSubmit && role.trim() === '' ? 'El rol es obligatorio.' : null
   const nameError = hasAttemptedSubmit && name.trim() === '' ? 'El nombre es obligatorio.' : null
   const institutionError =
@@ -158,7 +144,7 @@ export function ResearcherForm({
   // as each field becomes valid — same as the news article form.
   function handleConfirmClick() {
     setHasAttemptedSubmit(true)
-    if (!hasPhoto || role.trim() === '' || name.trim() === '' || institution.trim() === '') {
+    if (role.trim() === '' || name.trim() === '' || institution.trim() === '') {
       if (role.trim() === '') {
         document.getElementById('researcher-role')?.focus()
       } else if (name.trim() === '') {
@@ -169,14 +155,17 @@ export function ResearcherForm({
       return
     }
 
-    setConfirmOpen(true)
+    void handleConfirm()
   }
 
   async function handleConfirm() {
-    setConfirmOpen(false)
-    setUploadError(null)
+    if (uploadErrorToast.current !== null) {
+      toast.dismiss(uploadErrorToast.current)
+      uploadErrorToast.current = null
+    }
 
-    let src = researcher?.src ?? ''
+    // An untouched photo is kept as is; a removed one is saved as `''`, which means no photo.
+    let src = photoRemoved ? '' : (researcher?.src ?? '')
     if (photoFile) {
       setIsUploading(true)
 
@@ -187,13 +176,13 @@ export function ResearcherForm({
         result = await uploadResearcherImage(formData)
       } catch {
         setIsUploading(false)
-        setUploadError('No se pudo subir la imagen. Inténtelo de nuevo.')
+        uploadErrorToast.current = toast.show('error', UPLOAD_ERROR_MESSAGE)
         return
       }
       setIsUploading(false)
 
       if (!result.ok) {
-        setUploadError(result.error)
+        uploadErrorToast.current = toast.show('error', result.error)
         return
       }
       src = result.imageUrl
@@ -238,15 +227,13 @@ export function ResearcherForm({
   return (
     <div className="cms-form">
       <FileDropInput
-        errorMessage={photoError}
-        existingImageUrl={researcher?.src}
-        helperText="Retrato del investigador, en formato JPG o PNG."
+        existingImageUrl={researcher?.src || undefined}
+        helperText="Opcional. Retrato del investigador, en formato JPG o PNG."
         label="Foto"
         onFileSelect={(file) => {
           setPhotoFile(file)
           setPhotoRemoved(file === null)
         }}
-        required
       />
 
       <FormField
@@ -298,6 +285,7 @@ export function ResearcherForm({
 
       <Modal onClose={closeAddEmail} open={isAddingEmail} size="small" title="Añadir contacto">
         <FormField
+          errorMessage={newEmailError}
           id="new-researcher-email"
           label="Correo electrónico"
           onChange={(value) => {
@@ -307,11 +295,6 @@ export function ResearcherForm({
           type="email"
           value={newEmail}
         />
-        {newEmailError ? (
-          <p className="form-alert" role="alert">
-            {newEmailError}
-          </p>
-        ) : null}
         <div className="cms-form-actions">
           <Button onClick={closeAddEmail} variant="secondary">
             Cancelar
@@ -340,12 +323,6 @@ export function ResearcherForm({
         value={description}
       />
 
-      {uploadError ? (
-        <p className="form-alert" ref={uploadErrorRef} role="alert">
-          {uploadError}
-        </p>
-      ) : null}
-
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
           Cancelar
@@ -354,14 +331,6 @@ export function ResearcherForm({
           {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
         </Button>
       </div>
-
-      <ConfirmDialog
-        message={confirmMessage}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={handleConfirm}
-        open={confirmOpen}
-        title={confirmTitle}
-      />
 
       <StandardConfirmDialog
         cancelLabel="Seguir editando"

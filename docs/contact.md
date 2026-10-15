@@ -1,10 +1,12 @@
 # Contact
 
 How `/contacto` shows the official ways to reach LASCE. The page is public: it does not read a
-session and it does not redirect to `/acceso`. The copy is static. Nothing here is read from
-PostgreSQL. Changing a phone number, the planetarium location or the Instagram handle means editing
-[`apps/web/app/lib/contact.ts`](../apps/web/app/lib/contact.ts) and deploying. The map itself is
-the one documented in [`rosac-location.md`](rosac-location.md).
+session and it does not redirect to `/acceso`. The hero, the location section and the back link
+come from the `contact` catalogue. Changing the planetarium location means editing
+[`apps/web/app/lib/contact.ts`](../apps/web/app/lib/contact.ts) and deploying. The contact cards
+are bilingual database content, edited in "Modo edición" by someone who holds
+`create_components`, `edit_components` or `delete_components`. The map itself is the one
+documented in [`rosac-location.md`](rosac-location.md).
 
 The route used to be the placeholder served by `app/(public)/[section]/page.tsx` ("Contenido en
 preparación"). That entry is gone. `/contacto` is now
@@ -19,84 +21,84 @@ section route remains only for a work area that does not have its own page yet.
   ├─ TopicSection                 h2 "Ubicación"
   │    ├─ intro                   south side of the planetarium, readable if the map fails
   │    └─ RosacLocationMapLoader  satellite map, marker "LASCE"
-  ├─ TopicSection                 h2 "Información de contacto"
-  │    └─ CardGrid columns=2      equal height, same grid as other InfoCards
-  │         ├─ InfoCard Teléfono  Phone icon, tel link
-  │         └─ InfoCard Instagram camera icon, profile in a new tab
+  ├─ ContactChannelSection        h2 "Información de contacto"
+  │    └─ CardGrid columns=3      InfoCard, or EditableWrapper while editing
+  │         ├─ existing cards     icon, title, description
+  │         └─ AddItemCard        only in edit mode, with create permission
   └─ .topic-page-footer           TopicBackLink "Volver al inicio"
 ```
 
-| Piece           | File                                            | Covered by                                           |
-| --------------- | ----------------------------------------------- | ---------------------------------------------------- |
-| Channels        | `app/lib/contact.ts`                            | `app/lib/contact.test.ts`                            |
-| Location map    | `RosacLocationMapLoader`                        | `ContactPage.test.tsx`, `tests/e2e/contacto.spec.ts` |
-| Page            | `app/components/public/contact/ContactPage.tsx` | `ContactPage.test.tsx`, `ContactPage.stories.tsx`    |
-| Route           | `app/(public)/contacto/page.tsx`                | `tests/e2e/contacto.spec.ts`                         |
-| Sitemap and SEO | `app/lib/site.ts` (`publicPaths`)               | `tests/e2e/accessibility-seo.spec.ts`                |
-| Header link     | `app/components/public/PublicHeader.tsx`        | `tests/e2e/public-portal.spec.ts`                    |
+| Piece           | File                                                    | Covered by                                                   |
+| --------------- | ------------------------------------------------------- | ------------------------------------------------------------ |
+| Page shell      | `app/lib/contact.ts`                                    | `app/lib/contact.test.ts`                                    |
+| Cards           | `app/lib/contact-channels.ts`, `contact-channel-schema` | `contact-channels.test.ts`, `contact-channel-schema.test.ts` |
+| Editor          | `ContactChannelForm.tsx`, `ContactChannelSection.tsx`   | `ContactChannelForm.test.tsx`, `ContactPage.test.tsx`        |
+| Location map    | `RosacLocationMapLoader`                                | `ContactPage.test.tsx`, `tests/e2e/contacto.spec.ts`         |
+| Page            | `app/components/public/contact/ContactPage.tsx`         | `ContactPage.test.tsx`, `ContactPage.stories.tsx`            |
+| Route           | `app/(public)/contacto/page.tsx`                        | `tests/e2e/contacto.spec.ts`                                 |
+| API             | `app/api/contacto/canales`                              | the route handlers                                           |
+| Sitemap and SEO | `app/lib/site.ts` (`publicPaths`)                       | `tests/e2e/accessibility-seo.spec.ts`                        |
+| Header link     | `app/components/public/PublicHeader.tsx`                | `tests/e2e/public-portal.spec.ts`                            |
 
 `Contacto` is its own item in the header, after **Recursos**. The footer also links to `/contacto`.
 The footer element itself uses `id="contacto"` on every page. The section on this page uses
 `id="informacion-de-contacto"`, so the two ids do not collide.
 
-## What is shown
+## Cards
 
-Only complete, approved values. `availableContactChannels` drops a channel whose text is blank or
-a placeholder (`próximamente`, `por definir`, `contenido en preparación`, `ejemplo`, `n/a`, and
-the same for an empty `tel:`, `mailto:` or `#` link). The page does not render an empty card and
-does not say that a missing channel is coming later.
+Each channel is an `InfoCard` inside `CardGrid` (`columns={3}`, `equalHeight`): icon tile, `h3`
+title, description. The description is at most 120 characters. The field says so only when another character is typed past that limit, and that character is not added. The card shows at most three
+lines, so one long text cannot stretch the row. A card whose title or description is blank or a
+placeholder (`próximamente`,
+`por definir`, `contenido en preparación`, `ejemplo`, `n/a`) is not rendered.
 
-| Channel   | Visible text | Link                                     |
-| --------- | ------------ | ---------------------------------------- |
-| Teléfono  | `2511-6566`  | `tel:+50625116566`                       |
-| Instagram | `@lasce_ucr` | the Instagram URL already in `footer.ts` |
+The icon is chosen first, then the title, then the description, in both languages, using
+`LanguageTabs` and `TranslationReview`. The choices are phone, Instagram, email and Facebook. A location icon is not offered; the
+laboratory's place is the map section. Instagram and Facebook may also store an `https` link;
+the description then opens that link in a new tab. A phone card stores one number, the same in
+both languages: eight local digits, or those digits with the 506 country code. That number
+becomes `tel:+506` plus the local digits. An email description that contains `@` becomes
+`mailto:`. Changing the icon away from Instagram or Facebook clears a stored link.
 
-The phone is the Costa Rica local form. The `tel:` link includes the country code `+506`.
-Instagram opens in a new tab with `rel="noreferrer"`. Its `href` is the footer link labelled
-`Instagram`, so the profile URL has one source. If that footer link is removed, the Instagram
-card disappears with it.
+Spanish title and description live on `public.contact_channels`. English lives on
+`public.contact_channel_translations`. The icon, the link and the position are shared. The
+migration seeds the two cards the page already showed: phone `2511-6566` and Instagram
+`@lasce_ucr` at `https://www.instagram.com/lasce_ucr/`.
+
+The editor's own labels (the symbol names, the buttons, the toasts) follow the site language
+and live in `contact.cards`. A save reports "Canal de contacto agregado / actualizado /
+eliminado correctamente." A failure reports the server's reason, or "No se pudo guardar /
+eliminar el canal de contacto. Inténtelo de nuevo." Field problems appear on the field and on
+the language tab that holds them, the same way as the publication editor. Saving asks for no
+second confirmation. Deleting asks first, through `EditableWrapper`. Closing a new card, or an
+existing one with unsaved changes, asks first,
+through `StandardConfirmDialog` with the warning severity, from Cancelar and from the modal's
+close button and Escape
+(`ContactChannelForm` exposes `requestCancel`; `AddItemCard` takes `onRequestClose`). In a
+modal, the language tabs sit beside the title.
+
+The installed `lucide-react` build does not export Instagram or Facebook icons, so those two
+marks are drawn in `ContactChannelSection.tsx` with the same stroke weight as the Lucide phone,
+map and mail icons.
 
 ## Location
 
-The address is not a card. It is its own section, the same pattern as the ROSAC map
+The address is not a managed card. It is its own section, the same pattern as the ROSAC map
 ([`rosac-location.md`](rosac-location.md)): the address is a sentence above the map, and
 `RosacLocationMapLoader` draws the satellite view. The sentence stays on the page when the
 tiles fail. The map's accessible names follow the site language; ROSAC itself keeps the
-Spanish defaults.
+Spanish defaults. A location icon on a card is a separate, optional channel and does not
+replace this map.
 
 The laboratory is on the south side of the Planetario de la Universidad de Costa Rica, in the
 Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica. The Spanish
 sentence is "se encuentra al costado sur del Planetario de la Universidad de Costa Rica,
 Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica." The pin is the
-marked point on that building's roof (9.936990, -84.045073). It is a published map point, not a
+marked point on that building's roof (9.936990, -84.045073). The map opens at zoom 18. It is a published map point, not a
 surveyed GPS reading. The address does not include a postal code. The marker reads `LASCE`.
 
 The footer still shows the shorter location "San Pedro de Montes de Oca". That line is the
 footer identity, not this address. Changing one does not change the other.
 
 The hero lead is "Canales oficiales del Laboratorio de Astrofísica Solar y Clima Espacial."
-
-## Cards
-
-Each channel is an `InfoCard` inside `CardGrid` (`columns={2}`, `equalHeight`), the same card the
-academic-activity page uses for type, date and place: icon tile, `h3` title, 14px description.
-The phone and the Instagram handle are links inside that description. A string description stays
-one paragraph. A channel with `lines` renders one paragraph per line.
-
-The installed `lucide-react` build does not export an Instagram icon, so the card draws the camera
-mark in `ContactPage.tsx` with the same stroke weight as the phone icon. Importing `Instagram`
-from that package fails the page at compile time.
-
-## Adding a channel
-
-Append an entry to `contactContent.channels` in `app/lib/contact.ts`:
-
-- `id`: unique. `phone` and `instagram` also pick the icon. Any other id renders the card
-  without one.
-- `label`: the card title, in Spanish.
-- `value`: the single visible line. Use `lines` instead when the text is an address.
-- `href`: optional. `tel:` stays in the same tab. Set `external: true` for a site that should
-  open in a new tab.
-
-Leave the field out until LASCE has approved a real value. A blank or placeholder entry is
-filtered out, but it should not be committed as if it were official information.
+That name stays in Spanish in every language, including the meta description and the location intro.
