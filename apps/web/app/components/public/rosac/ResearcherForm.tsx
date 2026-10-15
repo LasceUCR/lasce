@@ -1,7 +1,7 @@
 'use client'
 
 import { Plus, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
@@ -13,7 +13,7 @@ import {
   uploadResearcherImage,
   type UploadResearcherImageResult,
 } from '@/app/(public)/radioastronomia/actions'
-import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 
 /**
  * The shape this form needs from a person record — deliberately not imported
@@ -59,6 +59,9 @@ function requireNonEmpty(message: string) {
   }
 }
 
+/** Same wording `ResearchAreaForm` uses when an image upload cannot reach the server. */
+const UPLOAD_ERROR_MESSAGE = 'No se pudo subir la imagen. Inténtelo de nuevo.'
+
 /** Matches the database CHECK constraint on both `researchers.email` and
  * `nosotros_researchers.email` — never send more than this many. */
 const MAX_EMAILS = 2
@@ -99,17 +102,11 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const uploadErrorRef = useRef<HTMLParagraphElement>(null)
-
-  // Scrolls the upload error into view as soon as it appears — the modal this
-  // form usually sits in can be taller than the viewport, and a message added
-  // below the last field is otherwise easy to miss without scrolling down.
-  useEffect(() => {
-    if (uploadError) {
-      scrollIntoViewIfSupported(uploadErrorRef.current)
-    }
-  }, [uploadError])
+  const toast = useToast()
+  // A failed upload is an action outcome, so it is reported with a toast (see "Feedback" in
+  // `AGENTS.md`). The previous attempt's toast is dismissed on retry so errors do not pile up,
+  // the same way `useRequestFeedback` handles the save request.
+  const uploadErrorToast = useRef<number | null>(null)
 
   const roleError = hasAttemptedSubmit && role.trim() === '' ? 'El rol es obligatorio.' : null
   const nameError = hasAttemptedSubmit && name.trim() === '' ? 'El nombre es obligatorio.' : null
@@ -162,7 +159,10 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
   }
 
   async function handleConfirm() {
-    setUploadError(null)
+    if (uploadErrorToast.current !== null) {
+      toast.dismiss(uploadErrorToast.current)
+      uploadErrorToast.current = null
+    }
 
     // An untouched photo is kept as is; a removed one is saved as `''`, which means no photo.
     let src = photoRemoved ? '' : (researcher?.src ?? '')
@@ -176,13 +176,13 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
         result = await uploadResearcherImage(formData)
       } catch {
         setIsUploading(false)
-        setUploadError('No se pudo subir la imagen. Inténtelo de nuevo.')
+        uploadErrorToast.current = toast.show('error', UPLOAD_ERROR_MESSAGE)
         return
       }
       setIsUploading(false)
 
       if (!result.ok) {
-        setUploadError(result.error)
+        uploadErrorToast.current = toast.show('error', result.error)
         return
       }
       src = result.imageUrl
@@ -285,6 +285,7 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
 
       <Modal onClose={closeAddEmail} open={isAddingEmail} size="small" title="Añadir contacto">
         <FormField
+          errorMessage={newEmailError}
           id="new-researcher-email"
           label="Correo electrónico"
           onChange={(value) => {
@@ -294,11 +295,6 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
           type="email"
           value={newEmail}
         />
-        {newEmailError ? (
-          <p className="form-alert" role="alert">
-            {newEmailError}
-          </p>
-        ) : null}
         <div className="cms-form-actions">
           <Button onClick={closeAddEmail} variant="secondary">
             Cancelar
@@ -326,12 +322,6 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
         onChange={setDescription}
         value={description}
       />
-
-      {uploadError ? (
-        <p className="form-alert" ref={uploadErrorRef} role="alert">
-          {uploadError}
-        </p>
-      ) : null}
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
