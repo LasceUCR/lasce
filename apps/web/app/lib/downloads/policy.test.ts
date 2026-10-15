@@ -20,7 +20,8 @@ describe('decideDownload', () => {
     ['GOES', 'SFXR', 'csv', GOES_HOLDER, 'allowed'],
     ['GOES', 'SFEU', 'csv', GOES_HOLDER, 'allowed'],
     ['GOES', 'GEOF', 'png', VISITOR, 'allowed'],
-    ['GOES', 'GEOF', 'csv', GOES_HOLDER, 'unsupported'],
+    ['GOES', 'GEOF', 'csv', VISITOR, 'forbidden'],
+    ['GOES', 'GEOF', 'csv', GOES_HOLDER, 'allowed'],
     ['GOES', 'MPSH', 'png', VISITOR, 'allowed'],
     ['GOES', 'SGPS', 'csv', GOES_HOLDER, 'unsupported'],
     ['GOES', 'Fe171', 'png', GOES_HOLDER, 'unsupported'],
@@ -56,7 +57,7 @@ describe('getDownloadOptions', () => {
   })
 
   test('offers only the image for instruments without a data export', () => {
-    expect(getDownloadOptions(target('GOES', 'GEOF'), GOES_HOLDER).map((o) => o.format)).toEqual([
+    expect(getDownloadOptions(target('GOES', 'MPSH'), GOES_HOLDER).map((o) => o.format)).toEqual([
       'png',
     ])
   })

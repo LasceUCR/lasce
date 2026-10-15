@@ -1,5 +1,6 @@
 import { queryCiticScientificData } from './citicScientificDataSource'
 import { queryExisReadings } from './exisReadingsDataSource'
+import { queryMagReadings } from './magReadingsDataSource'
 import { createInstrumentRoutedDataSource } from './instrumentRoutedDataSource'
 import { queryMockScientificData } from './mockScientificDataSource'
 import type { ScientificDataProvider } from './scientificDataSource'
@@ -20,6 +21,10 @@ const exisReadings: ScientificDataProvider = {
   query: ({ query }) => queryExisReadings(query),
 }
 
+const magReadings: ScientificDataProvider = {
+  query: ({ query }) => queryMagReadings(query),
+}
+
 const citicArchive: ScientificDataProvider = {
   query: ({ query, jobId }) => queryCiticScientificData(query, jobId),
 }
@@ -32,7 +37,7 @@ export const scientificDataSources = new ScientificDataSourceManager([
   createInstrumentRoutedDataSource('GOES', {
     SUVI: suviArchive,
     EXIS: exisReadings,
-    MAG: citicArchive,
+    MAG: magReadings,
     SEISS: citicArchive,
   }),
   createInstrumentRoutedDataSource('ROSAC', {
