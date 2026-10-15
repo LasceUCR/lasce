@@ -148,7 +148,7 @@ export const nosotrosContent = {
       },
       {
         id: 'alonso-vega',
-        src: '/images/Researchers/User.png',
+        src: '/images/Researchers/AlonsoVega.jpeg',
         name: 'MSc. Alonso Vega',
         role: 'Investigador colaborador',
         email: 'alonso.vega_f@ucr.ac.cr',
@@ -396,7 +396,7 @@ export async function deleteNosotrosActivity(id: string): Promise<boolean> {
  */
 type NosotrosResearcherRow = {
   id: string
-  photoUrl: string
+  photoUrl: string | null
   role: string
   name: string
   institution: string
@@ -407,7 +407,9 @@ type NosotrosResearcherRow = {
 function toNosotrosResearcher(row: NosotrosResearcherRow): NosotrosResearcher {
   return {
     id: row.id,
-    src: row.photoUrl,
+    // A researcher without a photo is stored as `null` and reaches the UI as `''`, the same
+    // "no photo" value `ResearcherForm` uses.
+    src: row.photoUrl ?? '',
     role: row.role,
     name: row.name,
     institution: row.institution,
@@ -431,7 +433,8 @@ export async function getNosotrosResearchers(): Promise<NosotrosResearcher[]> {
  * CHECK constraint.
  */
 export const nosotrosResearcherInputSchema = z.object({
-  src: z.string().trim().min(1, 'La foto es obligatoria.'),
+  /** Optional: `''` or a missing value means the researcher has no photo. */
+  src: z.string().trim().optional(),
   role: z.string().trim().min(1, 'El rol es obligatorio.'),
   name: z.string().trim().min(1, 'El nombre es obligatorio.'),
   email: z
@@ -474,7 +477,7 @@ export async function createNosotrosResearcher(
 ): Promise<NosotrosResearcher> {
   const row = await prisma.nosotrosResearcher.create({
     data: {
-      photoUrl: data.src,
+      photoUrl: normalizeOptional(data.src),
       role: data.role,
       name: data.name,
       email: data.email ?? [],
@@ -503,7 +506,7 @@ export async function updateNosotrosResearcher(
   const row = await prisma.nosotrosResearcher.update({
     where: { id },
     data: {
-      photoUrl: data.src,
+      photoUrl: normalizeOptional(data.src),
       role: data.role,
       name: data.name,
       email: data.email ?? [],
