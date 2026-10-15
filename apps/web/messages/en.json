@@ -585,7 +585,7 @@
       "albumCoverHelperText": "Album cover image, in JPG, PNG, or WEBP format.",
       "albumCoverRequired": "An album cover image is required.",
       "mediaField": "Media",
-      "mediaHelperText": "Media upload, in JPG, PNG, WEBP, or MP4 format.",
+      "mediaHelperText": "Media upload, in JPG, PNG, or WEBP format.",
       "mediaRequired": "A media upload is required.",
       "galleryWidth": "Gallery width (columns)",
       "galleryHeight": "Gallery height (rows)"

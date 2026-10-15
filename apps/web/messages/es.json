@@ -585,7 +585,7 @@
       "albumCoverHelperText": "Imagen de portada del álbum, en formato JPG, PNG o WEBP.",
       "albumCoverRequired": "Se requiere una imagen de portada para el álbum.",
       "mediaField": "Contenido",
-      "mediaHelperText": "Subida de contenido, en formato JPG, PNG, WEBP o MP4.",
+      "mediaHelperText": "Subida de contenido, en formato JPG, PNG, o WEBP.",
       "mediaRequired": "Se requiere subir un contenido.",
       "galleryWidth": "Ancho en la galeria (columnas)",
       "galleryHeight": "Alto en la galeria (filas)"
