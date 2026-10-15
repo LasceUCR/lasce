@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 import { SolarToday, type SolarTodayProps } from './SolarToday'
@@ -6,7 +7,7 @@ import { Default, Loading, Empty, SourceError } from './SolarToday.stories'
 
 describe('SolarToday', () => {
   test('identifies today, the source and five solar moments independently of the query form', () => {
-    render(<SolarToday {...(Default.args as SolarTodayProps)} />)
+    renderWithIntl(<SolarToday {...(Default.args as SolarTodayProps)} />)
     expect(screen.getByRole('region', { name: 'El Sol de hoy' })).toBeInTheDocument()
     expect(screen.getByText('Fuente: GOES', { exact: false })).toHaveTextContent('SUVI')
     expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(5)
@@ -18,7 +19,7 @@ describe('SolarToday', () => {
     const onProductChange = vi.fn()
     const onRangeChange = vi.fn()
     const onRefresh = vi.fn()
-    render(
+    renderWithIntl(
       <SolarToday
         {...(Default.args as SolarTodayProps)}
         onProductChange={onProductChange}
@@ -39,7 +40,7 @@ describe('SolarToday', () => {
     ['empty', Empty, 'Aún no hay imágenes para esta selección'],
     ['error', SourceError, 'No fue posible cargar las imágenes de GOES'],
   ])('keeps band controls usable in the %s state', (_name, story, message) => {
-    render(<SolarToday {...(story.args as SolarTodayProps)} />)
+    renderWithIntl(<SolarToday {...(story.args as SolarTodayProps)} />)
     expect(screen.getByText(message, { exact: false })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: '171 Å' })).toBeEnabled()
     expect(screen.queryByRole('list')).not.toBeInTheDocument()

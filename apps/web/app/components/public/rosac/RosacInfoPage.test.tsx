@@ -1,8 +1,10 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 // `RosacInfoPage.stories` pulls in `rosacInfoContent` from `@/app/lib/rosac`,
 // which imports `prisma` at module scope — this stubs it out so loading that
@@ -39,18 +41,22 @@ afterEach(() => {
 })
 
 function renderPage(props: RosacInfoPageProps = defaultArgs) {
-  return render(
-    <EditModeProvider>
-      <RosacInfoPage {...props} />
-    </EditModeProvider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeProvider>
+        <RosacInfoPage {...props} />
+      </EditModeProvider>
+    </ToastProvider>,
   )
 }
 
 function renderEditMode(props: RosacInfoPageProps = editModeArgs) {
-  return render(
-    <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
-      <RosacInfoPage {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+        <RosacInfoPage {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -118,19 +124,13 @@ describe('RosacInfoPage', () => {
     expect(relationship).toHaveTextContent('ROSAC aporta infraestructura nacional')
   })
 
-  test('links the general consultation to the ROSAC simulations', () => {
+  test('does not offer a general scientific consultation section', () => {
     renderPage()
 
-    const consultation = screen.getByRole('region', { name: '10. Consulta científica' })
-    expect(within(consultation).queryByText('Próximamente')).not.toBeInTheDocument()
-    const link = within(consultation).getByRole('link', {
-      name: 'Explorar datos',
-    })
-    expect(link).toHaveAttribute('href', '/datos?source=ROSAC#scientific-query-title')
-    // Primary action inside the same highlighted box as the donations CTA.
-    expect(link).toHaveClass('button', 'button-primary')
-    expect(link.parentElement).toHaveClass('topic-highlight')
-    expect(consultation).toHaveTextContent(defaultArgs.content.scientificConsultation.description)
+    expect(screen.queryByRole('region', { name: /Consulta científica/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Explorar datos' })).not.toBeInTheDocument()
+    const sections = screen.getAllByRole('heading', { level: 2 })
+    expect(sections.at(-1)).toHaveTextContent('9. Agradecimientos ROSAC')
   })
 
   test('presents three instrument cards without authentication or edit permissions', () => {
@@ -141,10 +141,25 @@ describe('RosacInfoPage', () => {
     expect(
       instruments.getAllByRole('img', { name: /Imagen ilustrativa de la galería ROSAC/ }),
     ).toHaveLength(3)
-    for (const name of ['Instrumento 1', 'Instrumento 2']) {
+    for (const name of ['ROSAC-SABER', 'ROSAC-MIRA 9GHz']) {
       const card = within(instruments.getByRole('article', { name }))
       expect(card.queryByText(/pendiente|por definir/i)).not.toBeInTheDocument()
     }
+    expect(
+      within(instruments.getByRole('article', { name: 'ROSAC-SABER' })).getByText(
+        'Banda entre 100 y 1000 MHz',
+      ),
+    ).toBeVisible()
+    expect(
+      within(instruments.getByRole('article', { name: 'ROSAC-MIRA 9GHz' })).getByText(
+        'Banda de los 9 GHz',
+      ),
+    ).toBeVisible()
+    expect(
+      within(instruments.getByRole('article', { name: 'ROSAC-HIROS' })).getByText(
+        'Observación del hidrógeno neutro a 1,4 GHz',
+      ),
+    ).toBeVisible()
     expect(instruments.getAllByRole('link')).toHaveLength(2)
     expect(instruments.getByText(/integración en la sección de datos/)).toBeVisible()
   })
@@ -263,8 +278,6 @@ describe('RosacInfoPage', () => {
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/researchers/${firstPerson?.id}`,
@@ -272,6 +285,29 @@ describe('RosacInfoPage', () => {
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog', { name: 'Editar investigador' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Investigador actualizado correctamente.')).toBeInTheDocument()
+  })
+
+  test('explains a failed researcher edit inside the open modal and keeps the form', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: 'No tiene permisos para modificar este contenido.' }),
+    })
+    renderEditMode()
+
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar a/ })
+    await user.click(firstEditButton as HTMLElement)
+    const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.queryByText('Investigador actualizado correctamente.')).not.toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
   test('DELETEs the researcher and refreshes the page once removal succeeds', async () => {
@@ -316,8 +352,9 @@ describe('RosacInfoPage', () => {
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar investigador' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    // Creating saves straight away: no second confirmation dialog.
+    expect(screen.queryByRole('dialog', { name: 'Agregar investigador' })).not.toBeInTheDocument()
 
     expect(mocks.uploadResearcherImage).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(
@@ -328,6 +365,33 @@ describe('RosacInfoPage', () => {
       }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog', { name: 'Añadir investigador' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Investigador agregado correctamente.')).toBeInTheDocument()
+  })
+
+  test('explains a failed researcher creation inside "Añadir investigador" and keeps the form', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: 'No tiene permisos para modificar este contenido.' }),
+    })
+    renderEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Añadir investigador' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('textbox', { name: 'Nombre' })).toHaveValue('Persona Nueva')
+    expect(screen.queryByText('Investigador agregado correctamente.')).not.toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
   test('offers editing but strictly NO add or delete on characteristics (Section 1)', () => {

@@ -132,6 +132,8 @@ jobs:
             NEXT_PUBLIC_APP_URL=${{ needs.context.outputs.app_url }}
             NEXT_PUBLIC_WEBDOTS_API_URL=${{ vars.WEBDOTS_API_URL }}
             NEXT_PUBLIC_WEBDOTS_API_KEY=${{ secrets.WEBDOTS_API_KEY }}
+            MINIO_ENDPOINT=${{ vars.MINIO_ENDPOINT }}
+            MINIO_USE_SSL=${{ vars.MINIO_USE_SSL }}
           tags: |
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}-${{ github.sha }}
