@@ -193,8 +193,6 @@ describe('ResearcherForm', () => {
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ email: `${researcher.email}, nuevo@ucr.ac.cr` }),
@@ -212,8 +210,6 @@ describe('ResearcherForm', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(screen.queryByText('La foto es obligatoria.')).not.toBeInTheDocument()
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
-
     expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Persona Nueva', src: '' }))
   })
@@ -226,7 +222,6 @@ describe('ResearcherForm', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Rol' }))
     await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador asociado')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
 
     expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
@@ -243,24 +238,12 @@ describe('ResearcherForm', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(screen.queryByText('La foto es obligatoria.')).not.toBeInTheDocument()
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
 
     expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ src: '' }))
   })
 
-  test('asks for confirmation before saving', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<ResearcherForm {...editArgs} onSave={onSave} />)
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
-    expect(screen.getByRole('dialog', { name: 'Guardar cambios' })).toBeInTheDocument()
-  })
-
-  test('saves the edited values once the confirmation is accepted, keeping the existing photo', async () => {
+  test('saves the edited values, keeping the existing photo', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<ResearcherForm {...editArgs} onSave={onSave} />)
@@ -268,9 +251,6 @@ describe('ResearcherForm', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Rol' }))
     await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador asociado')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith({
@@ -284,18 +264,29 @@ describe('ResearcherForm', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('does not save when the confirmation is cancelled', async () => {
+  test('saves a new researcher straight away, without a confirmation dialog', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...addArgs} onSave={onSave} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
+    await user.type(screen.getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(onSave).toHaveBeenCalledTimes(1)
+  })
+
+  test('saves an edit straight away, without a confirmation dialog', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     render(<ResearcherForm {...editArgs} onSave={onSave} />)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(onSave).toHaveBeenCalledTimes(1)
   })
 
   test('uploads a freshly dropped photo and saves with the returned public URL', async () => {
@@ -310,8 +301,6 @@ describe('ResearcherForm', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(mocks.uploadResearcherImage).toHaveBeenCalledTimes(1)
     const formData = mocks.uploadResearcherImage.mock.calls[0]![0] as FormData
@@ -333,8 +322,6 @@ describe('ResearcherForm', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
@@ -349,8 +336,6 @@ describe('ResearcherForm', () => {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(
       await screen.findByText('No se pudo subir la imagen. Inténtelo de nuevo.'),

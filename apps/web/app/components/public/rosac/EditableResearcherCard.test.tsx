@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -76,13 +76,11 @@ describe('EditableResearcherCard', () => {
 
   test('saves and closes the modal when the form save succeeds', async () => {
     const user = userEvent.setup()
-    const onSave = vi.fn().mockResolvedValue(null)
+    const onSave = vi.fn().mockResolvedValue(true)
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(
@@ -91,20 +89,24 @@ describe('EditableResearcherCard', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('shows the error and keeps the modal open when the form save fails', async () => {
+  test('keeps the modal open with the input when the save fails', async () => {
     const user = userEvent.setup()
-    const onSave = vi.fn().mockResolvedValue('No se pudo guardar el cambio. Inténtelo de nuevo.')
+    // The page reports the failure in a toast; the card only has to keep the form open.
+    const failedSave = Promise.resolve(false)
+    const onSave = vi.fn(() => failedSave)
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }))
+    await user.clear(screen.getByRole('textbox', { name: 'Rol' }))
+    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador asociado')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    await act(async () => {
+      await failedSave
+    })
 
-    expect(
-      await screen.findByText('No se pudo guardar el cambio. Inténtelo de nuevo.'),
-    ).toBeInTheDocument()
+    expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigador asociado')
   })
 
   test('confirms and calls onDelete when the delete action is confirmed', async () => {
