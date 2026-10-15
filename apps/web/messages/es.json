@@ -76,6 +76,11 @@
       "panelTitle": "Imagen del Sol en tiempo real",
       "observed": "Observado el <time></time>",
       "updating": "Actualizando la imagen más reciente del Sol…"
+    },
+    "validation": {
+      "valueNotText": "El valor debe ser texto.",
+      "valueRequired": "El valor es obligatorio.",
+      "valueTooLong": "El valor no puede superar los 15 caracteres."
     }
   },
   "workAreas": {
