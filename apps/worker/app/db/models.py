@@ -448,3 +448,113 @@ class ResourceDownload(Base):
     row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class HomeHero(Base):
+    """The hero banner of the public home page: its Spanish ``title`` and ``lead``.
+    A single row, edited from the web CMS. Mirrored by convention; no job touches it.
+    """
+
+    __tablename__ = "home_hero"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    title: Mapped[str] = mapped_column(Text)
+    lead: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class HomeHeroTranslation(Base):
+    """The ``title`` and ``lead`` of the `HomeHero` in a language other than Spanish."""
+
+    __tablename__ = "home_hero_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "home_hero_id", "locale", name="home_hero_translations_home_hero_id_locale_key"
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    home_hero_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.home_hero.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    lead: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GeomagneticIndexSource(enum.StrEnum):
+    """Who wrote a geomagnetic index's current value. Mirrors the Prisma
+    ``GeomagneticIndexSource`` enum, whose database values are the strings below.
+    """
+
+    MANUAL = "manual"
+    AUTOMATIC = "automatic"
+
+
+class GeomagneticIndex(Base):
+    """One geomagnetic index card on the home page (Kp, Dst, AE, Ap).
+
+    Edited by hand from the web CMS today. A future loading job would upsert by
+    ``code``, write ``value``, ``description`` (and its translations), set
+    ``source`` to ``automatic`` with ``observed_at``, and set ``updated_at`` to
+    now so an editor holding an older version gets a conflict. ``position`` is
+    editorial and must never be written by a job: leave it out of an insert and the
+    database gives the new row the next number.
+    """
+
+    __tablename__ = "geomagnetic_indices"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    code: Mapped[str] = mapped_column(String(8), unique=True)
+    value: Mapped[str] = mapped_column(String(15))
+    description: Mapped[str] = mapped_column(String(15))
+    # Unique; left out of an insert, it takes the next number of its sequence (Prisma's
+    # `@default(autoincrement())`), so a new index lands last.
+    position: Mapped[int] = mapped_column(
+        Integer,
+        unique=True,
+        server_default=text("nextval('geomagnetic_indices_position_seq')"),
+    )
+    # Postgres-specific ENUM for the same reason as `User.role`: Prisma owns the type.
+    source: Mapped[GeomagneticIndexSource] = mapped_column(
+        ENUM(
+            GeomagneticIndexSource,
+            name="geomagnetic_index_source",
+            schema="public",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        ),
+        server_default=text("'manual'"),
+    )
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GeomagneticIndexTranslation(Base):
+    """The ``description`` of a `GeomagneticIndex` in a language other than Spanish."""
+
+    __tablename__ = "geomagnetic_index_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "geomagnetic_index_id",
+            "locale",
+            name="geomagnetic_index_translations_geomagnetic_index_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    geomagnetic_index_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.geomagnetic_indices.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    description: Mapped[str] = mapped_column(String(15))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
