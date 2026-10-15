@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, ChevronDown } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -38,6 +38,7 @@ export function Select({
   const trigger = useRef<HTMLButtonElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const search = useRef({ text: '', time: 0 })
+  const pointerOnMenu = useRef(false)
   const expanded = open && !disabled
   const dismissMenu = useCallback(() => setOpen(false), [])
   const { position, placeMenu } = useFloatingMenu({
@@ -49,18 +50,49 @@ export function Select({
   })
   const selected = options.find((option) => option.value === value)
   const enabled = options.filter((option) => !option.disabled)
+  // A menu on `document.body` is inert while a modal dialog is open, so hover and clicks never
+  // reach it. Inside the dialog it can become a popover and join the top layer.
+  // `HTMLDialogElement` exists only in the browser; this component is also rendered on the
+  // server, where looking the name up throws.
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
+  const inDialog =
+    typeof HTMLDialogElement !== 'undefined' && portalRoot instanceof HTMLDialogElement
 
   function showMenu(next = value) {
+    setPortalRoot(trigger.current?.closest('dialog') ?? document.body)
     placeMenu()
     setActive(next)
     setOpen(true)
   }
 
   function choose(next: string) {
+    pointerOnMenu.current = false
     onChange(next)
     setOpen(false)
     trigger.current?.focus({ preventScroll: true })
   }
+
+  useLayoutEffect(() => {
+    const menu = list.current
+    if (!expanded || !inDialog || !menu) return
+    if (typeof menu.showPopover === 'function') {
+      try {
+        if (!menu.matches(':popover-open')) menu.showPopover()
+      } catch {
+        menu.removeAttribute('popover')
+      }
+    }
+    // A closed popover is `display: none`. If it could not open, drop the attribute so the
+    // menu stays in the dialog, where it can still receive hover and clicks.
+    if (menu.hasAttribute('popover') && !menu.matches(':popover-open')) {
+      menu.removeAttribute('popover')
+    }
+    return () => {
+      if (typeof menu.hidePopover === 'function' && menu.matches(':popover-open')) {
+        menu.hidePopover()
+      }
+    }
+  }, [expanded, inDialog])
 
   useEffect(() => {
     if (!expanded) return
@@ -130,7 +162,15 @@ export function Select({
         className="select-trigger"
         disabled={disabled}
         id={id}
-        onBlur={() => setOpen(false)}
+        onBlur={(event) => {
+          if (pointerOnMenu.current) {
+            pointerOnMenu.current = false
+            return
+          }
+          const next = event.relatedTarget
+          if (next instanceof Node && list.current?.contains(next)) return
+          setOpen(false)
+        }}
         onClick={() => (expanded ? setOpen(false) : showMenu())}
         onKeyDown={handleKeyDown}
         ref={trigger}
@@ -147,6 +187,11 @@ export function Select({
             aria-label={label}
             className="select-menu"
             id={`${id}-options`}
+            onMouseDown={(event) => {
+              pointerOnMenu.current = true
+              event.preventDefault()
+            }}
+            popover={inDialog ? 'manual' : undefined}
             ref={list}
             role="listbox"
             style={position}
@@ -174,7 +219,7 @@ export function Select({
               </div>
             ))}
           </div>,
-          document.body,
+          portalRoot ?? document.body,
         )}
     </>
   )

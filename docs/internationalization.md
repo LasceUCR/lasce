@@ -15,10 +15,11 @@ never text a visitor reads.
 - The English text is a first draft. Nobody has reviewed its scientific terminology yet.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
-- Database content ("Modo edición") has shared, reusable infrastructure, and **two features use
-  it: the publications on `/publicaciones`** (title and abstract) **and the home page** (the hero
-  banner's title and subtitle, and the geomagnetic indices' descriptions), in Spanish and
-  English. Every other editable entity is still single-language. See [Dynamic content](#dynamic-content) and
+- Database content ("Modo edición") has shared, reusable infrastructure. **Publications** on
+  `/publicaciones` (title and abstract), the **home page** (the hero banner's title and subtitle,
+  and the geomagnetic indices' descriptions) and the **contact cards** on `/contacto` (title and
+  description) use it, in Spanish and English. Every other editable entity is still
+  single-language. See [Dynamic content](#dynamic-content) and
   [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
@@ -167,7 +168,7 @@ inventory taken when the static pages were migrated.
 | ---------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
 | Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                       |
 | `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`   |
-| `/contacto`                              | `contact`                            | `lib/contact.ts`                                          |
+| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`             |
 | `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`                               |
 | `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`                                    |
 | `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                 |
@@ -258,10 +259,12 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
   [`translate-database-content.md`](translate-database-content.md), with the publications as the
   reference implementation, their API contract, the design decisions and the known limitations.
 - **Which entities are bilingual:** publications, the home page banner (`HomeHero`) and its
-  geomagnetic indices (`GeomagneticIndex`, description only). The same pattern is meant for `News`,
-  `ResearchArea`, `NosotrosActivity`, `Researcher`, `NosotrosResearcher`, `GalleryAlbum` and
-  `GalleryMedia`, each with its own translation table holding only its translatable columns
-  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
+  geomagnetic indices (`GeomagneticIndex`, description only), and the contact cards on
+  `/contacto` (`ContactChannel`: `title` and `description`; the icon, link and position are
+  shared). The same pattern is meant for `News`, `ResearchArea`, `NosotrosActivity`,
+  `Researcher`, `NosotrosResearcher`, `GalleryAlbum` and `GalleryMedia`, each with its own
+  translation table holding only its translatable columns (`title`, `abstract`, `description`,
+  `paragraph`, `role`, `altText`, `yearsLabel`).
 - **Tables:** [`database-definition.md`](database-definition.md).
 
 The editor's language tabs only choose which translation is being edited; the header selector
