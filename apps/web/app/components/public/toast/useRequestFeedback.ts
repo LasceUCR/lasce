@@ -14,6 +14,8 @@ export interface RequestFeedbackOptions {
   fallback: string
   /** Runs once the request succeeded, before the success toast: close the form, refresh. */
   onSuccess?: () => void
+  /** Entity-specific, localized failure text. Receives a clone so the default reader still works. */
+  describeFailure?: (response: Response) => Promise<string | null>
 }
 
 export type SendWithFeedback = (
@@ -39,7 +41,7 @@ export function useRequestFeedback(): SendWithFeedback {
   const lastError = useRef<number | null>(null)
 
   return useCallback<SendWithFeedback>(
-    async (url, init, { success, fallback, onSuccess }) => {
+    async (url, init, { success, fallback, onSuccess, describeFailure }) => {
       if (lastError.current !== null) {
         toast.dismiss(lastError.current)
         lastError.current = null
@@ -55,7 +57,9 @@ export function useRequestFeedback(): SendWithFeedback {
 
       if (!response.ok) {
         const reason =
-          (await readFailureReason(response)) ?? (response.status >= 500 ? t('server') : fallback)
+          (describeFailure ? await describeFailure(response.clone()) : null) ??
+          (await readFailureReason(response)) ??
+          (response.status >= 500 ? t('server') : fallback)
         lastError.current = toast.show('error', reason)
         return false
       }

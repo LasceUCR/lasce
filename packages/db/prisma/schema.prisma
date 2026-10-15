@@ -198,6 +198,50 @@ model ResearchAuthor {
   @@schema("research")
 }
 
+enum CollaborationScope {
+  NATIONAL      @map("national")
+  INTERNATIONAL @map("international")
+
+  @@map("collaboration_scope")
+  @@schema("research")
+}
+
+/// Partner organizations shown on `/colaboraciones-e-iniciativas`. Official names,
+/// acronyms, classification and display order are shared across languages.
+model Collaboration {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  acronym    String?
+  country    String
+  websiteUrl String?            @map("website_url")
+  scope      CollaborationScope
+  position   Int                @default(0)
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations CollaborationTranslation[]
+
+  @@map("collaborations")
+  @@schema("research")
+}
+
+/// Country is currently the only editable translatable field of a collaboration.
+/// Spanish stays on the base row; other locales follow the shared content resolver.
+model CollaborationTranslation {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collaborationId String   @map("collaboration_id") @db.Uuid
+  locale          String   @db.VarChar(5)
+  country         String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  collaboration Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+
+  @@unique([collaborationId, locale])
+  @@map("collaboration_translations")
+  @@schema("research")
+}
+
 /// Many-to-many join between `Research` and `ResearchAuthor`. Keeps `position`
 /// so a record's citation order (first author, second author, ...) can be
 /// reproduced on the public page instead of coming back in arbitrary order.
