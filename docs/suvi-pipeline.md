@@ -69,9 +69,9 @@ list_recent()  ──►  fetch()  ──►  _decode_fits()  ──►  Process
 4. **Catalogue the header, then render the matrix.** `ProcessHeaders.parse` + `.persist()` writes
    the Postgres row and the Influx metric point and returns a `frame_id` — this happens **before**
    the matrix is touched, so a frame is always catalogued even if rendering were to fail.
-   `publish_preview(...)` then renders the matrix directly to an 8-bit WebP (these images are
-   illustrative only, not a scientific product — there is no compression or quantisation step to
-   reverse) and stores two copies in MinIO: a per-frame archival copy, whose key is written back
+   `publish_preview(...)` then renders the matrix directly to an 8-bit, per-channel colorized WebP
+   (these images are illustrative only, not a scientific product — there is no compression or
+   quantisation step to reverse) and stores two copies in MinIO: a per-frame archival copy, whose key is written back
    onto that same catalogue row (`preview_file`), and an always-latest copy per satellite/channel
    (nothing in `apps/web` reads that one). This step is skipped only if the FITS file had no data HDU at all (`data_matrix is
 None`), which the pipeline treats as a valid — if unusual — frame.

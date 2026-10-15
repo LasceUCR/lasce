@@ -1,6 +1,7 @@
 import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
+import { locationMapProvider } from './location-map'
 import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
 import { rosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
 
@@ -142,12 +143,6 @@ export interface RosacInfoContent {
     items: readonly RosacDonation[]
     cta: { title: string; description: string; buttonLabel: string; href: string }
   }
-  scientificConsultation: {
-    title: string
-    description: string
-    buttonLabel: string
-    href: string
-  }
   backLink: { href: string; label: string }
 }
 
@@ -184,8 +179,8 @@ export const rosacInfoContent = {
       alt: 'Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control, con el logo de ROSAC.',
       presentation: 'banner',
       width: 1672,
-      height: 749,
-      focus: 'left',
+      height: 580,
+      focus: 'center',
       mobileSrc: '/images/ROSAC/rosac_home_mob.png',
     },
   },
@@ -235,11 +230,9 @@ export const rosacInfoContent = {
     address: rosacLocationAddress,
     coordinates: { latitude: 10.2840093, longitude: -85.5959871 },
     zoom: 16,
-    tileUrl:
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution:
-      'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
-    loadTimeoutMs: 15_000,
+    tileUrl: locationMapProvider.tileUrl,
+    attribution: locationMapProvider.attribution,
+    loadTimeoutMs: locationMapProvider.loadTimeoutMs,
     markerLabel: 'ROSAC',
     unavailableMessage:
       'No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.',
@@ -602,6 +595,15 @@ export const rosacInfoContent = {
           alt: 'Equipo de ROSAC junto a representantes de Eaton y el tablero eléctrico donado',
         },
       },
+      {
+        title: 'Donación Prysmian',
+        description:
+          'La organización ROSAC recibió una donación de equipo por parte de la empresa Prysmian, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.',
+        image: {
+          src: '/images/ROSAC/donations/prysmian.webp',
+          alt: 'Representante de Prysmian conversando con un miembro del equipo de ROSAC frente a la antena del observatorio',
+        },
+      },
     ],
     cta: {
       title: '¿Te gustaría ayudarnos?',
@@ -610,13 +612,6 @@ export const rosacInfoContent = {
       buttonLabel: 'Contáctanos',
       href: '/contacto',
     },
-  },
-  scientificConsultation: {
-    title: 'Consulta científica',
-    description:
-      'Explore las consultas de demostración de ROSAC en la sección de datos. Sus resultados son simulados mientras se define la integración de los instrumentos.',
-    buttonLabel: 'Explorar datos',
-    href: '/datos?source=ROSAC#scientific-query-title',
   },
   backLink: {
     href: '/#areas-de-trabajo',
@@ -633,7 +628,7 @@ export const rosacInfoContent = {
  */
 type ResearcherRow = {
   id: string
-  photoUrl: string
+  photoUrl: string | null
   role: string
   name: string
   institution: string
@@ -644,7 +639,9 @@ type ResearcherRow = {
 function toTeamMember(row: ResearcherRow): TeamMember {
   return {
     id: row.id,
-    src: row.photoUrl,
+    // A researcher without a photo is stored as `null` and reaches the UI as `''`, the same
+    // "no photo" value `ResearcherForm` uses.
+    src: row.photoUrl ?? '',
     role: row.role,
     name: row.name,
     institution: row.institution,
@@ -671,7 +668,8 @@ function normalizeOptional(value: string | undefined): string | null {
  * by both this schema and a database CHECK constraint.
  */
 export const researcherInputSchema = z.object({
-  src: z.string().trim().min(1, 'La foto es obligatoria.'),
+  /** Optional: `''` or a missing value means the researcher has no photo. */
+  src: z.string().trim().optional(),
   role: z.string().trim().min(1, 'El rol es obligatorio.'),
   name: z.string().trim().min(1, 'El nombre es obligatorio.'),
   email: z
@@ -708,7 +706,7 @@ export async function createResearcher(
 ): Promise<TeamMember> {
   const row = await prisma.researcher.create({
     data: {
-      photoUrl: data.src,
+      photoUrl: normalizeOptional(data.src),
       role: data.role,
       name: data.name,
       email: data.email ?? [],
@@ -737,7 +735,7 @@ export async function updateResearcher(
   const row = await prisma.researcher.update({
     where: { id },
     data: {
-      photoUrl: data.src,
+      photoUrl: normalizeOptional(data.src),
       role: data.role,
       name: data.name,
       email: data.email ?? [],

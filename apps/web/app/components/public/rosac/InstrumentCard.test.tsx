@@ -36,7 +36,7 @@ describe('InstrumentCard', () => {
     render(<InstrumentCard {...args} />)
     expect(screen.getByText(/Información pendiente de confirmación e integración/)).toBeVisible()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    const button = screen.getByRole('button', { name: 'Consultar simulación del instrumento 3' })
+    const button = screen.getByRole('button', { name: 'Consultar simulación del ROSAC-HIROS' })
     expect(button).toBeDisabled()
     expect(button).toHaveClass('button', 'button-primary')
     expect(screen.queryByText(/Los resultados son simulados/)).not.toBeInTheDocument()
@@ -78,5 +78,20 @@ describe('InstrumentCard', () => {
     rerender(<InstrumentCard {...(WithInformation.args as InstrumentCardProps)} />)
     expect(screen.getByRole('img')).toBeVisible()
     expect(screen.queryByText('Imagen no disponible')).not.toBeInTheDocument()
+  })
+
+  test('renders multiple characteristics even when duplicate values exist', () => {
+    const args = WithInformation.args as InstrumentCardProps
+    render(
+      <InstrumentCard
+        {...args}
+        instrument={{
+          ...args.instrument,
+          characteristics: ['Característica duplicada', 'Característica duplicada'],
+        }}
+      />,
+    )
+    const items = screen.getAllByText('Característica duplicada')
+    expect(items).toHaveLength(2)
   })
 })

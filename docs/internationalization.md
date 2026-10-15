@@ -15,9 +15,10 @@ never text a visitor reads.
 - The English text is a first draft. Nobody has reviewed its scientific terminology yet.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
-- Database content ("Modo edición") has shared, reusable infrastructure. **Publications
-  (`/publicaciones`) and the gallery (`/galeria`, albums and media) have bilingual reads and
-  writes fully integrated.** See [Dynamic content](#dynamic-content) and
+- Database content ("Modo edición") has shared, reusable infrastructure. **Publications** on
+  `/publicaciones` (title and abstract), the **contact cards** on `/contacto` (title and
+  description), and the gallery (`/galeria`, albums and media) use it, in Spanish and English. Every other editable entity is still
+  single-language. See [Dynamic content](#dynamic-content) and
   [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
@@ -166,7 +167,7 @@ inventory taken when the static pages were migrated.
 | ---------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
 | Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                       |
 | `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`                  |
-| `/contacto`                              | `contact`                            | `lib/contact.ts`                                          |
+| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`             |
 | `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`                               |
 | `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`                                    |
 | `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                 |
@@ -185,16 +186,16 @@ and the publications themselves, which are database content.
 
 ### Still to do
 
-| Route                            | Copy lives in                                                              | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                    |
-| -------------------------------- | -------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/galeria/**`                    | `lib/gallery.ts`, `gallery/*`                                              | 400 strings, 5,050 words           | The seeded media items' text is still static Spanish; albums and media in the database are bilingual. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings.    |
-| `/radioastronomia`               | `lib/rosac.ts`, `rosac-construction.ts`, `rosac-instruments.ts`, `rosac/*` | 126 in lib, 56 in components       | The team comes from the database. Instrument cards are built at module load from Spanish product names. `rosac-construction.ts` is imported by a Playwright spec                                                                                           |
-| `/nosotros`                      | `lib/nosotros.ts`, `NosotrosPage`, `NosotrosActivityForm`                  | 20 in lib, 27 in components        | Activities and researchers come from the database. The create, edit and delete feedback for activities is already in the catalogue (`nosotros.activities.*`); the API's own error messages are still Spanish                                               |
-| `/datos`                         | `lib/scientific-data.ts`, `scientific-data/*`                              | 66 in lib, 98 in components        | 139 labels are generated in code from Spanish pieces. Product names also reach the CSV and PNG exports. Four formatters hardcode `es-CR`                                                                                                                   |
-| `/noticias`, `/investigacion/**` | `lib/news.ts`, `research-areas.ts` and their components                    | 23 in lib, 111 in components       | Mostly editing forms. Two hand-written plurals. Zod messages are repeated word for word on the client. The news create, edit and delete feedback is already in the catalogue (`news.*`), with the shared network and server fallbacks in `common.feedback` |
-| `/acceso`, `/cuenta`             | `lib/auth/login.ts`, `registration.ts`, `account.ts`                       | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                           |
-| `/administracion/**`             | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*`         | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                           |
-| `(public)/[section]`             | inline in the page                                                         | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                               |
+| Route                            | Copy lives in                                                              | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
+| -------------------------------- | -------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/galeria/**`                    | `lib/gallery.ts`, `gallery/*`                                              | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
+| `/radioastronomia`               | `lib/rosac.ts`, `rosac-construction.ts`, `rosac-instruments.ts`, `rosac/*` | 126 in lib, 56 in components       | The team comes from the database. The researcher create and edit feedback is in the catalogue (`researchers.*`, shared with `/nosotros`). Instrument cards are built at module load from Spanish product names. `rosac-construction.ts` is imported by a Playwright spec          |
+| `/nosotros`                      | `lib/nosotros.ts`, `NosotrosPage`, `NosotrosActivityForm`                  | 20 in lib, 27 in components        | Activities and researchers come from the database. The create, edit and delete feedback for activities is already in the catalogue (`nosotros.activities.*`), and the researcher create and edit feedback in `researchers.*`; the API's own error messages are still Spanish      |
+| `/datos`                         | `lib/scientific-data.ts`, `scientific-data/*`                              | 66 in lib, 98 in components        | 139 labels are generated in code from Spanish pieces. Product names also reach the CSV and PNG exports. Four formatters hardcode `es-CR`                                                                                                                                          |
+| `/noticias`, `/investigacion/**` | `lib/news.ts`, `research-areas.ts` and their components                    | 23 in lib, 111 in components       | Mostly editing forms. Two hand-written plurals. Zod messages are repeated word for word on the client. The news create, edit and delete feedback is already in the catalogue (`news.*`), with the shared network and server fallbacks in `common.feedback`                        |
+| `/acceso`, `/cuenta`             | `lib/auth/login.ts`, `registration.ts`, `account.ts`                       | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
+| `/administracion/**`             | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*`         | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
+| `(public)/[section]`             | inline in the page                                                         | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
 
 ### Not tied to one page
 
@@ -250,13 +251,12 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
 - **How it works and how to make an entity bilingual:**
   [`translate-database-content.md`](translate-database-content.md), with the publications as the
   reference implementation, their API contract, the design decisions and the known limitations.
-- **Which entities are bilingual end to end:** publications and the gallery. `GalleryAlbum`
-  (`GalleryAlbumTranslation`: `title`, `description`) and `GalleryMedia`
-  (`GalleryMediaTranslation`: `title`, `description`, `altText`) resolve their text for the
-  visitor's language and are edited in both languages, with versions and review confirmations.
-  See [`gallery.md`](gallery.md). The same pattern is intended for `News`, `ResearchArea`,
-  `NosotrosActivity`, `Researcher` and `NosotrosResearcher`, each with a translation table holding
-  only its translatable columns.
+- **Which entities are bilingual:** publications, and the contact cards on `/contacto`
+  (`ContactChannel`: `title` and `description`; the icon, link and position are shared).
+  The same pattern is meant for `News`, `ResearchArea`, `NosotrosActivity`, `Researcher`,
+  `NosotrosResearcher`, `GalleryAlbum` and `GalleryMedia`, each with its own translation
+  table holding only its translatable columns (`title`, `abstract`, `description`,
+  `paragraph`, `role`, `altText`, `yearsLabel`).
 - **Tables:** [`database-definition.md`](database-definition.md).
 
 The editor's language tabs only choose which translation is being edited; the header selector

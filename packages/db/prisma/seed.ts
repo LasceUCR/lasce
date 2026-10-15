@@ -759,7 +759,7 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
       'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
   },
   {
-    photoUrl: '/images/Researchers/User.png',
+    photoUrl: '/images/Researchers/AlonsoVega.jpeg',
     name: 'MSc. Alonso Vega',
     role: 'Investigador colaborador',
     email: ['alonso.vega_f@ucr.ac.cr'],

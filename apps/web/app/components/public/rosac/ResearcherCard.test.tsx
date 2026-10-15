@@ -7,8 +7,13 @@ import { describe, expect, test, vi } from 'vitest'
 // module for its static fixture doesn't also require a real DATABASE_URL.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
-import { ResearcherCard, institutionPreview, type ResearcherCardProps } from './ResearcherCard'
-import { Default, WithoutDescription, WithoutEmail } from './ResearcherCard.stories'
+import {
+  DEFAULT_RESEARCHER_PHOTO,
+  ResearcherCard,
+  institutionPreview,
+  type ResearcherCardProps,
+} from './ResearcherCard'
+import { Default, WithoutDescription, WithoutEmail, WithoutPhoto } from './ResearcherCard.stories'
 
 const defaultArgs = Default.args as ResearcherCardProps
 const withoutEmailArgs = WithoutEmail.args as ResearcherCardProps
@@ -227,5 +232,21 @@ describe('ResearcherCard', () => {
     expect(image).toHaveAttribute('alt', '')
     expect(image).toHaveAttribute('src', defaultArgs.src)
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  test('shows the uploaded photo instead of the default portrait', () => {
+    const { container } = render(<ResearcherCard {...defaultArgs} />)
+
+    expect(defaultArgs.src).not.toBe('')
+    expect(container.querySelector('img')).toHaveAttribute('src', defaultArgs.src)
+    expect(container.querySelector('img')).not.toHaveAttribute('src', DEFAULT_RESEARCHER_PHOTO)
+  })
+
+  test('shows the default portrait when the researcher has no photo', () => {
+    const { container } = render(<ResearcherCard {...(WithoutPhoto.args as ResearcherCardProps)} />)
+
+    const image = container.querySelector('img')
+    expect(image).toHaveAttribute('src', DEFAULT_RESEARCHER_PHOTO)
+    expect(image).toHaveAttribute('alt', '')
   })
 })

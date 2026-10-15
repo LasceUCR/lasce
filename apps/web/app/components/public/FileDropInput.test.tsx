@@ -32,4 +32,29 @@ describe('FileDropInput', () => {
     expect(onFileSelect).toHaveBeenCalledWith(null)
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
+
+  test('refuses a file type the server would reject and keeps the selection unchanged', async () => {
+    const user = userEvent.setup({ applyAccept: false })
+    const onFileSelect = vi.fn()
+    const { container } = render(<FileDropInput {...emptyArgs} onFileSelect={onFileSelect} />)
+
+    await user.upload(
+      container.querySelector('input[type="file"]') as HTMLInputElement,
+      new File(['<svg/>'], 'logo.svg', { type: 'image/svg+xml' }),
+    )
+
+    expect(onFileSelect).not.toHaveBeenCalled()
+    expect(screen.getByText(/Formato no admitido/)).toBeInTheDocument()
+  })
+
+  test('accepts a PNG', async () => {
+    const user = userEvent.setup()
+    const onFileSelect = vi.fn()
+    const { container } = render(<FileDropInput {...emptyArgs} onFileSelect={onFileSelect} />)
+    const png = new File(['x'], 'a.png', { type: 'image/png' })
+
+    await user.upload(container.querySelector('input[type="file"]') as HTMLInputElement, png)
+
+    expect(onFileSelect).toHaveBeenCalledWith(png)
+  })
 })
