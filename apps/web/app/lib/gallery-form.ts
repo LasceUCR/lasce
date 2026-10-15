@@ -10,30 +10,15 @@ import {
 } from '@/app/lib/cms/save'
 import { defaultLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
 import {
-  draftFromStored,
-  emptyContentDraft,
-  hasContentChanges as hasTranslatableChanges,
-  isConfirmed,
-  isContentPath,
-  reviewsNeeded as translatableReviewsNeeded,
-  toContentInput,
-  validateContent,
-  type ContentDraft,
-  type FormErrors,
+  isContentPath
 } from '@/app/lib/i18n/content/form'
-import { contentCopy, editorCopy } from '@/app/lib/i18n/content/messages'
+import { contentCopy } from '@/app/lib/i18n/content/messages'
 import es from '@/messages/es.json' with { type: 'json' }
-import { isLegacyContent, storedContentFrom } from '@/app/lib/i18n/content/resolve'
 
 import {
   publicationContent,
   publicationFieldSchemas,
-  type Publication,
   type PublicationFieldMessages,
-  type ResearchGroup,
-  type ReviewConfirmation,
-  type StoredPublicationContent,
-  type TranslatableField,
 } from './publication-schema'
 
 export { SAVE_ERROR_MESSAGE, type SaveFailure } from '@/app/lib/cms/save'
