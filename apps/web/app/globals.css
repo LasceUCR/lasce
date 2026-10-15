@@ -5074,17 +5074,10 @@ a.gallery-tile:focus-visible {
   max-width: 200px;
 }
 
-.acknowledgments-tile > *,
-.acknowledgments-slide > * {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  width: 100%;
-  height: 100%;
-}
-
 .acknowledgments-tile > .editable,
-.acknowledgments-slide > .editable {
+.acknowledgments-tile > .acknowledgments-card,
+.acknowledgments-slide > .editable,
+.acknowledgments-slide > .acknowledgments-card {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -6421,6 +6414,7 @@ a.acknowledgments-card:focus-visible {
      a phone screen, most of a desktop window too, up to a cap (set per size
      variant below) so it doesn't stretch absurdly wide on an ultrawide
      monitor. */
+  height: fit-content;
   max-height: calc(100vh - 64px);
   max-height: calc(100dvh - 64px);
   padding: 32px 40px;
