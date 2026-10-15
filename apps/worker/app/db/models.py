@@ -424,6 +424,47 @@ class ExisFile(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class MagFile(Base):
+    """One daily MAG L2 1-minute geomagnetic field file (one UTC day). Written
+    by ``app.services.mag_readings.MagReadings``, the only writer this table
+    has. The readings themselves are in the ``mag_field`` InfluxDB
+    measurement; this row records that the day was ingested, from which
+    version of the archive's file, and how many points each channel produced.
+    """
+
+    __tablename__ = "mag_files"
+    __table_args__ = (
+        UniqueConstraint(
+            "satellite",
+            "product",
+            "day",
+            name="mag_files_satellite_product_day_key",
+        ),
+        {"schema": "solar"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    satellite: Mapped[str] = mapped_column(Text)
+    product: Mapped[str] = mapped_column(Text)
+    day: Mapped[date_type] = mapped_column(Date)
+    file_name: Mapped[str] = mapped_column(Text, unique=True)
+    version: Mapped[str] = mapped_column(Text)
+    source_url: Mapped[str] = mapped_column(Text)
+    source_modified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    first_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    point_count: Mapped[dict[str, int]] = mapped_column(JSONB)
+    attributes: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class ResourceDownload(Base):
     """One file a signed-in user downloaded from ``/datos`` (a chart image or a data
     export). Lives in the ``public`` Postgres schema. Written only by
