@@ -35,7 +35,7 @@ describe('scientific data navigation', () => {
       expect(url.hash).toBe('#scientific-query-title')
     }
     expect(rosacInstrumentsContent.items[2]!.consultation).toEqual({
-      label: 'Consultar simulación del instrumento 3',
+      label: 'Consultar simulación del ROSAC-HIROS',
     })
   })
 

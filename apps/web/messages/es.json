@@ -120,6 +120,15 @@
       "server": "El servidor no pudo completar la operación. Inténtelo de nuevo en unos minutos."
     }
   },
+  "solarImageLightbox": {
+    "open": "Ampliar imagen solar de {time}",
+    "kicker": "GOES · SUVI",
+    "close": "Cerrar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "position": "Imagen {position} de {total}",
+    "announcement": "Imagen {position} de {total}: {time}."
+  },
   "contact": {
     "meta": {
       "title": "Contacto | LASCE",
@@ -497,6 +506,13 @@
     "errors": {
       "saveUnknown": "No se pudo guardar la noticia. Inténtelo de nuevo.",
       "deleteUnknown": "No se pudo eliminar la noticia. Inténtelo de nuevo."
+    }
+  },
+  "researchers": {
+    "created": "Investigador agregado correctamente.",
+    "updated": "Investigador actualizado correctamente.",
+    "errors": {
+      "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo."
     }
   }
 }
