@@ -55,9 +55,13 @@ export function useFloatingMenu({
     setPosition({
       position: 'fixed',
       left: Math.max(availableLeft, Math.min(rect.left, availableRight - menuWidth)),
+      right: 'auto',
       width: menuWidth,
       maxHeight: Math.max(0, Math.min(320, upwards ? above : below)),
-      ...(upwards ? { bottom: window.innerHeight - rect.top + gap } : { top: rect.bottom + gap }),
+      // `auto` cancels the popover UA `inset: 0`, which would otherwise stretch the menu.
+      ...(upwards
+        ? { bottom: window.innerHeight - rect.top + gap, top: 'auto' }
+        : { top: rect.bottom + gap, bottom: 'auto' }),
     })
   }, [boundarySelector, triggerRef])
 

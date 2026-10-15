@@ -12,7 +12,7 @@ export interface FormFieldProps {
   label: string
   value: string
   onChange: (value: string) => void
-  type?: 'text' | 'url' | 'date' | 'email'
+  type?: 'text' | 'url' | 'date' | 'email' | 'tel'
   multiline?: boolean
   /** Renders a `<select>` with one entry per option instead of an input. */
   options?: FormFieldOption[]
@@ -58,11 +58,11 @@ export function FormField({
   placeholder,
   required,
   id,
+  maxLength,
   validate,
   error: externalError,
   errorMessage,
   lang,
-  maxLength,
 }: FormFieldProps) {
   const [error, setError] = useState<string | null>(null)
   const errorId = useId()
