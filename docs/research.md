@@ -42,7 +42,7 @@ column of full-width cards, 16px apart. The card deliberately repeats the `.news
 | ≤ 1120px | Same, text padded 16px 18px                                                        |
 | ≤ 700px  | Stacked: 200px photo on top, text below, summary aligned left instead of justified |
 
-The summary is clamped to three lines so every card has the same height. The button is pinned to the bottom-right corner of the card, so the buttons form one aligned column down the right edge of the list, on phones as well. The full text is still in the page for assistive technology, and it is the lead of the detail page.
+The summary is clamped to three lines with `TruncatedText` ([`truncated-text.md`](truncated-text.md)), so cards keep the same height; a "Leer más" toggle under a description that does not fit shows the rest in place, and a short description gets no toggle. The button is pinned to the bottom-right corner of the card, so the buttons form one aligned column down the right edge of the list, on phones as well. The full text is always in the page for assistive technology, and it is the lead of the detail page.
 
 `.research-areas` has 8px of bottom padding. With `.topic-page-footer`'s 8px, that leaves the same
 16px above "Volver al inicio" as any `TopicSection` page, so there is no dead band under the list.
