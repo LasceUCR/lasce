@@ -75,6 +75,14 @@ describe('getResearchers', () => {
 
     expect(findMany).toHaveBeenCalledWith({ orderBy: { createdAt: 'asc' } })
   })
+
+  test('maps a row without a photo to an empty src', async () => {
+    findMany.mockResolvedValue([researcherRow({ photoUrl: null })])
+
+    const [researcher] = await getResearchers()
+
+    expect(researcher?.src).toBe('')
+  })
 })
 
 describe('researcherInputSchema', () => {
@@ -90,10 +98,14 @@ describe('researcherInputSchema', () => {
     expect(researcherInputSchema.safeParse(validInput).success).toBe(true)
   })
 
-  test('rejects a missing photo', () => {
-    const result = researcherInputSchema.safeParse({ ...validInput, src: '' })
+  test('accepts an empty photo — the photo is optional', () => {
+    expect(researcherInputSchema.safeParse({ ...validInput, src: '' }).success).toBe(true)
+  })
 
-    expect(result.success).toBe(false)
+  test('accepts a missing photo', () => {
+    const { src: _src, ...withoutPhoto } = validInput
+
+    expect(researcherInputSchema.safeParse(withoutPhoto).success).toBe(true)
   })
 
   test('rejects an empty required field', () => {
@@ -231,6 +243,18 @@ describe('updateResearcher', () => {
       expect.objectContaining({ data: expect.objectContaining({ email: [] }) }),
     )
   })
+
+  test('stores a cleared photo as null', async () => {
+    findUnique.mockResolvedValue(researcherRow())
+    update.mockResolvedValue(researcherRow({ photoUrl: null }))
+
+    const result = await updateResearcher('researcher-1', { ...updateInput, src: '' }, 'admin-1')
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ photoUrl: null }) }),
+    )
+    expect(result?.src).toBe('')
+  })
 })
 
 describe('createResearcher', () => {
@@ -285,6 +309,22 @@ describe('createResearcher', () => {
       expect.objectContaining({ data: expect.objectContaining({ email: createInput.email }) }),
     )
     expect(result.email).toEqual(createInput.email)
+  })
+
+  test('creates the profile without a photo, stored as null', async () => {
+    const createInput = {
+      role: 'Investigador',
+      name: 'Persona Nueva',
+      institution: 'UCR',
+    }
+    create.mockResolvedValue(researcherRow({ photoUrl: null }))
+
+    const result = await createResearcher(createInput, 'admin-1')
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ photoUrl: null }) }),
+    )
+    expect(result.src).toBe('')
   })
 })
 

@@ -76,6 +76,11 @@
       "panelTitle": "Real-time image of the Sun",
       "observed": "Observed on <time></time>",
       "updating": "Updating the latest image of the Sun…"
+    },
+    "validation": {
+      "valueNotText": "The value must be text.",
+      "valueRequired": "The value is required.",
+      "valueTooLong": "The value cannot be longer than 15 characters."
     }
   },
   "workAreas": {
@@ -114,6 +119,15 @@
       "network": "Could not reach the server. Check your connection and try again.",
       "server": "The server could not complete the operation. Try again in a few minutes."
     }
+  },
+  "solarImageLightbox": {
+    "open": "Enlarge solar image from {time}",
+    "kicker": "GOES · SUVI",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
+    "position": "Image {position} of {total}",
+    "announcement": "Image {position} of {total}: {time}."
   },
   "contact": {
     "meta": {
@@ -707,6 +721,13 @@
     },
     "backLink": {
       "label": "Back to work areas"
+    }
+  },
+  "researchers": {
+    "created": "Researcher added successfully.",
+    "updated": "Researcher updated successfully.",
+    "errors": {
+      "unknown": "The researcher could not be saved. Try again."
     }
   }
 }
