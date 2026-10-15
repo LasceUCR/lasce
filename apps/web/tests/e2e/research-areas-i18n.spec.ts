@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
+import { createSignedInUser } from './helpers/admin-users'
+
 // Wide enough for the desktop header, where the language menu lives above 1400px.
 test.use({ viewport: { width: 1600, height: 900 } })
 
@@ -129,5 +131,169 @@ test('meets WCAG A and AA automated checks in English', async ({ context, page }
     expect((await axe().analyze()).violations).toEqual([])
   } finally {
     await fixtures.cleanup()
+  }
+})
+
+async function openEditMode(page: Page) {
+  await page.goto('/administracion')
+  await page.getByRole('switch', { name: 'Modo edición' }).click()
+  await page.goto('/investigacion')
+}
+
+function field(page: Page, name: string) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return page.getByRole('dialog').getByRole('textbox', { name: new RegExp(`^${escaped}`) })
+}
+
+test('edits an area in one language after confirming the other is still correct', async ({
+  page,
+  context,
+}) => {
+  const fixtures = await createFixtures()
+  const account = await createSignedInUser(context, 'ADMIN')
+  try {
+    await openEditMode(page)
+    await page.getByRole('button', { name: `Editar ${fixtures.bilingual.title}` }).click()
+
+    const dialog = page.getByRole('dialog', { name: `Editar "${fixtures.bilingual.title}"` })
+    await field(page, 'Descripción (Español)').fill(`Descripción revisada ${fixtures.id}.`)
+    await dialog.getByRole('button', { name: 'Confirmar' }).click()
+
+    // Changed in Spanish only: the English description must change too or be confirmed.
+    await expect(dialog.getByRole('tab', { name: /^English · 1 por revisar$/ })).toBeVisible()
+    await dialog
+      .getByRole('switch', { name: 'La descripción en inglés sigue siendo correcta' })
+      .click()
+    await dialog.getByRole('button', { name: 'Confirmar' }).click()
+
+    await expect(page.getByText('Área de investigación actualizada correctamente.')).toBeVisible()
+    await expect(dialog).toBeHidden()
+    await expect(page.getByText(`Descripción revisada ${fixtures.id}.`)).toBeVisible()
+
+    await switchLanguage(page, 'Español', 'English')
+    await expect(page.getByText(`English description of area ${fixtures.id}.`)).toBeVisible()
+  } finally {
+    await fixtures.cleanup()
+    await account.cleanup()
+  }
+})
+
+test('completes the English of an area saved before languages existed', async ({
+  page,
+  context,
+}) => {
+  const fixtures = await createFixtures()
+  const account = await createSignedInUser(context, 'ADMIN')
+  try {
+    await openEditMode(page)
+    await page.getByRole('button', { name: `Editar ${fixtures.legacy.title}` }).click()
+
+    const dialog = page.getByRole('dialog', { name: `Editar "${fixtures.legacy.title}"` })
+    await expect(dialog.getByRole('tab', { name: 'English · Sin traducción' })).toBeVisible()
+    await dialog.getByRole('tab', { name: /^English/ }).click()
+    await field(page, 'Título (English)').fill(`Completed area ${fixtures.id}`)
+    await field(page, 'Descripción (English)').fill('Now written in English.')
+    await dialog.getByRole('button', { name: 'Confirmar' }).click()
+
+    // The base text now counts as Spanish: it has to be reviewed once.
+    await dialog.getByRole('tab', { name: /^Español/ }).click()
+    for (const name of [
+      'El título en español sigue siendo correcto',
+      'La descripción en español sigue siendo correcta',
+    ]) {
+      await dialog.getByRole('switch', { name }).click()
+    }
+    await dialog.getByRole('button', { name: 'Confirmar' }).click()
+
+    await expect(page.getByText('Área de investigación actualizada correctamente.')).toBeVisible()
+    await expect(page.getByRole('heading', { name: fixtures.legacy.title })).toHaveAttribute(
+      'lang',
+      'es',
+    )
+    await switchLanguage(page, 'Español', 'English')
+    await expect(
+      page.getByRole('heading', { name: `Completed area ${fixtures.id}` }),
+    ).toHaveAttribute('lang', 'en')
+  } finally {
+    await fixtures.cleanup()
+    await account.cleanup()
+  }
+})
+
+test('creates an area in both languages with its photo', async ({ page, context }) => {
+  const { prisma } = await import('@lasce/db')
+  const id = randomUUID().slice(0, 8)
+  const account = await createSignedInUser(context, 'ADMIN')
+  try {
+    await openEditMode(page)
+    await page.getByRole('button', { name: 'Agregar área de investigación' }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'Agregar área de investigación' })
+    await field(page, 'Título (Español)').fill(`Área nueva ${id}`)
+    await field(page, 'Descripción (Español)').fill('Descripción de la nueva área.')
+    await dialog.getByRole('tab', { name: /^English/ }).click()
+    await field(page, 'Título (English)').fill(`New area ${id}`)
+    await field(page, 'Descripción (English)').fill('Description of the new area.')
+    await dialog
+      .locator('input[type="file"]')
+      .setInputFiles('public/images/research/geomagnetismo-costa-rica.jpg')
+    await dialog.getByRole('button', { name: 'Confirmar' }).click()
+
+    await expect(page.getByText('Área de investigación agregada correctamente.')).toBeVisible()
+    await expect(page.getByRole('heading', { name: `Área nueva ${id}` })).toBeVisible()
+
+    const stored = await prisma.researchArea.findFirstOrThrow({
+      where: { title: `Área nueva ${id}` },
+      include: { translations: true },
+    })
+    expect(stored.translations).toMatchObject([{ locale: 'en', title: `New area ${id}` }])
+  } finally {
+    await prisma.researchArea.deleteMany({ where: { title: { contains: id } } })
+    await account.cleanup()
+  }
+})
+
+test('deletes an area after confirming', async ({ page, context }) => {
+  const fixtures = await createFixtures()
+  const account = await createSignedInUser(context, 'ADMIN')
+  try {
+    await openEditMode(page)
+    await page.getByRole('button', { name: `Eliminar ${fixtures.legacy.title}` }).click()
+    await page
+      .getByRole('dialog', { name: 'Eliminar área de investigación' })
+      .getByRole('button', { name: 'Eliminar' })
+      .click()
+
+    await expect(page.getByText('Área de investigación eliminada correctamente.')).toBeVisible()
+    await expect(page.getByRole('heading', { name: fixtures.legacy.title })).toHaveCount(0)
+  } finally {
+    await fixtures.cleanup()
+    await account.cleanup()
+  }
+})
+
+test('meets WCAG A and AA automated checks in the editor, in English', async ({
+  page,
+  context,
+}) => {
+  const fixtures = await createFixtures()
+  const account = await createSignedInUser(context, 'ADMIN')
+  const axe = () => new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+  try {
+    await openEditMode(page)
+    await switchLanguage(page, 'Español', 'English')
+    await page.getByRole('button', { name: `Edit ${fixtures.legacy.title}` }).click()
+    const dialog = page.getByRole('dialog', { name: `Edit "${fixtures.legacy.title}"` })
+    await expect(dialog.getByText(/may not be in Spanish/)).toBeVisible()
+    expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
+
+    // With errors on screen.
+    await field(page, 'Title (Español)').fill('')
+    await dialog.getByRole('button', { name: 'Confirm' }).click()
+    await expect(dialog.getByText('The Spanish title is required.')).toBeVisible()
+    expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
+  } finally {
+    await fixtures.cleanup()
+    await account.cleanup()
   }
 })
