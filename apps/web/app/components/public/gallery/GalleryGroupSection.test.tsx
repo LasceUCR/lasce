@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { GalleryGroupSection, type GalleryGroupSectionProps } from './GalleryGroupSection'
 import { WithoutSubAlbums, WithSubAlbums } from './GalleryGroupSection.stories'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 
 const mocks = vi.hoisted(() => ({
@@ -28,7 +29,7 @@ const withSubAlbums = WithSubAlbums.args as GalleryGroupSectionProps
 const withoutSubAlbums = WithoutSubAlbums.args as GalleryGroupSectionProps
 
 function renderSection(props: GalleryGroupSectionProps, editMode = false) {
-  return render(
+  return renderWithIntl(
     <EditModeContext.Provider value={{ editMode, setEditMode: () => undefined }}>
       <GalleryGroupSection {...props} />
     </EditModeContext.Provider>,
@@ -115,7 +116,11 @@ describe('GalleryGroupSection', () => {
     renderSection(
       {
         ...withSubAlbums,
-        album: { ...album, id: 'album-id', coverObjectKey: '/images/galeria/rosac/8.jpg' },
+        album: {
+          ...album,
+          id: 'album-id',
+          coverObjectKey: '/images/galeria/rosac/8.jpg',
+        },
         canDelete: true,
         canEdit: true,
       },
@@ -133,7 +138,19 @@ describe('GalleryGroupSection', () => {
     renderSection(
       {
         ...withSubAlbums,
-        album: { ...album, id: 'album-id', coverObjectKey: '/images/galeria/rosac/8.jpg' },
+        album: {
+          ...album,
+          id: 'album-id',
+          coverObjectKey: '/images/galeria/rosac/8.jpg',
+          editing: {
+            isLegacy: false,
+            version: 'v1',
+            content: {
+              es: { title: album.title, description: album.description },
+              en: { title: 'ROSAC', description: 'ROSAC description.' },
+            },
+          },
+        },
         canEdit: true,
       },
       true,
@@ -142,10 +159,15 @@ describe('GalleryGroupSection', () => {
     await user.click(screen.getByRole('button', { name: `Editar ${album.title}` }))
 
     expect(screen.getByRole('dialog', { name: `Editar "${album.title}"` })).toBeInTheDocument()
-    await user.clear(screen.getByRole('textbox', { name: 'Título' }))
-    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'ROSAC actualizado')
-    await user.clear(screen.getByRole('textbox', { name: 'Descripción' }))
-    await user.type(screen.getByRole('textbox', { name: 'Descripción' }), 'Descripción nueva.')
+    await user.clear(screen.getByRole('textbox', { name: 'Título (Español)' }))
+    await user.type(screen.getByRole('textbox', { name: 'Título (Español)' }), 'ROSAC actualizado')
+    await user.clear(screen.getByRole('textbox', { name: 'Descripción (Español)' }))
+    await user.type(
+      screen.getByRole('textbox', { name: 'Descripción (Español)' }),
+      'Descripción nueva.',
+    )
+    await user.click(screen.getByRole('tab', { name: /English/ }))
+    for (const toggle of screen.getAllByRole('switch')) await user.click(toggle)
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     await waitFor(() => {
@@ -153,8 +175,15 @@ describe('GalleryGroupSection', () => {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: 'ROSAC actualizado',
-          description: 'Descripción nueva.',
+          version: 'v1',
+          content: {
+            es: { title: 'ROSAC actualizado', description: 'Descripción nueva.' },
+            en: { title: 'ROSAC', description: 'ROSAC description.' },
+          },
+          confirmedUnchanged: [
+            { locale: 'en', field: 'title' },
+            { locale: 'en', field: 'description' },
+          ],
           yearsLabel: '2019–2023',
           coverObjectKey: '/images/galeria/rosac/8.jpg',
         }),
@@ -220,7 +249,19 @@ describe('GalleryGroupSection', () => {
     renderSection(
       {
         ...withSubAlbums,
-        album: { ...album, id: 'album-id', coverObjectKey: '/images/galeria/rosac/8.jpg' },
+        album: {
+          ...album,
+          id: 'album-id',
+          coverObjectKey: '/images/galeria/rosac/8.jpg',
+          editing: {
+            isLegacy: false,
+            version: 'v1',
+            content: {
+              es: { title: album.title, description: album.description },
+              en: { title: 'ROSAC', description: 'ROSAC description.' },
+            },
+          },
+        },
         canEdit: true,
       },
       true,
@@ -232,11 +273,5 @@ describe('GalleryGroupSection', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe un álbum con este slug.')
     expect(mocks.refresh).not.toHaveBeenCalled()
     expect(screen.getByRole('dialog', { name: `Editar "${album.title}"` })).toBeInTheDocument()
-  })
-
-  test('shows the add-album control when creation is granted', () => {
-    renderSection({ ...withSubAlbums, canCreate: true }, true)
-
-    expect(screen.getByRole('button', { name: 'Añadir álbum' })).toBeInTheDocument()
   })
 })

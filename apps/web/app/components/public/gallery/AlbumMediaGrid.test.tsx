@@ -1,9 +1,20 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
+import type { ReactElement } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+
 import { AlbumMediaGrid, type AlbumMediaGridProps } from './AlbumMediaGrid'
 import { Default, SingleFile } from './AlbumMediaGrid.stories'
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
+vi.mock('@/app/(public)/galeria/actions', () => ({ uploadGalleryImage: vi.fn() }))
+
+function render(ui: ReactElement) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+}
 
 const defaultArgs = Default.args as AlbumMediaGridProps
 const singleArgs = SingleFile.args as AlbumMediaGridProps
@@ -80,6 +91,58 @@ describe('AlbumMediaGrid', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  test('shows edit and delete controls for each file when edit mode and grants are enabled', () => {
+    render(<AlbumMediaGrid {...defaultArgs} canDelete canEdit editMode />)
+
+    expect(screen.getAllByRole('button', { name: /^Editar / })).toHaveLength(
+      defaultArgs.media.length,
+    )
+    expect(screen.getAllByRole('button', { name: /^Eliminar / })).toHaveLength(
+      defaultArgs.media.length,
+    )
+  })
+
+  test('shows an add-file card when edit mode and create permission are enabled', () => {
+    render(<AlbumMediaGrid {...defaultArgs} albumId="album-1" canCreate editMode uploader="Ana" />)
+
+    expect(screen.getByRole('button', { name: 'Añadir archivo' })).toBeInTheDocument()
+  })
+
+  test('opens the media form for the album and reports missing fields on submit', async () => {
+    const user = userEvent.setup()
+    render(<AlbumMediaGrid {...defaultArgs} albumId="album-1" canCreate editMode uploader="Ana" />)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir archivo' }))
+    expect(screen.getByRole('dialog', { name: 'Añadir archivo' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.getByText('Se requiere subir un contenido.')).toBeInTheDocument()
+    expect(screen.getByText('El título en español es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('El texto alternativo en español es obligatorio.')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  test('hides the add-file card when the album or the user is unknown', () => {
+    render(<AlbumMediaGrid {...defaultArgs} canCreate editMode />)
+
+    expect(screen.queryByRole('button', { name: 'Añadir archivo' })).not.toBeInTheDocument()
+  })
+
+  test('deletes a file through the API after confirming', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+    render(<AlbumMediaGrid {...defaultArgs} canDelete editMode />)
+
+    await user.click(screen.getByRole('button', { name: `Eliminar ${first.title}` }))
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar archivo' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(`/api/gallery/media/${first.id}`, { method: 'DELETE' })
+    vi.unstubAllGlobals()
+  })
+
   test('labels a video so it is not distinguished by its icon alone', () => {
     render(<AlbumMediaGrid {...defaultArgs} />)
 
@@ -135,13 +198,24 @@ describe('AlbumMediaGrid', () => {
     expect(screen.getByRole('heading', { level: 2, name: first.title })).toBeInTheDocument()
   })
 
-  test('indicates there is no content available when an album has no media', () => {
+  test('renders no full-size buttons when an album has no media', () => {
     render(<AlbumMediaGrid albumTitle="Categoría vacía" media={[]} />)
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'No hay contenido disponible en esta categoría.',
-    )
-    expect(screen.queryByRole('list')).not.toBeInTheDocument()
     expect(screen.queryAllByRole('button')).toHaveLength(0)
+  })
+
+  test('allows creating the first file when an empty album is in edit mode', () => {
+    render(
+      <AlbumMediaGrid
+        albumId="album-1"
+        albumTitle="Categoría vacía"
+        canCreate
+        editMode
+        media={[]}
+        uploader="Ana"
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Añadir archivo' })).toBeInTheDocument()
   })
 })

@@ -23,6 +23,7 @@ vi.mock('@/app/components/public/gallery/forms/AlbumForm', () => ({
     onSave: (values: {
       title: string
       description: string
+      content: Record<'es' | 'en', { title: string; description: string }>
       yearsLabel: string
       coverObjectKey: string
     }) => void
@@ -33,6 +34,10 @@ vi.mock('@/app/components/public/gallery/forms/AlbumForm', () => ({
           onSave({
             title: 'Álbum Nuevo',
             description: 'Descripción del álbum.',
+            content: {
+              es: { title: 'Álbum Nuevo', description: 'Descripción del álbum.' },
+              en: { title: 'New album', description: 'Album description.' },
+            },
             yearsLabel: '',
             coverObjectKey: 'gallery/albums/album-nuevo.jpg',
           })
@@ -106,8 +111,10 @@ describe('GalleryAlbumAddCard', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug: 'album-nuevo',
-          title: 'Álbum Nuevo',
-          description: 'Descripción del álbum.',
+          content: {
+            es: { title: 'Álbum Nuevo', description: 'Descripción del álbum.' },
+            en: { title: 'New album', description: 'Album description.' },
+          },
           yearsLabel: null,
           coverObjectKey: 'gallery/albums/album-nuevo.jpg',
         }),

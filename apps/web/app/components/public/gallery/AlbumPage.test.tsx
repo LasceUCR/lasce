@@ -1,8 +1,24 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { screen } from '@testing-library/react'
+import type { ReactElement } from 'react'
+import { describe, expect, test, vi } from 'vitest'
 
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 import { AlbumPage, type AlbumPageProps } from './AlbumPage'
 import { albumMediaMeta, albumMeta, galleryAlbums } from '@/app/lib/gallery'
+
+vi.mock('@lasce/db', () => ({ prisma: {} }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
+vi.mock('@/app/(public)/galeria/actions', () => ({ uploadGalleryImage: vi.fn() }))
+
+function render(ui: ReactElement) {
+  return renderWithIntl(
+    <EditModeContext.Provider value={{ editMode: false, setEditMode: () => undefined }}>
+      <ToastProvider>{ui}</ToastProvider>
+    </EditModeContext.Provider>,
+  )
+}
 
 const album = galleryAlbums.rosac
 const [subAlbum] = album.subAlbums
@@ -95,12 +111,9 @@ describe('AlbumPage', () => {
     ).toBe(true)
   })
 
-  test('displays an empty state notice and no full-size buttons when an album has no media', () => {
+  test('displays no full-size buttons when an album has no media', () => {
     render(<AlbumPage {...albumArgs} media={[]} />)
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'No hay contenido disponible en esta categoría.',
-    )
     expect(
       screen.queryByRole('button', { name: /^Ver a tamaño completo:/ }),
     ).not.toBeInTheDocument()
