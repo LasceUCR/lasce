@@ -423,8 +423,9 @@ model ResourceDownload {
 model Researcher {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Local path under `apps/web/public`, same convention `TeamMember.src` uses
-  /// today. Revisit once photo upload has a real storage-backed URL.
-  photoUrl    String   @map("photo_url")
+  /// today. Revisit once photo upload has a real storage-backed URL. Null when
+  /// the researcher has no photo: the photo is optional.
+  photoUrl    String?  @map("photo_url")
   role        String
   name        String
   institution String
@@ -452,7 +453,8 @@ model Researcher {
 /// `NosotrosContent.researchers` in `app/lib/nosotros.ts`), not one shared team.
 model NosotrosResearcher {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  photoUrl    String   @map("photo_url")
+  /// Null when the researcher has no photo: the photo is optional.
+  photoUrl    String?  @map("photo_url")
   role        String
   name        String
   institution String
