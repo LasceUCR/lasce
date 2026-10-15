@@ -74,33 +74,47 @@ export function getRosacInstrumentsContent(
     products?.dynamicSpectrum ?? es.rosac.instruments.products.dynamicSpectrum,
   ]
 
-  const cardName = card?.name ?? es.rosac.instruments.card.name
-  const consultationLabel = card?.consultationLabel ?? es.rosac.instruments.card.consultationLabel
   const consultationNotice =
     card?.consultationNotice ?? es.rosac.instruments.card.consultationNotice
 
   const items: RosacInstrumentCardContent[] = [
-    ...rosacInstruments.map((instrument, index) => {
-      const number = String(index + 1)
-      const productName = productNames[index] ?? instrument.products[0]?.name ?? ''
-      return {
-        id: instrument.code,
-        name: cardName.replace('{number}', number),
-        image: localizedImages[index],
-        consultation: {
-          href: `/datos?source=ROSAC&instrument=${instrument.code}#scientific-query-title`,
-          label: consultationLabel.replace('{number}', number),
-          notice: consultationNotice.replace('{product}', productName),
-        },
-        labels,
-      }
-    }),
+    {
+      id: rosacInstruments[0]!.code,
+      name: 'ROSAC-SABER',
+      characteristics: ['Banda entre 100 y 1000 MHz'],
+      image: localizedImages[0],
+      consultation: {
+        href: `/datos?source=ROSAC&instrument=${rosacInstruments[0]!.code}#scientific-query-title`,
+        label: 'Consultar simulación del ROSAC-SABER',
+        notice: consultationNotice.replace(
+          '{product}',
+          productNames[0] ?? rosacInstruments[0]!.products[0]!.name,
+        ),
+      },
+      labels,
+    },
+    {
+      id: rosacInstruments[1]!.code,
+      name: 'ROSAC-MIRA 9GHz',
+      characteristics: ['Banda de los 9 GHz'],
+      image: localizedImages[1],
+      consultation: {
+        href: `/datos?source=ROSAC&instrument=${rosacInstruments[1]!.code}#scientific-query-title`,
+        label: 'Consultar simulación del ROSAC-MIRA 9GHz',
+        notice: consultationNotice.replace(
+          '{product}',
+          productNames[1] ?? rosacInstruments[1]!.products[0]!.name,
+        ),
+      },
+      labels,
+    },
     {
       id: 'rosac-instrument-3',
-      name: card?.pendingName ?? es.rosac.instruments.card.pendingName,
+      name: 'ROSAC-HIROS',
+      characteristics: ['Observación del hidrógeno neutro a 1,4 GHz'],
       image: localizedImages[2],
       pendingMessage: card?.pendingNotice ?? es.rosac.instruments.card.pendingNotice,
-      consultation: { label: consultationLabel.replace('{number}', '3') },
+      consultation: { label: 'Consultar simulación del ROSAC-HIROS' },
       labels,
     },
   ]

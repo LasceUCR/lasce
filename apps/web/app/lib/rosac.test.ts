@@ -351,7 +351,7 @@ describe('rosac content', () => {
     expect(english.radioObservation.title).toBe('Why observe in radio?')
     expect(english.relationship.title).toBe('ROSAC and LASCE')
     expect(english.instruments.title).toBe('Scientific instruments')
-    expect(english.instruments.items[0]?.name).toBe('Instrument 1')
+    expect(english.instruments.items[0]?.name).toBe('ROSAC-SABER')
     expect(english.team.title).toBe('Researchers')
     expect(english.acknowledgments.title).toBe('ROSAC acknowledgments')
     expect(english.donations.title).toBe('ROSAC donations')
