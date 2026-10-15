@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -8,13 +9,21 @@ import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 
 import type { ResearchArea } from '@/app/lib/research-area-schema'
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 
 import { ResearchAreaForm, type ResearchAreaFormValues } from './ResearchAreaForm'
 
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
+/** A JSON request for `useRequestFeedback`. */
+function jsonRequest(method: 'POST' | 'PATCH', values: ResearchAreaFormValues): RequestInit {
+  return {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(values),
+  }
+}
 
 const blankArea: ResearchAreaFormValues = {
   title: ' ',
@@ -49,97 +58,56 @@ export function ResearchAreasSection({
 }: ResearchAreasSectionProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
+  const t = useTranslations('researchAreas')
+  const sendWithFeedback = useRequestFeedback()
 
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const editingArea = areas.find((area) => area.id === editingAreaId)
 
   const fallbackTitleId = useId()
   const titleId = id ? `${id}-title` : fallbackTitleId
 
-  function openEditor(id: string) {
-    setSaveError(null)
-    setEditingAreaId(id)
-  }
-
   function closeEditor() {
-    setSaveError(null)
     setEditingAreaId(null)
   }
 
+  // Each handler reports its outcome in a toast through `useRequestFeedback` (docs/toasts.md).
+  // On failure nothing else happens, so a form stays open with what was typed.
   async function handleSaveArea(values: ResearchAreaFormValues) {
     if (!editingAreaId) return
 
-    setSaveError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/research-areas/${editingAreaId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setSaveError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    closeEditor()
-    router.refresh()
+    await sendWithFeedback(`/api/research-areas/${editingAreaId}`, jsonRequest('PATCH', values), {
+      success: t('updated'),
+      fallback: t('errors.saveUnknown'),
+      onSuccess: () => {
+        closeEditor()
+        router.refresh()
+      },
+    })
   }
 
   async function handleCreateArea(values: ResearchAreaFormValues, close: () => void) {
-    setCreateError(null)
-
-    let response: Response
-    try {
-      response = await fetch('/api/research-areas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setCreateError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    close()
-    router.refresh()
+    await sendWithFeedback('/api/research-areas', jsonRequest('POST', values), {
+      success: t('created'),
+      fallback: t('errors.saveUnknown'),
+      onSuccess: () => {
+        close()
+        router.refresh()
+      },
+    })
   }
 
-  async function handleDeleteArea(id: string) {
-    setDeleteError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/research-areas/${id}`, { method: 'DELETE' })
-    } catch {
-      setDeleteError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setDeleteError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    router.refresh()
+  async function handleDeleteArea(areaId: string) {
+    await sendWithFeedback(
+      `/api/research-areas/${areaId}`,
+      { method: 'DELETE' },
+      {
+        success: t('deleted'),
+        fallback: t('errors.deleteUnknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
   return (
@@ -151,30 +119,16 @@ export function ResearchAreasSection({
         </header>
       ) : null}
 
-      {deleteError ? (
-        <p className="form-alert" role="alert">
-          {deleteError}
-        </p>
-      ) : null}
-
       <div className="research-area-content">
         {editMode && canCreate ? (
           <AddItemCard label="Añadir">
             {({ close }) => (
               <>
-                {createError ? (
-                  <p className="form-alert" role="alert">
-                    {createError}
-                  </p>
-                ) : null}
                 <ResearchAreaForm
                   area={blankArea}
                   confirmMessage="¿Desea agregar esta área?"
                   confirmTitle="Agregar área"
-                  onCancel={() => {
-                    setCreateError(null)
-                    close()
-                  }}
+                  onCancel={close}
                   onSave={(values) => handleCreateArea(values, close)}
                 />
               </>
@@ -192,7 +146,7 @@ export function ResearchAreasSection({
               <li key={area.id}>
                 <EditableWrapper
                   key={area.id}
-                  onEdit={canEdit ? () => openEditor(area.id) : undefined}
+                  onEdit={canEdit ? () => setEditingAreaId(area.id) : undefined}
                   onDelete={canDelete ? () => handleDeleteArea(area.id) : undefined}
                   deleteConfirmLabel="Eliminar"
                   deleteConfirmTitle="Eliminar área"
@@ -218,12 +172,6 @@ export function ResearchAreasSection({
       >
         {editingArea ? (
           <>
-            {saveError ? (
-              <p className="form-alert" role="alert">
-                {saveError}
-              </p>
-            ) : null}
-
             <ResearchAreaForm
               area={{
                 title: editingArea.title,

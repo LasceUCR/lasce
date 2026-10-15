@@ -510,6 +510,13 @@
       "metaTitle": "{title} | Investigación | LASCE",
       "kicker": "Área de investigación",
       "back": "Volver a áreas de investigación"
+    },
+    "created": "Área de investigación agregada correctamente.",
+    "updated": "Área de investigación actualizada correctamente.",
+    "deleted": "Área de investigación eliminada correctamente.",
+    "errors": {
+      "saveUnknown": "No se pudo guardar el área de investigación. Inténtelo de nuevo.",
+      "deleteUnknown": "No se pudo eliminar el área de investigación. Inténtelo de nuevo."
     }
   }
 }

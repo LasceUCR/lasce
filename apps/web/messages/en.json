@@ -510,6 +510,13 @@
       "metaTitle": "{title} | Research | LASCE",
       "kicker": "Research area",
       "back": "Back to research areas"
+    },
+    "created": "Research area added successfully.",
+    "updated": "Research area updated successfully.",
+    "deleted": "Research area deleted successfully.",
+    "errors": {
+      "saveUnknown": "The research area could not be saved. Please try again.",
+      "deleteUnknown": "The research area could not be deleted. Please try again."
     }
   }
 }

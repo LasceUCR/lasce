@@ -6,6 +6,7 @@ import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { ResearchAreasSection, type ResearchAreasSectionProps } from './ResearchAreasSection'
 import { Default, Empty } from './ResearchAreasSection.stories'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 
 const mocks = vi.hoisted(() => ({ refresh: vi.fn() }))
 
@@ -45,30 +46,36 @@ if (!firstArea) throw new Error('The default research areas story must contain a
 
 function renderCreateSection() {
   return renderWithIntl(
-    <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
-      <ResearchAreasSection
-        areas={[]}
-        canCreate
-        subtitle="Áreas de investigación"
-        title="Investigación"
-      />
-    </EditModeContext.Provider>,
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
+        <ResearchAreasSection
+          areas={[]}
+          canCreate
+          subtitle="Áreas de investigación"
+          title="Investigación"
+        />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
 function renderSection(props: ResearchAreasSectionProps) {
   return renderWithIntl(
-    <EditModeContext.Provider value={{ editMode: false, setEditMode: vi.fn() }}>
-      <ResearchAreasSection {...props} />
-    </EditModeContext.Provider>,
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: false, setEditMode: vi.fn() }}>
+        <ResearchAreasSection {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
 function renderEditableSection() {
   return renderWithIntl(
-    <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
-      <ResearchAreasSection {...defaultArgs} canDelete canEdit />
-    </EditModeContext.Provider>,
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
+        <ResearchAreasSection {...defaultArgs} canDelete canEdit />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -151,9 +158,12 @@ describe('ResearchAreasSection', () => {
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(
+      await screen.findByText('Área de investigación agregada correctamente.'),
+    ).toBeInTheDocument()
   })
 
-  test('shows the API error and leaves the form open', async () => {
+  test("shows the server's reason in a toast and leaves the form open", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
@@ -163,8 +173,10 @@ describe('ResearchAreasSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Añadir' }))
     fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    // The toast renders inside the open modal, where the admin is.
+    expect(await within(dialog).findByText('No autorizado.')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
@@ -184,9 +196,12 @@ describe('ResearchAreasSection', () => {
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(
+      await screen.findByText('Área de investigación actualizada correctamente.'),
+    ).toBeInTheDocument()
   })
 
-  test('shows a PATCH API error and keeps the editor open', async () => {
+  test('shows a PATCH failure in a toast and keeps the editor open', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
@@ -196,8 +211,8 @@ describe('ResearchAreasSection', () => {
     clickFirstButton('Editar')
     fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(await within(dialog).findByText('No autorizado.')).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
@@ -215,9 +230,12 @@ describe('ResearchAreasSection', () => {
       method: 'DELETE',
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(
+      await screen.findByText('Área de investigación eliminada correctamente.'),
+    ).toBeInTheDocument()
   })
 
-  test('shows a DELETE API error without refreshing', async () => {
+  test('shows a DELETE failure in a toast without refreshing', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
@@ -228,8 +246,24 @@ describe('ResearchAreasSection', () => {
     const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
+    expect(await screen.findByText('No autorizado.')).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('falls back to its own message when the server gives no reason', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response('<html></html>', { status: 400 })),
+    )
+
+    renderEditableSection()
+    clickFirstButton('Eliminar')
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
+
+    expect(
+      await screen.findByText('No se pudo eliminar el área de investigación. Inténtelo de nuevo.'),
+    ).toBeInTheDocument()
   })
 
   test('renders no heading and names the list by label when no title is given', () => {
