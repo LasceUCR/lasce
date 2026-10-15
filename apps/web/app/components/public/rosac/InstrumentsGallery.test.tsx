@@ -11,7 +11,7 @@ describe('InstrumentsGallery', () => {
     render(
       <InstrumentsGallery label={rosacInstrumentsContent.title}>
         {rosacInstrumentsContent.items.map((item) => (
-          <InstrumentCard instrument={item} key={item.id} />
+          <div key={item.id}>{item.name}</div>
         ))}
       </InstrumentsGallery>,
     )
@@ -20,6 +20,9 @@ describe('InstrumentsGallery', () => {
     expect(within(track).getAllByRole('listitem')).toHaveLength(
       rosacInstrumentsContent.items.length,
     )
+    for (const item of rosacInstrumentsContent.items) {
+      expect(within(track).getByText(item.name)).toBeInTheDocument()
+    }
   })
 
   test('renders trailing slide when provided', () => {
