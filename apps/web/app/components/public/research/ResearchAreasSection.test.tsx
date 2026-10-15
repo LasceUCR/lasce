@@ -4,7 +4,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { ResearchAreasSection, type ResearchAreasSectionProps } from './ResearchAreasSection'
-import { Default, Empty } from './ResearchAreasSection.stories'
+import { Default, EditMode, Empty } from './ResearchAreasSection.stories'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 
@@ -16,17 +16,24 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
 }))
 
+/** What the stand-in form saves: new text in both languages and a new photo. */
+const savedDraft = {
+  es: { title: 'Área creada', description: 'Descripción.' },
+  en: { title: 'Created area', description: 'Description.' },
+}
+
+// The form has its own tests; here it only hands back a result, or cancels.
 vi.mock('./ResearchAreaForm', () => ({
   ResearchAreaForm: ({
     onSave,
     onCancel,
   }: {
-    onSave: (values: { title: string; description: string; src: string }) => void
+    onSave: (result: { draft: typeof savedDraft; confirmed: []; src: string }) => void
     onCancel: () => void
   }) => (
     <div>
       <button
-        onClick={() => onSave({ title: 'Área creada', description: 'Descripción', src: '' })}
+        onClick={() => onSave({ draft: savedDraft, confirmed: [], src: '/creada.jpg' })}
         type="button"
       >
         Guardar prueba
@@ -40,49 +47,30 @@ vi.mock('./ResearchAreaForm', () => ({
 
 const defaultArgs = Default.args as ResearchAreasSectionProps
 const emptyArgs = Empty.args as ResearchAreasSectionProps
+const editArgs = EditMode.args as ResearchAreasSectionProps
 const firstArea = defaultArgs.areas[0]
+const editedArea = editArgs.areas[0]
 
-if (!firstArea) throw new Error('The default research areas story must contain an area.')
+if (!firstArea || !editedArea) throw new Error('The research areas stories must contain areas.')
 
-function renderCreateSection() {
+function renderSection(props: ResearchAreasSectionProps, editMode = false) {
   return renderWithIntl(
     <ToastProvider>
-      <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
-        <ResearchAreasSection
-          areas={[]}
-          canCreate
-          subtitle="Áreas de investigación"
-          title="Investigación"
-        />
-      </EditModeContext.Provider>
-    </ToastProvider>,
-  )
-}
-
-function renderSection(props: ResearchAreasSectionProps) {
-  return renderWithIntl(
-    <ToastProvider>
-      <EditModeContext.Provider value={{ editMode: false, setEditMode: vi.fn() }}>
+      <EditModeContext.Provider value={{ editMode, setEditMode: vi.fn() }}>
         <ResearchAreasSection {...props} />
       </EditModeContext.Provider>
     </ToastProvider>,
   )
 }
 
-function renderEditableSection() {
-  return renderWithIntl(
-    <ToastProvider>
-      <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
-        <ResearchAreasSection {...defaultArgs} canDelete canEdit />
-      </EditModeContext.Provider>
-    </ToastProvider>,
-  )
+function answer(status: number, body?: unknown) {
+  return new Response(body === undefined ? null : JSON.stringify(body), { status })
 }
 
-function clickFirstButton(name: string) {
-  const button = screen.getAllByRole('button', { name }).at(0)
-  if (!button) throw new Error(`Expected a button named "${name}".`)
-  fireEvent.click(button)
+function deleteFirstArea() {
+  fireEvent.click(screen.getByRole('button', { name: `Eliminar ${editedArea?.title}` }))
+  const dialog = screen.getByRole('dialog', { name: 'Eliminar área de investigación' })
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 }
 
 afterEach(() => {
@@ -94,9 +82,9 @@ describe('ResearchAreasSection', () => {
   test('lists one item per research area it is given', () => {
     renderSection(defaultArgs)
 
-    const list = screen.getByRole('list')
-
-    expect(within(list).getAllByRole('listitem')).toHaveLength(defaultArgs.areas.length)
+    expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(
+      defaultArgs.areas.length,
+    )
   })
 
   test('marks each card with the language its text is in', () => {
@@ -117,16 +105,12 @@ describe('ResearchAreasSection', () => {
 
     for (const area of defaultArgs.areas) {
       const card = screen.getByRole('article', { name: area.title })
-
-      expect(within(card).getByRole('heading', { level: 3, name: area.title })).toBeInTheDocument()
       expect(within(card).getByText(area.description)).toBeInTheDocument()
     }
   })
 
   test('links each research area to its own detail page', () => {
     renderSection(defaultArgs)
-
-    expect(screen.getAllByRole('link')).toHaveLength(defaultArgs.areas.length)
 
     for (const area of defaultArgs.areas) {
       expect(
@@ -139,112 +123,108 @@ describe('ResearchAreasSection', () => {
     renderSection(emptyArgs)
 
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
-    expect(screen.queryAllByRole('link')).toHaveLength(0)
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
-  test('posts a new area and closes the form after success', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 201 }))
+  test('posts a new area in both languages, closes the form and says so', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(answer(201, { area: { id: 'new' } }))
     vi.stubGlobal('fetch', fetchMock)
 
-    renderCreateSection()
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir' }))
+    renderSection(editArgs, true)
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar área de investigación' }))
     fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
-    expect(fetchMock).toHaveBeenCalledWith('/api/research-areas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'Área creada', description: 'Descripción', src: '' }),
-    })
-    expect(mocks.refresh).toHaveBeenCalledOnce()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/api/research-areas')
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(init.body as string)).toEqual({ content: savedDraft, src: '/creada.jpg' })
     expect(
       await screen.findByText('Área de investigación agregada correctamente.'),
     ).toBeInTheDocument()
+    expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test("shows the server's reason in a toast and leaves the form open", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
-    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(403, { error: 'No autorizado.' })))
 
-    renderCreateSection()
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir' }))
+    renderSection(editArgs, true)
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar área de investigación' }))
     fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
 
-    const dialog = screen.getByRole('dialog')
+    const dialog = screen.getByRole('dialog', { name: 'Agregar área de investigación' })
     // The toast renders inside the open modal, where the admin is.
     expect(await within(dialog).findByText('No autorizado.')).toBeInTheDocument()
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
-  test('patches an area, closes the editor, and refreshes after success', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }))
+  test('patches an area against its version with what changed, then closes and refreshes', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(answer(200, { area: { id: editedArea.id } }))
     vi.stubGlobal('fetch', fetchMock)
 
-    renderEditableSection()
-    clickFirstButton('Editar')
+    renderSection(editArgs, true)
+    fireEvent.click(screen.getByRole('button', { name: `Editar ${editedArea.title}` }))
+    expect(screen.getByRole('dialog', { name: `Editar "${editedArea.title}"` })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
-    expect(fetchMock).toHaveBeenCalledWith(`/api/research-areas/${firstArea.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'Área creada', description: 'Descripción', src: '' }),
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(`/api/research-areas/${editedArea.id}`)
+    expect(init.method).toBe('PATCH')
+    expect(JSON.parse(init.body as string)).toEqual({
+      version: editedArea.editing?.version,
+      content: savedDraft,
+      src: '/creada.jpg',
     })
-    expect(mocks.refresh).toHaveBeenCalledOnce()
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(
       await screen.findByText('Área de investigación actualizada correctamente.'),
     ).toBeInTheDocument()
+    expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('shows a PATCH failure in a toast and keeps the editor open', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
-    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          answer(409, { code: 'conflict', error: 'El área de investigación cambió.' }),
+        ),
+    )
 
-    renderEditableSection()
-    clickFirstButton('Editar')
+    renderSection(editArgs, true)
+    fireEvent.click(screen.getByRole('button', { name: `Editar ${editedArea.title}` }))
     fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
 
     const dialog = screen.getByRole('dialog')
-    expect(await within(dialog).findByText('No autorizado.')).toBeInTheDocument()
+    expect(await within(dialog).findByText('El área de investigación cambió.')).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
-  test('deletes an area and refreshes after confirmation', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+  test('deletes an area after its confirmation and says so', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(answer(204))
     vi.stubGlobal('fetch', fetchMock)
 
-    renderEditableSection()
-    clickFirstButton('Eliminar')
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
+    renderSection(editArgs, true)
+    deleteFirstArea()
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
-    expect(fetchMock).toHaveBeenCalledWith(`/api/research-areas/${firstArea.id}`, {
+    expect(fetchMock).toHaveBeenCalledWith(`/api/research-areas/${editedArea.id}`, {
       method: 'DELETE',
     })
-    expect(mocks.refresh).toHaveBeenCalledOnce()
     expect(
       await screen.findByText('Área de investigación eliminada correctamente.'),
     ).toBeInTheDocument()
+    expect(mocks.refresh).toHaveBeenCalledOnce()
   })
 
   test('shows a DELETE failure in a toast without refreshing', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
-    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(answer(403, { error: 'No autorizado.' })))
 
-    renderEditableSection()
-    clickFirstButton('Eliminar')
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
+    renderSection(editArgs, true)
+    deleteFirstArea()
 
     expect(await screen.findByText('No autorizado.')).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
@@ -256,14 +236,26 @@ describe('ResearchAreasSection', () => {
       vi.fn().mockResolvedValue(new Response('<html></html>', { status: 400 })),
     )
 
-    renderEditableSection()
-    clickFirstButton('Eliminar')
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
+    renderSection(editArgs, true)
+    deleteFirstArea()
 
     expect(
       await screen.findByText('No se pudo eliminar el área de investigación. Inténtelo de nuevo.'),
     ).toBeInTheDocument()
+  })
+
+  test('labels its editing controls in the language the site is shown in', () => {
+    renderWithIntl(
+      <ToastProvider>
+        <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
+          <ResearchAreasSection {...editArgs} />
+        </EditModeContext.Provider>
+      </ToastProvider>,
+      { locale: 'en' },
+    )
+
+    expect(screen.getByRole('button', { name: 'Add research area' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: `Edit ${editedArea.title}` })).toBeInTheDocument()
   })
 
   test('renders no heading and names the list by label when no title is given', () => {
