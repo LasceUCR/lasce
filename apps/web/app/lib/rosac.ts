@@ -162,7 +162,6 @@ export interface RosacDonation {
   description: string
   image: { src: string; alt: string }
 }
-
 export const defaultTeamPeople: readonly TeamMember[] = [
   {
     id: 'carolina-salas',
@@ -306,6 +305,7 @@ export const rosacInstitutions: readonly RosacAcknowledgment[] = [
       alt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
     },
   },
+
   {
     name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     href: 'https://cinespa.ucr.ac.cr',
@@ -463,8 +463,8 @@ export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
         alt: hero.imageAlt,
         presentation: 'banner',
         width: 1672,
-        height: 749,
-        focus: 'left',
+        height: 580,
+        focus: 'center',
         mobileSrc: '/images/ROSAC/rosac_home_mob.png',
       },
     },
