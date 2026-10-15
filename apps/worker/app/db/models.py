@@ -68,6 +68,33 @@ class ResearchArea(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class ResearchAreaTranslation(Base):
+    """The ``title`` and ``description`` of a `ResearchArea` in a language other
+    than Spanish. One row per (area, locale); the Spanish text stays on
+    ``research_areas`` and the photograph is shared.
+    """
+
+    __tablename__ = "research_area_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "research_area_id",
+            "locale",
+            name="research_area_translations_research_area_id_locale_key",
+        ),
+        {"schema": "areas"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    research_area_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("areas.research_areas.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class Research(Base):
     """A public research record shown on `/investigacion`. Mapped to
     ``research_records`` (not ``research``) to avoid a `research.research`
