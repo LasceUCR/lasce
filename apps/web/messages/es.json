@@ -517,6 +517,10 @@
     "errors": {
       "saveUnknown": "No se pudo guardar el área de investigación. Inténtelo de nuevo.",
       "deleteUnknown": "No se pudo eliminar el área de investigación. Inténtelo de nuevo."
+    },
+    "validation": {
+      "srcRequired": "La imagen es obligatoria.",
+      "srcNotText": "La imagen debe ser la dirección de un archivo subido."
     }
   }
 }

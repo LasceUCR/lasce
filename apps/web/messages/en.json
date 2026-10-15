@@ -517,6 +517,10 @@
     "errors": {
       "saveUnknown": "The research area could not be saved. Please try again.",
       "deleteUnknown": "The research area could not be deleted. Please try again."
+    },
+    "validation": {
+      "srcRequired": "The image is required.",
+      "srcNotText": "The image must be the address of an uploaded file."
     }
   }
 }
