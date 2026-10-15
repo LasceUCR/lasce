@@ -196,6 +196,8 @@ export function AlbumMediaGrid({
               src: editingItem.src,
               format: editingItem.format,
             }}
+            stored={editingItem.editing?.content ?? null}
+            version={editingItem.editing?.version}
             onCancel={() => setEditingId(null)}
             onSaved={() => {
               setEditingId(null)

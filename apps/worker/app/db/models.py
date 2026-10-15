@@ -339,6 +339,33 @@ class GalleryMedia(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
+class GalleryMediaTranslation(Base):
+    """The ``title``, ``description``, and ``alt_text`` of a
+    ``GalleryMedia`` record in a language other than the source one.
+    One row per (media, locale); the source text stays on ``gallery_media``.
+    """
+
+    __tablename__ = "gallery_media_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "gallery_media_id",
+            "locale",
+            name="gallery_media_translations_gallery_media_id_locale_key",
+        ),
+        {"schema": "gallery"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    gallery_media_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("gallery.gallery_media.id", ondelete="CASCADE"),
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    alt_text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 class RolePermission(Base):
     """Permission granted to a ``UserRole``. Mirrors the Prisma ``RolePermission``

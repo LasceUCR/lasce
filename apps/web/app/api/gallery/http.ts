@@ -65,6 +65,10 @@ export function mediaWriteFailure(failure: GalleryMediaWriteFailure): NextRespon
     case 'album-not-found':
       return albumNotFound()
     case 'conflict':
-      return conflict('El archivo ya existe o se modificó el álbum. Inténtelo de nuevo.')
+      return conflict(
+        'El archivo cambió desde que lo abrió o ya existe. Recárguelo y vuelva a aplicar sus cambios.',
+      )
+    case 'review-required':
+      return reviewRequired(failure.pending)
   }
 }

@@ -34,26 +34,52 @@ Routes, the sitemap and the axe sweep all derive their album lists from `gallery
 album is picked up by `app/lib/site.ts` and `tests/e2e/accessibility-seo.spec.ts` without any edit
 there.
 
+## Album translations
+
+The Prisma schema includes `GalleryAlbumTranslation` (`gallery.gallery_album_translations`) for
+the translated `title`, `description` and optional `yearsLabel`. The base `GalleryAlbum` row keeps
+the source-language text; each translation row is keyed by album and locale. The album `slug`,
+cover image, parent/child hierarchy and media remain shared across languages. Deleting an album
+cascades to its translation rows.
+
+Albums are read and written bilingually, like publications: `getGalleryAlbums(locale, { includeEditingData })`
+resolves the text for the visitor's language (falling back to the base row) and, for editors, also
+returns every stored language and a `version` token. Existing albums with no translation row only
+have base text, whose language may be unknown. The `locale` column is a string (not a database
+enum), so supported locale validation belongs to the application.
+
+Media text is bilingual the same way: `GalleryMediaTranslation`
+(`gallery.gallery_media_translations`) holds `title`, `description` and `altText` per additional
+locale, and editors receive `GalleryMedia.editing` (every language plus `version`).
+
 ## API
 
-- `PATCH /api/gallery/albums/{albumId}` requires `edit_components` and accepts one or more album
-  metadata fieldscreate the payload. An empty update is rejected. It returns
-  the updated album with status `200`, `404` when the album does not exist, and `409` when the slug
-  is already in use.
+- `POST /api/gallery/albums` and `POST /api/gallery/albums/{albumId}` (sub-album) require
+  `create_components` and accept `slug`, `content` (`title` and `description` in both `es` and
+  `en`), and optional `yearsLabel` and `coverObjectKey`. They return `201`, `404`/`400` for a missing
+  or non-top-level parent, and `409` for a duplicate slug.
+- `PATCH /api/gallery/albums/{albumId}` requires `edit_components` and accepts the `version` the
+  editor loaded plus one or more of `content`, `slug`, `yearsLabel` and `coverObjectKey`. A field
+  changed in one language only must be confirmed through `confirmedUnchanged` (otherwise `409`
+  `review-required`). Omitted fields are left untouched and `null` clears `yearsLabel` or
+  `coverObjectKey`. It returns the updated album with `200`, `404` when missing, and `409` for a
+  stale `version` (`conflict`) or a duplicate slug. Errors use the `{ error, code }` envelope.
 - `DELETE /api/gallery/albums/{albumId}` requires `delete_components` and removes the album and its
   sub-albums and media records through the database cascade. It does not delete associated assets
   from MinIO or another asset store. A successful delete returns `204`; an unknown album returns
   `404`.
-- `POST /api/gallery/albums/{albumId}/media` accepts `title`, `description`, `alt`, `objectKey`,
-  `format`, `date` (ISO `YYYY-MM-DD`) and `uploader`, with optional `isVideo`, `colSpan`, and
-  `rowSpan`. It requires `create_components`, assigns the next position in the album, and returns
+- `POST /api/gallery/albums/{albumId}/media` accepts `content` (`title`, `description` and
+  `altText` in both `es` and `en`), `objectKey`, `format`, `date` (ISO `YYYY-MM-DD`) and
+  `uploader`, with optional `isVideo`, `colSpan`, and `rowSpan`. It requires `create_components`, assigns the next position in the album, and returns
   the created media with status `201`.
 - `DELETE /api/gallery/media/{mediaId}` requires `delete_components` and removes only the database
   record. It does not delete the associated file from MinIO or another asset store. A successful
   delete returns `204`.
-- `PATCH /api/gallery/media/{mediaId}` requires `edit_components` and accepts one or more media
-  metadata fields from the create payload. It returns the updated media record with status `200`;
-  an empty update is rejected.
+- `PATCH /api/gallery/media/{mediaId}` requires `edit_components` and accepts the `version` the
+  editor loaded plus one or more of `content`, `confirmedUnchanged` and the shared fields from the
+  create payload, with the same review rule as albums. It returns the updated media record with
+  `200`, `404` when missing, and `409` for a stale `version` (`conflict`) or `review-required`; an
+  update without changes is rejected.
 
 ## Alt text
 

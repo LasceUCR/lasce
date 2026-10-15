@@ -38,7 +38,27 @@ export const albumContent = defineTranslatableContent({
   },
 })
 
+/**
+ * A file's text, written once per language: all three fields are required in every locale. The
+ * field names are the column names, on `gallery.gallery_media` for Spanish and on
+ * `gallery.gallery_media_translations` for every other locale.
+ */
+export const mediaContent = defineTranslatableContent({
+  title: { noun: { word: 'título', gender: 'm' }, nouns: { en: 'title' }, required: true },
+  description: {
+    noun: { word: 'descripción', gender: 'f' },
+    nouns: { en: 'description' },
+    required: true,
+  },
+  altText: {
+    noun: { word: 'texto alternativo', gender: 'm' },
+    nouns: { en: 'alt text' },
+    required: true,
+  },
+})
+
 type AlbumContentSpecs = typeof albumContent.specs
+type MediaContentSpecs = typeof mediaContent.specs
 
 /** The fields of an album that are written once per language. */
 export const translatableFields = albumContent.fields
@@ -61,6 +81,20 @@ export type AlbumEditingData = {
    * True when the record predates translations and lacks a translation row. Its base text is in
    * whatever language it was entered in, which is not necessarily Spanish.
    */
+  isLegacy: boolean
+  /** Opaque concurrency token. Send it back unchanged as `version` when updating. */
+  version: string
+}
+
+export type MediaTranslatableField = FieldOf<MediaContentSpecs>
+
+/** A file's translatable text in every language, as stored (see `StoredAlbumContent`). */
+export type StoredMediaContent = StoredContent<MediaContentSpecs>
+
+/** What an editor needs to change a file: both languages and the version to save against. */
+export type MediaEditingData = {
+  content: StoredMediaContent
+  /** True when the record predates translations; its base text is in an unknown language. */
   isLegacy: boolean
   /** Opaque concurrency token. Send it back unchanged as `version` when updating. */
   version: string
@@ -89,6 +123,10 @@ export type GalleryMedia = {
   src?: string
   /** MinIO object key when the media record comes from PostgreSQL. */
   objectKey?: string
+  /** The language `title`, `description` and `alt` are in; `null` when it is unknown (legacy). */
+  contentLocale?: Locale | null
+  /** Present only when loaded with `includeEditingData`. */
+  editing?: MediaEditingData
 }
 
 type AlbumBase = {
@@ -127,6 +165,14 @@ export type GalleryAlbum = AlbumBase & {
 export const albumContentSchema = albumContent.schema
 
 export type AlbumContentInput = ContentInput<AlbumContentSpecs>
+
+/** Both languages' title, description and alt text, trimmed; blank text is rejected. */
+export const mediaContentSchema = mediaContent.schema
+
+export type MediaContentInput = ContentInput<MediaContentSpecs>
+
+/** A media field whose text in one language is kept as is while its counterpart changed. */
+export type MediaReviewConfirmation = ContentReviewConfirmation<MediaTranslatableField>
 
 /** A field whose text in one language is kept as is while its counterpart changed. */
 export type ReviewConfirmation = ContentReviewConfirmation<TranslatableField>
@@ -210,9 +256,6 @@ export const albumUpdateSchema = z
 export const subAlbumUpdateSchema = albumUpdateSchema
 
 const galleryMediaFields = {
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
-  alt: z.string().trim().min(1, 'El texto alternativo es obligatorio.'),
   objectKey: z.string().trim().min(1, 'La clave del archivo es obligatoria.'),
   format: z.string().trim().min(1, 'El formato es obligatorio.'),
   isVideo: z.boolean(),
@@ -222,22 +265,61 @@ const galleryMediaFields = {
   uploader: z.string().trim().min(1, 'El nombre de quien subió el archivo es obligatorio.'),
 }
 
-/** Body of a request to add a file to an album. `isVideo` and the tile spans have defaults. */
+/**
+ * Body of a request to add a file to an album: `content` holds the text in both languages.
+ * `isVideo` and the tile spans have defaults.
+ */
 export const galleryMediaInputSchema = z.strictObject({
+  content: mediaContentSchema,
   ...galleryMediaFields,
   isVideo: galleryMediaFields.isVideo.default(false),
   colSpan: galleryMediaFields.colSpan.default(1),
   rowSpan: galleryMediaFields.rowSpan.default(1),
 })
 
-/** Body of a request to edit a file: any field, but at least one. */
+/**
+ * Body of a request to edit a file.
+ *
+ * - `version` (required): the `editing.version` the editor loaded. A save against an older
+ *   version is rejected instead of overwriting a newer one.
+ * - `content`: both languages, replacing the stored text. Omit it to leave the text alone.
+ * - `confirmedUnchanged`: only with `content`; see `albumUpdateSchema`.
+ * - any other field: written when present. At least one change besides `version` is required.
+ */
 export const galleryMediaUpdateSchema = z
-  .strictObject(galleryMediaFields)
-  .partial()
-  .refine(
-    (data) => Object.keys(data).length > 0,
-    'Debe proporcionar al menos un campo para editar.',
-  )
+  .strictObject({
+    version: versionSchema('La versión del archivo es obligatoria y debe ser la que se cargó.'),
+    content: mediaContentSchema.optional(),
+    confirmedUnchanged: mediaContent.confirmationsSchema.optional(),
+    ...galleryMediaFields,
+  })
+  .partial({
+    objectKey: true,
+    format: true,
+    isVideo: true,
+    colSpan: true,
+    rowSpan: true,
+    date: true,
+    uploader: true,
+  })
+  .superRefine((input, context) => {
+    if (input.confirmedUnchanged && !input.content) {
+      context.addIssue({
+        code: 'custom',
+        path: ['confirmedUnchanged'],
+        message: 'Las confirmaciones solo aplican a una actualización de contenido (content).',
+      })
+    }
+
+    const { version: _version, confirmedUnchanged: _confirmed, ...changes } = input
+    if (Object.values(changes).every((value) => value === undefined)) {
+      context.addIssue({
+        code: 'custom',
+        path: [],
+        message: 'La solicitud no incluye ningún campo para actualizar.',
+      })
+    }
+  })
 
 export type AlbumCreateInput = z.infer<typeof albumCreateSchema>
 export type SubAlbumCreateInput = z.infer<typeof subAlbumCreateSchema>
@@ -259,4 +341,13 @@ export function findPendingReviews(
   confirmed: ReviewConfirmation[],
 ): ReviewConfirmation[] {
   return findContentReviews(albumContent, current, next, confirmed)
+}
+
+/** The media counterpart of `findPendingReviews`, bound to the file's fields. */
+export function findPendingMediaReviews(
+  current: StoredMediaContent,
+  next: MediaContentInput,
+  confirmed: MediaReviewConfirmation[],
+): MediaReviewConfirmation[] {
+  return findContentReviews(mediaContent, current, next, confirmed)
 }

@@ -14,7 +14,9 @@ import {
 
 import {
   albumContent,
+  findPendingMediaReviews,
   findPendingReviews,
+  mediaContent,
   translationLocales,
   type AlbumCreateInput,
   type AlbumUpdateInput,
@@ -22,6 +24,7 @@ import {
   type GalleryMedia,
   type GalleryMediaInput,
   type GalleryMediaUpdate,
+  type MediaReviewConfirmation,
   type GallerySubAlbum,
   type ReviewConfirmation,
   type SubAlbumCreateInput,
@@ -1996,6 +1999,8 @@ type DatabaseGalleryMedia = {
   rowSpan: number
   capturedAt: Date
   uploaderName: string
+  updatedAt: Date
+  translations: { locale: string; title: string; description: string; altText: string }[]
 }
 
 /** Validates a stored tile dimension before narrowing it to the gallery's supported span. */
@@ -2005,18 +2010,29 @@ function toGalleryTileSpan(value: number, mediaId: string, dimension: string): 1
 }
 
 function publicGallerySource(objectKey: string | null | undefined): string | undefined {
-  return objectKey?.startsWith('/images/galeria/') ? objectKey : undefined
+  if (!objectKey) return undefined
+  // Seeded files live under the web app's public directory; uploads are stored as their URL.
+  return objectKey.startsWith('/images/galeria/') || /^https?:\/\//.test(objectKey)
+    ? objectKey
+    : undefined
 }
 
 /** Converts a database media record to the public gallery shape while retaining its object key. */
-function toGalleryMedia(media: DatabaseGalleryMedia): GalleryMedia {
+function toGalleryMedia(
+  media: DatabaseGalleryMedia,
+  locale: Locale,
+  includeEditingData: boolean,
+): GalleryMedia {
   const src = publicGallerySource(media.objectKey)
+  const content = storedContentFrom(mediaContent, media, media.translations)
+  const { content: shown, contentLocale, isLegacy } = resolveContent(content, locale)
 
   return {
     id: media.id,
-    title: media.title,
-    description: media.description,
-    alt: media.altText,
+    title: shown.title,
+    description: shown.description,
+    alt: shown.altText,
+    contentLocale,
     date: media.capturedAt.toISOString().slice(0, 10),
     format: media.format,
     uploader: media.uploaderName,
@@ -2025,6 +2041,9 @@ function toGalleryMedia(media: DatabaseGalleryMedia): GalleryMedia {
     rowSpan: toGalleryTileSpan(media.rowSpan, media.id, 'rowSpan'),
     objectKey: media.objectKey,
     ...(src ? { src } : {}),
+    ...(includeEditingData
+      ? { editing: { content, isLegacy, version: toVersion(media.updatedAt) } }
+      : {}),
   }
 }
 
@@ -2042,10 +2061,12 @@ export type GalleryAlbumWriteResult =
 export type GallerySubAlbumCreateFailure =
   GalleryAlbumWriteFailure | { ok: false; reason: 'parent-not-found' | 'parent-not-top-level' }
 
-export type GalleryMediaWriteFailure = {
-  ok: false
-  reason: 'not-found' | 'album-not-found' | 'conflict'
-}
+export type GalleryMediaWriteFailure =
+  | { ok: false; reason: 'not-found' | 'album-not-found' }
+  /** The file changed since the editor loaded it, or its file key or position is taken. */
+  | { ok: false; reason: 'conflict' }
+  /** Fields changed in one language whose counterpart was neither changed nor confirmed. */
+  | { ok: false; reason: 'review-required'; pending: MediaReviewConfirmation[] }
 
 export type GalleryMediaWriteResult = { ok: true; media: GalleryMedia } | GalleryMediaWriteFailure
 
@@ -2054,7 +2075,15 @@ const translationsInclude = {
   select: { locale: true, title: true, description: true },
 } satisfies Prisma.GalleryAlbum$translationsArgs
 
-const mediaInclude = { orderBy: { position: 'asc' } } satisfies Prisma.GalleryAlbum$mediaArgs
+const mediaTranslationsInclude = {
+  where: { locale: { in: [...translationLocales] } },
+  select: { locale: true, title: true, description: true, altText: true },
+} satisfies Prisma.GalleryMedia$translationsArgs
+
+const mediaInclude = {
+  orderBy: { position: 'asc' },
+  include: { translations: mediaTranslationsInclude },
+} satisfies Prisma.GalleryAlbum$mediaArgs
 
 const albumInclude = {
   media: mediaInclude,
@@ -2091,7 +2120,7 @@ function toSubAlbum(
     coverObjectKey: record.coverObjectKey ?? undefined,
     ...(src ? { src } : {}),
     contentLocale,
-    media: record.media.map(toGalleryMedia),
+    media: record.media.map((item) => toGalleryMedia(item, locale, includeEditingData)),
     ...(includeEditingData
       ? { editing: { content, isLegacy, version: toVersion(record.updatedAt) } }
       : {}),
@@ -2303,10 +2332,14 @@ async function writeMedia(
   write: (tx: Prisma.TransactionClient) => Promise<DatabaseGalleryMedia>,
 ): Promise<GalleryMediaWriteResult> {
   const result = await runWrite(write, mediaConflict)
-  return result.ok ? { ok: true, media: toGalleryMedia(result.value) } : result
+  return result.ok ? { ok: true, media: toGalleryMedia(result.value, defaultLocale, true) } : result
 }
 
-/** Adds media to an album at the next position without uploading or deleting the asset itself. */
+const mediaRecordInclude = {
+  translations: mediaTranslationsInclude,
+} satisfies Prisma.GalleryMediaInclude
+
+/** Adds a file to an album at the next position, with its text in every language. */
 export async function createGalleryMedia(
   albumId: string,
   data: GalleryMediaInput,
@@ -2325,10 +2358,8 @@ export async function createGalleryMedia(
 
     return tx.galleryMedia.create({
       data: {
+        ...baseContent(mediaContent, data.content),
         albumId,
-        title: data.title,
-        description: data.description,
-        altText: data.alt,
         objectKey: data.objectKey,
         format: data.format,
         isVideo: data.isVideo,
@@ -2337,30 +2368,68 @@ export async function createGalleryMedia(
         capturedAt: new Date(`${data.date}T00:00:00.000Z`),
         uploaderName: data.uploader,
         position: (lastMedia?.position ?? -1) + 1,
+        translations: { create: translationRows(mediaContent, data.content) },
       },
+      include: mediaRecordInclude,
     })
   })
 }
 
-/** Updates supplied media metadata fields; the stored asset is never modified here. */
+/**
+ * Updates the fields present in `data`, all at once. With `content` both languages are written,
+ * after the review rule (`findPendingMediaReviews`); without it the text is left as it is. The
+ * stored asset is never modified here.
+ *
+ * Optimistic concurrency works as for albums: `data.version` is the `updated_at` the editor
+ * loaded, and a save against an older one is reported as `conflict`.
+ */
 export async function updateGalleryMedia(
   mediaId: string,
   data: GalleryMediaUpdate,
 ): Promise<GalleryMediaWriteResult> {
-  return writeMedia(async (tx) => {
-    const existing = await tx.galleryMedia.findUnique({
-      where: { id: mediaId },
-      select: { id: true },
-    })
-    if (!existing)
-      throw new WriteAbort<GalleryMediaWriteFailure>({ ok: false, reason: 'not-found' })
+  const expectedUpdatedAt = parseVersion(data.version)
 
-    return tx.galleryMedia.update({
+  return writeMedia(async (tx) => {
+    const current = await tx.galleryMedia.findUnique({
       where: { id: mediaId },
+      select: {
+        title: true,
+        description: true,
+        altText: true,
+        updatedAt: true,
+        translations: mediaTranslationsInclude,
+      },
+    })
+    if (!current) {
+      throw new WriteAbort<GalleryMediaWriteFailure>({ ok: false, reason: 'not-found' })
+    }
+
+    if (!isCurrentVersion(current.updatedAt, expectedUpdatedAt)) {
+      throw new WriteAbort<GalleryMediaWriteFailure>({ ok: false, reason: 'conflict' })
+    }
+
+    const { content } = data
+
+    if (content) {
+      const pending = findPendingMediaReviews(
+        storedContentFrom(mediaContent, current, current.translations),
+        content,
+        data.confirmedUnchanged ?? [],
+      )
+
+      if (pending.length > 0) {
+        throw new WriteAbort<GalleryMediaWriteFailure>({
+          ok: false,
+          reason: 'review-required',
+          pending,
+        })
+      }
+    }
+
+    const { count } = await tx.galleryMedia.updateMany({
+      where: { id: mediaId, updatedAt: expectedUpdatedAt },
       data: {
-        ...(data.title !== undefined ? { title: data.title } : {}),
-        ...(data.description !== undefined ? { description: data.description } : {}),
-        ...(data.alt !== undefined ? { altText: data.alt } : {}),
+        ...(content ? baseContent(mediaContent, content) : {}),
         ...(data.objectKey !== undefined ? { objectKey: data.objectKey } : {}),
         ...(data.format !== undefined ? { format: data.format } : {}),
         ...(data.isVideo !== undefined ? { isVideo: data.isVideo } : {}),
@@ -2368,12 +2437,31 @@ export async function updateGalleryMedia(
         ...(data.rowSpan !== undefined ? { rowSpan: data.rowSpan } : {}),
         ...(data.date !== undefined ? { capturedAt: new Date(`${data.date}T00:00:00.000Z`) } : {}),
         ...(data.uploader !== undefined ? { uploaderName: data.uploader } : {}),
+        updatedAt: nextUpdatedAt(expectedUpdatedAt),
       },
+    })
+    if (count === 0) {
+      throw new WriteAbort<GalleryMediaWriteFailure>({ ok: false, reason: 'conflict' })
+    }
+
+    if (content) {
+      for (const { locale, ...text } of translationRows(mediaContent, content)) {
+        await tx.galleryMediaTranslation.upsert({
+          where: { galleryMediaId_locale: { galleryMediaId: mediaId, locale } },
+          create: { galleryMediaId: mediaId, locale, ...text },
+          update: text,
+        })
+      }
+    }
+
+    return tx.galleryMedia.findUniqueOrThrow({
+      where: { id: mediaId },
+      include: mediaRecordInclude,
     })
   })
 }
 
-/** Deletes the media database record only; the associated asset is left untouched. */
+/** Deletes the media database record and its translations only; the asset is left untouched. */
 export async function deleteGalleryMedia(mediaId: string): Promise<boolean> {
   const { count } = await prisma.galleryMedia.deleteMany({ where: { id: mediaId } })
   return count > 0
