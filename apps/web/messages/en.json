@@ -115,6 +115,15 @@
       "server": "The server could not complete the operation. Try again in a few minutes."
     }
   },
+  "solarImageLightbox": {
+    "open": "Enlarge solar image from {time}",
+    "kicker": "GOES · SUVI",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
+    "position": "Image {position} of {total}",
+    "announcement": "Image {position} of {total}: {time}."
+  },
   "contact": {
     "meta": {
       "title": "Contact | LASCE",
