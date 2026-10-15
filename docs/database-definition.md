@@ -554,7 +554,9 @@ the base row; its translations and author links cascade. The full contract is in
 `geomagnetic_indices` with their translations, in the requested language; `updateHero()` and
 `updateIndicator()` write a base row and its translations in one transaction against the version
 the editor loaded; `reorderIndicators()` rewrites `geomagnetic_indices.position`. Nothing in the
-worker writes them yet; see [`home-page.md`](home-page.md#future-automatic-loading).
+worker writes them yet: a future job would upsert the indices by `code`, set `source` and
+`observed_at`, and leave `position` alone; see
+[`home-page.md`](home-page.md#future-automatic-loading).
 
 `apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
