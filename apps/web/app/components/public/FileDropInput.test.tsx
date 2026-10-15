@@ -57,4 +57,24 @@ describe('FileDropInput', () => {
 
     expect(onFileSelect).toHaveBeenCalledWith(png)
   })
+
+  test('names the file input by its label and keeps it out of the tab order', () => {
+    render(<FileDropInput {...existingArgs} />)
+
+    const input = document.querySelector('input[type="file"]')
+    expect(input).toHaveAccessibleName(existingArgs.label)
+    expect(input).toHaveAttribute('tabindex', '-1')
+    expect(screen.getByRole('button', { name: existingArgs.label })).toHaveAttribute(
+      'tabindex',
+      '0',
+    )
+  })
+
+  test('keeps the remove action outside the drop zone, so the two controls do not nest', () => {
+    render(<FileDropInput {...existingArgs} />)
+
+    const zone = screen.getByRole('button', { name: existingArgs.label })
+    const remove = screen.getByRole('button', { name: 'Quitar imagen' })
+    expect(zone).not.toContainElement(remove)
+  })
 })
