@@ -30,6 +30,6 @@ describe('AcademicActivityCard', () => {
     renderWithIntl(<AcademicActivityCard {...defaultArgs} />)
 
     const link = screen.getByRole('link', { name: /Ver detalles de la actividad/i })
-    expect(link).toHaveAttribute('href', `/noticias/actividades/${defaultArgs.activity.slug}`)
+    expect(link).toHaveAttribute('href', `/actividades-academicas/${defaultArgs.activity.slug}`)
   })
 })

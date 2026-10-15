@@ -51,6 +51,7 @@ on `useDisclosure` like the nav groups, and the native `LanguageSwitcher.tsx` in
 | Divulgación   | dropdown | Noticias, Galería                                                                                   |
 | Recursos      | dropdown | Publicaciones, Herramientas científicas                                                             |
 | Contacto      | link     | `/contacto`                                                                                         |
+| Actividades académicas | link | `/actividades-academicas`                                                                  |
 
 Each destination appears once; a group is only a label, never a page of its own. `Áreas de
 investigación` keeps `/investigacion` (the research areas page) reachable now that

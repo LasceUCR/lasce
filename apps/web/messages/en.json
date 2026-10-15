@@ -28,7 +28,8 @@
     "resources": "Resources",
     "publications": "Publications",
     "scientificTools": "Scientific tools",
-    "contact": "Contact"
+    "contact": "Contact",
+    "academicActivities": "Academic activities"
   },
   "footer": {
     "institutionsLabel": "Institutions",
@@ -347,7 +348,7 @@
       "details": "View the activity details"
     },
     "page": {
-      "metaTitle": "{title} | News | LASCE",
+      "metaTitle": "{title} | Academic activities | LASCE",
       "kicker": "Academic activity",
       "infoTitle": "General information",
       "type": "Type of activity",
@@ -355,7 +356,14 @@
       "location": "Place",
       "descriptionTitle": "Description of the activity",
       "resourcesTitle": "Resources and links of interest",
-      "backToNews": "Back to news"
+      "backToList": "Back to academic activities"
+    },
+    "listPage": {
+      "metaTitle": "Academic activities | LASCE",
+      "metaDescription": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
+      "kicker": "LASCE public portal",
+      "title": "Academic activities",
+      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE."
     },
     "items": {
       "machineLearningWorkshop": {

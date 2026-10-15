@@ -28,7 +28,8 @@
     "resources": "Recursos",
     "publications": "Publicaciones",
     "scientificTools": "Herramientas científicas",
-    "contact": "Contacto"
+    "contact": "Contacto",
+    "academicActivities": "Actividades académicas"
   },
   "footer": {
     "institutionsLabel": "Instituciones",
@@ -347,7 +348,7 @@
       "details": "Ver detalles de la actividad"
     },
     "page": {
-      "metaTitle": "{title} | Noticias | LASCE",
+      "metaTitle": "{title} | Actividades académicas | LASCE",
       "kicker": "Actividad académica",
       "infoTitle": "Información general",
       "type": "Tipo de actividad",
@@ -355,7 +356,14 @@
       "location": "Lugar",
       "descriptionTitle": "Descripción de la actividad",
       "resourcesTitle": "Recursos y enlaces de interés",
-      "backToNews": "Volver a noticias"
+      "backToList": "Volver a actividades académicas"
+    },
+    "listPage": {
+      "metaTitle": "Actividades académicas | LASCE",
+      "metaDescription": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
+      "kicker": "Portal público LASCE",
+      "title": "Actividades académicas",
+      "lead": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE."
     },
     "items": {
       "machineLearningWorkshop": {

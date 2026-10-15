@@ -522,7 +522,7 @@ test('displays academic activities in the news section and navigates to workshop
   await expect(page.getByText('Actividad académica')).toBeVisible()
 
   await page.getByRole('link', { name: /Ver detalles de la actividad/i }).click()
-  await expect(page).toHaveURL(/\/noticias\/actividades\/machine-learning-workshop$/)
+  await expect(page).toHaveURL(/\/actividades-academicas\/machine-learning-workshop$/)
   await expect(
     page.getByRole('heading', {
       level: 1,
@@ -532,6 +532,31 @@ test('displays academic activities in the news section and navigates to workshop
   await expect(
     page.getByRole('heading', { level: 2, name: 'Descripción de la actividad' }),
   ).toBeVisible()
+})
+
+test('shows the dedicated academic activities page, reachable from the nav bar', async ({
+  page,
+}) => {
+  const response = await page.goto('/')
+
+  expect(response?.status()).toBe(200)
+  await page.getByRole('link', { name: 'Actividades académicas' }).first().click()
+
+  await expect(page).toHaveURL(/\/actividades-academicas$/)
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', {
+      level: 3,
+      name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+    }),
+  ).toBeVisible()
+
+  await page.getByRole('link', { name: /Ver detalles de la actividad/i }).click()
+  await expect(page).toHaveURL(/\/actividades-academicas\/machine-learning-workshop$/)
+  await page.getByRole('link', { name: /Volver a actividades académicas/i }).click()
+  await expect(page).toHaveURL(/\/actividades-academicas$/)
 })
 
 test('displays research collaborations', async ({ page }) => {

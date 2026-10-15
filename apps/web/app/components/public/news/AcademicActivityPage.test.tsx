@@ -56,11 +56,11 @@ describe('AcademicActivityPage', () => {
     }
   })
 
-  test('renders back link to news page', () => {
+  test('renders back link to the academic activities list', () => {
     renderWithIntl(<AcademicActivityPage {...defaultArgs} />)
 
-    const backLink = screen.getByRole('link', { name: /Volver a noticias/i })
-    expect(backLink).toHaveAttribute('href', '/noticias')
+    const backLink = screen.getByRole('link', { name: /Volver a actividades académicas/i })
+    expect(backLink).toHaveAttribute('href', '/actividades-academicas')
   })
 
   test('shows the activity in English when the page is rendered in English', () => {
@@ -78,6 +78,9 @@ describe('AcademicActivityPage', () => {
       'href',
       '/galeria/workshop-ml-2026',
     )
-    expect(screen.getByRole('link', { name: 'Back to news' })).toHaveAttribute('href', '/noticias')
+    expect(screen.getByRole('link', { name: 'Back to academic activities' })).toHaveAttribute(
+      'href',
+      '/actividades-academicas',
+    )
   })
 })

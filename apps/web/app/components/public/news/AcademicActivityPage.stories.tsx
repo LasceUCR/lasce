@@ -17,7 +17,5 @@ type Story = StoryObj<typeof AcademicActivityPage>
 export const Default: Story = {
   args: {
     activity: academicActivities[0],
-    backHref: '/noticias',
-    backLabel: 'Volver a noticias',
   },
 }

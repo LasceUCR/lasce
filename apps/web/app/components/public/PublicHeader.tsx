@@ -67,6 +67,7 @@ const navigation: NavEntry[] = [
     ],
   },
   { id: 'contact', href: '/contacto' },
+  { id: 'academicActivities', href: '/actividades-academicas' },
 ]
 
 const languageOptions = locales.map((locale) => ({

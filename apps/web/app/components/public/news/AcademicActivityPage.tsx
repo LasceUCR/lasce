@@ -12,13 +12,13 @@ import type { AcademicActivity } from '@/app/lib/academic-activities'
 export interface AcademicActivityPageProps {
   activity: AcademicActivity
   backHref?: string
-  /** Defaults to "Volver a noticias" in the visitor's language. */
+  /** Defaults to "Volver a actividades académicas" in the visitor's language. */
   backLabel?: string
 }
 
 export function AcademicActivityPage({
   activity,
-  backHref = '/noticias',
+  backHref = '/actividades-academicas',
   backLabel,
 }: AcademicActivityPageProps) {
   const t = useTranslations('academicActivities.page')
@@ -93,7 +93,7 @@ export function AcademicActivityPage({
       ) : null}
 
       <div className="topic-page-footer page-width">
-        <TopicBackLink href={backHref} label={backLabel ?? t('backToNews')} />
+        <TopicBackLink href={backHref} label={backLabel ?? t('backToList')} />
       </div>
     </article>
   )

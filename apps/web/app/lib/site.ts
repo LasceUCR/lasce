@@ -20,7 +20,8 @@ export const publicPaths = [
   '/noticias',
   '/contacto',
   '/acceso',
+  '/actividades-academicas',
   ...workAreaSlugs.map((slug) => workAreaPath(slug)),
-  ...academicActivitySlugs.map((slug) => `/noticias/actividades/${slug}`),
+  ...academicActivitySlugs.map((slug) => `/actividades-academicas/${slug}`),
   ...galleryPaths,
 ] as const

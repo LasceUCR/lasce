@@ -110,7 +110,7 @@ test('shows an academic activity in English and keeps the official event title',
 }) => {
   await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
 
-  await page.goto('/noticias/actividades/machine-learning-workshop')
+  await page.goto('/actividades-academicas/machine-learning-workshop')
 
   await expect(
     page.getByRole('heading', {
@@ -120,9 +120,9 @@ test('shows an academic activity in English and keeps the official event title',
   ).toBeVisible()
   await expect(page.getByRole('heading', { name: 'General information' })).toBeVisible()
   await expect(page.getByText('16-20 February 2026')).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Back to news' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Back to academic activities' })).toHaveAttribute(
     'href',
-    '/noticias',
+    '/actividades-academicas',
   )
 })
 
