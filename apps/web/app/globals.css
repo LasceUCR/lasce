@@ -2243,8 +2243,27 @@ a {
 }
 
 .data-image-frame {
+  position: relative;
   display: grid;
   aspect-ratio: 1;
+}
+
+/* Covers the thumbnail so the whole image opens the lightbox. */
+.data-image-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+  z-index: 1;
+}
+
+.data-image-button:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: -3px;
 }
 
 .data-image-frame > * {
@@ -2307,7 +2326,7 @@ a {
   flex-wrap: wrap;
 }
 
-.solar-today h2 {
+.solar-today-heading h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -4590,6 +4609,13 @@ a.gallery-tile:focus-visible {
   border-radius: 8px;
 }
 
+.lightbox-stage .lightbox-media-contain img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .lightbox-meta {
   flex: 0 0 240px;
   width: 240px;
@@ -4609,8 +4635,11 @@ a.gallery-tile:focus-visible {
   line-height: 1.3;
 }
 
+/* Narrow caption column: the public shell justifies body copy, which spreads
+   these few words apart. */
 .lightbox-meta p {
   margin: 0 0 14px;
+  text-align: start;
   color: var(--space-body);
   font-size: 13px;
   line-height: 1.5;
