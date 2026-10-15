@@ -1484,19 +1484,6 @@ a {
   --notice-accent: var(--feedback-error);
 }
 
-.data-source-notice-copy {
-  display: grid;
-  text-align: left;
-}
-
-.data-source-notice-copy > span {
-  grid-area: 1 / 1;
-}
-
-.data-source-notice-copy > span[aria-hidden='true'] {
-  visibility: hidden;
-}
-
 .data-table {
   margin-top: 1rem;
   border-top: 1px solid var(--border);
@@ -1807,8 +1794,8 @@ a {
 
 .data-loading {
   margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--border);
+  padding: 1.25rem;
+  border: 1px solid var(--bright-teal-blue);
   border-radius: 10px;
   background: var(--white);
 }
@@ -1819,7 +1806,7 @@ a {
   justify-content: space-between;
   gap: 1rem;
   margin: 0 0 0.625rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -1831,7 +1818,7 @@ a {
 .data-loading-progress {
   display: block;
   width: 100%;
-  height: 0.625rem;
+  height: 1rem;
   overflow: hidden;
   appearance: none;
   border: 0;
@@ -1846,13 +1833,45 @@ a {
 
 .data-loading-progress::-webkit-progress-value {
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--blue), var(--blue-green));
+  background: var(--blue);
   transition: width 180ms ease;
 }
 
 .data-loading-progress::-moz-progress-bar {
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--blue), var(--blue-green));
+  background: var(--blue);
+}
+
+.data-loading-progress:indeterminate {
+  background:
+    linear-gradient(var(--blue), var(--blue)) left / 35% 100% no-repeat,
+    var(--alice-blue);
+  animation: data-loading-slide 1.2s ease-in-out infinite alternate;
+}
+
+.data-loading-progress:indeterminate::-webkit-progress-bar {
+  background: transparent;
+}
+
+.data-loading-progress:indeterminate::-moz-progress-bar {
+  background: transparent;
+}
+
+@keyframes data-loading-slide {
+  to {
+    background-position: right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-loading-progress:indeterminate {
+    animation: none;
+    background-position: center;
+  }
+
+  .data-loading-progress::-webkit-progress-value {
+    transition: none;
+  }
 }
 
 .data-loading-actions {
