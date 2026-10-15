@@ -9,9 +9,7 @@ import {
   type SaveFailure,
 } from '@/app/lib/cms/save'
 import { defaultLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
-import {
-  isContentPath
-} from '@/app/lib/i18n/content/form'
+import { isContentPath } from '@/app/lib/i18n/content/form'
 import { contentCopy } from '@/app/lib/i18n/content/messages'
 import es from '@/messages/es.json' with { type: 'json' }
 
