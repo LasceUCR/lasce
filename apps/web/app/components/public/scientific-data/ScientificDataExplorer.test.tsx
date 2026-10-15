@@ -1,6 +1,8 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl as render } from '@/app/lib/i18n/testing'
 
 import { ScientificDataExplorer, type ScientificDataExplorerProps } from './ScientificDataExplorer'
 import {
@@ -108,8 +110,8 @@ describe('ScientificDataExplorer', () => {
       'ROSAC-I1',
     )
     expect(
-      screen.getByText(/instrumentos y datos reales aún no están definidos/i),
-    ).toBeInTheDocument()
+      screen.queryByText(/instrumentos y datos reales aún no están definidos/i),
+    ).not.toBeInTheDocument()
   })
 
   test('queries and visualizes the exact selected GOES criteria', async () => {
@@ -195,14 +197,120 @@ describe('ScientificDataExplorer', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  test('explains consultation and download permissions before any request', () => {
+  test('keeps both banners hidden before consultation', () => {
     render(<ScientificDataExplorer {...defaultArgs} />)
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
+    expect(screen.queryByRole('note')).not.toBeInTheDocument()
+  })
+
+  test('shows only the selected instrument permissions after consultation', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => resultFixture }))
+    const user = userEvent.setup()
+    render(<ScientificDataExplorer {...defaultArgs} />)
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
     const banner = screen.getByRole('complementary', { name: 'Permisos de consulta y descarga' })
-    expect(banner).toHaveTextContent('Puede consultar información histórica de GOES sin una cuenta')
+    expect(
+      screen.getByText(/Puede consultar los datos de GOES \(EXIS\) sin una cuenta/),
+    ).toBeInTheDocument()
+    expect(banner).toHaveTextContent(
+      'Para GOES (EXIS), solo está disponible la descarga de la gráfica en PNG',
+    )
     expect(banner).toHaveTextContent('Para descargar, necesita una cuenta e iniciar sesión')
-    expect(banner).toHaveTextContent('los de GOES requieren un permiso de descarga de datos GOES')
-    expect(banner).toHaveTextContent('Las imágenes solares SUVI no se pueden descargar')
     expect(banner).toHaveTextContent('Cada enlace de descarga vence en 30 minutos')
+    expect(banner).not.toHaveTextContent(/ROSAC|SUVI/)
+
+    await user.click(screen.getByRole('combobox', { name: 'Fuente de datos' }))
+    await user.click(screen.getByRole('option', { name: /ROSAC/ }))
+    expect(banner).toHaveTextContent(
+      'Todos los datos de ROSAC (ROSAC-I1) están disponibles para descargar en CSV',
+    )
+    expect(banner).not.toHaveTextContent('GOES')
+    expect(screen.getByRole('note')).toHaveTextContent('todos los resultados son simulados')
+    expect(screen.getByRole('note')).not.toHaveTextContent('GOES')
+
+    await user.click(screen.getByRole('combobox', { name: 'Fuente de datos' }))
+    await user.click(screen.getByRole('option', { name: 'GOES' }))
+    expect(banner).toHaveTextContent('Para GOES (EXIS)')
+    expect(banner).not.toHaveTextContent('ROSAC')
+
+    await user.click(screen.getByRole('combobox', { name: 'Instrumento y producto' }))
+    await user.click(screen.getByRole('treeitem', { name: /^SUVI/ }))
+    await user.click(screen.getByRole('treeitem', { name: /171 Å/ }))
+    expect(banner).toHaveTextContent('Las descargas de GOES (SUVI) no están disponibles')
+    expect(banner).not.toHaveTextContent(/EXIS|PNG|iniciar sesión|30 minutos/)
+    expect(screen.getByRole('note')).toHaveTextContent('GOES (SUVI)')
+  })
+
+  test('keeps banners above loading and inputs while waiting, then shows results below inputs', async () => {
+    let resolveResponse!: (value: unknown) => void
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          resolveResponse = resolve
+        }),
+      ),
+    )
+    const user = userEvent.setup()
+    render(<ScientificDataExplorer {...defaultArgs} />)
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+    const banner = screen.getByRole('complementary')
+    const progress = screen.getByRole('progressbar', { name: 'Cargando datos' })
+    const source = screen.getByRole('combobox', { name: 'Fuente de datos' })
+    // Document order is also the reading and keyboard order of these sections.
+    expect(
+      screen.getByRole('note').compareDocumentPosition(banner) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(banner.compareDocumentPosition(progress) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(progress.compareDocumentPosition(source) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(progress).not.toHaveAttribute('value')
+    expect(screen.getByRole('button', { name: 'Consultando…' })).toBeDisabled()
+
+    await act(async () => resolveResponse({ ok: true, json: async () => resultFixture }))
+    const results = await screen.findByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+    expect(source.compareDocumentPosition(results) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+  })
+
+  test('clears loading when switching source and ignores the previous response', async () => {
+    let resolveResponse!: (value: unknown) => void
+    const fetchMock = vi.fn().mockReturnValue(
+      new Promise((resolve) => {
+        resolveResponse = resolve
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(<ScientificDataExplorer {...defaultArgs} />)
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+    await user.click(screen.getByRole('combobox', { name: 'Fuente de datos' }))
+    await user.click(screen.getByRole('option', { name: /ROSAC/ }))
+    expect(fetchMock.mock.calls[0]![1].signal.aborted).toBe(true)
+    await act(async () => resolveResponse({ ok: true, json: async () => resultFixture }))
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', { name: 'Flujo solar: rayos X (SFXR)' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('complementary')).toHaveTextContent('Todos los datos de ROSAC')
+  })
+
+  test('explains unavailable downloads for an account without download permissions', () => {
+    render(<ScientificDataExplorer {...visitorDownloadArgs} downloadGrants={[]} />)
+    expect(screen.getByRole('complementary')).toHaveTextContent(
+      'Su cuenta no tiene permiso para descargar recursos de GOES (EXIS)',
+    )
+    expect(screen.getByRole('complementary')).not.toHaveTextContent('30 minutos')
+  })
+
+  test('translates banners and loading feedback into English', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise(() => {})))
+    const user = userEvent.setup()
+    render(<ScientificDataExplorer {...defaultArgs} />, { locale: 'en' })
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+    expect(
+      screen.getByRole('complementary', { name: 'Consultation and download permissions' }),
+    ).toHaveTextContent('For GOES (EXIS), only the chart is available')
+    expect(screen.getByRole('progressbar', { name: 'Loading data' })).toBeInTheDocument()
   })
 
   test('offers the GOES chart image but not GOES data without the GOES data grant', () => {
@@ -216,6 +324,9 @@ describe('ScientificDataExplorer', () => {
     render(<ScientificDataExplorer {...goesHolderDownloadArgs} />)
 
     expect(screen.getByRole('button', { name: 'Descargar datos (CSV)' })).toBeEnabled()
+    expect(screen.getByRole('complementary')).toHaveTextContent(
+      'Sus permisos permiten descargar los datos de GOES (EXIS) en CSV',
+    )
   })
 
   test('requests the shown query and opens the returned link', async () => {
@@ -362,6 +473,9 @@ describe('ScientificDataExplorer', () => {
 
     expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Descargar datos (CSV)' })).toBeEnabled()
+    expect(screen.getByRole('complementary')).toHaveTextContent(
+      'Todos los datos de ROSAC (ROSAC-I2)',
+    )
   })
 
   test('offers no download for SUVI images, whatever the grants', () => {

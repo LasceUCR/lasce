@@ -1,6 +1,7 @@
 'use client'
 
 import { ChartNoAxesCombined, Images, Search } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import {
   useCallback,
   useEffect,
@@ -111,11 +112,13 @@ export function ScientificDataExplorer({
   requestDownload,
   navigate = assignLocation,
 }: ScientificDataExplorerProps) {
+  const t = useTranslations('scientificData')
   // Server-rendered controls must wait for React's handlers before accepting input.
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
   const [query, setQuery] = useState(initialQuery)
   const [result, setResult] = useState<ScientificDataResult | null>(initialResult ?? null)
   const [requestState, setRequestState] = useState<RequestState>(initialResult ? 'success' : 'idle')
+  const [hasConsulted, setHasConsulted] = useState(Boolean(initialResult))
   const [message, setMessage] = useState<string | null>(null)
   const resultsHeading = useRef<HTMLHeadingElement>(null)
   const activeRequest = useRef<AbortController | null>(null)
@@ -136,6 +139,26 @@ export function ScientificDataExplorer({
   const solarImages =
     query.source === 'GOES' && selected?.product.visualization === 'image-sequence'
   const maxDate = query.source === 'GOES' ? goesAvailability.today : undefined
+  const downloadOptions = getDownloadOptions(
+    query,
+    signedIn ? downloadGrants : ['download_resources'],
+  )
+  const canDownload = downloadOptions.some((option) => option.allowed)
+  const canDownloadData = downloadOptions.some(
+    (option) => option.format === 'csv' && option.allowed,
+  )
+  const downloadNotice =
+    downloadOptions.length === 0
+      ? 'noDownloads'
+      : !canDownload
+        ? 'denied'
+        : query.source === 'ROSAC'
+          ? 'rosacDownloads'
+          : canDownloadData
+            ? 'goesDataDownloads'
+            : 'goesChartOnly'
+  const bannerValues = { source: query.source, instrument: selected?.instrument.code ?? '' }
+  const loadingLabel = t(solarImages ? 'loading.images' : 'loading.data')
 
   function resetResults() {
     activeRequest.current?.abort()
@@ -235,6 +258,7 @@ export function ScientificDataExplorer({
       activeRequest.current?.abort()
       setResult(null)
       setRequestState('loading')
+      setHasConsulted(true)
       setMessage(null)
       setProgress(0)
       setResultJobId(null)
@@ -328,6 +352,49 @@ export function ScientificDataExplorer({
           {selectedSource.dataKind === 'observed' ? 'Datos observados' : 'Simulación'}
         </span>
       </div>
+
+      {hasConsulted && (
+        <>
+          <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
+            {t(
+              query.source === 'GOES' ? 'banners.goesConsultation' : 'banners.rosacConsultation',
+              bannerValues,
+            )}
+            {selected?.instrument.code === 'SEISS' && <> {t('banners.pendingProducts')}</>}
+          </Notice>
+          <aside aria-labelledby="scientific-permissions-title" className="data-permissions">
+            <h3 id="scientific-permissions-title">{t('banners.title')}</h3>
+            <p>
+              {t(`banners.${downloadNotice}`, bannerValues)}
+              {canDownload && (
+                <>
+                  {!signedIn && <> {t('banners.signIn')}</>} {t('banners.expiry')}
+                </>
+              )}
+            </p>
+          </aside>
+        </>
+      )}
+
+      {requestState === 'loading' && (
+        <div className="data-loading">
+          <p className="data-loading-copy" role="status">
+            <span>{loadingLabel}</span>
+            {!solarImages && <strong>{progress}%</strong>}
+          </p>
+          <progress
+            aria-label={loadingLabel}
+            className="data-loading-progress"
+            max={100}
+            value={solarImages || progress === 0 ? undefined : progress}
+          />
+          <div className="data-loading-actions">
+            <Button type="button" variant="secondary" onClick={resetResults}>
+              {t('loading.cancel')}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <form className="data-query-form" data-select-boundary noValidate onSubmit={submitQuery}>
         <div className="data-field data-source-field">
@@ -454,50 +521,6 @@ export function ScientificDataExplorer({
           </Button>
         </div>
       </form>
-
-      <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
-        <span className="data-source-notice-copy">
-          <span aria-hidden={query.source !== 'GOES'}>
-            Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica
-            puede tardar varios minutos. EHIS y MPSL están pendientes de integración.
-          </span>
-          <span aria-hidden={query.source !== 'ROSAC'}>
-            ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están
-            definidos; todos los resultados de esta fuente son simulados y están rotulados como tal.
-          </span>
-        </span>
-      </Notice>
-
-      <aside aria-labelledby="scientific-permissions-title" className="data-permissions">
-        <h3 id="scientific-permissions-title">Permisos de consulta y descarga</h3>
-        <p>
-          Puede consultar información histórica de GOES sin una cuenta. Para descargar, necesita una
-          cuenta e iniciar sesión. Las imágenes de las gráficas se pueden descargar para cualquier
-          fuente; los datos en CSV de ROSAC están disponibles para toda cuenta, y los de GOES
-          requieren un permiso de descarga de datos GOES. Las imágenes solares SUVI no se pueden
-          descargar desde esta plataforma. Cada enlace de descarga vence en 30 minutos.
-        </p>
-      </aside>
-
-      {requestState === 'loading' && (
-        <div className="data-loading">
-          <p className="data-loading-copy" role="status">
-            <span>{solarImages ? 'Cargando imágenes solares' : 'Cargando datos'}</span>
-            {!solarImages && <strong>{progress}%</strong>}
-          </p>
-          <progress
-            aria-label={solarImages ? 'Cargando imágenes solares' : 'Cargando datos'}
-            className="data-loading-progress"
-            max={100}
-            value={solarImages ? undefined : progress}
-          />
-          <div className="data-loading-actions">
-            <Button type="button" variant="secondary" onClick={resetResults}>
-              Cancelar consulta
-            </Button>
-          </div>
-        </div>
-      )}
 
       {message ? (
         <Notice id="scientific-query-message" tone="error" role="alert">
