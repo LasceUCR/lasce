@@ -104,22 +104,12 @@
 
 .consultation a,
 .consultation button {
-  margin-top: auto;
-  padding: 8px 10px;
-  min-height: 40px;
-  font-size: 0.8rem;
-  line-height: 1.25;
-  gap: 6px;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.consultation a span,
-.consultation button span {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-top: auto;
+  padding: 10px 16px;
+  line-height: 1.35;
+  white-space: normal;
+  text-align: center;
 }
 
 /* Unavailable action: neutral fill and border instead of the action color, readable muted text,
@@ -133,5 +123,9 @@
 }
 
 .consultation svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 9px;
+  margin-top: -2px;
   flex-shrink: 0;
 }

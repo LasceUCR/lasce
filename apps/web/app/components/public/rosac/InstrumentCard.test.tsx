@@ -36,7 +36,7 @@ describe('InstrumentCard', () => {
     render(<InstrumentCard {...args} />)
     expect(screen.getByText(/Información pendiente de confirmación e integración/)).toBeVisible()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    const button = screen.getByRole('button', { name: 'Consultar simulación del instrumento 3' })
+    const button = screen.getByRole('button', { name: 'Consultar simulación del ROSAC-HIROS' })
     expect(button).toBeDisabled()
     expect(button).toHaveClass('button', 'button-primary')
     expect(screen.queryByText(/Los resultados son simulados/)).not.toBeInTheDocument()
