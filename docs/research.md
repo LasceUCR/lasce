@@ -63,8 +63,8 @@ The page follows the language chosen in the header (the `lasce_locale` cookie), 
 the site ([`internationalization.md`](internationalization.md)):
 
 - **Fixed copy** (the page title and lead, the card's button, the photograph placeholder, the
-  detail page's kicker and back link, the editor's success and error messages) is in the
-  `researchAreas` namespace of the message catalogues.
+  detail page's kicker and back link, and the whole editor) is in the `researchAreas` namespace of
+  the message catalogues.
 - **Each area's title and description** come from the database in the visitor's language, through
   the shared content helpers ([`translate-database-content.md`](translate-database-content.md)).
   An area with no English yet is shown in its base text in both languages, with `lang=""` because
@@ -73,20 +73,51 @@ the site ([`internationalization.md`](internationalization.md)):
   and hidden link suffix, and on the detail page's heading and lead (`TopicHero`'s `contentLang`).
   The page's own copy keeps the page's language.
 
-The editor itself still writes Spanish only; it becomes bilingual with the CMS work for #278.
+## Editing
+
+In "Modo edición", an account with `create_components`, `edit_components` or `delete_components`
+sees the "Agregar área de investigación" card and an edit and a delete button on each area. The
+buttons only show in edit mode. The editor (`ResearchAreaForm`) follows
+[`translate-database-content.md`](translate-database-content.md):
+
+- The title and the description sit in one tab per language (`LanguageTabs`), both required in
+  Spanish and English. The photograph is shared by every language, so it sits below the tabs.
+- A field changed in one language only must change in the other too, or be confirmed as still
+  correct with the switch under it (`TranslationReview`), in the same edit.
+- An area with no English yet opens with its base text on the Spanish tab, flagged as possibly
+  not Spanish, and an empty English tab marked "Sin traducción". Its photo can be changed without
+  translating it; completing its English asks to review its base text once.
+- Saving asks for no confirmation. Closing with unsaved changes asks first, from "Cancelar", the
+  modal's close button or Escape. Deleting asks first.
+- The editor's labels and messages follow the site's language (`researchAreas.editor`,
+  `researchAreas.validation`, `researchAreas.discardDialog`, `researchAreas.deleteDialog`).
+
+The API (`/api/research-areas`, all behind the CMS permissions):
+
+| Route                      | Method | Body                                                           |
+| -------------------------- | ------ | -------------------------------------------------------------- |
+| `/api/research-areas`      | GET    | none; the areas in the request's language, never editing data  |
+| `/api/research-areas`      | POST   | `{ content: { es, en }, src }`                                 |
+| `/api/research-areas/[id]` | PATCH  | `{ version, content?: { es, en }, confirmedUnchanged?, src? }` |
+| `/api/research-areas/[id]` | DELETE | none; 204, or 404 when there was nothing to delete             |
+
+Errors use the shared envelope of `app/lib/cms/http.ts` (`invalid-body` with paths such as
+`content.en.title`, `review-required`, `conflict` for a stale version, `not-found`). The contracts
+are in `app/lib/research-area-schema.ts`, which the editor also validates with.
 
 ## Feedback
 
 Creating, editing and deleting an area report their outcome with a toast through
 `useRequestFeedback` ([`toasts.md`](toasts.md)): "Área de investigación agregada / actualizada /
 eliminada correctamente.", or the server's reason when it fails. On failure the form stays open
-with what was typed.
+with what was typed. A photo the server refuses to upload is reported in an error toast too.
 
 ## Adding an area
 
-In "Modo edición", with `create_components`, use the "Añadir" card on `/investigacion`: upload a
+In "Modo edición", with `create_components`, use the "Agregar área de investigación" card on
+`/investigacion`: fill in the title and the description in Spanish and in English, and upload a
 photograph (landscape works best; it is cropped to fill the 280px column, and to a 200px-high band
-on phones), then fill in the title and the description.
+on phones).
 
 For local and development databases, `packages/db/prisma/seed.ts` writes the seeded areas in
 Spanish and English (`pnpm db:seed`). An area without `src` shows a labelled placeholder instead of
