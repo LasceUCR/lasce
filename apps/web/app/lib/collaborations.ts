@@ -10,7 +10,7 @@ import es from '@/messages/es.json' with { type: 'json' }
  * The text is in the `collaborations` namespace of `apps/web/messages/`; this module holds the
  * structure, the links and the logos.
  *
- * Partner organizations live in `research-collaborations.ts` and are passed in by the route.
+ * Partner organizations are loaded from PostgreSQL by the route (`collaboration-records.ts`).
  */
 export interface CollaborationInitiative {
   id: string

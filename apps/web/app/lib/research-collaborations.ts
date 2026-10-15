@@ -1,13 +1,35 @@
 import es from '@/messages/es.json' with { type: 'json' }
 
+import type { Locale } from '@/app/lib/i18n/config'
+import type { StoredContent } from '@/app/lib/i18n/content/definition'
+import { defineTranslatableContent } from '@/app/lib/i18n/content/definition'
+
+/** Official names and acronyms are shared; only the country is editorial translated text. */
+export const collaborationContent = defineTranslatableContent({
+  country: {
+    noun: { word: 'país', gender: 'm' },
+    nouns: { en: 'country' },
+    required: true,
+    maxLength: 150,
+  },
+})
+
 export type CollaborationScope = 'national' | 'international'
 
 export interface ResearchCollaboration {
   id: string
   name: string
   acronym?: string
+  websiteUrl?: string
+  editing?: {
+    content: StoredContent<typeof collaborationContent.specs>
+    isLegacy: boolean
+    version: string
+  }
   /** Country name, in the visitor's language. */
   country: string
+  /** Actual language of the country text; null for a legacy record's unknown base language. */
+  countryLocale?: Locale | null
   scope: CollaborationScope
 }
 
@@ -79,7 +101,7 @@ const organizations: Organization[] = [
   },
 ]
 
-/** The partner organizations, with each country named in the language of `countries`. */
+/** Static fixtures for stories and tests. The public route reads collaboration-records.ts. */
 export function getResearchCollaborations(
   countries: CountryMessages = es.collaborations.countries,
 ): ResearchCollaboration[] {

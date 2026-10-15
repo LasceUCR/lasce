@@ -76,6 +76,11 @@
       "panelTitle": "Real-time image of the Sun",
       "observed": "Observed on <time></time>",
       "updating": "Updating the latest image of the Sun…"
+    },
+    "validation": {
+      "valueNotText": "The value must be text.",
+      "valueRequired": "The value is required.",
+      "valueTooLong": "The value cannot be longer than 15 characters."
     }
   },
   "workAreas": {
@@ -115,23 +120,70 @@
       "server": "The server could not complete the operation. Try again in a few minutes."
     }
   },
+  "solarImageLightbox": {
+    "open": "Enlarge solar image from {time}",
+    "kicker": "GOES · SUVI",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
+    "position": "Image {position} of {total}",
+    "announcement": "Image {position} of {total}: {time}."
+  },
   "contact": {
     "meta": {
       "title": "Contact | LASCE",
-      "description": "Official channels for reaching the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica."
+      "description": "Official channels for reaching the Laboratorio de Astrofísica Solar y Clima Espacial of the University of Costa Rica."
     },
     "hero": {
       "kicker": "LASCE public portal",
       "title": "Contact",
-      "lead": "Official channels of the Solar Astrophysics and Space Weather Laboratory."
+      "lead": "Official channels of the Laboratorio de Astrofísica Solar y Clima Espacial."
     },
     "channelsTitle": "Contact information",
-    "channels": {
-      "phone": "Phone"
+    "cards": {
+      "add": "Add contact channel",
+      "editTitle": "Edit contact channel",
+      "icon": "Symbol",
+      "title": "Title",
+      "description": "Description",
+      "descriptionMax": "The maximum of {max} characters has been reached.",
+      "phoneNumber": "Number",
+      "phoneRequired": "The number is required.",
+      "phoneSingle": "Enter a single phone number.",
+      "link": "Link",
+      "language": "Text language",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "linkHttps": "The link must start with https://.",
+      "linkTooLong": "The link cannot be longer than 500 characters.",
+      "edit": "Edit {title}",
+      "delete": "Delete {title}",
+      "deleteTitle": "Delete contact channel",
+      "deleteMessage": "This action cannot be undone and will remove the contact channel from the page.",
+      "created": "Contact channel added successfully.",
+      "updated": "Contact channel updated successfully.",
+      "deleted": "Contact channel deleted successfully.",
+      "saveFailed": "The contact channel could not be saved. Try again.",
+      "deleteFailed": "The contact channel could not be deleted. Try again.",
+      "deleteConfirm": "Confirm",
+      "deleteCancel": "Cancel",
+      "discardDialog": {
+        "title": "Discard unsaved changes",
+        "message": "If you discard now, all the data entered that has not been saved will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
+      "icons": {
+        "phone": "Phone",
+        "instagram": "Instagram",
+        "location": "Location",
+        "email": "Email",
+        "facebook": "Facebook"
+      }
     },
     "location": {
       "title": "Location",
-      "intro": "The Solar Astrophysics and Space Weather Laboratory is on the south side of the {address}.",
+      "intro": "The Laboratorio de Astrofísica Solar y Clima Espacial is on the south side of the {address}.",
       "unavailable": "The map could not be loaded. The address above is still available.",
       "mapRegion": "Location map of {label}",
       "mapInteractive": "Interactive map of {label}",
@@ -305,7 +357,8 @@
     "card": {
       "national": "National",
       "international": "International",
-      "acronym": "Acronym:"
+      "acronym": "Acronym:",
+      "website": "Official website"
     },
     "countries": {
       "cr": "Costa Rica",
@@ -334,6 +387,50 @@
           "p5": "The initiative contributes strongly to narrowing the gap between the number of radio astronomy observatories in the Southern Hemisphere and those in the Northern Hemisphere."
         }
       }
+    },
+    "validation": {
+      "name": "The name is required and must contain at most 300 characters.",
+      "scope": "Select National or International.",
+      "acronym": "The acronym must contain at most 100 characters.",
+      "url": "Enter a valid HTTP or HTTPS URL without credentials and at most 2048 characters."
+    },
+    "editor": {
+      "add": "Add collaboration",
+      "edit": "Edit collaboration",
+      "editNamed": "Edit {name}",
+      "deleteNamed": "Delete {name}",
+      "name": "Organization name",
+      "acronym": "Acronym (optional)",
+      "scope": "Classification",
+      "country": "Country ({language})",
+      "languages": "Country language",
+      "websiteUrl": "Website (optional)",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "legacy": "This record has text in an unknown language. When changing its country, complete and review both languages."
+    },
+    "feedback": {
+      "created": "Collaboration added successfully.",
+      "updated": "Collaboration updated successfully.",
+      "deleted": "Collaboration deleted successfully.",
+      "failed": "The operation could not be completed. Check the fields and try again.",
+      "conflict": "The collaboration changed. Reopen the form to load the current version.",
+      "notFound": "The collaboration no longer exists. Refresh the page.",
+      "forbidden": "You do not have permission for this operation. Check your session.",
+      "review": "Update the country in both languages or confirm that the translation is still correct."
+    },
+    "delete": {
+      "title": "Delete collaboration",
+      "message": "Delete this collaboration? It will be removed from the public page and this action cannot be undone.",
+      "entity": "Collaboration",
+      "confirm": "Delete"
+    },
+    "discard": {
+      "title": "Discard unsaved changes",
+      "message": "Any changes you have not saved will be lost.",
+      "confirm": "Discard",
+      "keepEditing": "Keep editing"
     }
   },
   "academicActivities": {
@@ -552,6 +649,13 @@
     "validation": {
       "srcRequired": "The image is required.",
       "srcNotText": "The image must be the address of an uploaded file."
+    }
+  },
+  "researchers": {
+    "created": "Researcher added successfully.",
+    "updated": "Researcher updated successfully.",
+    "errors": {
+      "unknown": "The researcher could not be saved. Try again."
     }
   }
 }
