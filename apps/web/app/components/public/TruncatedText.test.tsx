@@ -17,9 +17,14 @@ const customArgs = OneLineCustomLabels.args as TruncatedTextProps
  */
 let overflowing = false
 
-/** The number of lines the text is clamped to, or `''` while it is shown whole. */
+/** The number of lines the text is cut to, or `''` while it is shown whole. */
 function clampOf(element: HTMLElement) {
-  return element.style.getPropertyValue('-webkit-line-clamp')
+  return element.style.getPropertyValue('--truncated-lines')
+}
+
+/** The element `TruncatedText` renders (`as`), around the text. */
+function blockOf(text: HTMLElement) {
+  return text.parentElement as HTMLElement
 }
 
 beforeEach(() => {
@@ -46,7 +51,7 @@ afterEach(() => {
 })
 
 describe('TruncatedText', () => {
-  test('clamps long text to the lines it is given and offers "Leer más"', () => {
+  test('cuts long text to the lines it is given and offers "Leer más" inside it', () => {
     overflowing = true
     renderWithIntl(<TruncatedText {...longArgs} />)
 
@@ -54,7 +59,10 @@ describe('TruncatedText', () => {
     expect(clampOf(text)).toBe('3')
     const toggle = screen.getByRole('button', { name: 'Leer más' })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(toggle).toHaveAttribute('aria-controls', text.id)
+    expect(toggle).toHaveAttribute('aria-controls', blockOf(text).id)
+    // Inline, at the end of the last visible line, after an ellipsis.
+    expect(text).toContainElement(toggle)
+    expect(text).toHaveTextContent(/… Leer más/)
   })
 
   test('shows the whole text in place, and clamps it again', async () => {
@@ -66,10 +74,11 @@ describe('TruncatedText', () => {
 
     const text = screen.getByText(longArgs.children)
     expect(clampOf(text)).toBe('')
-    expect(screen.getByRole('button', { name: 'Leer menos' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
+    const toggle = screen.getByRole('button', { name: 'Leer menos' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    // Right after the last word, with no ellipsis left.
+    expect(text).toContainElement(toggle)
+    expect(text.textContent?.endsWith(`${longArgs.children} Leer menos`)).toBe(true)
 
     await user.click(screen.getByRole('button', { name: 'Leer menos' }))
     expect(screen.getByRole('button', { name: 'Leer más' })).toBeInTheDocument()
@@ -103,15 +112,15 @@ describe('TruncatedText', () => {
     overflowing = true
     renderWithIntl(<TruncatedText {...longArgs} lang="es" />, { locale: 'en' })
 
-    expect(screen.getByText(longArgs.children)).toHaveAttribute('lang', 'es')
+    expect(blockOf(screen.getByText(longArgs.children))).toHaveAttribute('lang', 'es')
     expect(screen.getByRole('button', { name: 'Read more' })).not.toHaveAttribute('lang')
   })
 
   test('renders as the element it is asked for, with its classes', () => {
     renderWithIntl(<TruncatedText {...shortArgs} as="div" className="research-note" />)
 
-    const text = screen.getByText(shortArgs.children)
-    expect(text.tagName).toBe('DIV')
-    expect(text).toHaveClass('research-note')
+    const block = blockOf(screen.getByText(shortArgs.children))
+    expect(block.tagName).toBe('DIV')
+    expect(block).toHaveClass('research-note')
   })
 })

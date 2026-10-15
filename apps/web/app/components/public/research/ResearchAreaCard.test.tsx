@@ -60,7 +60,7 @@ describe('ResearchAreaCard', () => {
     renderWithIntl(<ResearchAreaCard {...defaultArgs} contentLang="en" />)
 
     expect(screen.getByRole('heading', { name: defaultArgs.title })).toHaveAttribute('lang', 'en')
-    expect(screen.getByText(defaultArgs.description)).toHaveAttribute('lang', 'en')
+    expect(screen.getByText(defaultArgs.description).parentElement).toHaveAttribute('lang', 'en')
     expect(screen.getByRole('link')).not.toHaveAttribute('lang')
   })
 
@@ -110,11 +110,11 @@ describe('ResearchAreaCard: long descriptions', () => {
     renderWithIntl(<ResearchAreaCard {...longArgs} />)
 
     const description = screen.getByText(longArgs.description)
-    expect(description.style.getPropertyValue('-webkit-line-clamp')).toBe('3')
+    expect(description.style.getPropertyValue('--truncated-lines')).toBe('3')
 
     await user.click(screen.getByRole('button', { name: 'Leer más' }))
 
-    expect(description.style.getPropertyValue('-webkit-line-clamp')).toBe('')
+    expect(description.style.getPropertyValue('--truncated-lines')).toBe('')
     expect(screen.getByRole('button', { name: 'Leer menos' })).toBeInTheDocument()
     // The detail page is still the card's one link.
     expect(screen.getAllByRole('link')).toHaveLength(1)

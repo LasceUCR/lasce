@@ -16,9 +16,9 @@ import { TruncatedText } from '@/app/components/public/TruncatedText'
 ;<TruncatedText lines={3}>{area.description}</TruncatedText>
 ```
 
-That is all a field needs. The text shows its first three lines and ends in an ellipsis; if it does
-not fit, a "Leer más" button appears under it. Pressing it shows the whole text in place and turns
-into "Leer menos", which clamps it again.
+That is all a field needs. The text shows its first three lines; if it does not fit, the last line
+ends in "… **Leer más**", inline, like a link at the end of the text. Pressing it shows the whole
+text in place, followed by "**Leer menos**" right after the last word, which cuts it again.
 
 ## Props
 
@@ -37,6 +37,9 @@ into "Leer menos", which clamps it again.
 - **Only when needed.** A `ResizeObserver` compares the text's full height with its clamped box, at
   whatever width it gets. Text that fits in `lines` is shown exactly as it was, with no toggle, and
   a text that starts to overflow when the window narrows gets one.
+- **Inline toggle.** Collapsed, the toggle sits at the end of the last visible line after an
+  ellipsis, and the text wraps around it; expanded, it follows the last word. It never adds a line
+  of its own.
 - **Expanding in place.** "Leer más" removes the clamp; nothing navigates or opens. The container
   grows to fit, so put it in a layout that can grow (a flex column or a normal block), not in a box
   with a fixed height.
@@ -86,9 +89,10 @@ const t = useTranslations('publications.card')
 
 ### Styling the text
 
-`className` styles the text element; keep layout properties for the clamp out of it. The component
-owns `display`, `overflow` and the `line-clamp` itself (`.truncated-text` in `globals.css`), and sets
-the number of lines inline from `lines`. A class of yours only needs the look:
+`className` styles the text element (`as`); keep layout properties out of it. The component owns
+the layout (`.truncated-text*` in `globals.css`): the element is a flex box, and the text inside it
+is cut to `lines` lines of height (`--truncated-lines`, with the line height it measures) while an
+empty float pushes the toggle onto the last visible line. A class of yours only needs the look:
 
 ```css
 .research-area-card-description {
@@ -99,8 +103,8 @@ the number of lines inline from `lines`. A class of yours only needs the look:
 }
 ```
 
-The toggle is styled by `.truncated-text-toggle`: a quiet text button, so it does not compete with a
-card's own actions.
+The toggle is styled by `.truncated-text-toggle`: a text link inside the text, so it reads as part of
+it and does not compete with a card's own actions. It takes the text's font size.
 
 ## Testing
 
@@ -128,8 +132,10 @@ expect(screen.getByRole('button', { name: 'Leer menos' })).toHaveAttribute('aria
 ```
 
 - Render with `renderWithIntl`, since the default labels come from the catalogue.
-- To check the clamp, read `element.style.getPropertyValue('-webkit-line-clamp')`: `'3'` while cut,
-  `''` while whole. `toHaveStyle({ WebkitLineClamp: ... })` does not type-check.
+- To check the cut, read `element.style.getPropertyValue('--truncated-lines')` on the element
+  `getByText` returns for the text: `'3'` while cut,
+  `''` while whole. The toggle is inside that element (`expect(text).toContainElement(toggle)`);
+  the `id`, `lang` and classes are on its parent, the element `as` names.
 - Restore the stubs afterwards (`vi.unstubAllGlobals()`, `vi.restoreAllMocks()`).
 - A real overflow, at a real width, belongs in a Playwright spec: see the "Leer más" test in
   `apps/web/tests/e2e/research-areas-i18n.spec.ts`.
