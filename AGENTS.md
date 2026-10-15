@@ -80,8 +80,8 @@ Read [`docs/git-guidelines.md`](docs/git-guidelines.md) once in full. The short 
 - Squash merge into `development`. A release from `development` into `main` is the one
   exception: it is merged with a **merge commit**, never squashed, so that `development` stays
   an ancestor of `main` (section 10 of `docs/git-guidelines.md`). `development` needs 2
-  approvals, `main` needs 3, at least one from a `.github/CODEOWNERS` owner. **Pushing a new
-  commit dismisses existing approvals.**
+  approvals, `main` needs 3, at least one from a `.github/CODEOWNERS` owner. Approvals survive
+  later pushes, so ask for a fresh review yourself when a change after approval needs one.
 - Never commit `.env` or any credential.
 
 If you have already committed to a protected branch locally, move the work rather than forcing:

@@ -2,7 +2,7 @@ import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { renderWithIntl as render } from '@/app/lib/i18n/testing'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { ScientificDataExplorer, type ScientificDataExplorerProps } from './ScientificDataExplorer'
 import {
@@ -44,7 +44,7 @@ describe('ScientificDataExplorer', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(
+    renderWithIntl(
       <ScientificDataExplorer
         {...defaultArgs}
         initialQuery={{ ...defaultArgs.initialQuery, date: '2025-01-05' }}
@@ -63,7 +63,7 @@ describe('ScientificDataExplorer', () => {
   })
   test('offers observed GOES products and identifies products not yet integrated', async () => {
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
 
     expect(screen.getByRole('combobox', { name: 'Fuente de datos' })).toHaveValue('GOES')
     const product = screen.getByRole('combobox', { name: 'Instrumento y producto' })
@@ -99,7 +99,7 @@ describe('ScientificDataExplorer', () => {
 
   test('switches to provisional ROSAC instruments without presenting them as observations', async () => {
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
 
     await user.click(screen.getByRole('combobox', { name: 'Fuente de datos' }))
     await user.click(screen.getByRole('option', { name: /ROSAC/ }))
@@ -121,7 +121,7 @@ describe('ScientificDataExplorer', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
 
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
 
@@ -137,7 +137,7 @@ describe('ScientificDataExplorer', () => {
   })
 
   test('renders a ROSAC dynamic spectrum with an accessible values table', () => {
-    render(<ScientificDataExplorer {...spectrumArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...spectrumArgs} />)
 
     const results = screen.getByRole('region', { name: 'Espectro dinámico de prueba (ROSAC-I2)' })
     expect(
@@ -151,7 +151,7 @@ describe('ScientificDataExplorer', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
 
     const endTime = screen.getByLabelText('Hora de fin (UTC)')
     await user.clear(endTime)
@@ -167,7 +167,7 @@ describe('ScientificDataExplorer', () => {
   })
 
   test('keeps the form available when CITIC has no matching data', () => {
-    render(<ScientificDataExplorer {...withoutResultsArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...withoutResultsArgs} />)
 
     expect(screen.getByRole('status')).toHaveTextContent('No hay datos disponibles')
     expect(screen.getByRole('button', { name: 'Consultar datos' })).toBeEnabled()
@@ -178,7 +178,7 @@ describe('ScientificDataExplorer', () => {
   test('shows a GOES-specific error when the observed source fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
 
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
 
@@ -190,7 +190,7 @@ describe('ScientificDataExplorer', () => {
   test('renders supplied observations without requesting data', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
-    render(<ScientificDataExplorer {...withResultsArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...withResultsArgs} />)
 
     expect(screen.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /descargar/i })).not.toBeInTheDocument()
@@ -198,7 +198,7 @@ describe('ScientificDataExplorer', () => {
   })
 
   test('keeps both banners hidden before consultation', () => {
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
   })
@@ -206,7 +206,7 @@ describe('ScientificDataExplorer', () => {
   test('shows only the selected instrument permissions after consultation', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => resultFixture }))
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
     const banner = screen.getByRole('complementary', { name: 'Permisos de consulta y descarga' })
     expect(
@@ -252,7 +252,7 @@ describe('ScientificDataExplorer', () => {
       ),
     )
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
     const banner = screen.getByRole('complementary')
     const progress = screen.getByRole('progressbar', { name: 'Cargando datos' })
@@ -281,7 +281,7 @@ describe('ScientificDataExplorer', () => {
     )
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
     await user.click(screen.getByRole('combobox', { name: 'Fuente de datos' }))
     await user.click(screen.getByRole('option', { name: /ROSAC/ }))
@@ -295,7 +295,7 @@ describe('ScientificDataExplorer', () => {
   })
 
   test('explains unavailable downloads for an account without download permissions', () => {
-    render(<ScientificDataExplorer {...visitorDownloadArgs} downloadGrants={[]} />)
+    renderWithIntl(<ScientificDataExplorer {...visitorDownloadArgs} downloadGrants={[]} />)
     expect(screen.getByRole('complementary')).toHaveTextContent(
       'Su cuenta no tiene permiso para descargar recursos de GOES (EXIS)',
     )
@@ -305,7 +305,7 @@ describe('ScientificDataExplorer', () => {
   test('translates banners and loading feedback into English', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise(() => {})))
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />, { locale: 'en' })
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />, { locale: 'en' })
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
     expect(
       screen.getByRole('complementary', { name: 'Consultation and download permissions' }),
@@ -314,14 +314,14 @@ describe('ScientificDataExplorer', () => {
   })
 
   test('offers the GOES chart image but not GOES data without the GOES data grant', () => {
-    render(<ScientificDataExplorer {...visitorDownloadArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...visitorDownloadArgs} />)
 
     expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
     expect(screen.queryByRole('button', { name: 'Descargar datos (CSV)' })).not.toBeInTheDocument()
   })
 
   test('offers GOES data to a holder of the GOES data grant', () => {
-    render(<ScientificDataExplorer {...goesHolderDownloadArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...goesHolderDownloadArgs} />)
 
     expect(screen.getByRole('button', { name: 'Descargar datos (CSV)' })).toBeEnabled()
     expect(screen.getByRole('complementary')).toHaveTextContent(
@@ -338,7 +338,7 @@ describe('ScientificDataExplorer', () => {
     })
     const navigate = vi.fn()
     const user = userEvent.setup()
-    render(
+    renderWithIntl(
       <ScientificDataExplorer
         {...visitorDownloadArgs}
         navigate={navigate}
@@ -359,7 +359,7 @@ describe('ScientificDataExplorer', () => {
     const requestDownload = vi.fn()
     const navigate = vi.fn()
     const user = userEvent.setup()
-    render(
+    renderWithIntl(
       <ScientificDataExplorer
         {...signedOutDownloadArgs}
         loginHref="/acceso?next=%2Fdatos&reason=auth"
@@ -380,7 +380,7 @@ describe('ScientificDataExplorer', () => {
   test('sends a visitor whose session expired to sign in', async () => {
     const navigate = vi.fn()
     const user = userEvent.setup()
-    render(
+    renderWithIntl(
       <ScientificDataExplorer
         {...visitorDownloadArgs}
         loginHref="/acceso"
@@ -400,7 +400,7 @@ describe('ScientificDataExplorer', () => {
 
   test('shows why a download was refused and lets the visitor try again', async () => {
     const user = userEvent.setup()
-    render(
+    renderWithIntl(
       <ScientificDataExplorer
         {...visitorDownloadArgs}
         requestDownload={vi.fn().mockResolvedValue({
@@ -421,7 +421,7 @@ describe('ScientificDataExplorer', () => {
 
   test('reports a download that could not reach the server', async () => {
     const user = userEvent.setup()
-    render(
+    renderWithIntl(
       <ScientificDataExplorer
         {...visitorDownloadArgs}
         requestDownload={vi.fn().mockRejectedValue(new Error('offline'))}
@@ -447,7 +447,7 @@ describe('ScientificDataExplorer', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     const requestDownload = vi.fn().mockReturnValue(new Promise(() => {}))
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-    render(
+    renderWithIntl(
       <ScientificDataExplorer
         {...visitorDownloadArgs}
         initialResult={undefined}
@@ -469,7 +469,7 @@ describe('ScientificDataExplorer', () => {
   })
 
   test('offers ROSAC data to every account', () => {
-    render(<ScientificDataExplorer {...rosacDownloadArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...rosacDownloadArgs} />)
 
     expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Descargar datos (CSV)' })).toBeEnabled()
@@ -479,14 +479,14 @@ describe('ScientificDataExplorer', () => {
   })
 
   test('offers no download for SUVI images, whatever the grants', () => {
-    render(<ScientificDataExplorer {...suviDownloadArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...suviDownloadArgs} />)
 
     expect(screen.queryByRole('button', { name: /descargar/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Descargas' })).not.toBeInTheDocument()
   })
 
   test('identifies the source only as GOES while preserving observation notices', () => {
-    render(<ScientificDataExplorer {...withResultsArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...withResultsArgs} />)
     expect(screen.getByRole('combobox', { name: 'Fuente de datos' })).toHaveTextContent(/^GOES$/)
     expect(screen.getByText(/Observaciones de GOES\./)).toBeInTheDocument()
     expect(screen.queryByText(/CITIC|LASCE|NOAA/)).not.toBeInTheDocument()
@@ -496,7 +496,7 @@ describe('ScientificDataExplorer', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
     const product = screen.getByRole('combobox', { name: 'Instrumento y producto' })
     await user.click(product)
     await user.click(screen.getByRole('treeitem', { name: /^MAG/ }))
@@ -517,7 +517,7 @@ describe('ScientificDataExplorer', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => resultFixture })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...defaultArgs} />)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
     await user.click(screen.getByRole('combobox', { name: 'Instrumento y producto' }))
     await user.click(screen.getByRole('treeitem', { name: /^EXIS/ }))
     await user.click(screen.getByRole('treeitem', { name: /EUV/ }))
@@ -533,7 +533,7 @@ describe('ScientificDataExplorer', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<ScientificDataExplorer {...suviArgs} initialResult={undefined} />)
+    renderWithIntl(<ScientificDataExplorer {...suviArgs} initialResult={undefined} />)
     expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'Instrumento y producto' })).toHaveTextContent(
       'SUVI',

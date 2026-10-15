@@ -24,3 +24,13 @@ export const UnavailableImage: Story = {
     images: [{ ...Default.args!.images![0]!, imageUrl: '/unavailable-solar-image.png' }],
   },
 }
+
+export const MultipleImages: Story = {
+  args: {
+    images: [
+      Default.args!.images![0]!,
+      { ...Default.args!.images![0]!, timestamp: '2026-09-10T08:45:00Z' },
+      { ...Default.args!.images![0]!, timestamp: '2026-09-10T09:00:00Z' },
+    ],
+  },
+}

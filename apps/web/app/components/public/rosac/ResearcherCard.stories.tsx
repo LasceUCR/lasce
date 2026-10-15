@@ -27,3 +27,8 @@ export const WithoutEmail: Story = {
 export const WithoutDescription: Story = {
   args: { ...jelmuth, description: undefined },
 }
+
+/** A researcher saved without a photo shows the default portrait. */
+export const WithoutPhoto: Story = {
+  args: { ...carolina, src: '' },
+}
