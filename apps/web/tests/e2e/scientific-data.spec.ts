@@ -96,7 +96,7 @@ for (const width of [390, 1440]) {
       .boundingBox())!
     expect(bannerBox.y + bannerBox.height).toBeLessThan(progressBox.y)
     expect(progressBox.y + progressBox.height).toBeLessThan(sourceBox.y)
-    expect(progressBox.height).toBeGreaterThanOrEqual(16)
+    expect(progressBox.height).toBeGreaterThanOrEqual(6)
     expect(progressBox.x).toBeGreaterThanOrEqual(0)
     expect(progressBox.x + progressBox.width).toBeLessThanOrEqual(width)
     await progress.scrollIntoViewIfNeeded()

@@ -159,6 +159,7 @@ export function ScientificDataExplorer({
             : 'goesChartOnly'
   const bannerValues = { source: query.source, instrument: selected?.instrument.code ?? '' }
   const loadingLabel = t(solarImages ? 'loading.images' : 'loading.data')
+  const loadingProgress = !solarImages && progress > 0 ? progress : undefined
 
   function resetResults() {
     activeRequest.current?.abort()
@@ -355,7 +356,7 @@ export function ScientificDataExplorer({
 
       {hasConsulted && (
         <>
-          <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
+          <Notice tone="info">
             {t(
               query.source === 'GOES' ? 'banners.goesConsultation' : 'banners.rosacConsultation',
               bannerValues,
@@ -378,21 +379,21 @@ export function ScientificDataExplorer({
 
       {requestState === 'loading' && (
         <div className="data-loading">
-          <p className="data-loading-copy" role="status">
-            <span>{loadingLabel}</span>
-            {!solarImages && <strong>{progress}%</strong>}
-          </p>
+          <div className="data-loading-header">
+            <p className="data-loading-copy" role="status">
+              <span>{loadingLabel}</span>
+              {loadingProgress !== undefined && <strong>{loadingProgress}%</strong>}
+            </p>
+            <button className="data-loading-cancel" type="button" onClick={resetResults}>
+              {t('loading.cancel')}
+            </button>
+          </div>
           <progress
             aria-label={loadingLabel}
             className="data-loading-progress"
             max={100}
-            value={solarImages || progress === 0 ? undefined : progress}
+            value={loadingProgress}
           />
-          <div className="data-loading-actions">
-            <Button type="button" variant="secondary" onClick={resetResults}>
-              {t('loading.cancel')}
-            </Button>
-          </div>
         </div>
       )}
 
@@ -582,9 +583,7 @@ export function ScientificDataExplorer({
             ) : null}
           </dl>
 
-          <Notice tone={result.origin.kind === 'observed' ? 'info' : 'warning'}>
-            {result.origin.notice}
-          </Notice>
+          <Notice tone="info">{result.origin.notice}</Notice>
 
           {!hasResults ? (
             <div className="content-empty" role="status">

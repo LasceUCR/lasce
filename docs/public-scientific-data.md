@@ -59,8 +59,10 @@ removed while its UTC capture time remains visible; switching bands can recover 
 The consultation and permission banners stay hidden until the first query is submitted. Once
 shown, they follow the currently selected source and instrument, even when a change clears the
 results. They appear above the loading indicator, followed by the query inputs and the results.
-The loading bar is 1rem thick, uses a contrasting fill, and stays indeterminate until progress is
-available (or throughout an image query). Its animation respects reduced-motion preferences.
+The loading bar is 0.375rem thick, with a contrasting blue fill on a pale track. Its compact header
+places the loading status beside a text-style cancel control and only shows a percentage when
+progress is available. The fill transitions smoothly between updates and stays indeterminate until
+progress is available (or throughout an image query). It respects reduced-motion preferences.
 
 The banners communicate only the selected instrument's policy:
 
