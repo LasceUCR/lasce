@@ -650,7 +650,13 @@
       "hint": "Click a card to see more information.",
       "empty": "No researcher information is available at the moment.",
       "add": "Add researcher",
-      "saveError": "The change could not be saved. Try again."
+      "form": {
+        "languageTabs": "Content language",
+        "roleIn": "Role ({language})",
+        "descriptionIn": "Description ({language})",
+        "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the role or the description, check it as well.",
+        "legacyNoTranslation": "This researcher has no English version yet. To change the role or the description you must complete both languages; the other details can be changed without translating it."
+      }
     },
     "activities": {
       "title": "What do we do?",
@@ -1079,8 +1085,10 @@
     "institutionLabel": "Institution",
     "created": "Researcher added successfully.",
     "updated": "Researcher updated successfully.",
+    "deleted": "Researcher deleted successfully.",
     "errors": {
-      "unknown": "The researcher could not be saved. Try again."
+      "unknown": "The researcher could not be saved. Try again.",
+      "deleteUnknown": "The researcher could not be deleted. Try again."
     }
   },
   "administration": {
