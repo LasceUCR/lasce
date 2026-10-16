@@ -11,7 +11,7 @@ import { MediaLightbox } from './MediaLightbox'
 import { Modal } from '@/app/components/public/Modal'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
-import { MediaForm } from '@/app/components/public/gallery/forms/MediaForm'
+import { MediaForm, type MediaFormHandle } from '@/app/components/public/gallery/forms/MediaForm'
 import type { GalleryMedia } from '@/app/lib/gallery-schema'
 
 function mediaPlaceholder(item: GalleryMedia): string {
@@ -51,6 +51,8 @@ export function AlbumMediaGrid({
   const sendWithFeedback = useRequestFeedback()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [openIndex, setOpenIndex] = useState(closed)
+  const createForm = useRef<MediaFormHandle>(null)
+  const editForm = useRef<MediaFormHandle>(null)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
   const showEditor = editMode && (canEdit || canDelete || canCreate)
   const showAddCard = editMode && canCreate && albumId !== undefined && uploader !== undefined
@@ -91,9 +93,17 @@ export function AlbumMediaGrid({
       <ul className="media-grid tile-list">
         {showAddCard ? (
           <li className="media-grid-add">
-            <AddItemCard label="Añadir archivo" size="large">
+            <AddItemCard
+              label="Añadir archivo"
+              onRequestClose={(close) => {
+                if (createForm.current) createForm.current.requestCancel()
+                else close()
+              }}
+              size="large"
+            >
               {({ close }) => (
                 <MediaForm
+                  ref={createForm}
                   albumId={albumId}
                   onCancel={close}
                   onSaved={() => {
@@ -178,13 +188,17 @@ export function AlbumMediaGrid({
       </ul>
 
       <Modal
-        onClose={() => setEditingId(null)}
+        onClose={() => {
+          if (editForm.current) editForm.current.requestCancel()
+          else setEditingId(null)
+        }}
         open={editingItem !== null && editingItem !== undefined}
         size="large"
         title="Editar archivo"
       >
         {editingItem && albumId !== undefined ? (
           <MediaForm
+            ref={editForm}
             albumId={albumId}
             media={{
               id: editingItem.id,

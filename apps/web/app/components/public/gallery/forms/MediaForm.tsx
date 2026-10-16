@@ -1,7 +1,7 @@
 'use client'
 
 import { useLocale, useTranslations } from 'next-intl'
-import { useId, useState } from 'react'
+import { useId, useImperativeHandle, useState, type Ref } from 'react'
 
 import { uploadGalleryImage } from '@/app/(public)/galeria/actions'
 import { Button } from '@/app/components/public/Button'
@@ -63,7 +63,13 @@ export interface MediaFormValues {
   format: string
 }
 
+export interface MediaFormHandle {
+  /** Closes the form, asking first when there are unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface MediaFormProps {
+  ref?: Ref<MediaFormHandle>
   /** The file being edited. Without it, the form adds a new file. */
   media?: MediaFormValues
   /** The text as stored in every language, and the version it was loaded at, when editing. */
@@ -99,6 +105,7 @@ export function MediaForm({
   isLegacy = false,
   onSaved,
   onCancel,
+  ref,
 }: MediaFormProps) {
   const isEdit = media !== undefined
   const t = useTranslations('publications')
@@ -173,10 +180,12 @@ export function MediaForm({
     )
   }
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) setConfirmDiscardOpen(true)
     else onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   async function handleSubmit() {
     if (isSaving) return
@@ -351,7 +360,7 @@ export function MediaForm({
       </div>
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('editor.cancel')}
         </Button>
         <Button disabled={isSaving} onClick={handleSubmit} variant="primary">

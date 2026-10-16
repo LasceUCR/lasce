@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -12,9 +13,9 @@ vi.mock('@lasce/db', () => ({ prisma: {} }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 vi.mock('@/app/(public)/galeria/actions', () => ({ uploadGalleryImage: vi.fn() }))
 
-function render(ui: ReactElement) {
+function render(ui: ReactElement, editMode = false) {
   return renderWithIntl(
-    <EditModeContext.Provider value={{ editMode: false, setEditMode: () => undefined }}>
+    <EditModeContext.Provider value={{ editMode, setEditMode: () => undefined }}>
       <ToastProvider>{ui}</ToastProvider>
     </EditModeContext.Provider>,
   )
@@ -117,5 +118,21 @@ describe('AlbumPage', () => {
     expect(
       screen.queryByRole('button', { name: /^Ver a tamaño completo:/ }),
     ).not.toBeInTheDocument()
+  })
+
+  test('asks before Escape discards a new sub-album', async () => {
+    const user = userEvent.setup()
+    render(<AlbumPage {...albumArgs} canCreate parentAlbumId="parent-id" />, true)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir subálbum' }))
+    await user.type(screen.getByRole('textbox', { name: 'Título (Español)' }), 'Nuevo')
+    await user.keyboard('{Escape}')
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+    expect(screen.getByRole('dialog', { name: 'Añadir subálbum' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Título (Español)' })).toHaveValue('Nuevo')
   })
 })

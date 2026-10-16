@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -190,6 +190,60 @@ describe('GalleryGroupSection', () => {
       })
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(
+      screen.queryByRole('dialog', { name: `Editar "${album.title}"` }),
+    ).not.toBeInTheDocument()
+  })
+
+  test('confirms discard from Cancelar, Escape, and a modal close request', async () => {
+    const user = userEvent.setup()
+    const { album } = withSubAlbums
+    renderSection(
+      {
+        ...withSubAlbums,
+        album: {
+          ...album,
+          id: 'album-id',
+          editing: {
+            isLegacy: false,
+            version: 'v1',
+            content: {
+              es: { title: album.title, description: album.description },
+              en: { title: 'ROSAC', description: 'ROSAC description.' },
+            },
+          },
+        },
+        canEdit: true,
+      },
+      true,
+    )
+
+    await user.click(screen.getByRole('button', { name: `Editar ${album.title}` }))
+    await user.type(screen.getByRole('textbox', { name: 'Título (Español)' }), ' editado')
+
+    const editor = screen.getByRole('dialog', { name: `Editar "${album.title}"` })
+    fireEvent(editor, new Event('close'))
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+    expect(screen.getByRole('textbox', { name: 'Título (Español)' })).toHaveValue(
+      `${album.title} editado`,
+    )
+
+    await user.keyboard('{Escape}')
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Descartar' }))
+
     expect(
       screen.queryByRole('dialog', { name: `Editar "${album.title}"` }),
     ).not.toBeInTheDocument()

@@ -9,7 +9,11 @@ import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { Modal } from '@/app/components/public/Modal'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import { AlbumForm, type AlbumFormValues } from '@/app/components/public/gallery/forms/AlbumForm'
+import {
+  AlbumForm,
+  type AlbumFormHandle,
+  type AlbumFormValues,
+} from '@/app/components/public/gallery/forms/AlbumForm'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
@@ -98,6 +102,8 @@ export function AlbumPage({
   const createInProgress = useRef(false)
   const saveInProgress = useRef(false)
   const deleteInProgress = useRef(false)
+  const createForm = useRef<AlbumFormHandle>(null)
+  const editForm = useRef<AlbumFormHandle>(null)
 
   async function handleCreate(values: AlbumFormValues, close: () => void): Promise<void> {
     if (!parentAlbumId || createInProgress.current) return
@@ -231,7 +237,14 @@ export function AlbumPage({
           <ul className="card-grid card-grid-3 tile-list gallery-subalbum-list">
             {editMode && canCreate && parentAlbumId ? (
               <li className="gallery-subalbum-add">
-                <AddItemCard label="Añadir subálbum" size="large">
+                <AddItemCard
+                  label="Añadir subálbum"
+                  onRequestClose={(close) => {
+                    if (createForm.current) createForm.current.requestCancel()
+                    else close()
+                  }}
+                  size="large"
+                >
                   {({ close }) => (
                     <>
                       {createError ? (
@@ -247,6 +260,7 @@ export function AlbumPage({
                           close()
                         }}
                         onSave={(values) => handleCreate(values, close)}
+                        ref={createForm}
                       />
                     </>
                   )}
@@ -309,7 +323,10 @@ export function AlbumPage({
       </TopicSection>
 
       <Modal
-        onClose={closeEditor}
+        onClose={() => {
+          if (editForm.current) editForm.current.requestCancel()
+          else closeEditor()
+        }}
         open={isEditing && editingSubAlbum !== null}
         size="large"
         title={`Editar "${editingSubAlbum?.title ?? ''}"`}
@@ -332,6 +349,7 @@ export function AlbumPage({
             }}
             onCancel={closeEditor}
             onSave={handleSave}
+            ref={editForm}
           />
         ) : null}
       </Modal>

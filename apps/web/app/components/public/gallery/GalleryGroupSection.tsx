@@ -7,7 +7,11 @@ import { AlbumTile } from './AlbumTile'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { Modal } from '@/app/components/public/Modal'
-import { AlbumForm, type AlbumFormValues } from '@/app/components/public/gallery/forms/AlbumForm'
+import {
+  AlbumForm,
+  type AlbumFormHandle,
+  type AlbumFormValues,
+} from '@/app/components/public/gallery/forms/AlbumForm'
 import type { GalleryAlbum, ReviewConfirmation } from '@/app/lib/gallery-schema'
 
 const SAVE_ERROR_MESSAGE = 'No se pudo guardar el álbum. Inténtelo de nuevo.'
@@ -63,6 +67,7 @@ export function GalleryGroupSection({
   const [isSaving, setIsSaving] = useState(false)
   const saveInProgress = useRef(false)
   const deleteInProgress = useRef(false)
+  const editForm = useRef<AlbumFormHandle>(null)
 
   async function handleDelete(): Promise<void> {
     if (!album.id || deleteInProgress.current) return
@@ -190,7 +195,15 @@ export function GalleryGroupSection({
         ))}
       </ul>
 
-      <Modal onClose={closeEditor} open={isEditing} title={`Editar "${album.title}"`} size="large">
+      <Modal
+        onClose={() => {
+          if (editForm.current) editForm.current.requestCancel()
+          else closeEditor()
+        }}
+        open={isEditing}
+        title={`Editar "${album.title}"`}
+        size="large"
+      >
         {saveError ? (
           <p className="form-alert" role="alert">
             {saveError}
@@ -208,6 +221,7 @@ export function GalleryGroupSection({
           }}
           onCancel={closeEditor}
           onSave={handleSave}
+          ref={editForm}
         />
       </Modal>
     </section>

@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
@@ -217,5 +217,51 @@ describe('AlbumMediaGrid', () => {
     )
 
     expect(screen.getByRole('button', { name: 'Añadir archivo' })).toBeInTheDocument()
+  })
+
+  describe('unsaved changes in the file form', () => {
+    async function openDirtyForm() {
+      const user = userEvent.setup()
+      render(
+        <AlbumMediaGrid {...defaultArgs} albumId="album-1" canCreate editMode uploader="Ana" />,
+      )
+      await user.click(screen.getByRole('button', { name: 'Añadir archivo' }))
+      await user.type(screen.getByLabelText(/Título \(Español\)/), 'Aurora')
+      return user
+    }
+
+    test('asks before discarding when Escape is pressed', async () => {
+      const user = await openDirtyForm()
+
+      await user.keyboard('{Escape}')
+
+      expect(screen.getByText('Descartar cambios no guardados')).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+      expect(screen.getByLabelText(/Título \(Español\)/)).toHaveValue('Aurora')
+    })
+
+    test('asks before discarding when Cancelar is pressed', async () => {
+      const user = await openDirtyForm()
+
+      await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+      await user.click(screen.getByRole('button', { name: 'Descartar' }))
+
+      expect(screen.queryByLabelText(/Título \(Español\)/)).not.toBeInTheDocument()
+    })
+
+    test('closes without asking when nothing changed', async () => {
+      const user = userEvent.setup()
+      render(
+        <AlbumMediaGrid {...defaultArgs} albumId="album-1" canCreate editMode uploader="Ana" />,
+      )
+      await user.click(screen.getByRole('button', { name: 'Añadir archivo' }))
+
+      await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+      expect(screen.queryByText('Descartar cambios no guardados')).not.toBeInTheDocument()
+      await waitFor(() =>
+        expect(screen.queryByLabelText(/Título \(Español\)/)).not.toBeInTheDocument(),
+      )
+    })
   })
 })

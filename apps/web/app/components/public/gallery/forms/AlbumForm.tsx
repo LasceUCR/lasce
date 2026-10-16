@@ -1,7 +1,7 @@
 'use client'
 
 import { useLocale, useTranslations } from 'next-intl'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
@@ -69,6 +69,13 @@ export interface AlbumFormProps {
   /** Called once the form is valid, with the confirmations the save still needs. */
   onSave: (values: AlbumFormSaveValues, confirmed: ReviewConfirmation[]) => void
   onCancel: () => void
+  /** Routes modal close requests through the unsaved-changes confirmation. */
+  ref?: Ref<AlbumFormHandle>
+}
+
+/** Lets the containing modal ask the form to cancel safely before it closes. */
+export interface AlbumFormHandle {
+  requestCancel: () => void
 }
 
 export function AlbumForm({
@@ -77,6 +84,7 @@ export function AlbumForm({
   isLegacy = false,
   onSave,
   onCancel,
+  ref,
 }: AlbumFormProps) {
   // Everything the editor says follows the site's language; the tabs only pick the translation.
   const t = useTranslations('publications')
@@ -131,13 +139,15 @@ export function AlbumForm({
 
   const hasCover = coverFile !== null || (Boolean(album.coverObjectKey) && !coverRemoved)
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
     } else {
       onCancel()
     }
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function handleConfirmDiscard() {
     setConfirmDiscardOpen(false)
@@ -305,7 +315,7 @@ export function AlbumForm({
       ) : null}
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('editor.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">

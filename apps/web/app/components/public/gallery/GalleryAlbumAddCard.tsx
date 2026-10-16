@@ -5,7 +5,11 @@ import { useRef, useState } from 'react'
 
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import { AlbumForm, type AlbumFormValues } from '@/app/components/public/gallery/forms/AlbumForm'
+import {
+  AlbumForm,
+  type AlbumFormHandle,
+  type AlbumFormValues,
+} from '@/app/components/public/gallery/forms/AlbumForm'
 
 export interface GalleryAlbumAddCardProps {
   canCreate?: boolean
@@ -35,6 +39,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
   const [createError, setCreateError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const createInProgress = useRef(false)
+  const createForm = useRef<AlbumFormHandle>(null)
 
   if (!editMode || !canCreate) return null
 
@@ -84,7 +89,14 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
   return (
     <ul className="gallery-grid tile-list">
       <li className="gallery-grid-add">
-        <AddItemCard label="Añadir álbum" size="large">
+        <AddItemCard
+          label="Añadir álbum"
+          onRequestClose={(close) => {
+            if (createForm.current) createForm.current.requestCancel()
+            else close()
+          }}
+          size="large"
+        >
           {({ close }) => (
             <>
               {createError ? (
@@ -100,6 +112,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
                   close()
                 }}
                 onSave={(values) => handleCreate(values, close)}
+                ref={createForm}
               />
             </>
           )}
