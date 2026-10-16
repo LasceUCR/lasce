@@ -28,6 +28,16 @@ export const WithoutDescription: Story = {
   args: { ...jelmuth, description: undefined },
 }
 
+/** A bilingual roster (`/nosotros`) marks the language of the role and description. */
+export const WithContentLang: Story = {
+  args: { ...carolina, contentLang: 'es' },
+}
+
+/** The text of a legacy record is in an unknown language, so its `lang` is empty. */
+export const WithUnknownContentLang: Story = {
+  args: { ...carolina, contentLang: '' },
+}
+
 /** A researcher saved without a photo shows the default portrait. */
 export const WithoutPhoto: Story = {
   args: { ...carolina, src: '' },
