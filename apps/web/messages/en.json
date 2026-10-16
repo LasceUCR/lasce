@@ -792,6 +792,17 @@
     }
   },
   "administration": {
+    "shell": {
+      "panel": "Administration panel",
+      "menu": "Menu",
+      "items": {
+        "resumen": "Summary",
+        "descargas": "Downloads",
+        "usuarios": "Users",
+        "permisos": "Permissions",
+        "infraestructura": "Infrastructure"
+      }
+    },
     "summary": {
       "metaTitle": "Administration | LASCE",
       "metaDescription": "Summary of the state of the laboratory and its systems.",
