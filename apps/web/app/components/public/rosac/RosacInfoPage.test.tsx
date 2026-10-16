@@ -437,8 +437,7 @@ describe('RosacInfoPage', () => {
     expect(
       screen.queryByRole('heading', { name: 'Preparación para el montaje' }),
     ).not.toBeInTheDocument()
-    expect(screen.getByText('Principal Investigator')).toBeInTheDocument()
-    expect(screen.queryByText('Investigadora principal')).not.toBeInTheDocument()
+    expect(screen.getByText('Investigadora principal')).toBeInTheDocument()
     expect(screen.getAllByText(/^Institution:/).length).toBeGreaterThan(0)
     expect(screen.queryByText(/^Institución:/)).not.toBeInTheDocument()
   })
@@ -609,5 +608,28 @@ describe('RosacInfoPage', () => {
     await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(within(section).queryByText('Institución Adicional de Prueba')).not.toBeInTheDocument()
+  })
+
+  test('restores persisted edits from localStorage on mount and preserves them in view mode', () => {
+    const customCharacteristics = [
+      {
+        id: 'antenna',
+        icon: 'antenna' as const,
+        title: 'Antena PRUEBA',
+        description: 'Descripción guardada.',
+      },
+    ]
+    localStorage.setItem('lasce_rosac_characteristics_v1', JSON.stringify(customCharacteristics))
+
+    try {
+      renderPage()
+      const section = screen.getByRole('region', { name: '1. Características principales' })
+      expect(within(section).getByRole('heading', { name: 'Antena PRUEBA' })).toBeInTheDocument()
+      expect(
+        within(section).queryByRole('heading', { name: 'Antena de 11 metros' }),
+      ).not.toBeInTheDocument()
+    } finally {
+      localStorage.removeItem('lasce_rosac_characteristics_v1')
+    }
   })
 })
