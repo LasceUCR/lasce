@@ -69,27 +69,27 @@ test('fits the news cards to the screen at every width without sideways scrollin
   }
 })
 
-test("lets visitors access a news item's dedicated detail page and return to the list", async ({
+test("lets visitors expand and collapse a news item's summary inline with Leer más", async ({
   page,
 }) => {
   await page.goto('/noticias')
 
-  const firstCard = newsList(page).getByRole('article').first()
-  await expect(firstCard).toBeVisible()
-  const detailButton = firstCard.getByRole('link', {
-    name: /^Conozca más sobre esta noticia/,
-  })
-  await expect(detailButton).toBeVisible()
+  const cards = newsList(page).getByRole('article')
+  await expect(cards.first()).toBeVisible()
 
-  await detailButton.click()
-  await expect(page).toHaveURL(/\/noticias\/[a-f0-9-]+$/)
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-  await expect(page.getByRole('region', { name: 'Descripción' })).toBeVisible()
+  // Seeded news items have lengthened summaries, offering "Leer más"
+  const readMoreToggle = newsList(page).getByRole('button', { name: 'Leer más' }).first()
+  await expect(readMoreToggle).toBeVisible()
+  await expect(readMoreToggle).toHaveAttribute('aria-expanded', 'false')
 
-  const backLink = page.getByRole('link', { name: 'Volver a noticias' })
-  await expect(backLink).toBeVisible()
-  await backLink.click()
-  await expect(page).toHaveURL(/\/noticias$/)
+  await readMoreToggle.click()
+
+  const readLessToggle = newsList(page).getByRole('button', { name: 'Leer menos' }).first()
+  await expect(readLessToggle).toBeVisible()
+  await expect(readLessToggle).toHaveAttribute('aria-expanded', 'true')
+
+  await readLessToggle.click()
+  await expect(newsList(page).getByRole('button', { name: 'Leer más' }).first()).toBeVisible()
 })
 
 test('returns a 404 page when navigating to a non-existent news article', async ({ page }) => {
@@ -139,27 +139,18 @@ test('allows an admin to create, view, edit, and delete a news article', async (
     await expect(page.getByText('Noticia agregada correctamente.')).toBeVisible()
     await expect(addDialog).toBeHidden()
 
-    // 3. Newly created article is in list and has detail page
+    // 3. Newly created article is in list and displays its content
     const createdCard = newsList(page).getByRole('article').filter({ hasText: uniqueTitle })
     await expect(createdCard).toBeVisible()
-
-    const detailLink = createdCard.getByRole('link', {
-      name: new RegExp(`^Conozca más sobre esta noticia \\(${uniqueTitle}\\)`),
-    })
-    await expect(detailLink).toBeVisible()
-    await detailLink.click()
-
-    await expect(page.getByRole('heading', { level: 1, name: uniqueTitle })).toBeVisible()
-    await expect(page.getByText('Reportero E2E')).toBeVisible()
-    await expect(page.getByText('Periódico E2E')).toBeVisible()
+    await expect(createdCard.getByText('Reportero E2E')).toBeVisible()
+    await expect(createdCard.getByText('Periódico E2E')).toBeVisible()
     await expect(
-      page
-        .getByRole('region', { name: 'Descripción' })
-        .getByText('Resumen detallado de la noticia de prueba E2E.'),
+      createdCard.getByText('Resumen detallado de la noticia de prueba E2E.'),
     ).toBeVisible()
-
-    await page.getByRole('link', { name: 'Volver a noticias' }).click()
-    await expect(page).toHaveURL(/\/noticias$/)
+    const sourceLink = createdCard.getByRole('link', {
+      name: new RegExp(`^Abrir fuente de «${uniqueTitle}»`),
+    })
+    await expect(sourceLink).toHaveAttribute('href', uniqueUrl)
 
     // 4. Edit the news article
     const itemToEdit = newsList(page).locator('.editable').filter({ hasText: uniqueTitle })

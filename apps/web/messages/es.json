@@ -651,17 +651,9 @@
     }
   },
   "news": {
-    "page": {
-      "metaTitle": "{title} | Noticias | LASCE",
-      "kicker": "Noticia",
-      "infoTitle": "Información general",
-      "authors": "Autores",
-      "source": "Fuente",
-      "date": "Fecha",
-      "descriptionTitle": "Descripción de la noticia",
-      "resourcesTitle": "Recursos y enlaces de interés",
-      "openSource": "Abrir fuente original",
-      "backToNews": "Volver a noticias"
+    "card": {
+      "openSource": "Abrir fuente",
+      "openSourceAria": "de «{title}» (se abre en una pestaña nueva)"
     },
     "created": "Noticia agregada correctamente.",
     "updated": "Noticia actualizada correctamente.",

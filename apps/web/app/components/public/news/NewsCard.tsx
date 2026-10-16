@@ -1,6 +1,8 @@
-import { ArrowRight, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
+import { TruncatedText } from '@/app/components/public/TruncatedText'
 
 import styles from './NewsCard.module.css'
 
@@ -14,15 +16,13 @@ export interface NewsCardProps {
   publishedAt?: string | null
   abstract: string
   href: string
-  /** The item's dedicated detail page, e.g. `/noticias/<slug>`. */
-  detailHref?: string
 }
 
 /**
  * One news item on `/noticias`: a compact, text-only card in the same family as
- * `PublicationCard` (title, one meta line, a two-line summary, a link out).
- * If `detailHref` is provided, a primary button links to the news item's dedicated detail page
- * following the research areas pattern; "Abrir fuente" links to the external source.
+ * `PublicationCard` (title, one meta line, a summary clamped with TruncatedText, a link out).
+ * Its summary is clamped to two lines with `TruncatedText` ("Leer más" / "Leer menos"), exactly
+ * like `PublicationCard`. "Abrir fuente" links to the external source.
  */
 export function NewsCard({
   title,
@@ -32,9 +32,8 @@ export function NewsCard({
   publishedAt,
   abstract,
   href,
-  detailHref,
 }: NewsCardProps) {
-  const hasActions = Boolean(detailHref || href)
+  const t = useTranslations('news.card')
 
   return (
     <article className={`surface-card ${styles.card}`}>
@@ -45,34 +44,26 @@ export function NewsCard({
         {source} · {publishedAt ? <time dateTime={publishedAt}>{date}</time> : date}
       </p>
 
-      {abstract ? <p className={styles.abstract}>{abstract}</p> : null}
+      {abstract ? (
+        <TruncatedText className={styles.abstract} lines={2}>
+          {abstract}
+        </TruncatedText>
+      ) : null}
 
-      {hasActions ? (
+      {href ? (
         <div className={styles.footer}>
-          {detailHref ? (
-            <Button
-              href={detailHref}
-              icon={<ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} />}
-              variant="primary"
-            >
-              Conozca más sobre esta noticia <span className="sr-only">({title})</span>
-            </Button>
-          ) : null}
-
-          {href ? (
-            <Button
-              href={href}
-              icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
-              rel="noopener noreferrer"
-              target="_blank"
-              variant={detailHref ? 'secondary' : 'primary'}
-            >
-              Abrir fuente{' '}
-              {/* The space sits outside the hidden span: name computation trims an element's own
-                  text, while browsers also add their own gap around it. Both read one space. */}
-              <span className="sr-only">de «{title}» (se abre en una pestaña nueva)</span>
-            </Button>
-          ) : null}
+          <Button
+            href={href}
+            icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
+            rel="noopener noreferrer"
+            target="_blank"
+            variant="primary"
+          >
+            {t('openSource')}{' '}
+            {/* The space sits outside the hidden span: name computation trims an element's own
+                text, while browsers also add their own gap around it. Both read one space. */}
+            <span className="sr-only">{t('openSourceAria', { title })}</span>
+          </Button>
         </div>
       ) : null}
     </article>

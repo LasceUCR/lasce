@@ -38,7 +38,7 @@ export function EditableNewsCard({
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
 
-  const card = <NewsCard {...article} detailHref={`/noticias/${article.slug}`} />
+  const card = <NewsCard {...article} />
 
   function close() {
     setIsEditing(false)
@@ -64,7 +64,7 @@ export function EditableNewsCard({
     <>
       <EditableWrapper
         deleteConfirmLabel="Eliminar"
-        deleteConfirmMessage="Esta acción no se puede deshacer y borrará la noticia del catálogo público."
+        deleteConfirmMessage={`¿Desea eliminar la noticia "${article.title}"? Esta acción no se puede deshacer.`}
         deleteConfirmTitle="Eliminar noticia"
         onDelete={canDelete ? onDelete : undefined}
         onEdit={canEdit ? () => setIsEditing(true) : undefined}
