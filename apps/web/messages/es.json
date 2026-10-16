@@ -716,6 +716,10 @@
     }
   },
   "news": {
+    "card": {
+      "openSource": "Abrir fuente",
+      "openSourceAria": "de «{title}» (se abre en una pestaña nueva)"
+    },
     "created": "Noticia agregada correctamente.",
     "updated": "Noticia actualizada correctamente.",
     "deleted": "Noticia eliminada correctamente.",

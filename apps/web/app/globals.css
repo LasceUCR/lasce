@@ -2900,7 +2900,7 @@ a {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .news {
@@ -3976,6 +3976,10 @@ a {
 
 .topic-page-footer {
   padding: 8px 0 48px;
+}
+
+.topic-detail-footer {
+  padding-top: 56px;
 }
 
 .space-weather-footer {
@@ -6855,51 +6859,6 @@ a.acknowledgments-card:focus-visible {
   color: var(--ink, #0d2737);
   font-size: 0.95rem;
   line-height: 1.5;
-}
-
-.std-confirm-target-card {
-  margin: 0;
-  padding: 10px 14px;
-  background: var(--page, #eef4f7);
-  border-radius: 6px;
-  border-left: 4px solid var(--blue, #087fbd);
-  font-size: 0.9rem;
-  color: var(--navy-deep, #0d2737);
-  word-break: break-word;
-}
-
-.std-confirm-target-card-danger {
-  border-left-color: var(--danger, #dc2626);
-  background: #fff8f8;
-}
-
-.std-confirm-consequence {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  line-height: 1.45;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.std-confirm-consequence-danger {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fee2e2;
-}
-
-.std-confirm-consequence-warning {
-  background: #fffbeb;
-  color: #92400e;
-  border: 1px solid #fef3c7;
-}
-
-.std-confirm-consequence-info {
-  background: #f0f9ff;
-  color: #075985;
-  border: 1px solid #e0f2fe;
 }
 
 .std-confirm-error {

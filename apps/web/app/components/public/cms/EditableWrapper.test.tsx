@@ -90,15 +90,13 @@ describe('EditableWrapper', () => {
         deleteConfirmMessage="This cannot be undone."
         deleteConfirmTitle="Delete item"
         deleteLabel="Delete"
-        deleteTargetEntity="Solar activity"
-        deleteTargetLabel="Item"
       />,
     )
 
     await user.click(screen.getByRole('button', { name: 'Delete' }))
     const dialog = screen.getByRole('dialog', { name: 'Delete item' })
 
-    expect(dialog).toHaveTextContent('Item: Solar activity')
+    expect(dialog).toHaveTextContent('This cannot be undone.')
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
   })
