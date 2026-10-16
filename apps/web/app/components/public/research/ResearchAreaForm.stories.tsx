@@ -14,7 +14,7 @@ type Story = StoryObj<typeof ResearchAreaForm>
 export const Default: Story = {
   args: {
     area: {
-      title: 'Física solar',
+      title: 'Física Solar',
       description:
         'Estudiamos la actividad solar, sus fenómenos eruptivos y su impacto en el entorno espacial de la Tierra.',
       src: '',

@@ -3,14 +3,14 @@ import es from '@/messages/es.json' with { type: 'json' }
 /**
  * The solar astrophysics page (`/fisica-solar`). This module holds its structure: which cards
  * and steps exist and in what order. The text is in the `solarPhysics` namespace of
- * `apps/web/messages/`.
+ * `apps/web/messages/`. The "El trabajo de LASCE" section is not here: it is editable database
+ * content (`solar-physics-section.ts`).
  */
 
 export const solarOverviewItemIds = ['activity', 'magneticField', 'sunEarth', 'analysis'] as const
 export type SolarOverviewItemId = (typeof solarOverviewItemIds)[number]
 
 const flowStepIds = ['sun', 'disturbance', 'terrestrial', 'analysis'] as const
-const lasceParagraphIds = ['p1', 'p2', 'p3'] as const
 
 export interface SolarAstrophysicsContent {
   hero: { kicker: string; title: string; introduction: string }
@@ -20,7 +20,6 @@ export interface SolarAstrophysicsContent {
     items: readonly { id: SolarOverviewItemId; title: string; description: string }[]
     flow: { title: string; steps: readonly string[]; caption: string }
   }
-  lasce: { title: string; paragraphs: readonly string[] }
   backLink: { href: string; label: string }
 }
 
@@ -32,7 +31,7 @@ export function getSolarAstrophysicsContent({
   solarPhysics,
   common,
 }: SolarAstrophysicsMessages): SolarAstrophysicsContent {
-  const { hero, overview, lasce } = solarPhysics
+  const { hero, overview } = solarPhysics
 
   return {
     hero,
@@ -45,10 +44,6 @@ export function getSolarAstrophysicsContent({
         steps: flowStepIds.map((id) => overview.flow.steps[id]),
         caption: overview.flow.caption,
       },
-    },
-    lasce: {
-      title: lasce.title,
-      paragraphs: lasceParagraphIds.map((id) => lasce[id]),
     },
     backLink: { href: '/#areas-de-trabajo', label: common.backToWorkAreas },
   }
