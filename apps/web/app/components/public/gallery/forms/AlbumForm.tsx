@@ -134,6 +134,8 @@ export function AlbumForm({
     coverFile !== null ||
     coverRemoved
 
+  // The cover is only optional while editing an existing album.
+  const isEdit = stored !== null
   const hasCover = coverFile !== null || (Boolean(album.coverObjectKey) && !coverRemoved)
 
   function requestCancel() {
@@ -196,7 +198,7 @@ export function AlbumForm({
       return
     }
 
-    if (!hasCover) return
+    if (!isEdit && !hasCover) return
 
     handleConfirmSave()
   }
@@ -252,13 +254,14 @@ export function AlbumForm({
         existingImageUrl={album.coverObjectKey}
         helperText={tGallery('editor.albumCoverHelperText')}
         errorMessage={
-          hasAttemptedSubmit && !hasCover ? tGallery('editor.albumCoverRequired') : null
+          hasAttemptedSubmit && !isEdit && !hasCover ? tGallery('editor.albumCoverRequired') : null
         }
         label={tGallery('editor.albumCoverField')}
         onFileSelect={(file) => {
           setCoverFile(file)
           setCoverRemoved(file === null)
         }}
+        required={!isEdit}
       />
 
       <LanguageTabs
