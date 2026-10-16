@@ -585,7 +585,10 @@
       "reload": "Close and load the current version",
       "yearsLabel": "Time span",
       "uploadingImage": "Uploading image...",
-      "altTextField": "Alternative text ({language})"
+      "altTextField": "Alternative text ({language})",
+      "FileDropDescriptionText": "Drag an image here or click to select it from your device.",
+      "FileDropRejectionFormatMessage": "Unsupported format. Use a JPG, PNG, WebP, or GIF image.",
+      "FileDropRejectionSizeMessage": "The image exceeds the maximum size of 25 MB."
     },
     "authors": {
       "label": "Authors",

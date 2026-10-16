@@ -272,6 +272,9 @@ export function MediaForm({
         errorMessage={hasAttemptedSubmit && missingFile ? tGallery('editor.mediaRequired') : null}
         onFileSelect={setFile}
         required={!isEdit}
+        descriptionText={t('editor.FileDropDescriptionText')}
+        rejectionFormatMessage={t('editor.FileDropRejectionFormatMessage')}
+        rejectionSizeMessage={t('editor.FileDropRejectionSizeMessage')}
       />
 
       <LanguageTabs

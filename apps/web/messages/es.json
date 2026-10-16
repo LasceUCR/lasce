@@ -585,7 +585,10 @@
       "reload": "Cerrar y cargar la versión actual",
       "yearsLabel": "Años",
       "uploadingImage": "Subiendo imagen...",
-      "altTextField": "Texto alternativo ({language})"
+      "altTextField": "Texto alternativo ({language})",
+      "FileDropDescriptionText": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo.",
+      "FileDropRejectionFormatMessage": "Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.",
+      "FileDropRejectionSizeMessage": "La imagen supera el tamaño máximo de 25 MB."
     },
     "authors": {
       "label": "Autores",

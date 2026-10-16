@@ -262,6 +262,9 @@ export function AlbumForm({
           setCoverRemoved(file === null)
         }}
         required={!isEdit}
+        descriptionText={t('editor.FileDropDescriptionText')}
+        rejectionFormatMessage={t('editor.FileDropRejectionFormatMessage')}
+        rejectionSizeMessage={t('editor.FileDropRejectionSizeMessage')}
       />
 
       <LanguageTabs

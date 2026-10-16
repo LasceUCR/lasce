@@ -31,6 +31,9 @@ export interface FileDropInputProps {
   helperText?: string
   required?: boolean
   errorMessage?: string | null
+  rejectionFormatMessage?: string
+  rejectionSizeMessage?: string
+  descriptionText?: string
 }
 
 export function FileDropInput({
@@ -41,6 +44,9 @@ export function FileDropInput({
   helperText,
   required = false,
   errorMessage,
+  rejectionFormatMessage = 'Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.',
+  rejectionSizeMessage = 'La imagen supera el tamaño máximo de 25 MB.',
+  descriptionText = 'Arrastre una imagen aquí o haga clic para seleccionarla del equipo',
 }: FileDropInputProps) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -61,12 +67,12 @@ export function FileDropInput({
 
   function selectFile(file: File | null) {
     if (file && !isAccepted(file, accept)) {
-      setRejection('Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.')
+      setRejection(rejectionFormatMessage)
       if (inputRef.current) inputRef.current.value = ''
       return
     }
     if (file && file.size > MAX_FILE_BYTES) {
-      setRejection('La imagen supera el tamaño máximo de 25 MB.')
+      setRejection(rejectionSizeMessage)
       if (inputRef.current) inputRef.current.value = ''
       return
     }
@@ -165,7 +171,7 @@ export function FileDropInput({
           )}
 
           <div className="file-drop-copy">
-            <p>Arrastre una imagen aquí o haga clic para seleccionarla del equipo</p>
+            <p>{descriptionText}</p>
             {helperText && <p className="file-drop-helper">{helperText}</p>}
           </div>
         </div>
