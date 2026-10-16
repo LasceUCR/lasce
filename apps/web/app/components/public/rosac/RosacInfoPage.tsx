@@ -165,40 +165,42 @@ export function RosacInfoPage({
   const [acknowledgmentCreateError, setAcknowledgmentCreateError] = useState<string | null>(null)
   const [acknowledgmentListError, setAcknowledgmentListError] = useState<string | null>(null)
 
-  // Restore persisted state on mount from localStorage if available
+  // When edit mode is active, editors manipulate local state for the current session.
+  // When viewing in public mode, authoritative content arrives directly from props.
+  const displayCharacteristics = editMode ? characteristics : content.characteristics.items
+  const displayActivities = editMode ? activities : content.activities.items
+  const displayStages = editMode ? constructionStages : content.construction.stages
+  const displayInstruments = editMode ? instruments : content.instruments.items
+  const displayAcknowledgments = editMode ? acknowledgments : content.acknowledgments.institutions
+
+  // Synchronize component state with incoming localized content props
   useEffect(() => {
+    setCharacteristics(content.characteristics.items)
+    setActivities(content.activities.items)
+    setConstructionStages(content.construction.stages)
+    setInstruments(content.instruments.items)
+    setAcknowledgments(
+      content.acknowledgments.institutions.map((inst, index) => ({
+        id: inst.id ?? `ack-${index}`,
+        ...inst,
+      })),
+    )
     try {
-      const storedInstruments = localStorage.getItem(ROSAC_STORAGE_KEYS.instruments)
-      if (storedInstruments) {
-        const parsed = JSON.parse(storedInstruments)
-        if (Array.isArray(parsed)) setInstruments(parsed)
-      }
-      const storedCharacteristics = localStorage.getItem(ROSAC_STORAGE_KEYS.characteristics)
-      if (storedCharacteristics) {
-        const parsed = JSON.parse(storedCharacteristics)
-        if (Array.isArray(parsed)) setCharacteristics(parsed)
-      }
-      const storedActivities = localStorage.getItem(ROSAC_STORAGE_KEYS.activities)
-      if (storedActivities) {
-        const parsed = JSON.parse(storedActivities)
-        if (Array.isArray(parsed)) setActivities(parsed)
-      }
-      const storedStages = localStorage.getItem(ROSAC_STORAGE_KEYS.stages)
-      if (storedStages) {
-        const parsed = JSON.parse(storedStages)
-        if (Array.isArray(parsed)) {
-          setConstructionStages(parsed as unknown as typeof content.construction.stages)
-        }
-      }
-      const storedAcknowledgments = localStorage.getItem(ROSAC_STORAGE_KEYS.acknowledgments)
-      if (storedAcknowledgments) {
-        const parsed = JSON.parse(storedAcknowledgments)
-        if (Array.isArray(parsed)) setAcknowledgments(parsed)
-      }
+      localStorage.removeItem(ROSAC_STORAGE_KEYS.characteristics)
+      localStorage.removeItem(ROSAC_STORAGE_KEYS.activities)
+      localStorage.removeItem(ROSAC_STORAGE_KEYS.stages)
+      localStorage.removeItem(ROSAC_STORAGE_KEYS.instruments)
+      localStorage.removeItem(ROSAC_STORAGE_KEYS.acknowledgments)
     } catch {
       // ignore storage errors
     }
-  }, [content.construction.stages])
+  }, [
+    content.characteristics.items,
+    content.activities.items,
+    content.construction.stages,
+    content.instruments.items,
+    content.acknowledgments.institutions,
+  ])
 
   // --- Section 1: Characteristics handlers ---
   const editingCharacteristic = characteristics.find((item) => item.id === editingCharacteristicId)
@@ -549,7 +551,7 @@ export function RosacInfoPage({
         index="1"
       >
         <CardGrid columns={4} equalHeight>
-          {characteristics.map((item) => {
+          {displayCharacteristics.map((item) => {
             const Icon = icons[item.icon]
             const icon = <Icon size={22} strokeWidth={1.8} />
             const showEditor = editMode && canEdit
@@ -590,7 +592,7 @@ export function RosacInfoPage({
       {/* SECCIÓN 3: Actividades científicas (SOLO EDITAR CONTENIDO, 3 tarjetas fijas) */}
       <TopicSection title={content.activities.title} titleId="rosac-activities-title" index="3">
         <CardGrid columns={3} equalHeight>
-          {activities.map((item) => {
+          {displayActivities.map((item) => {
             const Icon = icons[item.icon]
             const icon = <Icon size={22} strokeWidth={1.8} />
             const showEditor = editMode && canEdit
@@ -630,8 +632,9 @@ export function RosacInfoPage({
       >
         <ConstructionCarousel
           canEdit={editMode && canEdit}
+          carousel={content.construction.carousel}
           onEditStage={(stage) => openStageEditor(stage.id)}
-          stages={constructionStages}
+          stages={displayStages}
         />
       </TopicSection>
 
@@ -705,7 +708,7 @@ export function RosacInfoPage({
               ) : undefined
             }
           >
-            {instruments.map((instrument) => {
+            {displayInstruments.map((instrument) => {
               const showEditor = editMode && (canEdit || canDelete)
 
               if (!showEditor) {
@@ -729,7 +732,7 @@ export function RosacInfoPage({
           </InstrumentsGallery>
         ) : (
           <CardGrid columns={3} equalHeight>
-            {instruments.map((instrument) => {
+            {displayInstruments.map((instrument) => {
               const showEditor = editMode && (canEdit || canDelete)
 
               if (!showEditor) {
@@ -772,12 +775,14 @@ export function RosacInfoPage({
         <TeamGallery
           emptyMessage={content.team.emptyMessage}
           hint={content.team.hint}
+          institutionLabel={content.team.institutionLabel}
           label={content.team.title}
           people={content.team.people}
           renderPerson={(person) => (
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
+              institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
               onSave={(values) => handleSaveResearcher(person.id, values)}
               researcher={person}
@@ -843,7 +848,7 @@ export function RosacInfoPage({
         ) : null}
 
         <AcknowledgmentsGallery
-          institutions={acknowledgments}
+          institutions={displayAcknowledgments}
           label={content.acknowledgments.title}
           renderInstitution={(institution) => (
             <EditableAcknowledgmentCard

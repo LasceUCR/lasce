@@ -16,7 +16,11 @@ const {
   getResearchers,
   researcherInputSchema,
   updateResearcher,
+  getRosacInfoContent,
+  rosacInfoContent,
+  rosacInfoMeta,
 } = await import('./rosac')
+const { getMessages } = await import('./i18n/messages')
 
 function researcherRow(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -341,5 +345,100 @@ describe('deleteResearcher', () => {
 
     expect(del).toHaveBeenCalledWith({ where: { id: 'researcher-1' } })
     expect(result).toBe(true)
+  })
+})
+
+describe('rosac content', () => {
+  test('exposes indexable metadata and Spanish copy by default', () => {
+    expect(rosacInfoMeta.title).toBe('Radioastronomía y ROSAC | LASCE')
+    expect(rosacInfoMeta.description).toMatch(/Radio Observatorio de Santa Cruz/i)
+    expect(rosacInfoContent.hero.title).toBe('Radio Observatorio de Santa Cruz (ROSAC)')
+    expect(rosacInfoContent.overview.title).toBe('¿Qué es ROSAC?')
+    expect(rosacInfoContent.overview.paragraphs).toHaveLength(2)
+    expect(rosacInfoContent.characteristics.title).toBe('Características principales')
+    expect(rosacInfoContent.characteristics.items).toHaveLength(4)
+    expect(rosacInfoContent.location.title).toBe('Ubicación')
+    expect(rosacInfoContent.location.markerLabel).toBe('ROSAC')
+    expect(rosacInfoContent.activities.title).toBe('¿Qué desarrollamos en ROSAC?')
+    expect(rosacInfoContent.activities.items).toHaveLength(6)
+    expect(rosacInfoContent.construction.title).toBe('Construcción del ROSAC')
+    expect(rosacInfoContent.construction.stages).toHaveLength(5)
+    expect(rosacInfoContent.radioObservation.title).toBe('¿Por qué observar en radio?')
+    expect(rosacInfoContent.relationship.title).toBe('ROSAC y LASCE')
+    expect(rosacInfoContent.instruments.title).toBe('Instrumentos científicos')
+    expect(rosacInfoContent.instruments.items).toHaveLength(3)
+    expect(rosacInfoContent.team.title).toBe('Investigadores')
+    expect(rosacInfoContent.acknowledgments.title).toBe('Agradecimientos ROSAC')
+    expect(rosacInfoContent.acknowledgments.institutions.length).toBeGreaterThan(0)
+    expect(rosacInfoContent.donations.title).toBe('Donaciones ROSAC')
+    expect(rosacInfoContent.donations.items).toHaveLength(2)
+    expect(rosacInfoContent.backLink.href).toBe('/#areas-de-trabajo')
+    expect(rosacInfoContent.backLink.label).toBe('Volver a las áreas')
+  })
+
+  test('localizes properly in English', () => {
+    const english = getRosacInfoContent(getMessages('en'))
+
+    expect(english.hero.kicker).toBe('LASCE work area')
+    expect(english.hero.title).toBe('Santa Cruz Radio Observatory (ROSAC)')
+    expect(english.overview.title).toBe('What is ROSAC?')
+    expect(english.characteristics.title).toBe('Main characteristics')
+    expect(english.location.title).toBe('Location')
+    expect(english.activities.title).toBe('What do we develop at ROSAC?')
+    expect(english.construction.title).toBe('ROSAC construction')
+    expect(english.construction.carousel?.ofPreposition).toBe('of')
+    expect(english.construction.carousel?.photoNoun).toBe('Photograph')
+    expect(english.radioObservation.title).toBe('Why observe in radio?')
+    expect(english.relationship.title).toBe('ROSAC and LASCE')
+    expect(english.instruments.title).toBe('Scientific instruments')
+    expect(english.instruments.items[0]?.name).toBe('ROSAC-SABER')
+    expect(english.instruments.items[0]?.characteristics).toEqual(['Band between 100 and 1000 MHz'])
+    expect(english.instruments.items[0]?.consultation?.label).toBe('View ROSAC-SABER simulation')
+    expect(english.instruments.items[1]?.characteristics).toEqual(['9 GHz band'])
+    expect(english.instruments.items[1]?.consultation?.label).toBe(
+      'View ROSAC-MIRA 9GHz simulation',
+    )
+    expect(english.instruments.items[2]?.characteristics).toEqual([
+      'Neutral hydrogen observation at 1.4 GHz',
+    ])
+    expect(english.team.title).toBe('Researchers')
+    expect(english.team.institutionLabel).toBe('Institution')
+    expect(english.team.people[0]?.role).toBe('Principal Investigator')
+    expect(english.team.people[0]?.description).toContain('Responsible for strategic planning')
+    expect(english.characteristics.items[0]?.title).toBe('11-meter antenna')
+    expect(english.construction.stages[0]?.title).toBe('Preparation for assembly')
+    expect(english.construction.stages[4]?.title).toBe('Electrical installation')
+    expect(english.acknowledgments.title).toBe('ROSAC acknowledgments')
+    expect(english.donations.title).toBe('ROSAC donations')
+    expect(english.donations.items[1]?.title).toBe('Prysmian donation')
+    expect(english.donations.cta.buttonLabel).toBe('Contact us')
+    expect(english.backLink.label).toBe('Back to work areas')
+  })
+
+  test('preserves structural parity and item identifiers across languages', () => {
+    const english = getRosacInfoContent(getMessages('en'))
+
+    expect(english.characteristics.items.map((i) => i.id)).toEqual(
+      rosacInfoContent.characteristics.items.map((i) => i.id),
+    )
+    expect(english.activities.items.map((i) => i.id)).toEqual(
+      rosacInfoContent.activities.items.map((i) => i.id),
+    )
+    expect(english.construction.stages.map((s) => s.id)).toEqual(
+      rosacInfoContent.construction.stages.map((s) => s.id),
+    )
+    expect(english.instruments.items.map((i) => i.id)).toEqual(
+      rosacInfoContent.instruments.items.map((i) => i.id),
+    )
+  })
+
+  test('gracefully falls back when messages are partial or undefined', () => {
+    const partial = getRosacInfoContent({} as never)
+
+    expect(partial.hero.title).toBe(rosacInfoContent.hero.title)
+    expect(partial.overview.title).toBe(rosacInfoContent.overview.title)
+    expect(partial.construction.title).toBe(rosacInfoContent.construction.title)
+    expect(partial.instruments.title).toBe(rosacInfoContent.instruments.title)
+    expect(partial.backLink.label).toBe(rosacInfoContent.backLink.label)
   })
 })

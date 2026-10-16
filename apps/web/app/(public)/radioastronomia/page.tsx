@@ -1,24 +1,42 @@
 import type { Metadata } from 'next'
+import { getMessages, getTranslations } from 'next-intl/server'
 
 import { RosacInfoPage } from '@/app/components/public/rosac/RosacInfoPage'
 import { userHasPermission } from '@/app/lib/auth/authorization'
-import { getResearchers, rosacInfoContent, rosacInfoMeta } from '@/app/lib/rosac'
+import {
+  getResearchers,
+  getRosacInfoContent,
+  localizeResearchers,
+  type RosacMessages,
+} from '@/app/lib/rosac'
 import { workAreaPath } from '@/app/lib/work-areas'
 
-export const metadata: Metadata = {
-  ...rosacInfoMeta,
-  alternates: { canonical: workAreaPath('radioastronomia') },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('rosac.meta')
+
+  return {
+    title: t('title'),
+    description: t('description'),
+    alternates: { canonical: workAreaPath('radioastronomia') },
+  }
 }
 
 export const dynamic = 'force-dynamic'
 
 export default async function RadioastronomiaRoute() {
-  const [people, canCreate, canEdit, canDelete] = await Promise.all([
+  const [messages, people, canCreate, canEdit, canDelete] = await Promise.all([
+    getMessages(),
     getResearchers(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
+
+  const content = getRosacInfoContent(messages as unknown as RosacMessages)
+  const teamPeople = localizeResearchers(
+    people.length > 0 ? people : content.team.people,
+    messages as unknown as RosacMessages,
+  )
 
   return (
     <RosacInfoPage
@@ -26,8 +44,8 @@ export default async function RadioastronomiaRoute() {
       canDelete={canDelete}
       canEdit={canEdit}
       content={{
-        ...rosacInfoContent,
-        team: { ...rosacInfoContent.team, people },
+        ...content,
+        team: { ...content.team, people: teamPeople },
       }}
     />
   )
