@@ -181,7 +181,7 @@ Sections 1 to 8 used to be conventions that nothing checked. They are now enforc
 | Merge commit or rebase merge into `development` | Not offered. Squash is the only method.                                   |
 | Squash or rebase merge into `main`              | Not offered. A release is a merge commit, see [Section 10](#10-releases). |
 
-Pushing a new commit **dismisses existing approvals**, so they have to be given again. This is deliberate: an approval applies to the code that was reviewed, not to the branch name.
+Pushing a new commit **keeps existing approvals**, and the last push does not need its own approval. This is deliberate: small follow-ups after review (a typo, a formatting fix, a rebase) should not send a Pull Request back to the start. The trade-off is that an approval no longer guarantees that a reviewer saw the final diff, so when a change made after approval is more than cosmetic, re-request review from the approvers before merging.
 
 ### The required checks
 

@@ -12,7 +12,7 @@ export interface FormFieldProps {
   label: string
   value: string
   onChange: (value: string) => void
-  type?: 'text' | 'url' | 'date' | 'email'
+  type?: 'text' | 'url' | 'date' | 'email' | 'tel'
   multiline?: boolean
   /** Renders a `<select>` with one entry per option instead of an input. */
   options?: FormFieldOption[]
@@ -44,6 +44,8 @@ export interface FormFieldProps {
    * the input itself, so the label and messages around it keep the language of their surroundings.
    */
   lang?: string
+  /** The most characters the text box or text area accepts; the schema still enforces it. */
+  maxLength?: number
 }
 
 export function FormField({
@@ -56,6 +58,7 @@ export function FormField({
   placeholder,
   required,
   id,
+  maxLength,
   validate,
   error: externalError,
   errorMessage,
@@ -141,6 +144,7 @@ export function FormField({
           aria-required={required || undefined}
           id={id}
           lang={lang}
+          maxLength={maxLength}
           onChange={handleChange}
           placeholder={placeholder}
           required={required}
@@ -154,6 +158,7 @@ export function FormField({
           aria-required={required || undefined}
           id={id}
           lang={lang}
+          maxLength={maxLength}
           onChange={handleChange}
           placeholder={placeholder}
           required={required}

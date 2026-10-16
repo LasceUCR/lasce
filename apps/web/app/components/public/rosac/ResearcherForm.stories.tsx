@@ -29,6 +29,15 @@ export const EditExisting: Story = {
   },
 }
 
+/** A researcher saved without a photo: the form does not ask for one. */
+export const EditWithoutPhoto: Story = {
+  args: {
+    researcher: { ...mockResearcher, src: '' },
+    onCancel: () => {},
+    onSave: () => {},
+  },
+}
+
 export const AddNew: Story = {
   args: {
     researcher: null,

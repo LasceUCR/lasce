@@ -19,8 +19,8 @@ the rules bind repository administrators and organisation owners too.
 |                                   | `development` | `main`           |
 | --------------------------------- | ------------- | ---------------- |
 | Approvals required                | 2             | 3                |
-| Stale approvals dismissed on push | yes           | yes              |
-| Approval required after last push | yes           | yes              |
+| Stale approvals dismissed on push | no            | no               |
+| Approval required after last push | no            | no               |
 | Review conversations resolved     | yes           | yes              |
 | Code owner review                 | yes           | yes              |
 | Branch must be up to date         | **yes**       | **no**           |
