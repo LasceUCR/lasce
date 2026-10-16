@@ -31,8 +31,6 @@ const blankArea: ResearchAreaFormValues = {
   src: '',
 }
 
-export type { ResearchArea } from '@/app/lib/research-area-schema'
-
 export interface ResearchAreasSectionProps {
   /** Visible heading. Omit it when the page already shows the title, and pass `label`. */
   title?: string
@@ -123,15 +121,13 @@ export function ResearchAreasSection({
         {editMode && canCreate ? (
           <AddItemCard label="Añadir">
             {({ close }) => (
-              <>
-                <ResearchAreaForm
-                  area={blankArea}
-                  confirmMessage="¿Desea agregar esta área?"
-                  confirmTitle="Agregar área"
-                  onCancel={close}
-                  onSave={(values) => handleCreateArea(values, close)}
-                />
-              </>
+              <ResearchAreaForm
+                area={blankArea}
+                confirmMessage="¿Desea agregar esta área?"
+                confirmTitle="Agregar área"
+                onCancel={close}
+                onSave={(values) => handleCreateArea(values, close)}
+              />
             )}
           </AddItemCard>
         ) : null}
@@ -171,19 +167,17 @@ export function ResearchAreasSection({
         title={editingArea ? `Editar "${editingArea.title}"` : 'Editar área'}
       >
         {editingArea ? (
-          <>
-            <ResearchAreaForm
-              area={{
-                title: editingArea.title,
-                description: editingArea.description,
-                src: editingArea.src ?? '',
-              }}
-              confirmMessage="¿Desea guardar los cambios?"
-              confirmTitle="Editar área"
-              onCancel={closeEditor}
-              onSave={handleSaveArea}
-            />
-          </>
+          <ResearchAreaForm
+            area={{
+              title: editingArea.title,
+              description: editingArea.description,
+              src: editingArea.src ?? '',
+            }}
+            confirmMessage="¿Desea guardar los cambios?"
+            confirmTitle="Editar área"
+            onCancel={closeEditor}
+            onSave={handleSaveArea}
+          />
         ) : null}
       </Modal>
     </section>

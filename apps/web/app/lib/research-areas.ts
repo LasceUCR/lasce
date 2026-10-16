@@ -7,8 +7,6 @@ import { resolveContent, storedContentFrom } from '@/app/lib/i18n/content/resolv
 
 import { researchAreaContent, type ResearchArea } from './research-area-schema'
 
-export * from './research-area-schema'
-
 /**
  * Fixture areas for stories and tests, in Spanish only. The public pages read the areas from the
  * database (`getResearchAreas`), where `packages/db/prisma/seed.ts` writes them in both
