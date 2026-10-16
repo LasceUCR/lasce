@@ -422,6 +422,32 @@ identifier, a title, a description, and an optional image source.
 | `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
 | `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
 
+The Spanish `title` and `description` live here; every other language in
+`research_area_translations`. Relationships: has many `research_area_translations`.
+
+### `research_area_translations`
+
+The `title` and `description` of a `research_areas` row in a language other than Spanish, one row
+per area and locale. The Prisma model is `ResearchAreaTranslation`. The photograph (`src`) is
+shared by every language, so it is not here.
+
+| Column             | Prisma type | Postgres type    | Constraints                                                |
+| ------------------ | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`               | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `research_area_id` | `String`    | `uuid`           | FK → `research_areas.id`, `ON DELETE CASCADE`, not null    |
+| `locale`           | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es` |
+| `title`            | `String`    | `text`           | not null                                                   |
+| `description`      | `String`    | `text`           | not null                                                   |
+| `created_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+Constraints: `UNIQUE (research_area_id, locale)`.
+
+> An area created before this table existed has no row here: it is shown in its base text in every
+> language, marked as being in an unknown language, until an editor adds its English. The
+> migration `20261015130000_add_research_area_translations` only creates the table;
+> `packages/db/prisma/seed.ts` writes the seeded areas in both languages.
+
 ### `exis_files`
 
 One daily EXIS L1b file (one product, one UTC day) ingested by the worker's `exis-pipeline` job
@@ -692,9 +718,14 @@ from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
 `apps/worker/app/services/mag_readings.py`'s `MagReadings.persist()` is the only writer of
 `solar.mag_files`, and `MagReadings.ingested()` its only reader; both are called from the
 `mag-pipeline` processor. Nothing in `apps/web` reads it.
-`apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
-maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
-area create, update, and delete operations will also write this table when implemented.
+`apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` and `getResearchAreaById()` read
+`areas.research_areas` with its `research_area_translations` and map each row to the
+`ResearchArea` shape the public investigation pages render, in the requested language, falling
+back per record to the base text, with every language and the version for an editor.
+`createResearchArea()` writes the base row and its translations in one transaction;
+`updateResearchArea()` writes the photo and, when the text changed, the Spanish base row and the
+upserted translations, only while `updated_at` still equals the version the editor loaded, and
+moves it forward. `deleteResearchArea()` deletes the base row; its translations cascade.
 
 `apps/web/app/lib/solar-physics-section.ts`'s `getSolarPhysicsSection()` reads the `lasce` row of
 `public.solar_physics_sections` with its translations and returns the title and paragraphs in the
