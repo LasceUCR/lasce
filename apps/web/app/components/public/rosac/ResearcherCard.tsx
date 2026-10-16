@@ -27,6 +27,8 @@ export interface ResearcherCardProps {
   description?: string
   /** One address, or several when LASCE supplied more than one. */
   email?: string | readonly string[]
+  /** Label preceding the institution text. Defaults to `'Institución'`. */
+  institutionLabel?: string
 }
 
 /**
@@ -43,6 +45,7 @@ export function ResearcherCard({
   institution,
   description,
   email,
+  institutionLabel = 'Institución',
 }: ResearcherCardProps) {
   const [flipped, setFlipped] = useState(false)
   const descriptionId = useId()
@@ -126,7 +129,9 @@ export function ResearcherCard({
                 ))}
               </p>
             ) : null}
-            <p className="researcher-card-institution">Institución: {institutionText}</p>
+            <p className="researcher-card-institution">
+              {institutionLabel}: {institutionText}
+            </p>
           </div>
         </div>
 
@@ -152,7 +157,7 @@ export function ResearcherCard({
                 className="researcher-card-institution"
                 id={description ? undefined : institutionId}
               >
-                Institución: {institution}
+                {institutionLabel}: {institution}
               </p>
             </div>
             {description ? (

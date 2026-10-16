@@ -418,6 +418,39 @@ test('keeps the bilingual editor inside the viewport from phones to desktops', a
   }
 })
 
+/** Each card's width next to the list's, so a card shrunk to its content stands out. */
+async function cardWidths(page: Page) {
+  return page.locator('.publication-list').evaluate((list) => ({
+    list: Math.round(list.getBoundingClientRect().width),
+    cards: Array.from(list.querySelectorAll('.publication-card'), (card) =>
+      Math.round(card.getBoundingClientRect().width),
+    ),
+  }))
+}
+
+test('keeps every card as wide as the list in view and edit mode', async ({ page, context }) => {
+  const fixtures = await createFixtures()
+  const account = await createSignedInUser(context, 'ADMIN')
+  try {
+    // The fixtures' abstracts are one short line, the case that used to shrink to its content.
+    for (const mode of ['view', 'edit'] as const) {
+      if (mode === 'edit') await openEditMode(page)
+      else await page.goto('/publicaciones')
+      await expect(page.getByRole('heading', { name: fixtures.legacy.title })).toBeVisible()
+
+      for (const width of [390, 768, 1440]) {
+        await page.setViewportSize({ width, height: 900 })
+        const { list, cards } = await cardWidths(page)
+        expect(cards.length, `${mode} mode at ${width}px`).toBeGreaterThan(0)
+        expect(cards, `${mode} mode at ${width}px`).toEqual(cards.map(() => list))
+      }
+    }
+  } finally {
+    await fixtures.cleanup()
+    await account.cleanup()
+  }
+})
+
 test('keeps the page behind the editor from scrolling while it is open', async ({
   page,
   context,
