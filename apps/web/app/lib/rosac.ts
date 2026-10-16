@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import es from '@/messages/es.json' with { type: 'json' }
 
-import { locationMapProvider } from './location-map'
+import { locationMapProvider, type LocationMapLabels } from './location-map'
 import { getRosacConstructionContent, type ConstructionContent } from './rosac-construction'
 import { getRosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
 
@@ -98,6 +98,7 @@ export interface RosacLocationContent {
   markerLabel: string
   /** Shown instead of the map if it fails to load; the address remains either way. */
   unavailableMessage: string
+  labels: LocationMapLabels
 }
 
 export interface RosacInfoContent {
@@ -439,67 +440,6 @@ export const rosacInstitutions: readonly RosacAcknowledgment[] = [
 
 export type RosacMessages = Pick<typeof es, 'rosac'>
 
-const personKeyBySlugOrName: Record<string, keyof typeof es.rosac.team.people> = {
-  'carolina-salas': 'carolinaSalas',
-  'miguel-velazquez': 'miguelVelazquez',
-  'david-gale': 'davidGale',
-  'oscar-nunez': 'oscarNunez',
-  'federico-ruiz': 'federicoRuiz',
-  'gustavo-lara': 'gustavoLara',
-  'andres-fallas': 'andresFallas',
-  'wagner-mejias': 'wagnerMejias',
-  'eduardo-ibarra': 'eduardoIbarra',
-  'andres-corrales': 'andresCorrales',
-  'andres-gamboa': 'andresGamboa',
-  'jelmuth-rojas': 'jelmuthRojas',
-  'barnald-bocker': 'barnaldBocker',
-  'fabian-chaverri': 'fabianChaverri',
-  'dra. carolina salas matamoros': 'carolinaSalas',
-  'dr. miguel velázquez': 'miguelVelazquez',
-  'dr. david gale': 'davidGale',
-  'dr. óscar núñez': 'oscarNunez',
-  'dr. oscar nunez': 'oscarNunez',
-  'dr. federico ruiz': 'federicoRuiz',
-  'msc. gustavo lara': 'gustavoLara',
-  'ing. andrés fallas': 'andresFallas',
-  'ing. andres fallas': 'andresFallas',
-  'msc. wagner mejías': 'wagnerMejias',
-  'msc. wagner mejias': 'wagnerMejias',
-  'dr. eduardo ibarra': 'eduardoIbarra',
-  'ing. andrés corrales': 'andresCorrales',
-  'ing. andres corrales': 'andresCorrales',
-  'ing. andrés gamboa': 'andresGamboa',
-  'ing. andres gamboa': 'andresGamboa',
-  'jelmuth rojas': 'jelmuthRojas',
-  'barnald bocker': 'barnaldBocker',
-  'msc. fabián chaverri': 'fabianChaverri',
-  'msc. fabian chaverri': 'fabianChaverri',
-}
-
-export function localizeResearchers(
-  people: readonly TeamMember[],
-  messages?: RosacMessages,
-): TeamMember[] {
-  const peopleMessages = messages?.rosac?.team?.people ?? es.rosac.team.people
-  if (!peopleMessages) return [...people]
-
-  return people.map((person) => {
-    const key =
-      personKeyBySlugOrName[person.id] ?? personKeyBySlugOrName[person.name.toLowerCase().trim()]
-
-    if (!key) return person
-
-    const translation = peopleMessages[key]
-    if (!translation) return person
-
-    return {
-      ...person,
-      role: translation.role ?? person.role,
-      description: translation.description ?? person.description,
-    }
-  })
-}
-
 export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
   const rosac = messages?.rosac ?? es.rosac
   const hero = rosac.hero ?? es.rosac.hero
@@ -574,6 +514,19 @@ export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
       loadTimeoutMs: locationMapProvider.loadTimeoutMs,
       markerLabel: location.markerLabel,
       unavailableMessage: location.unavailableMessage,
+      labels: {
+        regionName: (location.mapRegion ?? es.rosac.location.mapRegion).replace(
+          '{label}',
+          location.markerLabel,
+        ),
+        interactiveName: (location.mapInteractive ?? es.rosac.location.mapInteractive).replace(
+          '{label}',
+          location.markerLabel,
+        ),
+        instructions: location.mapInstructions ?? es.rosac.location.mapInstructions,
+        zoomInTitle: location.zoomIn ?? es.rosac.location.zoomIn,
+        zoomOutTitle: location.zoomOut ?? es.rosac.location.zoomOut,
+      },
     },
     activities: {
       title: activities.title,
@@ -630,7 +583,7 @@ export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
       hint: team.hint,
       emptyMessage: team.emptyMessage,
       institutionLabel: (team as { institutionLabel?: string }).institutionLabel ?? 'Institución',
-      people: localizeResearchers(defaultTeamPeople, messages),
+      people: defaultTeamPeople,
     },
     acknowledgments: {
       title: acknowledgments.title,
