@@ -39,7 +39,9 @@ describe('AcademicActivityForm', () => {
   })
 
   test('starts pre-filled with the activity being edited', () => {
-    render(<AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={() => {}} />)
+    render(
+      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={() => {}} />,
+    )
 
     expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue(existingActivity.title)
     expect(screen.getByRole('textbox', { name: 'Categoría' })).toHaveValue(
@@ -80,7 +82,9 @@ describe('AcademicActivityForm', () => {
     expect(screen.getByText('La ubicación es obligatoria.')).toBeInTheDocument()
     expect(screen.getByText('La descripción es obligatoria.')).toBeInTheDocument()
     expect(screen.getByText('La imagen es obligatoria.')).toBeInTheDocument()
-    expect(screen.getByText('El texto alternativo de la imagen es obligatorio.')).toBeInTheDocument()
+    expect(
+      screen.getByText('El texto alternativo de la imagen es obligatorio.'),
+    ).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
 
@@ -88,9 +92,7 @@ describe('AcademicActivityForm', () => {
     const onSave = vi.fn()
     const user = userEvent.setup()
 
-    render(
-      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />,
-    )
+    render(<AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />)
 
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Taller actualizado')
@@ -133,9 +135,7 @@ describe('AcademicActivityForm', () => {
       imageUrl: 'https://s3.example/lasce/nueva.png',
     })
 
-    render(
-      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />,
-    )
+    render(<AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />)
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
@@ -155,9 +155,7 @@ describe('AcademicActivityForm', () => {
       error: 'La imagen es demasiado grande.',
     })
 
-    render(
-      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />,
-    )
+    render(<AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />)
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))

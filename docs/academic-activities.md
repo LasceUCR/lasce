@@ -36,18 +36,18 @@ dedicated list page carries the CMS affordances; the `/noticias` teaser
 (`AcademicActivitiesSection`) stays read-only, same as before. `/actividades-academicas` is also a
 top-level entry in the main nav bar (`PublicHeader.tsx`, `nav.academicActivities`).
 
-| Piece                   | File                                                                 | Covered by                                 |
-| ------------------------ | --------------------------------------------------------------------- | ------------------------------------------- |
-| Data and CRUD           | `app/lib/academic-activities.ts`                                     | `app/lib/academic-activities.test.ts`       |
-| Section on news         | `app/components/public/news/AcademicActivitiesSection.tsx`           | `AcademicActivitiesSection.test.tsx`        |
-| Activity card           | `app/components/public/news/AcademicActivityCard.tsx`                | `AcademicActivityCard.test.tsx`             |
-| Edit/delete affordances | `app/components/public/news/EditableAcademicActivityCard.tsx`        | `EditableAcademicActivityCard.test.tsx`     |
-| Create/edit form        | `app/components/public/news/AcademicActivityForm.tsx`                | `AcademicActivityForm.test.tsx`             |
-| Image upload action     | `app/(public)/actividades-academicas/actions.ts`                     | exercised through the form's tests          |
-| Dedicated list page     | `app/components/public/news/AcademicActivitiesPage.tsx`               | `AcademicActivitiesPage.test.tsx`           |
-| List route              | `app/(public)/actividades-academicas/page.tsx`                       | `tests/e2e/public-portal.spec.ts`           |
-| Read/write API          | `app/api/academic-activities/route.ts`, `[id]/route.ts`              | `route.test.ts` next to each                |
-| Sitemap & SEO           | `app/lib/site.ts`                                                    | `tests/e2e/accessibility-seo.spec.ts`       |
+| Piece                   | File                                                          | Covered by                              |
+| ----------------------- | ------------------------------------------------------------- | --------------------------------------- |
+| Data and CRUD           | `app/lib/academic-activities.ts`                              | `app/lib/academic-activities.test.ts`   |
+| Section on news         | `app/components/public/news/AcademicActivitiesSection.tsx`    | `AcademicActivitiesSection.test.tsx`    |
+| Activity card           | `app/components/public/news/AcademicActivityCard.tsx`         | `AcademicActivityCard.test.tsx`         |
+| Edit/delete affordances | `app/components/public/news/EditableAcademicActivityCard.tsx` | `EditableAcademicActivityCard.test.tsx` |
+| Create/edit form        | `app/components/public/news/AcademicActivityForm.tsx`         | `AcademicActivityForm.test.tsx`         |
+| Image upload action     | `app/(public)/actividades-academicas/actions.ts`              | exercised through the form's tests      |
+| Dedicated list page     | `app/components/public/news/AcademicActivitiesPage.tsx`       | `AcademicActivitiesPage.test.tsx`       |
+| List route              | `app/(public)/actividades-academicas/page.tsx`                | `tests/e2e/public-portal.spec.ts`       |
+| Read/write API          | `app/api/academic-activities/route.ts`, `[id]/route.ts`       | `route.test.ts` next to each            |
+| Sitemap & SEO           | `app/lib/site.ts`                                             | `tests/e2e/accessibility-seo.spec.ts`   |
 
 ## Data model
 

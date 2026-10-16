@@ -27,7 +27,8 @@ export const mockActivity: AcademicActivity = {
     'Esta actividad fortaleció la proyección internacional del LASCE, amplió las redes de colaboración científica y contribuyó a la formación de capacidades regionales.',
   ].join('\n\n'),
   photoUrl: '/images/galeria/workshop-ml-2026/1.jpg',
-  photoAlt: 'Comité y participantes junto al cartel oficial del taller de Machine Learning y clima espacial',
+  photoAlt:
+    'Comité y participantes junto al cartel oficial del taller de Machine Learning y clima espacial',
 }
 
 export const Default: Story = {
