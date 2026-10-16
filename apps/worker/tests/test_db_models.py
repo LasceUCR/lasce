@@ -12,6 +12,7 @@ from app.db import (
     CollaborationTranslation,
     ContactChannel,
     ContactChannelTranslation,
+    EhisFile,
     ExisFile,
     GalleryAlbum,
     GalleryMedia,
@@ -458,6 +459,40 @@ def test_mag_file_matches_the_prisma_columns() -> None:
 def test_mag_file_is_unique_per_satellite_product_and_day() -> None:
     constraint_names = {constraint.name for constraint in MagFile.__table__.constraints}
     assert "mag_files_satellite_product_day_key" in constraint_names
+
+
+def test_ehis_files_live_in_the_solar_schema() -> None:
+    assert EhisFile.__table__.schema == "solar"
+
+
+def test_ehis_file_matches_the_prisma_columns() -> None:
+    columns = EhisFile.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "satellite",
+        "product",
+        "day",
+        "file_name",
+        "version",
+        "source_url",
+        "source_modified_at",
+        "first_observed_at",
+        "last_observed_at",
+        "point_count",
+        "attributes",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["file_name"].unique
+    assert not columns["day"].nullable
+    assert columns["source_modified_at"].nullable
+    assert columns["first_observed_at"].nullable
+
+
+def test_ehis_file_is_unique_per_satellite_product_and_day() -> None:
+    constraint_names = {constraint.name for constraint in EhisFile.__table__.constraints}
+    assert "ehis_files_satellite_product_day_key" in constraint_names
 
 
 def test_resource_downloads_live_in_the_public_schema() -> None:
