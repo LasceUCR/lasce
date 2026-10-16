@@ -134,6 +134,19 @@ describe('GalleryGroupSection', () => {
     expect(screen.getByRole('button', { name: `Eliminar ${album.title}` })).toBeInTheDocument()
   })
 
+  test.each([
+    ['canEdit', 'Editar', 'Eliminar'],
+    ['canDelete', 'Eliminar', 'Editar'],
+  ])('only offers the action granted by %s', (grant, shown, hidden) => {
+    const { album } = withSubAlbums
+    renderSection({ ...withSubAlbums, album: { ...album, id: 'album-id' }, [grant]: true }, true)
+
+    expect(screen.getByRole('button', { name: `${shown} ${album.title}` })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: `${hidden} ${album.title}` }),
+    ).not.toBeInTheDocument()
+  })
+
   test('edits the album with AlbumForm and refreshes after a successful PATCH', async () => {
     const user = userEvent.setup()
     vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 200 }))

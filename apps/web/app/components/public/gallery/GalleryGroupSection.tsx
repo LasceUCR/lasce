@@ -157,8 +157,8 @@ export function GalleryGroupSection({
               deleteConfirmMessage={tActions('deleteMessage', { title: album.title })}
               deleteLabel={tActions('deleteItem', { title: album.title })}
               editLabel={tActions('editItem', { title: album.title })}
-              onDelete={() => handleDelete()}
-              onEdit={() => handleUpdate()}
+              onDelete={canDelete ? () => handleDelete() : undefined}
+              onEdit={canEdit ? () => handleUpdate() : undefined}
             >
               {cover}
             </EditableWrapper>
