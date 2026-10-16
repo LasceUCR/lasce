@@ -554,8 +554,6 @@
     },
     "card": {
       "externalLink": "DOI / Enlace externo",
-      "readMore": "Leer resumen completo",
-      "readLess": "Ocultar resumen",
       "translationMissing": "Sin versión en inglés. Al editar el título o el resumen se deben completar ambos idiomas."
     },
     "editor": {
