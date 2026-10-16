@@ -1,10 +1,11 @@
 # Research areas
 
-How `/investigacion` and its detail pages are built, and how to add an area. The content is static:
-every area lives in [`apps/web/app/lib/research-areas.ts`](../apps/web/app/lib/research-areas.ts),
-and its photograph lives in `apps/web/public/images/research/`. Publications are a different page,
-`/publicaciones`, backed by the `research` schema in PostgreSQL (see
-[`database-definition.md`](database-definition.md)).
+How `/investigacion` and its detail pages are built, and how to add an area. The areas are database
+content: `areas.research_areas` holds each area's Spanish title and description and its photograph,
+and `areas.research_area_translations` its other languages (see
+[`database-definition.md`](database-definition.md)). Administrators create, edit and delete them in
+"Modo edición". Publications are a different page, `/publicaciones`, backed by the `research`
+schema.
 
 ## The shape
 
@@ -15,17 +16,19 @@ and its photograph lives in `apps/web/public/images/research/`. Publications are
             └─ ResearchAreaCard       article, named by its h3
                  ├─ MediaFrame        photograph, alt=""
                  └─ content           h3 title, 3-line summary, "Conozca más sobre esta área"
-/investigacion/areas/[slug]           ResearchAreaPage    h1 area title, full description as lead
+/investigacion/areas/[id]             ResearchAreaPage    h1 area title, full description as lead
 ```
 
-| Piece              | File                                                      | Covered by                                   |
-| ------------------ | --------------------------------------------------------- | -------------------------------------------- |
-| Content and lookup | `app/lib/research-areas.ts`                               | `app/lib/research-areas.test.ts`             |
-| Index route        | `app/(public)/investigacion/page.tsx`                     | `tests/e2e/public-portal.spec.ts`, axe sweep |
-| List of areas      | `app/components/public/research/ResearchAreasSection.tsx` | `ResearchAreasSection.test.tsx`              |
-| One area card      | `…/research/ResearchAreaCard.tsx`                         | `ResearchAreaCard.test.tsx`                  |
-| Detail route       | `app/(public)/investigacion/areas/[slug]/page.tsx`        | `tests/e2e/public-portal.spec.ts`            |
-| Detail page        | `…/research/ResearchAreaPage.tsx`                         | `ResearchAreaPage.test.tsx`                  |
+| Piece              | File                                                      | Covered by                                    |
+| ------------------ | --------------------------------------------------------- | --------------------------------------------- |
+| Reading and writes | `app/lib/research-areas.ts`, `research-area-schema.ts`    | `app/lib/research-areas.test.ts`, integration |
+| Fixed copy         | `researchAreas` in `apps/web/messages/{es,en}.json`       | `app/lib/i18n/messages.test.ts`               |
+| Index route        | `app/(public)/investigacion/page.tsx`                     | `tests/e2e/research-areas-i18n.spec.ts`, axe  |
+| List and editor    | `app/components/public/research/ResearchAreasSection.tsx` | `ResearchAreasSection.test.tsx`               |
+| One area card      | `…/research/ResearchAreaCard.tsx`                         | `ResearchAreaCard.test.tsx`                   |
+| Detail route       | `app/(public)/investigacion/areas/[id]/page.tsx`          | `tests/e2e/public-portal.spec.ts`, i18n spec  |
+| Detail page        | `…/research/ResearchAreaPage.tsx`                         | `ResearchAreaPage.test.tsx`                   |
+| API                | `app/api/research-areas/**`                               | `route.test.ts` next to each route            |
 
 ## Layout
 
@@ -54,14 +57,37 @@ The summary is clamped to three lines so every card has the same height. The but
   visually hidden suffix adds the title: a screen reader's list of links reads
   "Conozca más sobre esta área (Geomagnetismo y respuesta regional al clima espacial)".
 
+## Languages
+
+The page follows the language chosen in the header (the `lasce_locale` cookie), like the rest of
+the site ([`internationalization.md`](internationalization.md)):
+
+- **Fixed copy** (the page title and lead, the card's button, the photograph placeholder, the
+  detail page's kicker and back link, the editor's success and error messages) is in the
+  `researchAreas` namespace of the message catalogues.
+- **Each area's title and description** come from the database in the visitor's language, through
+  the shared content helpers ([`translate-database-content.md`](translate-database-content.md)).
+  An area with no English yet is shown in its base text in both languages, with `lang=""` because
+  that text's language is unknown; nothing is translated automatically. The photograph is shared.
+- The translated text carries its `lang` (`contentLangAttribute`) on the card's heading, summary
+  and hidden link suffix, and on the detail page's heading and lead (`TopicHero`'s `contentLang`).
+  The page's own copy keeps the page's language.
+
+The editor itself still writes Spanish only; it becomes bilingual with the CMS work for #278.
+
+## Feedback
+
+Creating, editing and deleting an area report their outcome with a toast through
+`useRequestFeedback` ([`toasts.md`](toasts.md)): "Área de investigación agregada / actualizada /
+eliminada correctamente.", or the server's reason when it fails. On failure the form stays open
+with what was typed.
+
 ## Adding an area
 
-1. Put the photograph in `apps/web/public/images/research/`. Landscape works best; it is cropped
-   to fill the 280px column (and to a 200px-high band on phones).
-2. Append an entry to `researchAreas` in `app/lib/research-areas.ts` with a unique, URL-safe
-   `slug`, a `title`, a `description` and `src`.
+In "Modo edición", with `create_components`, use the "Añadir" card on `/investigacion`: upload a
+photograph (landscape works best; it is cropped to fill the 280px column, and to a 200px-high band
+on phones), then fill in the title and the description.
 
-Nothing else changes. The list, the static detail route (`generateStaticParams` over
-`researchAreaSlugs`), the `ResearchAreasSection` story and its test, and the e2e check all read
-`researchAreas` directly. An area without `src` shows a labelled placeholder instead of a broken
-image.
+For local and development databases, `packages/db/prisma/seed.ts` writes the seeded areas in
+Spanish and English (`pnpm db:seed`). An area without `src` shows a labelled placeholder instead of
+a broken image.

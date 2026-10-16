@@ -1,9 +1,12 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { ResearchAreasSection, type ResearchAreasSectionProps } from './ResearchAreasSection'
 import { Default, Empty } from './ResearchAreasSection.stories'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 
 const mocks = vi.hoisted(() => ({ refresh: vi.fn() }))
 
@@ -42,31 +45,37 @@ const firstArea = defaultArgs.areas[0]
 if (!firstArea) throw new Error('The default research areas story must contain an area.')
 
 function renderCreateSection() {
-  return render(
-    <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
-      <ResearchAreasSection
-        areas={[]}
-        canCreate
-        subtitle="Áreas de investigación"
-        title="Investigación"
-      />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
+        <ResearchAreasSection
+          areas={[]}
+          canCreate
+          subtitle="Áreas de investigación"
+          title="Investigación"
+        />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
 function renderSection(props: ResearchAreasSectionProps) {
-  return render(
-    <EditModeContext.Provider value={{ editMode: false, setEditMode: vi.fn() }}>
-      <ResearchAreasSection {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: false, setEditMode: vi.fn() }}>
+        <ResearchAreasSection {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
 function renderEditableSection() {
-  return render(
-    <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
-      <ResearchAreasSection {...defaultArgs} canDelete canEdit />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: vi.fn() }}>
+        <ResearchAreasSection {...defaultArgs} canDelete canEdit />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -88,6 +97,19 @@ describe('ResearchAreasSection', () => {
     const list = screen.getByRole('list')
 
     expect(within(list).getAllByRole('listitem')).toHaveLength(defaultArgs.areas.length)
+  })
+
+  test('marks each card with the language its text is in', () => {
+    renderSection({
+      ...defaultArgs,
+      areas: [
+        { ...firstArea, contentLocale: 'en' },
+        { ...firstArea, id: 'legacy-area', title: 'Área sin traducción', contentLocale: null },
+      ],
+    })
+
+    expect(screen.getByRole('heading', { name: firstArea.title })).toHaveAttribute('lang', 'en')
+    expect(screen.getByRole('heading', { name: 'Área sin traducción' })).toHaveAttribute('lang', '')
   })
 
   test('shows every research area with its title and description', () => {
@@ -136,9 +158,12 @@ describe('ResearchAreasSection', () => {
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(
+      await screen.findByText('Área de investigación agregada correctamente.'),
+    ).toBeInTheDocument()
   })
 
-  test('shows the API error and leaves the form open', async () => {
+  test("shows the server's reason in a toast and leaves the form open", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
@@ -148,8 +173,10 @@ describe('ResearchAreasSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Añadir' }))
     fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    // The toast renders inside the open modal, where the admin is.
+    expect(await within(dialog).findByText('No autorizado.')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
@@ -169,9 +196,12 @@ describe('ResearchAreasSection', () => {
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(
+      await screen.findByText('Área de investigación actualizada correctamente.'),
+    ).toBeInTheDocument()
   })
 
-  test('shows a PATCH API error and keeps the editor open', async () => {
+  test('shows a PATCH failure in a toast and keeps the editor open', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
@@ -181,8 +211,8 @@ describe('ResearchAreasSection', () => {
     clickFirstButton('Editar')
     fireEvent.click(screen.getByRole('button', { name: 'Guardar prueba' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(await within(dialog).findByText('No autorizado.')).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
@@ -200,9 +230,12 @@ describe('ResearchAreasSection', () => {
       method: 'DELETE',
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(
+      await screen.findByText('Área de investigación eliminada correctamente.'),
+    ).toBeInTheDocument()
   })
 
-  test('shows a DELETE API error without refreshing', async () => {
+  test('shows a DELETE failure in a toast without refreshing', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ error: 'No autorizado.' }), { status: 403 }))
@@ -213,8 +246,24 @@ describe('ResearchAreasSection', () => {
     const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No autorizado.')
+    expect(await screen.findByText('No autorizado.')).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('falls back to its own message when the server gives no reason', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response('<html></html>', { status: 400 })),
+    )
+
+    renderEditableSection()
+    clickFirstButton('Eliminar')
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar área' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
+
+    expect(
+      await screen.findByText('No se pudo eliminar el área de investigación. Inténtelo de nuevo.'),
+    ).toBeInTheDocument()
   })
 
   test('renders no heading and names the list by label when no title is given', () => {

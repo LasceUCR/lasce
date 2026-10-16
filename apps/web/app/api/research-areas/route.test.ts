@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import type * as ResearchAreas from '@/app/lib/research-areas'
 
 const mocks = vi.hoisted(() => ({
+  getLocale: vi.fn(),
   getResearchAreas: vi.fn(),
   createResearchArea: vi.fn(),
   requireApiPermission: vi.fn(),
@@ -21,6 +22,9 @@ vi.mock('@/app/lib/research-areas', async (importOriginal) => {
     createResearchArea: mocks.createResearchArea,
   }
 })
+
+// The GET handler reads the request's language through next-intl.
+vi.mock('next-intl/server', () => ({ getLocale: mocks.getLocale }))
 
 vi.mock('@/app/lib/auth/apiGuard', () => ({
   requireApiPermission: mocks.requireApiPermission,
@@ -54,8 +58,11 @@ describe('GET /api/research-areas', () => {
     const areas = [{ id: 'area-1', ...validBody }]
     mocks.getResearchAreas.mockResolvedValue(areas)
 
+    mocks.getLocale.mockResolvedValue('en')
+
     const response = await GET()
 
+    expect(mocks.getResearchAreas).toHaveBeenCalledWith('en')
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual({ areas })
