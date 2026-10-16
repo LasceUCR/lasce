@@ -16,14 +16,13 @@ never text a visitor reads.
 - The English text is a first draft. Nobody has reviewed its scientific terminology yet.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
-- Database content ("Modo edición") has shared, reusable infrastructure, and **two entities use
-  it: the publications on `/publicaciones`** (title and abstract) **and the LASCE section of
-  `/fisica-solar`** (title and text), in Spanish and English. Every other editable entity is still
 - Database content ("Modo edición") has shared, reusable infrastructure. **Publications** on
-  `/publicaciones` (title and abstract), the **home page** (the hero banner's title and subtitle,
-  and the geomagnetic indices' descriptions), the **contact cards** on `/contacto` (title and
-  description) **the research areas on `/investigacion`** (title and description), and the **gallery** (`/galeria`, albums and media) use it, in Spanish and English. Every other editable entity is still
-  single-language. See [Dynamic content](#dynamic-content) and
+  `/publicaciones` (title and abstract), the **"¿Qué hacemos?" cards** on `/nosotros` (title and
+  description), the **LASCE section** of `/fisica-solar` (title and text), the **home page** (the
+  hero banner's title and subtitle, and the geomagnetic indices' descriptions), the **contact
+  cards** on `/contacto` (title and description), the **the research areas on `/investigacion`**
+  (title and description), and the **gallery** (`/galeria`, albums and media) use it, read and edited in Spanish and English. Every other editable
+  entity is still single-language. See [Dynamic content](#dynamic-content) and
   [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
@@ -238,7 +237,8 @@ still Spanish.
    namespaces Client Components use. It needs a safeguard, because a namespace left out fails
    only in the browser.
 6. **Review of the English text** by someone who knows the terminology.
-7. **Database content** for every entity except publications, following
+7. **Database content** for every entity except publications and the Nosotros activity cards,
+   following
    [`translate-database-content.md`](translate-database-content.md).
 
 ## Dynamic content
@@ -270,17 +270,14 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
 - **How it works and how to make an entity bilingual:**
   [`translate-database-content.md`](translate-database-content.md), with the publications as the
   reference implementation, their API contract, the design decisions and the known limitations.
-- **Which entities are bilingual:** publications and the LASCE section of `/fisica-solar`. The same pattern is meant for `News`,
-  `ResearchArea`, `NosotrosActivity`, `Researcher`, `NosotrosResearcher`, `GalleryAlbum` and
-  `GalleryMedia`, each with its own translation table holding only its translatable columns
-  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
-- **Which entities are bilingual:** publications, the home page banner (`HomeHero`) and its
-  geomagnetic indices (`GeomagneticIndex`, description only), the contact cards on `/contacto`
+- **Which entities are bilingual:** publications, `NosotrosActivity` (the "¿Qué hacemos?" cards
+  on `/nosotros`: `title` and `description`, stored as `paragraph`), the LASCE section of
+  `/fisica-solar` (`SolarPhysicsSection`), the home page banner (`HomeHero`) and its geomagnetic
+  indices (`GeomagneticIndex`, description only), the contact cards on `/contacto`
   (`ContactChannel`: `title` and `description`; the icon, link and position are shared), and
-  research areas. The same pattern is meant for `News`, `NosotrosActivity`, `Researcher`,
-  `NosotrosResearcher`, `GalleryAlbum` and `GalleryMedia`, each with its own translation table
-  holding only its translatable columns (`title`, `abstract`, `description`, `paragraph`, `role`,
-  `altText`, `yearsLabel`).
+  research areas (`ResearchArea`). The same pattern is meant for `News`, `Researcher`,
+  `NosotrosResearcher`, `GalleryAlbum` and `GalleryMedia`, each with its own translation table holding only its translatable columns
+  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
 - **Tables:** [`database-definition.md`](database-definition.md).
 
 The editor's language tabs only choose which translation is being edited; the header selector

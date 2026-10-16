@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Code, GraduationCap, Satellite, Sun, Users, Waves, type LucideIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -22,9 +22,10 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
+import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
 
-import { NosotrosActivityForm, type NosotrosActivityFormValues } from './NosotrosActivityForm'
+import { NosotrosActivityForm, type NosotrosActivityFormBody } from './NosotrosActivityForm'
 
 const icons: Record<NosotrosCardIcon, LucideIcon> = {
   sun: Sun,
@@ -36,7 +37,7 @@ const icons: Record<NosotrosCardIcon, LucideIcon> = {
 }
 
 /** Starting point for a brand-new card — the form just needs some valid icon selected. */
-const blankActivity: NosotrosActivityFormValues = { icon: 'sun', title: '', description: '' }
+const blankIcon: NosotrosCardIcon = 'sun'
 
 export interface NosotrosPageProps {
   content: NosotrosContent
@@ -59,9 +60,13 @@ export function NosotrosPage({
   const sendWithFeedback = useRequestFeedback()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
+  // A second click while a save is in flight would send the same version again and come back as
+  // a false conflict.
+  const saving = useRef(false)
   const [researcherListError, setResearcherListError] = useState<string | null>(null)
 
   const editingActivity = content.activities.items.find((item) => item.id === editingActivityId)
+  const editingData = editingActivity?.editing ?? null
 
   function openEditor(id: string) {
     setEditingActivityId(id)
@@ -71,42 +76,57 @@ export function NosotrosPage({
     setEditingActivityId(null)
   }
 
-  function jsonRequest(method: 'POST' | 'PATCH', values: NosotrosActivityFormValues) {
+  function jsonRequest(method: 'POST' | 'PATCH', body: NosotrosActivityFormBody) {
     return {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
+      body: JSON.stringify(body),
     }
   }
 
-  async function handleSaveActivity(values: NosotrosActivityFormValues) {
+  /** Runs one save at a time. The form stays open on failure, so the editor can retry. */
+  async function saveOnce(send: () => Promise<boolean>) {
+    if (saving.current) return
+    saving.current = true
+    try {
+      await send()
+    } finally {
+      saving.current = false
+    }
+  }
+
+  async function handleSaveActivity(body: NosotrosActivityFormBody) {
     if (!editingActivityId) return
 
-    await sendWithFeedback(
-      `/api/nosotros/activities/${editingActivityId}`,
-      jsonRequest('PATCH', values),
-      {
-        success: t('updated'),
-        fallback: t('errors.unknown'),
-        onSuccess: () => {
-          closeEditor()
-          // Re-runs the server component's `getNosotrosActivities()` so the page
-          // reflects the saved change immediately, without an optimistic guess.
-          router.refresh()
+    await saveOnce(() =>
+      sendWithFeedback(
+        `/api/nosotros/activities/${editingActivityId}`,
+        jsonRequest('PATCH', body),
+        {
+          success: t('updated'),
+          fallback: t('errors.unknown'),
+          onSuccess: () => {
+            closeEditor()
+            // Re-runs the server component's `getNosotrosActivities()` so the page
+            // reflects the saved change immediately, without an optimistic guess.
+            router.refresh()
+          },
         },
-      },
+      ),
     )
   }
 
-  async function handleCreateActivity(values: NosotrosActivityFormValues, close: () => void) {
-    await sendWithFeedback('/api/nosotros/activities', jsonRequest('POST', values), {
-      success: t('created'),
-      fallback: t('errors.unknown'),
-      onSuccess: () => {
-        close()
-        router.refresh()
-      },
-    })
+  async function handleCreateActivity(body: NosotrosActivityFormBody, close: () => void) {
+    await saveOnce(() =>
+      sendWithFeedback('/api/nosotros/activities', jsonRequest('POST', body), {
+        success: t('created'),
+        fallback: t('errors.unknown'),
+        onSuccess: () => {
+          close()
+          router.refresh()
+        },
+      }),
+    )
   }
 
   async function handleDeleteActivity(id: string) {
@@ -204,7 +224,10 @@ export function NosotrosPage({
           {content.activities.items.map((item) => {
             const Icon = icons[item.icon]
             const icon = <Icon size={22} strokeWidth={1.8} />
-            const showEditor = editMode && (canEdit || canDelete)
+            const lang = contentLangAttribute(item.contentLocale)
+            // The editor needs both languages and the version, which only an editor receives.
+            const editable = canEdit && item.editing !== undefined
+            const showEditor = editMode && (editable || canDelete)
 
             if (!showEditor) {
               return (
@@ -212,6 +235,7 @@ export function NosotrosPage({
                   key={item.id}
                   description={item.description}
                   icon={icon}
+                  lang={lang}
                   title={item.title}
                 />
               )
@@ -226,20 +250,26 @@ export function NosotrosPage({
                 deleteLabel={t('deleteLabel', { title: item.title })}
                 editLabel={t('editLabel', { title: item.title })}
                 onDelete={canDelete ? () => handleDeleteActivity(item.id) : undefined}
-                onEdit={canEdit ? () => openEditor(item.id) : undefined}
+                onEdit={editable ? () => openEditor(item.id) : undefined}
               >
-                <InfoCard description={item.description} icon={icon} title={item.title} />
+                <InfoCard
+                  description={item.description}
+                  icon={icon}
+                  lang={lang}
+                  title={item.title}
+                />
               </EditableWrapper>
             )
           })}
 
           {editMode && canCreate ? (
-            <AddItemCard label={t('add')}>
+            <AddItemCard label={t('add')} size="large">
               {({ close }) => (
                 <NosotrosActivityForm
-                  activity={blankActivity}
+                  editing={null}
+                  icon={blankIcon}
                   onCancel={close}
-                  onSave={(values) => handleCreateActivity(values, close)}
+                  onSave={(body) => handleCreateActivity(body, close)}
                   requireConfirmation={false}
                 />
               )}
@@ -318,14 +348,16 @@ export function NosotrosPage({
 
       <Modal
         onClose={closeEditor}
-        open={editingActivity !== undefined}
+        open={editingActivity !== undefined && editingData !== null}
+        size="large"
         title={
           editingActivity ? t('editTitle', { title: editingActivity.title }) : t('editFallback')
         }
       >
-        {editingActivity ? (
+        {editingActivity && editingData ? (
           <NosotrosActivityForm
-            activity={editingActivity}
+            editing={editingData}
+            icon={editingActivity.icon}
             onCancel={closeEditor}
             onSave={handleSaveActivity}
           />

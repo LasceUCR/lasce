@@ -688,6 +688,30 @@ the description when the page renders. See [`contact.md`](contact.md).
 `contact_channel_translations`: `id`, `contact_channel_id` (FK, `ON DELETE CASCADE`), `locale`
 (`varchar(5)`), `title`, `description`, timestamps. Unique on `(contact_channel_id, locale)`.
 
+## `public` schema (Nosotros)
+
+### `nosotros_activity_translations`
+
+The `title` and `paragraph` of a `nosotros_activities` row (a "¿Qué hacemos?" card on `/nosotros`)
+in a language other than Spanish, one row per card and locale. The Prisma model is
+`NosotrosActivityTranslation`. Spanish stays on the base row, so a card with no row here still
+renders, in its base text. `icon` is shared and stays on the base row. The base row's
+`modified_at` is the version an editor saves against.
+
+| Column        | Prisma type | Postgres type    | Constraints                                                  |
+| ------------- | ----------- | ---------------- | ------------------------------------------------------------ |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                      |
+| `activity_id` | `String`    | `uuid`           | FK → `nosotros_activities.id`, `ON DELETE CASCADE`, not null |
+| `locale`      | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es`    |
+| `title`       | `String`    | `text`           | not null                                                     |
+| `paragraph`   | `String`    | `text`           | not null                                                     |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                    |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                       |
+
+Constraints: `UNIQUE (activity_id, locale)`. Cards created before this table existed have no row
+and are shown as they are, with an unknown content language. See
+[translate-database-content.md](translate-database-content.md).
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
