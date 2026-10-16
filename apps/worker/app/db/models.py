@@ -187,6 +187,8 @@ class SolarPhysicsSectionTranslation(Base):
     body: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class CollaborationScope(enum.StrEnum):
     """Language-independent classification of a partner organization."""
 
