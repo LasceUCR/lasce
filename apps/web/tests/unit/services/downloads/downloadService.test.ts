@@ -67,6 +67,11 @@ const rosacQuery: ScientificDataQuery = {
   endTime: '09:00',
 }
 const magQuery: ScientificDataQuery = { ...exisQuery, product: 'GEOF', parameter: 'total' }
+const seissQuery: ScientificDataQuery = {
+  ...exisQuery,
+  product: 'MPSH',
+  parameter: 'electron:T1:E1',
+}
 const suviQuery: ScientificDataQuery = { ...exisQuery, product: 'Fe171', parameter: 'image' }
 
 function download(request: unknown, grants: Permission[] = GOES_HOLDER) {
@@ -124,6 +129,22 @@ describe('createResourceDownload', () => {
     })
   })
 
+  test('exports full-resolution MAG data from the stored geomagnetic field', async () => {
+    const result = await download({ query: magQuery, format: 'csv' })
+
+    expect(result).toMatchObject({
+      ok: true,
+      filename: 'GOES_MAG_GEOF_total_2026-09-27_0800-0900.csv',
+    })
+    const [sql, params] = mocks.queryInfluxSql.mock.calls[0]!
+    expect(sql).toContain('FROM mag_field')
+    expect(sql).not.toContain('ROW_NUMBER')
+    expect(params).toMatchObject({ product: 'GEOF', channel: 'total' })
+    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    const [, objectKey] = mocks.putObject.mock.calls[0]!
+    expect(objectKey).toMatch(/^GOES\/MAG\/2026-09-28\/[0-9a-f-]{36}\.csv$/)
+  })
+
   test('refuses GOES data without the GOES data grant, before reading anything', async () => {
     const result = await download({ query: exisQuery, format: 'csv' }, VISITOR)
 
@@ -169,8 +190,8 @@ describe('createResourceDownload', () => {
     expect(mocks.putObject).not.toHaveBeenCalled()
   })
 
-  test('refuses MAG data, which has no full-resolution export yet', async () => {
-    expect(await download({ query: magQuery, format: 'csv' })).toMatchObject({
+  test('refuses SEISS data, which has no full-resolution export yet', async () => {
+    expect(await download({ query: seissQuery, format: 'csv' })).toMatchObject({
       ok: false,
       reason: 'unsupported',
     })
@@ -179,9 +200,9 @@ describe('createResourceDownload', () => {
   test('asks to wait while an asynchronous query is still running', async () => {
     mocks.queryCiticScientificData.mockResolvedValue({ state: 'pending', jobId: 'j', progress: 10 })
 
-    const result = await download({ query: magQuery, format: 'png', jobId: 'j' }, VISITOR)
+    const result = await download({ query: seissQuery, format: 'png', jobId: 'j' }, VISITOR)
 
-    expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(magQuery, 'j')
+    expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(seissQuery, 'j')
     expect(result).toMatchObject({ ok: false, reason: 'pending' })
     expect(mocks.create).not.toHaveBeenCalled()
   })
