@@ -792,6 +792,13 @@
     }
   },
   "administration": {
+    "summary": {
+      "metaTitle": "Administración | LASCE",
+      "metaDescription": "Resumen del estado del laboratorio y sus sistemas.",
+      "title": "Resumen",
+      "description": "Estado general del laboratorio y sus sistemas.",
+      "infrastructureTitle": "Estado de infraestructura"
+    },
     "services": {
       "title": "Servicios",
       "names": {

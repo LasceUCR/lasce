@@ -792,6 +792,13 @@
     }
   },
   "administration": {
+    "summary": {
+      "metaTitle": "Administration | LASCE",
+      "metaDescription": "Summary of the state of the laboratory and its systems.",
+      "title": "Summary",
+      "description": "Overall state of the laboratory and its systems.",
+      "infrastructureTitle": "Infrastructure status"
+    },
     "services": {
       "title": "Services",
       "names": {
