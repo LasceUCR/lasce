@@ -1,11 +1,14 @@
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 
 import { ResumenPage } from '@/app/components/administracion/ResumenPage'
+import { getRecentActivity } from '@/app/lib/audit-log'
 import { requireUser } from '@/app/lib/auth/session'
+import { getContentSummary } from '@/app/lib/content-summary'
 
-export const metadata: Metadata = {
-  title: 'Administración | LASCE',
-  description: 'Resumen del estado del laboratorio y sus sistemas.',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('administration.summary')
+  return { title: t('metaTitle'), description: t('metaDescription') }
 }
 
 export const dynamic = 'force-dynamic'
@@ -14,5 +17,7 @@ export const dynamic = 'force-dynamic'
 export default async function AdministracionPage() {
   await requireUser('/administracion')
 
-  return <ResumenPage />
+  const [summary, activity] = await Promise.all([getContentSummary(), getRecentActivity()])
+
+  return <ResumenPage activity={activity} now={new Date()} summary={summary} />
 }

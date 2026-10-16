@@ -1151,5 +1151,62 @@
     "errors": {
       "unknown": "The researcher could not be saved. Try again."
     }
+  },
+  "administration": {
+    "shell": {
+      "panel": "Administration panel",
+      "menu": "Menu",
+      "items": {
+        "resumen": "Summary",
+        "descargas": "Downloads",
+        "usuarios": "Users",
+        "permisos": "Permissions",
+        "infraestructura": "Infrastructure"
+      }
+    },
+    "summary": {
+      "metaTitle": "Administration | LASCE",
+      "metaDescription": "Summary of the state of the laboratory and its systems.",
+      "title": "Summary",
+      "description": "Overall state of the laboratory and its systems.",
+      "infrastructureTitle": "Infrastructure status"
+    },
+    "services": {
+      "title": "Services",
+      "names": {
+        "api": "Public API",
+        "postgres": "PostgreSQL database",
+        "redis": "Job queue (Redis)",
+        "workers": "Processing workers",
+        "minio": "MinIO storage",
+        "influxdb": "Time series (InfluxDB)"
+      },
+      "status": {
+        "ok": "Online",
+        "down": "Offline",
+        "checking": "Checking…"
+      }
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity has been recorded yet.",
+      "actors": {
+        "system": "System",
+        "worker": "Worker",
+        "deletedUser": "Deleted account"
+      }
+    },
+    "content": {
+      "title": "Portal content",
+      "empty": "No records",
+      "cards": {
+        "publications": "Publications",
+        "news": "News",
+        "researchAreas": "Research areas",
+        "lasceResearchers": "LASCE researchers",
+        "rosacResearchers": "ROSAC researchers",
+        "instruments": "Queryable instruments"
+      }
+    }
   }
 }
