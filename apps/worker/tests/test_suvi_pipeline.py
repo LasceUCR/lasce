@@ -117,12 +117,19 @@ def mock_publish_preview(
 
 
 async def test_describes_the_frame_it_downloaded(monkeypatch: pytest.MonkeyPatch) -> None:
-    name = frame_name(datetime.now(UTC) - timedelta(minutes=1))
+    observed = datetime.now(UTC) - timedelta(minutes=1)
+    name = frame_name(observed)
+    day = f"/{observed:%Y/%m/%d}/"
     content = gzipped_fits_bytes()
 
     def handler(request: httpx.Request) -> httpx.Response:
-        if str(request.url).endswith("/"):
+        url = str(request.url)
+        # Only the frame's own day lists it. Shortly after midnight UTC the window spans two
+        # days, and serving the frame from both would count it twice.
+        if url.endswith(day):
             return httpx.Response(200, text=f'<a href="{name}">{name}</a>')
+        if url.endswith("/"):
+            return httpx.Response(200, text="<html><body>empty</body></html>")
         return httpx.Response(200, content=content)
 
     serve(monkeypatch, handler)
@@ -143,7 +150,7 @@ async def test_describes_the_frame_it_downloaded(monkeypatch: pytest.MonkeyPatch
         "exposure": "long",
         "bytes": len(content),
     }
-    assert result["file"]["url"].endswith(f"/suvi-l1b-fe094/{datetime.now(UTC):%Y/%m/%d}/{name}")
+    assert result["file"]["url"].endswith(f"/suvi-l1b-fe094{day}{name}")
     assert "block" not in result
     assert result["preview"] == PREVIEW_KEY
     persist.assert_awaited_once()

@@ -23,19 +23,19 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = 'force-dynamic'
 
 export default async function NosotrosRoute() {
-  const [messages, locale, researchers, canCreate, canEdit, canDelete] = await Promise.all([
+  const [messages, locale, canCreate, canEdit, canDelete] = await Promise.all([
     getMessages(),
     getLocale(),
-    getNosotrosResearchers(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
 
   // Both languages and the version go to the browser only for someone who can edit.
-  const activities = await getNosotrosActivities(resolveLocale(locale), {
-    includeEditingData: canEdit,
-  })
+  const [activities, researchers] = await Promise.all([
+    getNosotrosActivities(resolveLocale(locale), { includeEditingData: canEdit }),
+    getNosotrosResearchers(resolveLocale(locale), { includeEditingData: canEdit }),
+  ])
 
   const content = getNosotrosContent(messages)
 

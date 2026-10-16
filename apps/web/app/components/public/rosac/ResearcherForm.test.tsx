@@ -14,12 +14,26 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
-import { ResearcherForm, type ResearcherFormProps } from './ResearcherForm'
-import { AddNew, EditExisting, EditWithoutPhoto } from './ResearcherForm.stories'
+import {
+  ResearcherForm,
+  type BilingualResearcherFormProps,
+  type ResearcherFormProps,
+} from './ResearcherForm'
+import {
+  AddNew,
+  Bilingual,
+  BilingualCreate,
+  BilingualLegacy,
+  EditExisting,
+  EditWithoutPhoto,
+} from './ResearcherForm.stories'
 
 const editArgs = EditExisting.args as ResearcherFormProps
 const editWithoutPhotoArgs = EditWithoutPhoto.args as ResearcherFormProps
 const addArgs = AddNew.args as ResearcherFormProps
+const bilingualArgs = Bilingual.args as BilingualResearcherFormProps
+const bilingualCreateArgs = BilingualCreate.args as BilingualResearcherFormProps
+const bilingualLegacyArgs = BilingualLegacy.args as BilingualResearcherFormProps
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
 function render(ui: ReactElement) {
@@ -402,5 +416,214 @@ describe('ResearcherForm', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Descartar cambios no guardados' }),
     ).not.toBeInTheDocument()
+  })
+})
+
+describe('ResearcherForm: bilingual mode', () => {
+  type User = ReturnType<typeof userEvent.setup>
+
+  function tab(name: RegExp) {
+    return screen.getByRole('tab', { name })
+  }
+
+  /** A field's accessible name also carries its error message, so match on the label's start. */
+  function field(label: string) {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return screen.getByRole('textbox', { name: new RegExp(`^${escaped}`) })
+  }
+
+  async function replace(user: User, label: string, value: string) {
+    const input = field(label)
+    await user.clear(input)
+    if (value) await user.type(input, value)
+  }
+
+  async function confirmSave(user: User) {
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+  }
+
+  test('opens on the Spanish tab with the stored Spanish role and description', () => {
+    render(<ResearcherForm {...bilingualArgs} />)
+
+    const content = bilingualArgs.translation.editing?.content
+    expect(tab(/^Español/)).toHaveAttribute('aria-selected', 'true')
+    expect(field('Rol (Español)')).toHaveValue(content?.es.role)
+    expect(field('Descripción (Español)')).toHaveValue(content?.es.description)
+    expect(screen.queryByRole('textbox', { name: /^Rol \(English\)/ })).not.toBeInTheDocument()
+  })
+
+  test('replaces the single role and description with the language tabs', () => {
+    render(<ResearcherForm {...bilingualArgs} />)
+
+    expect(screen.queryByRole('textbox', { name: 'Rol' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: 'Descripción' })).not.toBeInTheDocument()
+  })
+
+  test('shows the English text on the English tab', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherForm {...bilingualArgs} />)
+
+    await user.click(tab(/^English/))
+
+    expect(field('Rol (English)')).toHaveValue('Principal investigator')
+    expect(field('Rol (English)')).toHaveAttribute('lang', 'en')
+  })
+
+  test('keeps the shared fields outside the tabs', () => {
+    render(<ResearcherForm {...bilingualArgs} />)
+
+    const panel = screen.getByRole('tabpanel')
+    expect(within(panel).queryByRole('textbox', { name: 'Nombre' })).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue(
+      bilingualArgs.researcher?.name,
+    )
+    expect(screen.getByRole('textbox', { name: 'Institución' })).toBeInTheDocument()
+  })
+
+  test('saves only the shared fields, with no content, when no text changed', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...bilingualArgs} onSave={onSave} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await confirmSave(user)
+
+    const researcher = bilingualArgs.researcher!
+    expect(onSave).toHaveBeenCalledWith({
+      name: `${researcher.name} editado`,
+      email: researcher.email,
+      institution: researcher.institution,
+      src: researcher.src,
+      content: null,
+      confirmedUnchanged: [],
+    })
+  })
+
+  test('saves both languages in full once the role changed in both', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...bilingualArgs} onSave={onSave} />)
+
+    await replace(user, 'Rol (Español)', 'Investigadora asociada')
+    await user.click(tab(/^English/))
+    await replace(user, 'Rol (English)', 'Associate researcher')
+    await confirmSave(user)
+
+    const content = bilingualArgs.translation.editing?.content
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: {
+          es: { role: 'Investigadora asociada', description: content?.es.description },
+          en: { role: 'Associate researcher', description: content?.en?.description },
+        },
+        confirmedUnchanged: [],
+      }),
+    )
+  })
+
+  test('asks to review the other language when only one language changed', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...bilingualArgs} onSave={onSave} />)
+
+    await replace(user, 'Rol (Español)', 'Investigadora asociada')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.queryByRole('dialog', { name: 'Guardar cambios' })).not.toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+    expect(tab(/^English/)).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('switch')).not.toBeChecked()
+  })
+
+  test('sends the review as confirmed unchanged once the editor accepts it', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...bilingualArgs} onSave={onSave} />)
+
+    await replace(user, 'Rol (Español)', 'Investigadora asociada')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('switch'))
+    await confirmSave(user)
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ confirmedUnchanged: [{ locale: 'en', field: 'role' }] }),
+    )
+  })
+
+  test('requires the English role when creating, opening the English tab', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...bilingualCreateArgs} onSave={onSave} />)
+
+    await user.type(field('Rol (Español)'), 'Investigador')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(tab(/^English/)).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('El rol en inglés es obligatorio.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('requires the description in both languages once it is filled in one', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...bilingualArgs} onSave={onSave} />)
+
+    await replace(user, 'Descripción (Español)', 'Texto nuevo')
+    await user.click(tab(/^English/))
+    await replace(user, 'Descripción (English)', '')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.queryByRole('dialog', { name: 'Guardar cambios' })).not.toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('opens a legacy researcher with its base text flagged as possibly not Spanish', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherForm {...bilingualLegacyArgs} />)
+
+    expect(screen.getByText(/podría no estar en español/)).toBeInTheDocument()
+    expect(field('Rol (Español)')).toHaveAttribute('lang', '')
+
+    await user.click(tab(/^English/))
+    expect(screen.getByText(/aún no tiene versión en inglés/)).toBeInTheDocument()
+    expect(field('Rol (English)')).toHaveValue('')
+  })
+
+  test('saves the shared fields of a legacy researcher without translating it', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...bilingualLegacyArgs} onSave={onSave} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await confirmSave(user)
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ content: null, confirmedUnchanged: [] }),
+    )
+  })
+
+  test('asks before discarding a changed role', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...bilingualArgs} onCancel={onCancel} />)
+
+    await user.type(field('Rol (Español)'), ' editado')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    expect(onCancel).not.toHaveBeenCalled()
+    await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('closes without asking when nothing changed', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...bilingualArgs} onCancel={onCancel} />)
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(onCancel).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
