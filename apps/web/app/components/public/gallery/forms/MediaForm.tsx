@@ -329,15 +329,6 @@ export function MediaForm({
         )}
       </LanguageTabs>
 
-      <FormField
-        id="media-date"
-        label={t('editor.date')}
-        onChange={setDate}
-        required
-        type="date"
-        value={date}
-      />
-
       <div className="cms-form-grid cms-form-grid-2">
         <FormField
           id={`${formId}-gallery-width`}
@@ -359,6 +350,15 @@ export function MediaForm({
           value={rowSpan}
         />
       </div>
+
+      <FormField
+        id="media-date"
+        label={t('editor.date')}
+        onChange={setDate}
+        required
+        type="date"
+        value={date}
+      />
 
       <div className="cms-form-actions">
         <Button onClick={requestCancel} variant="secondary">
