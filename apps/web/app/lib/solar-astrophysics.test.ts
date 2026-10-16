@@ -5,7 +5,7 @@ import { getSolarAstrophysicsContent, solarAstrophysicsContent } from './solar-a
 
 describe('solar astrophysics content', () => {
   test('is Spanish by default, with four study areas and a four-step chain', () => {
-    expect(solarAstrophysicsContent.hero.title).toBe('Astrofísica solar')
+    expect(solarAstrophysicsContent.hero.title).toBe('Física Solar')
     expect(solarAstrophysicsContent.overview.items.map((item) => item.title)).toEqual([
       'Actividad solar',
       'Campo magnético',
@@ -18,7 +18,11 @@ describe('solar astrophysics content', () => {
       'Entorno terrestre',
       'Análisis LASCE',
     ])
-    expect(solarAstrophysicsContent.lasce.paragraphs).toHaveLength(3)
+    expect(solarAstrophysicsContent.overview.title).toBe('¿Qué estudia la Física Solar?')
+  })
+
+  test('leaves the LASCE section to the database', () => {
+    expect(solarAstrophysicsContent).not.toHaveProperty('lasce')
   })
 
   test('follows the catalogue it is given and keeps the same structure', () => {

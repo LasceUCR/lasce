@@ -31,7 +31,7 @@ describe('work-areas', () => {
 
   test('titles the cards in Spanish by default', () => {
     expect(getHomeAreaCards().map((card) => card.title)).toEqual([
-      'Física solar',
+      'Física Solar',
       'Clima espacial',
       'ROSAC',
       'Herramientas científicas',

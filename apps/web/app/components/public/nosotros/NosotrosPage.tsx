@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Code, GraduationCap, Satellite, Sun, Users, Waves, type LucideIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -24,7 +24,6 @@ import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
-import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import { NosotrosActivityForm, type NosotrosActivityFormBody } from './NosotrosActivityForm'
 
@@ -55,25 +54,16 @@ export function NosotrosPage({
 }: NosotrosPageProps) {
   const router = useRouter()
   const t = useTranslations('nosotros.activities')
-  const tResearchers = useTranslations('nosotros.researchers')
-  const saveErrorMessage = tResearchers('saveError')
+  const tResearchers = useTranslations('researchers')
+  const tNosotrosResearchers = useTranslations('nosotros.researchers')
+  const saveErrorMessage = tNosotrosResearchers('saveError')
   const sendWithFeedback = useRequestFeedback()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
   // A second click while a save is in flight would send the same version again and come back as
   // a false conflict.
   const saving = useRef(false)
-  const [researcherCreateError, setResearcherCreateError] = useState<string | null>(null)
   const [researcherListError, setResearcherListError] = useState<string | null>(null)
-  const researcherCreateErrorRef = useRef<HTMLParagraphElement>(null)
-
-  // Scrolls the "Añadir investigador" error into view as soon as it appears —
-  // same reasoning as `ResearcherForm`'s own upload error.
-  useEffect(() => {
-    if (researcherCreateError) {
-      scrollIntoViewIfSupported(researcherCreateErrorRef.current)
-    }
-  }, [researcherCreateError])
 
   const editingActivity = content.activities.items.find((item) => item.id === editingActivityId)
   const editingData = editingActivity?.editing ?? null
@@ -151,55 +141,44 @@ export function NosotrosPage({
     )
   }
 
-  async function handleSaveResearcher(
-    id: string,
-    values: ResearcherFormValues,
-  ): Promise<string | null> {
-    let response: Response
-    try {
-      response = await fetch(`/api/nosotros/researchers/${id}`, {
+  // Reports the outcome in a toast once the request is done. A refresh re-runs the server
+  // component's `getNosotrosResearchers()` so the page reflects the saved change immediately,
+  // without an optimistic guess.
+  async function handleSaveResearcher(id: string, values: ResearcherFormValues): Promise<boolean> {
+    return sendWithFeedback(
+      `/api/nosotros/researchers/${id}`,
+      {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
-      })
-    } catch {
-      return saveErrorMessage
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      return body?.error ?? saveErrorMessage
-    }
-
-    // Re-runs the server component's `getNosotrosResearchers()` so the page
-    // reflects the saved change immediately, without an optimistic guess.
-    router.refresh()
-    return null
+      },
+      {
+        success: tResearchers('updated'),
+        fallback: tResearchers('errors.unknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
+  // Reports the outcome in a toast once the request is done. On success the "Añadir" modal
+  // closes and the page refreshes; on failure it stays open with what was typed.
   async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
-    setResearcherCreateError(null)
-
-    let response: Response
-    try {
-      response = await fetch('/api/nosotros/researchers', {
+    await sendWithFeedback(
+      '/api/nosotros/researchers',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
-      })
-    } catch {
-      setResearcherCreateError(saveErrorMessage)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setResearcherCreateError(body?.error ?? saveErrorMessage)
-      return
-    }
-
-    close()
-    router.refresh()
+      },
+      {
+        success: tResearchers('created'),
+        fallback: tResearchers('errors.unknown'),
+        onSuccess: () => {
+          close()
+          router.refresh()
+        },
+      },
+    )
   }
 
   async function handleDeleteResearcher(id: string) {
@@ -329,25 +308,13 @@ export function NosotrosPage({
           )}
           trailingSlide={
             editMode && canCreate ? (
-              <AddItemCard label={tResearchers('add')}>
+              <AddItemCard label={tNosotrosResearchers('add')}>
                 {({ close }) => (
-                  <>
-                    {researcherCreateError ? (
-                      <p className="form-alert" ref={researcherCreateErrorRef} role="alert">
-                        {researcherCreateError}
-                      </p>
-                    ) : null}
-                    <ResearcherForm
-                      confirmMessage={tResearchers('createConfirmMessage')}
-                      confirmTitle={tResearchers('createConfirmTitle')}
-                      onCancel={() => {
-                        setResearcherCreateError(null)
-                        close()
-                      }}
-                      onSave={(values) => handleCreateResearcher(values, close)}
-                      researcher={null}
-                    />
-                  </>
+                  <ResearcherForm
+                    onCancel={close}
+                    onSave={(values) => handleCreateResearcher(values, close)}
+                    researcher={null}
+                  />
                 )}
               </AddItemCard>
             ) : undefined

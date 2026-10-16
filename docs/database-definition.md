@@ -9,7 +9,7 @@ migration source; the worker mirrors these tables in SQLAlchemy
 
 | Postgres schema | Used for                                                  | Populated today |
 | --------------- | --------------------------------------------------------- | --------------- |
-| `public`        | Default, for anything not domain-specific                 | Yes             |
+| `public`        | Default, for anything not domain-specific; home page CMS  | Yes             |
 | `research`      | Public research/publications shown on `/publicaciones`    | Yes             |
 | `news`          | Public news/media coverage shown on `/noticias`           | Yes             |
 | `auth`          | Portal accounts created through `/acceso`                 | Yes             |
@@ -427,6 +427,20 @@ never writes here.
 Constraints: `UNIQUE (satellite, product, day)` — the upsert key, so a higher `_vX-Y-Z` of the
 same day replaces the older row instead of adding a second one.
 
+### `mag_files`
+
+One daily MAG L2 1-minute geomagnetic field file (`magn-l2-avg1m`, one UTC day) ingested by the
+worker's `mag-pipeline` job (`apps/worker/app/services/mag_readings.py`) — see
+[`mag-pipeline.md`](mag-pipeline.md). Same columns, constraints and upsert key as `exis_files`;
+the readings are in the InfluxDB measurement `mag_field` (tags `satellite`, `product`, `channel`;
+fields `value`, `valid`), not here. Differences:
+
+- `satellite` comes from the NetCDF `platform` attribute, upper-cased (`"g19"` → `"G19"`); the L2
+  files have no `platform_ID`.
+- `product` is always `"GEOF"`.
+- `version` looks like `"2-0-4"`, and `point_count` like
+  `{"EPN-x": 1440, "EPN-y": 1440, "EPN-z": 1440, "total": 1440}`.
+
 ## `public` schema (downloads)
 
 ### `resource_downloads`
@@ -455,6 +469,150 @@ permanent record. The worker never writes here.
 Indexes: `(user_id, created_at)` for a user's history, `(source, instrument, created_at)` for
 usage per instrument. Codes are plain strings, as in `role_permissions`, so a new instrument or
 format needs no migration.
+
+### `solar_physics_sections`
+
+An editable text section of the solar physics page (`/fisica-solar`). Today there is one row, with
+`key = 'lasce'`: "El trabajo de LASCE en Física Solar". The migration
+(`20261014120000_add_solar_physics_sections`) creates it with the text the page showed before it
+became editable. `title` and `body` are the Spanish source text; the other languages live in
+`solar_physics_section_translations`. `body` is plain text and a blank line separates paragraphs.
+The Prisma model is `SolarPhysicsSection`.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                        |
+| ------------ | ----------- | ---------------- | ------------------------------------------------------------------ |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                            |
+| `key`        | `String`    | `text`           | `UNIQUE`, not null; the section's name, `'lasce'` today            |
+| `title`      | `String`    | `text`           | not null, Spanish                                                  |
+| `body`       | `String`    | `text`           | not null, Spanish; paragraphs separated by a blank line            |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                          |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed; the editor's version token |
+
+Relationships: has many `solar_physics_section_translations`.
+
+### `solar_physics_section_translations`
+
+The `title` and `body` of a `solar_physics_sections` row in a language other than Spanish, one
+row per section and locale. The Prisma model is `SolarPhysicsSectionTranslation`. The migration
+seeds the `en` row from the English text the page used to read from the message catalogue.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                     |
+| ------------ | ----------- | ---------------- | --------------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                         |
+| `section_id` | `String`    | `uuid`           | FK → `solar_physics_sections.id`, `ON DELETE CASCADE`, not null |
+| `locale`     | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es`      |
+| `title`      | `String`    | `text`           | not null                                                        |
+| `body`       | `String`    | `text`           | not null                                                        |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                       |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                          |
+
+Constraints: `UNIQUE (section_id, locale)`. The application requires both languages on every
+save, so the section is only ever written complete.
+
+Relationships: belongs to one `solar_physics_sections` row.
+
+## `public` schema (home page)
+
+The editable content of the home page (`/`), see [`home-page.md`](home-page.md). Seeded by the
+migration `20261014101056_add_home_content`; nothing is created or deleted from the CMS.
+
+### `home_hero`
+
+The hero banner's Spanish title and subtitle. One row. The Prisma model is `HomeHero`.
+
+| Column       | Prisma type | Postgres type    | Constraints                            |
+| ------------ | ----------- | ---------------- | -------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `title`      | `String`    | `text`           | not null                               |
+| `lead`       | `String`    | `text`           | not null — the subtitle                |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+Relationships: has many `home_hero_translations`.
+
+### `home_hero_translations`
+
+The banner's `title` and `lead` in a language other than Spanish. The Prisma model is
+`HomeHeroTranslation`.
+
+| Column         | Prisma type | Postgres type    | Constraints                                                |
+| -------------- | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`           | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `home_hero_id` | `String`    | `uuid`           | FK → `home_hero.id`, `ON DELETE CASCADE`, not null         |
+| `locale`       | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es` |
+| `title`        | `String`    | `text`           | not null                                                   |
+| `lead`         | `String`    | `text`           | not null                                                   |
+| `created_at`   | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at`   | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+Constraints: `UNIQUE (home_hero_id, locale)`.
+
+### `geomagnetic_index_source` (enum)
+
+Who wrote an index's current value: `manual` (an editor) or `automatic` (a future loading job).
+
+### `geomagnetic_indices`
+
+One geomagnetic index card on the home page. The Prisma model is `GeomagneticIndex`.
+
+| Column        | Prisma type              | Postgres type              | Constraints                                                                                                            |
+| ------------- | ------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `id`          | `String`                 | `uuid`                     | PK, `gen_random_uuid()`                                                                                                |
+| `code`        | `String`                 | `varchar(8)`               | `UNIQUE`, not null — `kp`, `dst`, `ae`, `ap`; names the label                                                          |
+| `value`       | `String`                 | `varchar(15)`              | not null — shared by every language, e.g. `-12 nT`                                                                     |
+| `description` | `String`                 | `varchar(15)`              | not null — Spanish                                                                                                     |
+| `position`    | `Int`                    | `integer`                  | `UNIQUE`, not null, default `nextval('geomagnetic_indices_position_seq')` — display order, written only by the reorder |
+| `source`      | `GeomagneticIndexSource` | `geomagnetic_index_source` | not null, default `manual`                                                                                             |
+| `observed_at` | `DateTime?`              | `timestamptz(3)`           | nullable — null while values are entered by hand                                                                       |
+| `created_at`  | `DateTime`               | `timestamptz(3)`           | not null, default `now()`                                                                                              |
+| `updated_at`  | `DateTime`               | `timestamptz(3)`           | not null, default `now()`, app-managed                                                                                 |
+
+Relationships: has many `geomagnetic_index_translations`.
+
+> `position` is unique, so a reorder writes in two passes inside one transaction: every row moves
+> to a temporary negative position first, then to its new one. A row inserted without a position
+> takes the next number of `geomagnetic_indices_position_seq` (Prisma's
+> `@default(autoincrement())`), which the migration `20261015120000_make_geomagnetic_position_unique`
+> started after the seeded positions, so a new index lands last.
+
+### `geomagnetic_index_translations`
+
+An index's `description` in a language other than Spanish. The Prisma model is
+`GeomagneticIndexTranslation`.
+
+| Column                 | Prisma type | Postgres type    | Constraints                                                  |
+| ---------------------- | ----------- | ---------------- | ------------------------------------------------------------ |
+| `id`                   | `String`    | `uuid`           | PK, `gen_random_uuid()`                                      |
+| `geomagnetic_index_id` | `String`    | `uuid`           | FK → `geomagnetic_indices.id`, `ON DELETE CASCADE`, not null |
+| `locale`               | `String`    | `varchar(5)`     | not null — never `es`                                        |
+| `description`          | `String`    | `varchar(15)`    | not null                                                     |
+| `created_at`           | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                    |
+| `updated_at`           | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                       |
+
+Constraints: `UNIQUE (geomagnetic_index_id, locale)`.
+
+## `public` schema (contact)
+
+### `contact_channels` and `contact_channel_translations`
+
+One card in "Información de contacto" on `/contacto`. Spanish `title` and `description` live on
+the base row; every other language is a translation row. `icon`, `href` and `position` are
+shared. `href` is set only for Instagram and Facebook. Phone and email links are derived from
+the description when the page renders. See [`contact.md`](contact.md).
+
+| Column        | Prisma type          | Postgres type          | Constraints                                                     |
+| ------------- | -------------------- | ---------------------- | --------------------------------------------------------------- |
+| `id`          | `String`             | `uuid`                 | PK, `gen_random_uuid()`                                         |
+| `icon`        | `ContactChannelIcon` | `contact_channel_icon` | not null; `phone`, `instagram`, `location`, `email`, `facebook` |
+| `href`        | `String?`            | `text`                 | nullable                                                        |
+| `position`    | `Int`                | `integer`              | not null; display order                                         |
+| `title`       | `String`             | `text`                 | not null; Spanish                                               |
+| `description` | `String`             | `text`                 | not null; Spanish                                               |
+| `created_at`  | `DateTime`           | `timestamptz(3)`       | not null, default `now()`                                       |
+| `updated_at`  | `DateTime`           | `timestamptz(3)`       | not null, default `now()`, app-managed                          |
+
+`contact_channel_translations`: `id`, `contact_channel_id` (FK, `ON DELETE CASCADE`), `locale`
+(`varchar(5)`), `title`, `description`, timestamps. Unique on `(contact_channel_id, locale)`.
 
 ## `public` schema (Nosotros)
 
@@ -494,6 +652,14 @@ it forward, so concurrent edits are rejected instead of overwritten. `deletePubl
 the base row; its translations and author links cascade. The full contract is in
 [`internationalization.md`](internationalization.md#database-content-built-for-publications-proof-of-concept).
 
+`apps/web/app/lib/home.ts` owns the home page tables: `getHomeContent()` reads `home_hero` and
+`geomagnetic_indices` with their translations, in the requested language; `updateHero()` and
+`updateIndicator()` write a base row and its translations in one transaction against the version
+the editor loaded; `reorderIndicators()` rewrites `geomagnetic_indices.position`. Nothing in the
+worker writes them yet: a future job would upsert the indices by `code`, set `source` and
+`observed_at`, and leave `position` alone; see
+[`home-page.md`](home-page.md#future-automatic-loading).
+
 `apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
 `/noticias` renders.
@@ -508,6 +674,11 @@ behind the cookie together with its user, and `deleteCurrentSession()` deletes i
 `apps/web/app/services/downloads/downloadService.ts`'s `createResourceDownload()` is the only
 writer of `public.resource_downloads`. Nothing reads it yet.
 
+`apps/web/app/lib/contact-channels.ts` reads and writes `public.contact_channels` and
+`public.contact_channel_translations` for `/contacto`. Spanish text is the base row; English is
+upserted on save. An update writes only while `updated_at` still equals the version the editor
+loaded.
+
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.
 
@@ -517,9 +688,19 @@ decoded. Nothing in `apps/web` reads it yet.
 `apps/worker/app/services/exis_readings.py`'s `ExisReadings.persist()` is the only writer of
 `solar.exis_files`, and `ExisReadings.ingested_modified_at()` its only reader; both are called
 from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
+`apps/worker/app/services/mag_readings.py`'s `MagReadings.persist()` is the only writer of
+`solar.mag_files`, and `MagReadings.ingested()` its only reader; both are called from the
+`mag-pipeline` processor. Nothing in `apps/web` reads it.
 `apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
 maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
 area create, update, and delete operations will also write this table when implemented.
+
+`apps/web/app/lib/solar-physics-section.ts`'s `getSolarPhysicsSection()` reads the `lasce` row of
+`public.solar_physics_sections` with its translations and returns the title and paragraphs in the
+requested language for `/fisica-solar`. `updateSolarPhysicsSection()` (called by
+`PATCH /api/solar-physics/lasce-section`) is the only writer: in one transaction it rewrites the
+Spanish text, upserts the translations and moves `updated_at` forward, and only while `updated_at`
+still equals the version the editor loaded. Nothing in `apps/worker` reads these tables.
 
 Nothing yet reads or writes `gallery_albums`/`gallery_media` — `/galeria` still renders from the
 static mock in `apps/web/app/lib/gallery.ts`.

@@ -99,4 +99,15 @@ export const schedules: Schedule[] = [
       lookbackDays: 3,
     },
   },
+  // NOAA publishes the MAG 1-minute file once per day, around 04:00 UTC the next morning, and
+  // sometimes republishes a day. Hourly, five minutes after EXIS so the two do not share a minute.
+  {
+    id: 'mag-pipeline-geof',
+    name: 'mag-pipeline',
+    cron: '25 * * * *',
+    data: {
+      spacecraft: 19,
+      lookbackDays: 3,
+    },
+  },
 ]

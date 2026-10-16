@@ -2,6 +2,7 @@ import type { DownloadFormat } from '@/app/lib/downloads/formats'
 import type { ScientificInstrumentCode, ScientificSourceCode } from '@/app/lib/scientific-data'
 import { scientificDataSources } from '@/app/services/scientific-data'
 import { queryExisReadingsFull } from '@/app/services/scientific-data/exisReadingsDataSource'
+import { queryMagReadingsFull } from '@/app/services/scientific-data/magReadingsDataSource'
 import type {
   ScientificDataRequest,
   ScientificDataResponse,
@@ -16,12 +17,15 @@ const chartData: DownloadLoader = (request) => scientificDataSources.query(reque
 /** Every EXIS reading in the window, not the 360 the chart samples. */
 const exisFullResolution: DownloadLoader = ({ query }) => queryExisReadingsFull(query)
 
+/** Every stored MAG 1-minute reading in the window, not the 360 the chart samples. */
+const magFullResolution: DownloadLoader = ({ query }) => queryMagReadingsFull(query)
+
 /**
  * Where each downloadable (source, instrument, format) reads its data. Must cover every entry in
  * `DOWNLOAD_POLICIES` (`app/lib/downloads/policy.ts`); `loaders.test.ts` checks that it does.
  *
- * A data export of MAG or SEISS needs a full-resolution path through the worker first, since
- * the `query-goes-archive` job samples to 360 points; add its loader here when it exists.
+ * A data export of SEISS needs a full-resolution path through the worker first, since the
+ * `query-goes-archive` job samples to 360 points; add its loader here when it exists.
  */
 export const DOWNLOAD_LOADERS: Partial<
   Record<
@@ -31,7 +35,7 @@ export const DOWNLOAD_LOADERS: Partial<
 > = {
   GOES: {
     EXIS: { png: chartData, csv: exisFullResolution },
-    MAG: { png: chartData },
+    MAG: { png: chartData, csv: magFullResolution },
     SEISS: { png: chartData },
   },
   ROSAC: {

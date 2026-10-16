@@ -10,7 +10,8 @@ stored in a private MinIO bucket, handed back as a **30-minute presigned link**,
 | Source / instrument | Chart (PNG)          | Data (CSV)                                       |
 | ------------------- | -------------------- | ------------------------------------------------ |
 | GOES / EXIS         | `download_resources` | `download_resources` + `download_goes_resources` |
-| GOES / MAG, SEISS   | `download_resources` | not offered yet (needs a full-resolution path)   |
+| GOES / MAG          | `download_resources` | `download_resources` + `download_goes_resources` |
+| GOES / SEISS        | `download_resources` | not offered yet (needs a full-resolution path)   |
 | GOES / SUVI         | not offered          | not offered                                      |
 | ROSAC / any         | `download_resources` | `download_resources`                             |
 
@@ -39,7 +40,7 @@ ScientificDataExplorer ── requestResourceDownload (Server Action, app/(publi
                               2. getPermissionsForRole  → the role's grants, read on this request
                               3. validateResourceDownload (app/services/downloads/downloadAccess.ts)
                                    invalid      the query or format does not parse, or a future GOES date
-                                   unsupported  the product offers no such format (SUVI, MAG CSV, …)
+                                   unsupported  the product offers no such format (SUVI, SEISS CSV, …)
                                    forbidden    a required grant is missing; the message names it
 ```
 
@@ -72,13 +73,15 @@ again on every attempt, so retrying a failed download never skips a permission c
 
 ### Where the data comes from (`loaders.ts`)
 
-- **PNG** uses the same result the page shows (`scientificDataSources.query`). For EXIS that
-  result is sampled to 360 points. For MAG and SEISS it is the worker's `query-goes-archive` job:
+- **PNG** uses the same result the page shows (`scientificDataSources.query`). For EXIS and MAG
+  that result is sampled to 360 points. For SEISS it is the worker's `query-goes-archive` job:
   the page passes along the `jobId` that answered its query, so the download reuses the finished
   job instead of queueing a new one. While a job is still running, the action answers `pending`.
 - **EXIS CSV** reads InfluxDB **without sampling** (`queryExisReadingsFull`), keeping only the
   latest satellite in the window, as the chart does. A full SFXR day is about 86 000 rows, around
   3 MB.
+- **MAG CSV** does the same over `mag_field` (`queryMagReadingsFull`): at most 1 440 one-minute
+  readings a day.
 - **ROSAC CSV** uses the simulated result, which is already complete.
 
 ### Exporters (`exporters/`)
@@ -126,11 +129,11 @@ The object expires after a day. The row stays.
 
 ## Adding an instrument or a format
 
-**An instrument** (say MAG data):
+**An instrument** (say SEISS data):
 
-1. Add a reader that returns a `ScientificDataResult`. For MAG and SEISS, this means a
-   full-resolution path through the worker first, because `query-goes-archive` samples to 360
-   points.
+1. Add a reader that returns a `ScientificDataResult`. For SEISS, this means a full-resolution
+   path through the worker first, because `query-goes-archive` samples to 360 points. MAG did
+   this with a pipeline into InfluxDB ([`mag-pipeline.md`](mag-pipeline.md)).
 2. Add its formats to `DOWNLOAD_POLICIES` (`app/lib/downloads/policy.ts`).
 3. Add the loader to `DOWNLOAD_LOADERS` (`app/services/downloads/loaders.ts`).
    `loaders.test.ts` fails while a policy entry has no loader.
