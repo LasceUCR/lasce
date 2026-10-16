@@ -130,6 +130,30 @@ async function submitActivityEdit(user: User) {
   return editDialog
 }
 
+/** Opens the first researcher's editor in the "Investigadores LASCE" section. */
+async function openFirstResearcherEditor(user: User) {
+  const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+  const [firstEditButton] = within(researchers).getAllByRole('button', { name: /^Editar a/ })
+  await user.click(firstEditButton as HTMLElement)
+  return screen.getByRole('dialog', { name: 'Editar investigador' })
+}
+
+/** Presses "Confirmar" in the researcher editor, which saves straight away. */
+async function confirmResearcherEdit(user: User, editDialog: HTMLElement) {
+  await user.click(within(editDialog).getByRole('button', { name: 'Confirmar' }))
+}
+
+/** Rewrites the first researcher's role in both languages, so no translation needs reviewing. */
+async function editResearcherRoleInBothLanguages(user: User, editDialog: HTMLElement) {
+  const roleInput = within(editDialog).getByRole('textbox', { name: /^Rol \(Español\)/ })
+  await user.clear(roleInput)
+  await user.type(roleInput, 'Rol editado')
+  await user.click(within(editDialog).getByRole('tab', { name: /^English/ }))
+  const englishRoleInput = within(editDialog).getByRole('textbox', { name: /^Rol \(English\)/ })
+  await user.clear(englishRoleInput)
+  await user.type(englishRoleInput, 'Edited role')
+}
+
 afterEach(() => {
   vi.clearAllMocks()
 })
@@ -827,46 +851,128 @@ describe('NosotrosPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  test('PATCHes the researcher and refreshes the page once saving succeeds', async () => {
+  test('PATCHes both languages of the role, refreshes the page and confirms the change was saved', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ researcher: {} }) })
     renderPageInEditMode()
     const [firstResearcher] = defaultArgs.content.researchers.people
 
-    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
-    const [firstEditButton] = within(researchers).getAllByRole('button', { name: /^Editar a/ })
-    await user.click(firstEditButton as HTMLElement)
-    const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    const editDialog = await openFirstResearcherEditor(user)
+    await editResearcherRoleInBothLanguages(user, editDialog)
+    await confirmResearcherEdit(user, editDialog)
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/nosotros/researchers/${firstResearcher?.id}`,
       expect.objectContaining({ method: 'PATCH' }),
     )
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(init.body as string)).toEqual({
+      version: firstResearcher?.editing?.version,
+      content: {
+        es: {
+          role: 'Rol editado',
+          description: firstResearcher?.editing?.content.es.description,
+        },
+        en: {
+          role: 'Edited role',
+          description: firstResearcher?.editing?.content.en?.description,
+        },
+      },
+      confirmedUnchanged: [],
+    })
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog', { name: 'Editar investigador' })).not.toBeInTheDocument()
     expect(await screen.findByText('Investigador actualizado correctamente.')).toBeInTheDocument()
   })
 
-  test('explains a failed researcher edit inside the open modal and keeps the form', async () => {
+  test('PATCHes only the shared field that changed, leaving the translations out', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ researcher: {} }) })
+    renderPageInEditMode()
+    const [firstResearcher] = defaultArgs.content.researchers.people
+
+    const editDialog = await openFirstResearcherEditor(user)
+    const institutionInput = within(editDialog).getByRole('textbox', { name: /^Institución/ })
+    await user.clear(institutionInput)
+    await user.type(institutionInput, 'Universidad Nacional')
+    await confirmResearcherEdit(user, editDialog)
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(init.body as string)).toEqual({
+      version: firstResearcher?.editing?.version,
+      institution: 'Universidad Nacional',
+    })
+  })
+
+  test('closes the editor without a request when nothing changed', async () => {
+    const user = userEvent.setup()
+    renderPageInEditMode()
+
+    const editDialog = await openFirstResearcherEditor(user)
+    await confirmResearcherEdit(user, editDialog)
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog', { name: 'Editar investigador' })).not.toBeInTheDocument()
+  })
+
+  test('asks to review the other language when only one language of the role changed', async () => {
+    const user = userEvent.setup()
+    renderPageInEditMode()
+
+    const editDialog = await openFirstResearcherEditor(user)
+    const roleInput = within(editDialog).getByRole('textbox', { name: /^Rol \(Español\)/ })
+    await user.clear(roleInput)
+    await user.type(roleInput, 'Rol editado')
+    await user.click(within(editDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.queryByRole('dialog', { name: 'Guardar cambios' })).not.toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(within(editDialog).getByRole('switch')).toBeInTheDocument()
+  })
+
+  test('explains a failed researcher edit with a toast and keeps the editor open with what was typed', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue(
       failedResponse(403, { error: 'No tiene permisos para modificar este contenido.' }),
     )
     renderPageInEditMode()
 
-    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
-    const [firstEditButton] = within(researchers).getAllByRole('button', { name: /^Editar a/ })
-    await user.click(firstEditButton as HTMLElement)
-    const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    const editDialog = await openFirstResearcherEditor(user)
+    await editResearcherRoleInBothLanguages(user, editDialog)
+    await confirmResearcherEdit(user, editDialog)
 
     expect(
-      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+      await screen.findByText('No tiene permisos para modificar este contenido.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(within(editDialog).getByRole('textbox', { name: /^Rol \(English\)/ })).toHaveValue(
+      'Edited role',
+    )
     expect(screen.queryByText('Investigador actualizado correctamente.')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('marks each researcher role with the language of its text', () => {
+    renderPage()
+
+    const role = screen.getByText('Investigadora principal')
+    expect(role).toHaveAttribute('lang', 'es')
+  })
+
+  test('leaves the language of a legacy researcher unknown', () => {
+    renderPage({
+      content: {
+        ...defaultArgs.content,
+        researchers: {
+          ...defaultArgs.content.researchers,
+          people: defaultArgs.content.researchers.people.map((person, index) =>
+            index === 0 ? { ...person, contentLocale: null } : person,
+          ),
+        },
+      },
+    })
+
+    expect(screen.getByText('Investigadora principal')).toHaveAttribute('lang', '')
   })
 
   test('DELETEs the researcher and refreshes the page once removal succeeds', async () => {
@@ -885,9 +991,25 @@ describe('NosotrosPage', () => {
       method: 'DELETE',
     })
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(await screen.findByText('Investigador eliminado correctamente.')).toBeInTheDocument()
   })
 
-  test('POSTs a new researcher once every required field, including description, is filled in', async () => {
+  test('explains a failed researcher deletion with a toast and refreshes nothing', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(failedResponse(404, { error: 'Este investigador ya no existe.' }))
+    renderPageInEditMode()
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    const [firstDeleteButton] = within(researchers).getAllByRole('button', { name: /^Eliminar a/ })
+    await user.click(firstDeleteButton as HTMLElement)
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar investigador' })
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
+
+    expect(await screen.findByText('Este investigador ya no existe.')).toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('POSTs a new researcher with both languages of the role, refreshes and confirms it was added', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ researcher: {} }) })
     mocks.uploadResearcherImage.mockResolvedValue({
@@ -900,50 +1022,100 @@ describe('NosotrosPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
     const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.type(within(dialog).getByRole('textbox', { name: /^Nombre/ }), 'Persona Nueva')
+    await user.type(within(dialog).getByRole('textbox', { name: /^Institución/ }), 'UCR')
     await user.type(
-      within(dialog).getByRole('textbox', { name: 'Descripción' }),
-      'Texto de prueba.',
+      within(dialog).getByRole('textbox', { name: /^Rol \(Español\)/ }),
+      'Investigador',
     )
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    await user.type(within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ }), 'Researcher')
     const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     // Creating saves straight away: no second confirmation dialog.
-    expect(screen.queryByRole('dialog', { name: 'Agregar investigador' })).not.toBeInTheDocument()
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/nosotros/researchers',
       expect.objectContaining({ method: 'POST' }),
     )
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(init.body as string)).toEqual({
+      src: 'https://s3.example/lasce/foto.png',
+      name: 'Persona Nueva',
+      email: '',
+      institution: 'UCR',
+      content: {
+        es: { role: 'Investigador', description: null },
+        en: { role: 'Researcher', description: null },
+      },
+    })
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
-    expect(screen.queryByRole('dialog', { name: 'Añadir investigador' })).not.toBeInTheDocument()
     expect(await screen.findByText('Investigador agregado correctamente.')).toBeInTheDocument()
   })
 
-  test('explains a failed researcher creation inside "Añadir investigador" and keeps the form', async () => {
+  test('asks for the English role before adding a researcher, opening the English tab', async () => {
     const user = userEvent.setup()
-    fetchMock.mockResolvedValue(
-      failedResponse(403, { error: 'No tiene permisos para modificar este contenido.' }),
-    )
+    URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+    URL.revokeObjectURL = vi.fn()
     renderPageInEditMode()
 
     await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
     const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.type(within(dialog).getByRole('textbox', { name: /^Nombre/ }), 'Persona Nueva')
+    await user.type(within(dialog).getByRole('textbox', { name: /^Institución/ }), 'UCR')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /^Rol \(Español\)/ }),
+      'Investigador',
+    )
+    const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(within(dialog).getByText('El rol en inglés es obligatorio.')).toBeInTheDocument()
+    expect(within(dialog).getByRole('tab', { name: /^English/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  test('keeps the new researcher form open and explains the failure with a toast', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(failedResponse(500, {}))
+    mocks.uploadResearcherImage.mockResolvedValue({
+      ok: true,
+      imageUrl: 'https://s3.example/lasce/foto.png',
+    })
+    URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+    URL.revokeObjectURL = vi.fn()
+    renderPageInEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
+    await user.type(within(dialog).getByRole('textbox', { name: /^Nombre/ }), 'Persona Nueva')
+    await user.type(within(dialog).getByRole('textbox', { name: /^Institución/ }), 'UCR')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /^Rol \(Español\)/ }),
+      'Investigador',
+    )
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    await user.type(within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ }), 'Researcher')
+    const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(
-      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+      await screen.findByText(
+        'El servidor no pudo completar la operación. Inténtelo de nuevo en unos minutos.',
+      ),
     ).toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: 'Añadir investigador' })).toBeInTheDocument()
-    expect(within(dialog).getByRole('textbox', { name: 'Nombre' })).toHaveValue('Persona Nueva')
-    expect(screen.queryByText('Investigador agregado correctamente.')).not.toBeInTheDocument()
+    expect(within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ })).toHaveValue(
+      'Researcher',
+    )
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 

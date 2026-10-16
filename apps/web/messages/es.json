@@ -660,7 +660,13 @@
       "hint": "Haga clic en una ficha para ver más información.",
       "empty": "No hay información de investigadores disponible en este momento.",
       "add": "Añadir investigador",
-      "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo."
+      "form": {
+        "languageTabs": "Idioma del contenido",
+        "roleIn": "Rol ({language})",
+        "descriptionIn": "Descripción ({language})",
+        "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el rol o la descripción, revíselo también.",
+        "legacyNoTranslation": "Este investigador aún no tiene versión en inglés. Para cambiar el rol o la descripción debe completar ambos idiomas; el resto de los datos se puede cambiar sin traducirlo."
+      }
     },
     "activities": {
       "title": "¿Qué hacemos?",
@@ -1036,8 +1042,10 @@
     "institutionLabel": "Institución",
     "created": "Investigador agregado correctamente.",
     "updated": "Investigador actualizado correctamente.",
+    "deleted": "Investigador eliminado correctamente.",
     "errors": {
-      "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo."
+      "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo.",
+      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo."
     }
   },
   "administration": {
