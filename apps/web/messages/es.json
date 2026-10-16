@@ -50,19 +50,23 @@
       "demoNotice": "Datos de demostración",
       "kp": {
         "label": "Índice Kp",
-        "value": "2 · Tranquilo"
+        "value": "2",
+        "description": "Tranquilo"
       },
       "dst": {
         "label": "Índice Dst",
-        "value": "-12 nT · Estable"
+        "value": "-12 nT",
+        "description": "Estable"
       },
       "ae": {
         "label": "Índice AE",
-        "value": "75 nT · Actividad baja"
+        "value": "75 nT",
+        "description": "Actividad baja"
       },
       "ap": {
         "label": "Índice Ap",
-        "value": "7 · Tranquilo"
+        "value": "7",
+        "description": "Tranquilo"
       }
     },
     "areas": {
@@ -76,6 +80,50 @@
       "panelTitle": "Imagen del Sol en tiempo real",
       "observed": "Observado el <time></time>",
       "updating": "Actualizando la imagen más reciente del Sol…"
+    },
+    "editor": {
+      "languageTabs": "Idioma del contenido",
+      "heroEditLabel": "Editar portada",
+      "heroEditTitle": "Editar portada",
+      "heroTitleField": "Título ({language})",
+      "heroLeadField": "Subtítulo ({language})",
+      "indicatorEditLabel": "Editar {label}",
+      "indicatorEditTitle": "Editar {label}",
+      "valueField": "Valor",
+      "valueHint": "Igual en ambos idiomas. Máximo 15 caracteres.",
+      "descriptionField": "Descripción ({language})",
+      "descriptionHint": "Máximo 15 caracteres.",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si lo cambia, revíselo también.",
+      "legacyNoTranslation": "Este contenido aún no tiene versión en inglés. Para cambiar su texto debe completar ambos idiomas.",
+      "reorderHandle": "Reordenar {label}",
+      "reorderRole": "reordenable",
+      "reorderInstructions": "Para reordenar un índice, enfoque su control de reordenar y pulse Espacio o Intro. Use las flechas para moverlo y pulse Espacio o Intro de nuevo para soltarlo, o Escape para cancelar.",
+      "reorderPicked": "Se tomó {label}.",
+      "reorderOver": "{label} está sobre la posición de {target}.",
+      "reorderDropped": "Se soltó {label} en la posición de {target}.",
+      "reorderDroppedInPlace": "Se soltó {label} en su posición original.",
+      "reorderCancelled": "Se canceló el reordenamiento de {label}.",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "heroUpdated": "Portada actualizada correctamente.",
+      "indicatorUpdated": "Índice geomagnético actualizado correctamente.",
+      "orderUpdated": "Orden de los índices actualizado correctamente."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
+    },
+    "validation": {
+      "valueNotText": "El valor debe ser texto.",
+      "valueRequired": "El valor es obligatorio.",
+      "valueTooLong": "El valor no puede superar los 15 caracteres."
+    },
+    "saveErrors": {
+      "heroFailed": "No se pudo guardar la portada. Inténtelo de nuevo.",
+      "indicatorFailed": "No se pudo guardar el índice geomagnético. Inténtelo de nuevo.",
+      "orderFailed": "No se pudo guardar el orden de los índices. Inténtelo de nuevo."
     }
   },
   "workAreas": {
@@ -119,6 +167,15 @@
       "readLess": "Leer menos"
     }
   },
+  "solarImageLightbox": {
+    "open": "Ampliar imagen solar de {time}",
+    "kicker": "GOES · SUVI",
+    "close": "Cerrar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "position": "Imagen {position} de {total}",
+    "announcement": "Imagen {position} de {total}: {time}."
+  },
   "contact": {
     "meta": {
       "title": "Contacto | LASCE",
@@ -130,8 +187,46 @@
       "lead": "Canales oficiales del Laboratorio de Astrofísica Solar y Clima Espacial."
     },
     "channelsTitle": "Información de contacto",
-    "channels": {
-      "phone": "Teléfono"
+    "cards": {
+      "add": "Agregar canal de contacto",
+      "editTitle": "Editar canal de contacto",
+      "icon": "Símbolo",
+      "title": "Título",
+      "description": "Descripción",
+      "descriptionMax": "Se alcanzó el máximo de {max} caracteres.",
+      "phoneNumber": "Número",
+      "phoneRequired": "El número es obligatorio.",
+      "phoneSingle": "Escriba un solo número de teléfono.",
+      "link": "Enlace",
+      "language": "Idioma del texto",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "linkHttps": "El enlace debe empezar por https://.",
+      "linkTooLong": "El enlace no puede pasar de 500 caracteres.",
+      "edit": "Editar {title}",
+      "delete": "Eliminar {title}",
+      "deleteTitle": "Eliminar canal de contacto",
+      "deleteMessage": "Esta acción no se puede deshacer y quitará el canal de contacto de la página.",
+      "created": "Canal de contacto agregado correctamente.",
+      "updated": "Canal de contacto actualizado correctamente.",
+      "deleted": "Canal de contacto eliminado correctamente.",
+      "saveFailed": "No se pudo guardar el canal de contacto. Inténtelo de nuevo.",
+      "deleteFailed": "No se pudo eliminar el canal de contacto. Inténtelo de nuevo.",
+      "deleteConfirm": "Confirmar",
+      "deleteCancel": "Cancelar",
+      "discardDialog": {
+        "title": "Descartar cambios no guardados",
+        "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+        "keepEditing": "Seguir editando",
+        "discard": "Descartar"
+      },
+      "icons": {
+        "phone": "Teléfono",
+        "instagram": "Instagram",
+        "location": "Ubicación",
+        "email": "Correo",
+        "facebook": "Facebook"
+      }
     },
     "location": {
       "title": "Ubicación",
@@ -309,7 +404,8 @@
     "card": {
       "national": "Nacional",
       "international": "Internacional",
-      "acronym": "Siglas:"
+      "acronym": "Siglas:",
+      "website": "Sitio web oficial"
     },
     "countries": {
       "cr": "Costa Rica",
@@ -338,6 +434,50 @@
           "p5": "La iniciativa contribuye fuertemente a disminuir la brecha existente entre el número de observatorios radioastronómicos del Hemisferio Sur y los existentes en el Hemisferio Norte."
         }
       }
+    },
+    "validation": {
+      "name": "El nombre es obligatorio y debe tener hasta 300 caracteres.",
+      "scope": "Seleccione Nacional o Internacional.",
+      "acronym": "Las siglas deben tener hasta 100 caracteres.",
+      "url": "Ingrese una URL HTTP o HTTPS válida, sin credenciales y de hasta 2048 caracteres."
+    },
+    "editor": {
+      "add": "Añadir colaboración",
+      "edit": "Editar colaboración",
+      "editNamed": "Editar {name}",
+      "deleteNamed": "Eliminar {name}",
+      "name": "Nombre de la organización",
+      "acronym": "Siglas (opcional)",
+      "scope": "Clasificación",
+      "country": "País ({language})",
+      "languages": "Idioma del país",
+      "websiteUrl": "Sitio web (opcional)",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando...",
+      "legacy": "Este registro tiene texto de idioma desconocido. Al cambiar el país, complete y revise ambos idiomas."
+    },
+    "feedback": {
+      "created": "Colaboración agregada correctamente.",
+      "updated": "Colaboración actualizada correctamente.",
+      "deleted": "Colaboración eliminada correctamente.",
+      "failed": "No se pudo completar la operación. Revise los campos e inténtelo de nuevo.",
+      "conflict": "La colaboración cambió. Vuelva a abrir el formulario para cargar la versión actual.",
+      "notFound": "La colaboración ya no existe. Actualice la página.",
+      "forbidden": "No tiene permisos para esta operación. Compruebe su sesión.",
+      "review": "Actualice el país en ambos idiomas o confirme que la traducción sigue siendo correcta."
+    },
+    "delete": {
+      "title": "Eliminar colaboración",
+      "message": "¿Desea eliminar esta colaboración? Se quitará de la página pública y esta acción no se puede deshacer.",
+      "entity": "Colaboración",
+      "confirm": "Eliminar"
+    },
+    "discard": {
+      "title": "Descartar cambios no guardados",
+      "message": "Se perderán los datos ingresados que no se hayan guardado.",
+      "confirm": "Descartar",
+      "keepEditing": "Seguir editando"
     }
   },
   "academicActivities": {
@@ -494,6 +634,13 @@
     "errors": {
       "saveUnknown": "No se pudo guardar la noticia. Inténtelo de nuevo.",
       "deleteUnknown": "No se pudo eliminar la noticia. Inténtelo de nuevo."
+    }
+  },
+  "researchers": {
+    "created": "Investigador agregado correctamente.",
+    "updated": "Investigador actualizado correctamente.",
+    "errors": {
+      "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo."
     }
   }
 }

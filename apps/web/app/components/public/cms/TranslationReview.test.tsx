@@ -11,7 +11,9 @@ describe('TranslationReview', () => {
   test('explains the review and offers a switch named after the field and language', () => {
     render(<TranslationReview {...pendingArgs} />)
 
-    expect(screen.getByRole('note')).toHaveTextContent(pendingArgs.message)
+    const message = pendingArgs.message
+    if (!message) throw new Error('Expected a review message')
+    expect(screen.getByRole('note')).toHaveTextContent(message)
     expect(
       screen.getByRole('switch', { name: 'La descripción en español sigue siendo correcta' }),
     ).toHaveAttribute('aria-checked', 'false')

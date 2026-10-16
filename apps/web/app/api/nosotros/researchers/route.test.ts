@@ -98,15 +98,27 @@ describe('POST /api/nosotros/researchers', () => {
   test('rejects a body missing required fields', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
-    const response = await POST(postRequest({ ...validBody, name: '', src: '' }))
+    const response = await POST(postRequest({ ...validBody, name: '' }))
 
     expect(response.status).toBe(400)
     const body = await response.json()
     expect(body.issues).toMatchObject({
       name: expect.any(Array),
-      src: expect.any(Array),
     })
     expect(mocks.createNosotrosResearcher).not.toHaveBeenCalled()
+  })
+
+  test('accepts a body with no photo — it is optional', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.createNosotrosResearcher.mockResolvedValue({ id: 'new-1', ...validBody, src: '' })
+
+    const response = await POST(postRequest({ ...validBody, src: '' }))
+
+    expect(response.status).toBe(201)
+    expect(mocks.createNosotrosResearcher).toHaveBeenCalledWith(
+      { ...validBody, src: '' },
+      adminUser.id,
+    )
   })
 
   test('accepts a body with no description — it is optional here', async () => {

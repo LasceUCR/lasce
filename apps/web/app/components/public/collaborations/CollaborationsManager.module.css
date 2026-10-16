@@ -1,0 +1,11 @@
+.manager {
+  display: contents;
+}
+
+.manager :global(.editable) {
+  min-width: 0;
+}
+
+.manager :global(.collaboration-card) {
+  height: 100%;
+}

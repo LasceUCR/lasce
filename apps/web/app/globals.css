@@ -1070,6 +1070,18 @@ a {
   line-height: 1.2;
 }
 
+/* "Modo edición" on the home page: the cards' edit button and drag handle sit in one row at the
+   top right. The card keeps room for both, so its text never runs under them, and the wrapper
+   passes the grid cell's height through, so the cards keep their size. */
+.indicator-grid-editable > .editable,
+.indicator-grid-editable > .editable > .indicator {
+  height: 100%;
+}
+
+.indicator-grid-editable > .editable > .indicator {
+  padding-right: 92px;
+}
+
 .areas {
   margin-top: 34px;
   scroll-margin-top: 24px;
@@ -2243,8 +2255,27 @@ a {
 }
 
 .data-image-frame {
+  position: relative;
   display: grid;
   aspect-ratio: 1;
+}
+
+/* Covers the thumbnail so the whole image opens the lightbox. */
+.data-image-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+  z-index: 1;
+}
+
+.data-image-button:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: -3px;
 }
 
 .data-image-frame > * {
@@ -2307,7 +2338,7 @@ a {
   flex-wrap: wrap;
 }
 
-.solar-today h2 {
+.solar-today-heading h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -4630,6 +4661,13 @@ a.gallery-tile:focus-visible {
   border-radius: 8px;
 }
 
+.lightbox-stage .lightbox-media-contain img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .lightbox-meta {
   flex: 0 0 240px;
   width: 240px;
@@ -4649,8 +4687,11 @@ a.gallery-tile:focus-visible {
   line-height: 1.3;
 }
 
+/* Narrow caption column: the public shell justifies body copy, which spreads
+   these few words apart. */
 .lightbox-meta p {
   margin: 0 0 14px;
+  text-align: start;
   color: var(--space-body);
   font-size: 13px;
   line-height: 1.5;
@@ -5112,15 +5153,16 @@ a.gallery-tile:focus-visible {
 }
 
 .acknowledgments-tile {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 160px;
   max-width: 200px;
 }
 
-.acknowledgments-slide > * {
-  width: 100%;
-}
-
-.acknowledgments-slide > .editable {
+.acknowledgments-tile > .editable,
+.acknowledgments-tile > .acknowledgments-card,
+.acknowledgments-slide > .editable,
+.acknowledgments-slide > .acknowledgments-card {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -5129,12 +5171,22 @@ a.gallery-tile:focus-visible {
   height: 100%;
 }
 
+.acknowledgments-tile > .editable > :first-child,
 .acknowledgments-slide > .editable > :first-child {
-  display: flex;
-  flex-direction: column;
   flex: 1 1 auto;
   width: 100%;
   height: 100%;
+}
+
+.acknowledgments-tile .add-item-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
 }
 
 .acknowledgments-slide .add-item-card {
@@ -5153,6 +5205,7 @@ a.gallery-tile:focus-visible {
   align-items: center;
   justify-content: center;
   width: 100%;
+  height: 100%;
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -6011,6 +6064,22 @@ a.acknowledgments-card:focus-visible {
   gap: 6px;
 }
 
+/* `EditableWrapper drag`: the handle is an `icon-button` among the actions. */
+.editable-drag-handle {
+  cursor: grab;
+  /* The touch sensor needs the browser not to scroll while a finger drags the handle. */
+  touch-action: none;
+}
+
+.editable-dragging {
+  z-index: 2;
+  opacity: 0.85;
+}
+
+.editable-dragging .editable-drag-handle {
+  cursor: grabbing;
+}
+
 .file-drop-field {
   margin: 14px 0;
   display: flex;
@@ -6446,6 +6515,7 @@ a.acknowledgments-card:focus-visible {
      a phone screen, most of a desktop window too, up to a cap (set per size
      variant below) so it doesn't stretch absurdly wide on an ultrawide
      monitor. */
+  height: fit-content;
   max-height: calc(100vh - 64px);
   max-height: calc(100dvh - 64px);
   padding: 32px 40px;
