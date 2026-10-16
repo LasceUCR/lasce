@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
 import { ResearcherCard } from './ResearcherCard'
 import {
@@ -22,14 +22,19 @@ interface EditableResearcherCardBaseProps {
   canDelete?: boolean
   /** The `lang` of the researcher's role and description; see `ResearcherCardProps`. */
   contentLang?: string
+  /** Label preceding the institution text. Defaults to the translated `researchers.institutionLabel`. */
+  institutionLabel?: string
   onDelete: () => void
 }
 
 /** The single-language card (ROSAC). */
 export interface SingleLanguageEditableResearcherCardProps extends EditableResearcherCardBaseProps {
   translation?: undefined
-  /** Persists the edit; resolves to an error message on failure, or `null` on success. */
-  onSave: (values: ResearcherFormValues) => Promise<string | null>
+  /**
+   * Persists the edit and reports the outcome in a toast; resolves to whether it succeeded, so
+   * the modal closes only once the save is done and stays open, with the input, on failure.
+   */
+  onSave: (values: ResearcherFormValues) => Promise<boolean>
 }
 
 /**
@@ -61,20 +66,18 @@ export type EditableResearcherCardProps =
  * keeps the single-language one.
  */
 export function EditableResearcherCard(props: EditableResearcherCardProps) {
-  const { researcher, canEdit = false, canDelete = false, contentLang, onDelete } = props
+  const {
+    researcher,
+    canEdit = false,
+    canDelete = false,
+    contentLang,
+    institutionLabel,
+    onDelete,
+  } = props
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const saveErrorRef = useRef<HTMLParagraphElement>(null)
-
-  // Scrolls the error into view as soon as it appears — the modal can be
-  // taller than the viewport, and a message added above a long form is
-  // otherwise easy to miss without scrolling back up.
-  useEffect(() => {
-    if (saveError) {
-      scrollIntoViewIfSupported(saveErrorRef.current)
-    }
-  }, [saveError])
+  const tResearchers = useTranslations('researchers')
+  const resolvedInstitutionLabel = institutionLabel ?? tResearchers('institutionLabel')
 
   const card = (
     <ResearcherCard
@@ -82,6 +85,7 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
       description={researcher.description}
       email={researcher.email}
       institution={researcher.institution}
+      institutionLabel={resolvedInstitutionLabel}
       name={researcher.name}
       role={researcher.role}
       src={researcher.src}
@@ -89,7 +93,6 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
   )
 
   function closeEditor() {
-    setSaveError(null)
     setIsEditing(false)
   }
 
@@ -113,12 +116,7 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
       <ResearcherForm
         onCancel={closeEditor}
         onSave={async (values) => {
-          const error = await onSave(values)
-          if (error) {
-            setSaveError(error)
-            return
-          }
-          closeEditor()
+          if (await onSave(values)) closeEditor()
         }}
         researcher={researcher}
       />
@@ -127,11 +125,6 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
 
   const editModal = (
     <Modal onClose={closeEditor} open={isEditing} size="large" title="Editar investigador">
-      {saveError ? (
-        <p className="form-alert" ref={saveErrorRef} role="alert">
-          {saveError}
-        </p>
-      ) : null}
       {renderForm()}
     </Modal>
   )

@@ -38,26 +38,38 @@ export function useFloatingMenu({
     const menuInset = 8
     const viewportInset = 12
     const gap = 6
-    const availableTop = Math.max(top + viewportInset, (boundaryRect?.top ?? top) + menuInset)
+    const usableHeight = 160
+    const viewportTop = top + viewportInset
+    const viewportBottom = top + height - viewportInset
+    const availableTop = Math.max(viewportTop, (boundaryRect?.top ?? top) + menuInset)
     const availableRight = Math.min(
       left + width - viewportInset,
       (boundaryRect?.right ?? left + width) - menuInset,
     )
     const availableBottom = Math.min(
-      top + height - viewportInset,
+      viewportBottom,
       (boundaryRect?.bottom ?? top + height) - menuInset,
     )
     const availableLeft = Math.max(left + viewportInset, (boundaryRect?.left ?? left) + menuInset)
-    const below = availableBottom - rect.bottom - gap
-    const above = rect.top - availableTop - gap
-    const upwards = below < 160 && above > below
+    const boundedBelow = availableBottom - rect.bottom - gap
+    const boundedAbove = rect.top - availableTop - gap
+    // A boundary edge beside the trigger would squeeze the panel into an unusable sliver, so when
+    // neither side of the trigger fits a usable panel the viewport is the only vertical limit.
+    const bounded = Math.max(boundedBelow, boundedAbove) >= usableHeight
+    const below = bounded ? boundedBelow : viewportBottom - rect.bottom - gap
+    const above = bounded ? boundedAbove : rect.top - viewportTop - gap
+    const upwards = below < usableHeight && above > below
     const menuWidth = Math.min(rect.width, availableRight - availableLeft)
     setPosition({
       position: 'fixed',
       left: Math.max(availableLeft, Math.min(rect.left, availableRight - menuWidth)),
+      right: 'auto',
       width: menuWidth,
       maxHeight: Math.max(0, Math.min(320, upwards ? above : below)),
-      ...(upwards ? { bottom: window.innerHeight - rect.top + gap } : { top: rect.bottom + gap }),
+      // `auto` cancels the popover UA `inset: 0`, which would otherwise stretch the menu.
+      ...(upwards
+        ? { bottom: window.innerHeight - rect.top + gap, top: 'auto' }
+        : { top: rect.bottom + gap, bottom: 'auto' }),
     })
   }, [boundarySelector, triggerRef])
 

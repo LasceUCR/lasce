@@ -63,7 +63,8 @@ export type NosotrosResearcherEditingData = {
  * here, since a researcher can have more than one (matching `ResearcherCard`'s multi-address
  * display). Capped at 2 by both this schema and a database CHECK constraint.
  */
-const srcSchema = z.string().trim().min(1, 'La foto es obligatoria.')
+/** The photo is optional: `''` or a missing value means the researcher has no photo. */
+const srcSchema = z.string().trim()
 const nameSchema = z.string().trim().min(1, 'El nombre es obligatorio.')
 const institutionSchema = z.string().trim().min(1, 'La institución es obligatoria.')
 const emailSchema = z
@@ -83,10 +84,10 @@ const emailSchema = z
       .max(2, 'Máximo 2 correos de contacto.'),
   )
 
-/** Body of a create request. Both languages are required, and so are the shared fields. */
+/** Body of a create request. Both languages are required, and so are the shared fields but the photo. */
 export const nosotrosResearcherCreateSchema = z.strictObject({
   content: nosotrosResearcherContent.schema,
-  src: srcSchema,
+  src: srcSchema.optional(),
   name: nameSchema,
   email: emailSchema.optional(),
   institution: institutionSchema,

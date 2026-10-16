@@ -37,3 +37,8 @@ export const WithContentLang: Story = {
 export const WithUnknownContentLang: Story = {
   args: { ...carolina, contentLang: '' },
 }
+
+/** A researcher saved without a photo shows the default portrait. */
+export const WithoutPhoto: Story = {
+  args: { ...carolina, src: '' },
+}

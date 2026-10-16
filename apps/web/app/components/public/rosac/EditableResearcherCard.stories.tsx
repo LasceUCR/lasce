@@ -30,7 +30,7 @@ export const ViewMode: Story = {
   args: {
     researcher: mockResearcher,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: async () => true,
   },
   decorators: [
     (Story) => (
@@ -47,7 +47,7 @@ export const EditModeOn: Story = {
     canEdit: true,
     canDelete: true,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: async () => true,
   },
   decorators: [
     (Story) => (
@@ -65,7 +65,7 @@ export const AssistantMode: Story = {
     canEdit: true,
     canDelete: false,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: async () => true,
   },
   decorators: [
     (Story) => (

@@ -1,9 +1,11 @@
 import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
+import es from '@/messages/es.json' with { type: 'json' }
+
 import { locationMapProvider } from './location-map'
-import { rosacConstructionContent, type ConstructionContent } from './rosac-construction'
-import { rosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
+import { getRosacConstructionContent, type ConstructionContent } from './rosac-construction'
+import { getRosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
 
 // Built once and reused in both `location.intro` (as flowing prose) and `location.address`
 // (as its own field, kept for anything that needs the bare address rather than a sentence),
@@ -27,11 +29,7 @@ const rosacLocationAddress =
  * `institution` is the affiliation shown as `Institución: {institution}`. `email` is only set when
  * LASCE supplied a public address, or an admin added one through the form.
  */
-export const rosacInfoMeta = {
-  title: 'Radioastronomía y ROSAC | LASCE',
-  description:
-    'Conoce el Radio Observatorio de Santa Cruz: su propósito, la antena de 11 metros, sus capacidades en desarrollo, el equipo de investigadores y su relación con LASCE.',
-} as const
+export const rosacInfoMeta = es.rosac.meta
 
 export type RosacCardIcon =
   | 'antenna'
@@ -130,6 +128,7 @@ export interface RosacInfoContent {
     intro: string
     hint: string
     emptyMessage: string
+    institutionLabel: string
     people: readonly TeamMember[]
   }
   acknowledgments: {
@@ -164,460 +163,516 @@ export interface RosacDonation {
   description: string
   image: { src: string; alt: string }
 }
+export const defaultTeamPeople: readonly TeamMember[] = [
+  {
+    id: 'carolina-salas',
+    src: '/images/ROSAC/team/CarolinaSalas.jpg',
+    name: 'Dra. Carolina Salas Matamoros',
+    role: 'Investigadora principal',
+    email: 'carolina.salas_mata@ucr.ac.cr',
+    institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+    description:
+      'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
+  },
+  {
+    id: 'miguel-velazquez',
+    src: '/images/ROSAC/team/MiguelVelazquez.jpg',
+    name: 'Dr. Miguel Velázquez',
+    role: 'Investigador',
+    email: 'miguel.velazquez@ucr.ac.cr',
+    institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica, México',
+    description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
+  },
+  {
+    id: 'david-gale',
+    src: '/images/ROSAC/team/DavidGale.jpg',
+    name: 'Dr. David Gale',
+    role: 'Investigador',
+    email: 'david.gale@ucr.ac.cr',
+    institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), Puebla, México',
+    description:
+      'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
+  },
+  {
+    id: 'oscar-nunez',
+    src: '/images/ROSAC/team/OscarNunez.jpg',
+    name: 'Dr. Óscar Núñez',
+    role: 'Investigador',
+    email: 'oscar.nunezmata@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Eléctrica, UCR',
+    description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
+  },
+  {
+    id: 'federico-ruiz',
+    src: '/images/ROSAC/team/FedericoRuiz.png',
+    name: 'Dr. Federico Ruiz',
+    role: 'Investigador',
+    email: 'federico.ruizugalde@ucr.ac.cr',
+    institution: 'Instituto de Investigaciones en Ingeniería (INII), UCR',
+    description:
+      'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
+  },
+  {
+    id: 'gustavo-lara',
+    src: '/images/ROSAC/team/GustavoLara.jpg',
+    name: 'MSc. Gustavo Lara',
+    role: 'Investigador',
+    email: 'gustavo.lara@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+  },
+  {
+    id: 'andres-fallas',
+    src: '/images/ROSAC/team/AndresFallas.jpg',
+    name: 'Ing. Andrés Fallas',
+    role: 'Investigador',
+    email: 'andres.fallas@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+  },
+  {
+    id: 'wagner-mejias',
+    src: '/images/ROSAC/team/WagnerMejias.jpg',
+    name: 'MSc. Wagner Mejías',
+    role: 'Investigador',
+    email: 'wagner.mejias@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Mecánica, UCR',
+    description:
+      'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
+  },
+  {
+    id: 'eduardo-ibarra',
+    src: '/images/ROSAC/team/EduardoIbarra.jpg',
+    name: 'Dr. Eduardo Ibarra',
+    role: 'Colaborador externo',
+    institution: 'Investigador en ingeniería de microondas en Quantum Motion Technologies, Londres',
+    description:
+      'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
+  },
+  {
+    id: 'andres-corrales',
+    src: '/images/ROSAC/team/AndresCorrales.jpg',
+    name: 'Ing. Andrés Corrales',
+    role: 'Colaborador externo',
+    institution: 'Hewlett Packard Enterprise, Costa Rica',
+    description:
+      'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
+  },
+  {
+    id: 'andres-gamboa',
+    src: '/images/ROSAC/team/AndresGamboa.jpg',
+    name: 'Ing. Andrés Gamboa',
+    role: 'Colaborador externo',
+    institution: 'Cirtec Medical Enterprise',
+    description:
+      'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
+  },
+  {
+    id: 'jelmuth-rojas',
+    src: '/images/ROSAC/team/JelmutRojas.jpg',
+    name: 'Jelmuth Rojas',
+    role: 'Colaborador externo',
+    institution: 'INDI CR',
+    description: 'Apoyo en tareas de nivelación de la estructura.',
+  },
+  {
+    id: 'barnald-bocker',
+    src: '/images/ROSAC/team/BarnaldBocker-2.jpg',
+    name: 'Barnald Bocker',
+    role: 'Asistente',
+    institution: 'Estudiante de la Escuela de Física, UCR',
+    description:
+      'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
+  },
+  {
+    id: 'fabian-chaverri',
+    src: '/images/ROSAC/team/FabianChaverri.jpg',
+    name: 'MSc. Fabián Chaverri',
+    role: 'Futuro estudiante de doctorado',
+    institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+    description:
+      'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
+  },
+]
 
-export const rosacInfoContent = {
-  construction: rosacConstructionContent,
-  instruments: rosacInstrumentsContent,
-  hero: {
-    kicker: 'Área de trabajo LASCE',
-    // The observatory's full name is the heading, so no separate lead line repeats it.
-    title: 'Radio Observatorio de Santa Cruz (ROSAC)',
-    // The photo already carries the ROSAC logo in its lower left corner, so no separate mark is
-    // shown. Narrow screens switch to a version with the logo centered, cropped around the center.
-    image: {
-      src: '/images/ROSAC/rosac_home.jpg',
-      alt: 'Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control, con el logo de ROSAC.',
-      presentation: 'banner',
-      width: 1672,
-      height: 749,
-      focus: 'left',
-      mobileSrc: '/images/ROSAC/rosac_home_mob.png',
+export const rosacInstitutions: readonly RosacAcknowledgment[] = [
+  {
+    name: 'Vicerrectoría de Investigación, UCR',
+    href: 'https://vinv.ucr.ac.cr',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
+      alt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
     },
   },
-  overview: {
-    title: '¿Qué es ROSAC?',
-    paragraphs: [
-      'El Radio Observatorio de Santa Cruz (ROSAC) es un proyecto de la Universidad de Costa Rica ubicado en el Recinto de Santa Cruz, Guanacaste. Su desarrollo gira alrededor de la adaptación de una antena parabólica de 11 metros para uso astronómico, mediante una nueva montura, sistemas de movimiento y apuntado, receptores, electrónica y software de control.',
-      'Su propósito es desarrollar capacidades nacionales para observar el Sol y otras fuentes celestes en frecuencias de radio. El proyecto conecta la investigación en astrofísica con la física, la electrónica, la ingeniería, las telecomunicaciones, el control automático y la programación.',
-    ],
-  },
-  characteristics: {
-    title: 'Características principales',
-    items: [
-      {
-        id: 'antenna',
-        icon: 'antenna',
-        title: 'Antena de 11 metros',
-        description:
-          'Una antena parabólica se adapta para uso astronómico con una nueva montura y sistemas de movimiento y apuntado.',
-      },
-      {
-        id: 'location',
-        icon: 'location',
-        title: 'Santa Cruz, Guanacaste',
-        description:
-          'El proyecto se desarrolla en el Recinto de Santa Cruz de la Universidad de Costa Rica.',
-      },
-      {
-        id: 'frequencies',
-        icon: 'frequency',
-        title: 'Entre 100 y 1000 MHz',
-        description:
-          'Se preparan observaciones en este rango de frecuencias de radio, como parte del desarrollo del radiotelescopio.',
-      },
-      {
-        id: 'sources',
-        icon: 'sun',
-        title: 'El Sol y otras fuentes celestes',
-        description:
-          'Se desarrollan capacidades para apuntar, seguir fuentes astronómicas y registrar sus emisiones de radio.',
-      },
-    ],
-  },
-  location: {
-    title: 'Ubicación',
-    intro: `El Radio Observatorio de Santa Cruz (ROSAC) se ubica en el ${rosacLocationAddress}.`,
-    address: rosacLocationAddress,
-    coordinates: { latitude: 10.2840093, longitude: -85.5959871 },
-    zoom: 16,
-    tileUrl: locationMapProvider.tileUrl,
-    attribution: locationMapProvider.attribution,
-    loadTimeoutMs: locationMapProvider.loadTimeoutMs,
-    markerLabel: 'ROSAC',
-    unavailableMessage:
-      'No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.',
-  },
-  activities: {
-    title: '¿Qué desarrollamos en ROSAC?',
-    items: [
-      {
-        id: 'tracking',
-        icon: 'tracking',
-        title: 'Apuntado y seguimiento',
-        description:
-          'Desarrollamos un radiotelescopio capaz de apuntar y seguir fuentes astronómicas.',
-      },
-      {
-        id: 'observations',
-        icon: 'sun',
-        title: 'Observaciones en radio',
-        description:
-          'Preparamos observaciones del Sol y de otras fuentes celestes entre 100 y 1000 MHz.',
-      },
-      {
-        id: 'control',
-        icon: 'control',
-        title: 'Control y procesamiento de señales',
-        description:
-          'Diseñamos y probamos sistemas de control, seguimiento, posicionamiento, adquisición y procesamiento de señales.',
-      },
-      {
-        id: 'receivers',
-        icon: 'receiver',
-        title: 'Receptores de radio',
-        description:
-          'Desarrollamos y evaluamos receptores para registrar emisiones de radio asociadas con objetos celestes.',
-      },
-      {
-        id: 'infrastructure',
-        icon: 'maintenance',
-        title: 'Capacidades técnicas locales',
-        description:
-          'Generamos experiencia local en construcción, operación, calibración y mantenimiento de infraestructura de radioastronomía.',
-      },
-      {
-        id: 'education',
-        icon: 'education',
-        title: 'Investigación, docencia y divulgación',
-        description:
-          'Impulsamos la ciencia desde Guanacaste, ampliando la participación regional en ciencia y tecnología.',
-      },
-    ],
-  },
-  radioObservation: {
-    title: '¿Por qué observar en radio?',
-    paragraphs: [
-      'Las emisiones de radio permiten dar seguimiento a electrones acelerados y a estructuras que se desplazan a través de la corona solar y el medio interplanetario. Estas observaciones complementan las imágenes en luz visible, ultravioleta y rayos X, y ayudan a reconstruir la evolución de los eventos solares.',
-    ],
-  },
-  relationship: {
-    title: 'ROSAC y LASCE',
-    paragraphs: [
-      'LASCE integra datos, modelos y métodos de análisis para estudiar la actividad solar y su relación con el entorno terrestre. ROSAC aporta infraestructura nacional para observar el Sol en frecuencias de radio y fortalecer esas capacidades de investigación.',
-      'LASCE convierte observaciones en conocimiento; ROSAC genera y fortalece una parte esencial de esas observaciones. Juntos conectan ciencia básica, desarrollo tecnológico, formación y aplicaciones de interés nacional.',
-    ],
-  },
-  team: {
-    title: 'Investigadores',
-    intro:
-      'Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.',
-    hint: 'Haga clic en una ficha para ver más información.',
-    emptyMessage: 'No hay información de investigadores disponible en este momento.',
-    people: [
-      {
-        id: 'carolina-salas',
-        src: '/images/ROSAC/team/CarolinaSalas.jpg',
-        name: 'Dra. Carolina Salas Matamoros',
-        role: 'Investigadora principal',
-        email: 'carolina.salas_mata@ucr.ac.cr',
-        institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
-        description:
-          'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
-      },
-      {
-        id: 'miguel-velazquez',
-        src: '/images/ROSAC/team/MiguelVelazquez.jpg',
-        name: 'Dr. Miguel Velázquez',
-        role: 'Investigador',
-        email: 'miguel.velazquez@ucr.ac.cr',
-        institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica, México',
-        description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
-      },
-      {
-        id: 'david-gale',
-        src: '/images/ROSAC/team/DavidGale.jpg',
-        name: 'Dr. David Gale',
-        role: 'Investigador',
-        email: 'david.gale@ucr.ac.cr',
-        institution:
-          'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), Puebla, México',
-        description:
-          'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
-      },
-      {
-        id: 'oscar-nunez',
-        src: '/images/ROSAC/team/OscarNunez.jpg',
-        name: 'Dr. Óscar Núñez',
-        role: 'Investigador',
-        email: 'oscar.nunezmata@ucr.ac.cr',
-        institution: 'Escuela de Ingeniería Eléctrica, UCR',
-        description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
-      },
-      {
-        id: 'federico-ruiz',
-        src: '/images/ROSAC/team/FedericoRuiz.png',
-        name: 'Dr. Federico Ruiz',
-        role: 'Investigador',
-        email: 'federico.ruizugalde@ucr.ac.cr',
-        institution: 'Instituto de Investigaciones en Ingeniería (INII), UCR',
-        description:
-          'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
-      },
-      {
-        id: 'gustavo-lara',
-        src: '/images/ROSAC/team/GustavoLara.jpg',
-        name: 'MSc. Gustavo Lara',
-        role: 'Investigador',
-        email: 'gustavo.lara@ucr.ac.cr',
-        institution: 'Escuela de Ingeniería Topográfica, UCR',
-        description:
-          'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
-      },
-      {
-        id: 'andres-fallas',
-        src: '/images/ROSAC/team/AndresFallas.jpg',
-        name: 'Ing. Andrés Fallas',
-        role: 'Investigador',
-        email: 'andres.fallas@ucr.ac.cr',
-        institution: 'Escuela de Ingeniería Topográfica, UCR',
-        description:
-          'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
-      },
-      {
-        id: 'wagner-mejias',
-        src: '/images/ROSAC/team/WagnerMejias.jpg',
-        name: 'MSc. Wagner Mejías',
-        role: 'Investigador',
-        email: 'wagner.mejias@ucr.ac.cr',
-        institution: 'Escuela de Ingeniería Mecánica, UCR',
-        description:
-          'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
-      },
-      {
-        id: 'eduardo-ibarra',
-        src: '/images/ROSAC/team/EduardoIbarra.jpg',
-        name: 'Dr. Eduardo Ibarra',
-        role: 'Colaborador externo',
-        institution:
-          'Investigador en ingeniería de microondas en Quantum Motion Technologies, Londres',
-        description:
-          'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
-      },
-      {
-        id: 'andres-corrales',
-        src: '/images/ROSAC/team/AndresCorrales.jpg',
-        name: 'Ing. Andrés Corrales',
-        role: 'Colaborador externo',
-        institution: 'Hewlett Packard Enterprise, Costa Rica',
-        description:
-          'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
-      },
-      {
-        id: 'andres-gamboa',
-        src: '/images/ROSAC/team/AndresGamboa.jpg',
-        name: 'Ing. Andrés Gamboa',
-        role: 'Colaborador externo',
-        institution: 'Cirtec Medical Enterprise',
-        description:
-          'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
-      },
-      {
-        id: 'jelmuth-rojas',
-        src: '/images/ROSAC/team/JelmutRojas.jpg',
-        name: 'Jelmuth Rojas',
-        role: 'Colaborador externo',
-        institution: 'INDI CR',
-        description: 'Apoyo en tareas de nivelación de la estructura.',
-      },
-      {
-        id: 'barnald-bocker',
-        src: '/images/ROSAC/team/BarnaldBocker-2.jpg',
-        name: 'Barnald Bocker',
-        role: 'Asistente',
-        institution: 'Estudiante de la Escuela de Física, UCR',
-        description:
-          'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
-      },
-      {
-        id: 'fabian-chaverri',
-        src: '/images/ROSAC/team/FabianChaverri.jpg',
-        name: 'MSc. Fabián Chaverri',
-        role: 'Futuro estudiante de doctorado',
-        institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
-        description:
-          'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
-      },
-    ],
-  },
-  acknowledgments: {
-    title: 'Agradecimientos ROSAC',
-    subtitle: 'Lista de instituciones a las que el ROSAC les extiende agradecimiento.',
-    institutions: [
-      {
-        name: 'Vicerrectoría de Investigación, UCR',
-        href: 'https://vinv.ucr.ac.cr',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
-          alt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
-        },
-      },
-      {
-        name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
-        href: 'https://cinespa.ucr.ac.cr',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/cinespa.webp',
-          alt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
-        },
-      },
-      {
-        name: 'Escuela de Física, UCR',
-        href: 'https://fisica.ucr.ac.cr',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/efis.webp',
-          alt: 'Logo de la Escuela de Física, UCR',
-        },
-      },
-      {
-        name: 'Escuela de Ingeniería Mecánica, UCR',
-        href: 'https://www.ucr.ac.cr/directorio/escuela-de-ingenieria-mecanica.html',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/eim.webp',
-          alt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
-        },
-      },
-      {
-        name: 'Escuela de Ingeniería Topográfica, UCR',
-        href: 'https://eit.ucr.ac.cr/',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/eit.webp',
-          alt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
-        },
-      },
-      {
-        name: 'Escuela de Ingeniería Eléctrica, UCR',
-        href: 'https://eie.ucr.ac.cr',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/eie.webp',
-          alt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
-        },
-      },
-      {
-        name: 'Recinto de Santa Cruz',
-        href: 'https://www.ucr.ac.cr/directorio/recinto-universitario-de-santa-cruz/',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
-          alt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
-        },
-      },
-      {
-        name: 'Oficina de Servicios Generales (OSG), UCR',
-        href: 'https://osg.ucr.ac.cr',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/osg.webp',
-          alt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
-        },
-      },
-      {
-        name: 'Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR), UCR',
-        href: 'https://www.lanamme.ucr.ac.cr/',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/lanamme.webp',
-          alt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
-        },
-      },
-      {
-        name: 'Radiográfica Costarricense S.A. (RACSA)',
-        href: 'https://www.racsa.go.cr/',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/racsa.webp',
-          alt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
-        },
-      },
-      {
-        name: 'Bomberos de Costa Rica',
-        href: 'https://www.bomberos.go.cr',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
-          alt: 'Logo de Bomberos de Costa Rica',
-        },
-      },
-      {
-        name: 'Instituto Geográfico Nacional',
-        href: 'https://www.snitcr.go.cr/ign_ign',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
-          alt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
-        },
-      },
-      {
-        name: 'INDI CR',
-        href: 'https://www.indicr.com/',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/indi.webp',
-          alt: 'Logo de INDI, Ingeniería y Diseño',
-        },
-      },
-      {
-        // No confirmed URL yet — renders as a plain, non-interactive tile until one is supplied.
-        name: 'Prysmian Group',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
-          alt: 'Logo de Prysmian Group',
-        },
-      },
-      {
-        name: 'EATON Costa Rica',
-        href: 'https://www.eaton.com/cr/es-mx/company.html',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/eaton.webp',
-          alt: 'Logo de EATON Costa Rica',
-        },
-      },
-      {
-        name: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), México',
-        href: 'https://www.inaoep.mx',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/inaoe.webp',
-          alt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
-        },
-      },
-      {
-        name: 'Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
-        href: 'https://www.gob.mx/amexcid',
-        logo: {
-          src: '/images/ROSAC/acknowledgments/amexcid.webp',
-          alt: 'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
-        },
-      },
-    ],
-  },
-  donations: {
-    title: 'Donaciones ROSAC',
-    subtitle:
-      'El apoyo de empresas y organizaciones que hacen posible seguir creciendo y desarrollando nuestra labor.',
-    items: [
-      {
-        title: 'Donaciones Eaton',
-        description:
-          'La organización ROSAC recibió dos donaciones de equipo por parte de la empresa Eaton, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.',
-        image: {
-          src: '/images/ROSAC/donations/eaton.webp',
-          alt: 'Equipo de ROSAC junto a representantes de Eaton y el tablero eléctrico donado',
-        },
-      },
-      {
-        title: 'Donación Prysmian',
-        description:
-          'La organización ROSAC recibió una donación de equipo por parte de la empresa Prysmian, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.',
-        image: {
-          src: '/images/ROSAC/donations/prysmian.webp',
-          alt: 'Representante de Prysmian conversando con un miembro del equipo de ROSAC frente a la antena del observatorio',
-        },
-      },
-    ],
-    cta: {
-      title: '¿Te gustaría ayudarnos?',
-      description:
-        'Escríbenos y conversemos sobre cómo tu empresa u organización puede apoyar a ROSAC.',
-      buttonLabel: 'Contáctanos',
-      href: '/contacto',
+
+  {
+    name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+    href: 'https://cinespa.ucr.ac.cr',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/cinespa.webp',
+      alt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
     },
   },
-  backLink: {
-    href: '/#areas-de-trabajo',
-    label: 'Volver a las áreas',
+  {
+    name: 'Escuela de Física, UCR',
+    href: 'https://fisica.ucr.ac.cr',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/efis.webp',
+      alt: 'Logo de la Escuela de Física, UCR',
+    },
   },
-} as const satisfies RosacInfoContent
+  {
+    name: 'Escuela de Ingeniería Mecánica, UCR',
+    href: 'https://www.ucr.ac.cr/directorio/escuela-de-ingenieria-mecanica.html',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/eim.webp',
+      alt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
+    },
+  },
+  {
+    name: 'Escuela de Ingeniería Topográfica, UCR',
+    href: 'https://eit.ucr.ac.cr/',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/eit.webp',
+      alt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
+    },
+  },
+  {
+    name: 'Escuela de Ingeniería Eléctrica, UCR',
+    href: 'https://eie.ucr.ac.cr',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/eie.webp',
+      alt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
+    },
+  },
+  {
+    name: 'Recinto de Santa Cruz',
+    href: 'https://www.ucr.ac.cr/directorio/recinto-universitario-de-santa-cruz/',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
+      alt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
+    },
+  },
+  {
+    name: 'Oficina de Servicios Generales (OSG), UCR',
+    href: 'https://osg.ucr.ac.cr',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/osg.webp',
+      alt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
+    },
+  },
+  {
+    name: 'Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR), UCR',
+    href: 'https://www.lanamme.ucr.ac.cr/',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/lanamme.webp',
+      alt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
+    },
+  },
+  {
+    name: 'Radiográfica Costarricense S.A. (RACSA)',
+    href: 'https://www.racsa.go.cr/',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/racsa.webp',
+      alt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
+    },
+  },
+  {
+    name: 'Bomberos de Costa Rica',
+    href: 'https://www.bomberos.go.cr',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
+      alt: 'Logo de Bomberos de Costa Rica',
+    },
+  },
+  {
+    name: 'Instituto Geográfico Nacional',
+    href: 'https://www.snitcr.go.cr/ign_ign',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
+      alt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
+    },
+  },
+  {
+    name: 'INDI CR',
+    href: 'https://www.indicr.com/',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/indi.webp',
+      alt: 'Logo de INDI, Ingeniería y Diseño',
+    },
+  },
+  {
+    // No confirmed URL yet — renders as a plain, non-interactive tile until one is supplied.
+    name: 'Prysmian Group',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
+      alt: 'Logo de Prysmian Group',
+    },
+  },
+  {
+    name: 'EATON Costa Rica',
+    href: 'https://www.eaton.com/cr/es-mx/company.html',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/eaton.webp',
+      alt: 'Logo de EATON Costa Rica',
+    },
+  },
+  {
+    name: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), México',
+    href: 'https://www.inaoep.mx',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/inaoe.webp',
+      alt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
+    },
+  },
+  {
+    name: 'Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    href: 'https://www.gob.mx/amexcid',
+    logo: {
+      src: '/images/ROSAC/acknowledgments/amexcid.webp',
+      alt: 'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    },
+  },
+]
+
+export type RosacMessages = Pick<typeof es, 'rosac'>
+
+const personKeyBySlugOrName: Record<string, keyof typeof es.rosac.team.people> = {
+  'carolina-salas': 'carolinaSalas',
+  'miguel-velazquez': 'miguelVelazquez',
+  'david-gale': 'davidGale',
+  'oscar-nunez': 'oscarNunez',
+  'federico-ruiz': 'federicoRuiz',
+  'gustavo-lara': 'gustavoLara',
+  'andres-fallas': 'andresFallas',
+  'wagner-mejias': 'wagnerMejias',
+  'eduardo-ibarra': 'eduardoIbarra',
+  'andres-corrales': 'andresCorrales',
+  'andres-gamboa': 'andresGamboa',
+  'jelmuth-rojas': 'jelmuthRojas',
+  'barnald-bocker': 'barnaldBocker',
+  'fabian-chaverri': 'fabianChaverri',
+  'dra. carolina salas matamoros': 'carolinaSalas',
+  'dr. miguel velázquez': 'miguelVelazquez',
+  'dr. david gale': 'davidGale',
+  'dr. óscar núñez': 'oscarNunez',
+  'dr. oscar nunez': 'oscarNunez',
+  'dr. federico ruiz': 'federicoRuiz',
+  'msc. gustavo lara': 'gustavoLara',
+  'ing. andrés fallas': 'andresFallas',
+  'ing. andres fallas': 'andresFallas',
+  'msc. wagner mejías': 'wagnerMejias',
+  'msc. wagner mejias': 'wagnerMejias',
+  'dr. eduardo ibarra': 'eduardoIbarra',
+  'ing. andrés corrales': 'andresCorrales',
+  'ing. andres corrales': 'andresCorrales',
+  'ing. andrés gamboa': 'andresGamboa',
+  'ing. andres gamboa': 'andresGamboa',
+  'jelmuth rojas': 'jelmuthRojas',
+  'barnald bocker': 'barnaldBocker',
+  'msc. fabián chaverri': 'fabianChaverri',
+  'msc. fabian chaverri': 'fabianChaverri',
+}
+
+export function localizeResearchers(
+  people: readonly TeamMember[],
+  messages?: RosacMessages,
+): TeamMember[] {
+  const peopleMessages = messages?.rosac?.team?.people ?? es.rosac.team.people
+  if (!peopleMessages) return [...people]
+
+  return people.map((person) => {
+    const key =
+      personKeyBySlugOrName[person.id] ?? personKeyBySlugOrName[person.name.toLowerCase().trim()]
+
+    if (!key) return person
+
+    const translation = peopleMessages[key]
+    if (!translation) return person
+
+    return {
+      ...person,
+      role: translation.role ?? person.role,
+      description: translation.description ?? person.description,
+    }
+  })
+}
+
+export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
+  const rosac = messages?.rosac ?? es.rosac
+  const hero = rosac.hero ?? es.rosac.hero
+  const overview = rosac.overview ?? es.rosac.overview
+  const characteristics = rosac.characteristics ?? es.rosac.characteristics
+  const location = rosac.location ?? es.rosac.location
+  const activities = rosac.activities ?? es.rosac.activities
+  const radioObservation = rosac.radioObservation ?? es.rosac.radioObservation
+  const relationship = rosac.relationship ?? es.rosac.relationship
+  const team = rosac.team ?? es.rosac.team
+  const donations = rosac.donations ?? es.rosac.donations
+  const acknowledgments = rosac.acknowledgments ?? es.rosac.acknowledgments
+  const backLink = rosac.backLink ?? es.rosac.backLink
+
+  return {
+    construction: getRosacConstructionContent(messages),
+    instruments: getRosacInstrumentsContent(messages),
+    hero: {
+      kicker: hero.kicker,
+      title: hero.title,
+      image: {
+        src: '/images/ROSAC/rosac_home.jpg',
+        alt: hero.imageAlt,
+        presentation: 'banner',
+        width: 1672,
+        height: 580,
+        focus: 'center',
+        mobileSrc: '/images/ROSAC/rosac_home_mob.png',
+      },
+    },
+    overview: {
+      title: overview.title,
+      paragraphs: [overview.p1, overview.p2],
+    },
+    characteristics: {
+      title: characteristics.title,
+      items: [
+        {
+          id: 'antenna',
+          icon: 'antenna',
+          title: characteristics.items.antenna.title,
+          description: characteristics.items.antenna.description,
+        },
+        {
+          id: 'location',
+          icon: 'location',
+          title: characteristics.items.location.title,
+          description: characteristics.items.location.description,
+        },
+        {
+          id: 'frequencies',
+          icon: 'frequency',
+          title: characteristics.items.frequencies.title,
+          description: characteristics.items.frequencies.description,
+        },
+        {
+          id: 'sources',
+          icon: 'sun',
+          title: characteristics.items.sources.title,
+          description: characteristics.items.sources.description,
+        },
+      ],
+    },
+    location: {
+      title: location.title,
+      intro: location.intro.replace('{address}', rosacLocationAddress),
+      address: rosacLocationAddress,
+      coordinates: { latitude: 10.2840093, longitude: -85.5959871 },
+      zoom: 16,
+      tileUrl: locationMapProvider.tileUrl,
+      attribution: locationMapProvider.attribution,
+      loadTimeoutMs: locationMapProvider.loadTimeoutMs,
+      markerLabel: location.markerLabel,
+      unavailableMessage: location.unavailableMessage,
+    },
+    activities: {
+      title: activities.title,
+      items: [
+        {
+          id: 'tracking',
+          icon: 'tracking',
+          title: activities.items.tracking.title,
+          description: activities.items.tracking.description,
+        },
+        {
+          id: 'observations',
+          icon: 'sun',
+          title: activities.items.observations.title,
+          description: activities.items.observations.description,
+        },
+        {
+          id: 'control',
+          icon: 'control',
+          title: activities.items.control.title,
+          description: activities.items.control.description,
+        },
+        {
+          id: 'receivers',
+          icon: 'receiver',
+          title: activities.items.receivers.title,
+          description: activities.items.receivers.description,
+        },
+        {
+          id: 'infrastructure',
+          icon: 'maintenance',
+          title: activities.items.infrastructure.title,
+          description: activities.items.infrastructure.description,
+        },
+        {
+          id: 'education',
+          icon: 'education',
+          title: activities.items.education.title,
+          description: activities.items.education.description,
+        },
+      ],
+    },
+    radioObservation: {
+      title: radioObservation.title,
+      paragraphs: [radioObservation.p1],
+    },
+    relationship: {
+      title: relationship.title,
+      paragraphs: [relationship.p1, relationship.p2],
+    },
+    team: {
+      title: team.title,
+      intro: team.intro,
+      hint: team.hint,
+      emptyMessage: team.emptyMessage,
+      institutionLabel: (team as { institutionLabel?: string }).institutionLabel ?? 'Institución',
+      people: localizeResearchers(defaultTeamPeople, messages),
+    },
+    acknowledgments: {
+      title: acknowledgments.title,
+      subtitle: acknowledgments.subtitle,
+      institutions: rosacInstitutions,
+    },
+    donations: {
+      title: donations.title,
+      subtitle: donations.subtitle,
+      items: [
+        {
+          title: donations.items.eaton.title,
+          description: donations.items.eaton.description,
+          image: {
+            src: '/images/ROSAC/donations/eaton.webp',
+            alt: donations.items.eaton.imageAlt,
+          },
+        },
+        {
+          title: donations.items.prysmian.title,
+          description: donations.items.prysmian.description,
+          image: {
+            src: '/images/ROSAC/donations/prysmian.webp',
+            alt: donations.items.prysmian.imageAlt,
+          },
+        },
+      ],
+      cta: {
+        title: donations.cta.title,
+        description: donations.cta.description,
+        buttonLabel: donations.cta.buttonLabel,
+        href: '/contacto',
+      },
+    },
+    backLink: {
+      href: '/#areas-de-trabajo',
+      label: backLink.label,
+    },
+  }
+}
+
+export const rosacInfoContent = getRosacInfoContent(es)
 
 /**
  * The ROSAC researcher profiles (LASCE-CON-012-085), persisted in
@@ -628,7 +683,7 @@ export const rosacInfoContent = {
  */
 type ResearcherRow = {
   id: string
-  photoUrl: string
+  photoUrl: string | null
   role: string
   name: string
   institution: string
@@ -639,7 +694,9 @@ type ResearcherRow = {
 function toTeamMember(row: ResearcherRow): TeamMember {
   return {
     id: row.id,
-    src: row.photoUrl,
+    // A researcher without a photo is stored as `null` and reaches the UI as `''`, the same
+    // "no photo" value `ResearcherForm` uses.
+    src: row.photoUrl ?? '',
     role: row.role,
     name: row.name,
     institution: row.institution,
@@ -666,7 +723,8 @@ function normalizeOptional(value: string | undefined): string | null {
  * by both this schema and a database CHECK constraint.
  */
 export const researcherInputSchema = z.object({
-  src: z.string().trim().min(1, 'La foto es obligatoria.'),
+  /** Optional: `''` or a missing value means the researcher has no photo. */
+  src: z.string().trim().optional(),
   role: z.string().trim().min(1, 'El rol es obligatorio.'),
   name: z.string().trim().min(1, 'El nombre es obligatorio.'),
   email: z
@@ -703,7 +761,7 @@ export async function createResearcher(
 ): Promise<TeamMember> {
   const row = await prisma.researcher.create({
     data: {
-      photoUrl: data.src,
+      photoUrl: normalizeOptional(data.src),
       role: data.role,
       name: data.name,
       email: data.email ?? [],
@@ -732,7 +790,7 @@ export async function updateResearcher(
   const row = await prisma.researcher.update({
     where: { id },
     data: {
-      photoUrl: data.src,
+      photoUrl: normalizeOptional(data.src),
       role: data.role,
       name: data.name,
       email: data.email ?? [],

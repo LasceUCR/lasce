@@ -210,7 +210,7 @@ const spanishResearcherFixtures: readonly NosotrosResearcher[] = [
   },
   {
     id: 'alonso-vega',
-    src: '/images/Researchers/User.png',
+    src: '/images/Researchers/AlonsoVega.jpeg',
     name: 'MSc. Alonso Vega',
     role: 'Investigador colaborador',
     email: 'alonso.vega_f@ucr.ac.cr',
@@ -749,7 +749,9 @@ function toNosotrosResearcher(
 
   return {
     id: row.id,
-    src: row.photoUrl,
+    // A researcher without a photo is stored as `null` and reaches the UI as `''`, the same
+    // "no photo" value `ResearcherForm` uses.
+    src: row.photoUrl ?? '',
     role: shown.role,
     name: row.name,
     institution: row.institution,
@@ -760,6 +762,11 @@ function toNosotrosResearcher(
       ? { editing: { content, isLegacy, version: toVersion(row.modifiedAt) } }
       : {}),
   }
+}
+
+/** `''` and `undefined` both mean "no photo", stored as `null`. */
+function photoUrlFrom(src: string | undefined): string | null {
+  return src ? src : null
 }
 
 /**
@@ -794,7 +801,7 @@ export async function createNosotrosResearcher(
   const result = await runWrite<NosotrosResearcherRow, never>((tx) =>
     tx.nosotrosResearcher.create({
       data: {
-        photoUrl: input.src,
+        photoUrl: photoUrlFrom(input.src),
         name: input.name,
         email: input.email ?? [],
         institution: input.institution,
@@ -874,7 +881,7 @@ export async function updateNosotrosResearcher(
         where: { id, modifiedAt: expectedModifiedAt },
         data: {
           ...(content ? baseContent(nosotrosResearcherContent, content) : {}),
-          ...(input.src === undefined ? {} : { photoUrl: input.src }),
+          ...(input.src === undefined ? {} : { photoUrl: photoUrlFrom(input.src) }),
           ...(input.name === undefined ? {} : { name: input.name }),
           ...(input.email === undefined ? {} : { email: input.email }),
           ...(input.institution === undefined ? {} : { institution: input.institution }),

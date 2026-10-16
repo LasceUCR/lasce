@@ -102,10 +102,20 @@ describe('nosotrosResearcherCreateSchema', () => {
     })
 
     expect(issuesOf(result).map((issue) => issue.message)).toEqual([
-      'La foto es obligatoria.',
       'El nombre es obligatorio.',
       'La institución es obligatoria.',
     ])
+  })
+
+  test('accepts a researcher with no photo, which is optional', () => {
+    const { src: _src, ...withoutPhoto } = shared
+
+    expect(nosotrosResearcherCreateSchema.safeParse({ ...withoutPhoto, content }).success).toBe(
+      true,
+    )
+    expect(nosotrosResearcherCreateSchema.safeParse({ ...shared, src: '', content }).success).toBe(
+      true,
+    )
   })
 
   test('splits a comma-separated list of addresses into an array', () => {

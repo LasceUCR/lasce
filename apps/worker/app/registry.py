@@ -13,10 +13,17 @@ from app.models.jobs import (
     ExisPipelinePayload,
     IngestReadingsPayload,
     JobPayload,
+    MagPipelinePayload,
     QueryGoesArchivePayload,
     SuviPipelinePayload,
 )
-from app.processors import exis_pipeline, ingest_readings, query_goes_archive, suvi_pipeline
+from app.processors import (
+    exis_pipeline,
+    ingest_readings,
+    mag_pipeline,
+    query_goes_archive,
+    suvi_pipeline,
+)
 
 Processor = Callable[[Any, Any], Awaitable[dict[str, Any]]]
 
@@ -40,6 +47,7 @@ REGISTRY: dict[str, JobHandler] = {
     "query-goes-archive": JobHandler(QueryGoesArchivePayload, query_goes_archive.run),
     "suvi-pipeline": JobHandler(SuviPipelinePayload, suvi_pipeline.run),
     "exis-pipeline": JobHandler(ExisPipelinePayload, exis_pipeline.run),
+    "mag-pipeline": JobHandler(MagPipelinePayload, mag_pipeline.run),
 }
 
 

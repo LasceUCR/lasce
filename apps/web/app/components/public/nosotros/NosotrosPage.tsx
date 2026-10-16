@@ -94,7 +94,8 @@ export function NosotrosPage({
 }: NosotrosPageProps) {
   const router = useRouter()
   const t = useTranslations('nosotros.activities')
-  const tResearchers = useTranslations('nosotros.researchers')
+  const tResearchers = useTranslations('researchers')
+  const tNosotrosResearchers = useTranslations('nosotros.researchers')
   const sendWithFeedback = useRequestFeedback()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
@@ -302,7 +303,7 @@ export function NosotrosPage({
           })}
 
           {editMode && canCreate ? (
-            <AddItemCard label={t('add')}>
+            <AddItemCard label={t('add')} size="large">
               {({ close }) => (
                 <NosotrosActivityForm
                   editing={null}
@@ -345,11 +346,9 @@ export function NosotrosPage({
           )}
           trailingSlide={
             editMode && canCreate ? (
-              <AddItemCard label={tResearchers('add')}>
+              <AddItemCard label={tNosotrosResearchers('add')}>
                 {({ close }) => (
                   <ResearcherForm
-                    confirmMessage={tResearchers('createConfirmMessage')}
-                    confirmTitle={tResearchers('createConfirmTitle')}
                     onCancel={close}
                     onSave={(values: BilingualResearcherFormValues) =>
                       handleCreateResearcher(values, close)
@@ -391,6 +390,7 @@ export function NosotrosPage({
       <Modal
         onClose={closeEditor}
         open={editingActivity !== undefined && editingData !== null}
+        size="large"
         title={
           editingActivity ? t('editTitle', { title: editingActivity.title }) : t('editFallback')
         }

@@ -138,11 +138,9 @@ async function openFirstResearcherEditor(user: User) {
   return screen.getByRole('dialog', { name: 'Editar investigador' })
 }
 
-/** Presses "Confirmar" in the researcher editor and accepts the "Guardar cambios" dialog. */
+/** Presses "Confirmar" in the researcher editor, which saves straight away. */
 async function confirmResearcherEdit(user: User, editDialog: HTMLElement) {
   await user.click(within(editDialog).getByRole('button', { name: 'Confirmar' }))
-  const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-  await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 }
 
 /** Rewrites the first researcher's role in both languages, so no translation needs reviewing. */
@@ -1036,8 +1034,8 @@ describe('NosotrosPage', () => {
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar investigador' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    // Creating saves straight away: no second confirmation dialog.
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/nosotros/researchers',
@@ -1081,7 +1079,6 @@ describe('NosotrosPage', () => {
       'aria-selected',
       'true',
     )
-    expect(screen.queryByRole('dialog', { name: 'Agregar investigador' })).not.toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
@@ -1109,8 +1106,6 @@ describe('NosotrosPage', () => {
     const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar investigador' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(
       await screen.findByText(

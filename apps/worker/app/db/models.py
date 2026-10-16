@@ -68,6 +68,33 @@ class ResearchArea(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class ResearchAreaTranslation(Base):
+    """The ``title`` and ``description`` of a `ResearchArea` in a language other
+    than Spanish. One row per (area, locale); the Spanish text stays on
+    ``research_areas`` and the photograph is shared.
+    """
+
+    __tablename__ = "research_area_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "research_area_id",
+            "locale",
+            name="research_area_translations_research_area_id_locale_key",
+        ),
+        {"schema": "areas"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    research_area_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("areas.research_areas.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class Research(Base):
     """A public research record shown on `/investigacion`. Mapped to
     ``research_records`` (not ``research``) to avoid a `research.research`
@@ -143,6 +170,113 @@ class ResearchTranslation(Base):
     abstract: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SolarPhysicsSection(Base):
+    """An editable text section of the solar physics page (``/fisica-solar``).
+
+    ``title`` and ``body`` are the Spanish source text; the other languages live in
+    `SolarPhysicsSectionTranslation`. ``body`` is plain text with blank lines between paragraphs.
+    """
+
+    __tablename__ = "solar_physics_sections"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SolarPhysicsSectionTranslation(Base):
+    """The ``title`` and ``body`` of a `SolarPhysicsSection` in a language other than the
+    source one. One row per (section, locale); the source text stays on the section.
+    """
+
+    __tablename__ = "solar_physics_section_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "section_id",
+            "locale",
+            name="solar_physics_section_translations_section_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    section_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.solar_physics_sections.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class CollaborationScope(enum.StrEnum):
+    """Language-independent classification of a partner organization."""
+
+    NATIONAL = "national"
+    INTERNATIONAL = "international"
+
+
+class Collaboration(Base):
+    """Partner organization; the base country is the source-language text."""
+
+    __tablename__ = "collaborations"
+    __table_args__ = {"schema": "research"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(Text)
+    acronym: Mapped[str | None] = mapped_column(Text)
+    website_url: Mapped[str | None] = mapped_column(Text)
+    country: Mapped[str] = mapped_column(Text)
+    scope: Mapped[CollaborationScope] = mapped_column(
+        ENUM(
+            CollaborationScope,
+            name="collaboration_scope",
+            schema="research",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        )
+    )
+    position: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+
+
+class CollaborationTranslation(Base):
+    """Country in an additional locale, owned by the corresponding collaboration."""
+
+    __tablename__ = "collaboration_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "collaboration_id",
+            "locale",
+            name="collaboration_translations_collaboration_id_locale_key",
+        ),
+        {"schema": "research"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    collaboration_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("research.collaborations.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    country: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
 
 
 class NewsSource(Base):
@@ -424,6 +558,47 @@ class ExisFile(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class MagFile(Base):
+    """One daily MAG L2 1-minute geomagnetic field file (one UTC day). Written
+    by ``app.services.mag_readings.MagReadings``, the only writer this table
+    has. The readings themselves are in the ``mag_field`` InfluxDB
+    measurement; this row records that the day was ingested, from which
+    version of the archive's file, and how many points each channel produced.
+    """
+
+    __tablename__ = "mag_files"
+    __table_args__ = (
+        UniqueConstraint(
+            "satellite",
+            "product",
+            "day",
+            name="mag_files_satellite_product_day_key",
+        ),
+        {"schema": "solar"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    satellite: Mapped[str] = mapped_column(Text)
+    product: Mapped[str] = mapped_column(Text)
+    day: Mapped[date_type] = mapped_column(Date)
+    file_name: Mapped[str] = mapped_column(Text, unique=True)
+    version: Mapped[str] = mapped_column(Text)
+    source_url: Mapped[str] = mapped_column(Text)
+    source_modified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    first_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    point_count: Mapped[dict[str, int]] = mapped_column(JSONB)
+    attributes: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class ResourceDownload(Base):
     """One file a signed-in user downloaded from ``/datos`` (a chart image or a data
     export). Lives in the ``public`` Postgres schema. Written only by
@@ -448,3 +623,171 @@ class ResourceDownload(Base):
     row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class HomeHero(Base):
+    """The hero banner of the public home page: its Spanish ``title`` and ``lead``.
+    A single row, edited from the web CMS. Mirrored by convention; no job touches it.
+    """
+
+    __tablename__ = "home_hero"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    title: Mapped[str] = mapped_column(Text)
+    lead: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class HomeHeroTranslation(Base):
+    """The ``title`` and ``lead`` of the `HomeHero` in a language other than Spanish."""
+
+    __tablename__ = "home_hero_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "home_hero_id", "locale", name="home_hero_translations_home_hero_id_locale_key"
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    home_hero_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.home_hero.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    lead: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GeomagneticIndexSource(enum.StrEnum):
+    """Who wrote a geomagnetic index's current value. Mirrors the Prisma
+    ``GeomagneticIndexSource`` enum, whose database values are the strings below.
+    """
+
+    MANUAL = "manual"
+    AUTOMATIC = "automatic"
+
+
+class GeomagneticIndex(Base):
+    """One geomagnetic index card on the home page (Kp, Dst, AE, Ap).
+
+    Edited by hand from the web CMS today. A future loading job would upsert by
+    ``code``, write ``value``, ``description`` (and its translations), set
+    ``source`` to ``automatic`` with ``observed_at``, and set ``updated_at`` to
+    now so an editor holding an older version gets a conflict. ``position`` is
+    editorial and must never be written by a job: leave it out of an insert and the
+    database gives the new row the next number.
+    """
+
+    __tablename__ = "geomagnetic_indices"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    code: Mapped[str] = mapped_column(String(8), unique=True)
+    value: Mapped[str] = mapped_column(String(15))
+    description: Mapped[str] = mapped_column(String(15))
+    # Unique; left out of an insert, it takes the next number of its sequence (Prisma's
+    # `@default(autoincrement())`), so a new index lands last.
+    position: Mapped[int] = mapped_column(
+        Integer,
+        unique=True,
+        server_default=text("nextval('geomagnetic_indices_position_seq')"),
+    )
+    # Postgres-specific ENUM for the same reason as `User.role`: Prisma owns the type.
+    source: Mapped[GeomagneticIndexSource] = mapped_column(
+        ENUM(
+            GeomagneticIndexSource,
+            name="geomagnetic_index_source",
+            schema="public",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        ),
+        server_default=text("'manual'"),
+    )
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GeomagneticIndexTranslation(Base):
+    """The ``description`` of a `GeomagneticIndex` in a language other than Spanish."""
+
+    __tablename__ = "geomagnetic_index_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "geomagnetic_index_id",
+            "locale",
+            name="geomagnetic_index_translations_geomagnetic_index_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    geomagnetic_index_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.geomagnetic_indices.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    description: Mapped[str] = mapped_column(String(15))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ContactChannelIcon(enum.StrEnum):
+    """Icon of a `/contacto` card. Database values match the Prisma ``@map`` names."""
+
+    PHONE = "phone"
+    INSTAGRAM = "instagram"
+    LOCATION = "location"
+    EMAIL = "email"
+    FACEBOOK = "facebook"
+
+
+class ContactChannel(Base):
+    """One card in the contact page's channel list. Spanish text lives here."""
+
+    __tablename__ = "contact_channels"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    icon: Mapped[ContactChannelIcon] = mapped_column(
+        ENUM(
+            ContactChannelIcon,
+            name="contact_channel_icon",
+            schema="public",
+            create_type=False,
+            values_callable=lambda members: [member.value for member in members],
+        )
+    )
+    href: Mapped[str | None] = mapped_column(Text, nullable=True)
+    position: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ContactChannelTranslation(Base):
+    """Title and description of a contact card in a language other than Spanish."""
+
+    __tablename__ = "contact_channel_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "contact_channel_id",
+            "locale",
+            name="contact_channel_translations_contact_channel_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    contact_channel_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.contact_channels.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

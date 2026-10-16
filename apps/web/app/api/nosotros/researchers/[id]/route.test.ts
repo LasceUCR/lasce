@@ -216,6 +216,23 @@ describe('PATCH /api/nosotros/researchers/[id]', () => {
       adminUser.id,
     )
   })
+
+  test('saves a removed photo — it is optional', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateNosotrosResearcher.mockResolvedValue({
+      ok: true,
+      researcher: { id: researcherId, src: '' },
+    })
+
+    const response = await PATCH(patchRequest({ version: VERSION, src: '' }), { params })
+
+    expect(response.status).toBe(200)
+    expect(mocks.updateNosotrosResearcher).toHaveBeenCalledWith(
+      researcherId,
+      { version: VERSION, src: '' },
+      adminUser.id,
+    )
+  })
 })
 
 describe('DELETE /api/nosotros/researchers/[id]', () => {

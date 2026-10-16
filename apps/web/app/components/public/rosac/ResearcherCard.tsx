@@ -14,8 +14,12 @@ export function institutionPreview(institution: string): string {
   return `${institution.slice(0, INSTITUTION_PREVIEW_LENGTH)}...`
 }
 
+/** Shown in place of the portrait when a researcher has no photo, the same image in every view. */
+export const DEFAULT_RESEARCHER_PHOTO = '/images/Researchers/User.png'
+
 export interface ResearcherCardProps {
-  /** Local path under `apps/web/public`. */
+  /** Local path under `apps/web/public` or an uploaded photo URL. `''` means the researcher has
+   * no photo, and the card shows `DEFAULT_RESEARCHER_PHOTO` instead. */
   src: string
   name: string
   role: string
@@ -29,6 +33,8 @@ export interface ResearcherCardProps {
    * applied to the name or the institution, which are the same in every language.
    */
   contentLang?: string
+  /** Label preceding the institution text. Defaults to `'Institución'`. */
+  institutionLabel?: string
 }
 
 /**
@@ -46,6 +52,7 @@ export function ResearcherCard({
   description,
   email,
   contentLang,
+  institutionLabel = 'Institución',
 }: ResearcherCardProps) {
   const [flipped, setFlipped] = useState(false)
   const descriptionId = useId()
@@ -107,7 +114,12 @@ export function ResearcherCard({
             />
           ) : null}
           <div className="researcher-card-photo">
-            <Image alt="" fill sizes="(max-width: 760px) 86vw, 440px" src={src} />
+            <Image
+              alt=""
+              fill
+              sizes="(max-width: 760px) 86vw, 440px"
+              src={src || DEFAULT_RESEARCHER_PHOTO}
+            />
           </div>
           <p className="researcher-card-role" lang={contentLang}>
             {role}
@@ -117,7 +129,7 @@ export function ResearcherCard({
             {emails.length > 0 ? (
               <p className="researcher-card-emails">
                 {emails.map((address, index) => (
-                  <Fragment key={address}>
+                  <Fragment key={`${index}-${address}`}>
                     {index > 0 ? ', ' : null}
                     <a className="researcher-card-email" href={`mailto:${address}`}>
                       {address}
@@ -126,7 +138,9 @@ export function ResearcherCard({
                 ))}
               </p>
             ) : null}
-            <p className="researcher-card-institution">Institución: {institutionText}</p>
+            <p className="researcher-card-institution">
+              {institutionLabel}: {institutionText}
+            </p>
           </div>
         </div>
 
@@ -152,7 +166,7 @@ export function ResearcherCard({
                 className="researcher-card-institution"
                 id={description ? undefined : institutionId}
               >
-                Institución: {institution}
+                {institutionLabel}: {institution}
               </p>
             </div>
             {description ? (

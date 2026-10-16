@@ -1070,6 +1070,18 @@ a {
   line-height: 1.2;
 }
 
+/* "Modo edición" on the home page: the cards' edit button and drag handle sit in one row at the
+   top right. The card keeps room for both, so its text never runs under them, and the wrapper
+   passes the grid cell's height through, so the cards keep their size. */
+.indicator-grid-editable > .editable,
+.indicator-grid-editable > .editable > .indicator {
+  height: 100%;
+}
+
+.indicator-grid-editable > .editable > .indicator {
+  padding-right: 92px;
+}
+
 .areas {
   margin-top: 34px;
   scroll-margin-top: 24px;
@@ -2243,8 +2255,27 @@ a {
 }
 
 .data-image-frame {
+  position: relative;
   display: grid;
   aspect-ratio: 1;
+}
+
+/* Covers the thumbnail so the whole image opens the lightbox. */
+.data-image-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+  z-index: 1;
+}
+
+.data-image-button:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: -3px;
 }
 
 .data-image-frame > * {
@@ -2307,7 +2338,7 @@ a {
   flex-wrap: wrap;
 }
 
-.solar-today h2 {
+.solar-today-heading h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -2509,6 +2540,13 @@ a {
   gap: 16px;
 }
 
+/* `.surface-card` sets `align-self: start`, which in this flex column shrinks a card to its content
+   when it is a direct child of the list (view mode). In edit mode `EditableWrapper` sits in between
+   and the card already fills it. Same width in both modes, whatever the content length. */
+.publication-card {
+  width: 100%;
+}
+
 .publication-card h3 {
   margin: 0 0 6px;
   font-size: 16px;
@@ -2521,24 +2559,69 @@ a {
   font-size: 12px;
 }
 
-.publication-abstract {
-  display: -webkit-box;
+/* `TruncatedText`. The text box is cut to `--truncated-lines` lines of height while collapsed.
+   An empty float as tall as all but the last line, then the toggle floated right and clearing
+   it, put "… Leer más" at the end of the last visible line, with the text wrapping around it.
+   `--truncated-line-height` is measured by the component; `1lh` covers the first paint. The
+   outer element is a flex box so the float's percentage height resolves. */
+.truncated-text {
+  display: flex;
+}
+
+.truncated-text-body {
+  display: block;
+  min-width: 0;
+}
+
+.truncated-text-body.is-clamped {
+  --truncated-line: var(--truncated-line-height, 1lh);
+
   overflow: hidden;
+  max-height: calc(var(--truncated-lines) * var(--truncated-line));
+}
+
+.truncated-text-body.is-clamped::before {
+  content: '';
+  height: calc(100% - var(--truncated-line));
+  float: right;
+}
+
+.truncated-text-more {
+  margin-left: 4px;
+  float: right;
+  clear: both;
+}
+
+/* A text link at the end of the text, so it reads as part of it and does not compete with a
+   card's own actions. */
+.truncated-text-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  /* `--blue` fails WCAG AA (4.5:1) at this text's size; `--blue-accent-text` is the same hue,
+     darkened to pass. */
+  color: var(--blue-accent-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.truncated-text-toggle:hover {
+  text-decoration: underline;
+}
+
+.truncated-text-toggle:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Layout only — the clamp itself is `TruncatedText`'s (`.truncated-text*`, above). */
+.publication-abstract {
   margin: 10px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-}
-
-.publication-abstract.is-expanded {
-  display: block;
-  overflow: visible;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
 }
 
 .publication-card-footer {
@@ -2547,9 +2630,8 @@ a {
   justify-content: flex-end;
 }
 
-/* Same width for "DOI / Enlace externo" and the abstract toggle, so the toggle does not shrink
-   when its label changes and both actions line up across cards. Narrow screens make every
-   .button full width (see the 430px breakpoint). */
+/* Keeps "DOI / Enlace externo" the same width across cards so it lines up, rather than hugging
+   its label. Narrow screens make every .button full width (see the 430px breakpoint). */
 .publication-card-footer .button {
   min-width: min(16rem, 100%);
 }
@@ -2818,7 +2900,7 @@ a {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .news {
@@ -3896,6 +3978,10 @@ a {
   padding: 8px 0 48px;
 }
 
+.topic-detail-footer {
+  padding-top: 56px;
+}
+
 .space-weather-footer {
   padding-top: 52px;
   padding-bottom: 48px;
@@ -4586,6 +4672,13 @@ a.gallery-tile:focus-visible {
   border-radius: 8px;
 }
 
+.lightbox-stage .lightbox-media-contain img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .lightbox-meta {
   flex: 0 0 240px;
   width: 240px;
@@ -4605,8 +4698,11 @@ a.gallery-tile:focus-visible {
   line-height: 1.3;
 }
 
+/* Narrow caption column: the public shell justifies body copy, which spreads
+   these few words apart. */
 .lightbox-meta p {
   margin: 0 0 14px;
+  text-align: start;
   color: var(--space-body);
   font-size: 13px;
   line-height: 1.5;
@@ -4705,16 +4801,10 @@ a.gallery-tile:focus-visible {
 
 /* Clamped so every card keeps one height; the full text is the detail page's lead. */
 .research-area-card-description {
-  display: -webkit-box;
-  overflow: hidden;
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
 }
 
 /* Bottom-right corner of the card, so every button lines up down the right edge of the list. */
@@ -5068,15 +5158,16 @@ a.gallery-tile:focus-visible {
 }
 
 .acknowledgments-tile {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 160px;
   max-width: 200px;
 }
 
-.acknowledgments-slide > * {
-  width: 100%;
-}
-
-.acknowledgments-slide > .editable {
+.acknowledgments-tile > .editable,
+.acknowledgments-tile > .acknowledgments-card,
+.acknowledgments-slide > .editable,
+.acknowledgments-slide > .acknowledgments-card {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -5085,12 +5176,22 @@ a.gallery-tile:focus-visible {
   height: 100%;
 }
 
+.acknowledgments-tile > .editable > :first-child,
 .acknowledgments-slide > .editable > :first-child {
-  display: flex;
-  flex-direction: column;
   flex: 1 1 auto;
   width: 100%;
   height: 100%;
+}
+
+.acknowledgments-tile .add-item-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
 }
 
 .acknowledgments-slide .add-item-card {
@@ -5109,6 +5210,7 @@ a.gallery-tile:focus-visible {
   align-items: center;
   justify-content: center;
   width: 100%;
+  height: 100%;
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -5306,6 +5408,46 @@ a.acknowledgments-card:focus-visible {
   color: var(--muted);
 }
 
+/* Six cards: three per row, then the site's two and one at its usual breakpoints. */
+.indicator-grid.admin-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1400px) {
+  .indicator-grid.admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .indicator-grid.admin-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.indicator-link {
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.admin-content .indicator-link:hover {
+  border-color: var(--blue-dark);
+  box-shadow: 0 10px 22px rgba(21, 52, 76, 0.1);
+}
+
+.indicator-link:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 2px;
+}
+
+.indicator.indicator-empty strong {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
 .indicator-orange::before {
   background: var(--amber-glow);
 }
@@ -5317,6 +5459,39 @@ a.acknowledgments-card:focus-visible {
 .admin-panel h2 {
   margin: 0 0 14px;
   font-size: 16px;
+}
+
+/* Holds a full list's height (RECENT_ACTIVITY_LIMIT rows of 48px plus their borders), so the
+   card keeps its size with fewer events or none. */
+.admin-activity-body {
+  min-height: calc(5 * 48px + 4px);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-activity-empty {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.admin-activity-empty p {
+  margin: 0;
+}
+
+.admin-activity-empty-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #e8f6fc;
+  color: var(--blue-dark);
 }
 
 .admin-activity-list {
@@ -5415,6 +5590,10 @@ a.acknowledgments-card:focus-visible {
 
 .status-pill-blue {
   color: var(--blue-dark);
+}
+
+.status-pill-red {
+  color: var(--danger);
 }
 
 @media (max-width: 1120px) {
@@ -5967,6 +6146,22 @@ a.acknowledgments-card:focus-visible {
   gap: 6px;
 }
 
+/* `EditableWrapper drag`: the handle is an `icon-button` among the actions. */
+.editable-drag-handle {
+  cursor: grab;
+  /* The touch sensor needs the browser not to scroll while a finger drags the handle. */
+  touch-action: none;
+}
+
+.editable-dragging {
+  z-index: 2;
+  opacity: 0.85;
+}
+
+.editable-dragging .editable-drag-handle {
+  cursor: grabbing;
+}
+
 .file-drop-field {
   margin: 14px 0;
   display: flex;
@@ -6033,10 +6228,18 @@ a.acknowledgments-card:focus-visible {
   object-fit: cover;
 }
 
+/* Holds the drop zone and, beside it, the preview's remove button. */
+.file-drop-area {
+  position: relative;
+}
+
+/* Over the preview's top-right corner, 8px out, as when it sat inside the preview: the zone's
+   12px/16px padding plus the 56px preview place that corner. */
 .file-drop-remove {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: calc(12px - 8px);
+  left: calc(16px + 56px + 8px);
+  transform: translateX(-100%);
   box-shadow: 0 2px 6px rgba(13, 39, 55, 0.35);
 }
 
@@ -6402,6 +6605,7 @@ a.acknowledgments-card:focus-visible {
      a phone screen, most of a desktop window too, up to a cap (set per size
      variant below) so it doesn't stretch absurdly wide on an ultrawide
      monitor. */
+  height: fit-content;
   max-height: calc(100vh - 64px);
   max-height: calc(100dvh - 64px);
   padding: 32px 40px;
@@ -6655,51 +6859,6 @@ a.acknowledgments-card:focus-visible {
   color: var(--ink, #0d2737);
   font-size: 0.95rem;
   line-height: 1.5;
-}
-
-.std-confirm-target-card {
-  margin: 0;
-  padding: 10px 14px;
-  background: var(--page, #eef4f7);
-  border-radius: 6px;
-  border-left: 4px solid var(--blue, #087fbd);
-  font-size: 0.9rem;
-  color: var(--navy-deep, #0d2737);
-  word-break: break-word;
-}
-
-.std-confirm-target-card-danger {
-  border-left-color: var(--danger, #dc2626);
-  background: #fff8f8;
-}
-
-.std-confirm-consequence {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  line-height: 1.45;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.std-confirm-consequence-danger {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fee2e2;
-}
-
-.std-confirm-consequence-warning {
-  background: #fffbeb;
-  color: #92400e;
-  border: 1px solid #fef3c7;
-}
-
-.std-confirm-consequence-info {
-  background: #f0f9ff;
-  color: #075985;
-  border: 1px solid #e0f2fe;
 }
 
 .std-confirm-error {

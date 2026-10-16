@@ -170,6 +170,20 @@ describe('POST /api/nosotros/researchers', () => {
     )
   })
 
+  test('accepts a body with no photo — it is optional', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.createNosotrosResearcher.mockResolvedValue({ id: 'new-1', src: '' })
+    const { src: _src, ...withoutPhoto } = validBody
+
+    const response = await POST(postRequest(withoutPhoto))
+
+    expect(response.status).toBe(201)
+    expect(mocks.createNosotrosResearcher).toHaveBeenCalledWith(
+      { ...withoutPhoto, email: ['ada@ucr.ac.cr'] },
+      adminUser.id,
+    )
+  })
+
   test('answers an unexpected failure without exposing its details', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
     mocks.createNosotrosResearcher.mockRejectedValue(new Error('connection refused'))

@@ -220,68 +220,144 @@ for (const record of researchRecords) {
  * site
  */
 
+type SeedResearchAreaText = { title: string; description: string }
+
 type SeedResearchArea = {
-  title: string
-  description: string
+  /** Spanish, as LASCE provided it, and English. Both are written, so the area is complete. */
+  content: { es: SeedResearchAreaText; en: SeedResearchAreaText }
   src: string
 }
 
 const researchAreas: SeedResearchArea[] = [
   {
-    title: 'Radioastronomía solar y evolución de Flares-CMEs',
-    description:
-      'Estudia las emisiones solares de radio y su relación con los flares, la evolución de las eyecciones de masa coronal, la aceleración de partículas y su propagación hacia el medio interplanetario.',
+    content: {
+      es: {
+        title: 'Radioastronomía solar y evolución de Flares-CMEs',
+        description:
+          'Estudia las emisiones solares de radio y su relación con los flares, la evolución de las eyecciones de masa coronal, la aceleración de partículas y su propagación hacia el medio interplanetario.',
+      },
+      en: {
+        title: 'Solar radio astronomy and the evolution of flares and CMEs',
+        description:
+          'Studies solar radio emissions and their relation to flares, the evolution of coronal mass ejections, particle acceleration and their propagation into the interplanetary medium.',
+      },
+    },
     src: '/images/research/radioastronomia-solar-evolucion-flares-cmes.jpg',
   },
   {
-    title: 'Geomagnetismo y respuesta regional al clima espacial',
-    description:
-      'Analiza las variaciones del campo magnético terrestre producidas por la actividad solar. Incluye el cálculo de índices geomagnéticos para Costa Rica. Este estudio se lleva a cabo gracias al desarrollo de una tesis doctoral de la MSc. Johana Camacho en colaboración con el Instituto Nacional de Electricidad (ICE) y el Servicio de Clima Espacial México (SCiESMEX).',
+    content: {
+      es: {
+        title: 'Geomagnetismo y respuesta regional al clima espacial',
+        description:
+          'Analiza las variaciones del campo magnético terrestre producidas por la actividad solar. Incluye el cálculo de índices geomagnéticos para Costa Rica. Este estudio se lleva a cabo gracias al desarrollo de una tesis doctoral de la MSc. Johana Camacho en colaboración con el Instituto Costarricense de Electricidad (ICE) y el Servicio de Clima Espacial México (SCiESMEX).',
+      },
+      en: {
+        title: 'Geomagnetism and the regional response to space weather',
+        description:
+          "Analyzes the variations of the Earth's magnetic field caused by solar activity, including the calculation of geomagnetic indices for Costa Rica. This study is carried out through the doctoral thesis of MSc. Johana Camacho, in collaboration with the Instituto Costarricense de Electricidad (ICE) and the Servicio de Clima Espacial México (SCiESMEX).",
+      },
+    },
     src: '/images/research/geomagnetismo-respuesta-regional-clima-espacial.jpg',
   },
   {
-    title: 'Propagación y predicción de CMEs hacia la Tierra',
-    description:
-      'Desarrolla modelos y herramientas para estimar la velocidad, la trayectoria y el tiempo de llegada de las CMEs a la Tierra. Esta rama incluye el desarrollo de la herramienta científica computacional SWAAT y su futura integración con observaciones de ROSAC.',
+    content: {
+      es: {
+        title: 'Propagación y predicción de CMEs hacia la Tierra',
+        description:
+          'Desarrolla modelos y herramientas para estimar la velocidad, la trayectoria y el tiempo de llegada de las CMEs a la Tierra. Esta rama incluye el desarrollo de la herramienta científica computacional SWAAT y su futura integración con observaciones de ROSAC.',
+      },
+      en: {
+        title: 'Propagation and prediction of Earth-directed CMEs',
+        description:
+          'Develops models and tools to estimate the speed, trajectory and arrival time of CMEs at the Earth. This branch includes the development of the SWAAT computational scientific tool and its future integration with ROSAC observations.',
+      },
+    },
     src: '/images/research/propagacion-prediccion-cmes-hacia-tierra.png',
   },
   {
-    title: 'Inteligencia artificial y ciencia de datos aplicada al clima espacial',
-    description:
-      'Emplea aprendizaje automático, automatización y generación de datos sintéticos para identificar eventos solares, procesar grandes volúmenes de observaciones y mejorar la predicción de fenómenos de clima espacial.',
+    content: {
+      es: {
+        title: 'Inteligencia artificial y ciencia de datos aplicada al clima espacial',
+        description:
+          'Emplea aprendizaje automático, automatización y generación de datos sintéticos para identificar eventos solares, procesar grandes volúmenes de observaciones y mejorar la predicción de fenómenos de clima espacial.',
+      },
+      en: {
+        title: 'Artificial intelligence and data science applied to space weather',
+        description:
+          'Uses machine learning, automation and synthetic data generation to identify solar events, process large volumes of observations and improve the prediction of space weather phenomena.',
+      },
+    },
     src: '/images/research/inteligencia-artificial-ciencia-datos-clima-espacial.jpg',
   },
   {
-    title: 'Ionosfera GNSS y efectos tecnológicos del clima espacial',
-    description:
-      'Busca hacer observaciones desde Costa Rica con equipos GNSS para determinar cómo la actividad solar y geomagnética modifica la ionosfera y afecta los sistemas de navegación satelital, las comunicaciones y otras tecnologías sensibles a las condiciones del entorno espacial en nuestro país.',
+    content: {
+      es: {
+        title: 'Ionosfera GNSS y efectos tecnológicos del clima espacial',
+        description:
+          'Busca hacer observaciones desde Costa Rica con equipos GNSS para determinar cómo la actividad solar y geomagnética modifica la ionosfera y afecta los sistemas de navegación satelital, las comunicaciones y otras tecnologías sensibles a las condiciones del entorno espacial en nuestro país.',
+      },
+      en: {
+        title: 'GNSS ionosphere and the technological effects of space weather',
+        description:
+          'Aims to make observations from Costa Rica with GNSS equipment to determine how solar and geomagnetic activity modifies the ionosphere and affects satellite navigation systems, communications and other technologies sensitive to space environment conditions in our country.',
+      },
+    },
     src: '/images/research/ionosfera-gnss-efectos-tecnologicos-clima-espacial.jpg',
   },
   {
-    title: 'Infraestructura informática y gestión de datos de clima espacial',
-    description:
-      'Diseña y desarrolla plataformas informáticas para capturar, procesar, almacenar y consultar grandes volúmenes de datos solares provenientes de distintas fuentes. Esta rama también implementa bases de datos y servicios web especializados, y facilita el análisis interdisciplinario de la información en colaboración con investigadores en astrofísica solar y clima espacial.',
+    content: {
+      es: {
+        title: 'Infraestructura informática y gestión de datos de clima espacial',
+        description:
+          'Diseña y desarrolla plataformas informáticas para capturar, procesar, almacenar y consultar grandes volúmenes de datos solares provenientes de distintas fuentes. Esta rama también implementa bases de datos y servicios web especializados, y facilita el análisis interdisciplinario de la información en colaboración con investigadores en astrofísica solar y clima espacial.',
+      },
+      en: {
+        title: 'Computing infrastructure and space weather data management',
+        description:
+          'Designs and develops computing platforms to capture, process, store and query large volumes of solar data from different sources. This branch also implements specialized databases and web services, and supports the interdisciplinary analysis of the information in collaboration with researchers in solar astrophysics and space weather.',
+      },
+    },
     src: '/images/research/infraestructura-informatica-gestion-datos-clima-espacial.jpg',
   },
   {
-    title: 'Geomagnetismo en Costa Rica',
-    description:
-      'Estudia las variaciones del campo magnético terrestre ante diferentes condiciones de actividad solar y geomagnética. Esta rama utiliza mediciones magnéticas realizadas en tiempo real en nuestro país para calcular índices geomagnéticos específicos para Costa Rica y desarrollar herramientas de monitoreo adaptadas al entorno regional.',
+    content: {
+      es: {
+        title: 'Geomagnetismo en Costa Rica',
+        description:
+          'Estudia las variaciones del campo magnético terrestre ante diferentes condiciones de actividad solar y geomagnética. Esta rama utiliza mediciones magnéticas realizadas en tiempo real en nuestro país para calcular índices geomagnéticos específicos para Costa Rica y desarrollar herramientas de monitoreo adaptadas al entorno regional.',
+      },
+      en: {
+        title: 'Geomagnetism in Costa Rica',
+        description:
+          "Studies the variations of the Earth's magnetic field under different conditions of solar and geomagnetic activity. This branch uses real-time magnetic measurements made in our country to calculate geomagnetic indices specific to Costa Rica and to develop monitoring tools adapted to the regional environment.",
+      },
+    },
     src: '/images/research/geomagnetismo-costa-rica.jpg',
   },
 ]
 
-for (const area of researchAreas) {
+for (const { content, src } of researchAreas) {
+  const { es, en } = content
   const existing = await prisma.researchArea.findFirst({
-    where: { title: area.title },
+    where: { title: es.title },
     select: { id: true },
   })
 
-  if (existing) {
-    await prisma.researchArea.update({ where: { id: existing.id }, data: area })
-  } else {
-    await prisma.researchArea.create({ data: area })
-  }
+  const area = existing
+    ? await prisma.researchArea.update({
+        where: { id: existing.id },
+        data: { title: es.title, description: es.description, src },
+      })
+    : await prisma.researchArea.create({
+        data: { title: es.title, description: es.description, src },
+      })
+
+  // The English text, so the area reads complete in both languages instead of legacy.
+  await prisma.researchAreaTranslation.upsert({
+    where: { researchAreaId_locale: { researchAreaId: area.id, locale: 'en' } },
+    update: { title: en.title, description: en.description },
+    create: { researchAreaId: area.id, locale: 'en', title: en.title, description: en.description },
+  })
 }
 
 /**
@@ -305,7 +381,7 @@ const newsRecords: SeedNews[] = [
     source: 'La Nación – Revista Dominical',
     publishedAt: new Date('2026-05-24'),
     abstract:
-      'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
+      'Reportaje exhaustivo de la Revista Dominical de La Nación que confronta el escepticismo sobre la investigación científica en el país, documentando cinco iniciativas tecnológicas y biomédicas de vanguardia desarrolladas por universidades públicas. En el campo de las ciencias espaciales, destaca el radiotelescopio solar del Radio Observatorio de Santa Cruz (ROSAC), impulsado por la Universidad de Costa Rica en Guanacaste para monitorear eyecciones de masa coronal y proteger telecomunicaciones. El reportaje profundiza además en proyectos paralelos como el desarrollo de biomateriales para implantes óseos en el Tecnológico de Costa Rica, investigaciones avanzadas en nanotecnología en el CeNAT y avances en biotecnología médica, demostrando cómo la articulación interinstitucional y el talento científico nacional generan conocimiento de impacto global pese a limitaciones presupuestarias.',
     externalUrl:
       'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
   },
@@ -315,7 +391,7 @@ const newsRecords: SeedNews[] = [
     source: 'La Nación – Opinión (Leonardo Garnier)',
     publishedAt: new Date('2026-05-28'),
     abstract:
-      'Artículo de opinión que destaca a ROSAC como ejemplo de investigación científica costarricense y de la importancia de la inversión pública en ciencia.',
+      'Columna de opinión del exministro Leonardo Garnier en La Nación que articula una sólida defensa de la inversión pública en ciencia, tecnología y educación superior estatal mediante el FEES. Garnier analiza cómo proyectos de alto calibre científico generan valor social y soberanía tecnológica que el mercado privado no financia por sí solo. Detalla con énfasis el radiotelescopio solar ROSAC de la Universidad de Costa Rica, concebido para predecir perturbaciones geomagnéticas provocadas por tormentas solares que amenazan redes eléctricas, satélites de posicionamiento global y telecomunicaciones. Asimismo, vincula este esfuerzo con el Ciclotrón PET/CT para diagnóstico oncológico, los implantes biocompatibles del TEC y los laboratorios del CeNAT, concluyendo que la investigación científica nacional no es un gasto prescindible, sino un pilar estratégico indispensable para la resiliencia y competitividad del país.',
     externalUrl:
       'https://www.nacion.com/opinion/columnistas/vale-la-pena-invertir-en-ciencia-estos-proyectos/ILX4QIPB6JGHBCJ6QB34QRGY2A/story/',
   },
@@ -326,7 +402,7 @@ const newsRecords: SeedNews[] = [
     source: 'Delfino.cr',
     publishedAt: new Date('2025-12-05'),
     abstract:
-      'Un proyecto de la UCR busca generar datos propios sobre la actividad solar y desarrollar herramientas para estudiar y predecir el impacto del clima espacial en Costa Rica.',
+      'Artículo periodístico de Delfino.cr sobre el proyecto multidisciplinario que reúne a investigadores del Centro de Investigaciones Espaciales (Cinespa), la Escuela de Ciencias de la Computación e Informática (ECCI) y el Centro de Investigaciones en Tecnologías de la Información y Comunicación (CITIC) de la Universidad de Costa Rica. La iniciativa aborda el clima espacial desde una perspectiva integral: mientras el radiotelescopio ROSAC en Santa Cruz captura señales electromagnéticas solares en tiempo real, el equipo computacional diseña modelos de aprendizaje automático y procesamiento de series temporales para prever perturbaciones ionosféricas en latitudes tropicales. El artículo resalta que Centroamérica presenta particularidades geomagnéticas poco estudiadas y que contar con datos propios fortalece los sistemas de alerta temprana ante tormentas solares severas.',
     externalUrl:
       'https://delfino.cr/2025/12/cientificos-de-la-ucr-monitorean-la-actividad-solar-para-estudiar-el-impacto-del-clima-espacial-en-el-pais',
   },
@@ -337,7 +413,7 @@ const newsRecords: SeedNews[] = [
     source: 'Universidad de Costa Rica (UCR)',
     publishedAt: new Date('2025-12-05'),
     abstract:
-      'La UCR presenta un proyecto interdisciplinario para estudiar la actividad solar y sus efectos sobre Costa Rica mediante observaciones, instrumentación científica y herramientas computacionales.',
+      'Nota oficial de la Universidad de Costa Rica que describe la colaboración interdisciplinaria entre el Centro de Investigaciones Espaciales (Cinespa), la Escuela de Ciencias de la Computación e Informática y el CITIC para analizar y mitigar los efectos del clima espacial en Costa Rica. El reporte detalla la implementación de algoritmos de inteligencia artificial aplicados al procesamiento masivo de datos captados por el Radio Observatorio de Santa Cruz (ROSAC), permitiendo pronosticar la llegada de ondas de choque y eyecciones de masa coronal. Los científicos explican cómo las variaciones inducidas por la actividad solar en la ionosfera afectan directamente la precisión de los sistemas GNSS, las redes de distribución eléctrica y las comunicaciones aeronáuticas en la región, posicionando a la academia costarricense a la vanguardia de la meteorología espacial en Centroamérica.',
     externalUrl:
       'https://www.ucr.ac.cr/noticias/2025/12/05/cientificos-de-la-ucr-monitorean-la-actividad-solar-para-estudiar-el-impacto-del-clima-espacial-en-nuestro-pais.html',
   },
@@ -347,7 +423,7 @@ const newsRecords: SeedNews[] = [
     source: 'El Norte Hoy',
     publishedAt: new Date('2023-10-02'),
     abstract:
-      'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
+      'Crónica periodística de El Norte Hoy sobre la puesta en marcha oficial del Radio Observatorio de Santa Cruz (ROSAC), ubicado en la Finca Experimental de la Universidad de Costa Rica en Santa Cruz, Guanacaste. La publicación resalta que se trata del primer radiotelescopio solar de Centroamérica, dotado de un reflector parabólico de 11 metros capaz de realizar barridos continuos en frecuencias de MHz y GHz para detectar estallidos solares de tipo II y IV. Se detalla el respaldo de la Vicerrectoría de Investigación de la UCR y la cooperación técnica con el INAOE de México, así como el tendido especializado de fibra óptica y energía suministrado por Prysmian Group. El artículo subraya que las observaciones alimentarán plataformas científicas abiertas y brindarán oportunidades inéditas de formación para estudiantes de física, ingeniería eléctrica y computación.',
     externalUrl:
       'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
   },
@@ -358,7 +434,7 @@ const newsRecords: SeedNews[] = [
     source: 'Universidad de Costa Rica (UCR)',
     publishedAt: new Date('2023-09-12'),
     abstract:
-      'El Grupo Prysmian Centroamérica y el Caribe donó casi dos kilómetros de cable de fibra óptica y cableado eléctrico para el proyecto del Radio Observatorio Santa Cruz (Rosac), un aporte cercano a los USD 36 000 que permitirá a Costa Rica contar con un telescopio para medir la radiación electromagnética del Sol.',
+      'Comunicado de la Oficina de Divulgación e Información de la Universidad de Costa Rica que formaliza la donación realizada por el Grupo Prysmian Centroamérica y el Caribe al proyecto del Radio Observatorio Santa Cruz (ROSAC). La donación, valorada en aproximadamente USD 36 000, incluye cerca de dos kilómetros de cable de fibra óptica de última generación y conductores de energía diseñados para soportar las exigentes condiciones climáticas de Guanacaste. La nota resalta las declaraciones de las autoridades universitarias y representantes corporativos sobre la trascendencia de las alianzas público-privadas en el financiamiento de infraestructura de investigación crítica. Esta conexión garantiza la transmisión de datos a gran ancho de banda entre los receptores del radiotelescopio y los servidores de procesamiento en San José.',
     externalUrl:
       'https://www.ucr.ac.cr/noticias/2023/9/12/empresa-global-de-telecomunicaciones-hace-una-donacion-a-la-ucr-para-radio-observatorio-que-estudiara-el-sol.html',
   },
@@ -369,7 +445,7 @@ const newsRecords: SeedNews[] = [
     source: 'Prysmian Pro',
     publishedAt: null,
     abstract:
-      'Prysmian donó cerca de tres kilómetros de cables de energía y telecomunicaciones para apoyar el desarrollo y puesta en funcionamiento del radiotelescopio solar ROSAC.',
+      'Artículo técnico y corporativo publicado en Prysmian Pro que documenta la participación del fabricante internacional de cables en el equipamiento del radiotelescopio solar ROSAC en Guanacaste. La publicación explica que el suministro comprendió casi tres kilómetros de cableado eléctrico blindado y enlaces de fibra óptica monomodo indispensables para alimentar los motores de seguimiento azimutal y transportar datos sin atenuación ni interferencias electromagnéticas. La Dra. Carolina Salas Matamoros, investigadora de la Escuela de Física y del Cinespa, enfatiza que la ubicación geográfica de Costa Rica (longitud GMT-6) llena un vacío temporal estratégico en la red planetaria de radioastronomía solar, permitiendo la vigilancia continua del astro rey en frecuencias de 100 a 1 000 MHz cuando otros observatorios internacionales están en periodo nocturno.',
     externalUrl:
       'https://prysmianpro.com/en/prysmian-group-dona-36-000-en-cables-de-energia-y-telecomunicaciones-para-el-desarrollo-del-unico-radio-telescopio-solar-de-su-tipo-en-centroamerica/',
   },
@@ -379,7 +455,7 @@ const newsRecords: SeedNews[] = [
     source: 'Prysmian Pro',
     publishedAt: null,
     abstract:
-      'Artículo sobre el impacto social y educativo de Prysmian que menciona al proyecto del radiotelescopio solar ROSAC como una iniciativa de educación, inclusión y sostenibilidad.',
+      'Artículo editorial de Prysmian Pro enfocado en las políticas de responsabilidad social corporativa, transición energética y sostenibilidad de Prysmian en América Latina. La empresa presenta la colaboración con la Universidad de Costa Rica en el observatorio ROSAC como un ejemplo emblemático de cómo el sector industrial de conductores eléctricos y fibra óptica puede impulsar proyectos de alto impacto académico y comunitario. Se detalla cómo la infraestructura donada no solo hace posible el monitoreo de fenómenos heliofísicos extremos, sino que también promueve la divulgación científica en comunidades rurales de Guanacaste, inspira a jóvenes estudiantes hacia carreras STEM y consolida capacidades locales para la gestión de redes de telecomunicaciones avanzadas.',
     externalUrl:
       'https://prysmianpro.com/el-impacto-social-de-prysmian-en-la-era-de-la-transicion-energetica/',
   },
@@ -389,7 +465,7 @@ const newsRecords: SeedNews[] = [
     source: 'RACSA',
     publishedAt: new Date('2022-05-20'),
     abstract:
-      'RACSA presenta el radiotelescopio de ROSAC y su objetivo de estudiar el Sol mediante la medición de ondas de radio, destacando su carácter pionero en Costa Rica y Centroamérica.',
+      'Artículo divulgativo del blog oficial de RACSA (Radiográfica Costarricense) que relata la reconversión tecnológica de una antena parabólica de telecomunicaciones internacionales en desuso en el primer radiotelescopio solar de Costa Rica y Centroamérica. Ubicada estratégicamente en el Radio Observatorio de Santa Cruz, la antena de 11 metros fue modificada por ingenieros y astrofísicos de la UCR para operar en el rango de 100 a 1 000 MHz. La nota destaca cómo este instrumento especializado registra emisiones de radio asociadas a fulguraciones solares y eyecciones de plasma que perturban el entorno electromagnético terrestre, celebrando la exitosa economía circular que transforma chatarra tecnológica en un centro astronómico de referencia regional.',
     externalUrl: 'https://www.racsa.go.cr/blog/radiotelescopio-en-guanacaste-para-estudiar-el-sol/',
   },
   {
@@ -398,7 +474,7 @@ const newsRecords: SeedNews[] = [
     source: 'El Financiero',
     publishedAt: new Date('2022-03-17'),
     abstract:
-      'El radiotelescopio de ROSAC busca generar datos locales que permitan estudiar cómo las ondas solares pueden afectar sistemas como radares y telecomunicaciones en Costa Rica.',
+      'Reportaje en profundidad de la sección de Tecnología de El Financiero que detalla la operación diurna del radiotelescopio ROSAC en la Finca Experimental de Santa Cruz. El artículo explica las ventajas de la radioastronomía sobre la astronomía óptica tradicional: las ondas de radio atraviesan la atmósfera, las nubes y la neblina tropical de Guanacaste sin ser absorbidas, lo que permite un monitoreo ininterrumpido del disco solar en cualquier época del año. Los investigadores explican cómo los estallidos solares captados permiten calcular la velocidad y trayectoria de las nubes de plasma coronal, brindando información predictiva clave para salvaguardar satélites en órbita baja, redes de navegación aérea y sistemas de transmisión de energía eléctrica.',
     externalUrl:
       'https://www.elfinancierocr.com/tecnologia/radiotelescopio-en-guanacaste-apunta-hacia-el-sol/XP3IRSKZVJDWTGUBZH5R2S6GKE/story/',
   },
@@ -408,7 +484,7 @@ const newsRecords: SeedNews[] = [
     source: 'La República',
     publishedAt: new Date('2022-02-10'),
     abstract:
-      'La UCR inició el montaje de ROSAC en Guanacaste utilizando una antena parabólica donada por RACSA y adaptada para realizar observaciones solares.',
+      'Reportaje del periódico La República que cubre el hito de la instalación, montaje mecánico y calibración de la antena parabólica en el Radio Observatorio de Santa Cruz (ROSAC), administrado por la Sede de Guanacaste de la Universidad de Costa Rica. La crónica relata el complejo traslado de la estructura donada por Radiográfica Costarricense (RACSA), su restauración estructural y la instalación de receptores criogénicos y sistemas de seguimiento de alta precisión desarrollados con asistencia del INAOE de México. Se hace hincapié en el impacto formativo del observatorio para la descentralización de la educación superior científica hacia las regiones periféricas de Costa Rica, abriendo campos de tesis e investigación en radioastronomía e instrumentación electrónica.',
     externalUrl:
       'https://origin.larepublica.net/noticia/ucr-instala-radiotelescopio-en-guanacaste-con-antena-parabolica-donada-por-racsa',
   },
@@ -418,7 +494,7 @@ const newsRecords: SeedNews[] = [
     source: 'Universidad de Costa Rica (UCR)',
     publishedAt: new Date('2017-06-05'),
     abstract:
-      'Un proyecto de investigación de la UCR estudia la transformación de una gran antena instalada en la Finca Experimental de Santa Cruz en un radiotelescopio para estudiar los astros.',
+      'Reportaje pionero del Portal de la Investigación de la Universidad de Costa Rica que anunció formalmente la génesis del proyecto del Radio Observatorio de Santa Cruz liderado por el Cinespa. El documento expone la visión fundacional de convertir una infraestructura de telecomunicaciones satelitales en una estación de astrofísica y clima espacial dotada de instrumentación moderna. Se describen los convenios internacionales con centros astronómicos de México, los análisis de ruido electromagnético realizados en Santa Cruz para asegurar una zona radioeléctrica limpia, y los objetivos a largo plazo de vincular el observatorio con consorcios mundiales de monitoreo heliofísico, consolidando a Costa Rica en el mapa internacional de la exploración del cosmos.',
     externalUrl:
       'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
   },
@@ -759,7 +835,7 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
       'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
   },
   {
-    photoUrl: '/images/Researchers/User.png',
+    photoUrl: '/images/Researchers/AlonsoVega.jpeg',
     name: 'MSc. Alonso Vega',
     role: 'Investigador colaborador',
     email: ['alonso.vega_f@ucr.ac.cr'],

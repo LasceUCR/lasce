@@ -43,6 +43,23 @@ describe('Select', () => {
     expect(screen.getByRole('combobox')).toHaveFocus()
   })
 
+  test('selects an option while the control is inside a dialog', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(
+      <dialog open>
+        <Select {...args} onChange={onChange} />
+      </dialog>,
+    )
+
+    await user.click(screen.getByRole('combobox', { name: args.label }))
+    const option = screen.getByRole('option', { name: /Partículas/ })
+    expect(option.closest('dialog')).toBeTruthy()
+    await user.click(option)
+
+    expect(onChange).toHaveBeenCalledWith('particles')
+  })
+
   test('closes on Tab or an outside click and cannot open while disabled', async () => {
     const user = userEvent.setup()
     const { rerender } = render(<Select {...args} />)

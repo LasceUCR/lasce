@@ -288,6 +288,15 @@ dependencies answer, and `503` with `"status":"degraded"` otherwise. It is the
 service healthcheck and the smoke test at the end of every deploy. A Redis error
 here usually means a private-networking or `HOSTNAME` bind problem.
 
+`GET /api/health/services` is **not** a healthcheck: it reports the services a deploy should not
+wait on, for the Servicios panel of `/administracion`. It answers only to accounts that may open
+the administration panel (`401`/`403` otherwise), with
+`{"status":"ok","checks":{"api":"ok","workers":"ok","minio":"ok","influxdb":"ok"}}`, or `503`,
+`"degraded"` and `"down"` for each failing service. `workers` is `down` when no BullMQ worker holds
+a connection to the queue; MinIO is probed with `bucketExists(MINIO_BUCKET)` and InfluxDB with its
+`/health` endpoint. The failure reasons go to the log (`services health check degraded:`), never
+to the browser. Probes live in `apps/web/app/lib/service-health.ts`.
+
 **Triggering a job by hand.**
 
 ```bash

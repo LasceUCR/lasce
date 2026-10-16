@@ -569,6 +569,14 @@ describe('getNosotrosResearchers', () => {
       version: VERSION,
     })
   })
+
+  test('maps a row without a photo to an empty src', async () => {
+    researcherFindMany.mockResolvedValue([researcherRow({ photoUrl: null })])
+
+    const [researcher] = await getNosotrosResearchers()
+
+    expect(researcher?.src).toBe('')
+  })
 })
 
 describe('nosotrosResearcherFixtures', () => {
@@ -811,6 +819,29 @@ describe('updateNosotrosResearcher', () => {
       where: { id: 'researcher-1', modifiedAt: new Date(VERSION) },
       data: { email: [], modifiedBy: 'admin-1', modifiedAt: expect.any(Date) },
     })
+  })
+
+  test('stores a cleared photo as null', async () => {
+    await updateNosotrosResearcher('researcher-1', { version: VERSION, src: '' }, 'admin-1')
+
+    expect(tx.nosotrosResearcher.updateMany).toHaveBeenCalledWith({
+      where: { id: 'researcher-1', modifiedAt: new Date(VERSION) },
+      data: { photoUrl: null, modifiedBy: 'admin-1', modifiedAt: expect.any(Date) },
+    })
+  })
+
+  test('creates the profile without a photo, stored as null', async () => {
+    tx.nosotrosResearcher.create.mockResolvedValue({ ...bilingualResearcherRow, photoUrl: null })
+
+    const result = await createNosotrosResearcher(
+      { name: 'Persona Nueva', institution: 'UCR', content: bilingualResearcherContent },
+      'admin-1',
+    )
+
+    expect(tx.nosotrosResearcher.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ photoUrl: null }) }),
+    )
+    expect(result.src).toBe('')
   })
 })
 

@@ -92,7 +92,7 @@ export function AcademicActivityPage({
         </TopicSection>
       ) : null}
 
-      <div className="topic-page-footer page-width">
+      <div className="topic-page-footer topic-detail-footer page-width">
         <TopicBackLink href={backHref} label={backLabel ?? t('backToNews')} />
       </div>
     </article>
