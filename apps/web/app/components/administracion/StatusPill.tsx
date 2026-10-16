@@ -1,4 +1,4 @@
-export type StatusTone = 'green' | 'orange' | 'blue'
+export type StatusTone = 'green' | 'orange' | 'blue' | 'red'
 
 export interface StatusPillProps {
   label: string

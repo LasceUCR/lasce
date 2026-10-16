@@ -790,5 +790,44 @@
     "errors": {
       "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo."
     }
+  },
+  "administration": {
+    "services": {
+      "title": "Servicios",
+      "names": {
+        "api": "API pública",
+        "postgres": "Base de datos PostgreSQL",
+        "redis": "Cola de trabajos (Redis)",
+        "workers": "Workers de procesamiento",
+        "minio": "Almacenamiento MinIO",
+        "influxdb": "Series temporales (InfluxDB)"
+      },
+      "status": {
+        "ok": "En línea",
+        "down": "Fuera de línea",
+        "checking": "Verificando…"
+      }
+    },
+    "activity": {
+      "title": "Actividad reciente",
+      "empty": "Aún no hay actividad registrada.",
+      "actors": {
+        "system": "Sistema",
+        "worker": "Worker",
+        "deletedUser": "Cuenta eliminada"
+      }
+    },
+    "content": {
+      "title": "Contenido del portal",
+      "empty": "Sin registros",
+      "cards": {
+        "publications": "Publicaciones",
+        "news": "Noticias",
+        "researchAreas": "Áreas de investigación",
+        "lasceResearchers": "Investigadores LASCE",
+        "rosacResearchers": "Investigadores ROSAC",
+        "instruments": "Instrumentos consultables"
+      }
+    }
   }
 }
