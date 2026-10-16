@@ -206,8 +206,6 @@ export function ResearchAreasSection({
                     deleteConfirmMessage={t('deleteDialog.message')}
                     deleteConfirmTitle={t('deleteDialog.title')}
                     deleteLabel={t('editor.deleteLabel', { title: area.title })}
-                    deleteTargetEntity={area.title}
-                    deleteTargetLabel={t('deleteDialog.target')}
                     editLabel={t('editor.editLabel', { title: area.title })}
                     onDelete={canDelete ? () => handleDeleteArea(area.id) : undefined}
                     onEdit={

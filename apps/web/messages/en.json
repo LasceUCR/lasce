@@ -717,12 +717,312 @@
     }
   },
   "news": {
+    "card": {
+      "openSource": "Open source",
+      "openSourceAria": "of “{title}” (opens in a new tab)"
+    },
     "created": "News item added successfully.",
     "updated": "News item updated successfully.",
     "deleted": "News item deleted successfully.",
     "errors": {
       "saveUnknown": "The news item could not be saved. Try again.",
       "deleteUnknown": "The news item could not be deleted. Try again."
+    }
+  },
+  "rosac": {
+    "meta": {
+      "title": "Radio Astronomy and ROSAC | LASCE",
+      "description": "Learn about the Santa Cruz Radio Observatory: its purpose, the 11-meter antenna, its capabilities under development, the research team, and its relationship with LASCE."
+    },
+    "hero": {
+      "kicker": "LASCE work area",
+      "title": "Santa Cruz Radio Observatory (ROSAC)",
+      "imageAlt": "11-meter antenna of the Santa Cruz Radio Observatory at sunset, next to the control booth, with the ROSAC logo."
+    },
+    "overview": {
+      "title": "What is ROSAC?",
+      "p1": "The Santa Cruz Radio Observatory (ROSAC) is a University of Costa Rica project located at the Santa Cruz Campus, Guanacaste. Its development centers on adapting an 11-meter parabolic antenna for astronomical use, through a new mount, motion and pointing systems, receivers, electronics, and control software.",
+      "p2": "Its purpose is to develop national capabilities to observe the Sun and other celestial sources at radio frequencies. The project connects astrophysics research with physics, electronics, engineering, telecommunications, automatic control, and software development."
+    },
+    "characteristics": {
+      "title": "Main characteristics",
+      "items": {
+        "antenna": {
+          "title": "11-meter antenna",
+          "description": "A parabolic antenna is adapted for astronomical use with a new mount and motion and pointing systems."
+        },
+        "location": {
+          "title": "Santa Cruz, Guanacaste",
+          "description": "The project is developed at the Santa Cruz Campus of the University of Costa Rica."
+        },
+        "frequencies": {
+          "title": "Between 100 and 1000 MHz",
+          "description": "Observations are prepared in this radio frequency range as part of the radio telescope development."
+        },
+        "sources": {
+          "title": "The Sun and other celestial sources",
+          "description": "Capabilities are developed to point at, track astronomical sources, and record their radio emissions."
+        }
+      }
+    },
+    "location": {
+      "title": "Location",
+      "intro": "The Santa Cruz Radio Observatory (ROSAC) is located at the {address}.",
+      "markerLabel": "ROSAC",
+      "unavailableMessage": "Could not load the map. The address above remains available."
+    },
+    "activities": {
+      "title": "What do we develop at ROSAC?",
+      "items": {
+        "tracking": {
+          "title": "Pointing and tracking",
+          "description": "We develop a radio telescope capable of pointing at and tracking astronomical sources."
+        },
+        "observations": {
+          "title": "Radio observations",
+          "description": "We prepare observations of the Sun and other celestial sources between 100 and 1000 MHz."
+        },
+        "control": {
+          "title": "Control and signal processing",
+          "description": "We design and test control, tracking, positioning, acquisition, and signal processing systems."
+        },
+        "receivers": {
+          "title": "Radio receivers",
+          "description": "We develop and evaluate receivers to record radio emissions associated with celestial objects."
+        },
+        "infrastructure": {
+          "title": "Local technical capabilities",
+          "description": "We build local expertise in the construction, operation, calibration, and maintenance of radio astronomy infrastructure."
+        },
+        "education": {
+          "title": "Research, teaching, and outreach",
+          "description": "We promote science from Guanacaste, expanding regional participation in science and technology."
+        }
+      }
+    },
+    "construction": {
+      "title": "ROSAC construction",
+      "intro": "The development of the Santa Cruz Radio Observatory has involved various stages of study, preparation, assembly, and infrastructure adaptation. This walkthrough presents some of the work carried out during that process.",
+      "carousel": {
+        "ariaLabel": "ROSAC construction process",
+        "groupNoun": "Stage",
+        "photoNoun": "Photograph",
+        "previousGroup": "Previous stage",
+        "nextGroup": "Next stage",
+        "previousPhoto": "Previous photograph",
+        "nextPhoto": "Next photograph",
+        "imageUnavailable": "Could not load this photograph.",
+        "of": "of"
+      },
+      "stages": {
+        "preparacion": {
+          "title": "Preparation for assembly",
+          "navigationLabel": "Preparation",
+          "description": "Before main assembly, site preparation and work on components that would later form the structure took place. This stage brings together the logistics and prior adaptation needed to begin assembly.",
+          "images": {
+            "img1": "People on and around a concrete base, with an antenna in the background.",
+            "img2": "Truck with crane and metallic components next to the antenna site.",
+            "img3": "Circular concrete base with anchor bolts and accumulated water inside, next to a small parabolic antenna.",
+            "img4": "Forklift transports a wrapped and strapped cylindrical metallic component.",
+            "img5": "Ground-level view of the circular concrete base, with anchor bolts and a rusted metallic plate in the foreground."
+          }
+        },
+        "estructura": {
+          "title": "Structure assembly",
+          "navigationLabel": "Structure",
+          "description": "Assembly progressively integrated the main components of the radio telescope structure. Photographs show positioning and crane lifting of these elements before the reflector received its panels.",
+          "images": {
+            "img1": "Crane placed on a cylindrical support during assembly work.",
+            "img2": "Metallic component with railing suspended next to the antenna support.",
+            "img3": "View from below of the central vertex of the antenna's radial structure, with two people working next to it.",
+            "img4": "Two people working on a platform with the motorized antenna rotation mechanism, with a crane in the background.",
+            "img5": "Mobile crane and truck next to a large conical metallic base placed on the grass."
+          }
+        },
+        "paneles": {
+          "title": "Panel assembly",
+          "navigationLabel": "Panels",
+          "description": "With the structure assembled, work continued on the reflector with the installation of its panels. Photographs show work carried out directly on the antenna, including moving panels to their final position.",
+          "images": {
+            "img1": "Person securing a curved reflector panel on the grass with chains, next to an aerial work platform.",
+            "img2": "Aerial view of a person on an aerial lift hoisting a triangular reflector panel with ropes.",
+            "img3": "Aerial lift next to the metallic structure of the reflector.",
+            "img4": "Group of people at the base of the antenna, under the reflector structure.",
+            "img5": "People on an aerial lift next to the antenna, with a suspended panel."
+          }
+        },
+        "fotogrametria": {
+          "title": "Photogrammetry and panel leveling",
+          "navigationLabel": "Photogrammetry",
+          "description": "Once reflector panels were installed, observation and photogrammetric surveying were performed to verify the geometry and leveling of the resulting surface. This documented the condition of the antenna following assembly.",
+          "images": {
+            "img1": "Night view of two antennas and an aerial lift next to one of them.",
+            "img2": "Two people working next to the central opening of the antenna reflector.",
+            "img3": "Two people sitting on the assembled reflector surface, measuring with a metal ruler next to the central opening."
+          }
+        },
+        "instalacion": {
+          "title": "Electrical installation",
+          "navigationLabel": "Installation",
+          "description": "Electrical adaptation covered work across different points of the observatory infrastructure. Photographs document installation and connection of electrical components, cabling, and work in both the antenna area and associated systems.",
+          "images": {
+            "img1": "Person next to mechanisms and cabling under the antenna structure.",
+            "img2": "Work team gathered in front of the base of the antenna.",
+            "img3": "People and cables next to a building near the antenna.",
+            "img4": "Person handling cables next to an open electrical panel.",
+            "img5": "People working on the platform under the reflector, next to cables and structure."
+          }
+        }
+      }
+    },
+    "radioObservation": {
+      "title": "Why observe in radio?",
+      "p1": "Radio emissions allow tracking accelerated electrons and structures moving through the solar corona and interplanetary medium. These observations complement visible light, ultraviolet, and X-ray images, helping reconstruct the evolution of solar events."
+    },
+    "relationship": {
+      "title": "ROSAC and LASCE",
+      "p1": "LASCE integrates data, models, and analysis methods to study solar activity and its relationship with the Earth's environment. ROSAC provides national infrastructure to observe the Sun at radio frequencies and strengthen those research capabilities.",
+      "p2": "LASCE turns observations into knowledge; ROSAC generates and strengthens an essential part of those observations. Together they connect basic science, technological development, training, and applications of national interest."
+    },
+    "instruments": {
+      "title": "Scientific instruments",
+      "intro": "Explore simulations of ROSAC instruments. Photographs are illustrative and come from the observatory gallery.",
+      "card": {
+        "name": "Instrument {number}",
+        "pendingName": "Instrument 3 (to be defined)",
+        "consultationLabel": "View {name} simulation",
+        "consultationNotice": "{product}. Results are simulated; they do not correspond to instrument observations.",
+        "pendingNotice": "Information pending confirmation and integration into the data section.",
+        "imageUnavailable": "Image unavailable",
+        "imagePending": "Image pending",
+        "purpose": "Purpose",
+        "characteristics": "Characteristics",
+        "citation": "How to cite"
+      },
+      "items": {
+        "saber": {
+          "characteristics": {
+            "c1": "Band between 100 and 1000 MHz"
+          }
+        },
+        "mira": {
+          "characteristics": {
+            "c1": "9 GHz band"
+          }
+        },
+        "hiros": {
+          "characteristics": {
+            "c1": "Neutral hydrogen observation at 1.4 GHz"
+          }
+        }
+      },
+      "products": {
+        "timeSeries": "Test time series",
+        "dynamicSpectrum": "Test dynamic spectrum"
+      },
+      "images": {
+        "img1": "Illustrative image from the ROSAC gallery: two antennas at night and an aerial lift.",
+        "img2": "Illustrative image from the ROSAC gallery: work on the antenna rotation mechanism.",
+        "img3": "Illustrative image from the ROSAC gallery: assembly of the antenna radial structure."
+      }
+    },
+    "team": {
+      "title": "Researchers",
+      "intro": "The people developing the Santa Cruz Radio Observatory (ROSAC), a project bringing together astrophysics, physics, topographic, electrical, and mechanical engineering, electronics, and computing, with national and international collaboration.",
+      "hint": "Click on a card to see more information.",
+      "emptyMessage": "No researcher information available at this time.",
+      "institutionLabel": "Institution",
+      "people": {
+        "carolinaSalas": {
+          "role": "Principal Investigator",
+          "description": "Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument."
+        },
+        "miguelVelazquez": {
+          "role": "Researcher",
+          "description": "In charge of instrumentation development at ROSAC."
+        },
+        "davidGale": {
+          "role": "Researcher",
+          "description": "Installation and alignment of telescope reflectors. Mechanical systems, motion testing, lightning protection. General support."
+        },
+        "oscarNunez": {
+          "role": "Researcher",
+          "description": "In charge of the electrical system and technical support for gear motors."
+        },
+        "federicoRuiz": {
+          "role": "Researcher",
+          "description": "In charge of the implementation and commissioning of sensors and actuators, as well as the development of the controller and software systems associated with the ROSAC radio telescope."
+        },
+        "gustavoLara": {
+          "role": "Researcher",
+          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
+        },
+        "andresFallas": {
+          "role": "Researcher",
+          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
+        },
+        "wagnerMejias": {
+          "role": "Researcher",
+          "description": "Mechanical installation of the structure, preventive and corrective maintenance, adaptations and improvements to the general structure."
+        },
+        "eduardoIbarra": {
+          "role": "External collaborator",
+          "description": "Collaborator in the development and testing of the reception stage in the 100 MHz to 1.1 GHz range, receiver sensitivity analysis, radio telescope design, and electrical installation and antenna guidance system control tasks."
+        },
+        "andresCorrales": {
+          "role": "External collaborator",
+          "description": "Designer, developer, and maintainer of the radio telescope control software and end-user software."
+        },
+        "andresGamboa": {
+          "role": "External collaborator",
+          "description": "Support in radio telescope maintenance tasks, as well as electromechanical work related to instrument assembly."
+        },
+        "jelmuthRojas": {
+          "role": "External collaborator",
+          "description": "Support in structure leveling tasks."
+        },
+        "barnaldBocker": {
+          "role": "Assistant",
+          "description": "Support in the development and maintenance of ROSAC control software and communication protocols."
+        },
+        "fabianChaverri": {
+          "role": "Prospective doctoral student",
+          "description": "Prospective doctoral student with a thesis in astronomical instrumentation linked to the project."
+        }
+      }
+    },
+    "donations": {
+      "title": "ROSAC donations",
+      "subtitle": "The support of companies and organizations making it possible to keep growing and developing our work.",
+      "items": {
+        "eaton": {
+          "title": "Eaton donations",
+          "description": "The ROSAC organization received two equipment donations from Eaton, as part of its commitment to strengthening the initiatives and activities carried out by the organization. This contribution represents valuable support for ROSAC and the development of its work.",
+          "imageAlt": "ROSAC team with Eaton representatives and the donated electrical panel"
+        },
+        "prysmian": {
+          "title": "Prysmian donation",
+          "description": "The ROSAC organization received an equipment donation from Prysmian, as part of its commitment to strengthening the initiatives and activities carried out by the organization. This contribution represents valuable support for ROSAC and the development of its work.",
+          "imageAlt": "Prysmian representative talking with a ROSAC team member in front of the observatory antenna"
+        }
+      },
+      "cta": {
+        "title": "Would you like to help us?",
+        "description": "Write to us and let's talk about how your company or organization can support ROSAC.",
+        "buttonLabel": "Contact us"
+      }
+    },
+    "acknowledgments": {
+      "title": "ROSAC acknowledgments",
+      "subtitle": "List of institutions to which ROSAC extends its gratitude."
+    },
+    "scientificConsultation": {
+      "title": "Scientific query",
+      "description": "Explore ROSAC demonstration queries in the data section. Results are simulated while instrument integration is defined.",
+      "buttonLabel": "Explore data"
+    },
+    "backLink": {
+      "label": "Back to work areas"
     }
   },
   "researchAreas": {
@@ -786,10 +1086,68 @@
     }
   },
   "researchers": {
+    "institutionLabel": "Institution",
     "created": "Researcher added successfully.",
     "updated": "Researcher updated successfully.",
     "errors": {
       "unknown": "The researcher could not be saved. Try again."
+    }
+  },
+  "administration": {
+    "shell": {
+      "panel": "Administration panel",
+      "menu": "Menu",
+      "items": {
+        "resumen": "Summary",
+        "descargas": "Downloads",
+        "usuarios": "Users",
+        "permisos": "Permissions",
+        "infraestructura": "Infrastructure"
+      }
+    },
+    "summary": {
+      "metaTitle": "Administration | LASCE",
+      "metaDescription": "Summary of the state of the laboratory and its systems.",
+      "title": "Summary",
+      "description": "Overall state of the laboratory and its systems.",
+      "infrastructureTitle": "Infrastructure status"
+    },
+    "services": {
+      "title": "Services",
+      "names": {
+        "api": "Public API",
+        "postgres": "PostgreSQL database",
+        "redis": "Job queue (Redis)",
+        "workers": "Processing workers",
+        "minio": "MinIO storage",
+        "influxdb": "Time series (InfluxDB)"
+      },
+      "status": {
+        "ok": "Online",
+        "down": "Offline",
+        "checking": "Checking…"
+      }
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity has been recorded yet.",
+      "actors": {
+        "system": "System",
+        "worker": "Worker",
+        "deletedUser": "Deleted account"
+      }
+    },
+    "content": {
+      "title": "Portal content",
+      "empty": "No records",
+      "cards": {
+        "publications": "Publications",
+        "news": "News",
+        "researchAreas": "Research areas",
+        "lasceResearchers": "LASCE researchers",
+        "rosacResearchers": "ROSAC researchers",
+        "instruments": "Queryable instruments"
+      }
     }
   }
 }
