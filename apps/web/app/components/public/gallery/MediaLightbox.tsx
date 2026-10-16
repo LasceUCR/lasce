@@ -4,7 +4,11 @@ import { useId } from 'react'
 
 import { Lightbox } from '../Lightbox'
 import { MediaFrame } from './MediaFrame'
-import { mediaPlaceholder, type GalleryMedia } from '@/app/lib/gallery'
+import type { GalleryMedia } from '@/app/lib/gallery-schema'
+
+function mediaPlaceholder(item: GalleryMedia): string {
+  return `${item.isVideo ? 'Video' : 'Foto'}: ${item.title}`
+}
 
 export interface MediaLightboxProps {
   albumTitle: string

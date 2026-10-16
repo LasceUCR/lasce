@@ -423,6 +423,31 @@ class GalleryAlbum(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class GalleryAlbumTranslation(Base):
+    """The ``title`` and ``description`` of a `GalleryAlbum` in a language other
+    than the source one. One row per (album, locale); the source text stays on
+    ``gallery_albums``.
+    """
+
+    __tablename__ = "gallery_album_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "album_id", "locale", name="gallery_album_translations_album_id_locale_key"
+        ),
+        {"schema": "gallery"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    album_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("gallery.gallery_albums.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class GalleryMedia(Base):
     """One photo or video shown in an album's masonry grid and lightbox. Lives in
     the ``gallery`` Postgres schema. No job touches it yet; it is mirrored by
@@ -447,6 +472,35 @@ class GalleryMedia(Base):
     captured_at: Mapped[date_type] = mapped_column(Date)
     uploader_name: Mapped[str] = mapped_column(Text)
     position: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GalleryMediaTranslation(Base):
+    """The ``title``, ``description``, and ``alt_text`` of a
+    ``GalleryMedia`` record in a language other than the source one.
+    One row per (media, locale); the source text stays on ``gallery_media``.
+    """
+
+    __tablename__ = "gallery_media_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "gallery_media_id",
+            "locale",
+            name="gallery_media_translations_gallery_media_id_locale_key",
+        ),
+        {"schema": "gallery"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    gallery_media_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("gallery.gallery_media.id", ondelete="CASCADE"),
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    alt_text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

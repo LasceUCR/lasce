@@ -561,6 +561,7 @@
       "createTitle": "Agregar publicación",
       "editTitle": "Editar publicación",
       "editLabel": "Editar {title}",
+      "descriptionField": "Descripción ({language})",
       "deleteLabel": "Eliminar {title}",
       "languageTabs": "Idioma del contenido",
       "titleField": "Título ({language})",
@@ -575,7 +576,13 @@
       "group": "Grupo",
       "cancel": "Cancelar",
       "save": "Confirmar",
-      "reload": "Cerrar y cargar la versión actual"
+      "reload": "Cerrar y cargar la versión actual",
+      "yearsLabel": "Años",
+      "uploadingImage": "Subiendo imagen...",
+      "altTextField": "Texto alternativo ({language})",
+      "FileDropDescriptionText": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo.",
+      "FileDropRejectionFormatMessage": "Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.",
+      "FileDropRejectionSizeMessage": "La imagen supera el tamaño máximo de 25 MB."
     },
     "authors": {
       "label": "Autores",
@@ -631,6 +638,62 @@
       "conflict": "Otra persona guardó cambios en esta publicación después de que usted la abrió. Sus cambios no se guardaron, para no sobrescribir los de esa persona. Copie lo que necesite, cierre el editor y vuelva a abrir la publicación.",
       "notFound": "Esta publicación ya no existe; es posible que otra persona la haya eliminado. Sus cambios no se guardaron.",
       "deleteFailed": "No se pudo eliminar la publicación. Inténtelo de nuevo."
+    }
+  },
+  "gallery": {
+    "editor": {
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o la descripción, revíselo también.",
+      "legacyNoTranslation": "Este álbum aún no tiene versión en inglés. Para cambiar el título o la descripción debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",
+      "mediaLegacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título, la descripción o el texto alternativo, revíselo también.",
+      "mediaLegacyNoTranslation": "Este archivo aún no tiene versión en inglés. Para cambiar el título, la descripción o el texto alternativo debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",
+      "albumCoverField": "Imagen de portada del álbum",
+      "albumCoverHelperText": "Imagen de portada del álbum, en formato JPG, PNG o WEBP.",
+      "albumCoverRequired": "Se requiere una imagen de portada para el álbum.",
+      "mediaField": "Contenido",
+      "mediaHelperText": "Subida de contenido, en formato JPG, PNG, o WEBP.",
+      "mediaRequired": "Se requiere subir un contenido.",
+      "galleryWidth": "Ancho en la galería (columnas)",
+      "galleryHeight": "Alto en la galería (filas)",
+      "titleNeedsLettersOrNumbers": "El título debe incluir letras o números para generar el identificador.",
+      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo."
+    },
+    "actions": {
+      "addAlbum": "Añadir álbum",
+      "addSubAlbum": "Añadir subálbum",
+      "addFile": "Añadir imagen",
+      "creatingAlbum": "Creando álbum...",
+      "creatingSubAlbum": "Creando subálbum...",
+      "savingAlbum": "Guardando álbum...",
+      "savingSubAlbum": "Guardando subálbum...",
+      "deleteAlbum": "Eliminar álbum",
+      "deleteSubAlbum": "Eliminar subálbum",
+      "deleteFile": "Eliminar imagen",
+      "deleteMessage": "¿Desea eliminar \"{title}\"? Esta acción no se puede deshacer.",
+      "deleteItem": "Eliminar {title}",
+      "editItem": "Editar {title}",
+      "editQuoted": "Editar \"{title}\"",
+      "editFile": "Editar imagen"
+    },
+    "feedback": {
+      "albumCreated": "Álbum agregado correctamente.",
+      "albumUpdated": "Álbum actualizado correctamente.",
+      "albumDeleted": "Álbum eliminado correctamente.",
+      "albumCreateFailed": "No se pudo crear el álbum.",
+      "albumSaveFailed": "No se pudo guardar el álbum.",
+      "albumDeleteFailed": "No se pudo eliminar el álbum.",
+      "subAlbumCreated": "Subálbum agregado correctamente.",
+      "subAlbumUpdated": "Subálbum actualizado correctamente.",
+      "subAlbumDeleted": "Subálbum eliminado correctamente.",
+      "subAlbumCreateFailed": "No se pudo crear el subálbum.",
+      "subAlbumSaveFailed": "No se pudo guardar el subálbum.",
+      "subAlbumDeleteFailed": "No se pudo eliminar el subálbum.",
+      "fileDeleted": "Imagen eliminada correctamente.",
+      "fileDeleteFailed": "No se pudo eliminar la imagen.",
+      "imageCreated": "Imagen agregada correctamente.",
+      "imageUpdated": "Imagen actualizada correctamente.",
+      "imageCreateFailed": "No se pudo agregar la imagen.",
+      "imageUpdateFailed": "No se pudo actualizar la imagen.",
+      "imageReload": "No se pudo actualizar la imagen. Recargue la página."
     }
   },
   "nosotros": {

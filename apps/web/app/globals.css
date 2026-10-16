@@ -4381,6 +4381,49 @@ a {
   flex: 1;
 }
 
+.gallery-grid-add {
+  min-height: 260px;
+}
+
+.gallery-grid-add > .add-item-card {
+  flex: 1;
+  min-height: 0;
+  border-radius: 8px;
+}
+
+.gallery-subalbum-list {
+  align-items: stretch;
+}
+
+.gallery-subalbum-list > li > .editable {
+  display: flex;
+  flex: 1;
+}
+
+.gallery-subalbum-list .editable > .gallery-tile {
+  flex: 1;
+}
+
+/* In edit mode the album's cover tile fix. */
+.gallery-grid > li > .gallery-grid-editable {
+  display: flex;
+  flex: 1;
+}
+
+.gallery-grid-editable > .gallery-tile {
+  flex: 1;
+}
+
+.gallery-subalbum-add {
+  min-height: 260px;
+}
+
+.gallery-subalbum-add > .add-item-card {
+  flex: 1;
+  min-height: 0;
+  border-radius: 8px;
+}
+
 /* Fixed tracks, not fractions: the cards keep one size and the grid wraps, so
    an album with a single cover and no sub-albums shows one normal card rather
    than one stretched across the page. */
@@ -4469,6 +4512,10 @@ a.gallery-tile:focus-visible {
   gap: 16px;
 }
 
+.media-grid-add {
+  display: flex;
+}
+
 .media-tile {
   position: relative;
   grid-column: span var(--media-col-span, 1);
@@ -4483,6 +4530,26 @@ a.gallery-tile:focus-visible {
 .media-tile .media-tile-frame {
   width: 100%;
   height: 100%;
+}
+
+.media-tile-editable.editable {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.media-tile-editable .editable-actions,
+.media-tile-editable dialog {
+  pointer-events: auto;
+}
+
+/* The confirmation renders inside the dark tile, so it takes the light theme back. */
+.media-tile-editable dialog {
+  --action: var(--deep-space-blue-2);
+  --action-hover: var(--deep-space-blue);
+  --on-action: var(--white);
+  color: var(--ink);
 }
 
 .media-tile-button {

@@ -270,9 +270,9 @@ Relationships: belongs to one `users` row.
 
 ## `gallery` schema
 
-Nothing reads or writes these tables yet: `/galeria` still renders from the static mock in
-`apps/web/app/lib/gallery.ts`. This section documents the schema so it's kept accurate as that
-mock is replaced.
+Gallery albums and sub-albums are written through the POST endpoints documented in
+[`gallery.md`](gallery.md), and `/galeria` reads the database-backed album hierarchy. Initial
+gallery content is declared in `apps/web/app/lib/gallery.ts` and populated by `pnpm db:seed`.
 
 ### `gallery_albums`
 
@@ -296,7 +296,32 @@ exactly 2 levels by application convention — nothing here stops a sub-album fr
 | `updated_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                                                     |
 
 Relationships: optionally belongs to one parent `gallery_albums` row; has many `gallery_albums`
-(its sub-albums, deleted with it); has many `gallery_media`.
+(its sub-albums, deleted with it), `gallery_media`, and `gallery_album_translations` (deleted with
+it).
+
+The base `title`, `description` and `years_label` hold the source-language text. For older albums,
+the language of that text may be unknown.
+
+### `gallery_album_translations`
+
+The translated text of a `gallery_albums` row. The Prisma model is `GalleryAlbumTranslation`; it
+stores the title, description and optional years label for a non-source locale. The slug, cover
+image, album hierarchy and media are shared.
+
+| Column        | Prisma type | Postgres type    | Constraints                                               |
+| ------------- | ----------- | ---------------- | --------------------------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                   |
+| `album_id`    | `String`    | `uuid`           | FK → `gallery_albums.id`, `ON DELETE CASCADE`, not null   |
+| `locale`      | `String`    | `varchar(5)`     | not null — validated against `locales` by the application |
+| `title`       | `String`    | `text`           | not null                                                  |
+| `description` | `String`    | `text`           | not null                                                  |
+| `years_label` | `String?`   | `text`           | nullable                                                  |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                    |
+
+Constraint: `UNIQUE (album_id, locale)`. The database does not enforce that every album has a
+translation row or that `years_label` is populated consistently across locales. The application
+has not yet wired this table into localized gallery reads and writes.
 
 ### `gallery_media`
 
@@ -783,8 +808,20 @@ requested language for `/fisica-solar`. `updateSolarPhysicsSection()` (called by
 Spanish text, upserts the translations and moves `updated_at` forward, and only while `updated_at`
 still equals the version the editor loaded. Nothing in `apps/worker` reads these tables.
 
-Nothing yet reads or writes `gallery_albums`/`gallery_media` — `/galeria` still renders from the
-static mock in `apps/web/app/lib/gallery.ts`.
+`apps/web/app/lib/solar-physics-section.ts`'s `getSolarPhysicsSection()` reads the `lasce` row of
+`public.solar_physics_sections` with its translations and returns the title and paragraphs in the
+requested language for `/fisica-solar`. `updateSolarPhysicsSection()` (called by
+`PATCH /api/solar-physics/lasce-section`) is the only writer: in one transaction it rewrites the
+Spanish text, upserts the translations and moves `updated_at` forward, and only while `updated_at`
+still equals the version the editor loaded. Nothing in `apps/worker` reads these tables.
+
+`apps/web/app/lib/gallery.ts` reads the database-backed `gallery_albums` hierarchy and its
+`gallery_media`, each with its translations, and the gallery API writes these records.
+`getGalleryAlbums()` returns an album's title and description in the requested language and falls
+back to the base text when that language has no translation. Creating an album inserts its
+translations with it, and an update upserts them only when the editor sends text. Editing also
+returns every stored language so the form can show them. Media translations in
+`gallery_media_translations` work the same way.
 
 ## Keeping this current
 
