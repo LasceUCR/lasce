@@ -26,8 +26,6 @@ import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
 
 import { NosotrosActivityForm, type NosotrosActivityFormValues } from './NosotrosActivityForm'
 
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
-
 const icons: Record<NosotrosCardIcon, LucideIcon> = {
   sun: Sun,
   waves: Waves,
@@ -56,6 +54,8 @@ export function NosotrosPage({
   const router = useRouter()
   const t = useTranslations('nosotros.activities')
   const tResearchers = useTranslations('researchers')
+  const tNosotrosResearchers = useTranslations('nosotros.researchers')
+  const saveErrorMessage = tNosotrosResearchers('saveError')
   const sendWithFeedback = useRequestFeedback()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
@@ -168,13 +168,13 @@ export function NosotrosPage({
     try {
       response = await fetch(`/api/nosotros/researchers/${id}`, { method: 'DELETE' })
     } catch {
-      setResearcherListError(SAVE_ERROR_MESSAGE)
+      setResearcherListError(saveErrorMessage)
       return
     }
 
     if (!response.ok) {
       const body: { error?: string } | null = await response.json().catch(() => null)
-      setResearcherListError(body?.error ?? SAVE_ERROR_MESSAGE)
+      setResearcherListError(body?.error ?? saveErrorMessage)
       return
     }
 
@@ -197,9 +197,7 @@ export function NosotrosPage({
 
       <TopicSection title={content.activities.title} titleId="nosotros-activities-title" index="1">
         {editMode && canCreate && content.activities.items.length === 0 ? (
-          <p className="topic-intro">
-            Haga clic en &quot;Añadir&quot; para agregar alguna actividad.
-          </p>
+          <p className="topic-intro">{t('emptyHint')}</p>
         ) : null}
 
         <CardGrid columns={3} equalHeight>
@@ -222,11 +220,11 @@ export function NosotrosPage({
             return (
               <EditableWrapper
                 key={item.id}
-                deleteConfirmLabel="Eliminar"
-                deleteConfirmMessage={`¿Desea eliminar "${item.title}"? Esta acción no se puede deshacer.`}
-                deleteConfirmTitle="Eliminar actividad"
-                deleteLabel={`Eliminar ${item.title}`}
-                editLabel={`Editar ${item.title}`}
+                deleteConfirmLabel={t('deleteConfirm')}
+                deleteConfirmMessage={t('deleteMessage', { title: item.title })}
+                deleteConfirmTitle={t('deleteTitle')}
+                deleteLabel={t('deleteLabel', { title: item.title })}
+                editLabel={t('editLabel', { title: item.title })}
                 onDelete={canDelete ? () => handleDeleteActivity(item.id) : undefined}
                 onEdit={canEdit ? () => openEditor(item.id) : undefined}
               >
@@ -236,12 +234,13 @@ export function NosotrosPage({
           })}
 
           {editMode && canCreate ? (
-            <AddItemCard label="Añadir">
+            <AddItemCard label={t('add')}>
               {({ close }) => (
                 <NosotrosActivityForm
                   activity={blankActivity}
                   onCancel={close}
                   onSave={(values) => handleCreateActivity(values, close)}
+                  requireConfirmation={false}
                 />
               )}
             </AddItemCard>
@@ -279,7 +278,7 @@ export function NosotrosPage({
           )}
           trailingSlide={
             editMode && canCreate ? (
-              <AddItemCard label="Añadir investigador">
+              <AddItemCard label={tNosotrosResearchers('add')}>
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
@@ -320,7 +319,9 @@ export function NosotrosPage({
       <Modal
         onClose={closeEditor}
         open={editingActivity !== undefined}
-        title={editingActivity ? `Editar "${editingActivity.title}"` : 'Editar actividad'}
+        title={
+          editingActivity ? t('editTitle', { title: editingActivity.title }) : t('editFallback')
+        }
       >
         {editingActivity ? (
           <NosotrosActivityForm
