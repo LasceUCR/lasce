@@ -24,8 +24,8 @@ represent workshops, seminars, and conferences organized or co-organized by LASC
 
 Both the `/noticias` teaser and the dedicated `/actividades-academicas` list render the same
 `AcademicActivityCard` — there is no detail route for either surface to link to.
-`/actividades-academicas` is also a top-level entry in the main nav bar (`PublicHeader.tsx`,
-`nav.academicActivities`).
+`/actividades-academicas` is also reachable from the main nav, inside the `Divulgación` dropdown
+next to Noticias and Galería (`PublicHeader.tsx`, `nav.academicActivities`).
 
 | Piece               | File                                                       | Covered by                            |
 | ------------------- | ---------------------------------------------------------- | ------------------------------------- |

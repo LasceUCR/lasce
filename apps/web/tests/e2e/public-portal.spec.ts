@@ -523,16 +523,18 @@ test('displays academic activities in the news section, with the description in 
   await expect(page.getByRole('button', { name: 'Leer menos' }).first()).toBeVisible()
 })
 
-test('shows the dedicated academic activities page, reachable from the nav bar', async ({
+test('shows the dedicated academic activities page, reachable from the Divulgación menu', async ({
   page,
 }) => {
   // Wide enough for the desktop header: at 1400px and below the navigation is the mobile menu,
-  // where this link sits behind the hamburger button instead of as a plain, visible link.
+  // where this link sits behind the hamburger button instead of in the desktop dropdown.
   await page.setViewportSize({ width: 1600, height: 900 })
   const response = await page.goto('/')
 
   expect(response?.status()).toBe(200)
-  await page.getByRole('link', { name: 'Actividades académicas' }).first().click()
+  const desktopNav = page.getByRole('navigation', { name: 'Navegación principal' })
+  await desktopNav.getByText('Divulgación').click()
+  await desktopNav.getByRole('link', { name: 'Actividades académicas' }).click()
 
   await expect(page).toHaveURL(/\/actividades-academicas$/)
   await expect(
