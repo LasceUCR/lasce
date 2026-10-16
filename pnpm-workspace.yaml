@@ -2,11 +2,21 @@ packages:
   - "apps/*"
   - "packages/*"
 
+# next-intl/plugin requires @swc/core just by being imported (for an optional
+# message-extraction feature this project does not use), and 1.16.13's native
+# binding fails to load specifically from inside Next's next.config.ts
+# transpile step on Windows, even though the same binary loads fine from a
+# plain Node process. 1.16.18 does not have this problem.
+overrides:
+  "@swc/core": 1.16.18
+
 # pnpm 10 blocks lifecycle scripts unless a dependency is listed here.
 # These need theirs: Prisma downloads its query engine, and the rest ship
 # platform-specific native binaries.
 onlyBuiltDependencies:
+  - "@parcel/watcher"
   - "@prisma/engines"
+  - "@swc/core"
   - "@tailwindcss/oxide"
   - esbuild
   - msgpackr-extract

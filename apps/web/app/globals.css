@@ -613,12 +613,23 @@ a {
   gap: 10px;
 }
 
-/* From the 1400px mobile breakpoint up to 1500px the Spanish navigation, the language menu
+/* From the 1400px mobile breakpoint up to 1700px the Spanish navigation, the language menu
    and the account links do not fit on one row at the default 28px spacing, so the navigation
-   closes up there. */
-@media (min-width: 1401px) and (max-width: 1500px) {
+   closes up there. The range got wider (it used to stop at 1500px) once "Actividades
+   académicas" joined the top-level entries — the longest label in the bar — and pushed the
+   overlap further out than before. */
+@media (min-width: 1401px) and (max-width: 1700px) {
   .desktop-nav {
-    gap: 16px;
+    gap: 4px;
+  }
+
+  .desktop-nav a,
+  .desktop-nav .nav-group summary {
+    font-size: 12px;
+  }
+
+  .desktop-nav .nav-group summary {
+    gap: 2px;
   }
 }
 
@@ -2860,6 +2871,14 @@ a {
   gap: 16px;
 }
 
+/* Only on the dedicated `/actividades-academicas` page, not the `/noticias` teaser — that one
+   already gets its own bottom spacing from `.academic-activities`'s 32px padding-bottom. Matches
+   `.publications`'s 56px before its own `TopicBackLink` footer: a list of cards reads better with
+   more room above the footer than a plain `TopicSection` of text gets. */
+.academic-activities-list-standalone {
+  padding-bottom: 56px;
+}
+
 .academic-activity-card-header {
   display: flex;
   align-items: center;
@@ -2991,6 +3010,15 @@ a {
 /* Same look as `.news-abstract`, but unclamped — a donation write-up has no
    detail page to link to for the rest of the text, so it all shows here. */
 .donation-card-description {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Same look again, but clamped through `TruncatedText` instead of a detail page: the card is now
+   the only place the full write-up appears, so "Leer más" expands it in place. */
+.academic-activity-card-description {
   margin: 10px 0 0;
   color: var(--muted);
   font-size: 13px;
