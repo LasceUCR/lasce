@@ -2560,7 +2560,9 @@ a {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--blue);
+  /* `--blue` fails WCAG AA (4.5:1) at this text's size; `--blue-accent-text` is the same hue,
+     darkened to pass. */
+  color: var(--blue-accent-text);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
