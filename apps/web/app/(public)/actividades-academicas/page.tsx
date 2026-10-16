@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
-import { getMessages, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 
 import { AcademicActivitiesPage } from '@/app/components/public/news/AcademicActivitiesPage'
 import { getAcademicActivities } from '@/app/lib/academic-activities'
+import { userHasPermission } from '@/app/lib/auth/authorization'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('academicActivities.listPage')
@@ -12,9 +13,19 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = 'force-dynamic'
 
 export default async function ActividadesAcademicasPage() {
-  const messages = await getMessages()
+  const [activities, canCreate, canEdit, canDelete] = await Promise.all([
+    getAcademicActivities(),
+    userHasPermission('create_components'),
+    userHasPermission('edit_components'),
+    userHasPermission('delete_components'),
+  ])
 
   return (
-    <AcademicActivitiesPage activities={getAcademicActivities(messages.academicActivities.items)} />
+    <AcademicActivitiesPage
+      activities={activities}
+      canCreate={canCreate}
+      canDelete={canDelete}
+      canEdit={canEdit}
+    />
   )
 }

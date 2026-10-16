@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { getMessages } from 'next-intl/server'
 
 import { AcademicActivitiesSection } from '@/app/components/public/news/AcademicActivitiesSection'
 import { NewsExplorer } from '@/app/components/public/news/NewsExplorer'
@@ -17,8 +16,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function NewsPage() {
-  const [messages, news, canCreate, canEdit, canDelete] = await Promise.all([
-    getMessages(),
+  const [activities, news, canCreate, canEdit, canDelete] = await Promise.all([
+    getAcademicActivities(),
     getNews(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
@@ -29,10 +28,7 @@ export default async function NewsPage() {
     <article className="topic-page">
       <TopicHero kicker={noticiasHero.kicker} lead={noticiasHero.lead} title={noticiasHero.title} />
 
-      <AcademicActivitiesSection
-        activities={getAcademicActivities(messages.academicActivities.items)}
-        id="academic-activities"
-      />
+      <AcademicActivitiesSection activities={activities} id="academic-activities" />
 
       <NewsExplorer canCreate={canCreate} canDelete={canDelete} canEdit={canEdit} news={news} />
 
