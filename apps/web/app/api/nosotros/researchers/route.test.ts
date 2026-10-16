@@ -1,17 +1,12 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type * as NosotrosLib from '@/app/lib/nosotros'
 
 const mocks = vi.hoisted(() => ({
   getNosotrosResearchers: vi.fn(),
   createNosotrosResearcher: vi.fn(),
   requireApiPermission: vi.fn(),
+  getLocale: vi.fn(),
 }))
-
-// `@/app/lib/nosotros` imports `prisma` at module scope, which throws if
-// `DATABASE_URL` is unset — as it is here. The real module is still loaded
-// below (via `importOriginal`) so `nosotrosResearcherInputSchema` stays real,
-// but with `prisma` stubbed out first so importing it never touches a client.
-vi.mock('@lasce/db', () => ({ prisma: {} }))
 
 vi.mock('@/app/lib/nosotros', async (importOriginal) => {
   const original = await importOriginal<typeof NosotrosLib>()
@@ -26,15 +21,26 @@ vi.mock('@/app/lib/auth/apiGuard', () => ({
   requireApiPermission: mocks.requireApiPermission,
 }))
 
+// The real schemas are kept (via `importOriginal` above), and the module that defines them
+// imports `prisma` at load time — stub it out so loading it doesn't also require a live
+// DATABASE_URL.
+vi.mock('@lasce/db', () => ({ prisma: {} }))
+
+// The GET handler reads the request's language through next-intl.
+vi.mock('next-intl/server', () => ({ getLocale: mocks.getLocale }))
+
 import { GET, POST } from './route'
 
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
 const validBody = {
-  src: '/images/Researchers/New.jpg',
-  role: 'Investigador colaborador',
-  name: 'Persona Nueva',
-  institution: 'UCR',
-  description: 'Texto de prueba.',
+  src: '/images/Researchers/User.png',
+  name: 'Dra. Ada Lovelace',
+  email: 'ada@ucr.ac.cr',
+  institution: 'Universidad de Costa Rica',
+  content: {
+    es: { role: 'Investigadora', description: 'Estudia el clima espacial.' },
+    en: { role: 'Researcher', description: 'Studies space weather.' },
+  },
 }
 
 function postRequest(body: unknown) {
@@ -45,25 +51,30 @@ function postRequest(body: unknown) {
 }
 
 function deniedResponse() {
-  return new Response(JSON.stringify({ error: 'denied' }), { status: 401 })
+  return new Response(JSON.stringify({ error: 'No ha iniciado sesión.' }), { status: 401 })
 }
+
+beforeEach(() => {
+  mocks.getLocale.mockResolvedValue('es')
+})
 
 afterEach(() => {
   vi.clearAllMocks()
 })
 
 describe('GET /api/nosotros/researchers', () => {
+  const researchers = [
+    {
+      id: '1',
+      src: '/images/Researchers/User.png',
+      name: 'Dra. Ada Lovelace',
+      role: 'Investigadora',
+      institution: 'Universidad de Costa Rica',
+      contentLocale: 'es',
+    },
+  ]
+
   test('returns the researchers as never-cached JSON', async () => {
-    const researchers = [
-      {
-        id: '1',
-        src: '/images/ROSAC/team/CarolinaSalas.jpg',
-        role: 'Investigadora principal',
-        name: 'Dra. Carolina Salas Matamoros',
-        institution: 'CINESPA, UCR',
-        description: 'Texto.',
-      },
-    ]
     mocks.getNosotrosResearchers.mockResolvedValue(researchers)
 
     const response = await GET()
@@ -72,10 +83,19 @@ describe('GET /api/nosotros/researchers', () => {
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual({ researchers })
   })
+
+  test('reads the researchers in the language of the request, without editing data', async () => {
+    mocks.getLocale.mockResolvedValue('en')
+    mocks.getNosotrosResearchers.mockResolvedValue([])
+
+    await GET()
+
+    expect(mocks.getNosotrosResearchers).toHaveBeenCalledWith('en')
+  })
 })
 
 describe('POST /api/nosotros/researchers', () => {
-  test('rejects a request the permission guard denies', async () => {
+  test('rejects a request the create_components guard denies', async () => {
     const denied = deniedResponse()
     mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
@@ -92,54 +112,89 @@ describe('POST /api/nosotros/researchers', () => {
     const response = await POST(postRequest('not json'))
 
     expect(response.status).toBe(400)
+    expect((await response.json()).code).toBe('invalid-json')
     expect(mocks.createNosotrosResearcher).not.toHaveBeenCalled()
   })
 
-  test('rejects a body missing required fields', async () => {
+  test('rejects a body missing a language, listing the fields by path', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
-    const response = await POST(postRequest({ ...validBody, name: '' }))
+    const response = await POST(
+      postRequest({
+        ...validBody,
+        content: {
+          es: { role: 'Investigadora', description: null },
+          en: { role: '', description: null },
+        },
+      }),
+    )
 
     expect(response.status).toBe(400)
     const body = await response.json()
-    expect(body.issues).toMatchObject({
-      name: expect.any(Array),
-    })
+    expect(body.code).toBe('invalid-body')
+    expect(body.issues).toEqual([
+      { path: 'content.en.role', message: 'El rol en inglés es obligatorio.' },
+    ])
     expect(mocks.createNosotrosResearcher).not.toHaveBeenCalled()
   })
 
-  test('accepts a body with no photo — it is optional', async () => {
+  test('rejects the former flat body', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    mocks.createNosotrosResearcher.mockResolvedValue({ id: 'new-1', ...validBody, src: '' })
 
-    const response = await POST(postRequest({ ...validBody, src: '' }))
-
-    expect(response.status).toBe(201)
-    expect(mocks.createNosotrosResearcher).toHaveBeenCalledWith(
-      { ...validBody, src: '' },
-      adminUser.id,
+    const response = await POST(
+      postRequest({
+        src: validBody.src,
+        name: validBody.name,
+        institution: validBody.institution,
+        role: 'Investigadora',
+        description: 'Estudia el clima espacial.',
+      }),
     )
-  })
 
-  test('accepts a body with no description — it is optional here', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    const { description: _description, ...bodyWithoutDescription } = validBody
-    mocks.createNosotrosResearcher.mockResolvedValue({ id: 'new-1', ...bodyWithoutDescription })
-
-    const response = await POST(postRequest(bodyWithoutDescription))
-
-    expect(response.status).toBe(201)
+    expect(response.status).toBe(400)
+    expect(mocks.createNosotrosResearcher).not.toHaveBeenCalled()
   })
 
   test('creates the researcher, authored by the current admin', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    const created = { id: 'new-1', ...validBody }
+    const created = { id: 'new-1', name: validBody.name }
     mocks.createNosotrosResearcher.mockResolvedValue(created)
 
     const response = await POST(postRequest(validBody))
 
     expect(response.status).toBe(201)
     expect(await response.json()).toEqual({ researcher: created })
-    expect(mocks.createNosotrosResearcher).toHaveBeenCalledWith(validBody, adminUser.id)
+    expect(mocks.createNosotrosResearcher).toHaveBeenCalledWith(
+      { ...validBody, email: ['ada@ucr.ac.cr'] },
+      adminUser.id,
+    )
+  })
+
+  test('accepts a body with no photo — it is optional', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.createNosotrosResearcher.mockResolvedValue({ id: 'new-1', src: '' })
+    const { src: _src, ...withoutPhoto } = validBody
+
+    const response = await POST(postRequest(withoutPhoto))
+
+    expect(response.status).toBe(201)
+    expect(mocks.createNosotrosResearcher).toHaveBeenCalledWith(
+      { ...withoutPhoto, email: ['ada@ucr.ac.cr'] },
+      adminUser.id,
+    )
+  })
+
+  test('answers an unexpected failure without exposing its details', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.createNosotrosResearcher.mockRejectedValue(new Error('connection refused'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const response = await POST(postRequest(validBody))
+
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({
+      error: 'No se pudo guardar el investigador.',
+      code: 'internal-error',
+    })
   })
 })
