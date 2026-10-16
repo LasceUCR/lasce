@@ -12,7 +12,7 @@ import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { EditableResearcherCard } from '@/app/components/public/rosac/EditableResearcherCard'
 import {
   ResearcherForm,
-  type ResearcherFormValues,
+  type BilingualResearcherFormValues,
 } from '@/app/components/public/rosac/ResearcherForm'
 import { TeamGallery } from '@/app/components/public/rosac/TeamGallery'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
@@ -23,7 +23,13 @@ import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
-import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
+import type {
+  NosotrosCardIcon,
+  NosotrosContent,
+  NosotrosResearcher,
+  NosotrosResearcherCreateBody,
+  NosotrosResearcherUpdateBody,
+} from '@/app/lib/nosotros'
 
 import { NosotrosActivityForm, type NosotrosActivityFormBody } from './NosotrosActivityForm'
 
@@ -38,6 +44,40 @@ const icons: Record<NosotrosCardIcon, LucideIcon> = {
 
 /** Starting point for a brand-new card — the form just needs some valid icon selected. */
 const blankIcon: NosotrosCardIcon = 'sun'
+
+/** The body sent to `/api/nosotros/researchers`: a create, or an update with only what changed. */
+type ResearcherRequestBody = NosotrosResearcherCreateBody | NosotrosResearcherUpdateBody
+
+/** The addresses of a researcher as the form shows them, one comma separated string. */
+function emailText(email: NosotrosResearcher['email']): string {
+  if (!email) return ''
+  return typeof email === 'string' ? email : email.join(', ')
+}
+
+/**
+ * The update body for an edited researcher: the version, the shared fields that changed and, only
+ * when the role or the description changed, both languages with the reviews the editor
+ * confirmed. `null` when nothing changed.
+ */
+function researcherUpdateBody(
+  person: NosotrosResearcher,
+  version: string,
+  values: BilingualResearcherFormValues,
+): NosotrosResearcherUpdateBody | null {
+  const changes: Omit<NosotrosResearcherUpdateBody, 'version'> = {
+    ...(values.src === person.src ? {} : { src: values.src }),
+    ...(values.name.trim() === person.name ? {} : { name: values.name }),
+    ...(values.email === emailText(person.email) ? {} : { email: values.email }),
+    ...(values.institution.trim() === person.institution
+      ? {}
+      : { institution: values.institution }),
+    ...(values.content
+      ? { content: values.content, confirmedUnchanged: values.confirmedUnchanged }
+      : {}),
+  }
+
+  return Object.keys(changes).length === 0 ? null : { version, ...changes }
+}
 
 export interface NosotrosPageProps {
   content: NosotrosContent
@@ -56,14 +96,12 @@ export function NosotrosPage({
   const t = useTranslations('nosotros.activities')
   const tResearchers = useTranslations('researchers')
   const tNosotrosResearchers = useTranslations('nosotros.researchers')
-  const saveErrorMessage = tNosotrosResearchers('saveError')
   const sendWithFeedback = useRequestFeedback()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
   // A second click while a save is in flight would send the same version again and come back as
   // a false conflict.
   const saving = useRef(false)
-  const [researcherListError, setResearcherListError] = useState<string | null>(null)
 
   const editingActivity = content.activities.items.find((item) => item.id === editingActivityId)
   const editingData = editingActivity?.editing ?? null
@@ -76,7 +114,10 @@ export function NosotrosPage({
     setEditingActivityId(null)
   }
 
-  function jsonRequest(method: 'POST' | 'PATCH', body: NosotrosActivityFormBody) {
+  function jsonRequest(
+    method: 'POST' | 'PATCH',
+    body: NosotrosActivityFormBody | ResearcherRequestBody,
+  ) {
     return {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -85,11 +126,11 @@ export function NosotrosPage({
   }
 
   /** Runs one save at a time. The form stays open on failure, so the editor can retry. */
-  async function saveOnce(send: () => Promise<boolean>) {
-    if (saving.current) return
+  async function saveOnce(send: () => Promise<boolean>): Promise<boolean> {
+    if (saving.current) return false
     saving.current = true
     try {
-      await send()
+      return await send()
     } finally {
       saving.current = false
     }
@@ -141,64 +182,63 @@ export function NosotrosPage({
     )
   }
 
-  // Reports the outcome in a toast once the request is done. A refresh re-runs the server
-  // component's `getNosotrosResearchers()` so the page reflects the saved change immediately,
-  // without an optimistic guess.
-  async function handleSaveResearcher(id: string, values: ResearcherFormValues): Promise<boolean> {
-    return sendWithFeedback(
-      `/api/nosotros/researchers/${id}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      },
-      {
+  /** Saves an edited researcher. Resolves to whether it was saved, so the editor can close. */
+  async function handleSaveResearcher(
+    person: NosotrosResearcher,
+    values: BilingualResearcherFormValues,
+  ): Promise<boolean> {
+    // The editing data comes with the edit permission, which opening this form already required.
+    if (!person.editing) return false
+
+    const body = researcherUpdateBody(person, person.editing.version, values)
+    // Nothing to save: close instead of sending an empty update.
+    if (!body) return true
+
+    return saveOnce(() =>
+      sendWithFeedback(`/api/nosotros/researchers/${person.id}`, jsonRequest('PATCH', body), {
         success: tResearchers('updated'),
         fallback: tResearchers('errors.unknown'),
+        // Re-runs the server component's `getNosotrosResearchers()` so the page
+        // reflects the saved change immediately, without an optimistic guess.
         onSuccess: () => router.refresh(),
-      },
+      }),
     )
   }
 
-  // Reports the outcome in a toast once the request is done. On success the "Añadir" modal
-  // closes and the page refreshes; on failure it stays open with what was typed.
-  async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
-    await sendWithFeedback(
-      '/api/nosotros/researchers',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      },
-      {
+  async function handleCreateResearcher(values: BilingualResearcherFormValues, close: () => void) {
+    // A new researcher always carries both languages, since the form starts from nothing.
+    if (!values.content) return
+
+    const body: NosotrosResearcherCreateBody = {
+      src: values.src,
+      name: values.name,
+      email: values.email,
+      institution: values.institution,
+      content: values.content,
+    }
+
+    await saveOnce(() =>
+      sendWithFeedback('/api/nosotros/researchers', jsonRequest('POST', body), {
         success: tResearchers('created'),
         fallback: tResearchers('errors.unknown'),
         onSuccess: () => {
           close()
           router.refresh()
         },
-      },
+      }),
     )
   }
 
   async function handleDeleteResearcher(id: string) {
-    setResearcherListError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/nosotros/researchers/${id}`, { method: 'DELETE' })
-    } catch {
-      setResearcherListError(saveErrorMessage)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setResearcherListError(body?.error ?? saveErrorMessage)
-      return
-    }
-
-    router.refresh()
+    await sendWithFeedback(
+      `/api/nosotros/researchers/${id}`,
+      { method: 'DELETE' },
+      {
+        success: tResearchers('deleted'),
+        fallback: tResearchers('errors.deleteUnknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
   return (
@@ -286,12 +326,6 @@ export function NosotrosPage({
         titleId="nosotros-researchers-title"
         wide
       >
-        {researcherListError ? (
-          <p className="form-alert" role="alert">
-            {researcherListError}
-          </p>
-        ) : null}
-
         <TeamGallery
           emptyMessage={content.researchers.emptyMessage}
           hint={content.researchers.hint}
@@ -301,9 +335,13 @@ export function NosotrosPage({
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
+              contentLang={contentLangAttribute(person.contentLocale)}
               onDelete={() => handleDeleteResearcher(person.id)}
-              onSave={(values) => handleSaveResearcher(person.id, values)}
+              onSave={(values: BilingualResearcherFormValues) =>
+                handleSaveResearcher(person, values)
+              }
               researcher={person}
+              translation={{ editing: person.editing ?? null }}
             />
           )}
           trailingSlide={
@@ -312,8 +350,11 @@ export function NosotrosPage({
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
-                    onSave={(values) => handleCreateResearcher(values, close)}
+                    onSave={(values: BilingualResearcherFormValues) =>
+                      handleCreateResearcher(values, close)
+                    }
                     researcher={null}
+                    translation={{ editing: null }}
                   />
                 )}
               </AddItemCard>

@@ -14,6 +14,14 @@ import {
   type UploadResearcherImageResult,
 } from '@/app/(public)/radioastronomia/actions'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
+import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
+import type {
+  NosotrosResearcherContentInput,
+  NosotrosResearcherEditingData,
+  NosotrosResearcherField,
+} from '@/app/lib/nosotros-researcher-schema'
+
+import { ResearcherContentFields, type ResearcherContentHandle } from './ResearcherContentFields'
 
 /**
  * The shape this form needs from a person record — deliberately not imported
@@ -44,12 +52,59 @@ export interface ResearcherFormValues {
   src: string
 }
 
-export interface ResearcherFormProps {
+/**
+ * What `onSave` receives in the bilingual mode (`translation`): the shared fields, and the role
+ * and description of both languages in `content` instead of `role` and `description`.
+ */
+export interface BilingualResearcherFormValues {
+  name: string
+  /** `''` means no public address — same as an untouched row. */
+  email: string
+  institution: string
+  /** The photo's permanent URL — already uploaded by the time `onSave` runs. `''` means no
+   * photo. */
+  src: string
+  /**
+   * Both languages in full, or `null` when no role or description changed, so the shared fields
+   * of a legacy researcher can be saved without translating it.
+   */
+  content: NosotrosResearcherContentInput | null
+  /** The one-sided changes the editor reviewed and kept; only meaningful with `content`. */
+  confirmedUnchanged: ReviewConfirmation<NosotrosResearcherField>[]
+}
+
+interface ResearcherFormBaseProps {
   /** `null` starts a blank form for a new researcher. */
   researcher: PersonProfile | null
-  onSave: (values: ResearcherFormValues) => void
   onCancel: () => void
 }
+
+/** What turns the bilingual mode on. */
+export interface ResearcherFormTranslation {
+  /**
+   * `editing` of the researcher being edited: its text in both languages and the version to save
+   * against. `null` when creating one.
+   */
+  editing: NosotrosResearcherEditingData | null
+}
+
+/** The single-language form (ROSAC): one role and one description. */
+export interface SingleLanguageResearcherFormProps extends ResearcherFormBaseProps {
+  translation?: undefined
+  onSave: (values: ResearcherFormValues) => void
+}
+
+/**
+ * The opt-in bilingual form (`/nosotros`): the role and the description sit in one tab per
+ * language. It needs the site's language, so it is the only mode that reads the message
+ * catalogue.
+ */
+export interface BilingualResearcherFormProps extends ResearcherFormBaseProps {
+  translation: ResearcherFormTranslation
+  onSave: (values: BilingualResearcherFormValues) => void
+}
+
+export type ResearcherFormProps = SingleLanguageResearcherFormProps | BilingualResearcherFormProps
 
 /** Messages match `researcherInputSchema` / `nosotrosResearcherInputSchema`
  * so a rejection reads the same whether it's caught here or by the server. */
@@ -83,12 +138,19 @@ function parseEmails(email: PersonProfile['email']): string[] {
  * pre-filled for an existing one. "Confirmar" is the save action itself: creating and editing
  * save straight away, with no second confirmation dialog.
  *
+ * Passing `translation` switches to the bilingual mode used by `/nosotros`: the role and the
+ * description are edited per language (`ResearcherContentFields`) and `onSave` receives them as
+ * `content`. Without it nothing changes, which is how `/radioastronomia` keeps using the form.
+ *
  * The photo uploads to the real asset store through `uploadResearcherImage`
  * (the same `assetStorage` MinIO backend `NewsArticleForm` already uses)
  * before `onSave` runs, so `onSave` always receives a permanent URL rather
  * than a local `File`.
  */
-export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormProps) {
+export function ResearcherForm(props: ResearcherFormProps) {
+  const { researcher, onCancel } = props
+  const bilingual = props.translation !== undefined
+  const contentRef = useRef<ResearcherContentHandle>(null)
   const [role, setRole] = useState(researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
@@ -117,18 +179,26 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
   const emailsChanged =
     emails.length !== initialEmails.length ||
     emails.some((address, index) => address !== initialEmails[index])
-  const isDirty =
-    role !== (researcher?.role ?? '') ||
-    name !== (researcher?.name ?? '') ||
-    institution !== (researcher?.institution ?? '') ||
-    description !== (researcher?.description ?? '') ||
-    emailsChanged ||
-    newEmail.trim() !== '' ||
-    photoFile !== null ||
-    photoRemoved
+  // In the bilingual mode the role and the description are tracked by the content fields, which
+  // are only asked from an event handler.
+  function isDirty() {
+    const textChanged = bilingual
+      ? (contentRef.current?.isDirty() ?? false)
+      : role !== (researcher?.role ?? '') || description !== (researcher?.description ?? '')
+
+    return (
+      name !== (researcher?.name ?? '') ||
+      institution !== (researcher?.institution ?? '') ||
+      textChanged ||
+      emailsChanged ||
+      newEmail.trim() !== '' ||
+      photoFile !== null ||
+      photoRemoved
+    )
+  }
 
   function handleCancelClick() {
-    if (isDirty) {
+    if (isDirty()) {
       setConfirmDiscardOpen(true)
       return
     }
@@ -144,8 +214,15 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
   // as each field becomes valid — same as the news article form.
   function handleConfirmClick() {
     setHasAttemptedSubmit(true)
-    if (role.trim() === '' || name.trim() === '' || institution.trim() === '') {
-      if (role.trim() === '') {
+    const roleMissing = !bilingual && role.trim() === ''
+    const sharedValid = !roleMissing && name.trim() !== '' && institution.trim() !== ''
+    // The tabs open the language that has an error; they only take the focus when nothing shared
+    // above them is wrong.
+    const contentValid = bilingual
+      ? (contentRef.current?.validate({ focus: sharedValid }) ?? true)
+      : true
+    if (!sharedValid || !contentValid) {
+      if (roleMissing) {
         document.getElementById('researcher-role')?.focus()
       } else if (name.trim() === '') {
         document.getElementById('researcher-name')?.focus()
@@ -188,7 +265,23 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
       src = result.imageUrl
     }
 
-    onSave({ role, name, email: emails.join(', '), institution, description, src })
+    if (props.translation) {
+      const { content, confirmedUnchanged } = contentRef.current?.result() ?? {
+        content: null,
+        confirmedUnchanged: [],
+      }
+      props.onSave({
+        name,
+        email: emails.join(', '),
+        institution,
+        src,
+        content,
+        confirmedUnchanged,
+      })
+      return
+    }
+
+    props.onSave({ role, name, email: emails.join(', '), institution, description, src })
   }
 
   function openAddEmail() {
@@ -236,15 +329,17 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
         }}
       />
 
-      <FormField
-        errorMessage={roleError}
-        id="researcher-role"
-        label="Rol"
-        onChange={setRole}
-        required
-        validate={requireNonEmpty('El rol es obligatorio.')}
-        value={role}
-      />
+      {bilingual ? null : (
+        <FormField
+          errorMessage={roleError}
+          id="researcher-role"
+          label="Rol"
+          onChange={setRole}
+          required
+          validate={requireNonEmpty('El rol es obligatorio.')}
+          value={role}
+        />
+      )}
 
       <FormField
         errorMessage={nameError}
@@ -315,13 +410,17 @@ export function ResearcherForm({ researcher, onSave, onCancel }: ResearcherFormP
         value={institution}
       />
 
-      <FormField
-        id="researcher-description"
-        label="Descripción"
-        multiline
-        onChange={setDescription}
-        value={description}
-      />
+      {props.translation ? (
+        <ResearcherContentFields editing={props.translation.editing} ref={contentRef} />
+      ) : (
+        <FormField
+          id="researcher-description"
+          label="Descripción"
+          multiline
+          onChange={setDescription}
+          value={description}
+        />
+      )}
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
