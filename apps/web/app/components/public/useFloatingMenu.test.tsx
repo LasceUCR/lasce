@@ -120,15 +120,32 @@ describe('useFloatingMenu', () => {
     vi.spyOn(
       screen.getByRole('region', { name: 'Panel boundary' }),
       'getBoundingClientRect',
-    ).mockReturnValue(new DOMRect(100, 80, 500, 240))
+    ).mockReturnValue(new DOMRect(100, 80, 500, 400))
+    measure.mockReturnValue(new DOMRect(500, 300, 240, 40))
+    await user.click(trigger)
+
+    expect(screen.getByRole('dialog')).toHaveStyle({
+      left: '352px',
+      bottom: '306px',
+      width: '240px',
+      maxHeight: '206px',
+    })
+  })
+
+  test('falls back to the viewport when the boundary leaves no room on either side', async () => {
+    const { trigger, measure, user } = renderPanel({ bounded: true })
+    vi.spyOn(
+      screen.getByRole('region', { name: 'Panel boundary' }),
+      'getBoundingClientRect',
+    ).mockReturnValue(new DOMRect(100, 180, 500, 160))
     measure.mockReturnValue(new DOMRect(500, 220, 240, 40))
     await user.click(trigger)
 
     expect(screen.getByRole('dialog')).toHaveStyle({
       left: '352px',
-      bottom: '386px',
+      top: '266px',
       width: '240px',
-      maxHeight: '126px',
+      maxHeight: '320px',
     })
   })
 

@@ -8,10 +8,9 @@ import {
   deleteResearchArea,
   getResearchAreaById,
   getResearchAreas,
-  researchAreaCreateSchema,
-  researchAreaUpdateSchema,
   updateResearchArea,
 } from '@/app/lib/research-areas'
+import { researchAreaCreateSchema, researchAreaUpdateSchema } from '@/app/lib/research-area-schema'
 
 /**
  * Reading research areas in each language against a real PostgreSQL database. Every row these

@@ -16,7 +16,7 @@ type Story = StoryObj<typeof WorkAreaCard>
 
 export const Default: Story = {
   args: {
-    title: 'Física solar',
+    title: 'Física Solar',
     description: 'Actividad y observaciones',
     href: '/fisica-solar',
     icon: <Sun size={25} strokeWidth={1.7} />,

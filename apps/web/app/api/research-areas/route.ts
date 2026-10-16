@@ -4,11 +4,8 @@ import { getLocale } from 'next-intl/server'
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
 import { resolveLocale } from '@/app/lib/i18n/locale'
-import {
-  createResearchArea,
-  getResearchAreas,
-  researchAreaCreateSchema,
-} from '@/app/lib/research-areas'
+import { researchAreaCreateSchema } from '@/app/lib/research-area-schema'
+import { createResearchArea, getResearchAreas } from '@/app/lib/research-areas'
 
 export const dynamic = 'force-dynamic'
 

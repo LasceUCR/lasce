@@ -36,8 +36,6 @@ function jsonRequest(method: 'POST' | 'PATCH', body: unknown): RequestInit {
   }
 }
 
-export type { ResearchArea } from '@/app/lib/research-area-schema'
-
 export interface ResearchAreasSectionProps {
   /** Visible heading. Omit it when the page already shows the title, and pass `label`. */
   title?: string

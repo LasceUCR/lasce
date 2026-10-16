@@ -2591,7 +2591,9 @@ a {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--blue);
+  /* `--blue` fails WCAG AA (4.5:1) at this text's size; `--blue-accent-text` is the same hue,
+     darkened to pass. */
+  color: var(--blue-accent-text);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -2607,24 +2609,12 @@ a {
   outline-offset: 2px;
 }
 
+/* Layout only — the clamp itself is `TruncatedText`'s (`.truncated-text*`, above). */
 .publication-abstract {
-  display: -webkit-box;
-  overflow: hidden;
   margin: 10px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-}
-
-.publication-abstract.is-expanded {
-  display: block;
-  overflow: visible;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
 }
 
 .publication-card-footer {
@@ -2633,9 +2623,8 @@ a {
   justify-content: flex-end;
 }
 
-/* Same width for "DOI / Enlace externo" and the abstract toggle, so the toggle does not shrink
-   when its label changes and both actions line up across cards. Narrow screens make every
-   .button full width (see the 430px breakpoint). */
+/* Keeps "DOI / Enlace externo" the same width across cards so it lines up, rather than hugging
+   its label. Narrow screens make every .button full width (see the 430px breakpoint). */
 .publication-card-footer .button {
   min-width: min(16rem, 100%);
 }
@@ -4801,10 +4790,16 @@ a.gallery-tile:focus-visible {
 
 /* Clamped so every card keeps one height; the full text is the detail page's lead. */
 .research-area-card-description {
+  display: -webkit-box;
+  overflow: hidden;
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 /* Bottom-right corner of the card, so every button lines up down the right edge of the list. */

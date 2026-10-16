@@ -2,12 +2,16 @@
 
 The archive at ``BASE_URL`` is a tree of plain Apache directory listings, one
 tree per spacecraft and product. SUVI (:mod:`app.clients.suvi`) and EXIS
-(:mod:`app.clients.exis`) differ in how their files are named and how often
-they appear, but not in how a listing is read or a file is fetched, so that
-part lives here once.
+(:mod:`app.clients.exis`) and MAG (:mod:`app.clients.mag`) differ in how
+their files are named and how often they appear, but not in how a listing is
+read or a file is fetched, so that part lives here once. EXIS and MAG are both
+daily products filed by month, so their month walk lives here too.
 """
 
+from collections.abc import Sequence
+from datetime import date
 from html.parser import HTMLParser
+from typing import Protocol
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -16,6 +20,43 @@ BASE_URL = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellite
 SPACECRAFT = (16, 17, 18, 19)
 DEFAULT_SPACECRAFT = 19
 MAX_LISTING_BYTES = 8 * 1024 * 1024
+
+
+class DailyFile(Protocol):
+    """A file the archive publishes once per UTC day, possibly in several versions."""
+
+    @property
+    def day(self) -> date: ...
+
+    @property
+    def version(self) -> tuple[int, int, int]: ...
+
+
+def month_directories(product_root: str, start: date, end: date) -> list[str]:
+    """One ``product_root/YYYY/MM/`` URL per month the window touches, oldest first.
+
+    Daily products (EXIS, MAG) are filed in one directory per month. A window
+    that crosses the first of a month spans two directories, and both have to
+    be listed or the older half of the window is silently invisible.
+    """
+    if start > end:
+        raise ValueError("The start of the window must not follow its end")
+    urls = []
+    year, month = start.year, start.month
+    while (year, month) <= (end.year, end.month):
+        urls.append(f"{product_root}/{year:04d}/{month:02d}/")
+        year, month = (year + 1, 1) if month == 12 else (year, month + 1)
+    return urls
+
+
+def newest_versions[F: DailyFile](files: Sequence[F]) -> list[F]:
+    """The highest version of each day, most recent day first."""
+    best: dict[date, F] = {}
+    for file in files:
+        current = best.get(file.day)
+        if current is None or file.version > current.version:
+            best[file.day] = file
+    return sorted(best.values(), key=lambda file: file.day, reverse=True)
 
 
 def check_spacecraft(spacecraft: int) -> None:

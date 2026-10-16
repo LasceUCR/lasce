@@ -249,12 +249,12 @@ const researchAreas: SeedResearchArea[] = [
       es: {
         title: 'Geomagnetismo y respuesta regional al clima espacial',
         description:
-          'Analiza las variaciones del campo magnético terrestre producidas por la actividad solar. Incluye el cálculo de índices geomagnéticos para Costa Rica. Este estudio se lleva a cabo gracias al desarrollo de una tesis doctoral de la MSc. Johana Camacho en colaboración con el Instituto Nacional de Electricidad (ICE) y el Servicio de Clima Espacial México (SCiESMEX).',
+          'Analiza las variaciones del campo magnético terrestre producidas por la actividad solar. Incluye el cálculo de índices geomagnéticos para Costa Rica. Este estudio se lleva a cabo gracias al desarrollo de una tesis doctoral de la MSc. Johana Camacho en colaboración con el Instituto Costarricense de Electricidad (ICE) y el Servicio de Clima Espacial México (SCiESMEX).',
       },
       en: {
         title: 'Geomagnetism and the regional response to space weather',
         description:
-          "Analyzes the variations of the Earth's magnetic field caused by solar activity, including the calculation of geomagnetic indices for Costa Rica. This study is carried out through the doctoral thesis of MSc. Johana Camacho, in collaboration with the Instituto Nacional de Electricidad (ICE) and the Servicio de Clima Espacial México (SCiESMEX).",
+          "Analyzes the variations of the Earth's magnetic field caused by solar activity, including the calculation of geomagnetic indices for Costa Rica. This study is carried out through the doctoral thesis of MSc. Johana Camacho, in collaboration with the Instituto Costarricense de Electricidad (ICE) and the Servicio de Clima Espacial México (SCiESMEX).",
       },
     },
     src: '/images/research/geomagnetismo-respuesta-regional-clima-espacial.jpg',
