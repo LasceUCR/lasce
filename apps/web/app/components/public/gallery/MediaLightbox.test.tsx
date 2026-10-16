@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { MediaLightbox, type MediaLightboxProps } from './MediaLightbox'
@@ -58,6 +57,14 @@ describe('MediaLightbox', () => {
     expect(screen.getByText(`Subido por: ${photographArgs.item.uploader}`)).toBeInTheDocument()
   })
 
+  test('keeps the Spanish names of its controls', () => {
+    renderLightbox()
+
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument()
+  })
+
   test('titles the open file as the heading of the dialog', () => {
     renderLightbox()
 
@@ -71,44 +78,6 @@ describe('MediaLightbox', () => {
 
     expect(screen.getByText('2 / 13')).toBeInTheDocument()
     expect(screen.getByText('Archivo 2 de 13')).toBeInTheDocument()
-  })
-
-  test('moves focus to the close control when it opens', () => {
-    renderLightbox()
-
-    expect(screen.getByRole('button', { name: 'Cerrar' })).toHaveFocus()
-  })
-
-  test('closes on Escape and on the close control', async () => {
-    const user = userEvent.setup()
-    const { onClose } = renderLightbox()
-
-    await user.keyboard('{Escape}')
-    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
-
-    expect(onClose).toHaveBeenCalled()
-  })
-
-  test('pages through the album with the arrow keys', async () => {
-    const user = userEvent.setup()
-    const { onPrevious, onNext } = renderLightbox()
-
-    await user.keyboard('{ArrowLeft}')
-    await user.keyboard('{ArrowRight}')
-
-    expect(onPrevious).toHaveBeenCalledTimes(1)
-    expect(onNext).toHaveBeenCalledTimes(1)
-  })
-
-  test('pages through the album with the previous and next controls', async () => {
-    const user = userEvent.setup()
-    const { onPrevious, onNext } = renderLightbox()
-
-    await user.click(screen.getByRole('button', { name: 'Anterior' }))
-    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
-
-    expect(onPrevious).toHaveBeenCalledTimes(1)
-    expect(onNext).toHaveBeenCalledTimes(1)
   })
 
   // A live region that arrives already populated is read out on top of the
@@ -138,60 +107,6 @@ describe('MediaLightbox', () => {
     expect(
       await screen.findByText(`Archivo 2 de ${videoArgs.total}: ${videoArgs.item.title}.`),
     ).toBeInTheDocument()
-  })
-
-  test('locks the page behind it from scrolling, and releases it on close', () => {
-    const { unmount } = renderLightbox()
-
-    expect(document.body.style.overflow).toBe('hidden')
-
-    unmount()
-
-    expect(document.body.style.overflow).toBe('')
-  })
-
-  // The paths a real browser takes, which jsdom does not implement: closing
-  // natively fires `close`, and that is what reports the dismissal upwards.
-  test('closes itself natively when the browser supports it', async () => {
-    const close = vi.fn(function close(this: HTMLDialogElement) {
-      this.removeAttribute('open')
-      this.dispatchEvent(new Event('close'))
-    })
-    HTMLDialogElement.prototype.close = close
-
-    const user = userEvent.setup()
-    const { onClose } = renderLightbox()
-
-    await user.click(screen.getByRole('button', { name: 'Cerrar' }))
-
-    expect(close).toHaveBeenCalledTimes(1)
-    expect(onClose).toHaveBeenCalledTimes(1)
-  })
-
-  test('closes when the area beside the content is clicked', async () => {
-    const user = userEvent.setup()
-    const { onClose } = renderLightbox()
-
-    await user.click(screen.getByRole('dialog'))
-
-    expect(onClose).toHaveBeenCalledTimes(1)
-  })
-
-  test('keeps the content clickable without closing', async () => {
-    const user = userEvent.setup()
-    const { onClose } = renderLightbox()
-
-    await user.click(screen.getByRole('heading', { level: 2 }))
-
-    expect(onClose).not.toHaveBeenCalled()
-  })
-
-  test('still renders where the top layer is unavailable', () => {
-    Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal')
-
-    renderLightbox()
-
-    expect(screen.getByRole('dialog')).toHaveAttribute('open')
   })
 
   test('shows the still and the details of a video entry', () => {

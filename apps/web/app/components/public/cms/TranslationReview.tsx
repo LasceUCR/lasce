@@ -6,8 +6,11 @@ import { Notice } from '@/app/components/public/Notice'
 import { Toggle } from '@/app/components/public/Toggle'
 
 export interface TranslationReviewProps {
-  /** Why the field needs attention: `reviewMessage` (`app/lib/i18n/content/review.ts`). */
-  message: string
+  /**
+   * Why the field needs attention: `reviewMessage` (`app/lib/i18n/content/review.ts`).
+   * Omitted when the field's own error already says what to do.
+   */
+  message?: string
   /** The switch's label: `confirmationLabel` from the same module. */
   label: string
   checked: boolean
@@ -24,7 +27,7 @@ export function TranslationReview({ message, label, checked, onChange }: Transla
 
   return (
     <div className="cms-translation-review">
-      <Notice tone="warning">{message}</Notice>
+      {message ? <Notice tone="warning">{message}</Notice> : null}
       <Toggle checked={checked} id={id} label={label} onChange={onChange} />
     </div>
   )

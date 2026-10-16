@@ -220,3 +220,27 @@ describe('FormField: content language', () => {
     expect(screen.getByRole('combobox', { name: selectArgs.label })).not.toHaveAttribute('lang')
   })
 })
+
+describe('FormField: maximum length', () => {
+  test('stops typing at maxLength in a text box and a text area', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <ControlledField id="short" label="Corto" maxLength={5} />
+        <ControlledField id="long" label="Largo" maxLength={3} multiline />
+      </>,
+    )
+
+    await user.type(screen.getByRole('textbox', { name: 'Corto' }), '1234567')
+    await user.type(screen.getByRole('textbox', { name: 'Largo' }), 'abcdef')
+
+    expect(screen.getByRole('textbox', { name: 'Corto' })).toHaveValue('12345')
+    expect(screen.getByRole('textbox', { name: 'Largo' })).toHaveValue('abc')
+  })
+
+  test('sets no limit by default', () => {
+    render(<FormField {...(Text.args as FormFieldProps)} />)
+
+    expect(screen.getByRole('textbox')).not.toHaveAttribute('maxlength')
+  })
+})

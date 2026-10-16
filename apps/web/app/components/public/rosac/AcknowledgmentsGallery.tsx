@@ -1,12 +1,20 @@
 'use client'
 
 import Image from 'next/image'
+import type { ReactNode } from 'react'
 
 import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 export interface AcknowledgmentsGalleryProps {
   label: string
   institutions: readonly RosacAcknowledgment[]
+  /**
+   * Overrides how an institution slide renders — defaults to a plain `.acknowledgments-card`.
+   * This is how the caller wraps cards with edit affordances in edit mode.
+   */
+  renderInstitution?: (institution: RosacAcknowledgment, index: number) => ReactNode
+  /** An extra slide appended after institutions, e.g. an "add new" prompt in edit mode. */
+  trailingSlide?: ReactNode
 }
 
 /**
@@ -15,12 +23,19 @@ export interface AcknowledgmentsGalleryProps {
  * an institution without a confirmed `href` yet renders as a plain,
  * non-interactive tile rather than guessing a URL.
  */
-export function AcknowledgmentsGallery({ label, institutions }: AcknowledgmentsGalleryProps) {
+export function AcknowledgmentsGallery({
+  label,
+  institutions,
+  renderInstitution,
+  trailingSlide,
+}: AcknowledgmentsGalleryProps) {
   return (
     <ul aria-label={label} className="acknowledgments-grid">
-      {institutions.map((institution) => (
-        <li className="acknowledgments-tile" key={institution.name}>
-          {institution.href ? (
+      {institutions.map((institution, index) => (
+        <li className="acknowledgments-tile" key={institution.id ?? institution.name}>
+          {renderInstitution ? (
+            renderInstitution(institution, index)
+          ) : institution.href ? (
             <a
               className="acknowledgments-card"
               href={institution.href}
@@ -40,6 +55,7 @@ export function AcknowledgmentsGallery({ label, institutions }: AcknowledgmentsG
           )}
         </li>
       ))}
+      {trailingSlide ? <li className="acknowledgments-tile">{trailingSlide}</li> : null}
     </ul>
   )
 }
