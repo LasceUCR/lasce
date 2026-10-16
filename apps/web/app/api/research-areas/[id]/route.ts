@@ -2,11 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import { internalError, invalidBody, isUuid, ok, readJson } from '@/app/lib/cms/http'
-import {
-  deleteResearchArea,
-  researchAreaUpdateSchema,
-  updateResearchArea,
-} from '@/app/lib/research-areas'
+import { researchAreaUpdateSchema } from '@/app/lib/research-area-schema'
+import { deleteResearchArea, updateResearchArea } from '@/app/lib/research-areas'
 
 import { invalidId, notFound, writeFailure } from '../http'
 

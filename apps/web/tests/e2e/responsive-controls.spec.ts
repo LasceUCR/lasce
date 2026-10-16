@@ -20,7 +20,10 @@ test.describe('responsive native controls', () => {
       await context.addCookies([
         { name: 'lasce_locale', value: locale, url: 'http://localhost:3000' },
       ])
-      await page.goto('/colaboraciones-e-iniciativas')
+      // A generous navigation timeout: this test also runs under webkit/mobile-safari/android
+      // emulation, which has been measured slower than Chromium on CI's shared runners. This
+      // does not relax what the test checks — `waitUntil` stays at its default ('load').
+      await page.goto('/colaboraciones-e-iniciativas', { timeout: 60_000 })
       const section = page.getByRole('region', {
         name: locale === 'es' ? 'Colaboraciones de investigación' : 'Research collaborations',
       })

@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   queryMockScientificData: vi.fn(),
   querySuviFrames: vi.fn(),
   queryExisReadings: vi.fn(),
+  queryMagReadings: vi.fn(),
   queryCiticScientificData: vi.fn(),
 }))
 
@@ -22,6 +23,10 @@ vi.mock('@/app/services/scientific-data/suviFrameDataSource', () => ({
 
 vi.mock('@/app/services/scientific-data/exisReadingsDataSource', () => ({
   queryExisReadings: mocks.queryExisReadings,
+}))
+
+vi.mock('@/app/services/scientific-data/magReadingsDataSource', () => ({
+  queryMagReadings: mocks.queryMagReadings,
 }))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
@@ -47,11 +52,11 @@ function request(parameters: Record<string, string>) {
   return new Request(`http://localhost/api/scientific-data?${new URLSearchParams(parameters)}`)
 }
 
-// A MAG product: the GOES instrument family still read on demand through CITIC.
+// A SEISS product: the GOES instrument family still read on demand through CITIC.
 const validGoesQuery = {
   source: 'GOES',
-  product: 'GEOF',
-  parameter: 'total',
+  product: 'MPSH',
+  parameter: 'electron:T1:E1',
   date: '2026-09-10',
   startTime: '08:00',
   endTime: '09:00',
@@ -101,7 +106,7 @@ describe('GET /api/scientific-data', () => {
     expect(await response.json()).toMatchObject({ state: 'pending', progress: 20 })
     expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, 'goes-1')
   })
-  test('routes a MAG query to the CITIC historical adapter', async () => {
+  test('routes a SEISS query to the CITIC historical adapter', async () => {
     const expected = { visualization: 'time-series', points: [] }
     mocks.queryCiticScientificData.mockResolvedValue(expected)
 
@@ -113,8 +118,25 @@ describe('GET /api/scientific-data', () => {
     expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, undefined)
     expect(mocks.querySuviFrames).not.toHaveBeenCalled()
     expect(mocks.queryExisReadings).not.toHaveBeenCalled()
+    expect(mocks.queryMagReadings).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
+
+  test.each(['EPN-x', 'EPN-y', 'EPN-z', 'total'])(
+    'routes MAG %s to the InfluxDB readings synchronously',
+    async (parameter) => {
+      const expected = { visualization: 'time-series', points: [] }
+      mocks.queryMagReadings.mockResolvedValue(expected)
+      const mag = { ...validGoesQuery, product: 'GEOF', parameter }
+
+      const response = await GET(request(mag))
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual(expected)
+      expect(mocks.queryMagReadings).toHaveBeenCalledWith(mag)
+      expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    },
+  )
 
   test.each([
     ['SFXR', '0.1-0.8nm'],

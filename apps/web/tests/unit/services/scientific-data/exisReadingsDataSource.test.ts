@@ -131,6 +131,7 @@ describe('queryExisReadingsFull', () => {
 
     const [sql, params] = mocks.queryInfluxSql.mock.calls[0]!
     expect(sql).toContain('FROM exis_irradiance')
+    expect(sql).toContain('valid = true')
     expect(sql).not.toContain('ROW_NUMBER')
     expect(params).toEqual({
       product: 'SFXR',
