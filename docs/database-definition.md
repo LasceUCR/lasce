@@ -696,8 +696,11 @@ from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
 `apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` and `getResearchAreaById()` read
 `areas.research_areas` with its `research_area_translations` and map each row to the
 `ResearchArea` shape the public investigation pages render, in the requested language, falling
-back per record to the base text. `createResearchArea()`, `updateResearchArea()` and
-`deleteResearchArea()` write the base row; a deleted area's translations cascade.
+back per record to the base text, with every language and the version for an editor.
+`createResearchArea()` writes the base row and its translations in one transaction;
+`updateResearchArea()` writes the photo and, when the text changed, the Spanish base row and the
+upserted translations, only while `updated_at` still equals the version the editor loaded, and
+moves it forward. `deleteResearchArea()` deletes the base row; its translations cascade.
 
 `apps/web/app/lib/solar-physics-section.ts`'s `getSolarPhysicsSection()` reads the `lasce` row of
 `public.solar_physics_sections` with its translations and returns the title and paragraphs in the

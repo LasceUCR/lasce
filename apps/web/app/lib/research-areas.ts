@@ -1,11 +1,25 @@
 import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
+import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import { translationLocales } from '@/app/lib/i18n/content/definition'
-import { resolveContent, storedContentFrom } from '@/app/lib/i18n/content/resolve'
+import {
+  baseContent,
+  resolveContent,
+  storedContentFrom,
+  translationRows,
+} from '@/app/lib/i18n/content/resolve'
+import { findPendingReviews } from '@/app/lib/i18n/content/review'
 
-import { researchAreaContent, type ResearchArea } from './research-area-schema'
+import {
+  researchAreaContent,
+  type ResearchArea,
+  type ResearchAreaCreateInput,
+  type ResearchAreaReviewConfirmation,
+  type ResearchAreaUpdateInput,
+} from './research-area-schema'
 
 /**
  * Fixture areas for stories and tests, in Spanish only. The public pages read the areas from the
@@ -66,14 +80,6 @@ export const researchAreas: ResearchArea[] = [
 
 export const researchAreaIds = researchAreas.map((area) => area.id)
 
-export const researchAreaInputSchema = z.object({
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  description: z.string().trim(),
-  src: z.string().trim().min(1, 'La imagen es obligatoria.'),
-})
-
-export type ResearchAreaInput = z.infer<typeof researchAreaInputSchema>
-
 /** The translation rows read with an area, for the locales the site supports. */
 const areaInclude = {
   translations: {
@@ -87,11 +93,16 @@ type ResearchAreaRecord = Prisma.ResearchAreaGetPayload<{ include: typeof areaIn
 /**
  * An area in `locale`, falling back per record to its base text: a complete area shows Spanish
  * when it has no row for `locale`, and an area saved before translations existed shows its base
- * text in an unknown language (`contentLocale: null`).
+ * text in an unknown language (`contentLocale: null`). Every language and the version to save
+ * against are added only for an editor.
  */
-function toResearchArea(record: ResearchAreaRecord, locale: Locale): ResearchArea {
+function toResearchArea(
+  record: ResearchAreaRecord,
+  locale: Locale,
+  includeEditingData = false,
+): ResearchArea {
   const stored = storedContentFrom(researchAreaContent, record, record.translations)
-  const { content, contentLocale } = resolveContent(stored, locale)
+  const { content, contentLocale, isLegacy } = resolveContent(stored, locale)
 
   return {
     id: record.id,
@@ -99,17 +110,26 @@ function toResearchArea(record: ResearchAreaRecord, locale: Locale): ResearchAre
     description: content.description,
     src: record.src ?? undefined,
     contentLocale,
+    ...(includeEditingData
+      ? { editing: { content: stored, isLegacy, version: toVersion(record.updatedAt) } }
+      : {}),
   }
 }
 
-/** Every area, oldest first, in `locale` (the language of the request's `lasce_locale` cookie). */
-export async function getResearchAreas(locale: Locale = defaultLocale): Promise<ResearchArea[]> {
+/**
+ * Every area, oldest first, in `locale` (the language of the request's `lasce_locale` cookie).
+ * Pass `includeEditingData` only after a server-side check of the edit permission.
+ */
+export async function getResearchAreas(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false } = {},
+): Promise<ResearchArea[]> {
   const records = await prisma.researchArea.findMany({
     include: areaInclude,
     orderBy: { createdAt: 'asc' },
   })
 
-  return records.map((record) => toResearchArea(record, locale))
+  return records.map((record) => toResearchArea(record, locale, includeEditingData))
 }
 
 export async function getResearchAreaById(
@@ -122,44 +142,105 @@ export async function getResearchAreaById(
   return record ? toResearchArea(record, locale) : null
 }
 
-export async function createResearchArea(data: ResearchAreaInput) {
-  return prisma.researchArea.create({
-    data: {
-      title: data.title,
-      description: data.description,
-      src: data.src ?? null,
-    },
-  })
+export type ResearchAreaWriteFailure =
+  | { ok: false; reason: 'not-found' }
+  /** The area changed since the editor loaded it. */
+  | { ok: false; reason: 'conflict' }
+  /** Fields changed in one language whose counterpart was neither changed nor confirmed. */
+  | { ok: false; reason: 'review-required'; pending: ResearchAreaReviewConfirmation[] }
+
+export type ResearchAreaWriteResult = { ok: true; area: ResearchArea } | ResearchAreaWriteFailure
+
+/**
+ * Creates an area with its text in every language, in one transaction. It has no expected
+ * failure (no unique column is involved); a database error is thrown for the route to log.
+ */
+export async function createResearchArea(
+  input: ResearchAreaCreateInput,
+): Promise<{ ok: true; area: ResearchArea }> {
+  const result = await runWrite<ResearchAreaRecord, never>((tx) =>
+    tx.researchArea.create({
+      data: {
+        ...baseContent(researchAreaContent, input.content),
+        src: input.src,
+        translations: { create: translationRows(researchAreaContent, input.content) },
+      },
+      include: areaInclude,
+    }),
+  )
+
+  return { ok: true, area: toResearchArea(result.value, defaultLocale, true) }
 }
 
+/**
+ * Saves an area against the `version` the editor loaded: its photo, its text in every language
+ * (`content`), or both. A photo-only update never touches the translations, so it works on an
+ * area that has no English yet.
+ */
 export async function updateResearchArea(
   id: string,
-  data: ResearchAreaInput,
-): Promise<ResearchArea | null> {
-  if (!z.uuid().safeParse(id).success) return null
+  input: ResearchAreaUpdateInput,
+): Promise<ResearchAreaWriteResult> {
+  const expected = parseVersion(input.version)
 
-  const existing = await prisma.researchArea.findUnique({ where: { id } })
-  if (!existing) return null
+  const result = await runWrite<ResearchAreaRecord, ResearchAreaWriteFailure>(async (tx) => {
+    const current = await tx.researchArea.findUnique({ where: { id }, include: areaInclude })
+    if (!current) throw new WriteAbort<ResearchAreaWriteFailure>({ ok: false, reason: 'not-found' })
+    if (!isCurrentVersion(current.updatedAt, expected)) {
+      throw new WriteAbort<ResearchAreaWriteFailure>({ ok: false, reason: 'conflict' })
+    }
 
-  const record = await prisma.researchArea.update({
-    where: { id },
-    data: {
-      title: data.title,
-      description: data.description,
-      src: data.src,
-    },
-    include: areaInclude,
+    const { content } = input
+    if (content) {
+      const stored = storedContentFrom(researchAreaContent, current, current.translations)
+      const pending = findPendingReviews(
+        researchAreaContent,
+        stored,
+        content,
+        input.confirmedUnchanged ?? [],
+      )
+      if (pending.length > 0) {
+        throw new WriteAbort<ResearchAreaWriteFailure>({
+          ok: false,
+          reason: 'review-required',
+          pending,
+        })
+      }
+    }
+
+    // Only while nobody else saved; moves the version strictly forward.
+    const { count } = await tx.researchArea.updateMany({
+      where: { id, updatedAt: expected },
+      data: {
+        ...(content ? baseContent(researchAreaContent, content) : {}),
+        ...(input.src === undefined ? {} : { src: input.src }),
+        updatedAt: nextUpdatedAt(expected),
+      },
+    })
+    if (count === 0)
+      throw new WriteAbort<ResearchAreaWriteFailure>({ ok: false, reason: 'conflict' })
+
+    if (content) {
+      for (const { locale, ...text } of translationRows(researchAreaContent, content)) {
+        await tx.researchAreaTranslation.upsert({
+          where: { researchAreaId_locale: { researchAreaId: id, locale } },
+          create: { researchAreaId: id, locale, ...text },
+          update: text,
+        })
+      }
+    }
+
+    return tx.researchArea.findUniqueOrThrow({ where: { id }, include: areaInclude })
   })
 
-  return toResearchArea(record, defaultLocale)
+  return result.ok ? { ok: true, area: toResearchArea(result.value, defaultLocale, true) } : result
 }
 
+/**
+ * Deletes an area in one statement that reports what it removed, so two concurrent deletes give
+ * one success and one "not found". Its translations go with it (`ON DELETE CASCADE`).
+ */
 export async function deleteResearchArea(id: string): Promise<boolean> {
-  if (!z.uuid().safeParse(id).success) return false
-
-  const existing = await prisma.researchArea.findUnique({ where: { id } })
-  if (!existing) return false
-
-  await prisma.researchArea.delete({ where: { id } })
-  return true
+  const { count } = await prisma.researchArea.deleteMany({ where: { id } })
+  return count > 0
 }

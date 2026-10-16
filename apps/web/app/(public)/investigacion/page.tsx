@@ -24,7 +24,8 @@ export default async function InvestigacionPage() {
   ])
 
   // Titles and descriptions in the language chosen in the header (the `lasce_locale` cookie).
-  const areas = await getResearchAreas(resolveLocale(locale))
+  // Every language and the version to save against go to the browser only for an editor.
+  const areas = await getResearchAreas(resolveLocale(locale), { includeEditingData: canEdit })
 
   return (
     <article className="topic-page">
