@@ -57,7 +57,13 @@ export function validateResourceDownload(
   }
   const { query, format, jobId } = parsed.data
 
-  const availabilityMessage = getAvailabilityMessage(query, getGoesAvailability(now))
+  // This validation chain has no request/locale context to translate from (see
+  // docs/internationalization.md's "Not tied to one page" list); same Spanish text as before.
+  const availabilityMessage = getAvailabilityMessage(
+    query,
+    getGoesAvailability(now),
+    'Seleccione una fecha que no sea posterior a hoy.',
+  )
   if (availabilityMessage) return { ok: false, reason: 'invalid', message: availabilityMessage }
 
   const decision = decideDownload(query, format, grants)
