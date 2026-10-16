@@ -427,6 +427,20 @@ never writes here.
 Constraints: `UNIQUE (satellite, product, day)` — the upsert key, so a higher `_vX-Y-Z` of the
 same day replaces the older row instead of adding a second one.
 
+### `mag_files`
+
+One daily MAG L2 1-minute geomagnetic field file (`magn-l2-avg1m`, one UTC day) ingested by the
+worker's `mag-pipeline` job (`apps/worker/app/services/mag_readings.py`) — see
+[`mag-pipeline.md`](mag-pipeline.md). Same columns, constraints and upsert key as `exis_files`;
+the readings are in the InfluxDB measurement `mag_field` (tags `satellite`, `product`, `channel`;
+fields `value`, `valid`), not here. Differences:
+
+- `satellite` comes from the NetCDF `platform` attribute, upper-cased (`"g19"` → `"G19"`); the L2
+  files have no `platform_ID`.
+- `product` is always `"GEOF"`.
+- `version` looks like `"2-0-4"`, and `point_count` like
+  `{"EPN-x": 1440, "EPN-y": 1440, "EPN-z": 1440, "total": 1440}`.
+
 ## `public` schema (downloads)
 
 ### `resource_downloads`
@@ -650,6 +664,9 @@ decoded. Nothing in `apps/web` reads it yet.
 `apps/worker/app/services/exis_readings.py`'s `ExisReadings.persist()` is the only writer of
 `solar.exis_files`, and `ExisReadings.ingested_modified_at()` its only reader; both are called
 from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
+`apps/worker/app/services/mag_readings.py`'s `MagReadings.persist()` is the only writer of
+`solar.mag_files`, and `MagReadings.ingested()` its only reader; both are called from the
+`mag-pipeline` processor. Nothing in `apps/web` reads it.
 `apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
 maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
 area create, update, and delete operations will also write this table when implemented.
