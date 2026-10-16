@@ -78,7 +78,7 @@ async function deleteFirstActivity(user: User) {
   await user.click(within(confirmDialog).getByRole('button', { name: 'Eliminar' }))
 }
 
-/** Edits the first card's title and and submits it. */
+/** Edits the first card's title and submits it. */
 async function submitActivityEdit(user: User) {
   const [firstActivity] = defaultArgs.content.activities.items
   const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar / })
@@ -747,6 +747,28 @@ describe('NosotrosPage', () => {
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog', { name: 'Editar investigador' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Investigador actualizado correctamente.')).toBeInTheDocument()
+  })
+
+  test('explains a failed researcher edit inside the open modal and keeps the form', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(
+      failedResponse(403, { error: 'No tiene permisos para modificar este contenido.' }),
+    )
+    renderPageInEditMode()
+
+    const researchers = screen.getByRole('region', { name: /Investigadores LASCE/ })
+    const [firstEditButton] = within(researchers).getAllByRole('button', { name: /^Editar a/ })
+    await user.click(firstEditButton as HTMLElement)
+    const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.queryByText('Investigador actualizado correctamente.')).not.toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
   test('DELETEs the researcher and refreshes the page once removal succeeds', async () => {
@@ -792,10 +814,38 @@ describe('NosotrosPage', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
+    // Creating saves straight away: no second confirmation dialog.
+    expect(screen.queryByRole('dialog', { name: 'Agregar investigador' })).not.toBeInTheDocument()
+
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/nosotros/researchers',
       expect.objectContaining({ method: 'POST' }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog', { name: 'Añadir investigador' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Investigador agregado correctamente.')).toBeInTheDocument()
+  })
+
+  test('explains a failed researcher creation inside "Añadir investigador" and keeps the form', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(
+      failedResponse(403, { error: 'No tiene permisos para modificar este contenido.' }),
+    )
+    renderPageInEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Añadir investigador' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('textbox', { name: 'Nombre' })).toHaveValue('Persona Nueva')
+    expect(screen.queryByText('Investigador agregado correctamente.')).not.toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
   })
 })

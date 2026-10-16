@@ -81,15 +81,12 @@ describe('PATCH /api/nosotros/researchers/[id]', () => {
   test('rejects a body missing required fields and lists which ones', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
-    const response = await PATCH(patchRequest({ ...validBody, institution: '', src: '' }), {
-      params,
-    })
+    const response = await PATCH(patchRequest({ ...validBody, institution: '' }), { params })
 
     expect(response.status).toBe(400)
     const body = await response.json()
     expect(body.issues).toMatchObject({
       institution: expect.any(Array),
-      src: expect.any(Array),
     })
     expect(mocks.updateNosotrosResearcher).not.toHaveBeenCalled()
   })
@@ -113,6 +110,20 @@ describe('PATCH /api/nosotros/researchers/[id]', () => {
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ researcher: saved })
     expect(mocks.updateNosotrosResearcher).toHaveBeenCalledWith('abc', validBody, adminUser.id)
+  })
+
+  test('saves a change with no photo — it is optional', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateNosotrosResearcher.mockResolvedValue({ id: 'abc', ...validBody, src: '' })
+
+    const response = await PATCH(patchRequest({ ...validBody, src: '' }), { params })
+
+    expect(response.status).toBe(200)
+    expect(mocks.updateNosotrosResearcher).toHaveBeenCalledWith(
+      'abc',
+      { ...validBody, src: '' },
+      adminUser.id,
+    )
   })
 })
 

@@ -28,7 +28,7 @@ const publicRoutes = [
 
 const indexableRoutes = [
   ...publicRoutes,
-  { label: 'Física solar', path: '/fisica-solar' },
+  { label: 'Física Solar', path: '/fisica-solar' },
   { label: 'Clima espacial', path: '/clima-espacial' },
   { label: 'Radioastronomía', path: '/radioastronomia' },
   { label: 'Acceso al portal', path: '/acceso' },
@@ -79,7 +79,7 @@ const nosotrosGroup = {
 
 const researchGroup = {
   label: 'Investigación',
-  items: ['Áreas de investigación', 'Física solar', 'Clima espacial', 'ROSAC'],
+  items: ['Áreas de investigación', 'Física Solar', 'Clima espacial', 'ROSAC'],
 } as const
 
 const outreachGroup = {
