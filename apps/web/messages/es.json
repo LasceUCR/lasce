@@ -769,7 +769,12 @@
       "title": "Ubicación",
       "intro": "El Radio Observatorio de Santa Cruz (ROSAC) se ubica en el {address}.",
       "markerLabel": "ROSAC",
-      "unavailableMessage": "No fue posible cargar el mapa. La dirección indicada arriba sigue disponible."
+      "unavailableMessage": "No fue posible cargar el mapa. La dirección indicada arriba sigue disponible.",
+      "mapRegion": "Mapa de ubicación de {label}",
+      "mapInteractive": "Mapa interactivo de {label}",
+      "mapInstructions": "Use las flechas para desplazar el mapa y las teclas más y menos para cambiar el zoom. Presione Tab para salir del mapa.",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar"
     },
     "activities": {
       "title": "¿Qué desarrollamos en ROSAC?",
@@ -931,65 +936,7 @@
       "intro": "Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.",
       "hint": "Haga clic en una ficha para ver más información.",
       "emptyMessage": "No hay información de investigadores disponible en este momento.",
-      "institutionLabel": "Institución",
-      "people": {
-        "carolinaSalas": {
-          "role": "Investigadora principal",
-          "description": "Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento."
-        },
-        "miguelVelazquez": {
-          "role": "Investigador",
-          "description": "Encargado del desarrollo de la instrumentación en ROSAC."
-        },
-        "davidGale": {
-          "role": "Investigador",
-          "description": "Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general."
-        },
-        "oscarNunez": {
-          "role": "Investigador",
-          "description": "Encargado del sistema eléctrico y soporte técnico en los motorreductores."
-        },
-        "federicoRuiz": {
-          "role": "Investigador",
-          "description": "Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC."
-        },
-        "gustavoLara": {
-          "role": "Investigador",
-          "description": "Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio."
-        },
-        "andresFallas": {
-          "role": "Investigador",
-          "description": "Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio."
-        },
-        "wagnerMejias": {
-          "role": "Investigador",
-          "description": "Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general."
-        },
-        "eduardoIbarra": {
-          "role": "Colaborador externo",
-          "description": "Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena."
-        },
-        "andresCorrales": {
-          "role": "Colaborador externo",
-          "description": "Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final."
-        },
-        "andresGamboa": {
-          "role": "Colaborador externo",
-          "description": "Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos."
-        },
-        "jelmuthRojas": {
-          "role": "Colaborador externo",
-          "description": "Apoyo en tareas de nivelación de la estructura."
-        },
-        "barnaldBocker": {
-          "role": "Asistente",
-          "description": "Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación."
-        },
-        "fabianChaverri": {
-          "role": "Futuro estudiante de doctorado",
-          "description": "Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto."
-        }
-      }
+      "institutionLabel": "Institución"
     },
     "donations": {
       "title": "Donaciones ROSAC",

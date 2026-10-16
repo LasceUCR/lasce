@@ -165,32 +165,61 @@ export function RosacInfoPage({
   const [acknowledgmentCreateError, setAcknowledgmentCreateError] = useState<string | null>(null)
   const [acknowledgmentListError, setAcknowledgmentListError] = useState<string | null>(null)
 
-  // When edit mode is active, editors manipulate local state for the current session.
-  // When viewing in public mode, authoritative content arrives directly from props.
-  const displayCharacteristics = editMode ? characteristics : content.characteristics.items
-  const displayActivities = editMode ? activities : content.activities.items
-  const displayStages = editMode ? constructionStages : content.construction.stages
-  const displayInstruments = editMode ? instruments : content.instruments.items
-  const displayAcknowledgments = editMode ? acknowledgments : content.acknowledgments.institutions
+  const displayCharacteristics = characteristics
+  const displayActivities = activities
+  const displayStages = constructionStages
+  const displayInstruments = instruments
+  const displayAcknowledgments = acknowledgments
 
-  // Synchronize component state with incoming localized content props
+  // Restore persisted state from localStorage if available, or synchronize from props
   useEffect(() => {
-    setCharacteristics(content.characteristics.items)
-    setActivities(content.activities.items)
-    setConstructionStages(content.construction.stages)
-    setInstruments(content.instruments.items)
-    setAcknowledgments(
-      content.acknowledgments.institutions.map((inst, index) => ({
-        id: inst.id ?? `ack-${index}`,
-        ...inst,
-      })),
-    )
     try {
-      localStorage.removeItem(ROSAC_STORAGE_KEYS.characteristics)
-      localStorage.removeItem(ROSAC_STORAGE_KEYS.activities)
-      localStorage.removeItem(ROSAC_STORAGE_KEYS.stages)
-      localStorage.removeItem(ROSAC_STORAGE_KEYS.instruments)
-      localStorage.removeItem(ROSAC_STORAGE_KEYS.acknowledgments)
+      const storedInstruments = localStorage.getItem(ROSAC_STORAGE_KEYS.instruments)
+      if (storedInstruments) {
+        const parsed = JSON.parse(storedInstruments)
+        if (Array.isArray(parsed)) setInstruments(parsed)
+      } else {
+        setInstruments(content.instruments.items)
+      }
+
+      const storedCharacteristics = localStorage.getItem(ROSAC_STORAGE_KEYS.characteristics)
+      if (storedCharacteristics) {
+        const parsed = JSON.parse(storedCharacteristics)
+        if (Array.isArray(parsed)) setCharacteristics(parsed)
+      } else {
+        setCharacteristics(content.characteristics.items)
+      }
+
+      const storedActivities = localStorage.getItem(ROSAC_STORAGE_KEYS.activities)
+      if (storedActivities) {
+        const parsed = JSON.parse(storedActivities)
+        if (Array.isArray(parsed)) setActivities(parsed)
+      } else {
+        setActivities(content.activities.items)
+      }
+
+      const storedStages = localStorage.getItem(ROSAC_STORAGE_KEYS.stages)
+      if (storedStages) {
+        const parsed = JSON.parse(storedStages)
+        if (Array.isArray(parsed)) {
+          setConstructionStages(parsed as unknown as typeof content.construction.stages)
+        }
+      } else {
+        setConstructionStages(content.construction.stages)
+      }
+
+      const storedAcknowledgments = localStorage.getItem(ROSAC_STORAGE_KEYS.acknowledgments)
+      if (storedAcknowledgments) {
+        const parsed = JSON.parse(storedAcknowledgments)
+        if (Array.isArray(parsed)) setAcknowledgments(parsed)
+      } else {
+        setAcknowledgments(
+          content.acknowledgments.institutions.map((inst, index) => ({
+            id: inst.id ?? `ack-${index}`,
+            ...inst,
+          })),
+        )
+      }
     } catch {
       // ignore storage errors
     }
@@ -586,7 +615,7 @@ export function RosacInfoPage({
         title={content.location.title}
         titleId="rosac-location-title"
       >
-        <RosacLocationMapLoader location={content.location} />
+        <RosacLocationMapLoader labels={content.location.labels} location={content.location} />
       </TopicSection>
 
       {/* SECCIÓN 3: Actividades científicas (SOLO EDITAR CONTENIDO, 3 tarjetas fijas) */}
