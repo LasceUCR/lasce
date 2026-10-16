@@ -1,25 +1,26 @@
 import type { LucideIcon } from 'lucide-react'
-import { getMessages, getTranslations } from 'next-intl/server'
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { Button } from '@/app/components/public/Button'
 import { GoesSolarAnimation } from '@/app/components/public/GoesSolarAnimation'
 import { HeroSolarObservation } from '@/app/components/public/HeroSolarObservation'
 import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
 import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
+import { EditableHomeHero } from '@/app/components/public/home/EditableHomeHero'
+import {
+  GeomagneticIndicators,
+  type IndicatorItem,
+} from '@/app/components/public/home/GeomagneticIndicators'
+import { userHasPermission } from '@/app/lib/auth/authorization'
+import { getHomeContent, indicatorCodes, indicatorTones, type HomeHeroData } from '@/app/lib/home'
+import { resolveLocale } from '@/app/lib/i18n/locale'
 import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@/app/lib/work-areas'
-
-// Demonstration values until the geomagnetic indices are read from a real source. The label and
-// the value of each one are in the `home.indicators` namespace.
-const indicators = [
-  { id: 'kp', tone: 'teal' },
-  { id: 'dst', tone: 'cyan' },
-  { id: 'ae', tone: 'blue' },
-  { id: 'ap', tone: 'teal' },
-] as const
 
 // The laboratory's official name. It is a proper noun, so it is not a message: it reads the same
 // in every language (docs/internationalization.md, "Add a string").
 const institutionName = 'Laboratorio de Astrofísica Solar y Clima Espacial'
+
+export const dynamic = 'force-dynamic'
 
 function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
   return areas.map((area) => {
@@ -35,8 +36,37 @@ function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
 }
 
 export default async function HomePage() {
-  const t = await getTranslations('home')
-  const messages = await getMessages()
+  const [locale, t, messages, canEdit] = await Promise.all([
+    getLocale(),
+    getTranslations('home'),
+    getMessages(),
+    userHasPermission('edit_components'),
+  ])
+
+  // The banner and the indices are stored in the database (docs/home-page.md), in the language
+  // chosen in the header. Every language and the version to save against reach the browser only
+  // for an editor. Without stored rows the catalogue's text is shown, read-only.
+  const content = await getHomeContent(resolveLocale(locale), { includeEditingData: canEdit })
+
+  const hero: HomeHeroData = content.hero ?? {
+    title: t('hero.title'),
+    lead: t('hero.lead'),
+  }
+
+  const indicators: IndicatorItem[] =
+    content.indicators.length > 0
+      ? content.indicators.map(({ code, ...indicator }) => ({
+          ...indicator,
+          label: t(`indicators.${code}.label`),
+          tone: indicatorTones[code],
+        }))
+      : indicatorCodes.map((code) => ({
+          id: code,
+          label: t(`indicators.${code}.label`),
+          tone: indicatorTones[code],
+          value: t(`indicators.${code}.value`),
+          description: t(`indicators.${code}.description`),
+        }))
 
   return (
     <>
@@ -48,9 +78,7 @@ export default async function HomePage() {
           <p className="hero-institution" lang="es">
             {institutionName}
           </p>
-          <h1>{t('hero.title')}</h1>
-          <span className="hero-rule" aria-hidden="true" />
-          <p>{t('hero.lead')}</p>
+          <EditableHomeHero canEdit={canEdit} hero={hero} />
           <div className="hero-actions">
             <Button href="/nosotros">{t('hero.cta')}</Button>
           </div>
@@ -59,20 +87,12 @@ export default async function HomePage() {
       </section>
 
       <div className="home-content">
-        <section className="indicators page-width" id="datos" aria-labelledby="indicators-title">
-          <div className="indicator-heading">
-            <h2 id="indicators-title">{t('indicators.title')}</h2>
-            <span>{t('indicators.demoNotice')}</span>
-          </div>
-          <div className="indicator-grid">
-            {indicators.map((indicator) => (
-              <article className={`indicator indicator-${indicator.tone}`} key={indicator.id}>
-                <p>{t(`indicators.${indicator.id}.label`)}</p>
-                <strong>{t(`indicators.${indicator.id}.value`)}</strong>
-              </article>
-            ))}
-          </div>
-        </section>
+        <GeomagneticIndicators
+          canEdit={canEdit}
+          demoNotice={t('indicators.demoNotice')}
+          indicators={indicators}
+          title={t('indicators.title')}
+        />
 
         <WorkAreasSection
           id={workAreasSectionId}

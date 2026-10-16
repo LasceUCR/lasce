@@ -458,7 +458,7 @@ format needs no migration.
 
 ## `public` schema (home page)
 
-The editable content of the home page (`/`). Seeded by the
+The editable content of the home page (`/`), see [`home-page.md`](home-page.md). Seeded by the
 migration `20261014101056_add_home_content`; nothing is created or deleted from the CMS.
 
 ### `home_hero`
@@ -578,7 +578,8 @@ the base row; its translations and author links cascade. The full contract is in
 `updateIndicator()` write a base row and its translations in one transaction against the version
 the editor loaded; `reorderIndicators()` rewrites `geomagnetic_indices.position`. Nothing in the
 worker writes them yet: a future job would upsert the indices by `code`, set `source` and
-`observed_at`, and leave `position` alone.
+`observed_at`, and leave `position` alone; see
+[`home-page.md`](home-page.md#future-automatic-loading).
 
 `apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
