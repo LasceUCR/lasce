@@ -2540,6 +2540,13 @@ a {
   gap: 16px;
 }
 
+/* `.surface-card` sets `align-self: start`, which in this flex column shrinks a card to its content
+   when it is a direct child of the list (view mode). In edit mode `EditableWrapper` sits in between
+   and the card already fills it. Same width in both modes, whatever the content length. */
+.publication-card {
+  width: 100%;
+}
+
 .publication-card h3 {
   margin: 0 0 6px;
   font-size: 16px;
