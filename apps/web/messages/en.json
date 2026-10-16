@@ -1115,22 +1115,32 @@
       "exis": {
         "name": "Extreme Ultraviolet and X-ray Irradiance Sensors",
         "products": {
-          "sfeu": { "name": "Solar flux: EUV" },
-          "sfxr": { "name": "Solar flux: X-rays" }
+          "sfeu": {
+            "name": "Solar flux: EUV"
+          },
+          "sfxr": {
+            "name": "Solar flux: X-rays"
+          }
         }
       },
       "mag": {
         "name": "Magnetometer",
         "products": {
-          "geof": { "name": "Geomagnetic field" }
+          "geof": {
+            "name": "Geomagnetic field"
+          }
         }
       },
       "seiss": {
         "name": "Space Environment In-Situ Suite",
         "unavailableNote": "This GOES product and its channels are still pending integration.",
         "products": {
-          "ehis": { "name": "Energetic Heavy Ions" },
-          "mpsl": { "name": "Magnetospheric Electrons and Protons: low energy" },
+          "ehis": {
+            "name": "Energetic Heavy Ions"
+          },
+          "mpsl": {
+            "name": "Magnetospheric Electrons and Protons: low energy"
+          },
           "mpsh": {
             "name": "Magnetospheric Electrons and Protons: medium and high energy",
             "availabilityNote": "Select the telescope and the band from the level 1b file. Each telescope keeps its own viewing direction."
@@ -1148,13 +1158,17 @@
       "rosacI1": {
         "name": "Instrument 1 (to be defined)",
         "products": {
-          "timeSeries": { "name": "Test time series" }
+          "timeSeries": {
+            "name": "Test time series"
+          }
         }
       },
       "rosacI2": {
         "name": "Instrument 2 (to be defined)",
         "products": {
-          "dynamicSpectrum": { "name": "Test dynamic spectrum" }
+          "dynamicSpectrum": {
+            "name": "Test dynamic spectrum"
+          }
         }
       }
     },
@@ -1324,6 +1338,63 @@
       "requestFailedOther": "It was not possible to query the data. Try again.",
       "downloadFailed": "It was not possible to prepare the download. Try again later.",
       "downloadUnauthenticated": "Sign in to download resources."
+    }
+  },
+  "administration": {
+    "shell": {
+      "panel": "Administration panel",
+      "menu": "Menu",
+      "items": {
+        "resumen": "Summary",
+        "descargas": "Downloads",
+        "usuarios": "Users",
+        "permisos": "Permissions",
+        "infraestructura": "Infrastructure"
+      }
+    },
+    "summary": {
+      "metaTitle": "Administration | LASCE",
+      "metaDescription": "Summary of the state of the laboratory and its systems.",
+      "title": "Summary",
+      "description": "Overall state of the laboratory and its systems.",
+      "infrastructureTitle": "Infrastructure status"
+    },
+    "services": {
+      "title": "Services",
+      "names": {
+        "api": "Public API",
+        "postgres": "PostgreSQL database",
+        "redis": "Job queue (Redis)",
+        "workers": "Processing workers",
+        "minio": "MinIO storage",
+        "influxdb": "Time series (InfluxDB)"
+      },
+      "status": {
+        "ok": "Online",
+        "down": "Offline",
+        "checking": "Checking…"
+      }
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity has been recorded yet.",
+      "actors": {
+        "system": "System",
+        "worker": "Worker",
+        "deletedUser": "Deleted account"
+      }
+    },
+    "content": {
+      "title": "Portal content",
+      "empty": "No records",
+      "cards": {
+        "publications": "Publications",
+        "news": "News",
+        "researchAreas": "Research areas",
+        "lasceResearchers": "LASCE researchers",
+        "rosacResearchers": "ROSAC researchers",
+        "instruments": "Queryable instruments"
+      }
     }
   }
 }
