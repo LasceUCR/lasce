@@ -77,15 +77,27 @@ export function getRosacInstrumentsContent(
   const consultationNotice =
     card?.consultationNotice ?? es.rosac.instruments.card.consultationNotice
 
+  const itemsMessages = instruments?.items ?? es.rosac.instruments.items
+
+  const consultationLabelTemplate =
+    card?.consultationLabel ?? es.rosac.instruments.card.consultationLabel
+
+  function getConsultationLabel(name: string, index: number): string {
+    return consultationLabelTemplate.replace('{name}', name).replace('{number}', String(index + 1))
+  }
+
   const items: RosacInstrumentCardContent[] = [
     {
       id: rosacInstruments[0]!.code,
       name: 'ROSAC-SABER',
-      characteristics: ['Banda entre 100 y 1000 MHz'],
+      characteristics: [
+        itemsMessages?.saber?.characteristics?.c1 ??
+          es.rosac.instruments.items.saber.characteristics.c1,
+      ],
       image: localizedImages[0],
       consultation: {
         href: `/datos?source=ROSAC&instrument=${rosacInstruments[0]!.code}#scientific-query-title`,
-        label: 'Consultar simulación del ROSAC-SABER',
+        label: getConsultationLabel('ROSAC-SABER', 0),
         notice: consultationNotice.replace(
           '{product}',
           productNames[0] ?? rosacInstruments[0]!.products[0]!.name,
@@ -96,11 +108,14 @@ export function getRosacInstrumentsContent(
     {
       id: rosacInstruments[1]!.code,
       name: 'ROSAC-MIRA 9GHz',
-      characteristics: ['Banda de los 9 GHz'],
+      characteristics: [
+        itemsMessages?.mira?.characteristics?.c1 ??
+          es.rosac.instruments.items.mira.characteristics.c1,
+      ],
       image: localizedImages[1],
       consultation: {
         href: `/datos?source=ROSAC&instrument=${rosacInstruments[1]!.code}#scientific-query-title`,
-        label: 'Consultar simulación del ROSAC-MIRA 9GHz',
+        label: getConsultationLabel('ROSAC-MIRA 9GHz', 1),
         notice: consultationNotice.replace(
           '{product}',
           productNames[1] ?? rosacInstruments[1]!.products[0]!.name,
@@ -111,10 +126,13 @@ export function getRosacInstrumentsContent(
     {
       id: 'rosac-instrument-3',
       name: 'ROSAC-HIROS',
-      characteristics: ['Observación del hidrógeno neutro a 1,4 GHz'],
+      characteristics: [
+        itemsMessages?.hiros?.characteristics?.c1 ??
+          es.rosac.instruments.items.hiros.characteristics.c1,
+      ],
       image: localizedImages[2],
       pendingMessage: card?.pendingNotice ?? es.rosac.instruments.card.pendingNotice,
-      consultation: { label: 'Consultar simulación del ROSAC-HIROS' },
+      consultation: { label: getConsultationLabel('ROSAC-HIROS', 2) },
       labels,
     },
   ]

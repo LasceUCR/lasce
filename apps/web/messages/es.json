@@ -795,7 +795,7 @@
       "card": {
         "name": "Instrumento {number}",
         "pendingName": "Instrumento 3 (por definir)",
-        "consultationLabel": "Consultar simulación del instrumento {number}",
+        "consultationLabel": "Consultar simulación del {name}",
         "consultationNotice": "{product}. Los resultados son simulados; no corresponden a observaciones del instrumento.",
         "pendingNotice": "Información pendiente de confirmación e integración en la sección de datos.",
         "imageUnavailable": "Imagen no disponible",
@@ -803,6 +803,23 @@
         "purpose": "Propósito",
         "characteristics": "Características",
         "citation": "Cómo citar"
+      },
+      "items": {
+        "saber": {
+          "characteristics": {
+            "c1": "Banda entre 100 y 1000 MHz"
+          }
+        },
+        "mira": {
+          "characteristics": {
+            "c1": "Banda de los 9 GHz"
+          }
+        },
+        "hiros": {
+          "characteristics": {
+            "c1": "Observación del hidrógeno neutro a 1,4 GHz"
+          }
+        }
       },
       "products": {
         "timeSeries": "Serie temporal de prueba",
@@ -828,6 +845,11 @@
           "title": "Donaciones Eaton",
           "description": "La organización ROSAC recibió dos donaciones de equipo por parte de la empresa Eaton, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.",
           "imageAlt": "Equipo de ROSAC junto a representantes de Eaton y el tablero eléctrico donado"
+        },
+        "prysmian": {
+          "title": "Donación Prysmian",
+          "description": "La organización ROSAC recibió una donación de equipo por parte de la empresa Prysmian, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.",
+          "imageAlt": "Representante de Prysmian conversando con un miembro del equipo de ROSAC frente a la antena del observatorio"
         }
       },
       "cta": {

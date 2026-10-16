@@ -392,9 +392,20 @@ describe('rosac content', () => {
     expect(english.relationship.title).toBe('ROSAC and LASCE')
     expect(english.instruments.title).toBe('Scientific instruments')
     expect(english.instruments.items[0]?.name).toBe('ROSAC-SABER')
+    expect(english.instruments.items[0]?.characteristics).toEqual(['Band between 100 and 1000 MHz'])
+    expect(english.instruments.items[0]?.consultation?.label).toBe('Query ROSAC-SABER simulation')
+    expect(english.instruments.items[1]?.characteristics).toEqual(['9 GHz band'])
+    expect(english.instruments.items[1]?.consultation?.label).toBe(
+      'Query ROSAC-MIRA 9GHz simulation',
+    )
+    expect(english.instruments.items[2]?.characteristics).toEqual([
+      'Neutral hydrogen observation at 1.4 GHz',
+    ])
+    expect(english.instruments.items[2]?.consultation?.label).toBe('Query ROSAC-HIROS simulation')
     expect(english.team.title).toBe('Researchers')
     expect(english.acknowledgments.title).toBe('ROSAC acknowledgments')
     expect(english.donations.title).toBe('ROSAC donations')
+    expect(english.donations.items[1]?.title).toBe('Prysmian donation')
     expect(english.donations.cta.buttonLabel).toBe('Contact us')
     expect(english.backLink.label).toBe('Back to work areas')
   })

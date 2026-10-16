@@ -795,7 +795,7 @@
       "card": {
         "name": "Instrument {number}",
         "pendingName": "Instrument 3 (to be defined)",
-        "consultationLabel": "Query Instrument {number} simulation",
+        "consultationLabel": "Query {name} simulation",
         "consultationNotice": "{product}. Results are simulated; they do not correspond to instrument observations.",
         "pendingNotice": "Information pending confirmation and integration into the data section.",
         "imageUnavailable": "Image unavailable",
@@ -803,6 +803,23 @@
         "purpose": "Purpose",
         "characteristics": "Characteristics",
         "citation": "How to cite"
+      },
+      "items": {
+        "saber": {
+          "characteristics": {
+            "c1": "Band between 100 and 1000 MHz"
+          }
+        },
+        "mira": {
+          "characteristics": {
+            "c1": "9 GHz band"
+          }
+        },
+        "hiros": {
+          "characteristics": {
+            "c1": "Neutral hydrogen observation at 1.4 GHz"
+          }
+        }
       },
       "products": {
         "timeSeries": "Test time series",
@@ -828,6 +845,11 @@
           "title": "Eaton donations",
           "description": "The ROSAC organization received two equipment donations from Eaton, as part of its commitment to strengthening the initiatives and activities carried out by the organization. This contribution represents valuable support for ROSAC and the development of its work.",
           "imageAlt": "ROSAC team with Eaton representatives and the donated electrical panel"
+        },
+        "prysmian": {
+          "title": "Prysmian donation",
+          "description": "The ROSAC organization received an equipment donation from Prysmian, as part of its commitment to strengthening the initiatives and activities carried out by the organization. This contribution represents valuable support for ROSAC and the development of its work.",
+          "imageAlt": "Prysmian representative talking with a ROSAC team member in front of the observatory antenna"
         }
       },
       "cta": {
