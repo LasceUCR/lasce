@@ -27,14 +27,15 @@ describe('AcademicActivitiesPage', () => {
     }
   })
 
-  test('links each card to its own detail page', () => {
-    renderWithIntl(<AcademicActivitiesPage {...defaultArgs} />)
+  test('renders the full description for every activity, with no detail-page link', () => {
+    const { container } = renderWithIntl(<AcademicActivitiesPage {...defaultArgs} />)
 
     for (const activity of defaultArgs.activities) {
-      expect(
-        screen.getAllByRole('link', { name: /Ver detalles de la actividad/i })[0],
-      ).toHaveAttribute('href', `/actividades-academicas/${activity.slug}`)
+      const description = container.querySelector('.academic-activity-card-description')
+      // Multi-paragraph text, so compare node by node rather than normalizing whitespace away.
+      expect(description).toHaveTextContent(activity.description.replaceAll('\n\n', ' '))
     }
+    expect(screen.queryByRole('link', { name: /Ver detalles/i })).not.toBeInTheDocument()
   })
 
   test('shows an empty message instead of the list when there are no activities', () => {

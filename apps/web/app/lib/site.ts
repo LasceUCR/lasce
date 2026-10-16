@@ -1,4 +1,3 @@
-import { academicActivitySlugs } from './academic-activities'
 import { albumPath, galleryAlbumList, subAlbumPath } from './gallery'
 import { workAreaPath, workAreaSlugs } from './work-areas'
 
@@ -22,6 +21,5 @@ export const publicPaths = [
   '/acceso',
   '/actividades-academicas',
   ...workAreaSlugs.map((slug) => workAreaPath(slug)),
-  ...academicActivitySlugs.map((slug) => `/actividades-academicas/${slug}`),
   ...galleryPaths,
 ] as const

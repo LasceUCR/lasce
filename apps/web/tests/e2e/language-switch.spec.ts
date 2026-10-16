@@ -110,20 +110,22 @@ test('shows an academic activity in English and keeps the official event title',
 }) => {
   await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
 
-  await page.goto('/actividades-academicas/machine-learning-workshop')
+  await page.goto('/actividades-academicas')
 
   await expect(
     page.getByRole('heading', {
       level: 1,
+      name: 'Academic activities',
+    }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', {
+      level: 3,
       name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
     }),
   ).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'General information' })).toBeVisible()
   await expect(page.getByText('16-20 February 2026')).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Back to academic activities' })).toHaveAttribute(
-    'href',
-    '/actividades-academicas',
-  )
+  await expect(page.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
 })
 
 test('falls back to Spanish when the language cookie holds an unsupported value', async ({
