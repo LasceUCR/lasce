@@ -161,6 +161,10 @@
     "feedback": {
       "network": "Could not reach the server. Check your connection and try again.",
       "server": "The server could not complete the operation. Try again in a few minutes."
+    },
+    "truncatedText": {
+      "readMore": "Read more",
+      "readLess": "Read less"
     }
   },
   "solarImageLightbox": {
@@ -556,8 +560,6 @@
     },
     "card": {
       "externalLink": "DOI / External link",
-      "readMore": "Read full abstract",
-      "readLess": "Hide abstract",
       "translationMissing": "No English version. Editing the title or the abstract requires completing both languages."
     },
     "editor": {

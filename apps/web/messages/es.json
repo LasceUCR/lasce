@@ -161,6 +161,10 @@
     "feedback": {
       "network": "No se pudo conectar con el servidor. Revise su conexión e inténtelo de nuevo.",
       "server": "El servidor no pudo completar la operación. Inténtelo de nuevo en unos minutos."
+    },
+    "truncatedText": {
+      "readMore": "Leer más",
+      "readLess": "Leer menos"
     }
   },
   "solarImageLightbox": {
@@ -556,8 +560,6 @@
     },
     "card": {
       "externalLink": "DOI / Enlace externo",
-      "readMore": "Leer resumen completo",
-      "readLess": "Ocultar resumen",
       "translationMissing": "Sin versión en inglés. Al editar el título o el resumen se deben completar ambos idiomas."
     },
     "editor": {
