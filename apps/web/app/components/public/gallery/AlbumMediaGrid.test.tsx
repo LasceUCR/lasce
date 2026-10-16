@@ -105,15 +105,15 @@ describe('AlbumMediaGrid', () => {
   test('shows an add-file card when edit mode and create permission are enabled', () => {
     render(<AlbumMediaGrid {...defaultArgs} albumId="album-1" canCreate editMode uploader="Ana" />)
 
-    expect(screen.getByRole('button', { name: 'Añadir archivo' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir imagen' })).toBeInTheDocument()
   })
 
   test('opens the media form for the album and reports missing fields on submit', async () => {
     const user = userEvent.setup()
     render(<AlbumMediaGrid {...defaultArgs} albumId="album-1" canCreate editMode uploader="Ana" />)
 
-    await user.click(screen.getByRole('button', { name: 'Añadir archivo' }))
-    expect(screen.getByRole('dialog', { name: 'Añadir archivo' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Añadir imagen' }))
+    expect(screen.getByRole('dialog', { name: 'Añadir imagen' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -126,7 +126,7 @@ describe('AlbumMediaGrid', () => {
   test('hides the add-file card when the album or the user is unknown', () => {
     render(<AlbumMediaGrid {...defaultArgs} canCreate editMode />)
 
-    expect(screen.queryByRole('button', { name: 'Añadir archivo' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Añadir imagen' })).not.toBeInTheDocument()
   })
 
   test('deletes a file through the API after confirming', async () => {
@@ -136,7 +136,7 @@ describe('AlbumMediaGrid', () => {
     render(<AlbumMediaGrid {...defaultArgs} canDelete editMode />)
 
     await user.click(screen.getByRole('button', { name: `Eliminar ${first.title}` }))
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar archivo' })
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar imagen' })
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(`/api/gallery/media/${first.id}`, { method: 'DELETE' })
@@ -216,7 +216,7 @@ describe('AlbumMediaGrid', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Añadir archivo' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir imagen' })).toBeInTheDocument()
   })
 
   describe('unsaved changes in the file form', () => {
@@ -225,7 +225,7 @@ describe('AlbumMediaGrid', () => {
       render(
         <AlbumMediaGrid {...defaultArgs} albumId="album-1" canCreate editMode uploader="Ana" />,
       )
-      await user.click(screen.getByRole('button', { name: 'Añadir archivo' }))
+      await user.click(screen.getByRole('button', { name: 'Añadir imagen' }))
       await user.type(screen.getByLabelText(/Título \(Español\)/), 'Aurora')
       return user
     }
@@ -254,7 +254,7 @@ describe('AlbumMediaGrid', () => {
       render(
         <AlbumMediaGrid {...defaultArgs} albumId="album-1" canCreate editMode uploader="Ana" />,
       )
-      await user.click(screen.getByRole('button', { name: 'Añadir archivo' }))
+      await user.click(screen.getByRole('button', { name: 'Añadir imagen' }))
 
       await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
