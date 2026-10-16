@@ -776,6 +776,10 @@
     }
   },
   "news": {
+    "card": {
+      "openSource": "Open source",
+      "openSourceAria": "of “{title}” (opens in a new tab)"
+    },
     "created": "News item added successfully.",
     "updated": "News item updated successfully.",
     "deleted": "News item deleted successfully.",

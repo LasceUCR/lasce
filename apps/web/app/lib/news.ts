@@ -54,6 +54,13 @@ export async function getNews(): Promise<NewsArticle[]> {
   return records.map(toNewsArticle)
 }
 
+export async function getNewsById(id: string): Promise<NewsArticle | null> {
+  if (!z.string().uuid().safeParse(id).success) return null
+
+  const record = await prisma.news.findUnique({ where: { id }, include: newsRecordInclude })
+  return record ? toNewsArticle(record) : null
+}
+
 async function findNewsArticle(id: string): Promise<NewsArticle> {
   const record = await prisma.news.findUniqueOrThrow({ where: { id }, include: newsRecordInclude })
   return toNewsArticle(record)
