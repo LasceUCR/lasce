@@ -76,6 +76,7 @@ const translatedPages = [
     title: 'Radio Astronomy and ROSAC | LASCE',
   },
   { path: '/investigacion', heading: 'Research areas', title: 'Research | LASCE' },
+  { path: '/datos', heading: 'Data', title: 'Scientific data | LASCE' },
 ]
 
 for (const { path, heading, title } of translatedPages) {
