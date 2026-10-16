@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getLocale } from 'next-intl/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import {
@@ -6,6 +7,7 @@ import {
   createAcademicActivity,
   getAcademicActivities,
 } from '@/app/lib/academic-activities'
+import { resolveLocale } from '@/app/lib/i18n/locale'
 
 /**
  * Reads and creates academic activities. GET is public read-only content; POST requires
@@ -14,8 +16,9 @@ import {
  */
 export const dynamic = 'force-dynamic'
 
+/** Public list, in the language of the request's `lasce_locale` cookie. */
 export async function GET(): Promise<NextResponse> {
-  const activities = await getAcademicActivities()
+  const activities = await getAcademicActivities(resolveLocale(await getLocale()))
 
   return NextResponse.json({ activities }, { headers: { 'Cache-Control': 'no-store' } })
 }

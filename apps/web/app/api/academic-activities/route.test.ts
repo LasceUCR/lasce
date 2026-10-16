@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   getAcademicActivities: vi.fn(),
   createAcademicActivity: vi.fn(),
   requireApiPermission: vi.fn(),
+  getLocale: vi.fn(),
 }))
 
 vi.mock('@/app/lib/academic-activities', async (importOriginal) => {
@@ -19,6 +20,8 @@ vi.mock('@/app/lib/academic-activities', async (importOriginal) => {
 vi.mock('@/app/lib/auth/apiGuard', () => ({
   requireApiPermission: mocks.requireApiPermission,
 }))
+
+vi.mock('next-intl/server', () => ({ getLocale: mocks.getLocale }))
 
 // `academicActivityInputSchema` is kept real (via `importOriginal` above), and the module that
 // defines it imports `prisma` at load time — stub it out so loading the real schema doesn't also
@@ -55,8 +58,9 @@ afterEach(() => {
 })
 
 describe('GET /api/academic-activities', () => {
-  test('returns the activities as never-cached JSON', async () => {
+  test('returns the activities as never-cached JSON, in the request locale', async () => {
     const activities = [{ id: '1', ...validBody, date: '16-20 febrero, 2026' }]
+    mocks.getLocale.mockResolvedValue('es')
     mocks.getAcademicActivities.mockResolvedValue(activities)
 
     const response = await GET()
@@ -64,6 +68,7 @@ describe('GET /api/academic-activities', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual({ activities })
+    expect(mocks.getAcademicActivities).toHaveBeenCalledWith('es')
   })
 })
 

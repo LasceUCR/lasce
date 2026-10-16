@@ -1,11 +1,14 @@
 import { prisma } from '@lasce/db'
 import { z } from 'zod'
 
+import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+
 export interface AcademicActivity {
   id: string
   title: string
   category: string
-  /** Display string: a single date or a "16-20 febrero, 2026" range. */
+  /** Display string, in the language `getAcademicActivities` was called with: a single date or a
+   * "16-20 febrero, 2026" / "16-20 February 2026" range. */
   date: string
   /** Raw `yyyy-mm-dd`, what the edit form needs; `date` is display-only and doesn't round-trip. */
   startDate: string
@@ -28,8 +31,11 @@ type AcademicActivityRow = {
   photoAlt: string
 }
 
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('es-CR', {
+/** The `Intl` locale each site `Locale` formats dates with. */
+const INTL_LOCALE: Record<Locale, string> = { es: 'es-CR', en: 'en-US' }
+
+function formatDate(date: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -37,30 +43,38 @@ function formatDate(date: Date): string {
   }).format(date)
 }
 
-/** "16-20 febrero, 2026" for a range within the same month; otherwise two full dates. */
-function formatDateRange(start: Date, end: Date | null): string {
-  if (!end || end.getTime() === start.getTime()) return formatDate(start)
+/**
+ * "16-20 febrero, 2026" / "16-20 February 2026" for a range within the same month; otherwise two
+ * full dates. The comma before the year is a Spanish-only convention, matching the editorial copy
+ * LASCE originally supplied in each language.
+ */
+function formatDateRange(start: Date, end: Date | null, locale: Locale): string {
+  if (!end || end.getTime() === start.getTime()) return formatDate(start, locale)
 
   const sameMonth =
     start.getUTCFullYear() === end.getUTCFullYear() && start.getUTCMonth() === end.getUTCMonth()
   if (sameMonth) {
-    const month = new Intl.DateTimeFormat('es-CR', { month: 'long', timeZone: 'UTC' }).format(end)
-    return `${start.getUTCDate()}-${end.getUTCDate()} ${month}, ${end.getUTCFullYear()}`
+    const month = new Intl.DateTimeFormat(INTL_LOCALE[locale], {
+      month: 'long',
+      timeZone: 'UTC',
+    }).format(end)
+    const yearSeparator = locale === 'es' ? ', ' : ' '
+    return `${start.getUTCDate()}-${end.getUTCDate()} ${month}${yearSeparator}${end.getUTCFullYear()}`
   }
 
-  return `${formatDate(start)} - ${formatDate(end)}`
+  return `${formatDate(start, locale)} - ${formatDate(end, locale)}`
 }
 
 function toIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
-function toAcademicActivity(row: AcademicActivityRow): AcademicActivity {
+function toAcademicActivity(row: AcademicActivityRow, locale: Locale): AcademicActivity {
   return {
     id: row.id,
     title: row.title,
     category: row.category,
-    date: formatDateRange(row.startDate, row.endDate),
+    date: formatDateRange(row.startDate, row.endDate, locale),
     startDate: toIsoDate(row.startDate),
     endDate: row.endDate ? toIsoDate(row.endDate) : null,
     location: row.location,
@@ -70,10 +84,15 @@ function toAcademicActivity(row: AcademicActivityRow): AcademicActivity {
   }
 }
 
-/** Loads the activities from Postgres, most recent start date first. */
-export async function getAcademicActivities(): Promise<AcademicActivity[]> {
+/**
+ * Loads the activities from Postgres, most recent start date first, with `date` formatted in
+ * `locale` (the language of the request's `lasce_locale` cookie).
+ */
+export async function getAcademicActivities(
+  locale: Locale = defaultLocale,
+): Promise<AcademicActivity[]> {
   const rows = await prisma.academicActivity.findMany({ orderBy: { startDate: 'desc' } })
-  return rows.map(toAcademicActivity)
+  return rows.map((row) => toAcademicActivity(row, locale))
 }
 
 /** Shared by create and update: every field on `AcademicActivity` is required except `endDate`. */
@@ -120,7 +139,7 @@ export async function createAcademicActivity(
     data: { ...academicActivityRowData(data), modifiedBy },
   })
 
-  return toAcademicActivity(row)
+  return toAcademicActivity(row, defaultLocale)
 }
 
 /**
@@ -141,7 +160,7 @@ export async function updateAcademicActivity(
     data: { ...academicActivityRowData(data), modifiedBy },
   })
 
-  return toAcademicActivity(row)
+  return toAcademicActivity(row, defaultLocale)
 }
 
 /**

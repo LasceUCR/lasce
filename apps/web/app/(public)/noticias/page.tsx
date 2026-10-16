@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { getLocale } from 'next-intl/server'
 
 import { AcademicActivitiesSection } from '@/app/components/public/news/AcademicActivitiesSection'
 import { NewsExplorer } from '@/app/components/public/news/NewsExplorer'
@@ -6,6 +7,7 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { getAcademicActivities } from '@/app/lib/academic-activities'
 import { userHasPermission } from '@/app/lib/auth/authorization'
+import { resolveLocale } from '@/app/lib/i18n/locale'
 import { getNews, noticiasBackLink, noticiasHero, noticiasMeta } from '@/app/lib/news'
 
 export const metadata: Metadata = {
@@ -16,13 +18,14 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function NewsPage() {
-  const [activities, news, canCreate, canEdit, canDelete] = await Promise.all([
-    getAcademicActivities(),
+  const [locale, news, canCreate, canEdit, canDelete] = await Promise.all([
+    getLocale(),
     getNews(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
+  const activities = await getAcademicActivities(resolveLocale(locale))
 
   return (
     <article className="topic-page">

@@ -87,6 +87,14 @@ describe('academic-activities', () => {
     expect(activity?.endDate).toBeNull()
   })
 
+  test('formats the date range in English, without the Spanish comma before the year', async () => {
+    mocks.findMany.mockResolvedValue([row])
+
+    const [activity] = await getAcademicActivities('en')
+
+    expect(activity?.date).toBe('16-20 February 2026')
+  })
+
   test('rejects an input missing a required field', () => {
     const result = academicActivityInputSchema.safeParse({ ...input, title: '' })
     expect(result.success).toBe(false)
