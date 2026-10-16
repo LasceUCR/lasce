@@ -43,6 +43,7 @@ working through Claude Code.
 | How do I isolate a widget that might crash the page? | [`docs/error-boundary.md`](docs/error-boundary.md)                         |
 | How do I make content editable in "Modo edición"?    | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)                   |
 | How is the home page's content edited and reordered? | [`docs/home-page.md`](docs/home-page.md)                                   |
+| How is the space weather page's card edited?         | [`docs/space-weather.md`](docs/space-weather.md)                           |
 | Where does a test go, and what gates it?             | [`docs/testing.md`](docs/testing.md)                                       |
 | How do I write a component or service test?          | [`docs/tests/component_testing.md`](docs/tests/component_testing.md)       |
 | Branches, commits, PRs, required checks              | [`docs/git-guidelines.md`](docs/git-guidelines.md)                         |
