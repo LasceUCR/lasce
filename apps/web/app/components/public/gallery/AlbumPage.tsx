@@ -89,6 +89,7 @@ export function AlbumPage({
   const [editingSubAlbum, setEditingSubAlbum] = useState<GallerySubAlbum | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const t = useTranslations('gallery.feedback')
+  const tActions = useTranslations('gallery.actions')
   const sendWithFeedback = useRequestFeedback()
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -207,7 +208,7 @@ export function AlbumPage({
             {editMode && canCreate && parentAlbumId ? (
               <li className="gallery-subalbum-add">
                 <AddItemCard
-                  label="Añadir subálbum"
+                  label={tActions('addSubAlbum')}
                   onRequestClose={(close) => {
                     if (createForm.current) createForm.current.requestCancel()
                     else close()
@@ -216,7 +217,7 @@ export function AlbumPage({
                 >
                   {({ close }) => (
                     <>
-                      {isCreating ? <p role="status">Creando subálbum...</p> : null}
+                      {isCreating ? <p role="status">{tActions('creatingSubAlbum')}</p> : null}
                       <AlbumForm
                         album={blankAlbum}
                         requireSlug
@@ -236,10 +237,10 @@ export function AlbumPage({
                 <li key={subAlbum.slug}>
                   {showEditor ? (
                     <EditableWrapper
-                      deleteLabel={`Eliminar ${subAlbum.title}`}
-                      deleteConfirmTitle="Eliminar subálbum"
+                      deleteLabel={tActions('deleteItem', { title: subAlbum.title })}
+                      deleteConfirmTitle={tActions('deleteSubAlbum')}
                       deleteConfirmMessage={`¿Desea eliminar "${subAlbum.title}"? Esta acción no se puede deshacer.`}
-                      editLabel={`Editar ${subAlbum.title}`}
+                      editLabel={tActions('editItem', { title: subAlbum.title })}
                       onDelete={
                         canDelete && subAlbumId ? () => handleDelete(subAlbumId) : undefined
                       }
@@ -291,9 +292,9 @@ export function AlbumPage({
         }}
         open={isEditing && editingSubAlbum !== null}
         size="large"
-        title={`Editar "${editingSubAlbum?.title ?? ''}"`}
+        title={tActions('editQuoted', { title: editingSubAlbum?.title ?? '' })}
       >
-        {isSaving ? <p role="status">Guardando subálbum...</p> : null}
+        {isSaving ? <p role="status">{tActions('savingSubAlbum')}</p> : null}
         {editingSubAlbum ? (
           <AlbumForm
             stored={editingSubAlbum.editing?.content}

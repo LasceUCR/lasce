@@ -8,13 +8,13 @@ import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { MediaForm, type MediaFormHandle, type MediaFormProps } from './MediaForm'
-import { Create, Default, Legacy } from './MediaForm.stories'
+import meta, { Create, Default, Legacy } from './MediaForm.stories'
 
 vi.mock('@/app/(public)/galeria/actions', () => ({ uploadGalleryImage: vi.fn() }))
 
-const editArgs = Default.args as MediaFormProps
-const createArgs = Create.args as MediaFormProps
-const legacyArgs = Legacy.args as MediaFormProps
+const editArgs = { ...meta.args, ...Default.args } as MediaFormProps
+const createArgs = { ...meta.args, ...Create.args } as MediaFormProps
+const legacyArgs = { ...meta.args, ...Legacy.args } as MediaFormProps
 
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()

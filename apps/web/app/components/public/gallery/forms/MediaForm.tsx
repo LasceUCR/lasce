@@ -110,6 +110,7 @@ export function MediaForm({
   const isEdit = media !== undefined
   const t = useTranslations('publications')
   const tGallery = useTranslations('gallery')
+  const tFeedback = useTranslations('gallery.feedback')
   const uiLocale = useLocale() as Locale
   const formId = useId()
   const headerSlot = useModalHeaderSlot()
@@ -196,7 +197,7 @@ export function MediaForm({
     if (target) setTab(target)
     if (Object.keys(found).length > 0 || missingFile || date === '') return
     if (isEdit && !version) {
-      toast.show('error', 'No se pudo actualizar la imagen. Recargue la página.')
+      toast.show('error', tFeedback('imageReload'))
       return
     }
 
@@ -214,7 +215,7 @@ export function MediaForm({
         try {
           upload = await uploadGalleryImage(formData)
         } catch {
-          toast.show('error', 'No se pudo subir la imagen. Inténtelo de nuevo.')
+          toast.show('error', tGallery('editor.uploadFailed'))
           return
         }
 
@@ -252,8 +253,8 @@ export function MediaForm({
           body: JSON.stringify(body),
         },
         {
-          success: media ? 'Imagen actualizada correctamente.' : 'Imagen agregada correctamente.',
-          fallback: media ? 'No se pudo actualizar la imagen.' : 'No se pudo agregar la imagen.',
+          success: media ? tFeedback('imageUpdated') : tFeedback('imageCreated'),
+          fallback: media ? tFeedback('imageUpdateFailed') : tFeedback('imageCreateFailed'),
           onSuccess: onSaved,
         },
       )

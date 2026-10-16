@@ -1,6 +1,7 @@
 'use client'
 
 import { Play } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
@@ -49,6 +50,8 @@ export function AlbumMediaGrid({
 }: AlbumMediaGridProps) {
   const router = useRouter()
   const sendWithFeedback = useRequestFeedback()
+  const t = useTranslations('gallery.feedback')
+  const tActions = useTranslations('gallery.actions')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [openIndex, setOpenIndex] = useState(closed)
   const createForm = useRef<MediaFormHandle>(null)
@@ -62,8 +65,8 @@ export function AlbumMediaGrid({
       `/api/gallery/media/${id}`,
       { method: 'DELETE' },
       {
-        success: 'Archivo eliminado correctamente.',
-        fallback: 'No se pudo eliminar el archivo.',
+        success: t('fileDeleted'),
+        fallback: t('fileDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -94,7 +97,7 @@ export function AlbumMediaGrid({
         {showAddCard ? (
           <li className="media-grid-add">
             <AddItemCard
-              label="Añadir archivo"
+              label={tActions('addFile')}
               onRequestClose={(close) => {
                 if (createForm.current) createForm.current.requestCancel()
                 else close()
@@ -138,10 +141,10 @@ export function AlbumMediaGrid({
               {showEditor ? (
                 <EditableWrapper
                   className="media-tile-editable"
-                  deleteLabel={`Eliminar ${item.title}`}
-                  deleteConfirmTitle="Eliminar archivo"
-                  deleteConfirmMessage={`¿Desea eliminar "${item.title}"? Esta acción no se puede deshacer.`}
-                  editLabel={`Editar ${item.title}`}
+                  deleteLabel={tActions('deleteItem', { title: item.title })}
+                  deleteConfirmTitle={tActions('deleteFile')}
+                  deleteConfirmMessage={tActions('deleteMessage', { title: item.title })}
+                  editLabel={tActions('editItem', { title: item.title })}
                   onDelete={canDelete ? () => handleDelete(item.id) : undefined}
                   onEdit={canEdit ? () => setEditingId(item.id) : undefined}
                 >
@@ -194,7 +197,7 @@ export function AlbumMediaGrid({
         }}
         open={editingItem !== null && editingItem !== undefined}
         size="large"
-        title="Editar archivo"
+        title={tActions('editFile')}
       >
         {editingItem && albumId !== undefined ? (
           <MediaForm

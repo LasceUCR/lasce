@@ -29,6 +29,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
   const { editMode } = useEditMode()
   const router = useRouter()
   const t = useTranslations('gallery.feedback')
+  const tActions = useTranslations('gallery.actions')
   const sendWithFeedback = useRequestFeedback()
   const [isCreating, setIsCreating] = useState(false)
   const createInProgress = useRef(false)
@@ -77,7 +78,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
     <ul className="gallery-grid tile-list">
       <li className="gallery-grid-add">
         <AddItemCard
-          label="Añadir álbum"
+          label={tActions('addAlbum')}
           onRequestClose={(close) => {
             if (createForm.current) createForm.current.requestCancel()
             else close()
@@ -86,7 +87,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
         >
           {({ close }) => (
             <>
-              {isCreating ? <p role="status">Creando álbum...</p> : null}
+              {isCreating ? <p role="status">{tActions('creatingAlbum')}</p> : null}
               <AlbumForm
                 album={blankAlbum}
                 requireSlug

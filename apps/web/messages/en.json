@@ -660,6 +660,23 @@
       "titleNeedsLettersOrNumbers": "The title must include letters or numbers to generate the identifier.",
       "uploadFailed": "The image could not be uploaded. Please try again."
     },
+    "actions": {
+      "addAlbum": "Add album",
+      "addSubAlbum": "Add sub-album",
+      "addFile": "Add image",
+      "creatingAlbum": "Creating album...",
+      "creatingSubAlbum": "Creating sub-album...",
+      "savingAlbum": "Saving album...",
+      "savingSubAlbum": "Saving sub-album...",
+      "deleteAlbum": "Delete album",
+      "deleteSubAlbum": "Delete sub-album",
+      "deleteFile": "Delete image",
+      "deleteMessage": "Do you want to delete \"{title}\"? This cannot be undone.",
+      "deleteItem": "Delete {title}",
+      "editItem": "Edit {title}",
+      "editQuoted": "Edit \"{title}\"",
+      "editFile": "Edit image"
+    },
     "feedback": {
       "albumCreated": "Album added successfully.",
       "albumUpdated": "Album updated successfully.",
@@ -672,7 +689,14 @@
       "subAlbumDeleted": "Sub-album deleted successfully.",
       "subAlbumCreateFailed": "The sub-album could not be created.",
       "subAlbumSaveFailed": "The sub-album could not be saved.",
-      "subAlbumDeleteFailed": "The sub-album could not be deleted."
+      "subAlbumDeleteFailed": "The sub-album could not be deleted.",
+      "fileDeleted": "Image deleted successfully.",
+      "fileDeleteFailed": "The image could not be deleted.",
+      "imageCreated": "Image added successfully.",
+      "imageUpdated": "Image updated successfully.",
+      "imageCreateFailed": "The image could not be added.",
+      "imageUpdateFailed": "The image could not be updated.",
+      "imageReload": "The image could not be updated. Reload the page."
     }
   },
   "nosotros": {

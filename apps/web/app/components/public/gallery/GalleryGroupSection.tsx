@@ -62,6 +62,7 @@ export function GalleryGroupSection({
   const headingId = `galeria-${album.slug}`
   const [isEditing, setIsEditing] = useState(false)
   const t = useTranslations('gallery.feedback')
+  const tActions = useTranslations('gallery.actions')
   const sendWithFeedback = useRequestFeedback()
   const [isSaving, setIsSaving] = useState(false)
   const saveInProgress = useRef(false)
@@ -152,10 +153,10 @@ export function GalleryGroupSection({
           {editMode && (canEdit || canDelete) ? (
             <EditableWrapper
               className="gallery-grid-editable"
-              deleteConfirmTitle="Eliminar álbum"
-              deleteConfirmMessage={`¿Desea eliminar "${album.title}"? Esta acción no se puede deshacer.`}
-              deleteLabel={`Eliminar ${album.title}`}
-              editLabel={`Editar ${album.title}`}
+              deleteConfirmTitle={tActions('deleteAlbum')}
+              deleteConfirmMessage={tActions('deleteMessage', { title: album.title })}
+              deleteLabel={tActions('deleteItem', { title: album.title })}
+              editLabel={tActions('editItem', { title: album.title })}
               onDelete={() => handleDelete()}
               onEdit={() => handleUpdate()}
             >
@@ -183,10 +184,10 @@ export function GalleryGroupSection({
           else closeEditor()
         }}
         open={isEditing}
-        title={`Editar "${album.title}"`}
+        title={tActions('editQuoted', { title: album.title })}
         size="large"
       >
-        {isSaving ? <p role="status">Guardando álbum...</p> : null}
+        {isSaving ? <p role="status">{tActions('savingAlbum')}</p> : null}
         <AlbumForm
           stored={album.editing?.content}
           isLegacy={album.editing?.isLegacy}

@@ -660,6 +660,23 @@
       "titleNeedsLettersOrNumbers": "El título debe incluir letras o números para generar el identificador.",
       "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo."
     },
+    "actions": {
+      "addAlbum": "Añadir álbum",
+      "addSubAlbum": "Añadir subálbum",
+      "addFile": "Añadir imagen",
+      "creatingAlbum": "Creando álbum...",
+      "creatingSubAlbum": "Creando subálbum...",
+      "savingAlbum": "Guardando álbum...",
+      "savingSubAlbum": "Guardando subálbum...",
+      "deleteAlbum": "Eliminar álbum",
+      "deleteSubAlbum": "Eliminar subálbum",
+      "deleteFile": "Eliminar imagen",
+      "deleteMessage": "¿Desea eliminar \"{title}\"? Esta acción no se puede deshacer.",
+      "deleteItem": "Eliminar {title}",
+      "editItem": "Editar {title}",
+      "editQuoted": "Editar \"{title}\"",
+      "editFile": "Editar imagen"
+    },
     "feedback": {
       "albumCreated": "Álbum agregado correctamente.",
       "albumUpdated": "Álbum actualizado correctamente.",
@@ -672,7 +689,14 @@
       "subAlbumDeleted": "Subálbum eliminado correctamente.",
       "subAlbumCreateFailed": "No se pudo crear el subálbum.",
       "subAlbumSaveFailed": "No se pudo guardar el subálbum.",
-      "subAlbumDeleteFailed": "No se pudo eliminar el subálbum."
+      "subAlbumDeleteFailed": "No se pudo eliminar el subálbum.",
+      "fileDeleted": "Imagen eliminada correctamente.",
+      "fileDeleteFailed": "No se pudo eliminar la imagen.",
+      "imageCreated": "Imagen agregada correctamente.",
+      "imageUpdated": "Imagen actualizada correctamente.",
+      "imageCreateFailed": "No se pudo agregar la imagen.",
+      "imageUpdateFailed": "No se pudo actualizar la imagen.",
+      "imageReload": "No se pudo actualizar la imagen. Recargue la página."
     }
   },
   "nosotros": {

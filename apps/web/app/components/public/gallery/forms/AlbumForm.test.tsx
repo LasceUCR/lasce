@@ -8,13 +8,13 @@ import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AlbumForm, type AlbumFormHandle, type AlbumFormProps } from './AlbumForm'
-import { Create, Default, Legacy } from './AlbumForm.stories'
+import meta, { Create, Default, Legacy } from './AlbumForm.stories'
 
 vi.mock('@/app/(public)/galeria/actions', () => ({ uploadGalleryImage: vi.fn() }))
 
-const editArgs = Default.args as AlbumFormProps
-const createArgs = Create.args as AlbumFormProps
-const legacyArgs = Legacy.args as AlbumFormProps
+const editArgs = { ...meta.args, ...Default.args } as AlbumFormProps
+const createArgs = { ...meta.args, ...Create.args } as AlbumFormProps
+const legacyArgs = { ...meta.args, ...Legacy.args } as AlbumFormProps
 
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
