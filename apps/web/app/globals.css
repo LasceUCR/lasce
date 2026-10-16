@@ -2988,61 +2988,6 @@ a {
   font-size: 12px;
 }
 
-/* `TruncatedText`. The text box is cut to `--truncated-lines` lines of height while collapsed.
-   An empty float as tall as all but the last line, then the toggle floated right and clearing
-   it, put "… Leer más" at the end of the last visible line, with the text wrapping around it.
-   `--truncated-line-height` is measured by the component; `1lh` covers the first paint. The
-   outer element is a flex box so the float's percentage height resolves. */
-.truncated-text {
-  display: flex;
-}
-
-.truncated-text-body {
-  display: block;
-  min-width: 0;
-}
-
-.truncated-text-body.is-clamped {
-  --truncated-line: var(--truncated-line-height, 1lh);
-
-  overflow: hidden;
-  max-height: calc(var(--truncated-lines) * var(--truncated-line));
-}
-
-.truncated-text-body.is-clamped::before {
-  content: '';
-  height: calc(100% - var(--truncated-line));
-  float: right;
-}
-
-.truncated-text-more {
-  margin-left: 4px;
-  float: right;
-  clear: both;
-}
-
-/* A text link at the end of the text, so it reads as part of it and does not compete with a
-   card's own actions. */
-.truncated-text-toggle {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--blue);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.truncated-text-toggle:hover {
-  text-decoration: underline;
-}
-
-.truncated-text-toggle:focus-visible {
-  border-radius: 3px;
-  outline: 2px solid var(--blue);
-  outline-offset: 2px;
-}
-
 .news-abstract {
   display: -webkit-box;
   overflow: hidden;
