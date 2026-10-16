@@ -724,6 +724,302 @@
       "deleteUnknown": "No se pudo eliminar la noticia. Inténtelo de nuevo."
     }
   },
+  "rosac": {
+    "meta": {
+      "title": "Radioastronomía y ROSAC | LASCE",
+      "description": "Conoce el Radio Observatorio de Santa Cruz: su propósito, la antena de 11 metros, sus capacidades en desarrollo, el equipo de investigadores y su relación con LASCE."
+    },
+    "hero": {
+      "kicker": "Área de trabajo LASCE",
+      "title": "Radio Observatorio de Santa Cruz (ROSAC)",
+      "imageAlt": "Antena de 11 metros del Radio Observatorio de Santa Cruz al atardecer, junto a la caseta de control, con el logo de ROSAC."
+    },
+    "overview": {
+      "title": "¿Qué es ROSAC?",
+      "p1": "El Radio Observatorio de Santa Cruz (ROSAC) es un proyecto de la Universidad de Costa Rica ubicado en el Recinto de Santa Cruz, Guanacaste. Su desarrollo gira alrededor de la adaptación de una antena parabólica de 11 metros para uso astronómico, mediante una nueva montura, sistemas de movimiento y apuntado, receptores, electrónica y software de control.",
+      "p2": "Su propósito es desarrollar capacidades nacionales para observar el Sol y otras fuentes celestes en frecuencias de radio. El proyecto conecta la investigación en astrofísica con la física, la electrónica, la ingeniería, las telecomunicaciones, el control automático y la programación."
+    },
+    "characteristics": {
+      "title": "Características principales",
+      "items": {
+        "antenna": {
+          "title": "Antena de 11 metros",
+          "description": "Una antena parabólica se adapta para uso astronómico con una nueva montura y sistemas de movimiento y apuntado."
+        },
+        "location": {
+          "title": "Santa Cruz, Guanacaste",
+          "description": "El proyecto se desarrolla en el Recinto de Santa Cruz de la Universidad de Costa Rica."
+        },
+        "frequencies": {
+          "title": "Entre 100 y 1000 MHz",
+          "description": "Se preparan observaciones en este rango de frecuencias de radio, como parte del desarrollo del radiotelescopio."
+        },
+        "sources": {
+          "title": "El Sol y otras fuentes celestes",
+          "description": "Se desarrollan capacidades para apuntar, seguir fuentes astronómicas y registrar sus emisiones de radio."
+        }
+      }
+    },
+    "location": {
+      "title": "Ubicación",
+      "intro": "El Radio Observatorio de Santa Cruz (ROSAC) se ubica en el {address}.",
+      "markerLabel": "ROSAC",
+      "unavailableMessage": "No fue posible cargar el mapa. La dirección indicada arriba sigue disponible."
+    },
+    "activities": {
+      "title": "¿Qué desarrollamos en ROSAC?",
+      "items": {
+        "tracking": {
+          "title": "Apuntado y seguimiento",
+          "description": "Desarrollamos un radiotelescopio capaz de apuntar y seguir fuentes astronómicas."
+        },
+        "observations": {
+          "title": "Observaciones en radio",
+          "description": "Preparamos observaciones del Sol y de otras fuentes celestes entre 100 y 1000 MHz."
+        },
+        "control": {
+          "title": "Control y procesamiento de señales",
+          "description": "Diseñamos y probamos sistemas de control, seguimiento, posicionamiento, adquisición y procesamiento de señales."
+        },
+        "receivers": {
+          "title": "Receptores de radio",
+          "description": "Desarrollamos y evaluamos receptores para registrar emisiones de radio asociadas con objetos celestes."
+        },
+        "infrastructure": {
+          "title": "Capacidades técnicas locales",
+          "description": "Generamos experiencia local en construcción, operación, calibración y mantenimiento de infraestructura de radioastronomía."
+        },
+        "education": {
+          "title": "Investigación, docencia y divulgación",
+          "description": "Impulsamos la ciencia desde Guanacaste, ampliando la participación regional en ciencia y tecnología."
+        }
+      }
+    },
+    "construction": {
+      "title": "Construcción del ROSAC",
+      "intro": "El desarrollo del Radio Observatorio de Santa Cruz ha involucrado distintas etapas de estudio, preparación, montaje y adecuación de su infraestructura. Este recorrido presenta algunos de los trabajos realizados durante ese proceso.",
+      "carousel": {
+        "ariaLabel": "Proceso de construcción del ROSAC",
+        "groupNoun": "Etapa",
+        "photoNoun": "Fotografía",
+        "previousGroup": "Etapa anterior",
+        "nextGroup": "Etapa siguiente",
+        "previousPhoto": "Fotografía anterior",
+        "nextPhoto": "Fotografía siguiente",
+        "imageUnavailable": "No fue posible cargar esta fotografía.",
+        "of": "de"
+      },
+      "stages": {
+        "preparacion": {
+          "title": "Preparación para el montaje",
+          "navigationLabel": "Preparación",
+          "description": "Antes del montaje principal se realizaron trabajos de preparación del sitio y de los componentes que posteriormente formarían parte de la estructura. Esta etapa reúne parte de la logística y adecuación previa necesaria para iniciar el ensamblaje.",
+          "images": {
+            "img1": "Personas sobre y alrededor de una base de concreto, con una antena al fondo.",
+            "img2": "Camión con grúa y componentes metálicos junto al sitio de la antena.",
+            "img3": "Base circular de concreto con pernos de anclaje y agua acumulada en su interior, junto a una antena parabólica pequeña.",
+            "img4": "Montacargas transporta un componente cilíndrico metálico envuelto y asegurado con correas.",
+            "img5": "Vista a nivel del suelo de la base circular de concreto, con pernos de anclaje y una placa metálica oxidada en primer plano."
+          }
+        },
+        "estructura": {
+          "title": "Montaje de la estructura",
+          "navigationLabel": "Estructura",
+          "description": "El montaje integró progresivamente los componentes principales de la estructura del radiotelescopio. Las fotografías muestran el posicionamiento y la elevación de estos elementos con grúa, antes de que el reflector recibiera sus paneles.",
+          "images": {
+            "img1": "Grúa situada sobre un soporte cilíndrico durante los trabajos de montaje.",
+            "img2": "Componente metálico con baranda suspendido junto al soporte de la antena.",
+            "img3": "Vista desde abajo del vértice central de la estructura radial de la antena, con dos personas trabajando junto a él.",
+            "img4": "Dos personas trabajan sobre una plataforma con el mecanismo motorizado de rotación de la antena, con una grúa al fondo.",
+            "img5": "Grúa móvil y camión junto a una base cónica metálica de gran tamaño, colocada sobre el pasto."
+          }
+        },
+        "paneles": {
+          "title": "Montaje de paneles",
+          "navigationLabel": "Paneles",
+          "description": "Con la estructura ya montada, el trabajo continuó sobre el reflector con la instalación de sus paneles. Las fotografías muestran los trabajos realizados directamente sobre la antena, incluyendo el traslado de paneles hasta su posición final.",
+          "images": {
+            "img1": "Persona asegura con cadenas un panel curvo del reflector sobre el pasto, junto a una plataforma elevadora.",
+            "img2": "Vista aérea de una persona en una plataforma elevadora izando un panel triangular del reflector con cuerdas.",
+            "img3": "Plataforma elevadora junto a la estructura metálica del reflector.",
+            "img4": "Grupo de personas en la base de la antena, bajo la estructura del reflector.",
+            "img5": "Personas en una plataforma elevadora junto a la antena, con un panel suspendido."
+          }
+        },
+        "fotogrametria": {
+          "title": "Fotogrametría y nivelación de paneles",
+          "navigationLabel": "Fotogrametría",
+          "description": "Una vez instalados los paneles del reflector, se realizaron trabajos de observación y levantamiento fotogramétrico para verificar la geometría y nivelación de la superficie resultante. Estas labores permitieron documentar las condiciones de la antena tras el montaje.",
+          "images": {
+            "img1": "Vista nocturna de dos antenas y una plataforma elevadora junto a una de ellas.",
+            "img2": "Dos personas trabajan junto a la abertura central del reflector de la antena.",
+            "img3": "Dos personas sentadas sobre la superficie ya ensamblada del reflector, midiendo con una regla metálica junto a la abertura central."
+          }
+        },
+        "instalacion": {
+          "title": "Instalación eléctrica",
+          "navigationLabel": "Instalación",
+          "description": "La adecuación eléctrica comprendió trabajos sobre diferentes puntos de la infraestructura del observatorio. Las fotografías documentan la instalación y conexión de componentes eléctricos, trabajos de cableado y labores realizadas tanto en el entorno de la antena como en sus sistemas asociados.",
+          "images": {
+            "img1": "Persona junto a los mecanismos y el cableado bajo la estructura de la antena.",
+            "img2": "Equipo de trabajo reunido frente a la base de la antena.",
+            "img3": "Personas y cables junto a una edificación cercana a la antena.",
+            "img4": "Persona manipulando cables junto a un tablero eléctrico abierto.",
+            "img5": "Personas trabajando en la plataforma bajo el reflector, junto a cables y la estructura."
+          }
+        }
+      }
+    },
+    "radioObservation": {
+      "title": "¿Por qué observar en radio?",
+      "p1": "Las emisiones de radio permiten dar seguimiento a electrones acelerados y a estructuras que se desplazan a través de la corona solar y el medio interplanetario. Estas observaciones complementan las imágenes en luz visible, ultravioleta y rayos X, y ayudan a reconstruir la evolución de los eventos solares."
+    },
+    "relationship": {
+      "title": "ROSAC y LASCE",
+      "p1": "LASCE integra datos, modelos y métodos de análisis para estudiar la actividad solar y su relación con el entorno terrestre. ROSAC aporta infraestructura nacional para observar el Sol en frecuencias de radio y fortalecer esas capacidades de investigación.",
+      "p2": "LASCE convierte observaciones en conocimiento; ROSAC genera y fortalece una parte esencial de esas observaciones. Juntos conectan ciencia básica, desarrollo tecnológico, formación y aplicaciones de interés nacional."
+    },
+    "instruments": {
+      "title": "Instrumentos científicos",
+      "intro": "Explore las simulaciones de los instrumentos de ROSAC. Las fotografías son ilustrativas y provienen de la galería del observatorio.",
+      "card": {
+        "name": "Instrumento {number}",
+        "pendingName": "Instrumento 3 (por definir)",
+        "consultationLabel": "Consultar simulación del {name}",
+        "consultationNotice": "{product}. Los resultados son simulados; no corresponden a observaciones del instrumento.",
+        "pendingNotice": "Información pendiente de confirmación e integración en la sección de datos.",
+        "imageUnavailable": "Imagen no disponible",
+        "imagePending": "Imagen pendiente",
+        "purpose": "Propósito",
+        "characteristics": "Características",
+        "citation": "Cómo citar"
+      },
+      "items": {
+        "saber": {
+          "characteristics": {
+            "c1": "Banda entre 100 y 1000 MHz"
+          }
+        },
+        "mira": {
+          "characteristics": {
+            "c1": "Banda de los 9 GHz"
+          }
+        },
+        "hiros": {
+          "characteristics": {
+            "c1": "Observación del hidrógeno neutro a 1,4 GHz"
+          }
+        }
+      },
+      "products": {
+        "timeSeries": "Serie temporal de prueba",
+        "dynamicSpectrum": "Espectro dinámico de prueba"
+      },
+      "images": {
+        "img1": "Imagen ilustrativa de la galería ROSAC: dos antenas de noche y una plataforma elevadora.",
+        "img2": "Imagen ilustrativa de la galería ROSAC: trabajos en el mecanismo de rotación de la antena.",
+        "img3": "Imagen ilustrativa de la galería ROSAC: montaje de la estructura radial de la antena."
+      }
+    },
+    "team": {
+      "title": "Investigadores",
+      "intro": "Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.",
+      "hint": "Haga clic en una ficha para ver más información.",
+      "emptyMessage": "No hay información de investigadores disponible en este momento.",
+      "institutionLabel": "Institución",
+      "people": {
+        "carolinaSalas": {
+          "role": "Investigadora principal",
+          "description": "Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento."
+        },
+        "miguelVelazquez": {
+          "role": "Investigador",
+          "description": "Encargado del desarrollo de la instrumentación en ROSAC."
+        },
+        "davidGale": {
+          "role": "Investigador",
+          "description": "Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general."
+        },
+        "oscarNunez": {
+          "role": "Investigador",
+          "description": "Encargado del sistema eléctrico y soporte técnico en los motorreductores."
+        },
+        "federicoRuiz": {
+          "role": "Investigador",
+          "description": "Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC."
+        },
+        "gustavoLara": {
+          "role": "Investigador",
+          "description": "Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio."
+        },
+        "andresFallas": {
+          "role": "Investigador",
+          "description": "Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio."
+        },
+        "wagnerMejias": {
+          "role": "Investigador",
+          "description": "Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general."
+        },
+        "eduardoIbarra": {
+          "role": "Colaborador externo",
+          "description": "Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena."
+        },
+        "andresCorrales": {
+          "role": "Colaborador externo",
+          "description": "Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final."
+        },
+        "andresGamboa": {
+          "role": "Colaborador externo",
+          "description": "Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos."
+        },
+        "jelmuthRojas": {
+          "role": "Colaborador externo",
+          "description": "Apoyo en tareas de nivelación de la estructura."
+        },
+        "barnaldBocker": {
+          "role": "Asistente",
+          "description": "Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación."
+        },
+        "fabianChaverri": {
+          "role": "Futuro estudiante de doctorado",
+          "description": "Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto."
+        }
+      }
+    },
+    "donations": {
+      "title": "Donaciones ROSAC",
+      "subtitle": "El apoyo de empresas y organizaciones que hacen posible seguir creciendo y desarrollando nuestra labor.",
+      "items": {
+        "eaton": {
+          "title": "Donaciones Eaton",
+          "description": "La organización ROSAC recibió dos donaciones de equipo por parte de la empresa Eaton, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.",
+          "imageAlt": "Equipo de ROSAC junto a representantes de Eaton y el tablero eléctrico donado"
+        },
+        "prysmian": {
+          "title": "Donación Prysmian",
+          "description": "La organización ROSAC recibió una donación de equipo por parte de la empresa Prysmian, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.",
+          "imageAlt": "Representante de Prysmian conversando con un miembro del equipo de ROSAC frente a la antena del observatorio"
+        }
+      },
+      "cta": {
+        "title": "¿Te gustaría ayudarnos?",
+        "description": "Escríbenos y conversemos sobre cómo tu empresa u organización puede apoyar a ROSAC.",
+        "buttonLabel": "Contáctanos"
+      }
+    },
+    "acknowledgments": {
+      "title": "Agradecimientos ROSAC",
+      "subtitle": "Lista de instituciones a las que el ROSAC les extiende agradecimiento."
+    },
+    "scientificConsultation": {
+      "title": "Consulta científica",
+      "description": "Explore las consultas de demostración de ROSAC en la sección de datos. Sus resultados son simulados mientras se define la integración de los instrumentos.",
+      "buttonLabel": "Explorar datos"
+    },
+    "backLink": {
+      "label": "Volver a las áreas"
+    }
+  },
   "researchAreas": {
     "page": {
       "metaTitle": "Investigación | LASCE",
@@ -785,6 +1081,7 @@
     }
   },
   "researchers": {
+    "institutionLabel": "Institución",
     "created": "Investigador agregado correctamente.",
     "updated": "Investigador actualizado correctamente.",
     "errors": {

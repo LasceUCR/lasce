@@ -33,6 +33,9 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
+import { getMessages } from '@/app/lib/i18n/messages'
+import { getRosacInfoContent } from '@/app/lib/rosac'
+
 import { institutionPreview } from './ResearcherCard'
 import { RosacInfoPage, type RosacInfoPageProps } from './RosacInfoPage'
 import { Default, EditMode } from './RosacInfoPage.stories'
@@ -44,13 +47,14 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-function renderPage(props: RosacInfoPageProps = defaultArgs) {
+function renderPage(props: RosacInfoPageProps = defaultArgs, locale: 'es' | 'en' = 'es') {
   return renderWithIntl(
     <ToastProvider>
       <EditModeProvider>
         <RosacInfoPage {...props} />
       </EditModeProvider>
     </ToastProvider>,
+    { locale },
   )
 }
 
@@ -396,6 +400,47 @@ describe('RosacInfoPage', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Nombre' })).toHaveValue('Persona Nueva')
     expect(screen.queryByText('Investigador agregado correctamente.')).not.toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('renders the page in English when provided English content', () => {
+    const englishContent = getRosacInfoContent(getMessages('en'))
+    renderPage({ ...defaultArgs, content: englishContent }, 'en')
+
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Santa Cruz Radio Observatory (ROSAC)',
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '1. Main characteristics' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '2. Location' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: '3. What do we develop at ROSAC?' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '4. ROSAC construction' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '5. Why observe in radio?' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '6. Scientific instruments' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'View ROSAC-SABER simulation' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: 'View ROSAC-MIRA 9GHz simulation' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'View ROSAC-HIROS simulation' })).toBeDisabled()
+    expect(screen.getByText('Band between 100 and 1000 MHz')).toBeInTheDocument()
+    expect(screen.getByText('9 GHz band')).toBeInTheDocument()
+    expect(screen.getByText('Neutral hydrogen observation at 1.4 GHz')).toBeInTheDocument()
+    expect(screen.queryByText('Consultar simulación del ROSAC-SABER')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Prysmian donation' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Donación Prysmian' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '11-meter antenna' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Antena de 11 metros' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Preparation for assembly' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Preparación para el montaje' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('Principal Investigator')).toBeInTheDocument()
+    expect(screen.queryByText('Investigadora principal')).not.toBeInTheDocument()
+    expect(screen.getAllByText(/^Institution:/).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/^Institución:/)).not.toBeInTheDocument()
   })
 
   test('offers editing but strictly NO add or delete on characteristics (Section 1)', () => {
