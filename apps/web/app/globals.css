@@ -3932,6 +3932,16 @@ a {
   padding-bottom: 48px;
 }
 
+/* "Modo edición" on the Costa Rica card: the wrapper takes the section's page width, so the
+   section fills it and the pencil sits on the card's corner rather than at the screen's edge. */
+.space-weather-section-editable > .topic-section {
+  width: auto;
+}
+
+.space-weather-section-editable > .editable-actions {
+  top: 38px;
+}
+
 .info-card-content a {
   color: var(--blue-accent-text);
   text-decoration: underline;

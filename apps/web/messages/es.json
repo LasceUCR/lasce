@@ -361,6 +361,28 @@
           "earth": "Tierra"
         }
       }
+    },
+    "editor": {
+      "editLabel": "Editar la sección «¿Por qué estudiarlo desde Costa Rica?»",
+      "editTitle": "Editar «¿Por qué estudiarlo desde Costa Rica?»",
+      "languageTabs": "Idioma del contenido",
+      "titleField": "Título ({language})",
+      "bodyField": "Texto ({language})",
+      "bodyHint": "Separe los párrafos con una línea en blanco.",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o el texto, revíselo también.",
+      "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el título o el texto debe completar ambos idiomas.",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "updated": "Sección actualizada correctamente."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
+    },
+    "saveErrors": {
+      "failed": "No se pudo guardar la sección. Inténtelo de nuevo."
     }
   },
   "scientificTools": {

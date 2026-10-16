@@ -361,6 +361,28 @@
           "earth": "Earth"
         }
       }
+    },
+    "editor": {
+      "editLabel": "Edit the “Why study it from Costa Rica?” section",
+      "editTitle": "Edit “Why study it from Costa Rica?”",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "bodyField": "Text ({language})",
+      "bodyHint": "Separate paragraphs with a blank line.",
+      "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change the title or the text, review it too.",
+      "legacyNoTranslation": "This section has no English version yet. To change the title or the text, fill in both languages.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "updated": "Section updated successfully."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
+    "saveErrors": {
+      "failed": "The section could not be saved. Please try again."
     }
   },
   "scientificTools": {
