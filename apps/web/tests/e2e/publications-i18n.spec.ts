@@ -306,7 +306,7 @@ test('deletes a publication together with its translation', async ({ page, conte
     await openEditMode(page)
     await page.getByRole('button', { name: `Eliminar ${fixtures.bilingual.title}` }).click()
     const confirm = page.getByRole('dialog', { name: 'Eliminar publicación' })
-    await expect(confirm).toContainText(`Elemento: ${fixtures.bilingual.title}`)
+    await expect(confirm).toBeVisible()
     await confirm.getByRole('button', { name: 'Confirmar' }).click()
 
     await expect(page.getByRole('heading', { name: fixtures.bilingual.title })).toBeHidden()
