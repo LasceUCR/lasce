@@ -1,133 +1,212 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type * as ResearchAreas from '@/app/lib/research-areas'
 
 const mocks = vi.hoisted(() => ({
-  requireApiPermission: vi.fn(),
   updateResearchArea: vi.fn(),
   deleteResearchArea: vi.fn(),
+  requireApiPermission: vi.fn(),
 }))
 
-// `@/app/lib/nosotros` imports `prisma` at module scope, which throws if
-// `DATABASE_URL` is unset — as it is here. The real module is still loaded
-// below (via `importOriginal`) so `nosotrosResearcherInputSchema` stays real,
-// but with `prisma` stubbed out first so importing it never touches a client.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
-vi.mock('@/app/lib/auth/apiGuard', () => ({
-  requireApiPermission: mocks.requireApiPermission,
+vi.mock('@/app/lib/research-areas', async (importOriginal) => ({
+  ...(await importOriginal<typeof ResearchAreas>()),
+  updateResearchArea: mocks.updateResearchArea,
+  deleteResearchArea: mocks.deleteResearchArea,
 }))
 
-vi.mock('@/app/lib/research-areas', async (importOriginal) => {
-  const original = await importOriginal<typeof ResearchAreas>()
-  return {
-    ...original,
-    updateResearchArea: mocks.updateResearchArea,
-    deleteResearchArea: mocks.deleteResearchArea,
-  }
-})
+vi.mock('@/app/lib/auth/apiGuard', () => ({ requireApiPermission: mocks.requireApiPermission }))
 
 import { DELETE, PATCH } from './route'
 
-const params = Promise.resolve({ id: '00000000-0000-4000-8000-000000000001' })
-const validBody = {
-  title: 'Área actualizada',
-  description: 'Descripción actualizada.',
-  src: '/images/research/actualizada.jpg',
+const ID = '0b6f2a52-3f4c-4a43-9a52-8f7d2b1e9c10'
+const VERSION = '2026-10-15T10:00:00.000Z'
+
+const content = {
+  es: { title: 'Geomagnetismo', description: 'Estudia el campo magnético.' },
+  en: { title: 'Geomagnetism', description: 'Studies the magnetic field.' },
 }
 
-function patchRequest(body: unknown) {
-  return new Request('http://localhost/api/research-areas/area-id', {
-    method: 'PATCH',
-    body: typeof body === 'string' ? body : JSON.stringify(body),
-  })
+function paramsFor(id: string) {
+  return { params: Promise.resolve({ id }) }
 }
 
-function deniedResponse() {
-  return new Response(JSON.stringify({ error: 'denied' }), { status: 401 })
+async function patch(body: unknown, id = ID) {
+  const response = await PATCH(
+    new Request(`http://localhost/api/research-areas/${id}`, {
+      method: 'PATCH',
+      body: typeof body === 'string' ? body : JSON.stringify(body),
+    }),
+    paramsFor(id),
+  )
+  return { response, body: await response.json() }
 }
+
+function remove(id = ID) {
+  return DELETE(
+    new Request(`http://localhost/api/research-areas/${id}`, { method: 'DELETE' }),
+    paramsFor(id),
+  )
+}
+
+function deniedResponse(status: number) {
+  return new Response(JSON.stringify({ error: 'denied' }), { status })
+}
+
+beforeEach(() => {
+  mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1', role: 'ADMIN' } })
+  mocks.updateResearchArea.mockResolvedValue({ ok: true, area: { id: ID } })
+  mocks.deleteResearchArea.mockResolvedValue(true)
+})
 
 afterEach(() => {
   vi.clearAllMocks()
+  vi.restoreAllMocks()
 })
 
 describe('PATCH /api/research-areas/[id]', () => {
-  test('rejects a request denied by the edit_components guard', async () => {
-    const denied = deniedResponse()
+  test('requires the edit permission before looking at the id', async () => {
+    const denied = deniedResponse(403)
     mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
-    const response = await PATCH(patchRequest(validBody), { params })
+    const response = await PATCH(
+      new Request('http://localhost/api/research-areas/abc', { method: 'PATCH', body: '{}' }),
+      paramsFor('abc'),
+    )
 
-    expect(response).toBe(denied)
     expect(mocks.requireApiPermission).toHaveBeenCalledWith('edit_components')
+    expect(response).toBe(denied)
     expect(mocks.updateResearchArea).not.toHaveBeenCalled()
   })
 
-  test('rejects invalid JSON and invalid fields', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1' } })
+  test('answers 400 for an id that is not a UUID', async () => {
+    const { response, body } = await patch({ version: VERSION, src: '/a.jpg' }, 'abc')
 
-    const invalidJsonResponse = await PATCH(patchRequest('not json'), { params })
-    const invalidFieldsResponse = await PATCH(patchRequest({ ...validBody, title: '' }), { params })
-
-    expect(invalidJsonResponse.status).toBe(400)
-    expect(invalidFieldsResponse.status).toBe(400)
-    expect((await invalidFieldsResponse.json()).issues).toMatchObject({ title: expect.any(Array) })
-    expect(mocks.updateResearchArea).not.toHaveBeenCalled()
+    expect(response.status).toBe(400)
+    expect(body).toMatchObject({
+      code: 'invalid-id',
+      error: 'El identificador del área de investigación no es válido.',
+    })
   })
 
-  test('returns 404 when the area does not exist', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1' } })
-    mocks.updateResearchArea.mockResolvedValue(null)
+  test('rejects a body that is not JSON, or without the version', async () => {
+    expect((await patch('nope')).body.code).toBe('invalid-json')
 
-    const response = await PATCH(patchRequest(validBody), { params })
-
-    expect(response.status).toBe(404)
+    const { response, body } = await patch({ src: '/a.jpg' })
+    expect(response.status).toBe(400)
+    expect(body.issues).toEqual([
+      {
+        path: 'version',
+        message: 'La versión del área de investigación es obligatoria y debe ser la que se cargó.',
+      },
+    ])
   })
 
-  test('updates the area and returns never-cached JSON', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1' } })
-    const area = { id: 'area-id', ...validBody }
-    mocks.updateResearchArea.mockResolvedValue(area)
-
-    const response = await PATCH(patchRequest(validBody), { params })
+  test('saves a photo-only update', async () => {
+    const { response, body } = await patch({ version: VERSION, src: '/nueva.jpg' })
 
     expect(response.status).toBe(200)
-    expect(response.headers.get('Cache-Control')).toBe('no-store')
-    expect(await response.json()).toEqual({ area })
-    expect(mocks.updateResearchArea).toHaveBeenCalledWith(
-      '00000000-0000-4000-8000-000000000001',
-      validBody,
-    )
+    expect(mocks.updateResearchArea).toHaveBeenCalledWith(ID, {
+      version: VERSION,
+      src: '/nueva.jpg',
+    })
+    expect(body).toEqual({ area: { id: ID } })
+  })
+
+  test.each([
+    [
+      'not-found',
+      404,
+      'not-found',
+      `No existe un área de investigación con id "0b6f2a52-3f4c-4a43-9a52-8f7d2b1e9c10".`,
+    ],
+    [
+      'conflict',
+      409,
+      'conflict',
+      'El área de investigación cambió desde que la abrió. Recárguela y vuelva a aplicar sus cambios.',
+    ],
+  ])('maps %s to %i', async (reason, status, code, error) => {
+    mocks.updateResearchArea.mockResolvedValue({ ok: false, reason })
+
+    const { response, body } = await patch({ version: VERSION, src: '/a.jpg' })
+
+    expect(response.status).toBe(status)
+    expect(body).toEqual({ code, error })
+  })
+
+  test('answers a review required with the path of each field to review', async () => {
+    mocks.updateResearchArea.mockResolvedValue({
+      ok: false,
+      reason: 'review-required',
+      pending: [{ locale: 'en', field: 'title' }],
+    })
+
+    const { response, body } = await patch({ version: VERSION, content })
+
+    expect(response.status).toBe(400)
+    expect(body.pending).toEqual([{ path: 'content.en.title', locale: 'en', field: 'title' }])
+  })
+
+  test('answers a database failure as a JSON 500', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    mocks.updateResearchArea.mockRejectedValue(new Error('boom'))
+
+    const { response, body } = await patch({ version: VERSION, src: '/a.jpg' })
+
+    expect(response.status).toBe(500)
+    expect(body).toEqual({
+      error: 'No se pudo guardar el área de investigación.',
+      code: 'internal-error',
+    })
   })
 })
 
 describe('DELETE /api/research-areas/[id]', () => {
-  test('rejects a request denied by the delete_components guard', async () => {
-    const denied = deniedResponse()
+  test.each([401, 403])('answers %i from the guard and deletes nothing', async (status) => {
+    const denied = deniedResponse(status)
     mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
-    const response = await DELETE(new Request('http://localhost'), { params })
+    const response = await remove()
 
-    expect(response).toBe(denied)
     expect(mocks.requireApiPermission).toHaveBeenCalledWith('delete_components')
+    expect(response).toBe(denied)
     expect(mocks.deleteResearchArea).not.toHaveBeenCalled()
   })
 
-  test('returns 404 when the area does not exist', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1' } })
-    mocks.deleteResearchArea.mockResolvedValue(false)
+  test('answers 400 for an id that is not a UUID', async () => {
+    const response = await remove('abc')
 
-    const response = await DELETE(new Request('http://localhost'), { params })
-
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(400)
+    expect(mocks.deleteResearchArea).not.toHaveBeenCalled()
   })
 
-  test('deletes the area and returns no content', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1' } })
-    mocks.deleteResearchArea.mockResolvedValue(true)
-
-    const response = await DELETE(new Request('http://localhost'), { params })
+  test('deletes the area and answers 204', async () => {
+    const response = await remove()
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteResearchArea).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001')
+    expect(mocks.deleteResearchArea).toHaveBeenCalledWith(ID)
+  })
+
+  test('answers 404 when there was nothing to delete', async () => {
+    mocks.deleteResearchArea.mockResolvedValue(false)
+
+    const response = await remove()
+
+    expect(response.status).toBe(404)
+    await expect(response.json()).resolves.toMatchObject({ code: 'not-found' })
+  })
+
+  test('answers a database failure as a JSON 500', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    mocks.deleteResearchArea.mockRejectedValue(new Error('boom'))
+
+    const response = await remove()
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      error: 'No se pudo eliminar el área de investigación.',
+      code: 'internal-error',
+    })
   })
 })

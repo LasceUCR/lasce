@@ -2563,24 +2563,69 @@ a {
   font-size: 12px;
 }
 
-.publication-abstract {
-  display: -webkit-box;
+/* `TruncatedText`. The text box is cut to `--truncated-lines` lines of height while collapsed.
+   An empty float as tall as all but the last line, then the toggle floated right and clearing
+   it, put "… Leer más" at the end of the last visible line, with the text wrapping around it.
+   `--truncated-line-height` is measured by the component; `1lh` covers the first paint. The
+   outer element is a flex box so the float's percentage height resolves. */
+.truncated-text {
+  display: flex;
+}
+
+.truncated-text-body {
+  display: block;
+  min-width: 0;
+}
+
+.truncated-text-body.is-clamped {
+  --truncated-line: var(--truncated-line-height, 1lh);
+
   overflow: hidden;
+  max-height: calc(var(--truncated-lines) * var(--truncated-line));
+}
+
+.truncated-text-body.is-clamped::before {
+  content: '';
+  height: calc(100% - var(--truncated-line));
+  float: right;
+}
+
+.truncated-text-more {
+  margin-left: 4px;
+  float: right;
+  clear: both;
+}
+
+/* A text link at the end of the text, so it reads as part of it and does not compete with a
+   card's own actions. */
+.truncated-text-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  /* `--blue` fails WCAG AA (4.5:1) at this text's size; `--blue-accent-text` is the same hue,
+     darkened to pass. */
+  color: var(--blue-accent-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.truncated-text-toggle:hover {
+  text-decoration: underline;
+}
+
+.truncated-text-toggle:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Layout only — the clamp itself is `TruncatedText`'s (`.truncated-text*`, above). */
+.publication-abstract {
   margin: 10px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-}
-
-.publication-abstract.is-expanded {
-  display: block;
-  overflow: visible;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
 }
 
 .publication-card-footer {
@@ -2589,9 +2634,8 @@ a {
   justify-content: flex-end;
 }
 
-/* Same width for "DOI / Enlace externo" and the abstract toggle, so the toggle does not shrink
-   when its label changes and both actions line up across cards. Narrow screens make every
-   .button full width (see the 430px breakpoint). */
+/* Keeps "DOI / Enlace externo" the same width across cards so it lines up, rather than hugging
+   its label. Narrow screens make every .button full width (see the 430px breakpoint). */
 .publication-card-footer .button {
   min-width: min(16rem, 100%);
 }
@@ -4829,16 +4873,10 @@ a.gallery-tile:focus-visible {
 
 /* Clamped so every card keeps one height; the full text is the detail page's lead. */
 .research-area-card-description {
-  display: -webkit-box;
-  overflow: hidden;
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
 }
 
 /* Bottom-right corner of the card, so every button lines up down the right edge of the list. */
@@ -6185,10 +6223,18 @@ a.acknowledgments-card:focus-visible {
   object-fit: cover;
 }
 
+/* Holds the drop zone and, beside it, the preview's remove button. */
+.file-drop-area {
+  position: relative;
+}
+
+/* Over the preview's top-right corner, 8px out, as when it sat inside the preview: the zone's
+   12px/16px padding plus the 56px preview place that corner. */
 .file-drop-remove {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: calc(12px - 8px);
+  left: calc(16px + 56px + 8px);
+  transform: translateX(-100%);
   box-shadow: 0 2px 6px rgba(13, 39, 55, 0.35);
 }
 

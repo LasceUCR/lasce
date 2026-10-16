@@ -6,15 +6,16 @@ that shows the whole text in place. Use the shared `TruncatedText` component
 your own: it measures whether the text really overflows, keeps the toggle accessible and follows
 the site's language.
 
-The academic activity cards on `/noticias` and `/actividades-academicas` are the working example
-(`AcademicActivityCard.tsx`).
+The research area cards on `/investigacion` (`ResearchAreaCard.tsx`) and the academic activity
+cards on `/noticias` and `/actividades-academicas` (`AcademicActivityCard.tsx`) are working
+examples.
 
 ## Quick start
 
 ```tsx
 import { TruncatedText } from '@/app/components/public/TruncatedText'
 
-;<TruncatedText lines={3}>{activity.description}</TruncatedText>
+;<TruncatedText lines={3}>{area.description}</TruncatedText>
 ```
 
 That is all a field needs. The text shows its first three lines; if it does not fit, the last line
@@ -57,17 +58,18 @@ text in place, followed by "**Leer menos**" right after the last word, which cut
 ### A field that is database content
 
 Database content can be in a different language from the page, or in an unknown one for a record
-saved before translations existed. Pass its language through `contentLangAttribute`:
+saved before translations existed. Pass its language through `contentLangAttribute`, as the
+research area card does:
 
 ```tsx
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 
 ;<TruncatedText
-  className="my-card-description"
-  lang={contentLangAttribute(record.contentLocale)}
+  className="research-area-card-description"
+  lang={contentLangAttribute(area.contentLocale)}
   lines={3}
 >
-  {record.description}
+  {area.description}
 </TruncatedText>
 ```
 
@@ -95,8 +97,8 @@ is cut to `lines` lines of height (`--truncated-lines`, with the line height it 
 empty float pushes the toggle onto the last visible line. A class of yours only needs the look:
 
 ```css
-.academic-activity-card-description {
-  margin: 10px 0 0;
+.research-area-card-description {
+  margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
@@ -138,9 +140,9 @@ expect(screen.getByRole('button', { name: 'Leer menos' })).toHaveAttribute('aria
   the `id`, `lang` and classes are on its parent, the element `as` names.
 - Restore the stubs afterwards (`vi.unstubAllGlobals()`, `vi.restoreAllMocks()`).
 - A real overflow, at a real width, belongs in a Playwright spec: see the "Leer más" test in
-  `apps/web/tests/e2e/public-portal.spec.ts`.
+  `apps/web/tests/e2e/research-areas-i18n.spec.ts` and `apps/web/tests/e2e/public-portal.spec.ts`.
 
-`TruncatedText.test.tsx` and `AcademicActivityCard.test.tsx` show both.
+`TruncatedText.test.tsx`, `ResearchAreaCard.test.tsx` and `AcademicActivityCard.test.tsx` show both.
 
 ## Limitations
 

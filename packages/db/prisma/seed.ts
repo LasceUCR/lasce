@@ -220,68 +220,144 @@ for (const record of researchRecords) {
  * site
  */
 
+type SeedResearchAreaText = { title: string; description: string }
+
 type SeedResearchArea = {
-  title: string
-  description: string
+  /** Spanish, as LASCE provided it, and English. Both are written, so the area is complete. */
+  content: { es: SeedResearchAreaText; en: SeedResearchAreaText }
   src: string
 }
 
 const researchAreas: SeedResearchArea[] = [
   {
-    title: 'Radioastronomía solar y evolución de Flares-CMEs',
-    description:
-      'Estudia las emisiones solares de radio y su relación con los flares, la evolución de las eyecciones de masa coronal, la aceleración de partículas y su propagación hacia el medio interplanetario.',
+    content: {
+      es: {
+        title: 'Radioastronomía solar y evolución de Flares-CMEs',
+        description:
+          'Estudia las emisiones solares de radio y su relación con los flares, la evolución de las eyecciones de masa coronal, la aceleración de partículas y su propagación hacia el medio interplanetario.',
+      },
+      en: {
+        title: 'Solar radio astronomy and the evolution of flares and CMEs',
+        description:
+          'Studies solar radio emissions and their relation to flares, the evolution of coronal mass ejections, particle acceleration and their propagation into the interplanetary medium.',
+      },
+    },
     src: '/images/research/radioastronomia-solar-evolucion-flares-cmes.jpg',
   },
   {
-    title: 'Geomagnetismo y respuesta regional al clima espacial',
-    description:
-      'Analiza las variaciones del campo magnético terrestre producidas por la actividad solar. Incluye el cálculo de índices geomagnéticos para Costa Rica. Este estudio se lleva a cabo gracias al desarrollo de una tesis doctoral de la MSc. Johana Camacho en colaboración con el Instituto Nacional de Electricidad (ICE) y el Servicio de Clima Espacial México (SCiESMEX).',
+    content: {
+      es: {
+        title: 'Geomagnetismo y respuesta regional al clima espacial',
+        description:
+          'Analiza las variaciones del campo magnético terrestre producidas por la actividad solar. Incluye el cálculo de índices geomagnéticos para Costa Rica. Este estudio se lleva a cabo gracias al desarrollo de una tesis doctoral de la MSc. Johana Camacho en colaboración con el Instituto Costarricense de Electricidad (ICE) y el Servicio de Clima Espacial México (SCiESMEX).',
+      },
+      en: {
+        title: 'Geomagnetism and the regional response to space weather',
+        description:
+          "Analyzes the variations of the Earth's magnetic field caused by solar activity, including the calculation of geomagnetic indices for Costa Rica. This study is carried out through the doctoral thesis of MSc. Johana Camacho, in collaboration with the Instituto Costarricense de Electricidad (ICE) and the Servicio de Clima Espacial México (SCiESMEX).",
+      },
+    },
     src: '/images/research/geomagnetismo-respuesta-regional-clima-espacial.jpg',
   },
   {
-    title: 'Propagación y predicción de CMEs hacia la Tierra',
-    description:
-      'Desarrolla modelos y herramientas para estimar la velocidad, la trayectoria y el tiempo de llegada de las CMEs a la Tierra. Esta rama incluye el desarrollo de la herramienta científica computacional SWAAT y su futura integración con observaciones de ROSAC.',
+    content: {
+      es: {
+        title: 'Propagación y predicción de CMEs hacia la Tierra',
+        description:
+          'Desarrolla modelos y herramientas para estimar la velocidad, la trayectoria y el tiempo de llegada de las CMEs a la Tierra. Esta rama incluye el desarrollo de la herramienta científica computacional SWAAT y su futura integración con observaciones de ROSAC.',
+      },
+      en: {
+        title: 'Propagation and prediction of Earth-directed CMEs',
+        description:
+          'Develops models and tools to estimate the speed, trajectory and arrival time of CMEs at the Earth. This branch includes the development of the SWAAT computational scientific tool and its future integration with ROSAC observations.',
+      },
+    },
     src: '/images/research/propagacion-prediccion-cmes-hacia-tierra.png',
   },
   {
-    title: 'Inteligencia artificial y ciencia de datos aplicada al clima espacial',
-    description:
-      'Emplea aprendizaje automático, automatización y generación de datos sintéticos para identificar eventos solares, procesar grandes volúmenes de observaciones y mejorar la predicción de fenómenos de clima espacial.',
+    content: {
+      es: {
+        title: 'Inteligencia artificial y ciencia de datos aplicada al clima espacial',
+        description:
+          'Emplea aprendizaje automático, automatización y generación de datos sintéticos para identificar eventos solares, procesar grandes volúmenes de observaciones y mejorar la predicción de fenómenos de clima espacial.',
+      },
+      en: {
+        title: 'Artificial intelligence and data science applied to space weather',
+        description:
+          'Uses machine learning, automation and synthetic data generation to identify solar events, process large volumes of observations and improve the prediction of space weather phenomena.',
+      },
+    },
     src: '/images/research/inteligencia-artificial-ciencia-datos-clima-espacial.jpg',
   },
   {
-    title: 'Ionosfera GNSS y efectos tecnológicos del clima espacial',
-    description:
-      'Busca hacer observaciones desde Costa Rica con equipos GNSS para determinar cómo la actividad solar y geomagnética modifica la ionosfera y afecta los sistemas de navegación satelital, las comunicaciones y otras tecnologías sensibles a las condiciones del entorno espacial en nuestro país.',
+    content: {
+      es: {
+        title: 'Ionosfera GNSS y efectos tecnológicos del clima espacial',
+        description:
+          'Busca hacer observaciones desde Costa Rica con equipos GNSS para determinar cómo la actividad solar y geomagnética modifica la ionosfera y afecta los sistemas de navegación satelital, las comunicaciones y otras tecnologías sensibles a las condiciones del entorno espacial en nuestro país.',
+      },
+      en: {
+        title: 'GNSS ionosphere and the technological effects of space weather',
+        description:
+          'Aims to make observations from Costa Rica with GNSS equipment to determine how solar and geomagnetic activity modifies the ionosphere and affects satellite navigation systems, communications and other technologies sensitive to space environment conditions in our country.',
+      },
+    },
     src: '/images/research/ionosfera-gnss-efectos-tecnologicos-clima-espacial.jpg',
   },
   {
-    title: 'Infraestructura informática y gestión de datos de clima espacial',
-    description:
-      'Diseña y desarrolla plataformas informáticas para capturar, procesar, almacenar y consultar grandes volúmenes de datos solares provenientes de distintas fuentes. Esta rama también implementa bases de datos y servicios web especializados, y facilita el análisis interdisciplinario de la información en colaboración con investigadores en astrofísica solar y clima espacial.',
+    content: {
+      es: {
+        title: 'Infraestructura informática y gestión de datos de clima espacial',
+        description:
+          'Diseña y desarrolla plataformas informáticas para capturar, procesar, almacenar y consultar grandes volúmenes de datos solares provenientes de distintas fuentes. Esta rama también implementa bases de datos y servicios web especializados, y facilita el análisis interdisciplinario de la información en colaboración con investigadores en astrofísica solar y clima espacial.',
+      },
+      en: {
+        title: 'Computing infrastructure and space weather data management',
+        description:
+          'Designs and develops computing platforms to capture, process, store and query large volumes of solar data from different sources. This branch also implements specialized databases and web services, and supports the interdisciplinary analysis of the information in collaboration with researchers in solar astrophysics and space weather.',
+      },
+    },
     src: '/images/research/infraestructura-informatica-gestion-datos-clima-espacial.jpg',
   },
   {
-    title: 'Geomagnetismo en Costa Rica',
-    description:
-      'Estudia las variaciones del campo magnético terrestre ante diferentes condiciones de actividad solar y geomagnética. Esta rama utiliza mediciones magnéticas realizadas en tiempo real en nuestro país para calcular índices geomagnéticos específicos para Costa Rica y desarrollar herramientas de monitoreo adaptadas al entorno regional.',
+    content: {
+      es: {
+        title: 'Geomagnetismo en Costa Rica',
+        description:
+          'Estudia las variaciones del campo magnético terrestre ante diferentes condiciones de actividad solar y geomagnética. Esta rama utiliza mediciones magnéticas realizadas en tiempo real en nuestro país para calcular índices geomagnéticos específicos para Costa Rica y desarrollar herramientas de monitoreo adaptadas al entorno regional.',
+      },
+      en: {
+        title: 'Geomagnetism in Costa Rica',
+        description:
+          "Studies the variations of the Earth's magnetic field under different conditions of solar and geomagnetic activity. This branch uses real-time magnetic measurements made in our country to calculate geomagnetic indices specific to Costa Rica and to develop monitoring tools adapted to the regional environment.",
+      },
+    },
     src: '/images/research/geomagnetismo-costa-rica.jpg',
   },
 ]
 
-for (const area of researchAreas) {
+for (const { content, src } of researchAreas) {
+  const { es, en } = content
   const existing = await prisma.researchArea.findFirst({
-    where: { title: area.title },
+    where: { title: es.title },
     select: { id: true },
   })
 
-  if (existing) {
-    await prisma.researchArea.update({ where: { id: existing.id }, data: area })
-  } else {
-    await prisma.researchArea.create({ data: area })
-  }
+  const area = existing
+    ? await prisma.researchArea.update({
+        where: { id: existing.id },
+        data: { title: es.title, description: es.description, src },
+      })
+    : await prisma.researchArea.create({
+        data: { title: es.title, description: es.description, src },
+      })
+
+  // The English text, so the area reads complete in both languages instead of legacy.
+  await prisma.researchAreaTranslation.upsert({
+    where: { researchAreaId_locale: { researchAreaId: area.id, locale: 'en' } },
+    update: { title: en.title, description: en.description },
+    create: { researchAreaId: area.id, locale: 'en', title: en.title, description: en.description },
+  })
 }
 
 /**

@@ -2,6 +2,8 @@ import { prisma } from '@lasce/db'
 import type { NosotrosActivityIcon } from '@lasce/db'
 import { z } from 'zod'
 
+import es from '@/messages/es.json' with { type: 'json' }
+
 /**
  * Editorial source: institutional text supplied by LASCE, transcribed verbatim except where
  * noted. Institutional overview and purpose only. Work areas, solar astrophysics and space
@@ -15,20 +17,18 @@ import { z } from 'zod'
  * the card layout needs a heading, so each title is drawn from that bullet's own wording. The
  * bullet text itself is verbatim.
  *
+ * The fixed text lives in the `nosotros` namespace of `apps/web/messages/`; `getNosotrosContent`
+ * builds the page from it. The people and activity cards below are Spanish stand-ins for
+ * database rows, so they are not translated.
+ *
  * `researchers.people` is persisted in Postgres (LASCE-CON-012-086 follow-up) and fetched by
- * `getNosotrosResearchers()`; the hardcoded array below is only a fallback fixture for Storybook
+ * `getNosotrosResearchers()`; the fixtures below are only a fallback for Storybook
  * and tests, never what the real `/nosotros` route renders. Portraits are the named files in
  * `public/images/Researchers/`, except Dra. Carolina Salas Matamoros, who reuses the ROSAC
  * portrait, or a MinIO URL once uploaded through the admin form. People without a supplied
  * portrait use `User.png`. This is a separate, independently curated roster from the ROSAC team on
  * `/radioastronomia` — see `app/lib/rosac.ts` — not the same people re-shown here.
  */
-export const nosotrosMeta = {
-  title: 'Quiénes somos | LASCE',
-  description:
-    'El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE), vinculado al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica: qué es y qué investiga.',
-} as const
-
 export type NosotrosCardIcon =
   'sun' | 'waves' | 'satellite' | 'code' | 'collaboration' | 'education'
 
@@ -77,183 +77,187 @@ export interface NosotrosContent {
   backLink: { href: string; label: string }
 }
 
-export const nosotrosContent = {
-  hero: {
-    kicker: 'Portal público LASCE',
-    title: 'Quiénes somos',
-    lead: 'Laboratorio de Astrofísica Solar y Clima Espacial, vinculado al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica.',
+/** The parts of a message catalogue the Nosotros page reads. */
+export type NosotrosMessages = Pick<typeof es, 'nosotros' | 'common'>
+
+/**
+ * The page in the language of `messages`. The route passes the request's catalogue and then
+ * fills `researchers.people` and `activities.items` from the database.
+ */
+export function getNosotrosContent({ nosotros, common }: NosotrosMessages): NosotrosContent {
+  return {
+    hero: nosotros.hero,
+    overview: {
+      title: nosotros.overview.title,
+      paragraphs: [nosotros.overview.p1, nosotros.overview.p2],
+    },
+    researchers: {
+      title: nosotros.researchers.title,
+      intro: nosotros.researchers.intro,
+      hint: nosotros.researchers.hint,
+      emptyMessage: nosotros.researchers.empty,
+      people: [],
+    },
+    activities: { title: nosotros.activities.title, items: [] },
+    contribution: {
+      title: nosotros.contribution.title,
+      paragraphs: [nosotros.contribution.p1],
+    },
+    vision: { title: nosotros.vision.title, paragraphs: [nosotros.vision.p1] },
+    backLink: { href: '/', label: common.backToHome },
+  }
+}
+
+/** Spanish stand-ins for the `nosotros_researchers` rows, for Storybook and tests. */
+export const nosotrosResearcherFixtures: readonly NosotrosResearcher[] = [
+  {
+    id: 'carolina-salas',
+    src: '/images/ROSAC/team/CarolinaSalas.jpg',
+    name: 'Dra. Carolina Salas Matamoros',
+    role: 'Investigadora principal',
+    email: 'carolina.salas_mata@ucr.ac.cr',
+    institution: 'Centro de Investigaciones Espaciales, CINESPA',
+    description:
+      'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
   },
-  overview: {
-    title: '¿Quiénes somos?',
-    paragraphs: [
-      'El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE) es una iniciativa científica vinculada al Centro de Investigaciones Espaciales (CINESPA) de la Universidad de Costa Rica. Reúne investigación en astrofísica solar, observaciones astronómicas y desarrollo computacional para estudiar la actividad solar, su interacción con el medio interplanetario y el entorno terrestre.',
-      'LASCE parte de una idea sencilla pero poderosa: para comprender el clima espacial se necesita observar distintos eslabones de una misma cadena, desde el origen magnético de una erupción solar hasta sus manifestaciones en el espacio cercano a la Tierra. Por ello, en el LASCE se realiza investigación científica integrando datos de diferentes instrumentos, longitudes de onda y plataformas.',
-    ],
+  {
+    id: 'allan-berrocal',
+    src: '/images/Researchers/AllanBerrocal.jpg',
+    name: 'Dr. Allan Francisco Berrocal Rojas',
+    role: 'Investigador colaborador',
+    email: 'allan.berrocal@ucr.ac.cr',
+    institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+    description:
+      'Diseño, desarrollo e implementación de la plataforma informática del LASCE. Las tareas puntuales abarcan la captura de datos masivos de diferentes fuentes con información sobre el clima solar, el almacenamiento de los datos procesados y de interés para el proyecto en sistemas de bases de datos adecuadas para el dominio, y finalmente la habilitación de una interfaz de consulta mediante servicios web. Adicionalmente apoyar en los objetivos de análisis de datos sobre el clima solar junto a investigadores(as) especialistas en la materia como astrofísicos(as) solares.',
   },
-  researchers: {
-    title: 'Investigadores LASCE',
-    intro:
-      'Las personas que investigan y desarrollan el Laboratorio de Astrofísica Solar y Clima Espacial (LASCE).',
-    hint: 'Haga clic en una ficha para ver más información.',
-    emptyMessage: 'No hay información de investigadores disponible en este momento.',
-    people: [
-      {
-        id: 'carolina-salas',
-        src: '/images/ROSAC/team/CarolinaSalas.jpg',
-        name: 'Dra. Carolina Salas Matamoros',
-        role: 'Investigadora principal',
-        email: 'carolina.salas_mata@ucr.ac.cr',
-        institution: 'Centro de Investigaciones Espaciales, CINESPA',
-        description:
-          'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
-      },
-      {
-        id: 'allan-berrocal',
-        src: '/images/Researchers/AllanBerrocal.jpg',
-        name: 'Dr. Allan Francisco Berrocal Rojas',
-        role: 'Investigador colaborador',
-        email: 'allan.berrocal@ucr.ac.cr',
-        institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
-        description:
-          'Diseño, desarrollo e implementación de la plataforma informática del LASCE. Las tareas puntuales abarcan la captura de datos masivos de diferentes fuentes con información sobre el clima solar, el almacenamiento de los datos procesados y de interés para el proyecto en sistemas de bases de datos adecuadas para el dominio, y finalmente la habilitación de una interfaz de consulta mediante servicios web. Adicionalmente apoyar en los objetivos de análisis de datos sobre el clima solar junto a investigadores(as) especialistas en la materia como astrofísicos(as) solares.',
-      },
-      {
-        id: 'luis-esquivel',
-        src: '/images/Researchers/LuisEsquivel.jpeg',
-        name: 'Dr. Luis Gustavo Esquivel Quirós',
-        role: 'Investigador colaborador',
-        email: 'luis.esquivel@ucr.ac.cr',
-        institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
-      },
-      {
-        id: 'ivannia-calvo',
-        src: '/images/Researchers/IvanniaCalvo.png',
-        name: 'MSc. Ivannia Calvo',
-        role: 'Investigadora colaboradora',
-        email: 'ivannia.calvo@ucr.ac.cr',
-        institution: 'Centro de Investigaciones Espaciales',
-        description:
-          'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
-      },
-      {
-        id: 'felipe-meza',
-        src: '/images/Researchers/FelipeMeza.jpg',
-        name: 'Dr. Felipe Meza Obando',
-        role: 'Investigador colaborador',
-        email: 'felipe.mezaobando@ucr.ac.cr',
-        institution:
-          'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
-        description:
-          'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
-      },
-      {
-        id: 'alonso-vega',
-        src: '/images/Researchers/AlonsoVega.jpeg',
-        name: 'MSc. Alonso Vega',
-        role: 'Investigador colaborador',
-        email: 'alonso.vega_f@ucr.ac.cr',
-        institution: 'Escuela de Ingeniería Topográfica, UCR',
-        description:
-          'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
-      },
-      {
-        id: 'gabriela-molina',
-        src: '/images/Researchers/MolinaMariaGraciela.jpg',
-        name: 'Dra. Graciela Molina',
-        role: 'Investigadora colaboradora',
-        email: 'gmolina@herrera.unt.edu.ar',
-        institution:
-          'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina; Istituto Nazionale di Geofisica e Vulcanologia (INGV), Italia',
-        description:
-          'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
-      },
-      {
-        id: 'yenca-migoya',
-        src: '/images/Researchers/YencaMigoya.jpg',
-        name: 'Dra. Yenca Migoya',
-        role: 'Investigadora colaboradora',
-        email: 'yenca@ictp.it',
-        institution:
-          'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
-        description:
-          'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
-      },
-      {
-        id: 'johanna-camacho',
-        src: '/images/Researchers/JohanaCamacho.jpeg',
-        name: 'MSc. Johanna Pamela Camacho Garbanzo',
-        role: 'Investigadora colaboradora',
-        email: ['jcamachoga@ice.go.cr', 'Johanna.camacho@ucr.ac.cr'],
-        institution: 'Instituto Costarricense de Electricidad; Universidad de Costa Rica',
-        description:
-          'Es geofísica de exploración del Instituto Costarricense de Electricidad (ICE), donde cuenta con más de 17 años de experiencia en la aplicación de métodos geofísicos para la caracterización del subsuelo y el desarrollo de proyectos de investigación aplicada. Asimismo, posee 8 años de experiencia como docente universitaria en la Escuela de Física de la Universidad de Costa Rica, impartiendo laboratorios de Física General. Actualmente es estudiante de doctorado e investigadora del Laboratorio de Clima Espacial (LASCE), donde desarrolla investigaciones relacionadas con geomagnetismo, ionósfera y clima espacial, utilizando registros de campo magnético terrestre en tiempo real. Su trabajo se enfoca en el análisis de la interacción entre la actividad geomagnética y la ionósfera, así como en sus aplicaciones para el estudio del clima espacial en Costa Rica. A lo largo de su trayectoria profesional ha participado en numerosos estudios e informes de investigación geofísica aplicados a infraestructura, exploración del subsuelo, energía e ingeniería, mediante el uso de técnicas como radar de penetración terrestre (GPR), tomografía de resistividad eléctrica y otros métodos geofísicos. Sus principales áreas de interés incluyen la geofísica aplicada, el geomagnetismo, el clima espacial y la formación de nuevas generaciones de científicos e Ingenieros.',
-      },
-    ],
+  {
+    id: 'luis-esquivel',
+    src: '/images/Researchers/LuisEsquivel.jpeg',
+    name: 'Dr. Luis Gustavo Esquivel Quirós',
+    role: 'Investigador colaborador',
+    email: 'luis.esquivel@ucr.ac.cr',
+    institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
   },
-  activities: {
-    title: '¿Qué hacemos?',
-    items: [
-      {
-        id: 'eruptive-phenomena',
-        icon: 'sun',
-        title: 'Fenómenos solares eruptivos',
-        description:
-          "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
-      },
-      {
-        id: 'solar-terrestrial',
-        icon: 'waves',
-        title: 'Perturbaciones y relación Sol-Tierra',
-        description:
-          'Estudiamos la evolución de perturbaciones solares y su relación con el viento solar, el campo magnético interplanetario y local, y la ionosfera.',
-      },
-      {
-        id: 'observations',
-        icon: 'satellite',
-        title: 'Integración de observaciones',
-        description:
-          'Integramos mediciones propias con imágenes y datos de satélites, estaciones terrestres y observatorios internacionales.',
-      },
-      {
-        id: 'computational-tools',
-        icon: 'code',
-        title: 'Herramientas computacionales',
-        description:
-          'Implementamos y desarrollamos herramientas computacionales para procesar datos, reconocer patrones y apoyar a la investigación en la predicción del clima espacial y su impacto en nuestro país.',
-      },
-      {
-        id: 'collaboration',
-        icon: 'collaboration',
-        title: 'Colaboración interdisciplinaria',
-        description:
-          'Promovemos proyectos interdisciplinarios y colaboraciones nacionales e internacionales.',
-      },
-      {
-        id: 'training',
-        icon: 'education',
-        title: 'Formación de estudiantes',
-        description:
-          'Creamos oportunidades de formación práctica para estudiantes mediante investigación, instrumentación, programación y análisis de datos.',
-      },
-    ],
+  {
+    id: 'ivannia-calvo',
+    src: '/images/Researchers/IvanniaCalvo.png',
+    name: 'MSc. Ivannia Calvo',
+    role: 'Investigadora colaboradora',
+    email: 'ivannia.calvo@ucr.ac.cr',
+    institution: 'Centro de Investigaciones Espaciales',
+    description:
+      'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
   },
-  contribution: {
-    title: 'Aporte distintivo',
-    paragraphs: [
-      'LASCE busca que Costa Rica no sea únicamente usuaria de información internacional, sino también productora de datos, conocimiento y soluciones adaptadas a su ubicación y sus necesidades.',
-    ],
+  {
+    id: 'felipe-meza',
+    src: '/images/Researchers/FelipeMeza.jpg',
+    name: 'Dr. Felipe Meza Obando',
+    role: 'Investigador colaborador',
+    email: 'felipe.mezaobando@ucr.ac.cr',
+    institution:
+      'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
+    description:
+      'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
   },
-  vision: {
-    title: 'Nuestra visión',
-    paragraphs: [
-      'Consolidar en Costa Rica un referente regional para la observación del Sol, el estudio de la relación Sol-Tierra y el desarrollo de herramientas de monitoreo y predicción del clima espacial. Esta visión combina excelencia científica, tecnología desarrollada con participación nacional, cooperación internacional, formación de talento y comunicación pública de la ciencia.',
-    ],
+  {
+    id: 'alonso-vega',
+    src: '/images/Researchers/AlonsoVega.jpeg',
+    name: 'MSc. Alonso Vega',
+    role: 'Investigador colaborador',
+    email: 'alonso.vega_f@ucr.ac.cr',
+    institution: 'Escuela de Ingeniería Topográfica, UCR',
+    description:
+      'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
   },
-  backLink: {
-    href: '/',
-    label: 'Volver al inicio',
+  {
+    id: 'gabriela-molina',
+    src: '/images/Researchers/MolinaMariaGraciela.jpg',
+    name: 'Dra. Graciela Molina',
+    role: 'Investigadora colaboradora',
+    email: 'gmolina@herrera.unt.edu.ar',
+    institution:
+      'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina; Istituto Nazionale di Geofisica e Vulcanologia (INGV), Italia',
+    description:
+      'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
   },
-} as const satisfies NosotrosContent
+  {
+    id: 'yenca-migoya',
+    src: '/images/Researchers/YencaMigoya.jpg',
+    name: 'Dra. Yenca Migoya',
+    role: 'Investigadora colaboradora',
+    email: 'yenca@ictp.it',
+    institution:
+      'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
+    description:
+      'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
+  },
+  {
+    id: 'johanna-camacho',
+    src: '/images/Researchers/JohanaCamacho.jpeg',
+    name: 'MSc. Johanna Pamela Camacho Garbanzo',
+    role: 'Investigadora colaboradora',
+    email: ['jcamachoga@ice.go.cr', 'Johanna.camacho@ucr.ac.cr'],
+    institution: 'Instituto Costarricense de Electricidad; Universidad de Costa Rica',
+    description:
+      'Es geofísica de exploración del Instituto Costarricense de Electricidad (ICE), donde cuenta con más de 17 años de experiencia en la aplicación de métodos geofísicos para la caracterización del subsuelo y el desarrollo de proyectos de investigación aplicada. Asimismo, posee 8 años de experiencia como docente universitaria en la Escuela de Física de la Universidad de Costa Rica, impartiendo laboratorios de Física General. Actualmente es estudiante de doctorado e investigadora del Laboratorio de Clima Espacial (LASCE), donde desarrolla investigaciones relacionadas con geomagnetismo, ionósfera y clima espacial, utilizando registros de campo magnético terrestre en tiempo real. Su trabajo se enfoca en el análisis de la interacción entre la actividad geomagnética y la ionósfera, así como en sus aplicaciones para el estudio del clima espacial en Costa Rica. A lo largo de su trayectoria profesional ha participado en numerosos estudios e informes de investigación geofísica aplicados a infraestructura, exploración del subsuelo, energía e ingeniería, mediante el uso de técnicas como radar de penetración terrestre (GPR), tomografía de resistividad eléctrica y otros métodos geofísicos. Sus principales áreas de interés incluyen la geofísica aplicada, el geomagnetismo, el clima espacial y la formación de nuevas generaciones de científicos e Ingenieros.',
+  },
+]
+
+/** Spanish stand-ins for the `nosotros_activities` rows, for Storybook and tests. */
+export const nosotrosActivityFixtures: NosotrosContent['activities']['items'] = [
+  {
+    id: 'eruptive-phenomena',
+    icon: 'sun',
+    title: 'Fenómenos solares eruptivos',
+    description:
+      "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
+  },
+  {
+    id: 'solar-terrestrial',
+    icon: 'waves',
+    title: 'Perturbaciones y relación Sol-Tierra',
+    description:
+      'Estudiamos la evolución de perturbaciones solares y su relación con el viento solar, el campo magnético interplanetario y local, y la ionosfera.',
+  },
+  {
+    id: 'observations',
+    icon: 'satellite',
+    title: 'Integración de observaciones',
+    description:
+      'Integramos mediciones propias con imágenes y datos de satélites, estaciones terrestres y observatorios internacionales.',
+  },
+  {
+    id: 'computational-tools',
+    icon: 'code',
+    title: 'Herramientas computacionales',
+    description:
+      'Implementamos y desarrollamos herramientas computacionales para procesar datos, reconocer patrones y apoyar a la investigación en la predicción del clima espacial y su impacto en nuestro país.',
+  },
+  {
+    id: 'collaboration',
+    icon: 'collaboration',
+    title: 'Colaboración interdisciplinaria',
+    description:
+      'Promovemos proyectos interdisciplinarios y colaboraciones nacionales e internacionales.',
+  },
+  {
+    id: 'training',
+    icon: 'education',
+    title: 'Formación de estudiantes',
+    description:
+      'Creamos oportunidades de formación práctica para estudiantes mediante investigación, instrumentación, programación y análisis de datos.',
+  },
+]
+
+/** The page in Spanish with the database stand-ins filled in. For stories and tests. */
+export const nosotrosContent: NosotrosContent = (() => {
+  const content = getNosotrosContent(es)
+  return {
+    ...content,
+    researchers: { ...content.researchers, people: nosotrosResearcherFixtures },
+    activities: { ...content.activities, items: nosotrosActivityFixtures },
+  }
+})()
 
 /**
  * The "¿Qué hacemos?" flashcards (LASCE-CON-012-086), persisted in

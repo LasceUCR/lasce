@@ -550,8 +550,6 @@
     },
     "card": {
       "externalLink": "DOI / External link",
-      "readMore": "Read full abstract",
-      "readLess": "Hide abstract",
       "translationMissing": "No English version. Editing the title or the abstract requires completing both languages."
     },
     "editor": {
@@ -632,7 +630,64 @@
     }
   },
   "nosotros": {
+    "meta": {
+      "title": "About us | LASCE",
+      "description": "The Solar Astrophysics and Space Weather Laboratory (LASCE), part of the Space Research Center (CINESPA) at the Universidad de Costa Rica: what it is and what it researches."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "About us",
+      "lead": "Solar Astrophysics and Space Weather Laboratory, part of the Space Research Center (CINESPA) at the Universidad de Costa Rica."
+    },
+    "overview": {
+      "title": "Who are we?",
+      "p1": "The Solar Astrophysics and Space Weather Laboratory (LASCE) is a scientific initiative linked to the Space Research Center (CINESPA) of the Universidad de Costa Rica. It brings together solar astrophysics research, astronomical observations and computational development to study solar activity, its interaction with the interplanetary medium and the terrestrial environment.",
+      "p2": "LASCE starts from a simple but powerful idea: to understand space weather, you need to observe different links in the same chain, from the magnetic origin of a solar eruption to its manifestations in near-Earth space. For this reason, LASCE carries out scientific research that integrates data from different instruments, wavelengths and platforms."
+    },
+    "researchers": {
+      "title": "LASCE researchers",
+      "intro": "The people who research and develop the Solar Astrophysics and Space Weather Laboratory (LASCE).",
+      "hint": "Click a card to see more information.",
+      "empty": "No researcher information is available at the moment.",
+      "add": "Add researcher",
+      "saveError": "The change could not be saved. Try again."
+    },
     "activities": {
+      "title": "What do we do?",
+      "emptyHint": "Click \"Add\" to add an activity.",
+      "add": "Add",
+      "editTitle": "Edit \"{title}\"",
+      "editFallback": "Edit activity",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "deleteTitle": "Delete activity",
+      "deleteMessage": "Do you want to delete \"{title}\"? This action cannot be undone.",
+      "deleteConfirm": "Delete",
+      "form": {
+        "icon": "Icon",
+        "title": "Title",
+        "text": "Text",
+        "titleRequired": "The title is required.",
+        "textRequired": "The text is required.",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "confirmTitle": "Save changes",
+        "confirmMessage": "Do you want to save the changes to this activity?",
+        "icons": {
+          "sun": "Sun",
+          "waves": "Waves",
+          "satellite": "Satellite",
+          "code": "Code",
+          "collaboration": "Collaboration",
+          "education": "Education"
+        },
+        "discard": {
+          "title": "Discard unsaved changes",
+          "message": "If you discard now, all data entered that has not been saved will be lost.",
+          "confirm": "Discard",
+          "cancel": "Keep editing"
+        }
+      },
       "created": "Activity added successfully.",
       "updated": "Activity updated successfully.",
       "deleted": "Activity deleted successfully.",
@@ -640,6 +695,14 @@
         "unknown": "The activity could not be saved. Try again.",
         "deleteUnknown": "The activity could not be deleted. Try again."
       }
+    },
+    "contribution": {
+      "title": "Distinctive contribution",
+      "p1": "LASCE aims for Costa Rica to be not only a user of international information, but also a producer of data, knowledge and solutions adapted to its location and its needs."
+    },
+    "vision": {
+      "title": "Our vision",
+      "p1": "To establish in Costa Rica a regional reference for observing the Sun, studying the Sun-Earth relationship and developing tools for monitoring and predicting space weather. This vision combines scientific excellence, technology developed with national participation, international cooperation, talent training and public communication of science."
     }
   },
   "news": {
@@ -649,6 +712,66 @@
     "errors": {
       "saveUnknown": "The news item could not be saved. Try again.",
       "deleteUnknown": "The news item could not be deleted. Try again."
+    }
+  },
+  "researchAreas": {
+    "page": {
+      "metaTitle": "Research | LASCE",
+      "metaDescription": "Research areas of the Solar Astrophysics and Space Weather Laboratory of the Universidad de Costa Rica.",
+      "kicker": "LASCE public portal",
+      "title": "Research areas",
+      "lead": "Main research branches developed by LASCE."
+    },
+    "card": {
+      "readMore": "Learn more about this area",
+      "imagePlaceholder": "Research area image"
+    },
+    "detail": {
+      "metaTitle": "{title} | Research | LASCE",
+      "kicker": "Research area",
+      "back": "Back to research areas"
+    },
+    "created": "Research area added successfully.",
+    "updated": "Research area updated successfully.",
+    "deleted": "Research area deleted successfully.",
+    "errors": {
+      "saveUnknown": "The research area could not be saved. Please try again.",
+      "deleteUnknown": "The research area could not be deleted. Please try again."
+    },
+    "editor": {
+      "addCard": "Add research area",
+      "createTitle": "Add research area",
+      "editTitle": "Edit \"{title}\"",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "descriptionField": "Description ({language})",
+      "photo": "Photo",
+      "photoHelp": "An illustrative image for the research area, as JPG or PNG. It is the same in every language.",
+      "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change the title or the description, review it too.",
+      "legacyNoTranslation": "This area has no English version yet. To change the title or the description, fill in both languages; the photo can be changed without translating it.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "uploading": "Uploading image...",
+      "uploadFailed": "The image could not be uploaded. Please try again."
+    },
+    "deleteDialog": {
+      "title": "Delete research area",
+      "message": "Do you want to delete this research area? This cannot be undone.",
+      "target": "Area",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
+    "validation": {
+      "srcRequired": "The image is required.",
+      "srcNotText": "The image must be the address of an uploaded file."
     }
   },
   "researchers": {

@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import {
-  deleteResearchArea,
-  researchAreaInputSchema,
-  updateResearchArea,
-} from '@/app/lib/research-areas'
+import { internalError, invalidBody, isUuid, ok, readJson } from '@/app/lib/cms/http'
+import { researchAreaUpdateSchema } from '@/app/lib/research-area-schema'
+import { deleteResearchArea, updateResearchArea } from '@/app/lib/research-areas'
+
+import { invalidId, notFound, writeFailure } from '../http'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * Updates a research area against the `version` the editor loaded: its photo, its title and
+ * description in every language (`content`), or both. See `researchAreaUpdateSchema`.
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -16,39 +20,26 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
-
-  const parsed = researchAreaInputSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
-  }
-
   const { id } = await params
-  const area = await updateResearchArea(id, parsed.data)
-  if (!area) {
-    return NextResponse.json(
-      { error: `No existe un área de investigación con id "${id}".` },
-      { status: 404 },
-    )
-  }
+  if (!isUuid(id)) return invalidId()
 
-  return NextResponse.json({ area }, { headers: { 'Cache-Control': 'no-store' } })
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = researchAreaUpdateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
+  try {
+    const result = await updateResearchArea(id, parsed.data)
+    if (!result.ok) return writeFailure(id, result)
+
+    return ok({ area: result.area })
+  } catch (error) {
+    return internalError('No se pudo guardar el área de investigación.', error)
+  }
 }
 
+/** Deletes a research area; its translations go with it. Answers 204, or 404. */
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -57,12 +48,13 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  const deleted = await deleteResearchArea(id)
-  if (!deleted) {
-    return NextResponse.json(
-      { error: `No existe un área de investigación con id "${id}".` },
-      { status: 404 },
-    )
+  if (!isUuid(id)) return invalidId()
+
+  try {
+    const deleted = await deleteResearchArea(id)
+    if (!deleted) return notFound(id)
+  } catch (error) {
+    return internalError('No se pudo eliminar el área de investigación.', error)
   }
 
   return new NextResponse(null, { status: 204 })

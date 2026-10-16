@@ -27,6 +27,7 @@ vi.mock('@lasce/db', () => ({
 
 const {
   createNosotrosActivity,
+  getNosotrosContent,
   createNosotrosResearcher,
   deleteNosotrosActivity,
   deleteNosotrosResearcher,
@@ -37,6 +38,8 @@ const {
   updateNosotrosActivity,
   updateNosotrosResearcher,
 } = await import('./nosotros')
+
+import en from '@/messages/en.json' with { type: 'json' }
 
 function researcherRow(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -483,5 +486,17 @@ describe('deleteNosotrosResearcher', () => {
 
     expect(researcherDelete).toHaveBeenCalledWith({ where: { id: 'researcher-1' } })
     expect(result).toBe(true)
+  })
+})
+
+describe('getNosotrosContent', () => {
+  test('builds the page in English from the English catalogue', () => {
+    const content = getNosotrosContent(en)
+
+    expect(content.hero.title).toBe('About us')
+    expect(content.overview.paragraphs).toHaveLength(2)
+    expect(content.backLink).toEqual({ href: '/', label: 'Back to home' })
+    expect(content.researchers.people).toEqual([])
+    expect(content.activities.items).toEqual([])
   })
 })
