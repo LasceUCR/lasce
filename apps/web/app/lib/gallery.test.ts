@@ -80,13 +80,10 @@ const {
   galleryAlbums,
   galleryMediaInputSchema,
   galleryMediaUpdateSchema,
-  getAlbum,
   getGalleryAlbums,
-  getSubAlbum,
-  isAlbumSlug,
+  getGalleryPaths,
   mediaPlaceholder,
   subAlbumCreateSchema,
-  subAlbumParams,
   subAlbumPath,
   updateGalleryAlbum,
   updateGalleryMedia,
@@ -254,31 +251,21 @@ describe('gallery', () => {
     expect(subAlbumPath('rosac', 'fotogrametria')).toBe('/galeria/rosac/fotogrametria')
   })
 
-  test('accepts only the known album slugs', () => {
-    expect(isAlbumSlug('rosac')).toBe(true)
-    expect(isAlbumSlug('album-inexistente')).toBe(false)
-  })
+  test('lists the pages of the albums and sub-albums stored in the database', async () => {
+    prisma.galleryAlbum.findMany.mockResolvedValue([
+      { slug: 'rosac', subAlbums: [{ slug: 'fotogrametria' }, { slug: 'antena' }] },
+      { slug: 'taller', subAlbums: [] },
+    ])
 
-  test('returns an album by slug and nothing for an unknown one', () => {
-    expect(getAlbum('rosac')).toBe(galleryAlbums.rosac)
-    expect(getAlbum('album-inexistente')).toBeNull()
-  })
-
-  test('returns a sub-album only under its own album', () => {
-    expect(getSubAlbum('rosac', 'fotogrametria')?.title).toBe(
-      'Trabajos de fotogrametría para calibrar la parábola',
+    await expect(getGalleryPaths()).resolves.toEqual([
+      '/galeria/rosac',
+      '/galeria/rosac/fotogrametria',
+      '/galeria/rosac/antena',
+      '/galeria/taller',
+    ])
+    expect(prisma.galleryAlbum.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { parentAlbumId: null } }),
     )
-    expect(getSubAlbum('rosac', 'subalbum-inexistente')).toBeNull()
-    expect(getSubAlbum('album-inexistente', 'fotogrametria')).toBeNull()
-  })
-
-  test('enumerates every album and sub-album pair for static generation', () => {
-    const params = subAlbumParams()
-    const expected = galleryAlbumList.reduce((total, album) => total + album.subAlbums.length, 0)
-
-    expect(params).toHaveLength(expected)
-    expect(params).toContainEqual({ slug: 'rosac', subalbum: 'fotogrametria' })
-    expect(params.every(({ slug }) => isAlbumSlug(slug))).toBe(true)
   })
 
   test('counts an album own files plus everything in its sub-albums', () => {

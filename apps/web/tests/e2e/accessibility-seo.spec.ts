@@ -4,7 +4,8 @@ import { expect, test } from '@playwright/test'
 import { galleryAlbumList } from '@/app/lib/gallery'
 import { publicPaths } from '@/app/lib/site'
 
-// Every album and sub-album, derived so a new one is covered automatically.
+// The seeded albums and sub-albums (`pnpm db:seed` loads `galleryAlbumList`), so the e2e runs
+// against known data.
 const galleryRoutes = galleryAlbumList.flatMap((album) => [
   { label: album.title, path: `/galeria/${album.slug}` },
   ...album.subAlbums.map((subAlbum) => ({
@@ -249,7 +250,7 @@ test('robots and sitemap expose only indexable public routes', async ({ request 
   const sitemap = await sitemapResponse.text()
 
   expect(sitemapResponse.status()).toBe(200)
-  for (const path of publicPaths) {
+  for (const path of [...publicPaths, ...galleryRoutes.map((route) => route.path)]) {
     expect(sitemap).toContain(`<loc>http://localhost:3000${path}</loc>`)
   }
   expect(sitemap).not.toContain('/api/')

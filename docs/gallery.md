@@ -32,9 +32,11 @@ MinIO.
 | Full-screen view      | `…/MediaLightbox.tsx`                           | `MediaLightbox.test.tsx`       |
 | Dialog shell          | `app/components/public/Lightbox.tsx`            | `Lightbox.test.tsx`            |
 
-Routes, the sitemap and the axe sweep all derive their album lists from `galleryAlbumList`, so a new
-album is picked up by `app/lib/site.ts` and `tests/e2e/accessibility-seo.spec.ts` without any edit
-there.
+The album pages and the sitemap read the database: `getGalleryAlbums` serves the routes and
+`getGalleryPaths` feeds `getPublicPaths()` in `app/lib/site.ts`, so a new album appears in
+`/sitemap.xml` and a deleted one drops out. `galleryAlbumList` is only seed data
+(`packages/db/prisma/seed.ts`) and the fixture for the tests; the e2e specs run against the seeded
+albums, so they need `pnpm db:seed` first.
 
 ## Album translations
 

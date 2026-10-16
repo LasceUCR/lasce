@@ -1937,27 +1937,6 @@ export function subAlbumPath(albumSlug: string, subAlbumSlug: string): string {
   return `/galeria/${albumSlug}/${subAlbumSlug}`
 }
 
-export function isAlbumSlug(value: string): value is AlbumSlug {
-  return albumSlugs.includes(value as AlbumSlug)
-}
-
-export function getAlbum(slug: string): GalleryAlbum | null {
-  return isAlbumSlug(slug) ? galleryAlbums[slug] : null
-}
-
-export function getSubAlbum(albumSlug: string, subAlbumSlug: string): GallerySubAlbum | null {
-  const album = getAlbum(albumSlug)
-
-  return album?.subAlbums.find((subAlbum) => subAlbum.slug === subAlbumSlug) ?? null
-}
-
-/** Every album/sub-album pair, for `generateStaticParams` and the sitemap. */
-export function subAlbumParams(): { slug: string; subalbum: string }[] {
-  return galleryAlbumList.flatMap((album) =>
-    album.subAlbums.map((subAlbum) => ({ slug: album.slug, subalbum: subAlbum.slug })),
-  )
-}
-
 /** Files in the album itself plus everything in its sub-albums. */
 export function albumFileCount(album: GalleryAlbum): number {
   return album.subAlbums.reduce(
@@ -2157,6 +2136,20 @@ export async function getGalleryAlbums(
   })
 
   return records.map((record) => toGalleryAlbum(record, locale, includeEditingData))
+}
+
+/** Every album and sub-album page that exists right now, used for the sitemap. */
+export async function getGalleryPaths(): Promise<string[]> {
+  const records = await prisma.galleryAlbum.findMany({
+    where: { parentAlbumId: null },
+    orderBy: { createdAt: 'asc' },
+    select: { slug: true, subAlbums: { orderBy: { createdAt: 'asc' }, select: { slug: true } } },
+  })
+
+  return records.flatMap((album) => [
+    albumPath(album.slug),
+    ...album.subAlbums.map((subAlbum) => subAlbumPath(album.slug, subAlbum.slug)),
+  ])
 }
 
 /** Only the slug is a unique value of an album that this module knows how to explain. */

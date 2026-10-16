@@ -1,9 +1,13 @@
 import type { MetadataRoute } from 'next'
 
-import { publicPaths, siteUrl } from './lib/site'
+import { getPublicPaths, siteUrl } from './lib/site'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return publicPaths.map((path) => ({
+export const dynamic = 'force-dynamic'
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const paths = await getPublicPaths()
+
+  return paths.map((path) => ({
     url: new URL(path, siteUrl).toString(),
     changeFrequency: path === '/' ? 'weekly' : 'monthly',
     priority: path === '/' ? 1 : 0.7,
