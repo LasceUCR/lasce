@@ -725,6 +725,66 @@
       "deleteUnknown": "The news item could not be deleted. Try again."
     }
   },
+  "researchAreas": {
+    "page": {
+      "metaTitle": "Research | LASCE",
+      "metaDescription": "Research areas of the Solar Astrophysics and Space Weather Laboratory of the Universidad de Costa Rica.",
+      "kicker": "LASCE public portal",
+      "title": "Research areas",
+      "lead": "Main research branches developed by LASCE."
+    },
+    "card": {
+      "readMore": "Learn more about this area",
+      "imagePlaceholder": "Research area image"
+    },
+    "detail": {
+      "metaTitle": "{title} | Research | LASCE",
+      "kicker": "Research area",
+      "back": "Back to research areas"
+    },
+    "created": "Research area added successfully.",
+    "updated": "Research area updated successfully.",
+    "deleted": "Research area deleted successfully.",
+    "errors": {
+      "saveUnknown": "The research area could not be saved. Please try again.",
+      "deleteUnknown": "The research area could not be deleted. Please try again."
+    },
+    "editor": {
+      "addCard": "Add research area",
+      "createTitle": "Add research area",
+      "editTitle": "Edit \"{title}\"",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "descriptionField": "Description ({language})",
+      "photo": "Photo",
+      "photoHelp": "An illustrative image for the research area, as JPG or PNG. It is the same in every language.",
+      "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change the title or the description, review it too.",
+      "legacyNoTranslation": "This area has no English version yet. To change the title or the description, fill in both languages; the photo can be changed without translating it.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "uploading": "Uploading image...",
+      "uploadFailed": "The image could not be uploaded. Please try again."
+    },
+    "deleteDialog": {
+      "title": "Delete research area",
+      "message": "Do you want to delete this research area? This cannot be undone.",
+      "target": "Area",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
+    "validation": {
+      "srcRequired": "The image is required.",
+      "srcNotText": "The image must be the address of an uploaded file."
+    }
+  },
   "researchers": {
     "created": "Researcher added successfully.",
     "updated": "Researcher updated successfully.",

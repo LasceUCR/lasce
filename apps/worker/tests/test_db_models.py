@@ -27,6 +27,8 @@ from app.db import (
     NewsSource,
     Publisher,
     Research,
+    ResearchArea,
+    ResearchAreaTranslation,
     ResearchAuthor,
     ResearchCrossAuthor,
     ResearchTranslation,
@@ -518,6 +520,31 @@ def test_resource_download_outlives_its_user() -> None:
 
     assert user_fk.target_fullname == "auth.users.id"
     assert user_fk.ondelete == "SET NULL"
+
+
+def test_research_area_translation_matches_the_prisma_columns() -> None:
+    columns = ResearchAreaTranslation.__table__.columns
+    (area_fk,) = columns["research_area_id"].foreign_keys
+
+    assert ResearchArea.__table__.schema == "areas"
+    assert ResearchAreaTranslation.__table__.schema == "areas"
+    assert set(columns.keys()) == {
+        "id",
+        "research_area_id",
+        "locale",
+        "title",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert area_fk.target_fullname == "areas.research_areas.id"
+    assert area_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"research_area_id", "locale"}
+        for constraint in ResearchAreaTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
 
 
 def test_home_tables_live_in_the_public_schema() -> None:

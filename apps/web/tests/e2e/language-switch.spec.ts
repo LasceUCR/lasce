@@ -70,6 +70,7 @@ const translatedPages = [
     heading: 'Collaborations and Initiatives',
     title: 'Collaborations and Initiatives | LASCE',
   },
+  { path: '/investigacion', heading: 'Research areas', title: 'Research | LASCE' },
 ]
 
 for (const { path, heading, title } of translatedPages) {
