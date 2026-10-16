@@ -1020,6 +1020,66 @@
       "label": "Volver a las áreas"
     }
   },
+  "researchAreas": {
+    "page": {
+      "metaTitle": "Investigación | LASCE",
+      "metaDescription": "Áreas de investigación del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
+      "kicker": "Portal público LASCE",
+      "title": "Áreas de investigación",
+      "lead": "Principales ramas de investigación desarrolladas por el LASCE."
+    },
+    "card": {
+      "readMore": "Conozca más sobre esta área",
+      "imagePlaceholder": "Imagen del área de investigación"
+    },
+    "detail": {
+      "metaTitle": "{title} | Investigación | LASCE",
+      "kicker": "Área de investigación",
+      "back": "Volver a áreas de investigación"
+    },
+    "created": "Área de investigación agregada correctamente.",
+    "updated": "Área de investigación actualizada correctamente.",
+    "deleted": "Área de investigación eliminada correctamente.",
+    "errors": {
+      "saveUnknown": "No se pudo guardar el área de investigación. Inténtelo de nuevo.",
+      "deleteUnknown": "No se pudo eliminar el área de investigación. Inténtelo de nuevo."
+    },
+    "editor": {
+      "addCard": "Agregar área de investigación",
+      "createTitle": "Agregar área de investigación",
+      "editTitle": "Editar \"{title}\"",
+      "editLabel": "Editar {title}",
+      "deleteLabel": "Eliminar {title}",
+      "languageTabs": "Idioma del contenido",
+      "titleField": "Título ({language})",
+      "descriptionField": "Descripción ({language})",
+      "photo": "Foto",
+      "photoHelp": "Imagen ilustrativa para el área de investigación, en formato JPG o PNG. Es la misma en todos los idiomas.",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o la descripción, revíselo también.",
+      "legacyNoTranslation": "Esta área aún no tiene versión en inglés. Para cambiar el título o la descripción debe completar ambos idiomas; la foto se puede cambiar sin traducirla.",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "uploading": "Subiendo imagen...",
+      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo."
+    },
+    "deleteDialog": {
+      "title": "Eliminar área de investigación",
+      "message": "¿Desea eliminar esta área de investigación? Esta acción no se puede deshacer.",
+      "target": "Área",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
+    },
+    "validation": {
+      "srcRequired": "La imagen es obligatoria.",
+      "srcNotText": "La imagen debe ser la dirección de un archivo subido."
+    }
+  },
   "researchers": {
     "institutionLabel": "Institución",
     "created": "Investigador agregado correctamente.",

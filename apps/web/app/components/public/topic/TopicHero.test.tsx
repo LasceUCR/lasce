@@ -23,6 +23,23 @@ describe('TopicHero', () => {
     expect(screen.getByRole('img', { name: hero.image.alt })).toHaveAttribute('src', hero.image.src)
   })
 
+  test('marks the title and lead with the language of their content, not the kicker', () => {
+    render(<TopicHero {...hero} contentLang="en" />)
+
+    expect(screen.getByRole('heading', { level: 1, name: hero.title })).toHaveAttribute(
+      'lang',
+      'en',
+    )
+    expect(screen.getByText(hero.lead)).toHaveAttribute('lang', 'en')
+    expect(screen.getByText(hero.kicker)).not.toHaveAttribute('lang')
+  })
+
+  test('sets no lang when the content is in the page language', () => {
+    render(<TopicHero {...hero} />)
+
+    expect(screen.getByRole('heading', { level: 1, name: hero.title })).not.toHaveAttribute('lang')
+  })
+
   test('renders without a lead when none is given', () => {
     render(<TopicHero kicker={hero.kicker} title={hero.title} />)
 

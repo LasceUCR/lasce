@@ -75,6 +75,7 @@ const translatedPages = [
     heading: 'Santa Cruz Radio Observatory (ROSAC)',
     title: 'Radio Astronomy and ROSAC | LASCE',
   },
+  { path: '/investigacion', heading: 'Research areas', title: 'Research | LASCE' },
 ]
 
 for (const { path, heading, title } of translatedPages) {

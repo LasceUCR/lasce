@@ -650,7 +650,9 @@ model GalleryMedia {
   @@schema("gallery")
 }
 
-/// An editable research area shown on the public investigation page.
+/// An editable research area shown on the public investigation page. The base
+/// row holds the Spanish `title` and `description`; every other language lives
+/// in `ResearchAreaTranslation` (docs/translate-database-content.md).
 model ResearchArea {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
@@ -659,7 +661,31 @@ model ResearchArea {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  translations ResearchAreaTranslation[]
+
   @@map("research_areas")
+  @@schema("areas")
+}
+
+/// The `title` and `description` of a `ResearchArea` in a language other than
+/// Spanish, one row per area and locale. The photograph (`src`) is shared.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a
+/// language needs no migration. An area created before translations existed has
+/// no row here, and its base text is in whatever language it was entered in.
+model ResearchAreaTranslation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  researchAreaId String   @map("research_area_id") @db.Uuid
+  locale         String   @db.VarChar(5)
+  title          String
+  description    String   @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  researchArea ResearchArea @relation(fields: [researchAreaId], references: [id], onDelete: Cascade)
+
+  @@unique([researchAreaId, locale])
+  @@map("research_area_translations")
   @@schema("areas")
 }
 

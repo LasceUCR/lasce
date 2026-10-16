@@ -49,6 +49,12 @@ export interface TopicHeroProps {
   /** Compact framing for pages whose primary content is an interactive tool. */
   variant?: 'default' | 'compact'
   image?: TopicHeroImage
+  /**
+   * The language of `title` and `lead` when they are database content that can differ from the
+   * page's, from `contentLangAttribute`: `''` for text whose language is unknown. The kicker and
+   * the notice are the page's own copy and keep the page's language.
+   */
+  contentLang?: string
 }
 
 export function TopicHero({
@@ -58,6 +64,7 @@ export function TopicHero({
   notice,
   image,
   variant = 'default',
+  contentLang,
 }: TopicHeroProps) {
   return (
     <header
@@ -75,7 +82,7 @@ export function TopicHero({
         <div className="topic-hero-mark-body">
           <div className="topic-hero-mark-heading">
             <p className="topic-kicker">{kicker}</p>
-            <h1>{title}</h1>
+            <h1 lang={contentLang}>{title}</h1>
           </div>
           <div
             className={[
@@ -109,14 +116,18 @@ export function TopicHero({
               />
             ) : null}
           </div>
-          {lead ? <p className="topic-lead">{lead}</p> : null}
+          {lead ? (
+            <p className="topic-lead" lang={contentLang}>
+              {lead}
+            </p>
+          ) : null}
           {notice ? <p className="topic-notice">{notice}</p> : null}
         </div>
       ) : image?.presentation === 'mark' ? (
         <div className="topic-hero-mark-body">
           <div className="topic-hero-mark-heading">
             <p className="topic-kicker">{kicker}</p>
-            <h1>{title}</h1>
+            <h1 lang={contentLang}>{title}</h1>
           </div>
           {image.photo ? (
             <div className="topic-hero-mark-photo">
@@ -139,7 +150,11 @@ export function TopicHero({
               src={image.src}
               width={image.width}
             />
-            {lead ? <p className="topic-lead">{lead}</p> : null}
+            {lead ? (
+              <p className="topic-lead" lang={contentLang}>
+                {lead}
+              </p>
+            ) : null}
           </div>
           {notice ? <p className="topic-notice">{notice}</p> : null}
         </div>
@@ -147,8 +162,12 @@ export function TopicHero({
         <>
           <div className="topic-hero-copy">
             <p className="topic-kicker">{kicker}</p>
-            <h1>{title}</h1>
-            {lead ? <p className="topic-lead">{lead}</p> : null}
+            <h1 lang={contentLang}>{title}</h1>
+            {lead ? (
+              <p className="topic-lead" lang={contentLang}>
+                {lead}
+              </p>
+            ) : null}
             {notice ? <p className="topic-notice">{notice}</p> : null}
           </div>
           {image ? (
