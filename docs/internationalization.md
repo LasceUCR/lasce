@@ -16,7 +16,8 @@ never text a visitor reads.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
 - Database content ("Modo edición") has shared, reusable infrastructure. **Publications** on
-  `/publicaciones` (title and abstract), the **contact cards** on `/contacto` (title and
+  `/publicaciones` (title and abstract), the **home page** (the hero banner's title and subtitle,
+  and the geomagnetic indices' descriptions), the **contact cards** on `/contacto` (title and
   description) and **the research areas on `/investigacion`** (title and description) use it,
   read and edited in Spanish and English. Every other editable entity is still single-language.
   See [Dynamic content](#dynamic-content) and
@@ -167,7 +168,7 @@ inventory taken when the static pages were migrated.
 | Route                                    | Namespace                            | Copy built in                                             |
 | ---------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
 | Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                       |
-| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`                  |
+| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`   |
 | `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`             |
 | `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`                               |
 | `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`                                    |
@@ -179,6 +180,12 @@ inventory taken when the static pages were migrated.
 
 The academic activities section and its cards on `/noticias` are translated too; the rest of
 that page is not.
+
+On `/`, the hero banner's title and subtitle and the geomagnetic indices' descriptions are
+database content, edited in both languages in "Modo edición" ([`home-page.md`](home-page.md)).
+The catalogue's `home.hero.title|lead` and `home.indicators.<code>.value|description` are only
+the fallback for an empty database; the editor's copy is in `home.editor`, `home.discardDialog`,
+`home.validation` and `home.saveErrors`.
 
 `/publicaciones` is translated as a whole, in the `publications` namespace: the page's fixed
 copy (`page`, built in `(public)/publicaciones/page.tsx` and `PublicationsExplorer.tsx`), the
@@ -253,7 +260,8 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
 - **How it works and how to make an entity bilingual:**
   [`translate-database-content.md`](translate-database-content.md), with the publications as the
   reference implementation, their API contract, the design decisions and the known limitations.
-- **Which entities are bilingual:** publications, the contact cards on `/contacto`
+- **Which entities are bilingual:** publications, the home page banner (`HomeHero`) and its
+  geomagnetic indices (`GeomagneticIndex`, description only), the contact cards on `/contacto`
   (`ContactChannel`: `title` and `description`; the icon, link and position are shared), and
   research areas. The same pattern is meant for `News`, `NosotrosActivity`, `Researcher`,
   `NosotrosResearcher`, `GalleryAlbum` and `GalleryMedia`, each with its own translation table

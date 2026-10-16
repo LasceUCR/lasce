@@ -1070,6 +1070,18 @@ a {
   line-height: 1.2;
 }
 
+/* "Modo edición" on the home page: the cards' edit button and drag handle sit in one row at the
+   top right. The card keeps room for both, so its text never runs under them, and the wrapper
+   passes the grid cell's height through, so the cards keep their size. */
+.indicator-grid-editable > .editable,
+.indicator-grid-editable > .editable > .indicator {
+  height: 100%;
+}
+
+.indicator-grid-editable > .editable > .indicator {
+  padding-right: 92px;
+}
+
 .areas {
   margin-top: 34px;
   scroll-margin-top: 24px;
