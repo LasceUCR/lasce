@@ -263,7 +263,7 @@ export function NosotrosPage({
           })}
 
           {editMode && canCreate ? (
-            <AddItemCard label={t('add')}>
+            <AddItemCard label={t('add')} size="large">
               {({ close }) => (
                 <NosotrosActivityForm
                   editing={null}
@@ -349,6 +349,7 @@ export function NosotrosPage({
       <Modal
         onClose={closeEditor}
         open={editingActivity !== undefined && editingData !== null}
+        size="large"
         title={
           editingActivity ? t('editTitle', { title: editingActivity.title }) : t('editFallback')
         }
