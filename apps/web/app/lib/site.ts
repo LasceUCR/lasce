@@ -15,6 +15,7 @@ export const publicPaths = [
   '/noticias',
   '/contacto',
   '/acceso',
+  '/actividades-academicas',
   ...workAreaSlugs.map((slug) => workAreaPath(slug)),
   ...academicActivitySlugs.map((slug) => `/noticias/actividades/${slug}`),
 ] as const

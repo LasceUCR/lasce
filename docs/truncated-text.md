@@ -6,7 +6,9 @@ that shows the whole text in place. Use the shared `TruncatedText` component
 your own: it measures whether the text really overflows, keeps the toggle accessible and follows
 the site's language.
 
-The research area cards on `/investigacion` are the working example (`ResearchAreaCard.tsx`).
+The research area cards on `/investigacion` (`ResearchAreaCard.tsx`) and the academic activity
+cards on `/noticias` and `/actividades-academicas` (`AcademicActivityCard.tsx`) are working
+examples.
 
 ## Quick start
 
@@ -138,9 +140,9 @@ expect(screen.getByRole('button', { name: 'Leer menos' })).toHaveAttribute('aria
   the `id`, `lang` and classes are on its parent, the element `as` names.
 - Restore the stubs afterwards (`vi.unstubAllGlobals()`, `vi.restoreAllMocks()`).
 - A real overflow, at a real width, belongs in a Playwright spec: see the "Leer más" test in
-  `apps/web/tests/e2e/research-areas-i18n.spec.ts`.
+  `apps/web/tests/e2e/research-areas-i18n.spec.ts` and `apps/web/tests/e2e/public-portal.spec.ts`.
 
-`TruncatedText.test.tsx` and `ResearchAreaCard.test.tsx` show both.
+`TruncatedText.test.tsx`, `ResearchAreaCard.test.tsx` and `AcademicActivityCard.test.tsx` show both.
 
 ## Limitations
 

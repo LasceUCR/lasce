@@ -85,7 +85,7 @@ const researchGroup = {
 
 const outreachGroup = {
   label: 'Divulgación',
-  items: ['Noticias', 'Galería'],
+  items: ['Noticias', 'Galería', 'Actividades académicas'],
 } as const
 
 const resourcesGroup = {
