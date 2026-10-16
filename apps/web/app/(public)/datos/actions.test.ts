@@ -6,12 +6,26 @@ const mocks = vi.hoisted(() => ({
   createResourceDownload: vi.fn(),
 }))
 
+const scientificDataErrors = vi.hoisted(() => ({
+  downloadUnauthenticated: 'Inicie sesión para descargar recursos.',
+  upstreamError: 'No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.',
+  downloadFailed: 'No fue posible preparar la descarga. Inténtelo nuevamente más tarde.',
+}))
+
 vi.mock('@/app/lib/auth/session', () => ({ getSessionUser: mocks.getSessionUser }))
 vi.mock('@/app/lib/auth/permission-store', () => ({
   getPermissionsForRole: mocks.getPermissionsForRole,
 }))
 vi.mock('@/app/services/downloads/downloadService', () => ({
   createResourceDownload: mocks.createResourceDownload,
+}))
+
+// `getTranslations` resolves to next-intl's client build under Vitest, which throws outside a
+// Next.js request. Mocked with the real Spanish copy so assertions stay on the text a visitor
+// reads, matching `request.test.ts`'s convention for code that calls `next-intl/server` directly.
+vi.mock('next-intl/server', () => ({
+  getTranslations: () =>
+    Promise.resolve((key: string) => (scientificDataErrors as Record<string, string>)[key]),
 }))
 
 import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'

@@ -28,7 +28,8 @@
     "resources": "Resources",
     "publications": "Publications",
     "scientificTools": "Scientific tools",
-    "contact": "Contact"
+    "contact": "Contact",
+    "academicActivities": "Academic activities"
   },
   "footer": {
     "institutionsLabel": "Institutions",
@@ -510,31 +511,24 @@
       "empty": "No academic activities are available at the moment."
     },
     "card": {
-      "badge": "Academic activity",
-      "details": "View the activity details"
+      "badge": "Academic activity"
     },
-    "page": {
-      "metaTitle": "{title} | News | LASCE",
-      "kicker": "Academic activity",
-      "infoTitle": "General information",
-      "type": "Type of activity",
-      "date": "Date",
-      "location": "Place",
-      "descriptionTitle": "Description of the activity",
-      "resourcesTitle": "Resources and links of interest",
-      "backToNews": "Back to news"
+    "listPage": {
+      "metaTitle": "Academic activities | LASCE",
+      "metaDescription": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
+      "kicker": "LASCE public portal",
+      "title": "Academic activities",
+      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE."
     },
     "items": {
       "machineLearningWorkshop": {
         "category": "Workshop",
         "date": "16-20 February 2026",
-        "abstract": "A workshop focused on the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather and GNSS systems.",
         "p1": "As part of the LASCE project, the Workshop on Machine Learning Applied to Space Weather and Global Navigation Satellite Systems (GNSS) was held from 16 to 20 February 2026 in San José, Costa Rica. For five days the activity brought together students, early-career researchers and specialists to strengthen their skills in the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather.",
         "p2": "The programme combined lectures, discussion sessions and computational practice devoted to ionospheric processes, the effects of space weather on GNSS systems, scientific computing and data analysis with machine learning tools. This approach made it possible to combine the physical understanding of solar and terrestrial phenomena with modern methods of processing, modelling and prediction, while also promoting the use of open data and reproducible procedures.",
         "p3": "The workshop had 52 in-person participants from 17 countries; 37.2% were women and 70% came from developing countries. It was organised with the participation of the Space Research Center of the University of Costa Rica, the United Nations Office for Outer Space Affairs, the International Committee on GNSS, COSPAR, INGV and SCOSTEP, together with contributions from the National University of Tucumán and the Abdus Salam International Centre for Theoretical Physics.",
         "p4": "This activity strengthened the international profile of LASCE, widened its networks of scientific collaboration and contributed to building regional capabilities for researching, monitoring and predicting the effects of space weather on the ionosphere and on technological systems. It also created a space for identifying new scientific challenges, opportunities for cooperation and future initiatives that combine space weather physics with advanced data analysis tools.",
-        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop",
-        "galleryLabel": "View the workshop photo gallery"
+        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop"
       }
     }
   },
@@ -775,7 +769,12 @@
       "title": "Location",
       "intro": "The Santa Cruz Radio Observatory (ROSAC) is located at the {address}.",
       "markerLabel": "ROSAC",
-      "unavailableMessage": "Could not load the map. The address above remains available."
+      "unavailableMessage": "Could not load the map. The address above remains available.",
+      "mapRegion": "Location map of {label}",
+      "mapInteractive": "Interactive map of {label}",
+      "mapInstructions": "Use the arrow keys to pan the map and the plus and minus keys to zoom. Press Tab to leave the map.",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
     },
     "activities": {
       "title": "What do we develop at ROSAC?",
@@ -937,65 +936,7 @@
       "intro": "The people developing the Santa Cruz Radio Observatory (ROSAC), a project bringing together astrophysics, physics, topographic, electrical, and mechanical engineering, electronics, and computing, with national and international collaboration.",
       "hint": "Click on a card to see more information.",
       "emptyMessage": "No researcher information available at this time.",
-      "institutionLabel": "Institution",
-      "people": {
-        "carolinaSalas": {
-          "role": "Principal Investigator",
-          "description": "Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument."
-        },
-        "miguelVelazquez": {
-          "role": "Researcher",
-          "description": "In charge of instrumentation development at ROSAC."
-        },
-        "davidGale": {
-          "role": "Researcher",
-          "description": "Installation and alignment of telescope reflectors. Mechanical systems, motion testing, lightning protection. General support."
-        },
-        "oscarNunez": {
-          "role": "Researcher",
-          "description": "In charge of the electrical system and technical support for gear motors."
-        },
-        "federicoRuiz": {
-          "role": "Researcher",
-          "description": "In charge of the implementation and commissioning of sensors and actuators, as well as the development of the controller and software systems associated with the ROSAC radio telescope."
-        },
-        "gustavoLara": {
-          "role": "Researcher",
-          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
-        },
-        "andresFallas": {
-          "role": "Researcher",
-          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
-        },
-        "wagnerMejias": {
-          "role": "Researcher",
-          "description": "Mechanical installation of the structure, preventive and corrective maintenance, adaptations and improvements to the general structure."
-        },
-        "eduardoIbarra": {
-          "role": "External collaborator",
-          "description": "Collaborator in the development and testing of the reception stage in the 100 MHz to 1.1 GHz range, receiver sensitivity analysis, radio telescope design, and electrical installation and antenna guidance system control tasks."
-        },
-        "andresCorrales": {
-          "role": "External collaborator",
-          "description": "Designer, developer, and maintainer of the radio telescope control software and end-user software."
-        },
-        "andresGamboa": {
-          "role": "External collaborator",
-          "description": "Support in radio telescope maintenance tasks, as well as electromechanical work related to instrument assembly."
-        },
-        "jelmuthRojas": {
-          "role": "External collaborator",
-          "description": "Support in structure leveling tasks."
-        },
-        "barnaldBocker": {
-          "role": "Assistant",
-          "description": "Support in the development and maintenance of ROSAC control software and communication protocols."
-        },
-        "fabianChaverri": {
-          "role": "Prospective doctoral student",
-          "description": "Prospective doctoral student with a thesis in astronomical instrumentation linked to the project."
-        }
-      }
+      "institutionLabel": "Institution"
     },
     "donations": {
       "title": "ROSAC donations",
@@ -1099,6 +1040,253 @@
     "errors": {
       "unknown": "The researcher could not be saved. Try again.",
       "deleteUnknown": "The researcher could not be deleted. Try again."
+    }
+  },
+  "scientificData": {
+    "page": {
+      "metaTitle": "Scientific data | LASCE",
+      "description": "Explore images of the Sun and browse the available scientific information.",
+      "kicker": "LASCE public portal",
+      "title": "Data",
+      "queryShortcut": "Go to the query"
+    },
+    "sources": {
+      "goes": {
+        "name": "GOES",
+        "description": "Historical series and SUVI solar images from GOES."
+      },
+      "rosac": {
+        "name": "ROSAC — UCR",
+        "description": "Preview of the future ROSAC source; its instruments are still to be defined."
+      }
+    },
+    "instruments": {
+      "exis": {
+        "name": "Extreme Ultraviolet and X-ray Irradiance Sensors",
+        "products": {
+          "sfeu": {
+            "name": "Solar flux: EUV"
+          },
+          "sfxr": {
+            "name": "Solar flux: X-rays"
+          }
+        }
+      },
+      "mag": {
+        "name": "Magnetometer",
+        "products": {
+          "geof": {
+            "name": "Geomagnetic field"
+          }
+        }
+      },
+      "seiss": {
+        "name": "Space Environment In-Situ Suite",
+        "unavailableNote": "This GOES product and its channels are still pending integration.",
+        "products": {
+          "ehis": {
+            "name": "Energetic Heavy Ions"
+          },
+          "mpsl": {
+            "name": "Magnetospheric Electrons and Protons: low energy"
+          },
+          "mpsh": {
+            "name": "Magnetospheric Electrons and Protons: medium and high energy",
+            "availabilityNote": "Select the telescope and the band from the level 1b file. Each telescope keeps its own viewing direction."
+          },
+          "sgps": {
+            "name": "Solar and Galactic Protons",
+            "availabilityNote": "Select the SGPS−X or SGPS+X unit. The level 1b file includes differential channels and the > 500 MeV integral one."
+          }
+        }
+      },
+      "suvi": {
+        "name": "Solar Ultraviolet Imager",
+        "imageProductName": "Solar images: {wavelength} ({code})"
+      },
+      "rosacI1": {
+        "name": "Instrument 1 (to be defined)",
+        "products": {
+          "timeSeries": {
+            "name": "Test time series"
+          }
+        }
+      },
+      "rosacI2": {
+        "name": "Instrument 2 (to be defined)",
+        "products": {
+          "dynamicSpectrum": {
+            "name": "Test dynamic spectrum"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "xray": {
+        "shortBand": "Short band (0.05–0.4 nm)",
+        "longBand": "Long band (0.1–0.8 nm)"
+      },
+      "euv": {
+        "line1175": "Line 117.5 nm",
+        "line1216": "Line 121.6 nm",
+        "line1335": "Line 133.5 nm",
+        "line1405": "Line 140.5 nm",
+        "line256": "Line 25.6 nm",
+        "line284": "Line 28.4 nm",
+        "line304": "Line 30.4 nm",
+        "mgiiIndex": "Mg II index"
+      },
+      "magnetic": {
+        "x": "x component (EPN frame)",
+        "y": "y component (EPN frame)",
+        "z": "z component (EPN frame)",
+        "total": "Total magnitude"
+      },
+      "mpsh": {
+        "electron": "Electrons",
+        "proton": "Protons",
+        "label": "{species}: telescope {telescope}, band {band}"
+      },
+      "sgps": {
+        "integral": "> 500 MeV (integral)",
+        "differential": "{channel} (differential)",
+        "label": "SGPS{sign}X: {value}"
+      },
+      "image": "Calibrated image",
+      "simulatedIntensity": "Simulated intensity",
+      "simulatedSpectrum": "Simulated spectral intensity"
+    },
+    "units": {
+      "wPerM2": "W/m²",
+      "index": "index",
+      "nanotesla": "nT",
+      "particles": "particles/(cm²·s·sr·keV)",
+      "relativeIntensity": "relative intensity",
+      "pfu": "pfu",
+      "protonUnit": "protons/(cm²·s·sr·keV)",
+      "image": "image"
+    },
+    "today": {
+      "title": "The Sun today",
+      "lead": "Today's images in different ultraviolet light bands.",
+      "source": "Source: GOES",
+      "wavelengthsLegend": "SUVI bands (wavelength)",
+      "rangeLabel": "Today's range (UTC)",
+      "ranges": {
+        "day": "All day",
+        "h6": "Last 6 hours",
+        "h3": "Last 3 hours",
+        "h1": "Last hour"
+      },
+      "loading": "Loading today's solar images…",
+      "error": "The GOES images could not be loaded. You can switch bands or try again.",
+      "emptyTitle": "No images yet for this selection",
+      "emptyMessage": "Try another band or widen today's range. New observations will appear as they become available.",
+      "stripLabel": "Today's solar images",
+      "footer": "{date} · {wavelength} · Hours in UTC",
+      "scrollHint": "Scroll to see more",
+      "refresh": "Refresh images"
+    },
+    "images": {
+      "sequenceLabel": "Solar image sequence",
+      "loading": "Loading solar image…",
+      "unavailable": "This solar image is not available. Check another band or try again."
+    },
+    "instrumentSelect": {
+      "placeholder": "Select an option",
+      "defaultGroupLabel": "Options",
+      "productsOf": "Products of {group}"
+    },
+    "explorer": {
+      "kicker": "Public query",
+      "title": "Configure the data you want to visualize",
+      "badgeObserved": "Observed data",
+      "badgeSimulated": "Simulation",
+      "sourceLabel": "Data source",
+      "productLabel": "Instrument and product",
+      "parameterLabel": "Channel or parameter",
+      "pendingSuffix": " — pending",
+      "dateLabel": "Date",
+      "dateHint": "Historical query by date. Days with no observations show no data.",
+      "timeRangeGroupLabel": "Time range (UTC)",
+      "startTimeLabel": "Start time (UTC)",
+      "endTimeLabel": "End time (UTC)",
+      "submitLoading": "Querying…",
+      "submit": "Query data",
+      "noticeGoes": "Source: GOES. Availability depends on the product and the date; a historical query can take several minutes. EHIS and MPSL are still pending integration.",
+      "noticeRosac": "ROSAC is an integration preview. Its instruments and real data are not yet defined; every result from this source is simulated and labelled as such.",
+      "permissionsTitle": "Query and download permissions",
+      "permissionsText": "You can query GOES historical information without an account. Downloading requires an account and signing in. Chart images can be downloaded for any source; ROSAC's CSV data is available to every account, and GOES's requires a GOES data download permission. SUVI solar images cannot be downloaded from this platform. Every download link expires after 30 minutes.",
+      "loadingImages": "Loading solar images",
+      "loadingData": "Loading data",
+      "cancelQuery": "Cancel query",
+      "resultsKicker": "Query results",
+      "instrumentResultLabel": "Instrument",
+      "wavelengthResultLabel": "Wavelength",
+      "channelResultLabel": "Channel",
+      "dateResultLabel": "Date",
+      "intervalResultLabel": "Interval",
+      "sourceResultLabel": "Source",
+      "satelliteResultLabel": "Satellite",
+      "satelliteValue": "GOES-{number}",
+      "emptyTitle": "No data available",
+      "emptyImageMessage": "No solar images are available for the selected band, date and time range. Select another band or try again later.",
+      "emptyDataMessage": "No observations were found for the selected product, date and time range. Adjust the criteria and try again.",
+      "summaryLabel": "Summary of values",
+      "minimum": "Minimum",
+      "maximum": "Maximum",
+      "latest": "Latest value",
+      "chartCaptionObserved": "Observations from {provider}.",
+      "chartCaptionSimulated": "Simulated series to prepare the future ROSAC integration.",
+      "tableToggle": "View chart values ({count})",
+      "tableCaption": "Measurements of {product} on {date}",
+      "columnTime": "Time (UTC)",
+      "columnValue": "Value ({unit})",
+      "dynamicSpectrumLabel": "Simulated ROSAC dynamic spectrum",
+      "dynamicSpectrumCaption": "Demonstration dynamic spectrum; simulated values.",
+      "dynamicSpectrumTableToggle": "View spectrum values ({count})",
+      "dynamicSpectrumTableCaption": "Simulated intensity by hour and frequency",
+      "columnFrequency": "Frequency (MHz)",
+      "columnIntensity": "Relative intensity",
+      "downloadStarted": "The download of {filename} has started. The link expires in 30 minutes."
+    },
+    "downloads": {
+      "title": "Downloads",
+      "signInPrompt": "Sign in to download the chart",
+      "preparing": "Preparing download…"
+    },
+    "charts": {
+      "areaLabel": "Chart area: {label}",
+      "title": "Chart of {label}",
+      "description": "Series of {count} measurements between {start} and {end} UTC. The minimum value is {minimum} and the maximum is {maximum} {unit}.",
+      "empty": "There are no values to chart.",
+      "caption": "{caption} Unit: {unit}.",
+      "low": "Low",
+      "high": "High",
+      "spectrumDescription": "Intensity map by time and frequency, from {minFreq} to {maxFreq} {frequencyUnit} and from {start} to {end} UTC. Values range from {minimum} to {maximum} {unit}.",
+      "spectrumCaption": "{caption} Frequency in {frequencyUnit}; color by {unit}."
+    },
+    "validation": {
+      "invalidSource": "Select a valid source.",
+      "invalidProduct": "Select a valid scientific product.",
+      "invalidParameter": "Select a channel or parameter.",
+      "invalidDate": "Select a valid date in YYYY-MM-DD format.",
+      "invalidStartTime": "Select a valid start time in HH:mm format.",
+      "invalidEndTime": "Select a valid end time in HH:mm format.",
+      "startBeforeEnd": "The start time must be before the end time.",
+      "productUnavailable": "The selected product is not yet available for this source.",
+      "invalidParameterForProduct": "Select a valid channel or parameter for the product.",
+      "default": "Check the criteria."
+    },
+    "errors": {
+      "dateNotFuture": "Select a date that is not later than today.",
+      "invalidQuery": "The query criteria are not valid.",
+      "upstreamError": "It was not possible to query the scientific source. Try again later.",
+      "sourceUnavailable": "The scientific source is not available right now.",
+      "requestFailedGoes": "It was not possible to query the GOES source right now. Try again later.",
+      "requestFailedOther": "It was not possible to query the data. Try again.",
+      "downloadFailed": "It was not possible to prepare the download. Try again later.",
+      "downloadUnauthenticated": "Sign in to download resources."
     }
   },
   "administration": {

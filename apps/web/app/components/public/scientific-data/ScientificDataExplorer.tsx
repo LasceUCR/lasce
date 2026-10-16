@@ -1,6 +1,7 @@
 'use client'
 
 import { ChartNoAxesCombined, Images, Search } from 'lucide-react'
+import { useFormatter, useTranslations } from 'next-intl'
 import {
   useCallback,
   useEffect,
@@ -27,7 +28,7 @@ import {
 import {
   findScientificProduct,
   getDefaultQueryForSource,
-  scientificDataQuerySchema,
+  getScientificDataQuerySchema,
   scientificDataResultSchema,
   type ScientificDataQuery,
   type ScientificDataResult,
@@ -77,27 +78,8 @@ const subscribeToHydration = () => () => undefined
 const getClientSnapshot = () => true
 const getServerSnapshot = () => false
 
-const dateFormatter = new Intl.DateTimeFormat('es-CR', {
-  dateStyle: 'long',
-  timeZone: 'UTC',
-})
-
-const valueFormatter = new Intl.NumberFormat('es-CR', {
-  maximumSignificantDigits: 5,
-  notation: 'scientific',
-})
-
-function formatDate(date: string) {
-  return dateFormatter.format(new Date(`${date}T12:00:00Z`))
-}
-
 function formatTime(timestamp: string) {
   return timestamp.slice(11, 16)
-}
-
-function getValidationMessage(query: ScientificDataQuery) {
-  const parsed = scientificDataQuerySchema.safeParse(query)
-  return parsed.success ? null : (parsed.error.issues[0]?.message ?? 'Revise los criterios.')
 }
 
 export function ScientificDataExplorer({
@@ -111,6 +93,39 @@ export function ScientificDataExplorer({
   requestDownload,
   navigate = assignLocation,
 }: ScientificDataExplorerProps) {
+  const t = useTranslations('scientificData.explorer')
+  const tValidation = useTranslations('scientificData.validation')
+  const tErrors = useTranslations('scientificData.errors')
+  const format = useFormatter()
+  const querySchema = useMemo(
+    () =>
+      getScientificDataQuerySchema({
+        invalidSource: tValidation('invalidSource'),
+        invalidProduct: tValidation('invalidProduct'),
+        invalidParameter: tValidation('invalidParameter'),
+        invalidDate: tValidation('invalidDate'),
+        invalidStartTime: tValidation('invalidStartTime'),
+        invalidEndTime: tValidation('invalidEndTime'),
+        startBeforeEnd: tValidation('startBeforeEnd'),
+        productUnavailable: tValidation('productUnavailable'),
+        invalidParameterForProduct: tValidation('invalidParameterForProduct'),
+      }),
+    [tValidation],
+  )
+
+  function formatDate(date: string) {
+    return format.dateTime(new Date(`${date}T12:00:00Z`), { dateStyle: 'long', timeZone: 'UTC' })
+  }
+
+  function formatValue(value: number) {
+    return format.number(value, { maximumSignificantDigits: 5, notation: 'scientific' })
+  }
+
+  function getValidationMessage(validatedQuery: ScientificDataQuery) {
+    const parsed = querySchema.safeParse(validatedQuery)
+    return parsed.success ? null : (parsed.error.issues[0]?.message ?? tValidation('default'))
+  }
+
   // Server-rendered controls must wait for React's handlers before accepting input.
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
   const [query, setQuery] = useState(initialQuery)
@@ -164,7 +179,7 @@ export function ScientificDataExplorer({
       if (outcome.ok) {
         setDownloadMessage({
           tone: 'info',
-          text: `La descarga de ${outcome.filename} comenzó. El enlace vence en 30 minutos.`,
+          text: t('downloadStarted', { filename: outcome.filename }),
         })
         navigate(outcome.url)
       } else if (outcome.reason === 'unauthenticated') {
@@ -175,7 +190,7 @@ export function ScientificDataExplorer({
     } catch {
       setDownloadMessage({
         tone: 'error',
-        text: 'No fue posible preparar la descarga. Inténtelo nuevamente más tarde.',
+        text: tErrors('downloadFailed'),
       })
     } finally {
       setPendingDownload(null)
@@ -221,7 +236,11 @@ export function ScientificDataExplorer({
       return
     }
 
-    const availabilityMessage = getAvailabilityMessage(query, goesAvailability)
+    const availabilityMessage = getAvailabilityMessage(
+      query,
+      goesAvailability,
+      tErrors('dateNotFuture'),
+    )
     if (availabilityMessage) {
       setMessage(availabilityMessage)
       return
@@ -295,12 +314,12 @@ export function ScientificDataExplorer({
         setRequestState('error')
         setMessage(
           requestedQuery.source === 'GOES'
-            ? 'No fue posible consultar la fuente GOES en este momento. Inténtelo nuevamente más tarde.'
-            : 'No fue posible consultar los datos. Inténtelo nuevamente.',
+            ? tErrors('requestFailedGoes')
+            : tErrors('requestFailedOther'),
         )
       }
     },
-    [],
+    [tErrors],
   )
 
   const seriesValues =
@@ -319,23 +338,23 @@ export function ScientificDataExplorer({
     <section aria-labelledby="scientific-query-title" className="data-explorer">
       <div className="data-section-heading">
         <div>
-          <p className="topic-kicker">Consulta pública</p>
+          <p className="topic-kicker">{t('kicker')}</p>
           <h2 id="scientific-query-title" tabIndex={-1}>
-            Configure los datos que desea visualizar
+            {t('title')}
           </h2>
         </div>
         <span className="topic-badge">
-          {selectedSource.dataKind === 'observed' ? 'Datos observados' : 'Simulación'}
+          {selectedSource.dataKind === 'observed' ? t('badgeObserved') : t('badgeSimulated')}
         </span>
       </div>
 
       <form className="data-query-form" data-select-boundary noValidate onSubmit={submitQuery}>
         <div className="data-field data-source-field">
-          <label htmlFor="scientific-source">Fuente de datos</label>
+          <label htmlFor="scientific-source">{t('sourceLabel')}</label>
           <Select
             disabled={controlsDisabled}
             id="scientific-source"
-            label="Fuente de datos"
+            label={t('sourceLabel')}
             describedBy="scientific-source-hint"
             onChange={(value) => selectSource(value as ScientificSourceCode)}
             value={query.source}
@@ -347,18 +366,18 @@ export function ScientificDataExplorer({
         </div>
 
         <div className="data-field">
-          <label htmlFor="scientific-product">Instrumento y producto</label>
+          <label htmlFor="scientific-product">{t('productLabel')}</label>
           <InstrumentProductSelect
             disabled={controlsDisabled}
             id="scientific-product"
-            label="Instrumento y producto"
+            label={t('productLabel')}
             describedBy="scientific-product-hint"
             onChange={(value) => selectProduct(value as ScientificProductCode)}
             value={query.product}
             options={selectedSource.instruments.flatMap((instrument) =>
               instrument.products.map((product) => ({
                 value: product.code,
-                label: `${product.name}${product.name.includes(`(${product.code})`) ? '' : ` (${product.code})`}${product.available ? '' : ' — pendiente'}`,
+                label: `${product.name}${product.name.includes(`(${product.code})`) ? '' : ` (${product.code})`}${product.available ? '' : t('pendingSuffix')}`,
                 group: `${instrument.code} — ${instrument.name}`,
                 disabled: !product.available,
               })),
@@ -373,11 +392,11 @@ export function ScientificDataExplorer({
 
         {!solarImages ? (
           <div className="data-field">
-            <label htmlFor="scientific-parameter">Canal o parámetro</label>
+            <label htmlFor="scientific-parameter">{t('parameterLabel')}</label>
             <Select
               disabled={controlsDisabled}
               id="scientific-parameter"
-              label="Canal o parámetro"
+              label={t('parameterLabel')}
               onChange={(value) => updateQuery('parameter', value)}
               value={query.parameter}
               options={
@@ -391,7 +410,7 @@ export function ScientificDataExplorer({
         ) : null}
 
         <div className="data-field">
-          <label htmlFor="scientific-date">Fecha</label>
+          <label htmlFor="scientific-date">{t('dateLabel')}</label>
           <input
             disabled={controlsDisabled}
             id="scientific-date"
@@ -404,9 +423,7 @@ export function ScientificDataExplorer({
           />
           <div className="data-field-details" id="scientific-date-hint">
             {query.source === 'GOES' ? (
-              <span className="data-field-hint">
-                Consulta histórica por fecha. Los días sin observaciones se muestran sin datos.
-              </span>
+              <span className="data-field-hint">{t('dateHint')}</span>
             ) : null}
           </div>
         </div>
@@ -414,10 +431,10 @@ export function ScientificDataExplorer({
         <div
           className="data-time-range data-time-fields"
           role="group"
-          aria-label="Rango horario (UTC)"
+          aria-label={t('timeRangeGroupLabel')}
         >
           <div className="data-field">
-            <label htmlFor="scientific-start-time">Hora de inicio (UTC)</label>
+            <label htmlFor="scientific-start-time">{t('startTimeLabel')}</label>
             <input
               disabled={controlsDisabled}
               aria-describedby={message ? 'scientific-query-message' : undefined}
@@ -430,7 +447,7 @@ export function ScientificDataExplorer({
             />
           </div>
           <div className="data-field">
-            <label htmlFor="scientific-end-time">Hora de fin (UTC)</label>
+            <label htmlFor="scientific-end-time">{t('endTimeLabel')}</label>
             <input
               disabled={controlsDisabled}
               aria-describedby={message ? 'scientific-query-message' : undefined}
@@ -450,50 +467,38 @@ export function ScientificDataExplorer({
             icon={<Search aria-hidden="true" size={18} strokeWidth={1.8} />}
             type="submit"
           >
-            {requestState === 'loading' ? 'Consultando…' : 'Consultar datos'}
+            {requestState === 'loading' ? t('submitLoading') : t('submit')}
           </Button>
         </div>
       </form>
 
       <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
         <span className="data-source-notice-copy">
-          <span aria-hidden={query.source !== 'GOES'}>
-            Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica
-            puede tardar varios minutos. MPSL está pendiente de integración.
-          </span>
-          <span aria-hidden={query.source !== 'ROSAC'}>
-            ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están
-            definidos; todos los resultados de esta fuente son simulados y están rotulados como tal.
-          </span>
+          <span aria-hidden={query.source !== 'GOES'}>{t('noticeGoes')}</span>
+          <span aria-hidden={query.source !== 'ROSAC'}>{t('noticeRosac')}</span>
         </span>
       </Notice>
 
       <aside aria-labelledby="scientific-permissions-title" className="data-permissions">
-        <h3 id="scientific-permissions-title">Permisos de consulta y descarga</h3>
-        <p>
-          Puede consultar información histórica de GOES sin una cuenta. Para descargar, necesita una
-          cuenta e iniciar sesión. Las imágenes de las gráficas se pueden descargar para cualquier
-          fuente; los datos en CSV de ROSAC están disponibles para toda cuenta, y los de GOES
-          requieren un permiso de descarga de datos GOES. Las imágenes solares SUVI no se pueden
-          descargar desde esta plataforma. Cada enlace de descarga vence en 30 minutos.
-        </p>
+        <h3 id="scientific-permissions-title">{t('permissionsTitle')}</h3>
+        <p>{t('permissionsText')}</p>
       </aside>
 
       {requestState === 'loading' && (
         <div className="data-loading">
           <p className="data-loading-copy" role="status">
-            <span>{solarImages ? 'Cargando imágenes solares' : 'Cargando datos'}</span>
+            <span>{solarImages ? t('loadingImages') : t('loadingData')}</span>
             {!solarImages && <strong>{progress}%</strong>}
           </p>
           <progress
-            aria-label={solarImages ? 'Cargando imágenes solares' : 'Cargando datos'}
+            aria-label={solarImages ? t('loadingImages') : t('loadingData')}
             className="data-loading-progress"
             max={100}
             value={solarImages ? undefined : progress}
           />
           <div className="data-loading-actions">
             <Button type="button" variant="secondary" onClick={resetResults}>
-              Cancelar consulta
+              {t('cancelQuery')}
             </Button>
           </div>
         </div>
@@ -509,7 +514,7 @@ export function ScientificDataExplorer({
         <section aria-labelledby="scientific-results-title" className="data-results">
           <div className="data-section-heading">
             <div>
-              <p className="topic-kicker">Resultados de la consulta</p>
+              <p className="topic-kicker">{t('resultsKicker')}</p>
               <h2 id="scientific-results-title" ref={resultsHeading} tabIndex={-1}>
                 {result.product.name}
                 {result.product.name.includes(`(${result.product.code})`)
@@ -526,11 +531,15 @@ export function ScientificDataExplorer({
 
           <dl className="data-metadata">
             <div>
-              <dt>Instrumento</dt>
+              <dt>{t('instrumentResultLabel')}</dt>
               <dd>{result.instrument.code}</dd>
             </div>
             <div>
-              <dt>{result.visualization === 'image-sequence' ? 'Longitud de onda' : 'Canal'}</dt>
+              <dt>
+                {result.visualization === 'image-sequence'
+                  ? t('wavelengthResultLabel')
+                  : t('channelResultLabel')}
+              </dt>
               <dd>
                 {result.visualization === 'image-sequence'
                   ? selected?.product.wavelength
@@ -538,23 +547,23 @@ export function ScientificDataExplorer({
               </dd>
             </div>
             <div>
-              <dt>Fecha</dt>
+              <dt>{t('dateResultLabel')}</dt>
               <dd>{formatDate(result.query.date)}</dd>
             </div>
             <div>
-              <dt>Intervalo</dt>
+              <dt>{t('intervalResultLabel')}</dt>
               <dd>
                 {result.query.startTime}–{result.query.endTime} UTC
               </dd>
             </div>
             <div>
-              <dt>Fuente</dt>
+              <dt>{t('sourceResultLabel')}</dt>
               <dd>{result.origin.provider}</dd>
             </div>
             {result.origin.satellite ? (
               <div>
-                <dt>Satélite</dt>
-                <dd>GOES-{result.origin.satellite}</dd>
+                <dt>{t('satelliteResultLabel')}</dt>
+                <dd>{t('satelliteValue', { number: result.origin.satellite })}</dd>
               </div>
             ) : null}
           </dl>
@@ -565,28 +574,27 @@ export function ScientificDataExplorer({
 
           {!hasResults ? (
             <div className="content-empty" role="status">
-              <h3>No hay datos disponibles</h3>
+              <h3>{t('emptyTitle')}</h3>
               <p>
                 {result.visualization === 'image-sequence'
-                  ? 'No hay imágenes solares disponibles para la banda, la fecha y el horario seleccionados. Seleccione otra banda o intente nuevamente más tarde.'
-                  : 'No se encontraron observaciones para el producto, la fecha y el rango horario seleccionados. Modifique los criterios e intente nuevamente.'}
+                  ? t('emptyImageMessage')
+                  : t('emptyDataMessage')}
               </p>
             </div>
           ) : null}
 
           {result.visualization === 'time-series' && result.points.length > 0 ? (
             <>
-              <div className="data-summary" aria-label="Resumen de los valores">
+              <div className="data-summary" aria-label={t('summaryLabel')}>
                 {[
-                  ['Mínimo', minimum],
-                  ['Máximo', maximum],
-                  ['Último valor', latest],
+                  [t('minimum'), minimum],
+                  [t('maximum'), maximum],
+                  [t('latest'), latest],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <span>{label}</span>
                     <strong>
-                      {valueFormatter.format(value as number)}{' '}
-                      <small>{result.parameter.unit}</small>
+                      {formatValue(value as number)} <small>{result.parameter.unit}</small>
                     </strong>
                   </div>
                 ))}
@@ -595,8 +603,8 @@ export function ScientificDataExplorer({
               <ScientificDataChart
                 caption={
                   result.origin.kind === 'observed'
-                    ? `Observaciones de ${result.origin.provider}.`
-                    : 'Serie simulada para preparar la futura integración de ROSAC.'
+                    ? t('chartCaptionObserved', { provider: result.origin.provider })
+                    : t('chartCaptionSimulated')
                 }
                 label={result.product.name}
                 points={result.points}
@@ -604,14 +612,17 @@ export function ScientificDataExplorer({
               />
 
               <DataTable
-                summary={`Ver valores de la gráfica (${result.points.length})`}
-                caption={`Mediciones de ${result.product.name} el ${formatDate(result.query.date)}`}
-                columns={['Hora (UTC)', `Valor (${result.parameter.unit})`]}
+                summary={t('tableToggle', { count: result.points.length })}
+                caption={t('tableCaption', {
+                  product: result.product.name,
+                  date: formatDate(result.query.date),
+                })}
+                columns={[t('columnTime'), t('columnValue', { unit: result.parameter.unit })]}
               >
                 {result.points.map((point) => (
                   <tr key={point.timestamp}>
                     <th scope="row">{formatTime(point.timestamp)}</th>
-                    <td>{valueFormatter.format(point.value)}</td>
+                    <td>{formatValue(point.value)}</td>
                   </tr>
                 ))}
               </DataTable>
@@ -625,8 +636,8 @@ export function ScientificDataExplorer({
           {result.visualization === 'dynamic-spectrum' && result.cells.length > 0 ? (
             <>
               <DynamicSpectrumChart
-                label="Espectro dinámico simulado de ROSAC"
-                caption="Espectro dinámico de demostración; valores simulados."
+                label={t('dynamicSpectrumLabel')}
+                caption={t('dynamicSpectrumCaption')}
                 frequencyUnit={result.frequencyUnit}
                 cells={result.cells}
                 frequencies={result.frequencies}
@@ -634,15 +645,15 @@ export function ScientificDataExplorer({
                 unit={result.parameter.unit}
               />
               <DataTable
-                summary={`Ver valores del espectro (${result.cells.length})`}
-                caption="Intensidad simulada por hora y frecuencia"
-                columns={['Hora (UTC)', 'Frecuencia (MHz)', 'Intensidad relativa']}
+                summary={t('dynamicSpectrumTableToggle', { count: result.cells.length })}
+                caption={t('dynamicSpectrumTableCaption')}
+                columns={[t('columnTime'), t('columnFrequency'), t('columnIntensity')]}
               >
                 {result.cells.map((cell) => (
                   <tr key={`${cell.timestamp}-${cell.frequency}`}>
                     <th scope="row">{formatTime(cell.timestamp)}</th>
                     <td>{cell.frequency}</td>
-                    <td>{valueFormatter.format(cell.value)}</td>
+                    <td>{formatValue(cell.value)}</td>
                   </tr>
                 ))}
               </DataTable>

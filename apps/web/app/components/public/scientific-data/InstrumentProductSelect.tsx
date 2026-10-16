@@ -1,6 +1,7 @@
 'use client'
 
 import { Check, ChevronDown } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
@@ -27,6 +28,7 @@ export function InstrumentProductSelect({
   disabled,
   describedBy,
 }: InstrumentProductSelectProps) {
+  const t = useTranslations('scientificData.instrumentSelect')
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(`option-${value}`)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
@@ -45,7 +47,7 @@ export function InstrumentProductSelect({
   const selected = options.find((option) => option.value === value)
   const groups = Array.from(new Set(options.map((option) => option.group))).map((label, index) => ({
     key: `group-${index}`,
-    label: label ?? 'Opciones',
+    label: label ?? t('defaultGroupLabel'),
     options: options.filter((option) => option.group === label),
   }))
   const optionNodes = (items: SelectOption[]) =>
@@ -252,7 +254,7 @@ export function InstrumentProductSelect({
           {selected?.group ? (
             <span className="instrument-product-selection">{selected.group}</span>
           ) : null}
-          {selected?.label ?? 'Seleccione una opción'}
+          {selected?.label ?? t('placeholder')}
         </span>
         <ChevronDown aria-hidden="true" size={18} />
       </button>
@@ -294,7 +296,7 @@ export function InstrumentProductSelect({
                   aria-hidden={openGroup !== group.key}
                   inert={openGroup !== group.key}
                 >
-                  <div role="group" aria-label={`Productos de ${group.label}`}>
+                  <div role="group" aria-label={t('productsOf', { group: group.label })}>
                     {group.options.map(renderOption)}
                   </div>
                 </div>

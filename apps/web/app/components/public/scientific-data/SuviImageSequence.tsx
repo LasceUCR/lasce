@@ -24,6 +24,7 @@ interface SolarImageProps {
 
 function SolarImage({ image, strip, onOpen, triggerRef }: SolarImageProps) {
   const t = useTranslations('solarImageLightbox')
+  const tImages = useTranslations('scientificData.images')
   const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading')
 
   return (
@@ -31,9 +32,7 @@ function SolarImage({ image, strip, onOpen, triggerRef }: SolarImageProps) {
       <div className="data-image-frame" data-state={state}>
         {state !== 'loaded' ? (
           <p role="status" className="data-image-status">
-            {state === 'error'
-              ? 'Esta imagen solar no está disponible. Consulte otra banda o intente nuevamente.'
-              : 'Cargando imagen solar…'}
+            {state === 'error' ? tImages('unavailable') : tImages('loading')}
           </p>
         ) : null}
         {state !== 'error' ? (
@@ -72,6 +71,7 @@ function SolarImage({ image, strip, onOpen, triggerRef }: SolarImageProps) {
  * is open and focus can return to the thumbnail that opened it.
  */
 export function SuviImageSequence({ images, variant = 'grid' }: SuviImageSequenceProps) {
+  const tImages = useTranslations('scientificData.images')
   const [openIndex, setOpenIndex] = useState(closed)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
 
@@ -95,7 +95,7 @@ export function SuviImageSequence({ images, variant = 'grid' }: SuviImageSequenc
   return (
     <>
       <ul
-        aria-label="Secuencia de imágenes solares"
+        aria-label={tImages('sequenceLabel')}
         className={`data-image-grid${variant === 'strip' ? ' data-image-strip' : ''}`}
       >
         {images.map((image, index) => (
