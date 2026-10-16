@@ -37,7 +37,7 @@ import {
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
 import { languageLabels } from '@/app/lib/publication-form'
 
-import {uploadGalleryImage, type UploadGalleryImageResult } from '@/app/(public)/galeria/actions'
+import { uploadGalleryImage, type UploadGalleryImageResult } from '@/app/(public)/galeria/actions'
 
 type AlbumTranslatableField = 'title' | 'description'
 

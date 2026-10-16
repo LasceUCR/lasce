@@ -19,7 +19,12 @@ import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeed
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import { slugFromTitle, type GalleryMedia, type GallerySubAlbum, type ReviewConfirmation } from '@/app/lib/gallery-schema'
+import {
+  slugFromTitle,
+  type GalleryMedia,
+  type GallerySubAlbum,
+  type ReviewConfirmation,
+} from '@/app/lib/gallery-schema'
 
 const blankAlbum: AlbumFormValues = {
   title: '',

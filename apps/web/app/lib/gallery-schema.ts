@@ -22,8 +22,7 @@ export { translationLocales, type TranslationLocale } from '@/app/lib/i18n/conte
  *
  * The bilingual parts (content schema, stored content, review rule) come from the shared content
  * core in `app/lib/i18n/content/`.
-*/
-
+ */
 
 /** The URL identifier generated from an album title. Empty when the title has no letters or digits. */
 export function slugFromTitle(title: string): string {
