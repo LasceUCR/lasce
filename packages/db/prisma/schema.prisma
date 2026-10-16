@@ -67,6 +67,7 @@ model User {
   nosotrosActivities  NosotrosActivity[]
   researchers         Researcher[]
   nosotrosResearchers NosotrosResearcher[]
+  auditEvents         AuditEvent[]
 
   @@map("users")
   @@schema("auth")
@@ -558,6 +559,39 @@ model ResourceDownload {
   @@index([userId, createdAt])
   @@index([source, instrument, createdAt])
   @@map("resource_downloads")
+  @@schema("public")
+}
+
+/// One thing that happened in the portal, for the "Actividad reciente" panel of
+/// `/administracion` and any later audit view (LASCE-CON-012-151). Append-only: a row is never
+/// updated, and it is written through `apps/web/app/lib/audit-log.ts`. Only the web writes here;
+/// the worker does not mirror this table.
+model AuditEvent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// What happened, as `<entity>.<verb>`, e.g. "publication.create". A plain string, like
+  /// `RolePermission.permission`, so a new kind of event needs no migration.
+  action     String
+  /// The line the panel shows, written when the event happens so it still reads after the entity
+  /// it names is gone, e.g. "Publicación agregada: Solar flares in 2026".
+  summary    String
+  /// "user", "system" or "worker"; see `AUDIT_ACTOR_TYPES` in `audit-log.ts`.
+  actorType  String   @map("actor_type")
+  /// The account that acted. Null for the system, or once the account is deleted, so the trail
+  /// outlives it.
+  actorId    String?  @map("actor_id") @db.Uuid
+  /// What was acted on, e.g. "publication" and its id. Null when there is no single target.
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  /// Anything else worth keeping about the event, e.g. the fields that changed.
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@map("audit_events")
   @@schema("public")
 }
 
