@@ -42,7 +42,7 @@ const defaultArgs: AcademicActivitiesPageProps = { activities: [activity] }
 const emptyArgs: AcademicActivitiesPageProps = { activities: [] }
 const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
 
-function renderPage(props: AcademicActivitiesPageProps = defaultArgs, locale?: string) {
+function renderPage(props: AcademicActivitiesPageProps = defaultArgs, locale?: 'es' | 'en') {
   return renderWithIntl(
     <ToastProvider>
       <EditModeProvider>
