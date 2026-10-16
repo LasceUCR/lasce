@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
@@ -14,27 +15,17 @@ import {
   type AlbumFormHandle,
   type AlbumFormValues,
 } from '@/app/components/public/gallery/forms/AlbumForm'
-import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import type { GalleryMedia, GallerySubAlbum, ReviewConfirmation } from '@/app/lib/gallery-schema'
+import { slugFromTitle, type GalleryMedia, type GallerySubAlbum, type ReviewConfirmation } from '@/app/lib/gallery-schema'
 
 const blankAlbum: AlbumFormValues = {
   title: '',
   description: '',
   yearsLabel: '',
   coverObjectKey: '',
-}
-
-function slugFromTitle(title: string): string {
-  return title
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
 }
 
 function albumMediaMeta(media: readonly GalleryMedia[]): string {
@@ -92,7 +83,7 @@ export function AlbumPage({
   const router = useRouter()
   const [editingSubAlbum, setEditingSubAlbum] = useState<GallerySubAlbum | null>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const toast = useToast()
+  const t = useTranslations('gallery.feedback')
   const sendWithFeedback = useRequestFeedback()
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -105,10 +96,7 @@ export function AlbumPage({
     if (!parentAlbumId || createInProgress.current) return
 
     const slug = slugFromTitle(values.title)
-    if (!slug) {
-      toast.show('error', 'El título del subálbum debe incluir letras o números.')
-      return
-    }
+    if (!slug) return
 
     createInProgress.current = true
     setIsCreating(true)
@@ -127,8 +115,8 @@ export function AlbumPage({
           }),
         },
         {
-          success: 'Subálbum agregado correctamente.',
-          fallback: 'No se pudo crear el subálbum.',
+          success: t('subAlbumCreated'),
+          fallback: t('subAlbumCreateFailed'),
           onSuccess: () => {
             close()
             router.refresh()
@@ -146,8 +134,8 @@ export function AlbumPage({
       `/api/gallery/albums/${albumId}`,
       { method: 'DELETE' },
       {
-        success: 'Subálbum eliminado correctamente.',
-        fallback: 'No se pudo eliminar el subálbum.',
+        success: t('subAlbumDeleted'),
+        fallback: t('subAlbumDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -188,8 +176,8 @@ export function AlbumPage({
           }),
         },
         {
-          success: 'Subálbum actualizado correctamente.',
-          fallback: 'No se pudo guardar el subálbum.',
+          success: t('subAlbumUpdated'),
+          fallback: t('subAlbumSaveFailed'),
           onSuccess: () => {
             closeEditor()
             router.refresh()
@@ -226,6 +214,7 @@ export function AlbumPage({
                       {isCreating ? <p role="status">Creando subálbum...</p> : null}
                       <AlbumForm
                         album={blankAlbum}
+                        requireSlug
                         onCancel={close}
                         onSave={(values) => handleCreate(values, close)}
                         ref={createForm}

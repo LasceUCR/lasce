@@ -1,7 +1,7 @@
 'use client'
 
 import { useLocale, useTranslations } from 'next-intl'
-import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
+import { useId, useImperativeHandle, useState, type Ref } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
@@ -11,7 +11,9 @@ import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import {
+  slugFromTitle,
   albumContent,
   type ReviewConfirmation,
   type StoredAlbumContent,
@@ -34,9 +36,8 @@ import {
 } from '@/app/lib/i18n/content/form'
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
 import { languageLabels } from '@/app/lib/publication-form'
-import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
 
-import { uploadGalleryImage, type UploadGalleryImageResult } from '@/app/(public)/galeria/actions'
+import {uploadGalleryImage, type UploadGalleryImageResult } from '@/app/(public)/galeria/actions'
 
 type AlbumTranslatableField = 'title' | 'description'
 
@@ -69,6 +70,8 @@ export interface AlbumFormProps {
   /** Called once the form is valid, with the confirmations the save still needs. */
   onSave: (values: AlbumFormSaveValues, confirmed: ReviewConfirmation[]) => void
   onCancel: () => void
+  /** Creating an album: its URL identifier comes from the title, so the title needs a letter or digit. */
+  requireSlug?: boolean
   /** Routes modal close requests through the unsaved-changes confirmation. */
   ref?: Ref<AlbumFormHandle>
 }
@@ -84,6 +87,7 @@ export function AlbumForm({
   isLegacy = false,
   onSave,
   onCancel,
+  requireSlug = false,
   ref,
 }: AlbumFormProps) {
   // Everything the editor says follows the site's language; the tabs only pick the translation.
@@ -91,6 +95,7 @@ export function AlbumForm({
   const tGallery = useTranslations('gallery')
   const uiLocale = useLocale() as Locale
   const formId = useId()
+  const toast = useToast()
   // In a modal, the language tabs sit beside its title and stay in view while the form scrolls.
   const headerSlot = useModalHeaderSlot()
 
@@ -112,9 +117,7 @@ export function AlbumForm({
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
 
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-
-  const uploadErrorRef = useRef<HTMLParagraphElement>(null)
+  const [slugError, setSlugError] = useState<string | null>(null)
 
   // Visibility state for the discard confirmation dialog
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
@@ -130,12 +133,6 @@ export function AlbumForm({
     yearsLabel !== (album.yearsLabel ?? '') ||
     coverFile !== null ||
     coverRemoved
-
-  useEffect(() => {
-    if (uploadError) {
-      scrollIntoViewIfSupported(uploadErrorRef.current)
-    }
-  }, [uploadError])
 
   const hasCover = coverFile !== null || (Boolean(album.coverObjectKey) && !coverRemoved)
 
@@ -161,6 +158,7 @@ export function AlbumForm({
   function updateContent(locale: Locale, field: AlbumTranslatableField, value: string) {
     setContent((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
     setConfirmed((current) => resetConfirmations(current, field))
+    if (locale === defaultLocale && field === 'title') setSlugError(null)
   }
 
   function reviewControl(locale: Locale, field: AlbumTranslatableField) {
@@ -190,14 +188,20 @@ export function AlbumForm({
 
     if (target) setTab(target)
 
-    if (Object.keys(found).length > 0 || !hasCover) return
+    if (Object.keys(found).length > 0) return
+
+    if (requireSlug && !slugFromTitle(content[defaultLocale].title)) {
+      setSlugError(tGallery('editor.titleNeedsLettersOrNumbers'))
+      setTab(defaultLocale)
+      return
+    }
+
+    if (!hasCover) return
 
     handleConfirmSave()
   }
 
   async function handleConfirmSave() {
-    setUploadError(null)
-
     let coverObjectKey = album.coverObjectKey
 
     if (coverFile) {
@@ -212,14 +216,14 @@ export function AlbumForm({
         result = await uploadGalleryImage(formData)
       } catch {
         setIsUploading(false)
-        setUploadError('No se pudo subir la imagen. Inténtelo de nuevo.')
+        toast.show('error', tGallery('editor.uploadFailed'))
         return
       }
 
       setIsUploading(false)
 
       if (!result.ok) {
-        setUploadError(result.error)
+        toast.show('error', result.error)
         return
       }
 
@@ -281,7 +285,10 @@ export function AlbumForm({
               lang={contentFieldLang(stored, locale)}
               onChange={(value) => updateContent(locale, 'title', value)}
               required
-              error={errors[contentPath(locale, 'title')]}
+              error={
+                errors[contentPath(locale, 'title')] ??
+                (locale === defaultLocale ? (slugError ?? undefined) : undefined)
+              }
               value={content[locale].title}
             />
             {reviewControl(locale, 'title')}
@@ -307,12 +314,6 @@ export function AlbumForm({
         onChange={(value) => setYearsLabel(value)}
         value={yearsLabel}
       />
-
-      {uploadError ? (
-        <p className="form-alert" ref={uploadErrorRef} role="alert">
-          {uploadError}
-        </p>
-      ) : null}
 
       <div className="cms-form-actions">
         <Button onClick={requestCancel} variant="secondary">

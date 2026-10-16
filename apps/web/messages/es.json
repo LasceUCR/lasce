@@ -655,8 +655,24 @@
       "mediaField": "Contenido",
       "mediaHelperText": "Subida de contenido, en formato JPG, PNG, o WEBP.",
       "mediaRequired": "Se requiere subir un contenido.",
-      "galleryWidth": "Ancho en la galeria (columnas)",
-      "galleryHeight": "Alto en la galeria (filas)"
+      "galleryWidth": "Ancho en la galería (columnas)",
+      "galleryHeight": "Alto en la galería (filas)",
+      "titleNeedsLettersOrNumbers": "El título debe incluir letras o números para generar el identificador.",
+      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo."
+    },
+    "feedback": {
+      "albumCreated": "Álbum agregado correctamente.",
+      "albumUpdated": "Álbum actualizado correctamente.",
+      "albumDeleted": "Álbum eliminado correctamente.",
+      "albumCreateFailed": "No se pudo crear el álbum.",
+      "albumSaveFailed": "No se pudo guardar el álbum.",
+      "albumDeleteFailed": "No se pudo eliminar el álbum.",
+      "subAlbumCreated": "Subálbum agregado correctamente.",
+      "subAlbumUpdated": "Subálbum actualizado correctamente.",
+      "subAlbumDeleted": "Subálbum eliminado correctamente.",
+      "subAlbumCreateFailed": "No se pudo crear el subálbum.",
+      "subAlbumSaveFailed": "No se pudo guardar el subálbum.",
+      "subAlbumDeleteFailed": "No se pudo eliminar el subálbum."
     }
   },
   "nosotros": {

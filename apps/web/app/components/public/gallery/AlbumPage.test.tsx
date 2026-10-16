@@ -135,4 +135,24 @@ describe('AlbumPage', () => {
     expect(screen.getByRole('dialog', { name: 'Añadir subálbum' })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Título (Español)' })).toHaveValue('Nuevo')
   })
+
+  test('reports a title without letters or numbers next to the title field', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal('fetch', vi.fn())
+    render(<AlbumPage {...albumArgs} canCreate parentAlbumId="parent-id" />, true)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir subálbum' }))
+    await user.type(screen.getByRole('textbox', { name: 'Título (Español)' }), '!!!')
+    await user.type(screen.getByRole('textbox', { name: 'Descripción (Español)' }), 'Texto')
+    await user.click(screen.getByRole('tab', { name: 'English' }))
+    await user.type(screen.getByRole('textbox', { name: 'Título (English)' }), 'New')
+    await user.type(screen.getByRole('textbox', { name: 'Descripción (English)' }), 'Text')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      screen.getByText('El título debe incluir letras o números para generar el identificador.'),
+    ).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
+    vi.unstubAllGlobals()
+  })
 })

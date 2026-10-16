@@ -1,12 +1,13 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
-import { useToast } from '@/app/components/public/toast/ToastProvider'
+import { slugFromTitle } from '@/app/lib/gallery-schema'
 import {
   AlbumForm,
   type AlbumFormHandle,
@@ -24,19 +25,10 @@ const blankAlbum: AlbumFormValues = {
   coverObjectKey: '',
 }
 
-function slugFromTitle(title: string): string {
-  return title
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
 export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardProps) {
   const { editMode } = useEditMode()
   const router = useRouter()
-  const toast = useToast()
+  const t = useTranslations('gallery.feedback')
   const sendWithFeedback = useRequestFeedback()
   const [isCreating, setIsCreating] = useState(false)
   const createInProgress = useRef(false)
@@ -48,13 +40,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
     if (createInProgress.current) return
 
     const slug = slugFromTitle(values.title)
-    if (!slug) {
-      toast.show(
-        'error',
-        'El título debe incluir letras o números para generar el identificador del álbum.',
-      )
-      return
-    }
+    if (!slug) return
 
     createInProgress.current = true
     setIsCreating(true)
@@ -73,8 +59,8 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
           }),
         },
         {
-          success: 'Álbum agregado correctamente.',
-          fallback: 'No se pudo crear el álbum.',
+          success: t('albumCreated'),
+          fallback: t('albumCreateFailed'),
           onSuccess: () => {
             close()
             router.refresh()
@@ -103,6 +89,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
               {isCreating ? <p role="status">Creando álbum...</p> : null}
               <AlbumForm
                 album={blankAlbum}
+                requireSlug
                 onCancel={close}
                 onSave={(values) => handleCreate(values, close)}
                 ref={createForm}

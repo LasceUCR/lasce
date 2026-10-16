@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
@@ -60,6 +61,7 @@ export function GalleryGroupSection({
   const router = useRouter()
   const headingId = `galeria-${album.slug}`
   const [isEditing, setIsEditing] = useState(false)
+  const t = useTranslations('gallery.feedback')
   const sendWithFeedback = useRequestFeedback()
   const [isSaving, setIsSaving] = useState(false)
   const saveInProgress = useRef(false)
@@ -72,8 +74,8 @@ export function GalleryGroupSection({
       `/api/gallery/albums/${album.id}`,
       { method: 'DELETE' },
       {
-        success: 'Álbum eliminado correctamente.',
-        fallback: 'No se pudo eliminar el álbum.',
+        success: t('albumDeleted'),
+        fallback: t('albumDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -111,8 +113,8 @@ export function GalleryGroupSection({
           }),
         },
         {
-          success: 'Álbum actualizado correctamente.',
-          fallback: 'No se pudo guardar el álbum.',
+          success: t('albumUpdated'),
+          fallback: t('albumSaveFailed'),
           onSuccess: () => {
             closeEditor()
             router.refresh()
