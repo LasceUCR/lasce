@@ -268,6 +268,29 @@ class NewsCrossAuthor(Base):
     position: Mapped[int] = mapped_column(Integer)
 
 
+class NewsTranslation(Base):
+    """The ``title`` and ``abstract`` of a `News` item in a language other than
+    the source one. One row per (item, locale); the source text stays on
+    ``news_records``.
+    """
+
+    __tablename__ = "news_record_translations"
+    __table_args__ = (
+        UniqueConstraint("news_id", "locale", name="news_record_translations_news_id_locale_key"),
+        {"schema": "news"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    news_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("news.news_records.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    abstract: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class UserRole(enum.StrEnum):
     """Access level of a portal account. Mirrors the Prisma ``UserRole`` enum, whose
     database values are the lower-case strings below (``@map`` in the schema).

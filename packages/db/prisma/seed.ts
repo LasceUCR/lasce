@@ -289,136 +289,251 @@ for (const area of researchAreas) {
  * This is temporary mock content until the CMS is done.
  */
 type SeedNews = {
-  title: string
+  /** The title and abstract in each language: Spanish on the base row, English as a translation. */
+  content: Record<'es' | 'en', { title: string; abstract: string }>
   publishedAt: Date | null
   source: string
   authors: string[]
-  abstract: string
   externalUrl: string
 }
 
 const newsRecords: SeedNews[] = [
   {
-    title:
-      '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
+    content: {
+      es: {
+        title:
+          '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
+        abstract:
+          'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
+      },
+      en: {
+        title:
+          '“Nothing happens here?” Five scientific projects to get excited about in Costa Rica',
+        abstract:
+          'A feature on Costa Rican scientific projects, among them ROSAC, the University of Costa Rica radio telescope devoted to studying solar activity.',
+      },
+    },
     authors: ['Jorge Arturo Mora'],
     source: 'La Nación – Revista Dominical',
     publishedAt: new Date('2026-05-24'),
-    abstract:
-      'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
     externalUrl:
       'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
   },
   {
-    title: '¿Vale la pena invertir en ciencia? Estos proyectos costarricenses son la respuesta',
+    content: {
+      es: {
+        title: '¿Vale la pena invertir en ciencia? Estos proyectos costarricenses son la respuesta',
+        abstract:
+          'Artículo de opinión que destaca a ROSAC como ejemplo de investigación científica costarricense y de la importancia de la inversión pública en ciencia.',
+      },
+      en: {
+        title: 'Is investing in science worth it? These Costa Rican projects are the answer',
+        abstract:
+          'An opinion piece that highlights ROSAC as an example of Costa Rican scientific research and of why public investment in science matters.',
+      },
+    },
     authors: ['Leonardo Garnier'],
     source: 'La Nación – Opinión (Leonardo Garnier)',
     publishedAt: new Date('2026-05-28'),
-    abstract:
-      'Artículo de opinión que destaca a ROSAC como ejemplo de investigación científica costarricense y de la importancia de la inversión pública en ciencia.',
     externalUrl:
       'https://www.nacion.com/opinion/columnistas/vale-la-pena-invertir-en-ciencia-estos-proyectos/ILX4QIPB6JGHBCJ6QB34QRGY2A/story/',
   },
   {
-    title:
-      'Científicos de la UCR monitorean la actividad solar para estudiar el impacto del clima espacial en el país',
+    content: {
+      es: {
+        title:
+          'Científicos de la UCR monitorean la actividad solar para estudiar el impacto del clima espacial en el país',
+        abstract:
+          'Un proyecto de la UCR busca generar datos propios sobre la actividad solar y desarrollar herramientas para estudiar y predecir el impacto del clima espacial en Costa Rica.',
+      },
+      en: {
+        title:
+          'UCR scientists monitor solar activity to study the impact of space weather on the country',
+        abstract:
+          'A UCR project aims to produce its own solar activity data and build tools to study and forecast the impact of space weather on Costa Rica.',
+      },
+    },
     authors: ['Alonso Martinez'],
     source: 'Delfino.cr',
     publishedAt: new Date('2025-12-05'),
-    abstract:
-      'Un proyecto de la UCR busca generar datos propios sobre la actividad solar y desarrollar herramientas para estudiar y predecir el impacto del clima espacial en Costa Rica.',
     externalUrl:
       'https://delfino.cr/2025/12/cientificos-de-la-ucr-monitorean-la-actividad-solar-para-estudiar-el-impacto-del-clima-espacial-en-el-pais',
   },
   {
-    title:
-      'Científicos de la UCR monitorean la actividad solar para estudiar el impacto del clima espacial en nuestro país',
+    content: {
+      es: {
+        title:
+          'Científicos de la UCR monitorean la actividad solar para estudiar el impacto del clima espacial en nuestro país',
+        abstract:
+          'La UCR presenta un proyecto interdisciplinario para estudiar la actividad solar y sus efectos sobre Costa Rica mediante observaciones, instrumentación científica y herramientas computacionales.',
+      },
+      en: {
+        title:
+          'UCR scientists monitor solar activity to study the impact of space weather on our country',
+        abstract:
+          'UCR presents an interdisciplinary project to study solar activity and its effects on Costa Rica through observations, scientific instrumentation and computational tools.',
+      },
+    },
     authors: ['Tatiana Carmona Rizo'],
     source: 'Universidad de Costa Rica (UCR)',
     publishedAt: new Date('2025-12-05'),
-    abstract:
-      'La UCR presenta un proyecto interdisciplinario para estudiar la actividad solar y sus efectos sobre Costa Rica mediante observaciones, instrumentación científica y herramientas computacionales.',
     externalUrl:
       'https://www.ucr.ac.cr/noticias/2025/12/05/cientificos-de-la-ucr-monitorean-la-actividad-solar-para-estudiar-el-impacto-del-clima-espacial-en-nuestro-pais.html',
   },
   {
-    title: 'UCR pone en funcionamiento radiotelescopio para investigar el Sol',
+    content: {
+      es: {
+        title: 'UCR pone en funcionamiento radiotelescopio para investigar el Sol',
+        abstract:
+          'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
+      },
+      en: {
+        title: 'UCR brings a radio telescope online to study the Sun',
+        abstract:
+          'ROSAC, the radio telescope of the Santa Cruz Radio Observatory, will monitor solar radiation around the clock and produce data for scientific research.',
+      },
+    },
     authors: ['Gerardo Quesada A.'],
     source: 'El Norte Hoy',
     publishedAt: new Date('2023-10-02'),
-    abstract:
-      'ROSAC, el radiotelescopio del Radio Observatorio de Santa Cruz, permitirá monitorear la radiación solar durante las 24 horas y generar datos para investigaciones científicas.',
     externalUrl:
       'https://elnortehoycr.com/2023/10/02/ucr-pone-en-funcionamiento-radiotelescopio-para-investigar-el-sol/',
   },
   {
-    title:
-      'Empresa global de telecomunicaciones hace una donación a la UCR para radio observatorio que estudiará el Sol',
+    content: {
+      es: {
+        title:
+          'Empresa global de telecomunicaciones hace una donación a la UCR para radio observatorio que estudiará el Sol',
+        abstract:
+          'El Grupo Prysmian Centroamérica y el Caribe donó casi dos kilómetros de cable de fibra óptica y cableado eléctrico para el proyecto del Radio Observatorio Santa Cruz (Rosac), un aporte cercano a los USD 36 000 que permitirá a Costa Rica contar con un telescopio para medir la radiación electromagnética del Sol.',
+      },
+      en: {
+        title:
+          'Global telecommunications company donates to UCR for a radio observatory that will study the Sun',
+        abstract:
+          "Prysmian Group Central America and the Caribbean donated almost two kilometres of fibre-optic and electrical cabling to the Santa Cruz Radio Observatory (Rosac) project, a contribution of about USD 36,000 that will give Costa Rica a telescope to measure the Sun's electromagnetic radiation.",
+      },
+    },
     authors: ['Patricia Blanco Picado'],
     source: 'Universidad de Costa Rica (UCR)',
     publishedAt: new Date('2023-09-12'),
-    abstract:
-      'El Grupo Prysmian Centroamérica y el Caribe donó casi dos kilómetros de cable de fibra óptica y cableado eléctrico para el proyecto del Radio Observatorio Santa Cruz (Rosac), un aporte cercano a los USD 36 000 que permitirá a Costa Rica contar con un telescopio para medir la radiación electromagnética del Sol.',
     externalUrl:
       'https://www.ucr.ac.cr/noticias/2023/9/12/empresa-global-de-telecomunicaciones-hace-una-donacion-a-la-ucr-para-radio-observatorio-que-estudiara-el-sol.html',
   },
   {
-    title:
-      'Prysmian dona $36.000 en cables de energía y telecomunicaciones para el desarrollo del único radio telescopio solar de su tipo en Centroamérica',
+    content: {
+      es: {
+        title:
+          'Prysmian dona $36.000 en cables de energía y telecomunicaciones para el desarrollo del único radio telescopio solar de su tipo en Centroamérica',
+        abstract:
+          'Prysmian donó cerca de tres kilómetros de cables de energía y telecomunicaciones para apoyar el desarrollo y puesta en funcionamiento del radiotelescopio solar ROSAC.',
+      },
+      en: {
+        title:
+          'Prysmian donates $36,000 in power and telecommunications cables for the only solar radio telescope of its kind in Central America',
+        abstract:
+          'Prysmian donated about three kilometres of power and telecommunications cables to support the development and commissioning of the ROSAC solar radio telescope.',
+      },
+    },
     authors: ['Prysmian'],
     source: 'Prysmian Pro',
     publishedAt: null,
-    abstract:
-      'Prysmian donó cerca de tres kilómetros de cables de energía y telecomunicaciones para apoyar el desarrollo y puesta en funcionamiento del radiotelescopio solar ROSAC.',
     externalUrl:
       'https://prysmianpro.com/en/prysmian-group-dona-36-000-en-cables-de-energia-y-telecomunicaciones-para-el-desarrollo-del-unico-radio-telescopio-solar-de-su-tipo-en-centroamerica/',
   },
   {
-    title: 'El impacto social de Prysmian en la era de la transición energética',
+    content: {
+      es: {
+        title: 'El impacto social de Prysmian en la era de la transición energética',
+        abstract:
+          'Artículo sobre el impacto social y educativo de Prysmian que menciona al proyecto del radiotelescopio solar ROSAC como una iniciativa de educación, inclusión y sostenibilidad.',
+      },
+      en: {
+        title: "Prysmian's social impact in the era of the energy transition",
+        abstract:
+          "An article on Prysmian's social and educational impact that mentions the ROSAC solar radio telescope project as an education, inclusion and sustainability initiative.",
+      },
+    },
     authors: ['Prysmian'],
     source: 'Prysmian Pro',
     publishedAt: null,
-    abstract:
-      'Artículo sobre el impacto social y educativo de Prysmian que menciona al proyecto del radiotelescopio solar ROSAC como una iniciativa de educación, inclusión y sostenibilidad.',
     externalUrl:
       'https://prysmianpro.com/el-impacto-social-de-prysmian-en-la-era-de-la-transicion-energetica/',
   },
   {
-    title: 'Radiotelescopio en Guanacaste para estudiar el Sol',
+    content: {
+      es: {
+        title: 'Radiotelescopio en Guanacaste para estudiar el Sol',
+        abstract:
+          'RACSA presenta el radiotelescopio de ROSAC y su objetivo de estudiar el Sol mediante la medición de ondas de radio, destacando su carácter pionero en Costa Rica y Centroamérica.',
+      },
+      en: {
+        title: 'A radio telescope in Guanacaste to study the Sun',
+        abstract:
+          'RACSA presents the ROSAC radio telescope and its goal of studying the Sun by measuring radio waves, highlighting its pioneering role in Costa Rica and Central America.',
+      },
+    },
     authors: ['Mercadeo RACSA'],
     source: 'RACSA',
     publishedAt: new Date('2022-05-20'),
-    abstract:
-      'RACSA presenta el radiotelescopio de ROSAC y su objetivo de estudiar el Sol mediante la medición de ondas de radio, destacando su carácter pionero en Costa Rica y Centroamérica.',
     externalUrl: 'https://www.racsa.go.cr/blog/radiotelescopio-en-guanacaste-para-estudiar-el-sol/',
   },
   {
-    title: 'Radiotelescopio en Guanacaste apunta hacia el Sol para ayudar a revelar sus secretos',
+    content: {
+      es: {
+        title:
+          'Radiotelescopio en Guanacaste apunta hacia el Sol para ayudar a revelar sus secretos',
+        abstract:
+          'El radiotelescopio de ROSAC busca generar datos locales que permitan estudiar cómo las ondas solares pueden afectar sistemas como radares y telecomunicaciones en Costa Rica.',
+      },
+      en: {
+        title: 'Guanacaste radio telescope points at the Sun to help reveal its secrets',
+        abstract:
+          'The ROSAC radio telescope aims to produce local data to study how solar radio waves can affect systems such as radars and telecommunications in Costa Rica.',
+      },
+    },
     authors: ['Francisco Ruiz León'],
     source: 'El Financiero',
     publishedAt: new Date('2022-03-17'),
-    abstract:
-      'El radiotelescopio de ROSAC busca generar datos locales que permitan estudiar cómo las ondas solares pueden afectar sistemas como radares y telecomunicaciones en Costa Rica.',
     externalUrl:
       'https://www.elfinancierocr.com/tecnologia/radiotelescopio-en-guanacaste-apunta-hacia-el-sol/XP3IRSKZVJDWTGUBZH5R2S6GKE/story/',
   },
   {
-    title: 'UCR instala radiotelescopio en Guanacaste con antena parabólica donada por Racsa',
+    content: {
+      es: {
+        title: 'UCR instala radiotelescopio en Guanacaste con antena parabólica donada por Racsa',
+        abstract:
+          'La UCR inició el montaje de ROSAC en Guanacaste utilizando una antena parabólica donada por RACSA y adaptada para realizar observaciones solares.',
+      },
+      en: {
+        title:
+          'UCR installs a radio telescope in Guanacaste with a satellite dish donated by Racsa',
+        abstract:
+          'UCR began assembling ROSAC in Guanacaste using a satellite dish donated by RACSA and adapted for solar observations.',
+      },
+    },
     authors: ['Johnny Castro'],
     source: 'La República',
     publishedAt: new Date('2022-02-10'),
-    abstract:
-      'La UCR inició el montaje de ROSAC en Guanacaste utilizando una antena parabólica donada por RACSA y adaptada para realizar observaciones solares.',
     externalUrl:
       'https://origin.larepublica.net/noticia/ucr-instala-radiotelescopio-en-guanacaste-con-antena-parabolica-donada-por-racsa',
   },
   {
-    title: 'UCR contará con su propio radiotelescopio para explorar el cosmos.',
+    content: {
+      es: {
+        title: 'UCR contará con su propio radiotelescopio para explorar el cosmos.',
+        abstract:
+          'Un proyecto de investigación de la UCR estudia la transformación de una gran antena instalada en la Finca Experimental de Santa Cruz en un radiotelescopio para estudiar los astros.',
+      },
+      en: {
+        title: 'UCR will have its own radio telescope to explore the cosmos',
+        abstract:
+          'A UCR research project studies turning a large antenna at the Santa Cruz Experimental Farm into a radio telescope for studying celestial bodies.',
+      },
+    },
     authors: ['Manrique Vindas Segura'],
     source: 'Universidad de Costa Rica (UCR)',
     publishedAt: new Date('2017-06-05'),
-    abstract:
-      'Un proyecto de investigación de la UCR estudia la transformación de una gran antena instalada en la Finca Experimental de Santa Cruz en un radiotelescopio para estudiar los astros.',
     externalUrl:
       'https://vinv.ucr.ac.cr/es/noticias/ucr-contara-con-su-propio-radiotelescopio-para-explorar-el-cosmos',
   },
@@ -435,23 +550,32 @@ for (const record of newsRecords) {
     },
   })
 
+  const { es, en } = record.content
+
   const news = await prisma.news.upsert({
     where: {
       externalUrl: record.externalUrl,
     },
     update: {
-      title: record.title,
+      title: es.title,
       publishedAt: record.publishedAt,
       sourceId: source.id,
-      abstract: record.abstract,
+      abstract: es.abstract,
     },
     create: {
-      title: record.title,
+      title: es.title,
       publishedAt: record.publishedAt,
       sourceId: source.id,
-      abstract: record.abstract,
+      abstract: es.abstract,
       externalUrl: record.externalUrl,
     },
+  })
+
+  // The English text, so the item reads complete in both languages instead of legacy.
+  await prisma.newsTranslation.upsert({
+    where: { newsId_locale: { newsId: news.id, locale: 'en' } },
+    update: { title: en.title, abstract: en.abstract },
+    create: { newsId: news.id, locale: 'en', title: en.title, abstract: en.abstract },
   })
 
   for (const [index, name] of record.authors.entries()) {
