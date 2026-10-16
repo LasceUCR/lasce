@@ -147,6 +147,22 @@ const magneticParameters: ScientificParameter[] = [
   { code: 'total', label: 'Magnitud total', unit: 'nT' },
 ]
 
+const ehisGroups = [
+  ['H', 'Hidrógeno (H)'],
+  ['He', 'Helio (He)'],
+  ['CNO', 'Carbono-nitrógeno-oxígeno (CNO)'],
+  ['NeS', 'Neón-azufre (Ne-S)'],
+  ['ClNi', 'Cloro-níquel (Cl-Ni)'],
+] as const
+
+const ehisParameters: ScientificParameter[] = ehisGroups.flatMap(([group, name]) =>
+  Array.from({ length: 5 }, (_, band) => ({
+    code: `${group}:E${band + 1}`,
+    label: `${name}: banda de energía ${band + 1}`,
+    unit: 'partículas/(cm²·s·sr·MeV/nucleón)',
+  })),
+)
+
 const mpshParameters: ScientificParameter[] = ['electron', 'proton'].flatMap((species) =>
   Array.from({ length: 5 }, (_, telescope) =>
     Array.from({ length: species === 'electron' ? 10 : 11 }, (_, band) => ({
@@ -226,9 +242,10 @@ export const goesInstruments: ScientificInstrument[] = [
         code: 'EHIS',
         name: 'Iones pesados energéticos',
         visualization: 'time-series',
-        available: false,
-        availabilityNote: unavailableFromRollingApi,
-        parameters: [],
+        available: true,
+        availabilityNote:
+          'Seleccione el grupo de masa y la banda de energía. El archivo nivel 1b reporta un flujo cada 5 minutos y NOAA publica cada día con aproximadamente un día de retraso.',
+        parameters: ehisParameters,
       },
       {
         code: 'MPSL',

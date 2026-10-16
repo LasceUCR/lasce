@@ -63,7 +63,7 @@ describe('scientific data catalog and query validation', () => {
     ['unknown product', { product: 'UNKNOWN' }],
     ['source and product mismatch', { source: 'ROSAC' }],
     ['parameter and product mismatch', { parameter: 'Hp' }],
-    ['unavailable GOES product', { product: 'EHIS', parameter: 'heavy-ion' }],
+    ['unavailable GOES product', { product: 'MPSL', parameter: 'heavy-ion' }],
     ['SGPS proton channel under MPSH', { product: 'MPSH', parameter: 'proton:P1' }],
   ])('rejects %s', (_label, overrides) => {
     expect(scientificDataQuerySchema.safeParse({ ...validQuery, ...overrides }).success).toBe(false)

@@ -459,7 +459,7 @@ export function ScientificDataExplorer({
         <span className="data-source-notice-copy">
           <span aria-hidden={query.source !== 'GOES'}>
             Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica
-            puede tardar varios minutos. EHIS y MPSL están pendientes de integración.
+            puede tardar varios minutos. MPSL está pendiente de integración.
           </span>
           <span aria-hidden={query.source !== 'ROSAC'}>
             ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están
