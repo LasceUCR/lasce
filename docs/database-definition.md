@@ -453,6 +453,20 @@ never writes here.
 Constraints: `UNIQUE (satellite, product, day)` — the upsert key, so a higher `_vX-Y-Z` of the
 same day replaces the older row instead of adding a second one.
 
+### `mag_files`
+
+One daily MAG L2 1-minute geomagnetic field file (`magn-l2-avg1m`, one UTC day) ingested by the
+worker's `mag-pipeline` job (`apps/worker/app/services/mag_readings.py`) — see
+[`mag-pipeline.md`](mag-pipeline.md). Same columns, constraints and upsert key as `exis_files`;
+the readings are in the InfluxDB measurement `mag_field` (tags `satellite`, `product`, `channel`;
+fields `value`, `valid`), not here. Differences:
+
+- `satellite` comes from the NetCDF `platform` attribute, upper-cased (`"g19"` → `"G19"`); the L2
+  files have no `platform_ID`.
+- `product` is always `"GEOF"`.
+- `version` looks like `"2-0-4"`, and `point_count` like
+  `{"EPN-x": 1440, "EPN-y": 1440, "EPN-z": 1440, "total": 1440}`.
+
 ## `public` schema (downloads)
 
 ### `resource_downloads`
@@ -481,6 +495,47 @@ permanent record. The worker never writes here.
 Indexes: `(user_id, created_at)` for a user's history, `(source, instrument, created_at)` for
 usage per instrument. Codes are plain strings, as in `role_permissions`, so a new instrument or
 format needs no migration.
+
+### `solar_physics_sections`
+
+An editable text section of the solar physics page (`/fisica-solar`). Today there is one row, with
+`key = 'lasce'`: "El trabajo de LASCE en Física Solar". The migration
+(`20261014120000_add_solar_physics_sections`) creates it with the text the page showed before it
+became editable. `title` and `body` are the Spanish source text; the other languages live in
+`solar_physics_section_translations`. `body` is plain text and a blank line separates paragraphs.
+The Prisma model is `SolarPhysicsSection`.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                        |
+| ------------ | ----------- | ---------------- | ------------------------------------------------------------------ |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                            |
+| `key`        | `String`    | `text`           | `UNIQUE`, not null; the section's name, `'lasce'` today            |
+| `title`      | `String`    | `text`           | not null, Spanish                                                  |
+| `body`       | `String`    | `text`           | not null, Spanish; paragraphs separated by a blank line            |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                          |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed; the editor's version token |
+
+Relationships: has many `solar_physics_section_translations`.
+
+### `solar_physics_section_translations`
+
+The `title` and `body` of a `solar_physics_sections` row in a language other than Spanish, one
+row per section and locale. The Prisma model is `SolarPhysicsSectionTranslation`. The migration
+seeds the `en` row from the English text the page used to read from the message catalogue.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                     |
+| ------------ | ----------- | ---------------- | --------------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                         |
+| `section_id` | `String`    | `uuid`           | FK → `solar_physics_sections.id`, `ON DELETE CASCADE`, not null |
+| `locale`     | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es`      |
+| `title`      | `String`    | `text`           | not null                                                        |
+| `body`       | `String`    | `text`           | not null                                                        |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                       |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                          |
+
+Constraints: `UNIQUE (section_id, locale)`. The application requires both languages on every
+save, so the section is only ever written complete.
+
+Relationships: belongs to one `solar_physics_sections` row.
 
 ## `public` schema (home page)
 
@@ -635,11 +690,21 @@ decoded. Nothing in `apps/web` reads it yet.
 `apps/worker/app/services/exis_readings.py`'s `ExisReadings.persist()` is the only writer of
 `solar.exis_files`, and `ExisReadings.ingested_modified_at()` its only reader; both are called
 from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
+`apps/worker/app/services/mag_readings.py`'s `MagReadings.persist()` is the only writer of
+`solar.mag_files`, and `MagReadings.ingested()` its only reader; both are called from the
+`mag-pipeline` processor. Nothing in `apps/web` reads it.
 `apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` and `getResearchAreaById()` read
 `areas.research_areas` with its `research_area_translations` and map each row to the
 `ResearchArea` shape the public investigation pages render, in the requested language, falling
 back per record to the base text. `createResearchArea()`, `updateResearchArea()` and
 `deleteResearchArea()` write the base row; a deleted area's translations cascade.
+
+`apps/web/app/lib/solar-physics-section.ts`'s `getSolarPhysicsSection()` reads the `lasce` row of
+`public.solar_physics_sections` with its translations and returns the title and paragraphs in the
+requested language for `/fisica-solar`. `updateSolarPhysicsSection()` (called by
+`PATCH /api/solar-physics/lasce-section`) is the only writer: in one transaction it rewrites the
+Spanish text, upserts the translations and moves `updated_at` forward, and only while `updated_at`
+still equals the version the editor loaded. Nothing in `apps/worker` reads these tables.
 
 Nothing yet reads or writes `gallery_albums`/`gallery_media` — `/galeria` still renders from the
 static mock in `apps/web/app/lib/gallery.ts`.

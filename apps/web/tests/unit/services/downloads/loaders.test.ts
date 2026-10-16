@@ -1,12 +1,19 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-const mocks = vi.hoisted(() => ({ query: vi.fn(), queryExisReadingsFull: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+  query: vi.fn(),
+  queryExisReadingsFull: vi.fn(),
+  queryMagReadingsFull: vi.fn(),
+}))
 
 vi.mock('@/app/services/scientific-data', () => ({
   scientificDataSources: { query: mocks.query },
 }))
 vi.mock('@/app/services/scientific-data/exisReadingsDataSource', () => ({
   queryExisReadingsFull: mocks.queryExisReadingsFull,
+}))
+vi.mock('@/app/services/scientific-data/magReadingsDataSource', () => ({
+  queryMagReadingsFull: mocks.queryMagReadingsFull,
 }))
 
 import { DOWNLOAD_FORMATS } from '@/app/lib/downloads/formats'
@@ -59,6 +66,15 @@ describe('findDownloadLoader', () => {
     await findDownloadLoader('GOES', 'EXIS', 'csv')!({ query })
 
     expect(mocks.queryExisReadingsFull).toHaveBeenCalledWith(query)
+    expect(mocks.query).not.toHaveBeenCalled()
+  })
+
+  test('exports MAG data at full resolution rather than the sampled chart series', async () => {
+    const mag = { ...query, product: 'GEOF' as const, parameter: 'EPN-z' }
+
+    await findDownloadLoader('GOES', 'MAG', 'csv')!({ query: mag })
+
+    expect(mocks.queryMagReadingsFull).toHaveBeenCalledWith(mag)
     expect(mocks.query).not.toHaveBeenCalled()
   })
 })

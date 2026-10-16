@@ -102,26 +102,14 @@ def month_urls(product: ExisProduct, spacecraft: int, start: date, end: date) ->
     A window that crosses the first of a month spans two directories, and both
     have to be listed or the older half of the window is silently invisible.
     """
-    if start > end:
-        raise ValueError("The start of the window must not follow its end")
-    urls = []
-    year, month = start.year, start.month
-    while (year, month) <= (end.year, end.month):
-        urls.append(
-            f"{BASE_URL}/goes{spacecraft}/l1b/{product.url_segment}/{year:04d}/{month:02d}/"
-        )
-        year, month = (year + 1, 1) if month == 12 else (year, month + 1)
-    return urls
+    return ngdc.month_directories(
+        f"{BASE_URL}/goes{spacecraft}/l1b/{product.url_segment}", start, end
+    )
 
 
 def newest_versions(files: list[ExisFile]) -> list[ExisFile]:
     """The highest version of each day, most recent day first."""
-    best: dict[date, ExisFile] = {}
-    for file in files:
-        current = best.get(file.day)
-        if current is None or file.version > current.version:
-            best[file.day] = file
-    return sorted(best.values(), key=lambda file: file.day, reverse=True)
+    return ngdc.newest_versions(files)
 
 
 class ExisDownloader:
