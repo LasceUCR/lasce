@@ -148,7 +148,7 @@ export const nosotrosContent = {
       },
       {
         id: 'alonso-vega',
-        src: '/images/Researchers/User.png',
+        src: '/images/Researchers/AlonsoVega.jpeg',
         name: 'MSc. Alonso Vega',
         role: 'Investigador colaborador',
         email: 'alonso.vega_f@ucr.ac.cr',

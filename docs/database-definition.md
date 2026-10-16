@@ -458,7 +458,7 @@ format needs no migration.
 
 ## `public` schema (home page)
 
-The editable content of the home page (`/`). Seeded by the
+The editable content of the home page (`/`), see [`home-page.md`](home-page.md). Seeded by the
 migration `20261014101056_add_home_content`; nothing is created or deleted from the CMS.
 
 ### `home_hero`
@@ -536,6 +536,29 @@ An index's `description` in a language other than Spanish. The Prisma model is
 
 Constraints: `UNIQUE (geomagnetic_index_id, locale)`.
 
+## `public` schema (contact)
+
+### `contact_channels` and `contact_channel_translations`
+
+One card in "Información de contacto" on `/contacto`. Spanish `title` and `description` live on
+the base row; every other language is a translation row. `icon`, `href` and `position` are
+shared. `href` is set only for Instagram and Facebook. Phone and email links are derived from
+the description when the page renders. See [`contact.md`](contact.md).
+
+| Column        | Prisma type          | Postgres type          | Constraints                                                     |
+| ------------- | -------------------- | ---------------------- | --------------------------------------------------------------- |
+| `id`          | `String`             | `uuid`                 | PK, `gen_random_uuid()`                                         |
+| `icon`        | `ContactChannelIcon` | `contact_channel_icon` | not null; `phone`, `instagram`, `location`, `email`, `facebook` |
+| `href`        | `String?`            | `text`                 | nullable                                                        |
+| `position`    | `Int`                | `integer`              | not null; display order                                         |
+| `title`       | `String`             | `text`                 | not null; Spanish                                               |
+| `description` | `String`             | `text`                 | not null; Spanish                                               |
+| `created_at`  | `DateTime`           | `timestamptz(3)`       | not null, default `now()`                                       |
+| `updated_at`  | `DateTime`           | `timestamptz(3)`       | not null, default `now()`, app-managed                          |
+
+`contact_channel_translations`: `id`, `contact_channel_id` (FK, `ON DELETE CASCADE`), `locale`
+(`varchar(5)`), `title`, `description`, timestamps. Unique on `(contact_channel_id, locale)`.
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
@@ -555,7 +578,8 @@ the base row; its translations and author links cascade. The full contract is in
 `updateIndicator()` write a base row and its translations in one transaction against the version
 the editor loaded; `reorderIndicators()` rewrites `geomagnetic_indices.position`. Nothing in the
 worker writes them yet: a future job would upsert the indices by `code`, set `source` and
-`observed_at`, and leave `position` alone.
+`observed_at`, and leave `position` alone; see
+[`home-page.md`](home-page.md#future-automatic-loading).
 
 `apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
 nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
@@ -570,6 +594,11 @@ behind the cookie together with its user, and `deleteCurrentSession()` deletes i
 `apps/web/app/lib/auth/authorization.ts` reads it on each permission check.
 `apps/web/app/services/downloads/downloadService.ts`'s `createResourceDownload()` is the only
 writer of `public.resource_downloads`. Nothing reads it yet.
+
+`apps/web/app/lib/contact-channels.ts` reads and writes `public.contact_channels` and
+`public.contact_channel_translations` for `/contacto`. Spanish text is the base row; English is
+upserted on save. An update writes only while `updated_at` still equals the version the editor
+loaded.
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty.

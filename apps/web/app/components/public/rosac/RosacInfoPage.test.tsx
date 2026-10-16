@@ -14,6 +14,8 @@ vi.mock('@lasce/db', () => ({ prisma: {} }))
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   uploadResearcherImage: vi.fn(),
+  uploadInstrumentImage: vi.fn(),
+  uploadAcknowledgmentLogo: vi.fn(),
 }))
 
 // `RosacInfoPage` calls `useRouter()` to refresh after a create/edit/delete,
@@ -24,6 +26,8 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadResearcherImage: mocks.uploadResearcherImage,
+  uploadInstrumentImage: mocks.uploadInstrumentImage,
+  uploadAcknowledgmentLogo: mocks.uploadAcknowledgmentLogo,
 }))
 
 const fetchMock = vi.fn()
@@ -486,5 +490,102 @@ describe('RosacInfoPage', () => {
     expect(
       within(section).getByRole('heading', { name: 'Preparación Avanzada' }),
     ).toBeInTheDocument()
+  })
+
+  test('offers create, edit and delete on scientific instruments (Section 6)', async () => {
+    const user = userEvent.setup()
+    renderEditMode()
+    const section = screen.getByRole('region', { name: '6. Instrumentos científicos' })
+    expect(within(section).getAllByRole('button', { name: /^Editar / })).toHaveLength(3)
+    expect(within(section).getAllByRole('button', { name: /^Eliminar / })).toHaveLength(3)
+    expect(within(section).getByRole('button', { name: 'Añadir instrumento' })).toBeInTheDocument()
+
+    // Add a new instrument
+    mocks.uploadInstrumentImage.mockResolvedValueOnce({
+      ok: true,
+      imageUrl: 'https://s3.example/lasce/instrumento.png',
+    })
+    await user.click(within(section).getByRole('button', { name: 'Añadir instrumento' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir instrumento' })
+    await user.type(
+      within(addDialog).getByRole('textbox', { name: 'Nombre del instrumento' }),
+      'Instrumento 4 Polarímetro',
+    )
+    await user.type(
+      within(addDialog).getByRole('textbox', { name: 'Descripción' }),
+      'Medición de polarización en ondas de radio.',
+    )
+    const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'instrumento.png', { type: 'image/png' }))
+    await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      within(section).getByRole('heading', { name: 'Instrumento 4 Polarímetro' }),
+    ).toBeInTheDocument()
+
+    // Delete the newly added instrument
+    const deleteBtn = within(section).getByRole('button', {
+      name: 'Eliminar Instrumento 4 Polarímetro',
+    })
+    await user.click(deleteBtn)
+    const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar instrumento' })
+    await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      within(section).queryByRole('heading', { name: 'Instrumento 4 Polarímetro' }),
+    ).not.toBeInTheDocument()
+  })
+
+  test('offers create, edit and delete on acknowledgments', async () => {
+    const user = userEvent.setup()
+    renderEditMode()
+    const section = screen.getByRole('region', { name: '9. Agradecimientos ROSAC' })
+    const initialCount = defaultArgs.content.acknowledgments.institutions.length
+    expect(within(section).getAllByRole('button', { name: /^Editar / })).toHaveLength(initialCount)
+    expect(within(section).getAllByRole('button', { name: /^Eliminar / })).toHaveLength(
+      initialCount,
+    )
+    expect(within(section).getByRole('button', { name: 'Añadir institución' })).toBeInTheDocument()
+
+    // 1. Edit an existing acknowledgment
+    const firstInst = defaultArgs.content.acknowledgments.institutions[0]!
+    await user.click(within(section).getByRole('button', { name: `Editar ${firstInst.name}` }))
+    const editDialog = screen.getByRole('dialog', { name: 'Editar institución' })
+    const editNameInput = within(editDialog).getByRole('textbox', {
+      name: 'Nombre de la institución',
+    })
+    await user.clear(editNameInput)
+    await user.type(editNameInput, 'Vicerrectoría de Investigación Actualizada')
+    await user.click(within(editDialog).getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(
+      within(section).getByText('Vicerrectoría de Investigación Actualizada'),
+    ).toBeInTheDocument()
+
+    // 2. Add an acknowledgment using preset logo and custom name
+    await user.click(within(section).getByRole('button', { name: 'Añadir institución' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir institución' })
+    const select = within(addDialog).getByRole('combobox', {
+      name: 'Escoger un logo personalizado o seleccionar uno de la lista',
+    })
+    await user.selectOptions(select, '1')
+    const addNameInput = within(addDialog).getByRole('textbox', {
+      name: 'Nombre de la institución',
+    })
+    await user.clear(addNameInput)
+    await user.type(addNameInput, 'Institución Adicional de Prueba')
+    await user.click(within(addDialog).getByRole('button', { name: 'Agregar institución' }))
+
+    expect(within(section).getByText('Institución Adicional de Prueba')).toBeInTheDocument()
+
+    // 3. Delete the newly added acknowledgment
+    const deleteBtn = within(section).getByRole('button', {
+      name: 'Eliminar Institución Adicional de Prueba',
+    })
+    await user.click(deleteBtn)
+    const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar institución' })
+    await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(within(section).queryByText('Institución Adicional de Prueba')).not.toBeInTheDocument()
   })
 })

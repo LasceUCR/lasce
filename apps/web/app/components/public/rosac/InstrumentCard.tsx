@@ -54,7 +54,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
       <InstrumentImage key={instrument.image?.src} image={instrument.image} labels={labels} />
       <div className={styles.content}>
         <h3 id={titleId}>{instrument.name}</h3>
-        {instrument.pendingMessage ? (
+        {instrument.pendingMessage && !instrument.consultation?.notice ? (
           <p className={styles.pending}>{instrument.pendingMessage}</p>
         ) : null}
         <dl className={styles.details}>
@@ -69,8 +69,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
               <dt>{labels?.characteristics ?? 'Características'}</dt>
               <dd>
                 <ul>
-                  {instrument.characteristics.map((characteristic) => (
-                    <li key={characteristic}>{characteristic}</li>
+                  {instrument.characteristics.map((characteristic, index) => (
+                    <li key={`${index}-${characteristic}`}>{characteristic}</li>
                   ))}
                 </ul>
               </dd>
@@ -95,7 +95,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
               icon={<ArrowRight aria-hidden="true" size={18} />}
               variant="primary"
             >
-              {instrument.consultation.label}
+              <span>{instrument.consultation.label}</span>
             </Button>
           </div>
         ) : null}
