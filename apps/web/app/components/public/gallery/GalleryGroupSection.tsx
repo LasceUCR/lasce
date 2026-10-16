@@ -12,10 +12,8 @@ import {
   type AlbumFormHandle,
   type AlbumFormValues,
 } from '@/app/components/public/gallery/forms/AlbumForm'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import type { GalleryAlbum, ReviewConfirmation } from '@/app/lib/gallery-schema'
-
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el álbum. Inténtelo de nuevo.'
-const DELETE_ERROR_MESSAGE = 'No se pudo eliminar el álbum. Inténtelo de nuevo.'
 
 function albumPath(slug: string): string {
   return `/galeria/${slug}`
@@ -62,42 +60,30 @@ export function GalleryGroupSection({
   const router = useRouter()
   const headingId = `galeria-${album.slug}`
   const [isEditing, setIsEditing] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const sendWithFeedback = useRequestFeedback()
   const [isSaving, setIsSaving] = useState(false)
   const saveInProgress = useRef(false)
-  const deleteInProgress = useRef(false)
   const editForm = useRef<AlbumFormHandle>(null)
 
   async function handleDelete(): Promise<void> {
-    if (!album.id || deleteInProgress.current) return
+    if (!album.id) return
 
-    deleteInProgress.current = true
-    setDeleteError(null)
-
-    try {
-      const response = await fetch(`/api/gallery/albums/${album.id}`, { method: 'DELETE' })
-      if (!response.ok) {
-        const body: { error?: string } | null = await response.json().catch(() => null)
-        setDeleteError(body?.error ?? DELETE_ERROR_MESSAGE)
-        return
-      }
-
-      router.refresh()
-    } catch {
-      setDeleteError(DELETE_ERROR_MESSAGE)
-    } finally {
-      deleteInProgress.current = false
-    }
+    await sendWithFeedback(
+      `/api/gallery/albums/${album.id}`,
+      { method: 'DELETE' },
+      {
+        success: 'Álbum eliminado correctamente.',
+        fallback: 'No se pudo eliminar el álbum.',
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
   function handleUpdate(): void {
-    setSaveError(null)
     setIsEditing(true)
   }
 
   function closeEditor(): void {
-    setSaveError(null)
     setIsEditing(false)
   }
 
@@ -110,30 +96,29 @@ export function GalleryGroupSection({
 
     saveInProgress.current = true
     setIsSaving(true)
-    setSaveError(null)
 
     try {
-      const response = await fetch(`/api/gallery/albums/${album.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          version,
-          ...(values.content ? { content: values.content, confirmedUnchanged: confirmed } : {}),
-          yearsLabel: values.yearsLabel.trim() || null,
-          coverObjectKey: values.coverObjectKey || null,
-        }),
-      })
-
-      if (!response.ok) {
-        const body: { error?: string } | null = await response.json().catch(() => null)
-        setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
-        return
-      }
-
-      closeEditor()
-      router.refresh()
-    } catch {
-      setSaveError(SAVE_ERROR_MESSAGE)
+      await sendWithFeedback(
+        `/api/gallery/albums/${album.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            version,
+            ...(values.content ? { content: values.content, confirmedUnchanged: confirmed } : {}),
+            yearsLabel: values.yearsLabel.trim() || null,
+            coverObjectKey: values.coverObjectKey || null,
+          }),
+        },
+        {
+          success: 'Álbum actualizado correctamente.',
+          fallback: 'No se pudo guardar el álbum.',
+          onSuccess: () => {
+            closeEditor()
+            router.refresh()
+          },
+        },
+      )
     } finally {
       saveInProgress.current = false
       setIsSaving(false)
@@ -157,11 +142,6 @@ export function GalleryGroupSection({
         <span className="gallery-group-meta">{albumMeta(album)}</span>
       </div>
       <p className="gallery-group-description">{album.description}</p>
-      {deleteError ? (
-        <p className="form-alert" role="alert">
-          {deleteError}
-        </p>
-      ) : null}
 
       {/* A list, so a reader can be told how many albums this block holds
           and can step through them. The grid still owns the layout. */}
@@ -204,11 +184,6 @@ export function GalleryGroupSection({
         title={`Editar "${album.title}"`}
         size="large"
       >
-        {saveError ? (
-          <p className="form-alert" role="alert">
-            {saveError}
-          </p>
-        ) : null}
         {isSaving ? <p role="status">Guardando álbum...</p> : null}
         <AlbumForm
           stored={album.editing?.content}

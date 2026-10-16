@@ -5,6 +5,8 @@ import { useRef, useState } from 'react'
 
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import {
   AlbumForm,
   type AlbumFormHandle,
@@ -22,8 +24,6 @@ const blankAlbum: AlbumFormValues = {
   coverObjectKey: '',
 }
 
-const SAVE_ERROR_MESSAGE = 'No se pudo crear el álbum. Inténtelo de nuevo.'
-
 function slugFromTitle(title: string): string {
   return title
     .normalize('NFD')
@@ -36,7 +36,8 @@ function slugFromTitle(title: string): string {
 export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardProps) {
   const { editMode } = useEditMode()
   const router = useRouter()
-  const [createError, setCreateError] = useState<string | null>(null)
+  const toast = useToast()
+  const sendWithFeedback = useRequestFeedback()
   const [isCreating, setIsCreating] = useState(false)
   const createInProgress = useRef(false)
   const createForm = useRef<AlbumFormHandle>(null)
@@ -48,7 +49,8 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
 
     const slug = slugFromTitle(values.title)
     if (!slug) {
-      setCreateError(
+      toast.show(
+        'error',
         'El título debe incluir letras o números para generar el identificador del álbum.',
       )
       return
@@ -56,30 +58,29 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
 
     createInProgress.current = true
     setIsCreating(true)
-    setCreateError(null)
 
     try {
-      const response = await fetch('/api/gallery/albums', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug,
-          content: values.content,
-          yearsLabel: values.yearsLabel.trim() || null,
-          coverObjectKey: values.coverObjectKey,
-        }),
-      })
-
-      if (!response.ok) {
-        const body: { error?: string } | null = await response.json().catch(() => null)
-        setCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
-        return
-      }
-
-      close()
-      router.refresh()
-    } catch {
-      setCreateError(SAVE_ERROR_MESSAGE)
+      await sendWithFeedback(
+        '/api/gallery/albums',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slug,
+            content: values.content,
+            yearsLabel: values.yearsLabel.trim() || null,
+            coverObjectKey: values.coverObjectKey,
+          }),
+        },
+        {
+          success: 'Álbum agregado correctamente.',
+          fallback: 'No se pudo crear el álbum.',
+          onSuccess: () => {
+            close()
+            router.refresh()
+          },
+        },
+      )
     } finally {
       createInProgress.current = false
       setIsCreating(false)
@@ -99,18 +100,10 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
         >
           {({ close }) => (
             <>
-              {createError ? (
-                <p className="form-alert" role="alert">
-                  {createError}
-                </p>
-              ) : null}
               {isCreating ? <p role="status">Creando álbum...</p> : null}
               <AlbumForm
                 album={blankAlbum}
-                onCancel={() => {
-                  setCreateError(null)
-                  close()
-                }}
+                onCancel={close}
                 onSave={(values) => handleCreate(values, close)}
                 ref={createForm}
               />

@@ -14,6 +14,8 @@ import {
   type AlbumFormHandle,
   type AlbumFormValues,
 } from '@/app/components/public/gallery/forms/AlbumForm'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
@@ -25,10 +27,6 @@ const blankAlbum: AlbumFormValues = {
   yearsLabel: '',
   coverObjectKey: '',
 }
-
-const CREATE_ERROR_MESSAGE = 'No se pudo crear el subálbum. Inténtelo de nuevo.'
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el álbum. Inténtelo de nuevo.'
-const DELETE_ERROR_MESSAGE = 'No se pudo eliminar el subálbum. Inténtelo de nuevo.'
 
 function slugFromTitle(title: string): string {
   return title
@@ -94,14 +92,12 @@ export function AlbumPage({
   const router = useRouter()
   const [editingSubAlbum, setEditingSubAlbum] = useState<GallerySubAlbum | null>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const toast = useToast()
+  const sendWithFeedback = useRequestFeedback()
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const createInProgress = useRef(false)
   const saveInProgress = useRef(false)
-  const deleteInProgress = useRef(false)
   const createForm = useRef<AlbumFormHandle>(null)
   const editForm = useRef<AlbumFormHandle>(null)
 
@@ -110,36 +106,35 @@ export function AlbumPage({
 
     const slug = slugFromTitle(values.title)
     if (!slug) {
-      setCreateError('El título del subálbum debe incluir letras o números.')
+      toast.show('error', 'El título del subálbum debe incluir letras o números.')
       return
     }
 
     createInProgress.current = true
     setIsCreating(true)
-    setCreateError(null)
 
     try {
-      const response = await fetch(`/api/gallery/albums/${parentAlbumId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug,
-          content: values.content,
-          yearsLabel: values.yearsLabel.trim() || null,
-          coverObjectKey: values.coverObjectKey,
-        }),
-      })
-
-      if (!response.ok) {
-        const body: { error?: string } | null = await response.json().catch(() => null)
-        setCreateError(body?.error ?? CREATE_ERROR_MESSAGE)
-        return
-      }
-
-      close()
-      router.refresh()
-    } catch {
-      setCreateError(CREATE_ERROR_MESSAGE)
+      await sendWithFeedback(
+        `/api/gallery/albums/${parentAlbumId}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slug,
+            content: values.content,
+            yearsLabel: values.yearsLabel.trim() || null,
+            coverObjectKey: values.coverObjectKey,
+          }),
+        },
+        {
+          success: 'Subálbum agregado correctamente.',
+          fallback: 'No se pudo crear el subálbum.',
+          onSuccess: () => {
+            close()
+            router.refresh()
+          },
+        },
+      )
     } finally {
       createInProgress.current = false
       setIsCreating(false)
@@ -147,35 +142,23 @@ export function AlbumPage({
   }
 
   async function handleDelete(albumId: string): Promise<void> {
-    if (deleteInProgress.current) return
-
-    deleteInProgress.current = true
-    setDeleteError(null)
-
-    try {
-      const response = await fetch(`/api/gallery/albums/${albumId}`, { method: 'DELETE' })
-      if (!response.ok) {
-        const body: { error?: string } | null = await response.json().catch(() => null)
-        setDeleteError(body?.error ?? DELETE_ERROR_MESSAGE)
-        return
-      }
-
-      router.refresh()
-    } catch {
-      setDeleteError(DELETE_ERROR_MESSAGE)
-    } finally {
-      deleteInProgress.current = false
-    }
+    await sendWithFeedback(
+      `/api/gallery/albums/${albumId}`,
+      { method: 'DELETE' },
+      {
+        success: 'Subálbum eliminado correctamente.',
+        fallback: 'No se pudo eliminar el subálbum.',
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
   function handleUpdate(subAlbum: GallerySubAlbum): void {
-    setSaveError(null)
     setEditingSubAlbum(subAlbum)
     setIsEditing(true)
   }
 
   function closeEditor(): void {
-    setSaveError(null)
     setIsEditing(false)
     setEditingSubAlbum(null)
   }
@@ -190,30 +173,29 @@ export function AlbumPage({
 
     saveInProgress.current = true
     setIsSaving(true)
-    setSaveError(null)
 
     try {
-      const response = await fetch(`/api/gallery/albums/${albumId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          version,
-          ...(values.content ? { content: values.content, confirmedUnchanged: confirmed } : {}),
-          yearsLabel: values.yearsLabel.trim() || null,
-          coverObjectKey: values.coverObjectKey || null,
-        }),
-      })
-
-      if (!response.ok) {
-        const body: { error?: string } | null = await response.json().catch(() => null)
-        setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
-        return
-      }
-
-      closeEditor()
-      router.refresh()
-    } catch {
-      setSaveError(SAVE_ERROR_MESSAGE)
+      await sendWithFeedback(
+        `/api/gallery/albums/${albumId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            version,
+            ...(values.content ? { content: values.content, confirmedUnchanged: confirmed } : {}),
+            yearsLabel: values.yearsLabel.trim() || null,
+            coverObjectKey: values.coverObjectKey || null,
+          }),
+        },
+        {
+          success: 'Subálbum actualizado correctamente.',
+          fallback: 'No se pudo guardar el subálbum.',
+          onSuccess: () => {
+            closeEditor()
+            router.refresh()
+          },
+        },
+      )
     } finally {
       saveInProgress.current = false
       setIsSaving(false)
@@ -225,12 +207,6 @@ export function AlbumPage({
   return (
     <article className="topic-page">
       <TopicHero kicker="Galería LASCE" lead={description} notice={meta} title={title} />
-
-      {deleteError ? (
-        <p className="form-alert" role="alert">
-          {deleteError}
-        </p>
-      ) : null}
 
       {parentSlug && (subAlbums.length > 0 || (editMode && canCreate && parentAlbumId)) ? (
         <TopicSection title="Subálbumes" titleId="album-subalbums">
@@ -247,18 +223,10 @@ export function AlbumPage({
                 >
                   {({ close }) => (
                     <>
-                      {createError ? (
-                        <p className="form-alert" role="alert">
-                          {createError}
-                        </p>
-                      ) : null}
                       {isCreating ? <p role="status">Creando subálbum...</p> : null}
                       <AlbumForm
                         album={blankAlbum}
-                        onCancel={() => {
-                          setCreateError(null)
-                          close()
-                        }}
+                        onCancel={close}
                         onSave={(values) => handleCreate(values, close)}
                         ref={createForm}
                       />
@@ -331,11 +299,6 @@ export function AlbumPage({
         size="large"
         title={`Editar "${editingSubAlbum?.title ?? ''}"`}
       >
-        {saveError ? (
-          <p className="form-alert" role="alert">
-            {saveError}
-          </p>
-        ) : null}
         {isSaving ? <p role="status">Guardando subálbum...</p> : null}
         {editingSubAlbum ? (
           <AlbumForm

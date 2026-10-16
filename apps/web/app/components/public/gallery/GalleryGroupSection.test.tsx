@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { GalleryGroupSection, type GalleryGroupSectionProps } from './GalleryGroupSection'
 import { WithoutSubAlbums, WithSubAlbums } from './GalleryGroupSection.stories'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 
@@ -30,9 +31,11 @@ const withoutSubAlbums = WithoutSubAlbums.args as GalleryGroupSectionProps
 
 function renderSection(props: GalleryGroupSectionProps, editMode = false) {
   return renderWithIntl(
-    <EditModeContext.Provider value={{ editMode, setEditMode: () => undefined }}>
-      <GalleryGroupSection {...props} />
-    </EditModeContext.Provider>,
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode, setEditMode: () => undefined }}>
+        <GalleryGroupSection {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -270,6 +273,7 @@ describe('GalleryGroupSection', () => {
       expect(fetch).toHaveBeenCalledWith('/api/gallery/albums/album-id', { method: 'DELETE' })
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(await screen.findByText('Álbum eliminado correctamente.')).toBeInTheDocument()
   })
 
   test('shows the server error when album deletion fails', async () => {
@@ -290,7 +294,7 @@ describe('GalleryGroupSection', () => {
     await user.click(screen.getByRole('button', { name: `Eliminar ${album.title}` }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No existe el álbum indicado.')
+    expect(await screen.findByText('No existe el álbum indicado.')).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
@@ -324,7 +328,7 @@ describe('GalleryGroupSection', () => {
     await user.click(screen.getByRole('button', { name: `Editar ${album.title}` }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe un álbum con este slug.')
+    expect(await screen.findByText('Ya existe un álbum con este slug.')).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
     expect(screen.getByRole('dialog', { name: `Editar "${album.title}"` })).toBeInTheDocument()
   })

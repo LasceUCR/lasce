@@ -1,9 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { GalleryAlbumAddCard, type GalleryAlbumAddCardProps } from './GalleryAlbumAddCard'
 import { Available } from './GalleryAlbumAddCard.stories'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 
 const mocks = vi.hoisted(() => ({
@@ -56,10 +58,12 @@ vi.mock('@/app/components/public/gallery/forms/AlbumForm', () => ({
 const defaultArgs = Available.args as GalleryAlbumAddCardProps
 
 function renderCard(props: GalleryAlbumAddCardProps = defaultArgs, editMode = true) {
-  return render(
-    <EditModeContext.Provider value={{ editMode, setEditMode: () => undefined }}>
-      <GalleryAlbumAddCard {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode, setEditMode: () => undefined }}>
+        <GalleryAlbumAddCard {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -121,6 +125,7 @@ describe('GalleryAlbumAddCard', () => {
       })
     })
     expect(mocks.refresh).toHaveBeenCalledOnce()
+    expect(await screen.findByText('Álbum agregado correctamente.')).toBeInTheDocument()
 
     expect(screen.queryByRole('dialog', { name: 'Añadir álbum' })).not.toBeInTheDocument()
   })
@@ -135,7 +140,7 @@ describe('GalleryAlbumAddCard', () => {
     await user.click(screen.getByRole('button', { name: 'Añadir álbum' }))
     await user.click(screen.getByRole('button', { name: 'Guardar formulario' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe un álbum con este slug.')
+    expect(await screen.findByText('Ya existe un álbum con este slug.')).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledOnce()
     expect(mocks.refresh).not.toHaveBeenCalled()
     expect(screen.getByRole('dialog', { name: 'Añadir álbum' })).toBeInTheDocument()
