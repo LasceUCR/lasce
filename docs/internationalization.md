@@ -169,19 +169,20 @@ inventory taken when the static pages were migrated.
 
 ### Translated
 
-| Route                                    | Namespace                            | Copy built in                                                     |
-| ---------------------------------------- | ------------------------------------ | ----------------------------------------------------------------- |
-| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                               |
-| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`           |
-| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`                     |
-| `/nosotros`                              | `nosotros`                           | `lib/nosotros.ts`, `NosotrosPage.tsx`, `NosotrosActivityForm.tsx` |
-| `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`           |
-| `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`                                            |
-| `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                         |
-| `/colaboraciones-e-iniciativas`          | `collaborations`                     | `lib/collaborations.ts`, `lib/research-collaborations.ts`         |
-| `/investigacion/**`                      | `researchAreas`                      | `(public)/investigacion/**`, `research/*`                         |
-| `/noticias/actividades/[slug]`           | `academicActivities`                 | `lib/academic-activities.ts`                                      |
-| `/publicaciones`                         | `publications`                       | `PublicationsExplorer.tsx`, `lib/publication-form.ts`             |
+| Route                                    | Namespace                            | Copy built in                                                           |
+| ---------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------- |
+| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                                     |
+| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`                 |
+| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`                           |
+| `/nosotros`                              | `nosotros`                           | `lib/nosotros.ts`, `NosotrosPage.tsx`, `NosotrosActivityForm.tsx`       |
+| `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`                 |
+| `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`                                                  |
+| `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                               |
+| `/colaboraciones-e-iniciativas`          | `collaborations`                     | `lib/collaborations.ts`, `lib/research-collaborations.ts`               |
+| `/investigacion/**`                      | `researchAreas`                      | `(public)/investigacion/**`, `research/*`                               |
+| `/noticias/actividades/[slug]`           | `academicActivities`                 | `lib/academic-activities.ts`                                            |
+| `/publicaciones`                         | `publications`                       | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                   |
+| `/radioastronomia`                       | `rosac`                              | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts` |
 
 The academic activities section and its cards on `/noticias` are translated too; the rest of
 that page is not.
@@ -207,15 +208,14 @@ still Spanish.
 
 ### Still to do
 
-| Route                | Copy lives in                                                              | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
-| -------------------- | -------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/galeria/**`        | `lib/gallery.ts`, `gallery/*`                                              | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
-| `/radioastronomia`   | `lib/rosac.ts`, `rosac-construction.ts`, `rosac-instruments.ts`, `rosac/*` | 126 in lib, 56 in components       | The team comes from the database. The researcher create and edit feedback is in the catalogue (`researchers.*`, shared with `/nosotros`). Instrument cards are built at module load from Spanish product names. `rosac-construction.ts` is imported by a Playwright spec          |
-| `/datos`             | `lib/scientific-data.ts`, `scientific-data/*`                              | 66 in lib, 98 in components        | 139 labels are generated in code from Spanish pieces. Product names also reach the CSV and PNG exports. Four formatters hardcode `es-CR`                                                                                                                                          |
-| `/noticias`          | `lib/news.ts` and its components                                           | 23 in lib, 111 in components       | Mostly editing forms. Two hand-written plurals. Zod messages are repeated word for word on the client. The news create, edit and delete feedback is already in the catalogue (`news.*`), with the shared network and server fallbacks in `common.feedback`                        |
-| `/acceso`, `/cuenta` | `lib/auth/login.ts`, `registration.ts`, `account.ts`                       | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
-| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*`         | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
-| `(public)/[section]` | inline in the page                                                         | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
+| Route                | Copy lives in                                                      | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/galeria/**`        | `lib/gallery.ts`, `gallery/*`                                      | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
+| `/datos`             | `lib/scientific-data.ts`, `scientific-data/*`                      | 66 in lib, 98 in components        | 139 labels are generated in code from Spanish pieces. Product names also reach the CSV and PNG exports. Four formatters hardcode `es-CR`                                                                                                                                          |
+| `/noticias`          | `lib/news.ts` and its components                                   | 23 in lib, 111 in components       | Mostly editing forms. Two hand-written plurals. Zod messages are repeated word for word on the client. The news create, edit and delete feedback is already in the catalogue (`news.*`), with the shared network and server fallbacks in `common.feedback`                        |
+| `/acceso`, `/cuenta` | `lib/auth/login.ts`, `registration.ts`, `account.ts`               | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
+| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
+| `(public)/[section]` | inline in the page                                                 | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
 
 ### Not tied to one page
 

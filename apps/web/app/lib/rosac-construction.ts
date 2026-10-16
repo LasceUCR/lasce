@@ -1,3 +1,5 @@
+import es from '@/messages/es.json' with { type: 'json' }
+
 export interface ConstructionImage {
   src: string
   alt: string
@@ -8,14 +10,36 @@ export interface ConstructionStage {
   title: string
   navigationLabel: string
   description: string
-  images: readonly [ConstructionImage, ...ConstructionImage[]]
+  images: readonly [ConstructionImage, ConstructionImage, ...ConstructionImage[]]
+}
+
+export interface ConstructionCarouselCopy {
+  ariaLabel: string
+  groupNoun: string
+  photoNoun: string
+  previousGroupLabel: string
+  nextGroupLabel: string
+  previousPhotoLabel: string
+  nextPhotoLabel: string
+  imageUnavailableMessage: string
+  ofPreposition?: string
 }
 
 export interface ConstructionContent {
   title: string
   intro: string
   stages: readonly [ConstructionStage, ...ConstructionStage[]]
+  carousel?: ConstructionCarouselCopy
 }
+
+export const constructionStageIds = [
+  'preparacion',
+  'estructura',
+  'paneles',
+  'fotogrametria',
+  'instalacion',
+] as const
+export type ConstructionStageId = (typeof constructionStageIds)[number]
 
 // Photos live in one subfolder per stage now (moved there directly on disk), rather than all
 // flat under a single directory -- folder names carry spaces, so they are percent-encoded here
@@ -26,155 +50,95 @@ const panelesBase = '/images/ROSAC/construction/Montaje%20Paneles'
 const fotogrametriaBase = '/images/ROSAC/construction/Fotogrametria'
 const instalacionBase = '/images/ROSAC/construction/Intalacion%20Electrica'
 
-// Editorial copy supplied for this PBI is provisional, pending LASCE validation ("ROSAC
-// Construction Process" PBI). Stage order follows that PBI's required process order
-// (Preparation, Structure assembly, Panel assembly, Photogrammetry and panel leveling,
-// Electrical installation). The structure/panel split was confirmed once real photos for each
-// were sourced and sorted into their own folders on disk -- the newer photos in "Montaje" and
-// "Montaje Paneles" back up the original split read from alt text alone. The "EATON equipment
-// donation" stage this section used to show has been dropped: it is not one of the PBI's five
-// stages.
-export const rosacConstructionContent = {
-  title: 'Construcción del ROSAC',
-  intro:
-    'El desarrollo del Radio Observatorio de Santa Cruz ha involucrado distintas etapas de estudio, preparación, montaje y adecuación de su infraestructura. Este recorrido presenta algunos de los trabajos realizados durante ese proceso.',
-  stages: [
-    {
-      id: 'preparacion',
-      title: 'Preparación para el montaje',
-      navigationLabel: 'Preparación',
-      description:
-        'Antes del montaje principal se realizaron trabajos de preparación del sitio y de los componentes que posteriormente formarían parte de la estructura. Esta etapa reúne parte de la logística y adecuación previa necesaria para iniciar el ensamblaje.',
-      images: [
-        {
-          src: `${preparacionBase}/prev_montaje_1.jpg`,
-          alt: 'Personas sobre y alrededor de una base de concreto, con una antena al fondo.',
-        },
-        {
-          src: `${preparacionBase}/prev_montaje_2.jpg`,
-          alt: 'Camión con grúa y componentes metálicos junto al sitio de la antena.',
-        },
-        {
-          src: `${preparacionBase}/prev_montaje_3.jpg`,
-          alt: 'Base circular de concreto con pernos de anclaje y agua acumulada en su interior, junto a una antena parabólica pequeña.',
-        },
-        {
-          src: `${preparacionBase}/prev_montaje_4.jpg`,
-          alt: 'Montacargas transporta un componente cilíndrico metálico envuelto y asegurado con correas.',
-        },
-        {
-          src: `${preparacionBase}/prev_montaje_5.jpg`,
-          alt: 'Vista a nivel del suelo de la base circular de concreto, con pernos de anclaje y una placa metálica oxidada en primer plano.',
-        },
-      ],
-    },
-    {
-      id: 'estructura',
-      title: 'Montaje de la estructura',
-      navigationLabel: 'Estructura',
-      description:
-        'El montaje integró progresivamente los componentes principales de la estructura del radiotelescopio. Las fotografías muestran el posicionamiento y la elevación de estos elementos con grúa, antes de que el reflector recibiera sus paneles.',
-      images: [
-        {
-          src: `${estructuraBase}/montaje_1.jpeg`,
-          alt: 'Grúa situada sobre un soporte cilíndrico durante los trabajos de montaje.',
-        },
-        {
-          src: `${estructuraBase}/montaje_2.jpeg`,
-          alt: 'Componente metálico con baranda suspendido junto al soporte de la antena.',
-        },
-        {
-          src: `${estructuraBase}/montaje_3.jpg`,
-          alt: 'Vista desde abajo del vértice central de la estructura radial de la antena, con dos personas trabajando junto a él.',
-        },
-        {
-          src: `${estructuraBase}/montaje_4.jpg`,
-          alt: 'Dos personas trabajan sobre una plataforma con el mecanismo motorizado de rotación de la antena, con una grúa al fondo.',
-        },
-        {
-          src: `${estructuraBase}/montaje_5.jpg`,
-          alt: 'Grúa móvil y camión junto a una base cónica metálica de gran tamaño, colocada sobre el pasto.',
-        },
-      ],
-    },
-    {
-      id: 'paneles',
-      title: 'Montaje de paneles',
-      navigationLabel: 'Paneles',
-      description:
-        'Con la estructura ya montada, el trabajo continuó sobre el reflector con la instalación de sus paneles. Las fotografías muestran los trabajos realizados directamente sobre la antena, incluyendo el traslado de paneles hasta su posición final.',
-      images: [
-        {
-          src: `${panelesBase}/montaje_1.jpg`,
-          alt: 'Persona asegura con cadenas un panel curvo del reflector sobre el pasto, junto a una plataforma elevadora.',
-        },
-        {
-          src: `${panelesBase}/montaje_2.jpg`,
-          alt: 'Vista aérea de una persona en una plataforma elevadora izando un panel triangular del reflector con cuerdas.',
-        },
-        {
-          src: `${panelesBase}/montaje_3.jpeg`,
-          alt: 'Plataforma elevadora junto a la estructura metálica del reflector.',
-        },
-        {
-          src: `${panelesBase}/montaje_4.jpg`,
-          alt: 'Grupo de personas en la base de la antena, bajo la estructura del reflector.',
-        },
-        {
-          src: `${panelesBase}/montaje_5.jpg`,
-          alt: 'Personas en una plataforma elevadora junto a la antena, con un panel suspendido.',
-        },
-      ],
-    },
-    {
-      id: 'fotogrametria',
-      title: 'Fotogrametría y nivelación de paneles',
-      navigationLabel: 'Fotogrametría',
-      description:
-        'Una vez instalados los paneles del reflector, se realizaron trabajos de observación y levantamiento fotogramétrico para verificar la geometría y nivelación de la superficie resultante. Estas labores permitieron documentar las condiciones de la antena tras el montaje.',
-      images: [
-        {
-          src: `${fotogrametriaBase}/Fotogrametria_1.jpg`,
-          alt: 'Vista nocturna de dos antenas y una plataforma elevadora junto a una de ellas.',
-        },
-        {
-          src: `${fotogrametriaBase}/Fotogrametria_2.jpeg`,
-          alt: 'Dos personas trabajan junto a la abertura central del reflector de la antena.',
-        },
-        {
-          src: `${fotogrametriaBase}/Fotogrametria_3.jpeg`,
-          alt: 'Dos personas sentadas sobre la superficie ya ensamblada del reflector, midiendo con una regla metálica junto a la abertura central.',
-        },
-      ],
-    },
-    {
-      id: 'instalacion',
-      title: 'Instalación eléctrica',
-      navigationLabel: 'Instalación',
-      description:
-        'La adecuación eléctrica comprendió trabajos sobre diferentes puntos de la infraestructura del observatorio. Las fotografías documentan la instalación y conexión de componentes eléctricos, trabajos de cableado y labores realizadas tanto en el entorno de la antena como en sus sistemas asociados.',
-      images: [
-        {
-          src: `${instalacionBase}/elect_1.jpeg`,
-          alt: 'Persona junto a los mecanismos y el cableado bajo la estructura de la antena.',
-        },
-        {
-          src: `${instalacionBase}/elect_2.jpg`,
-          alt: 'Equipo de trabajo reunido frente a la base de la antena.',
-        },
-        {
-          src: `${instalacionBase}/elect_3.jpeg`,
-          alt: 'Personas y cables junto a una edificación cercana a la antena.',
-        },
-        {
-          src: `${instalacionBase}/elect_4.jpeg`,
-          alt: 'Persona manipulando cables junto a un tablero eléctrico abierto.',
-        },
-        {
-          src: `${instalacionBase}/elect_5.jpeg`,
-          alt: 'Personas trabajando en la plataforma bajo el reflector, junto a cables y la estructura.',
-        },
-      ],
-    },
+const stageImagePaths = {
+  preparacion: [
+    `${preparacionBase}/prev_montaje_1.jpg`,
+    `${preparacionBase}/prev_montaje_2.jpg`,
+    `${preparacionBase}/prev_montaje_3.jpg`,
+    `${preparacionBase}/prev_montaje_4.jpg`,
+    `${preparacionBase}/prev_montaje_5.jpg`,
   ],
-} as const satisfies ConstructionContent
+  estructura: [
+    `${estructuraBase}/montaje_1.jpeg`,
+    `${estructuraBase}/montaje_2.jpeg`,
+    `${estructuraBase}/montaje_3.jpg`,
+    `${estructuraBase}/montaje_4.jpg`,
+    `${estructuraBase}/montaje_5.jpg`,
+  ],
+  paneles: [
+    `${panelesBase}/montaje_1.jpg`,
+    `${panelesBase}/montaje_2.jpg`,
+    `${panelesBase}/montaje_3.jpeg`,
+    `${panelesBase}/montaje_4.jpg`,
+    `${panelesBase}/montaje_5.jpg`,
+  ],
+  fotogrametria: [
+    `${fotogrametriaBase}/Fotogrametria_1.jpg`,
+    `${fotogrametriaBase}/Fotogrametria_2.jpeg`,
+    `${fotogrametriaBase}/Fotogrametria_3.jpeg`,
+  ],
+  instalacion: [
+    `${instalacionBase}/elect_1.jpeg`,
+    `${instalacionBase}/elect_2.jpg`,
+    `${instalacionBase}/elect_3.jpeg`,
+    `${instalacionBase}/elect_4.jpeg`,
+    `${instalacionBase}/elect_5.jpeg`,
+  ],
+} as const
+
+/** The parts of a message catalogue the construction section reads. */
+export type RosacConstructionMessages = Pick<typeof es, 'rosac'>
+
+/**
+ * The construction content in the language of `messages`.
+ * The route passes the request's catalogue.
+ */
+export function getRosacConstructionContent(
+  messages: RosacConstructionMessages,
+): ConstructionContent {
+  const rosac = messages?.rosac ?? es.rosac
+  const construction = rosac?.construction ?? es.rosac.construction
+  const carousel = construction?.carousel ?? es.rosac.construction.carousel
+
+  const stages = constructionStageIds.map((id) => {
+    const fallbackStageMsg = es.rosac.construction.stages[id]
+    const stageMsg = construction?.stages?.[id] ?? fallbackStageMsg
+    const paths = stageImagePaths[id]
+    const images = paths.map((src, index) => {
+      const imgKey = `img${index + 1}` as keyof typeof fallbackStageMsg.images
+      return {
+        src,
+        alt: stageMsg?.images?.[imgKey] ?? fallbackStageMsg.images[imgKey] ?? '',
+      }
+    }) as unknown as [ConstructionImage, ConstructionImage, ...ConstructionImage[]]
+
+    return {
+      id,
+      title: stageMsg?.title ?? fallbackStageMsg.title,
+      navigationLabel: stageMsg?.navigationLabel ?? fallbackStageMsg.navigationLabel,
+      description: stageMsg?.description ?? fallbackStageMsg.description,
+      images,
+    }
+  }) as unknown as [ConstructionStage, ...ConstructionStage[]]
+
+  return {
+    title: construction?.title ?? es.rosac.construction.title,
+    intro: construction?.intro ?? es.rosac.construction.intro,
+    stages,
+    carousel: {
+      ariaLabel: carousel.ariaLabel ?? es.rosac.construction.carousel.ariaLabel,
+      groupNoun: carousel.groupNoun ?? es.rosac.construction.carousel.groupNoun,
+      photoNoun: carousel.photoNoun ?? es.rosac.construction.carousel.photoNoun,
+      previousGroupLabel: carousel.previousGroup ?? es.rosac.construction.carousel.previousGroup,
+      nextGroupLabel: carousel.nextGroup ?? es.rosac.construction.carousel.nextGroup,
+      previousPhotoLabel: carousel.previousPhoto ?? es.rosac.construction.carousel.previousPhoto,
+      nextPhotoLabel: carousel.nextPhoto ?? es.rosac.construction.carousel.nextPhoto,
+      imageUnavailableMessage:
+        carousel.imageUnavailable ?? es.rosac.construction.carousel.imageUnavailable,
+      ofPreposition: carousel.of ?? es.rosac.construction.carousel.of,
+    },
+  }
+}
+
+/** The construction content in Spanish, the source language. For stories and tests. */
+export const rosacConstructionContent: ConstructionContent = getRosacConstructionContent(es)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
@@ -13,6 +14,8 @@ export interface EditableResearcherCardProps {
   researcher: PersonProfile
   canEdit?: boolean
   canDelete?: boolean
+  /** Label preceding the institution text. Defaults to the translated `researchers.institutionLabel`. */
+  institutionLabel?: string
   /**
    * Persists the edit and reports the outcome in a toast; resolves to whether it succeeded, so
    * the modal closes only once the save is done and stays open, with the input, on failure.
@@ -34,17 +37,21 @@ export function EditableResearcherCard({
   researcher,
   canEdit = false,
   canDelete = false,
+  institutionLabel,
   onSave,
   onDelete,
 }: EditableResearcherCardProps) {
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
+  const tResearchers = useTranslations('researchers')
+  const resolvedInstitutionLabel = institutionLabel ?? tResearchers('institutionLabel')
 
   const card = (
     <ResearcherCard
       description={researcher.description}
       email={researcher.email}
       institution={researcher.institution}
+      institutionLabel={resolvedInstitutionLabel}
       name={researcher.name}
       role={researcher.role}
       src={researcher.src}
