@@ -175,9 +175,7 @@ inventory taken when the static pages were migrated.
 | `/colaboraciones-e-iniciativas`          | `collaborations`                     | `lib/collaborations.ts`, `lib/research-collaborations.ts` |
 | `/noticias/actividades/[slug]`           | `academicActivities`                 | `lib/academic-activities.ts`                              |
 | `/publicaciones`                         | `publications`                       | `PublicationsExplorer.tsx`, `lib/publication-form.ts`     |
-
-The academic activities section and its cards on `/noticias` are translated too; the rest of
-that page is not.
+| `/noticias`                              | `news`, `academicActivities`         | `NewsExplorer.tsx`, `lib/news-form.ts`                    |
 
 On `/`, the hero banner's title and subtitle and the geomagnetic indices' descriptions are
 database content, edited in both languages in "Modo edición" ([`home-page.md`](home-page.md)).
@@ -191,27 +189,36 @@ cards' buttons (`card`), the editor of "Modo edición" with its popups, validati
 messages (`editor`, `authorDialog`, `discardDialog`, `deleteDialog`, `validation`, `saveErrors`),
 and the publications themselves, which are database content.
 
+`/noticias` follows the same shape in the `news` namespace: the page's fixed copy (`page`), the
+cards' labels (`card`, including "Sin fecha" for an undated item), the editor with its popups,
+validation and toasts (`editor`, `discardDialog`, `deleteDialog`, `validation`, `errors`,
+`created`, `updated`, `deleted`), and the news items' title and abstract, which are database
+content in `news.news_record_translations`. Dates are formatted in the visitor's language by
+`getNews()`; an item without an English version is shown in its base text. The academic
+activities section above the news uses `academicActivities`. Each card links out to the original
+article, which is the item's detail view: there is no news page of its own to translate.
+
 ### Still to do
 
-| Route                            | Copy lives in                                                              | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
-| -------------------------------- | -------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/galeria/**`                    | `lib/gallery.ts`, `gallery/*`                                              | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
-| `/radioastronomia`               | `lib/rosac.ts`, `rosac-construction.ts`, `rosac-instruments.ts`, `rosac/*` | 126 in lib, 56 in components       | The team comes from the database. The researcher create and edit feedback is in the catalogue (`researchers.*`, shared with `/nosotros`). Instrument cards are built at module load from Spanish product names. `rosac-construction.ts` is imported by a Playwright spec          |
-| `/nosotros`                      | `lib/nosotros.ts`, `NosotrosPage`, `NosotrosActivityForm`                  | 20 in lib, 27 in components        | Activities and researchers come from the database. The create, edit and delete feedback for activities is already in the catalogue (`nosotros.activities.*`), and the researcher create and edit feedback in `researchers.*`; the API's own error messages are still Spanish      |
-| `/datos`                         | `lib/scientific-data.ts`, `scientific-data/*`                              | 66 in lib, 98 in components        | 139 labels are generated in code from Spanish pieces. Product names also reach the CSV and PNG exports. Four formatters hardcode `es-CR`                                                                                                                                          |
-| `/noticias`, `/investigacion/**` | `lib/news.ts`, `research-areas.ts` and their components                    | 23 in lib, 111 in components       | Mostly editing forms. Two hand-written plurals. Zod messages are repeated word for word on the client. The news create, edit and delete feedback is already in the catalogue (`news.*`), with the shared network and server fallbacks in `common.feedback`                        |
-| `/acceso`, `/cuenta`             | `lib/auth/login.ts`, `registration.ts`, `account.ts`                       | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
-| `/administracion/**`             | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*`         | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
-| `(public)/[section]`             | inline in the page                                                         | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
+| Route                | Copy lives in                                                              | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/galeria/**`        | `lib/gallery.ts`, `gallery/*`                                              | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
+| `/radioastronomia`   | `lib/rosac.ts`, `rosac-construction.ts`, `rosac-instruments.ts`, `rosac/*` | 126 in lib, 56 in components       | The team comes from the database. The researcher create and edit feedback is in the catalogue (`researchers.*`, shared with `/nosotros`). Instrument cards are built at module load from Spanish product names. `rosac-construction.ts` is imported by a Playwright spec          |
+| `/nosotros`          | `lib/nosotros.ts`, `NosotrosPage`, `NosotrosActivityForm`                  | 20 in lib, 27 in components        | Activities and researchers come from the database. The create, edit and delete feedback for activities is already in the catalogue (`nosotros.activities.*`), and the researcher create and edit feedback in `researchers.*`; the API's own error messages are still Spanish      |
+| `/datos`             | `lib/scientific-data.ts`, `scientific-data/*`                              | 66 in lib, 98 in components        | 139 labels are generated in code from Spanish pieces. Product names also reach the CSV and PNG exports. Four formatters hardcode `es-CR`                                                                                                                                          |
+| `/investigacion/**`  | `research-areas.ts` and its components                                     | not recounted                      | Mostly editing forms. Zod messages are repeated word for word on the client                                                                                                                                                                                                       |
+| `/acceso`, `/cuenta` | `lib/auth/login.ts`, `registration.ts`, `account.ts`                       | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
+| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*`         | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
+| `(public)/[section]` | inline in the page                                                         | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
 
 ### Not tied to one page
 
 1. **Validation and error messages**, about 50 distinct. Zod schemas with inline Spanish messages
-   (`lib/news.ts`, `lib/nosotros.ts`, `lib/auth/login.ts`, ...) become factories that take `t`.
+   (`lib/nosotros.ts`, `lib/auth/login.ts`, ...) become factories that take `t`.
    Server Actions and route handlers under `app/api/` call `getTranslations`; the cookie is
    available in both.
-2. **Formatting.** Nine `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
-   (`scientific-data/`, `lib/news.ts`, `cuenta/page.tsx`, `lib/auth/countries.ts`,
+2. **Formatting.** Eight `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
+   (`scientific-data/`, `cuenta/page.tsx`, `lib/auth/countries.ts`,
    `services/downloads/exporters/png.ts`, `UserRoleChangeDialog.tsx`). Replace them with
    next-intl's `useFormatter` / `getFormatter`, which follow the request's locale and time zone.
 3. **Shared editing components** with their own text: `ConfirmDialog`, `EditableWrapper`,

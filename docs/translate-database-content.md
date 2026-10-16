@@ -2,7 +2,7 @@
 
 A practical guide to managing editable Spanish/English content in PostgreSQL through LASCE's existing CMS, and to implementing the same pattern in another entity **without copying the Publications implementation**.
 
-- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)) and the contact cards on `/contacto` (`ContactChannel`) use the same pattern. News, research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
+- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)) the contact cards on `/contacto` (`ContactChannel`) and the news on `/noticias` (`News`, see [`internationalization.md`](internationalization.md#translated)) use the same pattern. Research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
 
   is a different problem, handled by the message catalogues in [`internationalization.md`](internationalization.md).
 
