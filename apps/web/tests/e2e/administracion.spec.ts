@@ -35,20 +35,73 @@ test('turns a signed-in visitor away without showing the panel', async ({ page, 
   }
 })
 
-test('shows the summary stats and infrastructure status panels', async ({ page, context }) => {
+test('shows the content cards, recent activity and services of the summary', async ({
+  page,
+  context,
+}) => {
   const fixture = await createSignedInUser(context, 'ASSISTANT')
   try {
     await page.goto('/administracion')
 
     await expect(page.getByRole('heading', { level: 1, name: 'Resumen' })).toBeVisible()
     await expect(page.getByText('Panel de administración')).toBeVisible()
-    await expect(page.getByRole('complementary', { name: 'Información provisional' })).toBeVisible()
-    await expect(page.getByText('Investigadores')).toBeVisible()
+    await expect(page.getByRole('complementary', { name: 'Información provisional' })).toHaveCount(
+      0,
+    )
+
+    const cards = page.getByRole('region', { name: 'Contenido del portal' })
+    await expect(cards.getByRole('link')).toHaveCount(6)
+    await expect(cards.getByRole('link', { name: /Publicaciones/ })).toHaveAttribute(
+      'href',
+      '/publicaciones',
+    )
+    // Every card shows a figure or says it has none; never a placeholder.
+    for (const card of await cards.getByRole('link').all()) {
+      await expect(card.locator('strong')).toHaveText(/^(\d[\d\s.,]*|Sin registros)$/)
+    }
+
     await expect(page.getByRole('heading', { level: 2, name: 'Actividad reciente' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: 'Servicios' })).toBeVisible()
-    await expect(page.getByRole('heading', { level: 2, name: 'Tareas y pipelines' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: 'Tareas y pipelines' })).toHaveCount(0)
+
+    const services = page.getByRole('region', { name: 'Servicios' })
+    await expect(services.getByRole('listitem')).toHaveCount(6)
+    await expect(services.getByText('Verificando…')).toHaveCount(0, { timeout: 15_000 })
+    // The page itself was served, so the API is up whatever else is down.
+    await expect(services.getByRole('listitem').filter({ hasText: 'API pública' })).toContainText(
+      'En línea',
+    )
   } finally {
     await fixture.cleanup()
+  }
+})
+
+test('reports the services only to accounts that may open the panel', async ({
+  page,
+  context,
+  request,
+}) => {
+  expect((await request.get('/api/health/services')).status()).toBe(401)
+
+  const visitor = await createSignedInUser(context, 'VISITOR')
+  try {
+    expect((await page.request.get('/api/health/services')).status()).toBe(403)
+  } finally {
+    await visitor.cleanup()
+  }
+
+  await context.clearCookies()
+  const assistant = await createSignedInUser(context, 'ASSISTANT')
+  try {
+    const response = await page.request.get('/api/health/services')
+    const body = await response.json()
+
+    expect([200, 503]).toContain(response.status())
+    expect(Object.keys(body.checks).sort()).toEqual(['api', 'influxdb', 'minio', 'workers'])
+    expect(body.checks.api).toBe('ok')
+    for (const state of Object.values(body.checks)) expect(['ok', 'down']).toContain(state)
+  } finally {
+    await assistant.cleanup()
   }
 })
 
