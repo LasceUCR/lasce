@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import { createSignedInUser } from './helpers/admin-users'
+
 // Runs against the seeded news (`pnpm db:seed`, which CI runs before this suite).
 
 function newsList(page: Page) {
@@ -64,5 +66,135 @@ test('fits the news cards to the screen at every width without sideways scrollin
     })
 
     expect(overflow, `horizontal overflow at ${width}px`).toBe(false)
+  }
+})
+
+test("lets visitors expand and collapse a news item's summary inline with Leer más", async ({
+  page,
+}) => {
+  await page.goto('/noticias')
+
+  const cards = newsList(page).getByRole('article')
+  await expect(cards.first()).toBeVisible()
+
+  // Seeded news items have lengthened summaries, offering "Leer más"
+  const readMoreToggle = newsList(page).getByRole('button', { name: 'Leer más' }).first()
+  await expect(readMoreToggle).toBeVisible()
+  await expect(readMoreToggle).toHaveAttribute('aria-expanded', 'false')
+
+  await readMoreToggle.click()
+
+  const readLessToggle = newsList(page).getByRole('button', { name: 'Leer menos' }).first()
+  await expect(readLessToggle).toBeVisible()
+  await expect(readLessToggle).toHaveAttribute('aria-expanded', 'true')
+
+  await readLessToggle.click()
+  await expect(newsList(page).getByRole('button', { name: 'Leer más' }).first()).toBeVisible()
+})
+
+test('returns a 404 page when navigating to a non-existent news article', async ({ page }) => {
+  const response = await page.goto('/noticias/00000000-0000-0000-0000-000000000000')
+  expect(response?.status()).toBe(404)
+})
+
+test('does not show administrative controls to unauthenticated visitors', async ({ page }) => {
+  await page.goto('/noticias')
+  await expect(page.getByRole('button', { name: 'Agregar noticia' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Editar' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Eliminar' })).toHaveCount(0)
+})
+
+test('allows an admin to create, view, edit, and delete a news article', async ({
+  page,
+  context,
+}) => {
+  const fixture = await createSignedInUser(context, 'ADMIN')
+  const uniqueTitle = `Noticia de prueba E2E ${Date.now()}`
+  const updatedTitle = `${uniqueTitle} (Editada)`
+  const uniqueUrl = `https://e2e.example.com/noticia-${Date.now()}`
+
+  try {
+    await page.goto('/administracion')
+    await page.getByRole('switch', { name: 'Modo edición' }).click()
+    await page.goto('/noticias')
+
+    // 1. Validation test on creation
+    await page.getByRole('button', { name: 'Agregar noticia' }).click()
+    const addDialog = page.getByRole('dialog', { name: 'Agregar noticia' })
+    await expect(addDialog).toBeVisible()
+
+    await addDialog.getByRole('button', { name: 'Confirmar' }).click()
+    await expect(addDialog.getByText('El título es obligatorio.')).toBeVisible()
+
+    // 2. Fill required fields and save
+    await addDialog.getByRole('textbox', { name: 'Título' }).fill(uniqueTitle)
+    await addDialog.getByRole('textbox', { name: 'Autores' }).fill('Reportero E2E')
+    await addDialog.getByRole('textbox', { name: 'Fuente' }).fill('Periódico E2E')
+    await addDialog.getByRole('textbox', { name: 'Enlace' }).fill(uniqueUrl)
+    await addDialog
+      .getByRole('textbox', { name: 'Resumen' })
+      .fill('Resumen detallado de la noticia de prueba E2E.')
+    await addDialog.getByRole('button', { name: 'Confirmar' }).click()
+
+    await expect(page.getByText('Noticia agregada correctamente.')).toBeVisible()
+    await expect(addDialog).toBeHidden()
+
+    // 3. Newly created article is in list and displays its content
+    const createdCard = newsList(page).getByRole('article').filter({ hasText: uniqueTitle })
+    await expect(createdCard).toBeVisible()
+    await expect(createdCard.getByText('Reportero E2E')).toBeVisible()
+    await expect(createdCard.getByText('Periódico E2E')).toBeVisible()
+    await expect(
+      createdCard.getByText('Resumen detallado de la noticia de prueba E2E.'),
+    ).toBeVisible()
+    const sourceLink = createdCard.getByRole('link', {
+      name: new RegExp(`^Abrir fuente de «${uniqueTitle}»`),
+    })
+    await expect(sourceLink).toHaveAttribute('href', uniqueUrl)
+
+    // 4. Edit the news article
+    const itemToEdit = newsList(page).locator('.editable').filter({ hasText: uniqueTitle })
+    await itemToEdit.getByRole('button', { name: 'Editar' }).click()
+    const editDialog = page.getByRole('dialog', { name: 'Editar noticia' })
+    await expect(editDialog).toBeVisible()
+
+    await editDialog.getByRole('textbox', { name: 'Título' }).fill(updatedTitle)
+    await editDialog.getByRole('button', { name: 'Confirmar' }).click()
+
+    await expect(page.getByText('Noticia actualizada correctamente.')).toBeVisible()
+    await expect(editDialog).toBeHidden()
+
+    const editedItem = newsList(page).locator('.editable').filter({ hasText: updatedTitle })
+    await expect(editedItem).toBeVisible()
+
+    // 5. Delete cancellation keeps the article
+    await editedItem.getByRole('button', { name: 'Eliminar' }).click()
+    const deleteDialog = page.getByRole('dialog', { name: 'Eliminar noticia' })
+    await expect(deleteDialog).toBeVisible()
+    await deleteDialog.getByRole('button', { name: 'Cancelar' }).click()
+    await expect(deleteDialog).toBeHidden()
+    await expect(
+      newsList(page).getByRole('article').filter({ hasText: updatedTitle }),
+    ).toBeVisible()
+
+    // 6. Delete confirmation deletes the article
+    await editedItem.getByRole('button', { name: 'Eliminar' }).click()
+    const confirmDeleteDialog = page.getByRole('dialog', { name: 'Eliminar noticia' })
+    await expect(confirmDeleteDialog).toBeVisible()
+    await confirmDeleteDialog.getByRole('button', { name: 'Eliminar' }).click()
+
+    await expect(page.getByText('Noticia eliminada correctamente.')).toBeVisible()
+    await expect(confirmDeleteDialog).toBeHidden()
+    await expect(newsList(page).getByRole('article').filter({ hasText: updatedTitle })).toHaveCount(
+      0,
+    )
+  } finally {
+    // Clean up created news in case test failed before deleting
+    await fixture.prisma.news.deleteMany({
+      where: {
+        OR: [{ title: uniqueTitle }, { title: updatedTitle }, { externalUrl: uniqueUrl }],
+      },
+    })
+    await fixture.cleanup()
   }
 })

@@ -328,7 +328,6 @@ export function PublicationForm({
           {t('editor.save')}
         </Button>
       </div>
-
       <StandardConfirmDialog
         cancelLabel={t('discardDialog.keepEditing')}
         confirmLabel={t('discardDialog.discard')}

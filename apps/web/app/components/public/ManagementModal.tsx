@@ -395,7 +395,6 @@ export function ManagementModal({
 
       {/* Modal de confirmación estándar para Guardar */}
       <StandardConfirmDialog
-        consequence="Los cambios se aplicarán de inmediato en el catálogo público de investigadores de la UCR."
         errorMessage={saveErrorMessage}
         isSubmitting={isSubmitting}
         message="¿Desea guardar y publicar los cambios en este perfil de investigador?"
@@ -404,7 +403,6 @@ export function ManagementModal({
         open={confirmSaveOpen}
         severity="info"
         submittingLabel="Guardando cambios..."
-        targetEntity={name.trim() || 'Nuevo investigador'}
         title="Confirmar guardado de cambios"
       />
 

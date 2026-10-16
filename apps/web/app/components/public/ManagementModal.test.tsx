@@ -53,7 +53,9 @@ describe('ManagementModal', () => {
     expect(
       screen.getByRole('dialog', { name: 'Confirmar guardado de cambios' }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/Carolina Salas Matamoros/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/¿Desea guardar y publicar los cambios en este perfil/),
+    ).toBeInTheDocument()
   })
 
   test('opens destructive confirm dialog and hides the management modal behind it when delete is clicked', async () => {
