@@ -393,15 +393,16 @@ describe('rosac content', () => {
     expect(english.instruments.title).toBe('Scientific instruments')
     expect(english.instruments.items[0]?.name).toBe('ROSAC-SABER')
     expect(english.instruments.items[0]?.characteristics).toEqual(['Band between 100 and 1000 MHz'])
-    expect(english.instruments.items[0]?.consultation?.label).toBe('Query ROSAC-SABER simulation')
+    expect(english.instruments.items[0]?.consultation?.label).toBe('View ROSAC-SABER simulation')
     expect(english.instruments.items[1]?.characteristics).toEqual(['9 GHz band'])
     expect(english.instruments.items[1]?.consultation?.label).toBe(
-      'Query ROSAC-MIRA 9GHz simulation',
+      'View ROSAC-MIRA 9GHz simulation',
     )
     expect(english.instruments.items[2]?.characteristics).toEqual([
       'Neutral hydrogen observation at 1.4 GHz',
     ])
     expect(english.team.title).toBe('Researchers')
+    expect(english.team.institutionLabel).toBe('Institution')
     expect(english.team.people[0]?.role).toBe('Principal Investigator')
     expect(english.team.people[0]?.description).toContain('Responsible for strategic planning')
     expect(english.characteristics.items[0]?.title).toBe('11-meter antenna')

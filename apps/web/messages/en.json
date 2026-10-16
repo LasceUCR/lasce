@@ -795,7 +795,7 @@
       "card": {
         "name": "Instrument {number}",
         "pendingName": "Instrument 3 (to be defined)",
-        "consultationLabel": "Query {name} simulation",
+        "consultationLabel": "View {name} simulation",
         "consultationNotice": "{product}. Results are simulated; they do not correspond to instrument observations.",
         "pendingNotice": "Information pending confirmation and integration into the data section.",
         "imageUnavailable": "Image unavailable",
@@ -836,6 +836,7 @@
       "intro": "The people developing the Santa Cruz Radio Observatory (ROSAC), a project bringing together astrophysics, physics, topographic, electrical, and mechanical engineering, electronics, and computing, with national and international collaboration.",
       "hint": "Click on a card to see more information.",
       "emptyMessage": "No researcher information available at this time.",
+      "institutionLabel": "Institution",
       "people": {
         "carolinaSalas": {
           "role": "Principal Investigator",
@@ -930,6 +931,7 @@
     }
   },
   "researchers": {
+    "institutionLabel": "Institution",
     "created": "Researcher added successfully.",
     "updated": "Researcher updated successfully.",
     "errors": {

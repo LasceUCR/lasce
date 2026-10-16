@@ -128,6 +128,7 @@ export interface RosacInfoContent {
     intro: string
     hint: string
     emptyMessage: string
+    institutionLabel: string
     people: readonly TeamMember[]
   }
   acknowledgments: {
@@ -628,6 +629,7 @@ export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
       intro: team.intro,
       hint: team.hint,
       emptyMessage: team.emptyMessage,
+      institutionLabel: (team as { institutionLabel?: string }).institutionLabel ?? 'Institución',
       people: localizeResearchers(defaultTeamPeople, messages),
     },
     acknowledgments: {

@@ -47,13 +47,14 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-function renderPage(props: RosacInfoPageProps = defaultArgs) {
+function renderPage(props: RosacInfoPageProps = defaultArgs, locale: 'es' | 'en' = 'es') {
   return renderWithIntl(
     <ToastProvider>
       <EditModeProvider>
         <RosacInfoPage {...props} />
       </EditModeProvider>
     </ToastProvider>,
+    { locale },
   )
 }
 
@@ -403,7 +404,7 @@ describe('RosacInfoPage', () => {
 
   test('renders the page in English when provided English content', () => {
     const englishContent = getRosacInfoContent(getMessages('en'))
-    renderPage({ ...defaultArgs, content: englishContent })
+    renderPage({ ...defaultArgs, content: englishContent }, 'en')
 
     expect(
       screen.getByRole('heading', {
@@ -419,11 +420,11 @@ describe('RosacInfoPage', () => {
     expect(screen.getByRole('region', { name: '4. ROSAC construction' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: '5. Why observe in radio?' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: '6. Scientific instruments' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Query ROSAC-SABER simulation' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'View ROSAC-SABER simulation' })).toBeInTheDocument()
     expect(
-      screen.getByRole('link', { name: 'Query ROSAC-MIRA 9GHz simulation' }),
+      screen.getByRole('link', { name: 'View ROSAC-MIRA 9GHz simulation' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Query ROSAC-HIROS simulation' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'View ROSAC-HIROS simulation' })).toBeDisabled()
     expect(screen.getByText('Band between 100 and 1000 MHz')).toBeInTheDocument()
     expect(screen.getByText('9 GHz band')).toBeInTheDocument()
     expect(screen.getByText('Neutral hydrogen observation at 1.4 GHz')).toBeInTheDocument()
@@ -438,6 +439,8 @@ describe('RosacInfoPage', () => {
     ).not.toBeInTheDocument()
     expect(screen.getByText('Principal Investigator')).toBeInTheDocument()
     expect(screen.queryByText('Investigadora principal')).not.toBeInTheDocument()
+    expect(screen.getAllByText(/^Institution:/).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/^Institución:/)).not.toBeInTheDocument()
   })
 
   test('offers editing but strictly NO add or delete on characteristics (Section 1)', () => {

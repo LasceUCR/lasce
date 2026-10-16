@@ -775,12 +775,14 @@ export function RosacInfoPage({
         <TeamGallery
           emptyMessage={content.team.emptyMessage}
           hint={content.team.hint}
+          institutionLabel={content.team.institutionLabel}
           label={content.team.title}
           people={content.team.people}
           renderPerson={(person) => (
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
+              institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
               onSave={(values) => handleSaveResearcher(person.id, values)}
               researcher={person}
