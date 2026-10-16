@@ -1,8 +1,10 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 // `RosacInfoPage.stories` pulls in `rosacInfoContent` from `@/app/lib/rosac`,
 // which imports `prisma` at module scope — this stubs it out so loading that
@@ -39,18 +41,22 @@ afterEach(() => {
 })
 
 function renderPage(props: RosacInfoPageProps = defaultArgs) {
-  return render(
-    <EditModeProvider>
-      <RosacInfoPage {...props} />
-    </EditModeProvider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeProvider>
+        <RosacInfoPage {...props} />
+      </EditModeProvider>
+    </ToastProvider>,
   )
 }
 
 function renderEditMode(props: RosacInfoPageProps = editModeArgs) {
-  return render(
-    <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
-      <RosacInfoPage {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+        <RosacInfoPage {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -272,8 +278,6 @@ describe('RosacInfoPage', () => {
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/researchers/${firstPerson?.id}`,
@@ -281,6 +285,29 @@ describe('RosacInfoPage', () => {
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog', { name: 'Editar investigador' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Investigador actualizado correctamente.')).toBeInTheDocument()
+  })
+
+  test('explains a failed researcher edit inside the open modal and keeps the form', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: 'No tiene permisos para modificar este contenido.' }),
+    })
+    renderEditMode()
+
+    const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar a/ })
+    await user.click(firstEditButton as HTMLElement)
+    const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.queryByText('Investigador actualizado correctamente.')).not.toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
   test('DELETEs the researcher and refreshes the page once removal succeeds', async () => {
@@ -325,8 +352,9 @@ describe('RosacInfoPage', () => {
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
-    const confirmDialog = screen.getByRole('dialog', { name: 'Agregar investigador' })
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Confirmar' }))
+
+    // Creating saves straight away: no second confirmation dialog.
+    expect(screen.queryByRole('dialog', { name: 'Agregar investigador' })).not.toBeInTheDocument()
 
     expect(mocks.uploadResearcherImage).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(
@@ -337,6 +365,33 @@ describe('RosacInfoPage', () => {
       }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog', { name: 'Añadir investigador' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Investigador agregado correctamente.')).toBeInTheDocument()
+  })
+
+  test('explains a failed researcher creation inside "Añadir investigador" and keeps the form', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: 'No tiene permisos para modificar este contenido.' }),
+    })
+    renderEditMode()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
+    const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Añadir investigador' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('textbox', { name: 'Nombre' })).toHaveValue('Persona Nueva')
+    expect(screen.queryByText('Investigador agregado correctamente.')).not.toBeInTheDocument()
+    expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
   test('offers editing but strictly NO add or delete on characteristics (Section 1)', () => {

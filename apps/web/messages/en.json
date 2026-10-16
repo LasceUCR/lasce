@@ -77,6 +77,11 @@
       "panelTitle": "Real-time image of the Sun",
       "observed": "Observed on <time></time>",
       "updating": "Updating the latest image of the Sun…"
+    },
+    "validation": {
+      "valueNotText": "The value must be text.",
+      "valueRequired": "The value is required.",
+      "valueTooLong": "The value cannot be longer than 15 characters."
     }
   },
   "workAreas": {
@@ -499,6 +504,13 @@
     "errors": {
       "saveUnknown": "The news item could not be saved. Try again.",
       "deleteUnknown": "The news item could not be deleted. Try again."
+    }
+  },
+  "researchers": {
+    "created": "Researcher added successfully.",
+    "updated": "Researcher updated successfully.",
+    "errors": {
+      "unknown": "The researcher could not be saved. Try again."
     }
   }
 }
