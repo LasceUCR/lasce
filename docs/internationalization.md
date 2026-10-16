@@ -18,11 +18,12 @@ never text a visitor reads.
   list, page by page, is in [Translation status](#translation-status).
 - Database content ("Modo edición") has shared, reusable infrastructure. **Publications** on
   `/publicaciones` (title and abstract), the **"¿Qué hacemos?" cards** on `/nosotros` (title and
-  description), the **LASCE section** of `/fisica-solar` (title and text), the **home page** (the
-  hero banner's title and subtitle, and the geomagnetic indices' descriptions), the **contact
-  cards** on `/contacto` (title and description) and **the research areas on `/investigacion`**
-  (title and description) use it, read and edited in Spanish and English. Every other editable
-  entity is still single-language. See [Dynamic content](#dynamic-content) and
+  description), the **researcher profiles** on `/nosotros` (role and description), the **LASCE
+  section** of `/fisica-solar` (title and text), the **home page** (the hero banner's title and
+  subtitle, and the geomagnetic indices' descriptions), the **contact cards** on `/contacto` (title
+  and description) and **the research areas on `/investigacion`** (title and description) use it,
+  read and edited in Spanish and English. Every other editable entity is still single-language.
+  See [Dynamic content](#dynamic-content) and
   [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
@@ -198,12 +199,15 @@ cards' buttons (`card`), the editor of "Modo edición" with its popups, validati
 messages (`editor`, `authorDialog`, `discardDialog`, `deleteDialog`, `validation`, `saveErrors`),
 and the publications themselves, which are database content.
 
-`/nosotros` is translated except for its database content: the fixed copy, the editor labels and
-dialogs of the activity cards (`nosotros.activities.form`) and the researcher add button and
-messages (`nosotros.researchers`), with the researcher create and edit feedback in the shared
-`researchers.*` namespace. The activity cards and researcher profiles are still single-language, the shared ROSAC researcher components (`ResearcherForm`,
-`EditableResearcherCard`, `TeamGallery`) still show Spanish, and the API's own error messages are
-still Spanish.
+`/nosotros` is translated, database content included: the fixed copy, the editor labels and
+dialogs of the activity cards (`nosotros.activities.form`) and the researcher messages and the
+labels of the bilingual part of the researcher editor (`nosotros.researchers`, `form`), with the
+researcher create, edit and delete feedback in the shared `researchers.*` namespace. The
+activity cards and the role and description of the researcher profiles are bilingual. The rest of
+the researcher editor (photo, name, contact, institution and its dialogs) comes from the
+components shared with ROSAC (`ResearcherForm`, `EditableResearcherCard`, `TeamGallery`), which
+still show Spanish; they turn the bilingual part on only when `/nosotros` passes `translation`.
+The API's own error messages are still Spanish.
 
 `/datos` has no database content; everything is `lib/scientific-data.ts` and the
 `scientific-data/*` components. `getScientificSources(messages)` follows the "content built on the
@@ -251,8 +255,8 @@ rest of the "Not tied to one page" list below.
    namespaces Client Components use. It needs a safeguard, because a namespace left out fails
    only in the browser.
 6. **Review of the English text** by someone who knows the terminology.
-7. **Database content** for every entity except publications and the Nosotros activity cards,
-   following
+7. **Database content** for every entity except publications and the Nosotros activity cards and
+   researchers, following
    [`translate-database-content.md`](translate-database-content.md).
 
 ## Dynamic content
@@ -285,12 +289,14 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
   [`translate-database-content.md`](translate-database-content.md), with the publications as the
   reference implementation, their API contract, the design decisions and the known limitations.
 - **Which entities are bilingual:** publications, `NosotrosActivity` (the "¿Qué hacemos?" cards
-  on `/nosotros`: `title` and `description`, stored as `paragraph`), the LASCE section of
-  `/fisica-solar` (`SolarPhysicsSection`), the home page banner (`HomeHero`) and its geomagnetic
-  indices (`GeomagneticIndex`, description only), the contact cards on `/contacto`
-  (`ContactChannel`: `title` and `description`; the icon, link and position are shared), and
-  research areas (`ResearchArea`). The same pattern is meant for `News`, `Researcher`,
-  `NosotrosResearcher`, `GalleryAlbum` and `GalleryMedia`, each with its own translation table holding only its translatable columns
+  on `/nosotros`: `title` and `description`, stored as `paragraph`), `NosotrosResearcher` (the
+  researcher profiles on `/nosotros`: `role` and an optional `description`; the name,
+  institution, addresses and photo are shared), the LASCE section of `/fisica-solar`
+  (`SolarPhysicsSection`), the home page banner (`HomeHero`) and its geomagnetic indices
+  (`GeomagneticIndex`, description only), the contact cards on `/contacto` (`ContactChannel`:
+  `title` and `description`; the icon, link and position are shared), and research areas
+  (`ResearchArea`). The same pattern is meant for `News`, `Researcher` (ROSAC), `GalleryAlbum` and
+  `GalleryMedia`, each with its own translation table holding only its translatable columns
   (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
 - **Tables:** [`database-definition.md`](database-definition.md).
 
