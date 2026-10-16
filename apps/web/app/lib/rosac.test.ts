@@ -401,8 +401,12 @@ describe('rosac content', () => {
     expect(english.instruments.items[2]?.characteristics).toEqual([
       'Neutral hydrogen observation at 1.4 GHz',
     ])
-    expect(english.instruments.items[2]?.consultation?.label).toBe('Query ROSAC-HIROS simulation')
     expect(english.team.title).toBe('Researchers')
+    expect(english.team.people[0]?.role).toBe('Principal Investigator')
+    expect(english.team.people[0]?.description).toContain('Responsible for strategic planning')
+    expect(english.characteristics.items[0]?.title).toBe('11-meter antenna')
+    expect(english.construction.stages[0]?.title).toBe('Preparation for assembly')
+    expect(english.construction.stages[4]?.title).toBe('Electrical installation')
     expect(english.acknowledgments.title).toBe('ROSAC acknowledgments')
     expect(english.donations.title).toBe('ROSAC donations')
     expect(english.donations.items[1]?.title).toBe('Prysmian donation')

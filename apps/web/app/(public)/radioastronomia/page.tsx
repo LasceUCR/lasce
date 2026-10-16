@@ -3,7 +3,12 @@ import { getMessages, getTranslations } from 'next-intl/server'
 
 import { RosacInfoPage } from '@/app/components/public/rosac/RosacInfoPage'
 import { userHasPermission } from '@/app/lib/auth/authorization'
-import { getResearchers, getRosacInfoContent, type RosacMessages } from '@/app/lib/rosac'
+import {
+  getResearchers,
+  getRosacInfoContent,
+  localizeResearchers,
+  type RosacMessages,
+} from '@/app/lib/rosac'
 import { workAreaPath } from '@/app/lib/work-areas'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,6 +33,10 @@ export default async function RadioastronomiaRoute() {
   ])
 
   const content = getRosacInfoContent(messages as unknown as RosacMessages)
+  const teamPeople = localizeResearchers(
+    people.length > 0 ? people : content.team.people,
+    messages as unknown as RosacMessages,
+  )
 
   return (
     <RosacInfoPage
@@ -36,7 +45,7 @@ export default async function RadioastronomiaRoute() {
       canEdit={canEdit}
       content={{
         ...content,
-        team: { ...content.team, people },
+        team: { ...content.team, people: teamPeople },
       }}
     />
   )

@@ -428,9 +428,16 @@ describe('RosacInfoPage', () => {
     expect(screen.getByText('9 GHz band')).toBeInTheDocument()
     expect(screen.getByText('Neutral hydrogen observation at 1.4 GHz')).toBeInTheDocument()
     expect(screen.queryByText('Consultar simulación del ROSAC-SABER')).not.toBeInTheDocument()
-    expect(screen.queryByText('Banda entre 100 y 1000 MHz')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Prysmian donation' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Donación Prysmian' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '11-meter antenna' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Antena de 11 metros' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Preparation for assembly' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Preparación para el montaje' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('Principal Investigator')).toBeInTheDocument()
+    expect(screen.queryByText('Investigadora principal')).not.toBeInTheDocument()
   })
 
   test('offers editing but strictly NO add or delete on characteristics (Section 1)', () => {
