@@ -6,15 +6,14 @@ that shows the whole text in place. Use the shared `TruncatedText` component
 your own: it measures whether the text really overflows, keeps the toggle accessible and follows
 the site's language.
 
-The academic activity cards on `/noticias` and `/actividades-academicas` are the working example
-(`AcademicActivityCard.tsx`).
+The research area cards on `/investigacion` are the working example (`ResearchAreaCard.tsx`).
 
 ## Quick start
 
 ```tsx
 import { TruncatedText } from '@/app/components/public/TruncatedText'
 
-;<TruncatedText lines={3}>{activity.description}</TruncatedText>
+;<TruncatedText lines={3}>{area.description}</TruncatedText>
 ```
 
 That is all a field needs. The text shows its first three lines; if it does not fit, the last line
@@ -57,7 +56,8 @@ text in place, followed by "**Leer menos**" right after the last word, which cut
 ### A field that is database content
 
 Database content can be in a different language from the page, or in an unknown one for a record
-saved before translations existed. Pass its language through `contentLangAttribute`:
+saved before translations existed. Pass its language through `contentLangAttribute`, as the
+research area card does:
 
 ```tsx
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
@@ -68,6 +68,11 @@ import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
   lines={3}
 >
   {record.description}
+  className="research-area-card-description"
+  lang={contentLangAttribute(area.contentLocale)}
+  lines={3}
+>
+  {area.description}
 </TruncatedText>
 ```
 
@@ -97,6 +102,8 @@ empty float pushes the toggle onto the last visible line. A class of yours only 
 ```css
 .academic-activity-card-description {
   margin: 10px 0 0;
+.research-area-card-description {
+  margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
@@ -141,6 +148,9 @@ expect(screen.getByRole('button', { name: 'Leer menos' })).toHaveAttribute('aria
   `apps/web/tests/e2e/public-portal.spec.ts`.
 
 `TruncatedText.test.tsx` and `AcademicActivityCard.test.tsx` show both.
+  `apps/web/tests/e2e/research-areas-i18n.spec.ts`.
+
+`TruncatedText.test.tsx` and `ResearchAreaCard.test.tsx` show both.
 
 ## Limitations
 
