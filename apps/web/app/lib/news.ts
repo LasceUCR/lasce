@@ -1,252 +1,274 @@
-import { prisma, Prisma } from '@lasce/db'
-import { z } from 'zod'
+import { prisma, type Prisma } from '@lasce/db'
+
+import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
+import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+import {
+  baseContent,
+  resolveContent,
+  storedContentFrom,
+  translationRows,
+} from '@/app/lib/i18n/content/resolve'
+
+import {
+  findPendingReviews,
+  newsContent,
+  translationLocales,
+  type NewsArticle,
+  type NewsCreateInput,
+  type NewsUpdateInput,
+  type ReviewConfirmation,
+} from './news-schema'
+
+export * from './news-schema'
+
+export type NewsWriteFailure =
+  | { ok: false; reason: 'not-found' }
+  /** The item changed since the editor loaded it. */
+  | { ok: false; reason: 'conflict' }
+  /** Another news item already uses the same external link. */
+  | { ok: false; reason: 'duplicate-link' }
+  /** Fields changed in one language whose counterpart was neither changed nor confirmed. */
+  | { ok: false; reason: 'review-required'; pending: ReviewConfirmation[] }
+
+export type NewsWriteResult = { ok: true; article: NewsArticle } | NewsWriteFailure
 
 const newsRecordInclude = {
   source: true,
-  authors: { orderBy: { position: 'asc' as const }, include: { newsAuthor: true } },
+  authors: { orderBy: { position: 'asc' }, include: { newsAuthor: true } },
+  translations: {
+    where: { locale: { in: [...translationLocales] } },
+    select: { locale: true, title: true, abstract: true },
+  },
 } satisfies Prisma.NewsInclude
 
 type NewsRecord = Prisma.NewsGetPayload<{ include: typeof newsRecordInclude }>
 
-export const noticiasMeta = {
-  title: 'Noticias | LASCE',
-  description:
-    'Noticias y cobertura mediática del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-} as const
+/** "24 de mayo de 2026" or "May 24, 2026". Dates are stored without a time, so read them in UTC. */
+function formatDate(date: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date)
+}
 
-export const noticiasHero = {
-  kicker: 'Portal público LASCE',
-  title: 'Noticias y cobertura mediática',
-  lead: 'Noticias, divulgación y cobertura sobre el trabajo del LASCE.',
-} as const
+function toNewsArticle(
+  record: NewsRecord,
+  locale: Locale,
+  includeEditingData: boolean,
+): NewsArticle {
+  const content = storedContentFrom(newsContent, record, record.translations)
+  // A complete item's base text was written or confirmed as Spanish when it was saved. A legacy
+  // item's base text was entered before languages existed, so its language is unknown.
+  const { content: shown, contentLocale, isLegacy } = resolveContent(content, locale)
 
-export const noticiasBackLink = {
-  href: '/',
-  label: 'Volver al inicio',
-} as const
-
-export type NewsArticle = {
-  slug: string
-  title: string
-  authors: string
-  source: string
-  date: string
-  /** Raw ISO date (`yyyy-mm-dd`), or `null` when undated — what an edit form needs; `date` is
-   * display-only and doesn't round-trip. */
-  publishedAt: string | null
-  abstract: string
-  href: string
+  return {
+    slug: record.id,
+    title: shown.title,
+    authors: record.authors.map((author) => author.newsAuthor.name).join(', '),
+    source: record.source.name,
+    date: record.publishedAt ? formatDate(record.publishedAt, locale) : null,
+    publishedAt: record.publishedAt ? record.publishedAt.toISOString().slice(0, 10) : null,
+    abstract: shown.abstract,
+    href: record.externalUrl,
+    contentLocale,
+    ...(includeEditingData
+      ? { editing: { content, isLegacy, version: toVersion(record.updatedAt) } }
+      : {}),
+  }
 }
 
 /**
- * Loads news articles from Postgres and maps each record to the shape
- * rendered by `NewsExplorer`.
+ * Loads news items from Postgres and maps each record to the shape rendered by `NewsExplorer`.
  *
- * Ordered newest first. Author order within a record follows
- * `NewsCrossAuthor.position`.
+ * `title` and `abstract` are in `locale` when the item has that translation, and fall back to the
+ * base text otherwise; `contentLocale` says which one was used. Dates are formatted in `locale`.
+ * Pass `includeEditingData` only for someone who can edit, because it sends every language to the
+ * browser.
+ *
+ * Ordered newest first, undated items last, whatever the language. Author order within a record
+ * follows `NewsCrossAuthor.position`.
  */
-export async function getNews(): Promise<NewsArticle[]> {
+export async function getNews(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<NewsArticle[]> {
   const records = await prisma.news.findMany({
     orderBy: { publishedAt: { sort: 'desc', nulls: 'last' } },
     include: newsRecordInclude,
   })
 
-  return records.map(toNewsArticle)
+  return records.map((record) => toNewsArticle(record, locale, includeEditingData))
 }
 
-async function findNewsArticle(id: string): Promise<NewsArticle> {
-  const record = await prisma.news.findUniqueOrThrow({ where: { id }, include: newsRecordInclude })
-  return toNewsArticle(record)
+/** `external_url` is the one unique column on `News` besides its id. Anything else is rethrown. */
+function duplicateFailure(columns: readonly string[]): NewsWriteFailure | null {
+  return columns.includes('external_url') || columns.includes('externalUrl')
+    ? { ok: false, reason: 'duplicate-link' }
+    : null
 }
-
-function toNewsArticle(record: NewsRecord): NewsArticle {
-  return {
-    slug: record.id,
-    title: record.title,
-    authors: record.authors.map((author) => author.newsAuthor.name).join(', '),
-    source: record.source.name,
-    date: record.publishedAt
-      ? new Intl.DateTimeFormat('es-CR', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-          timeZone: 'UTC',
-        }).format(record.publishedAt)
-      : 'Sin fecha',
-    publishedAt: record.publishedAt ? record.publishedAt.toISOString().slice(0, 10) : null,
-    abstract: record.abstract,
-    href: record.externalUrl,
-  }
-}
-
-/** Shared by create and update: an article's editable fields, as the form submits them. */
-export const newsInputSchema = z.object({
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  source: z.string().trim().min(1, 'La fuente es obligatoria.'),
-  authors: z.array(z.string().trim().min(1)).min(1, 'Debe indicar al menos un autor.'),
-  publishedAt: z.string().date().nullable(),
-  externalUrl: z.string().trim().url('El enlace debe ser una URL válida.'),
-  abstract: z.string().trim().min(1, 'El resumen es obligatorio.'),
-})
-
-export type NewsInput = z.infer<typeof newsInputSchema>
 
 /**
- * `newsInputSchema` validates `publishedAt` as a bare `yyyy-mm-dd` string, but
- * Prisma's client rejects that for a `DateTime`/`@db.Date` field — it wants a
- * full ISO datetime or a `Date` object ("premature end of input. Expected
- * ISO-8601 DateTime"). Converts once, right before either write.
+ * Runs a write transaction (`runWrite`) and reports the stored record as a news item. Expected
+ * failures are raised as `WriteAbort` or as a unique violation, so the transaction rolls back
+ * before anything is reported.
+ */
+async function writeNews(
+  write: (tx: Prisma.TransactionClient) => Promise<NewsRecord>,
+): Promise<NewsWriteResult> {
+  const result = await runWrite(write, duplicateFailure)
+  return result.ok
+    ? { ok: true, article: toNewsArticle(result.value, defaultLocale, true) }
+    : result
+}
+
+/** Sources are shared between news items and normalized by name. */
+function upsertSource(tx: Prisma.TransactionClient, name: string) {
+  return tx.newsSource.upsert({ where: { name }, update: {}, create: { name } })
+}
+
+/**
+ * `publishedAt` arrives as a bare `yyyy-mm-dd`, but Prisma's client rejects that for a
+ * `@db.Date` field: it wants a full ISO datetime or a `Date`.
  */
 function toPublishedAtDate(publishedAt: string | null): Date | null {
   return publishedAt ? new Date(publishedAt) : null
 }
 
 /**
- * Replaces a news item's author list with `authors`, in order. Upserts each name (shared
- * `NewsAuthor` rows, same as the seed script) and drops cross-author rows for names no longer
- * present — the one relation `NosotrosActivity`'s CRUD doesn't have to deal with. Runs inside the
- * caller's transaction, one query at a time, since a transaction holds a single connection.
+ * Replaces an item's author list with `authors`, in order. Only the join rows are deleted: an
+ * author may be credited on other news items.
  */
-async function syncNewsAuthors(
+async function replaceAuthors(
   tx: Prisma.TransactionClient,
   newsId: string,
   authors: readonly string[],
 ): Promise<void> {
-  const authorIds: string[] = []
+  await tx.newsCrossAuthor.deleteMany({ where: { newsId } })
 
-  for (const [index, name] of authors.entries()) {
-    const author = await tx.newsAuthor.upsert({
-      where: { name },
-      update: {},
-      create: { name },
-    })
+  for (const [position, name] of authors.entries()) {
+    const author = await tx.newsAuthor.upsert({ where: { name }, update: {}, create: { name } })
 
     await tx.newsCrossAuthor.upsert({
       where: { newsId_newsAuthorId: { newsId, newsAuthorId: author.id } },
-      update: { position: index },
-      create: { newsId, newsAuthorId: author.id, position: index },
+      update: {},
+      create: { newsId, newsAuthorId: author.id, position },
+    })
+  }
+}
+
+/**
+ * Creates a news item in every language at once, together with its source and its ordered
+ * authors. Either all of it is stored or none of it is.
+ */
+export async function createNews(input: NewsCreateInput): Promise<NewsWriteResult> {
+  return writeNews(async (tx) => {
+    const source = await upsertSource(tx, input.source)
+
+    const record = await tx.news.create({
+      data: {
+        ...baseContent(newsContent, input.content),
+        publishedAt: toPublishedAtDate(input.publishedAt),
+        sourceId: source.id,
+        externalUrl: input.externalUrl,
+        translations: { create: translationRows(newsContent, input.content) },
+      },
     })
 
-    authorIds.push(author.id)
-  }
+    await replaceAuthors(tx, record.id, input.authors)
 
-  await tx.newsCrossAuthor.deleteMany({
-    where: { newsId, newsAuthorId: { notIn: authorIds } },
+    return tx.news.findUniqueOrThrow({ where: { id: record.id }, include: newsRecordInclude })
   })
 }
 
-/** What a create or update returns when another news item already uses the same link. */
-export const DUPLICATE_NEWS_LINK = 'duplicate-link'
-
-export const DUPLICATE_NEWS_LINK_MESSAGE =
-  'Ya existe una noticia con este enlace. Use otro enlace o edite la noticia existente.'
-
 /**
- * Thrown from inside a write transaction when `externalUrl` (the one unique column on `News`
- * besides its id) is already taken, so the whole transaction rolls back. Only the `news` write
- * itself is wrapped: a unique violation from a concurrent source or author upsert is a different
- * failure and must not be reported as a duplicate link.
+ * Updates the fields present in `input`, all at once: either everything is stored or nothing is.
+ *
+ * With `content` it is a bilingual content update: both languages are written, after checking
+ * that every one-sided change has its counterpart changed or confirmed (`findPendingReviews`).
+ * Without `content` it updates shared fields only, and titles, abstracts and translations are
+ * left exactly as they are, so a legacy item can be corrected without being translated first.
+ *
+ * Optimistic concurrency applies to both kinds: `input.version` is the `updated_at` the editor
+ * loaded. The base row is updated only while it still has that value, and every save moves it
+ * forward, so of two editors who loaded the same version the second one gets `conflict`.
  */
-class DuplicateNewsLinkError extends Error {}
+export async function updateNews(id: string, input: NewsUpdateInput): Promise<NewsWriteResult> {
+  const expectedUpdatedAt = parseVersion(input.version)
 
-async function writeNewsRow<T>(write: () => Promise<T>): Promise<T> {
-  try {
-    return await write()
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      throw new DuplicateNewsLinkError()
+  return writeNews(async (tx) => {
+    const current = await tx.news.findUnique({
+      where: { id },
+      select: {
+        title: true,
+        abstract: true,
+        updatedAt: true,
+        translations: newsRecordInclude.translations,
+      },
+    })
+
+    if (!current) throw new WriteAbort<NewsWriteFailure>({ ok: false, reason: 'not-found' })
+
+    if (!isCurrentVersion(current.updatedAt, expectedUpdatedAt)) {
+      throw new WriteAbort<NewsWriteFailure>({ ok: false, reason: 'conflict' })
     }
-    throw error
-  }
-}
 
-function newsRowData(data: NewsInput, sourceId: string) {
-  return {
-    title: data.title,
-    publishedAt: toPublishedAtDate(data.publishedAt),
-    sourceId,
-    abstract: data.abstract,
-    externalUrl: data.externalUrl,
-  }
-}
+    const { content } = input
 
-/**
- * Creates a news item and its author links in one transaction, so a failure part way leaves
- * nothing behind. Returns `DUPLICATE_NEWS_LINK` when the link is already used.
- */
-export async function createNews(
-  data: NewsInput,
-): Promise<NewsArticle | typeof DUPLICATE_NEWS_LINK> {
-  let id: string
-  try {
-    id = await prisma.$transaction(async (tx) => {
-      const source = await tx.newsSource.upsert({
-        where: { name: data.source },
-        update: {},
-        create: { name: data.source },
-      })
-
-      const record = await writeNewsRow(() =>
-        tx.news.create({ data: newsRowData(data, source.id) }),
+    if (content) {
+      const pending = findPendingReviews(
+        storedContentFrom(newsContent, current, current.translations),
+        content,
+        input.confirmedUnchanged ?? [],
       )
 
-      await syncNewsAuthors(tx, record.id, data.authors)
-      return record.id
-    })
-  } catch (error) {
-    if (error instanceof DuplicateNewsLinkError) return DUPLICATE_NEWS_LINK
-    throw error
-  }
+      if (pending.length > 0) {
+        throw new WriteAbort<NewsWriteFailure>({ ok: false, reason: 'review-required', pending })
+      }
+    }
 
-  return findNewsArticle(id)
+    const source = input.source === undefined ? undefined : await upsertSource(tx, input.source)
+
+    const { count } = await tx.news.updateMany({
+      where: { id, updatedAt: expectedUpdatedAt },
+      data: {
+        ...(content ? baseContent(newsContent, content) : {}),
+        ...(input.publishedAt === undefined
+          ? {}
+          : { publishedAt: toPublishedAtDate(input.publishedAt) }),
+        ...(source === undefined ? {} : { sourceId: source.id }),
+        ...(input.externalUrl === undefined ? {} : { externalUrl: input.externalUrl }),
+        // Strictly later than the version it replaces, even if two saves share a millisecond.
+        updatedAt: nextUpdatedAt(expectedUpdatedAt),
+      },
+    })
+
+    if (count === 0) throw new WriteAbort<NewsWriteFailure>({ ok: false, reason: 'conflict' })
+
+    if (content) {
+      for (const { locale, ...text } of translationRows(newsContent, content)) {
+        await tx.newsTranslation.upsert({
+          where: { newsId_locale: { newsId: id, locale } },
+          create: { newsId: id, locale, ...text },
+          update: text,
+        })
+      }
+    }
+
+    if (input.authors !== undefined) {
+      await replaceAuthors(tx, id, input.authors)
+    }
+
+    return tx.news.findUniqueOrThrow({ where: { id }, include: newsRecordInclude })
+  })
 }
 
-/**
- * Updates one news item and its author links in one transaction, so a failure part way leaves
- * the saved article as it was. Returns `null` when `id` does not match any row, rather than
- * throwing, so the route handler can turn that into a 404 — same pre-check pattern as
- * `updateNosotrosActivity`. Returns `DUPLICATE_NEWS_LINK` when another item uses the link.
- */
-export async function updateNews(
-  id: string,
-  data: NewsInput,
-): Promise<NewsArticle | typeof DUPLICATE_NEWS_LINK | null> {
-  let found: boolean
-  try {
-    found = await prisma.$transaction(async (tx) => {
-      const existing = await tx.news.findUnique({ where: { id } })
-      if (!existing) return false
-
-      const source = await tx.newsSource.upsert({
-        where: { name: data.source },
-        update: {},
-        create: { name: data.source },
-      })
-
-      await writeNewsRow(() =>
-        tx.news.update({ where: { id }, data: newsRowData(data, source.id) }),
-      )
-
-      await syncNewsAuthors(tx, id, data.authors)
-      return true
-    })
-  } catch (error) {
-    if (error instanceof DuplicateNewsLinkError) return DUPLICATE_NEWS_LINK
-    throw error
-  }
-
-  return found ? findNewsArticle(id) : null
-}
-
-/**
- * Deletes one news item. Returns `false` when `id` does not match any row, rather than throwing —
- * same pre-check pattern as `deleteNosotrosActivity`. `NewsCrossAuthor` rows cascade with it;
- * shared `NewsAuthor`/`NewsSource` rows are left in place, same as `Research`'s analogous CRUD.
- */
+/** Deletes a news item. Its translations and author links go with it (`ON DELETE CASCADE`). */
 export async function deleteNews(id: string): Promise<boolean> {
-  const existing = await prisma.news.findUnique({ where: { id } })
-  if (!existing) return false
-
-  await prisma.news.delete({ where: { id } })
-  return true
+  // One statement that reports how many rows it removed: a concurrent delete of the same item
+  // finds nothing and answers "not found", instead of failing between a check and the delete.
+  const { count } = await prisma.news.deleteMany({ where: { id } })
+  return count > 0
 }
