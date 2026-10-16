@@ -1,9 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
 import { UserRoleChangeDialog } from './UserRoleChangeDialog'
 import styles from './UsersRolesTable.module.css'
+
+const subscribeToHydration = () => () => undefined
+const getClientSnapshot = () => true
+const getServerSnapshot = () => false
 
 export interface UserRolesRowProps {
   isCurrentUser?: boolean
@@ -22,6 +26,8 @@ export function UserRolesRow({
   hidden,
   isCurrentUser,
 }: UserRolesRowProps) {
+  // A native checkbox can change before React can ask for confirmation.
+  const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
   // Undefined means closed; null means confirmation to remove the current role.
   const [pendingRole, setPendingRole] = useState<OverviewRole | null | undefined>(undefined)
   const [feedback, setFeedback] = useState('')
@@ -45,6 +51,7 @@ export function UserRolesRow({
             type="button"
             className={styles.userName}
             aria-haspopup="dialog"
+            disabled={!hydrated}
             onClick={() => onUserSelect(user)}
           >
             {user.name}
@@ -75,7 +82,7 @@ export function UserRolesRow({
             <input
               type="checkbox"
               checked={user.roleIds.includes(role.id)}
-              disabled={!onSaveRoles}
+              disabled={!hydrated || !onSaveRoles}
               onChange={() => {
                 setFeedback('')
                 setPendingRole(user.roleIds.includes(role.id) ? null : role)

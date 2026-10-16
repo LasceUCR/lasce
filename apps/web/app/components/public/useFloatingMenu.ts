@@ -48,9 +48,16 @@ export function useFloatingMenu({
       (boundaryRect?.bottom ?? top + height) - menuInset,
     )
     const availableLeft = Math.max(left + viewportInset, (boundaryRect?.left ?? left) + menuInset)
-    const below = availableBottom - rect.bottom - gap
-    const above = rect.top - availableTop - gap
-    const upwards = below < 160 && above > below
+    const minimumMenuHeight = 160
+    let below = availableBottom - rect.bottom - gap
+    let above = rect.top - availableTop - gap
+    // Near a viewport edge, the boundary can leave less than one option visible.
+    // Keep its horizontal bounds, but use the viewport vertically when neither side fits.
+    if (boundaryRect && Math.max(above, below) < minimumMenuHeight) {
+      below = top + height - viewportInset - rect.bottom - gap
+      above = rect.top - top - viewportInset - gap
+    }
+    const upwards = below < minimumMenuHeight && above > below
     const menuWidth = Math.min(rect.width, availableRight - availableLeft)
     setPosition({
       position: 'fixed',

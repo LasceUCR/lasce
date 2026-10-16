@@ -120,17 +120,40 @@ describe('useFloatingMenu', () => {
     vi.spyOn(
       screen.getByRole('region', { name: 'Panel boundary' }),
       'getBoundingClientRect',
-    ).mockReturnValue(new DOMRect(100, 80, 500, 240))
-    measure.mockReturnValue(new DOMRect(500, 220, 240, 40))
+    ).mockReturnValue(new DOMRect(100, 80, 500, 400))
+    measure.mockReturnValue(new DOMRect(500, 360, 240, 40))
     await user.click(trigger)
 
     expect(screen.getByRole('dialog')).toHaveStyle({
       left: '352px',
-      bottom: '386px',
+      bottom: '246px',
       width: '240px',
-      maxHeight: '126px',
+      maxHeight: '266px',
     })
   })
+
+  test.each([
+    { edge: 'top', boundaryTop: 100, triggerTop: 130, position: { top: '176px' } },
+    { edge: 'bottom', boundaryTop: 440, triggerTop: 490, position: { bottom: '116px' } },
+  ])(
+    'uses viewport space when the boundary leaves both sides too short near the $edge',
+    async ({ boundaryTop, triggerTop, position }) => {
+      const { trigger, measure, user } = renderPanel({ bounded: true })
+      vi.spyOn(
+        screen.getByRole('region', { name: 'Panel boundary' }),
+        'getBoundingClientRect',
+      ).mockReturnValue(new DOMRect(100, boundaryTop, 500, 180))
+      measure.mockReturnValue(new DOMRect(500, triggerTop, 240, 40))
+      await user.click(trigger)
+
+      expect(screen.getByRole('dialog')).toHaveStyle({
+        ...position,
+        left: '352px',
+        width: '240px',
+        maxHeight: '320px',
+      })
+    },
+  )
 
   test('respects the offset and size of the visual viewport', async () => {
     const viewport = stubVisualViewport()

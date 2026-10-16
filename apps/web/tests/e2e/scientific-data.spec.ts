@@ -235,6 +235,33 @@ for (const width of [320, 768, 1440]) {
   })
 }
 
+test('keeps instrument products visible when the form starts near the viewport bottom', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 768, height: 720 })
+  await page.goto('/datos')
+  const product = page.getByRole('combobox', { name: 'Instrumento y producto' })
+  await expect(product).toBeEnabled()
+  await product.evaluate((element) => {
+    window.scrollBy({
+      top: element.getBoundingClientRect().bottom - window.innerHeight + 24,
+      behavior: 'instant',
+    })
+  })
+  const scrollY = await page.evaluate(() => window.scrollY)
+  await product.click()
+  await page.getByRole('treeitem', { name: /^SEISS/ }).click()
+  await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).toBeInViewport()
+  const menu = page.getByRole('tree', { name: 'Instrumento y producto' })
+  const box = (await menu.boundingBox())!
+  expect(box.height).toBeGreaterThanOrEqual(160)
+  expect(box.y).toBeGreaterThanOrEqual(0)
+  expect(box.y + box.height).toBeLessThanOrEqual(720)
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrollY)
+  await page.getByRole('treeitem', { name: /media y alta/ }).click()
+  await expect(product).toContainText('energía media y alta')
+})
+
 test('limits GOES dates to today and lets SUVI use historical dates', async ({ page }) => {
   await page.goto('/datos')
   await selectHistoricalXrays(page)

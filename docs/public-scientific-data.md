@@ -210,6 +210,9 @@ uses `InstrumentProductSelect`. Both are labeled comboboxes with keyboard naviga
 type-ahead, disabled options, and Escape/outside dismissal. Its popup fits the viewport, uses a
 bounded vertical scrollbar, and wraps long option labels within the menu. Pointer hover uses a
 subtle background; keyboard focus remains visible. Reduced-motion preferences disable animation.
+Popups prefer the form's bounds. If neither side of the trigger has 160 px of usable height,
+they use the viewport's vertical space while keeping the form's horizontal bounds, without
+scrolling the page.
 
 The data page has a compact introduction with **Portal público LASCE**, a prominent **Datos**
 heading, a short description and an anchor linking directly to the query. The solar section keeps
