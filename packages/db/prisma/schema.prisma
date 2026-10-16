@@ -426,6 +426,37 @@ model ExisFile {
   @@schema("solar")
 }
 
+/// One daily MAG L2 1-minute geomagnetic field file (one UTC day) whose readings are in InfluxDB.
+/// Written only by the worker's `mag-pipeline` job; the readings themselves live in the
+/// `mag_field` InfluxDB measurement, not here.
+model MagFile {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// The NetCDF `platform` attribute, upper-cased, e.g. "G19".
+  satellite        String
+  /// Always "GEOF", the catalogue code of the geomagnetic field product.
+  product          String
+  /// The UTC day the file covers, from its name.
+  day              DateTime  @db.Date
+  fileName         String    @unique @map("file_name")
+  /// The `_vX-Y-Z` part of the file name, e.g. "2-0-4".
+  version          String
+  sourceUrl        String    @map("source_url")
+  /// The archive's `Last-Modified` when ingested. A newer one means NOAA republished the day.
+  sourceModifiedAt DateTime? @map("source_modified_at") @db.Timestamptz(3)
+  firstObservedAt  DateTime? @map("first_observed_at") @db.Timestamptz(3)
+  lastObservedAt   DateTime? @map("last_observed_at") @db.Timestamptz(3)
+  /// Points written to InfluxDB per channel code, e.g. {"total": 1440}.
+  pointCount       Json      @map("point_count")
+  /// The NetCDF global attributes, so provenance not promoted to a column is still recoverable.
+  attributes       Json
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([satellite, product, day])
+  @@map("mag_files")
+  @@schema("solar")
+}
+
 /// One file a signed-in user downloaded from `/datos`: a chart image or a data export. Written
 /// by `apps/web/app/services/downloads/downloadService.ts` only after the object reached the
 /// private downloads bucket, so every row names an object that existed. The object itself
