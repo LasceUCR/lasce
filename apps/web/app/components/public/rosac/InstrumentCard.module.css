@@ -1,11 +1,13 @@
 .card {
   display: flex;
   min-width: 0;
+  width: 100%;
   flex-direction: column;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--white);
   overflow-wrap: anywhere;
+  height: 100%;
 }
 
 .image {
@@ -77,10 +79,15 @@
 .details ul {
   margin: 0;
   padding-left: 20px;
+  color: var(--muted);
 }
 
 .details dd {
   white-space: pre-line;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  text-align: start;
 }
 
 .consultation {
@@ -97,7 +104,10 @@
 
 .consultation a,
 .consultation button {
+  display: block;
   margin-top: auto;
+  padding: 10px 16px;
+  line-height: 1.35;
   white-space: normal;
   text-align: center;
 }
@@ -113,5 +123,9 @@
 }
 
 .consultation svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 9px;
+  margin-top: -2px;
   flex-shrink: 0;
 }

@@ -1,3 +1,4 @@
+import { CollaborationsManager } from './CollaborationsManager'
 import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
 
@@ -12,14 +13,28 @@ import type { ResearchCollaboration } from '@/app/lib/research-collaborations'
 export interface CollaborationsPageProps {
   content: CollaborationsContent
   collaborations: ResearchCollaboration[]
+  canCreate?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
 }
 
-export function CollaborationsPage({ content, collaborations }: CollaborationsPageProps) {
+export function CollaborationsPage({
+  content,
+  collaborations,
+  canCreate,
+  canEdit,
+  canDelete,
+}: CollaborationsPageProps) {
   return (
     <article className="topic-page">
       <TopicHero {...content.hero} />
 
-      <ResearchCollaborationsSection collaborations={collaborations} />
+      <CollaborationsContentSection
+        collaborations={collaborations}
+        canCreate={canCreate}
+        canEdit={canEdit}
+        canDelete={canDelete}
+      />
 
       <TopicSection
         title={content.initiatives.title}
@@ -69,5 +84,23 @@ export function CollaborationsPage({ content, collaborations }: CollaborationsPa
         <TopicBackLink {...content.backLink} />
       </div>
     </article>
+  )
+}
+
+function CollaborationsContentSection({
+  collaborations,
+  canCreate,
+  canEdit,
+  canDelete,
+}: Omit<CollaborationsPageProps, 'content'>) {
+  return canCreate || canEdit || canDelete ? (
+    <CollaborationsManager
+      collaborations={collaborations}
+      canCreate={canCreate}
+      canEdit={canEdit}
+      canDelete={canDelete}
+    />
+  ) : (
+    <ResearchCollaborationsSection collaborations={collaborations} />
   )
 }

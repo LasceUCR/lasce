@@ -7,9 +7,19 @@ is to replicate everything here so the two languages never disagree about a colu
 from sqlalchemy import UniqueConstraint
 
 from app.db import (
+    Collaboration,
+    CollaborationScope,
+    CollaborationTranslation,
+    ContactChannel,
+    ContactChannelTranslation,
     ExisFile,
     GalleryAlbum,
     GalleryMedia,
+    GeomagneticIndex,
+    GeomagneticIndexSource,
+    GeomagneticIndexTranslation,
+    HomeHero,
+    HomeHeroTranslation,
     News,
     NewsAuthor,
     NewsCrossAuthor,
@@ -28,6 +38,34 @@ from app.db import (
     UserRole,
     UserSession,
 )
+
+
+def test_collaboration_classification_and_defaults_match_prisma() -> None:
+    columns = Collaboration.__table__.columns
+    assert Collaboration.__table__.schema == "research"
+    assert columns["acronym"].nullable
+    assert not columns["country"].nullable
+    assert columns["id"].server_default is not None
+    assert columns["updated_at"].server_default is not None
+    assert [member.value for member in CollaborationScope] == ["national", "international"]
+    assert columns["scope"].type.enums == ["national", "international"]
+    assert columns["scope"].type.schema == "research"
+    assert columns["scope"].type.create_type is False
+
+
+def test_collaboration_translations_are_owned_by_one_record_per_locale() -> None:
+    columns = CollaborationTranslation.__table__.columns
+    (parent_fk,) = columns["collaboration_id"].foreign_keys
+    assert CollaborationTranslation.__table__.schema == "research"
+    assert parent_fk.target_fullname == "research.collaborations.id"
+    assert parent_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert not columns["country"].nullable
+    assert any(
+        {column.name for column in constraint.columns} == {"collaboration_id", "locale"}
+        for constraint in CollaborationTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
 
 
 def test_research_tables_live_in_the_research_schema() -> None:
@@ -411,8 +449,133 @@ def test_resource_download_matches_the_prisma_columns() -> None:
     assert not columns["object_key"].nullable
 
 
+def test_contact_channels_live_in_the_public_schema() -> None:
+    assert ContactChannel.__table__.schema == "public"
+    assert ContactChannelTranslation.__table__.schema == "public"
+
+
+def test_contact_channel_matches_the_prisma_columns() -> None:
+    columns = ContactChannel.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "icon",
+        "href",
+        "position",
+        "title",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["href"].nullable
+    assert not columns["title"].nullable
+
+
+def test_contact_channel_translation_cascades_with_its_channel() -> None:
+    (channel_fk,) = ContactChannelTranslation.__table__.columns["contact_channel_id"].foreign_keys
+
+    assert channel_fk.target_fullname == "public.contact_channels.id"
+    assert channel_fk.ondelete == "CASCADE"
+
+
 def test_resource_download_outlives_its_user() -> None:
     (user_fk,) = ResourceDownload.__table__.columns["user_id"].foreign_keys
 
     assert user_fk.target_fullname == "auth.users.id"
     assert user_fk.ondelete == "SET NULL"
+
+
+def test_home_tables_live_in_the_public_schema() -> None:
+    for model in (HomeHero, HomeHeroTranslation, GeomagneticIndex, GeomagneticIndexTranslation):
+        assert model.__table__.schema == "public"
+
+
+def test_home_hero_matches_the_prisma_columns() -> None:
+    assert set(HomeHero.__table__.columns.keys()) == {
+        "id",
+        "title",
+        "lead",
+        "created_at",
+        "updated_at",
+    }
+
+
+def test_home_hero_translation_is_unique_per_hero_and_locale() -> None:
+    columns = HomeHeroTranslation.__table__.columns
+    (hero_fk,) = columns["home_hero_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "home_hero_id",
+        "locale",
+        "title",
+        "lead",
+        "created_at",
+        "updated_at",
+    }
+    assert hero_fk.target_fullname == "public.home_hero.id"
+    assert hero_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"home_hero_id", "locale"}
+        for constraint in HomeHeroTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_geomagnetic_index_matches_the_prisma_columns() -> None:
+    columns = GeomagneticIndex.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "code",
+        "value",
+        "description",
+        "position",
+        "source",
+        "observed_at",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["code"].unique
+    assert columns["position"].unique
+    assert columns["position"].server_default is not None
+    assert "geomagnetic_indices_position_seq" in str(columns["position"].server_default.arg)
+    assert columns["code"].type.length == 8
+    assert columns["value"].type.length == 15
+    assert columns["description"].type.length == 15
+    assert columns["observed_at"].nullable
+
+
+def test_geomagnetic_index_source_mirrors_the_prisma_enum() -> None:
+    source = GeomagneticIndex.__table__.columns["source"]
+
+    assert [member.value for member in GeomagneticIndexSource] == ["manual", "automatic"]
+    assert source.type.enums == ["manual", "automatic"]
+    assert source.type.name == "geomagnetic_index_source"
+    assert source.type.schema == "public"
+    assert source.type.create_type is False
+    assert source.server_default is not None
+    assert str(source.server_default.arg) == "'manual'"
+
+
+def test_geomagnetic_index_translation_is_unique_per_index_and_locale() -> None:
+    columns = GeomagneticIndexTranslation.__table__.columns
+    (index_fk,) = columns["geomagnetic_index_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "geomagnetic_index_id",
+        "locale",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert index_fk.target_fullname == "public.geomagnetic_indices.id"
+    assert index_fk.ondelete == "CASCADE"
+    assert columns["description"].type.length == 15
+    assert any(
+        {column.name for column in constraint.columns} == {"geomagnetic_index_id", "locale"}
+        for constraint in GeomagneticIndexTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )

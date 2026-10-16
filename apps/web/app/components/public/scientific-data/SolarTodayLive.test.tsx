@@ -1,4 +1,5 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { findScientificProduct, type ScientificProductCode } from '@/app/lib/scientific-data'
@@ -44,7 +45,7 @@ describe('SolarTodayLive', () => {
   test('loads today automatically and selects five moments including both ends', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => result() })
     vi.stubGlobal('fetch', fetchMock)
-    render(<SolarTodayLive instrument={instrument} initialNow={now} />)
+    renderWithIntl(<SolarTodayLive instrument={instrument} initialNow={now} />)
     expect(await screen.findAllByRole('img')).toHaveLength(5)
     expect(screen.getByRole('img', { name: 'Fe195 imagen 0' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Fe195 imagen 7' })).toBeInTheDocument()
@@ -57,7 +58,7 @@ describe('SolarTodayLive', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => result('Fe171', 3) })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<SolarTodayLive instrument={instrument} initialNow={now} />)
+    renderWithIntl(<SolarTodayLive instrument={instrument} initialNow={now} />)
     await screen.findByRole('list')
     await user.click(screen.getByRole('combobox', { name: 'Rango de hoy (UTC)' }))
     await user.click(screen.getByRole('option', { name: 'Últimas 3 horas' }))
@@ -79,7 +80,7 @@ describe('SolarTodayLive', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => result('Fe171') })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<SolarTodayLive instrument={instrument} initialNow={now} />)
+    renderWithIntl(<SolarTodayLive instrument={instrument} initialNow={now} />)
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
     await user.click(screen.getByRole('radio', { name: '171 Å' }))
     await screen.findByRole('img', { name: 'Fe171 imagen 0' })
@@ -95,7 +96,7 @@ describe('SolarTodayLive', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => result('Fe171', 3) })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
-    render(<SolarTodayLive instrument={instrument} initialNow={now} />)
+    renderWithIntl(<SolarTodayLive instrument={instrument} initialNow={now} />)
     expect(await screen.findByRole('alert')).toHaveTextContent('No fue posible cargar')
     await user.click(screen.getByRole('radio', { name: '171 Å' }))
     await screen.findByText('Aún no hay imágenes para esta selección')
@@ -105,7 +106,7 @@ describe('SolarTodayLive', () => {
   test('does not replace today with yesterday at UTC midnight', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
-    render(<SolarTodayLive instrument={instrument} initialNow="2026-09-25T00:00:00.000Z" />)
+    renderWithIntl(<SolarTodayLive instrument={instrument} initialNow="2026-09-25T00:00:00.000Z" />)
     await screen.findByText('Aún no hay imágenes para esta selección')
     expect(fetchMock).not.toHaveBeenCalled()
   })

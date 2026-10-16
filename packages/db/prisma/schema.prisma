@@ -198,6 +198,50 @@ model ResearchAuthor {
   @@schema("research")
 }
 
+enum CollaborationScope {
+  NATIONAL      @map("national")
+  INTERNATIONAL @map("international")
+
+  @@map("collaboration_scope")
+  @@schema("research")
+}
+
+/// Partner organizations shown on `/colaboraciones-e-iniciativas`. Official names,
+/// acronyms, classification and display order are shared across languages.
+model Collaboration {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  acronym    String?
+  country    String
+  websiteUrl String?            @map("website_url")
+  scope      CollaborationScope
+  position   Int                @default(0)
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations CollaborationTranslation[]
+
+  @@map("collaborations")
+  @@schema("research")
+}
+
+/// Country is currently the only editable translatable field of a collaboration.
+/// Spanish stays on the base row; other locales follow the shared content resolver.
+model CollaborationTranslation {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collaborationId String   @map("collaboration_id") @db.Uuid
+  locale          String   @db.VarChar(5)
+  country         String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  collaboration Collaboration @relation(fields: [collaborationId], references: [id], onDelete: Cascade)
+
+  @@unique([collaborationId, locale])
+  @@map("collaboration_translations")
+  @@schema("research")
+}
+
 /// Many-to-many join between `Research` and `ResearchAuthor`. Keeps `position`
 /// so a record's citation order (first author, second author, ...) can be
 /// reproduced on the public page instead of coming back in arbitrary order.
@@ -462,8 +506,9 @@ model ResourceDownload {
 model Researcher {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Local path under `apps/web/public`, same convention `TeamMember.src` uses
-  /// today. Revisit once photo upload has a real storage-backed URL.
-  photoUrl    String   @map("photo_url")
+  /// today. Revisit once photo upload has a real storage-backed URL. Null when
+  /// the researcher has no photo: the photo is optional.
+  photoUrl    String?  @map("photo_url")
   role        String
   name        String
   institution String
@@ -491,7 +536,8 @@ model Researcher {
 /// `NosotrosContent.researchers` in `app/lib/nosotros.ts`), not one shared team.
 model NosotrosResearcher {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  photoUrl    String   @map("photo_url")
+  /// Null when the researcher has no photo: the photo is optional.
+  photoUrl    String?  @map("photo_url")
   role        String
   name        String
   institution String
@@ -584,4 +630,143 @@ model ResearchArea {
 
   @@map("research_areas")
   @@schema("areas")
+}
+
+/// The hero banner of the public home page (LASCE-CON-012-150): its title and
+/// subtitle (`lead`), editable in "Modo edición". A single row, seeded by its
+/// migration. The base row holds the Spanish text; every other language lives in
+/// `HomeHeroTranslation` (docs/translate-database-content.md).
+model HomeHero {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  lead      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations HomeHeroTranslation[]
+
+  @@map("home_hero")
+  @@schema("public")
+}
+
+/// The `title` and `lead` of the `HomeHero` in a language other than Spanish.
+/// `locale` is a plain string validated against `locales` in apps/web.
+model HomeHeroTranslation {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  homeHeroId String   @map("home_hero_id") @db.Uuid
+  locale     String   @db.VarChar(5)
+  title      String
+  lead       String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  homeHero HomeHero @relation(fields: [homeHeroId], references: [id], onDelete: Cascade)
+
+  @@unique([homeHeroId, locale])
+  @@map("home_hero_translations")
+  @@schema("public")
+}
+
+/// Who wrote a geomagnetic index's current value: an editor in "Modo edición"
+/// or, once it exists, a worker job that loads it from a real source.
+enum GeomagneticIndexSource {
+  MANUAL    @map("manual")
+  AUTOMATIC @map("automatic")
+
+  @@map("geomagnetic_index_source")
+  @@schema("public")
+}
+
+/// One geomagnetic index card on the home page (Kp, Dst, AE, Ap). Indices are
+/// fixed: they are edited and reordered, never created or deleted from the CMS.
+///
+/// `code` is the stable key: apps/web reads the card's label and tone from it
+/// (`home.indicators.<code>`), and a future loading job upserts by it. `value`
+/// is shared by every language ("-12 nT"); `description` is the Spanish text,
+/// with the other languages in `GeomagneticIndexTranslation`. `position` is the
+/// editorial display order: unique, written only by the reorder, and given the
+/// next number of its sequence when a row is inserted without one, so a new
+/// index lands last.
+model GeomagneticIndex {
+  id          String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String                 @unique @db.VarChar(8)
+  value       String                 @db.VarChar(15)
+  description String                 @db.VarChar(15)
+  position    Int                    @unique @default(autoincrement())
+  source      GeomagneticIndexSource @default(MANUAL)
+  /// When the value was observed. Null while values are entered by hand.
+  observedAt  DateTime?              @map("observed_at") @db.Timestamptz(3)
+  createdAt   DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations GeomagneticIndexTranslation[]
+
+  @@map("geomagnetic_indices")
+  @@schema("public")
+}
+
+/// The `description` of a `GeomagneticIndex` in a language other than Spanish.
+model GeomagneticIndexTranslation {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  geomagneticIndexId String   @map("geomagnetic_index_id") @db.Uuid
+  locale             String   @db.VarChar(5)
+  description        String   @db.VarChar(15)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  geomagneticIndex GeomagneticIndex @relation(fields: [geomagneticIndexId], references: [id], onDelete: Cascade)
+
+  @@unique([geomagneticIndexId, locale])
+  @@map("geomagnetic_index_translations")
+  @@schema("public")
+}
+
+/// Icon of a contact card on `/contacto`. The database values are the lowercase
+/// names the form sends; Prisma's members stay uppercase.
+enum ContactChannelIcon {
+  PHONE     @map("phone")
+  INSTAGRAM @map("instagram")
+  LOCATION  @map("location")
+  EMAIL     @map("email")
+  FACEBOOK  @map("facebook")
+
+  @@map("contact_channel_icon")
+  @@schema("public")
+}
+
+/// One card in "Información de contacto". Spanish title and description live here;
+/// every other language is a `ContactChannelTranslation`. `href` is only set for
+/// Instagram and Facebook. The phone and email links are derived from the description.
+model ContactChannel {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  icon        ContactChannelIcon
+  href        String?
+  position    Int
+  title       String
+  description String             @db.Text
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations ContactChannelTranslation[]
+
+  @@index([position])
+  @@map("contact_channels")
+  @@schema("public")
+}
+
+/// Title and description of a contact card in a language other than Spanish.
+model ContactChannelTranslation {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contactChannelId String   @map("contact_channel_id") @db.Uuid
+  locale           String   @db.VarChar(5)
+  title            String
+  description      String   @db.Text
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  channel ContactChannel @relation(fields: [contactChannelId], references: [id], onDelete: Cascade)
+
+  @@unique([contactChannelId, locale])
+  @@map("contact_channel_translations")
+  @@schema("public")
 }
