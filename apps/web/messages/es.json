@@ -50,19 +50,23 @@
       "demoNotice": "Datos de demostración",
       "kp": {
         "label": "Índice Kp",
-        "value": "2 · Tranquilo"
+        "value": "2",
+        "description": "Tranquilo"
       },
       "dst": {
         "label": "Índice Dst",
-        "value": "-12 nT · Estable"
+        "value": "-12 nT",
+        "description": "Estable"
       },
       "ae": {
         "label": "Índice AE",
-        "value": "75 nT · Actividad baja"
+        "value": "75 nT",
+        "description": "Actividad baja"
       },
       "ap": {
         "label": "Índice Ap",
-        "value": "7 · Tranquilo"
+        "value": "7",
+        "description": "Tranquilo"
       }
     },
     "areas": {
@@ -77,10 +81,49 @@
       "observed": "Observado el <time></time>",
       "updating": "Actualizando la imagen más reciente del Sol…"
     },
+    "editor": {
+      "languageTabs": "Idioma del contenido",
+      "heroEditLabel": "Editar portada",
+      "heroEditTitle": "Editar portada",
+      "heroTitleField": "Título ({language})",
+      "heroLeadField": "Subtítulo ({language})",
+      "indicatorEditLabel": "Editar {label}",
+      "indicatorEditTitle": "Editar {label}",
+      "valueField": "Valor",
+      "valueHint": "Igual en ambos idiomas. Máximo 15 caracteres.",
+      "descriptionField": "Descripción ({language})",
+      "descriptionHint": "Máximo 15 caracteres.",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si lo cambia, revíselo también.",
+      "legacyNoTranslation": "Este contenido aún no tiene versión en inglés. Para cambiar su texto debe completar ambos idiomas.",
+      "reorderHandle": "Reordenar {label}",
+      "reorderRole": "reordenable",
+      "reorderInstructions": "Para reordenar un índice, enfoque su control de reordenar y pulse Espacio o Intro. Use las flechas para moverlo y pulse Espacio o Intro de nuevo para soltarlo, o Escape para cancelar.",
+      "reorderPicked": "Se tomó {label}.",
+      "reorderOver": "{label} está sobre la posición de {target}.",
+      "reorderDropped": "Se soltó {label} en la posición de {target}.",
+      "reorderDroppedInPlace": "Se soltó {label} en su posición original.",
+      "reorderCancelled": "Se canceló el reordenamiento de {label}.",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "heroUpdated": "Portada actualizada correctamente.",
+      "indicatorUpdated": "Índice geomagnético actualizado correctamente.",
+      "orderUpdated": "Orden de los índices actualizado correctamente."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
+    },
     "validation": {
       "valueNotText": "El valor debe ser texto.",
       "valueRequired": "El valor es obligatorio.",
       "valueTooLong": "El valor no puede superar los 15 caracteres."
+    },
+    "saveErrors": {
+      "heroFailed": "No se pudo guardar la portada. Inténtelo de nuevo.",
+      "indicatorFailed": "No se pudo guardar el índice geomagnético. Inténtelo de nuevo.",
+      "orderFailed": "No se pudo guardar el orden de los índices. Inténtelo de nuevo."
     }
   },
   "workAreas": {
