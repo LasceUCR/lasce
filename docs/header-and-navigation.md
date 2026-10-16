@@ -46,9 +46,9 @@ on `useDisclosure` like the nav groups, and the native `LanguageSwitcher.tsx` in
 | ------------- | -------- | --------------------------------------------------------------------------------------------------- |
 | Inicio        | link     | `/`                                                                                                 |
 | Nosotros      | dropdown | Quiénes somos, Colaboraciones e Iniciativas                                                         |
-| Investigación | dropdown | Áreas de investigación (`/investigacion`), Física Solar, Clima espacial, ROSAC (`/radioastronomia`) |
+| Investigación | dropdown | Áreas de investigación (`/investigacion`), Física solar, Clima espacial, ROSAC (`/radioastronomia`) |
 | Datos         | link     | `/datos`                                                                                            |
-| Divulgación   | dropdown | Noticias, Galería                                                                                   |
+| Divulgación   | dropdown | Noticias, Galería, Actividades académicas (`/actividades-academicas`)                               |
 | Recursos      | dropdown | Publicaciones, Herramientas científicas                                                             |
 | Contacto      | link     | `/contacto`                                                                                         |
 
