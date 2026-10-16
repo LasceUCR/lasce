@@ -528,6 +528,9 @@ test('displays academic activities in the news section, with the description in 
 test('shows the dedicated academic activities page, reachable from the nav bar', async ({
   page,
 }) => {
+  // Wide enough for the desktop header: at 1400px and below the navigation is the mobile menu,
+  // where this link sits behind the hamburger button instead of as a plain, visible link.
+  await page.setViewportSize({ width: 1600, height: 900 })
   const response = await page.goto('/')
 
   expect(response?.status()).toBe(200)

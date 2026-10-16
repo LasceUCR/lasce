@@ -42,16 +42,16 @@ on `useDisclosure` like the nav groups, and the native `LanguageSwitcher.tsx` in
 `.mobile-language-section` in the mobile menu. It reaches every area of the homepage's "Áreas y accesos principales" section
 (`app/lib/work-areas.ts`) without a trip back to `/`:
 
-| Top bar entry | Kind     | Items                                                                                               |
-| ------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| Inicio        | link     | `/`                                                                                                 |
-| Nosotros      | dropdown | Quiénes somos, Colaboraciones e Iniciativas                                                         |
-| Investigación | dropdown | Áreas de investigación (`/investigacion`), Física solar, Clima espacial, ROSAC (`/radioastronomia`) |
-| Datos         | link     | `/datos`                                                                                            |
-| Divulgación   | dropdown | Noticias, Galería                                                                                   |
-| Recursos      | dropdown | Publicaciones, Herramientas científicas                                                             |
-| Contacto      | link     | `/contacto`                                                                                         |
-| Actividades académicas | link | `/actividades-academicas`                                                                  |
+| Top bar entry          | Kind     | Items                                                                                               |
+| ---------------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| Inicio                 | link     | `/`                                                                                                 |
+| Nosotros               | dropdown | Quiénes somos, Colaboraciones e Iniciativas                                                         |
+| Investigación          | dropdown | Áreas de investigación (`/investigacion`), Física solar, Clima espacial, ROSAC (`/radioastronomia`) |
+| Datos                  | link     | `/datos`                                                                                            |
+| Divulgación            | dropdown | Noticias, Galería                                                                                   |
+| Recursos               | dropdown | Publicaciones, Herramientas científicas                                                             |
+| Contacto               | link     | `/contacto`                                                                                         |
+| Actividades académicas | link     | `/actividades-academicas`                                                                           |
 
 Each destination appears once; a group is only a label, never a page of its own. `Áreas de
 investigación` keeps `/investigacion` (the research areas page) reachable now that
