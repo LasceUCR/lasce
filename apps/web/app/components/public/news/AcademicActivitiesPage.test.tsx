@@ -42,13 +42,14 @@ const defaultArgs: AcademicActivitiesPageProps = { activities: [activity] }
 const emptyArgs: AcademicActivitiesPageProps = { activities: [] }
 const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
 
-function renderPage(props: AcademicActivitiesPageProps = defaultArgs) {
+function renderPage(props: AcademicActivitiesPageProps = defaultArgs, locale?: string) {
   return renderWithIntl(
     <ToastProvider>
       <EditModeProvider>
         <AcademicActivitiesPage {...props} />
       </EditModeProvider>
     </ToastProvider>,
+    locale ? { locale } : undefined,
   )
 }
 
@@ -102,6 +103,14 @@ describe('AcademicActivitiesPage', () => {
     expect(screen.getByRole('heading', { level: 3, name: activity.title })).toBeInTheDocument()
   })
 
+  test('renders the full description for every activity, with no detail-page link', () => {
+    const { container } = renderPage()
+
+    const description = container.querySelector('.academic-activity-card-description')
+    expect(description).toHaveTextContent(activity.description.replaceAll('\n\n', ' '))
+    expect(screen.queryByRole('link', { name: /Ver detalles/i })).not.toBeInTheDocument()
+  })
+
   test('shows an empty message instead of the list when there are no activities', () => {
     renderPage(emptyArgs)
 
@@ -115,6 +124,15 @@ describe('AcademicActivitiesPage', () => {
     renderPage()
 
     expect(screen.getByRole('link', { name: /Volver al inicio/i })).toHaveAttribute('href', '/')
+  })
+
+  test('shows the hero in English when the page is rendered in English', () => {
+    renderPage(defaultArgs, 'en')
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Academic activities' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Back to home/i })).toHaveAttribute('href', '/')
   })
 
   test('hides the edit affordances when edit mode is off', () => {

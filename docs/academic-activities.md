@@ -33,8 +33,9 @@ behind "Modo edición" the same way as Nosotros activities or research areas —
 Both the `/noticias` teaser and the dedicated `/actividades-academicas` list render the same
 `AcademicActivityCard` — there is no detail route for either surface to link to. Only the
 dedicated list page carries the CMS affordances; the `/noticias` teaser
-(`AcademicActivitiesSection`) stays read-only, same as before. `/actividades-academicas` is also a
-top-level entry in the main nav bar (`PublicHeader.tsx`, `nav.academicActivities`).
+(`AcademicActivitiesSection`) stays read-only, same as before.
+`/actividades-academicas` is also reachable from the main nav, inside the `Divulgación` dropdown
+next to Noticias and Galería (`PublicHeader.tsx`, `nav.academicActivities`).
 
 | Piece                   | File                                                          | Covered by                              |
 | ----------------------- | ------------------------------------------------------------- | --------------------------------------- |
