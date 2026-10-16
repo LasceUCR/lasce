@@ -115,11 +115,15 @@ for (const width of [320, 768, 1440]) {
       true,
     )
     await expect(instruments).toBeVisible()
-    await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).toHaveAttribute(
+    await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).not.toHaveAttribute(
       'aria-disabled',
       'true',
     )
-    await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).toBeInViewport()
+    await expect(page.getByRole('treeitem', { name: /baja energía/ })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    await expect(page.getByRole('treeitem', { name: /baja energía/ })).toBeInViewport()
     await page.screenshot({
       path: testInfo.outputPath(`instruments-${width}.png`),
       animations: 'disabled',
