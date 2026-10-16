@@ -56,13 +56,22 @@ replace the new selection, and automatic updates do not move keyboard focus. Loa
 bands, source errors and individual image failures have visible messages. A failed image is
 removed while its UTC capture time remains visible; switching bands can recover normally.
 
-The visible permissions banner communicates the policy:
+The consultation and permission banners stay hidden until the first query is submitted. Once
+shown, they follow the currently selected source and instrument, even when a change clears the
+results. They appear above the loading indicator, followed by the query inputs and the results.
+The loading bar is 0.375rem thick, with a contrasting blue fill on a pale track. Its compact header
+places the loading status beside a text-style cancel control and only shows a percentage when
+progress is available. The fill transitions smoothly between updates and stays indeterminate until
+progress is available (or throughout an image query). It respects reduced-motion preferences.
+
+The banners communicate only the selected instrument's policy:
 
 - historical GOES information can be consulted without an account;
 - downloading anything requires an account and signing in;
-- chart images can be downloaded for every source;
+- chart images can be downloaded for charted instruments in either source;
 - ROSAC data (CSV) is open to every account;
-- GOES data requires the GOES data download permission (`download_goes_resources`);
+- GOES normally offers only the chart; EXIS also offers CSV to accounts with the GOES data
+  download permission (`download_goes_resources`), which the banner reflects;
 - SUVI solar images cannot be downloaded;
 - every download link expires after 30 minutes.
 
