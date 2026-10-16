@@ -3,10 +3,16 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
 import { InfoCard, type InfoCardProps } from './InfoCard'
-import { Default, HorizontalWithAction, WithMoreInformation } from './InfoCard.stories'
+import {
+  Default,
+  HorizontalWithAction,
+  WithContentLanguage,
+  WithMoreInformation,
+} from './InfoCard.stories'
 
 const defaultArgs = Default.args as InfoCardProps
 const moreArgs = WithMoreInformation.args as InfoCardProps
+const languageArgs = WithContentLanguage.args as InfoCardProps
 
 describe('InfoCard', () => {
   test('presents a named resource with a section heading and an external action', () => {
@@ -20,6 +26,25 @@ describe('InfoCard', () => {
       'href',
       'https://swaat.up.railway.app/',
     )
+  })
+
+  test('marks the language of its text when it is given one', () => {
+    render(<InfoCard {...languageArgs} />)
+
+    const heading = screen.getByRole('heading', { name: languageArgs.title })
+    expect(heading.closest('[lang]')).toHaveAttribute('lang', 'en')
+    expect(screen.getByText(languageArgs.description as string).closest('[lang]')).toHaveAttribute(
+      'lang',
+      'en',
+    )
+  })
+
+  test('sets no language on its text by default', () => {
+    render(<InfoCard {...defaultArgs} />)
+
+    expect(
+      screen.getByRole('heading', { name: defaultArgs.title }).closest('[lang]'),
+    ).not.toBeInTheDocument()
   })
 
   test('shows the title and description it was given', () => {
