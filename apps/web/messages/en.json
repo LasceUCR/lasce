@@ -50,19 +50,23 @@
       "demoNotice": "Demonstration data",
       "kp": {
         "label": "Kp index",
-        "value": "2 · Quiet"
+        "value": "2",
+        "description": "Quiet"
       },
       "dst": {
         "label": "Dst index",
-        "value": "-12 nT · Stable"
+        "value": "-12 nT",
+        "description": "Stable"
       },
       "ae": {
         "label": "AE index",
-        "value": "75 nT · Low activity"
+        "value": "75 nT",
+        "description": "Low activity"
       },
       "ap": {
         "label": "Ap index",
-        "value": "7 · Quiet"
+        "value": "7",
+        "description": "Quiet"
       }
     },
     "areas": {
@@ -77,10 +81,49 @@
       "observed": "Observed on <time></time>",
       "updating": "Updating the latest image of the Sun…"
     },
+    "editor": {
+      "languageTabs": "Content language",
+      "heroEditLabel": "Edit hero banner",
+      "heroEditTitle": "Edit hero banner",
+      "heroTitleField": "Title ({language})",
+      "heroLeadField": "Subtitle ({language})",
+      "indicatorEditLabel": "Edit {label}",
+      "indicatorEditTitle": "Edit {label}",
+      "valueField": "Value",
+      "valueHint": "The same in both languages. At most 15 characters.",
+      "descriptionField": "Description ({language})",
+      "descriptionHint": "At most 15 characters.",
+      "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change it, review it too.",
+      "legacyNoTranslation": "This content has no English version yet. To change its text, fill in both languages.",
+      "reorderHandle": "Reorder {label}",
+      "reorderRole": "sortable",
+      "reorderInstructions": "To reorder an index, focus its reorder control and press Space or Enter. Use the arrow keys to move it, then press Space or Enter again to drop it, or Escape to cancel.",
+      "reorderPicked": "Picked up {label}.",
+      "reorderOver": "{label} is over the position of {target}.",
+      "reorderDropped": "Dropped {label} in the position of {target}.",
+      "reorderDroppedInPlace": "Dropped {label} in its original position.",
+      "reorderCancelled": "Reordering {label} was cancelled.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "heroUpdated": "Hero banner updated successfully.",
+      "indicatorUpdated": "Geomagnetic index updated successfully.",
+      "orderUpdated": "Index order updated successfully."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
     "validation": {
       "valueNotText": "The value must be text.",
       "valueRequired": "The value is required.",
       "valueTooLong": "The value cannot be longer than 15 characters."
+    },
+    "saveErrors": {
+      "heroFailed": "The hero banner could not be saved. Please try again.",
+      "indicatorFailed": "The geomagnetic index could not be saved. Please try again.",
+      "orderFailed": "The index order could not be saved. Please try again."
     }
   },
   "workAreas": {
