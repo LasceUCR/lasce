@@ -277,11 +277,34 @@
         }
       }
     },
-    "lasce": {
-      "title": "LASCE's work in solar astrophysics",
-      "p1": "The Solar Astrophysics and Space Weather Laboratory brings together research in solar astrophysics, astronomical observations and computational development to study solar activity and its interaction with the Earth's environment.",
-      "p2": "Its work combines data from different instruments, wavelengths and platforms to observe different links of a single chain: from the magnetic origin of a solar eruption to its manifestations near the Earth.",
-      "p3": "From the University of Costa Rica, LASCE seeks to strengthen national scientific capabilities for analysing the Sun-Earth relationship, to train talent and to foster collaborations in the study of space weather."
+    "editor": {
+      "editLabel": "Edit the LASCE section",
+      "editTitle": "Edit the LASCE section",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "bodyField": "Text ({language})",
+      "bodyHint": "Separate paragraphs with a blank line.",
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the text, check it as well.",
+      "legacyNoTranslation": "This section has no English version yet. To change the title or the text you must complete both languages.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "reload": "Close and load the current version",
+      "updated": "Section updated successfully."
+    },
+    "saveErrors": {
+      "generic": "The change could not be saved. Please try again.",
+      "fields": "Check the highlighted fields.",
+      "notSignedIn": "You are not signed in.",
+      "signInAgain": "Sign in again to save; your changes are still in the form.",
+      "forbidden": "You do not have permission to modify this content.",
+      "conflict": "Someone else saved changes to this section after you opened it. Your changes were not saved, so as not to overwrite theirs. Copy what you need, close the editor and open the section again.",
+      "notFound": "This section no longer exists. Your changes were not saved."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all the data entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     }
   },
   "spaceWeather": {

@@ -145,6 +145,50 @@ class ResearchTranslation(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class SolarPhysicsSection(Base):
+    """An editable text section of the solar physics page (``/fisica-solar``).
+
+    ``title`` and ``body`` are the Spanish source text; the other languages live in
+    `SolarPhysicsSectionTranslation`. ``body`` is plain text with blank lines between paragraphs.
+    """
+
+    __tablename__ = "solar_physics_sections"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SolarPhysicsSectionTranslation(Base):
+    """The ``title`` and ``body`` of a `SolarPhysicsSection` in a language other than the
+    source one. One row per (section, locale); the source text stays on the section.
+    """
+
+    __tablename__ = "solar_physics_section_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "section_id",
+            "locale",
+            name="solar_physics_section_translations_section_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    section_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.solar_physics_sections.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class CollaborationScope(enum.StrEnum):
     """Language-independent classification of a partner organization."""
 
