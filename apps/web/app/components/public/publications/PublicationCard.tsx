@@ -1,11 +1,9 @@
-'use client'
-
-import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useEffect, useId, useRef, useState } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { Notice } from '@/app/components/public/Notice'
+import { TruncatedText } from '@/app/components/public/TruncatedText'
 import type { ResearchGroup } from '@/app/lib/publications'
 
 export interface PublicationCardProps {
@@ -26,12 +24,11 @@ export interface PublicationCardProps {
 }
 
 /**
- * The abstract is clamped to two lines (see `.publication-abstract` in globals.css) and ends with
- * an ellipsis. An external link (DOI or otherwise) doesn't necessarily lead back to this abstract
- * — it might go to a paywall, a journal's own summary, or nothing at all — so a "Leer resumen
- * completo" button appears in the footer, alongside the link when there is one, whenever the
- * clamp actually hides text, and expands the abstract in place. Overflow is measured with a
- * ResizeObserver, so the button appears or disappears as the card width changes.
+ * The abstract is clamped to two lines with the shared `TruncatedText` component — the standard
+ * from `feature-g02-research-areas-read-more`, the same one `ResearchAreaCard` uses for its own
+ * description — instead of a one-off clamp. Its default "Leer más"/"Leer menos" labels expand it
+ * in place; the external link (DOI or otherwise) is a separate action next to it, since it
+ * doesn't necessarily lead back to this abstract.
  */
 export function PublicationCard({
   title,
@@ -46,31 +43,6 @@ export function PublicationCard({
 }: PublicationCardProps) {
   // The card's own buttons and note follow the site's language; its content arrives in props.
   const t = useTranslations('publications.card')
-  const abstractId = useId()
-  const abstractRef = useRef<HTMLParagraphElement>(null)
-  const [expanded, setExpanded] = useState(false)
-  const [overflows, setOverflows] = useState(false)
-
-  useEffect(() => {
-    const element = abstractRef.current
-
-    // While expanded the clamp is off, so a measurement would always report no overflow.
-    if (!element || expanded || typeof ResizeObserver === 'undefined') {
-      return
-    }
-
-    const observer = new ResizeObserver(() => {
-      setOverflows(element.scrollHeight > element.clientHeight + 1)
-    })
-    observer.observe(element)
-
-    return () => observer.disconnect()
-  }, [abstract, expanded])
-
-  const canExpand = overflows || expanded
-  const abstractClassName = ['publication-abstract', expanded ? 'is-expanded' : '']
-    .filter(Boolean)
-    .join(' ')
 
   return (
     <article className="surface-card publication-card">
@@ -81,43 +53,23 @@ export function PublicationCard({
         {venue} · {year} · <strong className="publication-group">{researchGroup}</strong>
       </p>
 
-      <p className={abstractClassName} id={abstractId} lang={contentLang} ref={abstractRef}>
+      <TruncatedText className="publication-abstract" lang={contentLang} lines={2}>
         {abstract}
-      </p>
+      </TruncatedText>
 
       {translationMissing ? <Notice tone="warning">{t('translationMissing')}</Notice> : null}
 
-      {href || canExpand ? (
+      {href ? (
         <div className="publication-card-footer">
-          {href ? (
-            <Button
-              href={href}
-              icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
-              rel="noopener noreferrer"
-              target="_blank"
-              variant="primary"
-            >
-              {t('externalLink')}
-            </Button>
-          ) : null}
-
-          {canExpand ? (
-            <Button
-              ariaControls={abstractId}
-              ariaExpanded={expanded}
-              icon={
-                expanded ? (
-                  <ChevronUp aria-hidden="true" size={16} strokeWidth={1.8} />
-                ) : (
-                  <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} />
-                )
-              }
-              onClick={() => setExpanded((current) => !current)}
-              variant="primary"
-            >
-              {expanded ? t('readLess') : t('readMore')}
-            </Button>
-          ) : null}
+          <Button
+            href={href}
+            icon={<ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />}
+            rel="noopener noreferrer"
+            target="_blank"
+            variant="primary"
+          >
+            {t('externalLink')}
+          </Button>
         </div>
       ) : null}
     </article>

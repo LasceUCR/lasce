@@ -12,6 +12,7 @@ const institutionalArgs = InstitutionalReport.args as PublicationCardProps
 /**
  * jsdom has no layout and no ResizeObserver, so the clamp never overflows on its own. This stands
  * in for both: the observer reports once on `observe`, and every element measures as `overflows`.
+ * Same recipe as `TruncatedText`'s own tests (see `docs/truncated-text.md`).
  */
 function mockAbstractOverflow(overflows: boolean) {
   vi.stubGlobal(
@@ -50,11 +51,11 @@ describe('PublicationCard', () => {
     expect(metadata).toHaveTextContent(defaultArgs.researchGroup)
   })
 
-  test('shows the abstract with the clamp class applied', () => {
+  test('shows the abstract clamped through TruncatedText', () => {
     renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     const abstract = screen.getByText(defaultArgs.abstract)
-    expect(abstract).toHaveClass('publication-abstract')
+    expect(abstract.closest('.publication-abstract')).toBeInTheDocument()
   })
 
   test('links out through the DOI / external link action', () => {
@@ -72,60 +73,38 @@ describe('PublicationCard', () => {
     expect(link.parentElement).toHaveClass('publication-card-footer')
   })
 
-  test('omits the footer when there is no link and the abstract fits', () => {
-    mockAbstractOverflow(false)
+  test('omits the footer entirely when there is no external link', () => {
     const { container } = renderWithIntl(<PublicationCard {...defaultArgs} href={undefined} />)
 
     expect(container.querySelector('.publication-card-footer')).toBeNull()
   })
 
-  test('offers a "Leer resumen completo" button when a publication without a link overflows', () => {
+  test('offers "Leer más" inline when the abstract overflows, and expands it in place', () => {
     mockAbstractOverflow(true)
-    renderWithIntl(<PublicationCard {...defaultArgs} href={undefined} />)
+    renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     const abstract = screen.getByText(defaultArgs.abstract)
-    const toggle = screen.getByRole('button', { name: 'Leer resumen completo' })
-    expect(toggle).toHaveClass('button', 'button-primary')
-    expect(toggle.parentElement).toHaveClass('publication-card-footer')
+    const toggle = screen.getByRole('button', { name: 'Leer más' })
+    expect(abstract).toContainElement(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(toggle).toHaveAttribute('aria-controls', abstract.id)
-    expect(abstract).not.toHaveClass('is-expanded')
 
     fireEvent.click(toggle)
 
-    expect(screen.getByRole('button', { name: 'Ocultar resumen' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Leer menos' })).toHaveAttribute(
       'aria-expanded',
       'true',
     )
-    expect(abstract).toHaveClass('is-expanded')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ocultar resumen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Leer menos' }))
 
-    expect(screen.getByRole('button', { name: 'Leer resumen completo' })).toBeInTheDocument()
-    expect(abstract).not.toHaveClass('is-expanded')
+    expect(screen.getByRole('button', { name: 'Leer más' })).toBeInTheDocument()
   })
 
-  test('offers the abstract toggle alongside the external link when the abstract overflows', () => {
-    mockAbstractOverflow(true)
-    renderWithIntl(<PublicationCard {...defaultArgs} />)
-
-    const link = screen.getByRole('link', { name: /DOI \/ Enlace externo/ })
-    const toggle = screen.getByRole('button', { name: 'Leer resumen completo' })
-
-    // Both actions share one footer — the link doesn't necessarily lead back to this abstract.
-    expect(link.parentElement).toHaveClass('publication-card-footer')
-    expect(toggle.parentElement).toHaveClass('publication-card-footer')
-    expect(link.parentElement).toBe(toggle.parentElement)
-  })
-
-  test('omits the abstract toggle on a publication with an external link when it fits', () => {
+  test('leaves the abstract as plain text with no toggle when it fits', () => {
     mockAbstractOverflow(false)
     renderWithIntl(<PublicationCard {...defaultArgs} />)
 
-    expect(
-      screen.queryByRole('button', { name: /Leer resumen completo|Ocultar resumen/ }),
-    ).toBeNull()
-    expect(screen.getByRole('link', { name: /DOI \/ Enlace externo/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Leer más|Leer menos/ })).not.toBeInTheDocument()
   })
 
   test('renders a non-scientific publication venue without truncating it', () => {
@@ -138,7 +117,7 @@ describe('PublicationCard', () => {
     renderWithIntl(<PublicationCard {...defaultArgs} contentLang="en" />)
 
     expect(screen.getByRole('heading', { level: 3 })).toHaveAttribute('lang', 'en')
-    expect(screen.getByText(defaultArgs.abstract)).toHaveAttribute('lang', 'en')
+    expect(screen.getByText(defaultArgs.abstract).parentElement).toHaveAttribute('lang', 'en')
   })
 
   test('declares the language unknown for a legacy record instead of claiming Spanish', () => {
