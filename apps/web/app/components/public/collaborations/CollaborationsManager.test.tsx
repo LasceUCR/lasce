@@ -80,7 +80,11 @@ describe('CollaborationsManager', () => {
     renderManager()
     await user.click(screen.getByRole('button', { name: 'Eliminar Institute' }))
     const dialog = screen.getByRole('dialog', { name: 'Eliminar colaboración' })
-    expect(within(dialog).getByText('Institute')).toBeVisible()
+    expect(
+      within(dialog).getByText(
+        '¿Desea eliminar esta colaboración? Se quitará de la página pública y esta acción no se puede deshacer.',
+      ),
+    ).toBeVisible()
     expect(fetchMock).not.toHaveBeenCalled()
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
     expect(fetchMock).not.toHaveBeenCalled()

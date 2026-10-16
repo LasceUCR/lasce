@@ -303,8 +303,6 @@ export function PublicationsExplorer({
                 deleteConfirmMessage={t('deleteDialog.message')}
                 deleteConfirmTitle={t('deleteDialog.title')}
                 deleteLabel={t('editor.deleteLabel', { title: publication.title })}
-                deleteTargetEntity={publication.title}
-                deleteTargetLabel={t('deleteDialog.target')}
                 editLabel={t('editor.editLabel', { title: publication.title })}
                 onDelete={canDelete ? () => handleDeletePublication(publication.slug) : undefined}
                 onEdit={canEdit ? () => openEditor(publication) : undefined}
