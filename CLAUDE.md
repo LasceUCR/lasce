@@ -68,5 +68,6 @@ working through Claude Code.
 | How do I add a translated string or a language?      | [`docs/internationalization.md`](docs/internationalization.md)             |
 | How do I make database content bilingual?            | [`docs/translate-database-content.md`](docs/translate-database-content.md) |
 | How do I show a success or error toast?              | [`docs/toasts.md`](docs/toasts.md)                                         |
+| How do I record an activity in the audit trail?      | [`docs/audit-log.md`](docs/audit-log.md)                                   |
 
 When a change makes one of these wrong, update it in the same PR.

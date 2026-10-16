@@ -9,6 +9,12 @@ export interface InfoCardProps {
   layout?: 'vertical' | 'horizontal'
   headingLevel?: 2 | 3
   action?: ReactNode
+  /**
+   * The language of `title`, `description` and `more` when it can differ from the page's, as for
+   * database content shown in a bilingual site: `'es'`, `'en'`, or `''` for text whose language
+   * is unknown. Set on the text only, so the icon and the action keep the page's language.
+   */
+  lang?: string
 }
 
 export function InfoCard({
@@ -20,6 +26,7 @@ export function InfoCard({
   layout = 'vertical',
   headingLevel = 3,
   action,
+  lang,
 }: InfoCardProps) {
   const titleId = useId()
   const Heading = headingLevel === 2 ? 'h2' : 'h3'
@@ -29,7 +36,7 @@ export function InfoCard({
       <span className="info-card-icon" aria-hidden="true">
         {icon}
       </span>
-      <div className="info-card-content">
+      <div className="info-card-content" lang={lang}>
         <Heading id={titleId}>{title}</Heading>
         {typeof description === 'string' ? <p>{description}</p> : description}
         {more ? (

@@ -496,6 +496,29 @@ Indexes: `(user_id, created_at)` for a user's history, `(source, instrument, cre
 usage per instrument. Codes are plain strings, as in `role_permissions`, so a new instrument or
 format needs no migration.
 
+### `audit_events`
+
+The audit trail: one append-only row per thing that happened in the portal, shown newest first in
+the "Actividad reciente" panel of `/administracion` (LASCE-CON-012-151). Written only through
+`recordAuditEvent()` in `apps/web/app/lib/audit-log.ts`; see [audit-log.md](audit-log.md). The
+worker does not mirror this table in `apps/worker/app/db/models.py`.
+
+| Column        | Prisma type | Postgres type    | Constraints                                                          |
+| ------------- | ----------- | ---------------- | -------------------------------------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                              |
+| `action`      | `String`    | `text`           | not null; `<entity>.<verb>`, e.g. `"publication.create"`             |
+| `summary`     | `String`    | `text`           | not null; the line the panel shows, kept after the entity is gone    |
+| `actor_type`  | `String`    | `text`           | not null; `CHECK` in `('user', 'system', 'worker')`                  |
+| `actor_id`    | `String?`   | `uuid`           | FK → `auth.users.id`, `ON DELETE SET NULL`, so the trail outlives it |
+| `entity_type` | `String?`   | `text`           | nullable; what was acted on, e.g. `"publication"`                    |
+| `entity_id`   | `String?`   | `text`           | nullable; its id, as text so any key type fits                       |
+| `metadata`    | `Json?`     | `jsonb`          | nullable; anything else worth keeping                                |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                            |
+
+Indexes: `(created_at)` for the recent list, `(actor_id, created_at)` for one account's history,
+`(entity_type, entity_id, created_at)` for one record's history. `action` is a plain string, as in
+`role_permissions`, so a new kind of event needs no migration. Rows are never updated.
+
 ### `solar_physics_sections`
 
 An editable text section of the solar physics page (`/fisica-solar`). Today there is one row, with
@@ -640,6 +663,30 @@ the description when the page renders. See [`contact.md`](contact.md).
 `contact_channel_translations`: `id`, `contact_channel_id` (FK, `ON DELETE CASCADE`), `locale`
 (`varchar(5)`), `title`, `description`, timestamps. Unique on `(contact_channel_id, locale)`.
 
+## `public` schema (Nosotros)
+
+### `nosotros_activity_translations`
+
+The `title` and `paragraph` of a `nosotros_activities` row (a "¿Qué hacemos?" card on `/nosotros`)
+in a language other than Spanish, one row per card and locale. The Prisma model is
+`NosotrosActivityTranslation`. Spanish stays on the base row, so a card with no row here still
+renders, in its base text. `icon` is shared and stays on the base row. The base row's
+`modified_at` is the version an editor saves against.
+
+| Column        | Prisma type | Postgres type    | Constraints                                                  |
+| ------------- | ----------- | ---------------- | ------------------------------------------------------------ |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                      |
+| `activity_id` | `String`    | `uuid`           | FK → `nosotros_activities.id`, `ON DELETE CASCADE`, not null |
+| `locale`      | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es`    |
+| `title`       | `String`    | `text`           | not null                                                     |
+| `paragraph`   | `String`    | `text`           | not null                                                     |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                    |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                       |
+
+Constraints: `UNIQUE (activity_id, locale)`. Cards created before this table existed have no row
+and are shown as they are, with an unknown content language. See
+[translate-database-content.md](translate-database-content.md).
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
@@ -675,6 +722,9 @@ behind the cookie together with its user, and `deleteCurrentSession()` deletes i
 `apps/web/app/lib/auth/authorization.ts` reads it on each permission check.
 `apps/web/app/services/downloads/downloadService.ts`'s `createResourceDownload()` is the only
 writer of `public.resource_downloads`. Nothing reads it yet.
+`apps/web/app/lib/audit-log.ts` owns `public.audit_events`: `recordAuditEvent()` is its only
+writer (nothing calls it yet) and `getRecentActivity()` its only reader, for the summary at
+`/administracion`.
 
 `apps/web/app/lib/contact-channels.ts` reads and writes `public.contact_channels` and
 `public.contact_channel_translations` for `/contacto`. Spanish text is the base row; English is

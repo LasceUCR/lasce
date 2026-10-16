@@ -46,6 +46,22 @@ describe('readFailureReason', () => {
     ).toBe('El título es obligatorio.')
   })
 
+  test('reads the messages of a CMS route, a list of path and message', async () => {
+    const reason = await readFailureReason(
+      jsonBody({
+        error: 'Faltan campos obligatorios o no son válidos.',
+        issues: [
+          { path: 'content.en.title', message: 'El título en inglés es obligatorio.' },
+          { path: 'icon', message: 'Seleccione un ícono válido.' },
+        ],
+      }),
+    )
+
+    expect(reason).toBe(
+      'Faltan campos obligatorios o no son válidos: El título en inglés es obligatorio. Seleccione un ícono válido.',
+    )
+  })
+
   test('ignores issues that are not lists of messages', async () => {
     expect(
       await readFailureReason(

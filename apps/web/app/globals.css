@@ -5408,6 +5408,46 @@ a.acknowledgments-card:focus-visible {
   color: var(--muted);
 }
 
+/* Six cards: three per row, then the site's two and one at its usual breakpoints. */
+.indicator-grid.admin-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1400px) {
+  .indicator-grid.admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .indicator-grid.admin-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.indicator-link {
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.admin-content .indicator-link:hover {
+  border-color: var(--blue-dark);
+  box-shadow: 0 10px 22px rgba(21, 52, 76, 0.1);
+}
+
+.indicator-link:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 2px;
+}
+
+.indicator.indicator-empty strong {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
 .indicator-orange::before {
   background: var(--amber-glow);
 }
@@ -5419,6 +5459,39 @@ a.acknowledgments-card:focus-visible {
 .admin-panel h2 {
   margin: 0 0 14px;
   font-size: 16px;
+}
+
+/* Holds a full list's height (RECENT_ACTIVITY_LIMIT rows of 48px plus their borders), so the
+   card keeps its size with fewer events or none. */
+.admin-activity-body {
+  min-height: calc(5 * 48px + 4px);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-activity-empty {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.admin-activity-empty p {
+  margin: 0;
+}
+
+.admin-activity-empty-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #e8f6fc;
+  color: var(--blue-dark);
 }
 
 .admin-activity-list {
@@ -5517,6 +5590,10 @@ a.acknowledgments-card:focus-visible {
 
 .status-pill-blue {
   color: var(--blue-dark);
+}
+
+.status-pill-red {
+  color: var(--danger);
 }
 
 @media (max-width: 1120px) {

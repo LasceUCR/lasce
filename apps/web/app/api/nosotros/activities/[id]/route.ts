@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import {
+  conflict,
+  internalError,
+  invalidBody,
+  invalidId,
+  isUuid,
+  notFound,
+  ok,
+  readJson,
+  reviewRequired,
+} from '@/app/lib/cms/http'
+import {
   deleteNosotrosActivity,
-  nosotrosActivityInputSchema,
+  nosotrosActivityUpdateSchema,
   updateNosotrosActivity,
 } from '@/app/lib/nosotros'
 
@@ -16,12 +26,15 @@ import {
  */
 export const dynamic = 'force-dynamic'
 
-/** Ids are Postgres uuids. Anything else cannot match a row, and Prisma would throw on it. */
-const activityIdSchema = z.uuid()
+const INVALID_ID_MESSAGE = 'El identificador de la actividad no es válido.'
 
 const ACTIVITY_GONE_MESSAGE =
   'Esta actividad ya no existe. Es posible que otra persona la haya eliminado; recargue la página.'
 
+/**
+ * Updates a card. `version` is required; `content` carries both languages in full, and is left
+ * out to change the icon alone. See `nosotrosActivityUpdateSchema`.
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -29,50 +42,32 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
-
-  const parsed = nosotrosActivityInputSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
-  }
-
   const { id } = await params
-  if (!activityIdSchema.safeParse(id).success) {
-    return NextResponse.json({ error: ACTIVITY_GONE_MESSAGE }, { status: 404 })
-  }
+  if (!isUuid(id)) return invalidId(INVALID_ID_MESSAGE)
 
-  let activity: Awaited<ReturnType<typeof updateNosotrosActivity>>
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = nosotrosActivityUpdateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
   try {
-    activity = await updateNosotrosActivity(id, parsed.data, guard.user.id)
-  } catch {
-    return NextResponse.json(
-      {
-        error:
-          'No se pudieron guardar los cambios: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
-      },
-      { status: 500 },
-    )
-  }
+    const result = await updateNosotrosActivity(id, parsed.data, guard.user.id)
+    if (result.ok) return ok({ activity: result.activity })
 
-  if (!activity) {
-    return NextResponse.json({ error: ACTIVITY_GONE_MESSAGE }, { status: 404 })
+    switch (result.reason) {
+      case 'not-found':
+        return notFound(ACTIVITY_GONE_MESSAGE)
+      case 'conflict':
+        return conflict(
+          'La actividad cambió desde que la abrió. Recárguela y vuelva a aplicar sus cambios.',
+        )
+      case 'review-required':
+        return reviewRequired(result.pending)
+    }
+  } catch (error) {
+    return internalError('No se pudieron guardar los cambios.', error)
   }
-
-  return NextResponse.json({ activity }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
 export async function DELETE(
@@ -83,25 +78,12 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  if (!activityIdSchema.safeParse(id).success) {
-    return NextResponse.json({ error: ACTIVITY_GONE_MESSAGE }, { status: 404 })
-  }
+  if (!isUuid(id)) return invalidId(INVALID_ID_MESSAGE)
 
-  let deleted: boolean
   try {
-    deleted = await deleteNosotrosActivity(id)
-  } catch {
-    return NextResponse.json(
-      {
-        error:
-          'No se pudo eliminar la actividad: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
-      },
-      { status: 500 },
-    )
-  }
-
-  if (!deleted) {
-    return NextResponse.json({ error: ACTIVITY_GONE_MESSAGE }, { status: 404 })
+    if (!(await deleteNosotrosActivity(id))) return notFound(ACTIVITY_GONE_MESSAGE)
+  } catch (error) {
+    return internalError('No se pudo eliminar la actividad.', error)
   }
 
   return new NextResponse(null, { status: 204 })

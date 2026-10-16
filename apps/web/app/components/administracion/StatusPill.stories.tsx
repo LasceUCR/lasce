@@ -34,3 +34,10 @@ export const Orange: Story = {
     tone: 'orange',
   },
 }
+
+export const Red: Story = {
+  args: {
+    label: 'Fuera de línea',
+    tone: 'red',
+  },
+}

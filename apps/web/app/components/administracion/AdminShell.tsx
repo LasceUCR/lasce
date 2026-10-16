@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Download, LayoutDashboard, Server, Shield, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -31,10 +32,11 @@ export interface AdminShellProps {
 }
 
 export function AdminShell({ children, granted }: AdminShellProps) {
+  const t = useTranslations('administration.shell')
   const pathname = usePathname()
   const { editMode, setEditMode } = useEditMode()
   const items = visibleAdminMenu(granted).map((item) => ({
-    label: item.label,
+    label: t(`items.${item.key}`),
     href: item.href,
     icon: icons[item.key],
   }))
@@ -44,7 +46,8 @@ export function AdminShell({ children, granted }: AdminShellProps) {
       <AdminSidebar activePathname={pathname} items={items} />
       <div className="admin-content">
         <div className="admin-header">
-          <p className="topic-kicker">Panel de administración</p>
+          <p className="topic-kicker">{t('panel')}</p>
+          {/* The same name in every language, so it stays recognisable as the CMS switch. */}
           <Toggle
             checked={editMode}
             id="edit-mode-toggle"
