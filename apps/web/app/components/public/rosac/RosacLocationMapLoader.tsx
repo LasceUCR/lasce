@@ -32,7 +32,7 @@ export interface RosacLocationMapLoaderProps {
 export function RosacLocationMapLoader({ location, labels }: RosacLocationMapLoaderProps) {
   return (
     <ErrorBoundary fallback={<LocationUnavailable message={location.unavailableMessage} />}>
-      <RosacLocationMap labels={labels} location={location} />
+      <RosacLocationMap labels={labels ?? location.labels} location={location} />
     </ErrorBoundary>
   )
 }
