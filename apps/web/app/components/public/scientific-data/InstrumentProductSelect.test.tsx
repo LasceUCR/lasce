@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -14,7 +15,7 @@ describe('InstrumentProductSelect', () => {
   test('shows only instruments initially and expands products without committing a selection', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
-    render(<InstrumentProductSelect {...groupedArgs} onChange={onChange} />)
+    renderWithIntl(<InstrumentProductSelect {...groupedArgs} onChange={onChange} />)
     const trigger = screen.getByRole('combobox', { name: groupedArgs.label })
     await user.click(trigger)
     expect(screen.getByRole('tree', { name: groupedArgs.label })).toBeInTheDocument()
@@ -40,7 +41,7 @@ describe('InstrumentProductSelect', () => {
   test('navigates instrument parents and product children with the keyboard', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
-    render(<InstrumentProductSelect {...groupedArgs} onChange={onChange} />)
+    renderWithIntl(<InstrumentProductSelect {...groupedArgs} onChange={onChange} />)
     await user.tab()
     await user.keyboard('{Enter}{ArrowRight}{ArrowRight}{ArrowDown}{Enter}')
     expect(onChange).toHaveBeenLastCalledWith('euv')
@@ -60,7 +61,7 @@ describe('InstrumentProductSelect', () => {
 
   test('dismisses on outside pointer input and hides the tree when disabled', async () => {
     const user = userEvent.setup()
-    const { rerender } = render(<InstrumentProductSelect {...groupedArgs} />)
+    const { rerender } = renderWithIntl(<InstrumentProductSelect {...groupedArgs} />)
     const trigger = screen.getByRole('combobox')
     await user.click(trigger)
     fireEvent.pointerDown(document.body)
@@ -88,7 +89,9 @@ describe('InstrumentProductSelect', () => {
       pending.forEach(([, callback]) => callback(0))
     }
     const user = userEvent.setup()
-    render(<InstrumentProductSelect {...(LargeGroups.args as InstrumentProductSelectProps)} />)
+    renderWithIntl(
+      <InstrumentProductSelect {...(LargeGroups.args as InstrumentProductSelectProps)} />,
+    )
     await user.click(screen.getByRole('combobox'))
 
     // jsdom has no layout: place SEISS below the fold and let its height grow by hand.

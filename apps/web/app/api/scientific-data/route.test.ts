@@ -13,6 +13,39 @@ const mocks = vi.hoisted(() => ({
   queryCiticScientificData: vi.fn(),
 }))
 
+const scientificDataMessages = vi.hoisted(() => ({
+  validation: {
+    invalidSource: 'Seleccione una fuente válida.',
+    invalidProduct: 'Seleccione un producto científico válido.',
+    invalidParameter: 'Seleccione un canal o parámetro.',
+    invalidDate: 'Seleccione una fecha válida con el formato AAAA-MM-DD.',
+    invalidStartTime: 'Seleccione una hora de inicio válida con el formato HH:mm.',
+    invalidEndTime: 'Seleccione una hora de fin válida con el formato HH:mm.',
+    startBeforeEnd: 'La hora de inicio debe ser anterior a la hora de fin.',
+    productUnavailable: 'El producto seleccionado todavía no está disponible para esta fuente.',
+    invalidParameterForProduct: 'Seleccione un canal o parámetro válido para el producto.',
+  },
+  errors: {
+    dateNotFuture: 'Seleccione una fecha que no sea posterior a hoy.',
+    invalidQuery: 'Los criterios de consulta no son válidos.',
+    upstreamError: 'No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.',
+    sourceUnavailable: 'La fuente científica no está disponible en este momento.',
+  },
+}))
+
+// `getTranslations` resolves to next-intl's client build under Vitest, which throws outside a
+// Next.js request. Mocked with the real Spanish copy so assertions stay on the text a visitor
+// reads, matching `request.test.ts`'s convention for code that calls `next-intl/server` directly.
+vi.mock('next-intl/server', () => ({
+  getTranslations: (namespace: 'scientificData.validation' | 'scientificData.errors') => {
+    const section =
+      namespace === 'scientificData.validation'
+        ? scientificDataMessages.validation
+        : scientificDataMessages.errors
+    return Promise.resolve((key: string) => (section as Record<string, string>)[key])
+  },
+}))
+
 vi.mock('@/app/services/scientific-data/mockScientificDataSource', () => ({
   queryMockScientificData: mocks.queryMockScientificData,
 }))

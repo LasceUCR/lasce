@@ -9,9 +9,13 @@ export function getGoesAvailability(now = new Date()): GoesAvailability {
   return { today: now.toISOString().slice(0, 10) }
 }
 
-export function getAvailabilityMessage(query: ScientificDataQuery, availability: GoesAvailability) {
+export function getAvailabilityMessage(
+  query: ScientificDataQuery,
+  availability: GoesAvailability,
+  message: string,
+) {
   if (query.source === 'GOES' && query.date > availability.today) {
-    return 'Seleccione una fecha que no sea posterior a hoy.'
+    return message
   }
   return null
 }

@@ -1042,6 +1042,253 @@
       "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo."
     }
   },
+  "scientificData": {
+    "page": {
+      "metaTitle": "Datos científicos | LASCE",
+      "description": "Explore imágenes del Sol y consulte la información científica disponible.",
+      "kicker": "Portal público LASCE",
+      "title": "Datos",
+      "queryShortcut": "Ir a la consulta"
+    },
+    "sources": {
+      "goes": {
+        "name": "GOES",
+        "description": "Series históricas e imágenes solares SUVI de GOES."
+      },
+      "rosac": {
+        "name": "ROSAC — UCR",
+        "description": "Previsión de la futura fuente ROSAC; sus instrumentos aún están por definir."
+      }
+    },
+    "instruments": {
+      "exis": {
+        "name": "Sensores de irradiancia ultravioleta extrema y rayos X",
+        "products": {
+          "sfeu": {
+            "name": "Flujo solar: EUV"
+          },
+          "sfxr": {
+            "name": "Flujo solar: rayos X"
+          }
+        }
+      },
+      "mag": {
+        "name": "Magnetómetro",
+        "products": {
+          "geof": {
+            "name": "Campo geomagnético"
+          }
+        }
+      },
+      "seiss": {
+        "name": "Suite ambiental espacial in situ",
+        "unavailableNote": "Este producto GOES y sus canales aún están pendientes de integración.",
+        "products": {
+          "ehis": {
+            "name": "Iones pesados energéticos"
+          },
+          "mpsl": {
+            "name": "Electrones y protones magnetosféricos: baja energía"
+          },
+          "mpsh": {
+            "name": "Electrones y protones magnetosféricos: energía media y alta",
+            "availabilityNote": "Seleccione el telescopio y la banda del archivo nivel 1b. Cada telescopio conserva su dirección de observación."
+          },
+          "sgps": {
+            "name": "Protones solares y galácticos",
+            "availabilityNote": "Seleccione la unidad SGPS−X o SGPS+X. El archivo nivel 1b incluye canales diferenciales y el integral > 500 MeV."
+          }
+        }
+      },
+      "suvi": {
+        "name": "Generador de imágenes solares ultravioleta",
+        "imageProductName": "Imágenes solares: {wavelength} ({code})"
+      },
+      "rosacI1": {
+        "name": "Instrumento 1 (por definir)",
+        "products": {
+          "timeSeries": {
+            "name": "Serie temporal de prueba"
+          }
+        }
+      },
+      "rosacI2": {
+        "name": "Instrumento 2 (por definir)",
+        "products": {
+          "dynamicSpectrum": {
+            "name": "Espectro dinámico de prueba"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "xray": {
+        "shortBand": "Banda corta (0,05–0,4 nm)",
+        "longBand": "Banda larga (0,1–0,8 nm)"
+      },
+      "euv": {
+        "line1175": "Línea 117,5 nm",
+        "line1216": "Línea 121,6 nm",
+        "line1335": "Línea 133,5 nm",
+        "line1405": "Línea 140,5 nm",
+        "line256": "Línea 25,6 nm",
+        "line284": "Línea 28,4 nm",
+        "line304": "Línea 30,4 nm",
+        "mgiiIndex": "Índice Mg II"
+      },
+      "magnetic": {
+        "x": "Componente x (marco EPN)",
+        "y": "Componente y (marco EPN)",
+        "z": "Componente z (marco EPN)",
+        "total": "Magnitud total"
+      },
+      "mpsh": {
+        "electron": "Electrones",
+        "proton": "Protones",
+        "label": "{species}: telescopio {telescope}, banda {band}"
+      },
+      "sgps": {
+        "integral": "> 500 MeV (integral)",
+        "differential": "{channel} (diferencial)",
+        "label": "SGPS{sign}X: {value}"
+      },
+      "image": "Imagen calibrada",
+      "simulatedIntensity": "Intensidad simulada",
+      "simulatedSpectrum": "Intensidad espectral simulada"
+    },
+    "units": {
+      "wPerM2": "W/m²",
+      "index": "índice",
+      "nanotesla": "nT",
+      "particles": "partículas/(cm²·s·sr·keV)",
+      "relativeIntensity": "intensidad relativa",
+      "pfu": "pfu",
+      "protonUnit": "protones/(cm²·s·sr·keV)",
+      "image": "imagen"
+    },
+    "today": {
+      "title": "El Sol de hoy",
+      "lead": "Imágenes de hoy en distintas bandas de luz ultravioleta.",
+      "source": "Fuente: GOES",
+      "wavelengthsLegend": "Bandas SUVI (longitud de onda)",
+      "rangeLabel": "Rango de hoy (UTC)",
+      "ranges": {
+        "day": "Todo el día",
+        "h6": "Últimas 6 horas",
+        "h3": "Últimas 3 horas",
+        "h1": "Última hora"
+      },
+      "loading": "Cargando imágenes del Sol de hoy…",
+      "error": "No fue posible cargar las imágenes de GOES. Puede cambiar de banda o volver a intentarlo.",
+      "emptyTitle": "Aún no hay imágenes para esta selección",
+      "emptyMessage": "Pruebe otra banda o amplíe el rango de hoy. Las nuevas observaciones aparecerán cuando estén disponibles.",
+      "stripLabel": "Imágenes del Sol de hoy",
+      "footer": "{date} · {wavelength} · Horas en UTC",
+      "scrollHint": "Deslice para ver más",
+      "refresh": "Actualizar imágenes"
+    },
+    "images": {
+      "sequenceLabel": "Secuencia de imágenes solares",
+      "loading": "Cargando imagen solar…",
+      "unavailable": "Esta imagen solar no está disponible. Consulte otra banda o intente nuevamente."
+    },
+    "instrumentSelect": {
+      "placeholder": "Seleccione una opción",
+      "defaultGroupLabel": "Opciones",
+      "productsOf": "Productos de {group}"
+    },
+    "explorer": {
+      "kicker": "Consulta pública",
+      "title": "Configure los datos que desea visualizar",
+      "badgeObserved": "Datos observados",
+      "badgeSimulated": "Simulación",
+      "sourceLabel": "Fuente de datos",
+      "productLabel": "Instrumento y producto",
+      "parameterLabel": "Canal o parámetro",
+      "pendingSuffix": " — pendiente",
+      "dateLabel": "Fecha",
+      "dateHint": "Consulta histórica por fecha. Los días sin observaciones se muestran sin datos.",
+      "timeRangeGroupLabel": "Rango horario (UTC)",
+      "startTimeLabel": "Hora de inicio (UTC)",
+      "endTimeLabel": "Hora de fin (UTC)",
+      "submitLoading": "Consultando…",
+      "submit": "Consultar datos",
+      "noticeGoes": "Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos. EHIS y MPSL están pendientes de integración.",
+      "noticeRosac": "ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están definidos; todos los resultados de esta fuente son simulados y están rotulados como tal.",
+      "permissionsTitle": "Permisos de consulta y descarga",
+      "permissionsText": "Puede consultar información histórica de GOES sin una cuenta. Para descargar, necesita una cuenta e iniciar sesión. Las imágenes de las gráficas se pueden descargar para cualquier fuente; los datos en CSV de ROSAC están disponibles para toda cuenta, y los de GOES requieren un permiso de descarga de datos GOES. Las imágenes solares SUVI no se pueden descargar desde esta plataforma. Cada enlace de descarga vence en 30 minutos.",
+      "loadingImages": "Cargando imágenes solares",
+      "loadingData": "Cargando datos",
+      "cancelQuery": "Cancelar consulta",
+      "resultsKicker": "Resultados de la consulta",
+      "instrumentResultLabel": "Instrumento",
+      "wavelengthResultLabel": "Longitud de onda",
+      "channelResultLabel": "Canal",
+      "dateResultLabel": "Fecha",
+      "intervalResultLabel": "Intervalo",
+      "sourceResultLabel": "Fuente",
+      "satelliteResultLabel": "Satélite",
+      "satelliteValue": "GOES-{number}",
+      "emptyTitle": "No hay datos disponibles",
+      "emptyImageMessage": "No hay imágenes solares disponibles para la banda, la fecha y el horario seleccionados. Seleccione otra banda o intente nuevamente más tarde.",
+      "emptyDataMessage": "No se encontraron observaciones para el producto, la fecha y el rango horario seleccionados. Modifique los criterios e intente nuevamente.",
+      "summaryLabel": "Resumen de los valores",
+      "minimum": "Mínimo",
+      "maximum": "Máximo",
+      "latest": "Último valor",
+      "chartCaptionObserved": "Observaciones de {provider}.",
+      "chartCaptionSimulated": "Serie simulada para preparar la futura integración de ROSAC.",
+      "tableToggle": "Ver valores de la gráfica ({count})",
+      "tableCaption": "Mediciones de {product} el {date}",
+      "columnTime": "Hora (UTC)",
+      "columnValue": "Valor ({unit})",
+      "dynamicSpectrumLabel": "Espectro dinámico simulado de ROSAC",
+      "dynamicSpectrumCaption": "Espectro dinámico de demostración; valores simulados.",
+      "dynamicSpectrumTableToggle": "Ver valores del espectro ({count})",
+      "dynamicSpectrumTableCaption": "Intensidad simulada por hora y frecuencia",
+      "columnFrequency": "Frecuencia (MHz)",
+      "columnIntensity": "Intensidad relativa",
+      "downloadStarted": "La descarga de {filename} comenzó. El enlace vence en 30 minutos."
+    },
+    "downloads": {
+      "title": "Descargas",
+      "signInPrompt": "Inicie sesión para descargar la gráfica",
+      "preparing": "Preparando descarga…"
+    },
+    "charts": {
+      "areaLabel": "Área de gráfica: {label}",
+      "title": "Gráfica de {label}",
+      "description": "Serie de {count} mediciones entre {start} y {end} UTC. El valor mínimo es {minimum} y el máximo es {maximum} {unit}.",
+      "empty": "No hay valores para graficar.",
+      "caption": "{caption} Unidad: {unit}.",
+      "low": "Baja",
+      "high": "Alta",
+      "spectrumDescription": "Mapa de intensidad por tiempo y frecuencia, desde {minFreq} hasta {maxFreq} {frequencyUnit} y desde {start} hasta {end} UTC. Los valores van de {minimum} a {maximum} {unit}.",
+      "spectrumCaption": "{caption} Frecuencia en {frequencyUnit}; color según {unit}."
+    },
+    "validation": {
+      "invalidSource": "Seleccione una fuente válida.",
+      "invalidProduct": "Seleccione un producto científico válido.",
+      "invalidParameter": "Seleccione un canal o parámetro.",
+      "invalidDate": "Seleccione una fecha válida con el formato AAAA-MM-DD.",
+      "invalidStartTime": "Seleccione una hora de inicio válida con el formato HH:mm.",
+      "invalidEndTime": "Seleccione una hora de fin válida con el formato HH:mm.",
+      "startBeforeEnd": "La hora de inicio debe ser anterior a la hora de fin.",
+      "productUnavailable": "El producto seleccionado todavía no está disponible para esta fuente.",
+      "invalidParameterForProduct": "Seleccione un canal o parámetro válido para el producto.",
+      "default": "Revise los criterios."
+    },
+    "errors": {
+      "dateNotFuture": "Seleccione una fecha que no sea posterior a hoy.",
+      "invalidQuery": "Los criterios de consulta no son válidos.",
+      "upstreamError": "No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.",
+      "sourceUnavailable": "La fuente científica no está disponible en este momento.",
+      "requestFailedGoes": "No fue posible consultar la fuente GOES en este momento. Inténtelo nuevamente más tarde.",
+      "requestFailedOther": "No fue posible consultar los datos. Inténtelo nuevamente.",
+      "downloadFailed": "No fue posible preparar la descarga. Inténtelo nuevamente más tarde.",
+      "downloadUnauthenticated": "Inicie sesión para descargar recursos."
+    }
+  },
   "administration": {
     "shell": {
       "panel": "Panel de administración",
