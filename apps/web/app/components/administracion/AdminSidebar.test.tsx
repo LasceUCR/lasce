@@ -1,6 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AdminSidebar, type AdminSidebarProps } from './AdminSidebar'
 import { Default, MobileOpen } from './AdminSidebar.stories'
@@ -13,13 +15,13 @@ const link = (label: string) => screen.getByRole('link', { name: label })
 
 describe('AdminSidebar', () => {
   test('names the navigation for assistive technology', () => {
-    render(<AdminSidebar {...defaultArgs} />)
+    renderWithIntl(<AdminSidebar {...defaultArgs} />)
 
     expect(screen.getByRole('navigation', { name: 'Panel de administración' })).toBeInTheDocument()
   })
 
   test('lists every item it was given', () => {
-    render(<AdminSidebar {...defaultArgs} />)
+    renderWithIntl(<AdminSidebar {...defaultArgs} />)
 
     for (const item of defaultArgs.items) {
       expect(link(item.label)).toBeInTheDocument()
@@ -27,21 +29,23 @@ describe('AdminSidebar', () => {
   })
 
   test('marks only the item matching the current path as active', () => {
-    render(<AdminSidebar {...defaultArgs} activePathname="/administracion/usuarios" />)
+    renderWithIntl(<AdminSidebar {...defaultArgs} activePathname="/administracion/usuarios" />)
 
     expect(link('Usuarios')).toHaveAttribute('aria-current', 'page')
     expect(link('Resumen')).not.toHaveAttribute('aria-current')
   })
 
   test('keeps a nested user path marked as the Usuarios section', () => {
-    render(<AdminSidebar {...defaultArgs} activePathname="/administracion/usuarios/detalle" />)
+    renderWithIntl(
+      <AdminSidebar {...defaultArgs} activePathname="/administracion/usuarios/detalle" />,
+    )
 
     expect(link('Usuarios')).toHaveAttribute('aria-current', 'page')
     expect(link('Resumen')).not.toHaveAttribute('aria-current')
   })
 
   test('starts collapsed and names the current section on the toggle', () => {
-    render(<AdminSidebar {...defaultArgs} activePathname="/administracion/usuarios" />)
+    renderWithIntl(<AdminSidebar {...defaultArgs} activePathname="/administracion/usuarios" />)
 
     expect(toggle()).toHaveAttribute('aria-expanded', 'false')
     expect(toggle()).toHaveTextContent('Usuarios')
@@ -49,7 +53,7 @@ describe('AdminSidebar', () => {
 
   test('expands and collapses the list it controls', async () => {
     const user = userEvent.setup()
-    render(<AdminSidebar {...defaultArgs} />)
+    renderWithIntl(<AdminSidebar {...defaultArgs} />)
 
     const list = document.getElementById(toggle().getAttribute('aria-controls') ?? '')
     expect(list).toContainElement(link('Usuarios'))
@@ -62,14 +66,14 @@ describe('AdminSidebar', () => {
   })
 
   test('starts expanded when asked', () => {
-    render(<AdminSidebar {...openArgs} />)
+    renderWithIntl(<AdminSidebar {...openArgs} />)
 
     expect(toggle()).toHaveAttribute('aria-expanded', 'true')
   })
 
   test('closes on Escape and returns focus to the toggle', async () => {
     const user = userEvent.setup()
-    render(<AdminSidebar {...openArgs} />)
+    renderWithIntl(<AdminSidebar {...openArgs} />)
 
     link('Permisos').focus()
     await user.keyboard('{Escape}')
@@ -79,7 +83,7 @@ describe('AdminSidebar', () => {
   })
 
   test('closes on a pointer outside the navigation', () => {
-    render(<AdminSidebar {...openArgs} />)
+    renderWithIntl(<AdminSidebar {...openArgs} />)
 
     fireEvent.pointerDown(document.body)
 
@@ -88,7 +92,7 @@ describe('AdminSidebar', () => {
 
   test('closes when a section is chosen', async () => {
     const user = userEvent.setup()
-    render(<AdminSidebar {...openArgs} />)
+    renderWithIntl(<AdminSidebar {...openArgs} />)
 
     // jsdom cannot navigate, so keep the anchor from trying.
     link('Permisos').addEventListener('click', (event) => event.preventDefault())
@@ -98,7 +102,7 @@ describe('AdminSidebar', () => {
   })
 
   test('closes when the pathname changes', () => {
-    const { rerender } = render(<AdminSidebar {...openArgs} />)
+    const { rerender } = renderWithIntl(<AdminSidebar {...openArgs} />)
     expect(toggle()).toHaveAttribute('aria-expanded', 'true')
 
     rerender(<AdminSidebar {...openArgs} activePathname="/administracion/permisos" />)

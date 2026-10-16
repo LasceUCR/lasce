@@ -30,23 +30,18 @@
 }
 
 .abstract {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
-  overflow-wrap: anywhere;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
 }
 
 .footer {
   padding-top: 12px;
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* Matches `.publication-card-footer .button`. Narrow screens make every `.button` full width
@@ -55,11 +50,9 @@
   min-width: min(16rem, 100%);
 }
 
-/* The public shell justifies every paragraph (`.public-shell-content p`). On a one-line meta and a
-   two-line clamped summary that opens wide gaps between words at phone widths, so the card stays
-   ragged-right. Two classes, to outrank that rule. */
-.card .meta,
-.card .abstract {
+/* The public shell justifies every paragraph (`.public-shell-content p`). The meta line stays
+   start-aligned, while the abstract inherits the justified layout like `.publication-abstract`. */
+.card .meta {
   text-align: left;
 }
 

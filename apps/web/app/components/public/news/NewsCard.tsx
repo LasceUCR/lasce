@@ -1,6 +1,8 @@
 import { ExternalLink } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
+import { TruncatedText } from '@/app/components/public/TruncatedText'
 
 import styles from './NewsCard.module.css'
 
@@ -18,9 +20,9 @@ export interface NewsCardProps {
 
 /**
  * One news item on `/noticias`: a compact, text-only card in the same family as
- * `PublicationCard` (title, one meta line, a two-line summary, a link out). The external article
- * is the item's detail view, so "Abrir fuente" opens it in a new tab; its accessible name adds
- * the title, since every card carries the same visible label.
+ * `PublicationCard` (title, one meta line, a summary clamped with TruncatedText, a link out).
+ * Its summary is clamped to two lines with `TruncatedText` ("Leer más" / "Leer menos"), exactly
+ * like `PublicationCard`. "Abrir fuente" links to the external source.
  */
 export function NewsCard({
   title,
@@ -31,6 +33,8 @@ export function NewsCard({
   abstract,
   href,
 }: NewsCardProps) {
+  const t = useTranslations('news.card')
+
   return (
     <article className={`surface-card ${styles.card}`}>
       <h3 className={styles.title}>{title}</h3>
@@ -40,7 +44,11 @@ export function NewsCard({
         {source} · {publishedAt ? <time dateTime={publishedAt}>{date}</time> : date}
       </p>
 
-      {abstract ? <p className={styles.abstract}>{abstract}</p> : null}
+      {abstract ? (
+        <TruncatedText className={styles.abstract} lines={2}>
+          {abstract}
+        </TruncatedText>
+      ) : null}
 
       {href ? (
         <div className={styles.footer}>
@@ -51,10 +59,10 @@ export function NewsCard({
             target="_blank"
             variant="primary"
           >
-            Abrir fuente{' '}
+            {t('openSource')}{' '}
             {/* The space sits outside the hidden span: name computation trims an element's own
                 text, while browsers also add their own gap around it. Both read one space. */}
-            <span className="sr-only">de «{title}» (se abre en una pestaña nueva)</span>
+            <span className="sr-only">{t('openSourceAria', { title })}</span>
           </Button>
         </div>
       ) : null}
