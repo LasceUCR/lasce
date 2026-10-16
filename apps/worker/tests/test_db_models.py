@@ -20,6 +20,7 @@ from app.db import (
     GeomagneticIndexTranslation,
     HomeHero,
     HomeHeroTranslation,
+    MagFile,
     News,
     NewsAuthor,
     NewsCrossAuthor,
@@ -31,6 +32,8 @@ from app.db import (
     ResearchTranslation,
     ResourceDownload,
     RolePermission,
+    SolarPhysicsSection,
+    SolarPhysicsSectionTranslation,
     SuviFrame,
     User,
     UserRole,
@@ -109,6 +112,42 @@ def test_research_translation_matches_the_prisma_columns() -> None:
     assert any(
         {column.name for column in constraint.columns} == {"research_id", "locale"}
         for constraint in ResearchTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_solar_physics_section_matches_the_prisma_columns() -> None:
+    table = SolarPhysicsSection.__table__
+    columns = table.columns
+
+    assert table.schema == "public"
+    assert set(columns.keys()) == {"id", "key", "title", "body", "created_at", "updated_at"}
+    assert columns["key"].unique
+    assert not columns["title"].nullable
+    assert not columns["body"].nullable
+
+
+def test_solar_physics_section_translation_matches_the_prisma_columns() -> None:
+    table = SolarPhysicsSectionTranslation.__table__
+    columns = table.columns
+    (section_fk,) = columns["section_id"].foreign_keys
+
+    assert table.schema == "public"
+    assert set(columns.keys()) == {
+        "id",
+        "section_id",
+        "locale",
+        "title",
+        "body",
+        "created_at",
+        "updated_at",
+    }
+    assert section_fk.target_fullname == "public.solar_physics_sections.id"
+    assert section_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"section_id", "locale"}
+        for constraint in table.constraints
         if isinstance(constraint, UniqueConstraint)
     )
 
@@ -383,6 +422,40 @@ def test_exis_file_matches_the_prisma_columns() -> None:
 def test_exis_file_is_unique_per_satellite_product_and_day() -> None:
     constraint_names = {constraint.name for constraint in ExisFile.__table__.constraints}
     assert "exis_files_satellite_product_day_key" in constraint_names
+
+
+def test_mag_files_live_in_the_solar_schema() -> None:
+    assert MagFile.__table__.schema == "solar"
+
+
+def test_mag_file_matches_the_prisma_columns() -> None:
+    columns = MagFile.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "satellite",
+        "product",
+        "day",
+        "file_name",
+        "version",
+        "source_url",
+        "source_modified_at",
+        "first_observed_at",
+        "last_observed_at",
+        "point_count",
+        "attributes",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["file_name"].unique
+    assert not columns["day"].nullable
+    assert columns["source_modified_at"].nullable
+    assert columns["first_observed_at"].nullable
+
+
+def test_mag_file_is_unique_per_satellite_product_and_day() -> None:
+    constraint_names = {constraint.name for constraint in MagFile.__table__.constraints}
+    assert "mag_files_satellite_product_day_key" in constraint_names
 
 
 def test_resource_downloads_live_in_the_public_schema() -> None:

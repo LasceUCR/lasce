@@ -50,19 +50,23 @@
       "demoNotice": "Demonstration data",
       "kp": {
         "label": "Kp index",
-        "value": "2 · Quiet"
+        "value": "2",
+        "description": "Quiet"
       },
       "dst": {
         "label": "Dst index",
-        "value": "-12 nT · Stable"
+        "value": "-12 nT",
+        "description": "Stable"
       },
       "ae": {
         "label": "AE index",
-        "value": "75 nT · Low activity"
+        "value": "75 nT",
+        "description": "Low activity"
       },
       "ap": {
         "label": "Ap index",
-        "value": "7 · Quiet"
+        "value": "7",
+        "description": "Quiet"
       }
     },
     "areas": {
@@ -77,10 +81,49 @@
       "observed": "Observed on <time></time>",
       "updating": "Updating the latest image of the Sun…"
     },
+    "editor": {
+      "languageTabs": "Content language",
+      "heroEditLabel": "Edit hero banner",
+      "heroEditTitle": "Edit hero banner",
+      "heroTitleField": "Title ({language})",
+      "heroLeadField": "Subtitle ({language})",
+      "indicatorEditLabel": "Edit {label}",
+      "indicatorEditTitle": "Edit {label}",
+      "valueField": "Value",
+      "valueHint": "The same in both languages. At most 15 characters.",
+      "descriptionField": "Description ({language})",
+      "descriptionHint": "At most 15 characters.",
+      "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change it, review it too.",
+      "legacyNoTranslation": "This content has no English version yet. To change its text, fill in both languages.",
+      "reorderHandle": "Reorder {label}",
+      "reorderRole": "sortable",
+      "reorderInstructions": "To reorder an index, focus its reorder control and press Space or Enter. Use the arrow keys to move it, then press Space or Enter again to drop it, or Escape to cancel.",
+      "reorderPicked": "Picked up {label}.",
+      "reorderOver": "{label} is over the position of {target}.",
+      "reorderDropped": "Dropped {label} in the position of {target}.",
+      "reorderDroppedInPlace": "Dropped {label} in its original position.",
+      "reorderCancelled": "Reordering {label} was cancelled.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "heroUpdated": "Hero banner updated successfully.",
+      "indicatorUpdated": "Geomagnetic index updated successfully.",
+      "orderUpdated": "Index order updated successfully."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
     "validation": {
       "valueNotText": "The value must be text.",
       "valueRequired": "The value is required.",
       "valueTooLong": "The value cannot be longer than 15 characters."
+    },
+    "saveErrors": {
+      "heroFailed": "The hero banner could not be saved. Please try again.",
+      "indicatorFailed": "The geomagnetic index could not be saved. Please try again.",
+      "orderFailed": "The index order could not be saved. Please try again."
     }
   },
   "workAreas": {
@@ -118,6 +161,10 @@
     "feedback": {
       "network": "Could not reach the server. Check your connection and try again.",
       "server": "The server could not complete the operation. Try again in a few minutes."
+    },
+    "truncatedText": {
+      "readMore": "Read more",
+      "readLess": "Read less"
     }
   },
   "solarImageLightbox": {
@@ -234,11 +281,34 @@
         }
       }
     },
-    "lasce": {
-      "title": "LASCE's work in solar astrophysics",
-      "p1": "The Solar Astrophysics and Space Weather Laboratory brings together research in solar astrophysics, astronomical observations and computational development to study solar activity and its interaction with the Earth's environment.",
-      "p2": "Its work combines data from different instruments, wavelengths and platforms to observe different links of a single chain: from the magnetic origin of a solar eruption to its manifestations near the Earth.",
-      "p3": "From the University of Costa Rica, LASCE seeks to strengthen national scientific capabilities for analysing the Sun-Earth relationship, to train talent and to foster collaborations in the study of space weather."
+    "editor": {
+      "editLabel": "Edit the LASCE section",
+      "editTitle": "Edit the LASCE section",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "bodyField": "Text ({language})",
+      "bodyHint": "Separate paragraphs with a blank line.",
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the text, check it as well.",
+      "legacyNoTranslation": "This section has no English version yet. To change the title or the text you must complete both languages.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "reload": "Close and load the current version",
+      "updated": "Section updated successfully."
+    },
+    "saveErrors": {
+      "generic": "The change could not be saved. Please try again.",
+      "fields": "Check the highlighted fields.",
+      "notSignedIn": "You are not signed in.",
+      "signInAgain": "Sign in again to save; your changes are still in the form.",
+      "forbidden": "You do not have permission to modify this content.",
+      "conflict": "Someone else saved changes to this section after you opened it. Your changes were not saved, so as not to overwrite theirs. Copy what you need, close the editor and open the section again.",
+      "notFound": "This section no longer exists. Your changes were not saved."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all the data entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     }
   },
   "spaceWeather": {
@@ -490,8 +560,6 @@
     },
     "card": {
       "externalLink": "DOI / External link",
-      "readMore": "Read full abstract",
-      "readLess": "Hide abstract",
       "translationMissing": "No English version. Editing the title or the abstract requires completing both languages."
     },
     "editor": {
@@ -592,7 +660,64 @@
     }
   },
   "nosotros": {
+    "meta": {
+      "title": "About us | LASCE",
+      "description": "The Solar Astrophysics and Space Weather Laboratory (LASCE), part of the Space Research Center (CINESPA) at the Universidad de Costa Rica: what it is and what it researches."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "About us",
+      "lead": "Solar Astrophysics and Space Weather Laboratory, part of the Space Research Center (CINESPA) at the Universidad de Costa Rica."
+    },
+    "overview": {
+      "title": "Who are we?",
+      "p1": "The Solar Astrophysics and Space Weather Laboratory (LASCE) is a scientific initiative linked to the Space Research Center (CINESPA) of the Universidad de Costa Rica. It brings together solar astrophysics research, astronomical observations and computational development to study solar activity, its interaction with the interplanetary medium and the terrestrial environment.",
+      "p2": "LASCE starts from a simple but powerful idea: to understand space weather, you need to observe different links in the same chain, from the magnetic origin of a solar eruption to its manifestations in near-Earth space. For this reason, LASCE carries out scientific research that integrates data from different instruments, wavelengths and platforms."
+    },
+    "researchers": {
+      "title": "LASCE researchers",
+      "intro": "The people who research and develop the Solar Astrophysics and Space Weather Laboratory (LASCE).",
+      "hint": "Click a card to see more information.",
+      "empty": "No researcher information is available at the moment.",
+      "add": "Add researcher",
+      "saveError": "The change could not be saved. Try again."
+    },
     "activities": {
+      "title": "What do we do?",
+      "emptyHint": "Click \"Add\" to add an activity.",
+      "add": "Add",
+      "editTitle": "Edit \"{title}\"",
+      "editFallback": "Edit activity",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "deleteTitle": "Delete activity",
+      "deleteMessage": "Do you want to delete \"{title}\"? This action cannot be undone.",
+      "deleteConfirm": "Delete",
+      "form": {
+        "icon": "Icon",
+        "title": "Title",
+        "text": "Text",
+        "titleRequired": "The title is required.",
+        "textRequired": "The text is required.",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "confirmTitle": "Save changes",
+        "confirmMessage": "Do you want to save the changes to this activity?",
+        "icons": {
+          "sun": "Sun",
+          "waves": "Waves",
+          "satellite": "Satellite",
+          "code": "Code",
+          "collaboration": "Collaboration",
+          "education": "Education"
+        },
+        "discard": {
+          "title": "Discard unsaved changes",
+          "message": "If you discard now, all data entered that has not been saved will be lost.",
+          "confirm": "Discard",
+          "cancel": "Keep editing"
+        }
+      },
       "created": "Activity added successfully.",
       "updated": "Activity updated successfully.",
       "deleted": "Activity deleted successfully.",
@@ -600,6 +725,14 @@
         "unknown": "The activity could not be saved. Try again.",
         "deleteUnknown": "The activity could not be deleted. Try again."
       }
+    },
+    "contribution": {
+      "title": "Distinctive contribution",
+      "p1": "LASCE aims for Costa Rica to be not only a user of international information, but also a producer of data, knowledge and solutions adapted to its location and its needs."
+    },
+    "vision": {
+      "title": "Our vision",
+      "p1": "To establish in Costa Rica a regional reference for observing the Sun, studying the Sun-Earth relationship and developing tools for monitoring and predicting space weather. This vision combines scientific excellence, technology developed with national participation, international cooperation, talent training and public communication of science."
     }
   },
   "news": {

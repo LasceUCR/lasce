@@ -1,6 +1,8 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { NosotrosActivityForm, type NosotrosActivityFormProps } from './NosotrosActivityForm'
 import { Create, Default } from './NosotrosActivityForm.stories'
@@ -10,7 +12,7 @@ const createArgs = Create.args as NosotrosActivityFormProps
 
 describe('NosotrosActivityForm', () => {
   test('starts pre-filled with the activity being edited', () => {
-    render(<NosotrosActivityForm {...defaultArgs} />)
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} />)
 
     expect(screen.getByRole('combobox', { name: 'Ícono' })).toHaveValue('sun')
     expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue(defaultArgs.activity.title)
@@ -22,7 +24,7 @@ describe('NosotrosActivityForm', () => {
   test('calls onCancel directly, without asking for confirmation', async () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onCancel={onCancel} />)
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onCancel={onCancel} />)
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
@@ -33,7 +35,7 @@ describe('NosotrosActivityForm', () => {
   test('shows a field error and does not confirm when the title is cleared', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
 
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
@@ -46,7 +48,7 @@ describe('NosotrosActivityForm', () => {
   test('shows a field error for each empty field when creating an activity', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<NosotrosActivityForm {...createArgs} onSave={onSave} />)
+    renderWithIntl(<NosotrosActivityForm {...createArgs} onSave={onSave} />)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -58,7 +60,7 @@ describe('NosotrosActivityForm', () => {
   test('asks for confirmation before saving', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -69,7 +71,7 @@ describe('NosotrosActivityForm', () => {
   test('saves the edited values once the confirmation is accepted', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
 
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Nuevo título')
@@ -90,7 +92,7 @@ describe('NosotrosActivityForm', () => {
   test('does not save when the confirmation is cancelled', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -104,7 +106,7 @@ describe('NosotrosActivityForm', () => {
   test('saves straight away, without a confirmation dialog, when confirmation is not required', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<NosotrosActivityForm {...createArgs} onSave={onSave} />)
+    renderWithIntl(<NosotrosActivityForm {...createArgs} onSave={onSave} />)
 
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Actividad nueva')
     await user.type(screen.getByRole('textbox', { name: 'Texto' }), 'Texto de prueba')
@@ -121,7 +123,7 @@ describe('NosotrosActivityForm', () => {
   test('asks before discarding unsaved changes and closes once confirmed', async () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onCancel={onCancel} />)
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onCancel={onCancel} />)
 
     await user.type(screen.getByRole('textbox', { name: 'Título' }), ' editado')
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -136,7 +138,7 @@ describe('NosotrosActivityForm', () => {
   test('keeps the form open when discard is dismissed', async () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
-    render(<NosotrosActivityForm {...defaultArgs} onCancel={onCancel} />)
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onCancel={onCancel} />)
 
     await user.type(screen.getByRole('textbox', { name: 'Título' }), ' editado')
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -146,5 +148,14 @@ describe('NosotrosActivityForm', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Descartar cambios no guardados' }),
     ).not.toBeInTheDocument()
+  })
+
+  test('renders its labels in English', () => {
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} />, { locale: 'en' })
+
+    expect(screen.getByRole('combobox', { name: 'Icon' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Text' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
   })
 })

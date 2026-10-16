@@ -2,7 +2,8 @@
 
 A practical guide to managing editable Spanish/English content in PostgreSQL through LASCE's existing CMS, and to implementing the same pattern in another entity **without copying the Publications implementation**.
 
-- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **home page** (its hero banner and geomagnetic indices) and the contact cards on `/contacto` (`ContactChannel`) use the same pattern. News, research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
+- **Status.** The shared infrastructure is in place and two entities are integrated with it: **publications** (`/publicaciones`) and the **LASCE section of Física Solar** (`/fisica-solar`, a single editable text section, a lighter example with no create or delete). News, research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
+- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)) and the contact cards on `/contacto` (`ContactChannel`) use the same pattern. News, research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
 - **Status.** The shared infrastructure is in place and **publications** (`/publicaciones`) and the **gallery**
   (`/galeria`, albums and media; see [`gallery.md`](gallery.md)) have bilingual reads and writes
   fully integrated. News, research areas,

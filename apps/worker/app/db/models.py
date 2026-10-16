@@ -145,6 +145,50 @@ class ResearchTranslation(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class SolarPhysicsSection(Base):
+    """An editable text section of the solar physics page (``/fisica-solar``).
+
+    ``title`` and ``body`` are the Spanish source text; the other languages live in
+    `SolarPhysicsSectionTranslation`. ``body`` is plain text with blank lines between paragraphs.
+    """
+
+    __tablename__ = "solar_physics_sections"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SolarPhysicsSectionTranslation(Base):
+    """The ``title`` and ``body`` of a `SolarPhysicsSection` in a language other than the
+    source one. One row per (section, locale); the source text stays on the section.
+    """
+
+    __tablename__ = "solar_physics_section_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "section_id",
+            "locale",
+            name="solar_physics_section_translations_section_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    section_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.solar_physics_sections.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class CollaborationScope(enum.StrEnum):
     """Language-independent classification of a partner organization."""
 
@@ -515,6 +559,47 @@ class ExisFile(Base):
             "product",
             "day",
             name="exis_files_satellite_product_day_key",
+        ),
+        {"schema": "solar"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    satellite: Mapped[str] = mapped_column(Text)
+    product: Mapped[str] = mapped_column(Text)
+    day: Mapped[date_type] = mapped_column(Date)
+    file_name: Mapped[str] = mapped_column(Text, unique=True)
+    version: Mapped[str] = mapped_column(Text)
+    source_url: Mapped[str] = mapped_column(Text)
+    source_modified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    first_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    point_count: Mapped[dict[str, int]] = mapped_column(JSONB)
+    attributes: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class MagFile(Base):
+    """One daily MAG L2 1-minute geomagnetic field file (one UTC day). Written
+    by ``app.services.mag_readings.MagReadings``, the only writer this table
+    has. The readings themselves are in the ``mag_field`` InfluxDB
+    measurement; this row records that the day was ingested, from which
+    version of the archive's file, and how many points each channel produced.
+    """
+
+    __tablename__ = "mag_files"
+    __table_args__ = (
+        UniqueConstraint(
+            "satellite",
+            "product",
+            "day",
+            name="mag_files_satellite_product_day_key",
         ),
         {"schema": "solar"},
     )
