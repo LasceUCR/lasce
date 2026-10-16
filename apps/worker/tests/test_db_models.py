@@ -31,6 +31,8 @@ from app.db import (
     ResearchTranslation,
     ResourceDownload,
     RolePermission,
+    SpaceWeatherSection,
+    SpaceWeatherSectionTranslation,
     SuviFrame,
     User,
     UserRole,
@@ -539,5 +541,40 @@ def test_geomagnetic_index_translation_is_unique_per_index_and_locale() -> None:
     assert any(
         {column.name for column in constraint.columns} == {"geomagnetic_index_id", "locale"}
         for constraint in GeomagneticIndexTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_space_weather_tables_live_in_the_public_schema() -> None:
+    for model in (SpaceWeatherSection, SpaceWeatherSectionTranslation):
+        assert model.__table__.schema == "public"
+
+
+def test_space_weather_section_matches_the_prisma_columns() -> None:
+    columns = SpaceWeatherSection.__table__.columns
+
+    assert set(columns.keys()) == {"id", "key", "title", "body", "created_at", "updated_at"}
+    assert columns["key"].unique
+
+
+def test_space_weather_section_translation_is_unique_per_section_and_locale() -> None:
+    columns = SpaceWeatherSectionTranslation.__table__.columns
+    (section_fk,) = columns["section_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "section_id",
+        "locale",
+        "title",
+        "body",
+        "created_at",
+        "updated_at",
+    }
+    assert section_fk.target_fullname == "public.space_weather_sections.id"
+    assert section_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"section_id", "locale"}
+        for constraint in SpaceWeatherSectionTranslation.__table__.constraints
         if isinstance(constraint, UniqueConstraint)
     )

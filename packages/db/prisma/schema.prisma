@@ -731,3 +731,43 @@ model ContactChannelTranslation {
   @@map("contact_channel_translations")
   @@schema("public")
 }
+
+/// An editable text section of the space weather page (`/clima-espacial`)
+/// (LASCE-CON-012-252). Today there is one row, with `key` `costa-rica` ("¿Por qué
+/// estudiarlo desde Costa Rica?"); `key` is unique so the page can look the section
+/// up and a second section can be added without a new table. Seeded by its
+/// migration. `title` and `body` are the Spanish source text; every other language
+/// lives in `SpaceWeatherSectionTranslation` (docs/translate-database-content.md).
+/// `body` is plain text: a blank line separates paragraphs.
+model SpaceWeatherSection {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key       String   @unique
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Also the version an editor saves against (optimistic concurrency).
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations SpaceWeatherSectionTranslation[]
+
+  @@map("space_weather_sections")
+  @@schema("public")
+}
+
+/// The `title` and `body` of a `SpaceWeatherSection` in a language other than
+/// Spanish. `locale` is a plain string validated against `locales` in apps/web.
+model SpaceWeatherSectionTranslation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sectionId String   @map("section_id") @db.Uuid
+  locale    String   @db.VarChar(5)
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  section SpaceWeatherSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, locale])
+  @@map("space_weather_section_translations")
+  @@schema("public")
+}
