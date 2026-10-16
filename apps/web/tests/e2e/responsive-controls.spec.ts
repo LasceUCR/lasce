@@ -129,6 +129,8 @@ test.describe('responsive native controls', () => {
               Array.from(element.querySelectorAll('input, textarea, select, button')).some(
                 (control) => {
                   const bounds = control.getBoundingClientRect()
+                  // The other language's tab panel stays mounted but hidden: nothing to measure.
+                  if (bounds.width === 0) return false
                   return (
                     bounds.left < rect.left ||
                     bounds.right > rect.right ||
