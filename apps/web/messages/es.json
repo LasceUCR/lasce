@@ -18,7 +18,7 @@
     "collaborations": "Colaboraciones e Iniciativas",
     "research": "Investigación",
     "researchAreas": "Áreas de investigación",
-    "solarPhysics": "Física solar",
+    "solarPhysics": "Física Solar",
     "spaceWeather": "Clima espacial",
     "rosac": "ROSAC",
     "data": "Datos",
@@ -128,7 +128,7 @@
   },
   "workAreas": {
     "solarPhysics": {
-      "title": "Física solar",
+      "title": "Física Solar",
       "description": "Actividad y observaciones"
     },
     "spaceWeather": {
@@ -241,16 +241,16 @@
   },
   "solarPhysics": {
     "meta": {
-      "title": "Astrofísica solar | LASCE",
+      "title": "Física Solar | LASCE",
       "description": "Conozca cómo LASCE estudia la actividad solar, la relación Sol-Tierra y sus efectos sobre el entorno espacial desde Costa Rica."
     },
     "hero": {
       "kicker": "Área de trabajo LASCE",
-      "title": "Astrofísica solar",
+      "title": "Física Solar",
       "introduction": "La actividad solar no termina en el Sol. Sus campos magnéticos, su radiación y el flujo de partículas que libera se extienden por el Sistema Solar y pueden modificar el entorno espacial de la Tierra."
     },
     "overview": {
-      "title": "¿Qué estudia la astrofísica solar?",
+      "title": "¿Qué estudia la Física Solar?",
       "intro": "Esta área busca comprender los procesos físicos que originan la actividad del Sol y explicar cómo esas variaciones se conectan con el medio interplanetario y el entorno terrestre.",
       "items": {
         "activity": {
@@ -281,11 +281,34 @@
         }
       }
     },
-    "lasce": {
-      "title": "El trabajo de LASCE en astrofísica solar",
-      "p1": "El Laboratorio de Astrofísica Solar y Clima Espacial reúne investigación en astrofísica solar, observaciones astronómicas y desarrollo computacional para estudiar la actividad solar y su interacción con el entorno terrestre.",
-      "p2": "Su trabajo integra datos de diferentes instrumentos, longitudes de onda y plataformas para observar distintos eslabones de una misma cadena: desde el origen magnético de una erupción solar hasta sus manifestaciones cerca de la Tierra.",
-      "p3": "Desde la Universidad de Costa Rica, LASCE busca fortalecer capacidades científicas nacionales para analizar la relación Sol-Tierra, formar talento e impulsar colaboraciones en el estudio del clima espacial."
+    "editor": {
+      "editLabel": "Editar la sección de LASCE",
+      "editTitle": "Editar la sección de LASCE",
+      "languageTabs": "Idioma del contenido",
+      "titleField": "Título ({language})",
+      "bodyField": "Texto ({language})",
+      "bodyHint": "Separe los párrafos con una línea en blanco.",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o el texto, revíselo también.",
+      "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el título o el texto debe completar ambos idiomas.",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "reload": "Cerrar y cargar la versión actual",
+      "updated": "Sección actualizada correctamente."
+    },
+    "saveErrors": {
+      "generic": "No se pudo guardar el cambio. Inténtelo de nuevo.",
+      "fields": "Revise los campos marcados.",
+      "notSignedIn": "No ha iniciado sesión.",
+      "signInAgain": "Inicie sesión de nuevo para guardar; sus cambios siguen en el formulario.",
+      "forbidden": "No tiene permisos para modificar este contenido.",
+      "conflict": "Otra persona guardó cambios en esta sección después de que usted la abrió. Sus cambios no se guardaron, para no sobrescribir los de esa persona. Copie lo que necesite, cierre el editor y vuelva a abrir la sección.",
+      "notFound": "Esta sección ya no existe. Sus cambios no se guardaron."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
     }
   },
   "spaceWeather": {
