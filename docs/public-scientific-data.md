@@ -83,11 +83,13 @@ GOES products are served by three backends, chosen by instrument:
 | ---------- | ------------------------------------------------------------------------------------------------------- |
 | SUVI       | `solar.suvi_frames` (Postgres) for the catalogue, MinIO for the WebP, served by `/api/suvi/frames/[id]` |
 | EXIS       | InfluxDB measurement `exis_irradiance`, read through its SQL HTTP API (`INFLUXDB_*` variables)          |
-| MAG, SEISS | The [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo) via the worker |
+| MAG        | InfluxDB measurement `mag_field`, read the same way                                                     |
+| SEISS      | The [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo) via the worker |
 
-SUVI and EXIS are filled by the worker's `suvi-pipeline` and `exis-pipeline` jobs (see
-[`suvi-pipeline.md`](suvi-pipeline.md) and [`exis-pipeline.md`](exis-pipeline.md)); only days those
-jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. SUVI and EXIS now read the worker's own stores (`suvi_frames` + MinIO, and InfluxDB `exis_irradiance`) rather than the CITIC archive; EXIS queries keep only `valid = true` readings, so points withdrawn by a re-ingest never appear.
+SUVI, EXIS and MAG are filled by the worker's `suvi-pipeline`, `exis-pipeline` and `mag-pipeline`
+jobs (see [`suvi-pipeline.md`](suvi-pipeline.md), [`exis-pipeline.md`](exis-pipeline.md) and
+[`mag-pipeline.md`](mag-pipeline.md)); only days those
+jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. SUVI and EXIS now read the worker's own stores (`suvi_frames` + MinIO, and InfluxDB `exis_irradiance`) rather than the CITIC archive; MAG reads NOAA's L2 1-minute averages from InfluxDB `mag_field`. EXIS and MAG queries keep only `valid = true` readings, so points withdrawn by a re-ingest never appear.
 
 The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
@@ -95,7 +97,7 @@ The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/Q
 | ---------- | --------------------------- | ---------------------------------------------------------------------------------- |
 | SFXR       | InfluxDB `exis_irradiance`  | XRS-A or XRS-B, using each report's primary detector flag                          |
 | SFEU       | InfluxDB `exis_irradiance`  | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio             |
-| GEOF       | MAG/GEOF                    | Ambient EPN x/y/z or total ACRF magnitude                                          |
+| GEOF       | InfluxDB `mag_field`        | L2 1-minute EPN x/y/z or total magnitude (`mag-pipeline`)                          |
 | MPSH       | SEIS/MPSH                   | Electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5              |
 | SGPS       | SEIS/SGPS                   | Explicit SGPS−X or SGPS+X sensor; differential channels or integral P11 (>500 MeV) |
 | SUVI bands | `solar.suvi_frames` + MinIO | Up to eight clean frames per query, spread evenly, most recent satellite only      |
@@ -105,9 +107,9 @@ Operational SWPC channels are not interchangeable with L1b selectors. The former
 
 The web enqueues `query-goes-archive`; only the Python worker downloads and decodes NetCDF. The endpoint responds with `202` and `{ state: 'pending', jobId, progress }` during processing. The browser polls the same criteria with `jobId` every two seconds. Completed work returns the existing time-series response with GOES as the public source. Identical requests share a deterministic job identifier; current-day requests refresh in ten-minute buckets. BullMQ retains completed results for up to 24 hours, subject to its count cap. A new submission can retry failed work; polling never retries or re-enqueues expired jobs.
 
-The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` reads that store synchronously for EXIS, sampling at most 360 points per satellite inside the InfluxDB query, and only MAG and SEISS still go through `query-goes-archive`.
+The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` reads that store synchronously for EXIS, sampling at most 360 points per satellite inside the InfluxDB query, the scheduled `mag-pipeline` does the same for MAG (see [`mag-pipeline.md`](mag-pipeline.md)), and only SEISS still goes through `query-goes-archive`. The worker still accepts `GEOF` there, but `/datos` no longer routes MAG to it.
 
-Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. The web reads InfluxDB through `INFLUXDB_HOST`, `INFLUXDB_TOKEN` and `INFLUXDB_DATABASE`, so deployment needs `INFLUXDB_*` on the web service as well (see [`deployment.md`](deployment.md#10-known-gaps)). SUVI, EXIS and provisional ROSAC are synchronous.
+Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. The web reads InfluxDB through `INFLUXDB_HOST`, `INFLUXDB_TOKEN` and `INFLUXDB_DATABASE`, so deployment needs `INFLUXDB_*` on the web service as well (see [`deployment.md`](deployment.md#10-known-gaps)). SUVI, EXIS, MAG and provisional ROSAC are synchronous.
 
 The InfluxDB SQL (`GREATEST`, `CAST`, the string `$start`/`$end` bound against `time`, and the "table not found" handling in `influxSql.ts`) is covered only by unit tests with a mocked client and has not yet run against a real InfluxDB 3 instance; check `/datos` EXIS against an ingested day before relying on it.
 
@@ -180,8 +182,8 @@ which backend serves the query:
 
 ```text
 route.ts → ScientificDataSourceManager ─ by query.source ─→ GOES  ─ by instrument ─→ SUVI → suvi_frames + MinIO
-                                                                                      EXIS → InfluxDB
-                                                                                      MAG, SEISS → CITIC worker
+                                                                                      EXIS, MAG → InfluxDB
+                                                                                      SEISS → CITIC worker
                                                           → ROSAC ─ by instrument ─→ ROSAC-I1, ROSAC-I2 → simulation
 ```
 
