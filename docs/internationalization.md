@@ -10,11 +10,14 @@ never text a visitor reads.
 - The mechanism is in place and **Spanish (`es`) is the source language**. English (`en`) is the
   second language.
 - The **site shell** and the **static pages** read from the message catalogues and are translated
-  into English: the header navigation, the footer, the home page, Contacto, Física solar, Clima
+  into English: the header navigation, the footer, the home page, Contacto, Física Solar, Clima
   espacial, Herramientas científicas, Colaboraciones e Iniciativas and the academic activity page.
 - The English text is a first draft. Nobody has reviewed its scientific terminology yet.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
+- Database content ("Modo edición") has shared, reusable infrastructure, and **two entities use
+  it: the publications on `/publicaciones`** (title and abstract) **and the LASCE section of
+  `/fisica-solar`** (title and text), in Spanish and English. Every other editable entity is still
 - Database content ("Modo edición") has shared, reusable infrastructure. **Publications** on
   `/publicaciones` (title and abstract), the **home page** (the hero banner's title and subtitle,
   and the geomagnetic indices' descriptions) and the **contact cards** on `/contacto` (title and
@@ -167,6 +170,9 @@ inventory taken when the static pages were migrated.
 | Route                                    | Namespace                            | Copy built in                                             |
 | ---------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
 | Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                       |
+| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`                  |
+| `/contacto`                              | `contact`                            | `lib/contact.ts`                                          |
+| `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`   |
 | `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`   |
 | `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`             |
 | `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`                               |
@@ -258,6 +264,10 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
 - **How it works and how to make an entity bilingual:**
   [`translate-database-content.md`](translate-database-content.md), with the publications as the
   reference implementation, their API contract, the design decisions and the known limitations.
+- **Which entities are bilingual:** publications and the LASCE section of `/fisica-solar`. The same pattern is meant for `News`,
+  `ResearchArea`, `NosotrosActivity`, `Researcher`, `NosotrosResearcher`, `GalleryAlbum` and
+  `GalleryMedia`, each with its own translation table holding only its translatable columns
+  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
 - **Which entities are bilingual:** publications, the home page banner (`HomeHero`) and its
   geomagnetic indices (`GeomagneticIndex`, description only), and the contact cards on
   `/contacto` (`ContactChannel`: `title` and `description`; the icon, link and position are
