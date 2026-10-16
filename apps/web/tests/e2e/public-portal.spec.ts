@@ -501,7 +501,7 @@ test('returns 404 for an unknown public route', async ({ page }) => {
   expect(response?.status()).toBe(404)
 })
 
-test('displays academic activities in the news section and navigates to workshop details', async ({
+test('displays academic activities in the news section, with the description in the card', async ({
   page,
 }) => {
   const response = await page.goto('/noticias')
@@ -519,17 +519,36 @@ test('displays academic activities in the news section and navigates to workshop
   ).toBeVisible()
   await expect(page.getByText('Actividad académica')).toBeVisible()
 
-  await page.getByRole('link', { name: /Ver detalles de la actividad/i }).click()
-  await expect(page).toHaveURL(/\/noticias\/actividades\/machine-learning-workshop$/)
+  await page.getByRole('button', { name: 'Leer más' }).first().click()
+  await expect(page.getByRole('button', { name: 'Leer menos' }).first()).toBeVisible()
+})
+
+test('shows the dedicated academic activities page, reachable from the Divulgación menu', async ({
+  page,
+}) => {
+  // Wide enough for the desktop header: at 1400px and below the navigation is the mobile menu,
+  // where this link sits behind the hamburger button instead of in the desktop dropdown.
+  await page.setViewportSize({ width: 1600, height: 900 })
+  const response = await page.goto('/')
+
+  expect(response?.status()).toBe(200)
+  const desktopNav = page.getByRole('navigation', { name: 'Navegación principal' })
+  await desktopNav.getByText('Divulgación').click()
+  await desktopNav.getByRole('link', { name: 'Actividades académicas' }).click()
+
+  await expect(page).toHaveURL(/\/actividades-academicas$/)
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
+  ).toBeVisible()
   await expect(
     page.getByRole('heading', {
-      level: 1,
+      level: 3,
       name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
     }),
   ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { level: 2, name: 'Descripción de la actividad' }),
-  ).toBeVisible()
+
+  await page.getByRole('link', { name: 'Volver al inicio' }).click()
+  await expect(page).toHaveURL(/\/$/)
 })
 
 test('displays research collaborations', async ({ page }) => {

@@ -117,6 +117,7 @@ describe('PublicHeader', () => {
       items: [
         ['Noticias', '/noticias'],
         ['Galería', '/galeria'],
+        ['Actividades académicas', '/actividades-academicas'],
       ],
     },
     {
