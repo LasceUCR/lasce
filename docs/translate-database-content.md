@@ -3,7 +3,7 @@
 A practical guide to managing editable Spanish/English content in PostgreSQL through LASCE's existing CMS, and to implementing the same pattern in another entity **without copying the Publications implementation**.
 
 - **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **"¿Qué hacemos?" cards** on `/nosotros` (`NosotrosActivity`), the **researcher profiles** on `/nosotros` (`NosotrosResearcher`), the **LASCE section of Física Solar** (`/fisica-solar`, a single editable text section, a lighter example with no create or delete), the **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)), the contact cards on `/contacto` (`ContactChannel`), **research areas** (`/investigacion`), the **gallery**
-  (`/galeria`, albums and media) and the "¿Por qué estudiarlo desde Costa Rica?" card on `/clima-espacial` (`SpaceWeatherSection`, see [`space-weather.md`](space-weather.md)) use the same pattern. News, academic activities, and the ROSAC researchers are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
+  (`/galeria`, albums and media) and the **news** on `/noticias` (`News`, see [`internationalization.md`](internationalization.md#translated)) use the same pattern. Academic activities and the ROSAC researchers are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
 
   is a different problem, handled by the message catalogues in [`internationalization.md`](internationalization.md).
 

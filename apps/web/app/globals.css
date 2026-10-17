@@ -6494,6 +6494,16 @@ a.acknowledgments-card:focus-visible {
   flex-direction: column;
 }
 
+/* Groups the fields so a save in flight can disable them all at once; it adds no box of its own. */
+.news-article-form-fields {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 /* Pairs of fields sit side by side once there's room for both — on a
    narrower modal (small screens) each still wraps onto its own full-width
    row, same as an unpaired field. */

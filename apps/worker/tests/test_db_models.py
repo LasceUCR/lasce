@@ -25,6 +25,7 @@ from app.db import (
     NewsAuthor,
     NewsCrossAuthor,
     NewsSource,
+    NewsTranslation,
     Publisher,
     Research,
     ResearchArea,
@@ -178,7 +179,7 @@ replicate everything here.
 
 
 def test_news_tables_live_in_the_news_schema() -> None:
-    for model in (NewsSource, News, NewsAuthor, NewsCrossAuthor):
+    for model in (NewsSource, News, NewsAuthor, NewsCrossAuthor, NewsTranslation):
         assert model.__table__.schema == "news"
 
 
@@ -198,6 +199,29 @@ def test_news_record_matches_the_prisma_columns() -> None:
     assert columns["external_url"].unique
     assert columns["published_at"].nullable
     assert not columns["title"].nullable
+
+
+def test_news_translation_matches_the_prisma_columns() -> None:
+    columns = NewsTranslation.__table__.columns
+    (news_fk,) = columns["news_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "news_id",
+        "locale",
+        "title",
+        "abstract",
+        "created_at",
+        "updated_at",
+    }
+    assert news_fk.target_fullname == "news.news_records.id"
+    assert news_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"news_id", "locale"}
+        for constraint in NewsTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
 
 
 def test_news_cross_author_links_news_and_authors() -> None:

@@ -168,12 +168,39 @@ follows under `research`.
 > columns.
 
 > `published_at` is nullable rather than defaulted to a sentinel date: some coverage (e.g.
-> corporate blog posts) doesn't carry a publish date at all. `getNews()` renders these as
-> "Sin fecha" and sorts them after every dated record (`nulls: 'last'`) instead of showing a
-> fabricated date.
+> corporate blog posts) doesn't carry a publish date at all. The card renders these as
+> "Sin fecha" ("Undated" in English) and `getNews()` sorts them after every dated record
+> (`nulls: 'last'`) instead of showing a fabricated date.
 
 Relationships: belongs to one `news_sources` row; has many `news_cross_authors` (its authors,
-through the join table below).
+through the join table below); has many `news_record_translations` (its text in other languages).
+
+### `news_record_translations`
+
+The `title` and `abstract` of a `news_records` row in a language other than Spanish, one row per
+item and locale. The Prisma model is `NewsTranslation`. Spanish stays on the base row, so an item
+with no row here still renders, in its base text. Only these two columns are translated: sources
+and authors are proper nouns, and the date and link are the same in every language.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                |
+| ------------ | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `news_id`    | `String`    | `uuid`           | FK → `news_records.id`, `ON DELETE CASCADE`, not null      |
+| `locale`     | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es` |
+| `title`      | `String`    | `text`           | not null                                                   |
+| `abstract`   | `String`    | `text`           | not null                                                   |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+Constraints: `UNIQUE (news_id, locale)`.
+
+> Same rules as `research_record_translations`: `locale` is validated by the application, both
+> languages are required on create and on any update that changes a title or abstract, an update
+> of shared fields only (source, authors, date, link) leaves this table untouched, and an item
+> without a translation row is treated as legacy. The `20261017120000_add_news_translations`
+> migration only creates the table; existing items were not backfilled.
+
+Relationships: belongs to one `news_records` row.
 
 ### `news_authors`
 
@@ -781,9 +808,12 @@ worker writes them yet: a future job would upsert the indices by `code`, set `so
 `observed_at`, and leave `position` alone; see
 [`home-page.md`](home-page.md#future-automatic-loading).
 
-`apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
-nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
-`/noticias` renders.
+`apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` with its non-Spanish
+`news_record_translations` (newest `published_at` first, nulls last, authors ordered by
+`position`) and maps each row to the `NewsArticle` shape `/noticias` renders, in the visitor's
+language when the item has it and in its base text otherwise. `createNews()`, `updateNews()` and
+`deleteNews()` write the base row and its translations in one transaction; an update writes only
+while `updated_at` still equals the version the editor loaded.
 
 `apps/web/app/lib/auth/users.ts` writes `auth.users` through `createUser()` (the `/acceso`
 registration Server Action, mapping a unique violation on `email` to a `DuplicateEmailError`) and reads it
@@ -810,7 +840,9 @@ row and its translations in one transaction, only while `updated_at` still equal
 editor loaded.
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
-fixed, real LASCE research and news records so local/dev environments aren't empty.
+fixed, real LASCE research and news records so local/dev environments aren't empty. Both seed
+publications and seed news carry an English translation, so they read as complete rather than
+legacy.
 
 `apps/worker/app/services/process_headers.py`'s `ProcessHeaders.persist()` is the only writer of
 `solar.suvi_frames`, called from the `suvi-pipeline` processor after a frame is downloaded and
