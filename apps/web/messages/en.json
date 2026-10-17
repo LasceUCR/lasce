@@ -558,6 +558,7 @@
       "editTitle": "Edit publication",
       "editLabel": "Edit {title}",
       "deleteLabel": "Delete {title}",
+      "descriptionField": "Description ({language})",
       "languageTabs": "Content language",
       "titleField": "Title ({language})",
       "abstractField": "Abstract ({language})",
@@ -571,7 +572,13 @@
       "group": "Group",
       "cancel": "Cancel",
       "save": "Confirm",
-      "reload": "Close and load the current version"
+      "reload": "Close and load the current version",
+      "yearsLabel": "Time span",
+      "uploadingImage": "Uploading image...",
+      "altTextField": "Alternative text ({language})",
+      "FileDropDescriptionText": "Drag an image here or click to select it from your device.",
+      "FileDropRejectionFormatMessage": "Unsupported format. Use a JPG, PNG, WebP, or GIF image.",
+      "FileDropRejectionSizeMessage": "The image exceeds the maximum size of 25 MB."
     },
     "authors": {
       "label": "Authors",
@@ -627,6 +634,62 @@
       "conflict": "Someone else saved changes to this publication after you opened it. Your changes were not saved, so as not to overwrite theirs. Copy what you need, close the editor and open the publication again.",
       "notFound": "This publication no longer exists; someone else may have deleted it. Your changes were not saved.",
       "deleteFailed": "The publication could not be deleted. Please try again."
+    }
+  },
+  "gallery": {
+    "editor": {
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the description, check it as well.",
+      "legacyNoTranslation": "This album has no English version yet. To change the title or the description you must complete both languages; the other fields can be edited without translating it.",
+      "mediaLegacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title, the description or the alt text, check it as well.",
+      "mediaLegacyNoTranslation": "This file has no English version yet. To change the title, the description or the alt text you must complete both languages; the other fields can be edited without translating it.",
+      "albumCoverField": "Album cover image",
+      "albumCoverHelperText": "Album cover image, in JPG, PNG, or WEBP format.",
+      "albumCoverRequired": "An album cover image is required.",
+      "mediaField": "Media",
+      "mediaHelperText": "Media upload, in JPG, PNG, or WEBP format.",
+      "mediaRequired": "A media upload is required.",
+      "galleryWidth": "Gallery width (columns)",
+      "galleryHeight": "Gallery height (rows)",
+      "titleNeedsLettersOrNumbers": "The title must include letters or numbers to generate the identifier.",
+      "uploadFailed": "The image could not be uploaded. Please try again."
+    },
+    "actions": {
+      "addAlbum": "Add album",
+      "addSubAlbum": "Add sub-album",
+      "addFile": "Add image",
+      "creatingAlbum": "Creating album...",
+      "creatingSubAlbum": "Creating sub-album...",
+      "savingAlbum": "Saving album...",
+      "savingSubAlbum": "Saving sub-album...",
+      "deleteAlbum": "Delete album",
+      "deleteSubAlbum": "Delete sub-album",
+      "deleteFile": "Delete image",
+      "deleteMessage": "Do you want to delete \"{title}\"? This cannot be undone.",
+      "deleteItem": "Delete {title}",
+      "editItem": "Edit {title}",
+      "editQuoted": "Edit \"{title}\"",
+      "editFile": "Edit image"
+    },
+    "feedback": {
+      "albumCreated": "Album added successfully.",
+      "albumUpdated": "Album updated successfully.",
+      "albumDeleted": "Album deleted successfully.",
+      "albumCreateFailed": "The album could not be created.",
+      "albumSaveFailed": "The album could not be saved.",
+      "albumDeleteFailed": "The album could not be deleted.",
+      "subAlbumCreated": "Sub-album added successfully.",
+      "subAlbumUpdated": "Sub-album updated successfully.",
+      "subAlbumDeleted": "Sub-album deleted successfully.",
+      "subAlbumCreateFailed": "The sub-album could not be created.",
+      "subAlbumSaveFailed": "The sub-album could not be saved.",
+      "subAlbumDeleteFailed": "The sub-album could not be deleted.",
+      "fileDeleted": "Image deleted successfully.",
+      "fileDeleteFailed": "The image could not be deleted.",
+      "imageCreated": "Image added successfully.",
+      "imageUpdated": "Image updated successfully.",
+      "imageCreateFailed": "The image could not be added.",
+      "imageUpdateFailed": "The image could not be updated.",
+      "imageReload": "The image could not be updated. Reload the page."
     }
   },
   "nosotros": {

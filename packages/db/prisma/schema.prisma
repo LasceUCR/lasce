@@ -728,12 +728,38 @@ model GalleryAlbum {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
 
-  parentAlbum GalleryAlbum?  @relation("GalleryAlbumSubAlbums", fields: [parentAlbumId], references: [id], onDelete: Cascade)
-  subAlbums   GalleryAlbum[] @relation("GalleryAlbumSubAlbums")
-  media       GalleryMedia[]
+  parentAlbum  GalleryAlbum?             @relation("GalleryAlbumSubAlbums", fields: [parentAlbumId], references: [id], onDelete: Cascade)
+  subAlbums    GalleryAlbum[]            @relation("GalleryAlbumSubAlbums")
+  media        GalleryMedia[]
+  translations GalleryAlbumTranslation[]
 
   @@index([parentAlbumId])
   @@map("gallery_albums")
+  @@schema("gallery")
+}
+
+/// The translatable text of a `GalleryAlbum` in a language other than the
+/// source one (see "Dynamic content" in docs/internationalization.md). The base
+/// row keeps the source-language `title` and `description` being plain text; this
+/// table holds one row per additional locale. `slug`, the cover image and the
+/// album hierarchy are shared by every language.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a
+/// language needs no migration. An album created before translations existed has
+/// no row here, and its base text is in whatever language it was entered in.
+model GalleryAlbumTranslation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  albumId     String   @map("album_id") @db.Uuid
+  locale      String   @db.VarChar(5)
+  title       String
+  description String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  album GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId, locale])
+  @@map("gallery_album_translations")
   @@schema("gallery")
 }
 
@@ -762,11 +788,37 @@ model GalleryMedia {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
 
-  album GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  album        GalleryAlbum              @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  translations GalleryMediaTranslation[]
 
   @@unique([albumId, position])
   @@index([albumId])
   @@map("gallery_media")
+  @@schema("gallery")
+}
+
+/// The translatable text of a `GalleryMedia` record in an additional locale.
+/// The base row keeps the source-language `title`, `description`, and
+/// `altText`; this table holds one row per additional locale.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so
+/// adding a language needs no migration. A media record created before
+/// translations existed has no row here, and its base text is in whatever
+/// language it was entered in.
+model GalleryMediaTranslation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  galleryMediaId String   @map("gallery_media_id") @db.Uuid
+  locale         String   @db.VarChar(5)
+  title          String
+  description    String   @db.Text
+  altText        String   @map("alt_text")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  galleryMedia GalleryMedia @relation(fields: [galleryMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([galleryMediaId, locale])
+  @@map("gallery_media_translations")
   @@schema("gallery")
 }
 
