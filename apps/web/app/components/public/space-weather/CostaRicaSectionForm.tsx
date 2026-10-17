@@ -1,7 +1,7 @@
 'use client'
 
 import { useLocale, useTranslations } from 'next-intl'
-import { useId, useImperativeHandle, useState, type Ref } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField } from '@/app/components/public/FormField'
@@ -15,11 +15,11 @@ import {
   confirmationsStillNeeded,
   contentFieldLang,
   contentPath,
-  errorSummary,
   isConfirmed,
   languageTabFlags,
   resetConfirmations,
   reviewsNeeded,
+  tabWithErrors,
   validateContent,
   withConfirmation,
   type FormErrors,
@@ -52,8 +52,6 @@ export interface CostaRicaSectionFormProps {
   ) => void
   /** Called to close the form, once any unsaved changes have been discarded. */
   onCancel: () => void
-  /** True while a save is being sent: "Confirmar" stays disabled until it answers. */
-  saving?: boolean
   ref?: Ref<CostaRicaSectionFormHandle>
 }
 
@@ -63,17 +61,17 @@ export interface CostaRicaSectionFormProps {
  * text starts a new paragraph. When a field changes in one language only, its counterpart must
  * change too or be confirmed with a `TranslationReview` switch, in this edit.
  *
- * The form is validated as it is typed in, with the API's own rules: each problem shows under its
- * field (and on its language tab), and "Confirmar" stays disabled until there are none, so the
- * editor can only save an edit the API will accept. Saving asks for no confirmation; closing with
- * unsaved changes does, from "Cancelar" or, through `ref`'s `requestCancel`, from the modal's
- * close button and Escape.
+ * Like the other bilingual editors, the form is checked when "Confirmar" is pressed, with the
+ * API's own rules: each problem shows under its field and on its language tab, the form switches
+ * to the tab that has one (so a change made in one language leads to the other) and focuses the
+ * first field to fix. From then on the errors follow the editing. Saving asks for no
+ * confirmation; closing with unsaved changes does, from "Cancelar" or, through `ref`'s
+ * `requestCancel`, from the modal's close button and Escape.
  */
 export function CostaRicaSectionForm({
   initial,
   onSave,
   onCancel,
-  saving = false,
   ref,
 }: CostaRicaSectionFormProps) {
   const formId = useId()
@@ -81,11 +79,22 @@ export function CostaRicaSectionForm({
   const siteLocale = useLocale()
   const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
   const headerSlot = useModalHeaderSlot()
+  const formRef = useRef<HTMLDivElement>(null)
 
   const [draft, setDraft] = useState<SpaceWeatherSectionDraft>(initial.draft)
   const [confirmed, setConfirmed] = useState<SpaceWeatherSectionReviewConfirmation[]>([])
+  const [attempted, setAttempted] = useState(false)
   const [tab, setTab] = useState<Locale>(defaultLocale)
+  const [focusRequest, setFocusRequest] = useState(0)
   const [discardOpen, setDiscardOpen] = useState(false)
+
+  useEffect(() => {
+    if (focusRequest === 0) return
+    const invalid = formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? []
+    Array.from(invalid)
+      .find((element) => !element.closest('[hidden]'))
+      ?.focus()
+  }, [focusRequest])
 
   function requestCancel() {
     if (sectionHasChanges(initial, draft)) setDiscardOpen(true)
@@ -96,10 +105,8 @@ export function CostaRicaSectionForm({
 
   const content = spaceWeatherSectionContent
   const needed = reviewsNeeded(content, initial.stored, draft)
-  // Nothing is flagged while the text is unchanged, so the form opens without errors.
-  const errors: FormErrors = validateContent(content, initial.stored, draft, confirmed, uiLocale)
-  const isValid = Object.keys(errors).length === 0
-  const summary = errorSummary(errors, tab, uiLocale)
+  const validate = () => validateContent(content, initial.stored, draft, confirmed, uiLocale)
+  const errors: FormErrors = attempted ? validate() : {}
 
   function change(locale: Locale, field: SpaceWeatherSectionField, value: string) {
     setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
@@ -108,8 +115,17 @@ export function CostaRicaSectionForm({
   }
 
   function handleSave() {
-    if (!isValid || saving) return
-    onSave(draft, confirmationsStillNeeded(confirmed, needed))
+    setAttempted(true)
+    const found = validate()
+
+    if (Object.keys(found).length === 0) {
+      onSave(draft, confirmationsStillNeeded(confirmed, needed))
+      return
+    }
+
+    const target = tabWithErrors(found, tab)
+    if (target) setTab(target)
+    setFocusRequest((current) => current + 1)
   }
 
   function reviewControl(locale: Locale, field: SpaceWeatherSectionField) {
@@ -129,7 +145,7 @@ export function CostaRicaSectionForm({
   }
 
   return (
-    <div className="space-weather-editor-form">
+    <div className="space-weather-editor-form" ref={formRef}>
       <LanguageTabs
         copyLang={uiLocale}
         flags={languageTabFlags(initial.stored, errors, needed, confirmed, uiLocale)}
@@ -177,18 +193,11 @@ export function CostaRicaSectionForm({
         )}
       </LanguageTabs>
 
-      {/* Polite: it changes as the editor types, which an alert would announce every time. */}
-      {summary ? (
-        <Notice role="status" tone="error">
-          {summary}
-        </Notice>
-      ) : null}
-
       <div className="nosotros-activity-form-actions">
         <Button onClick={requestCancel} variant="secondary">
           {t('editor.cancel')}
         </Button>
-        <Button disabled={!isValid || saving} onClick={handleSave} variant="primary">
+        <Button onClick={handleSave} variant="primary">
           {t('editor.save')}
         </Button>
       </div>

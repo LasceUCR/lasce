@@ -58,50 +58,57 @@ describe('CostaRicaSectionForm', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
-  test('keeps "Confirmar" disabled while a field is invalid, saying why as it is typed', async () => {
-    const { onSave, user } = renderForm()
+  test('shows no error while typing, before "Confirmar" is pressed', async () => {
+    const { user } = renderForm()
 
-    await user.type(screen.getByRole('textbox', { name: 'Título (Español)' }), '!')
     await user.click(screen.getByRole('tab', { name: /English/ }))
     await user.clear(screen.getByRole('textbox', { name: 'Título (English)' }))
-
-    expect(within(panel(/English/)).getByText('El título en inglés es obligatorio.')).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    expect(onSave).not.toHaveBeenCalled()
-
-    await user.type(screen.getByRole('textbox', { name: 'Título (English)' }), 'New title')
 
     expect(screen.queryByText('El título en inglés es obligatorio.')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
   })
 
-  test('points to the tab whose errors are hidden', async () => {
+  test('on "Confirmar", opens the tab with the error and focuses its field', async () => {
+    const { onSave, user } = renderForm()
+
+    await user.type(screen.getByRole('textbox', { name: 'Título (Español)' }), '!')
+    await user.click(screen.getByRole('tab', { name: /English/ }))
+    await user.clear(screen.getByRole('textbox', { name: 'Título (English)' }))
+    await user.click(screen.getByRole('tab', { name: /Español/ }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('tab', { name: /English/ })).toHaveAttribute('aria-selected', 'true')
+    expect(within(panel(/English/)).getByText('El título en inglés es obligatorio.')).toBeVisible()
+    expect(screen.getByRole('textbox', { name: 'Título (English)' })).toHaveFocus()
+
+    await user.type(screen.getByRole('textbox', { name: 'Título (English)' }), 'New title')
+
+    expect(screen.queryByText('El título en inglés es obligatorio.')).not.toBeInTheDocument()
+  })
+
+  test('counts the errors of a hidden tab on that tab, with no summary below the form', async () => {
     const { user } = renderForm()
 
     await user.click(screen.getByRole('tab', { name: /English/ }))
     await user.clear(screen.getByRole('textbox', { name: 'Texto (English)' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     await user.click(screen.getByRole('tab', { name: /Español/ }))
 
     expect(screen.getByRole('tab', { name: /English.*1/ })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent(/English/)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
-  test('keeps "Confirmar" disabled while a save is being sent', () => {
-    renderForm({ saving: true })
-
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
-  })
-
-  test('asks to update or confirm the other language after a one-sided change', async () => {
+  test('leads to the other language after a one-sided change, to update or confirm it', async () => {
     const { onSave, user } = renderForm()
 
     await user.type(screen.getByRole('textbox', { name: 'Texto (Español)' }), ' Más.')
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    await user.click(screen.getByRole('tab', { name: /English/ }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('tab', { name: /English/ })).toHaveAttribute('aria-selected', 'true')
+
     await user.click(within(panel(/English/)).getByRole('switch'))
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).toHaveBeenCalledWith(

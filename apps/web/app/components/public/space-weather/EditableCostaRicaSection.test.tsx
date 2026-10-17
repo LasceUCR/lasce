@@ -126,7 +126,7 @@ describe('EditableCostaRicaSection', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('disables "Confirmar" until the save answers', async () => {
+  test('sends one save at a time', async () => {
     let respond: (response: Response) => void = () => {}
     fetchMock.mockReturnValue(
       new Promise<Response>((resolve) => {
@@ -136,11 +136,11 @@ describe('EditableCostaRicaSection', () => {
     const user = renderSection(editArgs)
 
     await editBothBodies(user)
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    const confirm = screen.getByRole('button', { name: 'Confirmar' })
-    expect(confirm).toBeDisabled()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
     respond(answer(409, { code: 'conflict', error: 'La sección cambió desde que la abrió.' }))
-    await waitFor(() => expect(confirm).toBeEnabled())
+    expect(await screen.findByText('La sección cambió desde que la abrió.')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 

@@ -48,8 +48,6 @@ export function EditableCostaRicaSection({
   // One save at a time: a second click while the first is in flight would send the same version
   // again and come back as a false conflict.
   const saving = useRef(false)
-  // The same, for the form: it keeps "Confirmar" disabled while the request is out.
-  const [sending, setSending] = useState(false)
 
   // Taken when the editor opens, so a refresh behind it cannot change what it saves against.
   const [initial, setInitial] = useState<SpaceWeatherSectionFormInitial | null>(null)
@@ -76,7 +74,6 @@ export function EditableCostaRicaSection({
 
     if (saving.current) return
     saving.current = true
-    setSending(true)
     await sendWithFeedback('/api/space-weather/costa-rica', jsonRequest('PATCH', body), {
       success: t('editor.updated'),
       fallback: t('saveErrors.failed'),
@@ -86,7 +83,6 @@ export function EditableCostaRicaSection({
       },
     })
     saving.current = false
-    setSending(false)
   }
 
   const modal = (
@@ -100,13 +96,7 @@ export function EditableCostaRicaSection({
       title={t('editor.editTitle')}
     >
       {initial ? (
-        <CostaRicaSectionForm
-          initial={initial}
-          onCancel={close}
-          onSave={handleSave}
-          ref={form}
-          saving={sending}
-        />
+        <CostaRicaSectionForm initial={initial} onCancel={close} onSave={handleSave} ref={form} />
       ) : null}
     </Modal>
   )

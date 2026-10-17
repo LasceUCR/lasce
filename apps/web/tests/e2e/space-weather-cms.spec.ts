@@ -105,10 +105,13 @@ test('edits the text in both languages and shows it to visitors', async ({ page,
       .fill('Primer párrafo E2E.\n\nSegundo párrafo E2E.')
     // Changed in Spanish only: the English text must be updated or confirmed before saving.
     await expect(dialog.getByRole('tab', { name: /^English · 1 por revisar$/ })).toBeVisible()
-    await expect(dialog.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
-    await dialog.getByRole('tab', { name: /^English/ }).click()
+    // "Confirmar" leads to the English tab, where the text is waiting to be updated.
+    await dialog.getByRole('button', { name: 'Confirmar' }).click()
+    await expect(dialog.getByRole('tab', { name: /^English/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
     await dialog.getByRole('textbox', { name: /^Texto \(English\)/ }).fill('E2E paragraph.')
-    await expect(dialog.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
     await dialog.getByRole('button', { name: 'Confirmar' }).click()
 
     await expect(page.getByText('Sección actualizada correctamente.')).toBeVisible()
@@ -136,9 +139,10 @@ test('keeps what was typed and the stored text when the input is invalid', async
     await dialog.getByRole('textbox', { name: /^Título \(Español\)/ }).fill('Título E2E')
     await dialog.getByRole('tab', { name: /^English/ }).click()
     await dialog.getByRole('textbox', { name: /^Texto \(English\)/ }).fill('')
+    await dialog.getByRole('button', { name: 'Confirmar' }).click()
 
     await expect(dialog.getByText('El texto en inglés es obligatorio.')).toBeVisible()
-    await expect(dialog.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    await expect(dialog).toBeVisible()
     await dialog.getByRole('tab', { name: /^Español/ }).click()
     await expect(dialog.getByRole('textbox', { name: /^Título \(Español\)/ })).toHaveValue(
       'Título E2E',
@@ -237,8 +241,8 @@ test('meets WCAG A and AA automated checks in edit mode and in the editor, in bo
     await page.getByRole('button', { name: EDIT_LABEL }).click()
     const dialog = page.getByRole('dialog', { name: DIALOG_TITLE })
     await dialog.getByRole('textbox', { name: /^Título \(Español\)/ }).fill('')
+    await dialog.getByRole('button', { name: 'Confirmar' }).click()
     await expect(dialog.getByText('El título en español es obligatorio.')).toBeVisible()
-    await expect(dialog.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
     expect((await axe(page).include('dialog[open]').analyze()).violations).toEqual([])
     await dialog.getByRole('button', { name: 'Cancelar' }).click()
     await page

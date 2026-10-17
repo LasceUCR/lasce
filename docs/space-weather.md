@@ -57,10 +57,11 @@ envelope of `app/lib/cms/http.ts` (`invalid-json`, `invalid-body`, `review-requi
 
 - A save sends both languages in full. A field changed in one language only must change in the
   other too, or be confirmed as still correct (`TranslationReview`), in the same edit.
-- The form validates as it is typed in, with the same rules as the API. Each problem shows under
-  its field and as a count on its language tab, and "Confirmar" stays disabled until there are
-  none, and while a save is being sent. Unlike the home page editors, which validate on the save
-  click and jump to the tab with errors, this one never switches tabs on its own.
+- Like the other bilingual editors, the form is checked when "Confirmar" is pressed, with the
+  same rules as the API. Each problem shows under its field and as a count on its language tab;
+  the form switches to the tab that has one and focuses the first field to fix, so a change made
+  in one language leads straight to the other. "Confirmar" is never disabled: a click while a
+  save is still being sent is ignored.
 - The write runs in one transaction against the `updated_at` the editor loaded and moves it
   forward. A stale save gets a 409 and changes nothing; the error toast shows the reason and the
   form stays open with what was typed.
