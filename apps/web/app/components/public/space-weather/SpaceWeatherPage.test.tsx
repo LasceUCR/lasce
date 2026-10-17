@@ -55,7 +55,7 @@ describe('SpaceWeatherPage', () => {
     )
   })
 
-  test('shows the stored Costa Rica card, one paragraph per block of text', () => {
+  test('shows the stored Costa Rica card, one paragraph per block of text, in its language', () => {
     render(<SpaceWeatherPage content={spaceWeatherContent} costaRicaSection={bilingualSection} />)
 
     const card = screen.getByRole('region', { name: bilingualSection.title })
@@ -66,6 +66,10 @@ describe('SpaceWeatherPage', () => {
       'lang',
       'es',
     )
+    expect(within(card).getByRole('heading', { name: bilingualSection.title })).toHaveAttribute(
+      'lang',
+      'es',
+    )
   })
 
   test('falls back to the catalogue text when the card is not stored', () => {
@@ -73,6 +77,7 @@ describe('SpaceWeatherPage', () => {
 
     const card = screen.getByRole('region', { name: /Por qué estudiarlo desde Costa Rica/ })
     expect(within(card).getByText(/La respuesta de la ionosfera/)).not.toHaveAttribute('lang')
+    expect(within(card).getByRole('heading')).not.toHaveAttribute('lang')
   })
 
   test('offers no editing to an account that cannot edit, even with the editing data', () => {
