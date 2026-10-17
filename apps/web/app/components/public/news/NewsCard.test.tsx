@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { fireEvent, screen } from '@testing-library/react'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
@@ -16,6 +16,29 @@ import {
 
 const defaultArgs = Default.args as NewsCardProps & { date: string }
 const englishArgs = English.args as NewsCardProps & { date: string }
+
+function mockAbstractOverflow(overflows: boolean) {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      callback: () => void
+      constructor(callback: () => void) {
+        this.callback = callback
+      }
+      observe() {
+        this.callback()
+      }
+      disconnect() {}
+    },
+  )
+  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(overflows ? 200 : 80)
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(80)
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
 
 describe('NewsCard', () => {
   test('leads with the title as a heading', () => {
@@ -106,6 +129,34 @@ describe('NewsCard', () => {
     expect(screen.getByRole('heading', { name: args.title })).toBeInTheDocument()
     expect(screen.getByText(args.abstract)).toBeInTheDocument()
   })
+
+  test('offers "Leer más" inline when the abstract overflows, and expands it in place', () => {
+    mockAbstractOverflow(true)
+    renderWithIntl(<NewsCard {...defaultArgs} />)
+
+    const abstract = screen.getByText(defaultArgs.abstract)
+    const toggle = screen.getByRole('button', { name: 'Leer más' })
+    expect(abstract).toContainElement(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(toggle)
+
+    expect(screen.getByRole('button', { name: 'Leer menos' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Leer menos' }))
+
+    expect(screen.getByRole('button', { name: 'Leer más' })).toBeInTheDocument()
+  })
+
+  test('does not show the toggle when the abstract fits without overflowing', () => {
+    mockAbstractOverflow(false)
+    renderWithIntl(<NewsCard {...defaultArgs} />)
+
+    expect(screen.queryByRole('button', { name: 'Leer más' })).not.toBeInTheDocument()
+  })
 })
 
 describe('NewsCard: languages', () => {
@@ -126,7 +177,8 @@ describe('NewsCard: languages', () => {
     renderWithIntl(<NewsCard {...englishArgs} />, { locale: 'en' })
 
     expect(screen.getByRole('heading', { name: englishArgs.title })).toHaveAttribute('lang', 'en')
-    expect(screen.getByText(englishArgs.abstract)).toHaveAttribute('lang', 'en')
+    // The abstract's text sits inside `TruncatedText`, whose outer paragraph carries the `lang`.
+    expect(screen.getByText(englishArgs.abstract).closest('p')).toHaveAttribute('lang', 'en')
   })
 
   test('marks text of unknown language with an empty lang and tells editors it lacks English', () => {

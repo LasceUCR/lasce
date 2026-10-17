@@ -80,11 +80,9 @@ export function EditableNewsCard({
       <EditableWrapper
         deleteCancelLabel={t('deleteDialog.cancel')}
         deleteConfirmLabel={t('deleteDialog.confirm')}
-        deleteConfirmMessage={t('deleteDialog.message')}
+        deleteConfirmMessage={t('deleteDialog.message', { title: article.title })}
         deleteConfirmTitle={t('deleteDialog.title')}
         deleteLabel={t('editor.deleteLabel', { title: article.title })}
-        deleteTargetEntity={article.title}
-        deleteTargetLabel={t('deleteDialog.target')}
         editLabel={t('editor.editLabel', { title: article.title })}
         onDelete={canDelete && !busy ? onDelete : undefined}
         onEdit={canEdit && !busy ? () => setEditing(initialFromArticle(article)) : undefined}

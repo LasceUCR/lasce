@@ -67,6 +67,7 @@ model User {
   nosotrosActivities  NosotrosActivity[]
   researchers         Researcher[]
   nosotrosResearchers NosotrosResearcher[]
+  auditEvents         AuditEvent[]
 
   @@map("users")
   @@schema("auth")
@@ -375,9 +376,73 @@ model NosotrosActivity {
   modifiedBy String               @map("modified_by") @db.Uuid
   modifiedAt DateTime             @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
-  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  modifier     User                          @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  translations NosotrosActivityTranslation[]
 
   @@map("nosotros_activities")
+  @@schema("public")
+}
+
+/// The translatable text of a `NosotrosActivity` in a language other than the
+/// source one (see "Dynamic content" in docs/internationalization.md). The base
+/// row keeps the source-language `title` and `paragraph`; this table holds one row
+/// per additional locale. `icon` is shared and stays on the base row.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a
+/// language needs no migration. A card created before translations existed has no
+/// row here, and its base text is in whatever language it was entered in.
+model NosotrosActivityTranslation {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  activityId String   @map("activity_id") @db.Uuid
+  locale     String   @db.VarChar(5)
+  title      String
+  paragraph  String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  activity NosotrosActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, locale])
+  @@map("nosotros_activity_translations")
+  @@schema("public")
+}
+
+/// An editable text section of the solar physics page (`/fisica-solar`). Today there is one
+/// row, with `key` `lasce` ("El trabajo de LASCE en Física Solar"); `key` is unique so the page
+/// can look the section up and a second section can be added without a new table.
+/// `title` and `body` are the Spanish source text; every other language lives in
+/// `SolarPhysicsSectionTranslation`. `body` is plain text: a blank line separates paragraphs.
+model SolarPhysicsSection {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key       String   @unique
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Also the version an editor saves against (optimistic concurrency).
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations SolarPhysicsSectionTranslation[]
+
+  @@map("solar_physics_sections")
+  @@schema("public")
+}
+
+/// The `title` and `body` of a `SolarPhysicsSection` in a language other than the source one.
+/// One row per (section, locale); `locale` is a short string validated by the app, so a new
+/// language needs no migration.
+model SolarPhysicsSectionTranslation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sectionId String   @map("section_id") @db.Uuid
+  locale    String   @db.VarChar(5)
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  section SolarPhysicsSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, locale])
+  @@map("solar_physics_section_translations")
   @@schema("public")
 }
 
@@ -451,6 +516,37 @@ model ExisFile {
   @@schema("solar")
 }
 
+/// One daily MAG L2 1-minute geomagnetic field file (one UTC day) whose readings are in InfluxDB.
+/// Written only by the worker's `mag-pipeline` job; the readings themselves live in the
+/// `mag_field` InfluxDB measurement, not here.
+model MagFile {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// The NetCDF `platform` attribute, upper-cased, e.g. "G19".
+  satellite        String
+  /// Always "GEOF", the catalogue code of the geomagnetic field product.
+  product          String
+  /// The UTC day the file covers, from its name.
+  day              DateTime  @db.Date
+  fileName         String    @unique @map("file_name")
+  /// The `_vX-Y-Z` part of the file name, e.g. "2-0-4".
+  version          String
+  sourceUrl        String    @map("source_url")
+  /// The archive's `Last-Modified` when ingested. A newer one means NOAA republished the day.
+  sourceModifiedAt DateTime? @map("source_modified_at") @db.Timestamptz(3)
+  firstObservedAt  DateTime? @map("first_observed_at") @db.Timestamptz(3)
+  lastObservedAt   DateTime? @map("last_observed_at") @db.Timestamptz(3)
+  /// Points written to InfluxDB per channel code, e.g. {"total": 1440}.
+  pointCount       Json      @map("point_count")
+  /// The NetCDF global attributes, so provenance not promoted to a column is still recoverable.
+  attributes       Json
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([satellite, product, day])
+  @@map("mag_files")
+  @@schema("solar")
+}
+
 /// One file a signed-in user downloaded from `/datos`: a chart image or a data export. Written
 /// by `apps/web/app/services/downloads/downloadService.ts` only after the object reached the
 /// private downloads bucket, so every row names an object that existed. The object itself
@@ -482,6 +578,39 @@ model ResourceDownload {
   @@index([userId, createdAt])
   @@index([source, instrument, createdAt])
   @@map("resource_downloads")
+  @@schema("public")
+}
+
+/// One thing that happened in the portal, for the "Actividad reciente" panel of
+/// `/administracion` and any later audit view (LASCE-CON-012-151). Append-only: a row is never
+/// updated, and it is written through `apps/web/app/lib/audit-log.ts`. Only the web writes here;
+/// the worker does not mirror this table.
+model AuditEvent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// What happened, as `<entity>.<verb>`, e.g. "publication.create". A plain string, like
+  /// `RolePermission.permission`, so a new kind of event needs no migration.
+  action     String
+  /// The line the panel shows, written when the event happens so it still reads after the entity
+  /// it names is gone, e.g. "Publicación agregada: Solar flares in 2026".
+  summary    String
+  /// "user", "system" or "worker"; see `AUDIT_ACTOR_TYPES` in `audit-log.ts`.
+  actorType  String   @map("actor_type")
+  /// The account that acted. Null for the system, or once the account is deleted, so the trail
+  /// outlives it.
+  actorId    String?  @map("actor_id") @db.Uuid
+  /// What was acted on, e.g. "publication" and its id. Null when there is no single target.
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  /// Anything else worth keeping about the event, e.g. the fields that changed.
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@map("audit_events")
   @@schema("public")
 }
 
@@ -539,9 +668,36 @@ model NosotrosResearcher {
   modifiedBy  String   @map("modified_by") @db.Uuid
   modifiedAt  DateTime @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
-  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  modifier     User                          @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  translations NosotrosResearcherTranslation[]
 
   @@map("nosotros_researchers")
+  @@schema("public")
+}
+
+/// The translatable text of a `NosotrosResearcher` in a language other than the
+/// source one (see "Dynamic content" in docs/internationalization.md). The base
+/// row keeps the source-language `role` and `description`; this table holds one
+/// row per additional locale. `name`, `institution`, `email` and `photoUrl` are
+/// shared and stay on the base row.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a
+/// language needs no migration. A researcher created before translations existed
+/// has no row here, and the base text is in whatever language it was entered in.
+/// `description` is optional on the base row and all-or-none across languages.
+model NosotrosResearcherTranslation {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  researcherId String   @map("researcher_id") @db.Uuid
+  locale       String   @db.VarChar(5)
+  role         String
+  description  String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  researcher NosotrosResearcher @relation(fields: [researcherId], references: [id], onDelete: Cascade)
+
+  @@unique([researcherId, locale])
+  @@map("nosotros_researcher_translations")
   @@schema("public")
 }
 
@@ -563,12 +719,38 @@ model GalleryAlbum {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
 
-  parentAlbum GalleryAlbum?  @relation("GalleryAlbumSubAlbums", fields: [parentAlbumId], references: [id], onDelete: Cascade)
-  subAlbums   GalleryAlbum[] @relation("GalleryAlbumSubAlbums")
-  media       GalleryMedia[]
+  parentAlbum  GalleryAlbum?             @relation("GalleryAlbumSubAlbums", fields: [parentAlbumId], references: [id], onDelete: Cascade)
+  subAlbums    GalleryAlbum[]            @relation("GalleryAlbumSubAlbums")
+  media        GalleryMedia[]
+  translations GalleryAlbumTranslation[]
 
   @@index([parentAlbumId])
   @@map("gallery_albums")
+  @@schema("gallery")
+}
+
+/// The translatable text of a `GalleryAlbum` in a language other than the
+/// source one (see "Dynamic content" in docs/internationalization.md). The base
+/// row keeps the source-language `title` and `description` being plain text; this
+/// table holds one row per additional locale. `slug`, the cover image and the
+/// album hierarchy are shared by every language.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a
+/// language needs no migration. An album created before translations existed has
+/// no row here, and its base text is in whatever language it was entered in.
+model GalleryAlbumTranslation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  albumId     String   @map("album_id") @db.Uuid
+  locale      String   @db.VarChar(5)
+  title       String
+  description String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  album GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId, locale])
+  @@map("gallery_album_translations")
   @@schema("gallery")
 }
 
@@ -597,7 +779,8 @@ model GalleryMedia {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(3)
 
-  album GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  album        GalleryAlbum              @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  translations GalleryMediaTranslation[]
 
   @@unique([albumId, position])
   @@index([albumId])
@@ -605,7 +788,34 @@ model GalleryMedia {
   @@schema("gallery")
 }
 
-/// An editable research area shown on the public investigation page.
+/// The translatable text of a `GalleryMedia` record in an additional locale.
+/// The base row keeps the source-language `title`, `description`, and
+/// `altText`; this table holds one row per additional locale.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so
+/// adding a language needs no migration. A media record created before
+/// translations existed has no row here, and its base text is in whatever
+/// language it was entered in.
+model GalleryMediaTranslation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  galleryMediaId String   @map("gallery_media_id") @db.Uuid
+  locale         String   @db.VarChar(5)
+  title          String
+  description    String   @db.Text
+  altText        String   @map("alt_text")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  galleryMedia GalleryMedia @relation(fields: [galleryMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([galleryMediaId, locale])
+  @@map("gallery_media_translations")
+  @@schema("gallery")
+}
+
+/// An editable research area shown on the public investigation page. The base
+/// row holds the Spanish `title` and `description`; every other language lives
+/// in `ResearchAreaTranslation` (docs/translate-database-content.md).
 model ResearchArea {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
@@ -614,7 +824,31 @@ model ResearchArea {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  translations ResearchAreaTranslation[]
+
   @@map("research_areas")
+  @@schema("areas")
+}
+
+/// The `title` and `description` of a `ResearchArea` in a language other than
+/// Spanish, one row per area and locale. The photograph (`src`) is shared.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a
+/// language needs no migration. An area created before translations existed has
+/// no row here, and its base text is in whatever language it was entered in.
+model ResearchAreaTranslation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  researchAreaId String   @map("research_area_id") @db.Uuid
+  locale         String   @db.VarChar(5)
+  title          String
+  description    String   @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  researchArea ResearchArea @relation(fields: [researchAreaId], references: [id], onDelete: Cascade)
+
+  @@unique([researchAreaId, locale])
+  @@map("research_area_translations")
   @@schema("areas")
 }
 

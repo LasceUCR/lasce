@@ -38,7 +38,7 @@ export interface RosacLocationMapProps {
 }
 
 export function RosacLocationMap({ location, labels, onMapReady }: RosacLocationMapProps) {
-  const names = labels ?? spanishLocationMapLabels(location.markerLabel)
+  const names = labels ?? location.labels ?? spanishLocationMapLabels(location.markerLabel)
   const [isUnavailable, setIsUnavailable] = useState(false)
   const hasLoadedATile = useRef(false)
   const instructionsId = useId()

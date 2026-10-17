@@ -96,6 +96,12 @@ Assert roles and user-visible text rather than CSS classes. See
 [docs/tests/component_testing.md](tests/component_testing.md) for the full
 conventions, including what to mock and the coverage thresholds.
 
+## Truncating long text
+
+To cut a text field after a number of lines with a "Leer más" / "Leer menos" toggle, use the
+shared `TruncatedText` component rather than a CSS `line-clamp` of your own:
+[`truncated-text.md`](truncated-text.md).
+
 ## Verify
 
 Confirm the story renders with no console errors, then run the checks:

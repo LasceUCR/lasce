@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -24,7 +25,7 @@ describe('ResourceDownloadActions', () => {
   test('offers each allowed format and reports the one chosen', async () => {
     const onDownload = vi.fn()
     const user = userEvent.setup()
-    render(<ResourceDownloadActions {...args(AllAllowed)} onDownload={onDownload} />)
+    renderWithIntl(<ResourceDownloadActions {...args(AllAllowed)} onDownload={onDownload} />)
 
     expect(screen.getByRole('heading', { name: 'Descargas' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Descargar datos (CSV)' }))
@@ -33,7 +34,7 @@ describe('ResourceDownloadActions', () => {
   })
 
   test('hides a format the user may not download', () => {
-    render(<ResourceDownloadActions {...args(GoesDataForbidden)} />)
+    renderWithIntl(<ResourceDownloadActions {...args(GoesDataForbidden)} />)
 
     expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeEnabled()
     expect(screen.queryByRole('button', { name: 'Descargar datos (CSV)' })).not.toBeInTheDocument()
@@ -42,7 +43,7 @@ describe('ResourceDownloadActions', () => {
   test('invites an anonymous visitor to sign in for the chart and does not advertise data', async () => {
     const onDownload = vi.fn()
     const user = userEvent.setup()
-    render(<ResourceDownloadActions {...args(SignedOut)} onDownload={onDownload} />)
+    renderWithIntl(<ResourceDownloadActions {...args(SignedOut)} onDownload={onDownload} />)
 
     expect(screen.getAllByRole('button')).toHaveLength(1)
     await user.click(
@@ -53,21 +54,21 @@ describe('ResourceDownloadActions', () => {
   })
 
   test('shows only the formats the product offers', () => {
-    render(<ResourceDownloadActions {...args(ImageOnly)} />)
+    renderWithIntl(<ResourceDownloadActions {...args(ImageOnly)} />)
 
     expect(screen.getAllByRole('button')).toHaveLength(1)
     expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeInTheDocument()
   })
 
   test('blocks every button while a file is being prepared', () => {
-    render(<ResourceDownloadActions {...args(Preparing)} />)
+    renderWithIntl(<ResourceDownloadActions {...args(Preparing)} />)
 
     expect(screen.getByRole('button', { name: 'Preparando descarga…' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' })).toBeDisabled()
   })
 
   test('announces a started download as a status and a failure as an alert', () => {
-    const { rerender } = render(<ResourceDownloadActions {...args(Ready)} />)
+    const { rerender } = renderWithIntl(<ResourceDownloadActions {...args(Ready)} />)
     expect(screen.getByRole('status')).toHaveTextContent('El enlace vence en 30 minutos.')
 
     rerender(<ResourceDownloadActions {...args(Failed)} />)
@@ -75,13 +76,13 @@ describe('ResourceDownloadActions', () => {
   })
 
   test('renders nothing when the product offers no download', () => {
-    const { container } = render(<ResourceDownloadActions {...args(NothingOffered)} />)
+    const { container } = renderWithIntl(<ResourceDownloadActions {...args(NothingOffered)} />)
 
     expect(container).toBeEmptyDOMElement()
   })
 
   test('renders nothing for a signed-in user who may download none of the formats', () => {
-    const { container } = render(<ResourceDownloadActions {...args(SignedOut)} signedIn />)
+    const { container } = renderWithIntl(<ResourceDownloadActions {...args(SignedOut)} signedIn />)
 
     expect(container).toBeEmptyDOMElement()
   })

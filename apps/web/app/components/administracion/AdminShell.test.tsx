@@ -1,8 +1,9 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AdminShell, type AdminShellProps } from './AdminShell'
 import { Default, NoGrants, PartialGrants } from './AdminShell.stories'
@@ -14,7 +15,7 @@ vi.mock('next/navigation', () => ({
 const defaultArgs = Default.args as AdminShellProps
 
 function renderShell(args: AdminShellProps = defaultArgs) {
-  return render(
+  return renderWithIntl(
     <EditModeProvider>
       <AdminShell {...args} />
     </EditModeProvider>,
@@ -75,5 +76,19 @@ describe('AdminShell', () => {
         .getAllByRole('link')
         .map((link) => link.textContent),
     ).toEqual(['Resumen', 'Infraestructura'])
+  })
+
+  test('speaks English when the site does, keeping the Modo edición name', () => {
+    renderWithIntl(
+      <EditModeProvider>
+        <AdminShell {...defaultArgs} />
+      </EditModeProvider>,
+      { locale: 'en' },
+    )
+
+    const nav = within(screen.getByRole('navigation', { name: 'Administration panel' }))
+    expect(nav.getByRole('link', { name: 'Summary' })).toBeInTheDocument()
+    expect(nav.getByRole('button', { name: /Menu/ })).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'Modo edición' })).toBeInTheDocument()
   })
 })

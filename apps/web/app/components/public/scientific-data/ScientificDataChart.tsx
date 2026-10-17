@@ -1,3 +1,6 @@
+'use client'
+
+import { useFormatter, useTranslations } from 'next-intl'
 import { useId } from 'react'
 
 import { layoutTimeSeries, TIME_SERIES_CHART as chart } from '@/app/lib/charts/timeSeriesLayout'
@@ -10,27 +13,25 @@ export interface ScientificDataChartProps {
   unit: string
 }
 
-const numberFormatter = new Intl.NumberFormat('es-CR', {
-  maximumSignificantDigits: 4,
-  notation: 'scientific',
-})
-
-function formatValue(value: number) {
-  return numberFormatter.format(value)
-}
-
 function formatTime(timestamp: string) {
   return timestamp.slice(11, 16)
 }
 
 export function ScientificDataChart({ caption, label, points, unit }: ScientificDataChartProps) {
+  const t = useTranslations('scientificData.charts')
+  const format = useFormatter()
   const titleId = useId()
   const descriptionId = useId()
   const layout = layoutTimeSeries(points)
+
+  function formatValue(value: number) {
+    return format.number(value, { maximumSignificantDigits: 4, notation: 'scientific' })
+  }
+
   if (!layout) {
     return (
       <p className="content-empty" role="status">
-        No hay valores para graficar.
+        {t('empty')}
       </p>
     )
   }
@@ -52,7 +53,7 @@ export function ScientificDataChart({ caption, label, points, unit }: Scientific
       <div
         className="data-chart-viewport"
         role="region"
-        aria-label={`Área de gráfica: ${label}`}
+        aria-label={t('areaLabel', { label })}
         tabIndex={0}
       >
         <svg
@@ -62,11 +63,16 @@ export function ScientificDataChart({ caption, label, points, unit }: Scientific
           role="img"
           viewBox={`0 0 ${chart.width} ${chart.height}`}
         >
-          <title id={titleId}>Gráfica de {label}</title>
+          <title id={titleId}>{t('title', { label })}</title>
           <desc id={descriptionId}>
-            Serie de {points.length} mediciones entre {formatTime(firstTimestamp)} y{' '}
-            {formatTime(lastTimestamp)} UTC. El valor mínimo es {formatValue(minimum)} y el máximo
-            es {formatValue(maximum)} {unit}.
+            {t('description', {
+              count: points.length,
+              start: formatTime(firstTimestamp),
+              end: formatTime(lastTimestamp),
+              minimum: formatValue(minimum),
+              maximum: formatValue(maximum),
+              unit,
+            })}
           </desc>
 
           {gridLines.map(({ ratio, y, value }) => (
@@ -130,9 +136,7 @@ export function ScientificDataChart({ caption, label, points, unit }: Scientific
           </g>
         </svg>
       </div>
-      <figcaption>
-        {caption} Unidad: {unit}.
-      </figcaption>
+      <figcaption>{t('caption', { caption, unit })}</figcaption>
     </figure>
   )
 }

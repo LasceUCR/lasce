@@ -2,6 +2,7 @@
 
 import { ChevronDown, Menu } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { isAdminItemActive } from '@/app/lib/admin-sections'
@@ -29,6 +30,7 @@ export interface AdminSidebarProps {
  * what is visible.
  */
 export function AdminSidebar({ items, activePathname, defaultOpen = false }: AdminSidebarProps) {
+  const t = useTranslations('administration.shell')
   const listId = useId()
   const nav = useRef<HTMLElement>(null)
   const button = useRef<HTMLButtonElement>(null)
@@ -71,7 +73,7 @@ export function AdminSidebar({ items, activePathname, defaultOpen = false }: Adm
 
   return (
     <nav
-      aria-label="Panel de administración"
+      aria-label={t('panel')}
       className={isOpen ? 'admin-sidebar is-open' : 'admin-sidebar'}
       onKeyDown={handleKeyDown}
       ref={nav}
@@ -85,7 +87,7 @@ export function AdminSidebar({ items, activePathname, defaultOpen = false }: Adm
         type="button"
       >
         <Menu aria-hidden="true" size={20} strokeWidth={1.8} />
-        <span>Menú</span>
+        <span>{t('menu')}</span>
         {current ? <span className="admin-menu-current">{current.label}</span> : null}
         <ChevronDown
           aria-hidden="true"

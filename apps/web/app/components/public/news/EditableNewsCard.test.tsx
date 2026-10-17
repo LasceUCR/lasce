@@ -116,6 +116,9 @@ describe('EditableNewsCard', () => {
 
     await user.click(screen.getByRole('button', { name: deleteName }))
     const dialog = screen.getByRole('dialog', { name: 'Eliminar noticia' })
+    expect(dialog).toHaveTextContent(
+      `¿Desea eliminar la noticia "${editArgs.article.title}"? Esta acción no se puede deshacer.`,
+    )
     await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(onDelete).toHaveBeenCalledTimes(1)

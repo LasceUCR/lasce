@@ -1,16 +1,35 @@
 'use client'
 
 import { Play } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { useCallback, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 
+import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { MediaFrame } from './MediaFrame'
 import { MediaLightbox } from './MediaLightbox'
-import { mediaPlaceholder, type GalleryMedia } from '@/app/lib/gallery'
+import { Modal } from '@/app/components/public/Modal'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
+import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
+import { MediaForm, type MediaFormHandle } from '@/app/components/public/gallery/forms/MediaForm'
+import type { GalleryMedia } from '@/app/lib/gallery-schema'
+
+function mediaPlaceholder(item: GalleryMedia): string {
+  return `${item.isVideo ? 'Video' : 'Foto'}: ${item.title}`
+}
 
 export interface AlbumMediaGridProps {
   albumTitle: string
   media: readonly GalleryMedia[]
+  editMode?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
+  canCreate?: boolean
+  /** Database id of the album the media belongs to. Required to add files. */
+  albumId?: string
+  /** Name of the signed-in user, recorded as the uploader of new files. */
+  uploader?: string
 }
 
 const closed = -1
@@ -19,9 +38,41 @@ const closed = -1
  * The album's masonry grid. Owns the lightbox index, so the grid and the dialog
  * agree on which file is open and focus can return to the tile that opened it.
  */
-export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
+export function AlbumMediaGrid({
+  albumTitle,
+  media,
+  editMode = false,
+  canEdit = false,
+  canDelete = false,
+  canCreate = false,
+  albumId,
+  uploader,
+}: AlbumMediaGridProps) {
+  const router = useRouter()
+  const sendWithFeedback = useRequestFeedback()
+  const t = useTranslations('gallery.feedback')
+  const tActions = useTranslations('gallery.actions')
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [openIndex, setOpenIndex] = useState(closed)
+  const createForm = useRef<MediaFormHandle>(null)
+  const editForm = useRef<MediaFormHandle>(null)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
+  const showEditor = editMode && (canEdit || canDelete || canCreate)
+  const showAddCard = editMode && canCreate && albumId !== undefined && uploader !== undefined
+
+  async function handleDelete(id: string): Promise<void> {
+    await sendWithFeedback(
+      `/api/gallery/media/${id}`,
+      { method: 'DELETE' },
+      {
+        success: t('fileDeleted'),
+        fallback: t('fileDeleteFailed'),
+        onSuccess: () => router.refresh(),
+      },
+    )
+  }
+
+  const editingItem = editingId === null ? null : media.find((item) => item.id === editingId)
 
   const close = useCallback(() => {
     // The dialog closes itself natively before this runs, so the document is no
@@ -40,34 +91,68 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
 
   const openItem = openIndex === closed ? null : media[openIndex]
 
-  if (media.length === 0) {
-    return (
-      <p className="content-empty" role="status">
-        No hay contenido disponible en esta categoría.
-      </p>
-    )
-  }
-
   return (
     <>
       <ul className="media-grid tile-list">
+        {showAddCard ? (
+          <li className="media-grid-add">
+            <AddItemCard
+              label={tActions('addFile')}
+              onRequestClose={(close) => {
+                if (createForm.current) createForm.current.requestCancel()
+                else close()
+              }}
+              size="large"
+            >
+              {({ close }) => (
+                <MediaForm
+                  ref={createForm}
+                  albumId={albumId}
+                  onCancel={close}
+                  onSaved={() => {
+                    close()
+                    router.refresh()
+                  }}
+                  uploader={uploader}
+                />
+              )}
+            </AddItemCard>
+          </li>
+        ) : null}
         {media.map((item, index) => {
           const span = {
             '--media-col-span': item.colSpan,
             '--media-row-span': item.rowSpan,
           } as CSSProperties
+          const frame = (
+            <MediaFrame
+              alt=""
+              className="media-tile-frame"
+              placeholder={mediaPlaceholder(item)}
+              src={item.src}
+            />
+          )
 
           return (
             <li className="media-tile" key={item.id} style={span}>
               {/* Decorative: the button below names the file, and the caption
                   repeats it as real text. The photograph's own description
                   belongs to the lightbox, where the image is the content. */}
-              <MediaFrame
-                alt=""
-                className="media-tile-frame"
-                placeholder={mediaPlaceholder(item)}
-                src={item.src}
-              />
+              {showEditor ? (
+                <EditableWrapper
+                  className="media-tile-editable"
+                  deleteLabel={tActions('deleteItem', { title: item.title })}
+                  deleteConfirmTitle={tActions('deleteFile')}
+                  deleteConfirmMessage={tActions('deleteMessage', { title: item.title })}
+                  editLabel={tActions('editItem', { title: item.title })}
+                  onDelete={canDelete ? () => handleDelete(item.id) : undefined}
+                  onEdit={canEdit ? () => setEditingId(item.id) : undefined}
+                >
+                  {frame}
+                </EditableWrapper>
+              ) : (
+                frame
+              )}
 
               <button
                 aria-label={`Ver a tamaño completo: ${item.title}`}
@@ -104,6 +189,43 @@ export function AlbumMediaGrid({ albumTitle, media }: AlbumMediaGridProps) {
           )
         })}
       </ul>
+
+      <Modal
+        onClose={() => {
+          if (editForm.current) editForm.current.requestCancel()
+          else setEditingId(null)
+        }}
+        open={editingItem !== null && editingItem !== undefined}
+        size="large"
+        title={tActions('editFile')}
+      >
+        {editingItem && albumId !== undefined ? (
+          <MediaForm
+            ref={editForm}
+            albumId={albumId}
+            media={{
+              id: editingItem.id,
+              title: editingItem.title,
+              description: editingItem.description,
+              alt: editingItem.alt,
+              date: editingItem.date,
+              colSpan: String(editingItem.colSpan),
+              rowSpan: String(editingItem.rowSpan),
+              src: editingItem.src,
+              format: editingItem.format,
+            }}
+            stored={editingItem.editing?.content ?? null}
+            version={editingItem.editing?.version}
+            isLegacy={editingItem.editing?.isLegacy}
+            onCancel={() => setEditingId(null)}
+            onSaved={() => {
+              setEditingId(null)
+              router.refresh()
+            }}
+            uploader={uploader ?? ''}
+          />
+        ) : null}
+      </Modal>
 
       {openItem ? (
         <MediaLightbox

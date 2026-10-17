@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { describe, expect, test } from 'vitest'
 
 import { ScientificDataChart } from './ScientificDataChart'
@@ -11,19 +12,19 @@ const resultFixture = (WithObservedResults.args as ScientificDataExplorerProps).
 
 describe('ScientificDataChart', () => {
   test('handles a source with no values without rendering an invalid plot', () => {
-    render(<ScientificDataChart {...(Empty.args as ScientificDataChartProps)} />)
+    renderWithIntl(<ScientificDataChart {...(Empty.args as ScientificDataChartProps)} />)
     expect(screen.getByRole('status')).toHaveTextContent('No hay valores para graficar.')
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
   test('describes a single available observation', () => {
-    render(<ScientificDataChart {...(SinglePoint.args as ScientificDataChartProps)} />)
+    renderWithIntl(<ScientificDataChart {...(SinglePoint.args as ScientificDataChartProps)} />)
     expect(screen.getByRole('img')).toHaveAccessibleDescription(/Serie de 1 mediciones/)
   })
   test('describes the visualized series through the accessibility tree', () => {
     if (resultFixture.visualization !== 'time-series') throw new Error('Expected a time series')
 
-    render(
+    renderWithIntl(
       <ScientificDataChart
         caption="Observaciones de NOAA."
         label={resultFixture.product.name}

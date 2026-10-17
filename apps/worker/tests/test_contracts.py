@@ -42,6 +42,11 @@ EXAMPLES: dict[str, dict[str, Any]] = {
         "lookbackDays": 3,
         "date": "2026-09-27",
     },
+    "mag-pipeline": {
+        "spacecraft": 19,
+        "lookbackDays": 3,
+        "date": "2026-10-14",
+    },
     "suvi-pipeline": {
         "channel": "Fe171",
         "spacecraft": 19,

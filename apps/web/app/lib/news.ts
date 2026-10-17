@@ -1,4 +1,5 @@
 import { prisma, type Prisma } from '@lasce/db'
+import { z } from 'zod'
 
 import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
@@ -101,6 +102,21 @@ export async function getNews(
   })
 
   return records.map((record) => toNewsArticle(record, locale, includeEditingData))
+}
+
+/**
+ * Loads one news item, shaped as `getNews` shapes it, or `null` when `id` is not a UUID or no
+ * item has it.
+ */
+export async function getNewsById(
+  id: string,
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<NewsArticle | null> {
+  if (!z.uuid().safeParse(id).success) return null
+
+  const record = await prisma.news.findUnique({ where: { id }, include: newsRecordInclude })
+  return record ? toNewsArticle(record, locale, includeEditingData) : null
 }
 
 /** `external_url` is the one unique column on `News` besides its id. Anything else is rethrown. */

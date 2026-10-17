@@ -1,108 +1,132 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type * as ResearchAreas from '@/app/lib/research-areas'
 
 const mocks = vi.hoisted(() => ({
+  getLocale: vi.fn(),
   getResearchAreas: vi.fn(),
   createResearchArea: vi.fn(),
   requireApiPermission: vi.fn(),
 }))
 
-// `@/app/lib/rosac` imports `prisma` at module scope, which throws if
-// `DATABASE_URL` is unset — as it is here. The real module is still loaded
-// below (via `importOriginal`) so `researcherInputSchema` stays real, but
-// with `prisma` stubbed out first so importing it never touches a client.
+// `@/app/lib/research-areas` imports `prisma` at module scope.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
-vi.mock('@/app/lib/research-areas', async (importOriginal) => {
-  const original = await importOriginal<typeof ResearchAreas>()
-  return {
-    ...original,
-    getResearchAreas: mocks.getResearchAreas,
-    createResearchArea: mocks.createResearchArea,
-  }
-})
-
-vi.mock('@/app/lib/auth/apiGuard', () => ({
-  requireApiPermission: mocks.requireApiPermission,
+vi.mock('@/app/lib/research-areas', async (importOriginal) => ({
+  ...(await importOriginal<typeof ResearchAreas>()),
+  getResearchAreas: mocks.getResearchAreas,
+  createResearchArea: mocks.createResearchArea,
 }))
+
+// The GET handler reads the request's language through next-intl.
+vi.mock('next-intl/server', () => ({ getLocale: mocks.getLocale }))
+
+vi.mock('@/app/lib/auth/apiGuard', () => ({ requireApiPermission: mocks.requireApiPermission }))
 
 import { GET, POST } from './route'
 
 const validBody = {
-  title: 'Área nueva',
-  description: 'Descripción de prueba.',
+  content: {
+    es: { title: 'Área nueva', description: 'Descripción de prueba.' },
+    en: { title: 'New area', description: 'Test description.' },
+  },
   src: '/images/research/nueva.jpg',
 }
 
-function postRequest(body: unknown) {
-  return new Request('http://localhost/api/research-areas', {
-    method: 'POST',
-    body: typeof body === 'string' ? body : JSON.stringify(body),
-  })
+async function post(body: unknown) {
+  const response = await POST(
+    new Request('http://localhost/api/research-areas', {
+      method: 'POST',
+      body: typeof body === 'string' ? body : JSON.stringify(body),
+    }),
+  )
+  return { response, body: await response.json() }
 }
 
-function deniedResponse() {
-  return new Response(JSON.stringify({ error: 'No ha iniciado sesión.' }), { status: 401 })
-}
+beforeEach(() => {
+  mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1', role: 'ADMIN' } })
+  mocks.createResearchArea.mockResolvedValue({ ok: true, area: { id: 'area-1' } })
+})
 
 afterEach(() => {
   vi.clearAllMocks()
+  vi.restoreAllMocks()
 })
 
 describe('GET /api/research-areas', () => {
-  test('returns the areas as never-cached JSON', async () => {
-    const areas = [{ id: 'area-1', ...validBody }]
-    mocks.getResearchAreas.mockResolvedValue(areas)
+  test('returns the areas in the request language as never-cached JSON', async () => {
+    mocks.getLocale.mockResolvedValue('en')
+    mocks.getResearchAreas.mockResolvedValue([{ id: 'area-1', title: 'New area' }])
 
     const response = await GET()
 
+    expect(mocks.getResearchAreas).toHaveBeenCalledWith('en')
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
-    expect(await response.json()).toEqual({ areas })
+    await expect(response.json()).resolves.toEqual({ areas: [{ id: 'area-1', title: 'New area' }] })
   })
 })
 
 describe('POST /api/research-areas', () => {
-  test('rejects a request denied by the create_components guard', async () => {
-    const denied = deniedResponse()
+  test('requires the create permission and saves nothing without it', async () => {
+    const denied = new Response(JSON.stringify({ error: 'No ha iniciado sesión.' }), {
+      status: 401,
+    })
     mocks.requireApiPermission.mockResolvedValue({ ok: false, response: denied })
 
-    const response = await POST(postRequest(validBody))
+    const response = await POST(
+      new Request('http://localhost/api/research-areas', { method: 'POST', body: '{}' }),
+    )
 
-    expect(response).toBe(denied)
     expect(mocks.requireApiPermission).toHaveBeenCalledWith('create_components')
+    expect(response).toBe(denied)
     expect(mocks.createResearchArea).not.toHaveBeenCalled()
   })
 
-  test('rejects a body that is not valid JSON', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1' } })
-
-    const response = await POST(postRequest('not json'))
+  test('rejects a body that is not JSON', async () => {
+    const { response, body } = await post('{')
 
     expect(response.status).toBe(400)
-    expect(mocks.createResearchArea).not.toHaveBeenCalled()
+    expect(body.code).toBe('invalid-json')
   })
 
-  test('rejects a missing title', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1' } })
-
-    const response = await POST(postRequest({ ...validBody, title: '' }))
+  test('rejects a missing language at its path, without saving', async () => {
+    const { response, body } = await post({ ...validBody, content: { es: validBody.content.es } })
 
     expect(response.status).toBe(400)
-    expect((await response.json()).issues).toMatchObject({ title: expect.any(Array) })
+    expect(body.code).toBe('invalid-body')
+    expect(body.issues.map((issue: { path: string }) => issue.path)).toContain('content.en')
     expect(mocks.createResearchArea).not.toHaveBeenCalled()
   })
 
-  test('creates the area and returns it', async () => {
-    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: { id: 'admin-1' } })
-    const created = { id: 'area-1', ...validBody }
-    mocks.createResearchArea.mockResolvedValue(created)
+  test('rejects the old single-language body', async () => {
+    const { response, body } = await post({
+      title: 'Área nueva',
+      description: 'Descripción.',
+      src: '/images/research/nueva.jpg',
+    })
 
-    const response = await POST(postRequest(validBody))
+    expect(response.status).toBe(400)
+    expect(body.code).toBe('invalid-body')
+  })
+
+  test('creates the area and answers 201 with it', async () => {
+    const { response, body } = await post(validBody)
 
     expect(response.status).toBe(201)
-    expect(response.headers.get('Cache-Control')).toBe('no-store')
-    expect(await response.json()).toEqual({ area: created })
     expect(mocks.createResearchArea).toHaveBeenCalledWith(validBody)
+    expect(body).toEqual({ area: { id: 'area-1' } })
+  })
+
+  test('answers a database failure as a JSON 500 without its details', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    mocks.createResearchArea.mockRejectedValue(new Error('connection refused'))
+
+    const { response, body } = await post(validBody)
+
+    expect(response.status).toBe(500)
+    expect(body).toEqual({
+      error: 'No se pudo crear el área de investigación.',
+      code: 'internal-error',
+    })
   })
 })

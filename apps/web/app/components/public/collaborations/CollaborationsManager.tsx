@@ -123,8 +123,6 @@ export function CollaborationsManager({
               onDelete={canDelete && !busy ? () => void mutate('DELETE', record.id) : undefined}
               deleteConfirmTitle={t('delete.title')}
               deleteConfirmMessage={t('delete.message')}
-              deleteTargetEntity={record.name}
-              deleteTargetLabel={t('delete.entity')}
               deleteConfirmLabel={t('delete.confirm')}
               deleteCancelLabel={t('editor.cancel')}
             >

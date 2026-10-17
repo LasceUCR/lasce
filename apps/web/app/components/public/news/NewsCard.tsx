@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { Notice } from '@/app/components/public/Notice'
+import { TruncatedText } from '@/app/components/public/TruncatedText'
 
 import styles from './NewsCard.module.css'
 
@@ -27,10 +28,11 @@ export interface NewsCardProps {
 
 /**
  * One news item on `/noticias`: a compact, text-only card in the same family as
- * `PublicationCard` (title, one meta line, a two-line summary, a link out). The external article
- * is the item's detail view, so "Abrir fuente" opens it in a new tab; its accessible name adds
- * the title, since every card carries the same visible label. The card's own labels follow the
- * site's language; its content arrives in props, already in that language when it has one.
+ * `PublicationCard` (title, one meta line, a summary clamped to two lines with `TruncatedText`
+ * ("Leer más" / "Leer menos"), a link out). The external article is the item's detail view, so
+ * "Abrir fuente" opens it in a new tab; its accessible name adds the title, since every card
+ * carries the same visible label. The card's own labels follow the site's language; its content
+ * arrives in props, already in that language when it has one.
  */
 export function NewsCard({
   title,
@@ -58,9 +60,9 @@ export function NewsCard({
       </p>
 
       {abstract ? (
-        <p className={styles.abstract} lang={contentLang}>
+        <TruncatedText className={styles.abstract} lang={contentLang} lines={2}>
           {abstract}
-        </p>
+        </TruncatedText>
       ) : null}
 
       {translationMissing ? <Notice tone="warning">{t('translationMissing')}</Notice> : null}

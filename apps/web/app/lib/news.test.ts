@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => {
   }
 
   const prisma = {
-    news: { findMany: vi.fn(), deleteMany: vi.fn() },
+    news: { findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
   }
 
@@ -39,8 +39,15 @@ vi.mock('@lasce/db', () => ({
   Prisma: { PrismaClientKnownRequestError: mocks.PrismaClientKnownRequestError },
 }))
 
-const { createNews, deleteNews, getNews, newsCreateSchema, newsUpdateSchema, updateNews } =
-  await import('./news')
+const {
+  createNews,
+  deleteNews,
+  getNews,
+  getNewsById,
+  newsCreateSchema,
+  newsUpdateSchema,
+  updateNews,
+} = await import('./news')
 
 const { tx, prisma } = mocks
 
@@ -236,6 +243,55 @@ describe('getNews', () => {
       version: VERSION,
     })
     expect(legacy?.editing).toMatchObject({ content: { en: null }, isLegacy: true })
+  })
+})
+
+describe('getNewsById', () => {
+  const validUuid = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+
+  test('returns null when the id is not a valid UUID without calling Prisma', async () => {
+    const article = await getNewsById('not-a-uuid')
+
+    expect(article).toBeNull()
+    expect(prisma.news.findUnique).not.toHaveBeenCalled()
+  })
+
+  test('returns null when the news record is not found', async () => {
+    prisma.news.findUnique.mockResolvedValue(null)
+
+    const article = await getNewsById(validUuid)
+
+    expect(article).toBeNull()
+    expect(prisma.news.findUnique).toHaveBeenCalledWith({
+      where: { id: validUuid },
+      include: expect.any(Object),
+    })
+  })
+
+  test('maps and returns the news article when found', async () => {
+    prisma.news.findUnique.mockResolvedValue(newsRow({ id: validUuid }))
+
+    const article = await getNewsById(validUuid)
+
+    expect(article).toEqual(
+      expect.objectContaining({
+        slug: validUuid,
+        title: 'UCR pone en funcionamiento radiotelescopio para investigar el Sol',
+      }),
+    )
+    expect(article?.editing).toBeUndefined()
+  })
+
+  test('shows a translated item in the requested language, with editing data when asked', async () => {
+    prisma.news.findUnique.mockResolvedValue({ ...bilingualRow, id: validUuid })
+
+    const article = await getNewsById(validUuid, 'en', { includeEditingData: true })
+
+    expect(article).toMatchObject({
+      title: 'UCR brings a radio telescope online to study the Sun',
+      contentLocale: 'en',
+      editing: { isLegacy: false, version: VERSION },
+    })
   })
 })
 

@@ -34,7 +34,7 @@ const publicRoutes: { label: string; path: string; heading: string; group?: stri
 ]
 
 const areaCards = [
-  { name: 'Física solar', path: '/fisica-solar' },
+  { name: 'Física Solar', path: '/fisica-solar' },
   { name: 'Clima espacial', path: '/clima-espacial' },
   { name: 'ROSAC', path: '/radioastronomia' },
   { name: 'Herramientas científicas', path: '/herramientas-cientificas' },
@@ -43,7 +43,7 @@ const areaCards = [
 ] as const
 
 const workAreaRoutes = [
-  { path: '/fisica-solar', heading: 'Astrofísica solar' },
+  { path: '/fisica-solar', heading: 'Física Solar' },
   { path: '/clima-espacial', heading: 'Clima espacial' },
   { path: '/radioastronomia', heading: 'Radio Observatorio de Santa Cruz (ROSAC)' },
 ] as const
@@ -52,7 +52,7 @@ const workAreaRoutes = [
 // behind the Investigación disclosure.
 const navigationRoutes: { label: string; path: string; group?: string }[] = [
   ...publicRoutes,
-  { label: 'Física solar', path: '/fisica-solar', group: 'Investigación' },
+  { label: 'Física Solar', path: '/fisica-solar', group: 'Investigación' },
   { label: 'Clima espacial', path: '/clima-espacial', group: 'Investigación' },
   { label: 'ROSAC', path: '/radioastronomia', group: 'Investigación' },
 ]
@@ -207,14 +207,12 @@ test('displays solar astrophysics information without authentication', async ({ 
   expect(new URL(page.url()).pathname).toBe('/fisica-solar')
   expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
 
-  await expect(page.getByRole('heading', { level: 1, name: 'Astrofísica solar' })).toBeVisible()
-  await expect(
-    page.getByRole('heading', { name: /Qué estudia la astrofísica solar/ }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Física Solar' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Qué estudia la Física Solar/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Relación Sol-Tierra' })).toBeVisible()
   await expect(
-    page.getByRole('heading', { name: 'El trabajo de LASCE en astrofísica solar' }),
+    page.getByRole('heading', { name: 'El trabajo de LASCE en Física Solar' }),
   ).toBeVisible()
   await expect(page.getByText(/Laboratorio de Astrofísica Solar y Clima Espacial/)).toBeVisible()
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
@@ -503,7 +501,7 @@ test('returns 404 for an unknown public route', async ({ page }) => {
   expect(response?.status()).toBe(404)
 })
 
-test('displays academic activities in the news section and navigates to workshop details', async ({
+test('displays academic activities in the news section, with the description in the card', async ({
   page,
 }) => {
   const response = await page.goto('/noticias')
@@ -521,17 +519,36 @@ test('displays academic activities in the news section and navigates to workshop
   ).toBeVisible()
   await expect(page.getByText('Actividad académica')).toBeVisible()
 
-  await page.getByRole('link', { name: /Ver detalles de la actividad/i }).click()
-  await expect(page).toHaveURL(/\/noticias\/actividades\/machine-learning-workshop$/)
+  await page.getByRole('button', { name: 'Leer más' }).first().click()
+  await expect(page.getByRole('button', { name: 'Leer menos' }).first()).toBeVisible()
+})
+
+test('shows the dedicated academic activities page, reachable from the Divulgación menu', async ({
+  page,
+}) => {
+  // Wide enough for the desktop header: at 1400px and below the navigation is the mobile menu,
+  // where this link sits behind the hamburger button instead of in the desktop dropdown.
+  await page.setViewportSize({ width: 1600, height: 900 })
+  const response = await page.goto('/')
+
+  expect(response?.status()).toBe(200)
+  const desktopNav = page.getByRole('navigation', { name: 'Navegación principal' })
+  await desktopNav.getByText('Divulgación').click()
+  await desktopNav.getByRole('link', { name: 'Actividades académicas' }).click()
+
+  await expect(page).toHaveURL(/\/actividades-academicas$/)
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
+  ).toBeVisible()
   await expect(
     page.getByRole('heading', {
-      level: 1,
+      level: 3,
       name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
     }),
   ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { level: 2, name: 'Descripción de la actividad' }),
-  ).toBeVisible()
+
+  await page.getByRole('link', { name: 'Volver al inicio' }).click()
+  await expect(page).toHaveURL(/\/$/)
 })
 
 test('displays research collaborations', async ({ page }) => {
