@@ -18,8 +18,8 @@ vi.mock('@/app/lib/auth/apiGuard', () => ({
   requireApiPermission: mocks.requireApiPermission,
 }))
 
-// `newsInputSchema` is kept real (via `importOriginal` above), and the module that defines it
-// imports `prisma` at load time — stub it out so loading the real schema doesn't also require a
+// `newsCreateSchema` is kept real (via `importOriginal` above), and the module that defines it
+// imports `prisma` at load time: stub it out so loading the real schema doesn't also require a
 // live DATABASE_URL.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
@@ -27,12 +27,14 @@ import { POST } from './route'
 
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
 const validBody = {
-  title: 'Nuevo artículo',
+  content: {
+    es: { title: 'Nuevo artículo', abstract: 'Resumen del artículo.' },
+    en: { title: 'New article', abstract: 'Article abstract.' },
+  },
   source: 'La Nación',
   authors: ['Jorge Arturo Mora'],
   publishedAt: '2026-05-24',
   externalUrl: 'https://www.nacion.com/articulo',
-  abstract: 'Resumen del artículo.',
 }
 
 function postRequest(body: unknown) {
@@ -65,64 +67,74 @@ describe('POST /api/news', () => {
   test('rejects a body that is not valid JSON', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
-    const response = await POST(postRequest('not json'))
+    const response = await POST(postRequest('{not json'))
 
     expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toMatchObject({ code: 'invalid-json' })
     expect(mocks.createNews).not.toHaveBeenCalled()
   })
 
-  test('rejects a body missing required fields', async () => {
+  test('rejects an item missing its English text, pointing at the language', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
-    const response = await POST(postRequest({ ...validBody, title: '', authors: [] }))
+    const response = await POST(
+      postRequest({ ...validBody, content: { es: validBody.content.es } }),
+    )
 
     expect(response.status).toBe(400)
     const body = await response.json()
-    expect(body.issues).toMatchObject({
-      title: expect.any(Array),
-      authors: expect.any(Array),
-    })
+    expect(body.code).toBe('invalid-body')
+    expect(body.issues).toEqual([expect.objectContaining({ path: 'content.en' })])
     expect(mocks.createNews).not.toHaveBeenCalled()
   })
 
-  test('creates the article', async () => {
+  test('rejects the previous single-language body', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    const created = {
-      slug: 'new-1',
-      ...validBody,
-      date: '24 de mayo de 2026',
-      href: validBody.externalUrl,
-    }
-    mocks.createNews.mockResolvedValue(created)
+    const { content, ...shared } = validBody
+
+    const response = await POST(postRequest({ ...shared, ...content.es }))
+
+    expect(response.status).toBe(400)
+    expect(mocks.createNews).not.toHaveBeenCalled()
+  })
+
+  test('creates the item in both languages and answers with it', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    const article = { slug: 'news-1', title: 'Nuevo artículo' }
+    mocks.createNews.mockResolvedValue({ ok: true, article })
 
     const response = await POST(postRequest(validBody))
 
     expect(response.status).toBe(201)
-    expect(await response.json()).toEqual({ article: created })
+    expect(response.headers.get('Cache-Control')).toBe('no-store')
+    await expect(response.json()).resolves.toEqual({ article })
     expect(mocks.createNews).toHaveBeenCalledWith(validBody)
   })
 
-  test('returns 409 when another article already uses the link', async () => {
+  test('answers 409 when another item already uses the link', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    mocks.createNews.mockResolvedValue('duplicate-link')
+    mocks.createNews.mockResolvedValue({ ok: false, reason: 'duplicate-link' })
 
     const response = await POST(postRequest(validBody))
 
     expect(response.status).toBe(409)
-    expect((await response.json()).error).toBe(
-      'Ya existe una noticia con este enlace. Use otro enlace o edite la noticia existente.',
-    )
+    await expect(response.json()).resolves.toEqual({
+      code: 'duplicate-external-url',
+      error: 'Ya existe una noticia con este enlace. Use otro enlace o edite la noticia existente.',
+    })
   })
 
-  test('explains a database failure instead of throwing', async () => {
+  test('explains a database failure without its details', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    mocks.createNews.mockRejectedValue(new Error('connection refused'))
+    mocks.createNews.mockRejectedValue(new Error('connection refused at 10.0.0.5'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const response = await POST(postRequest(validBody))
 
     expect(response.status).toBe(500)
-    expect((await response.json()).error).toBe(
-      'No se pudo guardar la noticia: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
-    )
+    await expect(response.json()).resolves.toEqual({
+      code: 'internal-error',
+      error: 'No se pudo guardar la noticia.',
+    })
   })
 })

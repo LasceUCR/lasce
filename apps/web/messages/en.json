@@ -780,16 +780,74 @@
     }
   },
   "news": {
+    "page": {
+      "metaTitle": "News | LASCE",
+      "metaDescription": "News and media coverage of the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
+      "kicker": "LASCE public portal",
+      "title": "News and media coverage",
+      "lead": "News, outreach and coverage of LASCE’s work.",
+      "recent": "Recent news",
+      "searchLabel": "Search news",
+      "searchPlaceholder": "Search by title, author or keyword...",
+      "results": "{count, plural, one {# news item found.} other {# news items found.}}",
+      "emptyQuery": "No news found for “{query}”.",
+      "empty": "No news has been published yet."
+    },
     "card": {
       "openSource": "Open source",
-      "openSourceAria": "of “{title}” (opens in a new tab)"
+      "openSourceContext": "of “{title}” (opens in a new tab)",
+      "undated": "Undated",
+      "translationMissing": "No English version. Editing the title or abstract requires completing both languages."
+    },
+    "editor": {
+      "addCard": "Add news item",
+      "editTitle": "Edit news item",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "abstractField": "Abstract ({language})",
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or abstract, review it too.",
+      "legacyNoTranslation": "This news item has no English version yet. To change the title or abstract you must complete both languages; the other fields can be edited without translating it.",
+      "authors": "Authors",
+      "authorsHint": "Separate names with commas.",
+      "source": "Source",
+      "publishedAt": "Date",
+      "externalUrl": "Link",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving..."
+    },
+    "validation": {
+      "source": "The source is required.",
+      "authors": "Enter at least one author.",
+      "publishedAt": "The date is not valid.",
+      "externalUrl": "The link must be a URL that starts with http:// or https://."
+    },
+    "deleteDialog": {
+      "title": "Delete news item",
+      "message": "Do you want to delete the news item \"{title}\"? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     },
     "created": "News item added successfully.",
     "updated": "News item updated successfully.",
     "deleted": "News item deleted successfully.",
     "errors": {
       "saveUnknown": "The news item could not be saved. Try again.",
-      "deleteUnknown": "The news item could not be deleted. Try again."
+      "deleteUnknown": "The news item could not be deleted. Try again.",
+      "forbidden": "You do not have permission for this operation. Check your session.",
+      "notFound": "This news item no longer exists; someone else may have deleted it. Reload the page.",
+      "conflict": "Someone else saved changes to this news item after you opened it. Your changes were not saved: close the editor and open the news item again.",
+      "duplicateLink": "A news item with this link already exists. Use another link or edit the existing news item.",
+      "review": "Update the field in both languages or confirm that the translation is still correct.",
+      "invalid": "Check the highlighted fields and try again."
     }
   },
   "rosac": {
