@@ -22,7 +22,7 @@ export const Default: Story = {
     date: '24 de mayo de 2026',
     publishedAt: '2026-05-24',
     abstract:
-      'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
+      'Reportaje sobre proyectos científicos y tecnológicos de vanguardia desarrollados en Costa Rica que desafían la percepción de que en el país no se hace ciencia avanzada. Entre las iniciativas destacadas figura el radiotelescopio solar ROSAC de la Universidad de Costa Rica en Santa Cruz, Guanacaste, junto a investigaciones sobre implantes óseos en el Tecnológico de Costa Rica y desarrollos en el CeNAT, evidenciando el impacto y rigor de la investigación nacional.',
     href: 'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
   },
 }

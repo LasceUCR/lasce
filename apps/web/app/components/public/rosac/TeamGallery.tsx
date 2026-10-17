@@ -10,6 +10,8 @@ export interface TeamGalleryProps<T extends ResearcherCardProps = ResearcherCard
   emptyMessage: string
   hint: string
   people: readonly T[]
+  /** Label preceding the institution text on default cards. */
+  institutionLabel?: string
   /**
    * Overrides how a person's slide renders — defaults to a plain `ResearcherCard`. This is how a
    * caller (the ROSAC admin page) wraps a card with edit affordances without this component
@@ -34,6 +36,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
   label,
   emptyMessage,
   hint,
+  institutionLabel,
   people,
   renderPerson,
   trailingSlide,
@@ -90,11 +93,13 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
               renderPerson(person, index)
             ) : (
               <ResearcherCard
+                contentLang={person.contentLang}
                 description={person.description}
                 email={person.email}
+                institution={person.institution}
+                institutionLabel={person.institutionLabel ?? institutionLabel}
                 name={person.name}
                 role={person.role}
-                institution={person.institution}
                 src={person.src}
               />
             )}

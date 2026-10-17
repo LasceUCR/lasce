@@ -107,7 +107,7 @@ describe('PublicHeader', () => {
       group: 'Investigación',
       items: [
         ['Áreas de investigación', '/investigacion'],
-        ['Física solar', '/fisica-solar'],
+        ['Física Solar', '/fisica-solar'],
         ['Clima espacial', '/clima-espacial'],
         ['ROSAC', '/radioastronomia'],
       ],
@@ -117,6 +117,7 @@ describe('PublicHeader', () => {
       items: [
         ['Noticias', '/noticias'],
         ['Galería', '/galeria'],
+        ['Actividades académicas', '/actividades-academicas'],
       ],
     },
     {

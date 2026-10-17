@@ -270,9 +270,9 @@ Relationships: belongs to one `users` row.
 
 ## `gallery` schema
 
-Nothing reads or writes these tables yet: `/galeria` still renders from the static mock in
-`apps/web/app/lib/gallery.ts`. This section documents the schema so it's kept accurate as that
-mock is replaced.
+Gallery albums and sub-albums are written through the POST endpoints documented in
+[`gallery.md`](gallery.md), and `/galeria` reads the database-backed album hierarchy. Initial
+gallery content is declared in `apps/web/app/lib/gallery.ts` and populated by `pnpm db:seed`.
 
 ### `gallery_albums`
 
@@ -296,7 +296,32 @@ exactly 2 levels by application convention — nothing here stops a sub-album fr
 | `updated_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                                                     |
 
 Relationships: optionally belongs to one parent `gallery_albums` row; has many `gallery_albums`
-(its sub-albums, deleted with it); has many `gallery_media`.
+(its sub-albums, deleted with it), `gallery_media`, and `gallery_album_translations` (deleted with
+it).
+
+The base `title`, `description` and `years_label` hold the source-language text. For older albums,
+the language of that text may be unknown.
+
+### `gallery_album_translations`
+
+The translated text of a `gallery_albums` row. The Prisma model is `GalleryAlbumTranslation`; it
+stores the title, description and optional years label for a non-source locale. The slug, cover
+image, album hierarchy and media are shared.
+
+| Column        | Prisma type | Postgres type    | Constraints                                               |
+| ------------- | ----------- | ---------------- | --------------------------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                   |
+| `album_id`    | `String`    | `uuid`           | FK → `gallery_albums.id`, `ON DELETE CASCADE`, not null   |
+| `locale`      | `String`    | `varchar(5)`     | not null — validated against `locales` by the application |
+| `title`       | `String`    | `text`           | not null                                                  |
+| `description` | `String`    | `text`           | not null                                                  |
+| `years_label` | `String?`   | `text`           | nullable                                                  |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                    |
+
+Constraint: `UNIQUE (album_id, locale)`. The database does not enforce that every album has a
+translation row or that `years_label` is populated consistently across locales. The application
+has not yet wired this table into localized gallery reads and writes.
 
 ### `gallery_media`
 
@@ -397,6 +422,32 @@ identifier, a title, a description, and an optional image source.
 | `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
 | `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
 
+The Spanish `title` and `description` live here; every other language in
+`research_area_translations`. Relationships: has many `research_area_translations`.
+
+### `research_area_translations`
+
+The `title` and `description` of a `research_areas` row in a language other than Spanish, one row
+per area and locale. The Prisma model is `ResearchAreaTranslation`. The photograph (`src`) is
+shared by every language, so it is not here.
+
+| Column             | Prisma type | Postgres type    | Constraints                                                |
+| ------------------ | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`               | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `research_area_id` | `String`    | `uuid`           | FK → `research_areas.id`, `ON DELETE CASCADE`, not null    |
+| `locale`           | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es` |
+| `title`            | `String`    | `text`           | not null                                                   |
+| `description`      | `String`    | `text`           | not null                                                   |
+| `created_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at`       | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+Constraints: `UNIQUE (research_area_id, locale)`.
+
+> An area created before this table existed has no row here: it is shown in its base text in every
+> language, marked as being in an unknown language, until an editor adds its English. The
+> migration `20261015130000_add_research_area_translations` only creates the table;
+> `packages/db/prisma/seed.ts` writes the seeded areas in both languages.
+
 ### `exis_files`
 
 One daily EXIS L1b file (one product, one UTC day) ingested by the worker's `exis-pipeline` job
@@ -427,6 +478,20 @@ never writes here.
 Constraints: `UNIQUE (satellite, product, day)` — the upsert key, so a higher `_vX-Y-Z` of the
 same day replaces the older row instead of adding a second one.
 
+### `mag_files`
+
+One daily MAG L2 1-minute geomagnetic field file (`magn-l2-avg1m`, one UTC day) ingested by the
+worker's `mag-pipeline` job (`apps/worker/app/services/mag_readings.py`) — see
+[`mag-pipeline.md`](mag-pipeline.md). Same columns, constraints and upsert key as `exis_files`;
+the readings are in the InfluxDB measurement `mag_field` (tags `satellite`, `product`, `channel`;
+fields `value`, `valid`), not here. Differences:
+
+- `satellite` comes from the NetCDF `platform` attribute, upper-cased (`"g19"` → `"G19"`); the L2
+  files have no `platform_ID`.
+- `product` is always `"GEOF"`.
+- `version` looks like `"2-0-4"`, and `point_count` like
+  `{"EPN-x": 1440, "EPN-y": 1440, "EPN-z": 1440, "total": 1440}`.
+
 ## `public` schema (downloads)
 
 ### `resource_downloads`
@@ -455,6 +520,70 @@ permanent record. The worker never writes here.
 Indexes: `(user_id, created_at)` for a user's history, `(source, instrument, created_at)` for
 usage per instrument. Codes are plain strings, as in `role_permissions`, so a new instrument or
 format needs no migration.
+
+### `audit_events`
+
+The audit trail: one append-only row per thing that happened in the portal, shown newest first in
+the "Actividad reciente" panel of `/administracion` (LASCE-CON-012-151). Written only through
+`recordAuditEvent()` in `apps/web/app/lib/audit-log.ts`; see [audit-log.md](audit-log.md). The
+worker does not mirror this table in `apps/worker/app/db/models.py`.
+
+| Column        | Prisma type | Postgres type    | Constraints                                                          |
+| ------------- | ----------- | ---------------- | -------------------------------------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                              |
+| `action`      | `String`    | `text`           | not null; `<entity>.<verb>`, e.g. `"publication.create"`             |
+| `summary`     | `String`    | `text`           | not null; the line the panel shows, kept after the entity is gone    |
+| `actor_type`  | `String`    | `text`           | not null; `CHECK` in `('user', 'system', 'worker')`                  |
+| `actor_id`    | `String?`   | `uuid`           | FK → `auth.users.id`, `ON DELETE SET NULL`, so the trail outlives it |
+| `entity_type` | `String?`   | `text`           | nullable; what was acted on, e.g. `"publication"`                    |
+| `entity_id`   | `String?`   | `text`           | nullable; its id, as text so any key type fits                       |
+| `metadata`    | `Json?`     | `jsonb`          | nullable; anything else worth keeping                                |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                            |
+
+Indexes: `(created_at)` for the recent list, `(actor_id, created_at)` for one account's history,
+`(entity_type, entity_id, created_at)` for one record's history. `action` is a plain string, as in
+`role_permissions`, so a new kind of event needs no migration. Rows are never updated.
+
+### `solar_physics_sections`
+
+An editable text section of the solar physics page (`/fisica-solar`). Today there is one row, with
+`key = 'lasce'`: "El trabajo de LASCE en Física Solar". The migration
+(`20261014120000_add_solar_physics_sections`) creates it with the text the page showed before it
+became editable. `title` and `body` are the Spanish source text; the other languages live in
+`solar_physics_section_translations`. `body` is plain text and a blank line separates paragraphs.
+The Prisma model is `SolarPhysicsSection`.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                        |
+| ------------ | ----------- | ---------------- | ------------------------------------------------------------------ |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                            |
+| `key`        | `String`    | `text`           | `UNIQUE`, not null; the section's name, `'lasce'` today            |
+| `title`      | `String`    | `text`           | not null, Spanish                                                  |
+| `body`       | `String`    | `text`           | not null, Spanish; paragraphs separated by a blank line            |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                          |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed; the editor's version token |
+
+Relationships: has many `solar_physics_section_translations`.
+
+### `solar_physics_section_translations`
+
+The `title` and `body` of a `solar_physics_sections` row in a language other than Spanish, one
+row per section and locale. The Prisma model is `SolarPhysicsSectionTranslation`. The migration
+seeds the `en` row from the English text the page used to read from the message catalogue.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                     |
+| ------------ | ----------- | ---------------- | --------------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                         |
+| `section_id` | `String`    | `uuid`           | FK → `solar_physics_sections.id`, `ON DELETE CASCADE`, not null |
+| `locale`     | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es`      |
+| `title`      | `String`    | `text`           | not null                                                        |
+| `body`       | `String`    | `text`           | not null                                                        |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                       |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                          |
+
+Constraints: `UNIQUE (section_id, locale)`. The application requires both languages on every
+save, so the section is only ever written complete.
+
+Relationships: belongs to one `solar_physics_sections` row.
 
 ## `public` schema (home page)
 
@@ -559,6 +688,54 @@ the description when the page renders. See [`contact.md`](contact.md).
 `contact_channel_translations`: `id`, `contact_channel_id` (FK, `ON DELETE CASCADE`), `locale`
 (`varchar(5)`), `title`, `description`, timestamps. Unique on `(contact_channel_id, locale)`.
 
+## `public` schema (Nosotros)
+
+### `nosotros_activity_translations`
+
+The `title` and `paragraph` of a `nosotros_activities` row (a "¿Qué hacemos?" card on `/nosotros`)
+in a language other than Spanish, one row per card and locale. The Prisma model is
+`NosotrosActivityTranslation`. Spanish stays on the base row, so a card with no row here still
+renders, in its base text. `icon` is shared and stays on the base row. The base row's
+`modified_at` is the version an editor saves against.
+
+| Column        | Prisma type | Postgres type    | Constraints                                                  |
+| ------------- | ----------- | ---------------- | ------------------------------------------------------------ |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                                      |
+| `activity_id` | `String`    | `uuid`           | FK → `nosotros_activities.id`, `ON DELETE CASCADE`, not null |
+| `locale`      | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es`    |
+| `title`       | `String`    | `text`           | not null                                                     |
+| `paragraph`   | `String`    | `text`           | not null                                                     |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                    |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                       |
+
+Constraints: `UNIQUE (activity_id, locale)`. Cards created before this table existed have no row
+and are shown as they are, with an unknown content language. See
+[translate-database-content.md](translate-database-content.md).
+
+### `nosotros_researcher_translations`
+
+The `role` and `description` of a `nosotros_researchers` row (a researcher profile on `/nosotros`)
+in a language other than Spanish, one row per researcher and locale. The Prisma model is
+`NosotrosResearcherTranslation`. Spanish stays on the base row, so a researcher with no row here
+still renders, in its base text. The photo, `name`, `institution` and `email` are shared and stay
+on the base row. The base row's `modified_at` is the version an editor saves against.
+`description` is optional on the base row and all-or-none across languages: null in every
+language, or filled in every language.
+
+| Column          | Prisma type | Postgres type    | Constraints                                                   |
+| --------------- | ----------- | ---------------- | ------------------------------------------------------------- |
+| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                       |
+| `researcher_id` | `String`    | `uuid`           | FK → `nosotros_researchers.id`, `ON DELETE CASCADE`, not null |
+| `locale`        | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es`     |
+| `role`          | `String`    | `text`           | not null                                                      |
+| `description`   | `String?`   | `text`           | nullable                                                      |
+| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                     |
+| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                        |
+
+Constraints: `UNIQUE (researcher_id, locale)`. Researchers created before this table existed have
+no row and are shown as they are, with an unknown content language. See
+[translate-database-content.md](translate-database-content.md).
+
 ## `public` schema (space weather)
 
 ### `space_weather_sections` and `space_weather_section_translations`
@@ -617,6 +794,9 @@ behind the cookie together with its user, and `deleteCurrentSession()` deletes i
 `apps/web/app/lib/auth/authorization.ts` reads it on each permission check.
 `apps/web/app/services/downloads/downloadService.ts`'s `createResourceDownload()` is the only
 writer of `public.resource_downloads`. Nothing reads it yet.
+`apps/web/app/lib/audit-log.ts` owns `public.audit_events`: `recordAuditEvent()` is its only
+writer (nothing calls it yet) and `getRecentActivity()` its only reader, for the summary at
+`/administracion`.
 
 `apps/web/app/lib/contact-channels.ts` reads and writes `public.contact_channels` and
 `public.contact_channel_translations` for `/contacto`. Spanish text is the base row; English is
@@ -638,12 +818,39 @@ decoded. Nothing in `apps/web` reads it yet.
 `apps/worker/app/services/exis_readings.py`'s `ExisReadings.persist()` is the only writer of
 `solar.exis_files`, and `ExisReadings.ingested_modified_at()` its only reader; both are called
 from the `exis-pipeline` processor. Nothing in `apps/web` reads it yet.
-`apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` reads `public.research_areas` and
-maps each row to the `ResearchArea` shape rendered by the public investigation page. The research
-area create, update, and delete operations will also write this table when implemented.
+`apps/worker/app/services/mag_readings.py`'s `MagReadings.persist()` is the only writer of
+`solar.mag_files`, and `MagReadings.ingested()` its only reader; both are called from the
+`mag-pipeline` processor. Nothing in `apps/web` reads it.
+`apps/web/app/lib/research-areas.ts`'s `getResearchAreas()` and `getResearchAreaById()` read
+`areas.research_areas` with its `research_area_translations` and map each row to the
+`ResearchArea` shape the public investigation pages render, in the requested language, falling
+back per record to the base text, with every language and the version for an editor.
+`createResearchArea()` writes the base row and its translations in one transaction;
+`updateResearchArea()` writes the photo and, when the text changed, the Spanish base row and the
+upserted translations, only while `updated_at` still equals the version the editor loaded, and
+moves it forward. `deleteResearchArea()` deletes the base row; its translations cascade.
 
-Nothing yet reads or writes `gallery_albums`/`gallery_media` — `/galeria` still renders from the
-static mock in `apps/web/app/lib/gallery.ts`.
+`apps/web/app/lib/solar-physics-section.ts`'s `getSolarPhysicsSection()` reads the `lasce` row of
+`public.solar_physics_sections` with its translations and returns the title and paragraphs in the
+requested language for `/fisica-solar`. `updateSolarPhysicsSection()` (called by
+`PATCH /api/solar-physics/lasce-section`) is the only writer: in one transaction it rewrites the
+Spanish text, upserts the translations and moves `updated_at` forward, and only while `updated_at`
+still equals the version the editor loaded. Nothing in `apps/worker` reads these tables.
+
+`apps/web/app/lib/solar-physics-section.ts`'s `getSolarPhysicsSection()` reads the `lasce` row of
+`public.solar_physics_sections` with its translations and returns the title and paragraphs in the
+requested language for `/fisica-solar`. `updateSolarPhysicsSection()` (called by
+`PATCH /api/solar-physics/lasce-section`) is the only writer: in one transaction it rewrites the
+Spanish text, upserts the translations and moves `updated_at` forward, and only while `updated_at`
+still equals the version the editor loaded. Nothing in `apps/worker` reads these tables.
+
+`apps/web/app/lib/gallery.ts` reads the database-backed `gallery_albums` hierarchy and its
+`gallery_media`, each with its translations, and the gallery API writes these records.
+`getGalleryAlbums()` returns an album's title and description in the requested language and falls
+back to the base text when that language has no translation. Creating an album inserts its
+translations with it, and an update upserts them only when the editor sends text. Editing also
+returns every stored language so the form can show them. Media translations in
+`gallery_media_translations` work the same way.
 
 ## Keeping this current
 

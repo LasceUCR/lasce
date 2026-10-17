@@ -27,6 +27,14 @@ export interface ResearcherCardProps {
   description?: string
   /** One address, or several when LASCE supplied more than one. */
   email?: string | readonly string[]
+  /**
+   * The `lang` of `role` and `description`, for a roster whose text is bilingual (`/nosotros`).
+   * `''` marks text in an unknown language. Left out, no `lang` is set, as for ROSAC. It is not
+   * applied to the name or the institution, which are the same in every language.
+   */
+  contentLang?: string
+  /** Label preceding the institution text. Defaults to `'Institución'`. */
+  institutionLabel?: string
 }
 
 /**
@@ -43,6 +51,8 @@ export function ResearcherCard({
   institution,
   description,
   email,
+  contentLang,
+  institutionLabel = 'Institución',
 }: ResearcherCardProps) {
   const [flipped, setFlipped] = useState(false)
   const descriptionId = useId()
@@ -111,7 +121,9 @@ export function ResearcherCard({
               src={src || DEFAULT_RESEARCHER_PHOTO}
             />
           </div>
-          <p className="researcher-card-role">{role}</p>
+          <p className="researcher-card-role" lang={contentLang}>
+            {role}
+          </p>
           <h3 className="researcher-card-name">{name}</h3>
           <div className="researcher-card-meta">
             {emails.length > 0 ? (
@@ -126,7 +138,9 @@ export function ResearcherCard({
                 ))}
               </p>
             ) : null}
-            <p className="researcher-card-institution">Institución: {institutionText}</p>
+            <p className="researcher-card-institution">
+              {institutionLabel}: {institutionText}
+            </p>
           </div>
         </div>
 
@@ -152,7 +166,7 @@ export function ResearcherCard({
                 className="researcher-card-institution"
                 id={description ? undefined : institutionId}
               >
-                Institución: {institution}
+                {institutionLabel}: {institution}
               </p>
             </div>
             {description ? (
@@ -164,7 +178,9 @@ export function ResearcherCard({
                 role="region"
                 tabIndex={flipped ? 0 : -1}
               >
-                <p className="researcher-card-description">{description}</p>
+                <p className="researcher-card-description" lang={contentLang}>
+                  {description}
+                </p>
               </div>
             ) : null}
           </div>

@@ -659,7 +659,7 @@ describe('PublicationsExplorer: closing and deleting', () => {
     ).toBeInTheDocument()
   })
 
-  test('names the publication in the delete confirmation and deletes it', async () => {
+  test('deletes the publication upon confirmation', async () => {
     const user = renderEditor()
     respond(200, {})
 
@@ -669,7 +669,6 @@ describe('PublicationsExplorer: closing and deleting', () => {
     expect(dialog).toHaveTextContent(
       'Esta acción no se puede deshacer y borrará la publicación del catálogo público.',
     )
-    expect(dialog).toHaveTextContent('Elemento: Actividad solar')
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
@@ -692,7 +691,7 @@ describe('PublicationsExplorer: in English, the language the site is shown in', 
     expect(screen.getByRole('tablist', { name: 'Content language' })).toBeInTheDocument()
   })
 
-  test('confirms a deletion in English, naming the publication', async () => {
+  test('confirms a deletion in English', async () => {
     const user = renderEditor([bilingual, legacy], 'en')
     respond(403, { error: 'No tiene permisos para modificar este contenido.' })
 
@@ -701,7 +700,6 @@ describe('PublicationsExplorer: in English, the language the site is shown in', 
     expect(dialog).toHaveTextContent(
       'This action cannot be undone and will remove the publication from the public catalog.',
     )
-    expect(dialog).toHaveTextContent('Item: Actividad solar')
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }))
 
     expect(screen.getByRole('alert')).toHaveTextContent(

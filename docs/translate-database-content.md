@@ -2,14 +2,15 @@
 
 A practical guide to managing editable Spanish/English content in PostgreSQL through LASCE's existing CMS, and to implementing the same pattern in another entity **without copying the Publications implementation**.
 
-- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)) the contact cards on `/contacto` (`ContactChannel`) and the "¿Por qué estudiarlo desde Costa Rica?" card on `/clima-espacial` (`SpaceWeatherSection`, see [`space-weather.md`](space-weather.md)) use the same pattern. News, research areas, activities, researchers and the gallery are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
+- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **"¿Qué hacemos?" cards** on `/nosotros` (`NosotrosActivity`), the **researcher profiles** on `/nosotros` (`NosotrosResearcher`), the **LASCE section of Física Solar** (`/fisica-solar`, a single editable text section, a lighter example with no create or delete), the **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)), the contact cards on `/contacto` (`ContactChannel`), **research areas** (`/investigacion`), the **gallery**
+  (`/galeria`, albums and media) and the "¿Por qué estudiarlo desde Costa Rica?" card on `/clima-espacial` (`SpaceWeatherSection`, see [`space-weather.md`](space-weather.md)) use the same pattern. News, academic activities, and the ROSAC researchers are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
 
   is a different problem, handled by the message catalogues in [`internationalization.md`](internationalization.md).
 
 - **Who this is for.** A developer adding bilingual editing to an entity they own. You should not need to read the publications code to follow it; it is listed in [section 5](#5-reference-implementation-publications) as a working example.
 
 - **Examples.** **Real API** means the named import/function exists in the shared implementation. **Illustrative** means an incomplete or entity-specific example that must be adapted and connected before it can run. The fictitious `Event` entity (`name`, optional `summary`, shared `startsAt`) has **no Prisma model, route or page** in LASCE. Do not paste the snippets as one ready-made feature.
-- **Scope.** `/publicaciones`, the home page, the contact cards and the space weather card have been integrated with the shared infrastructure. The remaining managed sections belong to their respective owners. This guide documents **how** to extend the pattern; it does not implement those features.
+- **Scope.** `/publicaciones`, `/investigacion`, the "¿Qué hacemos?" cards of `/nosotros` (`NosotrosActivity`, whose `description` is stored in the `paragraph` column; see `app/lib/nosotros-activity-schema.ts`), the researcher profiles of `/nosotros` (`NosotrosResearcher`: `role` required and `description` optional, all-or-none; see `app/lib/nosotros-researcher-schema.ts`), the LASCE section of `/fisica-solar`, the home page, the contact cards and the space weather card have been integrated with the shared infrastructure. The researcher form (`ResearcherForm`, `EditableResearcherCard`) is shared with the single-language ROSAC team, so its bilingual mode is opt-in through a `translation` prop and ROSAC does not pass it. The remaining managed sections belong to their respective owners. This guide documents **how** to extend the pattern; it does not implement those features.
 - **Release status.** Documentation of a completed local implementation does not imply that this branch has been merged into `development` or deployed to production.
 - **Source of truth.** If this guide and the code disagree, verify the actual exported signatures and existing tests, then fix the guide in the same PR. The snippets below were derived from the supplied implementation guide, not recompiled against the user's current working tree as part of this document edit.
 
@@ -887,6 +888,13 @@ For a new bilingual entity `X`:
 
 Publications are the working example of every step above.
 
+A smaller second example is the "¿Qué hacemos?" cards of `/nosotros` (`NosotrosActivity`): a
+shared `icon`, a translatable `title` and `description` (the `paragraph` column, mapped in
+`app/lib/nosotros.ts`), no external relations and no unique columns. Its pieces are
+`app/lib/nosotros-activity-schema.ts`, `app/lib/nosotros.ts`, `app/api/nosotros/activities/**`,
+`NosotrosActivityForm.tsx` and the `nosotros_activity_translations` table. Its version token is
+the base row's `modified_at`.
+
 ### Where the code lives
 
 | File                                                                                                             | What it shows                                                                                           |
@@ -1066,7 +1074,7 @@ For an existing single-language entity, **capture a before/after regression base
 
 Known limitations of the current implementation:
 
-- Publications, the home page, the contact cards and the space weather card use it. The rest of `/publicaciones` (its fixed copy and the editor) follows the site's language too, from the `publications` namespace of the message catalogue.
+- Publications, research areas, the home page, the contact cards and the space weather card use it. The rest of `/publicaciones` (its fixed copy and the editor) follows the site's language too, from the `publications` namespace of the message catalogue.
 
 - Search on `/publicaciones` matches the text in the current language only.
 - An editor receives every language of every publication with the page; there is no pagination.

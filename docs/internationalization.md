@@ -10,17 +10,20 @@ never text a visitor reads.
 - The mechanism is in place and **Spanish (`es`) is the source language**. English (`en`) is the
   second language.
 - The **site shell** and the **static pages** read from the message catalogues and are translated
-  into English: the header navigation, the footer, the home page, Contacto, Física solar, Clima
-  espacial, Herramientas científicas, Colaboraciones e Iniciativas and the academic activity page.
+  into English: the header navigation, the footer, the home page, Contacto, Física Solar, Clima
+  espacial, Herramientas científicas, Colaboraciones e Iniciativas, Nosotros and the academic
+  activity page.
 - The English text is a first draft. Nobody has reviewed its scientific terminology yet.
 - Everything else is still hardcoded Spanish and shows in Spanish in every language. The full
   list, page by page, is in [Translation status](#translation-status).
 - Database content ("Modo edición") has shared, reusable infrastructure. **Publications** on
-  `/publicaciones` (title and abstract), the **home page** (the hero banner's title and subtitle,
-  and the geomagnetic indices' descriptions), the **contact cards** on `/contacto` (title and
-  description) and the **"¿Por qué estudiarlo desde Costa Rica?" card** on `/clima-espacial`
-  (title and text) use it, in Spanish and English. Every other editable entity is still
-  single-language. See [Dynamic content](#dynamic-content) and
+  `/publicaciones` (title and abstract), the **"¿Qué hacemos?" cards** on `/nosotros` (title and
+  description), the **researcher profiles** on `/nosotros` (role and description), the **LASCE
+  section** of `/fisica-solar` (title and text), the **home page** (the hero banner's title and
+  subtitle, and the geomagnetic indices' descriptions), the **contact cards** on `/contacto` (title
+  and description), **the research areas on `/investigacion`** (title and description), the **gallery** (`/galeria`, albums and media) and the **"¿Por qué estudiarlo desde Costa Rica?" card** on `/clima-espacial` (title and text) use it,
+  read and edited in Spanish and English. Every other editable entity is still single-language.
+  See [Dynamic content](#dynamic-content) and
   [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
@@ -165,17 +168,21 @@ inventory taken when the static pages were migrated.
 
 ### Translated
 
-| Route                                    | Namespace                            | Copy built in                                             |
-| ---------------------------------------- | ------------------------------------ | --------------------------------------------------------- |
-| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                       |
-| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`   |
-| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`             |
-| `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`                               |
-| `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`, `lib/space-weather-section.ts`    |
-| `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                 |
-| `/colaboraciones-e-iniciativas`          | `collaborations`                     | `lib/collaborations.ts`, `lib/research-collaborations.ts` |
-| `/noticias/actividades/[slug]`           | `academicActivities`                 | `lib/academic-activities.ts`                              |
-| `/publicaciones`                         | `publications`                       | `PublicationsExplorer.tsx`, `lib/publication-form.ts`     |
+| Route                                    | Namespace                            | Copy built in                                                                 |
+| ---------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
+| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                                           |
+| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`                       |
+| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`                                 |
+| `/nosotros`                              | `nosotros`                           | `lib/nosotros.ts`, `NosotrosPage.tsx`, `NosotrosActivityForm.tsx`             |
+| `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`                       |
+| `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`, `lib/space-weather-section.ts`                        |
+| `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                                     |
+| `/colaboraciones-e-iniciativas`          | `collaborations`                     | `lib/collaborations.ts`, `lib/research-collaborations.ts`                     |
+| `/investigacion/**`                      | `researchAreas`                      | `(public)/investigacion/**`, `research/*`                                     |
+| `/noticias/actividades/[slug]`           | `academicActivities`                 | `lib/academic-activities.ts`                                                  |
+| `/publicaciones`                         | `publications`                       | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                         |
+| `/radioastronomia`                       | `rosac`                              | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`       |
+| `/datos`                                 | `scientificData`                     | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts` |
 
 The academic activities section and its cards on `/noticias` are translated too; the rest of
 that page is not.
@@ -198,18 +205,37 @@ cards' buttons (`card`), the editor of "Modo edición" with its popups, validati
 messages (`editor`, `authorDialog`, `discardDialog`, `deleteDialog`, `validation`, `saveErrors`),
 and the publications themselves, which are database content.
 
+`/nosotros` is translated, database content included: the fixed copy, the editor labels and
+dialogs of the activity cards (`nosotros.activities.form`) and the researcher messages and the
+labels of the bilingual part of the researcher editor (`nosotros.researchers`, `form`), with the
+researcher create, edit and delete feedback in the shared `researchers.*` namespace. The
+activity cards and the role and description of the researcher profiles are bilingual. The rest of
+the researcher editor (photo, name, contact, institution and its dialogs) comes from the
+components shared with ROSAC (`ResearcherForm`, `EditableResearcherCard`, `TeamGallery`), which
+still show Spanish; they turn the bilingual part on only when `/nosotros` passes `translation`.
+The API's own error messages are still Spanish.
+
+`/datos` has no database content; everything is `lib/scientific-data.ts` and the
+`scientific-data/*` components. `getScientificSources(messages)` follows the "content built on the
+server and passed as props" pattern: the instrument, product and parameter codes, visualization
+kinds and availability stay in the lib module, and only their copy is looked up from
+`scientificData.instruments`/`.parameters`/`.units`, with a Spanish fallback at every level. The
+query form's own validation (`scientificData.validation`) is a schema factory,
+`getScientificDataQuerySchema(messages)`, called with `useTranslations` on the client and
+`getTranslations` in the `/api/scientific-data` route handler and the `requestResourceDownload`
+Server Action — the first case of either in this codebase. The download-eligibility chain under
+`services/downloads/` has no request context to translate from and is still Spanish, same as the
+rest of the "Not tied to one page" list below.
+
 ### Still to do
 
-| Route                            | Copy lives in                                                              | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
-| -------------------------------- | -------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/galeria/**`                    | `lib/gallery.ts`, `gallery/*`                                              | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
-| `/radioastronomia`               | `lib/rosac.ts`, `rosac-construction.ts`, `rosac-instruments.ts`, `rosac/*` | 126 in lib, 56 in components       | The team comes from the database. The researcher create and edit feedback is in the catalogue (`researchers.*`, shared with `/nosotros`). Instrument cards are built at module load from Spanish product names. `rosac-construction.ts` is imported by a Playwright spec          |
-| `/nosotros`                      | `lib/nosotros.ts`, `NosotrosPage`, `NosotrosActivityForm`                  | 20 in lib, 27 in components        | Activities and researchers come from the database. The create, edit and delete feedback for activities is already in the catalogue (`nosotros.activities.*`), and the researcher create and edit feedback in `researchers.*`; the API's own error messages are still Spanish      |
-| `/datos`                         | `lib/scientific-data.ts`, `scientific-data/*`                              | 66 in lib, 98 in components        | 139 labels are generated in code from Spanish pieces. Product names also reach the CSV and PNG exports. Four formatters hardcode `es-CR`                                                                                                                                          |
-| `/noticias`, `/investigacion/**` | `lib/news.ts`, `research-areas.ts` and their components                    | 23 in lib, 111 in components       | Mostly editing forms. Two hand-written plurals. Zod messages are repeated word for word on the client. The news create, edit and delete feedback is already in the catalogue (`news.*`), with the shared network and server fallbacks in `common.feedback`                        |
-| `/acceso`, `/cuenta`             | `lib/auth/login.ts`, `registration.ts`, `account.ts`                       | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
-| `/administracion/**`             | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*`         | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
-| `(public)/[section]`             | inline in the page                                                         | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
+| Route                | Copy lives in                                                      | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/galeria/**`        | `lib/gallery.ts`, `gallery/*`                                      | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
+| `/noticias`          | `lib/news.ts` and its components                                   | 23 in lib, 111 in components       | Mostly editing forms. Two hand-written plurals. Zod messages are repeated word for word on the client. The news create, edit and delete feedback is already in the catalogue (`news.*`), with the shared network and server fallbacks in `common.feedback`                        |
+| `/acceso`, `/cuenta` | `lib/auth/login.ts`, `registration.ts`, `account.ts`               | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
+| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
+| `(public)/[section]` | inline in the page                                                 | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
 
 ### Not tied to one page
 
@@ -217,10 +243,12 @@ and the publications themselves, which are database content.
    (`lib/news.ts`, `lib/nosotros.ts`, `lib/auth/login.ts`, ...) become factories that take `t`.
    Server Actions and route handlers under `app/api/` call `getTranslations`; the cookie is
    available in both.
-2. **Formatting.** Nine `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
-   (`scientific-data/`, `lib/news.ts`, `cuenta/page.tsx`, `lib/auth/countries.ts`,
+2. **Formatting.** Five `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
+   (`lib/news.ts`, `cuenta/page.tsx`, `lib/auth/countries.ts`,
    `services/downloads/exporters/png.ts`, `UserRoleChangeDialog.tsx`). Replace them with
-   next-intl's `useFormatter` / `getFormatter`, which follow the request's locale and time zone.
+   next-intl's `useFormatter` / `getFormatter`, which follow the request's locale and time zone —
+   `scientific-data/` (`ScientificDataExplorer.tsx`, `SolarToday.tsx`, `ScientificDataChart.tsx`)
+   already does.
 3. **Shared editing components** with their own text: `ConfirmDialog`, `EditableWrapper`,
    `FileDropInput`, `Select`, `Carousel`, and the default label of `InfoCard`. Their strings
    ("Confirmar", "Cancelar", "Eliminar", "Anterior", "Siguiente") are repeated across forms and
@@ -233,7 +261,8 @@ and the publications themselves, which are database content.
    namespaces Client Components use. It needs a safeguard, because a namespace left out fails
    only in the browser.
 6. **Review of the English text** by someone who knows the terminology.
-7. **Database content** for every entity except publications, following
+7. **Database content** for every entity except publications and the Nosotros activity cards and
+   researchers, following
    [`translate-database-content.md`](translate-database-content.md).
 
 ## Dynamic content
@@ -265,13 +294,17 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
 - **How it works and how to make an entity bilingual:**
   [`translate-database-content.md`](translate-database-content.md), with the publications as the
   reference implementation, their API contract, the design decisions and the known limitations.
-- **Which entities are bilingual:** publications, the home page banner (`HomeHero`) and its
-  geomagnetic indices (`GeomagneticIndex`, description only), and the contact cards on
-  `/contacto` (`ContactChannel`: `title` and `description`; the icon, link and position are
-  shared), and the space weather page's sections (`SpaceWeatherSection`: `title` and `body`). The same pattern is meant for `News`, `ResearchArea`, `NosotrosActivity`,
-  `Researcher`, `NosotrosResearcher`, `GalleryAlbum` and `GalleryMedia`, each with its own
-  translation table holding only its translatable columns (`title`, `abstract`, `description`,
-  `paragraph`, `role`, `altText`, `yearsLabel`).
+- **Which entities are bilingual:** publications, `NosotrosActivity` (the "¿Qué hacemos?" cards
+  on `/nosotros`: `title` and `description`, stored as `paragraph`), `NosotrosResearcher` (the
+  researcher profiles on `/nosotros`: `role` and an optional `description`; the name,
+  institution, addresses and photo are shared), the LASCE section of `/fisica-solar`
+  (`SolarPhysicsSection`), the home page banner (`HomeHero`) and its geomagnetic indices
+  (`GeomagneticIndex`, description only), the contact cards on `/contacto` (`ContactChannel`:
+  `title` and `description`; the icon, link and position are shared), research areas
+  (`ResearchArea`), and the space weather page's sections (`SpaceWeatherSection`: `title` and
+  `body`). The same pattern is meant for `News`, `Researcher` (ROSAC), `GalleryAlbum` and
+  `GalleryMedia`, each with its own translation table holding only its translatable columns
+  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
 - **Tables:** [`database-definition.md`](database-definition.md).
 
 The editor's language tabs only choose which translation is being edited; the header selector

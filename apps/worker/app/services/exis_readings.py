@@ -26,7 +26,6 @@ reading the earlier version had, that reading is overwritten with
 """
 
 import asyncio
-import math
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -40,7 +39,14 @@ from sqlalchemy.dialects.postgresql import insert
 from app.clients.db import session_scope
 from app.clients.exis import ExisFile, ExisProduct
 from app.clients.influx import InfluxClient, Point, get_influx_client
-from app.clients.netcdf import NETCDF_LOCK, primary_irradiance
+from app.clients.netcdf import (
+    NETCDF_LOCK,
+    bad_quality,
+    epoch_nanoseconds,
+    json_attribute,
+    plain_utc,
+    primary_irradiance,
+)
 from app.db.models import ExisFile as ExisFileRow
 from app.logging import get_logger
 
@@ -54,7 +60,6 @@ BATCH_SIZE = 10_000
 # Which part of the file names the product, so a file saved under the wrong
 # directory is rejected instead of decoded as the wrong channels.
 _TITLE_SUFFIX = {ExisProduct.SFEU: "EUV", ExisProduct.SFXR: "X-Ray"}
-_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 
 
 @dataclass(frozen=True)
@@ -114,47 +119,6 @@ class ExisDecoded:
         return max(ends) if ends else None
 
 
-def _attribute(value: Any) -> Any:
-    """One NetCDF global attribute, made safe for a ``jsonb`` column."""
-    if isinstance(value, np.ndarray):
-        return [_attribute(item) for item in value.tolist()]
-    if isinstance(value, np.generic):
-        value = value.item()
-    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
-        return None
-    if value is None or isinstance(value, str | bool | int | float):
-        return value
-    return str(value)
-
-
-def _utc(stamp: datetime) -> datetime:
-    """A plain, UTC-aware ``datetime``.
-
-    ``num2date`` hands back cftime's ``real_datetime`` subclass; rebuilding a
-    plain one keeps database drivers from having to know about it.
-    """
-    return datetime(
-        stamp.year,
-        stamp.month,
-        stamp.day,
-        stamp.hour,
-        stamp.minute,
-        stamp.second,
-        stamp.microsecond,
-        tzinfo=UTC,
-    )
-
-
-def _quality_mask(dataset: Any, name: str) -> Any:
-    """``True`` for every report whose quality flags say it is not good."""
-    quality = dataset.variables[name]
-    good_mask = int(np.asarray(quality.flag_masks).flat[0])
-    flags = quality[:]
-    # A missing flag is not a good flag: fill it with every bit set.
-    filled = np.ma.filled(flags, np.iinfo(flags.dtype).max)
-    return np.bitwise_and(filled, good_mask) != 0
-
-
 def _channel_values(dataset: Any, product: ExisProduct, channel: Channel) -> Any:
     if product is ExisProduct.SFXR:
         return primary_irradiance(dataset, channel.variable, channel.unit)
@@ -189,7 +153,7 @@ def decode(content: bytes, product: ExisProduct, spacecraft: int) -> ExisDecoded
                 raise ValueError(f"Time and {channel.variable} dimensions do not match")
             filled = np.ma.filled(values.astype(np.float64), np.nan)
             valid = time_valid & ~np.ma.getmaskarray(values) & np.isfinite(filled)
-            valid &= ~_quality_mask(dataset, channel.quality)
+            valid &= ~bad_quality(dataset, channel.quality)
             valid &= filled >= 0
             if not valid.any():
                 series[channel.code] = []
@@ -203,18 +167,12 @@ def decode(content: bytes, product: ExisProduct, spacecraft: int) -> ExisDecoded
             )
             stamps = [decoded] if isinstance(decoded, datetime) else list(decoded)
             series[channel.code] = sorted(
-                (_utc(stamp), float(value))
+                (plain_utc(stamp), float(value))
                 for stamp, value in zip(stamps, filled[valid], strict=True)
             )
 
-        attributes = {name: _attribute(dataset.getncattr(name)) for name in dataset.ncattrs()}
+        attributes = {name: json_attribute(dataset.getncattr(name)) for name in dataset.ncattrs()}
     return ExisDecoded(satellite=satellite, series=series, attributes=attributes)
-
-
-def _nanoseconds(stamp: datetime) -> int:
-    """``stamp`` as integer nanoseconds since the epoch, exactly as InfluxDB keys it."""
-    delta = stamp - _EPOCH
-    return (delta.days * 86_400 + delta.seconds) * 10**9 + delta.microseconds * 1_000
 
 
 def _point(satellite: str, product: ExisProduct, channel: str) -> Point:
@@ -250,7 +208,7 @@ def stale_points(
     ``value`` stays readable but is marked as withdrawn.
     """
     kept = {
-        (code, _nanoseconds(stamp))
+        (code, epoch_nanoseconds(stamp))
         for code, points in decoded.series.items()
         for stamp, _ in points
     }

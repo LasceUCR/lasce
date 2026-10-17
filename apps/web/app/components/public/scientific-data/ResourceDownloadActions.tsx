@@ -1,4 +1,7 @@
+'use client'
+
 import { Download, LogIn } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { Notice } from '@/app/components/public/Notice'
@@ -32,6 +35,7 @@ export function ResourceDownloadActions({
   message,
   onDownload,
 }: ResourceDownloadActionsProps) {
+  const t = useTranslations('scientificData.downloads')
   const visible = options.filter((option) =>
     signedIn ? option.allowed : option.kind === 'graphic',
   )
@@ -39,7 +43,7 @@ export function ResourceDownloadActions({
 
   return (
     <section aria-labelledby="scientific-downloads-title" className="data-downloads">
-      <h3 id="scientific-downloads-title">Descargas</h3>
+      <h3 id="scientific-downloads-title">{t('title')}</h3>
       <div className="data-downloads-actions">
         {visible.map((option) => (
           <Button
@@ -55,9 +59,9 @@ export function ResourceDownloadActions({
             onClick={() => onDownload(option.format)}
           >
             {!signedIn
-              ? 'Inicie sesión para descargar la gráfica'
+              ? t('signInPrompt')
               : pendingFormat === option.format
-                ? 'Preparando descarga…'
+                ? t('preparing')
                 : option.label}
           </Button>
         ))}

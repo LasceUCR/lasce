@@ -1,7 +1,8 @@
 /**
  * The reason a JSON route handler gave for a failed request, as one sentence an error toast can
  * show. Route handlers here answer a failure with `{ error }`, and a validation failure adds
- * `issues` (Zod's `flatten().fieldErrors`). The field messages are what actually tell the admin
+ * `issues`: Zod's `flatten().fieldErrors` (lists of messages per field) or, from the CMS routes
+ * (`app/lib/cms/http.ts`), a list of `{ path, message }`. The field messages are what actually tell the admin
  * what to fix, so they are appended to `error` instead of being dropped.
  *
  * Returns `null` when the body says nothing usable (not JSON, an HTML error page, no `error`).
@@ -30,10 +31,14 @@ export async function readFailureReason(response: Pick<Response, 'json'>): Promi
 function issueMessages(issues: unknown): string[] {
   if (typeof issues !== 'object' || issues === null) return []
 
-  const messages = Object.values(issues).flatMap((value: unknown) =>
-    Array.isArray(value)
-      ? value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
-      : [],
-  )
+  const messages = Object.values(issues).flatMap((value: unknown) => {
+    if (Array.isArray(value)) {
+      return value.filter((item): item is string => typeof item === 'string' && item.trim() !== '')
+    }
+
+    // One `{ path, message }` issue of a CMS route.
+    const message = (value as { message?: unknown } | null)?.message
+    return typeof message === 'string' && message.trim() !== '' ? [message] : []
+  })
   return [...new Set(messages.map((item) => item.trim()))]
 }
