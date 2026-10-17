@@ -41,6 +41,11 @@ actions or `@lasce/*` packages directly inside the component. A component
 that only depends on its props can be rendered with mock data in Storybook
 and reused anywhere without dragging its call site's dependencies along.
 
+User-facing text is not hardcoded in the component. Either it arrives through
+props already translated, or, for the component's own fixed UI text, the
+component calls `useTranslations` from `next-intl`. Both patterns, and where
+the strings live, are in [`internationalization.md`](internationalization.md).
+
 ## 3. Add a story
 
 Co-locate a `.stories.tsx` file next to the component:
@@ -90,6 +95,12 @@ test('renders the label it was given', () => {
 Assert roles and user-visible text rather than CSS classes. See
 [docs/tests/component_testing.md](tests/component_testing.md) for the full
 conventions, including what to mock and the coverage thresholds.
+
+## Truncating long text
+
+To cut a text field after a number of lines with a "Leer más" / "Leer menos" toggle, use the
+shared `TruncatedText` component rather than a CSS `line-clamp` of your own:
+[`truncated-text.md`](truncated-text.md).
 
 ## Verify
 

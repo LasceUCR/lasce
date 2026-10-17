@@ -178,3 +178,69 @@ describe('FormField', () => {
     }, 10000)
   })
 })
+
+describe('FormField: content language', () => {
+  test('marks the language of a text box and a text area on the field itself', () => {
+    render(
+      <>
+        <FormField {...textArgs} id="title-en" lang="en" />
+        <FormField {...multilineArgs} id="abstract-en" lang="en" />
+      </>,
+    )
+
+    expect(screen.getByRole('textbox', { name: textArgs.label })).toHaveAttribute('lang', 'en')
+    expect(screen.getByRole('textbox', { name: multilineArgs.label })).toHaveAttribute('lang', 'en')
+  })
+
+  test('keeps the label and its error in the surrounding language', () => {
+    const { container } = render(
+      <FormField {...textArgs} error="El título en inglés es obligatorio." lang="en" />,
+    )
+
+    const label = container.querySelector('label')
+    expect(label).not.toHaveAttribute('lang')
+    expect(screen.getByText('El título en inglés es obligatorio.').closest('[lang]')).toBeNull()
+  })
+
+  test('marks text of unknown language with an empty lang', () => {
+    render(<FormField {...textArgs} lang="" />)
+
+    expect(screen.getByRole('textbox', { name: textArgs.label })).toHaveAttribute('lang', '')
+  })
+
+  test('sets no lang unless given one', () => {
+    render(
+      <>
+        <FormField {...textArgs} />
+        <FormField {...selectArgs} />
+      </>,
+    )
+
+    expect(screen.getByRole('textbox', { name: textArgs.label })).not.toHaveAttribute('lang')
+    expect(screen.getByRole('combobox', { name: selectArgs.label })).not.toHaveAttribute('lang')
+  })
+})
+
+describe('FormField: maximum length', () => {
+  test('stops typing at maxLength in a text box and a text area', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <ControlledField id="short" label="Corto" maxLength={5} />
+        <ControlledField id="long" label="Largo" maxLength={3} multiline />
+      </>,
+    )
+
+    await user.type(screen.getByRole('textbox', { name: 'Corto' }), '1234567')
+    await user.type(screen.getByRole('textbox', { name: 'Largo' }), 'abcdef')
+
+    expect(screen.getByRole('textbox', { name: 'Corto' })).toHaveValue('12345')
+    expect(screen.getByRole('textbox', { name: 'Largo' })).toHaveValue('abc')
+  })
+
+  test('sets no limit by default', () => {
+    render(<FormField {...(Text.args as FormFieldProps)} />)
+
+    expect(screen.getByRole('textbox')).not.toHaveAttribute('maxlength')
+  })
+})

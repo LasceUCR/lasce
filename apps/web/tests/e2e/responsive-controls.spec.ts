@@ -12,6 +12,37 @@ async function box(locator: Locator) {
 }
 
 test.describe('responsive native controls', () => {
+  test('keeps collaborations readable in both languages across screen sizes', async ({
+    context,
+    page,
+  }) => {
+    for (const locale of ['es', 'en']) {
+      await context.addCookies([
+        { name: 'lasce_locale', value: locale, url: 'http://localhost:3000' },
+      ])
+      // A generous navigation timeout: this test also runs under webkit/mobile-safari/android
+      // emulation, which has been measured slower than Chromium on CI's shared runners. This
+      // does not relax what the test checks — `waitUntil` stays at its default ('load').
+      await page.goto('/colaboraciones-e-iniciativas', { timeout: 60_000 })
+      const section = page.getByRole('region', {
+        name: locale === 'es' ? 'Colaboraciones de investigación' : 'Research collaborations',
+      })
+      await expect(section.getByRole('heading', { level: 3 })).toHaveCount(8)
+      for (const width of [320, 390, 768, 1080, 1440]) {
+        await page.setViewportSize({ width, height: 900 })
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true,
+        )
+        for (const card of await section.getByRole('article').all()) {
+          await expect(card.getByRole('heading', { level: 3 })).toBeVisible()
+          expect(await card.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+            true,
+          )
+        }
+      }
+    }
+  })
+
   test('closes navigation on an outside pointer after scrolling the menu', async ({ page }) => {
     await page.setViewportSize({ width: 844, height: 390 })
     await page.goto('/')
@@ -98,17 +129,18 @@ test.describe('responsive native controls', () => {
               rect.right > innerWidth ||
               rect.top < 0 ||
               rect.bottom > innerHeight ||
-              // The file picker is intentionally visually hidden behind its drop zone.
-              Array.from(
-                element.querySelectorAll('input:not([type="file"]), textarea, select, button'),
-              ).some((control) => {
-                const bounds = control.getBoundingClientRect()
-                return (
-                  bounds.left < rect.left ||
-                  bounds.right > rect.right ||
-                  control.scrollWidth > control.clientWidth
-                )
-              })
+              Array.from(element.querySelectorAll('input, textarea, select, button')).some(
+                (control) => {
+                  const bounds = control.getBoundingClientRect()
+                  // The other language's tab panel stays mounted but hidden: nothing to measure.
+                  if (bounds.width === 0) return false
+                  return (
+                    bounds.left < rect.left ||
+                    bounds.right > rect.right ||
+                    control.scrollWidth > control.clientWidth
+                  )
+                },
+              )
             )
           })
           expect(overflow).toBe(false)

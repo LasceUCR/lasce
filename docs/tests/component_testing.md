@@ -40,6 +40,22 @@ Follow the structure below so tests stay consistent across the app.
   internal `useState` values or component internals.
 - User-visible text and roles (`getByRole`, `getByText`), not CSS classes or DOM structure.
 
+## Components that translate their own text
+
+A component that calls `useTranslations` needs next-intl's provider. Render it with
+`renderWithIntl` from `@/app/lib/i18n/testing` instead of `render`:
+
+```tsx
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+
+renderWithIntl(<PublicHeader {...props} />) // Spanish, the default
+renderWithIntl(<PublicHeader {...props} />, { locale: 'en' })
+```
+
+It loads the real catalogue from `apps/web/messages/`, so assertions stay on the text a visitor
+reads. Do not mock `next-intl`. A component that receives its text through props needs none of
+this. See [`../internationalization.md`](../internationalization.md).
+
 ## Example
 
 This is the pattern for a component whose I/O boundary is a Server Action plus a polling

@@ -103,6 +103,19 @@ describe('Button', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
+  test('forwards disclosure attributes to a button that toggles a region', () => {
+    render(
+      <Button ariaControls="abstract-1" ariaExpanded={false}>
+        Ver más
+      </Button>,
+    )
+
+    const button = screen.getByRole('button', { name: 'Ver más' })
+
+    expect(button).toHaveAttribute('aria-controls', 'abstract-1')
+    expect(button).toHaveAttribute('aria-expanded', 'false')
+  })
+
   test('renders a destructive action with the danger variant', () => {
     render(<Button {...dangerArgs} />)
 

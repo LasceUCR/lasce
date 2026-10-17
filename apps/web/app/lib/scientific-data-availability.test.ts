@@ -3,6 +3,7 @@ import type { ScientificDataQuery } from './scientific-data'
 import { getAvailabilityMessage, getGoesAvailability } from './scientific-data-availability'
 
 const availability = getGoesAvailability(new Date('2026-09-14T12:30:00Z'))
+const dateNotFutureMessage = 'Seleccione una fecha que no sea posterior a hoy.'
 const query: ScientificDataQuery = {
   source: 'GOES',
   product: 'Fe171',
@@ -21,16 +22,24 @@ describe('scientific data availability', () => {
     { product: 'SFXR' as const, parameter: '0.1-0.8nm' },
   ])('accepts historical and current dates for $product', (overrides) => {
     expect(
-      getAvailabilityMessage({ ...query, ...overrides, date: '2025-01-05' }, availability),
+      getAvailabilityMessage(
+        { ...query, ...overrides, date: '2025-01-05' },
+        availability,
+        dateNotFutureMessage,
+      ),
     ).toBeNull()
     expect(
-      getAvailabilityMessage({ ...query, ...overrides, date: '2026-09-14' }, availability),
+      getAvailabilityMessage(
+        { ...query, ...overrides, date: '2026-09-14' },
+        availability,
+        dateNotFutureMessage,
+      ),
     ).toBeNull()
   })
-  test('rejects future GOES dates', () => {
-    expect(getAvailabilityMessage({ ...query, date: '2026-09-15' }, availability)).toContain(
-      'posterior a hoy',
-    )
+  test('rejects future GOES dates with the given message', () => {
+    expect(
+      getAvailabilityMessage({ ...query, date: '2026-09-15' }, availability, dateNotFutureMessage),
+    ).toBe(dateNotFutureMessage)
   })
   test('leaves ROSAC dates unrestricted', () => {
     const rosac: ScientificDataQuery = {
@@ -40,6 +49,6 @@ describe('scientific data availability', () => {
       parameter: 'simulated-intensity',
       date: '2030-01-01',
     }
-    expect(getAvailabilityMessage(rosac, availability)).toBeNull()
+    expect(getAvailabilityMessage(rosac, availability, dateNotFutureMessage)).toBeNull()
   })
 })

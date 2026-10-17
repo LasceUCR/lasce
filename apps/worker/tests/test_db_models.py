@@ -4,20 +4,41 @@ Even though the worker doesn't have a job using these tables yet, the convention
 is to replicate everything here so the two languages never disagree about a column.
 """
 
+from sqlalchemy import UniqueConstraint
+
 from app.db import (
+    Collaboration,
+    CollaborationScope,
+    CollaborationTranslation,
+    ContactChannel,
+    ContactChannelTranslation,
     ExisFile,
     GalleryAlbum,
     GalleryMedia,
+    GeomagneticIndex,
+    GeomagneticIndexSource,
+    GeomagneticIndexTranslation,
+    HomeHero,
+    HomeHeroTranslation,
+    MagFile,
     News,
     NewsAuthor,
     NewsCrossAuthor,
     NewsSource,
+    NewsTranslation,
     Publisher,
     Research,
+    ResearchArea,
+    ResearchAreaTranslation,
     ResearchAuthor,
     ResearchCrossAuthor,
+    ResearchTranslation,
     ResourceDownload,
     RolePermission,
+    SolarPhysicsSection,
+    SolarPhysicsSectionTranslation,
+    SpaceWeatherSection,
+    SpaceWeatherSectionTranslation,
     SuviFrame,
     User,
     UserRole,
@@ -25,8 +46,36 @@ from app.db import (
 )
 
 
+def test_collaboration_classification_and_defaults_match_prisma() -> None:
+    columns = Collaboration.__table__.columns
+    assert Collaboration.__table__.schema == "research"
+    assert columns["acronym"].nullable
+    assert not columns["country"].nullable
+    assert columns["id"].server_default is not None
+    assert columns["updated_at"].server_default is not None
+    assert [member.value for member in CollaborationScope] == ["national", "international"]
+    assert columns["scope"].type.enums == ["national", "international"]
+    assert columns["scope"].type.schema == "research"
+    assert columns["scope"].type.create_type is False
+
+
+def test_collaboration_translations_are_owned_by_one_record_per_locale() -> None:
+    columns = CollaborationTranslation.__table__.columns
+    (parent_fk,) = columns["collaboration_id"].foreign_keys
+    assert CollaborationTranslation.__table__.schema == "research"
+    assert parent_fk.target_fullname == "research.collaborations.id"
+    assert parent_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert not columns["country"].nullable
+    assert any(
+        {column.name for column in constraint.columns} == {"collaboration_id", "locale"}
+        for constraint in CollaborationTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
 def test_research_tables_live_in_the_research_schema() -> None:
-    for model in (Publisher, Research, ResearchAuthor, ResearchCrossAuthor):
+    for model in (Publisher, Research, ResearchAuthor, ResearchCrossAuthor, ResearchTranslation):
         assert model.__table__.schema == "research"
 
 
@@ -47,6 +96,65 @@ def test_research_record_matches_the_prisma_columns() -> None:
     assert columns["external_url"].unique
     assert columns["doi"].nullable
     assert not columns["title"].nullable
+
+
+def test_research_translation_matches_the_prisma_columns() -> None:
+    columns = ResearchTranslation.__table__.columns
+    (research_fk,) = columns["research_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "research_id",
+        "locale",
+        "title",
+        "abstract",
+        "created_at",
+        "updated_at",
+    }
+    assert research_fk.target_fullname == "research.research_records.id"
+    assert research_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"research_id", "locale"}
+        for constraint in ResearchTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_solar_physics_section_matches_the_prisma_columns() -> None:
+    table = SolarPhysicsSection.__table__
+    columns = table.columns
+
+    assert table.schema == "public"
+    assert set(columns.keys()) == {"id", "key", "title", "body", "created_at", "updated_at"}
+    assert columns["key"].unique
+    assert not columns["title"].nullable
+    assert not columns["body"].nullable
+
+
+def test_solar_physics_section_translation_matches_the_prisma_columns() -> None:
+    table = SolarPhysicsSectionTranslation.__table__
+    columns = table.columns
+    (section_fk,) = columns["section_id"].foreign_keys
+
+    assert table.schema == "public"
+    assert set(columns.keys()) == {
+        "id",
+        "section_id",
+        "locale",
+        "title",
+        "body",
+        "created_at",
+        "updated_at",
+    }
+    assert section_fk.target_fullname == "public.solar_physics_sections.id"
+    assert section_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"section_id", "locale"}
+        for constraint in table.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
 
 
 def test_research_cross_author_links_research_and_authors() -> None:
@@ -71,7 +179,7 @@ replicate everything here.
 
 
 def test_news_tables_live_in_the_news_schema() -> None:
-    for model in (NewsSource, News, NewsAuthor, NewsCrossAuthor):
+    for model in (NewsSource, News, NewsAuthor, NewsCrossAuthor, NewsTranslation):
         assert model.__table__.schema == "news"
 
 
@@ -85,13 +193,35 @@ def test_news_record_matches_the_prisma_columns() -> None:
         "source_id",
         "abstract",
         "external_url",
-        "image_url",
         "created_at",
         "updated_at",
     }
     assert columns["external_url"].unique
     assert columns["published_at"].nullable
     assert not columns["title"].nullable
+
+
+def test_news_translation_matches_the_prisma_columns() -> None:
+    columns = NewsTranslation.__table__.columns
+    (news_fk,) = columns["news_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "news_id",
+        "locale",
+        "title",
+        "abstract",
+        "created_at",
+        "updated_at",
+    }
+    assert news_fk.target_fullname == "news.news_records.id"
+    assert news_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"news_id", "locale"}
+        for constraint in NewsTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
 
 
 def test_news_cross_author_links_news_and_authors() -> None:
@@ -322,6 +452,40 @@ def test_exis_file_is_unique_per_satellite_product_and_day() -> None:
     assert "exis_files_satellite_product_day_key" in constraint_names
 
 
+def test_mag_files_live_in_the_solar_schema() -> None:
+    assert MagFile.__table__.schema == "solar"
+
+
+def test_mag_file_matches_the_prisma_columns() -> None:
+    columns = MagFile.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "satellite",
+        "product",
+        "day",
+        "file_name",
+        "version",
+        "source_url",
+        "source_modified_at",
+        "first_observed_at",
+        "last_observed_at",
+        "point_count",
+        "attributes",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["file_name"].unique
+    assert not columns["day"].nullable
+    assert columns["source_modified_at"].nullable
+    assert columns["first_observed_at"].nullable
+
+
+def test_mag_file_is_unique_per_satellite_product_and_day() -> None:
+    constraint_names = {constraint.name for constraint in MagFile.__table__.constraints}
+    assert "mag_files_satellite_product_day_key" in constraint_names
+
+
 def test_resource_downloads_live_in_the_public_schema() -> None:
     assert ResourceDownload.__table__.schema == "public"
 
@@ -348,8 +512,193 @@ def test_resource_download_matches_the_prisma_columns() -> None:
     assert not columns["object_key"].nullable
 
 
+def test_contact_channels_live_in_the_public_schema() -> None:
+    assert ContactChannel.__table__.schema == "public"
+    assert ContactChannelTranslation.__table__.schema == "public"
+
+
+def test_contact_channel_matches_the_prisma_columns() -> None:
+    columns = ContactChannel.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "icon",
+        "href",
+        "position",
+        "title",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["href"].nullable
+    assert not columns["title"].nullable
+
+
+def test_contact_channel_translation_cascades_with_its_channel() -> None:
+    (channel_fk,) = ContactChannelTranslation.__table__.columns["contact_channel_id"].foreign_keys
+
+    assert channel_fk.target_fullname == "public.contact_channels.id"
+    assert channel_fk.ondelete == "CASCADE"
+
+
 def test_resource_download_outlives_its_user() -> None:
     (user_fk,) = ResourceDownload.__table__.columns["user_id"].foreign_keys
 
     assert user_fk.target_fullname == "auth.users.id"
     assert user_fk.ondelete == "SET NULL"
+
+
+def test_research_area_translation_matches_the_prisma_columns() -> None:
+    columns = ResearchAreaTranslation.__table__.columns
+    (area_fk,) = columns["research_area_id"].foreign_keys
+
+    assert ResearchArea.__table__.schema == "areas"
+    assert ResearchAreaTranslation.__table__.schema == "areas"
+    assert set(columns.keys()) == {
+        "id",
+        "research_area_id",
+        "locale",
+        "title",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert area_fk.target_fullname == "areas.research_areas.id"
+    assert area_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"research_area_id", "locale"}
+        for constraint in ResearchAreaTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_home_tables_live_in_the_public_schema() -> None:
+    for model in (HomeHero, HomeHeroTranslation, GeomagneticIndex, GeomagneticIndexTranslation):
+        assert model.__table__.schema == "public"
+
+
+def test_home_hero_matches_the_prisma_columns() -> None:
+    assert set(HomeHero.__table__.columns.keys()) == {
+        "id",
+        "title",
+        "lead",
+        "created_at",
+        "updated_at",
+    }
+
+
+def test_home_hero_translation_is_unique_per_hero_and_locale() -> None:
+    columns = HomeHeroTranslation.__table__.columns
+    (hero_fk,) = columns["home_hero_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "home_hero_id",
+        "locale",
+        "title",
+        "lead",
+        "created_at",
+        "updated_at",
+    }
+    assert hero_fk.target_fullname == "public.home_hero.id"
+    assert hero_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"home_hero_id", "locale"}
+        for constraint in HomeHeroTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_geomagnetic_index_matches_the_prisma_columns() -> None:
+    columns = GeomagneticIndex.__table__.columns
+
+    assert set(columns.keys()) == {
+        "id",
+        "code",
+        "value",
+        "description",
+        "position",
+        "source",
+        "observed_at",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["code"].unique
+    assert columns["position"].unique
+    assert columns["position"].server_default is not None
+    assert "geomagnetic_indices_position_seq" in str(columns["position"].server_default.arg)
+    assert columns["code"].type.length == 8
+    assert columns["value"].type.length == 15
+    assert columns["description"].type.length == 15
+    assert columns["observed_at"].nullable
+
+
+def test_geomagnetic_index_source_mirrors_the_prisma_enum() -> None:
+    source = GeomagneticIndex.__table__.columns["source"]
+
+    assert [member.value for member in GeomagneticIndexSource] == ["manual", "automatic"]
+    assert source.type.enums == ["manual", "automatic"]
+    assert source.type.name == "geomagnetic_index_source"
+    assert source.type.schema == "public"
+    assert source.type.create_type is False
+    assert source.server_default is not None
+    assert str(source.server_default.arg) == "'manual'"
+
+
+def test_geomagnetic_index_translation_is_unique_per_index_and_locale() -> None:
+    columns = GeomagneticIndexTranslation.__table__.columns
+    (index_fk,) = columns["geomagnetic_index_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "geomagnetic_index_id",
+        "locale",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert index_fk.target_fullname == "public.geomagnetic_indices.id"
+    assert index_fk.ondelete == "CASCADE"
+    assert columns["description"].type.length == 15
+    assert any(
+        {column.name for column in constraint.columns} == {"geomagnetic_index_id", "locale"}
+        for constraint in GeomagneticIndexTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_space_weather_tables_live_in_the_public_schema() -> None:
+    for model in (SpaceWeatherSection, SpaceWeatherSectionTranslation):
+        assert model.__table__.schema == "public"
+
+
+def test_space_weather_section_matches_the_prisma_columns() -> None:
+    columns = SpaceWeatherSection.__table__.columns
+
+    assert set(columns.keys()) == {"id", "key", "title", "body", "created_at", "updated_at"}
+    assert columns["key"].unique
+
+
+def test_space_weather_section_translation_is_unique_per_section_and_locale() -> None:
+    columns = SpaceWeatherSectionTranslation.__table__.columns
+    (section_fk,) = columns["section_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "section_id",
+        "locale",
+        "title",
+        "body",
+        "created_at",
+        "updated_at",
+    }
+    assert section_fk.target_fullname == "public.space_weather_sections.id"
+    assert section_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"section_id", "locale"}
+        for constraint in SpaceWeatherSectionTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )

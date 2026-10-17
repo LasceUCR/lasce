@@ -1,19 +1,30 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocale, useMessages, useTranslations } from 'next-intl'
 
 import { SearchBar } from '@/app/components/public/SearchBar'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import type { NewsArticle } from '@/app/lib/news'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
+import { parseApiError } from '@/app/lib/cms/save'
+import { resolveLocale } from '@/app/lib/i18n/locale'
+import {
+  buildCreateRequest,
+  buildUpdateRequest,
+  describeNewsFailure,
+  emptyInitial,
+  type NewsDraft,
+  type NewsFormInitial,
+} from '@/app/lib/news-form'
+import type { NewsArticle, ReviewConfirmation } from '@/app/lib/news-schema'
 
 import { EditableNewsCard } from './EditableNewsCard'
-import { NewsArticleForm, type NewsArticleFormValues } from './NewsArticleForm'
-
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
+import { NewsArticleForm, type NewsArticleFormHandle } from './NewsArticleForm'
 
 export interface NewsExplorerProps {
+  /** Already in the site's language and in chronological order (newest first). */
   news: NewsArticle[]
   canCreate?: boolean
   canEdit?: boolean
@@ -24,9 +35,12 @@ function matches(value: string, query: string) {
   return value.toLowerCase().includes(query.trim().toLowerCase())
 }
 
-async function errorFromResponse(response: Response): Promise<string> {
-  const body: { error?: string } | null = await response.json().catch(() => null)
-  return body?.error ?? SAVE_ERROR_MESSAGE
+function jsonRequest(method: 'POST' | 'PATCH', body: unknown): RequestInit {
+  return {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }
 }
 
 export function NewsExplorer({
@@ -36,11 +50,22 @@ export function NewsExplorer({
   canDelete = false,
 }: NewsExplorerProps) {
   const router = useRouter()
+  // The page's copy and the editor's messages follow the site's language.
+  const t = useTranslations('news')
+  const uiLocale = resolveLocale(useLocale())
+  const errorMessages = useMessages().news.errors
+  const feedback = useTranslations('common.feedback')
+  const sendWithFeedback = useRequestFeedback()
   const [query, setQuery] = useState('')
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [listError, setListError] = useState<string | null>(null)
   const { editMode } = useEditMode()
+  const [busy, setBusy] = useState(false)
+  // One request at a time: a second click while the first is in flight would send the same
+  // version again and come back as a false conflict.
+  const pending = useRef(false)
+  const createForm = useRef<NewsArticleFormHandle>(null)
+  const [createInitial, setCreateInitial] = useState<NewsFormInitial>(emptyInitial)
 
+  // Filters the items as shown, so a search matches the language the visitor is reading.
   const filtered = useMemo(() => {
     if (query.trim() === '') {
       return news
@@ -57,114 +82,127 @@ export function NewsExplorer({
 
   const hasQuery = query.trim() !== ''
 
-  async function handleSave(id: string, values: NewsArticleFormValues): Promise<string | null> {
-    let response: Response
+  /**
+   * Sends one request and reports its outcome in a toast through `useRequestFeedback`. On failure
+   * the form stays open with the admin's input. On success `router.refresh()` re-runs the server
+   * component's `getNews()`.
+   */
+  async function send(
+    url: string,
+    init: RequestInit,
+    messages: { success: string; fallback: string },
+    onSuccess?: () => void,
+  ) {
+    if (pending.current) return
+    pending.current = true
+    setBusy(true)
+
     try {
-      response = await fetch(`/api/news/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+      await sendWithFeedback(url, init, {
+        ...messages,
+        describeFailure: async (response) => {
+          const body: unknown = await response.json().catch(() => null)
+          // The list behind the editor is out of date: refresh it, so reopening the item loads
+          // its current version. An open form keeps what was typed (it holds its own draft).
+          if (response.status === 404 || parseApiError(body).code === 'conflict') router.refresh()
+          return describeNewsFailure(response.status, body, uiLocale, {
+            ...errorMessages,
+            server: feedback('server'),
+            fallback: messages.fallback,
+          })
+        },
+        onSuccess: () => {
+          onSuccess?.()
+          router.refresh()
+        },
       })
-    } catch {
-      return SAVE_ERROR_MESSAGE
+    } finally {
+      pending.current = false
+      setBusy(false)
     }
-
-    if (!response.ok) {
-      return errorFromResponse(response)
-    }
-
-    // Re-runs the server component's `getNews()` so the page reflects the saved change
-    // immediately, without an optimistic guess.
-    router.refresh()
-    return null
   }
 
-  async function handleCreate(values: NewsArticleFormValues, close: () => void) {
-    setCreateError(null)
+  async function handleCreate(draft: NewsDraft, close: () => void) {
+    await send(
+      '/api/news',
+      jsonRequest('POST', buildCreateRequest(draft)),
+      { success: t('created'), fallback: t('errors.saveUnknown') },
+      () => {
+        setCreateInitial(emptyInitial())
+        close()
+      },
+    )
+  }
 
-    let response: Response
-    try {
-      response = await fetch('/api/news', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setCreateError(SAVE_ERROR_MESSAGE)
+  async function handleSave(
+    id: string,
+    initial: NewsFormInitial,
+    draft: NewsDraft,
+    confirmed: ReviewConfirmation[],
+    close: () => void,
+  ) {
+    const body = buildUpdateRequest(initial, draft, confirmed)
+    if (!body) {
+      close()
       return
     }
 
-    if (!response.ok) {
-      setCreateError(await errorFromResponse(response))
-      return
-    }
-
-    close()
-    router.refresh()
+    await send(
+      `/api/news/${id}`,
+      jsonRequest('PATCH', body),
+      { success: t('updated'), fallback: t('errors.saveUnknown') },
+      close,
+    )
   }
 
   async function handleDelete(id: string) {
-    setListError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/news/${id}`, { method: 'DELETE' })
-    } catch {
-      setListError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      setListError(await errorFromResponse(response))
-      return
-    }
-
-    router.refresh()
+    await send(
+      `/api/news/${id}`,
+      { method: 'DELETE' },
+      { success: t('deleted'), fallback: t('errors.deleteUnknown') },
+    )
   }
 
   return (
     <section aria-labelledby="news-title" className="news page-width">
-      <h2 id="news-title">Noticias recientes</h2>
+      <h2 id="news-title">{t('page.recent')}</h2>
 
       <SearchBar
-        label="Buscar noticias"
+        label={t('page.searchLabel')}
         onQueryChange={setQuery}
-        placeholder="Buscar por título, autor o palabra clave..."
+        placeholder={t('page.searchPlaceholder')}
         query={query}
       />
 
       {hasQuery ? (
         <p aria-live="polite" className="sr-only">
-          {filtered.length === 1
-            ? 'Se encontró 1 noticia.'
-            : `Se encontraron ${filtered.length} noticias.`}
+          {t('page.results', { count: filtered.length })}
         </p>
       ) : null}
 
-      {listError ? <p className="form-alert">{listError}</p> : null}
-
-      {filtered.length === 0 && !editMode ? (
+      {filtered.length === 0 && !(editMode && canCreate) ? (
         <p className="content-empty" role="status">
-          {hasQuery
-            ? `No se encontraron noticias para “${query}”.`
-            : 'No hay noticias publicadas todavía.'}
+          {hasQuery ? t('page.emptyQuery', { query }) : t('page.empty')}
         </p>
       ) : (
         <div className="news-list">
           {editMode && canCreate && (
-            <AddItemCard label="Agregar noticia" size="large">
+            <AddItemCard
+              label={t('editor.addCard')}
+              onRequestClose={(close) => {
+                if (createForm.current) createForm.current.requestCancel()
+                else close()
+              }}
+              size="large"
+            >
               {({ close }) => (
-                <>
-                  {createError ? <p className="form-alert">{createError}</p> : null}
-                  <NewsArticleForm
-                    article={null}
-                    onCancel={() => {
-                      setCreateError(null)
-                      close()
-                    }}
-                    onSave={(values) => handleCreate(values, close)}
-                  />
-                </>
+                <NewsArticleForm
+                  busy={busy}
+                  initial={createInitial}
+                  onCancel={close}
+                  onSave={(draft) => handleCreate(draft, close)}
+                  ref={createForm}
+                />
               )}
             </AddItemCard>
           )}
@@ -172,11 +210,14 @@ export function NewsExplorer({
           {filtered.map((article) => (
             <EditableNewsCard
               article={article}
+              busy={busy}
               canDelete={canDelete}
               canEdit={canEdit}
               key={article.slug}
               onDelete={() => handleDelete(article.slug)}
-              onSave={(values) => handleSave(article.slug, values)}
+              onSave={(initial, draft, confirmed, close) =>
+                handleSave(article.slug, initial, draft, confirmed, close)
+              }
             />
           ))}
         </div>

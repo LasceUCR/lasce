@@ -1,18 +1,26 @@
 import type { LucideIcon } from 'lucide-react'
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { Button } from '@/app/components/public/Button'
 import { GoesSolarAnimation } from '@/app/components/public/GoesSolarAnimation'
 import { HeroSolarObservation } from '@/app/components/public/HeroSolarObservation'
 import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
 import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
+import { EditableHomeHero } from '@/app/components/public/home/EditableHomeHero'
+import {
+  GeomagneticIndicators,
+  type IndicatorItem,
+} from '@/app/components/public/home/GeomagneticIndicators'
+import { userHasPermission } from '@/app/lib/auth/authorization'
+import { getHomeContent, indicatorCodes, indicatorTones, type HomeHeroData } from '@/app/lib/home'
+import { resolveLocale } from '@/app/lib/i18n/locale'
 import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@/app/lib/work-areas'
 
-const indicators = [
-  { label: 'Índice Kp', value: '2 · Tranquilo', tone: 'teal' },
-  { label: 'Índice Dst', value: '-12 nT · Estable', tone: 'cyan' },
-  { label: 'Índice AE', value: '75 nT · Actividad baja', tone: 'blue' },
-  { label: 'Índice Ap', value: '7 · Tranquilo', tone: 'teal' },
-]
+// The laboratory's official name. It is a proper noun, so it is not a message: it reads the same
+// in every language (docs/internationalization.md, "Add a string").
+const institutionName = 'Laboratorio de Astrofísica Solar y Clima Espacial'
+
+export const dynamic = 'force-dynamic'
 
 function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
   return areas.map((area) => {
@@ -27,7 +35,39 @@ function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
   })
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [locale, t, messages, canEdit] = await Promise.all([
+    getLocale(),
+    getTranslations('home'),
+    getMessages(),
+    userHasPermission('edit_components'),
+  ])
+
+  // The banner and the indices are stored in the database (docs/home-page.md), in the language
+  // chosen in the header. Every language and the version to save against reach the browser only
+  // for an editor. Without stored rows the catalogue's text is shown, read-only.
+  const content = await getHomeContent(resolveLocale(locale), { includeEditingData: canEdit })
+
+  const hero: HomeHeroData = content.hero ?? {
+    title: t('hero.title'),
+    lead: t('hero.lead'),
+  }
+
+  const indicators: IndicatorItem[] =
+    content.indicators.length > 0
+      ? content.indicators.map(({ code, ...indicator }) => ({
+          ...indicator,
+          label: t(`indicators.${code}.label`),
+          tone: indicatorTones[code],
+        }))
+      : indicatorCodes.map((code) => ({
+          id: code,
+          label: t(`indicators.${code}.label`),
+          tone: indicatorTones[code],
+          value: t(`indicators.${code}.value`),
+          description: t(`indicators.${code}.description`),
+        }))
+
   return (
     <>
       <section className="hero" id="inicio">
@@ -35,40 +75,30 @@ export default function HomePage() {
           <GoesSolarAnimation />
         </div>
         <div className="hero-content page-width">
-          <h1>Exploramos el Sol para comprender el clima espacial</h1>
-          <span className="hero-rule" aria-hidden="true" />
-          <p>
-            Investigamos la actividad solar y sus efectos en el medio interplanetario y la Tierra,
-            mediante observaciones, instrumentación, análisis de datos y desarrollo científico.
+          <p className="hero-institution" lang="es">
+            {institutionName}
           </p>
+          <EditableHomeHero canEdit={canEdit} hero={hero} />
           <div className="hero-actions">
-            <Button href="/nosotros">Conoce más sobre LASCE</Button>
+            <Button href="/nosotros">{t('hero.cta')}</Button>
           </div>
         </div>
         <HeroSolarObservation />
       </section>
 
       <div className="home-content">
-        <section className="indicators page-width" id="datos" aria-labelledby="indicators-title">
-          <div className="indicator-heading">
-            <h2 id="indicators-title">Índices geomagnéticos de Costa Rica</h2>
-            <span>Datos de demostración</span>
-          </div>
-          <div className="indicator-grid">
-            {indicators.map((indicator) => (
-              <article className={`indicator indicator-${indicator.tone}`} key={indicator.label}>
-                <p>{indicator.label}</p>
-                <strong>{indicator.value}</strong>
-              </article>
-            ))}
-          </div>
-        </section>
+        <GeomagneticIndicators
+          canEdit={canEdit}
+          demoNotice={t('indicators.demoNotice')}
+          indicators={indicators}
+          title={t('indicators.title')}
+        />
 
         <WorkAreasSection
           id={workAreasSectionId}
-          title="Áreas y accesos principales"
-          subtitle="Investigar, observar, analizar y compartir."
-          areas={toWorkAreaItems(getHomeAreaCards())}
+          title={t('areas.title')}
+          subtitle={t('areas.subtitle')}
+          areas={toWorkAreaItems(getHomeAreaCards(messages.workAreas))}
         />
       </div>
     </>

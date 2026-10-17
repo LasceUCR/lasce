@@ -1,25 +1,39 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadResearcherImage: vi.fn(),
 }))
 
-import { EditableResearcherCard, type EditableResearcherCardProps } from './EditableResearcherCard'
-import { AssistantMode, EditModeOn, ViewMode } from './EditableResearcherCard.stories'
+import {
+  EditableResearcherCard,
+  type BilingualEditableResearcherCardProps,
+  type EditableResearcherCardProps,
+} from './EditableResearcherCard'
+import {
+  AssistantMode,
+  BilingualEditMode,
+  EditModeOn,
+  ViewMode,
+} from './EditableResearcherCard.stories'
 
 const viewArgs = ViewMode.args as EditableResearcherCardProps
 const editArgs = EditModeOn.args as EditableResearcherCardProps
 const assistantArgs = AssistantMode.args as EditableResearcherCardProps
+const bilingualArgs = BilingualEditMode.args as BilingualEditableResearcherCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableResearcherCardProps) {
-  return render(
-    <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
-      <EditableResearcherCard {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
+        <EditableResearcherCard {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -76,13 +90,11 @@ describe('EditableResearcherCard', () => {
 
   test('saves and closes the modal when the form save succeeds', async () => {
     const user = userEvent.setup()
-    const onSave = vi.fn().mockResolvedValue(null)
+    const onSave = vi.fn().mockResolvedValue(true)
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(
@@ -91,20 +103,24 @@ describe('EditableResearcherCard', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  test('shows the error and keeps the modal open when the form save fails', async () => {
+  test('keeps the modal open with the input when the save fails', async () => {
     const user = userEvent.setup()
-    const onSave = vi.fn().mockResolvedValue('No se pudo guardar el cambio. Inténtelo de nuevo.')
+    // The page reports the failure in a toast; the card only has to keep the form open.
+    const failedSave = Promise.resolve(false)
+    const onSave = vi.fn(() => failedSave)
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }))
+    await user.clear(screen.getByRole('textbox', { name: 'Rol' }))
+    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador asociado')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
-    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+    await act(async () => {
+      await failedSave
+    })
 
-    expect(
-      await screen.findByText('No se pudo guardar el cambio. Inténtelo de nuevo.'),
-    ).toBeInTheDocument()
+    expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigador asociado')
   })
 
   test('confirms and calls onDelete when the delete action is confirmed', async () => {
@@ -113,8 +129,76 @@ describe('EditableResearcherCard', () => {
     renderWithEditMode(true, { ...editArgs, onDelete })
 
     await user.click(screen.getByRole('button', { name: `Eliminar a ${editArgs.researcher.name}` }))
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar investigador' })
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 
     expect(onDelete).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('EditableResearcherCard: bilingual mode', () => {
+  function renderBilingual(props: BilingualEditableResearcherCardProps) {
+    return renderWithIntl(
+      <ToastProvider>
+        <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+          <EditableResearcherCard {...props} />
+        </EditModeContext.Provider>
+      </ToastProvider>,
+    )
+  }
+
+  async function openAndSaveWithAName(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(
+      screen.getByRole('button', { name: `Editar a ${bilingualArgs.researcher.name}` }),
+    )
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+  }
+
+  test('marks the role with the language of its text', () => {
+    renderBilingual(bilingualArgs)
+
+    expect(screen.getByText(bilingualArgs.researcher.role)).toHaveAttribute('lang', 'es')
+  })
+
+  test('opens the bilingual form with a tab per language', async () => {
+    const user = userEvent.setup()
+    renderBilingual(bilingualArgs)
+
+    await user.click(
+      screen.getByRole('button', { name: `Editar a ${bilingualArgs.researcher.name}` }),
+    )
+
+    expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^Español/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^English/ })).toBeInTheDocument()
+  })
+
+  test('closes the modal once the save is reported as done', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(true)
+    renderBilingual({ ...bilingualArgs, onSave })
+
+    await openAndSaveWithAName(user)
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: `${bilingualArgs.researcher.name} editado`,
+        content: null,
+      }),
+    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('keeps the modal open, with no message of its own, when the save did not happen', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(false)
+    renderBilingual({ ...bilingualArgs, onSave })
+
+    await openAndSaveWithAName(user)
+
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

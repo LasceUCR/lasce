@@ -1,5 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
+try {
+  process.loadEnvFile(new URL('../../.env', import.meta.url))
+} catch {
+  // No root .env: CI provides the variables through its environment.
+}
+
 const baseURL = 'http://localhost:3000'
 
 export default defineConfig({

@@ -1,9 +1,8 @@
 # Gallery
 
-How `/galeria` is built, and the rules for adding a file to it. The content is still mock data in
-[`apps/web/app/lib/gallery.ts`](../apps/web/app/lib/gallery.ts); the images under
-`apps/web/public/images/galeria/` are public-domain NASA stand-ins, documented in the README beside
-them. Wiring in a real source (Postgres rows plus MinIO objects) is a change to that one module.
+How `/galeria` is built, and the rules for adding a file to it. The initial albums, sub-albums and
+media are declared in [`apps/web/app/lib/gallery.ts`](../apps/web/app/lib/gallery.ts) and inserted into PostgreSQL by `pnpm db:seed`. The seed stores the existing `/images/galeria/` paths as object keys; these assets remain served from the web app's public directory rather than being uploaded to
+MinIO.
 
 ## The shape
 
@@ -16,12 +15,14 @@ them. Wiring in a real source (Postgres rows plus MinIO objects) is a change to 
   │    └─ ul.card-grid › li       AlbumTile          h3, cover alt=""
   └─ TopicSection "Fotografías…"  h2
        └─ ul.media-grid › li      AlbumMediaGrid     button per file, image alt=""
-            └─ MediaLightbox      native <dialog>    h2 + figure/figcaption, real alt
+            └─ MediaLightbox      composes Lightbox  h2 + figure/figcaption, real alt
+                 └─ Lightbox      native <dialog>    shared shell, also used by /datos
 ```
 
 | Piece                 | File                                            | Covered by                     |
 | --------------------- | ----------------------------------------------- | ------------------------------ |
 | Mock data and helpers | `app/lib/gallery.ts`                            | `app/lib/gallery.test.ts`      |
+| Gallery write actions | `app/lib/gallery.ts`                            | `app/lib/gallery.test.ts`      |
 | Index page            | `app/components/public/gallery/GalleryPage.tsx` | `GalleryPage.test.tsx`         |
 | One album block       | `…/GalleryGroupSection.tsx`                     | `GalleryGroupSection.test.tsx` |
 | Album / sub-album     | `…/AlbumPage.tsx`                               | `AlbumPage.test.tsx`           |
@@ -29,10 +30,60 @@ them. Wiring in a real source (Postgres rows plus MinIO objects) is a change to 
 | Masonry grid          | `…/AlbumMediaGrid.tsx`                          | `AlbumMediaGrid.test.tsx`      |
 | Framed image          | `…/MediaFrame.tsx`                              | `MediaFrame.test.tsx`          |
 | Full-screen view      | `…/MediaLightbox.tsx`                           | `MediaLightbox.test.tsx`       |
+| Dialog shell          | `app/components/public/Lightbox.tsx`            | `Lightbox.test.tsx`            |
 
-Routes, the sitemap and the axe sweep all derive their album lists from `galleryAlbumList`, so a new
-album is picked up by `app/lib/site.ts` and `tests/e2e/accessibility-seo.spec.ts` without any edit
-there.
+The album pages and the sitemap read the database: `getGalleryAlbums` serves the routes and
+`getGalleryPaths` feeds `getPublicPaths()` in `app/lib/site.ts`, so a new album appears in
+`/sitemap.xml` and a deleted one drops out. `galleryAlbumList` is only seed data
+(`packages/db/prisma/seed.ts`) and the fixture for the tests; the e2e specs run against the seeded
+albums, so they need `pnpm db:seed` first.
+
+## Album translations
+
+The Prisma schema includes `GalleryAlbumTranslation` (`gallery.gallery_album_translations`) for
+the translated `title`, `description` and optional `yearsLabel`. The base `GalleryAlbum` row keeps
+the source-language text; each translation row is keyed by album and locale. The album `slug`,
+cover image, parent/child hierarchy and media remain shared across languages. Deleting an album
+cascades to its translation rows.
+
+Albums are read and written bilingually, like publications: `getGalleryAlbums(locale, { includeEditingData })`
+resolves the text for the visitor's language (falling back to the base row) and, for editors, also
+returns every stored language and a `version` token. Existing albums with no translation row only
+have base text, whose language may be unknown. The `locale` column is a string (not a database
+enum), so supported locale validation belongs to the application.
+
+Media text is bilingual the same way: `GalleryMediaTranslation`
+(`gallery.gallery_media_translations`) holds `title`, `description` and `altText` per additional
+locale, and editors receive `GalleryMedia.editing` (every language plus `version`).
+
+## API
+
+- `POST /api/gallery/albums` and `POST /api/gallery/albums/{albumId}` (sub-album) require
+  `create_components` and accept `slug`, `content` (`title` and `description` in both `es` and
+  `en`), and optional `yearsLabel` and `coverObjectKey`. They return `201`, `404`/`400` for a missing
+  or non-top-level parent, and `409` for a duplicate slug.
+- `PATCH /api/gallery/albums/{albumId}` requires `edit_components` and accepts the `version` the
+  editor loaded plus one or more of `content`, `slug`, `yearsLabel` and `coverObjectKey`. A field
+  changed in one language only must be confirmed through `confirmedUnchanged` (otherwise `409`
+  `review-required`). Omitted fields are left untouched and `null` clears `yearsLabel` or
+  `coverObjectKey`. It returns the updated album with `200`, `404` when missing, and `409` for a
+  stale `version` (`conflict`) or a duplicate slug. Errors use the `{ error, code }` envelope.
+- `DELETE /api/gallery/albums/{albumId}` requires `delete_components` and removes the album and its
+  sub-albums and media records through the database cascade. It does not delete associated assets
+  from MinIO or another asset store. A successful delete returns `204`; an unknown album returns
+  `404`.
+- `POST /api/gallery/albums/{albumId}/media` accepts `content` (`title`, `description` and
+  `altText` in both `es` and `en`), `objectKey`, `format`, `date` (ISO `YYYY-MM-DD`) and
+  `uploader`, with optional `isVideo`, `colSpan`, and `rowSpan`. It requires `create_components`, assigns the next position in the album, and returns
+  the created media with status `201`.
+- `DELETE /api/gallery/media/{mediaId}` requires `delete_components` and removes only the database
+  record. It does not delete the associated file from MinIO or another asset store. A successful
+  delete returns `204`.
+- `PATCH /api/gallery/media/{mediaId}` requires `edit_components` and accepts the `version` the
+  editor loaded plus one or more of `content`, `confirmedUnchanged` and the shared fields from the
+  create payload, with the same review rule as albums. It returns the updated media record with
+  `200`, `404` when missing, and `409` for a stale `version` (`conflict`) or `review-required`; an
+  update without changes is rejected.
 
 ## Alt text
 
@@ -73,7 +124,10 @@ These are deliberate. Please do not "fix" them back.
 - **The lightbox is a native `<dialog>` opened with `showModal()`.** The focus trap, Escape, the
   inert background and the stacking all come from the top layer instead of being hand-rolled. Arrow
   key paging is the only keyboard behaviour this component implements itself. `showModal` is absent
-  in jsdom, so the component falls back to setting the `open` attribute and the tests stub it.
+  in jsdom, so the component falls back to setting the `open` attribute and the tests stub it. That
+  behaviour lives in the shared `Lightbox` shell, which takes all of its copy as props;
+  `MediaLightbox` supplies the gallery's Spanish wording and the stage, and `/datos` reuses the
+  shell for solar images (`SolarImageLightbox`).
 - **Focus rings are not styled here.** `globals.css` sets one global
   `:focus-visible { outline: 3px solid var(--action) }`, and `--action` is inherited from the
   surface, so the ring is amber inside the lightbox and dark blue on the index. See
@@ -81,8 +135,6 @@ These are deliberate. Please do not "fix" them back.
 
 ## Known gaps
 
-- The data is mock. There is no gallery table in `packages/db/prisma/schema.prisma`; when one is
-  added, `imageAlt` on `News` is the precedent for a required alt column.
 - A video entry renders its still image and never a `<video>`, so `isVideo` only drives the badge
   and the placeholder caption.
 - `hank-bb.webp` is the one image with no provenance row in

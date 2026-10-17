@@ -3,6 +3,7 @@ import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
 
 import type { NextConfig } from 'next'
+import createNextIntlPlugin from 'next-intl/plugin'
 
 const repoRoot = new URL('../../', import.meta.url)
 
@@ -167,4 +168,8 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+// The path is explicit because the plugin looks for `./i18n/request.ts` by default, and the i18n
+// module lives with the other helpers under `app/lib` (see docs/internationalization.md).
+const withNextIntl = createNextIntlPlugin('./app/lib/i18n/request.ts')
+
+export default withNextIntl(nextConfig)

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
 
 /** How long the field must sit idle after a change before `validate` runs. */
 const VALIDATION_DEBOUNCE_MS = 500
@@ -12,7 +12,7 @@ export interface FormFieldProps {
   label: string
   value: string
   onChange: (value: string) => void
-  type?: 'text' | 'url' | 'date' | 'email'
+  type?: 'text' | 'url' | 'date' | 'email' | 'tel'
   multiline?: boolean
   /** Renders a `<select>` with one entry per option instead of an input. */
   options?: FormFieldOption[]
@@ -28,6 +28,24 @@ export interface FormFieldProps {
    * until the field is blurred again.
    */
   validate?: (value: string) => void
+  /**
+   * An error decided outside the field, such as a failed save or a rejection from the server.
+   * Shown instead of the field's own `validate` message while it is set.
+   */
+  error?: string | null
+  /**
+   * An error owned entirely by the parent form. Whenever it is passed, even as `null`, it replaces
+   * the field's own `validate` message, so the parent decides when an error shows.
+   */
+  errorMessage?: string | null
+  /**
+   * The language of the text typed in a text box or text area, when it can differ from the page's,
+   * as in a bilingual editor: `'es'`, `'en'`, or `''` for text whose language is unknown. Set on
+   * the input itself, so the label and messages around it keep the language of their surroundings.
+   */
+  lang?: string
+  /** The most characters the text box or text area accepts; the schema still enforces it. */
+  maxLength?: number
 }
 
 export function FormField({
@@ -40,9 +58,14 @@ export function FormField({
   placeholder,
   required,
   id,
+  maxLength,
   validate,
+  error: externalError,
+  errorMessage,
+  lang,
 }: FormFieldProps) {
   const [error, setError] = useState<string | null>(null)
+  const errorId = useId()
   // The value at mount, so the effect below can tell "still the pristine
   // value" from "the person changed it" with a plain comparison rather than a
   // flag it flips on its first run. A flag mutated inside the effect body is
@@ -83,7 +106,9 @@ export function FormField({
     onChange(event.target.value)
   }
 
-  const invalid = error !== null
+  const shownError = errorMessage !== undefined ? errorMessage : externalError || error
+  const invalid = Boolean(shownError)
+  const describedBy = shownError ? errorId : undefined
 
   return (
     <label className="cms-form-field" htmlFor={id}>
@@ -98,6 +123,7 @@ export function FormField({
       </span>
       {options ? (
         <select
+          aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           aria-required={required || undefined}
           id={id}
@@ -113,9 +139,12 @@ export function FormField({
         </select>
       ) : multiline ? (
         <textarea
+          aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           aria-required={required || undefined}
           id={id}
+          lang={lang}
+          maxLength={maxLength}
           onChange={handleChange}
           placeholder={placeholder}
           required={required}
@@ -124,9 +153,12 @@ export function FormField({
         />
       ) : (
         <input
+          aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           aria-required={required || undefined}
           id={id}
+          lang={lang}
+          maxLength={maxLength}
           onChange={handleChange}
           placeholder={placeholder}
           required={required}
@@ -134,7 +166,13 @@ export function FormField({
           value={value}
         />
       )}
-      {error ? <p className="form-field-error">{error}</p> : null}
+      {/* Inside the <label> for layout, so hidden from the field's name; `aria-describedby`
+          still announces it, once, as the field's description. */}
+      {shownError ? (
+        <p aria-hidden="true" className="form-field-error" id={errorId}>
+          {shownError}
+        </p>
+      ) : null}
     </label>
   )
 }

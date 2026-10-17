@@ -23,6 +23,23 @@ describe('TopicHero', () => {
     expect(screen.getByRole('img', { name: hero.image.alt })).toHaveAttribute('src', hero.image.src)
   })
 
+  test('marks the title and lead with the language of their content, not the kicker', () => {
+    render(<TopicHero {...hero} contentLang="en" />)
+
+    expect(screen.getByRole('heading', { level: 1, name: hero.title })).toHaveAttribute(
+      'lang',
+      'en',
+    )
+    expect(screen.getByText(hero.lead)).toHaveAttribute('lang', 'en')
+    expect(screen.getByText(hero.kicker)).not.toHaveAttribute('lang')
+  })
+
+  test('sets no lang when the content is in the page language', () => {
+    render(<TopicHero {...hero} />)
+
+    expect(screen.getByRole('heading', { level: 1, name: hero.title })).not.toHaveAttribute('lang')
+  })
+
   test('renders without a lead when none is given', () => {
     render(<TopicHero kicker={hero.kicker} title={hero.title} />)
 
@@ -58,6 +75,60 @@ describe('TopicHero', () => {
       name: 'Logo del Radio Observatorio de Santa Cruz (ROSAC)',
     })
     expect(mark).toHaveAttribute('src', '/images/ROSAC/logo/ROSAC-YELLOW.png')
+  })
+
+  test('shows a banner whole, without a separate mark, keeping its focus side in view', () => {
+    const { container } = render(
+      <TopicHero
+        kicker={hero.kicker}
+        title="Radio Observatorio de Santa Cruz (ROSAC)"
+        image={{
+          src: '/images/ROSAC/rosac_home.jpg',
+          alt: 'Antena de ROSAC con el logo de ROSAC.',
+          presentation: 'banner',
+          width: 1672,
+          height: 749,
+          focus: 'left',
+        }}
+      />,
+    )
+
+    expect(screen.getAllByRole('img')).toHaveLength(1)
+    const banner = screen.getByRole('img', { name: 'Antena de ROSAC con el logo de ROSAC.' })
+    expect(banner).toHaveAttribute('src', '/images/ROSAC/rosac_home.jpg')
+    expect(container.querySelector('header')).toHaveClass('topic-hero-with-mark')
+    expect(container.querySelector('.topic-hero-banner')).toBeInTheDocument()
+    expect(container.querySelector('.topic-hero-mark-footer')).toBeNull()
+  })
+
+  test('adds a mobile version of the banner that replaces it on narrow screens', () => {
+    const { container } = render(
+      <TopicHero
+        kicker={hero.kicker}
+        title="Radio Observatorio de Santa Cruz (ROSAC)"
+        image={{
+          src: '/images/ROSAC/rosac_home.jpg',
+          alt: 'Antena de ROSAC con el logo de ROSAC.',
+          presentation: 'banner',
+          width: 1672,
+          height: 749,
+          focus: 'left',
+          mobileSrc: '/images/ROSAC/rosac_home_mob.png',
+        }}
+      />,
+    )
+
+    expect(container.querySelector('.topic-hero-banner')).toHaveClass(
+      'topic-hero-banner-has-mobile',
+    )
+    expect(container.querySelector('.topic-hero-banner-main')).toHaveAttribute(
+      'src',
+      '/images/ROSAC/rosac_home.jpg',
+    )
+    expect(container.querySelector('.topic-hero-banner-mobile')).toHaveAttribute(
+      'src',
+      '/images/ROSAC/rosac_home_mob.png',
+    )
   })
 
   test('shows an optional notice under the lead', () => {

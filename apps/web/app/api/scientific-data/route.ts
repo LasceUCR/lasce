@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
+import { getTranslations } from 'next-intl/server'
 
-import { scientificDataQuerySchema } from '@/app/lib/scientific-data'
+import { getScientificDataQuerySchema } from '@/app/lib/scientific-data'
 import { getAvailabilityMessage, getGoesAvailability } from '@/app/lib/scientific-data-availability'
 import { scientificDataSources } from '@/app/services/scientific-data'
 import {
@@ -13,8 +14,22 @@ import {
  * no authentication requirement and exposes no download operation.
  */
 export async function GET(request: Request): Promise<NextResponse> {
+  const [validation, errors] = await Promise.all([
+    getTranslations('scientificData.validation'),
+    getTranslations('scientificData.errors'),
+  ])
   const searchParams = new URL(request.url).searchParams
-  const parsed = scientificDataQuerySchema.safeParse({
+  const parsed = getScientificDataQuerySchema({
+    invalidSource: validation('invalidSource'),
+    invalidProduct: validation('invalidProduct'),
+    invalidParameter: validation('invalidParameter'),
+    invalidDate: validation('invalidDate'),
+    invalidStartTime: validation('invalidStartTime'),
+    invalidEndTime: validation('invalidEndTime'),
+    startBeforeEnd: validation('startBeforeEnd'),
+    productUnavailable: validation('productUnavailable'),
+    invalidParameterForProduct: validation('invalidParameterForProduct'),
+  }).safeParse({
     source: searchParams.get('source'),
     product: searchParams.get('product'),
     parameter: searchParams.get('parameter'),
@@ -26,14 +41,18 @@ export async function GET(request: Request): Promise<NextResponse> {
   if (!parsed.success) {
     return NextResponse.json(
       {
-        error: 'Los criterios de consulta no son válidos.',
+        error: errors('invalidQuery'),
         issues: parsed.error.flatten().fieldErrors,
       },
       { status: 400 },
     )
   }
 
-  const availabilityMessage = getAvailabilityMessage(parsed.data, getGoesAvailability())
+  const availabilityMessage = getAvailabilityMessage(
+    parsed.data,
+    getGoesAvailability(),
+    errors('dateNotFuture'),
+  )
   if (availabilityMessage) {
     return NextResponse.json(
       { error: availabilityMessage },
@@ -55,9 +74,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (error instanceof ScientificDataUpstreamError) {
       console.error(`Scientific data upstream error: ${error.message}`)
       return NextResponse.json(
-        {
-          error: 'No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.',
-        },
+        { error: errors('upstreamError') },
         { status: 502, headers: { 'Cache-Control': 'no-store' } },
       )
     }
@@ -65,7 +82,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (error instanceof UnsupportedScientificQueryError) {
       console.error(`Scientific data wiring error: ${error.message}`)
       return NextResponse.json(
-        { error: 'La fuente científica no está disponible en este momento.' },
+        { error: errors('sourceUnavailable') },
         { status: 500, headers: { 'Cache-Control': 'no-store' } },
       )
     }

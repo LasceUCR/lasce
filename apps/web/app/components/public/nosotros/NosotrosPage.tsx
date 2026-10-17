@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Code, GraduationCap, Satellite, Sun, Users, Waves, type LucideIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
@@ -11,7 +12,7 @@ import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { EditableResearcherCard } from '@/app/components/public/rosac/EditableResearcherCard'
 import {
   ResearcherForm,
-  type ResearcherFormValues,
+  type BilingualResearcherFormValues,
 } from '@/app/components/public/rosac/ResearcherForm'
 import { TeamGallery } from '@/app/components/public/rosac/TeamGallery'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
@@ -20,12 +21,17 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
-import type { NosotrosCardIcon, NosotrosContent } from '@/app/lib/nosotros'
-import { scrollIntoViewIfSupported } from '@/app/lib/scrollIntoView'
+import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
+import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
+import type {
+  NosotrosCardIcon,
+  NosotrosContent,
+  NosotrosResearcher,
+  NosotrosResearcherCreateBody,
+  NosotrosResearcherUpdateBody,
+} from '@/app/lib/nosotros'
 
-import { NosotrosActivityForm, type NosotrosActivityFormValues } from './NosotrosActivityForm'
-
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
+import { NosotrosActivityForm, type NosotrosActivityFormBody } from './NosotrosActivityForm'
 
 const icons: Record<NosotrosCardIcon, LucideIcon> = {
   sun: Sun,
@@ -37,7 +43,41 @@ const icons: Record<NosotrosCardIcon, LucideIcon> = {
 }
 
 /** Starting point for a brand-new card — the form just needs some valid icon selected. */
-const blankActivity: NosotrosActivityFormValues = { icon: 'sun', title: '', description: '' }
+const blankIcon: NosotrosCardIcon = 'sun'
+
+/** The body sent to `/api/nosotros/researchers`: a create, or an update with only what changed. */
+type ResearcherRequestBody = NosotrosResearcherCreateBody | NosotrosResearcherUpdateBody
+
+/** The addresses of a researcher as the form shows them, one comma separated string. */
+function emailText(email: NosotrosResearcher['email']): string {
+  if (!email) return ''
+  return typeof email === 'string' ? email : email.join(', ')
+}
+
+/**
+ * The update body for an edited researcher: the version, the shared fields that changed and, only
+ * when the role or the description changed, both languages with the reviews the editor
+ * confirmed. `null` when nothing changed.
+ */
+function researcherUpdateBody(
+  person: NosotrosResearcher,
+  version: string,
+  values: BilingualResearcherFormValues,
+): NosotrosResearcherUpdateBody | null {
+  const changes: Omit<NosotrosResearcherUpdateBody, 'version'> = {
+    ...(values.src === person.src ? {} : { src: values.src }),
+    ...(values.name.trim() === person.name ? {} : { name: values.name }),
+    ...(values.email === emailText(person.email) ? {} : { email: values.email }),
+    ...(values.institution.trim() === person.institution
+      ? {}
+      : { institution: values.institution }),
+    ...(values.content
+      ? { content: values.content, confirmedUnchanged: values.confirmedUnchanged }
+      : {}),
+  }
+
+  return Object.keys(changes).length === 0 ? null : { version, ...changes }
+}
 
 export interface NosotrosPageProps {
   content: NosotrosContent
@@ -53,176 +93,152 @@ export function NosotrosPage({
   canDelete = false,
 }: NosotrosPageProps) {
   const router = useRouter()
+  const t = useTranslations('nosotros.activities')
+  const tResearchers = useTranslations('researchers')
+  const tNosotrosResearchers = useTranslations('nosotros.researchers')
+  const sendWithFeedback = useRequestFeedback()
   const { editMode } = useEditMode()
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [listError, setListError] = useState<string | null>(null)
-  const [researcherCreateError, setResearcherCreateError] = useState<string | null>(null)
-  const [researcherListError, setResearcherListError] = useState<string | null>(null)
-  const researcherCreateErrorRef = useRef<HTMLParagraphElement>(null)
-
-  // Scrolls the "Añadir investigador" error into view as soon as it appears —
-  // same reasoning as `ResearcherForm`'s own upload error.
-  useEffect(() => {
-    if (researcherCreateError) {
-      scrollIntoViewIfSupported(researcherCreateErrorRef.current)
-    }
-  }, [researcherCreateError])
+  // A second click while a save is in flight would send the same version again and come back as
+  // a false conflict.
+  const saving = useRef(false)
 
   const editingActivity = content.activities.items.find((item) => item.id === editingActivityId)
+  const editingData = editingActivity?.editing ?? null
 
   function openEditor(id: string) {
-    setSaveError(null)
     setEditingActivityId(id)
   }
 
   function closeEditor() {
-    setSaveError(null)
     setEditingActivityId(null)
   }
 
-  async function handleSaveActivity(values: NosotrosActivityFormValues) {
-    if (!editingActivityId) return
-
-    let response: Response
-    try {
-      response = await fetch(`/api/nosotros/activities/${editingActivityId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setSaveError(SAVE_ERROR_MESSAGE)
-      return
+  function jsonRequest(
+    method: 'POST' | 'PATCH',
+    body: NosotrosActivityFormBody | ResearcherRequestBody,
+  ) {
+    return {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setSaveError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    closeEditor()
-    // Re-runs the server component's `getNosotrosActivities()` so the page
-    // reflects the saved change immediately, without an optimistic guess.
-    router.refresh()
   }
 
-  async function handleCreateActivity(values: NosotrosActivityFormValues, close: () => void) {
-    setCreateError(null)
-
-    let response: Response
+  /** Runs one save at a time. The form stays open on failure, so the editor can retry. */
+  async function saveOnce(send: () => Promise<boolean>): Promise<boolean> {
+    if (saving.current) return false
+    saving.current = true
     try {
-      response = await fetch('/api/nosotros/activities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setCreateError(SAVE_ERROR_MESSAGE)
-      return
+      return await send()
+    } finally {
+      saving.current = false
     }
+  }
 
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
+  async function handleSaveActivity(body: NosotrosActivityFormBody) {
+    if (!editingActivityId) return
 
-    close()
-    router.refresh()
+    await saveOnce(() =>
+      sendWithFeedback(
+        `/api/nosotros/activities/${editingActivityId}`,
+        jsonRequest('PATCH', body),
+        {
+          success: t('updated'),
+          fallback: t('errors.unknown'),
+          onSuccess: () => {
+            closeEditor()
+            // Re-runs the server component's `getNosotrosActivities()` so the page
+            // reflects the saved change immediately, without an optimistic guess.
+            router.refresh()
+          },
+        },
+      ),
+    )
+  }
+
+  async function handleCreateActivity(body: NosotrosActivityFormBody, close: () => void) {
+    await saveOnce(() =>
+      sendWithFeedback('/api/nosotros/activities', jsonRequest('POST', body), {
+        success: t('created'),
+        fallback: t('errors.unknown'),
+        onSuccess: () => {
+          close()
+          router.refresh()
+        },
+      }),
+    )
   }
 
   async function handleDeleteActivity(id: string) {
-    setListError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/nosotros/activities/${id}`, { method: 'DELETE' })
-    } catch {
-      setListError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setListError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    router.refresh()
+    await sendWithFeedback(
+      `/api/nosotros/activities/${id}`,
+      { method: 'DELETE' },
+      {
+        success: t('deleted'),
+        fallback: t('errors.deleteUnknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
+  /** Saves an edited researcher. Resolves to whether it was saved, so the editor can close. */
   async function handleSaveResearcher(
-    id: string,
-    values: ResearcherFormValues,
-  ): Promise<string | null> {
-    let response: Response
-    try {
-      response = await fetch(`/api/nosotros/researchers/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      return SAVE_ERROR_MESSAGE
-    }
+    person: NosotrosResearcher,
+    values: BilingualResearcherFormValues,
+  ): Promise<boolean> {
+    // The editing data comes with the edit permission, which opening this form already required.
+    if (!person.editing) return false
 
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      return body?.error ?? SAVE_ERROR_MESSAGE
-    }
+    const body = researcherUpdateBody(person, person.editing.version, values)
+    // Nothing to save: close instead of sending an empty update.
+    if (!body) return true
 
-    // Re-runs the server component's `getNosotrosResearchers()` so the page
-    // reflects the saved change immediately, without an optimistic guess.
-    router.refresh()
-    return null
+    return saveOnce(() =>
+      sendWithFeedback(`/api/nosotros/researchers/${person.id}`, jsonRequest('PATCH', body), {
+        success: tResearchers('updated'),
+        fallback: tResearchers('errors.unknown'),
+        // Re-runs the server component's `getNosotrosResearchers()` so the page
+        // reflects the saved change immediately, without an optimistic guess.
+        onSuccess: () => router.refresh(),
+      }),
+    )
   }
 
-  async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
-    setResearcherCreateError(null)
+  async function handleCreateResearcher(values: BilingualResearcherFormValues, close: () => void) {
+    // A new researcher always carries both languages, since the form starts from nothing.
+    if (!values.content) return
 
-    let response: Response
-    try {
-      response = await fetch('/api/nosotros/researchers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-    } catch {
-      setResearcherCreateError(SAVE_ERROR_MESSAGE)
-      return
+    const body: NosotrosResearcherCreateBody = {
+      src: values.src,
+      name: values.name,
+      email: values.email,
+      institution: values.institution,
+      content: values.content,
     }
 
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setResearcherCreateError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    close()
-    router.refresh()
+    await saveOnce(() =>
+      sendWithFeedback('/api/nosotros/researchers', jsonRequest('POST', body), {
+        success: tResearchers('created'),
+        fallback: tResearchers('errors.unknown'),
+        onSuccess: () => {
+          close()
+          router.refresh()
+        },
+      }),
+    )
   }
 
   async function handleDeleteResearcher(id: string) {
-    setResearcherListError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/nosotros/researchers/${id}`, { method: 'DELETE' })
-    } catch {
-      setResearcherListError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setResearcherListError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    router.refresh()
+    await sendWithFeedback(
+      `/api/nosotros/researchers/${id}`,
+      { method: 'DELETE' },
+      {
+        success: tResearchers('deleted'),
+        fallback: tResearchers('errors.deleteUnknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
   return (
@@ -240,23 +256,18 @@ export function NosotrosPage({
       </TopicSection>
 
       <TopicSection title={content.activities.title} titleId="nosotros-activities-title" index="1">
-        {listError ? (
-          <p className="form-alert" role="alert">
-            {listError}
-          </p>
-        ) : null}
-
         {editMode && canCreate && content.activities.items.length === 0 ? (
-          <p className="topic-intro">
-            Haga clic en &quot;Añadir&quot; para agregar alguna actividad.
-          </p>
+          <p className="topic-intro">{t('emptyHint')}</p>
         ) : null}
 
         <CardGrid columns={3} equalHeight>
           {content.activities.items.map((item) => {
             const Icon = icons[item.icon]
             const icon = <Icon size={22} strokeWidth={1.8} />
-            const showEditor = editMode && (canEdit || canDelete)
+            const lang = contentLangAttribute(item.contentLocale)
+            // The editor needs both languages and the version, which only an editor receives.
+            const editable = canEdit && item.editing !== undefined
+            const showEditor = editMode && (editable || canDelete)
 
             if (!showEditor) {
               return (
@@ -264,6 +275,7 @@ export function NosotrosPage({
                   key={item.id}
                   description={item.description}
                   icon={icon}
+                  lang={lang}
                   title={item.title}
                 />
               )
@@ -272,38 +284,34 @@ export function NosotrosPage({
             return (
               <EditableWrapper
                 key={item.id}
-                deleteConfirmMessage={`¿Desea eliminar "${item.title}"? Esta acción no se puede deshacer.`}
-                deleteConfirmTitle="Eliminar actividad"
-                deleteLabel={`Eliminar ${item.title}`}
-                editLabel={`Editar ${item.title}`}
+                deleteConfirmLabel={t('deleteConfirm')}
+                deleteConfirmMessage={t('deleteMessage', { title: item.title })}
+                deleteConfirmTitle={t('deleteTitle')}
+                deleteLabel={t('deleteLabel', { title: item.title })}
+                editLabel={t('editLabel', { title: item.title })}
                 onDelete={canDelete ? () => handleDeleteActivity(item.id) : undefined}
-                onEdit={canEdit ? () => openEditor(item.id) : undefined}
+                onEdit={editable ? () => openEditor(item.id) : undefined}
               >
-                <InfoCard description={item.description} icon={icon} title={item.title} />
+                <InfoCard
+                  description={item.description}
+                  icon={icon}
+                  lang={lang}
+                  title={item.title}
+                />
               </EditableWrapper>
             )
           })}
 
           {editMode && canCreate ? (
-            <AddItemCard label="Añadir">
+            <AddItemCard label={t('add')} size="large">
               {({ close }) => (
-                <>
-                  {createError ? (
-                    <p className="form-alert" role="alert">
-                      {createError}
-                    </p>
-                  ) : null}
-                  <NosotrosActivityForm
-                    activity={blankActivity}
-                    confirmMessage="¿Desea agregar esta actividad?"
-                    confirmTitle="Agregar actividad"
-                    onCancel={() => {
-                      setCreateError(null)
-                      close()
-                    }}
-                    onSave={(values) => handleCreateActivity(values, close)}
-                  />
-                </>
+                <NosotrosActivityForm
+                  editing={null}
+                  icon={blankIcon}
+                  onCancel={close}
+                  onSave={(body) => handleCreateActivity(body, close)}
+                  requireConfirmation={false}
+                />
               )}
             </AddItemCard>
           ) : null}
@@ -318,12 +326,6 @@ export function NosotrosPage({
         titleId="nosotros-researchers-title"
         wide
       >
-        {researcherListError ? (
-          <p className="form-alert" role="alert">
-            {researcherListError}
-          </p>
-        ) : null}
-
         <TeamGallery
           emptyMessage={content.researchers.emptyMessage}
           hint={content.researchers.hint}
@@ -333,32 +335,27 @@ export function NosotrosPage({
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
+              contentLang={contentLangAttribute(person.contentLocale)}
               onDelete={() => handleDeleteResearcher(person.id)}
-              onSave={(values) => handleSaveResearcher(person.id, values)}
+              onSave={(values: BilingualResearcherFormValues) =>
+                handleSaveResearcher(person, values)
+              }
               researcher={person}
+              translation={{ editing: person.editing ?? null }}
             />
           )}
           trailingSlide={
             editMode && canCreate ? (
-              <AddItemCard label="Añadir investigador">
+              <AddItemCard label={tNosotrosResearchers('add')}>
                 {({ close }) => (
-                  <>
-                    {researcherCreateError ? (
-                      <p className="form-alert" ref={researcherCreateErrorRef} role="alert">
-                        {researcherCreateError}
-                      </p>
-                    ) : null}
-                    <ResearcherForm
-                      confirmMessage="¿Desea agregar este investigador?"
-                      confirmTitle="Agregar investigador"
-                      onCancel={() => {
-                        setResearcherCreateError(null)
-                        close()
-                      }}
-                      onSave={(values) => handleCreateResearcher(values, close)}
-                      researcher={null}
-                    />
-                  </>
+                  <ResearcherForm
+                    onCancel={close}
+                    onSave={(values: BilingualResearcherFormValues) =>
+                      handleCreateResearcher(values, close)
+                    }
+                    researcher={null}
+                    translation={{ editing: null }}
+                  />
                 )}
               </AddItemCard>
             ) : undefined
@@ -392,22 +389,19 @@ export function NosotrosPage({
 
       <Modal
         onClose={closeEditor}
-        open={editingActivity !== undefined}
-        title={editingActivity ? `Editar "${editingActivity.title}"` : 'Editar actividad'}
+        open={editingActivity !== undefined && editingData !== null}
+        size="large"
+        title={
+          editingActivity ? t('editTitle', { title: editingActivity.title }) : t('editFallback')
+        }
       >
-        {editingActivity ? (
-          <>
-            {saveError ? (
-              <p className="form-alert" role="alert">
-                {saveError}
-              </p>
-            ) : null}
-            <NosotrosActivityForm
-              activity={editingActivity}
-              onCancel={closeEditor}
-              onSave={handleSaveActivity}
-            />
-          </>
+        {editingActivity && editingData ? (
+          <NosotrosActivityForm
+            editing={editingData}
+            icon={editingActivity.icon}
+            onCancel={closeEditor}
+            onSave={handleSaveActivity}
+          />
         ) : null}
       </Modal>
     </article>

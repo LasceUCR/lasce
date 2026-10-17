@@ -1,69 +1,61 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
-import { useRef } from 'react'
+import type { ReactNode } from 'react'
 
 import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 export interface AcknowledgmentsGalleryProps {
   label: string
   institutions: readonly RosacAcknowledgment[]
+  /**
+   * Overrides how an institution slide renders — defaults to a plain `.acknowledgments-card`.
+   * This is how the caller wraps cards with edit affordances in edit mode.
+   */
+  renderInstitution?: (institution: RosacAcknowledgment, index: number) => ReactNode
+  /** An extra slide appended after institutions, e.g. an "add new" prompt in edit mode. */
+  trailingSlide?: ReactNode
 }
 
 /**
- * A scroll-snap track of institution logos, the same interaction pattern as
- * `TeamGallery` (native keyboard/touch scrolling, every card stays in the
- * DOM) but with square cards sized for a logo and name rather than a
- * researcher profile.
+ * A wrapping grid of institution logos — cards flow onto new rows instead of
+ * scrolling horizontally. Each logo links out to the institution's own site;
+ * an institution without a confirmed `href` yet renders as a plain,
+ * non-interactive tile rather than guessing a URL.
  */
-export function AcknowledgmentsGallery({ label, institutions }: AcknowledgmentsGalleryProps) {
-  const trackRef = useRef<HTMLUListElement>(null)
-
-  function scrollByCards(direction: 1 | -1) {
-    const track = trackRef.current
-
-    if (!track) {
-      return
-    }
-
-    track.scrollBy({ behavior: 'smooth', left: direction * (track.clientWidth * 0.6) })
-  }
-
+export function AcknowledgmentsGallery({
+  label,
+  institutions,
+  renderInstitution,
+  trailingSlide,
+}: AcknowledgmentsGalleryProps) {
   return (
-    <div className="acknowledgments-gallery">
-      {/* Focusable so the scrollable region is reachable by keyboard, which axe requires. */}
-      <ul aria-label={label} className="acknowledgments-track" ref={trackRef} tabIndex={0}>
-        {institutions.map((institution) => (
-          <li className="acknowledgments-slide" key={institution.name}>
-            <div className="acknowledgments-card">
+    <ul aria-label={label} className="acknowledgments-grid">
+      {institutions.map((institution, index) => (
+        <li className="acknowledgments-tile" key={institution.id ?? institution.name}>
+          {renderInstitution ? (
+            renderInstitution(institution, index)
+          ) : institution.href ? (
+            <a
+              className="acknowledgments-card"
+              href={institution.href}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
               <div className="acknowledgments-logo">
                 <Image alt={institution.logo.alt} fill sizes="160px" src={institution.logo.src} />
               </div>
-              <p className="acknowledgments-name">{institution.name}</p>
+            </a>
+          ) : (
+            <div className="acknowledgments-card acknowledgments-card-static">
+              <div className="acknowledgments-logo">
+                <Image alt={institution.logo.alt} fill sizes="160px" src={institution.logo.src} />
+              </div>
             </div>
-          </li>
-        ))}
-      </ul>
-
-      <div className="team-gallery-controls">
-        <button
-          aria-label="Anterior"
-          className="team-gallery-control"
-          onClick={() => scrollByCards(-1)}
-          type="button"
-        >
-          <ChevronLeft aria-hidden="true" size={20} strokeWidth={1.8} />
-        </button>
-        <button
-          aria-label="Siguiente"
-          className="team-gallery-control"
-          onClick={() => scrollByCards(1)}
-          type="button"
-        >
-          <ChevronRight aria-hidden="true" size={20} strokeWidth={1.8} />
-        </button>
-      </div>
-    </div>
+          )}
+        </li>
+      ))}
+      {trailingSlide ? <li className="acknowledgments-tile">{trailingSlide}</li> : null}
+    </ul>
   )
 }

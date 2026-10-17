@@ -1,5 +1,7 @@
 'use server'
 
+import { getTranslations } from 'next-intl/server'
+
 import { getPermissionsForRole } from '@/app/lib/auth/permission-store'
 import { getSessionUser } from '@/app/lib/auth/session'
 import {
@@ -19,12 +21,13 @@ export type RequestResourceDownloadResult =
 export async function requestResourceDownload(
   request: unknown,
 ): Promise<RequestResourceDownloadResult> {
+  const t = await getTranslations('scientificData.errors')
   const user = await getSessionUser()
   if (!user) {
     return {
       ok: false,
       reason: 'unauthenticated',
-      message: 'Inicie sesión para descargar recursos.',
+      message: t('downloadUnauthenticated'),
     }
   }
 
@@ -40,14 +43,14 @@ export async function requestResourceDownload(
       return {
         ok: false,
         reason: 'failed',
-        message: 'No fue posible consultar la fuente científica. Inténtelo nuevamente más tarde.',
+        message: t('upstreamError'),
       }
     }
     console.error('Resource download failed', error)
     return {
       ok: false,
       reason: 'failed',
-      message: 'No fue posible preparar la descarga. Inténtelo nuevamente más tarde.',
+      message: t('downloadFailed'),
     }
   }
 }

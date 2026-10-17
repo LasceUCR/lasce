@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
-import type { NewsArticle } from '@/app/lib/news'
+import { emptyInitial, initialFromArticle } from '@/app/lib/news-form'
 
+import { editableArticle, legacyArticle } from './fixtures'
 import { NewsArticleForm } from './NewsArticleForm'
 
 const meta: Meta<typeof NewsArticleForm> = {
@@ -15,34 +16,39 @@ export default meta
 
 type Story = StoryObj<typeof NewsArticleForm>
 
-const mockArticle: NewsArticle = {
-  slug: 'mock-slug',
-  title:
-    '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
-  authors: 'Jorge Arturo Mora',
-  source: 'La Nación – Revista Dominical',
-  date: '24 de mayo de 2026',
-  publishedAt: '2026-05-24',
-  abstract:
-    'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
-  href: 'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
-  imageUrl: '/images/news/la-nacion-1.png',
-  imageAlt:
-    'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
-}
-
+/** An item with both languages: the Spanish tab opens first, the English one holds its translation. */
 export const EditExisting: Story = {
   args: {
-    article: mockArticle,
+    initial: initialFromArticle(editableArticle),
     onCancel: () => {},
     onSave: () => {},
   },
 }
 
+/** A blank form: both languages' title and abstract are required. */
 export const AddNew: Story = {
   args: {
-    article: null,
+    initial: emptyInitial(),
     onCancel: () => {},
     onSave: () => {},
   },
+}
+
+/**
+ * An item saved before languages existed: its base text on the Spanish tab with a note that it may
+ * not be Spanish, and an empty English tab flagged as having no translation.
+ */
+export const Legacy: Story = {
+  args: { ...EditExisting.args, initial: initialFromArticle(legacyArticle) },
+}
+
+/** The editor follows the site's language: an English interface over the same content. */
+export const EnglishInterface: Story = {
+  args: EditExisting.args,
+  globals: { locale: 'en' },
+}
+
+/** A save in flight: every field and button is disabled. */
+export const Saving: Story = {
+  args: { ...EditExisting.args, busy: true },
 }

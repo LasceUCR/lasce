@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { ErrorBoundary } from '@/app/components/public/ErrorBoundary'
 import { LocationUnavailable } from './LocationUnavailable'
 
+import type { LocationMapLabels } from '@/app/lib/location-map'
 import type { RosacLocationContent } from '@/app/lib/rosac'
 
 import styles from './RosacInfoPage.module.css'
@@ -24,12 +25,14 @@ const RosacLocationMap = dynamic(
 
 export interface RosacLocationMapLoaderProps {
   location: RosacLocationContent
+  /** Accessible names. Omitted on ROSAC, which keeps the Spanish defaults. */
+  labels?: LocationMapLabels
 }
 
-export function RosacLocationMapLoader({ location }: RosacLocationMapLoaderProps) {
+export function RosacLocationMapLoader({ location, labels }: RosacLocationMapLoaderProps) {
   return (
     <ErrorBoundary fallback={<LocationUnavailable message={location.unavailableMessage} />}>
-      <RosacLocationMap location={location} />
+      <RosacLocationMap labels={labels ?? location.labels} location={location} />
     </ErrorBoundary>
   )
 }

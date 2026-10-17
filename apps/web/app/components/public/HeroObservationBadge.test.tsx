@@ -1,13 +1,15 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { HeroObservationBadge, type HeroObservationBadgeProps } from './HeroObservationBadge'
 import { Loading, Ready, Unavailable } from './HeroObservationBadge.stories'
 
 describe('HeroObservationBadge', () => {
   test('exposes a keyboard-operable "live" trigger with a descriptive accessible name', () => {
-    render(<HeroObservationBadge {...(Ready.args as HeroObservationBadgeProps)} />)
+    renderWithIntl(<HeroObservationBadge {...(Ready.args as HeroObservationBadgeProps)} />)
 
     const trigger = screen.getByText('En vivo').closest('summary')
     expect(trigger).toHaveAccessibleName(
@@ -16,20 +18,20 @@ describe('HeroObservationBadge', () => {
   })
 
   test('shows a neutral message while the feed is loading', () => {
-    render(<HeroObservationBadge {...(Loading.args as HeroObservationBadgeProps)} />)
+    renderWithIntl(<HeroObservationBadge {...(Loading.args as HeroObservationBadgeProps)} />)
 
     expect(screen.getByText(/Actualizando la imagen/)).toBeInTheDocument()
   })
 
   test('exposes the observation time as real, accessible text once ready', () => {
-    render(<HeroObservationBadge {...(Ready.args as HeroObservationBadgeProps)} />)
+    renderWithIntl(<HeroObservationBadge {...(Ready.args as HeroObservationBadgeProps)} />)
 
     const time = screen.getByText('2026-09-15 18:40 UTC')
     expect(time.closest('time')).toHaveAttribute('dateTime', '2026-09-15T18:40:00Z')
   })
 
   test('does not claim an observation time when the feed is unavailable', () => {
-    const { container } = render(
+    const { container } = renderWithIntl(
       <HeroObservationBadge {...(Unavailable.args as HeroObservationBadgeProps)} />,
     )
 
@@ -39,7 +41,7 @@ describe('HeroObservationBadge', () => {
 
   test('closes when its close button is activated', async () => {
     const user = userEvent.setup()
-    const { container } = render(
+    const { container } = renderWithIntl(
       <HeroObservationBadge {...(Ready.args as HeroObservationBadgeProps)} />,
     )
     const details = container.querySelector('details')
@@ -53,7 +55,7 @@ describe('HeroObservationBadge', () => {
 
   test('closes when the visitor clicks outside the panel', async () => {
     const user = userEvent.setup()
-    const { container } = render(
+    const { container } = renderWithIntl(
       <div>
         <HeroObservationBadge {...(Ready.args as HeroObservationBadgeProps)} />
         <button type="button">Fuera</button>
@@ -70,7 +72,7 @@ describe('HeroObservationBadge', () => {
 
   test('closes when Escape is pressed and returns focus to the trigger', async () => {
     const user = userEvent.setup()
-    const { container } = render(
+    const { container } = renderWithIntl(
       <HeroObservationBadge {...(Ready.args as HeroObservationBadgeProps)} />,
     )
     const details = container.querySelector('details')
@@ -81,5 +83,16 @@ describe('HeroObservationBadge', () => {
     await user.keyboard('{Escape}')
     expect(details).not.toHaveAttribute('open')
     expect(screen.getByText('En vivo').closest('summary')).toHaveFocus()
+  })
+
+  test('speaks English when the page is rendered in English', () => {
+    renderWithIntl(<HeroObservationBadge {...(Ready.args as HeroObservationBadgeProps)} />, {
+      locale: 'en',
+    })
+
+    expect(screen.getByText('Live').closest('summary')).toHaveAccessibleName(
+      'Live image of the Sun. Show the date and source of the observation.',
+    )
+    expect(screen.getByText(/Observed on/)).toHaveTextContent('Observed on 2026-09-15 18:40 UTC')
   })
 })

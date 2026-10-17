@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
-import type { NewsArticle } from '@/app/lib/news'
 
 import { EditableNewsCard } from './EditableNewsCard'
+import { editableArticle, legacyArticle } from './fixtures'
 
 const meta: Meta<typeof EditableNewsCard> = {
   component: EditableNewsCard,
@@ -16,27 +16,11 @@ export default meta
 
 type Story = StoryObj<typeof EditableNewsCard>
 
-const mockArticle: NewsArticle = {
-  slug: 'mock-slug',
-  title:
-    '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
-  authors: 'Jorge Arturo Mora',
-  source: 'La Nación – Revista Dominical',
-  date: '24 de mayo de 2026',
-  publishedAt: '2026-05-24',
-  abstract:
-    'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
-  href: 'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
-  imageUrl: '/images/news/la-nacion-1.png',
-  imageAlt:
-    'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
-}
-
 export const ViewMode: Story = {
   args: {
-    article: mockArticle,
+    article: editableArticle,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: (_initial, _draft, _confirmed, close) => close(),
   },
   decorators: [
     (Story) => (
@@ -49,11 +33,11 @@ export const ViewMode: Story = {
 
 export const EditModeOn: Story = {
   args: {
-    article: mockArticle,
+    article: editableArticle,
     canEdit: true,
     canDelete: true,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: (_initial, _draft, _confirmed, close) => close(),
   },
   decorators: [
     (Story) => (
@@ -67,11 +51,11 @@ export const EditModeOn: Story = {
 /** An assistant account: `edit_components` but not `delete_components` — only the pencil shows. */
 export const AssistantMode: Story = {
   args: {
-    article: mockArticle,
+    article: editableArticle,
     canEdit: true,
     canDelete: false,
     onDelete: () => {},
-    onSave: async () => null,
+    onSave: (_initial, _draft, _confirmed, close) => close(),
   },
   decorators: [
     (Story) => (
@@ -80,4 +64,10 @@ export const AssistantMode: Story = {
       </EditModeContext.Provider>
     ),
   ],
+}
+
+/** An item with no English version yet: editors see a note on the card. */
+export const LegacyItem: Story = {
+  args: { ...EditModeOn.args, article: legacyArticle },
+  decorators: EditModeOn.decorators,
 }

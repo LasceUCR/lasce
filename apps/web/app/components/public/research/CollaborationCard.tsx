@@ -1,22 +1,36 @@
+import styles from './CollaborationCard.module.css'
 import { Globe, MapPin } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
+import type { Locale } from '@/app/lib/i18n/config'
+import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 import type { CollaborationScope } from '@/app/lib/research-collaborations'
 
 export interface CollaborationCardProps {
   name: string
   acronym?: string
+  websiteUrl?: string
   country: string
+  countryLocale?: Locale | null
   scope: CollaborationScope
 }
 
-export function CollaborationCard({ name, acronym, country, scope }: CollaborationCardProps) {
+export function CollaborationCard({
+  name,
+  acronym,
+  websiteUrl,
+  country,
+  countryLocale,
+  scope,
+}: CollaborationCardProps) {
+  const t = useTranslations('collaborations.card')
   const isNational = scope === 'national'
 
   return (
     <article className="surface-card collaboration-card">
       <div className="collaboration-card-header">
         <span className={`collaboration-badge collaboration-badge-${scope}`} data-scope={scope}>
-          {isNational ? 'Nacional' : 'Internacional'}
+          {t(scope)}
         </span>
         <span className="collaboration-country">
           {isNational ? (
@@ -24,7 +38,7 @@ export function CollaborationCard({ name, acronym, country, scope }: Collaborati
           ) : (
             <Globe aria-hidden="true" size={14} />
           )}
-          <span>{country}</span>
+          <span lang={contentLangAttribute(countryLocale)}>{country}</span>
         </span>
       </div>
 
@@ -32,8 +46,13 @@ export function CollaborationCard({ name, acronym, country, scope }: Collaborati
 
       {acronym ? (
         <p className="collaboration-acronym">
-          <strong>Siglas:</strong> {acronym}
+          <strong>{t('acronym')}</strong> {acronym}
         </p>
+      ) : null}
+      {websiteUrl ? (
+        <a className={styles.website} href={websiteUrl} rel="noopener noreferrer" target="_blank">
+          {t('website')}
+        </a>
       ) : null}
     </article>
   )

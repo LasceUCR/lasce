@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
+import { englishArticle, spanishArticle } from './fixtures'
 import { NewsCard } from './NewsCard'
-import type { NewsArticle } from '@/app/lib/news'
 
 const meta: Meta<typeof NewsCard> = {
   component: NewsCard,
   parameters: {
-    layout: 'centered',
+    layout: 'padded',
   },
 }
 
@@ -14,31 +14,56 @@ export default meta
 
 type Story = StoryObj<typeof NewsCard>
 
-const mockNews: NewsArticle = {
-  slug: 'mock-slug',
-  title:
-    '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
-  authors: 'Jorge Arturo Mora',
-  source: 'La Nación – Revista Dominical',
-  date: '24 de mayo de 2026',
-  publishedAt: '2026-05-24',
-  abstract:
-    'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
-  href: 'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
-  imageUrl: '/images/news/la-nacion-1.png',
-  imageAlt:
-    'Proyectos científicos de vanguardia para Costa Rica en el Centro Nacional de Alta Tecnología.',
-}
+const { title, authors, source, date, publishedAt, abstract, href } = spanishArticle
 
 export const Default: Story = {
+  args: { title, authors, source, date, publishedAt, abstract, href, contentLang: 'es' },
+}
+
+/** The same item for a visitor reading in English: its translation and an English date. */
+export const English: Story = {
   args: {
-    title: mockNews.title,
-    authors: mockNews.authors,
-    source: mockNews.source,
-    date: mockNews.date,
-    abstract: mockNews.abstract,
-    href: mockNews.href,
-    imageUrl: mockNews.imageUrl,
-    imageAlt: mockNews.imageAlt,
+    ...Default.args,
+    title: englishArticle.title,
+    abstract: englishArticle.abstract,
+    date: englishArticle.date,
+    contentLang: 'en',
   },
+  globals: { locale: 'en' },
+}
+
+/** Some coverage carries no publish date; the card says "Sin fecha" in the site's language. */
+export const Undated: Story = {
+  args: { ...Default.args, date: null, publishedAt: null },
+}
+
+/**
+ * An editor's view of an item saved before languages existed: its text's language is unknown
+ * (`lang=""`) and a note says it has no English version yet.
+ */
+export const TranslationMissing: Story = {
+  args: { ...Default.args, contentLang: '', translationMissing: true },
+}
+
+export const WithoutSummary: Story = {
+  args: { ...Default.args, abstract: '' },
+}
+
+/** A long title, author list and summary wrap and clamp instead of widening the card. */
+export const LongText: Story = {
+  args: {
+    ...Default.args,
+    title:
+      'Investigadores del Laboratorio de Ciencias Espaciales presentan resultados sobre la propagación interplanetaria de eyecciones de masa coronal dirigidas a la Tierra durante el ciclo solar 25',
+    authors:
+      'Carolina Salas-Matamoros, Jaime Sánchez-Guevara, Ana Lucía Rodríguez-Villalobos, Marco Antonio Jiménez-Quesada',
+    source:
+      'https://www.ucr.ac.cr/noticias/2026/05/24/un-enlace-muy-largo-sin-espacios-que-no-debe-desbordar',
+    abstract:
+      'Un resumen extenso que ocupa más de dos líneas para mostrar el recorte con puntos suspensivos: el equipo analizó decenas de eventos registrados por instrumentos en tierra y en el espacio, y comparó sus trayectorias con modelos geométricos para estimar tiempos de llegada.',
+  },
+}
+
+export const WithoutLink: Story = {
+  args: { ...Default.args, href: '' },
 }

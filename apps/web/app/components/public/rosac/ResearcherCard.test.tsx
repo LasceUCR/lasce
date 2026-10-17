@@ -7,12 +7,26 @@ import { describe, expect, test, vi } from 'vitest'
 // module for its static fixture doesn't also require a real DATABASE_URL.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
-import { ResearcherCard, institutionPreview, type ResearcherCardProps } from './ResearcherCard'
-import { Default, WithoutDescription, WithoutEmail } from './ResearcherCard.stories'
+import {
+  DEFAULT_RESEARCHER_PHOTO,
+  ResearcherCard,
+  institutionPreview,
+  type ResearcherCardProps,
+} from './ResearcherCard'
+import {
+  Default,
+  WithContentLang,
+  WithUnknownContentLang,
+  WithoutDescription,
+  WithoutEmail,
+  WithoutPhoto,
+} from './ResearcherCard.stories'
 
 const defaultArgs = Default.args as ResearcherCardProps
 const withoutEmailArgs = WithoutEmail.args as ResearcherCardProps
 const withoutDescriptionArgs = WithoutDescription.args as ResearcherCardProps
+const contentLangArgs = WithContentLang.args as ResearcherCardProps
+const unknownContentLangArgs = WithUnknownContentLang.args as ResearcherCardProps
 
 function isOnHiddenFace(text: string) {
   const element = screen.getByText(text)
@@ -227,5 +241,55 @@ describe('ResearcherCard', () => {
     expect(image).toHaveAttribute('alt', '')
     expect(image).toHaveAttribute('src', defaultArgs.src)
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  test('sets no language on the role and description by default', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherCard {...defaultArgs} />)
+
+    expect(screen.getByText(defaultArgs.role)).not.toHaveAttribute('lang')
+
+    await user.click(screen.getByRole('button', { name: `Ver descripción de ${defaultArgs.name}` }))
+    expect(screen.getByText(defaultArgs.description as string)).not.toHaveAttribute('lang')
+  })
+
+  test('marks the role and the description with the language of their text', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherCard {...contentLangArgs} />)
+
+    expect(screen.getByText(contentLangArgs.role)).toHaveAttribute('lang', 'es')
+
+    await user.click(
+      screen.getByRole('button', { name: `Ver descripción de ${contentLangArgs.name}` }),
+    )
+    expect(screen.getByText(contentLangArgs.description as string)).toHaveAttribute('lang', 'es')
+  })
+
+  test('leaves the name and the institution without a language of their own', () => {
+    render(<ResearcherCard {...contentLangArgs} />)
+
+    expect(screen.getByRole('heading', { name: contentLangArgs.name })).not.toHaveAttribute('lang')
+  })
+
+  test('marks the text of a legacy record as being in an unknown language', () => {
+    render(<ResearcherCard {...unknownContentLangArgs} />)
+
+    expect(screen.getByText(unknownContentLangArgs.role)).toHaveAttribute('lang', '')
+  })
+
+  test('shows the uploaded photo instead of the default portrait', () => {
+    const { container } = render(<ResearcherCard {...defaultArgs} />)
+
+    expect(defaultArgs.src).not.toBe('')
+    expect(container.querySelector('img')).toHaveAttribute('src', defaultArgs.src)
+    expect(container.querySelector('img')).not.toHaveAttribute('src', DEFAULT_RESEARCHER_PHOTO)
+  })
+
+  test('shows the default portrait when the researcher has no photo', () => {
+    const { container } = render(<ResearcherCard {...(WithoutPhoto.args as ResearcherCardProps)} />)
+
+    const image = container.querySelector('img')
+    expect(image).toHaveAttribute('src', DEFAULT_RESEARCHER_PHOTO)
+    expect(image).toHaveAttribute('alt', '')
   })
 })
