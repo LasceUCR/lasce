@@ -126,6 +126,54 @@ export interface DynamicSpectrumDataResult extends ScientificDataResultBase {
 export type ScientificDataResult =
   TimeSeriesDataResult | ImageSequenceDataResult | DynamicSpectrumDataResult
 
+const xrayParameters: ScientificParameter[] = [
+  { code: '0.05-0.4nm', label: 'Banda corta (0,05–0,4 nm)', unit: 'W/m²' },
+  { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
+]
+
+const euvParameters: ScientificParameter[] = [
+  { code: '1175', label: 'Línea 117,5 nm', unit: 'W/m²' },
+  { code: '1216', label: 'Línea 121,6 nm', unit: 'W/m²' },
+  { code: '1335', label: 'Línea 133,5 nm', unit: 'W/m²' },
+  { code: '1405', label: 'Línea 140,5 nm', unit: 'W/m²' },
+  { code: '256', label: 'Línea 25,6 nm', unit: 'W/m²' },
+  { code: '284', label: 'Línea 28,4 nm', unit: 'W/m²' },
+  { code: '304', label: 'Línea 30,4 nm', unit: 'W/m²' },
+  { code: 'mgii_index', label: 'Índice Mg II', unit: 'índice' },
+]
+
+const magneticParameters: ScientificParameter[] = [
+  { code: 'EPN-x', label: 'Componente x (marco EPN)', unit: 'nT' },
+  { code: 'EPN-y', label: 'Componente y (marco EPN)', unit: 'nT' },
+  { code: 'EPN-z', label: 'Componente z (marco EPN)', unit: 'nT' },
+  { code: 'total', label: 'Magnitud total', unit: 'nT' },
+]
+
+const ehisGroups = [
+  ['H', 'Hidrógeno (H)'],
+  ['He', 'Helio (He)'],
+  ['CNO', 'Carbono-nitrógeno-oxígeno (CNO)'],
+  ['NeS', 'Neón-azufre (Ne-S)'],
+  ['ClNi', 'Cloro-níquel (Cl-Ni)'],
+] as const
+
+const ehisParameters: ScientificParameter[] = ehisGroups.flatMap(([group, name]) =>
+  Array.from({ length: 5 }, (_, band) => ({
+    code: `${group}:E${band + 1}`,
+    label: `${name}: banda de energía ${band + 1}`,
+    unit: 'partículas/(cm²·s·sr·MeV/nucleón)',
+  })),
+)
+
+const mpshParameters: ScientificParameter[] = ['electron', 'proton'].flatMap((species) =>
+  Array.from({ length: 5 }, (_, telescope) =>
+    Array.from({ length: species === 'electron' ? 10 : 11 }, (_, band) => ({
+      code: `${species}:T${telescope + 1}:E${band + 1}`,
+      label: `${species === 'electron' ? 'Electrones' : 'Protones'}: telescopio ${telescope + 1}, banda ${band + 1}`,
+      unit: 'partículas/(cm²·s·sr·keV)',
+    })),
+  ).flat(),
+)
 /** The parts of a message catalogue the scientific data page reads. */
 export type ScientificDataMessages = Pick<typeof es, 'scientificData'>
 
@@ -257,6 +305,101 @@ export function getScientificSources(messages: ScientificDataMessages): Scientif
       ).flat(),
   )
 
+const unavailableFromRollingApi =
+  'Este producto GOES y sus canales aún están pendientes de integración.'
+
+export const goesInstruments: ScientificInstrument[] = [
+  {
+    code: 'EXIS',
+    name: 'Sensores de irradiancia ultravioleta extrema y rayos X',
+    products: [
+      {
+        code: 'SFEU',
+        name: 'Flujo solar: EUV',
+        visualization: 'time-series',
+        available: true,
+        parameters: euvParameters,
+      },
+      {
+        code: 'SFXR',
+        name: 'Flujo solar: rayos X',
+        visualization: 'time-series',
+        available: true,
+        parameters: xrayParameters,
+      },
+    ],
+  },
+  {
+    code: 'MAG',
+    name: 'Magnetómetro',
+    products: [
+      {
+        code: 'GEOF',
+        name: 'Campo geomagnético',
+        visualization: 'time-series',
+        available: true,
+        parameters: magneticParameters,
+      },
+    ],
+  },
+  {
+    code: 'SEISS',
+    name: 'Suite ambiental espacial in situ',
+    products: [
+      {
+        code: 'EHIS',
+        name: 'Iones pesados energéticos',
+        visualization: 'time-series',
+        available: true,
+        availabilityNote:
+          'Seleccione el grupo de masa y la banda de energía. El archivo nivel 1b reporta un flujo cada 5 minutos y NOAA publica cada día con aproximadamente un día de retraso.',
+        parameters: ehisParameters,
+      },
+      {
+        code: 'MPSL',
+        name: 'Electrones y protones magnetosféricos: baja energía',
+        visualization: 'time-series',
+        available: false,
+        availabilityNote: unavailableFromRollingApi,
+        parameters: [],
+      },
+      {
+        code: 'MPSH',
+        name: 'Electrones y protones magnetosféricos: energía media y alta',
+        visualization: 'time-series',
+        available: true,
+        availabilityNote:
+          'Seleccione el telescopio y la banda del archivo nivel 1b. Cada telescopio conserva su dirección de observación.',
+        parameters: mpshParameters,
+      },
+      {
+        code: 'SGPS',
+        name: 'Protones solares y galácticos',
+        visualization: 'time-series',
+        available: true,
+        availabilityNote:
+          'Seleccione la unidad SGPS−X o SGPS+X. El archivo nivel 1b incluye canales diferenciales y el integral > 500 MeV.',
+        parameters: sgpsParameters,
+      },
+    ],
+  },
+  {
+    code: 'SUVI',
+    name: 'Generador de imágenes solares ultravioleta',
+    products: [
+      { code: 'Fe093', wavelength: '94 Å' },
+      { code: 'Fe131', wavelength: '131 Å' },
+      { code: 'Fe171', wavelength: '171 Å' },
+      { code: 'Fe195', wavelength: '195 Å' },
+      { code: 'Fe284', wavelength: '284 Å' },
+      { code: 'He303', wavelength: '304 Å' },
+    ].map(({ code, wavelength }) => ({
+      code: code as ScientificProductCode,
+      name: `Imágenes solares: ${wavelength} (${code})`,
+      wavelength,
+      visualization: 'image-sequence' as const,
+      available: true,
+      parameters: [{ code: 'image', label: 'Imagen calibrada', unit: 'imagen' }],
   const sgps = parameters?.sgps ?? es.scientificData.parameters.sgps
   const sgpsLabelTemplate = sgps?.label ?? es.scientificData.parameters.sgps.label
   const sgpsIntegral = sgps?.integral ?? es.scientificData.parameters.sgps.integral
