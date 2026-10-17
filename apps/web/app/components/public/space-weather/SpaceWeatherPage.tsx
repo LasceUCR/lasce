@@ -11,6 +11,10 @@ import type {
   SpaceWeatherContent,
   SunToEarthItemId,
 } from '@/app/lib/space-weather'
+import type { SpaceWeatherSection } from '@/app/lib/space-weather-section-schema'
+
+import { CostaRicaSectionView } from './CostaRicaSectionView'
+import { EditableCostaRicaSection } from './EditableCostaRicaSection'
 
 const sunToEarthIcons: Record<SunToEarthItemId, LucideIcon> = {
   release: Sun,
@@ -29,11 +33,22 @@ const componentIcons: Record<SpaceWeatherComponentId, LucideIcon> = {
 }
 
 export interface SpaceWeatherPageProps {
-  /** Every string the page shows, already in the visitor's language. */
+  /** Every fixed string the page shows, already in the visitor's language. */
   content: SpaceWeatherContent
+  /**
+   * The "¿Por qué estudiarlo desde Costa Rica?" card as stored, in the visitor's language. Absent
+   * when its row is missing: the card then shows the catalogue's text, with no edit controls.
+   */
+  costaRicaSection?: SpaceWeatherSection | null
+  /** True for someone who may edit the Costa Rica card in "Modo edición". */
+  canEditCostaRica?: boolean
 }
 
-export function SpaceWeatherPage({ content }: SpaceWeatherPageProps) {
+export function SpaceWeatherPage({
+  content,
+  costaRicaSection,
+  canEditCostaRica = false,
+}: SpaceWeatherPageProps) {
   const {
     hero: spaceWeatherHero,
     definition: spaceWeatherDefinition,
@@ -100,13 +115,12 @@ export function SpaceWeatherPage({ content }: SpaceWeatherPageProps) {
         />
       </TopicSection>
 
-      <TopicSection featured title={spaceWeatherCostaRica.title} titleId="sw-costa-rica-title">
-        {spaceWeatherCostaRica.paragraphs.map((paragraph) => (
-          <p className="topic-intro" key={paragraph}>
-            {paragraph}
-          </p>
-        ))}
-      </TopicSection>
+      {/* Visitors get the plain card: the editor, and its client code, only for an editor. */}
+      {canEditCostaRica && costaRicaSection?.editing ? (
+        <EditableCostaRicaSection canEdit section={costaRicaSection} />
+      ) : (
+        <CostaRicaSectionView section={costaRicaSection ?? spaceWeatherCostaRica} />
+      )}
 
       <div className="topic-page-footer space-weather-footer page-width">
         <TopicBackLink href={spaceWeatherBackLink.href} label={spaceWeatherBackLink.label} />

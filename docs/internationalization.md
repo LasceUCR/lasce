@@ -21,7 +21,7 @@ never text a visitor reads.
   description), the **researcher profiles** on `/nosotros` (role and description), the **LASCE
   section** of `/fisica-solar` (title and text), the **home page** (the hero banner's title and
   subtitle, and the geomagnetic indices' descriptions), the **contact cards** on `/contacto` (title
-  and description) **the research areas on `/investigacion`** (title and description), and the **gallery** (`/galeria`, albums and media) use it,
+  and description), **the research areas on `/investigacion`** (title and description), the **gallery** (`/galeria`, albums and media) and the **"¿Por qué estudiarlo desde Costa Rica?" card** on `/clima-espacial` (title and text) use it,
   read and edited in Spanish and English. Every other editable entity is still single-language.
   See [Dynamic content](#dynamic-content) and
   [`translate-database-content.md`](translate-database-content.md).
@@ -175,7 +175,7 @@ inventory taken when the static pages were migrated.
 | `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`                                 |
 | `/nosotros`                              | `nosotros`                           | `lib/nosotros.ts`, `NosotrosPage.tsx`, `NosotrosActivityForm.tsx`             |
 | `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`                       |
-| `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`                                                        |
+| `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`, `lib/space-weather-section.ts`                        |
 | `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                                     |
 | `/colaboraciones-e-iniciativas`          | `collaborations`                     | `lib/collaborations.ts`, `lib/research-collaborations.ts`                     |
 | `/investigacion/**`                      | `researchAreas`                      | `(public)/investigacion/**`, `research/*`                                     |
@@ -190,6 +190,12 @@ database content, edited in both languages in "Modo edición" ([`home-page.md`](
 The catalogue's `home.hero.title|lead` and `home.indicators.<code>.value|description` are only
 the fallback for an empty database; the editor's copy is in `home.editor`, `home.discardDialog`,
 `home.validation` and `home.saveErrors`.
+
+On `/clima-espacial`, the "¿Por qué estudiarlo desde Costa Rica?" card is database content,
+edited in both languages in "Modo edición" ([`space-weather.md`](space-weather.md)). The
+catalogue's `spaceWeather.costaRica.title|p1` are only the fallback for an empty database; the
+editor's copy is in `spaceWeather.editor`, `spaceWeather.discardDialog` and
+`spaceWeather.saveErrors`.
 
 `/publicaciones` is translated as a whole, in the `publications` namespace: the page's fixed
 copy (`page`, built in `(public)/publicaciones/page.tsx` and `PublicationsExplorer.tsx`), the
@@ -300,8 +306,9 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
   institution, addresses and photo are shared), the LASCE section of `/fisica-solar`
   (`SolarPhysicsSection`), the home page banner (`HomeHero`) and its geomagnetic indices
   (`GeomagneticIndex`, description only), the contact cards on `/contacto` (`ContactChannel`:
-  `title` and `description`; the icon, link and position are shared), and research areas
-  (`ResearchArea`). The same pattern is meant for `News`, `Researcher` (ROSAC), `GalleryAlbum` and
+  `title` and `description`; the icon, link and position are shared), research areas
+  (`ResearchArea`), and the space weather page's sections (`SpaceWeatherSection`: `title` and
+  `body`). The same pattern is meant for `News`, `Researcher` (ROSAC), `GalleryAlbum` and
   `GalleryMedia`, each with its own translation table holding only its translatable columns
   (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
 - **Tables:** [`database-definition.md`](database-definition.md).

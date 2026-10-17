@@ -763,6 +763,29 @@ Constraints: `UNIQUE (researcher_id, locale)`. Researchers created before this t
 no row and are shown as they are, with an unknown content language. See
 [translate-database-content.md](translate-database-content.md).
 
+## `public` schema (space weather)
+
+### `space_weather_sections` and `space_weather_section_translations`
+
+An editable text section of `/clima-espacial`, looked up by its unique `key`. Today there is one
+row, `costa-rica`: the "¿Por qué estudiarlo desde Costa Rica?" card. Spanish `title` and `body`
+live on the base row; every other language is a translation row. `body` is plain text and a blank
+line separates paragraphs. Seeded by the migration `20261016120000_add_space_weather_sections`;
+nothing is created or deleted from the CMS. See [`space-weather.md`](space-weather.md).
+
+| Column       | Prisma type | Postgres type    | Constraints                            |
+| ------------ | ----------- | ---------------- | -------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `key`        | `String`    | `text`           | not null, unique                       |
+| `title`      | `String`    | `text`           | not null; Spanish                      |
+| `body`       | `String`    | `text`           | not null; Spanish                      |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`space_weather_section_translations`: `id`, `section_id` (FK → `space_weather_sections.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `body`, timestamps. Unique on
+`(section_id, locale)`.
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
@@ -809,6 +832,12 @@ writer (nothing calls it yet) and `getRecentActivity()` its only reader, for the
 `public.contact_channel_translations` for `/contacto`. Spanish text is the base row; English is
 upserted on save. An update writes only while `updated_at` still equals the version the editor
 loaded.
+
+`apps/web/app/lib/space-weather-section.ts` reads and writes `public.space_weather_sections` and
+`public.space_weather_section_translations` for `/clima-espacial`: `getSpaceWeatherSection()` reads
+the `costa-rica` row in the requested language, and `updateSpaceWeatherSection()` writes the base
+row and its translations in one transaction, only while `updated_at` still equals the version the
+editor loaded.
 
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
 fixed, real LASCE research and news records so local/dev environments aren't empty. Both seed

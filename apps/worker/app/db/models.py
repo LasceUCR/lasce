@@ -868,3 +868,45 @@ class ContactChannelTranslation(Base):
     description: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SpaceWeatherSection(Base):
+    """An editable text section of the space weather page, looked up by its unique ``key``
+    (today only ``costa-rica``). ``title`` and ``body`` are the Spanish text; a blank line in
+    ``body`` separates paragraphs. Edited from the web CMS. Mirrored by convention; no job
+    touches it.
+    """
+
+    __tablename__ = "space_weather_sections"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SpaceWeatherSectionTranslation(Base):
+    """The ``title`` and ``body`` of a `SpaceWeatherSection` in a language other than Spanish."""
+
+    __tablename__ = "space_weather_section_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "section_id",
+            "locale",
+            name="space_weather_section_translations_section_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    section_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.space_weather_sections.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

@@ -5,6 +5,11 @@ export interface TopicSectionProps {
   index?: string
   title: string
   titleId?: string
+  /**
+   * The language `title` is written in, when it can differ from the page's, as in database
+   * content (from `contentLangAttribute`).
+   */
+  titleLang?: string
   badge?: string
   intro?: string
   className?: string
@@ -18,6 +23,7 @@ export function TopicSection({
   index,
   title,
   titleId,
+  titleLang,
   badge,
   intro,
   className,
@@ -34,7 +40,7 @@ export function TopicSection({
   const content = (
     <>
       <div className="topic-section-heading">
-        <h2 id={headingId}>
+        <h2 id={headingId} lang={titleLang}>
           {index ? <span className="topic-section-index">{index}.</span> : null} {title}
         </h2>
         {badge ? <span className="topic-badge">{badge}</span> : null}
