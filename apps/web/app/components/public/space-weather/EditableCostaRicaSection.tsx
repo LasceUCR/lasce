@@ -104,7 +104,7 @@ export function EditableCostaRicaSection({
   return (
     <>
       <EditableWrapper
-        className="space-weather-section-editable page-width"
+        className="featured-section-editable page-width"
         editLabel={t('editor.editLabel')}
         onEdit={() => setInitial(sectionInitial(editing))}
       >
