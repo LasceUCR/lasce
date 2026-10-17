@@ -625,7 +625,7 @@ import {
   withConfirmation,
   type ContentDraft,
 } from '@/app/lib/i18n/content/form'
-import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import { confirmationLabel } from '@/app/lib/i18n/content/review'
 type EventField = (typeof eventContent.fields)[number]
 interface EventContentFieldsProps {
   /** `editing.content` of the record, or `null` when creating. */
@@ -661,7 +661,6 @@ export function EventContentFields({ stored, onSave }: EventContentFieldsProps) 
       <TranslationReview
         checked={isConfirmed(confirmed, pending)}
         label={confirmationLabel(eventContent, pending)}
-        message={reviewMessage(eventContent, pending, stored, draft)}
         onChange={(checked) =>
           setConfirmed((current) => withConfirmation(current, pending, checked))
         }
@@ -729,7 +728,7 @@ What the shared pieces give you, and what to keep:
 
   It is the field's locale, or `''` for the base text of a legacy record, whose language is unknown. It goes on the input (`FormField`'s `lang`), not on the panel: the panel also holds the editor's own labels and messages, which are not in the panel's language.
 
-- **`TranslationReview`**: the explanation (`Notice`, warning tone) and the switch (`Toggle`, role `switch`) under the field to review.
+- **`TranslationReview`**: the switch (`Toggle`, role `switch`) under the field to review. The field's own error says what to do; there is no second notice.
 
 - **Validation**: `validateContent` checks nothing while the content is unchanged (so a shared-field edit of a legacy record saves without a translation), and otherwise runs your definition's schema, so the editor shows exactly the API's messages at the same paths, plus `editorCopy.fieldPending`
 
