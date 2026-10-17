@@ -184,7 +184,7 @@ What a visitor reading in locale `L` sees (`resolveContent`):
 
 Fallback is per record, never per field: with required fields in every language and optional ones all-or-none, a complete record always has every field it needs in every language.
 
-A legacy record becomes complete the first time an editor saves its text in every language. That save also requires reviewing the base text (the missing language counts as changed, so the review rule asks for the Spanish fields), which is how the base text becomes trusted Spanish. Until then, its shared fields can still be edited without translating it.
+A legacy record becomes complete the first time an editor saves its text in every language. That save also requires reviewing the base text of each field written in the new language (a blank missing translation is not a change, so editing one field does not ask to confirm another field of the same language). That review is how the base text becomes trusted Spanish. Until then, its shared fields can still be edited without translating it.
 
 ## 3. Implementation guide
 
@@ -471,7 +471,7 @@ Why it is shaped like this:
 
 The rule, `findPendingReviews(definition, stored, next, confirmed)`:
 
-1. For each field, compare stored and new text in every language, ignoring surrounding whitespace (`null` counts as empty). A language with no stored text (legacy) counts as changed.
+1. For each field, compare stored and new text in every language, ignoring surrounding whitespace (`null` counts as empty). A language with no stored text (legacy) counts as changed only for a field that now has text; leaving it blank is not a change of that field.
 
 2. If a field changed in some languages but not all, each unchanged language must be listed in `confirmedUnchanged` for that field.
 

@@ -458,14 +458,12 @@ describe('PublicationForm: legacy records', () => {
     await replace(user, 'Título (Español)', 'Electrones no térmicos en una fulguración eruptiva')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    // The base abstract must be reviewed too: it may not be Spanish at all.
     expect(
-      screen.getByRole('switch', { name: 'El resumen en español sigue siendo correcto' }),
-    ).toBeInTheDocument()
+      screen.queryByRole('switch', { name: 'El resumen en español sigue siendo correcto' }),
+    ).not.toBeInTheDocument()
     expect(
-      screen.getByText('Actualice este campo o confirme que sigue siendo correcto.'),
-    ).toBeInTheDocument()
-    expect(screen.queryByText(/Cambió el resumen en inglés/)).not.toBeInTheDocument()
+      screen.queryByRole('switch', { name: 'El título en español sigue siendo correcto' }),
+    ).not.toBeInTheDocument()
     expect(tab(/^English · 2 por revisar$/)).toBeInTheDocument()
 
     await user.click(tab(/^English/))

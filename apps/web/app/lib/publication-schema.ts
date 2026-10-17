@@ -238,9 +238,9 @@ export type PublicationContentInput = ContentInput<PublicationContentSpecs>
 /**
  * The translatable fields that changed in some languages but not in others, minus the ones the
  * editor confirmed as still correct in this operation. A language with no stored text yet (a
- * legacy record) counts as changed, so completing a legacy record's English requires reviewing
- * its base text too: that text may not be Spanish at all. The rule itself is the shared one
- * (`app/lib/i18n/content/review.ts`); this binds it to the publication's fields.
+ * legacy record) counts as changed only for a field that now has text, so writing its English
+ * requires reviewing that field's base text: it may not be Spanish at all. The rule itself is the
+ * shared one (`app/lib/i18n/content/review.ts`); this binds it to the publication's fields.
  */
 export function findPendingReviews(
   current: StoredPublicationContent,
