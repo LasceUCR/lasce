@@ -290,7 +290,9 @@ test('deletes a news item together with its translation', async ({ page, context
     await openEditMode(page)
     await page.getByRole('button', { name: `Eliminar ${fixtures.bilingual.title}` }).click()
     const confirm = page.getByRole('dialog', { name: 'Eliminar noticia' })
-    await expect(confirm).toContainText(`Noticia: ${fixtures.bilingual.title}`)
+    await expect(confirm).toContainText(
+      `¿Desea eliminar la noticia "${fixtures.bilingual.title}"? Esta acción no se puede deshacer.`,
+    )
     await confirm.getByRole('button', { name: 'Eliminar' }).click()
 
     await expect(page.getByRole('heading', { name: fixtures.bilingual.title })).toBeHidden()
