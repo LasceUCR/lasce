@@ -1,13 +1,13 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
-import { FormField } from '@/app/components/public/FormField'
+import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import type { RosacCardIcon } from '@/app/lib/rosac'
 
-import { ROSAC_CARD_ICON_OPTIONS } from './RosacCharacteristicForm'
 
 export interface RosacActivityFormValues {
   icon: RosacCardIcon
@@ -29,6 +29,7 @@ export const blankRosacActivity: RosacActivityFormValues = {
 }
 
 export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityFormProps) {
+  const t = useTranslations('rosac.editor')
   const initial = activity ?? blankRosacActivity
   const [icon, setIcon] = useState<RosacCardIcon>(initial.icon)
   const [title, setTitle] = useState(initial.title)
@@ -38,9 +39,25 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
   const formId = useId()
 
-  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
+  const iconOptions: FormFieldOption[] = useMemo(
+    () => [
+      { value: 'antenna', label: t('characteristics.icons.antenna') },
+      { value: 'location', label: t('characteristics.icons.location') },
+      { value: 'frequency', label: t('characteristics.icons.frequency') },
+      { value: 'sun', label: t('characteristics.icons.sun') },
+      { value: 'tracking', label: t('characteristics.icons.tracking') },
+      { value: 'control', label: t('characteristics.icons.control') },
+      { value: 'receiver', label: t('characteristics.icons.receiver') },
+      { value: 'maintenance', label: t('characteristics.icons.maintenance') },
+      { value: 'education', label: t('characteristics.icons.education') },
+    ],
+    [t],
+  )
+
+  const titleError =
+    hasAttemptedSubmit && title.trim() === '' ? t('activities.titleRequired') : null
   const descriptionError =
-    hasAttemptedSubmit && description.trim() === '' ? 'La descripción es obligatoria.' : null
+    hasAttemptedSubmit && description.trim() === '' ? t('activities.descriptionRequired') : null
 
   const isFormValid = title.trim() !== '' && description.trim() !== ''
 
@@ -76,16 +93,16 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
     <div className="cms-form">
       <FormField
         id={`${formId}-icon`}
-        label="Ícono"
+        label={t('activities.iconLabel')}
         onChange={(value) => setIcon(value as RosacCardIcon)}
-        options={ROSAC_CARD_ICON_OPTIONS}
+        options={iconOptions}
         value={icon}
       />
 
       <FormField
         errorMessage={titleError}
         id={`${formId}-title`}
-        label="Título"
+        label={t('activities.titleLabel')}
         onChange={setTitle}
         required
         value={title}
@@ -94,7 +111,7 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
       <FormField
         errorMessage={descriptionError}
         id={`${formId}-description`}
-        label="Descripción"
+        label={t('activities.descriptionLabel')}
         multiline
         onChange={setDescription}
         required
@@ -103,17 +120,17 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
+          {t('activities.cancel')}
         </Button>
         <Button onClick={handleConfirmClick} variant="primary">
-          Confirmar
+          {t('activities.save')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={() => {
           setConfirmDiscardOpen(false)
@@ -121,7 +138,7 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
         }}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardDialog.title')}
       />
     </div>
   )
