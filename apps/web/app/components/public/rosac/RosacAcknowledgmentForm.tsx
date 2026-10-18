@@ -1,7 +1,6 @@
-'use client'
-
 import Image from 'next/image'
-import { useId, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
@@ -148,7 +147,7 @@ function isValidUrl(value: string): boolean {
   }
 }
 
-const LOGO_SOURCE_OPTIONS: FormFieldOption[] = [
+export const LOGO_SOURCE_OPTIONS: FormFieldOption[] = [
   { value: 'custom', label: 'Subir logo personalizado' },
   ...PREDEFINED_ACKNOWLEDGMENT_LOGOS.map((item, index) => ({
     value: String(index),
@@ -161,6 +160,7 @@ export function RosacAcknowledgmentForm({
   onSave,
   onCancel,
 }: RosacAcknowledgmentFormProps) {
+  const t = useTranslations('rosac.editor')
   const formId = useId()
   const [name, setName] = useState(institution?.name ?? '')
   const [href, setHref] = useState(institution?.href ?? '')
@@ -183,6 +183,17 @@ export function RosacAcknowledgmentForm({
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
 
+  const logoSourceOptions: FormFieldOption[] = useMemo(
+    () => [
+      { value: 'custom', label: t('acknowledgments.logoSourceCustom') },
+      ...PREDEFINED_ACKNOWLEDGMENT_LOGOS.map((item, index) => ({
+        value: String(index),
+        label: t('acknowledgments.logoSourcePreset', { label: item.label }),
+      })),
+    ],
+    [t],
+  )
+
   const isCustomMode = logoSelection === 'custom'
   const selectedPreset =
     !isCustomMode && Number(logoSelection) >= 0
@@ -201,13 +212,12 @@ export function RosacAcknowledgmentForm({
   const trimmedName = name.trim()
   const trimmedHref = href.trim()
   const nameError =
-    hasAttemptedSubmit && trimmedName === '' ? 'El nombre de la institución es obligatorio.' : null
+    hasAttemptedSubmit && trimmedName === '' ? t('acknowledgments.nameRequired') : null
   const hrefError =
     hasAttemptedSubmit && trimmedHref !== '' && !isValidUrl(trimmedHref)
-      ? 'El enlace debe ser una URL válida que empiece con http:// o https://.'
+      ? t('acknowledgments.institutionUrlInvalid')
       : null
-  const logoError =
-    hasAttemptedSubmit && !hasLogo ? 'Debe seleccionar o subir un logo para la institución.' : null
+  const logoError = hasAttemptedSubmit && !hasLogo ? t('acknowledgments.logoRequired') : null
 
   const isFormValid =
     trimmedName !== '' && hasLogo && (trimmedHref === '' || isValidUrl(trimmedHref))
@@ -259,7 +269,7 @@ export function RosacAcknowledgmentForm({
           finalLogoUrl = result.imageUrl
         } catch {
           setIsUploading(false)
-          setUploadError('No se pudo subir el logo. Inténtelo de nuevo.')
+          setUploadError(t('acknowledgments.uploadError'))
           return
         }
         setIsUploading(false)
@@ -270,7 +280,11 @@ export function RosacAcknowledgmentForm({
       finalLogoUrl = selectedPreset.src
     }
 
-    const finalAlt = logoAlt.trim() || `Logo de ${trimmedName}`
+    const finalAlt =
+      logoAlt.trim() ||
+      t('acknowledgments.logoAltDefault', {
+        name: trimmedName,
+      })
 
     onSave({
       name: trimmedName,
@@ -293,14 +307,14 @@ export function RosacAcknowledgmentForm({
       <FormField
         errorMessage={nameError}
         id={`${formId}-name`}
-        label="Nombre de la institución"
+        label={t('acknowledgments.nameLabel')}
         onChange={(val) => {
           setName(val)
           if (!logoAlt && !institution) {
-            setLogoAlt(`Logo de ${val.trim()}`)
+            setLogoAlt(t('acknowledgments.logoAltDefault', { name: val.trim() }))
           }
         }}
-        placeholder="Ej. Centro de Investigaciones Espaciales (CINESPA), UCR"
+        placeholder={t('acknowledgments.namePlaceholder')}
         required
         value={name}
       />
@@ -308,16 +322,16 @@ export function RosacAcknowledgmentForm({
       <FormField
         errorMessage={hrefError}
         id={`${formId}-href`}
-        label="Sitio web de la institución (opcional)"
+        label={t('acknowledgments.institutionUrlLabel')}
         onChange={setHref}
-        placeholder="https://ejemplo.ucr.ac.cr"
+        placeholder={t('acknowledgments.institutionUrlPlaceholder')}
         value={href}
       />
 
       <div className="cms-form-field">
         <FormField
           id={`${formId}-logo-selection`}
-          label="Escoger un logo personalizado o seleccionar uno de la lista"
+          label={t('acknowledgments.logoSourceLabel')}
           onChange={(val) => {
             setLogoSelection(val)
             if (val !== 'custom') {
@@ -339,7 +353,7 @@ export function RosacAcknowledgmentForm({
               }
             }
           }}
-          options={LOGO_SOURCE_OPTIONS}
+          options={logoSourceOptions}
           value={logoSelection}
         />
       </div>
@@ -348,8 +362,8 @@ export function RosacAcknowledgmentForm({
         <FileDropInput
           errorMessage={logoError}
           existingImageUrl={!logoRemoved && customSrc ? customSrc : undefined}
-          helperText="Formatos WebP, PNG, SVG o JPG (máx. 10 MB)."
-          label="Archivo del logo"
+          helperText={t('acknowledgments.logoFileHelp')}
+          label={t('acknowledgments.logoFileLabel')}
           onFileSelect={(file) => {
             setLogoFile(file)
             if (!file) {
@@ -386,9 +400,9 @@ export function RosacAcknowledgmentForm({
             />
           </div>
           <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
-            Logo seleccionado:{' '}
+            {t('acknowledgments.selectedLogo')}{' '}
             <strong style={{ color: 'var(--foreground)' }}>
-              {selectedPreset?.label ?? 'Institucional'}
+              {selectedPreset?.label ?? t('acknowledgments.institutional')}
             </strong>
           </span>
         </div>
@@ -396,25 +410,29 @@ export function RosacAcknowledgmentForm({
 
       <FormField
         id={`${formId}-logo-alt`}
-        label="Texto alternativo del logo (Accesibilidad)"
+        label={t('acknowledgments.logoAltLabel')}
         onChange={setLogoAlt}
-        placeholder="Descripción accesible del logo institucional"
+        placeholder={t('acknowledgments.logoAltPlaceholder')}
         value={logoAlt}
       />
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} type="button" variant="secondary">
-          Cancelar
+          {t('acknowledgments.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleSaveClick} type="button" variant="primary">
-          {isUploading ? 'Guardando...' : institution ? 'Guardar cambios' : 'Agregar institución'}
+          {isUploading
+            ? t('acknowledgments.saving')
+            : institution
+              ? t('acknowledgments.save')
+              : t('acknowledgments.add')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={() => {
           setConfirmDiscardOpen(false)
@@ -422,7 +440,7 @@ export function RosacAcknowledgmentForm({
         }}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardDialog.title')}
       />
     </div>
   )

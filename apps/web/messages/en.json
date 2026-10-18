@@ -1113,6 +1113,45 @@
     },
     "backLink": {
       "label": "Back to work areas"
+    },
+    "editor": {
+      "discardDialog": {
+        "title": "Discard unsaved changes",
+        "message": "If you discard now, all entered data that has not been saved will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
+      "acknowledgments": {
+        "addCard": "Add institution",
+        "editLabel": "Edit {name}",
+        "deleteLabel": "Delete {name}",
+        "deleteConfirmTitle": "Delete institution",
+        "deleteConfirmMessage": "Do you want to delete the institution \"{name}\" from acknowledgments? This action cannot be undone.",
+        "editModalTitle": "Edit institution",
+        "nameLabel": "Institution name",
+        "namePlaceholder": "E.g. Center for Space Research (CINESPA), UCR",
+        "nameRequired": "Institution name is required.",
+        "logoSourceLabel": "Choose a custom logo or select one from the list",
+        "logoSourceCustom": "Upload custom logo",
+        "logoSourcePreset": "Select from list: {label}",
+        "logoFileLabel": "Logo file",
+        "logoFileHelp": "WebP, PNG, SVG or JPG formats (max. 10 MB).",
+        "logoRequired": "You must select or upload a logo for the institution.",
+        "logoAltLabel": "Logo alternative text (Accessibility)",
+        "logoAltPlaceholder": "Accessible description of the institutional logo",
+        "logoAltDefault": "Logo of {name}",
+        "selectedLogo": "Selected logo:",
+        "institutional": "Institutional",
+        "institutionUrlLabel": "Institution website (optional)",
+        "institutionUrlPlaceholder": "https://example.ucr.ac.cr",
+        "institutionUrlInvalid": "The link must be a valid URL starting with http:// or https://.",
+        "logoUnavailable": "Logo unavailable",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add institution",
+        "saving": "Saving...",
+        "uploadError": "The logo could not be uploaded. Try again."
+      }
     }
   },
   "researchAreas": {

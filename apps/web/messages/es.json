@@ -1113,6 +1113,45 @@
     },
     "backLink": {
       "label": "Volver a las áreas"
+    },
+    "editor": {
+      "discardDialog": {
+        "title": "Descartar cambios no guardados",
+        "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+        "keepEditing": "Seguir editando",
+        "discard": "Descartar"
+      },
+      "acknowledgments": {
+        "addCard": "Añadir institución",
+        "editLabel": "Editar {name}",
+        "deleteLabel": "Eliminar {name}",
+        "deleteConfirmTitle": "Eliminar institución",
+        "deleteConfirmMessage": "¿Desea eliminar la institución \"{name}\" de los agradecimientos? Esta acción no se puede deshacer.",
+        "editModalTitle": "Editar institución",
+        "nameLabel": "Nombre de la institución",
+        "namePlaceholder": "Ej. Centro de Investigaciones Espaciales (CINESPA), UCR",
+        "nameRequired": "El nombre de la institución es obligatorio.",
+        "logoSourceLabel": "Escoger un logo personalizado o seleccionar uno de la lista",
+        "logoSourceCustom": "Subir logo personalizado",
+        "logoSourcePreset": "Seleccionar de la lista: {label}",
+        "logoFileLabel": "Archivo del logo",
+        "logoFileHelp": "Formatos WebP, PNG, SVG o JPG (máx. 10 MB).",
+        "logoRequired": "Debe seleccionar o subir un logo para la institución.",
+        "logoAltLabel": "Texto alternativo del logo (Accesibilidad)",
+        "logoAltPlaceholder": "Descripción accesible del logo institucional",
+        "logoAltDefault": "Logo de {name}",
+        "selectedLogo": "Logo seleccionado:",
+        "institutional": "Institucional",
+        "institutionUrlLabel": "Sitio web de la institución (opcional)",
+        "institutionUrlPlaceholder": "https://ejemplo.ucr.ac.cr",
+        "institutionUrlInvalid": "El enlace debe ser una URL válida que empiece con http:// o https://.",
+        "logoUnavailable": "Logo no disponible",
+        "cancel": "Cancelar",
+        "save": "Guardar cambios",
+        "add": "Agregar institución",
+        "saving": "Guardando...",
+        "uploadError": "No se pudo subir el logo. Inténtelo de nuevo."
+      }
     }
   },
   "researchAreas": {
