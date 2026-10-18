@@ -177,6 +177,13 @@
     "position": "Imagen {position} de {total}",
     "announcement": "Imagen {position} de {total}: {time}."
   },
+  "fileDrop": {
+    "description": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo",
+    "rejectionFormat": "Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.",
+    "rejectionSize": "La imagen supera el tamaño máximo de 25 MB.",
+    "removeLabel": "Quitar imagen",
+    "previewAlt": "Vista previa de {label}"
+  },
   "contact": {
     "meta": {
       "title": "Contacto | LASCE",

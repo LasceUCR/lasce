@@ -96,6 +96,7 @@ export const DEFAULT_INSTRUMENT_IMAGE = {
 
 export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstrumentFormProps) {
   const t = useTranslations('rosac.editor')
+  const tRosacProducts = useTranslations('rosac.instruments.products')
   const initialDescription = instrument?.consultation?.notice ?? instrument?.pendingMessage ?? ''
   const initialConsultation = getInitialConsultationState(instrument)
 
@@ -128,21 +129,25 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
     [t],
   )
 
-  const simulationTargetOptions: FormFieldOption[] = useMemo(
-    () =>
-      rosacInstruments.map((inst, index) => {
-        const productName = inst.products[0]?.name
-        return {
-          value: inst.code,
-          label: t('instruments.simulationTargetOption', {
-            index: index + 1,
-            product: productName ? ` - ${productName}` : '',
-            code: inst.code,
-          }),
-        }
-      }),
-    [t],
-  )
+  const simulationTargetOptions: FormFieldOption[] = useMemo(() => {
+    function getLocalizedProductName(code: string, fallback?: string): string | undefined {
+      if (code === 'ROSAC-I1') return tRosacProducts('timeSeries')
+      if (code === 'ROSAC-I2') return tRosacProducts('dynamicSpectrum')
+      return fallback
+    }
+
+    return rosacInstruments.map((inst, index) => {
+      const productName = getLocalizedProductName(inst.code, inst.products[0]?.name)
+      return {
+        value: inst.code,
+        label: t('instruments.simulationTargetOption', {
+          index: index + 1,
+          product: productName ? ` - ${productName}` : '',
+          code: inst.code,
+        }),
+      }
+    })
+  }, [t, tRosacProducts])
 
   const nameError = hasAttemptedSubmit && name.trim() === '' ? t('instruments.nameRequired') : null
   const descriptionError =

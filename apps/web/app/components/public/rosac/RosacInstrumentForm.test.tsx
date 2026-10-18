@@ -175,4 +175,34 @@ describe('RosacInstrumentForm', () => {
     ).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
+
+  test('localizes simulation target options in both Spanish and English', () => {
+    const { unmount } = render(<RosacInstrumentForm {...editArgs} />)
+
+    expect(
+      screen.getByRole('option', {
+        name: 'Instrumento 1 - Serie temporal de prueba (ROSAC-I1)',
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('option', {
+        name: 'Instrumento 2 - Espectro dinámico de prueba (ROSAC-I2)',
+      }),
+    ).toBeInTheDocument()
+
+    unmount()
+
+    render(<RosacInstrumentForm {...editArgs} />, { locale: 'en' })
+
+    expect(
+      screen.getByRole('option', {
+        name: 'Instrument 1 - Test time series (ROSAC-I1)',
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('option', {
+        name: 'Instrument 2 - Test dynamic spectrum (ROSAC-I2)',
+      }),
+    ).toBeInTheDocument()
+  })
 })

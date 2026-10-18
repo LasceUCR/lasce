@@ -8,7 +8,6 @@ import { FormField, type FormFieldOption } from '@/app/components/public/FormFie
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import type { RosacCardIcon } from '@/app/lib/rosac'
 
-
 export interface RosacActivityFormValues {
   icon: RosacCardIcon
   title: string

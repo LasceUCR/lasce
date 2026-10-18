@@ -177,6 +177,13 @@
     "position": "Image {position} of {total}",
     "announcement": "Image {position} of {total}: {time}."
   },
+  "fileDrop": {
+    "description": "Drag an image here or click to select from your device",
+    "rejectionFormat": "Unsupported format. Use a JPG, PNG, WebP or GIF image.",
+    "rejectionSize": "The image exceeds the maximum size of 25 MB.",
+    "removeLabel": "Remove image",
+    "previewAlt": "Preview of {label}"
+  },
   "contact": {
     "meta": {
       "title": "Contact | LASCE",

@@ -917,7 +917,8 @@ a {
 }
 
 .button {
-  min-height: 43px;
+  min-height: 44px;
+  line-height: 1.2;
   padding: 0 26px;
   display: inline-flex;
   align-items: center;
@@ -925,6 +926,7 @@ a {
   gap: 9px;
   border: 1px solid transparent;
   border-radius: 7px;
+  background-clip: padding-box;
   font-size: 14px;
   font-weight: 700;
 }
@@ -944,6 +946,7 @@ a {
 .button-secondary {
   border-color: var(--action);
   background: transparent;
+  background-clip: padding-box;
   color: var(--action);
 }
 
@@ -951,6 +954,7 @@ a {
 .button-secondary:focus-visible {
   border-color: var(--action-hover);
   background: color-mix(in srgb, var(--action) 8%, transparent);
+  background-clip: padding-box;
   color: var(--action-hover);
 }
 
@@ -6470,7 +6474,7 @@ a.acknowledgments-card:focus-visible {
 
 .cms-form-actions {
   margin-top: 20px;
-  padding-bottom: 4px;
+  padding: 4px 0;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -6483,7 +6487,7 @@ a.acknowledgments-card:focus-visible {
 
 .nosotros-activity-form-actions {
   margin-top: 20px;
-  padding-bottom: 4px;
+  padding: 4px 0;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -6872,7 +6876,7 @@ a.acknowledgments-card:focus-visible {
 
 .modal-actions {
   margin-top: 20px;
-  padding-bottom: 4px;
+  padding: 4px 0;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
