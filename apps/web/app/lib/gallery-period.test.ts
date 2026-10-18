@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
   emptyPeriod,
   formatYearsLabel,
+  localizeYearsLabel,
   parseYearsLabel,
   periodError,
   type AlbumPeriod,
@@ -27,6 +28,11 @@ describe('parseYearsLabel', () => {
 
   test('reads an empty label as an empty period', () => {
     expect(parseYearsLabel('  ')).toEqual(emptyPeriod)
+  })
+
+  test('reads English month names too, as an editor in English is shown them', () => {
+    expect(parseYearsLabel('February 2026')).toEqual(period([2, 2026]))
+    expect(parseYearsLabel('May 2024–September 2025')).toEqual(period([5, 2024], [9, 2025]))
   })
 
   test('returns null for a label in any other shape', () => {
@@ -71,5 +77,24 @@ describe('periodError', () => {
   test('rejects an end before the start', () => {
     expect(periodError(period([null, 2024], [null, 2023]))).toBe('endBeforeStart')
     expect(periodError(period([6, 2024], [3, 2024]))).toBe('endBeforeStart')
+  })
+})
+
+describe('localizeYearsLabel', () => {
+  test('shows the month names in English for an English visitor', () => {
+    expect(localizeYearsLabel('febrero 2026', 'en')).toBe('February 2026')
+    expect(localizeYearsLabel('marzo 2024–junio 2025', 'en')).toBe('March 2024–June 2025')
+  })
+
+  test('leaves Spanish, year-only and unrecognised labels as stored', () => {
+    expect(localizeYearsLabel('febrero 2026', 'es')).toBe('febrero 2026')
+    expect(localizeYearsLabel('2019–2023', 'en')).toBe('2019–2023')
+    expect(localizeYearsLabel('primavera 2024', 'en')).toBe('primavera 2024')
+    expect(localizeYearsLabel('', 'en')).toBe('')
+  })
+
+  test('is saved back with the Spanish names', () => {
+    const parsed = parseYearsLabel(localizeYearsLabel('marzo 2024–junio 2025', 'en'))
+    expect(parsed && formatYearsLabel(parsed)).toBe('marzo 2024–junio 2025')
   })
 })

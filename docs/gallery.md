@@ -62,7 +62,8 @@ The editor picks an album's period with selects rather than free text: a start y
 an optional end year and month (`AlbumForm`). `app/lib/gallery-period.ts` turns the choice into the
 same display string the column always held, so `yearsLabel` and the API are unchanged: `2019–2023`,
 `febrero 2026`, `marzo 2024–junio 2025`. Month names are stored in Spanish, the shared row's
-language, and an end equal to the start collapses to one point. A stored label in any other shape
+language, and shown in the visitor's language (`localizeYearsLabel`, so `February 2026` in English);
+the editor reads either back. An end equal to the start collapses to one point. A stored label in any other shape
 is kept as it is, with a notice, until the editor chooses a new period.
 
 ## API

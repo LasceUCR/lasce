@@ -123,6 +123,27 @@ describe('AlbumForm', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
+  test('reads a period shown in English and saves it with the Spanish month names', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(
+      <AlbumForm
+        {...editArgs}
+        album={{ ...editArgs.album, yearsLabel: 'February 2026' }}
+        onSave={onSave}
+      />,
+    )
+
+    expect(select('Año de inicio')).toHaveValue('2026')
+    expect(select('Mes de inicio')).toHaveValue('2')
+    expect(screen.queryByText(/no tiene el formato/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
+    expect(onSave.mock.calls[0]?.[0]).toMatchObject({ yearsLabel: 'febrero 2026' })
+  })
+
   test('keeps a period in another shape until a new one is chosen', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
