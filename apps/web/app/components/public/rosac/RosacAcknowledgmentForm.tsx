@@ -12,6 +12,7 @@ import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 export interface RosacAcknowledgmentFormValues {
   name: string
+  href?: string
   logo: {
     src: string
     alt: string
@@ -25,94 +26,127 @@ export interface RosacAcknowledgmentFormProps {
   onCancel: () => void
 }
 
-export const PREDEFINED_ACKNOWLEDGMENT_LOGOS = [
+export interface PredefinedAcknowledgmentLogo {
+  label: string
+  src: string
+  defaultAlt: string
+  defaultHref?: string
+}
+
+export const PREDEFINED_ACKNOWLEDGMENT_LOGOS: readonly PredefinedAcknowledgmentLogo[] = [
   {
     label: 'Vicerrectoría de Investigación, UCR',
     src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
     defaultAlt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
+    defaultHref: 'https://vinv.ucr.ac.cr',
   },
   {
     label: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     src: '/images/ROSAC/acknowledgments/cinespa.webp',
     defaultAlt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
+    defaultHref: 'https://cinespa.ucr.ac.cr',
   },
   {
     label: 'Escuela de Física, UCR',
     src: '/images/ROSAC/acknowledgments/efis.webp',
     defaultAlt: 'Logo de la Escuela de Física, UCR',
+    defaultHref: 'https://fisica.ucr.ac.cr',
   },
   {
     label: 'Escuela de Ingeniería Mecánica, UCR',
     src: '/images/ROSAC/acknowledgments/eim.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
+    defaultHref: 'https://www.ucr.ac.cr/directorio/escuela-de-ingenieria-mecanica.html',
   },
   {
     label: 'Escuela de Ingeniería Topográfica, UCR',
     src: '/images/ROSAC/acknowledgments/eit.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
+    defaultHref: 'https://eit.ucr.ac.cr/',
   },
   {
     label: 'Escuela de Ingeniería Eléctrica, UCR',
     src: '/images/ROSAC/acknowledgments/eie.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
+    defaultHref: 'https://eie.ucr.ac.cr',
   },
   {
     label: 'Recinto de Santa Cruz, UCR',
     src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
     defaultAlt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
+    defaultHref: 'https://www.ucr.ac.cr/directorio/recinto-universitario-de-santa-cruz/',
   },
   {
     label: 'Oficina de Servicios Generales (OSG), UCR',
     src: '/images/ROSAC/acknowledgments/osg.webp',
     defaultAlt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
+    defaultHref: 'https://osg.ucr.ac.cr',
   },
   {
     label: 'LanammeUCR',
     src: '/images/ROSAC/acknowledgments/lanamme.webp',
     defaultAlt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
+    defaultHref: 'https://www.lanamme.ucr.ac.cr/',
   },
   {
     label: 'Radiográfica Costarricense S.A. (RACSA)',
     src: '/images/ROSAC/acknowledgments/racsa.webp',
     defaultAlt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
+    defaultHref: 'https://www.racsa.go.cr/',
   },
   {
     label: 'Bomberos de Costa Rica',
     src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
     defaultAlt: 'Logo de Bomberos de Costa Rica',
+    defaultHref: 'https://www.bomberos.go.cr',
   },
   {
     label: 'Instituto Geográfico Nacional',
     src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
     defaultAlt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
+    defaultHref: 'https://www.snitcr.go.cr/ign_ign',
   },
   {
     label: 'INDI CR',
     src: '/images/ROSAC/acknowledgments/indi.webp',
     defaultAlt: 'Logo de INDI, Ingeniería y Diseño',
+    defaultHref: 'https://www.indicr.com/',
   },
   {
     label: 'Prysmian Group',
     src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
     defaultAlt: 'Logo de Prysmian Group',
+    defaultHref: '',
   },
   {
     label: 'EATON Costa Rica',
     src: '/images/ROSAC/acknowledgments/eaton.webp',
     defaultAlt: 'Logo de EATON Costa Rica',
+    defaultHref: 'https://www.eaton.com/cr/es-mx/company.html',
   },
   {
     label: 'INAOE, México',
     src: '/images/ROSAC/acknowledgments/inaoe.webp',
     defaultAlt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
+    defaultHref: 'https://www.inaoep.mx',
   },
   {
     label: 'AMEXCID',
     src: '/images/ROSAC/acknowledgments/amexcid.webp',
     defaultAlt:
       'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    defaultHref: 'https://www.gob.mx/amexcid',
   },
 ]
+
+function isValidUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
 
 const LOGO_SOURCE_OPTIONS: FormFieldOption[] = [
   { value: 'custom', label: 'Subir logo personalizado' },
@@ -129,6 +163,7 @@ export function RosacAcknowledgmentForm({
 }: RosacAcknowledgmentFormProps) {
   const formId = useId()
   const [name, setName] = useState(institution?.name ?? '')
+  const [href, setHref] = useState(institution?.href ?? '')
   const [logoAlt, setLogoAlt] = useState(institution?.logo?.alt ?? '')
 
   // Determine initial logo selection (defaults to custom upload for new institutions)
@@ -163,15 +198,23 @@ export function RosacAcknowledgmentForm({
   const hasLogo = !logoRemoved && (Boolean(activeLogoSrc) || Boolean(logoFile))
 
   // Validation
+  const trimmedName = name.trim()
+  const trimmedHref = href.trim()
   const nameError =
-    hasAttemptedSubmit && name.trim() === '' ? 'El nombre de la institución es obligatorio.' : null
+    hasAttemptedSubmit && trimmedName === '' ? 'El nombre de la institución es obligatorio.' : null
+  const hrefError =
+    hasAttemptedSubmit && trimmedHref !== '' && !isValidUrl(trimmedHref)
+      ? 'El enlace debe ser una URL válida que empiece con http:// o https://.'
+      : null
   const logoError =
     hasAttemptedSubmit && !hasLogo ? 'Debe seleccionar o subir un logo para la institución.' : null
 
-  const isFormValid = name.trim() !== '' && hasLogo
+  const isFormValid =
+    trimmedName !== '' && hasLogo && (trimmedHref === '' || isValidUrl(trimmedHref))
 
   const isDirty =
     name !== (institution?.name ?? '') ||
+    href !== (institution?.href ?? '') ||
     logoAlt !== (institution?.logo?.alt ?? '') ||
     logoFile !== null ||
     logoRemoved ||
@@ -188,8 +231,10 @@ export function RosacAcknowledgmentForm({
   async function handleSaveClick() {
     setHasAttemptedSubmit(true)
     if (!isFormValid) {
-      if (name.trim() === '') {
+      if (trimmedName === '') {
         document.getElementById(`${formId}-name`)?.focus()
+      } else if (trimmedHref !== '' && !isValidUrl(trimmedHref)) {
+        document.getElementById(`${formId}-href`)?.focus()
       }
       return
     }
@@ -225,11 +270,11 @@ export function RosacAcknowledgmentForm({
       finalLogoUrl = selectedPreset.src
     }
 
-    const trimmedName = name.trim()
     const finalAlt = logoAlt.trim() || `Logo de ${trimmedName}`
 
     onSave({
       name: trimmedName,
+      href: trimmedHref || undefined,
       logo: {
         src: finalLogoUrl,
         alt: finalAlt,
@@ -260,6 +305,15 @@ export function RosacAcknowledgmentForm({
         value={name}
       />
 
+      <FormField
+        errorMessage={hrefError}
+        id={`${formId}-href`}
+        label="Sitio web de la institución (opcional)"
+        onChange={setHref}
+        placeholder="https://ejemplo.ucr.ac.cr"
+        value={href}
+      />
+
       <div className="cms-form-field">
         <FormField
           id={`${formId}-logo-selection`}
@@ -271,13 +325,16 @@ export function RosacAcknowledgmentForm({
               if (preset) {
                 setName(preset.label)
                 setLogoAlt(preset.defaultAlt)
+                setHref(preset.defaultHref ?? '')
               }
             } else {
               if (initialPresetIndex === -1 && institution) {
                 setName(institution.name)
+                setHref(institution.href ?? '')
                 setLogoAlt(institution.logo?.alt ?? '')
               } else {
                 setName('')
+                setHref('')
                 setLogoAlt('')
               }
             }
