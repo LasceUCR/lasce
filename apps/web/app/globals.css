@@ -6567,18 +6567,6 @@ a.acknowledgments-card:focus-visible {
   background: var(--white);
 }
 
-/* On a phone the two buttons share one row instead of stacking, so the pinned bar stays short. */
-@media (max-width: 520px) {
-  .nosotros-activity-form-actions.publication-form-actions {
-    flex-wrap: nowrap;
-  }
-
-  .publication-form-actions .button {
-    flex: 1 1 0;
-    width: auto;
-    padding: 0 12px;
-  }
-}
 
 /* Authors as a tag input: one box with the names as chips and, below them, a quiet text box
    with an "Agregar" button. The box draws the only border; the text box inside has none. */
@@ -6789,8 +6777,8 @@ a.acknowledgments-card:focus-visible {
 }
 
 /* The title, and beside it whatever a form puts in its slot (`useModalHeaderSlot`), such as
-   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the slot
-   wraps under the title. */
+   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the title
+   wraps onto its own lines and the tabs stay on the same row. */
 .modal-header {
   flex-shrink: 0;
   /* Mirrors `.modal-body` below: the same scrollbar gutter and the same padding cancelled by a
@@ -6890,11 +6878,36 @@ a.acknowledgments-card:focus-visible {
     padding: 24px 16px;
   }
 
+  .modal-header {
+    flex-wrap: nowrap;
+    gap: 8px 12px;
+  }
+
+  .modal-header h2 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .modal-header-slot {
+    flex: 0 0 auto;
+  }
+
+  /* Management dialogs stack their actions full width, with the primary button first. */
   .modal-actions,
   .cms-form-actions,
   .news-article-form-actions,
-  .nosotros-activity-form-actions {
-    flex-wrap: wrap;
+  .nosotros-activity-form-actions,
+  .confirm-dialog-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-actions .button,
+  .cms-form-actions .button,
+  .news-article-form-actions .button,
+  .nosotros-activity-form-actions .button,
+  .confirm-dialog-actions .button {
+    width: 100%;
   }
 }
 
@@ -7209,7 +7222,7 @@ a.acknowledgments-card:focus-visible {
   gap: 8px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 760px) {
   .mgmt-form-actions {
     flex-direction: column-reverse;
     align-items: stretch;
@@ -7217,5 +7230,10 @@ a.acknowledgments-card:focus-visible {
 
   .mgmt-form-actions-right {
     flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .mgmt-form-actions .button {
+    width: 100%;
   }
 }
