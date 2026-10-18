@@ -1203,6 +1203,7 @@ a {
 .site-footer {
   padding: 10px 0;
   background: var(--navy-deep);
+  z-index: 16;
   color: var(--white);
 }
 
@@ -5872,7 +5873,7 @@ a.acknowledgments-card:focus-visible {
 }
 
 .space-page-bg {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: -1;
 }
@@ -5885,7 +5886,7 @@ a.acknowledgments-card:focus-visible {
 /* Darkens the left half so the heading, lead and tabs keep their contrast. */
 .space-page-bg::after {
   content: '';
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: linear-gradient(
     90deg,
