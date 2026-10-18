@@ -56,6 +56,15 @@ Media text is bilingual the same way: `GalleryMediaTranslation`
 (`gallery.gallery_media_translations`) holds `title`, `description` and `altText` per additional
 locale, and editors receive `GalleryMedia.editing` (every language plus `version`).
 
+## Album period
+
+The editor picks an album's period with selects rather than free text: a start year and month, and
+an optional end year and month (`AlbumForm`). `app/lib/gallery-period.ts` turns the choice into the
+same display string the column always held, so `yearsLabel` and the API are unchanged: `2019–2023`,
+`febrero 2026`, `marzo 2024–junio 2025`. Month names are stored in Spanish, the shared row's
+language, and an end equal to the start collapses to one point. A stored label in any other shape
+is kept as it is, with a notice, until the editor chooses a new period.
+
 ## API
 
 - `POST /api/gallery/albums` and `POST /api/gallery/albums/{albumId}` (sub-album) require
