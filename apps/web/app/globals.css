@@ -6563,7 +6563,6 @@ a.acknowledgments-card:focus-visible {
   z-index: 1;
 }
 
-
 /* Authors as a tag input: one box with the names as chips and, below them, a quiet text box
    with an "Agregar" button. The box draws the only border; the text box inside has none. */
 .publication-authors {
@@ -6865,14 +6864,15 @@ a.acknowledgments-card:focus-visible {
 
 /* A white bar pinned to the bottom of the dialog. The form scrolls underneath it. The shadow
    continues that white down to the dialog edge, so field text cannot show past the buttons. */
-.modal :is(
-  .modal-actions,
-  .cms-form-actions,
-  .news-article-form-actions,
-  .nosotros-activity-form-actions,
-  .confirm-dialog-actions,
-  .mgmt-form-actions
-) {
+.modal
+  :is(
+    .modal-actions,
+    .cms-form-actions,
+    .news-article-form-actions,
+    .nosotros-activity-form-actions,
+    .confirm-dialog-actions,
+    .mgmt-form-actions
+  ) {
   position: sticky;
   bottom: 0;
   z-index: 2;
