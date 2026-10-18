@@ -917,8 +917,10 @@ a {
 }
 
 .button {
+  height: 44px;
   min-height: 44px;
-  line-height: 1.2;
+  box-sizing: border-box;
+  line-height: 1;
   padding: 0 26px;
   display: inline-flex;
   align-items: center;
@@ -926,9 +928,11 @@ a {
   gap: 9px;
   border: 1px solid transparent;
   border-radius: 7px;
-  background-clip: padding-box;
   font-size: 14px;
   font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
 }
 
 .button-primary {
@@ -944,9 +948,8 @@ a {
 }
 
 .button-secondary {
-  border-color: var(--action);
+  border: 1px solid var(--action);
   background: transparent;
-  background-clip: padding-box;
   color: var(--action);
 }
 
@@ -954,7 +957,6 @@ a {
 .button-secondary:focus-visible {
   border-color: var(--action-hover);
   background: color-mix(in srgb, var(--action) 8%, transparent);
-  background-clip: padding-box;
   color: var(--action-hover);
 }
 
@@ -3009,6 +3011,7 @@ a {
   text-overflow: ellipsis;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 /* Same look as `.news-abstract`, but unclamped — a donation write-up has no
@@ -6473,11 +6476,13 @@ a.acknowledgments-card:focus-visible {
 }
 
 .cms-form-actions {
-  margin-top: 20px;
-  padding: 4px 0;
+  margin-top: 24px;
+  padding: 8px 0;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .nosotros-activity-form {
@@ -6486,11 +6491,13 @@ a.acknowledgments-card:focus-visible {
 }
 
 .nosotros-activity-form-actions {
-  margin-top: 20px;
-  padding: 4px 0;
+  margin-top: 24px;
+  padding: 8px 0;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .news-article-form {
@@ -6848,7 +6855,7 @@ a.acknowledgments-card:focus-visible {
      bottom action buttons breathing room when scrolled to the extremities,
      preventing bottom button borders/shadows from being clipped by the
      scroll container edge. */
-  padding: 4px 6px 14px;
+  padding: 4px 6px 16px;
   margin: 0 -6px;
 }
 
@@ -6875,11 +6882,13 @@ a.acknowledgments-card:focus-visible {
 }
 
 .modal-actions {
-  margin-top: 20px;
-  padding: 4px 0;
+  margin-top: 24px;
+  padding: 8px 0;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 760px) {
