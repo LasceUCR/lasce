@@ -4015,6 +4015,16 @@ a {
   padding-bottom: 48px;
 }
 
+/* "Modo edición" on the Costa Rica card: the wrapper takes the section's page width, so the
+   section fills it and the pencil sits on the card's corner rather than at the screen's edge. */
+.space-weather-section-editable > .topic-section {
+  width: auto;
+}
+
+.space-weather-section-editable > .editable-actions {
+  top: 38px;
+}
+
 .info-card-content a {
   color: var(--blue-accent-text);
   text-decoration: underline;
@@ -6482,6 +6492,16 @@ a.acknowledgments-card:focus-visible {
 .news-article-form {
   display: flex;
   flex-direction: column;
+}
+
+/* Groups the fields so a save in flight can disable them all at once; it adds no box of its own. */
+.news-article-form-fields {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 /* Pairs of fields sit side by side once there's room for both — on a
