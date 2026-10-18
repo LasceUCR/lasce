@@ -7045,11 +7045,6 @@ a.acknowledgments-card:focus-visible {
 }
 
 @media (max-width: 600px) {
-  .std-confirm-header {
-    flex-direction: column;
-    gap: 12px;
-  }
-
   .std-confirm-actions {
     flex-direction: column-reverse;
   }
