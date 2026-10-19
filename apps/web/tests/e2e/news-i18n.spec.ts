@@ -333,12 +333,17 @@ test('meets WCAG A and AA automated checks in English and in the bilingual edito
     await expect(dialog.getByText(/may not be in Spanish/)).toBeVisible()
     expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
 
-    // With errors, a pending review and its switch on screen.
+    // Changing the Spanish title asks for the English title, not for the untouched abstract.
     await field(page, 'Title (Español)').fill('Título nuevo')
     await dialog.getByRole('button', { name: 'Confirm' }).click()
+    await expect(dialog.getByRole('tab', { name: /^English · 2 to review/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
     await expect(
-      dialog.getByRole('switch', { name: 'The Spanish abstract is still correct' }),
+      dialog.getByRole('switch', { name: 'The English title is still correct' }),
     ).toBeVisible()
+    await expect(dialog.getByText('The English title is required.')).toBeVisible()
     expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
   } finally {
     await fixtures.cleanup()
