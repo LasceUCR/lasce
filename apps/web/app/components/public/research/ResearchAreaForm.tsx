@@ -21,7 +21,6 @@ import {
   confirmationsStillNeeded,
   contentFieldLang,
   contentPath,
-  errorSummary,
   isConfirmed,
   languageTabFlags,
   resetConfirmations,
@@ -125,7 +124,6 @@ export function ResearchAreaForm({ initial, onSave, onCancel, ref }: ResearchAre
 
   const needed = reviewsNeededFor(initial, draft)
   const errors = attempted ? validateDraft(initial, draft, confirmed, currentSrc, language) : {}
-  const summary = attempted ? errorSummary(errors, tab, uiLocale) : null
 
   function change(locale: Locale, field: ResearchAreaField, value: string) {
     setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
@@ -241,12 +239,6 @@ export function ResearchAreaForm({ initial, onSave, onCancel, ref }: ResearchAre
         }}
         required
       />
-
-      {summary ? (
-        <Notice role="alert" tone="error">
-          {summary}
-        </Notice>
-      ) : null}
 
       <div className="cms-form-actions">
         <Button onClick={requestCancel} variant="secondary">

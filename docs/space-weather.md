@@ -71,7 +71,8 @@ The editor (`app/components/public/space-weather/`) is `EditableCostaRicaSection
 `TranslationReview`, `Modal` (portalled to `body`) and `StandardConfirmDialog` for discarding
 unsaved changes. `EditableWrapper` gets only `onEdit`. The outcome of a save is a toast through
 `useRequestFeedback` ([`toasts.md`](toasts.md)). The wrapper carries `page-width` so the pencil
-sits on the card's corner (`.space-weather-section-editable` in `globals.css`).
+sits on the card's corner (`.featured-section-editable` in `globals.css`, shared with the solar
+physics section).
 
 The same limitation as the home page applies: the API answers in Spanish, so an editor reading
 the site in English sees the server's reasons in Spanish (the fallback in

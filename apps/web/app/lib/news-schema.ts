@@ -169,7 +169,8 @@ export type NewsUpdateInput = z.infer<typeof newsUpdateSchema>
 /**
  * The translatable fields that changed in some languages but not in others, minus the ones the
  * editor confirmed as still correct. A language with no stored text yet (a legacy item) counts as
- * changed, so completing a legacy item's English requires reviewing its base text too.
+ * changed only for a field that now has text, so writing its English requires reviewing that
+ * field's base text too.
  */
 export function findPendingReviews(
   current: StoredNewsContent,
