@@ -344,9 +344,7 @@ describe('PublicationForm: bilingual review when editing', () => {
 
     expect(tab(/^English/)).toHaveAttribute('aria-selected', 'true')
     expect(
-      screen.getByText(
-        'Cambió el título en español. Actualice el título en inglés o confirme que sigue siendo correcto.',
-      ),
+      screen.getByText('Actualice este campo o confirme que sigue siendo correcto.'),
     ).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
@@ -460,16 +458,12 @@ describe('PublicationForm: legacy records', () => {
     await replace(user, 'Título (Español)', 'Electrones no térmicos en una fulguración eruptiva')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    // The base abstract must be reviewed too: it may not be Spanish at all.
     expect(
-      screen.getByRole('switch', { name: 'El resumen en español sigue siendo correcto' }),
-    ).toBeInTheDocument()
+      screen.queryByRole('switch', { name: 'El resumen en español sigue siendo correcto' }),
+    ).not.toBeInTheDocument()
     expect(
-      screen.getByText(
-        'Al agregar la versión en inglés, revise el resumen en español: el texto original podría estar en otro idioma. Actualícelo o confirme que es correcto.',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.queryByText(/Cambió el resumen en inglés/)).not.toBeInTheDocument()
+      screen.queryByRole('switch', { name: 'El título en español sigue siendo correcto' }),
+    ).not.toBeInTheDocument()
     expect(tab(/^English · 2 por revisar$/)).toBeInTheDocument()
 
     await user.click(tab(/^English/))
@@ -699,9 +693,7 @@ describe('PublicationForm: in English, the language the site is shown in', () =>
     await user.click(tab(/^English/))
 
     expect(
-      screen.getByText(
-        'The Spanish title changed. Update the English title or confirm that it is still correct.',
-      ),
+      screen.getByText('Update this field or confirm that it is still correct.'),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('switch', { name: 'The English title is still correct' }),
