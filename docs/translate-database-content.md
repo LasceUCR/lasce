@@ -184,7 +184,7 @@ What a visitor reading in locale `L` sees (`resolveContent`):
 
 Fallback is per record, never per field: with required fields in every language and optional ones all-or-none, a complete record always has every field it needs in every language.
 
-A legacy record becomes complete the first time an editor saves its text in every language. That save also requires reviewing the base text (the missing language counts as changed, so the review rule asks for the Spanish fields), which is how the base text becomes trusted Spanish. Until then, its shared fields can still be edited without translating it.
+A legacy record becomes complete the first time an editor saves its text in every language. That save also requires reviewing the base text of each field written in the new language (a blank missing translation is not a change, so editing one field does not ask to confirm another field of the same language). That review is how the base text becomes trusted Spanish. Until then, its shared fields can still be edited without translating it.
 
 ## 3. Implementation guide
 
@@ -471,7 +471,7 @@ Why it is shaped like this:
 
 The rule, `findPendingReviews(definition, stored, next, confirmed)`:
 
-1. For each field, compare stored and new text in every language, ignoring surrounding whitespace (`null` counts as empty). A language with no stored text (legacy) counts as changed.
+1. For each field, compare stored and new text in every language, ignoring surrounding whitespace (`null` counts as empty). A language with no stored text (legacy) counts as changed only for a field that now has text; leaving it blank is not a change of that field.
 
 2. If a field changed in some languages but not all, each unchanged language must be listed in `confirmedUnchanged` for that field.
 
@@ -625,7 +625,7 @@ import {
   withConfirmation,
   type ContentDraft,
 } from '@/app/lib/i18n/content/form'
-import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import { confirmationLabel } from '@/app/lib/i18n/content/review'
 type EventField = (typeof eventContent.fields)[number]
 interface EventContentFieldsProps {
   /** `editing.content` of the record, or `null` when creating. */
@@ -661,7 +661,6 @@ export function EventContentFields({ stored, onSave }: EventContentFieldsProps) 
       <TranslationReview
         checked={isConfirmed(confirmed, pending)}
         label={confirmationLabel(eventContent, pending)}
-        message={reviewMessage(eventContent, pending, stored, draft)}
         onChange={(checked) =>
           setConfirmed((current) => withConfirmation(current, pending, checked))
         }
@@ -729,7 +728,7 @@ What the shared pieces give you, and what to keep:
 
   It is the field's locale, or `''` for the base text of a legacy record, whose language is unknown. It goes on the input (`FormField`'s `lang`), not on the panel: the panel also holds the editor's own labels and messages, which are not in the panel's language.
 
-- **`TranslationReview`**: the explanation (`Notice`, warning tone) and the switch (`Toggle`, role `switch`) under the field to review.
+- **`TranslationReview`**: the switch (`Toggle`, role `switch`) under the field to review. The field's own error says what to do; there is no second notice.
 
 - **Validation**: `validateContent` checks nothing while the content is unchanged (so a shared-field edit of a legacy record saves without a translation), and otherwise runs your definition's schema, so the editor shows exactly the API's messages at the same paths, plus `editorCopy.fieldPending`
 

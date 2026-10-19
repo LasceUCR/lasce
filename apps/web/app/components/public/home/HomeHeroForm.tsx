@@ -15,7 +15,6 @@ import {
   confirmationsStillNeeded,
   contentFieldLang,
   contentPath,
-  errorSummary,
   isConfirmed,
   languageTabFlags,
   resetConfirmations,
@@ -87,7 +86,6 @@ export function HomeHeroForm({ initial, onSave, onCancel, ref }: HomeHeroFormPro
   const needed = reviewsNeeded(heroContent, initial.stored, draft)
   const validate = () => validateContent(heroContent, initial.stored, draft, confirmed, uiLocale)
   const errors: FormErrors = attempted ? validate() : {}
-  const summary = attempted ? errorSummary(errors, tab, uiLocale) : null
 
   function change(locale: Locale, field: HeroField, value: string) {
     setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
@@ -172,12 +170,6 @@ export function HomeHeroForm({ initial, onSave, onCancel, ref }: HomeHeroFormPro
           </>
         )}
       </LanguageTabs>
-
-      {summary ? (
-        <Notice role="alert" tone="error">
-          {summary}
-        </Notice>
-      ) : null}
 
       <div className="nosotros-activity-form-actions">
         <Button onClick={requestCancel} variant="secondary">
