@@ -1203,7 +1203,6 @@ a {
 .site-footer {
   padding: 10px 0;
   background: var(--navy-deep);
-  z-index: 16;
   color: var(--white);
 }
 
@@ -4016,16 +4015,14 @@ a {
   padding-bottom: 48px;
 }
 
-/* "Modo edición" on a featured topic card (the Costa Rica card of `/clima-espacial`, the LASCE
-   section of `/fisica-solar`): the wrapper takes the section's page width, so the section fills it
-   and the pencil sits on the card's corner rather than at the screen's edge. */
-.space-weather-section-editable > .topic-section,
-.solar-lasce-section-editable > .topic-section {
+/* "Modo edición" on a featured topic card (clima espacial, física solar): the wrapper takes the
+   section's page width, so the section fills it and the pencil sits on the card's corner rather
+   than at the screen's edge. */
+.featured-section-editable > .topic-section {
   width: auto;
 }
 
-.space-weather-section-editable > .editable-actions,
-.solar-lasce-section-editable > .editable-actions {
+.featured-section-editable > .editable-actions {
   top: 38px;
 }
 
@@ -5876,7 +5873,7 @@ a.acknowledgments-card:focus-visible {
 }
 
 .space-page-bg {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: -1;
 }
@@ -5889,7 +5886,7 @@ a.acknowledgments-card:focus-visible {
 /* Darkens the left half so the heading, lead and tabs keep their contrast. */
 .space-page-bg::after {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: linear-gradient(
     90deg,
@@ -6561,26 +6558,9 @@ a.acknowledgments-card:focus-visible {
   }
 }
 
-/* The publication editor's actions stay at the bottom of the modal while the form scrolls. */
+/* The publication editor pins its actions; the shared rule below does that for every form. */
 .publication-form-actions {
-  position: sticky;
-  bottom: 0;
   z-index: 1;
-  padding: 14px 0 2px;
-  background: var(--white);
-}
-
-/* On a phone the two buttons share one row instead of stacking, so the pinned bar stays short. */
-@media (max-width: 520px) {
-  .nosotros-activity-form-actions.publication-form-actions {
-    flex-wrap: nowrap;
-  }
-
-  .publication-form-actions .button {
-    flex: 1 1 0;
-    width: auto;
-    padding: 0 12px;
-  }
 }
 
 /* Authors as a tag input: one box with the names as chips and, below them, a quiet text box
@@ -6792,8 +6772,8 @@ a.acknowledgments-card:focus-visible {
 }
 
 /* The title, and beside it whatever a form puts in its slot (`useModalHeaderSlot`), such as
-   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the slot
-   wraps under the title. */
+   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the title
+   takes its own row and the tabs wrap onto the next one, so they never cover the title. */
 .modal-header {
   flex-shrink: 0;
   /* Mirrors `.modal-body` below: the same scrollbar gutter and the same padding cancelled by a
@@ -6804,9 +6784,9 @@ a.acknowledgments-card:focus-visible {
   margin: -4px -6px 6px;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 4px 24px;
+  gap: 8px 16px;
 }
 
 .modal-header h2 {
@@ -6882,6 +6862,29 @@ a.acknowledgments-card:focus-visible {
   gap: 10px;
 }
 
+/* A white bar pinned to the bottom of the dialog. The form scrolls underneath it. The shadow
+   continues that white down to the dialog edge, so field text cannot show past the buttons. */
+.modal
+  :is(
+    .modal-actions,
+    .cms-form-actions,
+    .news-article-form-actions,
+    .nosotros-activity-form-actions,
+    .confirm-dialog-actions,
+    .mgmt-form-actions
+  ) {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--white);
+  box-shadow: 0 48px 0 var(--white);
+  margin-top: 12px;
+  margin-bottom: -14px;
+  margin-left: -6px;
+  margin-right: -6px;
+  padding: 14px 6px 18px;
+}
+
 @media (max-width: 760px) {
   .cms-form-field input,
   .cms-form-field textarea,
@@ -6893,11 +6896,37 @@ a.acknowledgments-card:focus-visible {
     padding: 24px 16px;
   }
 
+  .modal .modal-header h2 {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .modal-header-slot,
+  .modal-header-slot .access-tabs {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+
+  .modal-header-slot .access-tabs {
+    flex-wrap: wrap;
+  }
+
+  /* Management dialogs stack their actions full width, with the primary button first. */
   .modal-actions,
   .cms-form-actions,
   .news-article-form-actions,
-  .nosotros-activity-form-actions {
-    flex-wrap: wrap;
+  .nosotros-activity-form-actions,
+  .confirm-dialog-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-actions .button,
+  .cms-form-actions .button,
+  .news-article-form-actions .button,
+  .nosotros-activity-form-actions .button,
+  .confirm-dialog-actions .button {
+    width: 100%;
   }
 }
 
@@ -7016,11 +7045,6 @@ a.acknowledgments-card:focus-visible {
 }
 
 @media (max-width: 600px) {
-  .std-confirm-header {
-    flex-direction: column;
-    gap: 12px;
-  }
-
   .std-confirm-actions {
     flex-direction: column-reverse;
   }
@@ -7212,7 +7236,7 @@ a.acknowledgments-card:focus-visible {
   gap: 8px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 760px) {
   .mgmt-form-actions {
     flex-direction: column-reverse;
     align-items: stretch;
@@ -7220,5 +7244,10 @@ a.acknowledgments-card:focus-visible {
 
   .mgmt-form-actions-right {
     flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .mgmt-form-actions .button {
+    width: 100%;
   }
 }

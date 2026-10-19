@@ -104,7 +104,7 @@ export function EditableLasceSection({ section, canEdit = false }: EditableLasce
   return (
     <>
       <EditableWrapper
-        className="solar-lasce-section-editable page-width"
+        className="featured-section-editable page-width"
         editLabel={t('editor.editLabel')}
         onEdit={openEditor}
       >
