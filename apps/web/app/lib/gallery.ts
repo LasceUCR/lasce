@@ -1941,11 +1941,11 @@ export function albumFileCount(album: GalleryAlbum): number {
 }
 
 /** Summary line for an album: sub-albums, total files and the years covered. */
-export function albumMeta(album: GalleryAlbum): string {
-  const parts = [`${albumFileCount(album)} archivos`, album.years]
+export function albumMeta(album: GalleryAlbum, files: string, subalbums: string): string {
+  const parts = [`${albumFileCount(album)} ${files}`, album.years]
 
   if (album.subAlbums.length > 0) {
-    parts.unshift(`${album.subAlbums.length} subálbumes`)
+    parts.unshift(`${album.subAlbums.length} ${subalbums}`)
   }
 
   return parts.join(' · ')

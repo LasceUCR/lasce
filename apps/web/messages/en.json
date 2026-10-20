@@ -664,7 +664,23 @@
   "gallery": {
     "meta": {
       "title": "Gallery | LASCE",
-      "description": "Photographs of the activities of the Laboratorio de Ciencias Espaciales: construction and instrumentation, observation, and daily life of the team."
+      "description": "Photographs and video of the activities of the Laboratorio de Ciencias Espaciales: construction and instrumentation, observation, and daily life of the team."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "Gallery",
+      "lead": "Photographs and video of the laboratory's activities: construction and instrumentation, observation, and daily life of the team. Organized by albums."
+    },
+    "common": {
+      "files": "Files",
+      "subalbums": "Subalbums",
+      "backToGallery": "Back to gallery",
+      "backToAlbum": "Back to {album}",
+      "gallery": "LASCE Gallery"
+    },
+    "albumPage": {
+      "albumFiles": "files in this album",
+      "albumContent": "Photographs and video of this album"
     },
     "editor": {
       "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the description, check it as well.",
