@@ -2295,7 +2295,7 @@ for (const album of galleryAlbums) {
 const defaultCharacteristics = [
   {
     key: 'frequency-range',
-    icon: 'waves',
+    icon: 'frequency',
     title: 'Entre 100 y 1000 MHz',
     description:
       'Se preparan observaciones en este rango de frecuencias de radio, como parte del desarrollo del radiotelescopio.',
@@ -2509,23 +2509,23 @@ const defaultStages = [
       'La adecuación eléctrica comprendió trabajos sobre diferentes puntos de la infraestructura del observatorio. Las fotografías documentan la instalación y conexión de componentes eléctricos, trabajos de cableado y labores realizadas tanto en el entorno de la antena como en sus sistemas asociados.',
     images: [
       {
-        src: '/images/ROSAC/construction/Intalacion%20Electrica/instalacion_1.jpg',
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_1.jpeg',
         alt: 'Persona junto a los mecanismos y el cableado bajo la estructura de la antena.',
       },
       {
-        src: '/images/ROSAC/construction/Intalacion%20Electrica/instalacion_2.jpg',
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_2.jpg',
         alt: 'Equipo de trabajo reunido frente a la base de la antena.',
       },
       {
-        src: '/images/ROSAC/construction/Intalacion%20Electrica/instalacion_3.jpg',
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_3.jpeg',
         alt: 'Personas y cables junto a una edificación cercana a la antena.',
       },
       {
-        src: '/images/ROSAC/construction/Intalacion%20Electrica/instalacion_4.jpg',
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_4.jpeg',
         alt: 'Persona manipulando cables junto a un tablero eléctrico abierto.',
       },
       {
-        src: '/images/ROSAC/construction/Intalacion%20Electrica/instalacion_5.jpg',
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_5.jpeg',
         alt: 'Personas trabajando en la plataforma bajo el reflector, junto a cables y la estructura.',
       },
     ],
@@ -2647,19 +2647,67 @@ const defaultAcknowledgments = [
     position: 8,
   },
   {
-    name: 'Centro de Investigaciones en Tecnologías de la Información y Comunicación (CITIC), UCR',
-    href: 'https://citic.ucr.ac.cr',
-    logoSrc: '/images/ROSAC/acknowledgments/citic.webp',
-    logoAlt:
-      'Logo del Centro de Investigaciones en Tecnologías de la Información y Comunicación (CITIC), UCR',
+    name: 'Radiográfica Costarricense S.A. (RACSA)',
+    href: 'https://www.racsa.go.cr/',
+    logoSrc: '/images/ROSAC/acknowledgments/racsa.webp',
+    logoAlt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
     position: 9,
+  },
+  {
+    name: 'Bomberos de Costa Rica',
+    href: 'https://www.bomberos.go.cr',
+    logoSrc: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
+    logoAlt: 'Logo de Bomberos de Costa Rica',
+    position: 10,
+  },
+  {
+    name: 'Instituto Geográfico Nacional',
+    href: 'https://www.snitcr.go.cr/ign_ign',
+    logoSrc: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
+    logoAlt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
+    position: 11,
+  },
+  {
+    name: 'INDI CR',
+    href: 'https://www.indicr.com/',
+    logoSrc: '/images/ROSAC/acknowledgments/indi.webp',
+    logoAlt: 'Logo de INDI, Ingeniería y Diseño',
+    position: 12,
+  },
+  {
+    name: 'Prysmian Group',
+    href: null,
+    logoSrc: '/images/ROSAC/acknowledgments/prysmian-group.webp',
+    logoAlt: 'Logo de Prysmian Group',
+    position: 13,
+  },
+  {
+    name: 'EATON Costa Rica',
+    href: 'https://www.eaton.com/cr/es-mx/company.html',
+    logoSrc: '/images/ROSAC/acknowledgments/eaton.webp',
+    logoAlt: 'Logo de EATON Costa Rica',
+    position: 14,
+  },
+  {
+    name: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), México',
+    href: 'https://www.inaoep.mx',
+    logoSrc: '/images/ROSAC/acknowledgments/inaoe.webp',
+    logoAlt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
+    position: 15,
+  },
+  {
+    name: 'Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    href: 'https://www.gob.mx/amexcid',
+    logoSrc: '/images/ROSAC/acknowledgments/amexcid.webp',
+    logoAlt:
+      'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    position: 16,
   },
 ]
 
-if ((await prisma.rosacAcknowledgment.count()) === 0) {
-  for (const ack of defaultAcknowledgments) {
-    await prisma.rosacAcknowledgment.create({ data: ack })
-  }
+await prisma.rosacAcknowledgment.deleteMany({})
+for (const ack of defaultAcknowledgments) {
+  await prisma.rosacAcknowledgment.create({ data: ack })
 }
 
 await prisma.$disconnect()

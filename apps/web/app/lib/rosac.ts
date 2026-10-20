@@ -44,6 +44,7 @@ export type RosacCardIcon =
   | 'antenna'
   | 'location'
   | 'frequency'
+  | 'waves'
   | 'sun'
   | 'tracking'
   | 'control'
@@ -790,6 +791,7 @@ export const rosacCharacteristicInputSchema = z.object({
     'antenna',
     'location',
     'frequency',
+    'waves',
     'sun',
     'tracking',
     'control',
@@ -806,7 +808,7 @@ export async function getRosacCharacteristics(): Promise<RosacCharacteristicItem
   const rows = await prisma.rosacCharacteristic.findMany({ orderBy: { position: 'asc' } })
   return rows.map((r) => ({
     id: r.key,
-    icon: r.icon as RosacCardIcon,
+    icon: (r.icon === 'waves' ? 'frequency' : r.icon) as RosacCardIcon,
     title: r.title,
     description: r.description,
   }))
@@ -816,23 +818,24 @@ export async function updateRosacCharacteristic(
   key: string,
   data: RosacCharacteristicInput,
 ): Promise<RosacCharacteristicItem> {
+  const icon = data.icon === 'waves' ? 'frequency' : data.icon
   const row = await prisma.rosacCharacteristic.upsert({
     where: { key },
     update: {
-      icon: data.icon,
+      icon,
       title: data.title,
       description: data.description,
     },
     create: {
       key,
-      icon: data.icon,
+      icon,
       title: data.title,
       description: data.description,
     },
   })
   return {
     id: row.key,
-    icon: row.icon as RosacCardIcon,
+    icon: (row.icon === 'waves' ? 'frequency' : row.icon) as RosacCardIcon,
     title: row.title,
     description: row.description,
   }
@@ -850,6 +853,7 @@ export const rosacActivityInputSchema = z.object({
     'antenna',
     'location',
     'frequency',
+    'waves',
     'sun',
     'tracking',
     'control',

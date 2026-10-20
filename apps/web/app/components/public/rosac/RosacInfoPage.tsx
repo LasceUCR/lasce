@@ -61,6 +61,7 @@ const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
   location: MapPin,
   frequency: Waves,
+  waves: Waves,
   sun: Sun,
   tracking: Crosshair,
   control: Settings,
@@ -639,7 +640,7 @@ export function RosacInfoPage({
       >
         <CardGrid columns={4} equalHeight>
           {displayCharacteristics.map((item) => {
-            const Icon = icons[item.icon]
+            const Icon = icons[item.icon] ?? RadioTower
             const icon = <Icon size={22} strokeWidth={1.8} />
             const showEditor = editMode && canEdit
 
@@ -680,7 +681,7 @@ export function RosacInfoPage({
       <TopicSection title={content.activities.title} titleId="rosac-activities-title" index="3">
         <CardGrid columns={3} equalHeight>
           {displayActivities.map((item) => {
-            const Icon = icons[item.icon]
+            const Icon = icons[item.icon] ?? RadioTower
             const icon = <Icon size={22} strokeWidth={1.8} />
             const showEditor = editMode && canEdit
 
