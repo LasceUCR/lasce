@@ -1,6 +1,7 @@
 'use client'
 
 import { useId } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Lightbox } from '../Lightbox'
 import { MediaFrame } from './MediaFrame'
@@ -22,7 +23,6 @@ export interface MediaLightboxProps {
   onNext: () => void
 }
 
-const labels = { close: 'Cerrar', previous: 'Anterior', next: 'Siguiente' }
 
 /**
  * Full-screen view of a single file. The dialog behaviour lives in the shared
@@ -40,6 +40,9 @@ export function MediaLightbox({
   const id = useId()
   const titleId = `${id}-title`
   const descriptionId = `${id}-description`
+  const tMedia = useTranslations('gallery.media')
+
+  const labels = { close: tMedia('close'), previous: tMedia('previous'), next: tMedia('next') }
 
   return (
     <Lightbox
@@ -68,9 +71,9 @@ export function MediaLightbox({
           <h2 id={titleId}>{item.title}</h2>
           <p id={descriptionId}>{item.description}</p>
           <div className="lightbox-facts">
-            <span>{`Fecha de captura: ${item.date}`}</span>
-            <span>{`Formato: ${item.format}`}</span>
-            <span>{`Subido por: ${item.uploader}`}</span>
+            <span>{tMedia('dateCaptured', { date: item.date })}</span>
+            <span>{tMedia('format', { format: item.format })}</span>
+            <span>{tMedia('uploadedBy', { user: item.uploader })}</span>
           </div>
         </figcaption>
       </figure>

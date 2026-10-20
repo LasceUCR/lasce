@@ -682,6 +682,16 @@
       "albumFiles": "archivos en este álbum",
       "albumContent": "Fotografías y video de este álbum"
     },
+    "media": {
+      "viewFullSize": "Ver a tamaño completo: {title}",
+      "video": "Video",
+      "close": "Cerrar",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "dateCaptured": "Fecha de captura: {date}",
+      "format": "Formato: {format}",
+      "uploadedBy": "Subido por: {user}"
+    },
     "editor": {
       "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o la descripción, revíselo también.",
       "legacyNoTranslation": "Este álbum aún no tiene versión en inglés. Para cambiar el título o la descripción debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",
