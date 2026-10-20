@@ -662,6 +662,10 @@
     }
   },
   "gallery": {
+    "meta": {
+      "title": "Galería | LASCE",
+      "description": "Fotografías de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación, y vida cotidiana del equipo."
+    },
     "editor": {
       "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o la descripción, revíselo también.",
       "legacyNoTranslation": "Este álbum aún no tiene versión en inglés. Para cambiar el título o la descripción debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",

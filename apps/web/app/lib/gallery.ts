@@ -50,12 +50,6 @@ export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
 
 export type AlbumSlug = (typeof albumSlugs)[number]
 
-export const galeriaMeta = {
-  title: 'Galería | LASCE',
-  description:
-    'Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación y vida cotidiana del equipo.',
-} as const
-
 export const galeriaHero = {
   kicker: 'Portal público LASCE',
   title: 'Galería',
