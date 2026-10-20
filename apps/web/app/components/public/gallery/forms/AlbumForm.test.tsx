@@ -8,13 +8,14 @@ import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AlbumForm, type AlbumFormHandle, type AlbumFormProps } from './AlbumForm'
-import meta, { Create, Default, Legacy } from './AlbumForm.stories'
+import meta, { Create, Default, Legacy, UnrecognizedPeriod } from './AlbumForm.stories'
 
 vi.mock('@/app/(public)/galeria/actions', () => ({ uploadGalleryImage: vi.fn() }))
 
 const editArgs = { ...meta.args, ...Default.args } as AlbumFormProps
 const createArgs = { ...meta.args, ...Create.args } as AlbumFormProps
 const legacyArgs = { ...meta.args, ...Legacy.args } as AlbumFormProps
+const unrecognizedArgs = { ...meta.args, ...UnrecognizedPeriod.args } as AlbumFormProps
 
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
@@ -35,6 +36,10 @@ function coverInput(container: HTMLElement): HTMLInputElement {
   return input
 }
 
+function select(label: string) {
+  return screen.getByRole('combobox', { name: label })
+}
+
 async function fillNewAlbum(user: User, title = 'Álbum nuevo') {
   await user.type(field('Título (Español)'), title)
   await user.type(field('Descripción (Español)'), 'Descripción nueva')
@@ -48,12 +53,14 @@ beforeEach(() => {
 })
 
 describe('AlbumForm', () => {
-  test('starts pre-filled with the stored text and the years label', async () => {
+  test('starts pre-filled with the stored text and the period', async () => {
     const user = userEvent.setup()
     render(<AlbumForm {...editArgs} />)
 
     expect(field('Título (Español)')).toHaveValue('Observatorio ROSAC')
-    expect(screen.getByRole('textbox', { name: 'Años' })).toHaveValue('2019–2023')
+    expect(select('Año de inicio')).toHaveValue('2019')
+    expect(select('Mes de inicio')).toHaveValue('')
+    expect(select('Año de fin')).toHaveValue('2023')
 
     await user.click(screen.getByRole('tab', { name: /^English/ }))
     expect(field('Título (English)')).toHaveValue('ROSAC Observatory')
@@ -64,8 +71,8 @@ describe('AlbumForm', () => {
     const onSave = vi.fn()
     render(<AlbumForm {...editArgs} onSave={onSave} />)
 
-    await user.clear(screen.getByRole('textbox', { name: 'Años' }))
-    await user.type(screen.getByRole('textbox', { name: 'Años' }), '2020')
+    await user.selectOptions(select('Año de inicio'), '2020')
+    await user.selectOptions(select('Año de fin'), 'Sin especificar')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
@@ -76,6 +83,77 @@ describe('AlbumForm', () => {
     })
     expect(values).not.toHaveProperty('content')
     expect(uploadGalleryImage).not.toHaveBeenCalled()
+  })
+
+  test('saves a period of months with the Spanish month names', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<AlbumForm {...editArgs} onSave={onSave} />)
+
+    await user.selectOptions(select('Mes de inicio'), 'marzo')
+    await user.selectOptions(select('Mes de fin'), 'junio')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
+    expect(onSave.mock.calls[0]?.[0]).toMatchObject({ yearsLabel: 'marzo 2019–junio 2023' })
+  })
+
+  test('reports an end before the start next to the end year and does not save', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<AlbumForm {...editArgs} onSave={onSave} />)
+
+    await user.selectOptions(select('Año de fin'), '2018')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.getByText('El fin no puede ser anterior al inicio.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('asks for the year of a month chosen on its own', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<AlbumForm {...editArgs} onSave={onSave} />)
+
+    await user.selectOptions(select('Año de fin'), 'Sin especificar')
+    await user.selectOptions(select('Mes de fin'), 'mayo')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.getByText('Elija también el año.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('reads a period shown in English and saves it with the Spanish month names', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(
+      <AlbumForm
+        {...editArgs}
+        album={{ ...editArgs.album, yearsLabel: 'February 2026' }}
+        onSave={onSave}
+      />,
+    )
+
+    expect(select('Año de inicio')).toHaveValue('2026')
+    expect(select('Mes de inicio')).toHaveValue('2')
+    expect(screen.queryByText(/no tiene el formato/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
+    expect(onSave.mock.calls[0]?.[0]).toMatchObject({ yearsLabel: 'febrero 2026' })
+  })
+
+  test('keeps a period in another shape until a new one is chosen', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<AlbumForm {...unrecognizedArgs} onSave={onSave} />)
+
+    expect(screen.getByText(/«primavera 2024»/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
+    expect(onSave.mock.calls[0]?.[0]).toMatchObject({ yearsLabel: 'primavera 2024' })
   })
 
   test('reports the missing cover and texts and does not save an empty album', async () => {

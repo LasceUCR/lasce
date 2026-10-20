@@ -12,6 +12,7 @@ import {
   translationRows,
 } from '@/app/lib/i18n/content/resolve'
 
+import { localizeYearsLabel } from './gallery-period'
 import {
   albumContent,
   findPendingMediaReviews,
@@ -2095,7 +2096,9 @@ function toSubAlbum(
     slug: record.slug,
     title: shown.title,
     description: shown.description,
-    ...(record.yearsLabel !== null ? { yearsLabel: record.yearsLabel } : {}),
+    ...(record.yearsLabel !== null
+      ? { yearsLabel: localizeYearsLabel(record.yearsLabel, locale) }
+      : {}),
     coverObjectKey: record.coverObjectKey ?? undefined,
     ...(src ? { src } : {}),
     contentLocale,
@@ -2113,7 +2116,7 @@ function toGalleryAlbum(
 ): GalleryAlbum {
   return {
     ...toSubAlbum(record, locale, includeEditingData),
-    years: record.yearsLabel ?? '',
+    years: localizeYearsLabel(record.yearsLabel ?? '', locale),
     subAlbums: record.subAlbums.map((subAlbum) => toSubAlbum(subAlbum, locale, includeEditingData)),
   }
 }

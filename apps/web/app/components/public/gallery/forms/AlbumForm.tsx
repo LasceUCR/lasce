@@ -13,6 +13,15 @@ import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import {
+  emptyPeriod,
+  formatYearsLabel,
+  parseYearsLabel,
+  periodError,
+  type AlbumPeriod,
+  type PeriodError,
+  type PeriodPoint,
+} from '@/app/lib/gallery-period'
+import {
   slugFromTitle,
   albumContent,
   type ReviewConfirmation,
@@ -40,6 +49,35 @@ import { languageLabels } from '@/app/lib/publication-form'
 import { uploadGalleryImage, type UploadGalleryImageResult } from '@/app/(public)/galeria/actions'
 
 type AlbumTranslatableField = 'title' | 'description'
+
+/** The earliest year offered for an album's period. */
+const FIRST_PERIOD_YEAR = 2000
+
+/** Which year select a period error is shown under: the one missing, or the end for an order error. */
+function periodErrorField(error: PeriodError, { start }: AlbumPeriod): 'start' | 'end' {
+  if (error === 'endBeforeStart') return 'end'
+  if (error === 'monthNeedsYear') return start.month && !start.year ? 'start' : 'end'
+  return 'start'
+}
+
+const periodErrorMessage = {
+  monthNeedsYear: 'editor.periodMonthNeedsYear',
+  endNeedsStart: 'editor.periodEndNeedsStart',
+  endBeforeStart: 'editor.periodEndBeforeStart',
+} as const
+
+/** Next year down to `FIRST_PERIOD_YEAR`, plus any stored year outside that range. */
+function periodYears(initial: AlbumPeriod): number[] {
+  const latest = new Date().getFullYear() + 1
+  const years = new Set<number>()
+  for (let year = latest; year >= FIRST_PERIOD_YEAR; year -= 1) years.add(year)
+  for (const year of [initial.start.year, initial.end.year]) if (year) years.add(year)
+  return [...years].sort((a, b) => b - a)
+}
+
+function samePoint(a: PeriodPoint, b: PeriodPoint): boolean {
+  return a.month === b.month && a.year === b.year
+}
 
 /** The translatable text of an album in one language. */
 export type AlbumFormContent = Record<AlbumTranslatableField, string>
@@ -111,7 +149,10 @@ export function AlbumForm({
   const [content, setContent] = useState(initialContent)
   const [confirmed, setConfirmed] = useState<ReviewConfirmation[]>([])
   const [tab, setTab] = useState<Locale>(defaultLocale)
-  const [yearsLabel, setYearsLabel] = useState(album.yearsLabel)
+  // A label written by hand in another shape is kept as is until a period is chosen.
+  const [storedPeriod] = useState(() => parseYearsLabel(album.yearsLabel ?? ''))
+  const initialPeriod = storedPeriod ?? emptyPeriod
+  const [period, setPeriod] = useState<AlbumPeriod>(initialPeriod)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverRemoved, setCoverRemoved] = useState(false)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
@@ -122,6 +163,9 @@ export function AlbumForm({
   // Visibility state for the discard confirmation dialog
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
 
+  const periodChanged =
+    !samePoint(period.start, initialPeriod.start) || !samePoint(period.end, initialPeriod.end)
+
   // Track whether unsaved changes exist
   const isDirty =
     hasAttemptedSubmit ||
@@ -130,7 +174,7 @@ export function AlbumForm({
         content[locale].title !== initialContent[locale].title ||
         content[locale].description !== initialContent[locale].description,
     ) ||
-    yearsLabel !== (album.yearsLabel ?? '') ||
+    periodChanged ||
     coverFile !== null ||
     coverRemoved
 
@@ -183,6 +227,35 @@ export function AlbumForm({
     ? validateContent(albumContent, stored, content, confirmed, uiLocale)
     : {}
 
+  const currentPeriodError = periodError(period)
+  const shownPeriodError = hasAttemptedSubmit ? currentPeriodError : null
+
+  function periodFieldError(end: 'start' | 'end'): string | undefined {
+    if (!shownPeriodError || periodErrorField(shownPeriodError, period) !== end) return undefined
+    return tGallery(periodErrorMessage[shownPeriodError])
+  }
+
+  function updatePeriod(end: 'start' | 'end', part: keyof PeriodPoint, value: string) {
+    setPeriod((current) => ({
+      ...current,
+      [end]: { ...current[end], [part]: value ? Number(value) : null },
+    }))
+  }
+
+  const none = { value: '', label: tGallery('editor.periodNone') }
+  const yearOptions = [
+    none,
+    ...periodYears(initialPeriod).map((year) => ({ value: String(year), label: String(year) })),
+  ]
+  const monthFormat = new Intl.DateTimeFormat(uiLocale, { month: 'long', timeZone: 'UTC' })
+  const monthOptions = [
+    none,
+    ...Array.from({ length: 12 }, (_, index) => ({
+      value: String(index + 1),
+      label: monthFormat.format(Date.UTC(2000, index, 1)),
+    })),
+  ]
+
   function handleConfirmClick() {
     setHasAttemptedSubmit(true)
     const found = validateContent(albumContent, stored, content, confirmed, uiLocale)
@@ -199,6 +272,8 @@ export function AlbumForm({
     }
 
     if (!isEdit && !hasCover) return
+
+    if (currentPeriodError) return
 
     handleConfirmSave()
   }
@@ -241,7 +316,10 @@ export function AlbumForm({
         title: content[defaultLocale].title,
         description: content[defaultLocale].description,
         ...(contentChanged ? { content } : {}),
-        yearsLabel,
+        yearsLabel:
+          storedPeriod === null && !periodChanged
+            ? (album.yearsLabel ?? '')
+            : formatYearsLabel(period),
         coverObjectKey,
       },
       confirmationsStillNeeded(confirmed, needed),
@@ -314,12 +392,29 @@ export function AlbumForm({
         )}
       </LanguageTabs>
 
-      <FormField
-        id="album-years-label"
-        label={t('editor.yearsLabel')}
-        onChange={(value) => setYearsLabel(value)}
-        value={yearsLabel}
-      />
+      {storedPeriod === null && !periodChanged ? (
+        <Notice>{tGallery('editor.periodUnrecognized', { label: album.yearsLabel })}</Notice>
+      ) : null}
+
+      {(['start', 'end'] as const).map((end) => (
+        <div className="cms-form-grid cms-form-grid-2" key={end}>
+          <FormField
+            error={periodFieldError(end)}
+            id={`${formId}-${end}-year`}
+            label={tGallery(end === 'start' ? 'editor.periodStartYear' : 'editor.periodEndYear')}
+            onChange={(value) => updatePeriod(end, 'year', value)}
+            options={yearOptions}
+            value={period[end].year ? String(period[end].year) : ''}
+          />
+          <FormField
+            id={`${formId}-${end}-month`}
+            label={tGallery(end === 'start' ? 'editor.periodStartMonth' : 'editor.periodEndMonth')}
+            onChange={(value) => updatePeriod(end, 'month', value)}
+            options={monthOptions}
+            value={period[end].month ? String(period[end].month) : ''}
+          />
+        </div>
+      ))}
 
       <div className="cms-form-actions">
         <Button onClick={requestCancel} variant="secondary">
