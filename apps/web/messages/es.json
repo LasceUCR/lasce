@@ -606,7 +606,6 @@
       "cancel": "Cancelar",
       "save": "Confirmar",
       "reload": "Cerrar y cargar la versión actual",
-      "yearsLabel": "Años",
       "uploadingImage": "Subiendo imagen...",
       "altTextField": "Texto alternativo ({language})",
       "FileDropDescriptionText": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo.",
@@ -684,7 +683,16 @@
       "galleryWidth": "Ancho en la galería (columnas)",
       "galleryHeight": "Alto en la galería (filas)",
       "titleNeedsLettersOrNumbers": "El título debe incluir letras o números para generar el identificador.",
-      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo."
+      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo.",
+      "periodStartYear": "Año de inicio",
+      "periodStartMonth": "Mes de inicio",
+      "periodEndYear": "Año de fin",
+      "periodEndMonth": "Mes de fin",
+      "periodNone": "Sin especificar",
+      "periodMonthNeedsYear": "Elija también el año.",
+      "periodEndNeedsStart": "Elija el año de inicio.",
+      "periodEndBeforeStart": "El fin no puede ser anterior al inicio.",
+      "periodUnrecognized": "El periodo guardado, «{label}», no tiene el formato de mes y año. Se conservará hasta que elija uno nuevo."
     },
     "actions": {
       "addAlbum": "Añadir álbum",

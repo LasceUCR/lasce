@@ -673,6 +673,27 @@ describe('getGalleryAlbums', () => {
     })
   })
 
+  test('shows the month names of the period in the visitor language', async () => {
+    prisma.galleryAlbum.findMany.mockResolvedValue([
+      albumRecord({
+        yearsLabel: 'febrero 2026',
+        media: [],
+        subAlbums: [subAlbumRecord({ yearsLabel: 'marzo 2024–junio 2025', media: [] })],
+      }),
+    ])
+
+    await expect(getGalleryAlbums('en')).resolves.toEqual([
+      expect.objectContaining({
+        years: 'February 2026',
+        yearsLabel: 'February 2026',
+        subAlbums: [expect.objectContaining({ yearsLabel: 'March 2024–June 2025' })],
+      }),
+    ])
+    await expect(getGalleryAlbums('es')).resolves.toEqual([
+      expect.objectContaining({ years: 'febrero 2026' }),
+    ])
+  })
+
   test('falls back to base content for a legacy record and marks its language as unknown', async () => {
     prisma.galleryAlbum.findMany.mockResolvedValue([
       {
