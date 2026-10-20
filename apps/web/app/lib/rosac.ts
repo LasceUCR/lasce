@@ -1,11 +1,20 @@
-import { prisma } from '@lasce/db'
+import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
 import es from '@/messages/es.json' with { type: 'json' }
 
+import {
+  getRosacConstructionContent,
+  type ConstructionContent,
+  type ConstructionImage,
+  type ConstructionStage,
+} from './rosac-construction'
+import {
+  getRosacInstrumentsContent,
+  type RosacInstrumentCardContent,
+  type RosacInstrumentsContent,
+} from './rosac-instruments'
 import { locationMapProvider, type LocationMapLabels } from './location-map'
-import { getRosacConstructionContent, type ConstructionContent } from './rosac-construction'
-import { getRosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
 
 // Built once and reused in both `location.intro` (as flowing prose) and `location.address`
 // (as its own field, kept for anything that needs the bare address rather than a sentence),
@@ -766,5 +775,386 @@ export async function deleteResearcher(id: string): Promise<boolean> {
   if (!existing) return false
 
   await prisma.researcher.delete({ where: { id } })
+  return true
+}
+
+export interface RosacCharacteristicItem {
+  id: string
+  icon: RosacCardIcon
+  title: string
+  description: string
+}
+
+export const rosacCharacteristicInputSchema = z.object({
+  icon: z.enum([
+    'antenna',
+    'location',
+    'frequency',
+    'sun',
+    'tracking',
+    'control',
+    'receiver',
+    'maintenance',
+    'education',
+  ]),
+  title: z.string().trim().min(1, 'El título es obligatorio.'),
+  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+})
+export type RosacCharacteristicInput = z.infer<typeof rosacCharacteristicInputSchema>
+
+export async function getRosacCharacteristics(): Promise<RosacCharacteristicItem[]> {
+  const rows = await prisma.rosacCharacteristic.findMany({ orderBy: { position: 'asc' } })
+  return rows.map((r) => ({
+    id: r.key,
+    icon: r.icon as RosacCardIcon,
+    title: r.title,
+    description: r.description,
+  }))
+}
+
+export async function updateRosacCharacteristic(
+  key: string,
+  data: RosacCharacteristicInput,
+): Promise<RosacCharacteristicItem> {
+  const row = await prisma.rosacCharacteristic.upsert({
+    where: { key },
+    update: {
+      icon: data.icon,
+      title: data.title,
+      description: data.description,
+    },
+    create: {
+      key,
+      icon: data.icon,
+      title: data.title,
+      description: data.description,
+    },
+  })
+  return {
+    id: row.key,
+    icon: row.icon as RosacCardIcon,
+    title: row.title,
+    description: row.description,
+  }
+}
+
+export interface RosacActivityItem {
+  id: string
+  icon: RosacCardIcon
+  title: string
+  description: string
+}
+
+export const rosacActivityInputSchema = z.object({
+  icon: z.enum([
+    'antenna',
+    'location',
+    'frequency',
+    'sun',
+    'tracking',
+    'control',
+    'receiver',
+    'maintenance',
+    'education',
+  ]),
+  title: z.string().trim().min(1, 'El título es obligatorio.'),
+  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+})
+export type RosacActivityInput = z.infer<typeof rosacActivityInputSchema>
+
+export async function getRosacActivities(): Promise<RosacActivityItem[]> {
+  const rows = await prisma.rosacActivity.findMany({ orderBy: { position: 'asc' } })
+  return rows.map((r) => ({
+    id: r.key,
+    icon: r.icon as RosacCardIcon,
+    title: r.title,
+    description: r.description,
+  }))
+}
+
+export async function updateRosacActivity(
+  key: string,
+  data: RosacActivityInput,
+): Promise<RosacActivityItem> {
+  const row = await prisma.rosacActivity.upsert({
+    where: { key },
+    update: {
+      icon: data.icon,
+      title: data.title,
+      description: data.description,
+    },
+    create: {
+      key,
+      icon: data.icon,
+      title: data.title,
+      description: data.description,
+    },
+  })
+  return {
+    id: row.key,
+    icon: row.icon as RosacCardIcon,
+    title: row.title,
+    description: row.description,
+  }
+}
+
+export const rosacStageInputSchema = z.object({
+  title: z.string().trim().min(1, 'El título es obligatorio.'),
+  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+  images: z
+    .array(
+      z.object({
+        src: z.string().trim().min(1),
+        alt: z.string().trim().min(1),
+      }),
+    )
+    .optional(),
+})
+export type RosacStageInput = z.infer<typeof rosacStageInputSchema>
+
+export async function getRosacStages(): Promise<ConstructionStage[]> {
+  const rows = await prisma.rosacStage.findMany({ orderBy: { position: 'asc' } })
+  return rows.map((r) => ({
+    id: r.key,
+    title: r.title,
+    navigationLabel: r.title,
+    description: r.description,
+    images: (r.images as unknown as ConstructionImage[]) ?? [],
+  })) as unknown as ConstructionStage[]
+}
+
+export async function updateRosacStage(
+  key: string,
+  data: RosacStageInput,
+): Promise<ConstructionStage> {
+  const row = await prisma.rosacStage.upsert({
+    where: { key },
+    update: {
+      title: data.title,
+      description: data.description,
+      ...(data.images ? { images: data.images as unknown as Prisma.InputJsonValue } : {}),
+    },
+    create: {
+      key,
+      title: data.title,
+      description: data.description,
+      images: (data.images ?? []) as unknown as Prisma.InputJsonValue,
+    },
+  })
+  return {
+    id: row.key,
+    title: row.title,
+    navigationLabel: row.title,
+    description: row.description,
+    images: (row.images as unknown as ConstructionImage[]) ?? [],
+  } as unknown as ConstructionStage
+}
+
+export const rosacInstrumentInputSchema = z.object({
+  name: z.string().trim().min(1, 'El nombre es obligatorio.'),
+  pendingMessage: z.string().trim().optional(),
+  image: z
+    .object({
+      src: z.string().trim().min(1),
+      alt: z.string().trim().min(1),
+    })
+    .optional(),
+  consultation: z
+    .object({
+      href: z.string().trim().optional(),
+      label: z.string().trim().min(1),
+      notice: z.string().trim().optional(),
+    })
+    .optional(),
+})
+export type RosacInstrumentInput = z.infer<typeof rosacInstrumentInputSchema>
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export async function getRosacInstruments(): Promise<RosacInstrumentCardContent[]> {
+  const rows = await prisma.rosacInstrument.findMany({ orderBy: { position: 'asc' } })
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    pendingMessage: r.pendingMessage ?? undefined,
+    image: r.imageSrc ? { src: r.imageSrc, alt: r.imageAlt ?? '' } : undefined,
+    consultation: r.consultationLabel
+      ? {
+          href: r.consultationHref ?? undefined,
+          label: r.consultationLabel,
+          notice: r.consultationNotice ?? undefined,
+        }
+      : undefined,
+  }))
+}
+
+export async function createRosacInstrument(
+  data: RosacInstrumentInput,
+): Promise<RosacInstrumentCardContent> {
+  const count = await prisma.rosacInstrument.count()
+  const row = await prisma.rosacInstrument.create({
+    data: {
+      name: data.name,
+      pendingMessage: data.pendingMessage || null,
+      imageSrc: data.image?.src || null,
+      imageAlt: data.image?.alt || null,
+      consultationHref: data.consultation?.href || null,
+      consultationLabel: data.consultation?.label || data.name,
+      consultationNotice: data.consultation?.notice || null,
+      position: count,
+    },
+  })
+  return {
+    id: row.id,
+    name: row.name,
+    pendingMessage: row.pendingMessage ?? undefined,
+    image: row.imageSrc ? { src: row.imageSrc, alt: row.imageAlt ?? '' } : undefined,
+    consultation: row.consultationLabel
+      ? {
+          href: row.consultationHref ?? undefined,
+          label: row.consultationLabel,
+          notice: row.consultationNotice ?? undefined,
+        }
+      : undefined,
+  }
+}
+
+export async function updateRosacInstrument(
+  id: string,
+  data: RosacInstrumentInput,
+): Promise<RosacInstrumentCardContent | null> {
+  const isUuid = UUID_REGEX.test(id)
+  const existing = await prisma.rosacInstrument.findFirst({
+    where: isUuid ? { id } : { name: id },
+  })
+
+  if (!existing) {
+    return createRosacInstrument(data)
+  }
+
+  const row = await prisma.rosacInstrument.update({
+    where: { id: existing.id },
+    data: {
+      name: data.name,
+      pendingMessage: data.pendingMessage || null,
+      imageSrc: data.image?.src || null,
+      imageAlt: data.image?.alt || null,
+      consultationHref: data.consultation?.href || null,
+      consultationLabel: data.consultation?.label || data.name,
+      consultationNotice: data.consultation?.notice || null,
+    },
+  })
+  return {
+    id: row.id,
+    name: row.name,
+    pendingMessage: row.pendingMessage ?? undefined,
+    image: row.imageSrc ? { src: row.imageSrc, alt: row.imageAlt ?? '' } : undefined,
+    consultation: row.consultationLabel
+      ? {
+          href: row.consultationHref ?? undefined,
+          label: row.consultationLabel,
+          notice: row.consultationNotice ?? undefined,
+        }
+      : undefined,
+  }
+}
+
+export async function deleteRosacInstrument(id: string): Promise<boolean> {
+  const isUuid = UUID_REGEX.test(id)
+  const existing = await prisma.rosacInstrument.findFirst({
+    where: isUuid ? { id } : { name: id },
+  })
+  if (!existing) return false
+  await prisma.rosacInstrument.delete({ where: { id: existing.id } })
+  return true
+}
+
+export const rosacAcknowledgmentInputSchema = z.object({
+  name: z.string().trim().min(1, 'El nombre es obligatorio.'),
+  href: z.string().trim().optional(),
+  logo: z.object({
+    src: z.string().trim().min(1, 'El archivo o URL del logo es obligatorio.'),
+    alt: z.string().trim().min(1, 'El texto alternativo es obligatorio.'),
+  }),
+})
+export type RosacAcknowledgmentInput = z.infer<typeof rosacAcknowledgmentInputSchema>
+
+export async function getRosacAcknowledgments(): Promise<RosacAcknowledgment[]> {
+  const rows = await prisma.rosacAcknowledgment.findMany({ orderBy: { position: 'asc' } })
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    href: r.href ?? undefined,
+    logo: {
+      src: r.logoSrc,
+      alt: r.logoAlt,
+    },
+  }))
+}
+
+export async function createRosacAcknowledgment(
+  data: RosacAcknowledgmentInput,
+): Promise<RosacAcknowledgment> {
+  const count = await prisma.rosacAcknowledgment.count()
+  const row = await prisma.rosacAcknowledgment.create({
+    data: {
+      name: data.name,
+      href: data.href || null,
+      logoSrc: data.logo.src,
+      logoAlt: data.logo.alt,
+      position: count,
+    },
+  })
+  return {
+    id: row.id,
+    name: row.name,
+    href: row.href ?? undefined,
+    logo: {
+      src: row.logoSrc,
+      alt: row.logoAlt,
+    },
+  }
+}
+
+export async function updateRosacAcknowledgment(
+  id: string,
+  data: RosacAcknowledgmentInput,
+): Promise<RosacAcknowledgment | null> {
+  const isUuid = UUID_REGEX.test(id)
+  const existing = await prisma.rosacAcknowledgment.findFirst({
+    where: isUuid ? { id } : { name: id },
+  })
+
+  if (!existing) {
+    return createRosacAcknowledgment(data)
+  }
+
+  const row = await prisma.rosacAcknowledgment.update({
+    where: { id: existing.id },
+    data: {
+      name: data.name,
+      href: data.href || null,
+      logoSrc: data.logo.src,
+      logoAlt: data.logo.alt,
+    },
+  })
+  return {
+    id: row.id,
+    name: row.name,
+    href: row.href ?? undefined,
+    logo: {
+      src: row.logoSrc,
+      alt: row.logoAlt,
+    },
+  }
+}
+
+export async function deleteRosacAcknowledgment(id: string): Promise<boolean> {
+  const isUuid = UUID_REGEX.test(id)
+  const existing = await prisma.rosacAcknowledgment.findFirst({
+    where: isUuid ? { id } : { name: id },
+  })
+  if (!existing) return false
+  await prisma.rosacAcknowledgment.delete({ where: { id: existing.id } })
   return true
 }

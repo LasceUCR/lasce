@@ -1030,3 +1030,81 @@ model SpaceWeatherSectionTranslation {
   @@map("space_weather_section_translations")
   @@schema("public")
 }
+
+/// A characteristic card shown on `/radioastronomia` (Section 1).
+model RosacCharacteristic {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  icon        String
+  title       String
+  description String   @db.Text
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("rosac_characteristics")
+  @@schema("public")
+}
+
+/// A scientific activity card shown on `/radioastronomia` (Section 3).
+model RosacActivity {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  icon        String
+  title       String
+  description String   @db.Text
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("rosac_activities")
+  @@schema("public")
+}
+
+/// A construction stage shown in the carousel on `/radioastronomia` (Section 4).
+model RosacStage {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  title       String
+  description String   @db.Text
+  images      Json     @default("[]")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("rosac_stages")
+  @@schema("public")
+}
+
+/// A scientific instrument card shown on `/radioastronomia` (Section 6).
+model RosacInstrument {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  pendingMessage     String?  @map("pending_message") @db.Text
+  imageSrc           String?  @map("image_src")
+  imageAlt           String?  @map("image_alt")
+  consultationHref   String?  @map("consultation_href")
+  consultationLabel  String   @map("consultation_label")
+  consultationNotice String?  @map("consultation_notice") @db.Text
+  position           Int      @default(0)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("rosac_instruments")
+  @@schema("public")
+}
+
+/// An institution acknowledgment card shown on `/radioastronomia` (Section 9).
+model RosacAcknowledgment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  href      String?
+  logoSrc   String   @map("logo_src")
+  logoAlt   String   @map("logo_alt")
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("rosac_acknowledgments")
+  @@schema("public")
+}
