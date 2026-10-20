@@ -23,7 +23,6 @@ export interface MediaLightboxProps {
   onNext: () => void
 }
 
-
 /**
  * Full-screen view of a single file. The dialog behaviour lives in the shared
  * `Lightbox`; this supplies the stage and the gallery's wording.

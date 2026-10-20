@@ -270,11 +270,7 @@ export function AlbumPage({
         </TopicSection>
       ) : null}
 
-      <TopicSection
-        badge={albumMediaMeta(media)}
-        title={t('albumContent')}
-        titleId="album-media"
-      >
+      <TopicSection badge={albumMediaMeta(media)} title={t('albumContent')} titleId="album-media">
         <AlbumMediaGrid
           albumTitle={title}
           media={media}

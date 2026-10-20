@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { MediaLightbox, type MediaLightboxProps } from './MediaLightbox'
 import { Photograph, Video } from './MediaLightbox.stories'
 
@@ -9,7 +10,7 @@ const videoArgs = Video.args as MediaLightboxProps
 
 function renderLightbox(overrides: Partial<MediaLightboxProps> = {}) {
   const handlers = { onClose: vi.fn(), onPrevious: vi.fn(), onNext: vi.fn() }
-  const view = render(<MediaLightbox {...photographArgs} {...handlers} {...overrides} />)
+  const view = renderWithIntl(<MediaLightbox {...photographArgs} {...handlers} {...overrides} />)
 
   return { ...handlers, ...view }
 }
