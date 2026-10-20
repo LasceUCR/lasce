@@ -1,4 +1,4 @@
-import { prisma, type ContactChannelIcon as DbContactChannelIcon } from '@lasce/db'
+import { prisma, type ContactChannelIcon as DbContactChannelIcon, type Prisma } from '@lasce/db'
 
 import { WriteAbort, runWrite } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
@@ -40,17 +40,9 @@ const ICON_FROM_DB: Record<DbContactChannelIcon, ContactChannelIcon> = {
 
 const recordInclude = {
   translations: { select: { locale: true, title: true, description: true } },
-} as const
+} satisfies Prisma.ContactChannelInclude
 
-type ChannelRow = {
-  id: string
-  icon: DbContactChannelIcon
-  href: string | null
-  title: string
-  description: string
-  updatedAt: Date
-  translations: { locale: string; title: string; description: string }[]
-}
+type ChannelRow = Prisma.ContactChannelGetPayload<{ include: typeof recordInclude }>
 
 function toCard(row: ChannelRow, locale: Locale, includeEditing: boolean): ContactCard {
   const stored = storedContentFrom(contactChannelContent, row, row.translations)

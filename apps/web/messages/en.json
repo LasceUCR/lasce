@@ -599,7 +599,6 @@
       "cancel": "Cancel",
       "save": "Confirm",
       "reload": "Close and load the current version",
-      "yearsLabel": "Time span",
       "uploadingImage": "Uploading image...",
       "altTextField": "Alternative text ({language})",
       "FileDropDescriptionText": "Drag an image here or click to select it from your device.",
@@ -677,7 +676,16 @@
       "galleryWidth": "Gallery width (columns)",
       "galleryHeight": "Gallery height (rows)",
       "titleNeedsLettersOrNumbers": "The title must include letters or numbers to generate the identifier.",
-      "uploadFailed": "The image could not be uploaded. Please try again."
+      "uploadFailed": "The image could not be uploaded. Please try again.",
+      "periodStartYear": "Start year",
+      "periodStartMonth": "Start month",
+      "periodEndYear": "End year",
+      "periodEndMonth": "End month",
+      "periodNone": "Not specified",
+      "periodMonthNeedsYear": "Choose the year too.",
+      "periodEndNeedsStart": "Choose the start year.",
+      "periodEndBeforeStart": "The end cannot be before the start.",
+      "periodUnrecognized": "The saved period, “{label}”, is not in month and year form. It is kept until you choose a new one."
     },
     "actions": {
       "addAlbum": "Add album",
