@@ -1,14 +1,18 @@
 import Image from 'next/image'
-import { ArrowRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
-import { Button } from '@/app/components/public/Button'
+import { TruncatedText } from '@/app/components/public/TruncatedText'
 import type { AcademicActivity } from '@/app/lib/academic-activities'
 
 export interface AcademicActivityCardProps {
   activity: AcademicActivity
 }
 
+/**
+ * The full write-up lives in the card now — there is no separate detail page to send a reader to
+ * — clamped to three lines through the shared `TruncatedText` component (the
+ * `feature-g02-research-areas-read-more` standard) with its default "Leer más"/"Leer menos".
+ */
 export function AcademicActivityCard({ activity }: AcademicActivityCardProps) {
   const t = useTranslations('academicActivities.card')
 
@@ -40,17 +44,11 @@ export function AcademicActivityCard({ activity }: AcademicActivityCardProps) {
           {activity.location ? ` · ${activity.location}` : ''}
         </p>
 
-        {activity.abstract ? <p className="news-abstract">{activity.abstract}</p> : null}
-
-        <div className="news-card-footer">
-          <Button
-            href={`/noticias/actividades/${activity.slug}`}
-            icon={<ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} />}
-            variant="primary"
-          >
-            {t('details')}
-          </Button>
-        </div>
+        {activity.description ? (
+          <TruncatedText className="academic-activity-card-description" lines={3}>
+            {activity.description}
+          </TruncatedText>
+        ) : null}
       </div>
     </article>
   )

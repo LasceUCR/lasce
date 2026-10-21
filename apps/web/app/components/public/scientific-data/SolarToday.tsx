@@ -1,6 +1,7 @@
 'use client'
 
 import { ArrowRight, RefreshCw, Sun } from 'lucide-react'
+import { useFormatter, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { Notice } from '@/app/components/public/Notice'
@@ -11,13 +12,6 @@ import type {
   ScientificProductCode,
 } from '@/app/lib/scientific-data'
 import { SuviImageSequence } from './SuviImageSequence'
-
-export const solarTimeRanges = [
-  { value: 'day', label: 'Todo el día' },
-  { value: '6', label: 'Últimas 6 horas' },
-  { value: '3', label: 'Últimas 3 horas' },
-  { value: '1', label: 'Última hora' },
-]
 
 export interface SolarTodayProps {
   instrument: ScientificInstrument
@@ -44,33 +38,39 @@ export function SolarToday({
   onRangeChange,
   onRefresh,
 }: SolarTodayProps) {
+  const t = useTranslations('scientificData.today')
+  const format = useFormatter()
+  const solarTimeRanges = [
+    { value: 'day', label: t('ranges.day') },
+    { value: '6', label: t('ranges.h6') },
+    { value: '3', label: t('ranges.h3') },
+    { value: '1', label: t('ranges.h1') },
+  ]
   const selected = instrument.products.find((item) => item.code === product)
-  const formattedDate = new Intl.DateTimeFormat('es-CR', {
+  const formattedDate = format.dateTime(new Date(`${date}T12:00:00Z`), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
-  }).format(new Date(`${date}T12:00:00Z`))
+  })
 
   return (
     <section className="solar-today" aria-labelledby="solar-today-title">
       <div className="solar-today-heading">
         <div>
           <h2 id="solar-today-title">
-            <Sun aria-hidden="true" size={22} /> El Sol de hoy
+            <Sun aria-hidden="true" size={22} /> {t('title')}
           </h2>
-          <p className="solar-today-lead">
-            Imágenes de hoy en distintas bandas de luz ultravioleta.
-          </p>
+          <p className="solar-today-lead">{t('lead')}</p>
         </div>
         <span className="solar-today-source">
-          Fuente: GOES <span aria-hidden="true">·</span> {instrument.code}
+          {t('source')} <span aria-hidden="true">·</span> {instrument.code}
         </span>
       </div>
 
       <div className="solar-today-controls">
         <fieldset className="data-wavelengths" disabled={disabled}>
-          <legend>Bandas SUVI (longitud de onda)</legend>
+          <legend>{t('wavelengthsLegend')}</legend>
           <div className="data-wavelength-options">
             {instrument.products.map((item) => (
               <label key={item.code}>
@@ -88,10 +88,10 @@ export function SolarToday({
           </div>
         </fieldset>
         <div className="solar-today-range data-field">
-          <label htmlFor="solar-today-range">Rango de hoy (UTC)</label>
+          <label htmlFor="solar-today-range">{t('rangeLabel')}</label>
           <Select
             id="solar-today-range"
-            label="Rango de hoy (UTC)"
+            label={t('rangeLabel')}
             value={range}
             options={solarTimeRanges}
             onChange={onRangeChange}
@@ -102,7 +102,7 @@ export function SolarToday({
 
       {state === 'loading' ? (
         <div className="solar-today-loading" role="status">
-          <span>Cargando imágenes del Sol de hoy…</span>
+          <span>{t('loading')}</span>
           <div className="solar-today-placeholders" aria-hidden="true">
             {Array.from({ length: 5 }, (_, index) => (
               <div key={index}>
@@ -113,22 +113,19 @@ export function SolarToday({
         </div>
       ) : state === 'error' ? (
         <Notice tone="error" role="alert">
-          No fue posible cargar las imágenes de GOES. Puede cambiar de banda o volver a intentarlo.
+          {t('error')}
         </Notice>
       ) : images.length === 0 ? (
         <div className="solar-today-empty" role="status">
           <Sun aria-hidden="true" size={32} strokeWidth={1.4} />
-          <h3>Aún no hay imágenes para esta selección</h3>
-          <p>
-            Pruebe otra banda o amplíe el rango de hoy. Las nuevas observaciones aparecerán cuando
-            estén disponibles.
-          </p>
+          <h3>{t('emptyTitle')}</h3>
+          <p>{t('emptyMessage')}</p>
         </div>
       ) : (
         <div
           className="solar-today-strip"
           role="region"
-          aria-label="Imágenes del Sol de hoy"
+          aria-label={t('stripLabel')}
           tabIndex={0}
           onKeyDown={(event) => {
             if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
@@ -148,11 +145,9 @@ export function SolarToday({
       )}
 
       <div className="solar-today-footer">
-        <p>
-          {formattedDate} · {selected?.wavelength} · Horas en UTC
-        </p>
+        <p>{t('footer', { date: formattedDate, wavelength: selected?.wavelength ?? '' })}</p>
         <span className="solar-today-scroll-hint">
-          Deslice para ver más <ArrowRight size={14} aria-hidden="true" />
+          {t('scrollHint')} <ArrowRight size={14} aria-hidden="true" />
         </span>
         <Button
           type="button"
@@ -161,7 +156,7 @@ export function SolarToday({
           icon={<RefreshCw size={15} aria-hidden="true" />}
           onClick={onRefresh}
         >
-          Actualizar imágenes
+          {t('refresh')}
         </Button>
       </div>
     </section>

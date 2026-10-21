@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
+import { englishArticle, spanishArticle } from './fixtures'
 import { NewsCard } from './NewsCard'
 
 const meta: Meta<typeof NewsCard> = {
@@ -13,23 +14,35 @@ export default meta
 
 type Story = StoryObj<typeof NewsCard>
 
+const { title, authors, source, date, publishedAt, abstract, href } = spanishArticle
+
 export const Default: Story = {
-  args: {
-    title:
-      '¿Cómo que aquí no pasa nada? Cinco proyectos científicos para entusiasmarse en Costa Rica',
-    authors: 'Jorge Arturo Mora',
-    source: 'La Nación – Revista Dominical',
-    date: '24 de mayo de 2026',
-    publishedAt: '2026-05-24',
-    abstract:
-      'Reportaje sobre proyectos científicos costarricenses, entre ellos ROSAC, el radiotelescopio de la Universidad de Costa Rica dedicado al estudio de la actividad solar.',
-    href: 'https://www.nacion.com/revista-dominical/como-que-aqui-no-pasa-nada-cinco-proyectos/CZAKRKAEDJE7DPTMVO52LFBZQQ/story/',
-  },
+  args: { title, authors, source, date, publishedAt, abstract, href, contentLang: 'es' },
 }
 
-/** Some coverage carries no publish date; `getNews()` shows it as "Sin fecha". */
+/** The same item for a visitor reading in English: its translation and an English date. */
+export const English: Story = {
+  args: {
+    ...Default.args,
+    title: englishArticle.title,
+    abstract: englishArticle.abstract,
+    date: englishArticle.date,
+    contentLang: 'en',
+  },
+  globals: { locale: 'en' },
+}
+
+/** Some coverage carries no publish date; the card says "Sin fecha" in the site's language. */
 export const Undated: Story = {
-  args: { ...Default.args, date: 'Sin fecha', publishedAt: null },
+  args: { ...Default.args, date: null, publishedAt: null },
+}
+
+/**
+ * An editor's view of an item saved before languages existed: its text's language is unknown
+ * (`lang=""`) and a note says it has no English version yet.
+ */
+export const TranslationMissing: Story = {
+  args: { ...Default.args, contentLang: '', translationMissing: true },
 }
 
 export const WithoutSummary: Story = {

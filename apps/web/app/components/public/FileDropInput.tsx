@@ -31,6 +31,9 @@ export interface FileDropInputProps {
   helperText?: string
   required?: boolean
   errorMessage?: string | null
+  rejectionFormatMessage?: string
+  rejectionSizeMessage?: string
+  descriptionText?: string
 }
 
 export function FileDropInput({
@@ -41,6 +44,9 @@ export function FileDropInput({
   helperText,
   required = false,
   errorMessage,
+  rejectionFormatMessage = 'Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.',
+  rejectionSizeMessage = 'La imagen supera el tamaño máximo de 25 MB.',
+  descriptionText = 'Arrastre una imagen aquí o haga clic para seleccionarla del equipo',
 }: FileDropInputProps) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -61,12 +67,12 @@ export function FileDropInput({
 
   function selectFile(file: File | null) {
     if (file && !isAccepted(file, accept)) {
-      setRejection('Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.')
+      setRejection(rejectionFormatMessage)
       if (inputRef.current) inputRef.current.value = ''
       return
     }
     if (file && file.size > MAX_FILE_BYTES) {
-      setRejection('La imagen supera el tamaño máximo de 25 MB.')
+      setRejection(rejectionSizeMessage)
       if (inputRef.current) inputRef.current.value = ''
       return
     }
@@ -120,67 +126,74 @@ export function FileDropInput({
         ) : null}
       </span>
 
-      <div
-        aria-invalid={isInvalid || undefined}
-        aria-labelledby={`${inputId}-label`}
-        className={[
-          'file-drop',
-          isDraggingOver && 'file-drop-active',
-          isInvalid && 'file-drop-error',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-        onClick={() => inputRef.current?.click()}
-        onDragLeave={() => setIsDraggingOver(false)}
-        onDragOver={(event) => {
-          event.preventDefault()
-          setIsDraggingOver(true)
-        }}
-        onDrop={handleDrop}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
+      {/* The remove button sits beside the drop zone, not inside it: a button nested in another
+          control (`role="button"`) is announced and reached ambiguously. CSS places it over the
+          preview's corner. */}
+      <div className="file-drop-area">
+        <div
+          aria-invalid={isInvalid || undefined}
+          aria-labelledby={`${inputId}-label`}
+          className={[
+            'file-drop',
+            isDraggingOver && 'file-drop-active',
+            isInvalid && 'file-drop-error',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          onClick={() => inputRef.current?.click()}
+          onDragLeave={() => setIsDraggingOver(false)}
+          onDragOver={(event) => {
             event.preventDefault()
-            inputRef.current?.click()
-          }
-        }}
-        role="button"
-        tabIndex={0}
-      >
-        {previewUrl ? (
-          <div className="file-drop-preview-wrap">
-            <img
-              alt={`Vista previa de ${label.toLowerCase()}`}
-              className="file-drop-preview"
-              src={previewUrl}
-            />
-            {/* Stops the click here from also bubbling to the drop zone's own
-                onClick, which would reopen the file picker instead of just
-                removing the current image. */}
-            <span onClick={(event) => event.stopPropagation()}>
-              <IconButton
-                className="file-drop-remove"
-                icon={<X size={12} strokeWidth={1.8} />}
-                label="Quitar imagen"
-                onClick={handleRemove}
+            setIsDraggingOver(true)
+          }}
+          onDrop={handleDrop}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              inputRef.current?.click()
+            }
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          {previewUrl ? (
+            <div className="file-drop-preview-wrap">
+              <img
+                alt={`Vista previa de ${label.toLowerCase()}`}
+                className="file-drop-preview"
+                src={previewUrl}
               />
-            </span>
-          </div>
-        ) : (
-          <div className="file-drop-icon">
-            <ImagePlus aria-hidden="true" size={22} strokeWidth={1.6} />
-          </div>
-        )}
+            </div>
+          ) : (
+            <div className="file-drop-icon">
+              <ImagePlus aria-hidden="true" size={22} strokeWidth={1.6} />
+            </div>
+          )}
 
-        <div className="file-drop-copy">
-          <p>Arrastre una imagen aquí o haga clic para seleccionarla del equipo</p>
-          {helperText && <p className="file-drop-helper">{helperText}</p>}
+          <div className="file-drop-copy">
+            <p>{descriptionText}</p>
+            {helperText && <p className="file-drop-helper">{helperText}</p>}
+          </div>
         </div>
+
+        {previewUrl ? (
+          <IconButton
+            className="file-drop-remove"
+            icon={<X size={12} strokeWidth={1.8} />}
+            label="Quitar imagen"
+            onClick={handleRemove}
+          />
+        ) : null}
       </div>
 
+      {/* Opened through the drop zone, which is the one keyboard stop: out of the tab order, but
+          named by the field's label for assistive technology that lists form fields. */}
       <input
         accept={accept}
+        aria-labelledby={`${inputId}-label`}
         className="sr-only"
         id={inputId}
+        tabIndex={-1}
         onChange={handleInputChange}
         ref={inputRef}
         type="file"

@@ -28,3 +28,22 @@ export const Orange: Story = {
     tone: 'orange',
   },
 }
+
+export const AsLink: Story = {
+  args: {
+    label: 'Publicaciones',
+    value: '12',
+    tone: 'cyan',
+    href: '/publicaciones',
+  },
+}
+
+export const Empty: Story = {
+  args: {
+    label: 'Noticias',
+    value: 'Sin registros',
+    tone: 'teal',
+    href: '/noticias',
+    isEmpty: true,
+  },
+}

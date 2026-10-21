@@ -262,6 +262,23 @@ test('keeps instrument products visible when the form starts near the viewport b
   await expect(product).toContainText('energía media y alta')
 })
 
+test('opens a usable instrument menu with the trigger against the window edge', async ({
+  page,
+}) => {
+  await page.goto('/datos')
+  const product = page.getByRole('combobox', { name: 'Instrumento y producto' })
+  const trigger = (await product.boundingBox())!
+  const viewport = page.viewportSize()!
+  // The card around the query form must not squeeze the menu into a sliver near a window edge.
+  await page.evaluate(
+    (offset) => window.scrollTo(0, offset),
+    trigger.y + trigger.height + 40 - viewport.height,
+  )
+  await product.click()
+  await page.getByRole('treeitem', { name: /^SEISS/ }).click()
+  await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).toBeInViewport()
+})
+
 test('limits GOES dates to today and lets SUVI use historical dates', async ({ page }) => {
   await page.goto('/datos')
   await selectHistoricalXrays(page)

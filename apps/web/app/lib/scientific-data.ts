@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import es from '@/messages/es.json' with { type: 'json' }
+
 export const SCIENTIFIC_SOURCE_CODES = ['GOES', 'ROSAC'] as const
 export const GOES_PRODUCT_CODES = [
   'SFEU',
@@ -124,38 +126,8 @@ export interface DynamicSpectrumDataResult extends ScientificDataResultBase {
 export type ScientificDataResult =
   TimeSeriesDataResult | ImageSequenceDataResult | DynamicSpectrumDataResult
 
-const xrayParameters: ScientificParameter[] = [
-  { code: '0.05-0.4nm', label: 'Banda corta (0,05–0,4 nm)', unit: 'W/m²' },
-  { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
-]
-
-const euvParameters: ScientificParameter[] = [
-  { code: '1175', label: 'Línea 117,5 nm', unit: 'W/m²' },
-  { code: '1216', label: 'Línea 121,6 nm', unit: 'W/m²' },
-  { code: '1335', label: 'Línea 133,5 nm', unit: 'W/m²' },
-  { code: '1405', label: 'Línea 140,5 nm', unit: 'W/m²' },
-  { code: '256', label: 'Línea 25,6 nm', unit: 'W/m²' },
-  { code: '284', label: 'Línea 28,4 nm', unit: 'W/m²' },
-  { code: '304', label: 'Línea 30,4 nm', unit: 'W/m²' },
-  { code: 'mgii_index', label: 'Índice Mg II', unit: 'índice' },
-]
-
-const magneticParameters: ScientificParameter[] = [
-  { code: 'EPN-x', label: 'Componente x (marco EPN)', unit: 'nT' },
-  { code: 'EPN-y', label: 'Componente y (marco EPN)', unit: 'nT' },
-  { code: 'EPN-z', label: 'Componente z (marco EPN)', unit: 'nT' },
-  { code: 'total', label: 'Magnitud total', unit: 'nT' },
-]
-
-const mpshParameters: ScientificParameter[] = ['electron', 'proton'].flatMap((species) =>
-  Array.from({ length: 5 }, (_, telescope) =>
-    Array.from({ length: species === 'electron' ? 10 : 11 }, (_, band) => ({
-      code: `${species}:T${telescope + 1}:E${band + 1}`,
-      label: `${species === 'electron' ? 'Electrones' : 'Protones'}: telescopio ${telescope + 1}, banda ${band + 1}`,
-      unit: 'partículas/(cm²·s·sr·keV)',
-    })),
-  ).flat(),
-)
+/** The parts of a message catalogue the scientific data page reads. */
+export type ScientificDataMessages = Pick<typeof es, 'scientificData'>
 
 const sgpsChannels = [
   'P1',
@@ -173,169 +145,323 @@ const sgpsChannels = [
   'P10',
 ]
 
-const sgpsParameters: ScientificParameter[] = ['minus', 'plus'].flatMap((sensor) =>
-  [...sgpsChannels, 'P11'].map((channel) => ({
-    code: `${sensor}:${channel}`,
-    label: `SGPS${sensor === 'minus' ? '−' : '+'}X: ${channel === 'P11' ? '> 500 MeV (integral)' : `${channel} (diferencial)`}`,
-    unit: channel === 'P11' ? 'pfu' : 'protones/(cm²·s·sr·keV)',
-  })),
-)
+/**
+ * The instrument, product and parameter metadata, in the language of `messages`. The structure
+ * (codes, which product uses which visualization, availability) stays in this module; only the
+ * copy fields are looked up from the catalogue, with a Spanish fallback at every level — the same
+ * "safe fallback" pattern `getRosacInstrumentsContent` uses.
+ */
+export function getScientificSources(messages: ScientificDataMessages): ScientificSource[] {
+  const sd = messages?.scientificData ?? es.scientificData
+  const sources = sd?.sources ?? es.scientificData.sources
+  const instruments = sd?.instruments ?? es.scientificData.instruments
+  const parameters = sd?.parameters ?? es.scientificData.parameters
+  const units = sd?.units ?? es.scientificData.units
 
-const unavailableFromRollingApi =
-  'Este producto GOES y sus canales aún están pendientes de integración.'
+  const wPerM2 = units?.wPerM2 ?? es.scientificData.units.wPerM2
+  const index = units?.index ?? es.scientificData.units.index
+  const nanotesla = units?.nanotesla ?? es.scientificData.units.nanotesla
+  const particles = units?.particles ?? es.scientificData.units.particles
+  const relativeIntensity = units?.relativeIntensity ?? es.scientificData.units.relativeIntensity
+  const pfu = units?.pfu ?? es.scientificData.units.pfu
+  const protonUnit = units?.protonUnit ?? es.scientificData.units.protonUnit
+  const imageUnit = units?.image ?? es.scientificData.units.image
 
-export const goesInstruments: ScientificInstrument[] = [
-  {
-    code: 'EXIS',
-    name: 'Sensores de irradiancia ultravioleta extrema y rayos X',
-    products: [
-      {
-        code: 'SFEU',
-        name: 'Flujo solar: EUV',
-        visualization: 'time-series',
-        available: true,
-        parameters: euvParameters,
-      },
-      {
-        code: 'SFXR',
-        name: 'Flujo solar: rayos X',
-        visualization: 'time-series',
-        available: true,
-        parameters: xrayParameters,
-      },
-    ],
-  },
-  {
-    code: 'MAG',
-    name: 'Magnetómetro',
-    products: [
-      {
-        code: 'GEOF',
-        name: 'Campo geomagnético',
-        visualization: 'time-series',
-        available: true,
-        parameters: magneticParameters,
-      },
-    ],
-  },
-  {
-    code: 'SEISS',
-    name: 'Suite ambiental espacial in situ',
-    products: [
-      {
-        code: 'EHIS',
-        name: 'Iones pesados energéticos',
-        visualization: 'time-series',
-        available: false,
-        availabilityNote: unavailableFromRollingApi,
-        parameters: [],
-      },
-      {
-        code: 'MPSL',
-        name: 'Electrones y protones magnetosféricos: baja energía',
-        visualization: 'time-series',
-        available: false,
-        availabilityNote: unavailableFromRollingApi,
-        parameters: [],
-      },
-      {
-        code: 'MPSH',
-        name: 'Electrones y protones magnetosféricos: energía media y alta',
-        visualization: 'time-series',
-        available: true,
-        availabilityNote:
-          'Seleccione el telescopio y la banda del archivo nivel 1b. Cada telescopio conserva su dirección de observación.',
-        parameters: mpshParameters,
-      },
-      {
-        code: 'SGPS',
-        name: 'Protones solares y galácticos',
-        visualization: 'time-series',
-        available: true,
-        availabilityNote:
-          'Seleccione la unidad SGPS−X o SGPS+X. El archivo nivel 1b incluye canales diferenciales y el integral > 500 MeV.',
-        parameters: sgpsParameters,
-      },
-    ],
-  },
-  {
-    code: 'SUVI',
-    name: 'Generador de imágenes solares ultravioleta',
-    products: [
-      { code: 'Fe093', wavelength: '94 Å' },
-      { code: 'Fe131', wavelength: '131 Å' },
-      { code: 'Fe171', wavelength: '171 Å' },
-      { code: 'Fe195', wavelength: '195 Å' },
-      { code: 'Fe284', wavelength: '284 Å' },
-      { code: 'He303', wavelength: '304 Å' },
-    ].map(({ code, wavelength }) => ({
-      code: code as ScientificProductCode,
-      name: `Imágenes solares: ${wavelength} (${code})`,
-      wavelength,
-      visualization: 'image-sequence' as const,
-      available: true,
-      parameters: [{ code: 'image', label: 'Imagen calibrada', unit: 'imagen' }],
+  const xray = parameters?.xray ?? es.scientificData.parameters.xray
+  const xrayParameters: ScientificParameter[] = [
+    {
+      code: '0.05-0.4nm',
+      label: xray?.shortBand ?? es.scientificData.parameters.xray.shortBand,
+      unit: wPerM2,
+    },
+    {
+      code: '0.1-0.8nm',
+      label: xray?.longBand ?? es.scientificData.parameters.xray.longBand,
+      unit: wPerM2,
+    },
+  ]
+
+  const euv = parameters?.euv ?? es.scientificData.parameters.euv
+  const euvParameters: ScientificParameter[] = [
+    {
+      code: '1175',
+      label: euv?.line1175 ?? es.scientificData.parameters.euv.line1175,
+      unit: wPerM2,
+    },
+    {
+      code: '1216',
+      label: euv?.line1216 ?? es.scientificData.parameters.euv.line1216,
+      unit: wPerM2,
+    },
+    {
+      code: '1335',
+      label: euv?.line1335 ?? es.scientificData.parameters.euv.line1335,
+      unit: wPerM2,
+    },
+    {
+      code: '1405',
+      label: euv?.line1405 ?? es.scientificData.parameters.euv.line1405,
+      unit: wPerM2,
+    },
+    { code: '256', label: euv?.line256 ?? es.scientificData.parameters.euv.line256, unit: wPerM2 },
+    { code: '284', label: euv?.line284 ?? es.scientificData.parameters.euv.line284, unit: wPerM2 },
+    { code: '304', label: euv?.line304 ?? es.scientificData.parameters.euv.line304, unit: wPerM2 },
+    {
+      code: 'mgii_index',
+      label: euv?.mgiiIndex ?? es.scientificData.parameters.euv.mgiiIndex,
+      unit: index,
+    },
+  ]
+
+  const magnetic = parameters?.magnetic ?? es.scientificData.parameters.magnetic
+  const magneticParameters: ScientificParameter[] = [
+    {
+      code: 'EPN-x',
+      label: magnetic?.x ?? es.scientificData.parameters.magnetic.x,
+      unit: nanotesla,
+    },
+    {
+      code: 'EPN-y',
+      label: magnetic?.y ?? es.scientificData.parameters.magnetic.y,
+      unit: nanotesla,
+    },
+    {
+      code: 'EPN-z',
+      label: magnetic?.z ?? es.scientificData.parameters.magnetic.z,
+      unit: nanotesla,
+    },
+    {
+      code: 'total',
+      label: magnetic?.total ?? es.scientificData.parameters.magnetic.total,
+      unit: nanotesla,
+    },
+  ]
+
+  const mpsh = parameters?.mpsh ?? es.scientificData.parameters.mpsh
+  const mpshLabelTemplate = mpsh?.label ?? es.scientificData.parameters.mpsh.label
+  const mpshSpecies = {
+    electron: mpsh?.electron ?? es.scientificData.parameters.mpsh.electron,
+    proton: mpsh?.proton ?? es.scientificData.parameters.mpsh.proton,
+  }
+  const mpshParameters: ScientificParameter[] = (['electron', 'proton'] as const).flatMap(
+    (species) =>
+      Array.from({ length: 5 }, (_, telescope) =>
+        Array.from({ length: species === 'electron' ? 10 : 11 }, (_, band) => ({
+          code: `${species}:T${telescope + 1}:E${band + 1}`,
+          label: mpshLabelTemplate
+            .replace('{species}', mpshSpecies[species])
+            .replace('{telescope}', String(telescope + 1))
+            .replace('{band}', String(band + 1)),
+          unit: particles,
+        })),
+      ).flat(),
+  )
+
+  const sgps = parameters?.sgps ?? es.scientificData.parameters.sgps
+  const sgpsLabelTemplate = sgps?.label ?? es.scientificData.parameters.sgps.label
+  const sgpsIntegral = sgps?.integral ?? es.scientificData.parameters.sgps.integral
+  const sgpsDifferentialTemplate =
+    sgps?.differential ?? es.scientificData.parameters.sgps.differential
+  const sgpsParameters: ScientificParameter[] = (['minus', 'plus'] as const).flatMap((sensor) =>
+    [...sgpsChannels, 'P11'].map((channel) => ({
+      code: `${sensor}:${channel}`,
+      label: sgpsLabelTemplate
+        .replace('{sign}', sensor === 'minus' ? '−' : '+')
+        .replace(
+          '{value}',
+          channel === 'P11' ? sgpsIntegral : sgpsDifferentialTemplate.replace('{channel}', channel),
+        ),
+      unit: channel === 'P11' ? pfu : protonUnit,
     })),
-  },
-]
+  )
 
-export const rosacInstruments: ScientificInstrument[] = [
-  {
-    code: 'ROSAC-I1',
-    name: 'Instrumento 1 (por definir)',
-    products: [
-      {
-        code: 'ROSAC-I1',
-        name: 'Serie temporal de prueba',
-        visualization: 'time-series',
-        available: true,
-        parameters: [
-          {
-            code: 'simulated-intensity',
-            label: 'Intensidad simulada',
-            unit: 'intensidad relativa',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    code: 'ROSAC-I2',
-    name: 'Instrumento 2 (por definir)',
-    products: [
-      {
-        code: 'ROSAC-I2',
-        name: 'Espectro dinámico de prueba',
-        visualization: 'dynamic-spectrum',
-        available: true,
-        parameters: [
-          {
-            code: 'simulated-spectrum',
-            label: 'Intensidad espectral simulada',
-            unit: 'intensidad relativa',
-          },
-        ],
-      },
-    ],
-  },
-]
+  const exis = instruments?.exis ?? es.scientificData.instruments.exis
+  const mag = instruments?.mag ?? es.scientificData.instruments.mag
+  const seiss = instruments?.seiss ?? es.scientificData.instruments.seiss
+  const suvi = instruments?.suvi ?? es.scientificData.instruments.suvi
+  const rosacI1 = instruments?.rosacI1 ?? es.scientificData.instruments.rosacI1
+  const rosacI2 = instruments?.rosacI2 ?? es.scientificData.instruments.rosacI2
+  const unavailableFromRollingApi =
+    seiss?.unavailableNote ?? es.scientificData.instruments.seiss.unavailableNote
+  const image = parameters?.image ?? es.scientificData.parameters.image
+  const simulatedIntensity =
+    parameters?.simulatedIntensity ?? es.scientificData.parameters.simulatedIntensity
+  const simulatedSpectrum =
+    parameters?.simulatedSpectrum ?? es.scientificData.parameters.simulatedSpectrum
 
-export const scientificSources: ScientificSource[] = [
-  {
-    code: 'GOES',
-    name: 'GOES',
-    description: 'Series históricas e imágenes solares SUVI de GOES.',
-    dataKind: 'observed',
-    instruments: goesInstruments,
-  },
-  {
-    code: 'ROSAC',
-    name: 'ROSAC — UCR',
-    description: 'Previsión de la futura fuente ROSAC; sus instrumentos aún están por definir.',
-    dataKind: 'simulated',
-    instruments: rosacInstruments,
-  },
-]
+  const goesInstruments: ScientificInstrument[] = [
+    {
+      code: 'EXIS',
+      name: exis?.name ?? es.scientificData.instruments.exis.name,
+      products: [
+        {
+          code: 'SFEU',
+          name: exis?.products?.sfeu?.name ?? es.scientificData.instruments.exis.products.sfeu.name,
+          visualization: 'time-series',
+          available: true,
+          parameters: euvParameters,
+        },
+        {
+          code: 'SFXR',
+          name: exis?.products?.sfxr?.name ?? es.scientificData.instruments.exis.products.sfxr.name,
+          visualization: 'time-series',
+          available: true,
+          parameters: xrayParameters,
+        },
+      ],
+    },
+    {
+      code: 'MAG',
+      name: mag?.name ?? es.scientificData.instruments.mag.name,
+      products: [
+        {
+          code: 'GEOF',
+          name: mag?.products?.geof?.name ?? es.scientificData.instruments.mag.products.geof.name,
+          visualization: 'time-series',
+          available: true,
+          parameters: magneticParameters,
+        },
+      ],
+    },
+    {
+      code: 'SEISS',
+      name: seiss?.name ?? es.scientificData.instruments.seiss.name,
+      products: [
+        {
+          code: 'EHIS',
+          name:
+            seiss?.products?.ehis?.name ?? es.scientificData.instruments.seiss.products.ehis.name,
+          visualization: 'time-series',
+          available: false,
+          availabilityNote: unavailableFromRollingApi,
+          parameters: [],
+        },
+        {
+          code: 'MPSL',
+          name:
+            seiss?.products?.mpsl?.name ?? es.scientificData.instruments.seiss.products.mpsl.name,
+          visualization: 'time-series',
+          available: false,
+          availabilityNote: unavailableFromRollingApi,
+          parameters: [],
+        },
+        {
+          code: 'MPSH',
+          name:
+            seiss?.products?.mpsh?.name ?? es.scientificData.instruments.seiss.products.mpsh.name,
+          visualization: 'time-series',
+          available: true,
+          availabilityNote:
+            seiss?.products?.mpsh?.availabilityNote ??
+            es.scientificData.instruments.seiss.products.mpsh.availabilityNote,
+          parameters: mpshParameters,
+        },
+        {
+          code: 'SGPS',
+          name:
+            seiss?.products?.sgps?.name ?? es.scientificData.instruments.seiss.products.sgps.name,
+          visualization: 'time-series',
+          available: true,
+          availabilityNote:
+            seiss?.products?.sgps?.availabilityNote ??
+            es.scientificData.instruments.seiss.products.sgps.availabilityNote,
+          parameters: sgpsParameters,
+        },
+      ],
+    },
+    {
+      code: 'SUVI',
+      name: suvi?.name ?? es.scientificData.instruments.suvi.name,
+      products: [
+        { code: 'Fe093', wavelength: '94 Å' },
+        { code: 'Fe131', wavelength: '131 Å' },
+        { code: 'Fe171', wavelength: '171 Å' },
+        { code: 'Fe195', wavelength: '195 Å' },
+        { code: 'Fe284', wavelength: '284 Å' },
+        { code: 'He303', wavelength: '304 Å' },
+      ].map(({ code, wavelength }) => ({
+        code: code as ScientificProductCode,
+        name: (suvi?.imageProductName ?? es.scientificData.instruments.suvi.imageProductName)
+          .replace('{wavelength}', wavelength)
+          .replace('{code}', code),
+        wavelength,
+        visualization: 'image-sequence' as const,
+        available: true,
+        parameters: [{ code: 'image', label: image, unit: imageUnit }],
+      })),
+    },
+  ]
+
+  const rosacInstruments: ScientificInstrument[] = [
+    {
+      code: 'ROSAC-I1',
+      name: rosacI1?.name ?? es.scientificData.instruments.rosacI1.name,
+      products: [
+        {
+          code: 'ROSAC-I1',
+          name:
+            rosacI1?.products?.timeSeries?.name ??
+            es.scientificData.instruments.rosacI1.products.timeSeries.name,
+          visualization: 'time-series',
+          available: true,
+          parameters: [
+            {
+              code: 'simulated-intensity',
+              label: simulatedIntensity,
+              unit: relativeIntensity,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: 'ROSAC-I2',
+      name: rosacI2?.name ?? es.scientificData.instruments.rosacI2.name,
+      products: [
+        {
+          code: 'ROSAC-I2',
+          name:
+            rosacI2?.products?.dynamicSpectrum?.name ??
+            es.scientificData.instruments.rosacI2.products.dynamicSpectrum.name,
+          visualization: 'dynamic-spectrum',
+          available: true,
+          parameters: [
+            {
+              code: 'simulated-spectrum',
+              label: simulatedSpectrum,
+              unit: relativeIntensity,
+            },
+          ],
+        },
+      ],
+    },
+  ]
+
+  const goes = sources?.goes ?? es.scientificData.sources.goes
+  const rosac = sources?.rosac ?? es.scientificData.sources.rosac
+
+  return [
+    {
+      code: 'GOES',
+      name: goes?.name ?? es.scientificData.sources.goes.name,
+      description: goes?.description ?? es.scientificData.sources.goes.description,
+      dataKind: 'observed',
+      instruments: goesInstruments,
+    },
+    {
+      code: 'ROSAC',
+      name: rosac?.name ?? es.scientificData.sources.rosac.name,
+      description: rosac?.description ?? es.scientificData.sources.rosac.description,
+      dataKind: 'simulated',
+      instruments: rosacInstruments,
+    },
+  ]
+}
+
+/** Spanish, for stories, tests and the fixtures that structural consumers (codes only) read. */
+export const scientificSources: ScientificSource[] = getScientificSources(es)
+export const goesInstruments: ScientificInstrument[] = scientificSources[0]!.instruments
+export const rosacInstruments: ScientificInstrument[] = scientificSources[1]!.instruments
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/
 const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/
@@ -384,54 +510,69 @@ export function getDefaultQueryForSource(
   }
 }
 
-export const scientificDataQuerySchema = z
-  .object({
-    source: z.enum(SCIENTIFIC_SOURCE_CODES, { error: 'Seleccione una fuente válida.' }),
-    product: z.enum(SCIENTIFIC_PRODUCT_CODES, {
-      error: 'Seleccione un producto científico válido.',
-    }),
-    parameter: z.string().min(1, 'Seleccione un canal o parámetro.'),
-    date: z
-      .string()
-      .refine(isCalendarDate, 'Seleccione una fecha válida con el formato AAAA-MM-DD.'),
-    startTime: z
-      .string()
-      .regex(timePattern, 'Seleccione una hora de inicio válida con el formato HH:mm.'),
-    endTime: z
-      .string()
-      .regex(timePattern, 'Seleccione una hora de fin válida con el formato HH:mm.'),
-  })
-  .superRefine((query, context) => {
-    if (
-      timePattern.test(query.startTime) &&
-      timePattern.test(query.endTime) &&
-      query.startTime >= query.endTime
-    ) {
-      context.addIssue({
-        code: 'custom',
-        message: 'La hora de inicio debe ser anterior a la hora de fin.',
-        path: ['endTime'],
-      })
-    }
+/** The parts of a message catalogue the query form's own validation reads. */
+export type ScientificDataValidationMessages = Pick<
+  typeof es.scientificData.validation,
+  | 'invalidSource'
+  | 'invalidProduct'
+  | 'invalidParameter'
+  | 'invalidDate'
+  | 'invalidStartTime'
+  | 'invalidEndTime'
+  | 'startBeforeEnd'
+  | 'productUnavailable'
+  | 'invalidParameterForProduct'
+>
 
-    const selection = findScientificProduct(query.source, query.product)
-    if (!selection || !selection.product.available) {
-      context.addIssue({
-        code: 'custom',
-        message: 'El producto seleccionado todavía no está disponible para esta fuente.',
-        path: ['product'],
-      })
-      return
-    }
+/**
+ * Builds the query schema with its validation messages in `messages`' language. `ScientificDataExplorer`
+ * builds one from `useTranslations('scientificData.validation')` for the message a visitor sees before
+ * submitting; `scientificDataQuerySchema` below is the Spanish default other, request-less call sites use.
+ */
+export function getScientificDataQuerySchema(messages: ScientificDataValidationMessages) {
+  return z
+    .object({
+      source: z.enum(SCIENTIFIC_SOURCE_CODES, { error: messages.invalidSource }),
+      product: z.enum(SCIENTIFIC_PRODUCT_CODES, { error: messages.invalidProduct }),
+      parameter: z.string().min(1, messages.invalidParameter),
+      date: z.string().refine(isCalendarDate, messages.invalidDate),
+      startTime: z.string().regex(timePattern, messages.invalidStartTime),
+      endTime: z.string().regex(timePattern, messages.invalidEndTime),
+    })
+    .superRefine((query, context) => {
+      if (
+        timePattern.test(query.startTime) &&
+        timePattern.test(query.endTime) &&
+        query.startTime >= query.endTime
+      ) {
+        context.addIssue({
+          code: 'custom',
+          message: messages.startBeforeEnd,
+          path: ['endTime'],
+        })
+      }
 
-    if (!selection.product.parameters.some((parameter) => parameter.code === query.parameter)) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Seleccione un canal o parámetro válido para el producto.',
-        path: ['parameter'],
-      })
-    }
-  })
+      const selection = findScientificProduct(query.source, query.product)
+      if (!selection || !selection.product.available) {
+        context.addIssue({
+          code: 'custom',
+          message: messages.productUnavailable,
+          path: ['product'],
+        })
+        return
+      }
+
+      if (!selection.product.parameters.some((parameter) => parameter.code === query.parameter)) {
+        context.addIssue({
+          code: 'custom',
+          message: messages.invalidParameterForProduct,
+          path: ['parameter'],
+        })
+      }
+    })
+}
+
+export const scientificDataQuerySchema = getScientificDataQuerySchema(es.scientificData.validation)
 
 const scientificParameterSchema = z.object({
   code: z.string(),

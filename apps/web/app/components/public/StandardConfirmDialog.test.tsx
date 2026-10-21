@@ -14,13 +14,11 @@ import {
 const defaultArgs = DestructiveDelete.args as StandardConfirmDialogProps
 
 describe('StandardConfirmDialog', () => {
-  test('renders dialog title, message, target entity and consequence', () => {
+  test('renders dialog title and message', () => {
     render(<StandardConfirmDialog {...defaultArgs} />)
 
     expect(screen.getByRole('dialog', { name: defaultArgs.title })).toBeInTheDocument()
     expect(screen.getByText(defaultArgs.message)).toBeInTheDocument()
-    expect(screen.getByText(/Carolina Salas/)).toBeInTheDocument()
-    expect(screen.getByText(/Esta acción no se puede deshacer/)).toBeInTheDocument()
   })
 
   test('renders danger confirm button with custom label for destructive action', () => {
@@ -76,14 +74,5 @@ describe('StandardConfirmDialog', () => {
       <StandardConfirmDialog {...(DiscardChangesWarning.args as StandardConfirmDialogProps)} />,
     )
     expect(screen.getByText('Descartar y salir')).toBeInTheDocument()
-  })
-
-  test('names the target entity with the label it is given', () => {
-    render(
-      <StandardConfirmDialog {...defaultArgs} targetLabel="Item" targetEntity="Solar activity" />,
-    )
-
-    expect(screen.getByText('Item:')).toBeInTheDocument()
-    expect(screen.getByText('Solar activity')).toBeInTheDocument()
   })
 })

@@ -68,6 +68,33 @@ class ResearchArea(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class ResearchAreaTranslation(Base):
+    """The ``title`` and ``description`` of a `ResearchArea` in a language other
+    than Spanish. One row per (area, locale); the Spanish text stays on
+    ``research_areas`` and the photograph is shared.
+    """
+
+    __tablename__ = "research_area_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "research_area_id",
+            "locale",
+            name="research_area_translations_research_area_id_locale_key",
+        ),
+        {"schema": "areas"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    research_area_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("areas.research_areas.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class Research(Base):
     """A public research record shown on `/investigacion`. Mapped to
     ``research_records`` (not ``research``) to avoid a `research.research`
@@ -141,6 +168,50 @@ class ResearchTranslation(Base):
     locale: Mapped[str] = mapped_column(String(5))
     title: Mapped[str] = mapped_column(Text)
     abstract: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SolarPhysicsSection(Base):
+    """An editable text section of the solar physics page (``/fisica-solar``).
+
+    ``title`` and ``body`` are the Spanish source text; the other languages live in
+    `SolarPhysicsSectionTranslation`. ``body`` is plain text with blank lines between paragraphs.
+    """
+
+    __tablename__ = "solar_physics_sections"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SolarPhysicsSectionTranslation(Base):
+    """The ``title`` and ``body`` of a `SolarPhysicsSection` in a language other than the
+    source one. One row per (section, locale); the source text stays on the section.
+    """
+
+    __tablename__ = "solar_physics_section_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "section_id",
+            "locale",
+            name="solar_physics_section_translations_section_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    section_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.solar_physics_sections.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
@@ -268,6 +339,29 @@ class NewsCrossAuthor(Base):
     position: Mapped[int] = mapped_column(Integer)
 
 
+class NewsTranslation(Base):
+    """The ``title`` and ``abstract`` of a `News` item in a language other than
+    the source one. One row per (item, locale); the source text stays on
+    ``news_records``.
+    """
+
+    __tablename__ = "news_record_translations"
+    __table_args__ = (
+        UniqueConstraint("news_id", "locale", name="news_record_translations_news_id_locale_key"),
+        {"schema": "news"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    news_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("news.news_records.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    abstract: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class UserRole(enum.StrEnum):
     """Access level of a portal account. Mirrors the Prisma ``UserRole`` enum, whose
     database values are the lower-case strings below (``@map`` in the schema).
@@ -352,6 +446,31 @@ class GalleryAlbum(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class GalleryAlbumTranslation(Base):
+    """The ``title`` and ``description`` of a `GalleryAlbum` in a language other
+    than the source one. One row per (album, locale); the source text stays on
+    ``gallery_albums``.
+    """
+
+    __tablename__ = "gallery_album_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "album_id", "locale", name="gallery_album_translations_album_id_locale_key"
+        ),
+        {"schema": "gallery"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    album_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("gallery.gallery_albums.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class GalleryMedia(Base):
     """One photo or video shown in an album's masonry grid and lightbox. Lives in
     the ``gallery`` Postgres schema. No job touches it yet; it is mirrored by
@@ -376,6 +495,35 @@ class GalleryMedia(Base):
     captured_at: Mapped[date_type] = mapped_column(Date)
     uploader_name: Mapped[str] = mapped_column(Text)
     position: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class GalleryMediaTranslation(Base):
+    """The ``title``, ``description``, and ``alt_text`` of a
+    ``GalleryMedia`` record in a language other than the source one.
+    One row per (media, locale); the source text stays on ``gallery_media``.
+    """
+
+    __tablename__ = "gallery_media_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "gallery_media_id",
+            "locale",
+            name="gallery_media_translations_gallery_media_id_locale_key",
+        ),
+        {"schema": "gallery"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    gallery_media_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("gallery.gallery_media.id", ondelete="CASCADE"),
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    alt_text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
@@ -461,6 +609,47 @@ class ExisFile(Base):
             "product",
             "day",
             name="exis_files_satellite_product_day_key",
+        ),
+        {"schema": "solar"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    satellite: Mapped[str] = mapped_column(Text)
+    product: Mapped[str] = mapped_column(Text)
+    day: Mapped[date_type] = mapped_column(Date)
+    file_name: Mapped[str] = mapped_column(Text, unique=True)
+    version: Mapped[str] = mapped_column(Text)
+    source_url: Mapped[str] = mapped_column(Text)
+    source_modified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    first_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_observed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    point_count: Mapped[dict[str, int]] = mapped_column(JSONB)
+    attributes: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class MagFile(Base):
+    """One daily MAG L2 1-minute geomagnetic field file (one UTC day). Written
+    by ``app.services.mag_readings.MagReadings``, the only writer this table
+    has. The readings themselves are in the ``mag_field`` InfluxDB
+    measurement; this row records that the day was ingested, from which
+    version of the archive's file, and how many points each channel produced.
+    """
+
+    __tablename__ = "mag_files"
+    __table_args__ = (
+        UniqueConstraint(
+            "satellite",
+            "product",
+            "day",
+            name="mag_files_satellite_product_day_key",
         ),
         {"schema": "solar"},
     )
@@ -677,5 +866,47 @@ class ContactChannelTranslation(Base):
     locale: Mapped[str] = mapped_column(String(5))
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SpaceWeatherSection(Base):
+    """An editable text section of the space weather page, looked up by its unique ``key``
+    (today only ``costa-rica``). ``title`` and ``body`` are the Spanish text; a blank line in
+    ``body`` separates paragraphs. Edited from the web CMS. Mirrored by convention; no job
+    touches it.
+    """
+
+    __tablename__ = "space_weather_sections"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SpaceWeatherSectionTranslation(Base):
+    """The ``title`` and ``body`` of a `SpaceWeatherSection` in a language other than Spanish."""
+
+    __tablename__ = "space_weather_section_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "section_id",
+            "locale",
+            name="space_weather_section_translations_section_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    section_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.space_weather_sections.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

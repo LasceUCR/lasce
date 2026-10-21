@@ -1,3 +1,6 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { useId } from 'react'
 
 import {
@@ -33,13 +36,14 @@ export function DynamicSpectrumChart({
   frequencyUnit,
   unit,
 }: DynamicSpectrumChartProps) {
+  const t = useTranslations('scientificData.charts')
   const titleId = useId()
   const descriptionId = useId()
   const layout = layoutDynamicSpectrum({ cells, frequencies, timestamps })
   if (!layout) {
     return (
       <p className="content-empty" role="status">
-        No hay valores para graficar.
+        {t('empty')}
       </p>
     )
   }
@@ -51,7 +55,7 @@ export function DynamicSpectrumChart({
       <div
         className="data-chart-viewport"
         role="region"
-        aria-label={`Área de gráfica: ${label}`}
+        aria-label={t('areaLabel', { label })}
         tabIndex={0}
       >
         <svg
@@ -63,10 +67,16 @@ export function DynamicSpectrumChart({
         >
           <title id={titleId}>{label}</title>
           <desc id={descriptionId}>
-            Mapa de intensidad por tiempo y frecuencia, desde {frequencies[0]} hasta{' '}
-            {frequencies.at(-1)} {frequencyUnit} y desde {formatTime(firstTimestamp)} hasta{' '}
-            {formatTime(lastTimestamp)} UTC. Los valores van de {minimum.toFixed(2)} a{' '}
-            {maximum.toFixed(2)} {unit}.
+            {t('spectrumDescription', {
+              minFreq: frequencies[0]!,
+              maxFreq: frequencies.at(-1)!,
+              frequencyUnit,
+              start: formatTime(firstTimestamp),
+              end: formatTime(lastTimestamp),
+              minimum: minimum.toFixed(2),
+              maximum: maximum.toFixed(2),
+              unit,
+            })}
           </desc>
 
           {rects.map(({ key, x, y, width, height, intensity }) => (
@@ -122,13 +132,11 @@ export function DynamicSpectrumChart({
         </svg>
       </div>
       <div aria-hidden="true" className="data-color-legend">
-        <span>Baja</span>
+        <span>{t('low')}</span>
         <span className="data-color-scale" />
-        <span>Alta</span>
+        <span>{t('high')}</span>
       </div>
-      <figcaption>
-        {caption} Frecuencia en {frequencyUnit}; color según {unit}.
-      </figcaption>
+      <figcaption>{t('spectrumCaption', { caption, frequencyUnit, unit })}</figcaption>
     </figure>
   )
 }

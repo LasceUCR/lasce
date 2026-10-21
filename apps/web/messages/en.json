@@ -28,7 +28,8 @@
     "resources": "Resources",
     "publications": "Publications",
     "scientificTools": "Scientific tools",
-    "contact": "Contact"
+    "contact": "Contact",
+    "academicActivities": "Academic activities"
   },
   "footer": {
     "institutionsLabel": "Institutions",
@@ -50,19 +51,23 @@
       "demoNotice": "Demonstration data",
       "kp": {
         "label": "Kp index",
-        "value": "2 · Quiet"
+        "value": "2",
+        "description": "Quiet"
       },
       "dst": {
         "label": "Dst index",
-        "value": "-12 nT · Stable"
+        "value": "-12 nT",
+        "description": "Stable"
       },
       "ae": {
         "label": "AE index",
-        "value": "75 nT · Low activity"
+        "value": "75 nT",
+        "description": "Low activity"
       },
       "ap": {
         "label": "Ap index",
-        "value": "7 · Quiet"
+        "value": "7",
+        "description": "Quiet"
       }
     },
     "areas": {
@@ -77,10 +82,49 @@
       "observed": "Observed on <time></time>",
       "updating": "Updating the latest image of the Sun…"
     },
+    "editor": {
+      "languageTabs": "Content language",
+      "heroEditLabel": "Edit hero banner",
+      "heroEditTitle": "Edit hero banner",
+      "heroTitleField": "Title ({language})",
+      "heroLeadField": "Subtitle ({language})",
+      "indicatorEditLabel": "Edit {label}",
+      "indicatorEditTitle": "Edit {label}",
+      "valueField": "Value",
+      "valueHint": "The same in both languages. At most 15 characters.",
+      "descriptionField": "Description ({language})",
+      "descriptionHint": "At most 15 characters.",
+      "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change it, review it too.",
+      "legacyNoTranslation": "This content has no English version yet. To change its text, fill in both languages.",
+      "reorderHandle": "Reorder {label}",
+      "reorderRole": "sortable",
+      "reorderInstructions": "To reorder an index, focus its reorder control and press Space or Enter. Use the arrow keys to move it, then press Space or Enter again to drop it, or Escape to cancel.",
+      "reorderPicked": "Picked up {label}.",
+      "reorderOver": "{label} is over the position of {target}.",
+      "reorderDropped": "Dropped {label} in the position of {target}.",
+      "reorderDroppedInPlace": "Dropped {label} in its original position.",
+      "reorderCancelled": "Reordering {label} was cancelled.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "heroUpdated": "Hero banner updated successfully.",
+      "indicatorUpdated": "Geomagnetic index updated successfully.",
+      "orderUpdated": "Index order updated successfully."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
     "validation": {
       "valueNotText": "The value must be text.",
       "valueRequired": "The value is required.",
       "valueTooLong": "The value cannot be longer than 15 characters."
+    },
+    "saveErrors": {
+      "heroFailed": "The hero banner could not be saved. Please try again.",
+      "indicatorFailed": "The geomagnetic index could not be saved. Please try again.",
+      "orderFailed": "The index order could not be saved. Please try again."
     }
   },
   "workAreas": {
@@ -118,6 +162,10 @@
     "feedback": {
       "network": "Could not reach the server. Check your connection and try again.",
       "server": "The server could not complete the operation. Try again in a few minutes."
+    },
+    "truncatedText": {
+      "readMore": "Read more",
+      "readLess": "Read less"
     }
   },
   "solarImageLightbox": {
@@ -234,11 +282,34 @@
         }
       }
     },
-    "lasce": {
-      "title": "LASCE's work in solar astrophysics",
-      "p1": "The Solar Astrophysics and Space Weather Laboratory brings together research in solar astrophysics, astronomical observations and computational development to study solar activity and its interaction with the Earth's environment.",
-      "p2": "Its work combines data from different instruments, wavelengths and platforms to observe different links of a single chain: from the magnetic origin of a solar eruption to its manifestations near the Earth.",
-      "p3": "From the University of Costa Rica, LASCE seeks to strengthen national scientific capabilities for analysing the Sun-Earth relationship, to train talent and to foster collaborations in the study of space weather."
+    "editor": {
+      "editLabel": "Edit the LASCE section",
+      "editTitle": "Edit the LASCE section",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "bodyField": "Text ({language})",
+      "bodyHint": "Separate paragraphs with a blank line.",
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the text, check it as well.",
+      "legacyNoTranslation": "This section has no English version yet. To change the title or the text you must complete both languages.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "reload": "Close and load the current version",
+      "updated": "Section updated successfully."
+    },
+    "saveErrors": {
+      "generic": "The change could not be saved. Please try again.",
+      "fields": "Check the highlighted fields.",
+      "notSignedIn": "You are not signed in.",
+      "signInAgain": "Sign in again to save; your changes are still in the form.",
+      "forbidden": "You do not have permission to modify this content.",
+      "conflict": "Someone else saved changes to this section after you opened it. Your changes were not saved, so as not to overwrite theirs. Copy what you need, close the editor and open the section again.",
+      "notFound": "This section no longer exists. Your changes were not saved."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all the data entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     }
   },
   "spaceWeather": {
@@ -318,6 +389,28 @@
           "earth": "Earth"
         }
       }
+    },
+    "editor": {
+      "editLabel": "Edit the “Why study it from Costa Rica?” section",
+      "editTitle": "Edit “Why study it from Costa Rica?”",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "bodyField": "Text ({language})",
+      "bodyHint": "Separate paragraphs with a blank line.",
+      "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change the title or the text, review it too.",
+      "legacyNoTranslation": "This section has no English version yet. To change the title or the text, fill in both languages.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "updated": "Section updated successfully."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
+    "saveErrors": {
+      "failed": "The section could not be saved. Please try again."
     }
   },
   "scientificTools": {
@@ -462,31 +555,24 @@
       "empty": "No academic activities are available at the moment."
     },
     "card": {
-      "badge": "Academic activity",
-      "details": "View the activity details"
+      "badge": "Academic activity"
     },
-    "page": {
-      "metaTitle": "{title} | News | LASCE",
-      "kicker": "Academic activity",
-      "infoTitle": "General information",
-      "type": "Type of activity",
-      "date": "Date",
-      "location": "Place",
-      "descriptionTitle": "Description of the activity",
-      "resourcesTitle": "Resources and links of interest",
-      "backToNews": "Back to news"
+    "listPage": {
+      "metaTitle": "Academic activities | LASCE",
+      "metaDescription": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
+      "kicker": "LASCE public portal",
+      "title": "Academic activities",
+      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE."
     },
     "items": {
       "machineLearningWorkshop": {
         "category": "Workshop",
         "date": "16-20 February 2026",
-        "abstract": "A workshop focused on the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather and GNSS systems.",
         "p1": "As part of the LASCE project, the Workshop on Machine Learning Applied to Space Weather and Global Navigation Satellite Systems (GNSS) was held from 16 to 20 February 2026 in San José, Costa Rica. For five days the activity brought together students, early-career researchers and specialists to strengthen their skills in the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather.",
         "p2": "The programme combined lectures, discussion sessions and computational practice devoted to ionospheric processes, the effects of space weather on GNSS systems, scientific computing and data analysis with machine learning tools. This approach made it possible to combine the physical understanding of solar and terrestrial phenomena with modern methods of processing, modelling and prediction, while also promoting the use of open data and reproducible procedures.",
         "p3": "The workshop had 52 in-person participants from 17 countries; 37.2% were women and 70% came from developing countries. It was organised with the participation of the Space Research Center of the University of Costa Rica, the United Nations Office for Outer Space Affairs, the International Committee on GNSS, COSPAR, INGV and SCOSTEP, together with contributions from the National University of Tucumán and the Abdus Salam International Centre for Theoretical Physics.",
         "p4": "This activity strengthened the international profile of LASCE, widened its networks of scientific collaboration and contributed to building regional capabilities for researching, monitoring and predicting the effects of space weather on the ionosphere and on technological systems. It also created a space for identifying new scientific challenges, opportunities for cooperation and future initiatives that combine space weather physics with advanced data analysis tools.",
-        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop",
-        "galleryLabel": "View the workshop photo gallery"
+        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop"
       }
     }
   },
@@ -512,8 +598,6 @@
     },
     "card": {
       "externalLink": "DOI / External link",
-      "readMore": "Read full abstract",
-      "readLess": "Hide abstract",
       "translationMissing": "No English version. Editing the title or the abstract requires completing both languages."
     },
     "editor": {
@@ -522,6 +606,7 @@
       "editTitle": "Edit publication",
       "editLabel": "Edit {title}",
       "deleteLabel": "Delete {title}",
+      "descriptionField": "Description ({language})",
       "languageTabs": "Content language",
       "titleField": "Title ({language})",
       "abstractField": "Abstract ({language})",
@@ -535,7 +620,12 @@
       "group": "Group",
       "cancel": "Cancel",
       "save": "Confirm",
-      "reload": "Close and load the current version"
+      "reload": "Close and load the current version",
+      "uploadingImage": "Uploading image...",
+      "altTextField": "Alternative text ({language})",
+      "FileDropDescriptionText": "Drag an image here or click to select it from your device.",
+      "FileDropRejectionFormatMessage": "Unsupported format. Use a JPG, PNG, WebP, or GIF image.",
+      "FileDropRejectionSizeMessage": "The image exceeds the maximum size of 25 MB."
     },
     "authors": {
       "label": "Authors",
@@ -593,8 +683,137 @@
       "deleteFailed": "The publication could not be deleted. Please try again."
     }
   },
+  "gallery": {
+    "editor": {
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the description, check it as well.",
+      "legacyNoTranslation": "This album has no English version yet. To change the title or the description you must complete both languages; the other fields can be edited without translating it.",
+      "mediaLegacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title, the description or the alt text, check it as well.",
+      "mediaLegacyNoTranslation": "This file has no English version yet. To change the title, the description or the alt text you must complete both languages; the other fields can be edited without translating it.",
+      "albumCoverField": "Album cover image",
+      "albumCoverHelperText": "Album cover image, in JPG, PNG, or WEBP format.",
+      "albumCoverRequired": "An album cover image is required.",
+      "mediaField": "Media",
+      "mediaHelperText": "Media upload, in JPG, PNG, or WEBP format.",
+      "mediaRequired": "A media upload is required.",
+      "galleryWidth": "Gallery width (columns)",
+      "galleryHeight": "Gallery height (rows)",
+      "titleNeedsLettersOrNumbers": "The title must include letters or numbers to generate the identifier.",
+      "uploadFailed": "The image could not be uploaded. Please try again.",
+      "periodStartYear": "Start year",
+      "periodStartMonth": "Start month",
+      "periodEndYear": "End year",
+      "periodEndMonth": "End month",
+      "periodNone": "Not specified",
+      "periodMonthNeedsYear": "Choose the year too.",
+      "periodEndNeedsStart": "Choose the start year.",
+      "periodEndBeforeStart": "The end cannot be before the start.",
+      "periodUnrecognized": "The saved period, “{label}”, is not in month and year form. It is kept until you choose a new one."
+    },
+    "actions": {
+      "addAlbum": "Add album",
+      "addSubAlbum": "Add sub-album",
+      "addFile": "Add image",
+      "creatingAlbum": "Creating album...",
+      "creatingSubAlbum": "Creating sub-album...",
+      "savingAlbum": "Saving album...",
+      "savingSubAlbum": "Saving sub-album...",
+      "deleteAlbum": "Delete album",
+      "deleteSubAlbum": "Delete sub-album",
+      "deleteFile": "Delete image",
+      "deleteMessage": "Do you want to delete \"{title}\"? This cannot be undone.",
+      "deleteItem": "Delete {title}",
+      "editItem": "Edit {title}",
+      "editQuoted": "Edit \"{title}\"",
+      "editFile": "Edit image"
+    },
+    "feedback": {
+      "albumCreated": "Album added successfully.",
+      "albumUpdated": "Album updated successfully.",
+      "albumDeleted": "Album deleted successfully.",
+      "albumCreateFailed": "The album could not be created.",
+      "albumSaveFailed": "The album could not be saved.",
+      "albumDeleteFailed": "The album could not be deleted.",
+      "subAlbumCreated": "Sub-album added successfully.",
+      "subAlbumUpdated": "Sub-album updated successfully.",
+      "subAlbumDeleted": "Sub-album deleted successfully.",
+      "subAlbumCreateFailed": "The sub-album could not be created.",
+      "subAlbumSaveFailed": "The sub-album could not be saved.",
+      "subAlbumDeleteFailed": "The sub-album could not be deleted.",
+      "fileDeleted": "Image deleted successfully.",
+      "fileDeleteFailed": "The image could not be deleted.",
+      "imageCreated": "Image added successfully.",
+      "imageUpdated": "Image updated successfully.",
+      "imageCreateFailed": "The image could not be added.",
+      "imageUpdateFailed": "The image could not be updated.",
+      "imageReload": "The image could not be updated. Reload the page."
+    }
+  },
   "nosotros": {
+    "meta": {
+      "title": "About us | LASCE",
+      "description": "The Solar Astrophysics and Space Weather Laboratory (LASCE), part of the Space Research Center (CINESPA) at the Universidad de Costa Rica: what it is and what it researches."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "About us",
+      "lead": "Solar Astrophysics and Space Weather Laboratory, part of the Space Research Center (CINESPA) at the Universidad de Costa Rica."
+    },
+    "overview": {
+      "title": "Who are we?",
+      "p1": "The Solar Astrophysics and Space Weather Laboratory (LASCE) is a scientific initiative linked to the Space Research Center (CINESPA) of the Universidad de Costa Rica. It brings together solar astrophysics research, astronomical observations and computational development to study solar activity, its interaction with the interplanetary medium and the terrestrial environment.",
+      "p2": "LASCE starts from a simple but powerful idea: to understand space weather, you need to observe different links in the same chain, from the magnetic origin of a solar eruption to its manifestations in near-Earth space. For this reason, LASCE carries out scientific research that integrates data from different instruments, wavelengths and platforms."
+    },
+    "researchers": {
+      "title": "LASCE researchers",
+      "intro": "The people who research and develop the Solar Astrophysics and Space Weather Laboratory (LASCE).",
+      "hint": "Click a card to see more information.",
+      "empty": "No researcher information is available at the moment.",
+      "add": "Add researcher",
+      "form": {
+        "languageTabs": "Content language",
+        "roleIn": "Role ({language})",
+        "descriptionIn": "Description ({language})",
+        "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the role or the description, check it as well.",
+        "legacyNoTranslation": "This researcher has no English version yet. To change the role or the description you must complete both languages; the other details can be changed without translating it."
+      }
+    },
     "activities": {
+      "title": "What do we do?",
+      "emptyHint": "Click \"Add\" to add an activity.",
+      "add": "Add",
+      "editTitle": "Edit \"{title}\"",
+      "editFallback": "Edit activity",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "deleteTitle": "Delete activity",
+      "deleteMessage": "Do you want to delete \"{title}\"? This action cannot be undone.",
+      "deleteConfirm": "Delete",
+      "form": {
+        "icon": "Icon",
+        "languageTabs": "Content language",
+        "titleIn": "Title ({language})",
+        "textIn": "Description ({language})",
+        "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the description, check it as well.",
+        "legacyNoTranslation": "This activity has no English version yet. To change the title or the description you must complete both languages; the icon can be changed without translating it.",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "confirmTitle": "Save changes",
+        "confirmMessage": "Do you want to save the changes to this activity?",
+        "icons": {
+          "sun": "Sun",
+          "waves": "Waves",
+          "satellite": "Satellite",
+          "code": "Code",
+          "collaboration": "Collaboration",
+          "education": "Education"
+        },
+        "discard": {
+          "title": "Discard unsaved changes",
+          "message": "If you discard now, all data entered that has not been saved will be lost.",
+          "confirm": "Discard",
+          "cancel": "Keep editing"
+        }
+      },
       "created": "Activity added successfully.",
       "updated": "Activity updated successfully.",
       "deleted": "Activity deleted successfully.",
@@ -602,22 +821,702 @@
         "unknown": "The activity could not be saved. Try again.",
         "deleteUnknown": "The activity could not be deleted. Try again."
       }
+    },
+    "contribution": {
+      "title": "Distinctive contribution",
+      "p1": "LASCE aims for Costa Rica to be not only a user of international information, but also a producer of data, knowledge and solutions adapted to its location and its needs."
+    },
+    "vision": {
+      "title": "Our vision",
+      "p1": "To establish in Costa Rica a regional reference for observing the Sun, studying the Sun-Earth relationship and developing tools for monitoring and predicting space weather. This vision combines scientific excellence, technology developed with national participation, international cooperation, talent training and public communication of science."
     }
   },
   "news": {
+    "page": {
+      "metaTitle": "News | LASCE",
+      "metaDescription": "News and media coverage of the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
+      "kicker": "LASCE public portal",
+      "title": "News and media coverage",
+      "lead": "News, outreach and coverage of LASCE’s work.",
+      "recent": "Recent news",
+      "searchLabel": "Search news",
+      "searchPlaceholder": "Search by title, author or keyword...",
+      "results": "{count, plural, one {# news item found.} other {# news items found.}}",
+      "emptyQuery": "No news found for “{query}”.",
+      "empty": "No news has been published yet."
+    },
+    "card": {
+      "openSource": "Open source",
+      "openSourceContext": "of “{title}” (opens in a new tab)",
+      "undated": "Undated",
+      "translationMissing": "No English version. Editing the title or abstract requires completing both languages."
+    },
+    "editor": {
+      "addCard": "Add news item",
+      "editTitle": "Edit news item",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "abstractField": "Abstract ({language})",
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or abstract, review it too.",
+      "legacyNoTranslation": "This news item has no English version yet. To change the title or abstract you must complete both languages; the other fields can be edited without translating it.",
+      "authors": "Authors",
+      "authorsHint": "Separate names with commas.",
+      "source": "Source",
+      "publishedAt": "Date",
+      "externalUrl": "Link",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving..."
+    },
+    "validation": {
+      "source": "The source is required.",
+      "authors": "Enter at least one author.",
+      "publishedAt": "The date is not valid.",
+      "externalUrl": "The link must be a URL that starts with http:// or https://."
+    },
+    "deleteDialog": {
+      "title": "Delete news item",
+      "message": "Do you want to delete the news item \"{title}\"? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
     "created": "News item added successfully.",
     "updated": "News item updated successfully.",
     "deleted": "News item deleted successfully.",
     "errors": {
       "saveUnknown": "The news item could not be saved. Try again.",
-      "deleteUnknown": "The news item could not be deleted. Try again."
+      "deleteUnknown": "The news item could not be deleted. Try again.",
+      "forbidden": "You do not have permission for this operation. Check your session.",
+      "notFound": "This news item no longer exists; someone else may have deleted it. Reload the page.",
+      "conflict": "Someone else saved changes to this news item after you opened it. Your changes were not saved: close the editor and open the news item again.",
+      "duplicateLink": "A news item with this link already exists. Use another link or edit the existing news item.",
+      "review": "Update the field in both languages or confirm that the translation is still correct.",
+      "invalid": "Check the highlighted fields and try again."
+    }
+  },
+  "rosac": {
+    "meta": {
+      "title": "Radio Astronomy and ROSAC | LASCE",
+      "description": "Learn about the Santa Cruz Radio Observatory: its purpose, the 11-meter antenna, its capabilities under development, the research team, and its relationship with LASCE."
+    },
+    "hero": {
+      "kicker": "LASCE work area",
+      "title": "Santa Cruz Radio Observatory (ROSAC)",
+      "imageAlt": "11-meter antenna of the Santa Cruz Radio Observatory at sunset, next to the control booth, with the ROSAC logo."
+    },
+    "overview": {
+      "title": "What is ROSAC?",
+      "p1": "The Santa Cruz Radio Observatory (ROSAC) is a University of Costa Rica project located at the Santa Cruz Campus, Guanacaste. Its development centers on adapting an 11-meter parabolic antenna for astronomical use, through a new mount, motion and pointing systems, receivers, electronics, and control software.",
+      "p2": "Its purpose is to develop national capabilities to observe the Sun and other celestial sources at radio frequencies. The project connects astrophysics research with physics, electronics, engineering, telecommunications, automatic control, and software development."
+    },
+    "characteristics": {
+      "title": "Main characteristics",
+      "items": {
+        "antenna": {
+          "title": "11-meter antenna",
+          "description": "A parabolic antenna is adapted for astronomical use with a new mount and motion and pointing systems."
+        },
+        "location": {
+          "title": "Santa Cruz, Guanacaste",
+          "description": "The project is developed at the Santa Cruz Campus of the University of Costa Rica."
+        },
+        "frequencies": {
+          "title": "Between 100 and 1000 MHz",
+          "description": "Observations are prepared in this radio frequency range as part of the radio telescope development."
+        },
+        "sources": {
+          "title": "The Sun and other celestial sources",
+          "description": "Capabilities are developed to point at, track astronomical sources, and record their radio emissions."
+        }
+      }
+    },
+    "location": {
+      "title": "Location",
+      "intro": "The Santa Cruz Radio Observatory (ROSAC) is located at the {address}.",
+      "markerLabel": "ROSAC",
+      "unavailableMessage": "Could not load the map. The address above remains available.",
+      "mapRegion": "Location map of {label}",
+      "mapInteractive": "Interactive map of {label}",
+      "mapInstructions": "Use the arrow keys to pan the map and the plus and minus keys to zoom. Press Tab to leave the map.",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
+    },
+    "activities": {
+      "title": "What do we develop at ROSAC?",
+      "items": {
+        "tracking": {
+          "title": "Pointing and tracking",
+          "description": "We develop a radio telescope capable of pointing at and tracking astronomical sources."
+        },
+        "observations": {
+          "title": "Radio observations",
+          "description": "We prepare observations of the Sun and other celestial sources between 100 and 1000 MHz."
+        },
+        "control": {
+          "title": "Control and signal processing",
+          "description": "We design and test control, tracking, positioning, acquisition, and signal processing systems."
+        },
+        "receivers": {
+          "title": "Radio receivers",
+          "description": "We develop and evaluate receivers to record radio emissions associated with celestial objects."
+        },
+        "infrastructure": {
+          "title": "Local technical capabilities",
+          "description": "We build local expertise in the construction, operation, calibration, and maintenance of radio astronomy infrastructure."
+        },
+        "education": {
+          "title": "Research, teaching, and outreach",
+          "description": "We promote science from Guanacaste, expanding regional participation in science and technology."
+        }
+      }
+    },
+    "construction": {
+      "title": "ROSAC construction",
+      "intro": "The development of the Santa Cruz Radio Observatory has involved various stages of study, preparation, assembly, and infrastructure adaptation. This walkthrough presents some of the work carried out during that process.",
+      "carousel": {
+        "ariaLabel": "ROSAC construction process",
+        "groupNoun": "Stage",
+        "photoNoun": "Photograph",
+        "previousGroup": "Previous stage",
+        "nextGroup": "Next stage",
+        "previousPhoto": "Previous photograph",
+        "nextPhoto": "Next photograph",
+        "imageUnavailable": "Could not load this photograph.",
+        "of": "of"
+      },
+      "stages": {
+        "preparacion": {
+          "title": "Preparation for assembly",
+          "navigationLabel": "Preparation",
+          "description": "Before main assembly, site preparation and work on components that would later form the structure took place. This stage brings together the logistics and prior adaptation needed to begin assembly.",
+          "images": {
+            "img1": "People on and around a concrete base, with an antenna in the background.",
+            "img2": "Truck with crane and metallic components next to the antenna site.",
+            "img3": "Circular concrete base with anchor bolts and accumulated water inside, next to a small parabolic antenna.",
+            "img4": "Forklift transports a wrapped and strapped cylindrical metallic component.",
+            "img5": "Ground-level view of the circular concrete base, with anchor bolts and a rusted metallic plate in the foreground."
+          }
+        },
+        "estructura": {
+          "title": "Structure assembly",
+          "navigationLabel": "Structure",
+          "description": "Assembly progressively integrated the main components of the radio telescope structure. Photographs show positioning and crane lifting of these elements before the reflector received its panels.",
+          "images": {
+            "img1": "Crane placed on a cylindrical support during assembly work.",
+            "img2": "Metallic component with railing suspended next to the antenna support.",
+            "img3": "View from below of the central vertex of the antenna's radial structure, with two people working next to it.",
+            "img4": "Two people working on a platform with the motorized antenna rotation mechanism, with a crane in the background.",
+            "img5": "Mobile crane and truck next to a large conical metallic base placed on the grass."
+          }
+        },
+        "paneles": {
+          "title": "Panel assembly",
+          "navigationLabel": "Panels",
+          "description": "With the structure assembled, work continued on the reflector with the installation of its panels. Photographs show work carried out directly on the antenna, including moving panels to their final position.",
+          "images": {
+            "img1": "Person securing a curved reflector panel on the grass with chains, next to an aerial work platform.",
+            "img2": "Aerial view of a person on an aerial lift hoisting a triangular reflector panel with ropes.",
+            "img3": "Aerial lift next to the metallic structure of the reflector.",
+            "img4": "Group of people at the base of the antenna, under the reflector structure.",
+            "img5": "People on an aerial lift next to the antenna, with a suspended panel."
+          }
+        },
+        "fotogrametria": {
+          "title": "Photogrammetry and panel leveling",
+          "navigationLabel": "Photogrammetry",
+          "description": "Once reflector panels were installed, observation and photogrammetric surveying were performed to verify the geometry and leveling of the resulting surface. This documented the condition of the antenna following assembly.",
+          "images": {
+            "img1": "Night view of two antennas and an aerial lift next to one of them.",
+            "img2": "Two people working next to the central opening of the antenna reflector.",
+            "img3": "Two people sitting on the assembled reflector surface, measuring with a metal ruler next to the central opening."
+          }
+        },
+        "instalacion": {
+          "title": "Electrical installation",
+          "navigationLabel": "Installation",
+          "description": "Electrical adaptation covered work across different points of the observatory infrastructure. Photographs document installation and connection of electrical components, cabling, and work in both the antenna area and associated systems.",
+          "images": {
+            "img1": "Person next to mechanisms and cabling under the antenna structure.",
+            "img2": "Work team gathered in front of the base of the antenna.",
+            "img3": "People and cables next to a building near the antenna.",
+            "img4": "Person handling cables next to an open electrical panel.",
+            "img5": "People working on the platform under the reflector, next to cables and structure."
+          }
+        }
+      }
+    },
+    "radioObservation": {
+      "title": "Why observe in radio?",
+      "p1": "Radio emissions allow tracking accelerated electrons and structures moving through the solar corona and interplanetary medium. These observations complement visible light, ultraviolet, and X-ray images, helping reconstruct the evolution of solar events."
+    },
+    "relationship": {
+      "title": "ROSAC and LASCE",
+      "p1": "LASCE integrates data, models, and analysis methods to study solar activity and its relationship with the Earth's environment. ROSAC provides national infrastructure to observe the Sun at radio frequencies and strengthen those research capabilities.",
+      "p2": "LASCE turns observations into knowledge; ROSAC generates and strengthens an essential part of those observations. Together they connect basic science, technological development, training, and applications of national interest."
+    },
+    "instruments": {
+      "title": "Scientific instruments",
+      "intro": "Explore simulations of ROSAC instruments. Photographs are illustrative and come from the observatory gallery.",
+      "card": {
+        "name": "Instrument {number}",
+        "pendingName": "Instrument 3 (to be defined)",
+        "consultationLabel": "View {name} simulation",
+        "consultationNotice": "{product}. Results are simulated; they do not correspond to instrument observations.",
+        "pendingNotice": "Information pending confirmation and integration into the data section.",
+        "imageUnavailable": "Image unavailable",
+        "imagePending": "Image pending",
+        "purpose": "Purpose",
+        "characteristics": "Characteristics",
+        "citation": "How to cite"
+      },
+      "items": {
+        "saber": {
+          "characteristics": {
+            "c1": "Band between 100 and 1000 MHz"
+          }
+        },
+        "mira": {
+          "characteristics": {
+            "c1": "9 GHz band"
+          }
+        },
+        "hiros": {
+          "characteristics": {
+            "c1": "Neutral hydrogen observation at 1.4 GHz"
+          }
+        }
+      },
+      "products": {
+        "timeSeries": "Test time series",
+        "dynamicSpectrum": "Test dynamic spectrum"
+      },
+      "images": {
+        "img1": "Illustrative image from the ROSAC gallery: two antennas at night and an aerial lift.",
+        "img2": "Illustrative image from the ROSAC gallery: work on the antenna rotation mechanism.",
+        "img3": "Illustrative image from the ROSAC gallery: assembly of the antenna radial structure."
+      }
+    },
+    "team": {
+      "title": "Researchers",
+      "intro": "The people developing the Santa Cruz Radio Observatory (ROSAC), a project bringing together astrophysics, physics, topographic, electrical, and mechanical engineering, electronics, and computing, with national and international collaboration.",
+      "hint": "Click on a card to see more information.",
+      "emptyMessage": "No researcher information available at this time.",
+      "institutionLabel": "Institution"
+    },
+    "donations": {
+      "title": "ROSAC donations",
+      "subtitle": "The support of companies and organizations making it possible to keep growing and developing our work.",
+      "items": {
+        "eaton": {
+          "title": "Eaton donations",
+          "description": "The ROSAC organization received two equipment donations from Eaton, as part of its commitment to strengthening the initiatives and activities carried out by the organization. This contribution represents valuable support for ROSAC and the development of its work.",
+          "imageAlt": "ROSAC team with Eaton representatives and the donated electrical panel"
+        },
+        "prysmian": {
+          "title": "Prysmian donation",
+          "description": "The ROSAC organization received an equipment donation from Prysmian, as part of its commitment to strengthening the initiatives and activities carried out by the organization. This contribution represents valuable support for ROSAC and the development of its work.",
+          "imageAlt": "Prysmian representative talking with a ROSAC team member in front of the observatory antenna"
+        }
+      },
+      "cta": {
+        "title": "Would you like to help us?",
+        "description": "Write to us and let's talk about how your company or organization can support ROSAC.",
+        "buttonLabel": "Contact us"
+      }
+    },
+    "acknowledgments": {
+      "title": "ROSAC acknowledgments",
+      "subtitle": "List of institutions to which ROSAC extends its gratitude."
+    },
+    "scientificConsultation": {
+      "title": "Scientific query",
+      "description": "Explore ROSAC demonstration queries in the data section. Results are simulated while instrument integration is defined.",
+      "buttonLabel": "Explore data"
+    },
+    "backLink": {
+      "label": "Back to work areas"
+    }
+  },
+  "researchAreas": {
+    "page": {
+      "metaTitle": "Research | LASCE",
+      "metaDescription": "Research areas of the Solar Astrophysics and Space Weather Laboratory of the Universidad de Costa Rica.",
+      "kicker": "LASCE public portal",
+      "title": "Research areas",
+      "lead": "Main research branches developed by LASCE."
+    },
+    "card": {
+      "readMore": "Learn more about this area",
+      "imagePlaceholder": "Research area image"
+    },
+    "detail": {
+      "metaTitle": "{title} | Research | LASCE",
+      "kicker": "Research area",
+      "back": "Back to research areas"
+    },
+    "created": "Research area added successfully.",
+    "updated": "Research area updated successfully.",
+    "deleted": "Research area deleted successfully.",
+    "errors": {
+      "saveUnknown": "The research area could not be saved. Please try again.",
+      "deleteUnknown": "The research area could not be deleted. Please try again."
+    },
+    "editor": {
+      "addCard": "Add research area",
+      "createTitle": "Add research area",
+      "editTitle": "Edit \"{title}\"",
+      "editLabel": "Edit {title}",
+      "deleteLabel": "Delete {title}",
+      "languageTabs": "Content language",
+      "titleField": "Title ({language})",
+      "descriptionField": "Description ({language})",
+      "photo": "Photo",
+      "photoHelp": "An illustrative image for the research area, as JPG or PNG. It is the same in every language.",
+      "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change the title or the description, review it too.",
+      "legacyNoTranslation": "This area has no English version yet. To change the title or the description, fill in both languages; the photo can be changed without translating it.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "uploading": "Uploading image...",
+      "uploadFailed": "The image could not be uploaded. Please try again."
+    },
+    "deleteDialog": {
+      "title": "Delete research area",
+      "message": "Do you want to delete this research area? This cannot be undone.",
+      "target": "Area",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, everything you entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
+    "validation": {
+      "srcRequired": "The image is required.",
+      "srcNotText": "The image must be the address of an uploaded file."
     }
   },
   "researchers": {
+    "institutionLabel": "Institution",
     "created": "Researcher added successfully.",
     "updated": "Researcher updated successfully.",
+    "deleted": "Researcher deleted successfully.",
     "errors": {
-      "unknown": "The researcher could not be saved. Try again."
+      "unknown": "The researcher could not be saved. Try again.",
+      "deleteUnknown": "The researcher could not be deleted. Try again."
+    }
+  },
+  "scientificData": {
+    "page": {
+      "metaTitle": "Scientific data | LASCE",
+      "description": "Explore images of the Sun and browse the available scientific information.",
+      "kicker": "LASCE public portal",
+      "title": "Data",
+      "queryShortcut": "Go to the query"
+    },
+    "sources": {
+      "goes": {
+        "name": "GOES",
+        "description": "Historical series and SUVI solar images from GOES."
+      },
+      "rosac": {
+        "name": "ROSAC — UCR",
+        "description": "Preview of the future ROSAC source; its instruments are still to be defined."
+      }
+    },
+    "instruments": {
+      "exis": {
+        "name": "Extreme Ultraviolet and X-ray Irradiance Sensors",
+        "products": {
+          "sfeu": {
+            "name": "Solar flux: EUV"
+          },
+          "sfxr": {
+            "name": "Solar flux: X-rays"
+          }
+        }
+      },
+      "mag": {
+        "name": "Magnetometer",
+        "products": {
+          "geof": {
+            "name": "Geomagnetic field"
+          }
+        }
+      },
+      "seiss": {
+        "name": "Space Environment In-Situ Suite",
+        "unavailableNote": "This GOES product and its channels are still pending integration.",
+        "products": {
+          "ehis": {
+            "name": "Energetic Heavy Ions"
+          },
+          "mpsl": {
+            "name": "Magnetospheric Electrons and Protons: low energy"
+          },
+          "mpsh": {
+            "name": "Magnetospheric Electrons and Protons: medium and high energy",
+            "availabilityNote": "Select the telescope and the band from the level 1b file. Each telescope keeps its own viewing direction."
+          },
+          "sgps": {
+            "name": "Solar and Galactic Protons",
+            "availabilityNote": "Select the SGPS−X or SGPS+X unit. The level 1b file includes differential channels and the > 500 MeV integral one."
+          }
+        }
+      },
+      "suvi": {
+        "name": "Solar Ultraviolet Imager",
+        "imageProductName": "Solar images: {wavelength} ({code})"
+      },
+      "rosacI1": {
+        "name": "Instrument 1 (to be defined)",
+        "products": {
+          "timeSeries": {
+            "name": "Test time series"
+          }
+        }
+      },
+      "rosacI2": {
+        "name": "Instrument 2 (to be defined)",
+        "products": {
+          "dynamicSpectrum": {
+            "name": "Test dynamic spectrum"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "xray": {
+        "shortBand": "Short band (0.05–0.4 nm)",
+        "longBand": "Long band (0.1–0.8 nm)"
+      },
+      "euv": {
+        "line1175": "Line 117.5 nm",
+        "line1216": "Line 121.6 nm",
+        "line1335": "Line 133.5 nm",
+        "line1405": "Line 140.5 nm",
+        "line256": "Line 25.6 nm",
+        "line284": "Line 28.4 nm",
+        "line304": "Line 30.4 nm",
+        "mgiiIndex": "Mg II index"
+      },
+      "magnetic": {
+        "x": "x component (EPN frame)",
+        "y": "y component (EPN frame)",
+        "z": "z component (EPN frame)",
+        "total": "Total magnitude"
+      },
+      "mpsh": {
+        "electron": "Electrons",
+        "proton": "Protons",
+        "label": "{species}: telescope {telescope}, band {band}"
+      },
+      "sgps": {
+        "integral": "> 500 MeV (integral)",
+        "differential": "{channel} (differential)",
+        "label": "SGPS{sign}X: {value}"
+      },
+      "image": "Calibrated image",
+      "simulatedIntensity": "Simulated intensity",
+      "simulatedSpectrum": "Simulated spectral intensity"
+    },
+    "units": {
+      "wPerM2": "W/m²",
+      "index": "index",
+      "nanotesla": "nT",
+      "particles": "particles/(cm²·s·sr·keV)",
+      "relativeIntensity": "relative intensity",
+      "pfu": "pfu",
+      "protonUnit": "protons/(cm²·s·sr·keV)",
+      "image": "image"
+    },
+    "today": {
+      "title": "The Sun today",
+      "lead": "Today's images in different ultraviolet light bands.",
+      "source": "Source: GOES",
+      "wavelengthsLegend": "SUVI bands (wavelength)",
+      "rangeLabel": "Today's range (UTC)",
+      "ranges": {
+        "day": "All day",
+        "h6": "Last 6 hours",
+        "h3": "Last 3 hours",
+        "h1": "Last hour"
+      },
+      "loading": "Loading today's solar images…",
+      "error": "The GOES images could not be loaded. You can switch bands or try again.",
+      "emptyTitle": "No images yet for this selection",
+      "emptyMessage": "Try another band or widen today's range. New observations will appear as they become available.",
+      "stripLabel": "Today's solar images",
+      "footer": "{date} · {wavelength} · Hours in UTC",
+      "scrollHint": "Scroll to see more",
+      "refresh": "Refresh images"
+    },
+    "images": {
+      "sequenceLabel": "Solar image sequence",
+      "loading": "Loading solar image…",
+      "unavailable": "This solar image is not available. Check another band or try again."
+    },
+    "instrumentSelect": {
+      "placeholder": "Select an option",
+      "defaultGroupLabel": "Options",
+      "productsOf": "Products of {group}"
+    },
+    "explorer": {
+      "kicker": "Public query",
+      "title": "Configure the data you want to visualize",
+      "badgeObserved": "Observed data",
+      "badgeSimulated": "Simulation",
+      "sourceLabel": "Data source",
+      "productLabel": "Instrument and product",
+      "parameterLabel": "Channel or parameter",
+      "pendingSuffix": " — pending",
+      "dateLabel": "Date",
+      "dateHint": "Historical query by date. Days with no observations show no data.",
+      "timeRangeGroupLabel": "Time range (UTC)",
+      "startTimeLabel": "Start time (UTC)",
+      "endTimeLabel": "End time (UTC)",
+      "submitLoading": "Querying…",
+      "submit": "Query data",
+      "noticeGoes": "Source: GOES. Availability depends on the product and the date; a historical query can take several minutes. EHIS and MPSL are still pending integration.",
+      "noticeRosac": "ROSAC is an integration preview. Its instruments and real data are not yet defined; every result from this source is simulated and labelled as such.",
+      "permissionsTitle": "Query and download permissions",
+      "permissionsText": "You can query GOES historical information without an account. Downloading requires an account and signing in. Chart images can be downloaded for any source; ROSAC's CSV data is available to every account, and GOES's requires a GOES data download permission. SUVI solar images cannot be downloaded from this platform. Every download link expires after 30 minutes.",
+      "loadingImages": "Loading solar images",
+      "loadingData": "Loading data",
+      "cancelQuery": "Cancel query",
+      "resultsKicker": "Query results",
+      "instrumentResultLabel": "Instrument",
+      "wavelengthResultLabel": "Wavelength",
+      "channelResultLabel": "Channel",
+      "dateResultLabel": "Date",
+      "intervalResultLabel": "Interval",
+      "sourceResultLabel": "Source",
+      "satelliteResultLabel": "Satellite",
+      "satelliteValue": "GOES-{number}",
+      "emptyTitle": "No data available",
+      "emptyImageMessage": "No solar images are available for the selected band, date and time range. Select another band or try again later.",
+      "emptyDataMessage": "No observations were found for the selected product, date and time range. Adjust the criteria and try again.",
+      "summaryLabel": "Summary of values",
+      "minimum": "Minimum",
+      "maximum": "Maximum",
+      "latest": "Latest value",
+      "chartCaptionObserved": "Observations from {provider}.",
+      "chartCaptionSimulated": "Simulated series to prepare the future ROSAC integration.",
+      "tableToggle": "View chart values ({count})",
+      "tableCaption": "Measurements of {product} on {date}",
+      "columnTime": "Time (UTC)",
+      "columnValue": "Value ({unit})",
+      "dynamicSpectrumLabel": "Simulated ROSAC dynamic spectrum",
+      "dynamicSpectrumCaption": "Demonstration dynamic spectrum; simulated values.",
+      "dynamicSpectrumTableToggle": "View spectrum values ({count})",
+      "dynamicSpectrumTableCaption": "Simulated intensity by hour and frequency",
+      "columnFrequency": "Frequency (MHz)",
+      "columnIntensity": "Relative intensity",
+      "downloadStarted": "The download of {filename} has started. The link expires in 30 minutes."
+    },
+    "downloads": {
+      "title": "Downloads",
+      "signInPrompt": "Sign in to download the chart",
+      "preparing": "Preparing download…"
+    },
+    "charts": {
+      "areaLabel": "Chart area: {label}",
+      "title": "Chart of {label}",
+      "description": "Series of {count} measurements between {start} and {end} UTC. The minimum value is {minimum} and the maximum is {maximum} {unit}.",
+      "empty": "There are no values to chart.",
+      "caption": "{caption} Unit: {unit}.",
+      "low": "Low",
+      "high": "High",
+      "spectrumDescription": "Intensity map by time and frequency, from {minFreq} to {maxFreq} {frequencyUnit} and from {start} to {end} UTC. Values range from {minimum} to {maximum} {unit}.",
+      "spectrumCaption": "{caption} Frequency in {frequencyUnit}; color by {unit}."
+    },
+    "validation": {
+      "invalidSource": "Select a valid source.",
+      "invalidProduct": "Select a valid scientific product.",
+      "invalidParameter": "Select a channel or parameter.",
+      "invalidDate": "Select a valid date in YYYY-MM-DD format.",
+      "invalidStartTime": "Select a valid start time in HH:mm format.",
+      "invalidEndTime": "Select a valid end time in HH:mm format.",
+      "startBeforeEnd": "The start time must be before the end time.",
+      "productUnavailable": "The selected product is not yet available for this source.",
+      "invalidParameterForProduct": "Select a valid channel or parameter for the product.",
+      "default": "Check the criteria."
+    },
+    "errors": {
+      "dateNotFuture": "Select a date that is not later than today.",
+      "invalidQuery": "The query criteria are not valid.",
+      "upstreamError": "It was not possible to query the scientific source. Try again later.",
+      "sourceUnavailable": "The scientific source is not available right now.",
+      "requestFailedGoes": "It was not possible to query the GOES source right now. Try again later.",
+      "requestFailedOther": "It was not possible to query the data. Try again.",
+      "downloadFailed": "It was not possible to prepare the download. Try again later.",
+      "downloadUnauthenticated": "Sign in to download resources."
+    }
+  },
+  "administration": {
+    "shell": {
+      "panel": "Administration panel",
+      "menu": "Menu",
+      "items": {
+        "resumen": "Summary",
+        "descargas": "Downloads",
+        "usuarios": "Users",
+        "permisos": "Permissions",
+        "infraestructura": "Infrastructure"
+      }
+    },
+    "summary": {
+      "metaTitle": "Administration | LASCE",
+      "metaDescription": "Summary of the state of the laboratory and its systems.",
+      "title": "Summary",
+      "description": "Overall state of the laboratory and its systems.",
+      "infrastructureTitle": "Infrastructure status"
+    },
+    "services": {
+      "title": "Services",
+      "names": {
+        "api": "Public API",
+        "postgres": "PostgreSQL database",
+        "redis": "Job queue (Redis)",
+        "workers": "Processing workers",
+        "minio": "MinIO storage",
+        "influxdb": "Time series (InfluxDB)"
+      },
+      "status": {
+        "ok": "Online",
+        "down": "Offline",
+        "checking": "Checking…"
+      }
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No activity has been recorded yet.",
+      "actors": {
+        "system": "System",
+        "worker": "Worker",
+        "deletedUser": "Deleted account"
+      }
+    },
+    "content": {
+      "title": "Portal content",
+      "empty": "No records",
+      "cards": {
+        "publications": "Publications",
+        "news": "News",
+        "researchAreas": "Research areas",
+        "lasceResearchers": "LASCE researchers",
+        "rosacResearchers": "ROSAC researchers",
+        "instruments": "Queryable instruments"
+      }
     }
   }
 }
