@@ -71,6 +71,30 @@ def bad_quality(dataset: Any, name: str) -> Any:
     return np.bitwise_and(filled, good_mask) != 0
 
 
+def invalid_quality(dataset: Any, name: str) -> Any:
+    """``True`` for every report whose quality flags call it invalid.
+
+    Laxer than :func:`bad_quality`: a *degraded* report is kept. The invalid
+    bits are read from the variable itself, as every ``flag_masks`` entry whose
+    ``flag_meanings`` word starts with ``invalid_``, because they differ
+    between variables (EHIS helium has an extra ``invalid_due_to_sgps_inputs_qf``
+    the other mass groups lack).
+    """
+    quality = dataset.variables[name]
+    masks = np.asarray(quality.flag_masks).ravel()
+    meanings = str(quality.flag_meanings).split()
+    if len(meanings) != len(masks):
+        raise ValueError(f"{name} has {len(masks)} flag masks but {len(meanings)} meanings")
+    invalid_mask = 0
+    for mask, meaning in zip(masks, meanings, strict=True):
+        if meaning.startswith("invalid_"):
+            invalid_mask |= int(mask)
+    flags = quality[:]
+    # A missing flag is not a valid flag: fill it with every bit set.
+    filled = np.ma.filled(flags, np.iinfo(flags.dtype).max)
+    return np.bitwise_and(filled, invalid_mask) != 0
+
+
 def primary_irradiance(dataset: Any, variable: str, unit: str) -> Any:
     """XRS irradiance taken, report by report, from the detector flagged primary.
 

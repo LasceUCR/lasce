@@ -83,7 +83,7 @@ describe('ScientificDataExplorer', () => {
     expect(within(options).queryByRole('treeitem', { name: /EUV/ })).not.toBeInTheDocument()
     expect(
       within(options).getByRole('treeitem', { name: /Iones pesados energéticos/ }),
-    ).toHaveAttribute('aria-disabled', 'true')
+    ).not.toHaveAttribute('aria-disabled', 'true')
     expect(within(options).getByRole('treeitem', { name: /baja energía/ })).toHaveAttribute(
       'aria-disabled',
       'true',

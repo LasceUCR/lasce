@@ -1256,7 +1256,8 @@
         "unavailableNote": "This GOES product and its channels are still pending integration.",
         "products": {
           "ehis": {
-            "name": "Energetic Heavy Ions"
+            "name": "Energetic Heavy Ions",
+            "availabilityNote": "Select the mass group and energy band. The level 1b file reports flux every 5 minutes and NOAA publishes daily with approximately a one-day delay."
           },
           "mpsl": {
             "name": "Magnetospheric Electrons and Protons: low energy"

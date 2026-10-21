@@ -126,6 +126,21 @@ export interface DynamicSpectrumDataResult extends ScientificDataResultBase {
 export type ScientificDataResult =
   TimeSeriesDataResult | ImageSequenceDataResult | DynamicSpectrumDataResult
 
+const ehisGroups = [
+  ['H', 'Hidrógeno (H)'],
+  ['He', 'Helio (He)'],
+  ['CNO', 'Carbono-nitrógeno-oxígeno (CNO)'],
+  ['NeS', 'Neón-azufre (Ne-S)'],
+  ['ClNi', 'Cloro-níquel (Cl-Ni)'],
+] as const
+
+const ehisParameters: ScientificParameter[] = ehisGroups.flatMap(([group, name]) =>
+  Array.from({ length: 5 }, (_, band) => ({
+    code: `${group}:E${band + 1}`,
+    label: `${name}: banda de energía ${band + 1}`,
+    unit: 'partículas/(cm²·s·sr·MeV/nucleón)',
+  })),
+)
 /** The parts of a message catalogue the scientific data page reads. */
 export type ScientificDataMessages = Pick<typeof es, 'scientificData'>
 
@@ -332,9 +347,11 @@ export function getScientificSources(messages: ScientificDataMessages): Scientif
           name:
             seiss?.products?.ehis?.name ?? es.scientificData.instruments.seiss.products.ehis.name,
           visualization: 'time-series',
-          available: false,
-          availabilityNote: unavailableFromRollingApi,
-          parameters: [],
+          available: true,
+          availabilityNote:
+            seiss?.products?.ehis?.availabilityNote ??
+            es.scientificData.instruments.seiss.products.ehis.availabilityNote,
+          parameters: ehisParameters,
         },
         {
           code: 'MPSL',

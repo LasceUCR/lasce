@@ -60,3 +60,11 @@ class MagPipelinePayload(JobPayload):
     spacecraft: int = Field(default=19)
     lookback_days: int = Field(alias="lookbackDays", ge=1, le=31, default=3)
     date: date_type | None = None
+
+
+class EhisPipelinePayload(JobPayload):
+    """Ingest one daily SEISS EHIS L1b file; without ``date``, the newest day in the lookback."""
+
+    spacecraft: int = Field(default=19)
+    lookback_days: int = Field(alias="lookbackDays", ge=1, le=31, default=3)
+    date: date_type | None = None
