@@ -1,25 +1,18 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import {
-  deleteNews,
-  DUPLICATE_NEWS_LINK,
-  DUPLICATE_NEWS_LINK_MESSAGE,
-  newsInputSchema,
-  updateNews,
-} from '@/app/lib/news'
+import { internalError, invalidBody, isUuid, ok, readJson } from '@/app/lib/cms/http'
+import { deleteNews, newsUpdateSchema, updateNews } from '@/app/lib/news'
 
-/** Updates or deletes one news item. PATCH needs `edit_components`; DELETE needs
- * `delete_components` — same pattern as `nosotros/activities/[id]/route.ts`. */
+import { invalidId, notFound, writeFailure } from '../http'
+
 export const dynamic = 'force-dynamic'
 
-/** Ids are Postgres uuids. Anything else cannot match a row, and Prisma would throw on it. */
-const newsIdSchema = z.uuid()
-
-const NEWS_GONE_MESSAGE =
-  'Esta noticia ya no existe. Es posible que otra persona la haya eliminado; recargue la página.'
-
+/**
+ * Updates a news item against the `version` the editor loaded. Requires `edit_components`. With
+ * `content` it is a bilingual content update; without it, only the shared fields present are
+ * written. See `newsUpdateSchema`.
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -27,55 +20,26 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
-
-  const parsed = newsInputSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
-  }
-
   const { id } = await params
-  if (!newsIdSchema.safeParse(id).success) {
-    return NextResponse.json({ error: NEWS_GONE_MESSAGE }, { status: 404 })
-  }
+  if (!isUuid(id)) return invalidId()
 
-  let article: Awaited<ReturnType<typeof updateNews>>
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = newsUpdateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
   try {
-    article = await updateNews(id, parsed.data)
-  } catch {
-    return NextResponse.json(
-      {
-        error:
-          'No se pudieron guardar los cambios de la noticia: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
-      },
-      { status: 500 },
-    )
-  }
+    const result = await updateNews(id, parsed.data)
+    if (!result.ok) return writeFailure(result)
 
-  if (!article) {
-    return NextResponse.json({ error: NEWS_GONE_MESSAGE }, { status: 404 })
+    return ok({ article: result.article })
+  } catch (error) {
+    return internalError('No se pudieron guardar los cambios de la noticia.', error)
   }
-  if (article === DUPLICATE_NEWS_LINK) {
-    return NextResponse.json({ error: DUPLICATE_NEWS_LINK_MESSAGE }, { status: 409 })
-  }
-
-  return NextResponse.json({ article }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
+/** Deletes a news item and its translations. Requires `delete_components`. */
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -84,25 +48,13 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  if (!newsIdSchema.safeParse(id).success) {
-    return NextResponse.json({ error: NEWS_GONE_MESSAGE }, { status: 404 })
-  }
+  if (!isUuid(id)) return invalidId()
 
-  let deleted: boolean
   try {
-    deleted = await deleteNews(id)
-  } catch {
-    return NextResponse.json(
-      {
-        error:
-          'No se pudo eliminar la noticia: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
-      },
-      { status: 500 },
-    )
-  }
-
-  if (!deleted) {
-    return NextResponse.json({ error: NEWS_GONE_MESSAGE }, { status: 404 })
+    const deleted = await deleteNews(id)
+    if (!deleted) return notFound()
+  } catch (error) {
+    return internalError('No se pudo eliminar la noticia.', error)
   }
 
   return new NextResponse(null, { status: 204 })

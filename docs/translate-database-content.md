@@ -2,15 +2,15 @@
 
 A practical guide to managing editable Spanish/English content in PostgreSQL through LASCE's existing CMS, and to implementing the same pattern in another entity **without copying the Publications implementation**.
 
-- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **"¿Qué hacemos?" cards** on `/nosotros` (`NosotrosActivity`), the **researcher profiles** on `/nosotros` (`NosotrosResearcher`), the **LASCE section of Física Solar** (`/fisica-solar`, a single editable text section, a lighter example with no create or delete), the **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)), the contact cards on `/contacto` (`ContactChannel`) **research areas** (`/investigacion`), and the **gallery**
-  (`/galeria`, albums and media) use the same pattern. News, academic activities, and the ROSAC researchers are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
+- **Status.** The shared infrastructure is in place. **Publications** (`/publicaciones`) are the reference. The **"¿Qué hacemos?" cards** on `/nosotros` (`NosotrosActivity`), the **researcher profiles** on `/nosotros` (`NosotrosResearcher`), the **LASCE section of Física Solar** (`/fisica-solar`, a single editable text section, a lighter example with no create or delete), the **home page** (its hero banner and geomagnetic indices, see [`home-page.md`](home-page.md)), the contact cards on `/contacto` (`ContactChannel`), **research areas** (`/investigacion`), the **gallery**
+  (`/galeria`, albums and media) and the **news** on `/noticias` (`News`, see [`internationalization.md`](internationalization.md#translated)) use the same pattern. Academic activities and the ROSAC researchers are still single-language. The fixed copy of the site (labels, buttons, the editor's own messages)
 
   is a different problem, handled by the message catalogues in [`internationalization.md`](internationalization.md).
 
 - **Who this is for.** A developer adding bilingual editing to an entity they own. You should not need to read the publications code to follow it; it is listed in [section 5](#5-reference-implementation-publications) as a working example.
 
 - **Examples.** **Real API** means the named import/function exists in the shared implementation. **Illustrative** means an incomplete or entity-specific example that must be adapted and connected before it can run. The fictitious `Event` entity (`name`, optional `summary`, shared `startsAt`) has **no Prisma model, route or page** in LASCE. Do not paste the snippets as one ready-made feature.
-- **Scope.** `/publicaciones`, `/investigacion`, the "¿Qué hacemos?" cards of `/nosotros` (`NosotrosActivity`, whose `description` is stored in the `paragraph` column; see `app/lib/nosotros-activity-schema.ts`), the researcher profiles of `/nosotros` (`NosotrosResearcher`: `role` required and `description` optional, all-or-none; see `app/lib/nosotros-researcher-schema.ts`), the LASCE section of `/fisica-solar`, the home page and the contact cards have been integrated with the shared infrastructure. The researcher form (`ResearcherForm`, `EditableResearcherCard`) is shared with the single-language ROSAC team, so its bilingual mode is opt-in through a `translation` prop and ROSAC does not pass it. The remaining managed sections belong to their respective owners. This guide documents **how** to extend the pattern; it does not implement those features.
+- **Scope.** `/publicaciones`, `/investigacion`, the "¿Qué hacemos?" cards of `/nosotros` (`NosotrosActivity`, whose `description` is stored in the `paragraph` column; see `app/lib/nosotros-activity-schema.ts`), the researcher profiles of `/nosotros` (`NosotrosResearcher`: `role` required and `description` optional, all-or-none; see `app/lib/nosotros-researcher-schema.ts`), the LASCE section of `/fisica-solar`, the home page, the contact cards and the space weather card have been integrated with the shared infrastructure. The researcher form (`ResearcherForm`, `EditableResearcherCard`) is shared with the single-language ROSAC team, so its bilingual mode is opt-in through a `translation` prop and ROSAC does not pass it. The remaining managed sections belong to their respective owners. This guide documents **how** to extend the pattern; it does not implement those features.
 - **Release status.** Documentation of a completed local implementation does not imply that this branch has been merged into `development` or deployed to production.
 - **Source of truth.** If this guide and the code disagree, verify the actual exported signatures and existing tests, then fix the guide in the same PR. The snippets below were derived from the supplied implementation guide, not recompiled against the user's current working tree as part of this document edit.
 
@@ -184,7 +184,7 @@ What a visitor reading in locale `L` sees (`resolveContent`):
 
 Fallback is per record, never per field: with required fields in every language and optional ones all-or-none, a complete record always has every field it needs in every language.
 
-A legacy record becomes complete the first time an editor saves its text in every language. That save also requires reviewing the base text (the missing language counts as changed, so the review rule asks for the Spanish fields), which is how the base text becomes trusted Spanish. Until then, its shared fields can still be edited without translating it.
+A legacy record becomes complete the first time an editor saves its text in every language. That save also requires reviewing the base text of each field written in the new language (a blank missing translation is not a change, so editing one field does not ask to confirm another field of the same language). That review is how the base text becomes trusted Spanish. Until then, its shared fields can still be edited without translating it.
 
 ## 3. Implementation guide
 
@@ -471,7 +471,7 @@ Why it is shaped like this:
 
 The rule, `findPendingReviews(definition, stored, next, confirmed)`:
 
-1. For each field, compare stored and new text in every language, ignoring surrounding whitespace (`null` counts as empty). A language with no stored text (legacy) counts as changed.
+1. For each field, compare stored and new text in every language, ignoring surrounding whitespace (`null` counts as empty). A language with no stored text (legacy) counts as changed only for a field that now has text; leaving it blank is not a change of that field.
 
 2. If a field changed in some languages but not all, each unchanged language must be listed in `confirmedUnchanged` for that field.
 
@@ -625,7 +625,7 @@ import {
   withConfirmation,
   type ContentDraft,
 } from '@/app/lib/i18n/content/form'
-import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import { confirmationLabel } from '@/app/lib/i18n/content/review'
 type EventField = (typeof eventContent.fields)[number]
 interface EventContentFieldsProps {
   /** `editing.content` of the record, or `null` when creating. */
@@ -661,7 +661,6 @@ export function EventContentFields({ stored, onSave }: EventContentFieldsProps) 
       <TranslationReview
         checked={isConfirmed(confirmed, pending)}
         label={confirmationLabel(eventContent, pending)}
-        message={reviewMessage(eventContent, pending, stored, draft)}
         onChange={(checked) =>
           setConfirmed((current) => withConfirmation(current, pending, checked))
         }
@@ -729,7 +728,7 @@ What the shared pieces give you, and what to keep:
 
   It is the field's locale, or `''` for the base text of a legacy record, whose language is unknown. It goes on the input (`FormField`'s `lang`), not on the panel: the panel also holds the editor's own labels and messages, which are not in the panel's language.
 
-- **`TranslationReview`**: the explanation (`Notice`, warning tone) and the switch (`Toggle`, role `switch`) under the field to review.
+- **`TranslationReview`**: the switch (`Toggle`, role `switch`) under the field to review. The field's own error says what to do; there is no second notice.
 
 - **Validation**: `validateContent` checks nothing while the content is unchanged (so a shared-field edit of a legacy record saves without a translation), and otherwise runs your definition's schema, so the editor shows exactly the API's messages at the same paths, plus `editorCopy.fieldPending`
 
@@ -1074,7 +1073,7 @@ For an existing single-language entity, **capture a before/after regression base
 
 Known limitations of the current implementation:
 
-- Publications, research areas, the home page and the contact cards use it. The rest of `/publicaciones` (its fixed copy and the editor) follows the site's language too, from the `publications` namespace of the message catalogue.
+- Publications, research areas, the home page, the contact cards and the space weather card use it. The rest of `/publicaciones` (its fixed copy and the editor) follows the site's language too, from the `publications` namespace of the message catalogue.
 
 - Search on `/publicaciones` matches the text in the current language only.
 - An editor receives every language of every publication with the page; there is no pagination.

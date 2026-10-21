@@ -16,7 +16,7 @@
     "accounts:create": "tsx prisma/seed-user-administration.ts",
     "studio": "prisma studio",
     "lint": "eslint .",
-    "typecheck": "prisma generate && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf .turbo generated node_modules"
   },
   "dependencies": {

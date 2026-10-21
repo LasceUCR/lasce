@@ -319,13 +319,12 @@ describe('NosotrosActivityForm: legacy card', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).not.toHaveBeenCalled()
-    // The untouched base description is flagged for review too, so the form stays on Español.
-    expect(tab(/^Español/)).toHaveAttribute('aria-selected', 'true')
-    expect(field('Descripción (Español)')).toHaveAttribute('aria-invalid', 'true')
-    expect(tab(/^English · 2 por revisar/)).toBeInTheDocument()
-
-    await user.click(tab(/^English/))
+    expect(tab(/^English · 2 por revisar/)).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('El título en inglés es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('La descripción en inglés es obligatoria.')).toBeInTheDocument()
+
+    await user.click(tab(/^Español/))
+    expect(field('Descripción (Español)')).not.toHaveAttribute('aria-invalid', 'true')
   })
 })
 
