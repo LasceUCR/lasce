@@ -306,7 +306,7 @@ describe('ScientificDataExplorer', () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise(() => {})))
     const user = userEvent.setup()
     renderWithIntl(<ScientificDataExplorer {...defaultArgs} />, { locale: 'en' })
-    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+    await user.click(screen.getByRole('button', { name: 'Query data' }))
     expect(
       screen.getByRole('complementary', { name: 'Consultation and download permissions' }),
     ).toHaveTextContent('For GOES (EXIS), only the chart is available')
