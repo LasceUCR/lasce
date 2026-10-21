@@ -1236,7 +1236,8 @@
         "unavailableNote": "Este producto GOES y sus canales aún están pendientes de integración.",
         "products": {
           "ehis": {
-            "name": "Iones pesados energéticos"
+            "name": "Iones pesados energéticos",
+            "availabilityNote": "Seleccione el grupo de masa y la banda de energía. El archivo nivel 1b reporta un flujo cada 5 minutos y NOAA publica cada día con aproximadamente un día de retraso."
           },
           "mpsl": {
             "name": "Electrones y protones magnetosféricos: baja energía"
