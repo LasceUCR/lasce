@@ -124,7 +124,12 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
   }
 
   const editModal = (
-    <Modal onClose={closeEditor} open={isEditing} size="large" title="Editar investigador">
+    <Modal
+      onClose={closeEditor}
+      open={isEditing}
+      size="large"
+      title={tResearchers('editModalTitle')}
+    >
       {renderForm()}
     </Modal>
   )
@@ -138,11 +143,11 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
   return (
     <>
       <EditableWrapper
-        deleteConfirmLabel="Eliminar"
-        deleteConfirmMessage={`¿Desea eliminar a "${researcher.name}"? Esta acción no se puede deshacer.`}
-        deleteConfirmTitle="Eliminar investigador"
-        deleteLabel={`Eliminar a ${researcher.name}`}
-        editLabel={`Editar a ${researcher.name}`}
+        deleteConfirmLabel={tResearchers('deleteConfirm')}
+        deleteConfirmMessage={tResearchers('deleteConfirmMessage', { name: researcher.name })}
+        deleteConfirmTitle={tResearchers('deleteConfirmTitle')}
+        deleteLabel={tResearchers('deleteLabel', { name: researcher.name })}
+        editLabel={tResearchers('editLabel', { name: researcher.name })}
         onDelete={canDelete ? onDelete : undefined}
         onEdit={canEdit ? () => setIsEditing(true) : undefined}
       >

@@ -197,4 +197,31 @@ describe('POST /api/nosotros/researchers', () => {
       code: 'internal-error',
     })
   })
+
+  test('returns translated validation errors when English is selected', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.getLocale.mockResolvedValue('en')
+
+    const response = await POST(postRequest({ ...validBody, name: ' ' }))
+
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.code).toBe('invalid-body')
+    expect(body.issues).toEqual([{ path: 'name', message: 'Name is required.' }])
+  })
+
+  test('answers an unexpected failure in English when English is selected', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.getLocale.mockResolvedValue('en')
+    mocks.createNosotrosResearcher.mockRejectedValue(new Error('fail'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const response = await POST(postRequest(validBody))
+
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({
+      error: 'Could not save the researcher.',
+      code: 'internal-error',
+    })
+  })
 })

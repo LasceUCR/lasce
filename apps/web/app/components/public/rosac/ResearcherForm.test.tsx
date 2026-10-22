@@ -36,8 +36,8 @@ const bilingualCreateArgs = BilingualCreate.args as BilingualResearcherFormProps
 const bilingualLegacyArgs = BilingualLegacy.args as BilingualResearcherFormProps
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
-function render(ui: ReactElement) {
-  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
 }
 
 // jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
@@ -625,5 +625,34 @@ describe('ResearcherForm: bilingual mode', () => {
 
     expect(onCancel).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('renders form labels, actions, dialogs and errors in English when English is selected', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...bilingualCreateArgs} onCancel={onCancel} />, { locale: 'en' })
+
+    expect(screen.getByText('Photo')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument()
+    expect(screen.getByText('Contact')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Institution' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add contact' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+
+    // Test add contact modal in English
+    await user.click(screen.getByRole('button', { name: 'Add contact' }))
+    const modal = screen.getByRole('dialog', { name: 'Add contact' })
+    expect(within(modal).getByRole('textbox', { name: 'Email' })).toBeInTheDocument()
+    await user.click(within(modal).getByRole('button', { name: 'Cancel' }))
+
+    // Test discard dialog in English
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Ada Lovelace')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    const discardDialog = screen.getByRole('dialog', { name: 'Discard unsaved changes' })
+    expect(discardDialog).toBeInTheDocument()
+    expect(within(discardDialog).getByRole('button', { name: 'Keep editing' })).toBeInTheDocument()
+    await user.click(within(discardDialog).getByRole('button', { name: 'Discard' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
   })
 })
