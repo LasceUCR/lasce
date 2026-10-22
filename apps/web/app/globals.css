@@ -4230,7 +4230,8 @@ a {
   .card-grid-equal .info-card,
   .card-grid-equal .researcher-card {
     height: auto;
-    align-self: start;
+    align-self: stretch;
+    width: 100%;
   }
 
   .card-grid-equal .editable {
