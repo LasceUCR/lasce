@@ -128,7 +128,11 @@ export function NewsExplorer({
   const lastShown = Math.min(page * PAGE_SIZE, totalItems)
   const summary = [
     hasQuery && totalItems > 0 ? t('page.results', { count: totalItems }) : null,
-    totalPages > 1 ? t('page.range', { from: firstShown, to: lastShown, total: totalItems }) : null,
+    totalPages <= 1
+      ? null
+      : firstShown === lastShown
+        ? t('page.rangeOne', { position: firstShown, total: totalItems })
+        : t('page.range', { from: firstShown, to: lastShown, total: totalItems }),
   ]
     .filter(Boolean)
     .join(' ')

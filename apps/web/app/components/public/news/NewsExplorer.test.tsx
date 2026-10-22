@@ -240,6 +240,12 @@ describe('NewsExplorer: listing', () => {
     ).toBeInTheDocument()
   })
 
+  test('names the one item shown when the last page has only one', () => {
+    renderExplorer({ news: fullPage.slice(0, 1), page: 3, totalItems: 21 })
+
+    expect(screen.getByText('Mostrando la noticia 21 de 21.')).toBeInTheDocument()
+  })
+
   test('says which items are shown on the last page', () => {
     renderExplorer({ news: fullPage.slice(0, 3), page: 3, totalItems: 23 })
 

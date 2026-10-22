@@ -832,6 +832,7 @@
       "emptyQuery": "No news found for “{query}”.",
       "empty": "No news has been published yet.",
       "range": "Showing {from}–{to} of {total}.",
+      "rangeOne": "Showing item {position} of {total}.",
       "paginationLabel": "News pages"
     },
     "card": {
