@@ -1,7 +1,6 @@
-'use client'
-
 import Image from 'next/image'
-import { useId, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
@@ -12,6 +11,7 @@ import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 export interface RosacAcknowledgmentFormValues {
   name: string
+  href?: string
   logo: {
     src: string
     alt: string
@@ -25,96 +25,129 @@ export interface RosacAcknowledgmentFormProps {
   onCancel: () => void
 }
 
-export const PREDEFINED_ACKNOWLEDGMENT_LOGOS = [
+export interface PredefinedAcknowledgmentLogo {
+  label: string
+  src: string
+  defaultAlt: string
+  defaultHref?: string
+}
+
+export const PREDEFINED_ACKNOWLEDGMENT_LOGOS: readonly PredefinedAcknowledgmentLogo[] = [
   {
     label: 'Vicerrectoría de Investigación, UCR',
     src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
     defaultAlt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
+    defaultHref: 'https://vinv.ucr.ac.cr',
   },
   {
     label: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     src: '/images/ROSAC/acknowledgments/cinespa.webp',
     defaultAlt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
+    defaultHref: 'https://cinespa.ucr.ac.cr',
   },
   {
     label: 'Escuela de Física, UCR',
     src: '/images/ROSAC/acknowledgments/efis.webp',
     defaultAlt: 'Logo de la Escuela de Física, UCR',
+    defaultHref: 'https://fisica.ucr.ac.cr',
   },
   {
     label: 'Escuela de Ingeniería Mecánica, UCR',
     src: '/images/ROSAC/acknowledgments/eim.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
+    defaultHref: 'https://www.ucr.ac.cr/directorio/escuela-de-ingenieria-mecanica.html',
   },
   {
     label: 'Escuela de Ingeniería Topográfica, UCR',
     src: '/images/ROSAC/acknowledgments/eit.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
+    defaultHref: 'https://eit.ucr.ac.cr/',
   },
   {
     label: 'Escuela de Ingeniería Eléctrica, UCR',
     src: '/images/ROSAC/acknowledgments/eie.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
+    defaultHref: 'https://eie.ucr.ac.cr',
   },
   {
     label: 'Recinto de Santa Cruz, UCR',
     src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
     defaultAlt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
+    defaultHref: 'https://www.ucr.ac.cr/directorio/recinto-universitario-de-santa-cruz/',
   },
   {
     label: 'Oficina de Servicios Generales (OSG), UCR',
     src: '/images/ROSAC/acknowledgments/osg.webp',
     defaultAlt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
+    defaultHref: 'https://osg.ucr.ac.cr',
   },
   {
     label: 'LanammeUCR',
     src: '/images/ROSAC/acknowledgments/lanamme.webp',
     defaultAlt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
+    defaultHref: 'https://www.lanamme.ucr.ac.cr/',
   },
   {
     label: 'Radiográfica Costarricense S.A. (RACSA)',
     src: '/images/ROSAC/acknowledgments/racsa.webp',
     defaultAlt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
+    defaultHref: 'https://www.racsa.go.cr/',
   },
   {
     label: 'Bomberos de Costa Rica',
     src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
     defaultAlt: 'Logo de Bomberos de Costa Rica',
+    defaultHref: 'https://www.bomberos.go.cr',
   },
   {
     label: 'Instituto Geográfico Nacional',
     src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
     defaultAlt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
+    defaultHref: 'https://www.snitcr.go.cr/ign_ign',
   },
   {
     label: 'INDI CR',
     src: '/images/ROSAC/acknowledgments/indi.webp',
     defaultAlt: 'Logo de INDI, Ingeniería y Diseño',
+    defaultHref: 'https://www.indicr.com/',
   },
   {
     label: 'Prysmian Group',
     src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
     defaultAlt: 'Logo de Prysmian Group',
+    defaultHref: '',
   },
   {
     label: 'EATON Costa Rica',
     src: '/images/ROSAC/acknowledgments/eaton.webp',
     defaultAlt: 'Logo de EATON Costa Rica',
+    defaultHref: 'https://www.eaton.com/cr/es-mx/company.html',
   },
   {
     label: 'INAOE, México',
     src: '/images/ROSAC/acknowledgments/inaoe.webp',
     defaultAlt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
+    defaultHref: 'https://www.inaoep.mx',
   },
   {
     label: 'AMEXCID',
     src: '/images/ROSAC/acknowledgments/amexcid.webp',
     defaultAlt:
       'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    defaultHref: 'https://www.gob.mx/amexcid',
   },
 ]
 
-const LOGO_SOURCE_OPTIONS: FormFieldOption[] = [
+function isValidUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+export const LOGO_SOURCE_OPTIONS: FormFieldOption[] = [
   { value: 'custom', label: 'Subir logo personalizado' },
   ...PREDEFINED_ACKNOWLEDGMENT_LOGOS.map((item, index) => ({
     value: String(index),
@@ -127,8 +160,10 @@ export function RosacAcknowledgmentForm({
   onSave,
   onCancel,
 }: RosacAcknowledgmentFormProps) {
+  const t = useTranslations('rosac.editor')
   const formId = useId()
   const [name, setName] = useState(institution?.name ?? '')
+  const [href, setHref] = useState(institution?.href ?? '')
   const [logoAlt, setLogoAlt] = useState(institution?.logo?.alt ?? '')
 
   // Determine initial logo selection (defaults to custom upload for new institutions)
@@ -148,6 +183,17 @@ export function RosacAcknowledgmentForm({
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
 
+  const logoSourceOptions: FormFieldOption[] = useMemo(
+    () => [
+      { value: 'custom', label: t('acknowledgments.logoSourceCustom') },
+      ...PREDEFINED_ACKNOWLEDGMENT_LOGOS.map((item, index) => ({
+        value: String(index),
+        label: t('acknowledgments.logoSourcePreset', { label: item.label }),
+      })),
+    ],
+    [t],
+  )
+
   const isCustomMode = logoSelection === 'custom'
   const selectedPreset =
     !isCustomMode && Number(logoSelection) >= 0
@@ -163,15 +209,22 @@ export function RosacAcknowledgmentForm({
   const hasLogo = !logoRemoved && (Boolean(activeLogoSrc) || Boolean(logoFile))
 
   // Validation
+  const trimmedName = name.trim()
+  const trimmedHref = href.trim()
   const nameError =
-    hasAttemptedSubmit && name.trim() === '' ? 'El nombre de la institución es obligatorio.' : null
-  const logoError =
-    hasAttemptedSubmit && !hasLogo ? 'Debe seleccionar o subir un logo para la institución.' : null
+    hasAttemptedSubmit && trimmedName === '' ? t('acknowledgments.nameRequired') : null
+  const hrefError =
+    hasAttemptedSubmit && trimmedHref !== '' && !isValidUrl(trimmedHref)
+      ? t('acknowledgments.institutionUrlInvalid')
+      : null
+  const logoError = hasAttemptedSubmit && !hasLogo ? t('acknowledgments.logoRequired') : null
 
-  const isFormValid = name.trim() !== '' && hasLogo
+  const isFormValid =
+    trimmedName !== '' && hasLogo && (trimmedHref === '' || isValidUrl(trimmedHref))
 
   const isDirty =
     name !== (institution?.name ?? '') ||
+    href !== (institution?.href ?? '') ||
     logoAlt !== (institution?.logo?.alt ?? '') ||
     logoFile !== null ||
     logoRemoved ||
@@ -188,8 +241,10 @@ export function RosacAcknowledgmentForm({
   async function handleSaveClick() {
     setHasAttemptedSubmit(true)
     if (!isFormValid) {
-      if (name.trim() === '') {
+      if (trimmedName === '') {
         document.getElementById(`${formId}-name`)?.focus()
+      } else if (trimmedHref !== '' && !isValidUrl(trimmedHref)) {
+        document.getElementById(`${formId}-href`)?.focus()
       }
       return
     }
@@ -214,7 +269,7 @@ export function RosacAcknowledgmentForm({
           finalLogoUrl = result.imageUrl
         } catch {
           setIsUploading(false)
-          setUploadError('No se pudo subir el logo. Inténtelo de nuevo.')
+          setUploadError(t('acknowledgments.uploadError'))
           return
         }
         setIsUploading(false)
@@ -225,11 +280,15 @@ export function RosacAcknowledgmentForm({
       finalLogoUrl = selectedPreset.src
     }
 
-    const trimmedName = name.trim()
-    const finalAlt = logoAlt.trim() || `Logo de ${trimmedName}`
+    const finalAlt =
+      logoAlt.trim() ||
+      t('acknowledgments.logoAltDefault', {
+        name: trimmedName,
+      })
 
     onSave({
       name: trimmedName,
+      href: trimmedHref || undefined,
       logo: {
         src: finalLogoUrl,
         alt: finalAlt,
@@ -248,22 +307,31 @@ export function RosacAcknowledgmentForm({
       <FormField
         errorMessage={nameError}
         id={`${formId}-name`}
-        label="Nombre de la institución"
+        label={t('acknowledgments.nameLabel')}
         onChange={(val) => {
           setName(val)
           if (!logoAlt && !institution) {
-            setLogoAlt(`Logo de ${val.trim()}`)
+            setLogoAlt(t('acknowledgments.logoAltDefault', { name: val.trim() }))
           }
         }}
-        placeholder="Ej. Centro de Investigaciones Espaciales (CINESPA), UCR"
+        placeholder={t('acknowledgments.namePlaceholder')}
         required
         value={name}
+      />
+
+      <FormField
+        errorMessage={hrefError}
+        id={`${formId}-href`}
+        label={t('acknowledgments.institutionUrlLabel')}
+        onChange={setHref}
+        placeholder={t('acknowledgments.institutionUrlPlaceholder')}
+        value={href}
       />
 
       <div className="cms-form-field">
         <FormField
           id={`${formId}-logo-selection`}
-          label="Escoger un logo personalizado o seleccionar uno de la lista"
+          label={t('acknowledgments.logoSourceLabel')}
           onChange={(val) => {
             setLogoSelection(val)
             if (val !== 'custom') {
@@ -271,18 +339,21 @@ export function RosacAcknowledgmentForm({
               if (preset) {
                 setName(preset.label)
                 setLogoAlt(preset.defaultAlt)
+                setHref(preset.defaultHref ?? '')
               }
             } else {
               if (initialPresetIndex === -1 && institution) {
                 setName(institution.name)
+                setHref(institution.href ?? '')
                 setLogoAlt(institution.logo?.alt ?? '')
               } else {
                 setName('')
+                setHref('')
                 setLogoAlt('')
               }
             }
           }}
-          options={LOGO_SOURCE_OPTIONS}
+          options={logoSourceOptions}
           value={logoSelection}
         />
       </div>
@@ -291,8 +362,8 @@ export function RosacAcknowledgmentForm({
         <FileDropInput
           errorMessage={logoError}
           existingImageUrl={!logoRemoved && customSrc ? customSrc : undefined}
-          helperText="Formatos WebP, PNG, SVG o JPG (máx. 10 MB)."
-          label="Archivo del logo"
+          helperText={t('acknowledgments.logoFileHelp')}
+          label={t('acknowledgments.logoFileLabel')}
           onFileSelect={(file) => {
             setLogoFile(file)
             if (!file) {
@@ -329,9 +400,9 @@ export function RosacAcknowledgmentForm({
             />
           </div>
           <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
-            Logo seleccionado:{' '}
+            {t('acknowledgments.selectedLogo')}{' '}
             <strong style={{ color: 'var(--foreground)' }}>
-              {selectedPreset?.label ?? 'Institucional'}
+              {selectedPreset?.label ?? t('acknowledgments.institutional')}
             </strong>
           </span>
         </div>
@@ -339,25 +410,29 @@ export function RosacAcknowledgmentForm({
 
       <FormField
         id={`${formId}-logo-alt`}
-        label="Texto alternativo del logo (Accesibilidad)"
+        label={t('acknowledgments.logoAltLabel')}
         onChange={setLogoAlt}
-        placeholder="Descripción accesible del logo institucional"
+        placeholder={t('acknowledgments.logoAltPlaceholder')}
         value={logoAlt}
       />
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} type="button" variant="secondary">
-          Cancelar
+          {t('acknowledgments.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleSaveClick} type="button" variant="primary">
-          {isUploading ? 'Guardando...' : institution ? 'Guardar cambios' : 'Agregar institución'}
+          {isUploading
+            ? t('acknowledgments.saving')
+            : institution
+              ? t('acknowledgments.save')
+              : t('acknowledgments.add')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={() => {
           setConfirmDiscardOpen(false)
@@ -365,7 +440,7 @@ export function RosacAcknowledgmentForm({
         }}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardDialog.title')}
       />
     </div>
   )
