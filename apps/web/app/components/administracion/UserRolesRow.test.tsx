@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderToString } from 'react-dom/server'
 import { describe, expect, test, vi } from 'vitest'
 import { mockDialog } from '@/tests/unit/helpers/mock-dialog'
 import { UserRolesRow, type UserRolesRowProps } from './UserRolesRow'
@@ -9,6 +10,21 @@ mockDialog()
 const args = ReadOnly.args as UserRolesRowProps
 
 describe('UserRolesRow', () => {
+  test('keeps server-rendered controls disabled until confirmation handlers are ready', () => {
+    const container = document.createElement('div')
+    container.innerHTML = renderToString(
+      <table>
+        <tbody>
+          <UserRolesRow {...args} onUserSelect={vi.fn()} onSaveRoles={vi.fn(async () => {})} />
+        </tbody>
+      </table>,
+    )
+    expect(within(container).getByRole('button', { name: args.user.name })).toBeDisabled()
+    for (const checkbox of within(container).getAllByRole('checkbox')) {
+      expect(checkbox).toBeDisabled()
+    }
+  })
+
   test('requires confirmation before replacing a role and cancels without a save', async () => {
     const user = userEvent.setup()
     const save = vi.fn(async () => {})
