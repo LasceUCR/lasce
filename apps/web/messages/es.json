@@ -166,6 +166,13 @@
     "truncatedText": {
       "readMore": "Leer más",
       "readLess": "Leer menos"
+    },
+    "pagination": {
+      "label": "Paginación",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page}",
+      "status": "Página {page} de {total}"
     }
   },
   "solarImageLightbox": {
@@ -823,7 +830,9 @@
       "searchPlaceholder": "Buscar por título, autor o palabra clave...",
       "results": "{count, plural, one {Se encontró # noticia.} other {Se encontraron # noticias.}}",
       "emptyQuery": "No se encontraron noticias para “{query}”.",
-      "empty": "No hay noticias publicadas todavía."
+      "empty": "No hay noticias publicadas todavía.",
+      "range": "Mostrando {from}–{to} de {total}.",
+      "paginationLabel": "Páginas de noticias"
     },
     "card": {
       "openSource": "Abrir fuente",
