@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFormatter, useMessages, useTranslations } from 'next-intl'
 import type { UserRole } from '@lasce/db'
 
@@ -69,6 +69,18 @@ export function RolePermissionsEditor({
   const toast = useToast()
   // The error toast of the previous attempt, dismissed when the next one starts.
   const errorToast = useRef<number | null>(null)
+  // Focus goes back to the table after the confirmation closes or the draft is discarded: the
+  // button that was used is disabled by then, so focus would otherwise fall to the page itself.
+  const tableRegion = useRef<HTMLDivElement>(null)
+  const [focusRequests, setFocusRequests] = useState(0)
+
+  useEffect(() => {
+    if (focusRequests > 0) tableRegion.current?.focus()
+  }, [focusRequests])
+
+  function returnFocusToTable() {
+    setFocusRequests((count) => count + 1)
+  }
 
   const lockedRoleIds = roles
     .filter((role) => isUserRole(role.id) && isRolePermissionsLocked(role.id))
@@ -111,6 +123,7 @@ export function RolePermissionsEditor({
   function discard() {
     if (saving || confirming || !canSave) return
     setDraft(matrix)
+    returnFocusToTable()
   }
 
   function requestSave() {
@@ -144,6 +157,7 @@ export function RolePermissionsEditor({
       setDraft(nextMatrix)
       // Close first, so the success toast shows on the page rather than in a closing dialog.
       setConfirming(false)
+      returnFocusToTable()
       toast.show('success', t('updated', { roles: listRoles(updated) }))
     } finally {
       setSaving(false)
@@ -164,10 +178,12 @@ export function RolePermissionsEditor({
           requestSave()
         }}
         onDiscard={discard}
-        saving={saving || confirming}
+        saving={saving}
+        confirming={confirming}
         canSave={canSave}
         pendingChanges={saving || confirming ? 0 : pending.count}
         dirtyPermissionIds={pending.dirtyPermissionIds}
+        tableRegionRef={tableRegion}
       />
       {confirming ? (
         <UserRoleChangeDialog
@@ -188,7 +204,10 @@ export function RolePermissionsEditor({
           }}
           onError={showError}
           onConfirm={persist}
-          onClose={() => setConfirming(false)}
+          onClose={() => {
+            setConfirming(false)
+            returnFocusToTable()
+          }}
         />
       ) : null}
     </>

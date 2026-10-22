@@ -52,6 +52,7 @@ describe('persisted role permissions', () => {
     })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(await screen.findByText('Permisos actualizados para Visitante.')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Tabla de permisos por rol' })).toHaveFocus()
     expect(screen.getByRole('checkbox', { name: 'Editar componentes: Visitante' })).toBeChecked()
   })
 
@@ -101,6 +102,7 @@ describe('persisted role permissions', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(saveAction).not.toHaveBeenCalled()
     expect(screen.getByRole('checkbox', { name: 'Editar componentes: Visitante' })).toBeChecked()
+    expect(screen.getByRole('region', { name: 'Tabla de permisos por rol' })).toHaveFocus()
   })
 
   test('discards the draft without writing', async () => {
@@ -126,6 +128,8 @@ describe('persisted role permissions', () => {
     ).not.toBeChecked()
     expect(screen.getByRole('button', { name: 'Descartar' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled()
+    // Both buttons are disabled now, so focus moves to the table instead of being lost.
+    expect(screen.getByRole('region', { name: 'Tabla de permisos por rol' })).toHaveFocus()
   })
 
   test('does not send administrator grants when a locked checkbox is clicked', async () => {

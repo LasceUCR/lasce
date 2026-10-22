@@ -152,3 +152,17 @@ describe('RolePermissionsPage in English', () => {
     )
   })
 })
+
+describe('RolePermissionsPage while a save is pending', () => {
+  test('keeps "Guardar cambios" while the confirmation is open, and says "Guardando..." only while saving', () => {
+    const { rerender } = render(<RolePermissionsPage {...defaultArgs} confirming />)
+
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Descartar' })).toBeDisabled()
+    expect(screen.getByRole('checkbox', { name: 'Editar componentes: Asistente' })).toBeDisabled()
+
+    rerender(<RolePermissionsPage {...defaultArgs} saving />)
+
+    expect(screen.getByRole('button', { name: 'Guardando...' })).toBeDisabled()
+  })
+})

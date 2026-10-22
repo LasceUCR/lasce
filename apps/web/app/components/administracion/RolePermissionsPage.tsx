@@ -1,4 +1,5 @@
 import { useTranslations } from 'next-intl'
+import type { Ref } from 'react'
 
 import type { Permission } from '@/app/lib/auth/permissions'
 import type { OverviewRole } from '@/app/lib/user-overview'
@@ -30,11 +31,21 @@ export interface RolePermissionsPageProps {
   onSave: () => Promise<void>
   onDiscard?: () => void
   saving?: boolean
+  /**
+   * The save confirmation is open: the controls wait for it like they wait for a save, but the
+   * button still says "Guardar cambios", since nothing is being saved yet.
+   */
+  confirming?: boolean
   canSave?: boolean
   pendingChanges?: number
   dirtyPermissionIds?: readonly Permission[]
   error?: string
   status?: string
+  /**
+   * The scrollable table region. The editor moves focus to it after the confirmation closes or
+   * the draft is discarded, because the button that was used is disabled by then.
+   */
+  tableRegionRef?: Ref<HTMLDivElement>
 }
 
 export function RolePermissionsPage({
@@ -48,11 +59,13 @@ export function RolePermissionsPage({
   onSave,
   onDiscard,
   saving = false,
+  confirming = false,
   canSave = true,
   pendingChanges = 0,
   dirtyPermissionIds = [],
   error,
   status,
+  tableRegionRef,
 }: RolePermissionsPageProps) {
   const t = useTranslations('administration.permissions')
   return (
@@ -74,7 +87,13 @@ export function RolePermissionsPage({
         <p id="role-permissions-help" className={styles.help}>
           {t('help')}
         </p>
-        <div className={tableStyles.scroll} role="region" aria-label={t('tableLabel')} tabIndex={0}>
+        <div
+          ref={tableRegionRef}
+          className={tableStyles.scroll}
+          role="region"
+          aria-label={t('tableLabel')}
+          tabIndex={0}
+        >
           <table
             className={tableStyles.table}
             aria-labelledby="role-permissions-title"
@@ -120,7 +139,7 @@ export function RolePermissionsPage({
                             <input
                               type="checkbox"
                               checked={granted[role.id]?.includes(permission.id) ?? false}
-                              disabled={locked || saving}
+                              disabled={locked || saving || confirming}
                               aria-label={t(locked ? 'checkboxLocked' : 'checkbox', {
                                 permission: permission.label,
                                 role: role.name,
@@ -164,12 +183,12 @@ export function RolePermissionsPage({
             <Button
               type="button"
               variant="secondary"
-              disabled={saving || pendingChanges === 0}
+              disabled={saving || confirming || pendingChanges === 0}
               onClick={onDiscard}
             >
               {t('discard')}
             </Button>
-            <Button type="submit" disabled={saving || !canSave}>
+            <Button type="submit" disabled={saving || confirming || !canSave}>
               {saving ? t('saving') : t('save')}
             </Button>
           </div>
