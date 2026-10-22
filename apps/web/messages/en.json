@@ -1515,6 +1515,88 @@
         "rosacResearchers": "ROSAC researchers",
         "instruments": "Queryable instruments"
       }
+    },
+    "permissions": {
+      "metaTitle": "Permissions | Administration | LASCE",
+      "title": "Permissions",
+      "description": "Configure the permissions of each role in the system.",
+      "tableTitle": "Permissions by role",
+      "help": "Each checkbox shows whether the role can perform that action. The administrator's permissions cannot be changed. Saving changes asks for confirmation before applying them.",
+      "tableLabel": "Permissions by role table",
+      "permissionColumn": "Permission",
+      "lockedRole": "Cannot be changed",
+      "unsavedSuffix": ", unsaved",
+      "checkbox": "{permission}: {role}",
+      "checkboxLocked": "{permission}: {role} (cannot be changed)",
+      "pending": "{count, plural, one {# unsaved change} other {# unsaved changes}}",
+      "pendingHelp": "You have permission changes that have not been saved.",
+      "discard": "Discard",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "updated": "Permissions updated for {roles}.",
+      "errors": {
+        "unauthorized": "Your session ended or you are no longer authorized to configure permissions. Reload the page to check your access.",
+        "locked": "The administrator's permissions cannot be changed.",
+        "conflict": "This role's information changed. Reload the page before saving it again.",
+        "unknown": "We could not confirm the change. Reload the page to check the current permissions before trying again."
+      },
+      "dialog": {
+        "title": "Confirm permission change",
+        "question": "Do you want to save the permissions of <strong>{roles}</strong>?",
+        "summary": "The change applies right away to the accounts with that role. They do not need to sign in again.",
+        "confirm": "Yes, save permissions",
+        "cancel": "No, cancel",
+        "savingStatus": "Saving permission change…",
+        "savingButton": "Saving…",
+        "reload": "Reload page"
+      }
+    }
+  },
+  "access": {
+    "roles": {
+      "VISITOR": "Visitor",
+      "ASSISTANT": "Assistant",
+      "ADMIN": "Administrator"
+    },
+    "permissions": {
+      "create_components": {
+        "label": "Create components",
+        "description": "Create portal components when that feature is available.",
+        "denied": "You are not authorized to create components."
+      },
+      "edit_components": {
+        "label": "Edit components",
+        "description": "Edit portal components when that feature is available.",
+        "denied": "You are not authorized to edit components."
+      },
+      "delete_components": {
+        "label": "Delete components",
+        "description": "Delete portal components when that feature is available.",
+        "denied": "You are not authorized to delete components."
+      },
+      "download_resources": {
+        "label": "Download resources",
+        "description": "Download laboratory resources and view the download history.",
+        "denied": "You are not authorized to access downloads."
+      },
+      "download_goes_resources": {
+        "label": "Download GOES resources",
+        "description": "Download data from the GOES satellites.",
+        "denied": "You are not authorized to download GOES resources."
+      },
+      "manage_users": {
+        "label": "Manage users",
+        "description": "View accounts and assign or remove roles.",
+        "denied": "You are not authorized to manage users."
+      },
+      "manage_permissions": {
+        "label": "Configure permissions",
+        "description": "View and change the permissions of each role.",
+        "denied": "You are not authorized to configure role permissions."
+      }
+    },
+    "accessDenied": {
+      "title": "Access denied"
     }
   }
 }
