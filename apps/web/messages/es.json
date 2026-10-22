@@ -468,6 +468,8 @@
       "mx": "México"
     },
     "initiatives": {
+      "readMore": "Leer más",
+      "readLess": "Leer menos",
       "title": "Iniciativas internacionales de las que LASCE forma parte",
       "items": {
         "iswi": {
@@ -1407,6 +1409,24 @@
     }
   },
   "scientificData": {
+    "banners": {
+      "title": "Permisos de consulta y descarga",
+      "goesConsultation": "Puede consultar los datos de GOES ({instrument}) sin una cuenta. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos.",
+      "rosacConsultation": "Puede consultar los datos de ROSAC ({instrument}) sin una cuenta. ROSAC es una previsión de integración: sus instrumentos y datos reales aún no están definidos; todos los resultados son simulados.",
+      "pendingProducts": "EHIS y MPSL están pendientes de integración.",
+      "rosacDownloads": "Todos los datos de ROSAC ({instrument}) están disponibles para descargar en CSV, junto con la gráfica en PNG.",
+      "goesChartOnly": "Para GOES ({instrument}), solo está disponible la descarga de la gráfica en PNG con los permisos de una cuenta básica.",
+      "goesDataDownloads": "Sus permisos permiten descargar los datos de GOES ({instrument}) en CSV y la gráfica en PNG.",
+      "noDownloads": "Las descargas de {source} ({instrument}) no están disponibles en esta plataforma.",
+      "denied": "Su cuenta no tiene permiso para descargar recursos de {source} ({instrument}).",
+      "signIn": "Para descargar, necesita una cuenta e iniciar sesión.",
+      "expiry": "Cada enlace de descarga vence en 30 minutos."
+    },
+    "loading": {
+      "data": "Cargando datos",
+      "images": "Cargando imágenes solares",
+      "cancel": "Cancelar consulta"
+    },
     "page": {
       "metaTitle": "Datos científicos | LASCE",
       "description": "Explore imágenes del Sol y consulte la información científica disponible.",
