@@ -6881,12 +6881,9 @@ a.acknowledgments-card:focus-visible {
      clearance here, that outline ran past this box's edge and got clipped by
      its scroll/overflow boundary instead of rendering in full. The negative
      horizontal margin cancels the padding back out so the fields still line
-     up exactly with the title/actions above and below, which don't scroll and
-     don't need it. Vertical padding gives the top focus outline and the
-     bottom action buttons breathing room when scrolled to the extremities,
-     preventing bottom button borders/shadows from being clipped by the
-     scroll container edge. */
-  padding: 4px 6px 14px;
+     up exactly with the title above. The action bar below owns the space
+     under the buttons, so this box does not add a second bottom gap. */
+  padding: 4px 6px 0;
   margin: 0 -6px;
 }
 
@@ -6920,8 +6917,9 @@ a.acknowledgments-card:focus-visible {
   gap: 10px;
 }
 
-/* A white bar pinned to the bottom of the dialog. The form scrolls underneath it. The shadow
-   continues that white down to the dialog edge, so field text cannot show past the buttons. */
+/* A white bar pinned to the bottom of every CMS dialog. The margin above it stays outside the
+   white, so the last field's border is fully visible instead of sliding under the buttons.
+   The padding below the buttons is the same on every one of these bars. */
 .modal
   :is(
     .modal-actions,
@@ -6929,18 +6927,18 @@ a.acknowledgments-card:focus-visible {
     .news-article-form-actions,
     .nosotros-activity-form-actions,
     .confirm-dialog-actions,
+    .std-confirm-actions,
     .mgmt-form-actions
   ) {
   position: sticky;
   bottom: 0;
   z-index: 2;
   background: var(--white);
-  box-shadow: 0 48px 0 var(--white);
-  margin-top: 12px;
-  margin-bottom: -14px;
+  margin-top: 20px;
+  margin-bottom: 0;
   margin-left: -6px;
   margin-right: -6px;
-  padding: 14px 6px 18px;
+  padding: 16px 6px 16px;
 }
 
 @media (max-width: 760px) {
