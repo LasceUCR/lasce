@@ -59,8 +59,9 @@ describe('Pagination', () => {
     renderPagination(FirstPage.args)
 
     expect(screen.queryByRole('link', { name: 'Anterior' })).not.toBeInTheDocument()
-    expect(within(navigation()).getByText('Anterior').closest('[aria-disabled]')).toHaveAttribute(
-      'aria-disabled',
+    // Still drawn, dimmed, so the controls keep their shape, but hidden from assistive technology.
+    expect(within(navigation()).getByText('Anterior').closest('[aria-hidden]')).toHaveAttribute(
+      'aria-hidden',
       'true',
     )
     expect(screen.getByRole('link', { name: 'Siguiente' })).toBeInTheDocument()

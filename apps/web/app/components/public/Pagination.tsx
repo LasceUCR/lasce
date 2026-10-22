@@ -61,9 +61,11 @@ export function Pagination({
       </>
     )
 
+    // Past either end there is nowhere to go: shown dimmed, but not a link, and left out for
+    // assistive technology, which hears only the steps that lead somewhere.
     if (target < 1 || target > totalPages) {
       return (
-        <span aria-disabled="true" className={`${styles.step} ${styles.disabled}`}>
+        <span aria-hidden="true" className={`${styles.step} ${styles.disabled}`}>
           {content}
         </span>
       )
