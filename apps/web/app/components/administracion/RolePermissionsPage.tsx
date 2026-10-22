@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl'
+
 import type { Permission } from '@/app/lib/auth/permissions'
 import type { OverviewRole } from '@/app/lib/user-overview'
 import { Button } from '@/app/components/public/Button'
@@ -8,8 +10,15 @@ import tableStyles from './UsersRolesTable.module.css'
 export interface RolePermissionRow {
   id: Permission
   label: string
+  /** What the permission allows, shown under its label. */
+  description?: string
 }
 
+/**
+ * The permission matrix of `/administracion/permisos`. Its own fixed text comes from the
+ * `administration.permissions` catalogue; roles and permissions arrive already named in the
+ * site's language (`roleName`, `permissionRows` in `app/lib/access-messages.ts`).
+ */
 export interface RolePermissionsPageProps {
   title: string
   description: string
@@ -45,8 +54,7 @@ export function RolePermissionsPage({
   error,
   status,
 }: RolePermissionsPageProps) {
-  const pendingCopy =
-    pendingChanges === 1 ? '1 cambio sin guardar' : `${pendingChanges} cambios sin guardar`
+  const t = useTranslations('administration.permissions')
   return (
     <div>
       <div className="section-heading">
@@ -62,18 +70,11 @@ export function RolePermissionsPage({
           void onSave()
         }}
       >
-        <h2 id="role-permissions-title">Permisos por rol</h2>
+        <h2 id="role-permissions-title">{t('tableTitle')}</h2>
         <p id="role-permissions-help" className={styles.help}>
-          Cada casilla indica si el rol puede hacer esa acción. Los permisos de la persona
-          administradora no se pueden cambiar. Guardar cambios pide confirmación antes de
-          aplicarlos.
+          {t('help')}
         </p>
-        <div
-          className={tableStyles.scroll}
-          role="region"
-          aria-label="Tabla de permisos por rol"
-          tabIndex={0}
-        >
+        <div className={tableStyles.scroll} role="region" aria-label={t('tableLabel')} tabIndex={0}>
           <table
             className={tableStyles.table}
             aria-labelledby="role-permissions-title"
@@ -81,10 +82,15 @@ export function RolePermissionsPage({
           >
             <thead>
               <tr>
-                <th scope="col">Permiso</th>
+                <th scope="col" className={styles.permissionColumn}>
+                  {t('permissionColumn')}
+                </th>
                 {roles.map((role) => (
                   <th scope="col" key={role.id} className={tableStyles.assignment}>
                     {role.name}
+                    {lockedRoleIds.includes(role.id) ? (
+                      <span className={styles.lockedNote}>{t('lockedRole')}</span>
+                    ) : null}
                   </th>
                 ))}
               </tr>
@@ -98,8 +104,13 @@ export function RolePermissionsPage({
                       <span className={styles.permissionLabel}>
                         {dirty ? <span className={styles.dirtyMark} aria-hidden="true" /> : null}
                         {permission.label}
-                        {dirty ? <span className="sr-only">, sin guardar</span> : null}
+                        {dirty ? <span className="sr-only">{t('unsavedSuffix')}</span> : null}
                       </span>
+                      {permission.description ? (
+                        <span className={styles.permissionDescription}>
+                          {permission.description}
+                        </span>
+                      ) : null}
                     </th>
                     {roles.map((role) => {
                       const locked = lockedRoleIds.includes(role.id)
@@ -110,11 +121,10 @@ export function RolePermissionsPage({
                               type="checkbox"
                               checked={granted[role.id]?.includes(permission.id) ?? false}
                               disabled={locked || saving}
-                              aria-label={
-                                locked
-                                  ? `${permission.label}: ${role.name} (no se puede cambiar)`
-                                  : `${permission.label}: ${role.name}`
-                              }
+                              aria-label={t(locked ? 'checkboxLocked' : 'checkbox', {
+                                permission: permission.label,
+                                role: role.name,
+                              })}
                               onChange={() => onTogglePermission(role.id, permission.id)}
                             />
                           </label>
@@ -139,11 +149,9 @@ export function RolePermissionsPage({
                 <span className={styles.dot} aria-hidden="true" />
                 <div>
                   <p className={styles.pendingTitle} role="status" aria-atomic="true">
-                    {pendingCopy}
+                    {t('pending', { count: pendingChanges })}
                   </p>
-                  <p className={styles.pendingHelp}>
-                    Tienes cambios pendientes de guardar en los permisos.
-                  </p>
+                  <p className={styles.pendingHelp}>{t('pendingHelp')}</p>
                 </div>
               </>
             ) : (
@@ -159,10 +167,10 @@ export function RolePermissionsPage({
               disabled={saving || pendingChanges === 0}
               onClick={onDiscard}
             >
-              Descartar
+              {t('discard')}
             </Button>
             <Button type="submit" disabled={saving || !canSave}>
-              {saving ? 'Guardando...' : 'Guardar cambios'}
+              {saving ? t('saving') : t('save')}
             </Button>
           </div>
         </div>

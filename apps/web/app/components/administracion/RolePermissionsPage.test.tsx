@@ -1,11 +1,19 @@
-import { render, screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
+import type { ReactElement } from 'react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+
 import { RolePermissionsPage, type RolePermissionsPageProps } from './RolePermissionsPage'
-import meta, { ErrorState, PendingChanges } from './RolePermissionsPage.stories'
+import meta, { English, ErrorState, PendingChanges } from './RolePermissionsPage.stories'
 
 const defaultArgs = meta.args as RolePermissionsPageProps
+const englishArgs = { ...defaultArgs, ...English.args } as RolePermissionsPageProps
+
+function render(ui: ReactElement) {
+  return renderWithIntl(ui)
+}
 
 describe('RolePermissionsPage', () => {
   test('shows the permission matrix with administrator grants locked', () => {
@@ -63,5 +71,84 @@ describe('RolePermissionsPage', () => {
     expect(screen.getByRole('row', { name: /Editar componentes, sin guardar/ })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Descartar' }))
     expect(onDiscard).toHaveBeenCalledOnce()
+  })
+
+  test('shows what each permission allows under its name', () => {
+    render(<RolePermissionsPage {...defaultArgs} />)
+
+    const row = screen.getByRole('row', { name: /^Configurar permisos/ })
+    expect(
+      within(row).getByText('Ver y cambiar los permisos asociados a cada rol.'),
+    ).toBeInTheDocument()
+  })
+
+  test('says under the administrator column that it cannot be changed', () => {
+    render(<RolePermissionsPage {...defaultArgs} />)
+
+    expect(
+      screen.getByRole('columnheader', { name: /^Persona administradora\s*No se puede cambiar$/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Visitante' })).toBeInTheDocument()
+  })
+
+  test('counts a single pending change in the singular', () => {
+    render(<RolePermissionsPage {...defaultArgs} pendingChanges={1} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('1 cambio sin guardar')
+  })
+})
+
+describe('RolePermissionsPage in English', () => {
+  test('shows its headings, columns, roles, permissions and buttons in English', () => {
+    renderWithIntl(<RolePermissionsPage {...englishArgs} />, { locale: 'en' })
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Permissions' })).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Permissions by role' })).toHaveAccessibleDescription(
+      /Each checkbox shows whether the role can perform that action/,
+    )
+    expect(screen.getByRole('region', { name: 'Permissions by role table' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Permission' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('columnheader', { name: /^Administrator\s*Cannot be changed$/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Download data from the GOES satellites.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Discard' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument()
+  })
+
+  test('names every checkbox after its permission and role, in English', () => {
+    renderWithIntl(<RolePermissionsPage {...englishArgs} />, { locale: 'en' })
+
+    expect(screen.getByRole('checkbox', { name: 'Edit components: Assistant' })).toBeChecked()
+    expect(
+      screen.getByRole('checkbox', {
+        name: 'Configure permissions: Administrator (cannot be changed)',
+      }),
+    ).toBeDisabled()
+  })
+
+  test('announces pending changes with English plurals', () => {
+    const { rerender } = renderWithIntl(<RolePermissionsPage {...englishArgs} />, {
+      locale: 'en',
+    })
+
+    expect(screen.getByRole('status')).toHaveTextContent('1 unsaved change')
+    expect(screen.getByText('You have permission changes that have not been saved.')).toBeVisible()
+    expect(screen.getByRole('row', { name: /Edit components, unsaved/ })).toBeInTheDocument()
+
+    rerender(<RolePermissionsPage {...englishArgs} pendingChanges={3} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('3 unsaved changes')
+  })
+
+  test('shows no Spanish text and no raw message keys', () => {
+    const { container } = renderWithIntl(<RolePermissionsPage {...englishArgs} />, {
+      locale: 'en',
+    })
+
+    expect(container).not.toHaveTextContent(/administration\.|access\./)
+    expect(container).not.toHaveTextContent(
+      /Permiso|Guardar|Descartar|Visitante|Asistente|cambio|sin guardar/,
+    )
   })
 })

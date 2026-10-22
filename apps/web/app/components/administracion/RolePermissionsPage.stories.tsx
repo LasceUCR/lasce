@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
+import en from '@/messages/en.json'
+
+import { permissionRows } from '@/app/lib/access-messages'
 import type { Permission } from '@/app/lib/auth/permissions'
-import { PERMISSION_LABELS, PERMISSIONS } from '@/app/lib/auth/permissions'
 
 import { RolePermissionsPage } from './RolePermissionsPage'
 
-const permissions = PERMISSIONS.map((id) => ({
-  id,
-  label: PERMISSION_LABELS[id],
-}))
+/** Each permission with its label and description, in Spanish. */
+const permissions = permissionRows()
 
 const granted: Record<string, readonly Permission[]> = {
   VISITOR: ['download_resources'],
@@ -66,5 +66,37 @@ export const PendingChanges: Story = {
     pendingChanges: 2,
     canSave: true,
     dirtyPermissionIds: ['edit_components', 'manage_permissions'],
+  },
+}
+
+/** The site in English: the page's own text, the roles and the permissions. */
+export const English: Story = {
+  args: {
+    title: en.administration.permissions.title,
+    description: en.administration.permissions.description,
+    roles: [
+      { id: 'VISITOR', name: en.access.roles.VISITOR },
+      { id: 'ASSISTANT', name: en.access.roles.ASSISTANT },
+      { id: 'ADMIN', name: en.access.roles.ADMIN },
+    ],
+    permissions: permissionRows(en),
+    pendingChanges: 1,
+    dirtyPermissionIds: ['edit_components'],
+  },
+  globals: { locale: 'en' },
+}
+
+/** On a phone: the table scrolls sideways and each label keeps its description under it. */
+export const Mobile: Story = {
+  globals: { viewport: { value: 'permissionsMobile', isRotated: false } },
+  parameters: {
+    viewport: {
+      options: {
+        permissionsMobile: {
+          name: 'Mobile (390px)',
+          styles: { width: '390px', height: '844px' },
+        },
+      },
+    },
   },
 }
