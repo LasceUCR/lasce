@@ -62,11 +62,13 @@ a.step:hover {
   box-shadow: 0 6px 14px rgba(2, 48, 71, 0.22);
 }
 
+/* Unavailable: no fill and a dashed border instead of a faded look, so its text keeps the
+   WCAG AA contrast (--muted on the page background) that axe checks. */
 .disabled {
+  border-style: dashed;
   border-color: var(--border);
   background: transparent;
   color: var(--muted);
-  opacity: 0.55;
   cursor: not-allowed;
 }
 
