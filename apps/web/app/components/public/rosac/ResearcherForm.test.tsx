@@ -149,8 +149,13 @@ describe('ResearcherForm', () => {
     await user.type(emailInput, 'nuevo@ucr.ac.cr')
     await user.click(screen.getByRole('button', { name: 'Agregar' }))
 
-    expect(emailInput).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Agregar' })).toBeDisabled()
+    await user.type(emailInput, 'tercero@ucr.ac.cr')
+    await user.click(screen.getByRole('button', { name: 'Agregar' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'No es posible agregar más de dos correos electrónicos.',
+    )
+    expect(screen.queryByText('tercero@ucr.ac.cr')).not.toBeInTheDocument()
   })
 
   test('rejects a malformed address in the contact field', async () => {

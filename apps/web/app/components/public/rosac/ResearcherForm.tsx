@@ -270,7 +270,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
   function addEmail() {
     const trimmed = newEmail.trim()
     if (emails.length >= MAX_EMAILS) {
-      setNewEmailError(t('editor.maxEmails', { max: MAX_EMAILS }))
+      setNewEmailError(t('editor.maxEmails'))
       return
     }
     if (trimmed === '') {
@@ -377,7 +377,6 @@ export function ResearcherForm(props: ResearcherFormProps) {
               aria-describedby={newEmailError ? emailFieldId : undefined}
               aria-invalid={newEmailError ? true : undefined}
               aria-label={t('editor.emailLabel')}
-              disabled={emails.length >= MAX_EMAILS}
               onChange={(event) => {
                 setNewEmail(event.target.value)
                 setNewEmailError(null)
@@ -387,12 +386,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
               type="email"
               value={newEmail}
             />
-            <Button
-              className="publication-authors-add"
-              disabled={emails.length >= MAX_EMAILS}
-              onClick={addEmail}
-              variant="secondary"
-            >
+            <Button className="publication-authors-add" onClick={addEmail} variant="secondary">
               Agregar
             </Button>
           </div>
