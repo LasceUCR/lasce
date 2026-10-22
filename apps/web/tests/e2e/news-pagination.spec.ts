@@ -105,7 +105,10 @@ function search(query: string, pageNumber?: number) {
   return `/noticias?${params.toString()}`
 }
 
-/** The URL's query string as an object, so the order of the parameters does not matter. */
+/**
+ * The URL's query string as an object, so the order of the parameters does not matter. Read it
+ * through `expect.poll`: a client-side navigation updates the URL a moment after the click.
+ */
 function queryOf(page: Page) {
   return Object.fromEntries(new URL(page.url()).searchParams)
 }
@@ -154,9 +157,9 @@ test('splits 23 items into pages of 10, 10 and 3, each item shown once', async (
       'aria-current',
       'page',
     )
-    expect(queryOf(page)).toEqual(
-      number === 1 ? { q: fixtures.tag } : { q: fixtures.tag, page: String(number) },
-    )
+    await expect
+      .poll(() => queryOf(page))
+      .toEqual(number === 1 ? { q: fixtures.tag } : { q: fixtures.tag, page: String(number) })
     seen.push(...(await shownTitles(page)))
   }
 
@@ -178,7 +181,7 @@ test('moves between pages with Siguiente and Anterior, from the keyboard too', a
   await pagination(page).getByRole('link', { name: 'Anterior' }).click()
 
   await expect(cards(page).first()).toContainText(fixtures.titles[0]!)
-  expect(queryOf(page)).toEqual({ q: fixtures.tag })
+  await expect.poll(() => queryOf(page)).toEqual({ q: fixtures.tag })
 })
 
 test('offers no previous page on the first page and no next page on the last', async ({ page }) => {
@@ -203,13 +206,15 @@ test('corrects a malformed, zero, negative or too large page in the URL', async 
   for (const value of ['abc', '0', '-2', '1.5', '1']) {
     await page.goto(`/noticias?q=${fixtures.tag}&page=${value}`)
 
-    expect(queryOf(page), `page=${value}`).toEqual({ q: fixtures.tag })
+    await expect
+      .poll(() => queryOf(page), { message: `page=${value}` })
+      .toEqual({ q: fixtures.tag })
     await expect(cards(page)).toHaveCount(10)
   }
 
   await page.goto(search(fixtures.tag, 99))
 
-  expect(queryOf(page)).toEqual({ q: fixtures.tag, page: '3' })
+  await expect.poll(() => queryOf(page)).toEqual({ q: fixtures.tag, page: '3' })
   await expect(cards(page)).toHaveCount(3)
   await expect(pagination(page).getByRole('link', { name: 'Página 3' })).toHaveAttribute(
     'aria-current',
@@ -243,7 +248,7 @@ test('keeps the search while moving between pages, and clears it back to the pla
   const box = page.getByRole('searchbox', { name: 'Buscar noticias' })
   await expect(box).toHaveValue(fixtures.tag)
   await pagination(page).getByRole('link', { name: 'Página 3' }).click()
-  expect(queryOf(page)).toEqual({ q: fixtures.tag, page: '3' })
+  await expect.poll(() => queryOf(page)).toEqual({ q: fixtures.tag, page: '3' })
 
   await box.fill('')
 
@@ -270,7 +275,7 @@ test('restores the page and the search from the URL on reload, back and forward'
 
   await page.reload()
   await expect(cards(page)).toHaveCount(3)
-  expect(queryOf(page)).toEqual({ q: fixtures.tag, page: '3' })
+  await expect.poll(() => queryOf(page)).toEqual({ q: fixtures.tag, page: '3' })
 })
 
 test('keeps the search and the page when the language changes, while that page exists', async ({
@@ -282,7 +287,7 @@ test('keeps the search and the page when the language changes, while that page e
 
   await expect(page.getByRole('heading', { name: 'Recent news' })).toBeVisible()
   await expect(cards(page).first()).toContainText(`News item 21 ${fixtures.tag}`)
-  expect(queryOf(page)).toEqual({ q: fixtures.tag, page: '3' })
+  await expect.poll(() => queryOf(page)).toEqual({ q: fixtures.tag, page: '3' })
   await expect(pagination(page).getByRole('link', { name: 'Previous' })).toBeVisible()
   await expect(pagination(page).getByRole('link', { name: 'Page 3' })).toHaveAttribute(
     'aria-current',
@@ -300,7 +305,7 @@ test('moves to the last page left when the translated results have fewer pages',
   await switchLanguage(page, 'Español', 'English')
 
   await expect(page.getByText('3 news items found.')).toBeVisible()
-  expect(queryOf(page)).toEqual({ q: fixtures.languageTag })
+  await expect.poll(() => queryOf(page)).toEqual({ q: fixtures.languageTag })
   await expect(cards(page)).toHaveCount(3)
   await expect(pagination(page)).toHaveCount(0)
 })
@@ -311,7 +316,7 @@ test('shows a translated empty state, and no page controls, when nothing matches
   const nothing = `nada${fixtures.id}`
   await page.goto(search(nothing, 4))
 
-  expect(queryOf(page)).toEqual({ q: nothing })
+  await expect.poll(() => queryOf(page)).toEqual({ q: nothing })
   await expect(newsList(page).getByRole('status')).toHaveText(
     `No se encontraron noticias para “${nothing}”.`,
   )
@@ -352,7 +357,7 @@ test('refreshes the results and the totals after news is added or deleted', asyn
 
     await expect(page.getByText('Noticia agregada correctamente.')).toBeVisible()
     await expect(page.getByText('Se encontraron 24 noticias. Mostrando 11–20 de 24.')).toBeVisible()
-    expect(queryOf(page)).toEqual({ q: fixtures.tag, page: '2' })
+    await expect.poll(() => queryOf(page)).toEqual({ q: fixtures.tag, page: '2' })
 
     // Deleting the last items of the last page moves to the page before it.
     await page.goto(search(fixtures.tag, 3))
@@ -367,7 +372,7 @@ test('refreshes the results and the totals after news is added or deleted', asyn
       await expect(page.getByRole('heading', { name: title ?? '' })).toHaveCount(0)
     }
 
-    expect(queryOf(page)).toEqual({ q: fixtures.tag, page: '2' })
+    await expect.poll(() => queryOf(page)).toEqual({ q: fixtures.tag, page: '2' })
     await expect(cards(page)).toHaveCount(10)
     await expect(page.getByText('Se encontraron 20 noticias. Mostrando 11–20 de 20.')).toBeVisible()
     await expect(pagination(page).getByRole('link', { name: 'Siguiente' })).toHaveCount(0)
