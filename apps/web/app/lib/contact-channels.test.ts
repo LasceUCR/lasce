@@ -86,8 +86,8 @@ describe('contact channels', () => {
     })
   })
 
-  test('appends a card after the last position and drops a link on a non-social icon', async () => {
-    mocks.aggregate.mockResolvedValue({ _max: { position: 1 } })
+  test('places a card before the first position and drops a link on a non-social icon', async () => {
+    mocks.aggregate.mockResolvedValue({ _min: { position: 1 } })
     mocks.create.mockResolvedValue(row())
 
     const card = await createContactChannel({ icon: 'phone', href: 'https://example.com', content })
@@ -95,7 +95,7 @@ describe('contact channels', () => {
     expect(card.title).toBe('Teléfono')
     expect(mocks.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ icon: 'PHONE', href: null, position: 2 }),
+        data: expect.objectContaining({ icon: 'PHONE', href: null, position: 0 }),
       }),
     )
   })
