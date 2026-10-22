@@ -1,14 +1,13 @@
 'use client'
 
-import { Plus, X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import { useId, useRef, useState, type KeyboardEvent } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { IconButton } from '@/app/components/public/IconButton'
-import { Modal } from '@/app/components/public/Modal'
 import {
   uploadResearcherImage,
   type UploadResearcherImageResult,
@@ -34,7 +33,7 @@ export interface PersonProfile {
   src: string
   role: string
   name: string
-  /** Zero, one or two public addresses — edited here as chips, each with its own "quitar". */
+  /** Zero, one or two public addresses — edited as chips, the same way publication authors are. */
   email?: string | readonly string[]
   institution: string
   description?: string
@@ -153,8 +152,8 @@ export function ResearcherForm(props: ResearcherFormProps) {
   const contentRef = useRef<ResearcherContentHandle>(null)
   const [role, setRole] = useState(researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
+  const emailFieldId = useId()
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
-  const [isAddingEmail, setIsAddingEmail] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [newEmailError, setNewEmailError] = useState<string | null>(null)
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
@@ -284,33 +283,34 @@ export function ResearcherForm(props: ResearcherFormProps) {
     props.onSave({ role, name, email: emails.join(', '), institution, description, src })
   }
 
-  function openAddEmail() {
-    setNewEmail('')
-    setNewEmailError(null)
-    setIsAddingEmail(true)
-  }
-
-  function closeAddEmail() {
-    setIsAddingEmail(false)
-  }
-
-  function handleAddEmail() {
+  function addEmail() {
     const trimmed = newEmail.trim()
     if (emails.length >= MAX_EMAILS) {
-      setNewEmailError(`Máximo ${MAX_EMAILS} correos de contacto.`)
+      setNewEmailError('No es posible agregar más de dos correos electrónicos.')
+      return
+    }
+    if (trimmed === '') {
+      setNewEmailError('El correo es obligatorio.')
       return
     }
     if (!isValidEmail(trimmed)) {
       setNewEmailError('El correo no es válido.')
       return
     }
-    if (emails.includes(trimmed)) {
+    if (emails.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
       setNewEmailError('Ese correo ya fue agregado.')
       return
     }
 
     setEmails([...emails, trimmed])
-    closeAddEmail()
+    setNewEmail('')
+    setNewEmailError(null)
+  }
+
+  function handleEmailKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== 'Enter') return
+    event.preventDefault()
+    addEmail()
   }
 
   function handleRemoveEmail(address: string) {
@@ -351,54 +351,68 @@ export function ResearcherForm(props: ResearcherFormProps) {
         value={name}
       />
 
-      <div className="cms-form-field">
-        <span className="cms-form-field-label" id="researcher-email-label">
-          Contacto
-        </span>
-        <div aria-labelledby="researcher-email-label" className="email-chip-field" role="group">
-          {emails.map((address) => (
-            <span className="email-chip" key={address}>
-              {address}
-              <IconButton
-                className="email-chip-remove"
-                icon={<X size={12} strokeWidth={2} />}
-                label={`Eliminar ${address}`}
-                onClick={() => handleRemoveEmail(address)}
-              />
-            </span>
-          ))}
-          {emails.length < MAX_EMAILS ? (
-            <IconButton
-              className="email-chip-add"
-              icon={<Plus size={14} strokeWidth={2} />}
-              label="Añadir contacto"
-              onClick={openAddEmail}
-            />
+      <div
+        aria-labelledby="researcher-email-label"
+        className="cms-form-field publication-authors"
+        role="group"
+      >
+        <div className="publication-authors-header">
+          <span className="cms-form-field-label" id="researcher-email-label">
+            Contacto
+          </span>
+          <span aria-live="polite" className="publication-authors-count">
+            {emails.length === 0
+              ? 'Sin correos'
+              : emails.length === 1
+                ? '1 correo'
+                : `${emails.length} correos`}
+          </span>
+        </div>
+        <div
+          className={
+            newEmailError ? 'publication-authors-box is-invalid' : 'publication-authors-box'
+          }
+        >
+          {emails.length > 0 ? (
+            <ul aria-label="Correos de contacto" className="publication-authors-list">
+              {emails.map((address) => (
+                <li className="email-chip" key={address}>
+                  {address}
+                  <IconButton
+                    className="email-chip-remove"
+                    icon={<X size={12} strokeWidth={2} />}
+                    label={`Eliminar ${address}`}
+                    onClick={() => handleRemoveEmail(address)}
+                  />
+                </li>
+              ))}
+            </ul>
           ) : null}
+          <div className="publication-authors-entry">
+            <input
+              aria-describedby={newEmailError ? emailFieldId : undefined}
+              aria-invalid={newEmailError ? true : undefined}
+              aria-label="Correo electrónico"
+              onChange={(event) => {
+                setNewEmail(event.target.value)
+                setNewEmailError(null)
+              }}
+              onKeyDown={handleEmailKeyDown}
+              placeholder={emails.length > 0 ? 'Escribir otro correo...' : 'Escribir un correo...'}
+              type="email"
+              value={newEmail}
+            />
+            <Button className="publication-authors-add" onClick={addEmail} variant="secondary">
+              Agregar
+            </Button>
+          </div>
         </div>
+        {newEmailError ? (
+          <p className="form-field-error" id={emailFieldId} role="alert">
+            {newEmailError}
+          </p>
+        ) : null}
       </div>
-
-      <Modal onClose={closeAddEmail} open={isAddingEmail} size="small" title="Añadir contacto">
-        <FormField
-          errorMessage={newEmailError}
-          id="new-researcher-email"
-          label="Correo electrónico"
-          onChange={(value) => {
-            setNewEmail(value)
-            setNewEmailError(null)
-          }}
-          type="email"
-          value={newEmail}
-        />
-        <div className="cms-form-actions">
-          <Button onClick={closeAddEmail} variant="secondary">
-            Cancelar
-          </Button>
-          <Button disabled={newEmail.trim() === ''} onClick={handleAddEmail} variant="primary">
-            Añadir
-          </Button>
-        </div>
-      </Modal>
 
       <FormField
         errorMessage={institutionError}

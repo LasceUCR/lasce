@@ -411,7 +411,7 @@ export function RosacInfoPage({
       consultation: values.consultation,
     }
 
-    const updated = [...instruments, newInstrument]
+    const updated = [newInstrument, ...instruments]
     setInstruments(updated)
     saveToLocalStorage(ROSAC_STORAGE_KEYS.instruments, updated)
     close()
@@ -539,7 +539,7 @@ export function RosacInfoPage({
       logo: values.logo,
     }
 
-    const updated = [...acknowledgments, newInstitution]
+    const updated = [newInstitution, ...acknowledgments]
     setAcknowledgments(updated)
     saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
     close()
@@ -713,7 +713,7 @@ export function RosacInfoPage({
         {instruments.length > 3 || (editMode && canCreate) ? (
           <InstrumentsGallery
             label={content.instruments.title}
-            trailingSlide={
+            leadingSlide={
               editMode && canCreate ? (
                 <AddItemCard label="Añadir instrumento">
                   {({ close }) => (
@@ -817,7 +817,7 @@ export function RosacInfoPage({
               researcher={person}
             />
           )}
-          trailingSlide={
+          leadingSlide={
             editMode && canCreate ? (
               <AddItemCard label="Añadir investigador">
                 {({ close }) => (
@@ -888,7 +888,7 @@ export function RosacInfoPage({
               onSave={(values) => handleSaveAcknowledgment(institution.id!, values)}
             />
           )}
-          trailingSlide={
+          leadingSlide={
             editMode && canCreate ? (
               <AddItemCard label="Añadir institución">
                 {({ close }) => (

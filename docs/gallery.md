@@ -84,7 +84,7 @@ is kept as it is, with a notice, until the editor chooses a new period.
   `404`.
 - `POST /api/gallery/albums/{albumId}/media` accepts `content` (`title`, `description` and
   `altText` in both `es` and `en`), `objectKey`, `format`, `date` (ISO `YYYY-MM-DD`) and
-  `uploader`, with optional `isVideo`, `colSpan`, and `rowSpan`. It requires `create_components`, assigns the next position in the album, and returns
+  `uploader`, with optional `isVideo`, `colSpan`, and `rowSpan`. It requires `create_components`, assigns the first position in the album, and returns
   the created media with status `201`.
 - `DELETE /api/gallery/media/{mediaId}` requires `delete_components` and removes only the database
   record. It does not delete the associated file from MinIO or another asset store. A successful
