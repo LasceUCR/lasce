@@ -1,6 +1,8 @@
 // Free of server-only imports: the page that reads `?page=` and the component that renders the
 // controls both use these, and so does any other listing that paginates.
 
+import { SEARCH_PARAM } from './search-query'
+
 /** Items per page in every paginated listing. Visitors cannot change it. */
 export const PAGE_SIZE = 10
 
@@ -61,4 +63,63 @@ export function paginate(
     skip: (page - 1) * pageSize,
     take: pageSize,
   }
+}
+
+/** A page number to link to, or a gap in the sequence that `Pagination` shows as `…`. */
+export type PageItem = number | 'ellipsis'
+
+/**
+ * The page numbers to offer around `current`, out of `total`: every page when there are 7 or
+ * fewer, otherwise always 7 items (the first page, the last, the current one and its neighbours,
+ * with a gap where pages are left out), so the controls keep their width while moving.
+ *
+ * 12 pages, on page 6: `1 … 5 6 7 … 12`. On page 2: `1 2 3 4 5 … 12`.
+ */
+export function pageItems(current: number, total: number): PageItem[] {
+  if (total <= 7) return Array.from({ length: Math.max(total, 0) }, (_, index) => index + 1)
+
+  if (current <= 4) return [1, 2, 3, 4, 5, 'ellipsis', total]
+  if (current >= total - 3) {
+    return [1, 'ellipsis', total - 4, total - 3, total - 2, total - 1, total]
+  }
+  return [1, 'ellipsis', current - 1, current, current + 1, 'ellipsis', total]
+}
+
+export interface ListingState {
+  /** Search text; `''` for none. */
+  query?: string
+  page?: number
+}
+
+/**
+ * The URL of a listing at `pathname` showing `page` of the results for `query`, as in
+ * `/noticias?q=sol&page=2`. Page 1 and an empty search are left out, so the plain listing keeps
+ * its plain URL.
+ */
+export function listingHref(pathname: string, { query = '', page = 1 }: ListingState): string {
+  const params = new URLSearchParams()
+  if (query !== '') params.set(SEARCH_PARAM, query)
+  if (page > 1) params.set(PAGE_PARAM, String(page))
+
+  const search = params.toString()
+  return search === '' ? pathname : `${pathname}?${search}`
+}
+
+/**
+ * Whether the query string a listing was opened with already says exactly what is shown, as
+ * `listingHref` would write it. When it does not (`?page=0`, `?page=99` past the end, `?q=` empty,
+ * `?page=1`, a repeated parameter, text that was trimmed), the page redirects to that URL, so the
+ * page shown and the URL never disagree.
+ */
+export function isListingUrl(
+  params: Readonly<Record<string, SearchParamValue>>,
+  { query = '', page = 1 }: ListingState,
+): boolean {
+  const queryValue = params[SEARCH_PARAM]
+  const pageValue = params[PAGE_PARAM]
+
+  const queryMatches = query === '' ? queryValue === undefined : queryValue === query
+  const pageMatches = page === 1 ? pageValue === undefined : pageValue === String(page)
+
+  return queryMatches && pageMatches
 }
