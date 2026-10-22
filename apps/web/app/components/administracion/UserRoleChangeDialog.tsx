@@ -2,9 +2,28 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/app/components/public/Button'
+import { ToastOutlet } from '@/app/components/public/toast/ToastOutlet'
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
 import { RoleAssignmentError } from '@/app/lib/user-overview'
 import styles from './UserRoleChangeDialog.module.css'
+
+/**
+ * The text of the permissions confirmation, already in the site's language. Built by
+ * `RolePermissionsEditor` from `administration.permissions.dialog`; without it the dialog keeps
+ * its Spanish text, which the user-role flow of `/administracion/usuarios` still uses.
+ */
+export interface PermissionsDialogCopy {
+  title: string
+  /** The question, naming the roles (formatted as a list in the site's language). */
+  question: ReactNode
+  summary: string
+  confirm: string
+  cancel: string
+  savingStatus: string
+  savingButton: string
+  reload: string
+  unknownError: string
+}
 
 export interface UserRoleChangeDialogProps {
   isCurrentUser?: boolean
@@ -12,6 +31,14 @@ export interface UserRoleChangeDialogProps {
   currentRoles?: OverviewRole[]
   role?: OverviewRole | null
   roleNames?: string[]
+  /** Permissions mode only: replaces the Spanish text. */
+  permissionsCopy?: PermissionsDialogCopy
+  /**
+   * When given, a failure is reported through it (as a toast) instead of as text inside the
+   * dialog; the dialog then hosts the toasts, so they are not inert behind it. Either way the
+   * dialog stays open, and a failure that needs a reload offers one.
+   */
+  onError?: (message: string) => void
   onConfirm: () => Promise<void>
   onClose: () => void
 }
@@ -25,6 +52,8 @@ export function UserRoleChangeDialog({
   currentRoles = [],
   role = null,
   roleNames,
+  permissionsCopy,
+  onError,
   onConfirm,
   onClose,
   isCurrentUser = false,
@@ -40,10 +69,11 @@ export function UserRoleChangeDialog({
   const permissionsMode = roleNames !== undefined
   const copy = permissionsMode
     ? {
-        title: 'Confirmar cambio de permisos',
-        confirm: 'Sí, guardar permisos',
-        saving: 'Guardando cambio de permisos…',
+        title: permissionsCopy?.title ?? 'Confirmar cambio de permisos',
+        confirm: permissionsCopy?.confirm ?? 'Sí, guardar permisos',
+        saving: permissionsCopy?.savingStatus ?? 'Guardando cambio de permisos…',
         unknownError:
+          permissionsCopy?.unknownError ??
           'No pudimos confirmar el cambio. Recarga la página para comprobar los permisos actuales antes de volver a intentarlo.',
       }
     : {
@@ -53,10 +83,13 @@ export function UserRoleChangeDialog({
         unknownError:
           'No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo.',
       }
+  const cancelLabel = permissionsCopy?.cancel ?? 'No, cancelar'
+  const savingButtonLabel = permissionsCopy?.savingButton ?? 'Guardando…'
+  const reloadLabel = permissionsCopy?.reload ?? 'Recargar página'
 
   useEffect(() => {
-    if (error) errorRef.current?.focus()
-  }, [error])
+    if (error && !onError) errorRef.current?.focus()
+  }, [error, onError])
 
   useEffect(() => {
     const dialog = dialogRef.current!
@@ -77,11 +110,12 @@ export function UserRoleChangeDialog({
     try {
       await onConfirm()
     } catch (failure) {
-      setError(
+      const reported =
         failure instanceof RoleAssignmentError
           ? failure
-          : new RoleAssignmentError(copy.unknownError, true),
-      )
+          : new RoleAssignmentError(copy.unknownError, true)
+      setError(reported)
+      onError?.(reported.message)
     } finally {
       savingRef.current = false
       setSaving(false)
@@ -89,7 +123,14 @@ export function UserRoleChangeDialog({
   }
 
   let body: ReactNode
-  if (permissionsMode) {
+  if (permissionsMode && permissionsCopy) {
+    body = (
+      <>
+        <p id={descriptionId}>{permissionsCopy.question}</p>
+        <p className={styles.summary}>{permissionsCopy.summary}</p>
+      </>
+    )
+  } else if (permissionsMode) {
     body = (
       <>
         <p id={descriptionId}>
@@ -171,7 +212,7 @@ export function UserRoleChangeDialog({
     >
       <h2 id={titleId}>{copy.title}</h2>
       {body}
-      {error && (
+      {error && !onError && (
         <p role="alert" tabIndex={-1} ref={errorRef} className={styles.error}>
           {error.message}
         </p>
@@ -180,11 +221,11 @@ export function UserRoleChangeDialog({
       <div ref={cancelRef} className={styles.actions}>
         {error?.reloadRequired && (
           <Button variant="brand" onClick={() => window.location.reload()}>
-            Recargar página
+            {reloadLabel}
           </Button>
         )}
         <Button variant="secondary" disabled={saving} onClick={onClose}>
-          No, cancelar
+          {cancelLabel}
         </Button>
         <Button
           className={styles.confirm}
@@ -193,9 +234,10 @@ export function UserRoleChangeDialog({
             void confirm()
           }}
         >
-          {saving ? 'Guardando…' : copy.confirm}
+          {saving ? savingButtonLabel : copy.confirm}
         </Button>
       </div>
+      {onError ? <ToastOutlet /> : null}
     </dialog>
   )
 }
