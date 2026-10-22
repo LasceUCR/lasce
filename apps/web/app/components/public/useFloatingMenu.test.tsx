@@ -115,22 +115,28 @@ describe('useFloatingMenu', () => {
     expect(screen.getByRole('dialog')).toHaveStyle({ left: '12px', width: '176px' })
   })
 
-  test('limits placement and available height to the supplied ancestor boundary', async () => {
-    const { trigger, measure, user } = renderPanel({ bounded: true })
-    vi.spyOn(
-      screen.getByRole('region', { name: 'Panel boundary' }),
-      'getBoundingClientRect',
-    ).mockReturnValue(new DOMRect(100, 80, 500, 400))
-    measure.mockReturnValue(new DOMRect(500, 300, 240, 40))
-    await user.click(trigger)
+  test.each([
+    { triggerTop: 360, bottom: '246px', maxHeight: '266px' },
+    { triggerTop: 300, bottom: '306px', maxHeight: '206px' },
+  ])(
+    'limits placement and available height to the supplied ancestor boundary at y=$triggerTop',
+    async ({ triggerTop, bottom, maxHeight }) => {
+      const { trigger, measure, user } = renderPanel({ bounded: true })
+      vi.spyOn(
+        screen.getByRole('region', { name: 'Panel boundary' }),
+        'getBoundingClientRect',
+      ).mockReturnValue(new DOMRect(100, 80, 500, 400))
+      measure.mockReturnValue(new DOMRect(500, triggerTop, 240, 40))
+      await user.click(trigger)
 
-    expect(screen.getByRole('dialog')).toHaveStyle({
-      left: '352px',
-      bottom: '306px',
-      width: '240px',
-      maxHeight: '206px',
-    })
-  })
+      expect(screen.getByRole('dialog')).toHaveStyle({
+        left: '352px',
+        bottom,
+        width: '240px',
+        maxHeight,
+      })
+    },
+  )
 
   test('falls back to the viewport when the boundary leaves no room on either side', async () => {
     const { trigger, measure, user } = renderPanel({ bounded: true })
@@ -148,6 +154,29 @@ describe('useFloatingMenu', () => {
       maxHeight: '320px',
     })
   })
+
+  test.each([
+    { edge: 'top', boundaryTop: 100, triggerTop: 130, position: { top: '176px' } },
+    { edge: 'bottom', boundaryTop: 440, triggerTop: 490, position: { bottom: '116px' } },
+  ])(
+    'uses viewport space when the boundary leaves both sides too short near the $edge',
+    async ({ boundaryTop, triggerTop, position }) => {
+      const { trigger, measure, user } = renderPanel({ bounded: true })
+      vi.spyOn(
+        screen.getByRole('region', { name: 'Panel boundary' }),
+        'getBoundingClientRect',
+      ).mockReturnValue(new DOMRect(100, boundaryTop, 500, 180))
+      measure.mockReturnValue(new DOMRect(500, triggerTop, 240, 40))
+      await user.click(trigger)
+
+      expect(screen.getByRole('dialog')).toHaveStyle({
+        ...position,
+        left: '352px',
+        width: '240px',
+        maxHeight: '320px',
+      })
+    },
+  )
 
   test('respects the offset and size of the visual viewport', async () => {
     const viewport = stubVisualViewport()

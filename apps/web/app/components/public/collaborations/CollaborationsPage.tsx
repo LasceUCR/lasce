@@ -10,6 +10,8 @@ import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { CollaborationsContent } from '@/app/lib/collaborations'
 import type { ResearchCollaboration } from '@/app/lib/research-collaborations'
 
+import { InitiativeDescription } from './InitiativeDescription'
+
 export interface CollaborationsPageProps {
   content: CollaborationsContent
   collaborations: ResearchCollaboration[]
@@ -59,11 +61,7 @@ export function CollaborationsPage({
             ) : null}
             <div className="topic-initiative-copy">
               <h3>{item.title}</h3>
-              {item.paragraphs.map((paragraph) => (
-                <p className="topic-intro" key={paragraph}>
-                  {paragraph}
-                </p>
-              ))}
+              <InitiativeDescription paragraphs={item.paragraphs} />
               {item.href && item.linkLabel ? (
                 <Button
                   href={item.href}

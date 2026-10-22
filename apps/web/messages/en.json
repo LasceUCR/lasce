@@ -461,6 +461,8 @@
       "mx": "Mexico"
     },
     "initiatives": {
+      "readMore": "Read more",
+      "readLess": "Read less",
       "title": "International initiatives LASCE is part of",
       "items": {
         "iswi": {
@@ -1252,6 +1254,24 @@
     }
   },
   "scientificData": {
+    "banners": {
+      "title": "Consultation and download permissions",
+      "goesConsultation": "You can view GOES ({instrument}) data without an account. Availability depends on the product and date; historical queries may take several minutes.",
+      "rosacConsultation": "You can view ROSAC ({instrument}) data without an account. ROSAC is planned for future integration: its instruments and real data have not been defined yet; all results are simulated.",
+      "pendingProducts": "EHIS and MPSL are pending integration.",
+      "rosacDownloads": "All ROSAC ({instrument}) data is available to download as CSV, along with the chart as PNG.",
+      "goesChartOnly": "For GOES ({instrument}), only the chart is available to download as PNG with basic account permissions.",
+      "goesDataDownloads": "Your permissions allow you to download GOES ({instrument}) data as CSV and the chart as PNG.",
+      "noDownloads": "Downloads for {source} ({instrument}) are not available on this platform.",
+      "denied": "Your account does not have permission to download resources from {source} ({instrument}).",
+      "signIn": "To download, you need an account and must sign in.",
+      "expiry": "Each download link expires after 30 minutes."
+    },
+    "loading": {
+      "data": "Loading data",
+      "images": "Loading solar images",
+      "cancel": "Cancel query"
+    },
     "page": {
       "metaTitle": "Scientific data | LASCE",
       "description": "Explore images of the Sun and browse the available scientific information.",
