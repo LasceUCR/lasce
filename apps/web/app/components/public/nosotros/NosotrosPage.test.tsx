@@ -5,7 +5,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
-import { getNosotrosContent } from '@/app/lib/nosotros'
+import { getNosotrosContent, getNosotrosResearcherFixtures } from '@/app/lib/nosotros'
 import en from '@/messages/en.json' with { type: 'json' }
 
 // `NosotrosPage.stories` pulls in `nosotrosContent` from `@/app/lib/nosotros`,
@@ -32,13 +32,18 @@ import { Default, ProvisionalCopy } from './NosotrosPage.stories'
 const defaultArgs = Default.args as NosotrosPageProps
 
 function getNosotrosPageEnglishProps(): NosotrosPageProps {
-  return { content: { ...getNosotrosContent(en), ...pickDatabaseContent(defaultArgs) } }
-}
-
-function pickDatabaseContent({ content }: NosotrosPageProps) {
   return {
-    researchers: { ...getNosotrosContent(en).researchers, people: content.researchers.people },
-    activities: { ...getNosotrosContent(en).activities, items: content.activities.items },
+    content: {
+      ...getNosotrosContent(en),
+      researchers: {
+        ...getNosotrosContent(en).researchers,
+        people: getNosotrosResearcherFixtures('en'),
+      },
+      activities: {
+        ...getNosotrosContent(en).activities,
+        items: defaultArgs.content.activities.items,
+      },
+    },
   }
 }
 const provisionalArgs = ProvisionalCopy.args as NosotrosPageProps
@@ -1132,5 +1137,7 @@ describe('NosotrosPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'About us' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /What do we do\?/ })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Our vision' })).toBeInTheDocument()
+    expect(screen.getByText('Principal investigator')).toBeInTheDocument()
+    expect(screen.getAllByText('Collaborating researcher').length).toBeGreaterThan(0)
   })
 })
