@@ -35,11 +35,11 @@ beforeEach(() => {
     translations: [{ locale: 'en', country: 'Italy' }],
   })
   mocks.record.updateMany.mockResolvedValue({ count: 1 })
-  mocks.record.aggregate.mockResolvedValue({ _max: { position: 7 } })
+  mocks.record.aggregate.mockResolvedValue({ _min: { position: 7 } })
   mocks.record.create.mockResolvedValue({ id: 'partner' })
 })
 describe('collaboration writes', () => {
-  test('appends a bilingual organization and stores omitted optional fields as null', async () => {
+  test('places a bilingual organization first and stores omitted optional fields as null', async () => {
     const input = collaborationCreateSchema.parse({
       name: 'Partner',
       scope: 'international',
@@ -52,7 +52,7 @@ describe('collaboration writes', () => {
         scope: 'INTERNATIONAL',
         acronym: null,
         websiteUrl: null,
-        position: 8,
+        position: 6,
         country: 'Italia',
         translations: { create: [{ locale: 'en', country: 'Italy' }] },
       },
