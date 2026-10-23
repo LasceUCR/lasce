@@ -1042,7 +1042,26 @@ model RosacCharacteristic {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  translations RosacCharacteristicTranslation[]
+
   @@map("rosac_characteristics")
+  @@schema("public")
+}
+
+/// The translatable text of a `RosacCharacteristic` in a language other than Spanish.
+model RosacCharacteristicTranslation {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  characteristicId String   @map("characteristic_id") @db.Uuid
+  locale           String   @db.VarChar(5)
+  title            String
+  description      String   @db.Text
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  characteristic RosacCharacteristic @relation(fields: [characteristicId], references: [id], onDelete: Cascade)
+
+  @@unique([characteristicId, locale])
+  @@map("rosac_characteristic_translations")
   @@schema("public")
 }
 
@@ -1057,7 +1076,26 @@ model RosacActivity {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  translations RosacActivityTranslation[]
+
   @@map("rosac_activities")
+  @@schema("public")
+}
+
+/// The translatable text of a `RosacActivity` in a language other than Spanish.
+model RosacActivityTranslation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  activityId  String   @map("activity_id") @db.Uuid
+  locale      String   @db.VarChar(5)
+  title       String
+  description String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  activity RosacActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, locale])
+  @@map("rosac_activity_translations")
   @@schema("public")
 }
 
@@ -1072,7 +1110,26 @@ model RosacStage {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  translations RosacStageTranslation[]
+
   @@map("rosac_stages")
+  @@schema("public")
+}
+
+/// The translatable text of a `RosacStage` in a language other than Spanish.
+model RosacStageTranslation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stageId     String   @map("stage_id") @db.Uuid
+  locale      String   @db.VarChar(5)
+  title       String
+  description String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  stage RosacStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@unique([stageId, locale])
+  @@map("rosac_stage_translations")
   @@schema("public")
 }
 
@@ -1090,7 +1147,29 @@ model RosacInstrument {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  translations RosacInstrumentTranslation[]
+
   @@map("rosac_instruments")
+  @@schema("public")
+}
+
+/// The translatable text of a `RosacInstrument` in a language other than Spanish.
+model RosacInstrumentTranslation {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  instrumentId       String   @map("instrument_id") @db.Uuid
+  locale             String   @db.VarChar(5)
+  name               String
+  pendingMessage     String?  @map("pending_message") @db.Text
+  consultationLabel  String?  @map("consultation_label")
+  consultationNotice String?  @map("consultation_notice") @db.Text
+  imageAlt           String?  @map("image_alt")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  instrument RosacInstrument @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+
+  @@unique([instrumentId, locale])
+  @@map("rosac_instrument_translations")
   @@schema("public")
 }
 

@@ -786,6 +786,106 @@ nothing is created or deleted from the CMS. See [`space-weather.md`](space-weath
 `ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `body`, timestamps. Unique on
 `(section_id, locale)`.
 
+## `public` schema (ROSAC)
+
+### `rosac_characteristics` and `rosac_characteristic_translations`
+
+The 4 characteristic cards shown in Section 1 of `/radioastronomia`, looked up by `key` or `id`.
+Spanish `title` and `description` live on the base row; other languages live in `rosac_characteristic_translations`.
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `key`         | `String`    | `text`           | not null, unique                       |
+| `icon`        | `String`    | `text`           | not null                               |
+| `title`       | `String`    | `text`           | not null; Spanish                      |
+| `description` | `String`    | `text`           | not null; Spanish                      |
+| `position`    | `Int`       | `integer`        | not null, default 0                    |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`rosac_characteristic_translations`: `id`, `characteristic_id` (FK → `rosac_characteristics.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `description`, timestamps. Unique on
+`(characteristic_id, locale)`.
+
+### `rosac_activities` and `rosac_activity_translations`
+
+The 6 scientific activity cards shown in Section 3 of `/radioastronomia`.
+Spanish `title` and `description` live on the base row; other languages live in `rosac_activity_translations`.
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `key`         | `String`    | `text`           | not null, unique                       |
+| `icon`        | `String`    | `text`           | not null                               |
+| `title`       | `String`    | `text`           | not null; Spanish                      |
+| `description` | `String`    | `text`           | not null; Spanish                      |
+| `position`    | `Int`       | `integer`        | not null, default 0                    |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`rosac_activity_translations`: `id`, `activity_id` (FK → `rosac_activities.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `description`, timestamps. Unique on
+`(activity_id, locale)`.
+
+### `rosac_stages` and `rosac_stage_translations`
+
+The 5 construction stages shown in the carousel of Section 4 of `/radioastronomia`.
+Spanish `title` and `description` live on the base row; other languages live in `rosac_stage_translations`. `images` stores array of image objects.
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `key`         | `String`    | `text`           | not null, unique                       |
+| `title`       | `String`    | `text`           | not null; Spanish                      |
+| `description` | `String`    | `text`           | not null; Spanish                      |
+| `images`      | `Json`      | `jsonb`          | not null, default `[]`                 |
+| `position`    | `Int`       | `integer`        | not null, default 0                    |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`rosac_stage_translations`: `id`, `stage_id` (FK → `rosac_stages.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `description`, timestamps. Unique on
+`(stage_id, locale)`.
+
+### `rosac_instruments` and `rosac_instrument_translations`
+
+The scientific instrument cards shown in Section 6 of `/radioastronomia`.
+Spanish fields live on the base row; English translations live in `rosac_instrument_translations`.
+
+| Column                | Prisma type | Postgres type    | Constraints                            |
+| --------------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`                  | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `name`                | `String`    | `text`           | not null                               |
+| `pending_message`     | `String?`   | `text`           | nullable                               |
+| `image_src`           | `String?`   | `text`           | nullable                               |
+| `image_alt`           | `String?`   | `text`           | nullable                               |
+| `consultation_href`   | `String?`   | `text`           | nullable                               |
+| `consultation_label`  | `String`    | `text`           | not null                               |
+| `consultation_notice` | `String?`   | `text`           | nullable                               |
+| `position`            | `Int`       | `integer`        | not null, default 0                    |
+| `created_at`          | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`          | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`rosac_instrument_translations`: `id`, `instrument_id` (FK → `rosac_instruments.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `name`, `pending_message`, `consultation_label`,
+`consultation_notice`, `image_alt`, timestamps. Unique on `(instrument_id, locale)`.
+
+### `rosac_acknowledgments`
+
+The institution acknowledgment cards shown in Section 9 of `/radioastronomia`.
+
+| Column       | Prisma type | Postgres type    | Constraints                            |
+| ------------ | ----------- | ---------------- | -------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `name`       | `String`    | `text`           | not null                               |
+| `href`       | `String?`   | `text`           | nullable                               |
+| `logo_src`   | `String`    | `text`           | not null                               |
+| `logo_alt`   | `String`    | `text`           | not null                               |
+| `position`   | `Int`       | `integer`        | not null, default 0                    |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
