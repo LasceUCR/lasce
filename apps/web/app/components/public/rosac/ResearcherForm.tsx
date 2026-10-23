@@ -38,6 +38,10 @@ export interface PersonProfile {
   email?: string | readonly string[]
   institution: string
   description?: string
+  /** The stored base role before UI localization, used to initialize single-language edit forms. */
+  storedRole?: string
+  /** The stored base description before UI localization, used to initialize single-language edit forms. */
+  storedDescription?: string
 }
 
 export interface ResearcherFormValues {
@@ -151,14 +155,16 @@ export function ResearcherForm(props: ResearcherFormProps) {
   const { researcher, onCancel } = props
   const bilingual = props.translation !== undefined
   const contentRef = useRef<ResearcherContentHandle>(null)
-  const [role, setRole] = useState(researcher?.role ?? '')
+  const [role, setRole] = useState(researcher?.storedRole ?? researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
   const [isAddingEmail, setIsAddingEmail] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [newEmailError, setNewEmailError] = useState<string | null>(null)
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
-  const [description, setDescription] = useState(researcher?.description ?? '')
+  const [description, setDescription] = useState(
+    researcher?.storedDescription ?? researcher?.description ?? '',
+  )
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
@@ -184,7 +190,8 @@ export function ResearcherForm(props: ResearcherFormProps) {
   function isDirty() {
     const textChanged = bilingual
       ? (contentRef.current?.isDirty() ?? false)
-      : role !== (researcher?.role ?? '') || description !== (researcher?.description ?? '')
+      : role !== (researcher?.storedRole ?? researcher?.role ?? '') ||
+        description !== (researcher?.storedDescription ?? researcher?.description ?? '')
 
     return (
       name !== (researcher?.name ?? '') ||
