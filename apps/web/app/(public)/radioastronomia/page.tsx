@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
-import { getMessages, getTranslations } from 'next-intl/server'
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { RosacInfoPage } from '@/app/components/public/rosac/RosacInfoPage'
 import { userHasPermission } from '@/app/lib/auth/authorization'
+import type { Locale } from '@/app/lib/i18n/config'
 import {
   getResearchers,
   getRosacAcknowledgments,
@@ -28,28 +29,23 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = 'force-dynamic'
 
 export default async function RadioastronomiaRoute() {
-  const [
-    messages,
-    people,
-    characteristics,
-    activities,
-    stages,
-    instruments,
-    acknowledgments,
-    canCreate,
-    canEdit,
-    canDelete,
-  ] = await Promise.all([
+  const [messages, localeStr, people, canCreate, canEdit, canDelete] = await Promise.all([
     getMessages(),
+    getLocale(),
     getResearchers(),
-    getRosacCharacteristics(),
-    getRosacActivities(),
-    getRosacStages(),
-    getRosacInstruments(),
-    getRosacAcknowledgments(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
+  ])
+
+  const locale = localeStr as Locale
+
+  const [characteristics, activities, stages, instruments, acknowledgments] = await Promise.all([
+    getRosacCharacteristics(locale, { includeEditingData: canEdit }),
+    getRosacActivities(locale, { includeEditingData: canEdit }),
+    getRosacStages(locale, { includeEditingData: canEdit }),
+    getRosacInstruments(locale, { includeEditingData: canEdit }),
+    getRosacAcknowledgments(),
   ])
 
   const content = getRosacInfoContent(messages as unknown as RosacMessages)
