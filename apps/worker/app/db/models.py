@@ -24,7 +24,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import ENUM, JSONB, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM, JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -991,5 +991,172 @@ class RosacAcknowledgment(Base):
     logo_src: Mapped[str] = mapped_column(Text)
     logo_alt: Mapped[str] = mapped_column(Text)
     position: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class Researcher(Base):
+    """A researcher profile card."""
+
+    __tablename__ = "researchers"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    role: Mapped[str] = mapped_column(Text)
+    name: Mapped[str] = mapped_column(Text)
+    institution: Mapped[str] = mapped_column(Text)
+    email: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    modified_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("auth.users.id", ondelete="RESTRICT")
+    )
+    modified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ResearcherTranslation(Base):
+    """The ``role`` and ``description`` of a `Researcher` in a language other than Spanish."""
+
+    __tablename__ = "researcher_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "researcher_id",
+            "locale",
+            name="researcher_translations_researcher_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    researcher_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.researchers.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    role: Mapped[str] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacCharacteristicTranslation(Base):
+    """The ``title`` and ``description`` of a `RosacCharacteristic` in a language
+    other than Spanish.
+    """
+
+    __tablename__ = "rosac_characteristic_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "characteristic_id",
+            "locale",
+            name="rosac_characteristic_translations_characteristic_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    characteristic_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_characteristics.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacActivityTranslation(Base):
+    """The ``title`` and ``description`` of a `RosacActivity` in a language other than Spanish."""
+
+    __tablename__ = "rosac_activity_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "activity_id",
+            "locale",
+            name="rosac_activity_translations_activity_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    activity_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_activities.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacStageTranslation(Base):
+    """The ``title`` and ``description`` of a `RosacStage` in a language other than Spanish."""
+
+    __tablename__ = "rosac_stage_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "stage_id",
+            "locale",
+            name="rosac_stage_translations_stage_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    stage_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_stages.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacInstrumentTranslation(Base):
+    """The translatable text of a `RosacInstrument` in a language other than Spanish."""
+
+    __tablename__ = "rosac_instrument_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "instrument_id",
+            "locale",
+            name="rosac_instrument_translations_instrument_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    instrument_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_instruments.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    name: Mapped[str] = mapped_column(Text)
+    consultation_label: Mapped[str | None] = mapped_column(Text, nullable=True)
+    consultation_notice: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pending_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacAcknowledgmentTranslation(Base):
+    """The ``name`` of a `RosacAcknowledgment` in a language other than Spanish."""
+
+    __tablename__ = "rosac_acknowledgment_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "acknowledgment_id",
+            "locale",
+            name="rosac_acknowledgment_translations_acknowledgment_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    acknowledgment_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_acknowledgments.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    name: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
