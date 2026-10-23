@@ -1,5 +1,7 @@
 import es from '@/messages/es.json' with { type: 'json' }
 
+import type { Locale } from '@/app/lib/i18n/config'
+import type { RosacInstrumentEditingData } from './rosac-schema'
 import { rosacInstruments } from './scientific-data'
 
 export interface InstrumentCardLabels {
@@ -24,6 +26,8 @@ export interface RosacInstrumentCardContent {
    */
   consultation?: { href?: string; label: string; notice?: string }
   labels?: InstrumentCardLabels
+  contentLocale?: Locale | null
+  editing?: RosacInstrumentEditingData
 }
 
 export interface RosacInstrumentsContent {
