@@ -917,10 +917,8 @@ a {
 }
 
 .button {
-  height: 44px;
-  min-height: 44px;
+  min-height: 43px;
   box-sizing: border-box;
-  line-height: 1;
   padding: 0 26px;
   display: inline-flex;
   align-items: center;
@@ -6954,6 +6952,20 @@ a.acknowledgments-card:focus-visible {
   margin-left: -6px;
   margin-right: -6px;
   padding: 14px 6px 18px;
+}
+
+.modal
+  :is(
+    .modal-actions,
+    .cms-form-actions,
+    .news-article-form-actions,
+    .nosotros-activity-form-actions,
+    .confirm-dialog-actions,
+    .mgmt-form-actions
+  )
+  .button {
+  height: 44px;
+  line-height: 1;
 }
 
 @media (max-width: 760px) {

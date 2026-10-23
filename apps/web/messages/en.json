@@ -178,11 +178,15 @@
     "announcement": "Image {position} of {total}: {time}."
   },
   "fileDrop": {
+    "dropHere": "Drag an image here",
+    "browseFiles": "click to select from your device",
     "description": "Drag an image here or click to select from your device",
     "rejectionFormat": "Unsupported format. Use a JPG, PNG, WebP or GIF image.",
     "rejectionSize": "The image exceeds the maximum size of 25 MB.",
+    "removeFile": "Remove image",
     "removeLabel": "Remove image",
-    "previewAlt": "Preview of {label}"
+    "previewAlt": "Preview of {label}",
+    "imagePreviewAlt": "Preview of {label}"
   },
   "contact": {
     "meta": {

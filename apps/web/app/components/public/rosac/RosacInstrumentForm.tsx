@@ -1,3 +1,5 @@
+'use client'
+
 import { useId, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
@@ -10,20 +12,6 @@ import { rosacInstruments } from '@/app/lib/scientific-data'
 import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 
 export type ConsultationMode = 'simulation' | 'custom' | 'disabled'
-
-export const CONSULTATION_MODE_OPTIONS: FormFieldOption[] = [
-  { value: 'simulation', label: 'Simulación del catálogo de datos (ROSAC)' },
-  { value: 'custom', label: 'Enlace externo o personalizado' },
-  { value: 'disabled', label: 'En integración / Próximamente (sin enlace)' },
-]
-
-export const SIMULATION_TARGET_OPTIONS: FormFieldOption[] = rosacInstruments.map((inst, index) => {
-  const productName = inst.products[0]?.name
-  return {
-    value: inst.code,
-    label: `Instrumento ${index + 1}${productName ? ` - ${productName}` : ''} (${inst.code})`,
-  }
-})
 
 export function getSimulationUrl(instrumentCode: string): string {
   return `/datos?source=ROSAC&instrument=${instrumentCode}#scientific-query-title`

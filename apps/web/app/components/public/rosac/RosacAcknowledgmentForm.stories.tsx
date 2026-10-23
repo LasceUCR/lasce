@@ -16,7 +16,6 @@ export const EditExisting: Story = {
     institution: {
       id: 'cinespa',
       name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
-      href: 'https://cinespa.ucr.ac.cr',
       logo: {
         src: '/images/ROSAC/acknowledgments/cinespa.webp',
         alt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',

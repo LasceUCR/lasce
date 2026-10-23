@@ -508,7 +508,6 @@ export function RosacInfoPage({
         ? {
             ...inst,
             name: values.name,
-            href: values.href,
             logo: values.logo,
           }
         : inst,
@@ -536,7 +535,6 @@ export function RosacInfoPage({
     const newInstitution: RosacAcknowledgment = {
       id: newId,
       name: values.name,
-      href: values.href,
       logo: values.logo,
     }
 

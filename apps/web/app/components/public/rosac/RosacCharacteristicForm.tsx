@@ -8,18 +8,6 @@ import { FormField, type FormFieldOption } from '@/app/components/public/FormFie
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import type { RosacCardIcon } from '@/app/lib/rosac'
 
-export const ROSAC_CARD_ICON_OPTIONS: FormFieldOption[] = [
-  { value: 'antenna', label: 'Antena' },
-  { value: 'location', label: 'Ubicación' },
-  { value: 'frequency', label: 'Frecuencia' },
-  { value: 'sun', label: 'Sol' },
-  { value: 'tracking', label: 'Apuntado y seguimiento' },
-  { value: 'control', label: 'Control' },
-  { value: 'receiver', label: 'Receptor' },
-  { value: 'maintenance', label: 'Mantenimiento e infraestructura' },
-  { value: 'education', label: 'Educación' },
-]
-
 export interface RosacCharacteristicFormValues {
   icon: RosacCardIcon
   title: string

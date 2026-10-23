@@ -32,9 +32,6 @@ describe('RosacAcknowledgmentForm', () => {
       editArgs.institution!.name,
     )
     expect(
-      screen.getByRole('textbox', { name: 'Sitio web de la institución (opcional)' }),
-    ).toHaveValue(editArgs.institution!.href)
-    expect(
       screen.getByRole('textbox', { name: 'Texto alternativo del logo (Accesibilidad)' }),
     ).toHaveValue(editArgs.institution!.logo.alt)
   })
@@ -43,9 +40,6 @@ describe('RosacAcknowledgmentForm', () => {
     render(<RosacAcknowledgmentForm {...addArgs} />)
 
     expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).toHaveValue('')
-    expect(
-      screen.getByRole('textbox', { name: 'Sitio web de la institución (opcional)' }),
-    ).toHaveValue('')
     expect(screen.getByRole('button', { name: 'Agregar institución' })).toBeEnabled()
   })
 
@@ -86,35 +80,6 @@ describe('RosacAcknowledgmentForm', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('validates url format when href is provided', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<RosacAcknowledgmentForm {...editArgs} onSave={onSave} />)
-
-    const hrefInput = screen.getByRole('textbox', {
-      name: 'Sitio web de la institución (opcional)',
-    })
-    await user.clear(hrefInput)
-    await user.type(hrefInput, 'enlace-invalido')
-
-    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
-
-    expect(
-      screen.getByText('El enlace debe ser una URL válida que empiece con http:// o https://.'),
-    ).toBeInTheDocument()
-    expect(onSave).not.toHaveBeenCalled()
-
-    await user.clear(hrefInput)
-    await user.type(hrefInput, 'https://cinespa.ucr.ac.cr/nuevo')
-    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
-
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        href: 'https://cinespa.ucr.ac.cr/nuevo',
-      }),
-    )
-  })
-
   test('saves institution directly without extra confirmation dialog', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
@@ -130,7 +95,6 @@ describe('RosacAcknowledgmentForm', () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'CINESPA Editado',
-        href: editArgs.institution!.href,
         logo: expect.objectContaining({
           src: editArgs.institution!.logo.src,
         }),
@@ -138,7 +102,7 @@ describe('RosacAcknowledgmentForm', () => {
     )
   })
 
-  test('clears name, alt and href when switching from a preset back to custom logo', async () => {
+  test('clears name and alt when switching from a preset back to custom logo', async () => {
     const user = userEvent.setup()
     render(<RosacAcknowledgmentForm {...addArgs} />)
 
@@ -149,18 +113,27 @@ describe('RosacAcknowledgmentForm', () => {
     // Select preset 0
     await user.selectOptions(select, '0')
     expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).not.toHaveValue('')
-    expect(
-      screen.getByRole('textbox', { name: 'Sitio web de la institución (opcional)' }),
-    ).toHaveValue('https://vinv.ucr.ac.cr')
 
     // Switch back to custom
     await user.selectOptions(select, 'custom')
     expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).toHaveValue('')
     expect(
-      screen.getByRole('textbox', { name: 'Sitio web de la institución (opcional)' }),
-    ).toHaveValue('')
-    expect(
       screen.getByRole('textbox', { name: 'Texto alternativo del logo (Accesibilidad)' }),
     ).toHaveValue('')
+  })
+
+  test('fills alt text with English preset defaultAltEn when in English locale', async () => {
+    const user = userEvent.setup()
+    render(<RosacAcknowledgmentForm {...addArgs} />, { locale: 'en' })
+
+    const select = screen.getByRole('combobox', {
+      name: 'Choose a custom logo or select one from the list',
+    })
+
+    // Select preset 0
+    await user.selectOptions(select, '0')
+    expect(
+      screen.getByRole('textbox', { name: 'Logo alternative text (Accessibility)' }),
+    ).toHaveValue('Logo of the Vice-Rectorate for Research, University of Costa Rica')
   })
 })
