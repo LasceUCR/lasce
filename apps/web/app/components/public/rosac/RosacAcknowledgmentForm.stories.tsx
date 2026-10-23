@@ -20,6 +20,18 @@ export const EditExisting: Story = {
         src: '/images/ROSAC/acknowledgments/cinespa.webp',
         alt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
       },
+      editing: {
+        content: {
+          es: {
+            name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+          },
+          en: {
+            name: 'Center for Space Research (CINESPA), UCR',
+          },
+        },
+        isLegacy: false,
+        version: '1',
+      },
     },
     onCancel: fn(),
     onSave: fn(),

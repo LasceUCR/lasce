@@ -1,14 +1,43 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
+import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
+import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
+import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import { uploadInstrumentImage } from '@/app/(public)/radioastronomia/actions'
-import { rosacInstruments } from '@/app/lib/scientific-data'
+import { defaultLocale, isLocale, localeLabels, locales, type Locale } from '@/app/lib/i18n/config'
+import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
+import {
+  confirmationsStillNeeded,
+  contentFieldLang,
+  contentPath,
+  draftFromStored,
+  hasContentChanges,
+  isConfirmed,
+  languageTabFlags,
+  resetConfirmations,
+  reviewsNeeded,
+  tabWithErrors,
+  toContentInput,
+  validateContent,
+  withConfirmation,
+  type ContentDraft,
+} from '@/app/lib/i18n/content/form'
+import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import {
+  rosacInstrumentContent,
+  type RosacInstrumentCreateInput,
+  type RosacInstrumentField,
+  type RosacInstrumentUpdateInput,
+} from '@/app/lib/rosac-schema'
 import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
+import { rosacInstruments } from '@/app/lib/scientific-data'
 
 export type ConsultationMode = 'simulation' | 'custom' | 'disabled'
 
@@ -76,17 +105,11 @@ function getInitialConsultationState(instrument: RosacInstrumentCardContent | nu
   }
 }
 
-export interface RosacInstrumentFormValues {
-  name: string
-  pendingMessage?: string
-  image?: { src: string; alt: string }
-  consultation?: { href?: string; label: string; notice?: string }
-}
+export type RosacInstrumentFormBody = RosacInstrumentCreateInput | RosacInstrumentUpdateInput
 
 export interface RosacInstrumentFormProps {
-  /** Existing instrument for editing, or null for creating a new card. */
   instrument: RosacInstrumentCardContent | null
-  onSave: (values: RosacInstrumentFormValues) => void
+  onSave: (body: RosacInstrumentFormBody) => void | Promise<void>
   onCancel: () => void
 }
 
@@ -96,11 +119,34 @@ export const DEFAULT_INSTRUMENT_IMAGE = {
 }
 
 export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstrumentFormProps) {
-  const initialDescription = instrument?.consultation?.notice ?? instrument?.pendingMessage ?? ''
-  const initialConsultation = getInitialConsultationState(instrument)
+  const t = useTranslations('rosac.editor')
+  const siteLocale = useLocale()
+  const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
+  const stored =
+    instrument?.editing?.content ??
+    (instrument
+      ? {
+          es: {
+            name: instrument.name,
+            description: instrument.consultation?.notice ?? instrument.pendingMessage ?? '',
+          },
+          en: null,
+        }
+      : null)
 
-  const [name, setName] = useState(instrument?.name ?? '')
-  const [description, setDescription] = useState(initialDescription)
+  const formRef = useRef<HTMLDivElement>(null)
+  const formId = useId()
+
+  const [tab, setTab] = useState<Locale>(defaultLocale)
+  const [draft, setDraft] = useState<ContentDraft<RosacInstrumentField>>(() =>
+    draftFromStored(rosacInstrumentContent, stored),
+  )
+  const [confirmed, setConfirmed] = useState<ReviewConfirmation<RosacInstrumentField>[]>([])
+  const [attempted, setAttempted] = useState(false)
+  const [focusRequest, setFocusRequest] = useState(0)
+
+  // Shared fields state
+  const initialConsultation = getInitialConsultationState(instrument)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageRemoved, setImageRemoved] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -115,23 +161,32 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
   const [customHref, setCustomHref] = useState(initialConsultation.customHref)
   const [consultationLabel, setConsultationLabel] = useState(instrument?.consultation?.label ?? '')
 
-  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
-  const formId = useId()
 
-  const nameError = hasAttemptedSubmit && name.trim() === '' ? 'El nombre es obligatorio.' : null
-  const descriptionError =
-    hasAttemptedSubmit && description.trim() === '' ? 'La descripción es obligatoria.' : null
+  useEffect(() => {
+    if (focusRequest === 0) return
+    const invalid = formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? []
+    Array.from(invalid)
+      .find((element) => !element.closest('[hidden]'))
+      ?.focus()
+  }, [focusRequest])
+
+  const needed = reviewsNeeded(rosacInstrumentContent, stored, draft)
+  const errors = attempted
+    ? validateContent(rosacInstrumentContent, stored, draft, confirmed, uiLocale)
+    : {}
+
   const hasImage = imageFile !== null || (Boolean(imageSrc) && !imageRemoved)
-  const imageError = hasAttemptedSubmit && !hasImage ? 'La imagen es obligatoria.' : null
+  const imageError = attempted && !hasImage ? 'La imagen es obligatoria.' : null
   const customHrefError =
-    hasAttemptedSubmit && consultationMode === 'custom' && customHref.trim() === ''
+    attempted && consultationMode === 'custom' && customHref.trim() === ''
       ? 'El enlace es obligatorio para un destino personalizado.'
       : null
 
-  const isCustomHrefValid = consultationMode !== 'custom' || customHref.trim() !== ''
-  const isFormValid =
-    name.trim() !== '' && description.trim() !== '' && hasImage && isCustomHrefValid
+  const contentChanged = hasContentChanges(rosacInstrumentContent, stored, draft)
+  const hasTypedText = locales.some((locale) =>
+    rosacInstrumentContent.fields.some((field) => draft[locale][field].trim() !== ''),
+  )
 
   const isConsultationDirty =
     consultationLabel !== (instrument?.consultation?.label ?? '') ||
@@ -139,38 +194,46 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
     (consultationMode === 'simulation' && simulationTarget !== initialConsultation.target) ||
     (consultationMode === 'custom' && customHref !== initialConsultation.customHref)
 
-  const isDirty =
-    name !== (instrument?.name ?? '') ||
-    description !== initialDescription ||
-    imageFile !== null ||
-    imageRemoved ||
-    imageAlt !== (instrument?.image?.alt ?? '') ||
-    isConsultationDirty
+  const isImageDirty =
+    imageFile !== null || imageRemoved || imageAlt !== (instrument?.image?.alt ?? '')
+  const isDirty = instrument
+    ? contentChanged || isConsultationDirty || isImageDirty
+    : hasTypedText || isImageDirty || isConsultationDirty
 
   function handleCancelClick() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
-    } else {
-      onCancel()
+      return
     }
+    onCancel()
+  }
+
+  function setContent(locale: Locale, field: RosacInstrumentField, value: string) {
+    setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
+    setConfirmed((current) => resetConfirmations(current, field))
   }
 
   async function handleConfirmClick() {
-    setHasAttemptedSubmit(true)
-    if (!isFormValid) {
-      if (name.trim() === '') {
-        document.getElementById(`${formId}-name`)?.focus()
-      } else if (description.trim() === '') {
-        document.getElementById(`${formId}-description`)?.focus()
-      } else if (consultationMode === 'custom' && customHref.trim() === '') {
-        document.getElementById(`${formId}-consultation-href`)?.focus()
-      }
+    setAttempted(true)
+    const found = validateContent(rosacInstrumentContent, stored, draft, confirmed, uiLocale)
+
+    if (
+      Object.keys(found).length > 0 ||
+      !hasImage ||
+      (consultationMode === 'custom' && !customHref.trim())
+    ) {
+      const target = tabWithErrors(found, tab)
+      if (target) setTab(target)
+      setFocusRequest((current) => current + 1)
       return
     }
 
-    if (isUploading) return
+    if (instrument && !contentChanged && !isImageDirty && !isConsultationDirty) {
+      onCancel()
+      return
+    }
 
-    let finalImageUrl = imageRemoved ? '' : imageSrc
+    let finalImageUrl = imageSrc
     if (imageFile) {
       setIsUploading(true)
       setUploadError(null)
@@ -186,7 +249,7 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
         finalImageUrl = result.imageUrl
       } catch {
         setIsUploading(false)
-        setUploadError('No se pudo subir la imagen. Inténtelo de nuevo.')
+        setUploadError('Error al subir la imagen. Inténtelo de nuevo.')
         return
       }
       setIsUploading(false)
@@ -197,52 +260,106 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
       finalConsultationHref = getSimulationUrl(simulationTarget)
     } else if (consultationMode === 'custom') {
       finalConsultationHref = customHref.trim() || undefined
+    }
+
+    const currentName = draft[defaultLocale].name.trim()
+    const content = toContentInput(rosacInstrumentContent, draft)
+    const image = hasImage
+      ? {
+          src: finalImageUrl,
+          alt: imageAlt.trim() || `Imagen ilustrativa de ${currentName}`,
+        }
+      : undefined
+
+    const consultation = {
+      label: consultationLabel.trim() || `Consultar simulación de ${currentName}`,
+      href: finalConsultationHref,
+    }
+
+    if (!instrument) {
+      onSave({
+        content,
+        image,
+        consultation,
+      })
     } else {
-      finalConsultationHref = undefined
+      onSave({
+        version: instrument.editing?.version ?? '',
+        ...(contentChanged
+          ? { content, confirmedUnchanged: confirmationsStillNeeded(confirmed, needed) }
+          : {}),
+        ...(isImageDirty ? { image } : {}),
+        ...(isConsultationDirty ? { consultation } : {}),
+      })
     }
+  }
 
-    const values: RosacInstrumentFormValues = {
-      name: name.trim(),
-      image: {
-        src: finalImageUrl,
-        alt: imageAlt.trim() || `Imagen ilustrativa de ${name.trim()}`,
-      },
-      consultation: {
-        label: consultationLabel.trim() || `Consultar simulación de ${name.trim()}`,
-        href: finalConsultationHref,
-        notice: description.trim(),
-      },
-    }
+  function reviewControl(locale: Locale, field: RosacInstrumentField) {
+    const review = needed.find((each) => each.locale === locale && each.field === field)
+    if (!review) return null
 
-    onSave(values)
+    return (
+      <TranslationReview
+        checked={isConfirmed(confirmed, review)}
+        label={confirmationLabel(rosacInstrumentContent, review, uiLocale)}
+        message={reviewMessage(rosacInstrumentContent, review, stored, draft, uiLocale)}
+        onChange={(checked) =>
+          setConfirmed((current) => withConfirmation(current, review, checked))
+        }
+      />
+    )
   }
 
   return (
-    <div className="cms-form">
+    <div className="cms-form" ref={formRef}>
       {uploadError ? (
         <p className="form-alert" role="alert">
           {uploadError}
         </p>
       ) : null}
 
-      <FormField
-        errorMessage={nameError}
-        id={`${formId}-name`}
-        label="Nombre del instrumento"
-        onChange={setName}
-        required
-        value={name}
-      />
+      <LanguageTabs
+        copyLang={uiLocale}
+        flags={languageTabFlags(stored, errors, needed, confirmed, uiLocale)}
+        label={t('languageTabs')}
+        onSelect={setTab}
+        selected={tab}
+      >
+        {(locale) => (
+          <>
+            {instrument?.editing?.isLegacy && locale === defaultLocale ? (
+              <Notice>{t('legacyBaseText')}</Notice>
+            ) : null}
 
-      <FormField
-        errorMessage={descriptionError}
-        id={`${formId}-description`}
-        label="Descripción"
-        multiline
-        onChange={setDescription}
-        required
-        value={description}
-      />
+            {instrument?.editing?.isLegacy && locale !== defaultLocale ? (
+              <Notice tone="warning">{t('legacyNoTranslation')}</Notice>
+            ) : null}
+
+            <FormField
+              error={errors[contentPath(locale, 'name')]}
+              id={`${formId}-${locale}-name`}
+              label={t('nameIn', { language: localeLabels[locale] })}
+              lang={contentFieldLang(stored, locale)}
+              onChange={(value) => setContent(locale, 'name', value)}
+              required
+              value={draft[locale].name}
+            />
+            {reviewControl(locale, 'name')}
+
+            <FormField
+              error={errors[contentPath(locale, 'description')]}
+              id={`${formId}-${locale}-description`}
+              label={t('descriptionIn', { language: localeLabels[locale] })}
+              lang={contentFieldLang(stored, locale)}
+              multiline
+              onChange={(value) => setContent(locale, 'description', value)}
+              required
+              value={draft[locale].description}
+            />
+            {reviewControl(locale, 'description')}
+          </>
+        )}
+      </LanguageTabs>
 
       <FileDropInput
         errorMessage={imageError}
@@ -321,26 +438,24 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
           id={`${formId}-consultation-label`}
           label="Etiqueta del botón"
           onChange={setConsultationLabel}
-          placeholder={
-            name.trim() ? `Consultar simulación de ${name.trim()}` : 'Consultar simulación'
-          }
+          placeholder="Consultar simulación"
           value={consultationLabel}
         />
       </div>
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
+          {t('cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
-          {isUploading ? 'Guardando...' : 'Confirmar'}
+          {isUploading ? t('saving') : t('save')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardCancel')}
+        confirmLabel={t('discardConfirm')}
+        message={t('discardMessage')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={() => {
           setConfirmDiscardOpen(false)
@@ -348,7 +463,7 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
         }}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardTitle')}
       />
     </div>
   )

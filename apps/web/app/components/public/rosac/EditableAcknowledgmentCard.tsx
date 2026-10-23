@@ -11,14 +11,14 @@ import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 import {
   RosacAcknowledgmentForm,
-  type RosacAcknowledgmentFormValues,
+  type RosacAcknowledgmentFormBody,
 } from './RosacAcknowledgmentForm'
 
 export interface EditableAcknowledgmentCardProps {
   institution: RosacAcknowledgment
   canEdit?: boolean
   canDelete?: boolean
-  onSave: (values: RosacAcknowledgmentFormValues) => Promise<string | null> | void
+  onSave: (values: RosacAcknowledgmentFormBody) => Promise<string | null> | void
   onDelete?: () => void
 }
 
@@ -89,7 +89,7 @@ export function EditableAcknowledgmentCard({
       </div>
     )
 
-  async function handleFormSave(values: RosacAcknowledgmentFormValues) {
+  async function handleFormSave(values: RosacAcknowledgmentFormBody) {
     const error = await onSave(values)
     if (error) {
       setSaveError(error)
