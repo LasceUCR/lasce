@@ -1,36 +1,38 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { RosacActivityForm, type RosacActivityFormProps } from './RosacActivityForm'
-import { AddNew, EditExisting } from './RosacActivityForm.stories'
+import { EditExisting } from './RosacActivityForm.stories'
 
 const editArgs = EditExisting.args as RosacActivityFormProps
-const addArgs = AddNew.args as RosacActivityFormProps
+
+function renderForm(props: Partial<RosacActivityFormProps> = {}, locale: 'es' | 'en' = 'es') {
+  const onSave = vi.fn()
+  const onCancel = vi.fn()
+  renderWithIntl(
+    <RosacActivityForm {...editArgs} onCancel={onCancel} onSave={onSave} {...props} />,
+    { locale },
+  )
+  return { onSave, onCancel, user: userEvent.setup() }
+}
 
 describe('RosacActivityForm', () => {
   test('starts pre-filled when editing an existing activity', () => {
-    render(<RosacActivityForm {...editArgs} />)
+    renderForm()
 
     expect(screen.getByRole('combobox', { name: 'Ícono' })).toHaveValue('tracking')
-    expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue(editArgs.activity!.title)
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(
-      editArgs.activity!.description,
+    expect(screen.getByRole('textbox', { name: 'Título (Español)' })).toHaveValue(
+      editArgs.activity.title,
+    )
+    expect(screen.getByRole('textbox', { name: 'Descripción (Español)' })).toHaveValue(
+      editArgs.activity.description,
     )
   })
 
-  test('starts blank when adding a new activity', () => {
-    render(<RosacActivityForm {...addArgs} />)
-
-    expect(screen.getByRole('combobox', { name: 'Ícono' })).toHaveValue('tracking')
-    expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue('')
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue('')
-  })
-
   test('calls onCancel directly when untouched', async () => {
-    const user = userEvent.setup()
-    const onCancel = vi.fn()
-    render(<RosacActivityForm {...editArgs} onCancel={onCancel} />)
+    const { onCancel, user } = renderForm()
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
@@ -38,49 +40,93 @@ describe('RosacActivityForm', () => {
   })
 
   test('prompts to discard changes when modified and cancelled', async () => {
-    const user = userEvent.setup()
-    const onCancel = vi.fn()
-    render(<RosacActivityForm {...addArgs} onCancel={onCancel} />)
+    const { onCancel, user } = renderForm()
 
-    const titleInput = screen.getByRole('textbox', { name: 'Título' })
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
+    await user.clear(titleInput)
     await user.type(titleInput, 'Actividad Nueva')
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
-    const discardDialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    const discardDialog = screen.getByRole('dialog', { name: '¿Descartar cambios?' })
     expect(discardDialog).toBeInTheDocument()
 
     await user.click(within(discardDialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
-  test('shows validation errors when title or description is missing', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<RosacActivityForm {...addArgs} onSave={onSave} />)
+  test('shows validation errors when title is cleared on submit', async () => {
+    const { onSave, user } = renderForm()
+
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
+    await user.clear(titleInput)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByText('El título es obligatorio.')).toBeInTheDocument()
-    expect(screen.getByText('La descripción es obligatoria.')).toBeInTheDocument()
+    expect(screen.getByText('El título en español es obligatorio.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('calls onSave directly without save confirmation dialog when adding a new activity', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<RosacActivityForm {...addArgs} onSave={onSave} />)
+  test('calls onSave directly when submitted with both languages updated', async () => {
+    const { onSave, user } = renderForm()
 
-    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Nueva Actividad')
-    await user.type(screen.getByRole('textbox', { name: 'Descripción' }), 'Detalle de actividad.')
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Nueva Actividad')
+
+    await user.click(screen.getByRole('tab', { name: /^English/ }))
+    const enTitleInput = screen.getByRole('textbox', { name: 'Título (English)' })
+    await user.clear(enTitleInput)
+    await user.type(enTitleInput, 'New Activity')
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).toHaveBeenCalledWith({
-      icon: 'tracking',
-      title: 'Nueva Actividad',
-      description: 'Detalle de actividad.',
+      version: '1',
+      content: {
+        es: {
+          title: 'Nueva Actividad',
+          description: editArgs.activity.description,
+        },
+        en: {
+          title: 'New Activity',
+          description: editArgs.activity.editing?.content.en?.description ?? '',
+        },
+      },
+      confirmedUnchanged: [],
+    })
+  })
+
+  test('asks to review the other language when only one language changed', async () => {
+    const { onSave, user } = renderForm()
+
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Nueva Actividad')
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('tab', { name: /^English/ })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('switch')).not.toBeChecked()
+
+    await user.click(screen.getByRole('switch'))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith({
+      version: '1',
+      content: {
+        es: {
+          title: 'Nueva Actividad',
+          description: editArgs.activity.description,
+        },
+        en: {
+          title: editArgs.activity.editing?.content.en?.title ?? '',
+          description: editArgs.activity.editing?.content.en?.description ?? '',
+        },
+      },
+      confirmedUnchanged: [{ locale: 'en', field: 'title' }],
     })
   })
 })
