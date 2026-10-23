@@ -35,6 +35,12 @@ export async function PATCH(
 
   const { id } = await params
   const characteristic = await updateRosacCharacteristic(id, parsed.data)
+  if (!characteristic) {
+    return NextResponse.json(
+      { error: `No existe una característica con id "${id}".` },
+      { status: 404 },
+    )
+  }
 
   return NextResponse.json({ characteristic }, { headers: { 'Cache-Control': 'no-store' } })
 }

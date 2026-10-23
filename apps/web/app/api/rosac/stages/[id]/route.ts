@@ -35,6 +35,9 @@ export async function PATCH(
 
   const { id } = await params
   const stage = await updateRosacStage(id, parsed.data)
+  if (!stage) {
+    return NextResponse.json({ error: `No existe una etapa con id "${id}".` }, { status: 404 })
+  }
 
   return NextResponse.json({ stage }, { headers: { 'Cache-Control': 'no-store' } })
 }

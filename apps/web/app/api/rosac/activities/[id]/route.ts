@@ -35,6 +35,9 @@ export async function PATCH(
 
   const { id } = await params
   const activity = await updateRosacActivity(id, parsed.data)
+  if (!activity) {
+    return NextResponse.json({ error: `No existe una actividad con id "${id}".` }, { status: 404 })
+  }
 
   return NextResponse.json({ activity }, { headers: { 'Cache-Control': 'no-store' } })
 }
