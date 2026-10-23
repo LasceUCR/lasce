@@ -28,9 +28,15 @@ import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
-import type { RosacAcknowledgment, RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
-import type { ConstructionStage } from '@/app/lib/rosac-construction'
-import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
+import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
+import type {
+  RosacAcknowledgment,
+  RosacCardIcon,
+  RosacInfoContent,
+  RosacResearcher,
+  RosacResearcherCreateBody,
+  RosacResearcherUpdateBody,
+} from '@/app/lib/rosac'
 
 import styles from './RosacInfoPage.module.css'
 import { AcknowledgmentsGallery } from './AcknowledgmentsGallery'
@@ -40,19 +46,19 @@ import { EditableAcknowledgmentCard } from './EditableAcknowledgmentCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { InstrumentCard } from './InstrumentCard'
 import { InstrumentsGallery } from './InstrumentsGallery'
-import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
+import { ResearcherForm, type BilingualResearcherFormValues } from './ResearcherForm'
 import {
   RosacAcknowledgmentForm,
-  type RosacAcknowledgmentFormValues,
+  type RosacAcknowledgmentFormBody,
 } from './RosacAcknowledgmentForm'
-import { RosacActivityForm, type RosacActivityFormValues } from './RosacActivityForm'
+import { RosacActivityForm, type RosacActivityFormBody } from './RosacActivityForm'
 import {
   RosacCharacteristicForm,
-  type RosacCharacteristicFormValues,
+  type RosacCharacteristicFormBody,
 } from './RosacCharacteristicForm'
-import { RosacInstrumentForm, type RosacInstrumentFormValues } from './RosacInstrumentForm'
+import { RosacInstrumentForm, type RosacInstrumentFormBody } from './RosacInstrumentForm'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
-import { RosacStageForm, type RosacStageFormValues } from './RosacStageForm'
+import { RosacStageForm, type RosacStageFormBody } from './RosacStageForm'
 import { TeamGallery } from './TeamGallery'
 
 const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
@@ -61,13 +67,41 @@ const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
   location: MapPin,
   frequency: Waves,
-  waves: Waves,
   sun: Sun,
   tracking: Crosshair,
   control: Settings,
   receiver: Radio,
   maintenance: Wrench,
   education: GraduationCap,
+}
+
+function emailText(email: RosacResearcher['email']): string {
+  if (!email) return ''
+  return typeof email === 'string' ? email : email.join(', ')
+}
+
+function researcherUpdateBody(
+  person: RosacResearcher,
+  version: string,
+  values: BilingualResearcherFormValues,
+): RosacResearcherUpdateBody | null {
+  const changes: Omit<RosacResearcherUpdateBody, 'version'> = {
+    ...(values.src === person.src ? {} : { src: values.src }),
+    ...(values.name.trim() === person.name ? {} : { name: values.name }),
+    ...(values.email === emailText(person.email) ? {} : { email: values.email }),
+    ...(values.institution.trim() === person.institution
+      ? {}
+      : { institution: values.institution }),
+    ...(values.content
+      ? {
+          content: values.content as unknown as RosacResearcherUpdateBody['content'],
+          confirmedUnchanged:
+            values.confirmedUnchanged as unknown as RosacResearcherUpdateBody['confirmedUnchanged'],
+        }
+      : {}),
+  }
+
+  return Object.keys(changes).length === 0 ? null : { version, ...changes }
 }
 
 export interface RosacInfoPageProps {
@@ -77,20 +111,17 @@ export interface RosacInfoPageProps {
   canDelete?: boolean
   onSaveCharacteristic?: (
     id: string,
-    values: RosacCharacteristicFormValues,
+    values: RosacCharacteristicFormBody,
   ) => Promise<string | null> | void
-  onSaveActivity?: (id: string, values: RosacActivityFormValues) => Promise<string | null> | void
-  onSaveStage?: (id: string, values: RosacStageFormValues) => Promise<string | null> | void
-  onCreateInstrument?: (values: RosacInstrumentFormValues) => Promise<string | null> | void
-  onSaveInstrument?: (
-    id: string,
-    values: RosacInstrumentFormValues,
-  ) => Promise<string | null> | void
+  onSaveActivity?: (id: string, values: RosacActivityFormBody) => Promise<string | null> | void
+  onSaveStage?: (id: string, values: RosacStageFormBody) => Promise<string | null> | void
+  onCreateInstrument?: (values: RosacInstrumentFormBody) => Promise<string | null> | void
+  onSaveInstrument?: (id: string, values: RosacInstrumentFormBody) => Promise<string | null> | void
   onDeleteInstrument?: (id: string) => Promise<string | null> | void
-  onCreateAcknowledgment?: (values: RosacAcknowledgmentFormValues) => Promise<string | null> | void
+  onCreateAcknowledgment?: (values: RosacAcknowledgmentFormBody) => Promise<string | null> | void
   onSaveAcknowledgment?: (
     id: string,
-    values: RosacAcknowledgmentFormValues,
+    values: RosacAcknowledgmentFormBody,
   ) => Promise<string | null> | void
   onDeleteAcknowledgment?: (id: string) => Promise<string | null> | void
 }
@@ -189,7 +220,7 @@ export function RosacInfoPage({
     setEditingCharacteristicId(null)
   }
 
-  async function handleSaveCharacteristic(values: RosacCharacteristicFormValues) {
+  async function handleSaveCharacteristic(values: RosacCharacteristicFormBody) {
     if (!editingCharacteristicId) return
 
     if (onSaveCharacteristic) {
@@ -215,17 +246,20 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const updated = characteristics.map((item) =>
-      item.id === editingCharacteristicId
-        ? {
-            ...item,
-            icon: values.icon,
-            title: values.title,
-            description: values.description,
-          }
-        : item,
+    setCharacteristics((prev) =>
+      prev.map((item) =>
+        item.id === editingCharacteristicId
+          ? {
+              ...item,
+              ...(values.icon ? { icon: values.icon } : {}),
+              ...(values.content?.es?.title ? { title: values.content.es.title } : {}),
+              ...(values.content?.es?.description
+                ? { description: values.content.es.description }
+                : {}),
+            }
+          : item,
+      ),
     )
-    setCharacteristics(updated)
     closeCharacteristicEditor()
   }
 
@@ -242,7 +276,7 @@ export function RosacInfoPage({
     setEditingActivityId(null)
   }
 
-  async function handleSaveActivity(values: RosacActivityFormValues) {
+  async function handleSaveActivity(values: RosacActivityFormBody) {
     if (!editingActivityId) return
 
     if (onSaveActivity) {
@@ -268,17 +302,20 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const updated = activities.map((item) =>
-      item.id === editingActivityId
-        ? {
-            ...item,
-            icon: values.icon,
-            title: values.title,
-            description: values.description,
-          }
-        : item,
+    setActivities((prev) =>
+      prev.map((item) =>
+        item.id === editingActivityId
+          ? {
+              ...item,
+              ...(values.icon ? { icon: values.icon } : {}),
+              ...(values.content?.es?.title ? { title: values.content.es.title } : {}),
+              ...(values.content?.es?.description
+                ? { description: values.content.es.description }
+                : {}),
+            }
+          : item,
+      ),
     )
-    setActivities(updated)
     closeActivityEditor()
   }
 
@@ -295,7 +332,7 @@ export function RosacInfoPage({
     setEditingStageId(null)
   }
 
-  async function handleSaveStage(values: RosacStageFormValues) {
+  async function handleSaveStage(values: RosacStageFormBody) {
     if (!editingStageId) return
 
     if (onSaveStage) {
@@ -321,20 +358,21 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const updated = constructionStages.map((s) =>
-      s.id === editingStageId
-        ? ({
-            ...s,
-            title: values.title,
-            description: values.description,
-            images:
-              values.images && values.images.length > 0
-                ? (values.images as unknown as typeof s.images)
-                : s.images,
-          } as ConstructionStage)
-        : s,
+    setConstructionStages(
+      (prev) =>
+        prev.map((item) =>
+          item.id === editingStageId
+            ? {
+                ...item,
+                ...(values.content?.es?.title ? { title: values.content.es.title } : {}),
+                ...(values.content?.es?.description
+                  ? { description: values.content.es.description }
+                  : {}),
+                ...(values.images ? { images: values.images } : {}),
+              }
+            : item,
+        ) as unknown as typeof prev,
     )
-    setConstructionStages(updated as unknown as typeof constructionStages)
     closeStageEditor()
   }
 
@@ -351,7 +389,7 @@ export function RosacInfoPage({
     setEditingInstrumentId(null)
   }
 
-  async function handleSaveInstrument(values: RosacInstrumentFormValues) {
+  async function handleSaveInstrument(values: RosacInstrumentFormBody) {
     if (!editingInstrumentId) return
 
     if (onSaveInstrument) {
@@ -377,25 +415,24 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const updated = instruments.map((inst) =>
-      inst.id === editingInstrumentId
-        ? {
-            ...inst,
-            name: values.name,
-            pendingMessage: undefined,
-            image: values.image ?? inst.image,
-            consultation: values.consultation ?? inst.consultation,
-          }
-        : inst,
+    setInstruments((prev) =>
+      prev.map((inst) =>
+        inst.id === editingInstrumentId
+          ? {
+              ...inst,
+              ...(values.content?.es?.name ? { name: values.content.es.name } : {}),
+              ...(values.image ? { image: values.image } : {}),
+              ...(values.consultation ? { consultation: values.consultation } : {}),
+            }
+          : inst,
+      ),
     )
-    setInstruments(updated)
     closeInstrumentEditor()
   }
 
-  async function handleCreateInstrument(values: RosacInstrumentFormValues, close: () => void) {
+  async function handleCreateInstrument(values: RosacInstrumentFormBody, close: () => void) {
     setInstrumentCreateError(null)
 
-    const createdId = `instrument-${Date.now()}`
     if (onCreateInstrument) {
       const err = await onCreateInstrument(values)
       if (err) {
@@ -419,15 +456,15 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const newInstrument: RosacInstrumentCardContent = {
-      id: createdId,
-      name: values.name,
-      pendingMessage: values.pendingMessage,
-      image: values.image,
-      consultation: values.consultation,
-    }
-
-    setInstruments([...instruments, newInstrument])
+    setInstruments((prev) => [
+      ...prev,
+      {
+        id: `inst-${Date.now()}`,
+        name: values.content?.es?.name ?? '',
+        image: values.image,
+        consultation: values.consultation,
+      },
+    ])
     close()
   }
 
@@ -453,18 +490,25 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    setInstruments(instruments.filter((inst) => inst.id !== id))
+    setInstruments((prev) => prev.filter((inst) => inst.id !== id))
   }
 
   // --- Section 7: Researcher Handlers ---
-  // Reports the outcome in a toast once the request is done, then refreshes the team.
-  async function handleSaveResearcher(id: string, values: ResearcherFormValues): Promise<boolean> {
+  async function handleSaveResearcher(
+    person: RosacResearcher,
+    values: BilingualResearcherFormValues,
+  ): Promise<boolean> {
+    if (!person.editing) return false
+
+    const body = researcherUpdateBody(person, person.editing.version, values)
+    if (!body) return true
+
     return sendWithFeedback(
-      `/api/researchers/${id}`,
+      `/api/researchers/${person.id}`,
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(body),
       },
       {
         success: tResearchers('updated'),
@@ -474,15 +518,23 @@ export function RosacInfoPage({
     )
   }
 
-  // Reports the outcome in a toast once the request is done. On success the "Añadir" modal
-  // closes and the page refreshes; on failure it stays open with what was typed.
-  async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
+  async function handleCreateResearcher(values: BilingualResearcherFormValues, close: () => void) {
+    if (!values.content) return
+
+    const body: RosacResearcherCreateBody = {
+      src: values.src,
+      name: values.name,
+      email: values.email,
+      institution: values.institution,
+      content: values.content as unknown as RosacResearcherCreateBody['content'],
+    }
+
     await sendWithFeedback(
       '/api/researchers',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(body),
       },
       {
         success: tResearchers('created'),
@@ -518,7 +570,7 @@ export function RosacInfoPage({
   // --- Section 8: Acknowledgments Handlers ---
   async function handleSaveAcknowledgment(
     id: string,
-    values: RosacAcknowledgmentFormValues,
+    values: RosacAcknowledgmentFormBody,
   ): Promise<string | null> {
     if (onSaveAcknowledgment) {
       const err = await onSaveAcknowledgment(id, values)
@@ -542,26 +594,27 @@ export function RosacInfoPage({
       if (!ok) return 'Error al guardar la institución'
     }
 
-    const updated = acknowledgments.map((inst) =>
-      inst.id === id
-        ? {
-            ...inst,
-            name: values.name,
-            logo: values.logo,
-          }
-        : inst,
+    setAcknowledgments((prev) =>
+      prev.map((inst) =>
+        inst.id === id
+          ? {
+              ...inst,
+              ...(values.content?.es?.name ? { name: values.content.es.name } : {}),
+              ...(values.logo ? { logo: values.logo } : {}),
+            }
+          : inst,
+      ),
     )
-    setAcknowledgments(updated)
+
     return null
   }
 
   async function handleCreateAcknowledgment(
-    values: RosacAcknowledgmentFormValues,
+    values: RosacAcknowledgmentFormBody,
     close: () => void,
   ) {
     setAcknowledgmentCreateError(null)
 
-    const createdId = `ack-${Date.now()}`
     if (onCreateAcknowledgment) {
       const err = await onCreateAcknowledgment(values)
       if (err) {
@@ -585,13 +638,15 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const newInstitution: RosacAcknowledgment = {
-      id: createdId,
-      name: values.name,
-      logo: values.logo,
-    }
+    setAcknowledgments((prev) => [
+      ...prev,
+      {
+        id: `ack-${Date.now()}`,
+        name: values.content?.es?.name ?? '',
+        logo: values.logo ?? { src: '', alt: '' },
+      },
+    ])
 
-    setAcknowledgments([...acknowledgments, newInstitution])
     close()
   }
 
@@ -870,10 +925,14 @@ export function RosacInfoPage({
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
+              contentLang={contentLangAttribute(person.contentLocale)}
               institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
-              onSave={(values) => handleSaveResearcher(person.id, values)}
+              onSave={(values: BilingualResearcherFormValues) =>
+                handleSaveResearcher(person, values)
+              }
               researcher={person}
+              translation={{ editing: person.editing ?? null }}
             />
           )}
           trailingSlide={
@@ -882,8 +941,11 @@ export function RosacInfoPage({
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
-                    onSave={(values) => handleCreateResearcher(values, close)}
+                    onSave={(values: BilingualResearcherFormValues) =>
+                      handleCreateResearcher(values, close)
+                    }
                     researcher={null}
+                    translation={{ editing: null }}
                   />
                 )}
               </AddItemCard>

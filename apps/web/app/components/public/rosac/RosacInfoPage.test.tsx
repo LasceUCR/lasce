@@ -285,6 +285,13 @@ describe('RosacInfoPage', () => {
     const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar a/ })
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
+    const roleInput = within(dialog).getByRole('textbox', { name: /^Rol \(Español\)/ })
+    await user.clear(roleInput)
+    await user.type(roleInput, 'Rol editado')
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    const englishRoleInput = within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ })
+    await user.clear(englishRoleInput)
+    await user.type(englishRoleInput, 'Edited role')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -308,10 +315,17 @@ describe('RosacInfoPage', () => {
     const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar a/ })
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
+    const roleInput = within(dialog).getByRole('textbox', { name: /^Rol \(Español\)/ })
+    await user.clear(roleInput)
+    await user.type(roleInput, 'Rol editado')
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    const englishRoleInput = within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ })
+    await user.clear(englishRoleInput)
+    await user.type(englishRoleInput, 'Edited role')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(
-      await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
+      await screen.findByText('No tiene permisos para modificar este contenido.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
     expect(screen.queryByText('Investigador actualizado correctamente.')).not.toBeInTheDocument()
@@ -349,12 +363,18 @@ describe('RosacInfoPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
     const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Rol (Español)' }), 'Investigador')
     await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
     await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
     await user.type(
-      within(dialog).getByRole('textbox', { name: 'Descripción' }),
+      within(dialog).getByRole('textbox', { name: 'Descripción (Español)' }),
       'Texto de prueba.',
+    )
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    await user.type(within(dialog).getByRole('textbox', { name: 'Rol (English)' }), 'Researcher')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Descripción (English)' }),
+      'Test text.',
     )
     const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
@@ -388,9 +408,11 @@ describe('RosacInfoPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
     const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Rol (Español)' }), 'Investigador')
     await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
     await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    await user.type(within(dialog).getByRole('textbox', { name: 'Rol (English)' }), 'Researcher')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(
@@ -460,9 +482,13 @@ describe('RosacInfoPage', () => {
     await user.click(firstEditBtn as HTMLElement)
 
     const dialog = screen.getByRole('dialog', { name: 'Editar "Antena de 11 metros"' })
-    const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
+    const titleInput = within(dialog).getByRole('textbox', { name: 'Título (Español)' })
     await user.clear(titleInput)
     await user.type(titleInput, 'Antena Actualizada')
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    const enTitleInput = within(dialog).getByRole('textbox', { name: 'Título (English)' })
+    await user.clear(enTitleInput)
+    await user.type(enTitleInput, 'Updated Antenna')
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
@@ -488,9 +514,13 @@ describe('RosacInfoPage', () => {
     const firstActivity = defaultArgs.content.activities.items[0]!
     await user.click(within(section).getByRole('button', { name: `Editar ${firstActivity.title}` }))
     const dialog = screen.getByRole('dialog', { name: `Editar "${firstActivity.title}"` })
-    const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
+    const titleInput = within(dialog).getByRole('textbox', { name: 'Título (Español)' })
     await user.clear(titleInput)
     await user.type(titleInput, 'Radioastronomía Avanzada')
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    const enTitleInput = within(dialog).getByRole('textbox', { name: 'Título (English)' })
+    await user.clear(enTitleInput)
+    await user.type(enTitleInput, 'Advanced Radio Astronomy')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -514,9 +544,13 @@ describe('RosacInfoPage', () => {
     // Edit current stage
     await user.click(within(section).getByRole('button', { name: 'Editar etapa' }))
     const dialog = screen.getByRole('dialog', { name: 'Editar "Preparación para el montaje"' })
-    const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
+    const titleInput = within(dialog).getByRole('textbox', { name: 'Título (Español)' })
     await user.clear(titleInput)
     await user.type(titleInput, 'Preparación Avanzada')
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    const enTitleInput = within(dialog).getByRole('textbox', { name: 'Título (English)' })
+    await user.clear(enTitleInput)
+    await user.type(enTitleInput, 'Advanced Preparation')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -548,12 +582,21 @@ describe('RosacInfoPage', () => {
     await user.click(within(section).getByRole('button', { name: 'Añadir instrumento' }))
     const addDialog = screen.getByRole('dialog', { name: 'Añadir instrumento' })
     await user.type(
-      within(addDialog).getByRole('textbox', { name: 'Nombre del instrumento' }),
+      within(addDialog).getByRole('textbox', { name: 'Nombre (Español)' }),
       'Instrumento 4 Polarímetro',
     )
     await user.type(
-      within(addDialog).getByRole('textbox', { name: 'Descripción' }),
+      within(addDialog).getByRole('textbox', { name: 'Descripción (Español)' }),
       'Medición de polarización en ondas de radio.',
+    )
+    await user.click(within(addDialog).getByRole('tab', { name: /^English/ }))
+    await user.type(
+      within(addDialog).getByRole('textbox', { name: 'Nombre (English)' }),
+      'Instrument 4 Polarimeter',
+    )
+    await user.type(
+      within(addDialog).getByRole('textbox', { name: 'Descripción (English)' }),
+      'Radio wave polarization measurement.',
     )
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'instrumento.png', { type: 'image/png' }))
@@ -596,11 +639,17 @@ describe('RosacInfoPage', () => {
     await user.click(within(section).getByRole('button', { name: `Editar ${firstInst.name}` }))
     const editDialog = screen.getByRole('dialog', { name: 'Editar institución' })
     const editNameInput = within(editDialog).getByRole('textbox', {
-      name: 'Nombre de la institución',
+      name: 'Nombre (Español)',
     })
     await user.clear(editNameInput)
     await user.type(editNameInput, 'Vicerrectoría de Investigación Actualizada')
-    await user.click(within(editDialog).getByRole('button', { name: 'Guardar cambios' }))
+    await user.click(within(editDialog).getByRole('tab', { name: /^English/ }))
+    const editEnNameInput = within(editDialog).getByRole('textbox', {
+      name: 'Nombre (English)',
+    })
+    await user.clear(editEnNameInput)
+    await user.type(editEnNameInput, 'Research Vice-rectory Updated')
+    await user.click(within(editDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(
       within(section).getByText('Vicerrectoría de Investigación Actualizada'),
@@ -614,11 +663,17 @@ describe('RosacInfoPage', () => {
     })
     await user.selectOptions(select, '1')
     const addNameInput = within(addDialog).getByRole('textbox', {
-      name: 'Nombre de la institución',
+      name: 'Nombre (Español)',
     })
     await user.clear(addNameInput)
     await user.type(addNameInput, 'Institución Adicional de Prueba')
-    await user.click(within(addDialog).getByRole('button', { name: 'Agregar institución' }))
+    await user.click(within(addDialog).getByRole('tab', { name: /^English/ }))
+    const addEnNameInput = within(addDialog).getByRole('textbox', {
+      name: 'Nombre (English)',
+    })
+    await user.clear(addEnNameInput)
+    await user.type(addEnNameInput, 'Additional Test Institution')
+    await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(within(section).getByText('Institución Adicional de Prueba')).toBeInTheDocument()
 

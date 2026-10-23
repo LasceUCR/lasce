@@ -34,9 +34,103 @@ export const EmptyResearchers: Story = {
   },
 }
 
+const editModeContent = {
+  ...rosacInfoContent,
+  characteristics: {
+    ...rosacInfoContent.characteristics,
+    items: rosacInfoContent.characteristics.items.map((item) => ({
+      ...item,
+      editing: {
+        content: {
+          es: { title: item.title, description: item.description },
+          en: { title: item.title, description: item.description },
+        },
+        isLegacy: false,
+        version: '1',
+      },
+    })),
+  },
+  activities: {
+    ...rosacInfoContent.activities,
+    items: rosacInfoContent.activities.items.map((item) => ({
+      ...item,
+      editing: {
+        content: {
+          es: { title: item.title, description: item.description },
+          en: { title: item.title, description: item.description },
+        },
+        isLegacy: false,
+        version: '1',
+      },
+    })),
+  },
+  construction: {
+    ...rosacInfoContent.construction,
+    stages: rosacInfoContent.construction.stages.map((stage) => ({
+      ...stage,
+      editing: {
+        content: {
+          es: { title: stage.title, description: stage.description },
+          en: { title: stage.title, description: stage.description },
+        },
+        isLegacy: false,
+        version: '1',
+      },
+    })) as unknown as typeof rosacInfoContent.construction.stages,
+  },
+  instruments: {
+    ...rosacInfoContent.instruments,
+    items: rosacInfoContent.instruments.items.map((item) => ({
+      ...item,
+      editing: {
+        content: {
+          es: {
+            name: item.name,
+            description: item.consultation?.notice ?? item.pendingMessage ?? '',
+          },
+          en: {
+            name: item.name,
+            description: item.consultation?.notice ?? item.pendingMessage ?? '',
+          },
+        },
+        isLegacy: false,
+        version: '1',
+      },
+    })),
+  },
+  team: {
+    ...rosacInfoContent.team,
+    people: rosacInfoContent.team.people.map((person) => ({
+      ...person,
+      editing: {
+        content: {
+          es: { role: person.role, description: person.description ?? null },
+          en: { role: person.role, description: person.description ?? null },
+        },
+        isLegacy: false,
+        version: '1',
+      },
+    })),
+  },
+  acknowledgments: {
+    ...rosacInfoContent.acknowledgments,
+    institutions: rosacInfoContent.acknowledgments.institutions.map((inst) => ({
+      ...inst,
+      editing: {
+        content: {
+          es: { name: inst.name },
+          en: { name: inst.name },
+        },
+        isLegacy: false,
+        version: '1',
+      },
+    })),
+  },
+}
+
 export const EditMode: Story = {
   args: {
-    content: rosacInfoContent,
+    content: editModeContent,
     canCreate: true,
     canEdit: true,
     canDelete: true,
