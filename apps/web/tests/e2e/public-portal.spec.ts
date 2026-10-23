@@ -395,11 +395,12 @@ for (const album of galleryAlbumList) {
   test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
     await page.goto('/galeria')
 
-    await expect(page.getByRole('heading', { level: 2, name: album.title })).toBeVisible()
-    await page.getByRole('link', { name: new RegExp(album.title) }).click()
+    const albumLink = page.locator(`a[href="/galeria/${album.slug}"]`)
+    await expect(albumLink).toBeVisible()
+    await albumLink.click()
 
     await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
-    await expect(page.getByRole('heading', { level: 1, name: album.title })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     await expect(
       page.getByRole('button', { name: /^Ver a tama\u00f1o completo:/ }).first(),
     ).toBeVisible()

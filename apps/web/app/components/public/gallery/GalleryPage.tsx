@@ -1,8 +1,8 @@
 import { GalleryGroupSection } from './GalleryGroupSection'
 import { GalleryAlbumAddCard } from './GalleryAlbumAddCard'
+import { getTranslations } from 'next-intl/server'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
-import { galeriaHero } from '@/app/lib/gallery'
 import type { GalleryAlbum } from '@/app/lib/gallery-schema'
 
 export interface GalleryPageProps {
@@ -12,15 +12,18 @@ export interface GalleryPageProps {
   canDelete?: boolean
 }
 
-export function GalleryPage({
+export async function GalleryPage({
   albums,
   canCreate = false,
   canEdit = false,
   canDelete = false,
 }: GalleryPageProps) {
+  const t = await getTranslations('gallery.hero')
+  const tcommon = await getTranslations('common')
+
   return (
     <article className="topic-page">
-      <TopicHero kicker={galeriaHero.kicker} lead={galeriaHero.lead} title={galeriaHero.title} />
+      <TopicHero kicker={t('kicker')} lead={t('lead')} title={t('title')} />
 
       <div className="gallery-groups page-width">
         <GalleryAlbumAddCard canCreate={canCreate} />
@@ -36,7 +39,7 @@ export function GalleryPage({
       </div>
 
       <div className="topic-page-footer page-width">
-        <TopicBackLink href="/" label="Volver al inicio" />
+        <TopicBackLink href="/" label={tcommon('backToHome')} />
       </div>
     </article>
   )

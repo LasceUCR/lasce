@@ -2,6 +2,25 @@ import { screen } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
+const messages = vi.hoisted(() => ({
+  hero: {
+    kicker: 'Portal público LASCE',
+    title: 'Galería',
+    lead: 'Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes.',
+  },
+  common: { backToHome: 'Volver al inicio' },
+}))
+
+vi.mock('next-intl/server', () => ({
+  getTranslations: async (namespace: 'gallery.hero' | 'common') => {
+    if (namespace === 'gallery.hero') {
+      return (key: 'kicker' | 'title' | 'lead') => messages.hero[key]
+    }
+
+    return (key: 'backToHome') => messages.common[key]
+  },
+}))
+
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
@@ -20,9 +39,14 @@ function render(ui: ReactElement) {
   )
 }
 
+async function renderGalleryPage() {
+  const page = await GalleryPage({ albums: galleryAlbumList })
+  render(page)
+}
+
 describe('GalleryPage', () => {
-  test('introduces the gallery and lists every album', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('introduces the gallery and lists every album', async () => {
+    await renderGalleryPage()
 
     expect(screen.getByRole('heading', { level: 1, name: galeriaHero.title })).toBeInTheDocument()
     expect(screen.getByText(galeriaHero.lead)).toBeInTheDocument()
@@ -32,8 +56,8 @@ describe('GalleryPage', () => {
     }
   })
 
-  test('links every album and every sub-album to a page of its own', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('links every album and every sub-album to a page of its own', async () => {
+    await renderGalleryPage()
 
     for (const album of galleryAlbumList) {
       expect(screen.getByRole('link', { name: new RegExp(album.title) })).toHaveAttribute(
@@ -52,8 +76,8 @@ describe('GalleryPage', () => {
 
   // Every album is an h2 and every tile beneath it an h3, so the outline never
   // skips a level and can be used to move around the page.
-  test('nests every tile heading under the heading of its album', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('nests every tile heading under the heading of its album', async () => {
+    await renderGalleryPage()
 
     const expected = galleryAlbumList.flatMap((album) => [
       album.title,
@@ -63,14 +87,14 @@ describe('GalleryPage', () => {
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(expected.length)
   })
 
-  test('presents each album block as its own list', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('presents each album block as its own list', async () => {
+    await renderGalleryPage()
 
     expect(screen.getAllByRole('list')).toHaveLength(galleryAlbumList.length)
   })
 
-  test('offers a way back to the home page at the bottom of the page', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('offers a way back to the home page at the bottom of the page', async () => {
+    await renderGalleryPage()
 
     const backLink = screen.getByRole('link', { name: 'Volver al inicio' })
     const heading = screen.getByRole('heading', { level: 1, name: galeriaHero.title })

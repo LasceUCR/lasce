@@ -27,7 +27,7 @@ const [subAlbum] = album.subAlbums
 const albumArgs: AlbumPageProps = {
   title: album.title,
   description: album.description,
-  meta: albumMeta(album),
+  meta: albumMeta(album, 'Archivos', 'Subálbumes'),
   media: album.media,
   subAlbums: album.subAlbums,
   parentSlug: album.slug,
@@ -39,7 +39,7 @@ describe('AlbumPage', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: album.title })).toBeInTheDocument()
     expect(screen.getByText(album.description)).toBeInTheDocument()
-    expect(screen.getByText(albumMeta(album))).toBeInTheDocument()
+    expect(screen.getByText(albumMeta(album, 'Archivos', 'Subálbumes'))).toBeInTheDocument()
     expect(screen.getByText(albumMediaMeta(album.media))).toBeInTheDocument()
   })
 

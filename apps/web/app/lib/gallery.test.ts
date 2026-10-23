@@ -276,7 +276,7 @@ describe('gallery', () => {
   })
 
   test('builds the summary line from the files actually present', () => {
-    expect(albumMeta(galleryAlbums.rosac)).toBe(
+    expect(albumMeta(galleryAlbums.rosac, 'archivos', 'subálbumes')).toBe(
       `5 subálbumes · ${albumFileCount(galleryAlbums.rosac)} archivos · 2019–2023`,
     )
   })
@@ -291,8 +291,10 @@ describe('gallery', () => {
       media: galleryAlbums.rosac.media,
     }
 
-    expect(albumMeta(standalone)).toBe(`${galleryAlbums.rosac.media.length} archivos · 2024`)
-    expect(albumMeta(standalone)).not.toContain('subálbumes')
+    expect(albumMeta(standalone, 'archivos', 'subálbumes')).toBe(
+      `${galleryAlbums.rosac.media.length} archivos · 2024`,
+    )
+    expect(albumMeta(standalone, 'archivos', 'subálbumes')).not.toContain('subálbumes')
   })
 
   test('counts the files shown on a single page', () => {

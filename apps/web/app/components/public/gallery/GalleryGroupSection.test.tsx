@@ -23,7 +23,7 @@ function albumMeta(album: GalleryGroupSectionProps['album']): string {
     (total, subAlbum) => total + subAlbum.media.length,
     album.media.length,
   )
-  return `${album.subAlbums.length ? `${album.subAlbums.length} subálbumes · ` : ''}${fileCount} archivos · ${album.years}`
+  return `${album.subAlbums.length ? `${album.subAlbums.length} Subálbumes · ` : ''}${fileCount} Archivos · ${album.years}`
 }
 
 const withSubAlbums = WithSubAlbums.args as GalleryGroupSectionProps
@@ -84,7 +84,7 @@ describe('GalleryGroupSection', () => {
     for (const subAlbum of album.subAlbums) {
       const tile = screen.getByRole('link', { name: new RegExp(subAlbum.title) })
 
-      expect(tile).toHaveTextContent(`${subAlbum.media.length} archivos`)
+      expect(tile).toHaveTextContent(`${subAlbum.media.length} Archivos`)
     }
   })
 

@@ -664,6 +664,36 @@
     }
   },
   "gallery": {
+    "meta": {
+      "title": "Galería | LASCE",
+      "description": "Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación, y vida cotidiana del equipo."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Galería",
+      "lead": "Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes."
+    },
+    "common": {
+      "files": "Archivos",
+      "subalbums": "Subálbumes",
+      "backToGallery": "Volver a la galería",
+      "backToAlbum": "Volver a {album}",
+      "gallery": "Galería LASCE"
+    },
+    "albumPage": {
+      "albumFiles": "archivos en este álbum",
+      "albumContent": "Fotografías y video de este álbum"
+    },
+    "media": {
+      "viewFullSize": "Ver a tamaño completo: {title}",
+      "video": "Video",
+      "close": "Cerrar",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "dateCaptured": "Fecha de captura: {date}",
+      "format": "Formato: {format}",
+      "uploadedBy": "Subido por: {user}"
+    },
     "editor": {
       "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o la descripción, revíselo también.",
       "legacyNoTranslation": "Este álbum aún no tiene versión en inglés. Para cambiar el título o la descripción debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",

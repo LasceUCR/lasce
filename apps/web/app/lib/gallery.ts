@@ -50,12 +50,6 @@ export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
 
 export type AlbumSlug = (typeof albumSlugs)[number]
 
-export const galeriaMeta = {
-  title: 'Galería | LASCE',
-  description:
-    'Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación y vida cotidiana del equipo.',
-} as const
-
 export const galeriaHero = {
   kicker: 'Portal público LASCE',
   title: 'Galería',
@@ -1915,7 +1909,7 @@ export const galleryAlbums = {
   },
   'workshop-ml-2026': {
     slug: 'workshop-ml-2026',
-    title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+    title: 'Taller 2026 de aprendizaje automático aplicado al clima espacial y GNSS',
     description:
       'Taller enfocado en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial y los sistemas GNSS.',
     years: 'febrero 2026',
@@ -1947,11 +1941,11 @@ export function albumFileCount(album: GalleryAlbum): number {
 }
 
 /** Summary line for an album: sub-albums, total files and the years covered. */
-export function albumMeta(album: GalleryAlbum): string {
-  const parts = [`${albumFileCount(album)} archivos`, album.years]
+export function albumMeta(album: GalleryAlbum, files: string, subalbums: string): string {
+  const parts = [`${albumFileCount(album)} ${files}`, album.years]
 
   if (album.subAlbums.length > 0) {
-    parts.unshift(`${album.subAlbums.length} subálbumes`)
+    parts.unshift(`${album.subAlbums.length} ${subalbums}`)
   }
 
   return parts.join(' · ')

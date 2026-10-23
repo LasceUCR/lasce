@@ -50,7 +50,8 @@ export function AlbumMediaGrid({
 }: AlbumMediaGridProps) {
   const router = useRouter()
   const sendWithFeedback = useRequestFeedback()
-  const t = useTranslations('gallery.feedback')
+  const tFeedback = useTranslations('gallery.feedback')
+  const tMedia = useTranslations('gallery.media')
   const tActions = useTranslations('gallery.actions')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [openIndex, setOpenIndex] = useState(closed)
@@ -65,8 +66,8 @@ export function AlbumMediaGrid({
       `/api/gallery/media/${id}`,
       { method: 'DELETE' },
       {
-        success: t('fileDeleted'),
-        fallback: t('fileDeleteFailed'),
+        success: tFeedback('fileDeleted'),
+        fallback: tFeedback('fileDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -155,7 +156,7 @@ export function AlbumMediaGrid({
               )}
 
               <button
-                aria-label={`Ver a tamaño completo: ${item.title}`}
+                aria-label={tMedia('viewFullSize', { title: item.title })}
                 className="media-tile-button"
                 onClick={() => setOpenIndex(index)}
                 ref={(element) => {
@@ -167,7 +168,7 @@ export function AlbumMediaGrid({
               {item.isVideo ? (
                 <span className="play-badge">
                   <Play aria-hidden="true" size={16} strokeWidth={1.8} />
-                  <span className="sr-only">Video</span>
+                  <span className="sr-only">{tMedia('video')}</span>
                 </span>
               ) : null}
 
