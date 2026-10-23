@@ -166,7 +166,8 @@
     "truncatedText": {
       "readMore": "Read more",
       "readLess": "Read less"
-    }
+    },
+    "loading": "Loading…"
   },
   "solarImageLightbox": {
     "open": "Enlarge solar image from {time}",

@@ -41,6 +41,9 @@ import { DynamicSpectrumChart } from './DynamicSpectrumChart'
 import { InstrumentProductSelect } from './InstrumentProductSelect'
 import { ResourceDownloadActions, type ResourceDownloadMessage } from './ResourceDownloadActions'
 import { ScientificDataChart } from './ScientificDataChart'
+import { LoadingRegion } from '@/app/components/public/skeleton/LoadingRegion'
+
+import { ScientificResultsSkeleton } from './ScientificResultsSkeleton'
 import { SuviImageSequence } from './SuviImageSequence'
 
 export interface ResourceDownloadRequestInput {
@@ -546,164 +549,179 @@ export function ScientificDataExplorer({
         </Notice>
       ) : null}
 
-      {requestState === 'success' && result ? (
-        <section aria-labelledby="scientific-results-title" className="data-results">
-          <div className="data-section-heading">
-            <div>
-              <p className="topic-kicker">{t('resultsKicker')}</p>
-              <h2 id="scientific-results-title" ref={resultsHeading} tabIndex={-1}>
-                {result.product.name}
-                {result.product.name.includes(`(${result.product.code})`)
-                  ? ''
-                  : ` (${result.product.code})`}
-              </h2>
-            </div>
-            {result.visualization === 'image-sequence' ? (
-              <Images aria-hidden="true" size={25} strokeWidth={1.6} />
-            ) : (
-              <ChartNoAxesCombined aria-hidden="true" size={25} strokeWidth={1.6} />
-            )}
-          </div>
-
-          <dl className="data-metadata">
-            <div>
-              <dt>{t('instrumentResultLabel')}</dt>
-              <dd>{result.instrument.code}</dd>
-            </div>
-            <div>
-              <dt>
-                {result.visualization === 'image-sequence'
-                  ? t('wavelengthResultLabel')
-                  : t('channelResultLabel')}
-              </dt>
-              <dd>
-                {result.visualization === 'image-sequence'
-                  ? selected?.product.wavelength
-                  : result.parameter.label}
-              </dd>
-            </div>
-            <div>
-              <dt>{t('dateResultLabel')}</dt>
-              <dd>{formatDate(result.query.date)}</dd>
-            </div>
-            <div>
-              <dt>{t('intervalResultLabel')}</dt>
-              <dd>
-                {result.query.startTime}–{result.query.endTime} UTC
-              </dd>
-            </div>
-            <div>
-              <dt>{t('sourceResultLabel')}</dt>
-              <dd>{result.origin.provider}</dd>
-            </div>
-            {result.origin.satellite ? (
-              <div>
-                <dt>{t('satelliteResultLabel')}</dt>
-                <dd>{t('satelliteValue', { number: result.origin.satellite })}</dd>
-              </div>
-            ) : null}
-          </dl>
-
-          <Notice tone="info">{result.origin.notice}</Notice>
-
-          {!hasResults ? (
-            <div className="content-empty" role="status">
-              <h3>{t('emptyTitle')}</h3>
-              <p>
-                {result.visualization === 'image-sequence'
-                  ? t('emptyImageMessage')
-                  : t('emptyDataMessage')}
-              </p>
-            </div>
-          ) : null}
-
-          {result.visualization === 'time-series' && result.points.length > 0 ? (
-            <>
-              <div className="data-summary" aria-label={t('summaryLabel')}>
-                {[
-                  [t('minimum'), minimum],
-                  [t('maximum'), maximum],
-                  [t('latest'), latest],
-                ].map(([label, value]) => (
-                  <div key={label}>
-                    <span>{label}</span>
-                    <strong>
-                      {formatValue(value as number)} <small>{result.parameter.unit}</small>
-                    </strong>
-                  </div>
-                ))}
-              </div>
-
-              <ScientificDataChart
-                caption={
-                  result.origin.kind === 'observed'
-                    ? t('chartCaptionObserved', { provider: result.origin.provider })
-                    : t('chartCaptionSimulated')
-                }
-                label={result.product.name}
-                points={result.points}
-                unit={result.parameter.unit}
-              />
-
-              <DataTable
-                summary={t('tableToggle', { count: result.points.length })}
-                caption={t('tableCaption', {
-                  product: result.product.name,
-                  date: formatDate(result.query.date),
-                })}
-                columns={[t('columnTime'), t('columnValue', { unit: result.parameter.unit })]}
-              >
-                {result.points.map((point) => (
-                  <tr key={point.timestamp}>
-                    <th scope="row">{formatTime(point.timestamp)}</th>
-                    <td>{formatValue(point.value)}</td>
-                  </tr>
-                ))}
-              </DataTable>
-            </>
-          ) : null}
-
-          {result.visualization === 'image-sequence' && result.images.length > 0 ? (
-            <SuviImageSequence images={result.images} />
-          ) : null}
-
-          {result.visualization === 'dynamic-spectrum' && result.cells.length > 0 ? (
-            <>
-              <DynamicSpectrumChart
-                label={t('dynamicSpectrumLabel')}
-                caption={t('dynamicSpectrumCaption')}
-                frequencyUnit={result.frequencyUnit}
-                cells={result.cells}
-                frequencies={result.frequencies}
-                timestamps={result.timestamps}
-                unit={result.parameter.unit}
-              />
-              <DataTable
-                summary={t('dynamicSpectrumTableToggle', { count: result.cells.length })}
-                caption={t('dynamicSpectrumTableCaption')}
-                columns={[t('columnTime'), t('columnFrequency'), t('columnIntensity')]}
-              >
-                {result.cells.map((cell) => (
-                  <tr key={`${cell.timestamp}-${cell.frequency}`}>
-                    <th scope="row">{formatTime(cell.timestamp)}</th>
-                    <td>{cell.frequency}</td>
-                    <td>{formatValue(cell.value)}</td>
-                  </tr>
-                ))}
-              </DataTable>
-            </>
-          ) : null}
-
-          {requestDownload && hasResults ? (
-            <ResourceDownloadActions
-              message={downloadMessage}
-              onDownload={(format) => void downloadResult(format)}
-              options={getDownloadOptions(result.query, downloadGrants)}
-              pendingFormat={pendingDownload}
-              signedIn={signedIn}
+      {/* While a query runs, the results card is drawn as placeholders shaped like the product
+          asked for, in the same place; the progress bar above already announces the load. */}
+      {requestState === 'loading' || (requestState === 'success' && result) ? (
+        <LoadingRegion
+          announce={false}
+          id="scientific-results"
+          loading={requestState === 'loading'}
+          skeleton={
+            <ScientificResultsSkeleton
+              visualization={selected?.product.visualization ?? 'time-series'}
             />
+          }
+        >
+          {result ? (
+            <section aria-labelledby="scientific-results-title" className="data-results">
+              <div className="data-section-heading">
+                <div>
+                  <p className="topic-kicker">{t('resultsKicker')}</p>
+                  <h2 id="scientific-results-title" ref={resultsHeading} tabIndex={-1}>
+                    {result.product.name}
+                    {result.product.name.includes(`(${result.product.code})`)
+                      ? ''
+                      : ` (${result.product.code})`}
+                  </h2>
+                </div>
+                {result.visualization === 'image-sequence' ? (
+                  <Images aria-hidden="true" size={25} strokeWidth={1.6} />
+                ) : (
+                  <ChartNoAxesCombined aria-hidden="true" size={25} strokeWidth={1.6} />
+                )}
+              </div>
+
+              <dl className="data-metadata">
+                <div>
+                  <dt>{t('instrumentResultLabel')}</dt>
+                  <dd>{result.instrument.code}</dd>
+                </div>
+                <div>
+                  <dt>
+                    {result.visualization === 'image-sequence'
+                      ? t('wavelengthResultLabel')
+                      : t('channelResultLabel')}
+                  </dt>
+                  <dd>
+                    {result.visualization === 'image-sequence'
+                      ? selected?.product.wavelength
+                      : result.parameter.label}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{t('dateResultLabel')}</dt>
+                  <dd>{formatDate(result.query.date)}</dd>
+                </div>
+                <div>
+                  <dt>{t('intervalResultLabel')}</dt>
+                  <dd>
+                    {result.query.startTime}–{result.query.endTime} UTC
+                  </dd>
+                </div>
+                <div>
+                  <dt>{t('sourceResultLabel')}</dt>
+                  <dd>{result.origin.provider}</dd>
+                </div>
+                {result.origin.satellite ? (
+                  <div>
+                    <dt>{t('satelliteResultLabel')}</dt>
+                    <dd>{t('satelliteValue', { number: result.origin.satellite })}</dd>
+                  </div>
+                ) : null}
+              </dl>
+
+              <Notice tone="info">{result.origin.notice}</Notice>
+
+              {!hasResults ? (
+                <div className="content-empty" role="status">
+                  <h3>{t('emptyTitle')}</h3>
+                  <p>
+                    {result.visualization === 'image-sequence'
+                      ? t('emptyImageMessage')
+                      : t('emptyDataMessage')}
+                  </p>
+                </div>
+              ) : null}
+
+              {result.visualization === 'time-series' && result.points.length > 0 ? (
+                <>
+                  <div className="data-summary" aria-label={t('summaryLabel')}>
+                    {[
+                      [t('minimum'), minimum],
+                      [t('maximum'), maximum],
+                      [t('latest'), latest],
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <span>{label}</span>
+                        <strong>
+                          {formatValue(value as number)} <small>{result.parameter.unit}</small>
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+
+                  <ScientificDataChart
+                    caption={
+                      result.origin.kind === 'observed'
+                        ? t('chartCaptionObserved', { provider: result.origin.provider })
+                        : t('chartCaptionSimulated')
+                    }
+                    label={result.product.name}
+                    points={result.points}
+                    unit={result.parameter.unit}
+                  />
+
+                  <DataTable
+                    summary={t('tableToggle', { count: result.points.length })}
+                    caption={t('tableCaption', {
+                      product: result.product.name,
+                      date: formatDate(result.query.date),
+                    })}
+                    columns={[t('columnTime'), t('columnValue', { unit: result.parameter.unit })]}
+                  >
+                    {result.points.map((point) => (
+                      <tr key={point.timestamp}>
+                        <th scope="row">{formatTime(point.timestamp)}</th>
+                        <td>{formatValue(point.value)}</td>
+                      </tr>
+                    ))}
+                  </DataTable>
+                </>
+              ) : null}
+
+              {result.visualization === 'image-sequence' && result.images.length > 0 ? (
+                <SuviImageSequence images={result.images} />
+              ) : null}
+
+              {result.visualization === 'dynamic-spectrum' && result.cells.length > 0 ? (
+                <>
+                  <DynamicSpectrumChart
+                    label={t('dynamicSpectrumLabel')}
+                    caption={t('dynamicSpectrumCaption')}
+                    frequencyUnit={result.frequencyUnit}
+                    cells={result.cells}
+                    frequencies={result.frequencies}
+                    timestamps={result.timestamps}
+                    unit={result.parameter.unit}
+                  />
+                  <DataTable
+                    summary={t('dynamicSpectrumTableToggle', { count: result.cells.length })}
+                    caption={t('dynamicSpectrumTableCaption')}
+                    columns={[t('columnTime'), t('columnFrequency'), t('columnIntensity')]}
+                  >
+                    {result.cells.map((cell) => (
+                      <tr key={`${cell.timestamp}-${cell.frequency}`}>
+                        <th scope="row">{formatTime(cell.timestamp)}</th>
+                        <td>{cell.frequency}</td>
+                        <td>{formatValue(cell.value)}</td>
+                      </tr>
+                    ))}
+                  </DataTable>
+                </>
+              ) : null}
+
+              {requestDownload && hasResults ? (
+                <ResourceDownloadActions
+                  message={downloadMessage}
+                  onDownload={(format) => void downloadResult(format)}
+                  options={getDownloadOptions(result.query, downloadGrants)}
+                  pendingFormat={pendingDownload}
+                  signedIn={signedIn}
+                />
+              ) : null}
+            </section>
           ) : null}
-        </section>
+        </LoadingRegion>
       ) : null}
     </section>
   )
