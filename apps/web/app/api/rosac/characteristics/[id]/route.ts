@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server'
+import type { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { rosacCharacteristicInputSchema, updateRosacCharacteristic } from '@/app/lib/rosac'
+import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
+import { rosacCharacteristicUpdateSchema, updateRosacCharacteristic } from '@/app/lib/rosac'
+
+import { writeFailure } from '../../http'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,29 +15,20 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
-
-  const parsed = rosacCharacteristicInputSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
-  }
-
   const { id } = await params
-  const characteristic = await updateRosacCharacteristic(id, parsed.data)
 
-  return NextResponse.json({ characteristic }, { headers: { 'Cache-Control': 'no-store' } })
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = rosacCharacteristicUpdateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
+  try {
+    const result = await updateRosacCharacteristic(id, parsed.data)
+    if (!result.ok) return writeFailure('la característica', id, result)
+
+    return ok({ characteristic: result.characteristic })
+  } catch (error) {
+    return internalError('No se pudo guardar la característica.', error)
+  }
 }

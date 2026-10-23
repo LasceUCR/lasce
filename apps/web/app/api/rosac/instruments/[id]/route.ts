@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
+import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
 import {
   deleteRosacInstrument,
-  rosacInstrumentInputSchema,
+  rosacInstrumentUpdateSchema,
   updateRosacInstrument,
 } from '@/app/lib/rosac'
+
+import { notFound, writeFailure } from '../../http'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,34 +19,22 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
-
-  const parsed = rosacInstrumentInputSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
-  }
-
   const { id } = await params
-  const instrument = await updateRosacInstrument(id, parsed.data)
-  if (!instrument) {
-    return NextResponse.json({ error: `No existe un instrumento con id "${id}".` }, { status: 404 })
-  }
 
-  return NextResponse.json({ instrument }, { headers: { 'Cache-Control': 'no-store' } })
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = rosacInstrumentUpdateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
+  try {
+    const result = await updateRosacInstrument(id, parsed.data)
+    if (!result.ok) return writeFailure('el instrumento', id, result)
+
+    return ok({ instrument: result.instrument })
+  } catch (error) {
+    return internalError('No se pudo guardar el instrumento.', error)
+  }
 }
 
 export async function DELETE(
@@ -54,9 +45,12 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  const deleted = await deleteRosacInstrument(id)
-  if (!deleted) {
-    return NextResponse.json({ error: `No existe un instrumento con id "${id}".` }, { status: 404 })
+
+  try {
+    const deleted = await deleteRosacInstrument(id)
+    if (!deleted) return notFound('el instrumento', id)
+  } catch (error) {
+    return internalError('No se pudo eliminar el instrumento.', error)
   }
 
   return new NextResponse(null, { status: 204 })

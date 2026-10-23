@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server'
+import type { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { rosacActivityInputSchema, updateRosacActivity } from '@/app/lib/rosac'
+import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
+import { rosacActivityUpdateSchema, updateRosacActivity } from '@/app/lib/rosac'
+
+import { writeFailure } from '../../http'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,29 +15,20 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
-  }
-
-  const parsed = rosacActivityInputSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
-  }
-
   const { id } = await params
-  const activity = await updateRosacActivity(id, parsed.data)
 
-  return NextResponse.json({ activity }, { headers: { 'Cache-Control': 'no-store' } })
+  const json = await readJson(request)
+  if (!json.ok) return json.response
+
+  const parsed = rosacActivityUpdateSchema.safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error)
+
+  try {
+    const result = await updateRosacActivity(id, parsed.data)
+    if (!result.ok) return writeFailure('la actividad', id, result)
+
+    return ok({ activity: result.activity })
+  } catch (error) {
+    return internalError('No se pudo guardar la actividad.', error)
+  }
 }
