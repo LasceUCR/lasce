@@ -1123,6 +1123,33 @@
     },
     "backLink": {
       "label": "Back to work areas"
+    },
+    "editor": {
+      "languageTabs": "Content language",
+      "legacyBaseText": "This text was recorded before language versions existed and might not be in Spanish. If you change it, review this too.",
+      "legacyNoTranslation": "This section does not yet have an English version. To change text you must complete both languages; shared fields can be changed without translating.",
+      "titleIn": "Title ({language})",
+      "descriptionIn": "Description ({language})",
+      "nameIn": "Name ({language})",
+      "icon": "Icon",
+      "icons": {
+        "antenna": "Antenna",
+        "location": "Location",
+        "frequency": "Frequency",
+        "sun": "Sun",
+        "tracking": "Pointing and tracking",
+        "control": "Control",
+        "receiver": "Receiver",
+        "maintenance": "Maintenance and infrastructure",
+        "education": "Education"
+      },
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "discardTitle": "Discard changes?",
+      "discardMessage": "There are unsaved changes. If you close the form, they will be lost.",
+      "discardConfirm": "Discard",
+      "discardCancel": "Keep editing"
     }
   },
   "researchAreas": {
