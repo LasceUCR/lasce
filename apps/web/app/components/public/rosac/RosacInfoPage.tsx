@@ -113,6 +113,7 @@ export function RosacInfoPage({
   const router = useRouter()
   const { editMode } = useEditMode()
   const tResearchers = useTranslations('researchers')
+  const tEditor = useTranslations('rosac.editor')
   const sendWithFeedback = useRequestFeedback()
 
   // --- Section 1: Characteristics State (Edit only, fixed 4 cards) ---
@@ -207,8 +208,8 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Característica actualizada correctamente.',
-          fallback: 'No se pudo guardar la característica. Inténtelo de nuevo.',
+          success: tEditor('characteristics.updated'),
+          fallback: tEditor('characteristics.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
@@ -260,8 +261,8 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Actividad actualizada correctamente.',
-          fallback: 'No se pudo guardar la actividad. Inténtelo de nuevo.',
+          success: tEditor('activities.updated'),
+          fallback: tEditor('activities.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
@@ -313,8 +314,8 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Etapa actualizada correctamente.',
-          fallback: 'No se pudo guardar la etapa. Inténtelo de nuevo.',
+          success: tEditor('stages.updated'),
+          fallback: tEditor('stages.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
@@ -327,10 +328,7 @@ export function RosacInfoPage({
             ...s,
             title: values.title,
             description: values.description,
-            images:
-              values.images && values.images.length > 0
-                ? (values.images as unknown as typeof s.images)
-                : s.images,
+            images: values.images && values.images.length > 0 ? values.images : s.images,
           } as ConstructionStage)
         : s,
     )
@@ -369,8 +367,8 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Instrumento actualizado correctamente.',
-          fallback: 'No se pudo guardar el instrumento. Inténtelo de nuevo.',
+          success: tEditor('instruments.updated'),
+          fallback: tEditor('instruments.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
@@ -395,7 +393,8 @@ export function RosacInfoPage({
   async function handleCreateInstrument(values: RosacInstrumentFormValues, close: () => void) {
     setInstrumentCreateError(null)
 
-    const createdId = `instrument-${Date.now()}`
+    const created: { instrument: Partial<RosacInstrumentCardContent> | null } = { instrument: null }
+
     if (onCreateInstrument) {
       const err = await onCreateInstrument(values)
       if (err) {
@@ -411,23 +410,31 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Instrumento agregado correctamente.',
-          fallback: 'No se pudo guardar el instrumento. Inténtelo de nuevo.',
-          onSuccess: () => router.refresh(),
+          success: tEditor('instruments.created'),
+          fallback: tEditor('instruments.errors.saveUnknown'),
+          onSuccess: async (response) => {
+            const data = (await response.json().catch(() => null)) as {
+              instrument?: RosacInstrumentCardContent
+            } | null
+            if (data?.instrument) {
+              created.instrument = data.instrument
+            }
+            router.refresh()
+          },
         },
       )
       if (!ok) return
     }
 
     const newInstrument: RosacInstrumentCardContent = {
-      id: createdId,
-      name: values.name,
-      pendingMessage: values.pendingMessage,
-      image: values.image,
-      consultation: values.consultation,
+      id: created.instrument?.id ?? `instrument-${Date.now()}`,
+      name: created.instrument?.name ?? values.name,
+      pendingMessage: created.instrument?.pendingMessage ?? values.pendingMessage,
+      image: created.instrument?.image ?? values.image,
+      consultation: created.instrument?.consultation ?? values.consultation,
     }
 
-    setInstruments([...instruments, newInstrument])
+    setInstruments((prev) => [...prev, newInstrument])
     close()
   }
 
@@ -445,8 +452,8 @@ export function RosacInfoPage({
         `/api/rosac/instruments/${id}`,
         { method: 'DELETE' },
         {
-          success: 'Instrumento eliminado correctamente.',
-          fallback: 'No se pudo eliminar el instrumento. Inténtelo de nuevo.',
+          success: tEditor('instruments.deleted'),
+          fallback: tEditor('instruments.errors.deleteUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
@@ -534,8 +541,8 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Institución actualizada correctamente.',
-          fallback: 'No se pudo guardar la institución. Inténtelo de nuevo.',
+          success: tEditor('acknowledgments.updated'),
+          fallback: tEditor('acknowledgments.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
@@ -547,6 +554,7 @@ export function RosacInfoPage({
         ? {
             ...inst,
             name: values.name,
+            href: values.href,
             logo: values.logo,
           }
         : inst,
@@ -561,7 +569,10 @@ export function RosacInfoPage({
   ) {
     setAcknowledgmentCreateError(null)
 
-    const createdId = `ack-${Date.now()}`
+    const created: { acknowledgment: Partial<RosacAcknowledgment> | null } = {
+      acknowledgment: null,
+    }
+
     if (onCreateAcknowledgment) {
       const err = await onCreateAcknowledgment(values)
       if (err) {
@@ -577,21 +588,30 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Institución agregada correctamente.',
-          fallback: 'No se pudo guardar la institución. Inténtelo de nuevo.',
-          onSuccess: () => router.refresh(),
+          success: tEditor('acknowledgments.created'),
+          fallback: tEditor('acknowledgments.errors.saveUnknown'),
+          onSuccess: async (response) => {
+            const data = (await response.json().catch(() => null)) as {
+              acknowledgment?: RosacAcknowledgment
+            } | null
+            if (data?.acknowledgment) {
+              created.acknowledgment = data.acknowledgment
+            }
+            router.refresh()
+          },
         },
       )
       if (!ok) return
     }
 
     const newInstitution: RosacAcknowledgment = {
-      id: createdId,
-      name: values.name,
-      logo: values.logo,
+      id: created.acknowledgment?.id ?? `ack-${Date.now()}`,
+      name: created.acknowledgment?.name ?? values.name,
+      href: created.acknowledgment?.href ?? values.href,
+      logo: created.acknowledgment?.logo ?? values.logo,
     }
 
-    setAcknowledgments([...acknowledgments, newInstitution])
+    setAcknowledgments((prev) => [...prev, newInstitution])
     close()
   }
 
@@ -609,8 +629,8 @@ export function RosacInfoPage({
         `/api/rosac/acknowledgments/${id}`,
         { method: 'DELETE' },
         {
-          success: 'Institución eliminada correctamente.',
-          fallback: 'No se pudo eliminar la institución. Inténtelo de nuevo.',
+          success: tEditor('acknowledgments.deleted'),
+          fallback: tEditor('acknowledgments.errors.deleteUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
