@@ -2,6 +2,42 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { createAdminFixture } from './helpers/admin-users'
 
+test('disables role changes until the client can open the confirmation dialog', async ({
+  page,
+  context,
+}) => {
+  const fixture = await createAdminFixture(context)
+  let releaseScripts!: () => void
+  const scriptsReady = new Promise<void>((resolve) => {
+    releaseScripts = resolve
+  })
+  await page.route(/\/_next\/.*\.js(?:\?.*)?$/, async (route) => {
+    await scriptsReady
+    await route.continue()
+  })
+  const row = page.getByRole('row', { name: new RegExp(fixture.admin.email) })
+  const checkbox = row.getByRole('checkbox', { name: /^Persona administradora:/ })
+  const details = row.getByRole('button', { name: fixture.admin.fullName, exact: true })
+  try {
+    try {
+      await page.goto('/administracion/usuarios', { waitUntil: 'commit' })
+      await expect(checkbox).toBeChecked()
+      await expect(checkbox).toBeDisabled()
+      await expect(details).toBeDisabled()
+    } finally {
+      releaseScripts()
+    }
+    await expect(details).toBeEnabled()
+    await checkbox.click()
+    const dialog = page.getByRole('dialog', { name: 'Confirmar retiro de rol' })
+    await expect(dialog.getByText(/perderás el acceso/)).toBeVisible()
+    await dialog.getByRole('button', { name: 'No, cancelar' }).click()
+    await expect(checkbox).toBeChecked()
+  } finally {
+    await fixture.cleanup()
+  }
+})
+
 test('supports narrow screens, long names, keyboard recovery and conflicting changes', async ({
   page,
   context,

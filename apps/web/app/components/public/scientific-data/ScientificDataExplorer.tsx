@@ -94,6 +94,8 @@ export function ScientificDataExplorer({
   navigate = assignLocation,
 }: ScientificDataExplorerProps) {
   const t = useTranslations('scientificData.explorer')
+  const tBanners = useTranslations('scientificData.banners')
+  const tLoading = useTranslations('scientificData.loading')
   const tValidation = useTranslations('scientificData.validation')
   const tErrors = useTranslations('scientificData.errors')
   const format = useFormatter()
@@ -131,6 +133,7 @@ export function ScientificDataExplorer({
   const [query, setQuery] = useState(initialQuery)
   const [result, setResult] = useState<ScientificDataResult | null>(initialResult ?? null)
   const [requestState, setRequestState] = useState<RequestState>(initialResult ? 'success' : 'idle')
+  const [hasConsulted, setHasConsulted] = useState(Boolean(initialResult))
   const [message, setMessage] = useState<string | null>(null)
   const resultsHeading = useRef<HTMLHeadingElement>(null)
   const activeRequest = useRef<AbortController | null>(null)
@@ -151,6 +154,27 @@ export function ScientificDataExplorer({
   const solarImages =
     query.source === 'GOES' && selected?.product.visualization === 'image-sequence'
   const maxDate = query.source === 'GOES' ? goesAvailability.today : undefined
+  const downloadOptions = getDownloadOptions(
+    query,
+    signedIn ? downloadGrants : ['download_resources'],
+  )
+  const canDownload = downloadOptions.some((option) => option.allowed)
+  const canDownloadData = downloadOptions.some(
+    (option) => option.format === 'csv' && option.allowed,
+  )
+  const downloadNotice =
+    downloadOptions.length === 0
+      ? 'noDownloads'
+      : !canDownload
+        ? 'denied'
+        : query.source === 'ROSAC'
+          ? 'rosacDownloads'
+          : canDownloadData
+            ? 'goesDataDownloads'
+            : 'goesChartOnly'
+  const bannerValues = { source: query.source, instrument: selected?.instrument.code ?? '' }
+  const loadingLabel = tLoading(solarImages ? 'images' : 'data')
+  const loadingProgress = !solarImages && progress > 0 ? progress : undefined
 
   function resetResults() {
     activeRequest.current?.abort()
@@ -254,6 +278,7 @@ export function ScientificDataExplorer({
       activeRequest.current?.abort()
       setResult(null)
       setRequestState('loading')
+      setHasConsulted(true)
       setMessage(null)
       setProgress(0)
       setResultJobId(null)
@@ -347,6 +372,49 @@ export function ScientificDataExplorer({
           {selectedSource.dataKind === 'observed' ? t('badgeObserved') : t('badgeSimulated')}
         </span>
       </div>
+
+      {hasConsulted && (
+        <>
+          <Notice tone="info">
+            {tBanners(
+              query.source === 'GOES' ? 'goesConsultation' : 'rosacConsultation',
+              bannerValues,
+            )}
+            {selected?.instrument.code === 'SEISS' && <> {tBanners('pendingProducts')}</>}
+          </Notice>
+          <aside aria-labelledby="scientific-permissions-title" className="data-permissions">
+            <h3 id="scientific-permissions-title">{tBanners('title')}</h3>
+            <p>
+              {tBanners(downloadNotice, bannerValues)}
+              {canDownload && (
+                <>
+                  {!signedIn && <> {tBanners('signIn')}</>} {tBanners('expiry')}
+                </>
+              )}
+            </p>
+          </aside>
+        </>
+      )}
+
+      {requestState === 'loading' && (
+        <div className="data-loading">
+          <div className="data-loading-header">
+            <p className="data-loading-copy" role="status">
+              <span>{loadingLabel}</span>
+              {loadingProgress !== undefined && <strong>{loadingProgress}%</strong>}
+            </p>
+            <button className="data-loading-cancel" type="button" onClick={resetResults}>
+              {tLoading('cancel')}
+            </button>
+          </div>
+          <progress
+            aria-label={loadingLabel}
+            className="data-loading-progress"
+            max={100}
+            value={loadingProgress}
+          />
+        </div>
+      )}
 
       <form className="data-query-form" data-select-boundary noValidate onSubmit={submitQuery}>
         <div className="data-field data-source-field">
@@ -472,38 +540,6 @@ export function ScientificDataExplorer({
         </div>
       </form>
 
-      <Notice tone={query.source === 'GOES' ? 'info' : 'warning'}>
-        <span className="data-source-notice-copy">
-          <span aria-hidden={query.source !== 'GOES'}>{t('noticeGoes')}</span>
-          <span aria-hidden={query.source !== 'ROSAC'}>{t('noticeRosac')}</span>
-        </span>
-      </Notice>
-
-      <aside aria-labelledby="scientific-permissions-title" className="data-permissions">
-        <h3 id="scientific-permissions-title">{t('permissionsTitle')}</h3>
-        <p>{t('permissionsText')}</p>
-      </aside>
-
-      {requestState === 'loading' && (
-        <div className="data-loading">
-          <p className="data-loading-copy" role="status">
-            <span>{solarImages ? t('loadingImages') : t('loadingData')}</span>
-            {!solarImages && <strong>{progress}%</strong>}
-          </p>
-          <progress
-            aria-label={solarImages ? t('loadingImages') : t('loadingData')}
-            className="data-loading-progress"
-            max={100}
-            value={solarImages ? undefined : progress}
-          />
-          <div className="data-loading-actions">
-            <Button type="button" variant="secondary" onClick={resetResults}>
-              {t('cancelQuery')}
-            </Button>
-          </div>
-        </div>
-      )}
-
       {message ? (
         <Notice id="scientific-query-message" tone="error" role="alert">
           {message}
@@ -568,9 +604,7 @@ export function ScientificDataExplorer({
             ) : null}
           </dl>
 
-          <Notice tone={result.origin.kind === 'observed' ? 'info' : 'warning'}>
-            {result.origin.notice}
-          </Notice>
+          <Notice tone="info">{result.origin.notice}</Notice>
 
           {!hasResults ? (
             <div className="content-empty" role="status">
