@@ -2300,6 +2300,11 @@ const defaultCharacteristics = [
     description:
       'Se preparan observaciones en este rango de frecuencias de radio, como parte del desarrollo del radiotelescopio.',
     position: 0,
+    en: {
+      title: 'Between 100 and 1000 MHz',
+      description:
+        'Observations are prepared in this radio frequency range as part of the radio telescope development.',
+    },
   },
   {
     key: 'antenna-system',
@@ -2308,6 +2313,11 @@ const defaultCharacteristics = [
     description:
       'Una antena parabólica se adapta para uso astronómico con una nueva montura y sistemas de movimiento y apuntado.',
     position: 1,
+    en: {
+      title: '11-meter antenna',
+      description:
+        'A parabolic antenna is adapted for astronomical use with a new mount and motion and pointing systems.',
+    },
   },
   {
     key: 'digital-backend',
@@ -2316,6 +2326,11 @@ const defaultCharacteristics = [
     description:
       'El proyecto se desarrolla en el Recinto de Santa Cruz de la Universidad de Costa Rica.',
     position: 2,
+    en: {
+      title: 'Santa Cruz, Guanacaste',
+      description:
+        'The project is developed at the Santa Cruz Campus of the University of Costa Rica.',
+    },
   },
   {
     key: 'science-goals',
@@ -2324,14 +2339,37 @@ const defaultCharacteristics = [
     description:
       'Se desarrollan capacidades para apuntar, seguir fuentes astronómicas y registrar sus emisiones de radio.',
     position: 3,
+    en: {
+      title: 'The Sun and other celestial sources',
+      description:
+        'Capabilities are developed to point at, track astronomical sources, and record their radio emissions.',
+    },
   },
 ]
 
-for (const char of defaultCharacteristics) {
-  await prisma.rosacCharacteristic.upsert({
+for (const { en, ...char } of defaultCharacteristics) {
+  const record = await prisma.rosacCharacteristic.upsert({
     where: { key: char.key },
     update: char,
     create: char,
+  })
+  await prisma.rosacCharacteristicTranslation.upsert({
+    where: {
+      characteristicId_locale: {
+        characteristicId: record.id,
+        locale: 'en',
+      },
+    },
+    update: {
+      title: en.title,
+      description: en.description,
+    },
+    create: {
+      characteristicId: record.id,
+      locale: 'en',
+      title: en.title,
+      description: en.description,
+    },
   })
 }
 
@@ -2342,6 +2380,11 @@ const defaultActivities = [
     title: 'Apuntado y seguimiento',
     description: 'Desarrollamos un radiotelescopio capaz de apuntar y seguir fuentes astronómicas.',
     position: 0,
+    en: {
+      title: 'Pointing and tracking',
+      description:
+        'We develop a radio telescope capable of pointing at and tracking astronomical sources.',
+    },
   },
   {
     key: 'observations',
@@ -2350,6 +2393,11 @@ const defaultActivities = [
     description:
       'Preparamos observaciones del Sol y de otras fuentes celestes entre 100 y 1000 MHz.',
     position: 1,
+    en: {
+      title: 'Radio observations',
+      description:
+        'We prepare observations of the Sun and other celestial sources between 100 and 1000 MHz.',
+    },
   },
   {
     key: 'control',
@@ -2358,6 +2406,11 @@ const defaultActivities = [
     description:
       'Diseñamos y probamos sistemas de control, seguimiento, posicionamiento, adquisición y procesamiento de señales.',
     position: 2,
+    en: {
+      title: 'Control and signal processing',
+      description:
+        'We design and test control, tracking, positioning, acquisition, and signal processing systems.',
+    },
   },
   {
     key: 'receivers',
@@ -2366,6 +2419,11 @@ const defaultActivities = [
     description:
       'Desarrollamos y evaluamos receptores para registrar emisiones de radio asociadas con objetos celestes.',
     position: 3,
+    en: {
+      title: 'Radio receivers',
+      description:
+        'We develop and evaluate receivers to record radio emissions associated with celestial objects.',
+    },
   },
   {
     key: 'infrastructure',
@@ -2374,6 +2432,11 @@ const defaultActivities = [
     description:
       'Generamos experiencia local en construcción, operación, calibración y mantenimiento de infraestructura de radioastronomía.',
     position: 4,
+    en: {
+      title: 'Local technical capabilities',
+      description:
+        'We build local expertise in the construction, operation, calibration, and maintenance of radio astronomy infrastructure.',
+    },
   },
   {
     key: 'education',
@@ -2382,14 +2445,37 @@ const defaultActivities = [
     description:
       'Impulsamos la ciencia desde Guanacaste, ampliando la participación regional en ciencia y tecnología.',
     position: 5,
+    en: {
+      title: 'Research, teaching, and outreach',
+      description:
+        'We promote science from Guanacaste, expanding regional participation in science and technology.',
+    },
   },
 ]
 
-for (const act of defaultActivities) {
-  await prisma.rosacActivity.upsert({
+for (const { en, ...act } of defaultActivities) {
+  const record = await prisma.rosacActivity.upsert({
     where: { key: act.key },
     update: act,
     create: act,
+  })
+  await prisma.rosacActivityTranslation.upsert({
+    where: {
+      activityId_locale: {
+        activityId: record.id,
+        locale: 'en',
+      },
+    },
+    update: {
+      title: en.title,
+      description: en.description,
+    },
+    create: {
+      activityId: record.id,
+      locale: 'en',
+      title: en.title,
+      description: en.description,
+    },
   })
 }
 
@@ -2422,6 +2508,11 @@ const defaultStages = [
       },
     ],
     position: 0,
+    en: {
+      title: 'Preparation for assembly',
+      description:
+        'Before main assembly, site preparation and work on components that would later form the structure took place. This stage brings together the logistics and prior adaptation needed to begin assembly.',
+    },
   },
   {
     key: 'estructura',
@@ -2451,6 +2542,11 @@ const defaultStages = [
       },
     ],
     position: 1,
+    en: {
+      title: 'Structure assembly',
+      description:
+        'Assembly progressively integrated the main components of the radio telescope structure. Photographs show positioning and crane lifting of these elements before the reflector received its panels.',
+    },
   },
   {
     key: 'paneles',
@@ -2480,6 +2576,11 @@ const defaultStages = [
       },
     ],
     position: 2,
+    en: {
+      title: 'Panel assembly',
+      description:
+        'With the structure assembled, work continued on the reflector with the installation of its panels. Photographs show work carried out directly on the antenna, including moving panels to their final position.',
+    },
   },
   {
     key: 'fotogrametria',
@@ -2501,6 +2602,11 @@ const defaultStages = [
       },
     ],
     position: 3,
+    en: {
+      title: 'Photogrammetry and panel leveling',
+      description:
+        'Once reflector panels were installed, observation and photogrammetric surveying were performed to verify the geometry and leveling of the resulting surface. This documented the condition of the antenna following assembly.',
+    },
   },
   {
     key: 'instalacion',
@@ -2530,14 +2636,37 @@ const defaultStages = [
       },
     ],
     position: 4,
+    en: {
+      title: 'Electrical installation',
+      description:
+        'Electrical adaptation covered work across different points of the observatory infrastructure. Photographs document installation and connection of electrical components, cabling, and work in both the antenna area and associated systems.',
+    },
   },
 ]
 
-for (const stage of defaultStages) {
-  await prisma.rosacStage.upsert({
+for (const { en, ...stage } of defaultStages) {
+  const record = await prisma.rosacStage.upsert({
     where: { key: stage.key },
     update: stage,
     create: stage,
+  })
+  await prisma.rosacStageTranslation.upsert({
+    where: {
+      stageId_locale: {
+        stageId: record.id,
+        locale: 'en',
+      },
+    },
+    update: {
+      title: en.title,
+      description: en.description,
+    },
+    create: {
+      stageId: record.id,
+      locale: 'en',
+      title: en.title,
+      description: en.description,
+    },
   })
 }
 
@@ -2552,6 +2681,14 @@ const defaultInstruments = [
     consultationNotice:
       'Serie temporal de prueba. Los resultados son simulados; no corresponden a observaciones del instrumento.',
     position: 0,
+    en: {
+      name: 'ROSAC-SABER',
+      consultationLabel: 'View ROSAC-SABER simulation',
+      consultationNotice:
+        'Test time series. Results are simulated; they do not correspond to instrument observations.',
+      imageAlt:
+        'Illustrative image from the ROSAC gallery: two antennas at night and an aerial lift.',
+    },
   },
   {
     name: 'ROSAC-MIRA 9GHz',
@@ -2563,6 +2700,14 @@ const defaultInstruments = [
     consultationNotice:
       'Espectro dinámico de prueba. Los resultados son simulados; no corresponden a observaciones del instrumento.',
     position: 1,
+    en: {
+      name: 'ROSAC-MIRA 9GHz',
+      consultationLabel: 'View ROSAC-MIRA 9GHz simulation',
+      consultationNotice:
+        'Test dynamic spectrum. Results are simulated; they do not correspond to instrument observations.',
+      imageAlt:
+        'Illustrative image from the ROSAC gallery: work on the antenna rotation mechanism.',
+    },
   },
   {
     name: 'ROSAC-HIROS',
@@ -2573,13 +2718,50 @@ const defaultInstruments = [
     consultationHref: null,
     consultationLabel: 'Consultar simulación del ROSAC-HIROS',
     position: 2,
+    en: {
+      name: 'ROSAC-HIROS',
+      consultationLabel: 'View ROSAC-HIROS simulation',
+      pendingMessage: 'Information pending confirmation and integration into the data section.',
+      imageAlt:
+        'Illustrative image from the ROSAC gallery: assembly of the antenna radial structure.',
+    },
   },
 ]
 
-if ((await prisma.rosacInstrument.count()) === 0) {
-  for (const inst of defaultInstruments) {
-    await prisma.rosacInstrument.create({ data: inst })
+for (const { en, ...inst } of defaultInstruments) {
+  let record = await prisma.rosacInstrument.findFirst({
+    where: { name: inst.name },
+  })
+  if (!record) {
+    record = await prisma.rosacInstrument.create({ data: inst })
+  } else {
+    record = await prisma.rosacInstrument.update({
+      where: { id: record.id },
+      data: inst,
+    })
   }
+  await prisma.rosacInstrumentTranslation.upsert({
+    where: {
+      instrumentId_locale: {
+        instrumentId: record.id,
+        locale: 'en',
+      },
+    },
+    update: {
+      name: en.name,
+      consultationLabel: en.consultationLabel,
+      consultationNotice: en.consultationNotice,
+      pendingMessage: en.pendingMessage,
+    },
+    create: {
+      instrumentId: record.id,
+      locale: 'en',
+      name: en.name,
+      consultationLabel: en.consultationLabel,
+      consultationNotice: en.consultationNotice,
+      pendingMessage: en.pendingMessage,
+    },
+  })
 }
 
 const defaultAcknowledgments = [
