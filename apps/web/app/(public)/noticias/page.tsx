@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { AcademicActivitiesSection } from '@/app/components/public/news/AcademicActivitiesSection'
@@ -39,10 +40,12 @@ export default async function NewsPage() {
     <article className="topic-page">
       <TopicHero kicker={t('kicker')} lead={t('lead')} title={t('title')} />
 
-      <AcademicActivitiesSection
-        activities={getAcademicActivities(messages.academicActivities.items)}
-        id="academic-activities"
-      />
+      <Suspense fallback={<AcademicActivitiesSection id="academic-activities" loading={true} />}>
+        <AcademicActivitiesSection
+          activities={getAcademicActivities(messages.academicActivities.items)}
+          id="academic-activities"
+        />
+      </Suspense>
 
       <NewsExplorer canCreate={canCreate} canDelete={canDelete} canEdit={canEdit} news={news} />
 

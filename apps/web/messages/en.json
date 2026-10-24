@@ -166,7 +166,8 @@
     "truncatedText": {
       "readMore": "Read more",
       "readLess": "Read less"
-    }
+    },
+    "loading": "Loading…"
   },
   "solarImageLightbox": {
     "open": "Enlarge solar image from {time}",
@@ -532,7 +533,9 @@
     "section": {
       "title": "Academic activities",
       "description": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
-      "empty": "No academic activities are available at the moment."
+      "empty": "No academic activities are available at the moment.",
+      "loading": "Loading academic activities…",
+      "error": "Could not load academic activities. Please try again later."
     },
     "card": {
       "badge": "Academic activity"
