@@ -3,6 +3,7 @@
 import { Building2 } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
@@ -29,6 +30,7 @@ export function EditableAcknowledgmentCard({
   onSave,
   onDelete,
 }: EditableAcknowledgmentCardProps) {
+  const t = useTranslations('rosac.editor')
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
   const [imageFailed, setImageFailed] = useState(false)
@@ -59,7 +61,9 @@ export function EditableAcknowledgmentCard({
             }}
           >
             <Building2 aria-hidden="true" size={36} strokeWidth={1.5} />
-            <span style={{ fontSize: '0.75rem', textAlign: 'center' }}>Logo no disponible</span>
+            <span style={{ fontSize: '0.75rem', textAlign: 'center' }}>
+              {t('acknowledgments.logoUnavailable')}
+            </span>
           </div>
         )}
       </div>
@@ -107,7 +111,7 @@ export function EditableAcknowledgmentCard({
       }}
       open={isEditing}
       size="medium"
-      title="Editar institución"
+      title={t('acknowledgments.editModalTitle')}
     >
       {saveError ? (
         <p className="form-alert" role="alert">
@@ -132,10 +136,10 @@ export function EditableAcknowledgmentCard({
   return (
     <>
       <EditableWrapper
-        deleteConfirmMessage={`¿Desea eliminar la institución "${institution.name}" de los agradecimientos? Esta acción no se puede deshacer.`}
-        deleteConfirmTitle="Eliminar institución"
-        deleteLabel={`Eliminar ${institution.name}`}
-        editLabel={`Editar ${institution.name}`}
+        deleteConfirmMessage={t('acknowledgments.deleteConfirmMessage', { name: institution.name })}
+        deleteConfirmTitle={t('acknowledgments.deleteConfirmTitle')}
+        deleteLabel={t('acknowledgments.deleteLabel', { name: institution.name })}
+        editLabel={t('acknowledgments.editLabel', { name: institution.name })}
         onDelete={canDelete ? onDelete : undefined}
         onEdit={canEdit ? () => setIsEditing(true) : undefined}
       >

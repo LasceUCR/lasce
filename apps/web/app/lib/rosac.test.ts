@@ -308,7 +308,7 @@ describe('rosac content', () => {
     ])
     expect(english.team.title).toBe('Researchers')
     expect(english.team.institutionLabel).toBe('Institution')
-    expect(english.team.people[0]?.role).toBe('Investigadora principal')
+    expect(english.team.people[0]?.role).toBe('Principal Investigator')
     expect(english.characteristics.items[0]?.title).toBe('11-meter antenna')
     expect(english.construction.stages[0]?.title).toBe('Preparation for assembly')
     expect(english.construction.stages[4]?.title).toBe('Electrical installation')

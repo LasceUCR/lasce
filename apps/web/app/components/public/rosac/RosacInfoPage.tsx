@@ -925,7 +925,7 @@ export function RosacInfoPage({
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
-              contentLang={contentLangAttribute(person.contentLocale)}
+              contentLang={person.contentLang ?? contentLangAttribute(person.contentLocale)}
               institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
               onSave={(values: BilingualResearcherFormValues) =>
