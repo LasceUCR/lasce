@@ -6961,11 +6961,17 @@ a.acknowledgments-card:focus-visible {
     .news-article-form-actions,
     .nosotros-activity-form-actions,
     .confirm-dialog-actions,
-    .mgmt-form-actions
+    .mgmt-form-actions,
+    .cms-stage-photo-actions
   )
   .button {
   height: 44px;
   line-height: 1;
+}
+
+.cms-stage-photo-actions .button {
+  width: 100%;
+  white-space: nowrap;
 }
 
 @media (max-width: 760px) {

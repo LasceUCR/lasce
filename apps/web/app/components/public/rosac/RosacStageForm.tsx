@@ -365,6 +365,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         </p>
 
         <div
+          className="cms-stage-photo-actions"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -373,7 +374,6 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
           }}
         >
           <Button
-            className="button-block"
             icon={<ImageIcon size={16} />}
             onClick={handleOpenEditPhotos}
             type="button"
@@ -382,7 +382,6 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
             {t('stages.editPhotos')} ({images.length})
           </Button>
           <Button
-            className="button-block"
             icon={<Plus size={16} />}
             onClick={handleOpenAddPhoto}
             type="button"
