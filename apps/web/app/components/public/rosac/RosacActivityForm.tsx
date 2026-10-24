@@ -1,119 +1,221 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
-import { FormField } from '@/app/components/public/FormField'
+import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
+import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
-import type { RosacCardIcon } from '@/app/lib/rosac'
+import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
+import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
+import { defaultLocale, isLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
+import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
+import {
+  confirmationsStillNeeded,
+  contentFieldLang,
+  contentPath,
+  draftFromStored,
+  hasContentChanges,
+  isConfirmed,
+  languageTabFlags,
+  resetConfirmations,
+  reviewsNeeded,
+  tabWithErrors,
+  toContentInput,
+  validateContent,
+  withConfirmation,
+  type ContentDraft,
+} from '@/app/lib/i18n/content/form'
+import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import {
+  rosacActivityContent,
+  rosacCardIcons,
+  type RosacActivityField,
+  type RosacActivityItem,
+  type RosacActivityUpdateInput,
+  type RosacCardIcon,
+} from '@/app/lib/rosac-schema'
 
-import { ROSAC_CARD_ICON_OPTIONS } from './RosacCharacteristicForm'
-
-export interface RosacActivityFormValues {
-  icon: RosacCardIcon
-  title: string
-  description: string
-}
+export type RosacActivityFormBody = RosacActivityUpdateInput
 
 export interface RosacActivityFormProps {
-  /** Blank/null for creating new activity; existing values for editing. */
-  activity: RosacActivityFormValues | null
-  onSave: (values: RosacActivityFormValues) => void
+  activity: RosacActivityItem
+  onSave: (body: RosacActivityFormBody) => void
   onCancel: () => void
 }
 
-export const blankRosacActivity: RosacActivityFormValues = {
-  icon: 'tracking',
-  title: '',
-  description: '',
-}
-
 export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityFormProps) {
-  const initial = activity ?? blankRosacActivity
-  const [icon, setIcon] = useState<RosacCardIcon>(initial.icon)
-  const [title, setTitle] = useState(initial.title)
-  const [description, setDescription] = useState(initial.description)
+  const t = useTranslations('rosac.editor')
+  const siteLocale = useLocale()
+  const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
+  const stored = activity.editing?.content ?? {
+    es: { title: activity.title, description: activity.description },
+    en: null,
+  }
 
-  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
-  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
+  const iconOptions: FormFieldOption[] = rosacCardIcons.map((value) => ({
+    value,
+    label: t(`icons.${value}`),
+  }))
+
+  const formRef = useRef<HTMLDivElement>(null)
   const formId = useId()
 
-  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
-  const descriptionError =
-    hasAttemptedSubmit && description.trim() === '' ? 'La descripción es obligatoria.' : null
+  const [tab, setTab] = useState<Locale>(defaultLocale)
+  const [draft, setDraft] = useState<ContentDraft<RosacActivityField>>(() =>
+    draftFromStored(rosacActivityContent, stored),
+  )
+  const [confirmed, setConfirmed] = useState<ReviewConfirmation<RosacActivityField>[]>([])
+  const [icon, setIcon] = useState<RosacCardIcon>(activity.icon)
+  const [attempted, setAttempted] = useState(false)
+  const [focusRequest, setFocusRequest] = useState(0)
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
 
-  const isFormValid = title.trim() !== '' && description.trim() !== ''
+  useEffect(() => {
+    if (focusRequest === 0) return
+    const invalid = formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? []
+    Array.from(invalid)
+      .find((element) => !element.closest('[hidden]'))
+      ?.focus()
+  }, [focusRequest])
 
-  const isDirty =
-    icon !== initial.icon || title !== initial.title || description !== initial.description
+  const needed = reviewsNeeded(rosacActivityContent, stored, draft)
+  const errors = attempted
+    ? validateContent(rosacActivityContent, stored, draft, confirmed, uiLocale)
+    : {}
+
+  const iconChanged = icon !== activity.icon
+  const contentChanged = hasContentChanges(rosacActivityContent, stored, draft)
+  const isDirty = iconChanged || contentChanged
 
   function handleCancelClick() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
-    } else {
-      onCancel()
+      return
+    }
+    onCancel()
+  }
+
+  function setContent(locale: Locale, field: RosacActivityField, value: string) {
+    setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
+    setConfirmed((current) => resetConfirmations(current, field))
+  }
+
+  function buildBody(): RosacActivityFormBody {
+    const version = activity.editing?.version ?? ''
+    const content = toContentInput(rosacActivityContent, draft)
+
+    return {
+      version,
+      ...(iconChanged ? { icon } : {}),
+      ...(contentChanged
+        ? { content, confirmedUnchanged: confirmationsStillNeeded(confirmed, needed) }
+        : {}),
     }
   }
 
   function handleConfirmClick() {
-    setHasAttemptedSubmit(true)
-    if (!isFormValid) {
-      if (title.trim() === '') {
-        document.getElementById(`${formId}-title`)?.focus()
-      } else if (description.trim() === '') {
-        document.getElementById(`${formId}-description`)?.focus()
-      }
+    setAttempted(true)
+    const found = validateContent(rosacActivityContent, stored, draft, confirmed, uiLocale)
+
+    if (Object.keys(found).length > 0) {
+      const target = tabWithErrors(found, tab)
+      if (target) setTab(target)
+      setFocusRequest((current) => current + 1)
       return
     }
-    onSave({
-      icon,
-      title: title.trim(),
-      description: description.trim(),
-    })
+
+    if (!iconChanged && !contentChanged) {
+      onCancel()
+      return
+    }
+
+    onSave(buildBody())
+  }
+
+  function reviewControl(locale: Locale, field: RosacActivityField) {
+    const review = needed.find((each) => each.locale === locale && each.field === field)
+    if (!review) return null
+
+    return (
+      <TranslationReview
+        checked={isConfirmed(confirmed, review)}
+        label={confirmationLabel(rosacActivityContent, review, uiLocale)}
+        message={reviewMessage(rosacActivityContent, review, stored, draft, uiLocale)}
+        onChange={(checked) =>
+          setConfirmed((current) => withConfirmation(current, review, checked))
+        }
+      />
+    )
   }
 
   return (
-    <div className="cms-form">
+    <div className="cms-form" ref={formRef}>
+      <LanguageTabs
+        copyLang={uiLocale}
+        flags={languageTabFlags(stored, errors, needed, confirmed, uiLocale)}
+        label={t('languageTabs')}
+        onSelect={setTab}
+        selected={tab}
+      >
+        {(locale) => (
+          <>
+            {activity.editing?.isLegacy && locale === defaultLocale ? (
+              <Notice>{t('legacyBaseText')}</Notice>
+            ) : null}
+
+            {activity.editing?.isLegacy && locale !== defaultLocale ? (
+              <Notice tone="warning">{t('legacyNoTranslation')}</Notice>
+            ) : null}
+
+            <FormField
+              error={errors[contentPath(locale, 'title')]}
+              id={`${formId}-${locale}-title`}
+              label={t('titleIn', { language: localeLabels[locale] })}
+              lang={contentFieldLang(stored, locale)}
+              onChange={(value) => setContent(locale, 'title', value)}
+              required
+              value={draft[locale].title}
+            />
+            {reviewControl(locale, 'title')}
+
+            <FormField
+              error={errors[contentPath(locale, 'description')]}
+              id={`${formId}-${locale}-description`}
+              label={t('descriptionIn', { language: localeLabels[locale] })}
+              lang={contentFieldLang(stored, locale)}
+              multiline
+              onChange={(value) => setContent(locale, 'description', value)}
+              required
+              value={draft[locale].description}
+            />
+            {reviewControl(locale, 'description')}
+          </>
+        )}
+      </LanguageTabs>
+
       <FormField
         id={`${formId}-icon`}
-        label="Ícono"
+        label={t('icon')}
         onChange={(value) => setIcon(value as RosacCardIcon)}
-        options={ROSAC_CARD_ICON_OPTIONS}
+        options={iconOptions}
         value={icon}
-      />
-
-      <FormField
-        errorMessage={titleError}
-        id={`${formId}-title`}
-        label="Título"
-        onChange={setTitle}
-        required
-        value={title}
-      />
-
-      <FormField
-        errorMessage={descriptionError}
-        id={`${formId}-description`}
-        label="Descripción"
-        multiline
-        onChange={setDescription}
-        required
-        value={description}
       />
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
+          {t('cancel')}
         </Button>
         <Button onClick={handleConfirmClick} variant="primary">
-          Confirmar
+          {t('save')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardCancel')}
+        confirmLabel={t('discardConfirm')}
+        message={t('discardMessage')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={() => {
           setConfirmDiscardOpen(false)
@@ -121,7 +223,7 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
         }}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardTitle')}
       />
     </div>
   )

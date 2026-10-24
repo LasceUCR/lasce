@@ -1,5 +1,8 @@
 import es from '@/messages/es.json' with { type: 'json' }
 
+import type { Locale } from '@/app/lib/i18n/config'
+import type { RosacStageEditingData } from './rosac-schema'
+
 export interface ConstructionImage {
   src: string
   alt: string
@@ -11,6 +14,8 @@ export interface ConstructionStage {
   navigationLabel: string
   description: string
   images: readonly [ConstructionImage, ConstructionImage, ...ConstructionImage[]]
+  contentLocale?: Locale | null
+  editing?: RosacStageEditingData
 }
 
 export interface ConstructionCarouselCopy {

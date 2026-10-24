@@ -2,6 +2,7 @@
 
 import { Plus, X } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
@@ -38,6 +39,10 @@ export interface PersonProfile {
   email?: string | readonly string[]
   institution: string
   description?: string
+  /** The stored base role before UI localization, used to initialize single-language edit forms. */
+  storedRole?: string
+  /** The stored base description before UI localization, used to initialize single-language edit forms. */
+  storedDescription?: string
 }
 
 export interface ResearcherFormValues {
@@ -114,9 +119,6 @@ function requireNonEmpty(message: string) {
   }
 }
 
-/** Same wording `ResearchAreaForm` uses when an image upload cannot reach the server. */
-const UPLOAD_ERROR_MESSAGE = 'No se pudo subir la imagen. Inténtelo de nuevo.'
-
 /** Matches the database CHECK constraint on both `researchers.email` and
  * `nosotros_researchers.email` — never send more than this many. */
 const MAX_EMAILS = 2
@@ -149,16 +151,20 @@ function parseEmails(email: PersonProfile['email']): string[] {
  */
 export function ResearcherForm(props: ResearcherFormProps) {
   const { researcher, onCancel } = props
+  const t = useTranslations('researchers.editor')
+  const tDiscard = useTranslations('researchers.discardDialog')
   const bilingual = props.translation !== undefined
   const contentRef = useRef<ResearcherContentHandle>(null)
-  const [role, setRole] = useState(researcher?.role ?? '')
+  const [role, setRole] = useState(researcher?.storedRole ?? researcher?.role ?? '')
   const [name, setName] = useState(researcher?.name ?? '')
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
   const [isAddingEmail, setIsAddingEmail] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [newEmailError, setNewEmailError] = useState<string | null>(null)
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
-  const [description, setDescription] = useState(researcher?.description ?? '')
+  const [description, setDescription] = useState(
+    researcher?.storedDescription ?? researcher?.description ?? '',
+  )
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
@@ -170,10 +176,10 @@ export function ResearcherForm(props: ResearcherFormProps) {
   // the same way `useRequestFeedback` handles the save request.
   const uploadErrorToast = useRef<number | null>(null)
 
-  const roleError = hasAttemptedSubmit && role.trim() === '' ? 'El rol es obligatorio.' : null
-  const nameError = hasAttemptedSubmit && name.trim() === '' ? 'El nombre es obligatorio.' : null
+  const roleError = hasAttemptedSubmit && role.trim() === '' ? t('roleRequired') : null
+  const nameError = hasAttemptedSubmit && name.trim() === '' ? t('nameRequired') : null
   const institutionError =
-    hasAttemptedSubmit && institution.trim() === '' ? 'La institución es obligatoria.' : null
+    hasAttemptedSubmit && institution.trim() === '' ? t('institutionRequired') : null
 
   const initialEmails = parseEmails(researcher?.email)
   const emailsChanged =
@@ -184,7 +190,8 @@ export function ResearcherForm(props: ResearcherFormProps) {
   function isDirty() {
     const textChanged = bilingual
       ? (contentRef.current?.isDirty() ?? false)
-      : role !== (researcher?.role ?? '') || description !== (researcher?.description ?? '')
+      : role !== (researcher?.storedRole ?? researcher?.role ?? '') ||
+        description !== (researcher?.storedDescription ?? researcher?.description ?? '')
 
     return (
       name !== (researcher?.name ?? '') ||
@@ -253,7 +260,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
         result = await uploadResearcherImage(formData)
       } catch {
         setIsUploading(false)
-        uploadErrorToast.current = toast.show('error', UPLOAD_ERROR_MESSAGE)
+        uploadErrorToast.current = toast.show('error', t('uploadError'))
         return
       }
       setIsUploading(false)
@@ -297,15 +304,15 @@ export function ResearcherForm(props: ResearcherFormProps) {
   function handleAddEmail() {
     const trimmed = newEmail.trim()
     if (emails.length >= MAX_EMAILS) {
-      setNewEmailError(`Máximo ${MAX_EMAILS} correos de contacto.`)
+      setNewEmailError(t('maxEmails', { max: MAX_EMAILS }))
       return
     }
     if (!isValidEmail(trimmed)) {
-      setNewEmailError('El correo no es válido.')
+      setNewEmailError(t('invalidEmail'))
       return
     }
     if (emails.includes(trimmed)) {
-      setNewEmailError('Ese correo ya fue agregado.')
+      setNewEmailError(t('duplicateEmail'))
       return
     }
 
@@ -321,8 +328,8 @@ export function ResearcherForm(props: ResearcherFormProps) {
     <div className="cms-form">
       <FileDropInput
         existingImageUrl={researcher?.src || undefined}
-        helperText="Opcional. Retrato del investigador, en formato JPG o PNG."
-        label="Foto"
+        helperText={t('photoHelp')}
+        label={t('photoLabel')}
         onFileSelect={(file) => {
           setPhotoFile(file)
           setPhotoRemoved(file === null)
@@ -333,10 +340,10 @@ export function ResearcherForm(props: ResearcherFormProps) {
         <FormField
           errorMessage={roleError}
           id="researcher-role"
-          label="Rol"
+          label={t('roleLabel')}
           onChange={setRole}
           required
-          validate={requireNonEmpty('El rol es obligatorio.')}
+          validate={requireNonEmpty(t('roleRequired'))}
           value={role}
         />
       )}
@@ -344,16 +351,16 @@ export function ResearcherForm(props: ResearcherFormProps) {
       <FormField
         errorMessage={nameError}
         id="researcher-name"
-        label="Nombre"
+        label={t('nameLabel')}
         onChange={setName}
         required
-        validate={requireNonEmpty('El nombre es obligatorio.')}
+        validate={requireNonEmpty(t('nameRequired'))}
         value={name}
       />
 
       <div className="cms-form-field">
         <span className="cms-form-field-label" id="researcher-email-label">
-          Contacto
+          {t('contactLabel')}
         </span>
         <div aria-labelledby="researcher-email-label" className="email-chip-field" role="group">
           {emails.map((address) => (
@@ -362,7 +369,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
               <IconButton
                 className="email-chip-remove"
                 icon={<X size={12} strokeWidth={2} />}
-                label={`Eliminar ${address}`}
+                label={t('deleteContact', { address })}
                 onClick={() => handleRemoveEmail(address)}
               />
             </span>
@@ -371,18 +378,18 @@ export function ResearcherForm(props: ResearcherFormProps) {
             <IconButton
               className="email-chip-add"
               icon={<Plus size={14} strokeWidth={2} />}
-              label="Añadir contacto"
+              label={t('addContact')}
               onClick={openAddEmail}
             />
           ) : null}
         </div>
       </div>
 
-      <Modal onClose={closeAddEmail} open={isAddingEmail} size="small" title="Añadir contacto">
+      <Modal onClose={closeAddEmail} open={isAddingEmail} size="small" title={t('addContactTitle')}>
         <FormField
           errorMessage={newEmailError}
           id="new-researcher-email"
-          label="Correo electrónico"
+          label={t('emailLabel')}
           onChange={(value) => {
             setNewEmail(value)
             setNewEmailError(null)
@@ -392,10 +399,10 @@ export function ResearcherForm(props: ResearcherFormProps) {
         />
         <div className="cms-form-actions">
           <Button onClick={closeAddEmail} variant="secondary">
-            Cancelar
+            {t('cancel')}
           </Button>
           <Button disabled={newEmail.trim() === ''} onClick={handleAddEmail} variant="primary">
-            Añadir
+            {t('add')}
           </Button>
         </div>
       </Modal>
@@ -403,10 +410,10 @@ export function ResearcherForm(props: ResearcherFormProps) {
       <FormField
         errorMessage={institutionError}
         id="researcher-institution"
-        label="Institución"
+        label={t('institutionLabel')}
         onChange={setInstitution}
         required
-        validate={requireNonEmpty('La institución es obligatoria.')}
+        validate={requireNonEmpty(t('institutionRequired'))}
         value={institution}
       />
 
@@ -415,7 +422,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
       ) : (
         <FormField
           id="researcher-description"
-          label="Descripción"
+          label={t('descriptionLabel')}
           multiline
           onChange={setDescription}
           value={description}
@@ -424,22 +431,22 @@ export function ResearcherForm(props: ResearcherFormProps) {
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
+          {t('cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
-          {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
+          {isUploading ? t('uploading') : t('save')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={tDiscard('keepEditing')}
+        confirmLabel={tDiscard('discard')}
+        message={tDiscard('message')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={handleConfirmDiscard}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={tDiscard('title')}
       />
     </div>
   )

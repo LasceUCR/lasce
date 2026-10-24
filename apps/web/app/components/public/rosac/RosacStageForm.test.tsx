@@ -1,6 +1,8 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 const mocks = vi.hoisted(() => ({
   uploadConstructionStageImage: vi.fn(),
@@ -28,32 +30,58 @@ const sampleImages = [
 
 const defaultArgs: RosacStageFormProps = {
   stage: {
+    id: 'stage-1',
+    navigationLabel: 'Preparación',
     title: 'Preparación para el montaje',
     description:
       'Antes del montaje principal se realizaron trabajos de preparación del sitio y de los componentes que posteriormente formarían parte de la estructura.',
     images: sampleImages,
+    editing: {
+      content: {
+        es: {
+          title: 'Preparación para el montaje',
+          description:
+            'Antes del montaje principal se realizaron trabajos de preparación del sitio y de los componentes que posteriormente formarían parte de la estructura.',
+        },
+        en: {
+          title: 'Preparation for assembly',
+          description:
+            'Prior to the main assembly, site preparation and component works were carried out.',
+        },
+      },
+      isLegacy: false,
+      version: '1',
+    },
   },
   onCancel: vi.fn(),
   onSave: vi.fn(),
 }
 
+function renderForm(props: Partial<RosacStageFormProps> = {}, locale: 'es' | 'en' = 'es') {
+  const onSave = vi.fn()
+  const onCancel = vi.fn()
+  renderWithIntl(
+    <RosacStageForm {...defaultArgs} onCancel={onCancel} onSave={onSave} {...props} />,
+    { locale },
+  )
+  return { onSave, onCancel, user: userEvent.setup() }
+}
+
 describe('RosacStageForm', () => {
   test('starts pre-filled with the stage being edited', () => {
-    render(<RosacStageForm {...defaultArgs} />)
+    renderForm()
 
-    expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue(defaultArgs.stage.title)
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: 'Título (Español)' })).toHaveValue(
+      defaultArgs.stage.title,
+    )
+    expect(screen.getByRole('textbox', { name: 'Descripción (Español)' })).toHaveValue(
       defaultArgs.stage.description,
     )
-    expect(screen.getByRole('button', { name: 'Editar fotografías' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Añadir fotografía' })).toBeInTheDocument()
-    expect(screen.getByText('2 fotografías registradas')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Editar fotografías (2)' })).toBeInTheDocument()
   })
 
   test('calls onCancel directly when untouched', async () => {
-    const user = userEvent.setup()
-    const onCancel = vi.fn()
-    render(<RosacStageForm {...defaultArgs} onCancel={onCancel} />)
+    const { onCancel, user } = renderForm()
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
@@ -61,17 +89,15 @@ describe('RosacStageForm', () => {
   })
 
   test('prompts to discard changes when modified and cancelled', async () => {
-    const user = userEvent.setup()
-    const onCancel = vi.fn()
-    render(<RosacStageForm {...defaultArgs} onCancel={onCancel} />)
+    const { onCancel, user } = renderForm()
 
-    const titleInput = screen.getByRole('textbox', { name: 'Título' })
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
     await user.clear(titleInput)
     await user.type(titleInput, 'Título Modificado')
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
-    const discardDialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    const discardDialog = screen.getByRole('dialog', { name: '¿Descartar cambios?' })
     expect(discardDialog).toBeInTheDocument()
 
     await user.click(within(discardDialog).getByRole('button', { name: 'Descartar' }))
@@ -79,56 +105,98 @@ describe('RosacStageForm', () => {
   })
 
   test('shows validation errors when fields are empty', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
+    const { onSave, user } = renderForm()
 
-    const titleInput = screen.getByRole('textbox', { name: 'Título' })
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
     await user.clear(titleInput)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByText('El título es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('El título en español es obligatorio.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('saves changes directly without save confirmation dialog', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
+  test('saves changes directly when confirmed with both languages updated', async () => {
+    const { onSave, user } = renderForm()
 
-    const titleInput = screen.getByRole('textbox', { name: 'Título' })
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
     await user.clear(titleInput)
     await user.type(titleInput, 'Etapa Modificada')
+
+    await user.click(screen.getByRole('tab', { name: /^English/ }))
+    const enTitleInput = screen.getByRole('textbox', { name: 'Título (English)' })
+    await user.clear(enTitleInput)
+    await user.type(enTitleInput, 'Modified Stage')
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).toHaveBeenCalledWith({
-      title: 'Etapa Modificada',
-      description: defaultArgs.stage.description,
-      images: defaultArgs.stage.images,
+      version: '1',
+      content: {
+        es: {
+          title: 'Etapa Modificada',
+          description: defaultArgs.stage.description,
+        },
+        en: {
+          title: 'Modified Stage',
+          description: defaultArgs.stage.editing?.content.en?.description ?? '',
+        },
+      },
+      confirmedUnchanged: [],
+    })
+  })
+
+  test('asks to review the other language when only one language changed', async () => {
+    const { onSave, user } = renderForm()
+
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Etapa Modificada')
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('tab', { name: /^English/ })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('switch')).not.toBeChecked()
+
+    await user.click(screen.getByRole('switch'))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith({
+      version: '1',
+      content: {
+        es: {
+          title: 'Etapa Modificada',
+          description: defaultArgs.stage.description,
+        },
+        en: {
+          title: defaultArgs.stage.editing?.content.en?.title ?? '',
+          description: defaultArgs.stage.editing?.content.en?.description ?? '',
+        },
+      },
+      confirmedUnchanged: [{ locale: 'en', field: 'title' }],
     })
   })
 
   test('allows editing alt text of an existing photo via the edit photos modal', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
+    const { onSave, user } = renderForm()
 
-    await user.click(screen.getByRole('button', { name: 'Editar fotografías' }))
+    await user.click(screen.getByRole('button', { name: /^Editar fotografías/ }))
 
-    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías' })
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
     expect(editDialog).toBeInTheDocument()
 
-    const altInput = within(editDialog).getByRole('textbox', {
-      name: 'Texto alternativo de la fotografía 1',
-    })
+    const altInput = within(editDialog).getAllByRole('textbox', {
+      name: 'Texto alternativo accesible (alt)',
+    })[0]!
     await user.clear(altInput)
     await user.type(altInput, 'Nueva descripción accesible')
 
     await user.click(within(editDialog).getByRole('button', { name: 'Guardar fotografías' }))
-    expect(screen.queryByRole('dialog', { name: 'Editar fotografías' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('dialog', { name: 'Editar fotografías de la etapa' }),
+    ).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -145,19 +213,16 @@ describe('RosacStageForm', () => {
   })
 
   test('prompts to confirm deletion and removes a photo via the edit photos modal', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
+    const { onSave, user } = renderForm()
 
-    await user.click(screen.getByRole('button', { name: 'Editar fotografías' }))
+    await user.click(screen.getByRole('button', { name: /^Editar fotografías/ }))
 
-    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías' })
-    const deleteButton = within(editDialog).getByRole('button', {
-      name: 'Eliminar fotografía 1',
-    })
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
+    const deleteButton = within(editDialog).getAllByRole('button', {
+      name: 'Eliminar fotografía',
+    })[0]!
     await user.click(deleteButton)
 
-    // Confirm dialog must appear
     const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar fotografía' })
     expect(deleteConfirmDialog).toBeInTheDocument()
 
@@ -165,7 +230,9 @@ describe('RosacStageForm', () => {
     expect(screen.queryByRole('dialog', { name: 'Eliminar fotografía' })).not.toBeInTheDocument()
 
     await user.click(within(editDialog).getByRole('button', { name: 'Guardar fotografías' }))
-    expect(screen.queryByRole('dialog', { name: 'Editar fotografías' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('dialog', { name: 'Editar fotografías de la etapa' }),
+    ).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -177,15 +244,14 @@ describe('RosacStageForm', () => {
   })
 
   test('cancels photo deletion when dismissed from confirmation dialog', async () => {
-    const user = userEvent.setup()
-    render(<RosacStageForm {...defaultArgs} />)
+    const { user } = renderForm()
 
-    await user.click(screen.getByRole('button', { name: 'Editar fotografías' }))
+    await user.click(screen.getByRole('button', { name: /^Editar fotografías/ }))
 
-    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías' })
-    const deleteButton = within(editDialog).getByRole('button', {
-      name: 'Eliminar fotografía 1',
-    })
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
+    const deleteButton = within(editDialog).getAllByRole('button', {
+      name: 'Eliminar fotografía',
+    })[0]!
     await user.click(deleteButton)
 
     const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar fotografía' })
@@ -194,20 +260,17 @@ describe('RosacStageForm', () => {
     await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Cancelar' }))
     expect(screen.queryByRole('dialog', { name: 'Eliminar fotografía' })).not.toBeInTheDocument()
 
-    // Photo 1 is still present
     expect(
-      within(editDialog).getByRole('textbox', { name: 'Texto alternativo de la fotografía 1' }),
+      within(editDialog).getAllByRole('textbox', { name: 'Texto alternativo accesible (alt)' })[0],
     ).toBeInTheDocument()
   })
 
   test('allows adding a new photo with custom alt text via the add photo modal', async () => {
-    const user = userEvent.setup()
     mocks.uploadConstructionStageImage.mockResolvedValueOnce({
       ok: true,
       imageUrl: '/images/uploaded.jpg',
     })
-    const onSave = vi.fn()
-    render(<RosacStageForm {...defaultArgs} onSave={onSave} />)
+    const { onSave, user } = renderForm()
 
     await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
 
@@ -226,7 +289,7 @@ describe('RosacStageForm', () => {
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
     expect(screen.queryByRole('dialog', { name: 'Añadir fotografía' })).not.toBeInTheDocument()
 
-    expect(screen.getByText('3 fotografías registradas')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Editar fotografías (3)' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 

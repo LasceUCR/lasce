@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -10,6 +10,7 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadInstrumentImage: mocks.uploadInstrumentImage,
 }))
 
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { RosacInstrumentForm, type RosacInstrumentFormProps } from './RosacInstrumentForm'
 import { AddNew, EditExisting } from './RosacInstrumentForm.stories'
 
@@ -20,15 +21,19 @@ const addArgs = AddNew.args as RosacInstrumentFormProps
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
 
+function renderForm(props: RosacInstrumentFormProps) {
+  return renderWithIntl(<RosacInstrumentForm {...props} />)
+}
+
 describe('RosacInstrumentForm', () => {
   test('starts pre-filled when editing an existing instrument', () => {
-    render(<RosacInstrumentForm {...editArgs} />)
+    renderForm(editArgs)
 
-    expect(screen.getByRole('textbox', { name: 'Nombre del instrumento' })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: 'Nombre (Español)' })).toHaveValue(
       editArgs.instrument!.name,
     )
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(
-      editArgs.instrument!.consultation!.notice,
+    expect(screen.getByRole('textbox', { name: 'Descripción (Español)' })).toHaveValue(
+      editArgs.instrument!.editing!.content.es.description,
     )
     expect(screen.getByRole('textbox', { name: 'Etiqueta del botón' })).toHaveValue(
       editArgs.instrument!.consultation!.label,
@@ -36,17 +41,17 @@ describe('RosacInstrumentForm', () => {
   })
 
   test('starts blank when adding a new instrument', () => {
-    render(<RosacInstrumentForm {...addArgs} />)
+    renderForm(addArgs)
 
-    expect(screen.getByRole('textbox', { name: 'Nombre del instrumento' })).toHaveValue('')
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue('')
+    expect(screen.getByRole('textbox', { name: 'Nombre (Español)' })).toHaveValue('')
+    expect(screen.getByRole('textbox', { name: 'Descripción (Español)' })).toHaveValue('')
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
   })
 
   test('calls onCancel directly when untouched', async () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
-    render(<RosacInstrumentForm {...editArgs} onCancel={onCancel} />)
+    renderForm({ ...editArgs, onCancel })
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
@@ -56,14 +61,14 @@ describe('RosacInstrumentForm', () => {
   test('prompts to discard changes when modified and cancelled', async () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
-    render(<RosacInstrumentForm {...addArgs} onCancel={onCancel} />)
+    renderForm({ ...addArgs, onCancel })
 
-    const nameInput = screen.getByRole('textbox', { name: 'Nombre del instrumento' })
+    const nameInput = screen.getByRole('textbox', { name: 'Nombre (Español)' })
     await user.type(nameInput, 'Radiómetro')
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
-    const discardDialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    const discardDialog = screen.getByRole('dialog', { name: '¿Descartar cambios?' })
     expect(discardDialog).toBeInTheDocument()
 
     await user.click(within(discardDialog).getByRole('button', { name: 'Descartar' }))
@@ -73,12 +78,12 @@ describe('RosacInstrumentForm', () => {
   test('shows validation errors when required fields are missing', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<RosacInstrumentForm {...addArgs} onSave={onSave} />)
+    renderForm({ ...addArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByText('El nombre es obligatorio.')).toBeInTheDocument()
-    expect(screen.getByText('La descripción es obligatoria.')).toBeInTheDocument()
+    expect(screen.getByText('El nombre en español es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('La descripción en español es obligatoria.')).toBeInTheDocument()
     expect(screen.getByText('La imagen es obligatoria.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
@@ -86,28 +91,70 @@ describe('RosacInstrumentForm', () => {
   test('calls onSave directly without save confirmation dialog when saving an instrument', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<RosacInstrumentForm {...editArgs} onSave={onSave} />)
+    renderForm({ ...editArgs, onSave })
 
-    const nameInput = screen.getByRole('textbox', { name: 'Nombre del instrumento' })
+    const nameInput = screen.getByRole('textbox', { name: 'Nombre (Español)' })
     await user.clear(nameInput)
     await user.type(nameInput, 'Espectrómetro Solar')
 
-    const descInput = screen.getByRole('textbox', { name: 'Descripción' })
-    await user.clear(descInput)
-    await user.type(descInput, 'Espectros de radio de alta resolución.')
+    await user.click(screen.getByRole('tab', { name: /^English/ }))
+    const enNameInput = screen.getByRole('textbox', { name: 'Nombre (English)' })
+    await user.clear(enNameInput)
+    await user.type(enNameInput, 'Solar Spectrometer')
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'Espectrómetro Solar',
-        image: expect.objectContaining({
-          src: editArgs.instrument!.image!.src,
-        }),
-        consultation: expect.objectContaining({
-          notice: 'Espectros de radio de alta resolución.',
-        }),
+        version: '1',
+        content: {
+          es: {
+            name: 'Espectrómetro Solar',
+            description: 'Resultados simulados.',
+          },
+          en: {
+            name: 'Solar Spectrometer',
+            description: 'Simulated results.',
+          },
+        },
+        confirmedUnchanged: [],
+      }),
+    )
+  })
+
+  test('asks to review the other language when only one language changed', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    renderForm({ ...editArgs, onSave })
+
+    const nameInput = screen.getByRole('textbox', { name: 'Nombre (Español)' })
+    await user.clear(nameInput)
+    await user.type(nameInput, 'Espectrómetro Solar')
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('tab', { name: /^English/ })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('switch')).not.toBeChecked()
+
+    await user.click(screen.getByRole('switch'))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        version: '1',
+        content: {
+          es: {
+            name: 'Espectrómetro Solar',
+            description: 'Resultados simulados.',
+          },
+          en: {
+            name: editArgs.instrument!.editing!.content.en?.name,
+            description: editArgs.instrument!.editing!.content.en?.description,
+          },
+        },
+        confirmedUnchanged: [{ locale: 'en', field: 'name' }],
       }),
     )
   })
@@ -115,7 +162,7 @@ describe('RosacInstrumentForm', () => {
   test('configures simulation consultation mode with target selector', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<RosacInstrumentForm {...editArgs} onSave={onSave} />)
+    renderForm({ ...editArgs, onSave })
 
     const modeSelect = screen.getByRole('combobox', { name: 'Tipo de acción' })
     await user.selectOptions(modeSelect, 'simulation')
@@ -139,7 +186,7 @@ describe('RosacInstrumentForm', () => {
   test('configures disabled consultation mode without href', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<RosacInstrumentForm {...editArgs} onSave={onSave} />)
+    renderForm({ ...editArgs, onSave })
 
     const modeSelect = screen.getByRole('combobox', { name: 'Tipo de acción' })
     await user.selectOptions(modeSelect, 'disabled')
@@ -158,7 +205,7 @@ describe('RosacInstrumentForm', () => {
   test('validates custom url field when custom mode is selected', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    render(<RosacInstrumentForm {...editArgs} onSave={onSave} />)
+    renderForm({ ...editArgs, onSave })
 
     const modeSelect = screen.getByRole('combobox', { name: 'Tipo de acción' })
     await user.selectOptions(modeSelect, 'custom')

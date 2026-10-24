@@ -32,9 +32,21 @@ from app.db import (
     ResearchAreaTranslation,
     ResearchAuthor,
     ResearchCrossAuthor,
+    Researcher,
+    ResearcherTranslation,
     ResearchTranslation,
     ResourceDownload,
     RolePermission,
+    RosacAcknowledgment,
+    RosacAcknowledgmentTranslation,
+    RosacActivity,
+    RosacActivityTranslation,
+    RosacCharacteristic,
+    RosacCharacteristicTranslation,
+    RosacInstrument,
+    RosacInstrumentTranslation,
+    RosacStage,
+    RosacStageTranslation,
     SolarPhysicsSection,
     SolarPhysicsSectionTranslation,
     SpaceWeatherSection,
@@ -700,5 +712,162 @@ def test_space_weather_section_translation_is_unique_per_section_and_locale() ->
     assert any(
         {column.name for column in constraint.columns} == {"section_id", "locale"}
         for constraint in SpaceWeatherSectionTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_rosac_tables_live_in_the_public_schema() -> None:
+    for model in (
+        Researcher,
+        ResearcherTranslation,
+        RosacCharacteristic,
+        RosacCharacteristicTranslation,
+        RosacActivity,
+        RosacActivityTranslation,
+        RosacStage,
+        RosacStageTranslation,
+        RosacInstrument,
+        RosacInstrumentTranslation,
+        RosacAcknowledgment,
+        RosacAcknowledgmentTranslation,
+    ):
+        assert model.__table__.schema == "public"
+
+
+def test_researcher_translation_is_unique_per_researcher_and_locale() -> None:
+    columns = ResearcherTranslation.__table__.columns
+    (fk,) = columns["researcher_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "researcher_id",
+        "locale",
+        "role",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert fk.target_fullname == "public.researchers.id"
+    assert fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"researcher_id", "locale"}
+        for constraint in ResearcherTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_rosac_characteristic_translation_is_unique_per_card_and_locale() -> None:
+    columns = RosacCharacteristicTranslation.__table__.columns
+    (fk,) = columns["characteristic_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "characteristic_id",
+        "locale",
+        "title",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert fk.target_fullname == "public.rosac_characteristics.id"
+    assert fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"characteristic_id", "locale"}
+        for constraint in RosacCharacteristicTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_rosac_activity_translation_is_unique_per_activity_and_locale() -> None:
+    columns = RosacActivityTranslation.__table__.columns
+    (fk,) = columns["activity_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "activity_id",
+        "locale",
+        "title",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert fk.target_fullname == "public.rosac_activities.id"
+    assert fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"activity_id", "locale"}
+        for constraint in RosacActivityTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_rosac_stage_translation_is_unique_per_stage_and_locale() -> None:
+    columns = RosacStageTranslation.__table__.columns
+    (fk,) = columns["stage_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "stage_id",
+        "locale",
+        "title",
+        "description",
+        "created_at",
+        "updated_at",
+    }
+    assert fk.target_fullname == "public.rosac_stages.id"
+    assert fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"stage_id", "locale"}
+        for constraint in RosacStageTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_rosac_instrument_translation_is_unique_per_instrument_and_locale() -> None:
+    columns = RosacInstrumentTranslation.__table__.columns
+    (fk,) = columns["instrument_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "instrument_id",
+        "locale",
+        "name",
+        "consultation_label",
+        "consultation_notice",
+        "pending_message",
+        "created_at",
+        "updated_at",
+    }
+    assert fk.target_fullname == "public.rosac_instruments.id"
+    assert fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"instrument_id", "locale"}
+        for constraint in RosacInstrumentTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_rosac_acknowledgment_translation_is_unique_per_acknowledgment_and_locale() -> None:
+    columns = RosacAcknowledgmentTranslation.__table__.columns
+    (fk,) = columns["acknowledgment_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "acknowledgment_id",
+        "locale",
+        "name",
+        "created_at",
+        "updated_at",
+    }
+    assert fk.target_fullname == "public.rosac_acknowledgments.id"
+    assert fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"acknowledgment_id", "locale"}
+        for constraint in RosacAcknowledgmentTranslation.__table__.constraints
         if isinstance(constraint, UniqueConstraint)
     )

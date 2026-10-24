@@ -1089,7 +1089,65 @@
       "intro": "The people developing the Santa Cruz Radio Observatory (ROSAC), a project bringing together astrophysics, physics, topographic, electrical, and mechanical engineering, electronics, and computing, with national and international collaboration.",
       "hint": "Click on a card to see more information.",
       "emptyMessage": "No researcher information available at this time.",
-      "institutionLabel": "Institution"
+      "institutionLabel": "Institution",
+      "people": {
+        "carolinaSalas": {
+          "role": "Principal Investigator",
+          "description": "Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument."
+        },
+        "miguelVelazquez": {
+          "role": "Researcher",
+          "description": "In charge of instrumentation development at ROSAC."
+        },
+        "davidGale": {
+          "role": "Researcher",
+          "description": "Installation and alignment of telescope reflectors. Mechanical systems, motion testing, lightning protection. General support."
+        },
+        "oscarNunez": {
+          "role": "Researcher",
+          "description": "In charge of the electrical system and technical support for gear motors."
+        },
+        "federicoRuiz": {
+          "role": "Researcher",
+          "description": "In charge of the implementation and commissioning of sensors and actuators, as well as the development of the controller and software systems associated with the ROSAC radio telescope."
+        },
+        "gustavoLara": {
+          "role": "Researcher",
+          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
+        },
+        "andresFallas": {
+          "role": "Researcher",
+          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
+        },
+        "wagnerMejias": {
+          "role": "Researcher",
+          "description": "Mechanical installation of the structure, preventive and corrective maintenance, adaptations and improvements to the general structure."
+        },
+        "eduardoIbarra": {
+          "role": "External collaborator",
+          "description": "Collaborator in the development and testing of the reception stage in the 100 MHz to 1.1 GHz range, receiver sensitivity analysis, radio telescope design, and electrical installation and antenna guidance system control tasks."
+        },
+        "andresCorrales": {
+          "role": "External collaborator",
+          "description": "Designer, developer, and maintainer of the radio telescope control software and end-user software."
+        },
+        "andresGamboa": {
+          "role": "External collaborator",
+          "description": "Support in radio telescope maintenance tasks, as well as electromechanical work related to instrument assembly."
+        },
+        "jelmuthRojas": {
+          "role": "External collaborator",
+          "description": "Support in structure leveling tasks."
+        },
+        "barnaldBocker": {
+          "role": "Assistant",
+          "description": "Support in the development and maintenance of ROSAC control software and communication protocols."
+        },
+        "fabianChaverri": {
+          "role": "Prospective doctoral student",
+          "description": "Prospective doctoral student with a thesis in astronomical instrumentation linked to the project."
+        }
+      }
     },
     "donations": {
       "title": "ROSAC donations",
@@ -1123,6 +1181,199 @@
     },
     "backLink": {
       "label": "Back to work areas"
+    },
+    "editor": {
+      "languageTabs": "Content language",
+      "legacyBaseText": "This text was recorded before language versions existed and might not be in Spanish. If you change it, review this too.",
+      "legacyNoTranslation": "This section does not yet have an English version. To change text you must complete both languages; shared fields can be changed without translating.",
+      "titleIn": "Title ({language})",
+      "descriptionIn": "Description ({language})",
+      "nameIn": "Name ({language})",
+      "icon": "Icon",
+      "icons": {
+        "antenna": "Antenna",
+        "location": "Location",
+        "frequency": "Frequency",
+        "sun": "Sun",
+        "tracking": "Pointing and tracking",
+        "control": "Control",
+        "receiver": "Receiver",
+        "maintenance": "Maintenance and infrastructure",
+        "education": "Education"
+      },
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "discardTitle": "Discard changes?",
+      "discardMessage": "There are unsaved changes. If you close the form, they will be lost.",
+      "discardConfirm": "Discard",
+      "discardCancel": "Keep editing",
+      "discardDialog": {
+        "title": "Discard unsaved changes",
+        "message": "If you discard now, all entered data that has not been saved will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
+      "acknowledgments": {
+        "addCard": "Add institution",
+        "editLabel": "Edit {name}",
+        "deleteLabel": "Delete {name}",
+        "deleteConfirmTitle": "Delete institution",
+        "deleteConfirmMessage": "Do you want to delete the institution \"{name}\" from acknowledgments? This action cannot be undone.",
+        "editModalTitle": "Edit institution",
+        "nameLabel": "Institution name",
+        "namePlaceholder": "E.g. Center for Space Research (CINESPA), UCR",
+        "nameRequired": "Institution name is required.",
+        "logoSourceLabel": "Choose a custom logo or select one from the list",
+        "logoSourceCustom": "Upload custom logo",
+        "logoSourcePreset": "Select from list: {label}",
+        "logoFileLabel": "Logo file",
+        "logoFileHelp": "WebP, PNG, SVG or JPG formats (max. 10 MB).",
+        "logoRequired": "You must select or upload a logo for the institution.",
+        "logoAltLabel": "Logo alternative text (Accessibility)",
+        "logoAltPlaceholder": "Accessible description of the institutional logo",
+        "logoAltDefault": "Logo of {name}",
+        "selectedLogo": "Selected logo:",
+        "institutional": "Institutional",
+        "institutionUrlLabel": "Institution website (optional)",
+        "institutionUrlPlaceholder": "https://example.ucr.ac.cr",
+        "institutionUrlInvalid": "The link must be a valid URL starting with http:// or https://.",
+        "logoUnavailable": "Logo unavailable",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add institution",
+        "saving": "Saving...",
+        "uploadError": "The logo could not be uploaded. Try again."
+      },
+      "characteristics": {
+        "editLabel": "Edit {title}",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit characteristic",
+        "iconLabel": "Icon",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "icons": {
+          "antenna": "Antenna",
+          "location": "Location",
+          "frequency": "Frequency",
+          "sun": "Sun",
+          "tracking": "Pointing and tracking",
+          "control": "Control",
+          "receiver": "Receiver",
+          "maintenance": "Maintenance and infrastructure",
+          "education": "Education"
+        }
+      },
+      "activities": {
+        "editLabel": "Edit {title}",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit activity",
+        "iconLabel": "Icon",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "cancel": "Cancel",
+        "save": "Confirm"
+      },
+      "stages": {
+        "editStage": "Edit stage",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit stage",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "photosTitle": "Stage photographs",
+        "registeredCount": "{count, plural, one {# registered photograph} other {# registered photographs}}",
+        "editPhotos": "Edit photographs",
+        "addPhoto": "Add photograph",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "uploading": "Uploading photographs...",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "imagesRequired": "The stage must contain at least one photograph.",
+        "uploadError": "Error uploading photographs. Try again.",
+        "editModal": {
+          "title": "Edit stage photographs",
+          "help": "Modify the accessible description (alt) of each photograph or remove those that no longer correspond to this stage.",
+          "altLabel": "Accessible alternative text (alt)",
+          "altPlaceholder": "Image description",
+          "deleteLabel": "Delete photograph",
+          "noPhotos": "No photographs registered in this stage.",
+          "savePhotos": "Save photographs",
+          "cancel": "Cancel",
+          "deleteDialog": {
+            "title": "Delete photograph",
+            "message": "Are you sure you want to delete this photograph from the stage?",
+            "confirm": "Delete",
+            "cancel": "Cancel"
+          },
+          "discardDialog": {
+            "title": "Discard photo changes",
+            "message": "If you discard now, changes made to photographs will not be applied."
+          }
+        },
+        "addModal": {
+          "title": "Add photograph",
+          "fileLabel": "Image file",
+          "fileHelp": "JPG, PNG or WebP formats (max. 10 MB).",
+          "fileRequired": "You must select an image file.",
+          "altLabel": "Accessible alternative text (alt)",
+          "altPlaceholder": "Description for screen reader users",
+          "altDefault": "Photograph of {title}",
+          "submit": "Add photograph",
+          "cancel": "Cancel",
+          "discardDialog": {
+            "title": "Discard new photograph",
+            "message": "If you discard now, the selected photograph will not be added to the stage."
+          }
+        }
+      },
+      "instruments": {
+        "addCard": "Add instrument",
+        "editLabel": "Edit {name}",
+        "deleteLabel": "Delete {name}",
+        "deleteConfirmTitle": "Delete instrument",
+        "deleteConfirmMessage": "This action cannot be undone and will delete the scientific instrument.",
+        "editModalTitle": "Edit \"{name}\"",
+        "defaultModalTitle": "Edit instrument",
+        "nameLabel": "Instrument name",
+        "nameRequired": "Name is required.",
+        "descriptionLabel": "Description",
+        "descriptionRequired": "Description is required.",
+        "imageLabel": "Instrument image",
+        "imageHelp": "JPG, PNG, WebP or AVIF formats (max. 10 MB).",
+        "imageRequired": "Image is required.",
+        "imageAltLabel": "Image alternative text (Accessibility)",
+        "imageAltPlaceholder": "Short image description for screen readers",
+        "imageAltDefault": "Illustrative image of {name}",
+        "actionSectionLabel": "Scientific consultation action",
+        "actionTypeLabel": "Action type",
+        "modes": {
+          "simulation": "Data catalog simulation (ROSAC)",
+          "custom": "External or custom link",
+          "disabled": "In integration / Coming soon (no link)"
+        },
+        "simulationTargetLabel": "Associated simulation instrument",
+        "simulationTargetOption": "Instrument {index}{product} ({code})",
+        "simulationAutoUrl": "Automatic link:",
+        "customHrefLabel": "Consultation link (URL)",
+        "customHrefPlaceholder": "https://... or /datos/...",
+        "customHrefRequired": "Link is required for a custom destination.",
+        "disabledHint": "The button will appear disabled indicating that the simulation is pending or in integration.",
+        "consultationLabel": "Button label",
+        "consultationLabelPlaceholder": "Consult simulation of {name}",
+        "consultationLabelDefault": "Consult simulation",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "saving": "Saving...",
+        "uploadError": "The image could not be uploaded. Try again."
+      },
+      "saveError": "The change could not be saved. Try again."
     }
   },
   "researchAreas": {
@@ -1193,6 +1444,43 @@
     "errors": {
       "unknown": "The researcher could not be saved. Try again.",
       "deleteUnknown": "The researcher could not be deleted. Try again."
+    },
+    "editor": {
+      "addCard": "Add researcher",
+      "editTitle": "Edit researcher",
+      "editLabel": "Edit {name}",
+      "deleteLabel": "Delete {name}",
+      "deleteConfirmTitle": "Delete researcher",
+      "deleteConfirmMessage": "Do you want to delete \"{name}\"? This action cannot be undone.",
+      "deleteConfirm": "Delete",
+      "photoLabel": "Photo",
+      "photoHelp": "Optional. Researcher portrait, in JPG or PNG format.",
+      "roleLabel": "Role",
+      "roleRequired": "Role is required.",
+      "nameLabel": "Name",
+      "nameRequired": "Name is required.",
+      "institutionLabel": "Institution",
+      "institutionRequired": "Institution is required.",
+      "descriptionLabel": "Description",
+      "contactLabel": "Contact",
+      "addContact": "Add contact",
+      "deleteContact": "Delete {address}",
+      "addContactTitle": "Add contact",
+      "emailLabel": "Email address",
+      "add": "Add",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "uploading": "Uploading image...",
+      "uploadError": "The image could not be uploaded. Try again.",
+      "maxEmails": "Maximum {max} contact emails.",
+      "invalidEmail": "The email is not valid.",
+      "duplicateEmail": "That email was already added."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all entered data that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     }
   },
   "scientificData": {
@@ -1516,5 +1804,16 @@
         "instruments": "Queryable instruments"
       }
     }
+  },
+  "fileDrop": {
+    "dropHere": "Drag an image here",
+    "browseFiles": "click to select from your device",
+    "description": "Drag an image here or click to select from your device",
+    "rejectionFormat": "Unsupported format. Use a JPG, PNG, WebP or GIF image.",
+    "rejectionSize": "The image exceeds the maximum size of 25 MB.",
+    "removeFile": "Remove image",
+    "removeLabel": "Remove image",
+    "previewAlt": "Preview of {label}",
+    "imagePreviewAlt": "Preview of {label}"
   }
 }

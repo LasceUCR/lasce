@@ -28,25 +28,30 @@ vi.mock('@/app/lib/rosac', async (importOriginal) => {
 
 import { DELETE, PATCH } from './route'
 
-const params = Promise.resolve({ id: 'abc' })
+const researcherId = '5f0b1c9e-3d2a-4f6b-9c8d-7e6f5a4b3c2d'
+const params = Promise.resolve({ id: researcherId })
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
+const VERSION = '2026-01-01T00:00:00.000Z'
 const validBody = {
+  version: VERSION,
   src: '/images/ROSAC/team/Updated.jpg',
-  role: 'Investigador asociado',
   name: 'Nuevo nombre',
   institution: 'UCR',
-  description: 'Texto actualizado.',
+  content: {
+    es: { role: 'Investigador asociado', description: 'Texto actualizado.' },
+    en: { role: 'Associate Researcher', description: 'Updated text.' },
+  },
 }
 
 function patchRequest(body: unknown) {
-  return new Request('http://localhost/api/researchers/abc', {
+  return new Request(`http://localhost/api/researchers/${researcherId}`, {
     method: 'PATCH',
     body: typeof body === 'string' ? body : JSON.stringify(body),
   })
 }
 
 function deleteRequest() {
-  return new Request('http://localhost/api/researchers/abc', { method: 'DELETE' })
+  return new Request(`http://localhost/api/researchers/${researcherId}`, { method: 'DELETE' })
 }
 
 function deniedResponse(status: number) {
@@ -75,6 +80,7 @@ describe('PATCH /api/researchers/[id]', () => {
     const response = await PATCH(patchRequest('not json'), { params })
 
     expect(response.status).toBe(400)
+    expect((await response.json()).code).toBe('invalid-json')
     expect(mocks.updateResearcher).not.toHaveBeenCalled()
   })
 
@@ -85,42 +91,47 @@ describe('PATCH /api/researchers/[id]', () => {
 
     expect(response.status).toBe(400)
     const body = await response.json()
-    expect(body.issues).toMatchObject({
-      institution: expect.any(Array),
-    })
+    expect(body.code).toBe('invalid-body')
+    expect(body.issues).toEqual([
+      { path: 'institution', message: 'La institución es obligatoria.' },
+    ])
     expect(mocks.updateResearcher).not.toHaveBeenCalled()
   })
 
   test('returns 404 when the researcher does not exist', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    mocks.updateResearcher.mockResolvedValue(null)
+    mocks.updateResearcher.mockResolvedValue({ ok: false, reason: 'not-found' })
 
     const response = await PATCH(patchRequest(validBody), { params })
 
     expect(response.status).toBe(404)
+    expect((await response.json()).code).toBe('not-found')
   })
 
   test('saves the change and stamps modifiedBy with the current admin', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    const saved = { id: 'abc', ...validBody }
-    mocks.updateResearcher.mockResolvedValue(saved)
+    const saved = { id: researcherId, ...validBody }
+    mocks.updateResearcher.mockResolvedValue({ ok: true, researcher: saved })
 
     const response = await PATCH(patchRequest(validBody), { params })
 
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ researcher: saved })
-    expect(mocks.updateResearcher).toHaveBeenCalledWith('abc', validBody, adminUser.id)
+    expect(mocks.updateResearcher).toHaveBeenCalledWith(researcherId, validBody, adminUser.id)
   })
 
   test('saves a change with no photo — it is optional', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    mocks.updateResearcher.mockResolvedValue({ id: 'abc', ...validBody, src: '' })
+    mocks.updateResearcher.mockResolvedValue({
+      ok: true,
+      researcher: { id: researcherId, ...validBody, src: '' },
+    })
 
     const response = await PATCH(patchRequest({ ...validBody, src: '' }), { params })
 
     expect(response.status).toBe(200)
     expect(mocks.updateResearcher).toHaveBeenCalledWith(
-      'abc',
+      researcherId,
       { ...validBody, src: '' },
       adminUser.id,
     )
@@ -155,6 +166,6 @@ describe('DELETE /api/researchers/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteResearcher).toHaveBeenCalledWith('abc')
+    expect(mocks.deleteResearcher).toHaveBeenCalledWith(researcherId)
   })
 })

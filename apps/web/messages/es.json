@@ -330,7 +330,7 @@
       "items": {
         "release": {
           "title": "El Sol libera energía",
-          "description": "Los ‘flares’ producen incrementos intensos de radiación y se asocian al origen de las eyecciones de masa coronal (CMEs, por sus siglas en inglés), las cuales son grandes estructuras de plasma y campo magnético. Algunos de estos eventos aceleran partículas a altas energías."
+          "description": "Las fulguraciones producen incrementos intensos de radiación y se asocian al origen de las eyecciones de masa coronal (CMEs, por sus siglas en inglés), las cuales son grandes estructuras de plasma y campo magnético. Algunos de estos eventos aceleran partículas a altas energías."
         },
         "propagation": {
           "title": "La perturbación se propaga",
@@ -1089,7 +1089,65 @@
       "intro": "Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.",
       "hint": "Haga clic en una ficha para ver más información.",
       "emptyMessage": "No hay información de investigadores disponible en este momento.",
-      "institutionLabel": "Institución"
+      "institutionLabel": "Institución",
+      "people": {
+        "carolinaSalas": {
+          "role": "Investigadora principal",
+          "description": "Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento."
+        },
+        "miguelVelazquez": {
+          "role": "Investigador",
+          "description": "Encargado del desarrollo de la instrumentación en ROSAC."
+        },
+        "davidGale": {
+          "role": "Investigador",
+          "description": "Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general."
+        },
+        "oscarNunez": {
+          "role": "Investigador",
+          "description": "Encargado del sistema eléctrico y soporte técnico en los motorreductores."
+        },
+        "federicoRuiz": {
+          "role": "Investigador",
+          "description": "Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC."
+        },
+        "gustavoLara": {
+          "role": "Investigador",
+          "description": "Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio."
+        },
+        "andresFallas": {
+          "role": "Investigador",
+          "description": "Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio."
+        },
+        "wagnerMejias": {
+          "role": "Investigador",
+          "description": "Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general."
+        },
+        "eduardoIbarra": {
+          "role": "Colaborador externo",
+          "description": "Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena."
+        },
+        "andresCorrales": {
+          "role": "Colaborador externo",
+          "description": "Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final."
+        },
+        "andresGamboa": {
+          "role": "Colaborador externo",
+          "description": "Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos."
+        },
+        "jelmuthRojas": {
+          "role": "Colaborador externo",
+          "description": "Apoyo en tareas de nivelación de la estructura."
+        },
+        "barnaldBocker": {
+          "role": "Asistente",
+          "description": "Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación."
+        },
+        "fabianChaverri": {
+          "role": "Futuro estudiante de doctorado",
+          "description": "Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto."
+        }
+      }
     },
     "donations": {
       "title": "Donaciones ROSAC",
@@ -1123,6 +1181,199 @@
     },
     "backLink": {
       "label": "Volver a las áreas"
+    },
+    "editor": {
+      "languageTabs": "Idioma del contenido",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el texto, revíselo también.",
+      "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el texto debe completar ambos idiomas; los campos compartidos se pueden cambiar sin traducirla.",
+      "titleIn": "Título ({language})",
+      "descriptionIn": "Descripción ({language})",
+      "nameIn": "Nombre ({language})",
+      "icon": "Ícono",
+      "icons": {
+        "antenna": "Antena",
+        "location": "Ubicación",
+        "frequency": "Frecuencia",
+        "sun": "Sol",
+        "tracking": "Apuntado y seguimiento",
+        "control": "Control",
+        "receiver": "Receptor",
+        "maintenance": "Mantenimiento e infraestructura",
+        "education": "Educación"
+      },
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando...",
+      "discardTitle": "¿Descartar cambios?",
+      "discardMessage": "Hay cambios sin guardar. Si cierra el formulario, se perderán.",
+      "discardConfirm": "Descartar",
+      "discardCancel": "Continuar editando",
+      "discardDialog": {
+        "title": "Descartar cambios no guardados",
+        "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+        "keepEditing": "Seguir editando",
+        "discard": "Descartar"
+      },
+      "acknowledgments": {
+        "addCard": "Añadir institución",
+        "editLabel": "Editar {name}",
+        "deleteLabel": "Eliminar {name}",
+        "deleteConfirmTitle": "Eliminar institución",
+        "deleteConfirmMessage": "¿Desea eliminar la institución \"{name}\" de los agradecimientos? Esta acción no se puede deshacer.",
+        "editModalTitle": "Editar institución",
+        "nameLabel": "Nombre de la institución",
+        "namePlaceholder": "Ej. Centro de Investigaciones Espaciales (CINESPA), UCR",
+        "nameRequired": "El nombre de la institución es obligatorio.",
+        "logoSourceLabel": "Escoger un logo personalizado o seleccionar uno de la lista",
+        "logoSourceCustom": "Subir logo personalizado",
+        "logoSourcePreset": "Seleccionar de la lista: {label}",
+        "logoFileLabel": "Archivo del logo",
+        "logoFileHelp": "Formatos WebP, PNG, SVG o JPG (máx. 10 MB).",
+        "logoRequired": "Debe seleccionar o subir un logo para la institución.",
+        "logoAltLabel": "Texto alternativo del logo (Accesibilidad)",
+        "logoAltPlaceholder": "Descripción accesible del logo institucional",
+        "logoAltDefault": "Logo de {name}",
+        "selectedLogo": "Logo seleccionado:",
+        "institutional": "Institucional",
+        "institutionUrlLabel": "Sitio web de la institución (opcional)",
+        "institutionUrlPlaceholder": "https://ejemplo.ucr.ac.cr",
+        "institutionUrlInvalid": "El enlace debe ser una URL válida que empiece con http:// o https://.",
+        "logoUnavailable": "Logo no disponible",
+        "cancel": "Cancelar",
+        "save": "Guardar cambios",
+        "add": "Agregar institución",
+        "saving": "Guardando...",
+        "uploadError": "No se pudo subir el logo. Inténtelo de nuevo."
+      },
+      "characteristics": {
+        "editLabel": "Editar {title}",
+        "editModalTitle": "Editar \"{title}\"",
+        "defaultModalTitle": "Editar característica",
+        "iconLabel": "Ícono",
+        "titleLabel": "Título",
+        "descriptionLabel": "Descripción",
+        "titleRequired": "El título es obligatorio.",
+        "descriptionRequired": "La descripción es obligatoria.",
+        "cancel": "Cancelar",
+        "save": "Confirmar",
+        "icons": {
+          "antenna": "Antena",
+          "location": "Ubicación",
+          "frequency": "Frecuencia",
+          "sun": "Sol",
+          "tracking": "Apuntado y seguimiento",
+          "control": "Control",
+          "receiver": "Receptor",
+          "maintenance": "Mantenimiento e infraestructura",
+          "education": "Educación"
+        }
+      },
+      "activities": {
+        "editLabel": "Editar {title}",
+        "editModalTitle": "Editar \"{title}\"",
+        "defaultModalTitle": "Editar actividad",
+        "iconLabel": "Ícono",
+        "titleLabel": "Título",
+        "descriptionLabel": "Descripción",
+        "titleRequired": "El título es obligatorio.",
+        "descriptionRequired": "La descripción es obligatoria.",
+        "cancel": "Cancelar",
+        "save": "Confirmar"
+      },
+      "stages": {
+        "editStage": "Editar etapa",
+        "editModalTitle": "Editar \"{title}\"",
+        "defaultModalTitle": "Editar etapa",
+        "titleLabel": "Título",
+        "descriptionLabel": "Descripción",
+        "photosTitle": "Fotografías de la etapa",
+        "registeredCount": "{count, plural, one {# fotografía registrada} other {# fotografías registradas}}",
+        "editPhotos": "Editar fotografías",
+        "addPhoto": "Añadir fotografía",
+        "cancel": "Cancelar",
+        "save": "Confirmar",
+        "uploading": "Subiendo fotografías...",
+        "titleRequired": "El título es obligatorio.",
+        "descriptionRequired": "La descripción es obligatoria.",
+        "imagesRequired": "La etapa debe contener al menos una fotografía.",
+        "uploadError": "Error al subir las fotografías. Inténtelo de nuevo.",
+        "editModal": {
+          "title": "Editar fotografías de la etapa",
+          "help": "Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no correspondan a esta etapa.",
+          "altLabel": "Texto alternativo accesible (alt)",
+          "altPlaceholder": "Descripción de la imagen",
+          "deleteLabel": "Eliminar fotografía",
+          "noPhotos": "No hay fotografías registradas en esta etapa.",
+          "savePhotos": "Guardar fotografías",
+          "cancel": "Cancelar",
+          "deleteDialog": {
+            "title": "Eliminar fotografía",
+            "message": "¿Está seguro de que desea eliminar esta fotografía de la etapa?",
+            "confirm": "Eliminar",
+            "cancel": "Cancelar"
+          },
+          "discardDialog": {
+            "title": "Descartar cambios de fotografías",
+            "message": "Si descarta ahora, no se aplicarán los cambios realizados a las fotografías."
+          }
+        },
+        "addModal": {
+          "title": "Añadir fotografía",
+          "fileLabel": "Archivo de imagen",
+          "fileHelp": "Formatos JPG, PNG o WebP (máx. 10 MB).",
+          "fileRequired": "Debe seleccionar un archivo de imagen.",
+          "altLabel": "Texto alternativo accesible (alt)",
+          "altPlaceholder": "Descripción para personas con lectores de pantalla",
+          "altDefault": "Fotografía de {title}",
+          "submit": "Añadir fotografía",
+          "cancel": "Cancelar",
+          "discardDialog": {
+            "title": "Descartar nueva fotografía",
+            "message": "Si descarta ahora, la fotografía seleccionada no se agregará a la etapa."
+          }
+        }
+      },
+      "instruments": {
+        "addCard": "Añadir instrumento",
+        "editLabel": "Editar {name}",
+        "deleteLabel": "Eliminar {name}",
+        "deleteConfirmTitle": "Eliminar instrumento",
+        "deleteConfirmMessage": "Esta acción no se puede deshacer y borrará el instrumento científico.",
+        "editModalTitle": "Editar \"{name}\"",
+        "defaultModalTitle": "Editar instrumento",
+        "nameLabel": "Nombre del instrumento",
+        "nameRequired": "El nombre es obligatorio.",
+        "descriptionLabel": "Descripción",
+        "descriptionRequired": "La descripción es obligatoria.",
+        "imageLabel": "Imagen del instrumento",
+        "imageHelp": "Formatos JPG, PNG, WebP o AVIF (máx. 10 MB).",
+        "imageRequired": "La imagen es obligatoria.",
+        "imageAltLabel": "Texto alternativo de la imagen (Accesibilidad)",
+        "imageAltPlaceholder": "Descripción breve de la imagen para lectores de pantalla",
+        "imageAltDefault": "Imagen ilustrativa de {name}",
+        "actionSectionLabel": "Acción de consulta científica",
+        "actionTypeLabel": "Tipo de acción",
+        "modes": {
+          "simulation": "Simulación del catálogo de datos (ROSAC)",
+          "custom": "Enlace externo o personalizado",
+          "disabled": "En integración / Próximamente (sin enlace)"
+        },
+        "simulationTargetLabel": "Instrumento de simulación asociado",
+        "simulationTargetOption": "Instrumento {index}{product} ({code})",
+        "simulationAutoUrl": "Enlace automático:",
+        "customHrefLabel": "Enlace de consulta (URL)",
+        "customHrefPlaceholder": "https://... o /datos/...",
+        "customHrefRequired": "El enlace es obligatorio para un destino personalizado.",
+        "disabledHint": "El botón se mostrará deshabilitado indicando que la simulación está pendiente o en integración.",
+        "consultationLabel": "Etiqueta del botón",
+        "consultationLabelPlaceholder": "Consultar simulación de {name}",
+        "consultationLabelDefault": "Consultar simulación",
+        "cancel": "Cancelar",
+        "save": "Confirmar",
+        "saving": "Guardando...",
+        "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo."
+      },
+      "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo."
     }
   },
   "researchAreas": {
@@ -1193,6 +1444,43 @@
     "errors": {
       "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo.",
       "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo."
+    },
+    "editor": {
+      "addCard": "Añadir investigador",
+      "editTitle": "Editar investigador",
+      "editLabel": "Editar a {name}",
+      "deleteLabel": "Eliminar a {name}",
+      "deleteConfirmTitle": "Eliminar investigador",
+      "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
+      "deleteConfirm": "Eliminar",
+      "photoLabel": "Foto",
+      "photoHelp": "Opcional. Retrato del investigador, en formato JPG o PNG.",
+      "roleLabel": "Rol",
+      "roleRequired": "El rol es obligatorio.",
+      "nameLabel": "Nombre",
+      "nameRequired": "El nombre es obligatorio.",
+      "institutionLabel": "Institución",
+      "institutionRequired": "La institución es obligatoria.",
+      "descriptionLabel": "Descripción",
+      "contactLabel": "Contacto",
+      "addContact": "Añadir contacto",
+      "deleteContact": "Eliminar {address}",
+      "addContactTitle": "Añadir contacto",
+      "emailLabel": "Correo electrónico",
+      "add": "Añadir",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "uploading": "Subiendo imagen...",
+      "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo.",
+      "maxEmails": "Máximo {max} correos de contacto.",
+      "invalidEmail": "El correo no es válido.",
+      "duplicateEmail": "Ese correo ya fue agregado."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
     }
   },
   "scientificData": {
@@ -1516,5 +1804,16 @@
         "instruments": "Instrumentos consultables"
       }
     }
+  },
+  "fileDrop": {
+    "dropHere": "Arrastre una imagen aquí",
+    "browseFiles": "haga clic para seleccionarla del equipo",
+    "description": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo",
+    "rejectionFormat": "Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.",
+    "rejectionSize": "La imagen supera el tamaño máximo de 25 MB.",
+    "removeFile": "Quitar imagen",
+    "removeLabel": "Quitar imagen",
+    "previewAlt": "Vista previa de {label}",
+    "imagePreviewAlt": "Vista previa de {label}"
   }
 }

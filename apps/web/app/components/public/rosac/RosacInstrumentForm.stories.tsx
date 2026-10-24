@@ -25,6 +25,20 @@ export const EditExisting: Story = {
         href: '/datos?source=ROSAC&instrument=inst-1',
         notice: 'Resultados simulados.',
       },
+      editing: {
+        content: {
+          es: {
+            name: 'Instrumento 1',
+            description: 'Resultados simulados.',
+          },
+          en: {
+            name: 'Instrument 1',
+            description: 'Simulated results.',
+          },
+        },
+        isLegacy: false,
+        version: '1',
+      },
     },
     onCancel: fn(),
     onSave: fn(),
@@ -51,6 +65,21 @@ export const EditDisabled: Story = {
       consultation: {
         label: 'Consultar simulación del instrumento 3',
         notice: 'Información pendiente de confirmación e integración en la sección de datos.',
+      },
+      editing: {
+        content: {
+          es: {
+            name: 'Instrumento 3 (por definir)',
+            description:
+              'Información pendiente de confirmación e integración en la sección de datos.',
+          },
+          en: {
+            name: 'Instrument 3 (to be defined)',
+            description: 'Information pending confirmation and integration into the data section.',
+          },
+        },
+        isLegacy: false,
+        version: '1',
       },
     },
     onCancel: fn(),

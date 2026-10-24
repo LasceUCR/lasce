@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadAcknowledgmentLogo: vi.fn(),
@@ -19,7 +20,7 @@ const editArgs = EditModeOn.args as EditableAcknowledgmentCardProps
 const assistantArgs = AssistantMode.args as EditableAcknowledgmentCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableAcknowledgmentCardProps) {
-  return render(
+  return renderWithIntl(
     <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
       <EditableAcknowledgmentCard {...props} />
     </EditModeContext.Provider>,
@@ -63,7 +64,7 @@ describe('EditableAcknowledgmentCard', () => {
     await user.click(screen.getByRole('button', { name: `Editar ${editArgs.institution.name}` }))
 
     expect(screen.getByRole('dialog', { name: 'Editar institución' })).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: 'Nombre (Español)' })).toHaveValue(
       editArgs.institution.name,
     )
   })
@@ -74,7 +75,7 @@ describe('EditableAcknowledgmentCard', () => {
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: `Editar ${editArgs.institution.name}` }))
-    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
