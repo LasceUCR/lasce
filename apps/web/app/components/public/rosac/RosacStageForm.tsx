@@ -364,8 +364,16 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
           {t('stages.registeredCount', { count: images.length })}
         </p>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px',
+            width: '100%',
+          }}
+        >
           <Button
+            className="button-block"
             icon={<ImageIcon size={16} />}
             onClick={handleOpenEditPhotos}
             type="button"
@@ -374,6 +382,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
             {t('stages.editPhotos')} ({images.length})
           </Button>
           <Button
+            className="button-block"
             icon={<Plus size={16} />}
             onClick={handleOpenAddPhoto}
             type="button"
