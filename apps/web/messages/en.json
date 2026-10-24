@@ -1298,13 +1298,12 @@
         "imagesRequired": "The stage must contain at least one photograph.",
         "uploadError": "Error uploading photographs. Try again.",
         "editModal": {
-          "title": "Edit photographs",
+          "title": "Edit stage photographs",
           "help": "Modify the accessible description (alt) of each photograph or remove those that no longer correspond to this stage.",
-          "altLabel": "Alternative text for photograph {index}",
-          "altPlaceholder": "Accessible alternative text for photograph",
-          "deleteLabel": "Delete photograph {index}",
-          "deleteMinTitle": "There must be at least one photo in the stage",
-          "deleteTooltip": "Delete this photograph",
+          "altLabel": "Accessible alternative text (alt)",
+          "altPlaceholder": "Image description",
+          "deleteLabel": "Delete photograph",
+          "noPhotos": "No photographs registered in this stage.",
           "savePhotos": "Save photographs",
           "cancel": "Cancel",
           "deleteDialog": {

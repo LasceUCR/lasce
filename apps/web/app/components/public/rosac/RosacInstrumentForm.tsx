@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -40,20 +40,6 @@ import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 import { rosacInstruments } from '@/app/lib/scientific-data'
 
 export type ConsultationMode = 'simulation' | 'custom' | 'disabled'
-
-const CONSULTATION_MODE_OPTIONS: FormFieldOption[] = [
-  { value: 'simulation', label: 'Simulación del catálogo de datos (ROSAC)' },
-  { value: 'custom', label: 'Enlace externo o personalizado' },
-  { value: 'disabled', label: 'En integración / Próximamente (sin enlace)' },
-]
-
-const SIMULATION_TARGET_OPTIONS: FormFieldOption[] = rosacInstruments.map((inst, index) => {
-  const productName = inst.products[0]?.name
-  return {
-    value: inst.code,
-    label: `Instrumento ${index + 1}${productName ? ` - ${productName}` : ''} (${inst.code})`,
-  }
-})
 
 export function getSimulationUrl(instrumentCode: string): string {
   return `/datos?source=ROSAC&instrument=${instrumentCode}#scientific-query-title`
@@ -163,6 +149,31 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
 
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
 
+  const consultationModeOptions: FormFieldOption[] = useMemo(
+    () => [
+      { value: 'simulation', label: t('instruments.modes.simulation') },
+      { value: 'custom', label: t('instruments.modes.custom') },
+      { value: 'disabled', label: t('instruments.modes.disabled') },
+    ],
+    [t],
+  )
+
+  const simulationTargetOptions: FormFieldOption[] = useMemo(
+    () =>
+      rosacInstruments.map((inst, index) => {
+        const productName = inst.products[0]?.name
+        return {
+          value: inst.code,
+          label: t('instruments.simulationTargetOption', {
+            index: index + 1,
+            product: productName ? ` - ${productName}` : '',
+            code: inst.code,
+          }),
+        }
+      }),
+    [t],
+  )
+
   useEffect(() => {
     if (focusRequest === 0) return
     const invalid = formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? []
@@ -177,10 +188,10 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
     : {}
 
   const hasImage = imageFile !== null || (Boolean(imageSrc) && !imageRemoved)
-  const imageError = attempted && !hasImage ? 'La imagen es obligatoria.' : null
+  const imageError = attempted && !hasImage ? t('instruments.imageRequired') : null
   const customHrefError =
     attempted && consultationMode === 'custom' && customHref.trim() === ''
-      ? 'El enlace es obligatorio para un destino personalizado.'
+      ? t('instruments.customHrefRequired')
       : null
 
   const contentChanged = hasContentChanges(rosacInstrumentContent, stored, draft)
@@ -249,7 +260,7 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
         finalImageUrl = result.imageUrl
       } catch {
         setIsUploading(false)
-        setUploadError('Error al subir la imagen. Inténtelo de nuevo.')
+        setUploadError(t('instruments.uploadError'))
         return
       }
       setIsUploading(false)
@@ -267,12 +278,14 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
     const image = hasImage
       ? {
           src: finalImageUrl,
-          alt: imageAlt.trim() || `Imagen ilustrativa de ${currentName}`,
+          alt: imageAlt.trim() || t('instruments.imageAltDefault', { name: currentName }),
         }
       : undefined
 
     const consultation = {
-      label: consultationLabel.trim() || `Consultar simulación de ${currentName}`,
+      label:
+        consultationLabel.trim() ||
+        t('instruments.consultationLabelPlaceholder', { name: currentName }),
       href: finalConsultationHref,
     }
 
@@ -364,8 +377,8 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
       <FileDropInput
         errorMessage={imageError}
         existingImageUrl={!imageRemoved && imageSrc ? imageSrc : undefined}
-        helperText="Formatos JPG, PNG, WebP o AVIF (máx. 10 MB)."
-        label="Imagen del instrumento"
+        helperText={t('instruments.imageHelp')}
+        label={t('instruments.imageLabel')}
         onFileSelect={(file) => {
           setImageFile(file)
           if (!file) {
@@ -379,20 +392,20 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
 
       <FormField
         id={`${formId}-image-alt`}
-        label="Texto alternativo de la imagen (Accesibilidad)"
+        label={t('instruments.imageAltLabel')}
         onChange={setImageAlt}
-        placeholder="Descripción breve de la imagen para lectores de pantalla"
+        placeholder={t('instruments.imageAltPlaceholder')}
         value={imageAlt}
       />
 
       <div className="cms-form-field">
-        <span className="cms-form-field-label">Acción de consulta científica</span>
+        <span className="cms-form-field-label">{t('instruments.actionSectionLabel')}</span>
 
         <FormField
           id={`${formId}-consultation-mode`}
-          label="Tipo de acción"
+          label={t('instruments.actionTypeLabel')}
           onChange={(val) => setConsultationMode(val as ConsultationMode)}
-          options={CONSULTATION_MODE_OPTIONS}
+          options={consultationModeOptions}
           value={consultationMode}
         />
 
@@ -400,13 +413,13 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
           <>
             <FormField
               id={`${formId}-simulation-target`}
-              label="Instrumento de simulación asociado"
+              label={t('instruments.simulationTargetLabel')}
               onChange={setSimulationTarget}
-              options={SIMULATION_TARGET_OPTIONS}
+              options={simulationTargetOptions}
               value={simulationTarget}
             />
             <p className="form-field-hint" style={{ marginTop: '-14px', marginBottom: '8px' }}>
-              Enlace automático:{' '}
+              {t('instruments.simulationAutoUrl')}{' '}
               <code style={{ fontSize: '0.85em', wordBreak: 'break-all' }}>
                 {getSimulationUrl(simulationTarget)}
               </code>
@@ -418,9 +431,9 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
           <FormField
             errorMessage={customHrefError}
             id={`${formId}-consultation-href`}
-            label="Enlace de consulta (URL)"
+            label={t('instruments.customHrefLabel')}
             onChange={setCustomHref}
-            placeholder="https://... o /datos/..."
+            placeholder={t('instruments.customHrefPlaceholder')}
             required
             type="url"
             value={customHref}
@@ -429,16 +442,15 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
 
         {consultationMode === 'disabled' ? (
           <p className="form-field-hint" style={{ marginTop: '-14px', marginBottom: '8px' }}>
-            El botón se mostrará deshabilitado indicando que la simulación está pendiente o en
-            integración.
+            {t('instruments.disabledHint')}
           </p>
         ) : null}
 
         <FormField
           id={`${formId}-consultation-label`}
-          label="Etiqueta del botón"
+          label={t('instruments.consultationLabel')}
           onChange={setConsultationLabel}
-          placeholder="Consultar simulación"
+          placeholder={t('instruments.consultationLabelDefault')}
           value={consultationLabel}
         />
       </div>

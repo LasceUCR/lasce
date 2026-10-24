@@ -1298,13 +1298,12 @@
         "imagesRequired": "La etapa debe contener al menos una fotografía.",
         "uploadError": "Error al subir las fotografías. Inténtelo de nuevo.",
         "editModal": {
-          "title": "Editar fotografías",
+          "title": "Editar fotografías de la etapa",
           "help": "Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no correspondan a esta etapa.",
-          "altLabel": "Texto alternativo de la fotografía {index}",
-          "altPlaceholder": "Texto alternativo accesible de la fotografía",
-          "deleteLabel": "Eliminar fotografía {index}",
-          "deleteMinTitle": "Debe haber al menos una foto en la etapa",
-          "deleteTooltip": "Eliminar esta fotografía",
+          "altLabel": "Texto alternativo accesible (alt)",
+          "altPlaceholder": "Descripción de la imagen",
+          "deleteLabel": "Eliminar fotografía",
+          "noPhotos": "No hay fotografías registradas en esta etapa.",
           "savePhotos": "Guardar fotografías",
           "cancel": "Cancelar",
           "deleteDialog": {

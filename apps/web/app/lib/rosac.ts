@@ -1349,16 +1349,22 @@ function toInstrumentItem(
 ): RosacInstrumentCardContent {
   const stored = toInstrumentStored(record)
   const { content, contentLocale, isLegacy } = resolveContent(stored, locale)
+  const trans = record.translations.find((t) => t.locale === locale)
+  const consultationLabel =
+    trans?.consultationLabel ??
+    (locale === 'en' && record.consultationLabel
+      ? record.consultationLabel.replace(/^Consultar simulación del? /i, 'Consult simulation for ')
+      : record.consultationLabel)
 
   return {
     id: record.id,
     name: content.name ?? '',
     pendingMessage: content.description || undefined,
     image: record.imageSrc ? { src: record.imageSrc, alt: record.imageAlt ?? '' } : undefined,
-    consultation: record.consultationLabel
+    consultation: consultationLabel
       ? {
           href: record.consultationHref ?? undefined,
-          label: record.consultationLabel,
+          label: consultationLabel,
           notice: content.description || undefined,
         }
       : undefined,
