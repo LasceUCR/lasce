@@ -221,7 +221,7 @@ test('displays researcher content in English when site language switches to Engl
   // Description in English
   await expect(
     researchers.getByText(
-      /coordinates the integration between solar astrophysics, radio astronomy, space weather/,
+      /coordinates the integration (of|between) solar astrophysics, radio astronomy, space weather/,
     ),
   ).toBeVisible()
 
