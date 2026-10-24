@@ -1121,7 +1121,7 @@ export function RosacInfoPage({
       <Modal
         onClose={closeInstrumentEditor}
         open={editingInstrument !== undefined}
-        size="large"
+        size="medium"
         title={
           editingInstrument
             ? tEditor('instruments.editModalTitle', { name: editingInstrument.name })

@@ -127,7 +127,7 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
     <Modal
       onClose={closeEditor}
       open={isEditing}
-      size="large"
+      size="medium"
       title={tResearchers('editor.editTitle')}
     >
       {renderForm()}
