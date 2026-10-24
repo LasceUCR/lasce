@@ -4,10 +4,11 @@ import { getLocale } from 'next-intl/server'
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
 import { resolveLocale } from '@/app/lib/i18n/locale'
+import { getMessages } from '@/app/lib/i18n/messages'
 import {
   createNosotrosResearcher,
+  getNosotrosResearcherCreateSchema,
   getNosotrosResearchers,
-  nosotrosResearcherCreateSchema,
 } from '@/app/lib/nosotros'
 
 /**
@@ -38,7 +39,11 @@ export async function POST(request: Request): Promise<NextResponse> {
   const json = await readJson(request)
   if (!json.ok) return json.response
 
-  const parsed = nosotrosResearcherCreateSchema.safeParse(json.body)
+  const locale = resolveLocale(await getLocale())
+  const messages = getMessages(locale)
+  const errors = (messages.researchers as { errors?: Record<string, string> })?.errors ?? {}
+
+  const parsed = getNosotrosResearcherCreateSchema(locale).safeParse(json.body)
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
@@ -46,6 +51,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return ok({ researcher }, 201)
   } catch (error) {
-    return internalError('No se pudo guardar el investigador.', error)
+    return internalError(errors.saveError ?? 'No se pudo guardar el investigador.', error)
   }
 }

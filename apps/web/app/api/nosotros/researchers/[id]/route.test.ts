@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type * as NosotrosLib from '@/app/lib/nosotros'
 
 const mocks = vi.hoisted(() => ({
   requireApiPermission: vi.fn(),
   updateNosotrosResearcher: vi.fn(),
   deleteNosotrosResearcher: vi.fn(),
+  getLocale: vi.fn(),
 }))
 
 // `@/app/lib/nosotros` imports `prisma` at module scope, which throws if
@@ -12,6 +13,10 @@ const mocks = vi.hoisted(() => ({
 // below (via `importOriginal`) so `nosotrosResearcherUpdateSchema` stays real,
 // but with `prisma` stubbed out first so importing it never touches a client.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
+
+vi.mock('next-intl/server', () => ({
+  getLocale: mocks.getLocale,
+}))
 
 vi.mock('@/app/lib/auth/apiGuard', () => ({
   requireApiPermission: mocks.requireApiPermission,
@@ -57,6 +62,10 @@ function deleteRequest() {
 function deniedResponse(status: number) {
   return new Response(JSON.stringify({ error: 'denied' }), { status })
 }
+
+beforeEach(() => {
+  mocks.getLocale.mockResolvedValue('es')
+})
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -288,5 +297,33 @@ describe('DELETE /api/nosotros/researchers/[id]', () => {
 
     expect(response.status).toBe(204)
     expect(mocks.deleteNosotrosResearcher).toHaveBeenCalledWith(researcherId)
+  })
+
+  test('returns 404 with English message when researcher does not exist and English is selected', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.getLocale.mockResolvedValue('en')
+    mocks.deleteNosotrosResearcher.mockResolvedValue(false)
+
+    const response = await DELETE(deleteRequest(), { params })
+
+    expect(response.status).toBe(404)
+    expect(await response.json()).toEqual({
+      error:
+        'This researcher no longer exists. Another person may have deleted it; reload the page.',
+      code: 'not-found',
+    })
+  })
+
+  test('returns 400 with English message for invalid id in DELETE', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.getLocale.mockResolvedValue('en')
+
+    const response = await DELETE(deleteRequest(), { params: Promise.resolve({ id: 'bad' }) })
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({
+      error: 'The researcher identifier is invalid.',
+      code: 'invalid-id',
+    })
   })
 })
