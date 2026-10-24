@@ -412,7 +412,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
       <Modal
         onClose={handleCloseEditPhotosClick}
         open={isEditPhotosOpen}
-        size="large"
+        size="medium"
         title={t('stages.editModal.title')}
       >
         <div className="cms-form">
@@ -427,7 +427,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '16px',
+                gap: '12px',
                 maxHeight: '50vh',
                 overflowY: 'auto',
                 paddingRight: '8px',
@@ -438,12 +438,8 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
                   key={img.id}
                   style={{
                     display: 'flex',
-                    gap: '16px',
+                    gap: '12px',
                     alignItems: 'center',
-                    padding: '12px',
-                    background: 'var(--color-bg-secondary)',
-                    borderRadius: '8px',
-                    border: '1px solid var(--color-border)',
                   }}
                 >
                   <div
