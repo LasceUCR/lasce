@@ -453,6 +453,7 @@ describe('RosacInfoPage', () => {
 
   test('edits a characteristic and updates it in place (Section 1)', async () => {
     const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })
     renderEditMode()
     const section = screen.getByRole('region', { name: '1. Características principales' })
     const [firstEditBtn] = within(section).getAllByRole('button', { name: /^Editar / })
@@ -465,11 +466,16 @@ describe('RosacInfoPage', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/rosac/characteristics/antenna',
+      expect.objectContaining({ method: 'PATCH' }),
+    )
     expect(within(section).getByRole('heading', { name: 'Antena Actualizada' })).toBeInTheDocument()
   })
 
   test('offers editing but strictly NO add or delete on scientific activities (Section 3)', async () => {
     const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })
     renderEditMode()
     const section = screen.getByRole('region', { name: '3. ¿Qué desarrollamos en ROSAC?' })
     expect(within(section).getAllByRole('button', { name: /^Editar / })).toHaveLength(
@@ -487,6 +493,10 @@ describe('RosacInfoPage', () => {
     await user.type(titleInput, 'Radioastronomía Avanzada')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/rosac/activities/${firstActivity.id}`,
+      expect.objectContaining({ method: 'PATCH' }),
+    )
     expect(
       within(section).getByRole('heading', { name: 'Radioastronomía Avanzada' }),
     ).toBeInTheDocument()
@@ -494,6 +504,7 @@ describe('RosacInfoPage', () => {
 
   test('offers editing but strictly NO add or delete on construction stages (Section 4)', async () => {
     const user = userEvent.setup()
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })
     renderEditMode()
     const section = screen.getByRole('region', { name: '4. Construcción del ROSAC' })
     expect(within(section).getByRole('button', { name: 'Editar etapa' })).toBeInTheDocument()
@@ -508,6 +519,10 @@ describe('RosacInfoPage', () => {
     await user.type(titleInput, 'Preparación Avanzada')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/api\/rosac\/stages\//),
+      expect.objectContaining({ method: 'PATCH' }),
+    )
     expect(
       within(section).getByRole('heading', { name: 'Preparación Avanzada' }),
     ).toBeInTheDocument()
@@ -515,6 +530,10 @@ describe('RosacInfoPage', () => {
 
   test('offers create, edit and delete on scientific instruments (Section 6)', async () => {
     const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ instrument: { id: 'new-inst' } }),
+    })
     renderEditMode()
     const section = screen.getByRole('region', { name: '6. Instrumentos científicos' })
     expect(within(section).getAllByRole('button', { name: /^Editar / })).toHaveLength(3)
@@ -530,35 +549,35 @@ describe('RosacInfoPage', () => {
     const addDialog = screen.getByRole('dialog', { name: 'Añadir instrumento' })
     await user.type(
       within(addDialog).getByRole('textbox', { name: 'Nombre del instrumento' }),
-      'Instrumento 4 Polarímetro',
+      'Polarímetro',
     )
     await user.type(
       within(addDialog).getByRole('textbox', { name: 'Descripción' }),
-      'Medición de polarización en ondas de radio.',
+      'Medición de ondas.',
     )
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'instrumento.png', { type: 'image/png' }))
     await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(
-      within(section).getByRole('heading', { name: 'Instrumento 4 Polarímetro' }),
-    ).toBeInTheDocument()
+    expect(within(section).getByRole('heading', { name: 'Polarímetro' })).toBeInTheDocument()
 
     // Delete the newly added instrument
     const deleteBtn = within(section).getByRole('button', {
-      name: 'Eliminar Instrumento 4 Polarímetro',
+      name: 'Eliminar Polarímetro',
     })
     await user.click(deleteBtn)
     const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar instrumento' })
     await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(
-      within(section).queryByRole('heading', { name: 'Instrumento 4 Polarímetro' }),
-    ).not.toBeInTheDocument()
+    expect(within(section).queryByRole('heading', { name: 'Polarímetro' })).not.toBeInTheDocument()
   })
 
-  test('offers create, edit and delete on acknowledgments', async () => {
+  test('offers editing an existing acknowledgment', async () => {
     const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ acknowledgment: { id: 'ack-1' } }),
+    })
     renderEditMode()
     const section = screen.getByRole('region', { name: '9. Agradecimientos ROSAC' })
     const initialCount = defaultArgs.content.acknowledgments.institutions.length
@@ -566,9 +585,7 @@ describe('RosacInfoPage', () => {
     expect(within(section).getAllByRole('button', { name: /^Eliminar / })).toHaveLength(
       initialCount,
     )
-    expect(within(section).getByRole('button', { name: 'Añadir institución' })).toBeInTheDocument()
 
-    // 1. Edit an existing acknowledgment
     const firstInst = defaultArgs.content.acknowledgments.institutions[0]!
     await user.click(within(section).getByRole('button', { name: `Editar ${firstInst.name}` }))
     const editDialog = screen.getByRole('dialog', { name: 'Editar institución' })
@@ -576,14 +593,23 @@ describe('RosacInfoPage', () => {
       name: 'Nombre de la institución',
     })
     await user.clear(editNameInput)
-    await user.type(editNameInput, 'Vicerrectoría de Investigación Actualizada')
+    await user.type(editNameInput, 'UCR Modificada')
     await user.click(within(editDialog).getByRole('button', { name: 'Guardar cambios' }))
 
-    expect(
-      within(section).getByText('Vicerrectoría de Investigación Actualizada'),
-    ).toBeInTheDocument()
+    expect(within(section).getByText('UCR Modificada')).toBeInTheDocument()
+  })
 
-    // 2. Add an acknowledgment using preset logo and custom name
+  test('offers create and delete on acknowledgments', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ acknowledgment: { id: 'new-ack' } }),
+    })
+    renderEditMode()
+    const section = screen.getByRole('region', { name: '9. Agradecimientos ROSAC' })
+    expect(within(section).getByRole('button', { name: 'Añadir institución' })).toBeInTheDocument()
+
+    // 1. Add an acknowledgment using preset logo and custom name
     await user.click(within(section).getByRole('button', { name: 'Añadir institución' }))
     const addDialog = screen.getByRole('dialog', { name: 'Añadir institución' })
     const select = within(addDialog).getByRole('combobox', {
@@ -594,42 +620,33 @@ describe('RosacInfoPage', () => {
       name: 'Nombre de la institución',
     })
     await user.clear(addNameInput)
-    await user.type(addNameInput, 'Institución Adicional de Prueba')
+    await user.type(addNameInput, 'Nueva Institución')
     await user.click(within(addDialog).getByRole('button', { name: 'Agregar institución' }))
 
-    expect(within(section).getByText('Institución Adicional de Prueba')).toBeInTheDocument()
+    expect(within(section).getByText('Nueva Institución')).toBeInTheDocument()
 
-    // 3. Delete the newly added acknowledgment
+    // 2. Delete the newly added acknowledgment
     const deleteBtn = within(section).getByRole('button', {
-      name: 'Eliminar Institución Adicional de Prueba',
+      name: 'Eliminar Nueva Institución',
     })
     await user.click(deleteBtn)
     const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar institución' })
     await user.click(within(deleteConfirmDialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(within(section).queryByText('Institución Adicional de Prueba')).not.toBeInTheDocument()
+    expect(within(section).queryByText('Nueva Institución')).not.toBeInTheDocument()
   })
 
-  test('restores persisted edits from localStorage on mount and preserves them in view mode', () => {
-    const customCharacteristics = [
-      {
-        id: 'antenna',
-        icon: 'antenna' as const,
-        title: 'Antena PRUEBA',
-        description: 'Descripción guardada.',
-      },
-    ]
-    localStorage.setItem('lasce_rosac_characteristics_v1', JSON.stringify(customCharacteristics))
-
+  test('does not read or write to localStorage for any ROSAC CMS content', () => {
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem')
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
     try {
       renderPage()
-      const section = screen.getByRole('region', { name: '1. Características principales' })
-      expect(within(section).getByRole('heading', { name: 'Antena PRUEBA' })).toBeInTheDocument()
-      expect(
-        within(section).queryByRole('heading', { name: 'Antena de 11 metros' }),
-      ).not.toBeInTheDocument()
+      const rosacGetCalls = getItemSpy.mock.calls.filter(([key]) => /rosac/i.test(key))
+      expect(rosacGetCalls).toHaveLength(0)
+      expect(setItemSpy).not.toHaveBeenCalled()
     } finally {
-      localStorage.removeItem('lasce_rosac_characteristics_v1')
+      getItemSpy.mockRestore()
+      setItemSpy.mockRestore()
     }
   })
 })

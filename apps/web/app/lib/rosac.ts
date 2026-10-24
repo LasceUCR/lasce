@@ -1,11 +1,24 @@
-import { prisma } from '@lasce/db'
+import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
 import es from '@/messages/es.json' with { type: 'json' }
+import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+import { defineTranslatableContent, type StoredContent } from '@/app/lib/i18n/content/definition'
+import { baseContent, resolveContent, storedContentFrom } from '@/app/lib/i18n/content/resolve'
+import { toVersion } from '@/app/lib/cms/version'
 
+import {
+  getRosacConstructionContent,
+  type ConstructionContent,
+  type ConstructionImage,
+  type ConstructionStage,
+} from './rosac-construction'
+import {
+  getRosacInstrumentsContent,
+  type RosacInstrumentCardContent,
+  type RosacInstrumentsContent,
+} from './rosac-instruments'
 import { locationMapProvider, type LocationMapLabels } from './location-map'
-import { getRosacConstructionContent, type ConstructionContent } from './rosac-construction'
-import { getRosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
 
 // Built once and reused in both `location.intro` (as flowing prose) and `location.address`
 // (as its own field, kept for anything that needs the bare address rather than a sentence),
@@ -35,6 +48,7 @@ export type RosacCardIcon =
   | 'antenna'
   | 'location'
   | 'frequency'
+  | 'waves'
   | 'sun'
   | 'tracking'
   | 'control'
@@ -766,5 +780,1017 @@ export async function deleteResearcher(id: string): Promise<boolean> {
   if (!existing) return false
 
   await prisma.researcher.delete({ where: { id } })
+  return true
+}
+
+export const rosacCharacteristicContent = defineTranslatableContent({
+  title: { noun: { word: 'título', gender: 'm' }, nouns: { en: 'title' }, required: true },
+  description: {
+    noun: { word: 'descripción', gender: 'f' },
+    nouns: { en: 'description' },
+    required: true,
+  },
+})
+
+export type StoredRosacCharacteristicContent = StoredContent<
+  typeof rosacCharacteristicContent.specs
+>
+
+export interface RosacCharacteristicEditingData {
+  content: StoredRosacCharacteristicContent
+  isLegacy: boolean
+  version: string
+}
+
+export interface RosacCharacteristicItem {
+  id: string
+  icon: RosacCardIcon
+  title: string
+  description: string
+  editing?: RosacCharacteristicEditingData
+}
+
+export const rosacCharacteristicInputSchema = z
+  .object({
+    icon: z.enum([
+      'antenna',
+      'location',
+      'frequency',
+      'sun',
+      'tracking',
+      'control',
+      'receiver',
+      'maintenance',
+      'education',
+    ]),
+    title: z.string().trim().min(1, 'El título es obligatorio.').optional(),
+    description: z.string().trim().min(1, 'La descripción es obligatoria.').optional(),
+    content: rosacCharacteristicContent.schema.optional(),
+  })
+  .refine((data) => (data.title && data.description) || data.content, {
+    message: 'El título y la descripción son obligatorios.',
+  })
+
+export type RosacCharacteristicInput = z.infer<typeof rosacCharacteristicInputSchema>
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export async function getRosacCharacteristics(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<RosacCharacteristicItem[]> {
+  const rows = await prisma.rosacCharacteristic.findMany({
+    orderBy: { position: 'asc' },
+    include: { translations: true },
+  })
+  return rows.map((r) => {
+    const stored = storedContentFrom(
+      rosacCharacteristicContent,
+      { title: r.title, description: r.description },
+      r.translations.map((t) => ({
+        locale: t.locale,
+        title: t.title,
+        description: t.description,
+      })),
+    )
+    const { content: shown, isLegacy } = resolveContent(stored, locale)
+    return {
+      id: r.key,
+      icon: (r.icon === 'waves' ? 'frequency' : r.icon) as RosacCardIcon,
+      title: shown.title,
+      description: shown.description,
+      ...(includeEditingData
+        ? {
+            editing: {
+              content: stored,
+              isLegacy,
+              version: toVersion(r.updatedAt),
+            },
+          }
+        : {}),
+    }
+  })
+}
+
+export async function updateRosacCharacteristic(
+  keyOrId: string,
+  data: RosacCharacteristicInput,
+): Promise<RosacCharacteristicItem | null> {
+  const isUuid = UUID_REGEX.test(keyOrId)
+  const existing = await prisma.rosacCharacteristic.findFirst({
+    where: isUuid ? { id: keyOrId } : { key: keyOrId },
+    include: { translations: true },
+  })
+  if (!existing) return null
+
+  let esTitle = data.title ?? existing.title
+  let esDesc = data.description ?? existing.description
+  let enTitle: string | undefined
+  let enDesc: string | undefined
+
+  if (data.content) {
+    const base = baseContent(rosacCharacteristicContent, data.content)
+    esTitle = base.title
+    esDesc = base.description
+    const en = data.content.en
+    if (en) {
+      enTitle = en.title
+      enDesc = en.description
+    }
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.rosacCharacteristic.update({
+      where: { id: existing.id },
+      data: {
+        icon: data.icon,
+        title: esTitle,
+        description: esDesc,
+      },
+    })
+
+    if (enTitle !== undefined && enDesc !== undefined) {
+      await tx.rosacCharacteristicTranslation.upsert({
+        where: {
+          characteristicId_locale: { characteristicId: existing.id, locale: 'en' },
+        },
+        update: { title: enTitle, description: enDesc },
+        create: {
+          characteristicId: existing.id,
+          locale: 'en',
+          title: enTitle,
+          description: enDesc,
+        },
+      })
+    }
+
+    return tx.rosacCharacteristic.findUnique({
+      where: { id: existing.id },
+      include: { translations: true },
+    })
+  })
+
+  if (!updated) return null
+
+  const stored = storedContentFrom(
+    rosacCharacteristicContent,
+    { title: updated.title, description: updated.description },
+    updated.translations.map((t) => ({
+      locale: t.locale,
+      title: t.title,
+      description: t.description,
+    })),
+  )
+  const { content: shown, isLegacy } = resolveContent(stored, defaultLocale)
+
+  return {
+    id: updated.key,
+    icon: updated.icon as RosacCardIcon,
+    title: shown.title,
+    description: shown.description,
+    editing: {
+      content: stored,
+      isLegacy,
+      version: toVersion(updated.updatedAt),
+    },
+  }
+}
+
+// --- Section 3: Activities ---
+
+export const rosacActivityContent = defineTranslatableContent({
+  title: { noun: { word: 'título', gender: 'm' }, nouns: { en: 'title' }, required: true },
+  description: {
+    noun: { word: 'descripción', gender: 'f' },
+    nouns: { en: 'description' },
+    required: true,
+  },
+})
+
+export type StoredRosacActivityContent = StoredContent<typeof rosacActivityContent.specs>
+
+export interface RosacActivityEditingData {
+  content: StoredRosacActivityContent
+  isLegacy: boolean
+  version: string
+}
+
+export interface RosacActivityItem {
+  id: string
+  icon: RosacCardIcon
+  title: string
+  description: string
+  editing?: RosacActivityEditingData
+}
+
+export const rosacActivityInputSchema = z
+  .object({
+    icon: z.enum([
+      'antenna',
+      'location',
+      'frequency',
+      'sun',
+      'tracking',
+      'control',
+      'receiver',
+      'maintenance',
+      'education',
+    ]),
+    title: z.string().trim().min(1, 'El título es obligatorio.').optional(),
+    description: z.string().trim().min(1, 'La descripción es obligatoria.').optional(),
+    content: rosacActivityContent.schema.optional(),
+  })
+  .refine((data) => (data.title && data.description) || data.content, {
+    message: 'El título y la descripción son obligatorios.',
+  })
+
+export type RosacActivityInput = z.infer<typeof rosacActivityInputSchema>
+
+export async function getRosacActivities(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<RosacActivityItem[]> {
+  const rows = await prisma.rosacActivity.findMany({
+    orderBy: { position: 'asc' },
+    include: { translations: true },
+  })
+  return rows.map((r) => {
+    const stored = storedContentFrom(
+      rosacActivityContent,
+      { title: r.title, description: r.description },
+      r.translations.map((t) => ({
+        locale: t.locale,
+        title: t.title,
+        description: t.description,
+      })),
+    )
+    const { content: shown, isLegacy } = resolveContent(stored, locale)
+    return {
+      id: r.key,
+      icon: (r.icon === 'waves' ? 'frequency' : r.icon) as RosacCardIcon,
+      title: shown.title,
+      description: shown.description,
+      ...(includeEditingData
+        ? {
+            editing: {
+              content: stored,
+              isLegacy,
+              version: toVersion(r.updatedAt),
+            },
+          }
+        : {}),
+    }
+  })
+}
+
+export async function updateRosacActivity(
+  keyOrId: string,
+  data: RosacActivityInput,
+): Promise<RosacActivityItem | null> {
+  const isUuid = UUID_REGEX.test(keyOrId)
+  const existing = await prisma.rosacActivity.findFirst({
+    where: isUuid ? { id: keyOrId } : { key: keyOrId },
+    include: { translations: true },
+  })
+  if (!existing) return null
+
+  let esTitle = data.title ?? existing.title
+  let esDesc = data.description ?? existing.description
+  let enTitle: string | undefined
+  let enDesc: string | undefined
+
+  if (data.content) {
+    const base = baseContent(rosacActivityContent, data.content)
+    esTitle = base.title
+    esDesc = base.description
+    const en = data.content.en
+    if (en) {
+      enTitle = en.title
+      enDesc = en.description
+    }
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.rosacActivity.update({
+      where: { id: existing.id },
+      data: {
+        icon: data.icon,
+        title: esTitle,
+        description: esDesc,
+      },
+    })
+
+    if (enTitle !== undefined && enDesc !== undefined) {
+      await tx.rosacActivityTranslation.upsert({
+        where: {
+          activityId_locale: { activityId: existing.id, locale: 'en' },
+        },
+        update: { title: enTitle, description: enDesc },
+        create: {
+          activityId: existing.id,
+          locale: 'en',
+          title: enTitle,
+          description: enDesc,
+        },
+      })
+    }
+
+    return tx.rosacActivity.findUnique({
+      where: { id: existing.id },
+      include: { translations: true },
+    })
+  })
+
+  if (!updated) return null
+
+  const stored = storedContentFrom(
+    rosacActivityContent,
+    { title: updated.title, description: updated.description },
+    updated.translations.map((t) => ({
+      locale: t.locale,
+      title: t.title,
+      description: t.description,
+    })),
+  )
+  const { content: shown, isLegacy } = resolveContent(stored, defaultLocale)
+
+  return {
+    id: updated.key,
+    icon: updated.icon as RosacCardIcon,
+    title: shown.title,
+    description: shown.description,
+    editing: {
+      content: stored,
+      isLegacy,
+      version: toVersion(updated.updatedAt),
+    },
+  }
+}
+
+// --- Section 4: Construction Stages ---
+
+export const rosacStageContent = defineTranslatableContent({
+  title: { noun: { word: 'título', gender: 'm' }, nouns: { en: 'title' }, required: true },
+  description: {
+    noun: { word: 'descripción', gender: 'f' },
+    nouns: { en: 'description' },
+    required: true,
+  },
+})
+
+export type StoredRosacStageContent = StoredContent<typeof rosacStageContent.specs>
+
+export interface RosacStageEditingData {
+  content: StoredRosacStageContent
+  isLegacy: boolean
+  version: string
+}
+
+export const rosacStageInputSchema = z
+  .object({
+    title: z.string().trim().min(1, 'El título es obligatorio.').optional(),
+    description: z.string().trim().min(1, 'La descripción es obligatoria.').optional(),
+    images: z
+      .array(
+        z.object({
+          src: z.string().trim().min(1),
+          alt: z.string().trim().min(1),
+        }),
+      )
+      .optional(),
+    content: rosacStageContent.schema.optional(),
+  })
+  .refine((data) => (data.title && data.description) || data.content, {
+    message: 'El título y la descripción son obligatorios.',
+  })
+
+export type RosacStageInput = z.infer<typeof rosacStageInputSchema>
+
+export async function getRosacStages(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<ConstructionStage[]> {
+  const rows = await prisma.rosacStage.findMany({
+    orderBy: { position: 'asc' },
+    include: { translations: true },
+  })
+  return rows.map((r) => {
+    const stored = storedContentFrom(
+      rosacStageContent,
+      { title: r.title, description: r.description },
+      r.translations.map((t) => ({
+        locale: t.locale,
+        title: t.title,
+        description: t.description,
+      })),
+    )
+    const { content: shown, isLegacy } = resolveContent(stored, locale)
+    return {
+      id: r.key,
+      title: shown.title,
+      navigationLabel: shown.title,
+      description: shown.description,
+      images: (r.images as unknown as ConstructionImage[]) ?? [],
+      ...(includeEditingData
+        ? {
+            editing: {
+              content: stored,
+              isLegacy,
+              version: toVersion(r.updatedAt),
+            },
+          }
+        : {}),
+    } as unknown as ConstructionStage
+  })
+}
+
+export async function updateRosacStage(
+  keyOrId: string,
+  data: RosacStageInput,
+): Promise<ConstructionStage | null> {
+  const isUuid = UUID_REGEX.test(keyOrId)
+  const existing = await prisma.rosacStage.findFirst({
+    where: isUuid ? { id: keyOrId } : { key: keyOrId },
+    include: { translations: true },
+  })
+  if (!existing) return null
+
+  let esTitle = data.title ?? existing.title
+  let esDesc = data.description ?? existing.description
+  let enTitle: string | undefined
+  let enDesc: string | undefined
+
+  if (data.content) {
+    const base = baseContent(rosacStageContent, data.content)
+    esTitle = base.title
+    esDesc = base.description
+    const en = data.content.en
+    if (en) {
+      enTitle = en.title
+      enDesc = en.description
+    }
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.rosacStage.update({
+      where: { id: existing.id },
+      data: {
+        title: esTitle,
+        description: esDesc,
+        ...(data.images ? { images: data.images as unknown as Prisma.InputJsonValue } : {}),
+      },
+    })
+
+    if (enTitle !== undefined && enDesc !== undefined) {
+      await tx.rosacStageTranslation.upsert({
+        where: {
+          stageId_locale: { stageId: existing.id, locale: 'en' },
+        },
+        update: { title: enTitle, description: enDesc },
+        create: {
+          stageId: existing.id,
+          locale: 'en',
+          title: enTitle,
+          description: enDesc,
+        },
+      })
+    }
+
+    return tx.rosacStage.findUnique({
+      where: { id: existing.id },
+      include: { translations: true },
+    })
+  })
+
+  if (!updated) return null
+
+  const stored = storedContentFrom(
+    rosacStageContent,
+    { title: updated.title, description: updated.description },
+    updated.translations.map((t) => ({
+      locale: t.locale,
+      title: t.title,
+      description: t.description,
+    })),
+  )
+  const { content: shown, isLegacy } = resolveContent(stored, defaultLocale)
+
+  return {
+    id: updated.key,
+    title: shown.title,
+    navigationLabel: shown.title,
+    description: shown.description,
+    images: (updated.images as unknown as ConstructionImage[]) ?? [],
+    editing: {
+      content: stored,
+      isLegacy,
+      version: toVersion(updated.updatedAt),
+    },
+  } as unknown as ConstructionStage
+}
+
+// --- Section 6: Instruments ---
+
+export const rosacInstrumentContent = defineTranslatableContent({
+  name: { noun: { word: 'nombre', gender: 'm' }, nouns: { en: 'name' }, required: true },
+  pendingMessage: {
+    noun: { word: 'mensaje pendiente', gender: 'm' },
+    nouns: { en: 'pending message' },
+    required: false,
+  },
+  consultationLabel: {
+    noun: { word: 'etiqueta de consulta', gender: 'f' },
+    nouns: { en: 'consultation label' },
+    required: false,
+  },
+  consultationNotice: {
+    noun: { word: 'aviso de consulta', gender: 'm' },
+    nouns: { en: 'consultation notice' },
+    required: false,
+  },
+  imageAlt: {
+    noun: { word: 'texto alternativo', gender: 'm' },
+    nouns: { en: 'alternative text' },
+    required: false,
+  },
+})
+
+export type StoredRosacInstrumentContent = StoredContent<typeof rosacInstrumentContent.specs>
+
+export interface RosacInstrumentEditingData {
+  content: StoredRosacInstrumentContent
+  isLegacy: boolean
+  version: string
+}
+
+export const safeUrlSchema = z
+  .string()
+  .trim()
+  .refine(
+    (val) => {
+      if (!val) return true
+      if (val.startsWith('/')) return true
+      try {
+        const parsed = new URL(val)
+        return (
+          (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+          !parsed.username &&
+          !parsed.password
+        )
+      } catch {
+        return false
+      }
+    },
+    { message: 'La URL debe ser una dirección web válida (http/https) o una ruta relativa.' },
+  )
+
+export const rosacInstrumentInputSchema = z
+  .object({
+    name: z.string().trim().min(1, 'El nombre es obligatorio.').optional(),
+    pendingMessage: z.string().trim().optional(),
+    image: z
+      .object({
+        src: z.string().trim().min(1),
+        alt: z.string().trim().min(1),
+      })
+      .optional(),
+    consultation: z
+      .object({
+        href: safeUrlSchema.optional(),
+        label: z.string().trim().min(1),
+        notice: z.string().trim().optional(),
+      })
+      .optional(),
+    content: rosacInstrumentContent.schema.optional(),
+  })
+  .refine((data) => data.name || data.content, {
+    message: 'El nombre es obligatorio.',
+  })
+
+export type RosacInstrumentInput = z.infer<typeof rosacInstrumentInputSchema>
+
+export async function getRosacInstruments(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<RosacInstrumentCardContent[]> {
+  const rows = await prisma.rosacInstrument.findMany({
+    orderBy: { position: 'asc' },
+    include: { translations: true },
+  })
+  return rows.map((r) => {
+    const stored = storedContentFrom(
+      rosacInstrumentContent,
+      {
+        name: r.name,
+        pendingMessage: r.pendingMessage,
+        consultationLabel: r.consultationLabel,
+        consultationNotice: r.consultationNotice,
+        imageAlt: r.imageAlt,
+      },
+      r.translations.map((t) => ({
+        locale: t.locale,
+        name: t.name,
+        pendingMessage: t.pendingMessage,
+        consultationLabel: t.consultationLabel,
+        consultationNotice: t.consultationNotice,
+        imageAlt: t.imageAlt,
+      })),
+    )
+    const { content: shown, isLegacy } = resolveContent(stored, locale)
+    return {
+      id: r.id,
+      name: shown.name,
+      pendingMessage: shown.pendingMessage ?? undefined,
+      image: r.imageSrc ? { src: r.imageSrc, alt: shown.imageAlt ?? r.imageAlt ?? '' } : undefined,
+      consultation: shown.consultationLabel
+        ? {
+            href: r.consultationHref ?? undefined,
+            label: shown.consultationLabel,
+            notice: shown.consultationNotice ?? undefined,
+          }
+        : undefined,
+      ...(includeEditingData
+        ? {
+            editing: {
+              content: stored,
+              isLegacy,
+              version: toVersion(r.updatedAt),
+            },
+          }
+        : {}),
+    }
+  })
+}
+
+export async function createRosacInstrument(
+  data: RosacInstrumentInput,
+): Promise<RosacInstrumentCardContent> {
+  const maxPosition = await prisma.rosacInstrument.aggregate({
+    _max: { position: true },
+  })
+  const nextPosition = (maxPosition._max.position ?? -1) + 1
+
+  let esName = data.name ?? ''
+  let esPending = data.pendingMessage || null
+  let esLabel = data.consultation?.label || data.name || ''
+  let esNotice = data.consultation?.notice || null
+  let esAlt = data.image?.alt || null
+
+  let enName: string | undefined
+  let enPending: string | null | undefined
+  let enLabel: string | null | undefined
+  let enNotice: string | null | undefined
+  let enAlt: string | null | undefined
+
+  if (data.content) {
+    const base = baseContent(rosacInstrumentContent, data.content)
+    esName = base.name
+    esPending = base.pendingMessage || null
+    esLabel = base.consultationLabel || data.consultation?.label || base.name
+    esNotice = base.consultationNotice || null
+    esAlt = base.imageAlt || null
+
+    const en = data.content.en
+    if (en) {
+      enName = en.name
+      enPending = en.pendingMessage || null
+      enLabel = en.consultationLabel || null
+      enNotice = en.consultationNotice || null
+      enAlt = en.imageAlt || null
+    }
+  }
+
+  const row = await prisma.$transaction(async (tx) => {
+    const created = await tx.rosacInstrument.create({
+      data: {
+        name: esName,
+        pendingMessage: esPending,
+        imageSrc: data.image?.src || null,
+        imageAlt: esAlt,
+        consultationHref: data.consultation?.href || null,
+        consultationLabel: esLabel,
+        consultationNotice: esNotice,
+        position: nextPosition,
+      },
+    })
+
+    if (enName) {
+      await tx.rosacInstrumentTranslation.create({
+        data: {
+          instrumentId: created.id,
+          locale: 'en',
+          name: enName,
+          pendingMessage: enPending,
+          consultationLabel: enLabel,
+          consultationNotice: enNotice,
+          imageAlt: enAlt,
+        },
+      })
+    }
+
+    return tx.rosacInstrument.findUnique({
+      where: { id: created.id },
+      include: { translations: true },
+    })
+  })
+
+  if (!row) throw new Error('No se pudo crear el instrumento')
+
+  const stored = storedContentFrom(
+    rosacInstrumentContent,
+    {
+      name: row.name,
+      pendingMessage: row.pendingMessage,
+      consultationLabel: row.consultationLabel,
+      consultationNotice: row.consultationNotice,
+      imageAlt: row.imageAlt,
+    },
+    row.translations.map((t) => ({
+      locale: t.locale,
+      name: t.name,
+      pendingMessage: t.pendingMessage,
+      consultationLabel: t.consultationLabel,
+      consultationNotice: t.consultationNotice,
+      imageAlt: t.imageAlt,
+    })),
+  )
+  const { content: shown, isLegacy } = resolveContent(stored, defaultLocale)
+
+  return {
+    id: row.id,
+    name: shown.name,
+    pendingMessage: shown.pendingMessage ?? undefined,
+    image: row.imageSrc ? { src: row.imageSrc, alt: shown.imageAlt ?? '' } : undefined,
+    consultation: shown.consultationLabel
+      ? {
+          href: row.consultationHref ?? undefined,
+          label: shown.consultationLabel,
+          notice: shown.consultationNotice ?? undefined,
+        }
+      : undefined,
+    editing: {
+      content: stored,
+      isLegacy,
+      version: toVersion(row.updatedAt),
+    },
+  }
+}
+
+export async function updateRosacInstrument(
+  id: string,
+  data: RosacInstrumentInput,
+): Promise<RosacInstrumentCardContent | null> {
+  if (!UUID_REGEX.test(id)) return null
+  const existing = await prisma.rosacInstrument.findUnique({
+    where: { id },
+    include: { translations: true },
+  })
+
+  if (!existing) return null
+
+  let esName = data.name ?? existing.name
+  let esPending =
+    data.pendingMessage !== undefined ? data.pendingMessage || null : existing.pendingMessage
+  let esLabel = data.consultation?.label ?? existing.consultationLabel
+  let esNotice =
+    data.consultation?.notice !== undefined
+      ? data.consultation.notice || null
+      : existing.consultationNotice
+  let esAlt = data.image?.alt !== undefined ? data.image.alt || null : existing.imageAlt
+
+  let enName: string | undefined
+  let enPending: string | null | undefined
+  let enLabel: string | null | undefined
+  let enNotice: string | null | undefined
+  let enAlt: string | null | undefined
+
+  if (data.content) {
+    const base = baseContent(rosacInstrumentContent, data.content)
+    esName = base.name
+    esPending = base.pendingMessage || null
+    esLabel = base.consultationLabel || data.consultation?.label || base.name
+    esNotice = base.consultationNotice || null
+    esAlt = base.imageAlt || null
+
+    const en = data.content.en
+    if (en) {
+      enName = en.name
+      enPending = en.pendingMessage || null
+      enLabel = en.consultationLabel || null
+      enNotice = en.consultationNotice || null
+      enAlt = en.imageAlt || null
+    }
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.rosacInstrument.update({
+      where: { id: existing.id },
+      data: {
+        name: esName,
+        pendingMessage: esPending,
+        imageSrc: data.image?.src !== undefined ? data.image.src || null : existing.imageSrc,
+        imageAlt: esAlt,
+        consultationHref:
+          data.consultation?.href !== undefined
+            ? data.consultation.href || null
+            : existing.consultationHref,
+        consultationLabel: esLabel,
+        consultationNotice: esNotice,
+      },
+    })
+
+    if (enName) {
+      await tx.rosacInstrumentTranslation.upsert({
+        where: {
+          instrumentId_locale: { instrumentId: existing.id, locale: 'en' },
+        },
+        update: {
+          name: enName,
+          pendingMessage: enPending,
+          consultationLabel: enLabel,
+          consultationNotice: enNotice,
+          imageAlt: enAlt,
+        },
+        create: {
+          instrumentId: existing.id,
+          locale: 'en',
+          name: enName,
+          pendingMessage: enPending,
+          consultationLabel: enLabel,
+          consultationNotice: enNotice,
+          imageAlt: enAlt,
+        },
+      })
+    }
+
+    return tx.rosacInstrument.findUnique({
+      where: { id: existing.id },
+      include: { translations: true },
+    })
+  })
+
+  if (!updated) return null
+
+  const stored = storedContentFrom(
+    rosacInstrumentContent,
+    {
+      name: updated.name,
+      pendingMessage: updated.pendingMessage,
+      consultationLabel: updated.consultationLabel,
+      consultationNotice: updated.consultationNotice,
+      imageAlt: updated.imageAlt,
+    },
+    updated.translations.map((t) => ({
+      locale: t.locale,
+      name: t.name,
+      pendingMessage: t.pendingMessage,
+      consultationLabel: t.consultationLabel,
+      consultationNotice: t.consultationNotice,
+      imageAlt: t.imageAlt,
+    })),
+  )
+  const { content: shown, isLegacy } = resolveContent(stored, defaultLocale)
+
+  return {
+    id: updated.id,
+    name: shown.name,
+    pendingMessage: shown.pendingMessage ?? undefined,
+    image: updated.imageSrc ? { src: updated.imageSrc, alt: shown.imageAlt ?? '' } : undefined,
+    consultation: shown.consultationLabel
+      ? {
+          href: updated.consultationHref ?? undefined,
+          label: shown.consultationLabel,
+          notice: shown.consultationNotice ?? undefined,
+        }
+      : undefined,
+    editing: {
+      content: stored,
+      isLegacy,
+      version: toVersion(updated.updatedAt),
+    },
+  }
+}
+
+export async function deleteRosacInstrument(id: string): Promise<boolean> {
+  if (!UUID_REGEX.test(id)) return false
+  const existing = await prisma.rosacInstrument.findUnique({
+    where: { id },
+  })
+  if (!existing) return false
+  await prisma.rosacInstrument.delete({ where: { id: existing.id } })
+  return true
+}
+
+// --- Section 9: Acknowledgments ---
+
+export const safeExternalUrlSchema = z
+  .string()
+  .trim()
+  .refine(
+    (val) => {
+      if (!val) return true
+      try {
+        const parsed = new URL(val)
+        return (
+          (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+          !parsed.username &&
+          !parsed.password
+        )
+      } catch {
+        return false
+      }
+    },
+    { message: 'La URL debe ser una dirección web válida (http/https).' },
+  )
+
+export const rosacAcknowledgmentInputSchema = z.object({
+  name: z.string().trim().min(1, 'El nombre es obligatorio.'),
+  href: safeExternalUrlSchema.optional(),
+  logo: z.object({
+    src: z.string().trim().min(1, 'El archivo o URL del logo es obligatorio.'),
+    alt: z.string().trim().min(1, 'El texto alternativo es obligatorio.'),
+  }),
+})
+export type RosacAcknowledgmentInput = z.infer<typeof rosacAcknowledgmentInputSchema>
+
+export async function getRosacAcknowledgments(): Promise<RosacAcknowledgment[]> {
+  const rows = await prisma.rosacAcknowledgment.findMany({ orderBy: { position: 'asc' } })
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    href: r.href ?? undefined,
+    logo: {
+      src: r.logoSrc,
+      alt: r.logoAlt,
+    },
+  }))
+}
+
+export async function createRosacAcknowledgment(
+  data: RosacAcknowledgmentInput,
+): Promise<RosacAcknowledgment> {
+  const maxPosition = await prisma.rosacAcknowledgment.aggregate({
+    _max: { position: true },
+  })
+  const nextPosition = (maxPosition._max.position ?? -1) + 1
+
+  const row = await prisma.rosacAcknowledgment.create({
+    data: {
+      name: data.name,
+      href: data.href || null,
+      logoSrc: data.logo.src,
+      logoAlt: data.logo.alt,
+      position: nextPosition,
+    },
+  })
+  return {
+    id: row.id,
+    name: row.name,
+    href: row.href ?? undefined,
+    logo: {
+      src: row.logoSrc,
+      alt: row.logoAlt,
+    },
+  }
+}
+
+export async function updateRosacAcknowledgment(
+  id: string,
+  data: RosacAcknowledgmentInput,
+): Promise<RosacAcknowledgment | null> {
+  if (!UUID_REGEX.test(id)) return null
+  const existing = await prisma.rosacAcknowledgment.findUnique({
+    where: { id },
+  })
+
+  if (!existing) return null
+
+  const row = await prisma.rosacAcknowledgment.update({
+    where: { id: existing.id },
+    data: {
+      name: data.name,
+      href: data.href || null,
+      logoSrc: data.logo.src,
+      logoAlt: data.logo.alt,
+    },
+  })
+  return {
+    id: row.id,
+    name: row.name,
+    href: row.href ?? undefined,
+    logo: {
+      src: row.logoSrc,
+      alt: row.logoAlt,
+    },
+  }
+}
+
+export async function deleteRosacAcknowledgment(id: string): Promise<boolean> {
+  if (!UUID_REGEX.test(id)) return false
+  const existing = await prisma.rosacAcknowledgment.findUnique({
+    where: { id },
+  })
+  if (!existing) return false
+  await prisma.rosacAcknowledgment.delete({ where: { id: existing.id } })
   return true
 }

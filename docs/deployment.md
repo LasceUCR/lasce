@@ -133,6 +133,10 @@ step rather than as a separate CI step, which could not abort atomically.
 Web is redeployed before worker so the schema is current before the worker
 (which reads it through SQLAlchemy) restarts.
 
+### Seeding new content after migration (ROSAC CMS)
+
+When deploying the migrations adding ROSAC CMS persistence (`20261023160000_add_rosac_translations` and predecessor `20261020000000_add_rosac_cms_tables`), run the database seed once against staging and production (via `.github/workflows/ops.yml` or `pnpm db:seed` with `DATABASE_URL` pointing to the environment database). The seed checks each table with `count() === 0` before inserting, ensuring initial content and English translations are safely populated without overwriting existing edits.
+
 ## 5. Secrets and variables
 
 Nothing below is committed, and nothing is echoed in workflow logs.

@@ -1123,6 +1123,51 @@
     },
     "backLink": {
       "label": "Volver a las áreas"
+    },
+    "editor": {
+      "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo.",
+      "discardDialog": {
+        "title": "Descartar cambios no guardados",
+        "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+        "keepEditing": "Seguir editando",
+        "discard": "Descartar"
+      },
+      "characteristics": {
+        "updated": "Característica actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la característica. Inténtelo de nuevo."
+        }
+      },
+      "activities": {
+        "updated": "Actividad actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la actividad. Inténtelo de nuevo."
+        }
+      },
+      "stages": {
+        "updated": "Etapa actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la etapa. Inténtelo de nuevo."
+        }
+      },
+      "instruments": {
+        "created": "Instrumento agregado correctamente.",
+        "updated": "Instrumento actualizado correctamente.",
+        "deleted": "Instrumento eliminado correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar el instrumento. Inténtelo de nuevo.",
+          "deleteUnknown": "No se pudo eliminar el instrumento. Inténtelo de nuevo."
+        }
+      },
+      "acknowledgments": {
+        "created": "Institución agregada correctamente.",
+        "updated": "Institución actualizada correctamente.",
+        "deleted": "Institución eliminada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la institución. Inténtelo de nuevo.",
+          "deleteUnknown": "No se pudo eliminar la institución. Inténtelo de nuevo."
+        }
+      }
     }
   },
   "researchAreas": {

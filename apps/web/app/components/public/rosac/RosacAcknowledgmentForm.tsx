@@ -12,6 +12,7 @@ import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 export interface RosacAcknowledgmentFormValues {
   name: string
+  href?: string
   logo: {
     src: string
     alt: string
@@ -129,6 +130,7 @@ export function RosacAcknowledgmentForm({
 }: RosacAcknowledgmentFormProps) {
   const formId = useId()
   const [name, setName] = useState(institution?.name ?? '')
+  const [href, setHref] = useState(institution?.href ?? '')
   const [logoAlt, setLogoAlt] = useState(institution?.logo?.alt ?? '')
 
   // Determine initial logo selection (defaults to custom upload for new institutions)
@@ -162,16 +164,35 @@ export function RosacAcknowledgmentForm({
 
   const hasLogo = !logoRemoved && (Boolean(activeLogoSrc) || Boolean(logoFile))
 
+  function isValidHttpUrl(val: string): boolean {
+    if (!val.trim()) return true
+    try {
+      const parsed = new URL(val.trim())
+      return (
+        (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+        !parsed.username &&
+        !parsed.password
+      )
+    } catch {
+      return false
+    }
+  }
+
   // Validation
   const nameError =
     hasAttemptedSubmit && name.trim() === '' ? 'El nombre de la institución es obligatorio.' : null
+  const hrefError =
+    hasAttemptedSubmit && href.trim() !== '' && !isValidHttpUrl(href)
+      ? 'La dirección web debe comenzar con http:// o https://'
+      : null
   const logoError =
     hasAttemptedSubmit && !hasLogo ? 'Debe seleccionar o subir un logo para la institución.' : null
 
-  const isFormValid = name.trim() !== '' && hasLogo
+  const isFormValid = name.trim() !== '' && hasLogo && isValidHttpUrl(href)
 
   const isDirty =
     name !== (institution?.name ?? '') ||
+    href !== (institution?.href ?? '') ||
     logoAlt !== (institution?.logo?.alt ?? '') ||
     logoFile !== null ||
     logoRemoved ||
@@ -190,6 +211,8 @@ export function RosacAcknowledgmentForm({
     if (!isFormValid) {
       if (name.trim() === '') {
         document.getElementById(`${formId}-name`)?.focus()
+      } else if (!isValidHttpUrl(href)) {
+        document.getElementById(`${formId}-href`)?.focus()
       }
       return
     }
@@ -230,6 +253,7 @@ export function RosacAcknowledgmentForm({
 
     onSave({
       name: trimmedName,
+      href: href.trim() || undefined,
       logo: {
         src: finalLogoUrl,
         alt: finalAlt,
@@ -258,6 +282,15 @@ export function RosacAcknowledgmentForm({
         placeholder="Ej. Centro de Investigaciones Espaciales (CINESPA), UCR"
         required
         value={name}
+      />
+
+      <FormField
+        errorMessage={hrefError}
+        id={`${formId}-href`}
+        label="Enlace web institucional (opcional)"
+        onChange={setHref}
+        placeholder="https://ejemplo.ucr.ac.cr"
+        value={href}
       />
 
       <div className="cms-form-field">

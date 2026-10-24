@@ -1123,6 +1123,51 @@
     },
     "backLink": {
       "label": "Back to work areas"
+    },
+    "editor": {
+      "saveError": "Could not save changes. Please try again.",
+      "discardDialog": {
+        "title": "Discard unsaved changes",
+        "message": "If you discard now, any information you have entered without saving will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
+      "characteristics": {
+        "updated": "Characteristic updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the characteristic. Please try again."
+        }
+      },
+      "activities": {
+        "updated": "Activity updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the activity. Please try again."
+        }
+      },
+      "stages": {
+        "updated": "Stage updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the stage. Please try again."
+        }
+      },
+      "instruments": {
+        "created": "Instrument added successfully.",
+        "updated": "Instrument updated successfully.",
+        "deleted": "Instrument deleted successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the instrument. Please try again.",
+          "deleteUnknown": "Could not delete the instrument. Please try again."
+        }
+      },
+      "acknowledgments": {
+        "created": "Institution added successfully.",
+        "updated": "Institution updated successfully.",
+        "deleted": "Institution deleted successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the institution. Please try again.",
+          "deleteUnknown": "Could not delete the institution. Please try again."
+        }
+      }
     }
   },
   "researchAreas": {
