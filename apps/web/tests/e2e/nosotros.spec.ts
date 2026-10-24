@@ -206,7 +206,7 @@ test('displays researcher content in English when site language switches to Engl
   await expect(researchers.getByRole('button', { name: 'Next' })).toBeVisible()
 
   // Check English roles and affiliations
-  await expect(researchers.getByText('Principal Investigator')).toBeVisible()
+  await expect(researchers.getByText('Principal investigator', { exact: true })).toBeVisible()
   await expect(
     researchers.getByText('Institution: Centro de Investigaciones Espaciales, CINESPA').first(),
   ).toBeVisible()
