@@ -56,13 +56,22 @@ replace the new selection, and automatic updates do not move keyboard focus. Loa
 bands, source errors and individual image failures have visible messages. A failed image is
 removed while its UTC capture time remains visible; switching bands can recover normally.
 
-The visible permissions banner communicates the policy:
+The consultation and permission banners stay hidden until the first query is submitted. Once
+shown, they follow the currently selected source and instrument, even when a change clears the
+results. They appear above the loading indicator, followed by the query inputs and the results.
+The loading bar is 0.375rem thick, with a contrasting blue fill on a pale track. Its compact header
+places the loading status beside a text-style cancel control and only shows a percentage when
+progress is available. The fill transitions smoothly between updates and stays indeterminate until
+progress is available (or throughout an image query). It respects reduced-motion preferences.
+
+The banners communicate only the selected instrument's policy:
 
 - historical GOES information can be consulted without an account;
 - downloading anything requires an account and signing in;
-- chart images can be downloaded for every source;
+- chart images can be downloaded for charted instruments in either source;
 - ROSAC data (CSV) is open to every account;
-- GOES data requires the GOES data download permission (`download_goes_resources`);
+- GOES normally offers only the chart; EXIS also offers CSV to accounts with the GOES data
+  download permission (`download_goes_resources`), which the banner reflects;
 - SUVI solar images cannot be downloaded;
 - every download link expires after 30 minutes.
 
@@ -206,6 +215,9 @@ uses `InstrumentProductSelect`. Both are labeled comboboxes with keyboard naviga
 type-ahead, disabled options, and Escape/outside dismissal. Its popup fits the viewport, uses a
 bounded vertical scrollbar, and wraps long option labels within the menu. Pointer hover uses a
 subtle background; keyboard focus remains visible. Reduced-motion preferences disable animation.
+Popups prefer the form's bounds. If neither side of the trigger has 160 px of usable height,
+they use the viewport's vertical space while keeping the form's horizontal bounds, without
+scrolling the page.
 
 The data page has a compact introduction with **Portal público LASCE**, a prominent **Datos**
 heading, a short description and an anchor linking directly to the query. The solar section keeps
