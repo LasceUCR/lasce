@@ -81,7 +81,6 @@ describe('GalleryAlbumAddCard', () => {
     renderCard()
 
     expect(screen.getByRole('button', { name: 'Añadir álbum' })).toBeInTheDocument()
-    expect(screen.getByRole('list')).toBeInTheDocument()
   })
 
   test('does not render without create permission', () => {

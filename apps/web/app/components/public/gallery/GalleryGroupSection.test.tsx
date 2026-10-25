@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { GalleryGroupSection, type GalleryGroupSectionProps } from './GalleryGroupSection'
 import { WithoutSubAlbums, WithSubAlbums } from './GalleryGroupSection.stories'
 import type { GalleryMedia } from '@/app/lib/gallery-schema'
+import { uploadGalleryImage } from '@/app/(public)/galeria/actions'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
@@ -18,6 +19,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@lasce/db', () => ({ prisma: {} }))
+vi.mock('@/app/(public)/galeria/actions', () => ({ uploadGalleryImage: vi.fn() }))
 
 function albumMeta(album: GalleryGroupSectionProps['album']): string {
   const fileCount = album.subAlbums.reduce(
@@ -198,6 +200,59 @@ describe('GalleryGroupSection', () => {
     expect(screen.queryByText('An image without a source')).not.toBeInTheDocument()
   })
 
+  test('wraps featured images with edit and delete actions for permitted editors', async () => {
+    const user = userEvent.setup()
+    const parentPhoto = firstItem(withSubAlbums.album.media)
+    const subAlbum = firstItem(withSubAlbums.album.subAlbums)
+    const subAlbumPhoto = firstItem(subAlbum.media)
+    const album = {
+      ...withSubAlbums.album,
+      id: 'album-id',
+      media: [{ ...parentPhoto, id: 'parent-media-id' }],
+      subAlbums: [
+        {
+          ...subAlbum,
+          id: 'subalbum-id',
+          media: [{ ...subAlbumPhoto, id: 'subalbum-media-id' }],
+        },
+      ],
+    }
+    renderSection({ album, canEdit: true, canDelete: true }, true)
+
+    expect(screen.getByRole('button', { name: `Editar ${parentPhoto.title}` })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: `Editar ${subAlbumPhoto.title}` }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: `Editar ${subAlbumPhoto.title}` }))
+    expect(screen.getByRole('dialog', { name: 'Editar imagen' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Título (Español)' })).toHaveValue(
+      subAlbumPhoto.title,
+    )
+  })
+
+  test('deletes featured media after confirmation', async () => {
+    const user = userEvent.setup()
+    const parentPhoto = firstItem(withSubAlbums.album.media)
+    const album = {
+      ...withSubAlbums.album,
+      id: 'album-id',
+      media: [{ ...parentPhoto, id: 'parent-media-id' }],
+    }
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 204 }))
+    renderSection({ album, canDelete: true }, true)
+
+    await user.click(screen.getByRole('button', { name: `Eliminar ${parentPhoto.title}` }))
+    const confirmation = screen.getByRole('dialog', { name: 'Eliminar imagen' })
+    await user.click(within(confirmation).getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith('/api/gallery/media/parent-media-id', {
+        method: 'DELETE',
+      }),
+    )
+    expect(mocks.refresh).toHaveBeenCalledOnce()
+  })
+
   test('shows no album tiles when no photos are available', () => {
     const { album } = withSubAlbums
     renderSection({
@@ -214,6 +269,69 @@ describe('GalleryGroupSection', () => {
     expect(screen.queryByRole('button', { name: 'Imágenes siguientes' })).not.toBeInTheDocument()
   })
 
+  test('offers an image form for the album when create permission is available in edit mode', async () => {
+    const user = userEvent.setup()
+    const album = { ...withSubAlbums.album, id: 'album-id' }
+    vi.mocked(uploadGalleryImage).mockResolvedValue({
+      ok: true,
+      imageUrl: '/uploads/new-image.png',
+    })
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 201 }))
+    const { container } = renderSection({ album, canCreate: true, uploader: 'Ana Mora' }, true)
+
+    const addButton = screen.getByRole('button', { name: 'Añadir imagen' })
+    await user.click(addButton)
+
+    const dialog = screen.getByRole('dialog', { name: 'Añadir imagen' })
+    expect(within(dialog).getByText('Contenido')).toBeInTheDocument()
+    const fileInput = container.querySelector<HTMLInputElement>('input[type="file"]')
+    if (!fileInput) throw new Error('The file input is missing.')
+    await user.upload(fileInput, new File(['image'], 'new-image.png', { type: 'image/png' }))
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Título (Español)' }),
+      'Nueva imagen',
+    )
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Descripción (Español)' }),
+      'Descripción de la imagen',
+    )
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Texto alternativo (Español)' }),
+      'Una nueva imagen',
+    )
+    await user.click(within(dialog).getByRole('tab', { name: 'English' }))
+    await user.type(within(dialog).getByRole('textbox', { name: 'Título (English)' }), 'New image')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Descripción (English)' }),
+      'Image description',
+    )
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Texto alternativo (English)' }),
+      'A new image',
+    )
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/gallery/albums/album-id/media',
+        expect.objectContaining({ method: 'POST' }),
+      ),
+    )
+    const request = vi.mocked(fetch).mock.calls[0]?.[1] as RequestInit
+    expect(JSON.parse(request.body as string)).toMatchObject({
+      isVideo: false,
+      uploader: 'Ana Mora',
+      objectKey: '/uploads/new-image.png',
+    })
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce())
+  })
+
+  test('does not offer the image form without an album id or uploader', () => {
+    renderSection({ ...withSubAlbums, canCreate: true, uploader: 'Ana Mora' }, true)
+
+    expect(screen.queryByRole('button', { name: 'Añadir imagen' })).not.toBeInTheDocument()
+  })
+
   test('exposes the scroll track to the keyboard and scrolls by about one card', async () => {
     const user = userEvent.setup()
     renderSection(withSubAlbums)
@@ -226,10 +344,10 @@ describe('GalleryGroupSection', () => {
     Object.defineProperty(track, 'clientWidth', { configurable: true, value: 600 })
 
     await user.click(screen.getByRole('button', { name: 'Imágenes siguientes' }))
-    expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: 360 })
+    expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: 120 })
 
     await user.click(screen.getByRole('button', { name: 'Imágenes anteriores' }))
-    expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: -360 })
+    expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: -120 })
   })
 
   test('renders a full-screen image control when there are no sub-albums', () => {

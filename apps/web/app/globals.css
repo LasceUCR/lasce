@@ -4464,16 +4464,6 @@ a {
   flex: 1;
 }
 
-.gallery-grid-add {
-  min-height: 260px;
-}
-
-.gallery-grid-add > .add-item-card {
-  flex: 1;
-  min-height: 0;
-  border-radius: 8px;
-}
-
 .gallery-subalbum-list {
   align-items: stretch;
 }
@@ -7341,6 +7331,12 @@ a.acknowledgments-card:focus-visible {
   display: flex;
   flex: 0 0 260px; /* same fixed track the grid used; matches AlbumTile `sizes` */
   scroll-snap-align: start;
+}
+
+.gallery-carousel-track > li > .gallery-carousel-media-editable {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 @media (max-width: 600px) {

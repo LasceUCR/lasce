@@ -11,11 +11,13 @@ import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { Button } from '@/app/components/public/Button'
 import { Modal } from '@/app/components/public/Modal'
+import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import {
   AlbumForm,
   type AlbumFormHandle,
   type AlbumFormValues,
 } from '@/app/components/public/gallery/forms/AlbumForm'
+import { MediaForm, type MediaFormHandle } from '@/app/components/public/gallery/forms/MediaForm'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import {
   type GalleryAlbum,
@@ -48,6 +50,8 @@ export interface GalleryGroupSectionProps {
   album: GalleryAlbum
   canEdit?: boolean
   canDelete?: boolean
+  canCreate?: boolean
+  uploader?: string
   featuredImageLimit?: number
 }
 
@@ -61,6 +65,8 @@ export function GalleryGroupSection({
   album,
   canEdit = false,
   canDelete = false,
+  canCreate = false,
+  uploader,
   featuredImageLimit = 10,
 }: GalleryGroupSectionProps) {
   const { editMode } = useEditMode()
@@ -74,6 +80,12 @@ export function GalleryGroupSection({
   const [isSaving, setIsSaving] = useState(false)
   const saveInProgress = useRef(false)
   const editForm = useRef<AlbumFormHandle>(null)
+  const createMediaForm = useRef<MediaFormHandle>(null)
+  const editMediaForm = useRef<MediaFormHandle>(null)
+  const [editingMedia, setEditingMedia] = useState<{
+    media: GalleryMedia
+    albumId: string
+  } | null>(null)
 
   const trackRef = useRef<HTMLUListElement>(null)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
@@ -81,16 +93,20 @@ export function GalleryGroupSection({
   const featuredMedia = [
     ...album.media
       .filter((media) => !media.isVideo && media.src)
-      .map((media) => ({ media, ownerSlug: album.slug })),
+      .map((media) => ({ media, ownerSlug: album.slug, ownerId: album.id })),
     ...album.subAlbums.flatMap((subAlbum) =>
       subAlbum.media
         .filter((media) => !media.isVideo && media.src)
         .map((media) => ({
           media,
           ownerSlug: subAlbum.slug,
+          ownerId: subAlbum.id,
         })),
     ),
   ].slice(0, featuredImageLimit)
+  const albumId = album.id
+  const showAddCard = editMode && canCreate && albumId !== undefined && uploader !== undefined
+  const canDeleteItem = editMode && canDelete
 
   useLayoutEffect(() => {
     const track = trackRef.current
@@ -136,6 +152,18 @@ export function GalleryGroupSection({
       {
         success: t(isSub ? 'subAlbumDeleted' : 'albumDeleted'),
         fallback: t(isSub ? 'subAlbumDeleteFailed' : 'albumDeleteFailed'),
+        onSuccess: () => router.refresh(),
+      },
+    )
+  }
+
+  async function handleDeleteMedia(mediaId: string): Promise<void> {
+    await sendWithFeedback(
+      `/api/gallery/media/${mediaId}`,
+      { method: 'DELETE' },
+      {
+        success: t('fileDeleted'),
+        fallback: t('fileDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -219,8 +247,33 @@ export function GalleryGroupSection({
         ref={trackRef}
         tabIndex={0}
       >
-        {featuredMedia.map(({ media, ownerSlug }, index) => (
-          <li key={`${ownerSlug}-${media.id}`}>
+        {showAddCard ? (
+          <li>
+            <AddItemCard
+              label={tActions('addFile')}
+              onRequestClose={(close) => {
+                if (createMediaForm.current) createMediaForm.current.requestCancel()
+                else close()
+              }}
+              size="large"
+            >
+              {({ close }) => (
+                <MediaForm
+                  ref={createMediaForm}
+                  albumId={albumId}
+                  onCancel={close}
+                  onSaved={() => {
+                    close()
+                    router.refresh()
+                  }}
+                  uploader={uploader}
+                />
+              )}
+            </AddItemCard>
+          </li>
+        ) : null}
+        {featuredMedia.map(({ media, ownerSlug, ownerId }, index) => {
+          const trigger = (
             <button
               aria-label={tActions('viewImageFullSize', { title: media.title })}
               className="gallery-carousel-image-button"
@@ -238,8 +291,33 @@ export function GalleryGroupSection({
                 src={media.src}
               />
             </button>
-          </li>
-        ))}
+          )
+          const canEditItem = editMode && canEdit && ownerId !== undefined
+
+          return (
+            <li key={`${ownerSlug}-${media.id}`}>
+              {canEditItem || canDeleteItem ? (
+                <EditableWrapper
+                  className="gallery-carousel-media-editable"
+                  deleteLabel={tActions('deleteItem', { title: media.title })}
+                  deleteConfirmTitle={tActions('deleteFile')}
+                  deleteConfirmMessage={tActions('deleteMessage', { title: media.title })}
+                  editLabel={tActions('editItem', { title: media.title })}
+                  onDelete={canDeleteItem ? () => handleDeleteMedia(media.id) : undefined}
+                  onEdit={
+                    canEditItem && ownerId
+                      ? () => setEditingMedia({ media, albumId: ownerId })
+                      : undefined
+                  }
+                >
+                  {trigger}
+                </EditableWrapper>
+              ) : (
+                trigger
+              )}
+            </li>
+          )
+        })}
       </ul>
       <div className="team-gallery-controls">
         {featuredMedia.length > 0 ? (
@@ -278,6 +356,43 @@ export function GalleryGroupSection({
           total={featuredMedia.length}
         />
       ) : null}
+
+      <Modal
+        onClose={() => {
+          if (editMediaForm.current) editMediaForm.current.requestCancel()
+          else setEditingMedia(null)
+        }}
+        open={editingMedia !== null}
+        size="large"
+        title={tActions('editFile')}
+      >
+        {editingMedia ? (
+          <MediaForm
+            ref={editMediaForm}
+            albumId={editingMedia.albumId}
+            media={{
+              id: editingMedia.media.id,
+              title: editingMedia.media.title,
+              description: editingMedia.media.description,
+              alt: editingMedia.media.alt,
+              date: editingMedia.media.date,
+              colSpan: String(editingMedia.media.colSpan),
+              rowSpan: String(editingMedia.media.rowSpan),
+              src: editingMedia.media.src,
+              format: editingMedia.media.format,
+            }}
+            stored={editingMedia.media.editing?.content ?? null}
+            version={editingMedia.media.editing?.version}
+            isLegacy={editingMedia.media.editing?.isLegacy}
+            onCancel={() => setEditingMedia(null)}
+            onSaved={() => {
+              setEditingMedia(null)
+              router.refresh()
+            }}
+            uploader={editingMedia.media.uploader}
+          />
+        ) : null}
+      </Modal>
 
       <Modal
         onClose={() => {
