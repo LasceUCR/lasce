@@ -1,9 +1,10 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { GalleryGroupSection, type GalleryGroupSectionProps } from './GalleryGroupSection'
 import { WithoutSubAlbums, WithSubAlbums } from './GalleryGroupSection.stories'
+import type { GalleryMedia } from '@/app/lib/gallery-schema'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
@@ -28,6 +29,12 @@ function albumMeta(album: GalleryGroupSectionProps['album']): string {
 
 const withSubAlbums = WithSubAlbums.args as GalleryGroupSectionProps
 const withoutSubAlbums = WithoutSubAlbums.args as GalleryGroupSectionProps
+
+function firstItem<T>(items: readonly T[]): T {
+  const item = items[0]
+  if (item === undefined) throw new Error('Expected the gallery story fixture to contain an item')
+  return item
+}
 
 function renderSection(props: GalleryGroupSectionProps, editMode = false) {
   return renderWithIntl(
@@ -56,62 +63,187 @@ describe('GalleryGroupSection', () => {
     expect(screen.getByRole('heading', { level: 2, name: album.title })).toBeInTheDocument()
     expect(screen.getByText(album.description)).toBeInTheDocument()
     expect(screen.getAllByText(albumMeta(album)).length).toBeGreaterThan(0)
+
+    const description = screen.getByText(album.description)
+    const count = description.nextElementSibling
+    expect(count).toHaveClass('gallery-group-meta')
+    expect(count).toHaveTextContent(albumMeta(album))
   })
 
-  test('links the cover to the album and every sub-album to its own page', () => {
+  test('provides a full-screen control for each featured photo', () => {
     const { album } = withSubAlbums
     renderSection(withSubAlbums)
 
-    expect(screen.getByRole('link', { name: new RegExp(album.title) })).toHaveAttribute(
+    const parentPhoto = firstItem(album.media)
+    const subAlbum = firstItem(album.subAlbums)
+    const subAlbumPhoto = firstItem(subAlbum.media)
+
+    expect(
+      screen.getByRole('button', {
+        name: `Ver imagen a pantalla completa: ${parentPhoto.title}`,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: `Ver imagen a pantalla completa: ${subAlbumPhoto.title}`,
+      }),
+    ).toBeInTheDocument()
+  })
+
+  test('opens a featured photo in the full-screen lightbox and pages through the featured images', async () => {
+    const user = userEvent.setup()
+    const album = withSubAlbums.album
+    const firstPhoto = firstItem(album.media)
+    const nextPhoto = firstItem(firstItem(album.subAlbums).media)
+    renderSection(withSubAlbums)
+
+    const trigger = screen.getByRole('button', {
+      name: `Ver imagen a pantalla completa: ${firstPhoto.title}`,
+    })
+    const nextTrigger = screen.getByRole('button', {
+      name: `Ver imagen a pantalla completa: ${nextPhoto.title}`,
+    })
+    await user.click(trigger)
+
+    const dialog = screen.getByRole('dialog')
+    expect(
+      within(dialog).getByRole('heading', { level: 2, name: firstPhoto.title }),
+    ).toBeInTheDocument()
+    expect(within(dialog).getByRole('img', { name: firstPhoto.alt })).toBeInTheDocument()
+    expect(within(dialog).getByText(`Formato: ${firstPhoto.format}`)).toBeInTheDocument()
+    expect(within(dialog).getByText('1 / 2')).toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Siguiente' }))
+    expect(
+      within(screen.getByRole('dialog')).getByRole('heading', {
+        level: 2,
+        name: nextPhoto.title,
+      }),
+    ).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(nextTrigger).toHaveFocus()
+  })
+
+  test('provides an album link beside the album heading', () => {
+    renderSection(withSubAlbums)
+
+    expect(screen.getByRole('link', { name: /Ver álbum/ })).toHaveAttribute(
       'href',
-      '/galeria/rosac',
+      `/galeria/${withSubAlbums.album.slug}`,
     )
+  })
 
-    for (const subAlbum of album.subAlbums) {
-      expect(screen.getByRole('link', { name: new RegExp(subAlbum.title) })).toHaveAttribute(
-        'href',
-        `/galeria/rosac/${subAlbum.slug}`,
-      )
+  test('shows parent-album photos first and fills up to ten from sub-albums', () => {
+    const { album } = withSubAlbums
+    const parentPhoto = firstItem(album.media)
+    const subAlbum = firstItem(album.subAlbums)
+    const subAlbumPhoto = firstItem(subAlbum.media)
+    const parentPhotos = Array.from({ length: 8 }, (_, index) => ({
+      ...parentPhoto,
+      id: `parent-${index}`,
+      title: `Parent photo ${index}`,
+    }))
+    const subAlbumPhotos = Array.from({ length: 3 }, (_, index) => ({
+      ...subAlbumPhoto,
+      id: `sub-${index}`,
+      title: `Sub-album photo ${index}`,
+    }))
+    const skippedSubAlbumPhotos = Array.from({ length: 2 }, (_, index) => ({
+      ...subAlbumPhoto,
+      id: `later-${index}`,
+      title: `Later sub-album photo ${index}`,
+    }))
+    const video: GalleryMedia = {
+      ...parentPhoto,
+      id: 'parent-video',
+      title: 'A video',
+      isVideo: true,
     }
-  })
-
-  test('counts each sub-album from the files it actually holds', () => {
-    const { album } = withSubAlbums
-    renderSection(withSubAlbums)
-
-    // Two sub-albums hold the same number of files, so match on the tile
-    // rather than on the count alone.
-    for (const subAlbum of album.subAlbums) {
-      const tile = screen.getByRole('link', { name: new RegExp(subAlbum.title) })
-
-      expect(tile).toHaveTextContent(`${subAlbum.media.length} archivos`)
+    const pendingImage: GalleryMedia = {
+      ...parentPhoto,
+      id: 'pending-image',
+      title: 'An image without a source',
+      src: undefined,
     }
+
+    renderSection({
+      album: {
+        ...album,
+        media: [...parentPhotos, video, pendingImage],
+        subAlbums: [
+          { ...subAlbum, media: subAlbumPhotos },
+          { ...subAlbum, slug: 'later', media: skippedSubAlbumPhotos },
+        ],
+      },
+    })
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /Ver imagen a pantalla completa:/ })).toHaveLength(
+      10,
+    )
+    expect(
+      screen.getByRole('button', { name: 'Ver imagen a pantalla completa: Parent photo 0' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Ver imagen a pantalla completa: Sub-album photo 0' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', {
+        name: 'Ver imagen a pantalla completa: Later sub-album photo 0',
+      }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('A video')).not.toBeInTheDocument()
+    expect(screen.queryByText('An image without a source')).not.toBeInTheDocument()
   })
 
-  test('presents the cover and its sub-albums as one list', () => {
+  test('shows no album tiles when no photos are available', () => {
     const { album } = withSubAlbums
+    renderSection({
+      album: {
+        ...album,
+        media: [],
+        subAlbums: album.subAlbums.map((item) => ({ ...item, media: [] })),
+      },
+    })
+
+    const track = screen.getByRole('list', { name: album.title })
+    expect(track).toBeEmptyDOMElement()
+    expect(screen.queryByRole('button', { name: 'Imágenes anteriores' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Imágenes siguientes' })).not.toBeInTheDocument()
+  })
+
+  test('exposes the scroll track to the keyboard and scrolls by about one card', async () => {
+    const user = userEvent.setup()
     renderSection(withSubAlbums)
 
-    expect(screen.getByRole('list')).toBeInTheDocument()
-    expect(screen.getAllByRole('listitem')).toHaveLength(1 + album.subAlbums.length)
+    const track = screen.getByRole('list', { name: withSubAlbums.album.title })
+    expect(track).toHaveAttribute('tabindex', '0')
+
+    const scrollBy = vi.fn()
+    Object.defineProperty(track, 'scrollBy', { value: scrollBy, writable: true })
+    Object.defineProperty(track, 'clientWidth', { configurable: true, value: 600 })
+
+    await user.click(screen.getByRole('button', { name: 'Imágenes siguientes' }))
+    expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: 360 })
+
+    await user.click(screen.getByRole('button', { name: 'Imágenes anteriores' }))
+    expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: -360 })
   })
 
-  test('titles every tile one level below the album heading', () => {
-    const { album } = withSubAlbums
-    renderSection(withSubAlbums)
-
-    const titles = screen
-      .getAllByRole('heading', { level: 3 })
-      .map((heading) => heading.textContent)
-
-    expect(titles).toEqual([album.title, ...album.subAlbums.map((subAlbum) => subAlbum.title)])
-  })
-
-  test('renders the cover on its own when the album has no sub-albums', () => {
+  test('renders a full-screen image control when there are no sub-albums', () => {
     renderSection(withoutSubAlbums)
 
     expect(screen.getAllByRole('link')).toHaveLength(1)
-    expect(screen.queryByText(/^\d+ archivos$/)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Ver álbum/ })).toHaveAttribute(
+      'href',
+      `/galeria/${withoutSubAlbums.album.slug}`,
+    )
+    const photoButton = screen.getByRole('button', {
+      name: 'Ver imagen a pantalla completa: Montaje de la antena',
+    })
+    expect(photoButton.querySelector('img')).toBeInTheDocument()
   })
 
   test('shows album editing controls when edit mode and grants are enabled', () => {
@@ -123,6 +255,7 @@ describe('GalleryGroupSection', () => {
           ...album,
           id: 'album-id',
           coverObjectKey: '/images/galeria/rosac/8.jpg',
+          subAlbums: album.subAlbums.map((subAlbum) => ({ ...subAlbum, id: 'sub-album-id' })),
         },
         canDelete: true,
         canEdit: true,
@@ -130,8 +263,29 @@ describe('GalleryGroupSection', () => {
       true,
     )
 
+    const track = screen.getByRole('list', { name: album.title })
+    const title = screen.getByRole('heading', { level: 2, name: album.title })
+    expect(title.parentElement).toHaveClass('gallery-group-title-editable')
+    expect(track).not.toHaveClass('editable')
+    const featuredCount = Math.min(
+      album.media.filter((media) => !media.isVideo && media.src).length +
+        album.subAlbums.reduce(
+          (total, subAlbum) =>
+            total + subAlbum.media.filter((media) => !media.isVideo && media.src).length,
+          0,
+        ),
+      withSubAlbums.featuredImageLimit ?? 10,
+    )
+    expect(within(track).getAllByRole('listitem')).toHaveLength(featuredCount)
+    expect(
+      within(track).getAllByRole('button', { name: /Ver imagen a pantalla completa:/ }),
+    ).toHaveLength(featuredCount)
     expect(screen.getByRole('button', { name: `Editar ${album.title}` })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: `Eliminar ${album.title}` })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Añadir subálbum' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: `Editar ${firstItem(album.subAlbums).title}` }),
+    ).not.toBeInTheDocument()
   })
 
   test.each([

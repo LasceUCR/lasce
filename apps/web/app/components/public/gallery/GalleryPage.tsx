@@ -28,9 +28,9 @@ export function GalleryPage({
           <GalleryGroupSection
             album={album}
             key={album.slug}
-            canCreate={canCreate}
             canEdit={canEdit}
             canDelete={canDelete}
+            featuredImageLimit={10}
           />
         ))}
       </div>
