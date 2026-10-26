@@ -37,6 +37,7 @@ working through Claude Code.
 | How do I add a job across both languages?            | [`docs/add-a-job.md`](docs/add-a-job.md)                                   |
 | How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                       |
 | How do I truncate long text with "Leer más"?         | [`docs/truncated-text.md`](docs/truncated-text.md)                         |
+| How do I paginate and search a listing via the URL?  | [`docs/pagination.md`](docs/pagination.md)                                 |
 | How does the SUVI pipeline job orchestrate a run?    | [`docs/suvi-pipeline.md`](docs/suvi-pipeline.md)                           |
 | How does the EXIS pipeline job ingest a day?         | [`docs/exis-pipeline.md`](docs/exis-pipeline.md)                           |
 | How does the MAG pipeline job ingest a day?          | [`docs/mag-pipeline.md`](docs/mag-pipeline.md)                             |
