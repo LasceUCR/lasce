@@ -1,5 +1,6 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
@@ -10,11 +11,19 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadInstrumentImage: mocks.uploadInstrumentImage,
 }))
 
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+
 import { RosacInstrumentForm, type RosacInstrumentFormProps } from './RosacInstrumentForm'
 import { AddNew, EditExisting } from './RosacInstrumentForm.stories'
 
 const editArgs = EditExisting.args as RosacInstrumentFormProps
 const addArgs = AddNew.args as RosacInstrumentFormProps
+
+/** The form reports a failed upload with a toast, so it renders inside the app's providers. */
+function render(ui: ReactElement) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+}
 
 // jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
@@ -170,6 +179,41 @@ describe('RosacInstrumentForm', () => {
 
     expect(
       screen.getByText('El enlace es obligatorio para un destino personalizado.'),
+    ).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('shows the error in a toast and does not save when the image upload fails', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    mocks.uploadInstrumentImage.mockResolvedValue({
+      ok: false,
+      error: 'La imagen es demasiado grande.',
+    })
+    render(<RosacInstrumentForm {...editArgs} onSave={onSave} />)
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+    // A toast, not a custom message inside the form.
+    expect(document.querySelector('.cms-form .form-alert')).toBeNull()
+  })
+
+  test('shows a toast when the image upload throws', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    mocks.uploadInstrumentImage.mockRejectedValue(new Error('network error'))
+    render(<RosacInstrumentForm {...editArgs} onSave={onSave} />)
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await screen.findByText('No se pudo subir la imagen. Inténtelo de nuevo.'),
     ).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
