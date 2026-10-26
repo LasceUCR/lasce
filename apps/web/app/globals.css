@@ -2994,6 +2994,22 @@ a {
   margin-bottom: 20px;
 }
 
+/* Focused by `NewsExplorer` when the page changes: keep it clear of the sticky header. */
+.news > h2 {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.news > h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.news-summary {
+  margin: -6px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .news-list {
   margin-top: 0;
   display: flex;
