@@ -59,7 +59,6 @@ describe('GalleryPage', () => {
     }
   })
 
-
   test('presents each album block as its own list', () => {
     render(<GalleryPage albums={galleryAlbumList} />)
 

@@ -56,7 +56,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
             slug,
             content: values.content,
             yearsLabel: values.yearsLabel.trim() || null,
-            coverObjectKey: values.coverObjectKey,
+            coverObjectKey: values.coverObjectKey || null,
           }),
         },
         {
@@ -89,6 +89,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
           <AlbumForm
             album={blankAlbum}
             requireSlug
+            showCover={false}
             onCancel={close}
             onSave={(values) => handleCreate(values, close)}
             ref={createForm}
