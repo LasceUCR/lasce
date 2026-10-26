@@ -7,6 +7,7 @@ import {
   createPublication,
   deletePublication,
   getPublications,
+  getPublicationsPage,
   publicationCreateSchema,
   publicationUpdateSchema,
   updatePublication,
@@ -432,5 +433,171 @@ describe('integrity', () => {
 
     expect([...results].sort()).toEqual([false, true])
     expect(await prisma.research.count({ where: { id: publication.slug } })).toBe(0)
+  })
+})
+
+describe('paginating and searching', () => {
+  /** In the title of every item of the 23-item listing, and nowhere else. */
+  const LISTING = `pg${RUN}`
+  /** One item's Spanish abstract; its English abstract says something else. */
+  const SPANISH_ONLY = `soloes${RUN}`
+  /** The same item's English title; its Spanish title says something else. */
+  const ENGLISH_ONLY = `onlyen${RUN}`
+  /** The base title of an item with no translation. */
+  const LEGACY_ONLY = `legado${RUN}`
+  const AUTHOR = `Periodista ${RUN}`
+
+  const dates = ['2026-03-01', '2026-02-01', '2026-02-01', '2026-02-01', '2026-01-01']
+
+  function createListed(index: number) {
+    return create({
+      content: {
+        es: { title: `Publicación ${index} ${LISTING}`, abstract: 'Resumen.' },
+        en: { title: `Publication ${index} ${LISTING}`, abstract: 'Abstract.' },
+      },
+      // Several items share each date, so the creation time decides most of the order.
+      date: dates[index % dates.length],
+      researchGroup: index < 12 ? 'LASCE' : 'ROSAC',
+    })
+  }
+
+  async function allPages(query: string, group: 'LASCE' | 'ROSAC' | null = null) {
+    const first = await getPublicationsPage('es', { query, group })
+    const pages = [first]
+    for (let page = 2; page <= first.totalPages; page += 1) {
+      pages.push(await getPublicationsPage('es', { query, group, page }))
+    }
+    return pages
+  }
+
+  beforeAll(async () => {
+    // One at a time, so `created_at` follows the index.
+    for (let index = 0; index < 23; index += 1) stored(await createListed(index))
+
+    stored(
+      await create({
+        content: {
+          es: { title: `Tormenta solar ${RUN}`, abstract: `Resumen ${SPANISH_ONLY}.` },
+          en: { title: `Solar storm ${ENGLISH_ONLY}`, abstract: 'An abstract.' },
+        },
+        authors: [`Otra autora ${RUN}`, AUTHOR],
+      }),
+    )
+
+    const legacy = await createLegacy()
+    await prisma.research.update({
+      where: { id: legacy.id },
+      data: { title: `${LEGACY_ONLY} ${RUN}` },
+    })
+  })
+
+  test('splits 23 matching items into pages of 10, 10 and 3', async () => {
+    const pages = await allPages(LISTING)
+
+    expect(pages.map((page) => page.publications.length)).toEqual([10, 10, 3])
+    expect(pages.map((page) => page.page)).toEqual([1, 2, 3])
+    for (const page of pages) {
+      expect(page).toMatchObject({ pageSize: 10, totalItems: 23, totalPages: 3, group: null })
+    }
+  })
+
+  test('shows every item exactly once across the pages, in the order of the full listing', async () => {
+    const paged = (await allPages(LISTING)).flatMap((page) =>
+      page.publications.map((publication) => publication.slug),
+    )
+    const listing = (await getPublications('es'))
+      .filter((publication) => publication.title.includes(LISTING))
+      .map((publication) => publication.slug)
+
+    expect(new Set(paged).size).toBe(23)
+    expect(paged).toEqual(listing)
+  })
+
+  test('orders newest first, and items sharing a date by creation, newest first', async () => {
+    const publications = (await allPages(LISTING)).flatMap((page) => page.publications)
+    const index = (publication: Publication) => Number(publication.title.split(' ')[1])
+    const sorted = [...publications].sort(
+      (a, b) => b.date.getTime() - a.date.getTime() || index(b) - index(a),
+    )
+
+    expect(publications.map(index)).toEqual(sorted.map(index))
+  })
+
+  test('returns the same page every time while the collection does not change', async () => {
+    const first = await getPublicationsPage('es', { query: LISTING, page: 2 })
+    const second = await getPublicationsPage('es', { query: LISTING, page: 2 })
+
+    expect(second.publications.map((publication) => publication.slug)).toEqual(
+      first.publications.map((publication) => publication.slug),
+    )
+  })
+
+  test('shows the last page for a page past the end, and the first for one below it', async () => {
+    const past = await getPublicationsPage('es', { query: LISTING, page: 99 })
+    const below = await getPublicationsPage('es', { query: LISTING, page: 0 })
+
+    expect(past.page).toBe(3)
+    expect(past.publications).toHaveLength(3)
+    expect(below.page).toBe(1)
+    expect(below.publications).toHaveLength(10)
+  })
+
+  test('counts only the publications of the selected group', async () => {
+    const page = await getPublicationsPage('es', { query: LISTING, group: 'LASCE' })
+
+    expect(page).toMatchObject({ totalItems: 12, totalPages: 2, group: 'LASCE' })
+    expect(page.publications).toHaveLength(10)
+    expect(page.publications.every((publication) => publication.researchGroup === 'LASCE')).toBe(
+      true,
+    )
+  })
+
+  test('finds a publication by any of its authors, ignoring case', async () => {
+    for (const locale of ['es', 'en'] as const) {
+      expect((await getPublicationsPage(locale, { query: AUTHOR.toLowerCase() })).totalItems).toBe(
+        1,
+      )
+    }
+  })
+
+  test('searches the text shown in the language being read', async () => {
+    expect((await getPublicationsPage('es', { query: SPANISH_ONLY })).totalItems).toBe(1)
+    expect((await getPublicationsPage('en', { query: SPANISH_ONLY })).totalItems).toBe(0)
+
+    expect((await getPublicationsPage('en', { query: ENGLISH_ONLY })).totalItems).toBe(1)
+    expect((await getPublicationsPage('es', { query: ENGLISH_ONLY })).totalItems).toBe(0)
+  })
+
+  test('searches the base text of a publication with no translation in every language', async () => {
+    for (const locale of ['es', 'en'] as const) {
+      const page = await getPublicationsPage(locale, { query: LEGACY_ONLY })
+
+      expect(page.totalItems).toBe(1)
+      expect(page.publications[0]).toMatchObject({ contentLocale: null })
+    }
+  })
+
+  test('treats % and _ in the search as plain characters', async () => {
+    expect((await getPublicationsPage('es', { query: `${LISTING}%` })).totalItems).toBe(0)
+    expect((await getPublicationsPage('es', { query: `p_${RUN}` })).totalItems).toBe(0)
+  })
+
+  test('reports no pages for a search nothing matches', async () => {
+    expect(await getPublicationsPage('es', { query: `nada ${RUN}` })).toMatchObject({
+      page: 1,
+      totalItems: 0,
+      totalPages: 0,
+      publications: [],
+    })
+  })
+
+  test('sends no editing data unless asked for it', async () => {
+    const visitor = await getPublicationsPage('es', { query: LISTING })
+    const editor = await getPublicationsPage('es', { query: LISTING, includeEditingData: true })
+
+    expect(visitor.publications.every((publication) => publication.editing === undefined)).toBe(
+      true,
+    )
+    expect(editor.publications.every((publication) => publication.editing !== undefined)).toBe(true)
   })
 })
