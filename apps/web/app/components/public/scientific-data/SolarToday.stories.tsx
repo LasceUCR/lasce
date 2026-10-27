@@ -27,6 +27,23 @@ export const Default: Story = {
     onRefresh: () => {},
   },
 }
+/** Five placeholders in the strip's own layout, while today's images load. */
 export const Loading: Story = { args: { ...Default.args, state: 'loading', images: [] } }
+
+/** On a phone the placeholders follow the strip: one and a part of the next in view. */
+export const LoadingMobile: Story = {
+  ...Loading,
+  globals: { viewport: { value: 'solarTodayMobile', isRotated: false } },
+  parameters: {
+    layout: 'fullscreen',
+    viewport: {
+      options: {
+        solarTodayMobile: { name: 'Mobile (390px)', styles: { width: '390px', height: '844px' } },
+      },
+    },
+  },
+}
+
+export const LoadingEnglish: Story = { ...Loading, globals: { locale: 'en' } }
 export const Empty: Story = { args: { ...Default.args, images: [] } }
 export const SourceError: Story = { args: { ...Default.args, state: 'error', images: [] } }
