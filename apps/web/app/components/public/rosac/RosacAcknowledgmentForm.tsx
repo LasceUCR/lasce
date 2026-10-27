@@ -49,92 +49,116 @@ export interface RosacAcknowledgmentFormProps {
   onCancel: () => void
 }
 
-export const PREDEFINED_ACKNOWLEDGMENT_LOGOS = [
+export interface PredefinedAcknowledgmentLogo {
+  label: string
+  src: string
+  defaultAlt: string
+  defaultAltEn: string
+}
+
+export const PREDEFINED_ACKNOWLEDGMENT_LOGOS: readonly PredefinedAcknowledgmentLogo[] = [
   {
     label: 'Vicerrectoría de Investigación, UCR',
     src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
     defaultAlt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
+    defaultAltEn: 'Logo of the Vice-Rectorate for Research, University of Costa Rica',
   },
   {
     label: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     src: '/images/ROSAC/acknowledgments/cinespa.webp',
     defaultAlt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
+    defaultAltEn: 'Logo of the Space Research Center (CINESPA)',
   },
   {
     label: 'Escuela de Física, UCR',
     src: '/images/ROSAC/acknowledgments/efis.webp',
     defaultAlt: 'Logo de la Escuela de Física, UCR',
+    defaultAltEn: 'Logo of the School of Physics, UCR',
   },
   {
     label: 'Escuela de Ingeniería Mecánica, UCR',
     src: '/images/ROSAC/acknowledgments/eim.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
+    defaultAltEn: 'Logo of the School of Mechanical Engineering, UCR',
   },
   {
     label: 'Escuela de Ingeniería Topográfica, UCR',
     src: '/images/ROSAC/acknowledgments/eit.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
+    defaultAltEn: 'Logo of the School of Surveying Engineering, UCR',
   },
   {
     label: 'Escuela de Ingeniería Eléctrica, UCR',
     src: '/images/ROSAC/acknowledgments/eie.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
+    defaultAltEn: 'Logo of the School of Electrical Engineering, UCR',
   },
   {
     label: 'Recinto de Santa Cruz, UCR',
     src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
     defaultAlt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
+    defaultAltEn: 'Logo of the Santa Cruz Campus, University of Costa Rica',
   },
   {
     label: 'Oficina de Servicios Generales (OSG), UCR',
     src: '/images/ROSAC/acknowledgments/osg.webp',
     defaultAlt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
+    defaultAltEn: 'Logo of the General Services Office (OSG), UCR',
   },
   {
     label: 'LanammeUCR',
     src: '/images/ROSAC/acknowledgments/lanamme.webp',
     defaultAlt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
+    defaultAltEn: 'Logo of the National Laboratory of Materials and Structural Models (LanammeUCR)',
   },
   {
     label: 'Radiográfica Costarricense S.A. (RACSA)',
     src: '/images/ROSAC/acknowledgments/racsa.webp',
     defaultAlt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
+    defaultAltEn: 'Logo of Radiográfica Costarricense S.A. (RACSA)',
   },
   {
     label: 'Bomberos de Costa Rica',
     src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
     defaultAlt: 'Logo de Bomberos de Costa Rica',
+    defaultAltEn: 'Logo of the Costa Rica Fire Department',
   },
   {
     label: 'Instituto Geográfico Nacional',
     src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
     defaultAlt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
+    defaultAltEn: 'Logo of the National Geographic Institute, National Registry of Costa Rica',
   },
   {
     label: 'INDI CR',
     src: '/images/ROSAC/acknowledgments/indi.webp',
     defaultAlt: 'Logo de INDI, Ingeniería y Diseño',
+    defaultAltEn: 'Logo of INDI, Engineering and Design',
   },
   {
     label: 'Prysmian Group',
     src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
     defaultAlt: 'Logo de Prysmian Group',
+    defaultAltEn: 'Logo of Prysmian Group',
   },
   {
     label: 'EATON Costa Rica',
     src: '/images/ROSAC/acknowledgments/eaton.webp',
     defaultAlt: 'Logo de EATON Costa Rica',
+    defaultAltEn: 'Logo of EATON Costa Rica',
   },
   {
     label: 'INAOE, México',
     src: '/images/ROSAC/acknowledgments/inaoe.webp',
     defaultAlt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
+    defaultAltEn: 'Logo of the National Institute of Astrophysics, Optics and Electronics (INAOE)',
   },
   {
     label: 'AMEXCID',
     src: '/images/ROSAC/acknowledgments/amexcid.webp',
     defaultAlt:
       'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    defaultAltEn: 'Logo of the Mexican Agency for International Development Cooperation (AMEXCID)',
   },
 ]
 
@@ -382,7 +406,7 @@ export function RosacAcknowledgmentForm({
               const preset = PREDEFINED_ACKNOWLEDGMENT_LOGOS[Number(val)]
               if (preset) {
                 setContent(defaultLocale, 'name', preset.label)
-                setLogoAlt(preset.defaultAlt)
+                setLogoAlt(siteLocale === 'en' ? preset.defaultAltEn : preset.defaultAlt)
               }
             } else {
               if (initialPresetIndex === -1 && institution) {

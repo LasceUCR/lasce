@@ -476,8 +476,19 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
                   <button
                     aria-label={t('stages.editModal.deleteLabel')}
                     className="icon-button icon-button--danger"
+                    disabled={draftEditImages.length <= 1}
                     onClick={() => handleDeleteDraftImageClick(img.id)}
-                    style={{ alignSelf: 'flex-end', marginBottom: '8px' }}
+                    style={{
+                      alignSelf: 'flex-end',
+                      marginBottom: '8px',
+                      cursor: draftEditImages.length <= 1 ? 'not-allowed' : 'pointer',
+                      opacity: draftEditImages.length <= 1 ? 0.5 : 1,
+                    }}
+                    title={
+                      draftEditImages.length <= 1
+                        ? t('stages.editModal.deleteMinTitle')
+                        : t('stages.editModal.deleteTooltip')
+                    }
                     type="button"
                   >
                     <Trash2 size={18} />
@@ -540,6 +551,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
       {/* Confirmación de eliminación: Fotografía */}
       <StandardConfirmDialog
+        cancelLabel={t('stages.editModal.deleteDialog.cancel')}
         confirmLabel={t('stages.editModal.deleteDialog.confirm')}
         message={t('stages.editModal.deleteDialog.message')}
         onCancel={() => setImageToDelete(null)}

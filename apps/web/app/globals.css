@@ -6976,7 +6976,6 @@ a.acknowledgments-card:focus-visible {
   width: 100%;
   white-space: nowrap;
 }
-
 @media (max-width: 760px) {
   .cms-form-field input,
   .cms-form-field textarea,

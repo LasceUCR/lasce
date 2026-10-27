@@ -185,6 +185,17 @@
     "position": "Imagen {position} de {total}",
     "announcement": "Imagen {position} de {total}: {time}."
   },
+  "fileDrop": {
+    "dropHere": "Arrastre una imagen aquí",
+    "browseFiles": "haga clic para seleccionarla del equipo",
+    "description": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo",
+    "rejectionFormat": "Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.",
+    "rejectionSize": "La imagen supera el tamaño máximo de 25 MB.",
+    "removeFile": "Quitar imagen",
+    "removeLabel": "Quitar imagen",
+    "previewAlt": "Vista previa de {label}",
+    "imagePreviewAlt": "Vista previa de {label}"
+  },
   "contact": {
     "meta": {
       "title": "Contacto | LASCE",
@@ -1219,6 +1230,7 @@
       "discardMessage": "Hay cambios sin guardar. Si cierra el formulario, se perderán.",
       "discardConfirm": "Descartar",
       "discardCancel": "Continuar editando",
+      "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo.",
       "discardDialog": {
         "title": "Descartar cambios no guardados",
         "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
@@ -1312,8 +1324,10 @@
           "title": "Editar fotografías de la etapa",
           "help": "Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no correspondan a esta etapa.",
           "altLabel": "Texto alternativo accesible (alt)",
-          "altPlaceholder": "Descripción de la imagen",
+          "altPlaceholder": "Texto alternativo accesible de la fotografía",
           "deleteLabel": "Eliminar fotografía",
+          "deleteMinTitle": "Debe haber al menos una foto en la etapa",
+          "deleteTooltip": "Eliminar esta fotografía",
           "noPhotos": "No hay fotografías registradas en esta etapa.",
           "savePhotos": "Guardar fotografías",
           "cancel": "Cancelar",
@@ -1383,8 +1397,7 @@
         "save": "Confirmar",
         "saving": "Guardando...",
         "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo."
-      },
-      "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo."
+      }
     }
   },
   "researchAreas": {

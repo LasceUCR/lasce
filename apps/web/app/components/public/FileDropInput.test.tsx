@@ -2,8 +2,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
-import { renderWithIntl as render } from '@/app/lib/i18n/testing'
-
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { FileDropInput, type FileDropInputProps } from './FileDropInput'
 import { Empty, WithExistingImage } from './FileDropInput.stories'
 
@@ -12,22 +11,42 @@ const existingArgs = WithExistingImage.args as FileDropInputProps
 
 describe('FileDropInput', () => {
   test('shows the existing image as a preview when one is given', () => {
-    render(<FileDropInput {...existingArgs} />)
+    renderWithIntl(<FileDropInput {...existingArgs} />)
 
     expect(screen.getByRole('img')).toHaveAttribute('src', existingArgs.existingImageUrl)
+    expect(screen.getByRole('img')).toHaveAttribute(
+      'alt',
+      `Vista previa de ${existingArgs.label.toLowerCase()}`,
+    )
   })
 
   test('has no preview image and no remove action when nothing is selected yet', () => {
-    render(<FileDropInput {...emptyArgs} />)
+    renderWithIntl(<FileDropInput {...emptyArgs} />)
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Quitar imagen' })).not.toBeInTheDocument()
+    expect(
+      screen.getByText('Arrastre una imagen aquí o haga clic para seleccionarla del equipo'),
+    ).toBeInTheDocument()
+  })
+
+  test('renders English copy when rendered under en locale', () => {
+    renderWithIntl(<FileDropInput {...existingArgs} />, { locale: 'en' })
+
+    expect(screen.getByRole('button', { name: 'Remove image' })).toBeInTheDocument()
+    expect(screen.getByRole('img')).toHaveAttribute(
+      'alt',
+      `Preview of ${existingArgs.label.toLowerCase()}`,
+    )
+    expect(
+      screen.getByText('Drag an image here or click to select from your device'),
+    ).toBeInTheDocument()
   })
 
   test('clears the selection and calls onFileSelect with null', async () => {
     const user = userEvent.setup()
     const onFileSelect = vi.fn()
-    render(<FileDropInput {...existingArgs} onFileSelect={onFileSelect} />)
+    renderWithIntl(<FileDropInput {...existingArgs} onFileSelect={onFileSelect} />)
 
     await user.click(screen.getByRole('button', { name: 'Quitar imagen' }))
 
@@ -38,7 +57,9 @@ describe('FileDropInput', () => {
   test('refuses a file type the server would reject and keeps the selection unchanged', async () => {
     const user = userEvent.setup({ applyAccept: false })
     const onFileSelect = vi.fn()
-    const { container } = render(<FileDropInput {...emptyArgs} onFileSelect={onFileSelect} />)
+    const { container } = renderWithIntl(
+      <FileDropInput {...emptyArgs} onFileSelect={onFileSelect} />,
+    )
 
     await user.upload(
       container.querySelector('input[type="file"]') as HTMLInputElement,
@@ -52,7 +73,9 @@ describe('FileDropInput', () => {
   test('accepts a PNG', async () => {
     const user = userEvent.setup()
     const onFileSelect = vi.fn()
-    const { container } = render(<FileDropInput {...emptyArgs} onFileSelect={onFileSelect} />)
+    const { container } = renderWithIntl(
+      <FileDropInput {...emptyArgs} onFileSelect={onFileSelect} />,
+    )
     const png = new File(['x'], 'a.png', { type: 'image/png' })
 
     await user.upload(container.querySelector('input[type="file"]') as HTMLInputElement, png)
@@ -61,7 +84,7 @@ describe('FileDropInput', () => {
   })
 
   test('names the file input by its label and keeps it out of the tab order', () => {
-    render(<FileDropInput {...existingArgs} />)
+    renderWithIntl(<FileDropInput {...existingArgs} />)
 
     const input = document.querySelector('input[type="file"]')
     expect(input).toHaveAccessibleName(existingArgs.label)
@@ -73,7 +96,7 @@ describe('FileDropInput', () => {
   })
 
   test('keeps the remove action outside the drop zone, so the two controls do not nest', () => {
-    render(<FileDropInput {...existingArgs} />)
+    renderWithIntl(<FileDropInput {...existingArgs} />)
 
     const zone = screen.getByRole('button', { name: existingArgs.label })
     const remove = screen.getByRole('button', { name: 'Quitar imagen' })

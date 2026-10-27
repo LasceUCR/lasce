@@ -185,6 +185,17 @@
     "position": "Image {position} of {total}",
     "announcement": "Image {position} of {total}: {time}."
   },
+  "fileDrop": {
+    "dropHere": "Drag an image here",
+    "browseFiles": "click to select from your device",
+    "description": "Drag an image here or click to select from your device",
+    "rejectionFormat": "Unsupported format. Use a JPG, PNG, WebP or GIF image.",
+    "rejectionSize": "The image exceeds the maximum size of 25 MB.",
+    "removeFile": "Remove image",
+    "removeLabel": "Remove image",
+    "previewAlt": "Preview of {label}",
+    "imagePreviewAlt": "Preview of {label}"
+  },
   "contact": {
     "meta": {
       "title": "Contact | LASCE",
@@ -1219,6 +1230,7 @@
       "discardMessage": "There are unsaved changes. If you close the form, they will be lost.",
       "discardConfirm": "Discard",
       "discardCancel": "Keep editing",
+      "saveError": "The change could not be saved. Try again.",
       "discardDialog": {
         "title": "Discard unsaved changes",
         "message": "If you discard now, all entered data that has not been saved will be lost.",
@@ -1312,8 +1324,10 @@
           "title": "Edit stage photographs",
           "help": "Modify the accessible description (alt) of each photograph or remove those that no longer correspond to this stage.",
           "altLabel": "Accessible alternative text (alt)",
-          "altPlaceholder": "Image description",
+          "altPlaceholder": "Accessible alternative text for photograph",
           "deleteLabel": "Delete photograph",
+          "deleteMinTitle": "There must be at least one photo in the stage",
+          "deleteTooltip": "Delete this photograph",
           "noPhotos": "No photographs registered in this stage.",
           "savePhotos": "Save photographs",
           "cancel": "Cancel",
@@ -1383,8 +1397,7 @@
         "save": "Confirm",
         "saving": "Saving...",
         "uploadError": "The image could not be uploaded. Try again."
-      },
-      "saveError": "The change could not be saved. Try again."
+      }
     }
   },
   "researchAreas": {

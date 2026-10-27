@@ -61,8 +61,6 @@ import { RosacLocationMapLoader } from './RosacLocationMapLoader'
 import { RosacStageForm, type RosacStageFormBody } from './RosacStageForm'
 import { TeamGallery } from './TeamGallery'
 
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
-
 const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
   location: MapPin,
@@ -555,13 +553,13 @@ export function RosacInfoPage({
     try {
       response = await fetch(`/api/researchers/${id}`, { method: 'DELETE' })
     } catch {
-      setListError(SAVE_ERROR_MESSAGE)
+      setListError(tEditor('saveError'))
       return
     }
 
     if (!response.ok) {
       const body: { error?: string } | null = await response.json().catch(() => null)
-      setListError(body?.error ?? SAVE_ERROR_MESSAGE)
+      setListError(body?.error ?? tEditor('saveError'))
       return
     }
 
