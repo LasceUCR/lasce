@@ -12,7 +12,7 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 }))
 
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
-import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { renderWithIntl, type RenderWithIntlOptions } from '@/app/lib/i18n/testing'
 
 import {
   ResearcherForm,
@@ -36,8 +36,8 @@ const bilingualCreateArgs = BilingualCreate.args as BilingualResearcherFormProps
 const bilingualLegacyArgs = BilingualLegacy.args as BilingualResearcherFormProps
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
-function render(ui: ReactElement) {
-  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+function render(ui: ReactElement, options?: RenderWithIntlOptions) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
 }
 
 // jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
@@ -669,5 +669,18 @@ describe('ResearcherForm: bilingual mode', () => {
 
     expect(onCancel).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('renders photo file drop area fully in English under en locale', () => {
+    render(<ResearcherForm {...editArgs} />, { locale: 'en' })
+
+    expect(screen.getByText('Photo')).toBeInTheDocument()
+    expect(
+      screen.getByText('Optional. Researcher portrait, in JPG or PNG format.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Drag an image here or click to select from your device'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove image' })).toBeInTheDocument()
   })
 })
