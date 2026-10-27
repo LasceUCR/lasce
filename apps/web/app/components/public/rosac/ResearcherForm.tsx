@@ -41,7 +41,7 @@ export interface PersonProfile {
   /** The stored base role before UI localization, used to initialize single-language edit forms. */
   storedRole?: string
   /** The stored base description before UI localization, used to initialize single-language edit forms. */
-  storedDescription?: string
+  storedDescription?: string | null
 }
 
 export interface ResearcherFormValues {
@@ -155,16 +155,20 @@ export function ResearcherForm(props: ResearcherFormProps) {
   const { researcher, onCancel } = props
   const bilingual = props.translation !== undefined
   const contentRef = useRef<ResearcherContentHandle>(null)
-  const [role, setRole] = useState(researcher?.storedRole ?? researcher?.role ?? '')
+  const initialRole =
+    researcher?.storedRole !== undefined ? (researcher.storedRole ?? '') : (researcher?.role ?? '')
+  const initialDescription =
+    researcher?.storedDescription !== undefined
+      ? (researcher.storedDescription ?? '')
+      : (researcher?.description ?? '')
+  const [role, setRole] = useState(initialRole)
   const [name, setName] = useState(researcher?.name ?? '')
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
   const [isAddingEmail, setIsAddingEmail] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [newEmailError, setNewEmailError] = useState<string | null>(null)
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
-  const [description, setDescription] = useState(
-    researcher?.storedDescription ?? researcher?.description ?? '',
-  )
+  const [description, setDescription] = useState(initialDescription)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
@@ -190,8 +194,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
   function isDirty() {
     const textChanged = bilingual
       ? (contentRef.current?.isDirty() ?? false)
-      : role !== (researcher?.storedRole ?? researcher?.role ?? '') ||
-        description !== (researcher?.storedDescription ?? researcher?.description ?? '')
+      : role !== initialRole || description !== initialDescription
 
     return (
       name !== (researcher?.name ?? '') ||
