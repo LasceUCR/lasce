@@ -7,6 +7,7 @@ import {
   createNews,
   deleteNews,
   getNews,
+  getNewsPage,
   newsCreateSchema,
   newsUpdateSchema,
   updateNews,
@@ -410,5 +411,164 @@ describe('deleting and integrity', () => {
         data: { newsId: article.slug, locale: 'en', title: 'x', abstract: 'x' },
       }),
     ).rejects.toThrow()
+  })
+})
+
+describe('paginating and searching', () => {
+  /** In the title of every item of the 23-item listing, and nowhere else. */
+  const LISTING = `pg${RUN}`
+  /** One item's Spanish abstract; its English abstract says something else. */
+  const SPANISH_ONLY = `soloes${RUN}`
+  /** The same item's English title; its Spanish title says something else. */
+  const ENGLISH_ONLY = `onlyen${RUN}`
+  /** The base title of an item with no translation. */
+  const LEGACY_ONLY = `legado${RUN}`
+  const SOURCE = `Medio ${RUN}`
+  const AUTHOR = `Periodista ${RUN}`
+
+  const dates = ['2026-03-01', '2026-02-01', '2026-02-01', '2026-02-01', '2026-01-01']
+
+  function createListed(index: number, overrides: Record<string, unknown> = {}) {
+    return create({
+      content: {
+        es: { title: `Noticia ${index} ${LISTING}`, abstract: 'Resumen.' },
+        en: { title: `News ${index} ${LISTING}`, abstract: 'Abstract.' },
+      },
+      // Several items share each date, and two are undated, so ties decide most of the order.
+      publishedAt: index < 2 ? null : (dates[index % dates.length] ?? null),
+      ...overrides,
+    })
+  }
+
+  async function allPages(query: string) {
+    const first = await getNewsPage('es', { query })
+    const pages = [first]
+    for (let page = 2; page <= first.totalPages; page += 1) {
+      pages.push(await getNewsPage('es', { query, page }))
+    }
+    return pages
+  }
+
+  beforeAll(async () => {
+    // One at a time, so `created_at` follows the index.
+    for (let index = 0; index < 23; index += 1) {
+      // 12 of them share a source, to check the totals of a search.
+      stored(await createListed(index, index < 12 ? { source: SOURCE } : {}))
+    }
+
+    stored(
+      await create({
+        content: {
+          es: { title: `Tormenta solar ${RUN}`, abstract: `Resumen ${SPANISH_ONLY}.` },
+          en: { title: `Solar storm ${ENGLISH_ONLY}`, abstract: 'An abstract.' },
+        },
+        authors: [`Otra autora ${RUN}`, AUTHOR],
+      }),
+    )
+
+    const legacy = await createLegacy()
+    await prisma.news.update({ where: { id: legacy.id }, data: { title: `${LEGACY_ONLY} ${RUN}` } })
+  })
+
+  test('splits 23 matching items into pages of 10, 10 and 3', async () => {
+    const pages = await allPages(LISTING)
+
+    expect(pages.map((page) => page.articles.length)).toEqual([10, 10, 3])
+    expect(pages.map((page) => page.page)).toEqual([1, 2, 3])
+    for (const page of pages) {
+      expect(page).toMatchObject({ pageSize: 10, totalItems: 23, totalPages: 3 })
+    }
+  })
+
+  test('shows every item exactly once across the pages, in the order of the full listing', async () => {
+    const paged = (await allPages(LISTING)).flatMap((page) => page.articles.map((a) => a.slug))
+    const listing = (await getNews('es'))
+      .filter((article) => article.title.includes(LISTING))
+      .map((article) => article.slug)
+
+    expect(new Set(paged).size).toBe(23)
+    expect(paged).toEqual(listing)
+  })
+
+  test('orders newest first, items sharing a date by creation, newest first, and undated last', async () => {
+    const articles = (await allPages(LISTING)).flatMap((page) => page.articles)
+    const index = (article: NewsArticle) => Number(article.title.split(' ')[1])
+
+    const dated = articles.filter((article) => article.publishedAt !== null)
+    const sorted = [...dated].sort(
+      (a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? '') || index(b) - index(a),
+    )
+    expect(dated.map(index)).toEqual(sorted.map(index))
+    expect(articles.slice(-2).map(index)).toEqual([1, 0])
+  })
+
+  test('returns the same page every time while the collection does not change', async () => {
+    const first = await getNewsPage('es', { query: LISTING, page: 2 })
+    const second = await getNewsPage('es', { query: LISTING, page: 2 })
+
+    expect(second.articles.map((a) => a.slug)).toEqual(first.articles.map((a) => a.slug))
+  })
+
+  test('shows the last page for a page past the end, and the first for one below it', async () => {
+    const past = await getNewsPage('es', { query: LISTING, page: 99 })
+    const below = await getNewsPage('es', { query: LISTING, page: 0 })
+
+    expect(past.page).toBe(3)
+    expect(past.articles).toHaveLength(3)
+    expect(below.page).toBe(1)
+    expect(below.articles).toHaveLength(10)
+  })
+
+  test('counts only the matching items in the totals', async () => {
+    const page = await getNewsPage('es', { query: SOURCE })
+
+    expect(page).toMatchObject({ totalItems: 12, totalPages: 2 })
+    expect(page.articles).toHaveLength(10)
+  })
+
+  test('finds an item by its source and by any of its authors, ignoring case', async () => {
+    for (const locale of ['es', 'en'] as const) {
+      expect((await getNewsPage(locale, { query: SOURCE.toUpperCase() })).totalItems).toBe(12)
+      expect((await getNewsPage(locale, { query: AUTHOR.toLowerCase() })).totalItems).toBe(1)
+    }
+  })
+
+  test('searches the text shown in the language being read', async () => {
+    expect((await getNewsPage('es', { query: SPANISH_ONLY })).totalItems).toBe(1)
+    expect((await getNewsPage('en', { query: SPANISH_ONLY })).totalItems).toBe(0)
+
+    expect((await getNewsPage('en', { query: ENGLISH_ONLY })).totalItems).toBe(1)
+    expect((await getNewsPage('es', { query: ENGLISH_ONLY })).totalItems).toBe(0)
+  })
+
+  test('searches the base text of an item with no translation in every language', async () => {
+    for (const locale of ['es', 'en'] as const) {
+      const page = await getNewsPage(locale, { query: LEGACY_ONLY })
+
+      expect(page.totalItems).toBe(1)
+      expect(page.articles[0]).toMatchObject({ contentLocale: null })
+    }
+  })
+
+  test('treats % and _ in the search as plain characters', async () => {
+    expect((await getNewsPage('es', { query: `${LISTING}%` })).totalItems).toBe(0)
+    expect((await getNewsPage('es', { query: `p_${RUN}` })).totalItems).toBe(0)
+  })
+
+  test('reports no pages for a search nothing matches', async () => {
+    expect(await getNewsPage('es', { query: `nada ${RUN}` })).toMatchObject({
+      page: 1,
+      totalItems: 0,
+      totalPages: 0,
+      articles: [],
+    })
+  })
+
+  test('sends no editing data unless asked for it', async () => {
+    const visitor = await getNewsPage('es', { query: LISTING })
+    const editor = await getNewsPage('es', { query: LISTING, includeEditingData: true })
+
+    expect(visitor.articles.every((article) => article.editing === undefined)).toBe(true)
+    expect(editor.articles.every((article) => article.editing !== undefined)).toBe(true)
   })
 })

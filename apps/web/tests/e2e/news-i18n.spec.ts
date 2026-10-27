@@ -168,8 +168,12 @@ test('creates a news item in both languages from the editor', async ({ page, con
     await field(page, 'Enlace').fill(`https://example.org/e2e/${fixtures.id}/created`)
     await save(page)
 
-    await expect(page.getByRole('heading', { name: `Nueva noticia ${fixtures.id}` })).toBeVisible()
     await expect(page.getByText('Noticia agregada correctamente.')).toBeVisible()
+    // An undated item is listed last, past the first page: search for it.
+    await page
+      .getByRole('searchbox', { name: 'Buscar noticias' })
+      .fill(`Nueva noticia ${fixtures.id}`)
+    await expect(page.getByRole('heading', { name: `Nueva noticia ${fixtures.id}` })).toBeVisible()
 
     const stored = await fixtures.prisma.news.findFirstOrThrow({
       where: { title: `Nueva noticia ${fixtures.id}` },
