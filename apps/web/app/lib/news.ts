@@ -10,6 +10,8 @@ import {
   storedContentFrom,
   translationRows,
 } from '@/app/lib/i18n/content/resolve'
+import { paginate, type PageWindow } from '@/app/lib/pagination'
+import { escapeLikeWildcards, parseSearchParam } from '@/app/lib/search-query'
 
 import {
   findPendingReviews,
@@ -44,6 +46,18 @@ const newsRecordInclude = {
 } satisfies Prisma.NewsInclude
 
 type NewsRecord = Prisma.NewsGetPayload<{ include: typeof newsRecordInclude }>
+
+/**
+ * Newest first, undated items last, whatever the language. Items that share a date are ordered by
+ * when they were created, newest first, and finally by id, so the order never depends on how the
+ * database happens to return ties: a page boundary then falls in the same place on every query,
+ * and no item is shown twice or skipped while the collection does not change.
+ */
+const newsOrder = [
+  { publishedAt: { sort: 'desc', nulls: 'last' } },
+  { createdAt: 'desc' },
+  { id: 'desc' },
+] satisfies Prisma.NewsOrderByWithRelationInput[]
 
 /** "24 de mayo de 2026" or "May 24, 2026". Dates are stored without a time, so read them in UTC. */
 function formatDate(date: Date, locale: Locale): string {
@@ -89,19 +103,107 @@ function toNewsArticle(
  * Pass `includeEditingData` only for someone who can edit, because it sends every language to the
  * browser.
  *
- * Ordered newest first, undated items last, whatever the language. Author order within a record
- * follows `NewsCrossAuthor.position`.
+ * Ordered as `newsOrder` says: newest first, undated items last, whatever the language. Author
+ * order within a record follows `NewsCrossAuthor.position`.
  */
 export async function getNews(
   locale: Locale = defaultLocale,
   { includeEditingData = false }: { includeEditingData?: boolean } = {},
 ): Promise<NewsArticle[]> {
-  const records = await prisma.news.findMany({
-    orderBy: { publishedAt: { sort: 'desc', nulls: 'last' } },
-    include: newsRecordInclude,
-  })
+  const records = await prisma.news.findMany({ orderBy: newsOrder, include: newsRecordInclude })
 
   return records.map((record) => toNewsArticle(record, locale, includeEditingData))
+}
+
+/**
+ * The news items matching `query` as a visitor reading in `locale` sees them, so a search finds
+ * what is on the screen:
+ *
+ * - title and abstract in the text `resolveContent` shows: the `locale` translation when the item
+ *   has one, the base text otherwise (always the base text in the default locale);
+ * - the source and author names, which every language shares.
+ *
+ * Case is ignored, and `%` and `_` are matched literally. An empty query matches every item.
+ */
+export function newsSearchWhere(query: string, locale: Locale): Prisma.NewsWhereInput {
+  if (query === '') return {}
+
+  const text = {
+    contains: escapeLikeWildcards(query),
+    mode: 'insensitive',
+  } satisfies Prisma.StringFilter
+  const titleOrAbstract = [{ title: text }, { abstract: text }]
+
+  const shownText: Prisma.NewsWhereInput =
+    locale === defaultLocale
+      ? { OR: titleOrAbstract }
+      : {
+          OR: [
+            { translations: { some: { locale, OR: titleOrAbstract } } },
+            { translations: { none: { locale } }, OR: titleOrAbstract },
+          ],
+        }
+
+  return {
+    OR: [
+      shownText,
+      { source: { name: text } },
+      { authors: { some: { newsAuthor: { name: text } } } },
+    ],
+  }
+}
+
+export interface NewsPageRequest {
+  /** The search text. It is trimmed and cut to `SEARCH_MAX_LENGTH`; empty means every item. */
+  query?: string
+  /** The page asked for. A page outside `1..totalPages` is brought within it. */
+  page?: number
+  /** Only for someone who can edit: it sends every language to the browser. */
+  includeEditingData?: boolean
+}
+
+export interface NewsPage extends PageWindow {
+  /** The items on `page`, shaped as `getNews` shapes them, in `newsOrder`. */
+  articles: NewsArticle[]
+  /** The search text actually applied, after trimming and cutting. */
+  query: string
+}
+
+/**
+ * One page of the news items matching `query`, read in `locale`. The database applies the search,
+ * the order and the page, so only the items on that page are loaded. Totals count the matching
+ * items, not the whole collection.
+ *
+ * `page` is normalized against the matching items (see `paginate`): the returned `page` is the
+ * one shown, which the caller compares with the one asked for to correct the URL. With no
+ * matching item, `totalPages` is 0, `page` is 1 and `articles` is empty.
+ */
+export async function getNewsPage(
+  locale: Locale = defaultLocale,
+  { query = '', page = 1, includeEditingData = false }: NewsPageRequest = {},
+): Promise<NewsPage> {
+  const search = parseSearchParam(query)
+  const where = newsSearchWhere(search, locale)
+
+  const totalItems = await prisma.news.count({ where })
+  const window = paginate(totalItems, page)
+
+  const records =
+    totalItems === 0
+      ? []
+      : await prisma.news.findMany({
+          where,
+          orderBy: newsOrder,
+          include: newsRecordInclude,
+          skip: window.skip,
+          take: window.take,
+        })
+
+  return {
+    ...window,
+    query: search,
+    articles: records.map((record) => toNewsArticle(record, locale, includeEditingData)),
+  }
 }
 
 /**

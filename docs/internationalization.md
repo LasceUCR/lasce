@@ -216,7 +216,9 @@ cards' labels (`card`, including "Sin fecha" for an undated item), the editor wi
 validation and toasts (`editor`, `discardDialog`, `deleteDialog`, `validation`, `errors`,
 `created`, `updated`, `deleted`), and the news items' title and abstract, which are database
 content in `news.news_record_translations`. Dates are formatted in the visitor's language by
-`getNews()`; an item without an English version is shown in its base text. The academic
+`getNewsPage()`; an item without an English version is shown in its base text, and a search runs
+on the text shown, in the visitor's language (see [`pagination.md`](pagination.md)). The page
+controls' own text is in `common.pagination`. The academic
 activities section above the news uses `academicActivities`. Each card links out to the original
 article, which is the item's detail view: there is no news page of its own to translate.
 
