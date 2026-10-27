@@ -12,7 +12,7 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 }))
 
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
-import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { renderWithIntl, type RenderWithIntlOptions } from '@/app/lib/i18n/testing'
 
 import {
   ResearcherForm,
@@ -36,7 +36,7 @@ const bilingualCreateArgs = BilingualCreate.args as BilingualResearcherFormProps
 const bilingualLegacyArgs = BilingualLegacy.args as BilingualResearcherFormProps
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
-function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
+function render(ui: ReactElement, options?: RenderWithIntlOptions) {
   return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
 }
 
@@ -643,7 +643,7 @@ describe('ResearcherForm: bilingual mode', () => {
     // Test add contact modal in English
     await user.click(screen.getByRole('button', { name: 'Add contact' }))
     const modal = screen.getByRole('dialog', { name: 'Add contact' })
-    expect(within(modal).getByRole('textbox', { name: 'Email' })).toBeInTheDocument()
+    expect(within(modal).getByRole('textbox', { name: 'Email address' })).toBeInTheDocument()
     await user.click(within(modal).getByRole('button', { name: 'Cancel' }))
 
     // Test discard dialog in English
@@ -654,5 +654,18 @@ describe('ResearcherForm: bilingual mode', () => {
     expect(within(discardDialog).getByRole('button', { name: 'Keep editing' })).toBeInTheDocument()
     await user.click(within(discardDialog).getByRole('button', { name: 'Discard' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('renders photo file drop area fully in English under en locale', () => {
+    render(<ResearcherForm {...editArgs} />, { locale: 'en' })
+
+    expect(screen.getByText('Photo')).toBeInTheDocument()
+    expect(
+      screen.getByText('Optional. Researcher portrait, in JPG or PNG format.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Drag an image here or click to select from your device'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove image' })).toBeInTheDocument()
   })
 })

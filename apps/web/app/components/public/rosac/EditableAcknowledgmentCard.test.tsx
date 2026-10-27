@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadAcknowledgmentLogo: vi.fn(),
@@ -19,7 +20,7 @@ const editArgs = EditModeOn.args as EditableAcknowledgmentCardProps
 const assistantArgs = AssistantMode.args as EditableAcknowledgmentCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableAcknowledgmentCardProps) {
-  return render(
+  return renderWithIntl(
     <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
       <EditableAcknowledgmentCard {...props} />
     </EditModeContext.Provider>,
