@@ -215,6 +215,7 @@ model Collaboration {
   acronym    String?
   country    String
   websiteUrl String?            @map("website_url")
+  logoPath   String?            @map("logo_path")
   scope      CollaborationScope
   position   Int                @default(0)
   createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
