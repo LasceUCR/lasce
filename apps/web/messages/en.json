@@ -166,6 +166,14 @@
     "truncatedText": {
       "readMore": "Read more",
       "readLess": "Read less"
+    },
+    "loading": "Loading…",
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page}",
+      "status": "Page {page} of {total}"
     }
   },
   "solarImageLightbox": {
@@ -834,7 +842,10 @@
       "searchPlaceholder": "Search by title, author or keyword...",
       "results": "{count, plural, one {# news item found.} other {# news items found.}}",
       "emptyQuery": "No news found for “{query}”.",
-      "empty": "No news has been published yet."
+      "empty": "No news has been published yet.",
+      "range": "Showing {from}–{to} of {total}.",
+      "rangeOne": "Showing item {position} of {total}.",
+      "paginationLabel": "News pages"
     },
     "card": {
       "openSource": "Open source",

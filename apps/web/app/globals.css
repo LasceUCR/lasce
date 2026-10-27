@@ -2359,6 +2359,23 @@ a {
   opacity: 0;
 }
 
+/* Fills the frame until the image has loaded (`SuviImageSequence`); the frame clips its corners. */
+.data-image-frame .data-image-skeleton {
+  height: 100%;
+  border-radius: 0;
+}
+
+/* The image fades in over its placeholder instead of popping in. */
+.data-image-grid img {
+  transition: opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-image-grid img {
+    transition: none;
+  }
+}
+
 .data-image-status {
   align-self: center;
   margin: 0;
@@ -2509,28 +2526,6 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-.solar-today-loading > span {
-  display: block;
-  margin-bottom: 0.75rem;
-  color: var(--muted);
-  font-size: 0.875rem;
-}
-
-.solar-today-placeholders {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.solar-today-placeholders > div {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1;
-  border-radius: 12px;
-  background: var(--space-black);
-  color: var(--white);
-}
-
 .solar-today-empty {
   display: grid;
   justify-items: center;
@@ -2595,14 +2590,6 @@ a {
 @media (max-width: 600px) {
   .data-image-strip {
     grid-auto-columns: 72%;
-  }
-
-  .solar-today-placeholders {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .solar-today-placeholders > div:nth-child(n + 4) {
-    display: none;
   }
 }
 
@@ -2996,6 +2983,22 @@ a {
 
 .news .search-filter-bar {
   margin-bottom: 20px;
+}
+
+/* Focused by `NewsExplorer` when the page changes: keep it clear of the sticky header. */
+.news > h2 {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.news > h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.news-summary {
+  margin: -6px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .news-list {
