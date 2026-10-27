@@ -24,6 +24,35 @@ describe('SuviImageSequence', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
+  test('fills the frame with a placeholder until the image loads, and marks it busy', () => {
+    const { container } = renderWithIntl(
+      <SuviImageSequence {...(Default.args as SuviImageSequenceProps)} />,
+    )
+    const frame = container.querySelector('[data-state]')!
+
+    expect(frame).toHaveAttribute('aria-busy', 'true')
+    expect(frame.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando imagen solar…')
+
+    fireEvent.load(screen.getByRole('img'))
+
+    expect(frame).not.toHaveAttribute('aria-busy')
+    expect(frame.querySelector('[aria-hidden="true"]')).toBeNull()
+    expect(screen.getByRole('img')).toBeInTheDocument()
+  })
+
+  test('stops being busy and explains it when the image fails to load', () => {
+    const { container } = renderWithIntl(
+      <SuviImageSequence {...(UnavailableImage.args as SuviImageSequenceProps)} />,
+      { locale: 'en' },
+    )
+
+    fireEvent.error(screen.getByRole('img'))
+
+    expect(container.querySelector('[aria-busy]')).toBeNull()
+    expect(screen.getByRole('status')).toHaveTextContent('This solar image is not available.')
+  })
+
   test('replaces a failed image with an informative message and recovers on a new band', () => {
     const { rerender } = renderWithIntl(
       <SuviImageSequence {...(UnavailableImage.args as SuviImageSequenceProps)} />,
