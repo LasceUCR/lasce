@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
-import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { AcademicActivitiesSection } from '@/app/components/public/news/AcademicActivitiesSection'
 import { NewsExplorer } from '@/app/components/public/news/NewsExplorer'
@@ -10,7 +9,6 @@ import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { getAcademicActivities } from '@/app/lib/academic-activities'
 import { userHasPermission } from '@/app/lib/auth/authorization'
 import { resolveLocale } from '@/app/lib/i18n/locale'
-import { getNews, noticiasBackLink, noticiasHero, noticiasMeta } from '@/app/lib/news'
 import { getNewsPage } from '@/app/lib/news'
 import {
   isListingUrl,
@@ -34,10 +32,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = 'force-dynamic'
 
-export default async function NewsPage() {
-  const [locale, news, canCreate, canEdit, canDelete] = await Promise.all([
-    getLocale(),
-    getNews(),
 interface NewsPageProps {
   searchParams: Promise<Record<string, SearchParamValue>>
 }
@@ -50,9 +44,8 @@ interface NewsPageProps {
  */
 export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams
-  const [locale, messages, t, common, canCreate, canEdit, canDelete] = await Promise.all([
+  const [locale, t, common, canCreate, canEdit, canDelete] = await Promise.all([
     getLocale(),
-    getMessages(),
     getTranslations('news.page'),
     getTranslations('common'),
     userHasPermission('create_components'),
