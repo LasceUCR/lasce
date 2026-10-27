@@ -1507,19 +1507,6 @@ a {
   --notice-accent: var(--feedback-error);
 }
 
-.data-source-notice-copy {
-  display: grid;
-  text-align: left;
-}
-
-.data-source-notice-copy > span {
-  grid-area: 1 / 1;
-}
-
-.data-source-notice-copy > span[aria-hidden='true'] {
-  visibility: hidden;
-}
-
 .data-table {
   margin-top: 1rem;
   border-top: 1px solid var(--border);
@@ -1733,13 +1720,17 @@ a {
   gap: 0.5rem 1.25rem;
 }
 
+.data-explorer .ui-notice-info {
+  background: var(--white);
+}
+
 .data-permissions {
   margin-top: 1rem;
   padding: 1rem;
   border: 1px solid var(--border);
   border-left: 4px solid var(--bright-teal-blue);
   border-radius: 8px;
-  background: var(--alice-blue);
+  background: var(--white);
   color: var(--ink);
   font-size: 0.875rem;
   line-height: 1.6;
@@ -1830,31 +1821,66 @@ a {
 
 .data-loading {
   margin-top: 1rem;
-  padding: 1rem;
+  padding: 0.75rem 1rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--white);
+}
+
+.data-loading-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .data-loading-copy {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 0 0 0.625rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .data-loading-copy strong {
-  color: var(--blue-dark);
+  color: var(--blue-accent-text);
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.data-loading-cancel {
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.data-loading-cancel:hover {
+  color: var(--blue-accent-text);
+  text-decoration: underline;
+}
+
+.data-loading-cancel:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .data-loading-progress {
   display: block;
   width: 100%;
-  height: 0.625rem;
+  height: 0.375rem;
   overflow: hidden;
   appearance: none;
   border: 0;
@@ -1869,19 +1895,51 @@ a {
 
 .data-loading-progress::-webkit-progress-value {
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--blue), var(--blue-green));
-  transition: width 180ms ease;
+  background: var(--blue);
+  transition: width 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .data-loading-progress::-moz-progress-bar {
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--blue), var(--blue-green));
+  background: var(--blue);
 }
 
-.data-loading-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.875rem;
+.data-loading-progress:indeterminate {
+  background:
+    linear-gradient(90deg, transparent, var(--blue) 25%, var(--blue) 75%, transparent) -75% 0 / 40%
+      100% no-repeat,
+    var(--alice-blue);
+  animation: data-loading-slide 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.data-loading-progress:indeterminate::-webkit-progress-bar {
+  background: transparent;
+}
+
+.data-loading-progress:indeterminate::-moz-progress-bar {
+  background: transparent;
+}
+
+@keyframes data-loading-slide {
+  from {
+    background-position: -75% 0;
+  }
+
+  to {
+    background-position: 175% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-loading-progress:indeterminate {
+    animation: none;
+    background-position: center;
+  }
+
+  .data-loading-progress::-webkit-progress-value,
+  .data-loading-cancel {
+    transition: none;
+  }
 }
 
 .data-field {
@@ -2934,6 +2992,22 @@ a {
 
 .news .search-filter-bar {
   margin-bottom: 20px;
+}
+
+/* Focused by `NewsExplorer` when the page changes: keep it clear of the sticky header. */
+.news > h2 {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.news > h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.news-summary {
+  margin: -6px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .news-list {
@@ -4013,6 +4087,17 @@ a {
 .space-weather-footer {
   padding-top: 52px;
   padding-bottom: 48px;
+}
+
+/* "Modo edición" on a featured topic card (clima espacial, física solar): the wrapper takes the
+   section's page width, so the section fills it and the pencil sits on the card's corner rather
+   than at the screen's edge. */
+.featured-section-editable > .topic-section {
+  width: auto;
+}
+
+.featured-section-editable > .editable-actions {
+  top: 38px;
 }
 
 .info-card-content a {
@@ -6484,6 +6569,16 @@ a.acknowledgments-card:focus-visible {
   flex-direction: column;
 }
 
+/* Groups the fields so a save in flight can disable them all at once; it adds no box of its own. */
+.news-article-form-fields {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 /* Pairs of fields sit side by side once there's room for both — on a
    narrower modal (small screens) each still wraps onto its own full-width
    row, same as an unpaired field. */
@@ -6537,26 +6632,9 @@ a.acknowledgments-card:focus-visible {
   }
 }
 
-/* The publication editor's actions stay at the bottom of the modal while the form scrolls. */
+/* The publication editor pins its actions; the shared rule below does that for every form. */
 .publication-form-actions {
-  position: sticky;
-  bottom: 0;
   z-index: 1;
-  padding: 14px 0 2px;
-  background: var(--white);
-}
-
-/* On a phone the two buttons share one row instead of stacking, so the pinned bar stays short. */
-@media (max-width: 520px) {
-  .nosotros-activity-form-actions.publication-form-actions {
-    flex-wrap: nowrap;
-  }
-
-  .publication-form-actions .button {
-    flex: 1 1 0;
-    width: auto;
-    padding: 0 12px;
-  }
 }
 
 /* Authors as a tag input: one box with the names as chips and, below them, a quiet text box
@@ -6768,8 +6846,8 @@ a.acknowledgments-card:focus-visible {
 }
 
 /* The title, and beside it whatever a form puts in its slot (`useModalHeaderSlot`), such as
-   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the slot
-   wraps under the title. */
+   language tabs. Outside the scrolling body, so both stay in view. On a narrow modal the title
+   takes its own row and the tabs wrap onto the next one, so they never cover the title. */
 .modal-header {
   flex-shrink: 0;
   /* Mirrors `.modal-body` below: the same scrollbar gutter and the same padding cancelled by a
@@ -6780,9 +6858,9 @@ a.acknowledgments-card:focus-visible {
   margin: -4px -6px 6px;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 4px 24px;
+  gap: 8px 16px;
 }
 
 .modal-header h2 {
@@ -6858,6 +6936,29 @@ a.acknowledgments-card:focus-visible {
   gap: 10px;
 }
 
+/* A white bar pinned to the bottom of the dialog. The form scrolls underneath it. The shadow
+   continues that white down to the dialog edge, so field text cannot show past the buttons. */
+.modal
+  :is(
+    .modal-actions,
+    .cms-form-actions,
+    .news-article-form-actions,
+    .nosotros-activity-form-actions,
+    .confirm-dialog-actions,
+    .mgmt-form-actions
+  ) {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--white);
+  box-shadow: 0 48px 0 var(--white);
+  margin-top: 12px;
+  margin-bottom: -14px;
+  margin-left: -6px;
+  margin-right: -6px;
+  padding: 14px 6px 18px;
+}
+
 @media (max-width: 760px) {
   .cms-form-field input,
   .cms-form-field textarea,
@@ -6869,11 +6970,37 @@ a.acknowledgments-card:focus-visible {
     padding: 24px 16px;
   }
 
+  .modal .modal-header h2 {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .modal-header-slot,
+  .modal-header-slot .access-tabs {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+
+  .modal-header-slot .access-tabs {
+    flex-wrap: wrap;
+  }
+
+  /* Management dialogs stack their actions full width, with the primary button first. */
   .modal-actions,
   .cms-form-actions,
   .news-article-form-actions,
-  .nosotros-activity-form-actions {
-    flex-wrap: wrap;
+  .nosotros-activity-form-actions,
+  .confirm-dialog-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-actions .button,
+  .cms-form-actions .button,
+  .news-article-form-actions .button,
+  .nosotros-activity-form-actions .button,
+  .confirm-dialog-actions .button {
+    width: 100%;
   }
 }
 
@@ -6992,11 +7119,6 @@ a.acknowledgments-card:focus-visible {
 }
 
 @media (max-width: 600px) {
-  .std-confirm-header {
-    flex-direction: column;
-    gap: 12px;
-  }
-
   .std-confirm-actions {
     flex-direction: column-reverse;
   }
@@ -7188,7 +7310,7 @@ a.acknowledgments-card:focus-visible {
   gap: 8px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 760px) {
   .mgmt-form-actions {
     flex-direction: column-reverse;
     align-items: stretch;
@@ -7196,5 +7318,10 @@ a.acknowledgments-card:focus-visible {
 
   .mgmt-form-actions-right {
     flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .mgmt-form-actions .button {
+    width: 100%;
   }
 }

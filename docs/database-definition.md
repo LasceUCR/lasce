@@ -168,12 +168,39 @@ follows under `research`.
 > columns.
 
 > `published_at` is nullable rather than defaulted to a sentinel date: some coverage (e.g.
-> corporate blog posts) doesn't carry a publish date at all. `getNews()` renders these as
-> "Sin fecha" and sorts them after every dated record (`nulls: 'last'`) instead of showing a
-> fabricated date.
+> corporate blog posts) doesn't carry a publish date at all. The card renders these as
+> "Sin fecha" ("Undated" in English) and `getNewsPage()` sorts them after every dated record
+> (`nulls: 'last'`) instead of showing a fabricated date.
 
 Relationships: belongs to one `news_sources` row; has many `news_cross_authors` (its authors,
-through the join table below).
+through the join table below); has many `news_record_translations` (its text in other languages).
+
+### `news_record_translations`
+
+The `title` and `abstract` of a `news_records` row in a language other than Spanish, one row per
+item and locale. The Prisma model is `NewsTranslation`. Spanish stays on the base row, so an item
+with no row here still renders, in its base text. Only these two columns are translated: sources
+and authors are proper nouns, and the date and link are the same in every language.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                |
+| ------------ | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `news_id`    | `String`    | `uuid`           | FK → `news_records.id`, `ON DELETE CASCADE`, not null      |
+| `locale`     | `String`    | `varchar(5)`     | not null — a code from `locales` in `apps/web`, never `es` |
+| `title`      | `String`    | `text`           | not null                                                   |
+| `abstract`   | `String`    | `text`           | not null                                                   |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                     |
+
+Constraints: `UNIQUE (news_id, locale)`.
+
+> Same rules as `research_record_translations`: `locale` is validated by the application, both
+> languages are required on create and on any update that changes a title or abstract, an update
+> of shared fields only (source, authors, date, link) leaves this table untouched, and an item
+> without a translation row is treated as legacy. The `20261017120000_add_news_translations`
+> migration only creates the table; existing items were not backfilled.
+
+Relationships: belongs to one `news_records` row.
 
 ### `news_authors`
 
@@ -736,6 +763,29 @@ Constraints: `UNIQUE (researcher_id, locale)`. Researchers created before this t
 no row and are shown as they are, with an unknown content language. See
 [translate-database-content.md](translate-database-content.md).
 
+## `public` schema (space weather)
+
+### `space_weather_sections` and `space_weather_section_translations`
+
+An editable text section of `/clima-espacial`, looked up by its unique `key`. Today there is one
+row, `costa-rica`: the "¿Por qué estudiarlo desde Costa Rica?" card. Spanish `title` and `body`
+live on the base row; every other language is a translation row. `body` is plain text and a blank
+line separates paragraphs. Seeded by the migration `20261016120000_add_space_weather_sections`;
+nothing is created or deleted from the CMS. See [`space-weather.md`](space-weather.md).
+
+| Column       | Prisma type | Postgres type    | Constraints                            |
+| ------------ | ----------- | ---------------- | -------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `key`        | `String`    | `text`           | not null, unique                       |
+| `title`      | `String`    | `text`           | not null; Spanish                      |
+| `body`       | `String`    | `text`           | not null; Spanish                      |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`space_weather_section_translations`: `id`, `section_id` (FK → `space_weather_sections.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `body`, timestamps. Unique on
+`(section_id, locale)`.
+
 ## Where this is read and written
 
 `apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
@@ -758,9 +808,14 @@ worker writes them yet: a future job would upsert the indices by `code`, set `so
 `observed_at`, and leave `position` alone; see
 [`home-page.md`](home-page.md#future-automatic-loading).
 
-`apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` (newest `published_at` first,
-nulls last, authors ordered by `position`) and maps each row to the `NewsArticle` shape
-`/noticias` renders.
+`apps/web/app/lib/news.ts`'s `getNewsPage()` loads one page of `news_records` with its
+non-Spanish `news_record_translations`: searched, ordered (newest `published_at` first, nulls
+last, then newest `created_at`, then `id`, so pages never overlap) and cut to the page in
+PostgreSQL, with authors ordered by `position` (see [`pagination.md`](pagination.md)). It maps
+each row to the `NewsArticle` shape `/noticias` renders, in the visitor's language when the item
+has it and in its base text otherwise. `getNews()` loads every item in the same order. `createNews()`, `updateNews()` and
+`deleteNews()` write the base row and its translations in one transaction; an update writes only
+while `updated_at` still equals the version the editor loaded.
 
 `apps/web/app/lib/auth/users.ts` writes `auth.users` through `createUser()` (the `/acceso`
 registration Server Action, mapping a unique violation on `email` to a `DuplicateEmailError`) and reads it
@@ -780,8 +835,16 @@ writer (nothing calls it yet) and `getRecentActivity()` its only reader, for the
 upserted on save. An update writes only while `updated_at` still equals the version the editor
 loaded.
 
+`apps/web/app/lib/space-weather-section.ts` reads and writes `public.space_weather_sections` and
+`public.space_weather_section_translations` for `/clima-espacial`: `getSpaceWeatherSection()` reads
+the `costa-rica` row in the requested language, and `updateSpaceWeatherSection()` writes the base
+row and its translations in one transaction, only while `updated_at` still equals the version the
+editor loaded.
+
 `packages/db/prisma/seed.ts` clears and repopulates the relevant research and news tables from
-fixed, real LASCE research and news records so local/dev environments aren't empty.
+fixed, real LASCE research and news records so local/dev environments aren't empty. Both seed
+publications and seed news carry an English translation, so they read as complete rather than
+legacy.
 
 `apps/worker/app/services/process_headers.py`'s `ProcessHeaders.persist()` is the only writer of
 `solar.suvi_frames`, called from the `suvi-pipeline` processor after a frame is downloaded and

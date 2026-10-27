@@ -26,7 +26,9 @@ test('lists news as compact, text-only cards that open the source article', asyn
   await expect(link).toHaveAttribute('href', /^https?:\/\//)
 })
 
-test('keeps news in chronological order, newest first and undated last', async ({ page }) => {
+test('keeps news in chronological order on the first page, newest first and undated last', async ({
+  page,
+}) => {
   await page.goto('/noticias')
 
   const cards = newsList(page).getByRole('article')
@@ -111,6 +113,7 @@ test('allows an admin to create, view, edit, and delete a news article', async (
   const fixture = await createSignedInUser(context, 'ADMIN')
   const uniqueTitle = `Noticia de prueba E2E ${Date.now()}`
   const updatedTitle = `${uniqueTitle} (Editada)`
+  const englishTitle = `E2E test news item ${Date.now()}`
   const uniqueUrl = `https://e2e.example.com/noticia-${Date.now()}`
 
   try {
@@ -124,20 +127,30 @@ test('allows an admin to create, view, edit, and delete a news article', async (
     await expect(addDialog).toBeVisible()
 
     await addDialog.getByRole('button', { name: 'Confirmar' }).click()
-    await expect(addDialog.getByText('El título es obligatorio.')).toBeVisible()
+    await expect(addDialog.getByText('El título en español es obligatorio.')).toBeVisible()
 
-    // 2. Fill required fields and save
-    await addDialog.getByRole('textbox', { name: 'Título' }).fill(uniqueTitle)
-    await addDialog.getByRole('textbox', { name: 'Autores' }).fill('Reportero E2E')
-    await addDialog.getByRole('textbox', { name: 'Fuente' }).fill('Periódico E2E')
-    await addDialog.getByRole('textbox', { name: 'Enlace' }).fill(uniqueUrl)
+    // 2. Fill the required fields, the title and abstract in both languages, and save
+    await addDialog.getByRole('textbox', { name: /^Título \(Español\)/ }).fill(uniqueTitle)
     await addDialog
-      .getByRole('textbox', { name: 'Resumen' })
+      .getByRole('textbox', { name: /^Resumen \(Español\)/ })
       .fill('Resumen detallado de la noticia de prueba E2E.')
+    await addDialog.getByRole('tab', { name: /^English/ }).click()
+    await addDialog.getByRole('textbox', { name: /^Título \(English\)/ }).fill(englishTitle)
+    await addDialog
+      .getByRole('textbox', { name: /^Resumen \(English\)/ })
+      .fill('Detailed abstract of the E2E test news item.')
+    await addDialog.getByRole('textbox', { name: /^Autores/ }).fill('Reportero E2E')
+    await addDialog.getByRole('textbox', { name: /^Fuente/ }).fill('Periódico E2E')
+    await addDialog.getByRole('textbox', { name: /^Enlace/ }).fill(uniqueUrl)
     await addDialog.getByRole('button', { name: 'Confirmar' }).click()
 
     await expect(page.getByText('Noticia agregada correctamente.')).toBeVisible()
     await expect(addDialog).toBeHidden()
+
+    // An undated item is listed last, past the first page: search for it, which keeps it on
+    // screen through the edit and the deletion below.
+    await page.getByRole('searchbox', { name: 'Buscar noticias' }).fill(uniqueTitle)
+    await expect(page).toHaveURL(/\?q=/)
 
     // 3. Newly created article is in list and displays its content
     const createdCard = newsList(page).getByRole('article').filter({ hasText: uniqueTitle })
@@ -158,7 +171,12 @@ test('allows an admin to create, view, edit, and delete a news article', async (
     const editDialog = page.getByRole('dialog', { name: 'Editar noticia' })
     await expect(editDialog).toBeVisible()
 
-    await editDialog.getByRole('textbox', { name: 'Título' }).fill(updatedTitle)
+    // A title changed in one language must change in the other too, in the same edit.
+    await editDialog.getByRole('textbox', { name: /^Título \(Español\)/ }).fill(updatedTitle)
+    await editDialog.getByRole('tab', { name: /^English/ }).click()
+    await editDialog
+      .getByRole('textbox', { name: /^Título \(English\)/ })
+      .fill(`${englishTitle} (Edited)`)
     await editDialog.getByRole('button', { name: 'Confirmar' }).click()
 
     await expect(page.getByText('Noticia actualizada correctamente.')).toBeVisible()

@@ -37,6 +37,7 @@ working through Claude Code.
 | How do I add a job across both languages?            | [`docs/add-a-job.md`](docs/add-a-job.md)                                   |
 | How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                       |
 | How do I truncate long text with "Leer más"?         | [`docs/truncated-text.md`](docs/truncated-text.md)                         |
+| How do I paginate and search a listing via the URL?  | [`docs/pagination.md`](docs/pagination.md)                                 |
 | How does the SUVI pipeline job orchestrate a run?    | [`docs/suvi-pipeline.md`](docs/suvi-pipeline.md)                           |
 | How does the EXIS pipeline job ingest a day?         | [`docs/exis-pipeline.md`](docs/exis-pipeline.md)                           |
 | How does the MAG pipeline job ingest a day?          | [`docs/mag-pipeline.md`](docs/mag-pipeline.md)                             |
@@ -44,6 +45,7 @@ working through Claude Code.
 | How do I isolate a widget that might crash the page? | [`docs/error-boundary.md`](docs/error-boundary.md)                         |
 | How do I make content editable in "Modo edición"?    | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)                   |
 | How is the home page's content edited and reordered? | [`docs/home-page.md`](docs/home-page.md)                                   |
+| How is the space weather page's card edited?         | [`docs/space-weather.md`](docs/space-weather.md)                           |
 | Where does a test go, and what gates it?             | [`docs/testing.md`](docs/testing.md)                                       |
 | How do I write a component or service test?          | [`docs/tests/component_testing.md`](docs/tests/component_testing.md)       |
 | Branches, commits, PRs, required checks              | [`docs/git-guidelines.md`](docs/git-guidelines.md)                         |

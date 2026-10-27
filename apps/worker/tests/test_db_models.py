@@ -25,6 +25,7 @@ from app.db import (
     NewsAuthor,
     NewsCrossAuthor,
     NewsSource,
+    NewsTranslation,
     Publisher,
     Research,
     ResearchArea,
@@ -36,6 +37,8 @@ from app.db import (
     RolePermission,
     SolarPhysicsSection,
     SolarPhysicsSectionTranslation,
+    SpaceWeatherSection,
+    SpaceWeatherSectionTranslation,
     SuviFrame,
     User,
     UserRole,
@@ -176,7 +179,7 @@ replicate everything here.
 
 
 def test_news_tables_live_in_the_news_schema() -> None:
-    for model in (NewsSource, News, NewsAuthor, NewsCrossAuthor):
+    for model in (NewsSource, News, NewsAuthor, NewsCrossAuthor, NewsTranslation):
         assert model.__table__.schema == "news"
 
 
@@ -196,6 +199,29 @@ def test_news_record_matches_the_prisma_columns() -> None:
     assert columns["external_url"].unique
     assert columns["published_at"].nullable
     assert not columns["title"].nullable
+
+
+def test_news_translation_matches_the_prisma_columns() -> None:
+    columns = NewsTranslation.__table__.columns
+    (news_fk,) = columns["news_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "news_id",
+        "locale",
+        "title",
+        "abstract",
+        "created_at",
+        "updated_at",
+    }
+    assert news_fk.target_fullname == "news.news_records.id"
+    assert news_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"news_id", "locale"}
+        for constraint in NewsTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
 
 
 def test_news_cross_author_links_news_and_authors() -> None:
@@ -639,5 +665,40 @@ def test_geomagnetic_index_translation_is_unique_per_index_and_locale() -> None:
     assert any(
         {column.name for column in constraint.columns} == {"geomagnetic_index_id", "locale"}
         for constraint in GeomagneticIndexTranslation.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    )
+
+
+def test_space_weather_tables_live_in_the_public_schema() -> None:
+    for model in (SpaceWeatherSection, SpaceWeatherSectionTranslation):
+        assert model.__table__.schema == "public"
+
+
+def test_space_weather_section_matches_the_prisma_columns() -> None:
+    columns = SpaceWeatherSection.__table__.columns
+
+    assert set(columns.keys()) == {"id", "key", "title", "body", "created_at", "updated_at"}
+    assert columns["key"].unique
+
+
+def test_space_weather_section_translation_is_unique_per_section_and_locale() -> None:
+    columns = SpaceWeatherSectionTranslation.__table__.columns
+    (section_fk,) = columns["section_id"].foreign_keys
+
+    assert set(columns.keys()) == {
+        "id",
+        "section_id",
+        "locale",
+        "title",
+        "body",
+        "created_at",
+        "updated_at",
+    }
+    assert section_fk.target_fullname == "public.space_weather_sections.id"
+    assert section_fk.ondelete == "CASCADE"
+    assert columns["locale"].type.length == 5
+    assert any(
+        {column.name for column in constraint.columns} == {"section_id", "locale"}
+        for constraint in SpaceWeatherSectionTranslation.__table__.constraints
         if isinstance(constraint, UniqueConstraint)
     )

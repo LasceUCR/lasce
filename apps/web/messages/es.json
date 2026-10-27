@@ -166,6 +166,13 @@
     "truncatedText": {
       "readMore": "Leer más",
       "readLess": "Leer menos"
+    },
+    "pagination": {
+      "label": "Paginación",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page}",
+      "status": "Página {page} de {total}"
     }
   },
   "solarImageLightbox": {
@@ -389,6 +396,28 @@
           "earth": "Tierra"
         }
       }
+    },
+    "editor": {
+      "editLabel": "Editar la sección «¿Por qué estudiarlo desde Costa Rica?»",
+      "editTitle": "Editar «¿Por qué estudiarlo desde Costa Rica?»",
+      "languageTabs": "Idioma del contenido",
+      "titleField": "Título ({language})",
+      "bodyField": "Texto ({language})",
+      "bodyHint": "Separe los párrafos con una línea en blanco.",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o el texto, revíselo también.",
+      "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el título o el texto debe completar ambos idiomas.",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "updated": "Sección actualizada correctamente."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
+    },
+    "saveErrors": {
+      "failed": "No se pudo guardar la sección. Inténtelo de nuevo."
     }
   },
   "scientificTools": {
@@ -439,6 +468,8 @@
       "mx": "México"
     },
     "initiatives": {
+      "readMore": "Leer más",
+      "readLess": "Leer menos",
       "title": "Iniciativas internacionales de las que LASCE forma parte",
       "items": {
         "iswi": {
@@ -573,7 +604,6 @@
       "cancel": "Cancelar",
       "save": "Confirmar",
       "reload": "Cerrar y cargar la versión actual",
-      "yearsLabel": "Años",
       "uploadingImage": "Subiendo imagen...",
       "altTextField": "Texto alternativo ({language})",
       "FileDropDescriptionText": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo.",
@@ -651,7 +681,16 @@
       "galleryWidth": "Ancho en la galería (columnas)",
       "galleryHeight": "Alto en la galería (filas)",
       "titleNeedsLettersOrNumbers": "El título debe incluir letras o números para generar el identificador.",
-      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo."
+      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo.",
+      "periodStartYear": "Año de inicio",
+      "periodStartMonth": "Mes de inicio",
+      "periodEndYear": "Año de fin",
+      "periodEndMonth": "Mes de fin",
+      "periodNone": "Sin especificar",
+      "periodMonthNeedsYear": "Elija también el año.",
+      "periodEndNeedsStart": "Elija el año de inicio.",
+      "periodEndBeforeStart": "El fin no puede ser anterior al inicio.",
+      "periodUnrecognized": "El periodo guardado, «{label}», no tiene el formato de mes y año. Se conservará hasta que elija uno nuevo."
     },
     "actions": {
       "addAlbum": "Añadir álbum",
@@ -776,16 +815,77 @@
     }
   },
   "news": {
+    "page": {
+      "metaTitle": "Noticias | LASCE",
+      "metaDescription": "Noticias y cobertura mediática del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
+      "kicker": "Portal público LASCE",
+      "title": "Noticias y cobertura mediática",
+      "lead": "Noticias, divulgación y cobertura sobre el trabajo del LASCE.",
+      "recent": "Noticias recientes",
+      "searchLabel": "Buscar noticias",
+      "searchPlaceholder": "Buscar por título, autor o palabra clave...",
+      "results": "{count, plural, one {Se encontró # noticia.} other {Se encontraron # noticias.}}",
+      "emptyQuery": "No se encontraron noticias para “{query}”.",
+      "empty": "No hay noticias publicadas todavía.",
+      "range": "Mostrando {from}–{to} de {total}.",
+      "rangeOne": "Mostrando la noticia {position} de {total}.",
+      "paginationLabel": "Páginas de noticias"
+    },
     "card": {
       "openSource": "Abrir fuente",
-      "openSourceAria": "de «{title}» (se abre en una pestaña nueva)"
+      "openSourceContext": "de «{title}» (se abre en una pestaña nueva)",
+      "undated": "Sin fecha",
+      "translationMissing": "Sin versión en inglés. Al editar el título o el resumen se deben completar ambos idiomas."
+    },
+    "editor": {
+      "addCard": "Agregar noticia",
+      "editTitle": "Editar noticia",
+      "editLabel": "Editar {title}",
+      "deleteLabel": "Eliminar {title}",
+      "languageTabs": "Idioma del contenido",
+      "titleField": "Título ({language})",
+      "abstractField": "Resumen ({language})",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o el resumen, revíselo también.",
+      "legacyNoTranslation": "Esta noticia aún no tiene versión en inglés. Para cambiar el título o el resumen debe completar ambos idiomas; los demás campos se pueden editar sin traducirla.",
+      "authors": "Autores",
+      "authorsHint": "Separe los nombres con comas.",
+      "source": "Fuente",
+      "publishedAt": "Fecha",
+      "externalUrl": "Enlace",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando..."
+    },
+    "validation": {
+      "source": "La fuente es obligatoria.",
+      "authors": "Debe indicar al menos un autor.",
+      "publishedAt": "La fecha no es válida.",
+      "externalUrl": "El enlace debe ser una URL que empiece con http:// o https://."
+    },
+    "deleteDialog": {
+      "title": "Eliminar noticia",
+      "message": "¿Desea eliminar la noticia \"{title}\"? Esta acción no se puede deshacer.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
     },
     "created": "Noticia agregada correctamente.",
     "updated": "Noticia actualizada correctamente.",
     "deleted": "Noticia eliminada correctamente.",
     "errors": {
       "saveUnknown": "No se pudo guardar la noticia. Inténtelo de nuevo.",
-      "deleteUnknown": "No se pudo eliminar la noticia. Inténtelo de nuevo."
+      "deleteUnknown": "No se pudo eliminar la noticia. Inténtelo de nuevo.",
+      "forbidden": "No tiene permisos para esta operación. Compruebe su sesión.",
+      "notFound": "Esta noticia ya no existe; es posible que otra persona la haya eliminado. Recargue la página.",
+      "conflict": "Otra persona guardó cambios en esta noticia después de que usted la abrió. Sus cambios no se guardaron: cierre el editor y vuelva a abrir la noticia.",
+      "duplicateLink": "Ya existe una noticia con este enlace. Use otro enlace o edite la noticia existente.",
+      "review": "Actualice el campo en ambos idiomas o confirme que la traducción sigue siendo correcta.",
+      "invalid": "Revise los campos marcados e inténtelo de nuevo."
     }
   },
   "rosac": {
@@ -1102,6 +1202,24 @@
     }
   },
   "scientificData": {
+    "banners": {
+      "title": "Permisos de consulta y descarga",
+      "goesConsultation": "Puede consultar los datos de GOES ({instrument}) sin una cuenta. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos.",
+      "rosacConsultation": "Puede consultar los datos de ROSAC ({instrument}) sin una cuenta. ROSAC es una previsión de integración: sus instrumentos y datos reales aún no están definidos; todos los resultados son simulados.",
+      "pendingProducts": "EHIS y MPSL están pendientes de integración.",
+      "rosacDownloads": "Todos los datos de ROSAC ({instrument}) están disponibles para descargar en CSV, junto con la gráfica en PNG.",
+      "goesChartOnly": "Para GOES ({instrument}), solo está disponible la descarga de la gráfica en PNG con los permisos de una cuenta básica.",
+      "goesDataDownloads": "Sus permisos permiten descargar los datos de GOES ({instrument}) en CSV y la gráfica en PNG.",
+      "noDownloads": "Las descargas de {source} ({instrument}) no están disponibles en esta plataforma.",
+      "denied": "Su cuenta no tiene permiso para descargar recursos de {source} ({instrument}).",
+      "signIn": "Para descargar, necesita una cuenta e iniciar sesión.",
+      "expiry": "Cada enlace de descarga vence en 30 minutos."
+    },
+    "loading": {
+      "data": "Cargando datos",
+      "images": "Cargando imágenes solares",
+      "cancel": "Cancelar consulta"
+    },
     "page": {
       "metaTitle": "Datos científicos | LASCE",
       "description": "Explore imágenes del Sol y consulte la información científica disponible.",

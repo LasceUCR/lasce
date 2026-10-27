@@ -49,3 +49,11 @@ export const Legacy: Story = {
     },
   },
 }
+
+/** A period written by hand before the selects existed: kept as is until a new one is chosen. */
+export const UnrecognizedPeriod: Story = {
+  args: {
+    ...Default.args,
+    album: { ...album, yearsLabel: 'primavera 2024' },
+  },
+}

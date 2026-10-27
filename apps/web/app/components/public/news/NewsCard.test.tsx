@@ -4,9 +4,18 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { NewsCard, type NewsCardProps } from './NewsCard'
-import { Default, LongText, Undated, WithoutLink, WithoutSummary } from './NewsCard.stories'
+import {
+  Default,
+  English,
+  LongText,
+  TranslationMissing,
+  Undated,
+  WithoutLink,
+  WithoutSummary,
+} from './NewsCard.stories'
 
-const defaultArgs = Default.args as NewsCardProps
+const defaultArgs = Default.args as NewsCardProps & { date: string }
+const englishArgs = English.args as NewsCardProps & { date: string }
 
 function mockAbstractOverflow(overflows: boolean) {
   vi.stubGlobal(
@@ -55,6 +64,12 @@ describe('NewsCard', () => {
     expect(document.querySelector('time')).toBeNull()
   })
 
+  test('says an undated item is undated in English', () => {
+    renderWithIntl(<NewsCard {...(Undated.args as NewsCardProps)} />, { locale: 'en' })
+
+    expect(screen.getByText(/Undated/)).toBeInTheDocument()
+  })
+
   test('leaves the authors out of the line when there are none', () => {
     renderWithIntl(<NewsCard {...defaultArgs} authors="" />)
 
@@ -82,7 +97,7 @@ describe('NewsCard', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
-  test('opens the external article in a new tab', () => {
+  test('opens the external article, which is the item’s detail view, in a new tab', () => {
     renderWithIntl(<NewsCard {...defaultArgs} />)
 
     const link = screen.getByRole('link', { name: /^Abrir fuente/ })
@@ -141,5 +156,42 @@ describe('NewsCard', () => {
     renderWithIntl(<NewsCard {...defaultArgs} />)
 
     expect(screen.queryByRole('button', { name: 'Leer más' })).not.toBeInTheDocument()
+  })
+})
+
+describe('NewsCard: languages', () => {
+  test('shows the English title, abstract, date and link label to an English reader', () => {
+    renderWithIntl(<NewsCard {...englishArgs} />, { locale: 'en' })
+
+    expect(screen.getByRole('heading', { name: englishArgs.title })).toBeInTheDocument()
+    expect(screen.getByText(englishArgs.abstract)).toBeInTheDocument()
+    expect(screen.getByText(englishArgs.date)).toHaveAttribute('datetime', '2026-05-24')
+    expect(
+      screen.getByRole('link', {
+        name: `Open source of “${englishArgs.title}” (opens in a new tab)`,
+      }),
+    ).toBeInTheDocument()
+  })
+
+  test('marks the title and abstract with the language they are written in', () => {
+    renderWithIntl(<NewsCard {...englishArgs} />, { locale: 'en' })
+
+    expect(screen.getByRole('heading', { name: englishArgs.title })).toHaveAttribute('lang', 'en')
+    // The abstract's text sits inside `TruncatedText`, whose outer paragraph carries the `lang`.
+    expect(screen.getByText(englishArgs.abstract).closest('p')).toHaveAttribute('lang', 'en')
+  })
+
+  test('marks text of unknown language with an empty lang and tells editors it lacks English', () => {
+    const args = TranslationMissing.args as NewsCardProps
+    renderWithIntl(<NewsCard {...args} />)
+
+    expect(screen.getByRole('heading', { name: args.title })).toHaveAttribute('lang', '')
+    expect(screen.getByText(/Sin versión en inglés/)).toBeInTheDocument()
+  })
+
+  test('says nothing about translations to a visitor', () => {
+    renderWithIntl(<NewsCard {...defaultArgs} />)
+
+    expect(screen.queryByText(/Sin versión en inglés/)).not.toBeInTheDocument()
   })
 })

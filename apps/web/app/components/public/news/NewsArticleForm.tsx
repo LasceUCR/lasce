@@ -1,230 +1,289 @@
 'use client'
 
-import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField } from '@/app/components/public/FormField'
+import { useModalHeaderSlot } from '@/app/components/public/Modal'
+import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
-import type { NewsArticle } from '@/app/lib/news'
+import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
+import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
+import { defaultLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
+import {
+  confirmationsStillNeeded,
+  contentFieldLang,
+  contentPath,
+  isConfirmed,
+  languageTabFlags,
+  resetConfirmations,
+  tabWithErrors,
+  withConfirmation,
+} from '@/app/lib/i18n/content/form'
+import { resolveLocale } from '@/app/lib/i18n/locale'
+import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
+import {
+  hasUnsavedChanges,
+  reviewsNeeded,
+  validateDraft,
+  type FormErrors,
+  type NewsDraft,
+  type NewsFormInitial,
+} from '@/app/lib/news-form'
+import {
+  newsContent,
+  type NewsField,
+  type NewsFieldMessages,
+  type ReviewConfirmation,
+} from '@/app/lib/news-schema'
 
-/** The editable fields of a news article, as `/api/news` expects them. */
-export interface NewsArticleFormValues {
-  title: string
-  authors: string[]
-  source: string
-  publishedAt: string | null
-  externalUrl: string
-  abstract: string
+type SharedTextField = 'authors' | 'source' | 'publishedAt' | 'externalUrl'
+
+/** What a parent can ask of the form: the modal around it routes its close button here. */
+export interface NewsArticleFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
 }
 
 export interface NewsArticleFormProps {
-  /** `null` starts a blank form for a new article. */
-  article: NewsArticle | null
-  onSave: (values: NewsArticleFormValues) => void
+  /** What the form opens with: from `emptyInitial()` or `initialFromArticle()`. */
+  initial: NewsFormInitial
+  /** Called once the edit is valid, with the confirmations it still needs. */
+  onSave: (draft: NewsDraft, confirmed: ReviewConfirmation[]) => void
+  /** Called to close the form, once any unsaved changes have been discarded. */
   onCancel: () => void
+  /** True while a save is in flight: the fields and buttons are disabled. */
+  busy?: boolean
+  ref?: Ref<NewsArticleFormHandle>
 }
 
-function splitAuthors(value: string): string[] {
-  return value
-    .split(',')
-    .map((author) => author.trim())
-    .filter((author) => author !== '')
-}
+/**
+ * Creates or edits a news item in both languages. The title and abstract sit in one tab per
+ * language (`LanguageTabs`); the source, authors, date and link are shared and sit below, outside
+ * the tabs. Both panels stay mounted, so switching tabs never loses what was typed. The tabs only
+ * choose the translation being edited; they never change the site's language.
+ *
+ * When a title or abstract changes in one language only, the same field in the other language
+ * must change too or be confirmed with a switch. A legacy item (saved before languages existed)
+ * opens with its base text on the Spanish tab and an empty English tab, and its shared fields can
+ * be saved without translating it.
+ *
+ * Closing with unsaved changes asks first, from "Cancelar" or, through `ref`'s `requestCancel`,
+ * from the modal's own close button and Escape.
+ */
+export function NewsArticleForm({
+  initial,
+  onSave,
+  onCancel,
+  busy = false,
+  ref,
+}: NewsArticleFormProps) {
+  const formId = useId()
+  // Everything the editor says follows the site's language; the tabs only pick the translation.
+  const t = useTranslations('news')
+  const validation = useTranslations('news.validation')
+  const uiLocale = resolveLocale(useLocale())
+  // In a modal, the language tabs sit beside its title and stay in view while the form scrolls.
+  const headerSlot = useModalHeaderSlot()
+  const formRef = useRef<HTMLFormElement>(null)
 
-/** Messages match `newsInputSchema` (apps/web/app/lib/news.ts) so a rejection reads the same
- * whether it's caught here, on blur, or by the server after submission. */
-function requireNonEmpty(message: string) {
-  return (value: string) => {
-    if (value.trim() === '') throw new Error(message)
-  }
-}
+  const [draft, setDraft] = useState<NewsDraft>(initial.draft)
+  const [confirmed, setConfirmed] = useState<ReviewConfirmation[]>([])
+  const [attempted, setAttempted] = useState(false)
+  const [tab, setTab] = useState<Locale>(defaultLocale)
+  const [focusRequest, setFocusRequest] = useState(0)
+  const [discardOpen, setDiscardOpen] = useState(false)
 
-function validateAuthors(value: string) {
-  if (splitAuthors(value).length === 0) throw new Error('Debe indicar al menos un autor.')
-}
-
-function validateExternalUrl(value: string) {
-  if (value.trim() === '') throw new Error('El enlace debe ser una URL válida.')
-  try {
-    new URL(value)
-  } catch {
-    throw new Error('El enlace debe ser una URL válida.')
-  }
-}
-
-export function NewsArticleForm({ article, onSave, onCancel }: NewsArticleFormProps) {
-  const [title, setTitle] = useState(article?.title ?? '')
-  const [authors, setAuthors] = useState(article?.authors ?? '')
-  const [source, setSource] = useState(article?.source ?? '')
-  const [publishedAt, setPublishedAt] = useState(article?.publishedAt ?? '')
-  const [externalUrl, setExternalUrl] = useState(article?.href ?? '')
-  const [abstract, setAbstract] = useState(article?.abstract ?? '')
-
-  // Standards: Validation & Confirmation States
-  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
-  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
-
-  // Compute field errors for display
-  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
-  const authorsError =
-    hasAttemptedSubmit && splitAuthors(authors).length === 0
-      ? 'Debe indicar al menos un autor.'
-      : null
-  const sourceError =
-    hasAttemptedSubmit && source.trim() === '' ? 'La fuente es obligatoria.' : null
-
-  let urlError: string | null = null
-  if (hasAttemptedSubmit) {
-    if (externalUrl.trim() === '') {
-      urlError = 'El enlace es obligatorio.'
-    } else {
-      try {
-        new URL(externalUrl)
-      } catch {
-        urlError = 'El enlace debe ser una URL válida.'
-      }
-    }
+  const messages: NewsFieldMessages = {
+    source: validation('source'),
+    authors: validation('authors'),
+    publishedAt: validation('publishedAt'),
+    externalUrl: validation('externalUrl'),
   }
 
-  const abstractError =
-    hasAttemptedSubmit && abstract.trim() === '' ? 'El resumen es obligatorio.' : null
+  useEffect(() => {
+    if (focusRequest === 0) return
+    const invalid = formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? []
+    Array.from(invalid)
+      .find((element) => !element.closest('[hidden]'))
+      ?.focus()
+  }, [focusRequest])
 
-  const isFormValid =
-    title.trim() !== '' &&
-    splitAuthors(authors).length > 0 &&
-    source.trim() !== '' &&
-    externalUrl.trim() !== '' &&
-    urlError === null &&
-    abstract.trim() !== ''
-
-  // Check if form is dirty for discard confirmation
-  const isDirty =
-    hasAttemptedSubmit ||
-    title !== (article?.title ?? '') ||
-    authors !== (article?.authors ?? '') ||
-    source !== (article?.source ?? '') ||
-    publishedAt !== (article?.publishedAt ?? '') ||
-    externalUrl !== (article?.href ?? '') ||
-    abstract !== (article?.abstract ?? '')
-
-  function handleCancelClick() {
-    if (isDirty) {
-      setConfirmDiscardOpen(true)
-    } else {
-      onCancel()
-    }
+  function requestCancel() {
+    if (busy) return
+    if (hasUnsavedChanges(initial, draft)) setDiscardOpen(true)
+    else onCancel()
   }
 
-  function handleConfirmDiscard() {
-    setConfirmDiscardOpen(false)
-    onCancel()
+  useImperativeHandle(ref, () => ({ requestCancel }))
+
+  const needed = reviewsNeeded(initial, draft)
+  const errors: FormErrors = attempted
+    ? validateDraft(initial, draft, confirmed, uiLocale, messages)
+    : {}
+
+  function setContent(locale: Locale, field: NewsField, value: string) {
+    setDraft((current) => ({
+      ...current,
+      content: { ...current.content, [locale]: { ...current.content[locale], [field]: value } },
+    }))
+    setConfirmed((current) => resetConfirmations(current, field))
   }
 
-  function handleSave() {
-    setHasAttemptedSubmit(true)
+  function setShared(field: SharedTextField, value: string) {
+    setDraft((current) => ({ ...current, [field]: value }))
+  }
 
-    if (!isFormValid) {
-      if (title.trim() === '') {
-        document.getElementById('news-title-input')?.focus()
-      } else if (splitAuthors(authors).length === 0) {
-        document.getElementById('news-authors-input')?.focus()
-      } else if (source.trim() === '') {
-        document.getElementById('news-source-input')?.focus()
-      } else if (externalUrl.trim() === '') {
-        document.getElementById('news-url-input')?.focus()
-      } else if (abstract.trim() === '') {
-        document.getElementById('news-abstract-input')?.focus()
-      }
+  function handleSubmit() {
+    if (busy) return
+    setAttempted(true)
+    const found = validateDraft(initial, draft, confirmed, uiLocale, messages)
+
+    if (Object.keys(found).length === 0) {
+      onSave(draft, confirmationsStillNeeded(confirmed, needed))
       return
     }
 
-    onSave({
-      title,
-      authors: splitAuthors(authors),
-      source,
-      publishedAt: publishedAt === '' ? null : publishedAt,
-      externalUrl,
-      abstract,
-    })
+    const target = tabWithErrors(found, tab)
+    if (target) setTab(target)
+    setFocusRequest((current) => current + 1)
+  }
+
+  function reviewControl(locale: Locale, field: NewsField) {
+    const review = needed.find((each) => each.locale === locale && each.field === field)
+    if (!review) return null
+
+    return (
+      <TranslationReview
+        checked={isConfirmed(confirmed, review)}
+        label={confirmationLabel(newsContent, review, uiLocale)}
+        message={reviewMessage(newsContent, review, initial.stored, draft.content, uiLocale)}
+        onChange={(checked) =>
+          setConfirmed((current) => withConfirmation(current, review, checked))
+        }
+      />
+    )
   }
 
   return (
-    <div className="news-article-form">
-      <FormField
-        errorMessage={titleError}
-        id="news-title-input"
-        label="Título"
-        onChange={setTitle}
-        required
-        validate={requireNonEmpty('El título es obligatorio.')}
-        value={title}
-      />
+    <form
+      className="news-article-form"
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault()
+        handleSubmit()
+      }}
+      ref={formRef}
+    >
+      <fieldset className="news-article-form-fields" disabled={busy}>
+        <LanguageTabs
+          copyLang={uiLocale}
+          flags={languageTabFlags(initial.stored, errors, needed, confirmed, uiLocale)}
+          label={t('editor.languageTabs')}
+          onSelect={setTab}
+          selected={tab}
+          tablistContainer={headerSlot}
+        >
+          {(locale) => (
+            <>
+              {initial.isLegacy && locale === defaultLocale ? (
+                <Notice>{t('editor.legacyBaseText')}</Notice>
+              ) : null}
 
-      <div className="news-article-form-row">
-        <FormField
-          errorMessage={authorsError}
-          id="news-authors-input"
-          label="Autores"
-          onChange={setAuthors}
-          required
-          validate={validateAuthors}
-          value={authors}
-        />
-        <FormField
-          errorMessage={sourceError}
-          id="news-source-input"
-          label="Fuente"
-          onChange={setSource}
-          required
-          validate={requireNonEmpty('La fuente es obligatoria.')}
-          value={source}
-        />
-      </div>
+              {initial.isLegacy && locale !== defaultLocale ? (
+                <Notice tone="warning">{t('editor.legacyNoTranslation')}</Notice>
+              ) : null}
 
-      <div className="news-article-form-row">
-        <FormField label="Fecha" onChange={setPublishedAt} type="date" value={publishedAt} />
-        <FormField
-          errorMessage={urlError}
-          id="news-url-input"
-          label="Enlace"
-          onChange={setExternalUrl}
-          required
-          type="url"
-          validate={validateExternalUrl}
-          value={externalUrl}
-        />
-      </div>
+              <FormField
+                error={errors[contentPath(locale, 'title')]}
+                id={`${formId}-${locale}-title`}
+                label={t('editor.titleField', { language: localeLabels[locale] })}
+                lang={contentFieldLang(initial.stored, locale)}
+                onChange={(value) => setContent(locale, 'title', value)}
+                required
+                value={draft.content[locale].title}
+              />
+              {reviewControl(locale, 'title')}
 
-      <FormField
-        errorMessage={abstractError}
-        id="news-abstract-input"
-        label="Resumen"
-        multiline
-        onChange={setAbstract}
-        required
-        validate={requireNonEmpty('El resumen es obligatorio.')}
-        value={abstract}
-      />
+              <FormField
+                error={errors[contentPath(locale, 'abstract')]}
+                id={`${formId}-${locale}-abstract`}
+                label={t('editor.abstractField', { language: localeLabels[locale] })}
+                lang={contentFieldLang(initial.stored, locale)}
+                multiline
+                onChange={(value) => setContent(locale, 'abstract', value)}
+                required
+                value={draft.content[locale].abstract}
+              />
+              {reviewControl(locale, 'abstract')}
+            </>
+          )}
+        </LanguageTabs>
 
-      <div className="news-article-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
-        </Button>
-        <Button onClick={handleSave} variant="primary">
-          Confirmar
-        </Button>
-      </div>
+        <div className="news-article-form-row">
+          <FormField
+            error={errors.authors}
+            id={`${formId}-authors`}
+            label={t('editor.authors')}
+            onChange={(value) => setShared('authors', value)}
+            placeholder={t('editor.authorsHint')}
+            required
+            value={draft.authors}
+          />
+          <FormField
+            error={errors.source}
+            id={`${formId}-source`}
+            label={t('editor.source')}
+            onChange={(value) => setShared('source', value)}
+            required
+            value={draft.source}
+          />
+        </div>
+
+        <div className="news-article-form-row">
+          <FormField
+            error={errors.publishedAt}
+            id={`${formId}-published-at`}
+            label={t('editor.publishedAt')}
+            onChange={(value) => setShared('publishedAt', value)}
+            type="date"
+            value={draft.publishedAt}
+          />
+          <FormField
+            error={errors.externalUrl}
+            id={`${formId}-external-url`}
+            label={t('editor.externalUrl')}
+            onChange={(value) => setShared('externalUrl', value)}
+            required
+            type="url"
+            value={draft.externalUrl}
+          />
+        </div>
+
+        <div className="news-article-form-actions">
+          <Button onClick={requestCancel} variant="secondary">
+            {t('editor.cancel')}
+          </Button>
+          <Button type="submit" variant="primary">
+            {busy ? t('editor.saving') : t('editor.save')}
+          </Button>
+        </div>
+      </fieldset>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
-        onCancel={() => setConfirmDiscardOpen(false)}
-        onConfirm={handleConfirmDiscard}
-        open={confirmDiscardOpen}
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
+        onCancel={() => setDiscardOpen(false)}
+        onConfirm={() => {
+          setDiscardOpen(false)
+          onCancel()
+        }}
+        open={discardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardDialog.title')}
       />
-    </div>
+    </form>
   )
 }
