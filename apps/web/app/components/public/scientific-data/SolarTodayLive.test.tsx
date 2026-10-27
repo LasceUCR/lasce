@@ -103,6 +103,42 @@ describe('SolarTodayLive', () => {
     await user.click(screen.getByRole('button', { name: 'Actualizar imágenes' }))
     expect(await screen.findAllByRole('img')).toHaveLength(3)
   })
+  test('marks the strip busy with placeholders until the images arrive', async () => {
+    let resolve!: (value: unknown) => void
+    const fetchMock = vi.fn(
+      () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const { container } = renderWithIntl(
+      <SolarTodayLive instrument={instrument} initialNow={now} />,
+    )
+
+    expect(container.querySelector('#solar-today-results')).toHaveAttribute('aria-busy', 'true')
+    expect(screen.queryByText('Aún no hay imágenes para esta selección')).not.toBeInTheDocument()
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+
+    await act(async () => resolve({ ok: true, json: async () => result() }))
+
+    expect(await screen.findAllByRole('img')).toHaveLength(5)
+    expect(container.querySelector('#solar-today-results')).not.toHaveAttribute('aria-busy')
+    expect(container.querySelector('[inert]')).toBeNull()
+  })
+
+  test('stops loading and shows the error when the source fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }))
+    const { container } = renderWithIntl(
+      <SolarTodayLive instrument={instrument} initialNow={now} />,
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No fue posible cargar')
+    expect(container.querySelector('#solar-today-results')).not.toHaveAttribute('aria-busy')
+    expect(container.querySelector('[inert]')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Actualizar imágenes' })).toBeEnabled()
+  })
+
   test('does not replace today with yesterday at UTC midnight', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
