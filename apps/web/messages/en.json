@@ -1771,5 +1771,23 @@
         "instruments": "Queryable instruments"
       }
     }
+  },
+  "account": {
+    "signIn": "Sign in",
+    "myAccount": "My account",
+    "administration": "Administration",
+    "signOut": "Sign out",
+    "signingOut": "Signing out...",
+    "roles": {
+      "VISITOR": "Visitor",
+      "ASSISTANT": "Assistant",
+      "ADMIN": "Administrator"
+    },
+    "signOutDialog": {
+      "title": "Sign out?",
+      "body": "Your session in this browser will end and you will have to sign in again.",
+      "confirm": "Sign out",
+      "cancel": "Cancel"
+    }
   }
 }
