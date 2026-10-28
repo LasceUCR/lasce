@@ -2,6 +2,10 @@
 
 How a view shows placeholders shaped like its content while that content loads (#377), instead of
 an empty area, a spinner or a lone "Cargando…". The shared pieces are in
+`apps/web/app/components/public/skeleton/`. `/datos` is where they first shipped: "Sol hoy", each
+solar image, and the results of an instrument query. `/galeria` (#403) is the second consumer, and
+a different one: it has no client-side loading state to toggle, so it reaches for the plain
+`Skeleton` shape directly rather than `LoadingRegion` — see "Where it is used" below.
 `apps/web/app/components/public/skeleton/`; `/datos` is where they are used today: "Sol hoy",
 each solar image, and the results of an instrument query.
 
@@ -58,6 +62,20 @@ Three rules keep the transition still:
 - **End every load.** `loading` must become false on success, on an empty answer, on a failure and
   on a cancel; `LoadingRegion` cannot tell a slow request from one that will never end.
 
+### A Server Component with no client-side state: `loading.tsx` and `error.tsx`
+
+`LoadingRegion` assumes a `loading` boolean the caller toggles, which fits a client component
+fetching its own data. A page that instead reads the database directly in a Server Component (as
+`/galeria`'s do, all `force-dynamic`) has no such boolean — the only "loading" moment is Next's own
+Suspense boundary around that component's render, shown through the route's `loading.tsx` while it
+is pending and swapped automatically for the real page once it resolves. There, a page composes
+`Skeleton` (and `SkeletonText`) directly into its own markup — `GalleryPageSkeleton.tsx` and
+`AlbumPageSkeleton.tsx` are the reference — with a `role="status"` paragraph of its own standing in
+for `LoadingRegion`'s announcement, since there is no single mounted element to attach it to across
+the loading/loaded swap. A thrown `getGalleryAlbums` is caught the same native way, by the route's
+`error.tsx`, which never reuses the skeleton: it renders a `Notice tone="error"` and a retry button
+instead (`GalleryErrorState.tsx`).
+
 ## Accessibility
 
 `LoadingRegion` does what the acceptance criteria ask, so each view does not have to:
@@ -79,16 +97,22 @@ its loading message stays for screen readers only, while the placeholder fills t
 
 ## Where it is used
 
-| View                       | File                                            | Placeholder                                              |
-| -------------------------- | ----------------------------------------------- | -------------------------------------------------------- |
-| "Sol hoy" on `/datos`      | `scientific-data/SolarToday.tsx`                | 5 `SkeletonImageCard`s in the strip                      |
-| Each solar image           | `scientific-data/SuviImageSequence.tsx`         | A dark `Skeleton` filling the frame                      |
-| An instrument query result | `scientific-data/ScientificResultsSkeleton.tsx` | Heading, metadata, and a chart or image grid, by product |
+| View                                               | File                                                      | Placeholder                                                               |
+| -------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------- |
+| "Sol hoy" on `/datos`                              | `scientific-data/SolarToday.tsx`                          | 5 `SkeletonImageCard`s in the strip                                       |
+| Each solar image                                   | `scientific-data/SuviImageSequence.tsx`                   | A dark `Skeleton` filling the frame                                       |
+| An instrument query result                         | `scientific-data/ScientificResultsSkeleton.tsx`           | Heading, metadata, and a chart or image grid, by product                  |
+| `/galeria`                                         | `gallery/GalleryPageSkeleton.tsx`                         | The static hero renders for real; album groups get `GalleryTileSkeleton`s |
+| `/galeria/[slug]` and `/galeria/[slug]/[subalbum]` | `gallery/AlbumPageSkeleton.tsx`                           | Hero text, sub-album tiles (top-level album only) and the media grid      |
+| Every `/galeria` route's data fetch failing        | `gallery/GalleryErrorState.tsx` (via `galeria/error.tsx`) | A `Notice` and a "Reintentar" button                                      |
 
 ## Tests
 
-- The components: `skeleton/*.test.tsx`.
+- The components: `skeleton/*.test.tsx`, and the Gallery's own
+  `gallery/GalleryTileSkeleton.test.tsx`, `MediaTileSkeleton.test.tsx`,
+  `GalleryPageSkeleton.test.tsx`, `AlbumPageSkeleton.test.tsx` and `GalleryErrorState.test.tsx`.
 - Each view's loading, result, empty and error states: `SolarToday.test.tsx`,
   `SolarTodayLive.test.tsx`, `SuviImageSequence.test.tsx`, `ScientificDataExplorer.test.tsx`.
-- In a browser, with the data API answered by the test: `tests/e2e/skeleton-loading.spec.ts`
-  (layout from 320 to 1440 px, reduced motion, focus and axe).
+- In a browser: `tests/e2e/skeleton-loading.spec.ts` for `/datos` (data API answered by the test;
+  layout from 320 to 1440 px, reduced motion, focus and axe), `tests/e2e/gallery-skeleton.spec.ts`
+  for `/galeria` (the page's own document request delayed and then failed, same checks).

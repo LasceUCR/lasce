@@ -706,7 +706,7 @@ export type ResearcherInput = z.infer<typeof researcherInputSchema>
 /**
  * Creates a new researcher profile, authored by the admin who submitted it.
  * `createdAt` defaults to now, which — since the list is ordered by it —
- * puts the new profile at the end, same place `AddItemCard` prompted from.
+ * puts the new profile at the end. The add card itself stays at the front of the gallery.
  */
 export async function createResearcher(
   data: ResearcherInput,

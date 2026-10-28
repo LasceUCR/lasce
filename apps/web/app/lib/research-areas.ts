@@ -117,7 +117,9 @@ function toResearchArea(
 }
 
 /**
- * Every area, oldest first, in `locale` (the language of the request's `lasce_locale` cookie).
+ * Every area, newest first, in `locale` (the language of the request's `lasce_locale` cookie).
+ * An area just created is the first card. Editing does not move it, because the order is
+ * `createdAt`.
  * Pass `includeEditingData` only after a server-side check of the edit permission.
  */
 export async function getResearchAreas(
@@ -126,7 +128,7 @@ export async function getResearchAreas(
 ): Promise<ResearchArea[]> {
   const records = await prisma.researchArea.findMany({
     include: areaInclude,
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
   })
 
   return records.map((record) => toResearchArea(record, locale, includeEditingData))

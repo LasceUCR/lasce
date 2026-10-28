@@ -206,23 +206,6 @@ export function GalleryGroupSection({
       {/* A list, so a reader can be told how many albums this block holds
           and can step through them. The grid still owns the layout. */}
       <ul className="gallery-grid tile-list">
-        <li>
-          {editMode && (canEdit || canDelete) ? (
-            <EditableWrapper
-              className="gallery-grid-editable"
-              deleteConfirmTitle={tActions('deleteAlbum')}
-              deleteConfirmMessage={tActions('deleteMessage', { title: album.title })}
-              deleteLabel={tActions('deleteItem', { title: album.title })}
-              editLabel={tActions('editItem', { title: album.title })}
-              onDelete={canDelete ? () => handleDelete(album, false) : undefined}
-              onEdit={canEdit ? () => handleUpdate() : undefined}
-            >
-              {cover}
-            </EditableWrapper>
-          ) : (
-            cover
-          )}
-        </li>
         {editMode && canCreate && album.id ? (
           <li>
             <AddItemCard
@@ -248,6 +231,23 @@ export function GalleryGroupSection({
             </AddItemCard>
           </li>
         ) : null}
+        <li>
+          {editMode && (canEdit || canDelete) ? (
+            <EditableWrapper
+              className="gallery-grid-editable"
+              deleteConfirmTitle={tActions('deleteAlbum')}
+              deleteConfirmMessage={tActions('deleteMessage', { title: album.title })}
+              deleteLabel={tActions('deleteItem', { title: album.title })}
+              editLabel={tActions('editItem', { title: album.title })}
+              onDelete={canDelete ? () => handleDelete(album, false) : undefined}
+              onEdit={canEdit ? () => handleUpdate() : undefined}
+            >
+              {cover}
+            </EditableWrapper>
+          ) : (
+            cover
+          )}
+        </li>
         {album.subAlbums.map((subAlbum) => {
           const tile = (
             <AlbumTile

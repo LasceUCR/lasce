@@ -620,6 +620,9 @@
       "cancel": "Cancel",
       "save": "Confirm",
       "reload": "Close and load the current version",
+      "created": "Publication added successfully.",
+      "updated": "Publication updated successfully.",
+      "deleted": "Publication deleted successfully.",
       "uploadingImage": "Uploading image...",
       "altTextField": "Alternative text ({language})",
       "FileDropDescriptionText": "Drag an image here or click to select it from your device.",
@@ -1442,7 +1445,7 @@
       "save": "Confirm",
       "uploading": "Uploading image...",
       "uploadError": "The image could not be uploaded. Try again.",
-      "maxEmails": "Maximum {max} contact emails.",
+      "maxEmails": "It is not possible to add more than two email addresses.",
       "invalidEmail": "The email is not valid.",
       "duplicateEmail": "That email was already added."
     },
@@ -1773,6 +1776,24 @@
         "rosacResearchers": "ROSAC researchers",
         "instruments": "Queryable instruments"
       }
+    }
+  },
+  "account": {
+    "signIn": "Sign in",
+    "myAccount": "My account",
+    "administration": "Administration",
+    "signOut": "Sign out",
+    "signingOut": "Signing out...",
+    "roles": {
+      "VISITOR": "Visitor",
+      "ASSISTANT": "Assistant",
+      "ADMIN": "Administrator"
+    },
+    "signOutDialog": {
+      "title": "Sign out?",
+      "body": "Your session in this browser will end and you will have to sign in again.",
+      "confirm": "Sign out",
+      "cancel": "Cancel"
     }
   }
 }
