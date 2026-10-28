@@ -1,13 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadAcknowledgmentLogo } from '@/app/(public)/radioastronomia/actions'
 import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
@@ -162,7 +163,10 @@ export function RosacAcknowledgmentForm({
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoRemoved, setLogoRemoved] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const toast = useToast()
+  // A failed upload is an action outcome, so it is reported with a toast (see "Feedback" in
+  // `AGENTS.md`). The previous attempt's toast is dismissed on retry so errors do not pile up.
+  const uploadErrorToast = useRef<number | null>(null)
 
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
@@ -226,25 +230,29 @@ export function RosacAcknowledgmentForm({
 
     if (isUploading) return
 
+    if (uploadErrorToast.current !== null) {
+      toast.dismiss(uploadErrorToast.current)
+      uploadErrorToast.current = null
+    }
+
     let finalLogoUrl = ''
 
     if (isCustomMode) {
       if (logoFile) {
         setIsUploading(true)
-        setUploadError(null)
         try {
           const formData = new FormData()
           formData.set('file', logoFile)
           const result = await uploadAcknowledgmentLogo(formData)
           if (!result.ok) {
             setIsUploading(false)
-            setUploadError(result.error)
+            uploadErrorToast.current = toast.show('error', result.error)
             return
           }
           finalLogoUrl = result.imageUrl
         } catch {
           setIsUploading(false)
-          setUploadError(t('acknowledgments.uploadError'))
+          uploadErrorToast.current = toast.show('error', t('acknowledgments.uploadError'))
           return
         }
         setIsUploading(false)
@@ -272,12 +280,6 @@ export function RosacAcknowledgmentForm({
 
   return (
     <div className="cms-form">
-      {uploadError ? (
-        <p className="form-alert" role="alert">
-          {uploadError}
-        </p>
-      ) : null}
-
       <FormField
         errorMessage={nameError}
         id={`${formId}-name`}
