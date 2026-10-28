@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
+import { renderWithIntl as render } from '@/app/lib/i18n/testing'
+
 const mocks = vi.hoisted(() => ({
   uploadConstructionStageImage: vi.fn(),
 }))

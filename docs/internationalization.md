@@ -168,22 +168,30 @@ inventory taken when the static pages were migrated.
 
 ### Translated
 
-| Route                                    | Namespace                            | Copy built in                                                                 |
-| ---------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------- |
-| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata` | `PublicHeader.tsx`, `lib/footer.ts`                                           |
-| `/`                                      | `home`, `workAreas`                  | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`                       |
-| `/contacto`                              | `contact`                            | `lib/contact.ts`, `ContactChannelSection.tsx`                                 |
-| `/nosotros`                              | `nosotros`                           | `lib/nosotros.ts`, `NosotrosPage.tsx`, `NosotrosActivityForm.tsx`             |
-| `/fisica-solar`                          | `solarPhysics`                       | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`                       |
-| `/clima-espacial`                        | `spaceWeather`                       | `lib/space-weather.ts`, `lib/space-weather-section.ts`                        |
-| `/herramientas-cientificas`              | `scientificTools`                    | `lib/scientific-tools.ts`                                                     |
-| `/colaboraciones-e-iniciativas`          | `collaborations`                     | `lib/collaborations.ts`, `lib/research-collaborations.ts`                     |
-| `/investigacion/**`                      | `researchAreas`                      | `(public)/investigacion/**`, `research/*`                                     |
-| `/actividades-academicas`                | `academicActivities`                 | `lib/academic-activities.ts`, `AcademicActivitiesPage.tsx`                    |
-| `/publicaciones`                         | `publications`                       | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                         |
-| `/noticias`                              | `news`, `academicActivities`         | `NewsExplorer.tsx`, `lib/news-form.ts`                                        |
-| `/radioastronomia`                       | `rosac`                              | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`       |
-| `/datos`                                 | `scientificData`                     | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts` |
+| Route                                    | Namespace                                       | Copy built in                                                                                                  |
+| ---------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata`, `account` | `PublicHeader.tsx`, `lib/footer.ts`, `auth/AccountLinks.tsx`, `auth/AccountMenu.tsx`, `auth/SignOutButton.tsx` |
+| `/`                                      | `home`, `workAreas`                             | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`                                                        |
+| `/contacto`                              | `contact`                                       | `lib/contact.ts`, `ContactChannelSection.tsx`                                                                  |
+| `/nosotros`                              | `nosotros`                                      | `lib/nosotros.ts`, `NosotrosPage.tsx`, `NosotrosActivityForm.tsx`                                              |
+| `/fisica-solar`                          | `solarPhysics`                                  | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`                                                        |
+| `/clima-espacial`                        | `spaceWeather`                                  | `lib/space-weather.ts`, `lib/space-weather-section.ts`                                                         |
+| `/herramientas-cientificas`              | `scientificTools`                               | `lib/scientific-tools.ts`                                                                                      |
+| `/colaboraciones-e-iniciativas`          | `collaborations`                                | `lib/collaborations.ts`, `lib/research-collaborations.ts`                                                      |
+| `/investigacion/**`                      | `researchAreas`                                 | `(public)/investigacion/**`, `research/*`                                                                      |
+| `/actividades-academicas`                | `academicActivities`                            | `lib/academic-activities.ts`, `AcademicActivitiesPage.tsx`                                                     |
+| `/publicaciones`                         | `publications`                                  | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                                                          |
+| `/noticias`                              | `news`, `academicActivities`                    | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
+| `/radioastronomia`                       | `rosac`                                         | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`                                        |
+| `/datos`                                 | `scientificData`                                | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts`                                  |
+
+The top menu's user dropdown (`AccountLinks.tsx`, `AccountMenu.tsx`, its mobile equivalent, and
+the shared `SignOutButton.tsx` confirmation dialog) reads its copy from the `account` namespace:
+sign-in/out labels, "Mi cuenta", "Administración", and the `roles` map keyed by `UserRole`. This
+is fixed UI chrome with no per-user content, so it is static catalogue copy, the same choice as
+`nav`/`footer`/`shell`, not database content like `/` or `/clima-espacial` below. `ROLE_LABELS` in
+`lib/auth/account.ts` stays Spanish-only: it also backs the `/administracion/usuarios` role list
+and the `/cuenta` page, both still untranslated.
 
 On `/`, the hero banner's title and subtitle and the geomagnetic indices' descriptions are
 database content, edited in both languages in "Modo edición" ([`home-page.md`](home-page.md)).
@@ -208,7 +216,9 @@ cards' labels (`card`, including "Sin fecha" for an undated item), the editor wi
 validation and toasts (`editor`, `discardDialog`, `deleteDialog`, `validation`, `errors`,
 `created`, `updated`, `deleted`), and the news items' title and abstract, which are database
 content in `news.news_record_translations`. Dates are formatted in the visitor's language by
-`getNews()`; an item without an English version is shown in its base text. The academic
+`getNewsPage()`; an item without an English version is shown in its base text, and a search runs
+on the text shown, in the visitor's language (see [`pagination.md`](pagination.md)). The page
+controls' own text is in `common.pagination`. The academic
 activities section above the news uses `academicActivities`. Each card links out to the original
 article, which is the item's detail view: there is no news page of its own to translate.
 
@@ -236,12 +246,12 @@ rest of the "Not tied to one page" list below.
 
 ### Still to do
 
-| Route                | Copy lives in                                                      | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                           |
-| -------------------- | ------------------------------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/galeria/**`        | `lib/gallery.ts`, `gallery/*`                                      | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead |
-| `/acceso`, `/cuenta` | `lib/auth/login.ts`, `registration.ts`, `account.ts`               | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's account links ("Ingresar", "Mi cuenta") live here                                                                  |
-| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                  |
-| `(public)/[section]` | inline in the page                                                 | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                      |
+| Route                | Copy lives in                                                      | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/galeria/**`        | `lib/gallery.ts`, `gallery/*`                                      | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead                                                                    |
+| `/acceso`, `/cuenta` | `lib/auth/login.ts`, `registration.ts`, `account.ts`               | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's own account links moved to the `account` namespace (see the Translated table above); `ROLE_LABELS`, `accountSummaryCopy` and the rest of this page's body copy are still Spanish-only |
+| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                                                                                     |
+| `(public)/[section]` | inline in the page                                                 | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                                                                                         |
 
 ### Not tied to one page
 

@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
+import { renderWithIntl as render } from '@/app/lib/i18n/testing'
+
 const mocks = vi.hoisted(() => ({
   uploadAcknowledgmentLogo: vi.fn(),
 }))
@@ -170,5 +172,18 @@ describe('RosacAcknowledgmentForm', () => {
       await screen.findByText('No se pudo subir el logo. Inténtelo de nuevo.'),
     ).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
+  test('fills alt text with English preset defaultAltEn when in English locale', async () => {
+    const user = userEvent.setup()
+    render(<RosacAcknowledgmentForm {...addArgs} />, { locale: 'en' })
+
+    const select = screen.getByRole('combobox', {
+      name: 'Choose a custom logo or select one from the list',
+    })
+
+    // Select preset 0
+    await user.selectOptions(select, '0')
+    expect(
+      screen.getByRole('textbox', { name: 'Logo alternative text (Accessibility)' }),
+    ).toHaveValue('Logo of the Vice-Rectorate for Research, University of Costa Rica')
   })
 })

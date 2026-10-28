@@ -27,6 +27,9 @@ function renderWithEditMode(editMode: boolean, props: EditableAcknowledgmentCard
         <EditableAcknowledgmentCard {...props} />
       </EditModeContext.Provider>
     </ToastProvider>,
+    <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
+      <EditableAcknowledgmentCard {...props} />
+    </EditModeContext.Provider>,
   )
 }
 

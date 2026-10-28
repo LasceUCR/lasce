@@ -166,6 +166,14 @@
     "truncatedText": {
       "readMore": "Read more",
       "readLess": "Read less"
+    },
+    "loading": "Loading…",
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page}",
+      "status": "Page {page} of {total}"
     }
   },
   "solarImageLightbox": {
@@ -176,6 +184,17 @@
     "next": "Next",
     "position": "Image {position} of {total}",
     "announcement": "Image {position} of {total}: {time}."
+  },
+  "fileDrop": {
+    "dropHere": "Drag an image here",
+    "browseFiles": "click to select from your device",
+    "description": "Drag an image here or click to select from your device",
+    "rejectionFormat": "Unsupported format. Use a JPG, PNG, WebP or GIF image.",
+    "rejectionSize": "The image exceeds the maximum size of 25 MB.",
+    "removeFile": "Remove image",
+    "removeLabel": "Remove image",
+    "previewAlt": "Preview of {label}",
+    "imagePreviewAlt": "Preview of {label}"
   },
   "contact": {
     "meta": {
@@ -826,7 +845,10 @@
       "searchPlaceholder": "Search by title, author or keyword...",
       "results": "{count, plural, one {# news item found.} other {# news items found.}}",
       "emptyQuery": "No news found for “{query}”.",
-      "empty": "No news has been published yet."
+      "empty": "No news has been published yet.",
+      "range": "Showing {from}–{to} of {total}.",
+      "rangeOne": "Showing item {position} of {total}.",
+      "paginationLabel": "News pages"
     },
     "card": {
       "openSource": "Open source",
@@ -1126,6 +1148,175 @@
     },
     "backLink": {
       "label": "Back to work areas"
+    },
+    "editor": {
+      "saveError": "The change could not be saved. Try again.",
+      "discardDialog": {
+        "title": "Discard unsaved changes",
+        "message": "If you discard now, all entered data that has not been saved will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
+      "characteristics": {
+        "editLabel": "Edit {title}",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit characteristic",
+        "iconLabel": "Icon",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "icons": {
+          "antenna": "Antenna",
+          "location": "Location",
+          "frequency": "Frequency",
+          "sun": "Sun",
+          "tracking": "Pointing and tracking",
+          "control": "Control",
+          "receiver": "Receiver",
+          "maintenance": "Maintenance and infrastructure",
+          "education": "Education"
+        }
+      },
+      "activities": {
+        "editLabel": "Edit {title}",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit activity",
+        "iconLabel": "Icon",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "cancel": "Cancel",
+        "save": "Confirm"
+      },
+      "stages": {
+        "editStage": "Edit stage",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit stage",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "photosTitle": "Stage photographs",
+        "registeredCount": "{count, plural, one {# registered photograph} other {# registered photographs}}",
+        "editPhotos": "Edit photographs",
+        "addPhoto": "Add photograph",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "uploading": "Uploading photographs...",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "imagesRequired": "The stage must contain at least one photograph.",
+        "uploadError": "Error uploading photographs. Try again.",
+        "editModal": {
+          "title": "Edit photographs",
+          "help": "Modify the accessible description (alt) of each photograph or remove those that no longer correspond to this stage.",
+          "altLabel": "Alternative text for photograph {index}",
+          "altPlaceholder": "Accessible alternative text for photograph",
+          "deleteLabel": "Delete photograph {index}",
+          "deleteMinTitle": "There must be at least one photo in the stage",
+          "deleteTooltip": "Delete this photograph",
+          "savePhotos": "Save photographs",
+          "cancel": "Cancel",
+          "deleteDialog": {
+            "title": "Delete photograph",
+            "message": "Are you sure you want to delete this photograph from the stage?",
+            "confirm": "Delete",
+            "cancel": "Cancel"
+          },
+          "discardDialog": {
+            "title": "Discard photo changes",
+            "message": "If you discard now, changes made to photographs will not be applied."
+          }
+        },
+        "addModal": {
+          "title": "Add photograph",
+          "fileLabel": "Image file",
+          "fileHelp": "JPG, PNG or WebP formats (max. 10 MB).",
+          "fileRequired": "You must select an image file.",
+          "altLabel": "Accessible alternative text (alt)",
+          "altPlaceholder": "Description for screen reader users",
+          "altDefault": "Photograph of {title}",
+          "submit": "Add photograph",
+          "cancel": "Cancel",
+          "discardDialog": {
+            "title": "Discard new photograph",
+            "message": "If you discard now, the selected photograph will not be added to the stage."
+          }
+        }
+      },
+      "instruments": {
+        "addCard": "Add instrument",
+        "editLabel": "Edit {name}",
+        "deleteLabel": "Delete {name}",
+        "deleteConfirmTitle": "Delete instrument",
+        "deleteConfirmMessage": "This action cannot be undone and will delete the scientific instrument.",
+        "editModalTitle": "Edit \"{name}\"",
+        "defaultModalTitle": "Edit instrument",
+        "nameLabel": "Instrument name",
+        "nameRequired": "Name is required.",
+        "descriptionLabel": "Description",
+        "descriptionRequired": "Description is required.",
+        "imageLabel": "Instrument image",
+        "imageHelp": "JPG, PNG, WebP or AVIF formats (max. 10 MB).",
+        "imageRequired": "Image is required.",
+        "imageAltLabel": "Image alternative text (Accessibility)",
+        "imageAltPlaceholder": "Short image description for screen readers",
+        "imageAltDefault": "Illustrative image of {name}",
+        "actionSectionLabel": "Scientific consultation action",
+        "actionTypeLabel": "Action type",
+        "modes": {
+          "simulation": "Data catalog simulation (ROSAC)",
+          "custom": "External or custom link",
+          "disabled": "In integration / Coming soon (no link)"
+        },
+        "simulationTargetLabel": "Associated simulation instrument",
+        "simulationTargetOption": "Instrument {index}{product} ({code})",
+        "simulationAutoUrl": "Automatic link:",
+        "customHrefLabel": "Consultation link (URL)",
+        "customHrefPlaceholder": "https://... or /datos/...",
+        "customHrefRequired": "Link is required for a custom destination.",
+        "disabledHint": "The button will appear disabled indicating that the simulation is pending or in integration.",
+        "consultationLabel": "Button label",
+        "consultationLabelPlaceholder": "Consult simulation of {name}",
+        "consultationLabelDefault": "Consult simulation",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "saving": "Saving...",
+        "uploadError": "The image could not be uploaded. Try again."
+      },
+      "acknowledgments": {
+        "addCard": "Add institution",
+        "editLabel": "Edit {name}",
+        "deleteLabel": "Delete {name}",
+        "deleteConfirmTitle": "Delete institution",
+        "deleteConfirmMessage": "Do you want to delete the institution \"{name}\" from acknowledgments? This action cannot be undone.",
+        "editModalTitle": "Edit institution",
+        "nameLabel": "Institution name",
+        "namePlaceholder": "E.g. Center for Space Research (CINESPA), UCR",
+        "nameRequired": "Institution name is required.",
+        "logoSourceLabel": "Choose a custom logo or select one from the list",
+        "logoSourceCustom": "Upload custom logo",
+        "logoSourcePreset": "Select from list: {label}",
+        "logoFileLabel": "Logo file",
+        "logoFileHelp": "WebP, PNG, SVG or JPG formats (max. 10 MB).",
+        "logoRequired": "You must select or upload a logo for the institution.",
+        "logoAltLabel": "Logo alternative text (Accessibility)",
+        "logoAltPlaceholder": "Accessible description of the institutional logo",
+        "logoAltDefault": "Logo of {name}",
+        "selectedLogo": "Selected logo:",
+        "institutional": "Institutional",
+        "institutionUrlLabel": "Institution website (optional)",
+        "institutionUrlPlaceholder": "https://example.ucr.ac.cr",
+        "institutionUrlInvalid": "The link must be a valid URL starting with http:// or https://.",
+        "logoUnavailable": "Logo unavailable",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add institution",
+        "saving": "Saving...",
+        "uploadError": "The logo could not be uploaded. Try again."
+      }
     }
   },
   "researchAreas": {
@@ -1196,6 +1387,43 @@
     "errors": {
       "unknown": "The researcher could not be saved. Try again.",
       "deleteUnknown": "The researcher could not be deleted. Try again."
+    },
+    "editor": {
+      "addCard": "Add researcher",
+      "editTitle": "Edit researcher",
+      "editLabel": "Edit {name}",
+      "deleteLabel": "Delete {name}",
+      "deleteConfirmTitle": "Delete researcher",
+      "deleteConfirmMessage": "Do you want to delete \"{name}\"? This action cannot be undone.",
+      "deleteConfirm": "Delete",
+      "photoLabel": "Photo",
+      "photoHelp": "Optional. Researcher portrait, in JPG or PNG format.",
+      "roleLabel": "Role",
+      "roleRequired": "Role is required.",
+      "nameLabel": "Name",
+      "nameRequired": "Name is required.",
+      "institutionLabel": "Institution",
+      "institutionRequired": "Institution is required.",
+      "descriptionLabel": "Description",
+      "contactLabel": "Contact",
+      "addContact": "Add contact",
+      "deleteContact": "Delete {address}",
+      "addContactTitle": "Add contact",
+      "emailLabel": "Email address",
+      "add": "Add",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "uploading": "Uploading image...",
+      "uploadError": "The image could not be uploaded. Try again.",
+      "maxEmails": "Maximum {max} contact emails.",
+      "invalidEmail": "The email is not valid.",
+      "duplicateEmail": "That email was already added."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all entered data that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     }
   },
   "scientificData": {
@@ -1518,6 +1746,24 @@
         "rosacResearchers": "ROSAC researchers",
         "instruments": "Queryable instruments"
       }
+    }
+  },
+  "account": {
+    "signIn": "Sign in",
+    "myAccount": "My account",
+    "administration": "Administration",
+    "signOut": "Sign out",
+    "signingOut": "Signing out...",
+    "roles": {
+      "VISITOR": "Visitor",
+      "ASSISTANT": "Assistant",
+      "ADMIN": "Administrator"
+    },
+    "signOutDialog": {
+      "title": "Sign out?",
+      "body": "Your session in this browser will end and you will have to sign in again.",
+      "confirm": "Sign out",
+      "cancel": "Cancel"
     }
   }
 }

@@ -127,6 +127,7 @@ export function RosacInfoPage({
   const router = useRouter()
   const { editMode } = useEditMode()
   const tResearchers = useTranslations('researchers')
+  const tEditor = useTranslations('rosac.editor')
   const sendWithFeedback = useRequestFeedback()
   const toast = useToast()
 
@@ -461,6 +462,23 @@ export function RosacInfoPage({
         onSuccess: () => router.refresh(),
       },
     )
+    setListError(null)
+
+    let response: Response
+    try {
+      response = await fetch(`/api/researchers/${id}`, { method: 'DELETE' })
+    } catch {
+      setListError(tEditor('saveError'))
+      return
+    }
+
+    if (!response.ok) {
+      const body: { error?: string } | null = await response.json().catch(() => null)
+      setListError(body?.error ?? tEditor('saveError'))
+      return
+    }
+
+    router.refresh()
   }
 
   // --- Section 8: Acknowledgments Handlers ---
@@ -566,7 +584,7 @@ export function RosacInfoPage({
             return (
               <EditableWrapper
                 key={item.id}
-                editLabel={`Editar ${item.title}`}
+                editLabel={tEditor('characteristics.editLabel', { title: item.title })}
                 onEdit={() => openCharacteristicEditor(item.id)}
               >
                 <InfoCard title={item.title} description={item.description} icon={icon} />
@@ -607,7 +625,7 @@ export function RosacInfoPage({
             return (
               <EditableWrapper
                 key={item.id}
-                editLabel={`Editar ${item.title}`}
+                editLabel={tEditor('activities.editLabel', { title: item.title })}
                 onEdit={() => openActivityEditor(item.id)}
               >
                 <InfoCard title={item.title} description={item.description} icon={icon} />
@@ -676,7 +694,7 @@ export function RosacInfoPage({
             label={content.instruments.title}
             trailingSlide={
               editMode && canCreate ? (
-                <AddItemCard label="Añadir instrumento">
+                <AddItemCard label={tEditor('instruments.addCard')}>
                   {({ close }) => (
                     <RosacInstrumentForm
                       instrument={null}
@@ -698,10 +716,10 @@ export function RosacInfoPage({
               return (
                 <EditableWrapper
                   key={instrument.id}
-                  deleteConfirmMessage="Esta acción no se puede deshacer y borrará el instrumento científico."
-                  deleteConfirmTitle="Eliminar instrumento"
-                  deleteLabel={`Eliminar ${instrument.name}`}
-                  editLabel={`Editar ${instrument.name}`}
+                  deleteConfirmMessage={tEditor('instruments.deleteConfirmMessage')}
+                  deleteConfirmTitle={tEditor('instruments.deleteConfirmTitle')}
+                  deleteLabel={tEditor('instruments.deleteLabel', { name: instrument.name })}
+                  editLabel={tEditor('instruments.editLabel', { name: instrument.name })}
                   onDelete={canDelete ? () => handleDeleteInstrument(instrument.id) : undefined}
                   onEdit={canEdit ? () => openInstrumentEditor(instrument.id) : undefined}
                 >
@@ -722,10 +740,10 @@ export function RosacInfoPage({
               return (
                 <EditableWrapper
                   key={instrument.id}
-                  deleteConfirmMessage="Esta acción no se puede deshacer y borrará el instrumento científico."
-                  deleteConfirmTitle="Eliminar instrumento"
-                  deleteLabel={`Eliminar ${instrument.name}`}
-                  editLabel={`Editar ${instrument.name}`}
+                  deleteConfirmMessage={tEditor('instruments.deleteConfirmMessage')}
+                  deleteConfirmTitle={tEditor('instruments.deleteConfirmTitle')}
+                  deleteLabel={tEditor('instruments.deleteLabel', { name: instrument.name })}
+                  editLabel={tEditor('instruments.editLabel', { name: instrument.name })}
                   onDelete={canDelete ? () => handleDeleteInstrument(instrument.id) : undefined}
                   onEdit={canEdit ? () => openInstrumentEditor(instrument.id) : undefined}
                 >
@@ -764,7 +782,7 @@ export function RosacInfoPage({
           )}
           trailingSlide={
             editMode && canCreate ? (
-              <AddItemCard label="Añadir investigador">
+              <AddItemCard label={tResearchers('editor.addCard')}>
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
@@ -829,7 +847,7 @@ export function RosacInfoPage({
           )}
           trailingSlide={
             editMode && canCreate ? (
-              <AddItemCard label="Añadir institución">
+              <AddItemCard label={tEditor('acknowledgments.addCard')}>
                 {({ close }) => (
                   <RosacAcknowledgmentForm
                     institution={null}
@@ -852,8 +870,8 @@ export function RosacInfoPage({
         open={editingCharacteristic !== undefined}
         title={
           editingCharacteristic
-            ? `Editar "${editingCharacteristic.title}"`
-            : 'Editar característica'
+            ? tEditor('characteristics.editModalTitle', { title: editingCharacteristic.title })
+            : tEditor('characteristics.defaultModalTitle')
         }
       >
         {editingCharacteristic ? (
@@ -869,7 +887,11 @@ export function RosacInfoPage({
       <Modal
         onClose={closeActivityEditor}
         open={editingActivity !== undefined}
-        title={editingActivity ? `Editar "${editingActivity.title}"` : 'Editar actividad'}
+        title={
+          editingActivity
+            ? tEditor('activities.editModalTitle', { title: editingActivity.title })
+            : tEditor('activities.defaultModalTitle')
+        }
       >
         {editingActivity ? (
           <RosacActivityForm
@@ -884,7 +906,11 @@ export function RosacInfoPage({
       <Modal
         onClose={closeStageEditor}
         open={editingStage !== undefined}
-        title={editingStage ? `Editar "${editingStage.title}"` : 'Editar etapa'}
+        title={
+          editingStage
+            ? tEditor('stages.editModalTitle', { title: editingStage.title })
+            : tEditor('stages.defaultModalTitle')
+        }
       >
         {editingStage ? (
           <RosacStageForm
@@ -900,7 +926,11 @@ export function RosacInfoPage({
         onClose={closeInstrumentEditor}
         open={editingInstrument !== undefined}
         size="large"
-        title={editingInstrument ? `Editar "${editingInstrument.name}"` : 'Editar instrumento'}
+        title={
+          editingInstrument
+            ? tEditor('instruments.editModalTitle', { name: editingInstrument.name })
+            : tEditor('instruments.defaultModalTitle')
+        }
       >
         {editingInstrument ? (
           <RosacInstrumentForm
