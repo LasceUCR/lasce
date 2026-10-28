@@ -51,12 +51,6 @@ export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
 
 export type AlbumSlug = (typeof albumSlugs)[number]
 
-export const galeriaHero = {
-  kicker: 'Portal público LASCE',
-  title: 'Galería',
-  lead: 'Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes.',
-} as const
-
 const previosMontajeMedia = [
   {
     id: 'previos-montaje-1',
