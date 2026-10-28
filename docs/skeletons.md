@@ -6,6 +6,8 @@ an empty area, a spinner or a lone "Cargando…". The shared pieces are in
 solar image, and the results of an instrument query. `/galeria` (#403) is the second consumer, and
 a different one: it has no client-side loading state to toggle, so it reaches for the plain
 `Skeleton` shape directly rather than `LoadingRegion` — see "Where it is used" below.
+`apps/web/app/components/public/skeleton/`; `/datos` is where they are used today: "Sol hoy",
+each solar image, and the results of an instrument query.
 
 ## The pieces
 
@@ -114,3 +116,16 @@ its loading message stays for screen readers only, while the placeholder fills t
 - In a browser: `tests/e2e/skeleton-loading.spec.ts` for `/datos` (data API answered by the test;
   layout from 320 to 1440 px, reduced motion, focus and axe), `tests/e2e/gallery-skeleton.spec.ts`
   for `/galeria` (the page's own document request delayed and then failed, same checks).
+| View                       | File                                            | Placeholder                                              |
+| -------------------------- | ----------------------------------------------- | -------------------------------------------------------- |
+| "Sol hoy" on `/datos`      | `scientific-data/SolarToday.tsx`                | 5 `SkeletonImageCard`s in the strip                      |
+| Each solar image           | `scientific-data/SuviImageSequence.tsx`         | A dark `Skeleton` filling the frame                      |
+| An instrument query result | `scientific-data/ScientificResultsSkeleton.tsx` | Heading, metadata, and a chart or image grid, by product |
+
+## Tests
+
+- The components: `skeleton/*.test.tsx`.
+- Each view's loading, result, empty and error states: `SolarToday.test.tsx`,
+  `SolarTodayLive.test.tsx`, `SuviImageSequence.test.tsx`, `ScientificDataExplorer.test.tsx`.
+- In a browser, with the data API answered by the test: `tests/e2e/skeleton-loading.spec.ts`
+  (layout from 320 to 1440 px, reduced motion, focus and axe).
