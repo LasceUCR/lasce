@@ -1,8 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-
-import { renderWithIntl as render } from '@/app/lib/i18n/testing'
 
 const mocks = vi.hoisted(() => ({
   uploadAcknowledgmentLogo: vi.fn(),
@@ -12,6 +11,9 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadAcknowledgmentLogo: mocks.uploadAcknowledgmentLogo,
 }))
 
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+
 import {
   RosacAcknowledgmentForm,
   type RosacAcknowledgmentFormProps,
@@ -20,6 +22,11 @@ import { AddNew, EditExisting } from './RosacAcknowledgmentForm.stories'
 
 const editArgs = EditExisting.args as RosacAcknowledgmentFormProps
 const addArgs = AddNew.args as RosacAcknowledgmentFormProps
+
+/** The form reports a failed upload with a toast, so it renders inside the app's providers. */
+function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
+}
 
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
@@ -162,6 +169,49 @@ describe('RosacAcknowledgmentForm', () => {
     expect(
       screen.getByRole('textbox', { name: 'Texto alternativo del logo (Accesibilidad)' }),
     ).toHaveValue('')
+  })
+
+  test('shows the error in a toast and does not save when the logo upload fails', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    mocks.uploadAcknowledgmentLogo.mockResolvedValue({
+      ok: false,
+      error: 'El logo es demasiado grande.',
+    })
+    render(<RosacAcknowledgmentForm {...addArgs} onSave={onSave} />)
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Nombre de la institución' }),
+      'Instituto Tecnológico',
+    )
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['logo'], 'logo.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
+
+    expect(await screen.findByText('El logo es demasiado grande.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+    // A toast, not a custom message inside the form.
+    expect(document.querySelector('.cms-form .form-alert')).toBeNull()
+  })
+
+  test('shows a toast when the logo upload throws', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    mocks.uploadAcknowledgmentLogo.mockRejectedValue(new Error('network error'))
+    render(<RosacAcknowledgmentForm {...addArgs} onSave={onSave} />)
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Nombre de la institución' }),
+      'Instituto Tecnológico',
+    )
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['logo'], 'logo.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
+
+    expect(
+      await screen.findByText('No se pudo subir el logo. Inténtelo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
   })
 
   test('fills alt text with English preset defaultAltEn when in English locale', async () => {
