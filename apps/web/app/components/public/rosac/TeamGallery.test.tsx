@@ -153,6 +153,15 @@ describe('TeamGallery', () => {
     ).not.toBeInTheDocument()
   })
 
+  test('places a leading slide before every person', () => {
+    render(<TeamGallery {...defaultArgs} leadingSlide={<button type="button">Añadir</button>} />)
+
+    const track = screen.getByRole('list', { name: defaultArgs.label })
+    const items = within(track).getAllByRole('listitem')
+    expect(items).toHaveLength(defaultArgs.people.length + 1)
+    expect(within(items[0]!).getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
+  })
+
   test('appends a trailing slide after every person', () => {
     render(<TeamGallery {...defaultArgs} trailingSlide={<button type="button">Añadir</button>} />)
 

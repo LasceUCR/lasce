@@ -65,6 +65,22 @@ describe('AcknowledgmentsGallery', () => {
     expect(screen.getByRole('img', { name: unlinkedInstitution.logo.alt })).toBeInTheDocument()
   })
 
+  test('places a leading slide before the institutions', () => {
+    render(
+      <AcknowledgmentsGallery
+        {...defaultArgs}
+        leadingSlide={<button type="button">Añadir institución</button>}
+      />,
+    )
+
+    const grid = screen.getByRole('list', { name: defaultArgs.label })
+    const items = within(grid).getAllByRole('listitem')
+    expect(items).toHaveLength(defaultArgs.institutions.length + 1)
+    expect(
+      within(items[0]!).getByRole('button', { name: 'Añadir institución' }),
+    ).toBeInTheDocument()
+  })
+
   test('renders a single institution as a one-tile grid', () => {
     render(<AcknowledgmentsGallery {...singleArgs} />)
 
