@@ -1746,5 +1746,23 @@
         "instruments": "Instrumentos consultables"
       }
     }
+  },
+  "account": {
+    "signIn": "Ingresar",
+    "myAccount": "Mi cuenta",
+    "administration": "Administración",
+    "signOut": "Cerrar sesión",
+    "signingOut": "Cerrando sesión...",
+    "roles": {
+      "VISITOR": "Visitante",
+      "ASSISTANT": "Asistente",
+      "ADMIN": "Persona administradora"
+    },
+    "signOutDialog": {
+      "title": "¿Cerrar sesión?",
+      "body": "Tu sesión en este navegador terminará y tendrás que volver a ingresar.",
+      "confirm": "Cerrar sesión",
+      "cancel": "Cancelar"
+    }
   }
 }
