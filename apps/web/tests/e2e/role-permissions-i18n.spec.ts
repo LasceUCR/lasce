@@ -159,7 +159,9 @@ test('counts pending changes and confirms them in English, and cancelling saves 
     await expect(page.getByText('1 unsaved change', { exact: true })).toBeVisible()
     await page.getByRole('checkbox', { name: 'Download resources: Assistant' }).uncheck()
     await expect(page.getByText('2 unsaved changes', { exact: true })).toBeVisible()
-    await expect(page.getByRole('row', { name: /Edit components, unsaved/ })).toBeVisible()
+    // ", unsaved" sits in an absolutely positioned .sr-only span, which a browser lays out as a
+    // block, so the row's accessible name gets a space before the comma.
+    await expect(page.getByRole('row', { name: /Edit components\s*, unsaved/ })).toBeVisible()
 
     await page.getByRole('button', { name: 'Save changes' }).click()
     const dialog = page.getByRole('dialog', { name: 'Confirm permission change' })
