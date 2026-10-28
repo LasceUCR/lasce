@@ -1,4 +1,7 @@
 import es from '@/messages/es.json' with { type: 'json' }
+import type { Locale } from './i18n/config'
+import type { StoredContent } from './i18n/content/definition'
+import type { initiativeContent } from './initiative-schema'
 
 /**
  * Editorial source for `/colaboraciones-e-iniciativas`. The initiative copy used to live on
@@ -10,7 +13,8 @@ import es from '@/messages/es.json' with { type: 'json' }
  * The text is in the `collaborations` namespace of `apps/web/messages/`; this module holds the
  * structure, the links and the logos.
  *
- * Partner organizations are loaded from PostgreSQL by the route (`collaboration-records.ts`).
+ * These initiative items are historical fixtures for stories/tests. The public route replaces
+ * them with PostgreSQL records; the migration preserves this original bilingual content.
  */
 export interface CollaborationInitiative {
   id: string
@@ -21,6 +25,12 @@ export interface CollaborationInitiative {
   linkLabel?: string
   /** Mark shown beside the title. */
   logo?: { src: string; alt: string; width: number; height: number }
+  contentLocale?: Locale | null
+  editing?: {
+    content: StoredContent<typeof initiativeContent.specs>
+    isLegacy: boolean
+    version: string
+  }
 }
 
 export interface CollaborationsContent {
