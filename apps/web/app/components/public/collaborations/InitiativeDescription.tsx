@@ -1,7 +1,7 @@
 'use client'
 
 import { useId, useLayoutEffect, useRef, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import styles from './InitiativeDescription.module.css'
 
@@ -14,6 +14,7 @@ export interface InitiativeDescriptionProps {
 
 export function InitiativeDescription({ paragraphs }: InitiativeDescriptionProps) {
   const t = useTranslations('collaborations.initiatives')
+  const uiLocale = useLocale()
   const id = useId()
   const [expanded, setExpanded] = useState(false)
   const description = useRef<HTMLDivElement>(null)
@@ -61,6 +62,7 @@ export function InitiativeDescription({ paragraphs }: InitiativeDescriptionProps
           <>
             {' '}
             <button
+              lang={uiLocale}
               aria-controls={id}
               aria-expanded={expanded}
               className={styles.toggle}
