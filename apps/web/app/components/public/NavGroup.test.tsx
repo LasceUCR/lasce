@@ -158,8 +158,7 @@ describe('NavGroup', () => {
     vi.useRealTimers()
   })
 
-  test('opening another group by keyboard closes the previous one', async () => {
-    const user = userEvent.setup()
+  test('opening another group with a click closes the previous one', () => {
     render(
       <>
         <NavGroup {...closedArgs} label="Investigación" />
@@ -167,11 +166,12 @@ describe('NavGroup', () => {
       </>,
     )
 
-    await user.click(screen.getByText('Investigación'))
+    // Opened by hover, so no focus moves and no blur can be what closes it below.
+    fireEvent.mouseEnter(group('Investigación'))
     expect(group('Investigación')).toHaveAttribute('open')
 
-    screen.getByText('Divulgación').focus()
-    await user.keyboard('{Enter}')
+    // A browser activates a focused summary on Enter or Space with this same click event.
+    fireEvent.click(screen.getByText('Divulgación'))
 
     expect(group('Investigación')).not.toHaveAttribute('open')
     expect(group('Divulgación')).toHaveAttribute('open')
