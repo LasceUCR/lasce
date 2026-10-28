@@ -8,7 +8,7 @@ import {
   type ScientificInstrument,
   type ScientificProductCode,
 } from '@/app/lib/scientific-data'
-import { SolarToday } from './SolarToday'
+import { SOLAR_TODAY_IMAGE_COUNT, SolarToday } from './SolarToday'
 
 export interface SolarTodayLiveProps {
   instrument: ScientificInstrument
@@ -69,12 +69,14 @@ export function SolarTodayLive({ instrument, initialNow }: SolarTodayLiveProps) 
         if (parsed.visualization !== 'image-sequence') throw new Error('Expected solar images')
         controller.signal.throwIfAborted()
         // A compact chronological row, including both ends of the requested interval.
+        const count = SOLAR_TODAY_IMAGE_COUNT
         const images =
-          parsed.images.length <= 5
+          parsed.images.length <= count
             ? parsed.images
             : Array.from(
-                { length: 5 },
-                (_, index) => parsed.images[Math.round((index * (parsed.images.length - 1)) / 4)]!,
+                { length: count },
+                (_, index) =>
+                  parsed.images[Math.round((index * (parsed.images.length - 1)) / (count - 1))]!,
               )
         setResponse({ key, state: 'success', images })
       } catch {
