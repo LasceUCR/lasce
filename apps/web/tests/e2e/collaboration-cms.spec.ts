@@ -82,7 +82,11 @@ test('manages bilingual collaborations and optional fields through the shared CM
       .click()
     await expect(page.getByText('Collaboration deleted successfully.')).toBeVisible()
     await expect(page.getByRole('heading', { name, exact: true })).toHaveCount(0)
-    await expect(page.getByRole('link', { name: 'Official IVIA site' })).toBeVisible()
+    await expect(
+      page
+        .getByRole('article', { name: 'Ibero-American VLBI Initiative (IVIA)', exact: true })
+        .getByRole('link'),
+    ).toBeVisible()
   } finally {
     await account.prisma.collaboration.deleteMany({ where: { name } })
     await account.cleanup()
