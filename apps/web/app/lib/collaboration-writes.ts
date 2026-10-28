@@ -17,14 +17,15 @@ const scopes = { national: 'NATIONAL', international: 'INTERNATIONAL' } as const
 
 export async function createCollaboration(input: CollaborationCreateInput) {
   return runWrite<{ id: string }, CollaborationWriteFailure>(async (tx) => {
-    const last = await tx.collaboration.aggregate({ _max: { position: true } })
+    const first = await tx.collaboration.aggregate({ _min: { position: true } })
+    const earliest = first._min.position
     return tx.collaboration.create({
       data: {
         name: input.name,
         acronym: input.acronym,
         scope: scopes[input.scope],
         websiteUrl: input.websiteUrl,
-        position: (last._max.position ?? -1) + 1,
+        position: earliest === null || earliest === undefined ? 0 : earliest - 1,
         ...baseContent(collaborationContent, input.content),
         translations: { create: translationRows(collaborationContent, input.content) },
       },
