@@ -67,10 +67,9 @@ const defaultArgs: RosacStageFormProps = {
 function renderForm(props: Partial<RosacStageFormProps> = {}, locale: 'es' | 'en' = 'es') {
   const onSave = vi.fn()
   const onCancel = vi.fn()
-  render(
-    <RosacStageForm {...defaultArgs} onCancel={onCancel} onSave={onSave} {...props} />,
-    { locale },
-  )
+  render(<RosacStageForm {...defaultArgs} onCancel={onCancel} onSave={onSave} {...props} />, {
+    locale,
+  })
   return { onSave, onCancel, user: userEvent.setup() }
 }
 

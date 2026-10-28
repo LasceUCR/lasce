@@ -28,7 +28,10 @@ function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
 
-function renderForm(props: RosacInstrumentFormProps, options?: Parameters<typeof renderWithIntl>[1]) {
+function renderForm(
+  props: RosacInstrumentFormProps,
+  options?: Parameters<typeof renderWithIntl>[1],
+) {
   return render(<RosacInstrumentForm {...props} />, options)
 }
 
