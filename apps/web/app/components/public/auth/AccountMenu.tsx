@@ -2,17 +2,13 @@
 
 import Link from 'next/link'
 import { ChevronDown, LogOut, User } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import type { UserRole } from '@lasce/db'
 
 import { isActivePath } from '@/app/components/public/NavGroup'
 import { useDisclosure } from '@/app/components/public/useDisclosure'
-import {
-  ROLE_LABELS,
-  accountMenuCopy,
-  canSeeAdminNavigation,
-  shortName,
-} from '@/app/lib/auth/account'
+import { canSeeAdminNavigation, shortName } from '@/app/lib/auth/account'
 
 import { SignOutButton } from './SignOutButton'
 
@@ -49,6 +45,7 @@ export function AccountMenu({
   onSignOut,
   defaultOpen = false,
 }: AccountMenuProps) {
+  const t = useTranslations('account')
   const {
     detailsRef,
     summaryRef,
@@ -60,7 +57,7 @@ export function AccountMenu({
     handleBlur,
   } = useDisclosure()
   const showAdmin = canSeeAdminNavigation(role)
-  const roleLabel = role ? ROLE_LABELS[role] : null
+  const roleLabel = role ? t(`roles.${role}`) : null
 
   return (
     <details
@@ -90,7 +87,7 @@ export function AccountMenu({
             href="/administracion"
             onClick={close}
           >
-            {accountMenuCopy.administracion}
+            {t('administration')}
           </Link>
         ) : null}
         <Link
@@ -99,7 +96,7 @@ export function AccountMenu({
           href="/cuenta"
           onClick={close}
         >
-          {accountMenuCopy.account}
+          {t('myAccount')}
         </Link>
         <hr aria-hidden="true" className="account-menu-divider" />
         <SignOutButton
