@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useRef, useState } from 'react'
 import type { Ref } from 'react'
 
+import { Skeleton } from '@/app/components/public/skeleton/Skeleton'
+
 import { SolarImageLightbox, formatTimestamp } from './SolarImageLightbox'
 import type { ScientificImage } from '@/app/lib/scientific-data'
 
@@ -29,9 +31,16 @@ function SolarImage({ image, strip, onOpen, triggerRef }: SolarImageProps) {
 
   return (
     <figure>
-      <div className="data-image-frame" data-state={state}>
+      {/* Busy until the image arrives: a placeholder fills the frame meanwhile, and the loading
+          message is only announced. A failure replaces both with a message everyone can read. */}
+      <div
+        aria-busy={state === 'loading' || undefined}
+        className="data-image-frame"
+        data-state={state}
+      >
+        {state === 'loading' ? <Skeleton className="data-image-skeleton" tone="dark" /> : null}
         {state !== 'loaded' ? (
-          <p role="status" className="data-image-status">
+          <p role="status" className={state === 'error' ? 'data-image-status' : 'sr-only'}>
             {state === 'error' ? tImages('unavailable') : tImages('loading')}
           </p>
         ) : null}
