@@ -116,16 +116,3 @@ its loading message stays for screen readers only, while the placeholder fills t
 - In a browser: `tests/e2e/skeleton-loading.spec.ts` for `/datos` (data API answered by the test;
   layout from 320 to 1440 px, reduced motion, focus and axe), `tests/e2e/gallery-skeleton.spec.ts`
   for `/galeria` (the page's own document request delayed and then failed, same checks).
-| View                       | File                                            | Placeholder                                              |
-| -------------------------- | ----------------------------------------------- | -------------------------------------------------------- |
-| "Sol hoy" on `/datos`      | `scientific-data/SolarToday.tsx`                | 5 `SkeletonImageCard`s in the strip                      |
-| Each solar image           | `scientific-data/SuviImageSequence.tsx`         | A dark `Skeleton` filling the frame                      |
-| An instrument query result | `scientific-data/ScientificResultsSkeleton.tsx` | Heading, metadata, and a chart or image grid, by product |
-
-## Tests
-
-- The components: `skeleton/*.test.tsx`.
-- Each view's loading, result, empty and error states: `SolarToday.test.tsx`,
-  `SolarTodayLive.test.tsx`, `SuviImageSequence.test.tsx`, `ScientificDataExplorer.test.tsx`.
-- In a browser, with the data API answered by the test: `tests/e2e/skeleton-loading.spec.ts`
-  (layout from 320 to 1440 px, reduced motion, focus and axe).
