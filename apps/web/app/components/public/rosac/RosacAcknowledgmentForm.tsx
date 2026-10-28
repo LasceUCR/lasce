@@ -1,8 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useId, useRef, useState } from 'react'
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -253,11 +252,7 @@ export function RosacAcknowledgmentForm({
           finalLogoUrl = result.imageUrl
         } catch {
           setIsUploading(false)
-          uploadErrorToast.current = toast.show(
-            'error',
-            'No se pudo subir el logo. Inténtelo de nuevo.',
-          )
-          setUploadError(t('acknowledgments.uploadError'))
+          uploadErrorToast.current = toast.show('error', t('acknowledgments.uploadError'))
           return
         }
         setIsUploading(false)

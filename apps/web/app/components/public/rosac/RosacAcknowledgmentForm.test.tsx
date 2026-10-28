@@ -3,8 +3,6 @@ import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
-import { renderWithIntl as render } from '@/app/lib/i18n/testing'
-
 const mocks = vi.hoisted(() => ({
   uploadAcknowledgmentLogo: vi.fn(),
 }))
@@ -26,8 +24,8 @@ const editArgs = EditExisting.args as RosacAcknowledgmentFormProps
 const addArgs = AddNew.args as RosacAcknowledgmentFormProps
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
-function render(ui: ReactElement) {
-  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
 }
 
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
@@ -172,6 +170,8 @@ describe('RosacAcknowledgmentForm', () => {
       await screen.findByText('No se pudo subir el logo. Inténtelo de nuevo.'),
     ).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
+  })
+
   test('fills alt text with English preset defaultAltEn when in English locale', async () => {
     const user = userEvent.setup()
     render(<RosacAcknowledgmentForm {...addArgs} />, { locale: 'en' })

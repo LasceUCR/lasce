@@ -3,8 +3,6 @@ import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
-import { renderWithIntl as render } from '@/app/lib/i18n/testing'
-
 const mocks = vi.hoisted(() => ({
   uploadConstructionStageImage: vi.fn(),
 }))
@@ -22,8 +20,8 @@ import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { RosacStageForm, type RosacStageFormProps } from './RosacStageForm'
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
-function render(ui: ReactElement) {
-  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
 }
 
 const sampleImages = [

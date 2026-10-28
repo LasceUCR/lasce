@@ -1,7 +1,6 @@
 'use client'
 
-import { useId, useRef, useState } from 'react'
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -213,11 +212,7 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
         finalImageUrl = result.imageUrl
       } catch {
         setIsUploading(false)
-        uploadErrorToast.current = toast.show(
-          'error',
-          'No se pudo subir la imagen. Inténtelo de nuevo.',
-        )
-        setUploadError(t('instruments.uploadError'))
+        uploadErrorToast.current = toast.show('error', t('instruments.uploadError'))
         return
       }
       setIsUploading(false)

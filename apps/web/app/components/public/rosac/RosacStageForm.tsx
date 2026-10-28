@@ -3,7 +3,6 @@
 import { Image as ImageIcon, Loader2, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { useId, useRef, useState } from 'react'
-import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -226,11 +225,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         }
       } catch {
         setIsUploading(false)
-        uploadErrorToast.current = toast.show(
-          'error',
-          'Error al subir las fotografías. Inténtelo de nuevo.',
-        )
-        setUploadError(t('stages.uploadError'))
+        uploadErrorToast.current = toast.show('error', t('stages.uploadError'))
         return
       }
 

@@ -462,23 +462,6 @@ export function RosacInfoPage({
         onSuccess: () => router.refresh(),
       },
     )
-    setListError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/researchers/${id}`, { method: 'DELETE' })
-    } catch {
-      setListError(tEditor('saveError'))
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setListError(body?.error ?? tEditor('saveError'))
-      return
-    }
-
-    router.refresh()
   }
 
   // --- Section 8: Acknowledgments Handlers ---

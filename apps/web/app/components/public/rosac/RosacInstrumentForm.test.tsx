@@ -3,8 +3,6 @@ import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
-import { renderWithIntl as render } from '@/app/lib/i18n/testing'
-
 const mocks = vi.hoisted(() => ({
   uploadInstrumentImage: vi.fn(),
 }))
@@ -23,8 +21,8 @@ const editArgs = EditExisting.args as RosacInstrumentFormProps
 const addArgs = AddNew.args as RosacInstrumentFormProps
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
-function render(ui: ReactElement) {
-  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
 }
 
 // jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
@@ -218,6 +216,8 @@ describe('RosacInstrumentForm', () => {
       await screen.findByText('No se pudo subir la imagen. Inténtelo de nuevo.'),
     ).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
+  })
+
   test('localizes simulation target options in both Spanish and English', () => {
     const { unmount } = render(<RosacInstrumentForm {...editArgs} />)
 
