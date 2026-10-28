@@ -803,6 +803,46 @@ export async function getResearchers(
   return rows.map((r) => toTeamMember(r, locale, includeEditingData))
 }
 
+/**
+ * Shared by create and update. `email` is a single form field — a comma
+ * separated list of zero, one or two addresses — split and validated into an
+ * array here, since a researcher can have more than one (LASCE-CON-012-085
+ * follow-up, matching `ResearcherCard`'s multi-address display). Capped at 2
+ * by both this schema and a database CHECK constraint.
+ */
+export const researcherInputSchema = z.object({
+  /** Optional: `''` or a missing value means the researcher has no photo. */
+  src: z.string().trim().optional(),
+  role: z.string().trim().min(1, 'El rol es obligatorio.'),
+  name: z.string().trim().min(1, 'El nombre es obligatorio.'),
+  email: z
+    .string()
+    .trim()
+    .transform((value) =>
+      value === ''
+        ? []
+        : value
+            .split(',')
+            .map((address) => address.trim())
+            .filter((address) => address !== ''),
+    )
+    .pipe(
+      z
+        .array(z.email({ error: 'Uno o más correos no son válidos.' }))
+        .max(2, 'Máximo 2 correos de contacto.'),
+    )
+    .optional(),
+  institution: z.string().trim().min(1, 'La institución es obligatoria.'),
+  description: z.string().trim().optional(),
+})
+
+export type ResearcherInput = z.infer<typeof researcherInputSchema>
+
+/**
+ * Creates a new researcher profile, authored by the admin who submitted it.
+ * `createdAt` defaults to now, which — since the list is ordered by it —
+ * puts the new profile at the end. The add card itself stays at the front of the gallery.
+ */
 export async function createResearcher(
   data: RosacResearcherCreateInput,
   modifiedBy: string,

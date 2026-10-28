@@ -80,8 +80,9 @@ export type ContactChannelWriteFailure =
   | { ok: false; reason: 'review-required'; pending: { locale: Locale; field: string }[] }
 
 export async function createContactChannel(input: ContactChannelCreateInput): Promise<ContactCard> {
-  const last = await prisma.contactChannel.aggregate({ _max: { position: true } })
-  const position = (last._max.position ?? -1) + 1
+  const first = await prisma.contactChannel.aggregate({ _min: { position: true } })
+  const earliest = first._min.position
+  const position = earliest === null || earliest === undefined ? 0 : earliest - 1
   const created = await prisma.contactChannel.create({
     data: {
       icon: ICON_TO_DB[input.icon],

@@ -1499,7 +1499,7 @@
       "save": "Confirm",
       "uploading": "Uploading image...",
       "uploadError": "The image could not be uploaded. Try again.",
-      "maxEmails": "Maximum {max} contact emails.",
+      "maxEmails": "It is not possible to add more than two email addresses.",
       "invalidEmail": "The email is not valid.",
       "duplicateEmail": "That email was already added."
     },

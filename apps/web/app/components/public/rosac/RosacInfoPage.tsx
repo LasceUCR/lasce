@@ -437,13 +437,13 @@ export function RosacInfoPage({
     }
 
     setInstruments((prev) => [
-      ...prev,
       {
         id: `inst-${Date.now()}`,
         name: values.content?.es?.name ?? '',
         image: values.image,
         consultation: values.consultation,
       },
+      ...prev,
     ])
     close()
   }
@@ -609,14 +609,13 @@ export function RosacInfoPage({
     }
 
     setAcknowledgments((prev) => [
-      ...prev,
       {
         id: `ack-${Date.now()}`,
         name: values.content?.es?.name ?? '',
         logo: values.logo ?? { src: '', alt: '' },
       },
+      ...prev,
     ])
-
     close()
   }
 
@@ -789,7 +788,7 @@ export function RosacInfoPage({
         {instruments.length > 3 || (editMode && canCreate) ? (
           <InstrumentsGallery
             label={content.instruments.title}
-            trailingSlide={
+            leadingSlide={
               editMode && canCreate ? (
                 <AddItemCard label={tEditor('instruments.addCard')}>
                   {({ close }) => (
@@ -881,7 +880,7 @@ export function RosacInfoPage({
               translation={{ editing: person.editing ?? null }}
             />
           )}
-          trailingSlide={
+          leadingSlide={
             editMode && canCreate ? (
               <AddItemCard label={tResearchers('editor.addCard')}>
                 {({ close }) => (
@@ -949,7 +948,7 @@ export function RosacInfoPage({
               onSave={(values) => handleSaveAcknowledgment(institution.id!, values)}
             />
           )}
-          trailingSlide={
+          leadingSlide={
             editMode && canCreate ? (
               <AddItemCard label={tEditor('acknowledgments.addCard')}>
                 {({ close }) => (
