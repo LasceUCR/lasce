@@ -27,16 +27,16 @@ and CI genuinely runs on pushes, not only on PRs.
 All eight run in parallel. The names are stable so a branch ruleset can require
 them (LASCE-INF-001-016).
 
-| Job               | Proves                                                                                   |
-| ----------------- | ---------------------------------------------------------------------------------------- |
-| `lint`            | Prettier formatting is clean and ESLint passes on every Node workspace.                  |
-| `typecheck`       | `tsc --noEmit` passes. Depends on `^build`, so the Prisma client is generated first.     |
-| `test`            | `turbo run test` across every TypeScript workspace, with coverage floors enforced.       |
-| `build`           | `turbo run build`: `prisma generate` then `next build`.                                  |
-| `worker`          | ruff (lint + format check), mypy `--strict`, and pytest, on Python 3.13.                 |
-| `e2e`             | Playwright/Chromium against `next dev`, with real Postgres and Redis service containers. |
-| `docker (web)`    | `infra/docker/web.Dockerfile` builds. Not pushed.                                        |
-| `docker (worker)` | `infra/docker/worker.Dockerfile` builds. Not pushed.                                     |
+| Job               | Proves                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| `lint`            | Prettier formatting is clean and ESLint passes on every Node workspace.                     |
+| `typecheck`       | `tsc --noEmit` passes. Depends on `^build`, so the Prisma client is generated first.        |
+| `test`            | `turbo run test` across every TypeScript workspace, with coverage floors enforced.          |
+| `build`           | `turbo run build`: `prisma generate` then `next build`.                                     |
+| `worker`          | ruff (lint + format check), mypy `--strict`, and pytest, on Python 3.13.                    |
+| `e2e`             | Playwright against the production build, in four shards, each with real Postgres and Redis. |
+| `docker (web)`    | `infra/docker/web.Dockerfile` builds. Not pushed.                                           |
+| `docker (worker)` | `infra/docker/worker.Dockerfile` builds. Not pushed.                                        |
 
 These are the display names GitHub reports on a pull request, and all eight are
 required by the branch rulesets. The `docker` job pins `name:` to the matrix

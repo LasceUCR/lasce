@@ -1441,7 +1441,7 @@
       "save": "Confirmar",
       "uploading": "Subiendo imagen...",
       "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo.",
-      "maxEmails": "Máximo {max} correos de contacto.",
+      "maxEmails": "No es posible agregar más de dos correos electrónicos.",
       "invalidEmail": "El correo no es válido.",
       "duplicateEmail": "Ese correo ya fue agregado."
     },

@@ -174,7 +174,7 @@ describe('getNosotrosActivities', () => {
     await getNosotrosActivities()
 
     expect(findMany).toHaveBeenCalledWith({
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       include: {
         translations: {
           where: { locale: { in: ['en'] } },

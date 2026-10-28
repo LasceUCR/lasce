@@ -137,7 +137,7 @@ describe('reading research areas', () => {
     expect(prisma.researchArea.findUnique).toHaveBeenCalledTimes(1)
   })
 
-  test('lists every area oldest first, without editing data for a visitor', async () => {
+  test('lists every area newest first, without editing data for a visitor', async () => {
     prisma.researchArea.findMany.mockResolvedValue([bilingualRow])
 
     const [area] = await getResearchAreas('en')
@@ -146,7 +146,7 @@ describe('reading research areas', () => {
     expect(area).not.toHaveProperty('editing')
     expect(prisma.researchArea.findMany).toHaveBeenCalledWith({
       include: areaInclude,
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
     })
   })
 
