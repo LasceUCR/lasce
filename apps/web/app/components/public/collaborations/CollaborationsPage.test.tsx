@@ -12,6 +12,19 @@ import { Default } from './CollaborationsPage.stories'
 const defaultArgs = Default.args as CollaborationsPageProps
 
 describe('CollaborationsPage', () => {
+  test('shows the empty database listing without restoring the historical fixtures', () => {
+    renderWithIntl(
+      <CollaborationsPage
+        {...defaultArgs}
+        content={{
+          ...defaultArgs.content,
+          initiatives: { ...defaultArgs.content.initiatives, items: [] },
+        }}
+      />,
+    )
+    expect(screen.getByText('No hay iniciativas disponibles.')).toBeVisible()
+    expect(screen.queryByRole('heading', { name: /ISWI/ })).not.toBeInTheDocument()
+  })
   test('presents collaborations and international initiatives under one heading', () => {
     renderWithIntl(<CollaborationsPage {...defaultArgs} />)
 
