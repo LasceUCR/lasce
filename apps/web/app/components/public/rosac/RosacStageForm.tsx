@@ -2,13 +2,15 @@
 
 import { Image as ImageIcon, Loader2, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { Modal } from '@/app/components/public/Modal'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadConstructionStageImage } from '@/app/(public)/radioastronomia/actions'
 import type { ConstructionImage } from '@/app/lib/rosac-construction'
 
@@ -32,6 +34,7 @@ interface EditableImageItem {
 }
 
 export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps) {
+  const t = useTranslations('rosac.editor')
   const formId = useId()
   const [title, setTitle] = useState(stage.title)
   const [description, setDescription] = useState(stage.description)
@@ -59,17 +62,17 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
   // General form submission & discard
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const toast = useToast()
+  // A failed upload is an action outcome, so it is reported with a toast (see "Feedback" in
+  // `AGENTS.md`). The previous attempt's toast is dismissed on retry so errors do not pile up.
+  const uploadErrorToast = useRef<number | null>(null)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmDiscardGeneral, setConfirmDiscardGeneral] = useState(false)
 
-  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
+  const titleError = hasAttemptedSubmit && title.trim() === '' ? t('stages.titleRequired') : null
   const descriptionError =
-    hasAttemptedSubmit && description.trim() === '' ? 'La descripción es obligatoria.' : null
-  const imagesError =
-    hasAttemptedSubmit && images.length === 0
-      ? 'La etapa debe contener al menos una fotografía.'
-      : null
+    hasAttemptedSubmit && description.trim() === '' ? t('stages.descriptionRequired') : null
+  const imagesError = hasAttemptedSubmit && images.length === 0 ? t('stages.imagesRequired') : null
 
   const isFormValid = title.trim() !== '' && description.trim() !== '' && images.length > 0
 
@@ -144,12 +147,16 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
   function handleConfirmAddPhoto() {
     if (!addPhotoFile) {
-      setAddPhotoError('Debe seleccionar un archivo de imagen.')
+      setAddPhotoError(t('stages.addModal.fileRequired'))
       return
     }
 
     const previewUrl = URL.createObjectURL(addPhotoFile)
-    const altText = addPhotoAlt.trim() || `Fotografía de ${title.trim() || 'la etapa'}`
+    const altText =
+      addPhotoAlt.trim() ||
+      t('stages.addModal.altDefault', {
+        title: title.trim() || t('stages.defaultModalTitle'),
+      })
 
     setImages((prev) => [
       ...prev,
@@ -189,12 +196,16 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
     if (isUploading) return
 
+    if (uploadErrorToast.current !== null) {
+      toast.dismiss(uploadErrorToast.current)
+      uploadErrorToast.current = null
+    }
+
     const finalImages: ConstructionImage[] = []
     const pendingUploads = images.filter((img) => Boolean(img.file))
 
     if (pendingUploads.length > 0) {
       setIsUploading(true)
-      setUploadError(null)
 
       try {
         for (const item of images) {
@@ -204,7 +215,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
             const result = await uploadConstructionStageImage(formData)
             if (!result.ok) {
               setIsUploading(false)
-              setUploadError(result.error)
+              uploadErrorToast.current = toast.show('error', result.error)
               return
             }
             finalImages.push({ src: result.imageUrl, alt: item.alt })
@@ -214,7 +225,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         }
       } catch {
         setIsUploading(false)
-        setUploadError('Error al subir las fotografías. Inténtelo de nuevo.')
+        uploadErrorToast.current = toast.show('error', t('stages.uploadError'))
         return
       }
 
@@ -234,16 +245,10 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
   return (
     <div className="cms-form">
-      {uploadError ? (
-        <p className="form-alert" role="alert">
-          {uploadError}
-        </p>
-      ) : null}
-
       <FormField
         errorMessage={titleError}
         id={`${formId}-title`}
-        label="Título"
+        label={t('stages.titleLabel')}
         onChange={setTitle}
         required
         value={title}
@@ -252,7 +257,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
       <FormField
         errorMessage={descriptionError}
         id={`${formId}-description`}
-        label="Descripción"
+        label={t('stages.descriptionLabel')}
         multiline
         onChange={setDescription}
         required
@@ -269,11 +274,10 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
           }}
         >
           <label style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--blue-dark)' }}>
-            Fotografías de la etapa
+            {t('stages.photosTitle')}
           </label>
           <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
-            {images.length}{' '}
-            {images.length === 1 ? 'fotografía registrada' : 'fotografías registradas'}
+            {t('stages.registeredCount', { count: images.length })}
           </span>
         </div>
 
@@ -296,7 +300,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
             type="button"
             variant="secondary"
           >
-            Editar fotografías
+            {t('stages.editPhotos')}
           </Button>
           <Button
             icon={<Plus aria-hidden="true" size={16} />}
@@ -304,23 +308,23 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
             type="button"
             variant="secondary"
           >
-            Añadir fotografía
+            {t('stages.addPhoto')}
           </Button>
         </div>
       </div>
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} type="button" variant="secondary">
-          Cancelar
+          {t('stages.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} type="button" variant="primary">
           {isUploading ? (
             <>
               <Loader2 aria-hidden="true" className="btn-spinner" size={16} />
-              <span>Subiendo fotografías...</span>
+              <span>{t('stages.uploading')}</span>
             </>
           ) : (
-            'Confirmar'
+            t('stages.save')
           )}
         </Button>
       </div>
@@ -330,12 +334,11 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         onClose={handleCloseEditPhotosClick}
         open={isEditPhotosOpen}
         size="medium"
-        title="Editar fotografías"
+        title={t('stages.editModal.title')}
       >
         <div className="cms-form">
           <p style={{ margin: '0 0 12px', fontSize: '0.9rem', color: 'var(--muted)' }}>
-            Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no
-            correspondan a esta etapa.
+            {t('stages.editModal.help')}
           </p>
 
           <div
@@ -397,9 +400,9 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
                 <div>
                   <input
-                    aria-label={`Texto alternativo de la fotografía ${index + 1}`}
+                    aria-label={t('stages.editModal.altLabel', { index: index + 1 })}
                     onChange={(e) => handleUpdateDraftImageAlt(img.id, e.target.value)}
-                    placeholder="Texto alternativo accesible de la fotografía"
+                    placeholder={t('stages.editModal.altPlaceholder')}
                     style={{
                       width: '100%',
                       padding: '6px 10px',
@@ -414,7 +417,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
                 <div>
                   <button
-                    aria-label={`Eliminar fotografía ${index + 1}`}
+                    aria-label={t('stages.editModal.deleteLabel', { index: index + 1 })}
                     disabled={draftEditImages.length <= 1}
                     onClick={() => handleRequestDeleteDraftImage(img.id)}
                     style={{
@@ -430,8 +433,8 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
                     }}
                     title={
                       draftEditImages.length <= 1
-                        ? 'Debe haber al menos una foto en la etapa'
-                        : 'Eliminar esta fotografía'
+                        ? t('stages.editModal.deleteMinTitle')
+                        : t('stages.editModal.deleteTooltip')
                     }
                     type="button"
                   >
@@ -444,10 +447,10 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
           <div className="cms-form-actions">
             <Button onClick={handleCloseEditPhotosClick} type="button" variant="secondary">
-              Cancelar
+              {t('stages.editModal.cancel')}
             </Button>
             <Button onClick={handleSaveEditPhotos} type="button" variant="primary">
-              Guardar fotografías
+              {t('stages.editModal.savePhotos')}
             </Button>
           </div>
         </div>
@@ -458,13 +461,13 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         onClose={handleCloseAddPhotoClick}
         open={isAddPhotoOpen}
         size="medium"
-        title="Añadir fotografía"
+        title={t('stages.addModal.title')}
       >
         <div className="cms-form">
           <FileDropInput
             errorMessage={addPhotoError}
-            helperText="Formatos JPG, PNG o WebP (máx. 10 MB)."
-            label="Archivo de imagen"
+            helperText={t('stages.addModal.fileHelp')}
+            label={t('stages.addModal.fileLabel')}
             onFileSelect={(file) => {
               setAddPhotoFile(file)
               if (file) setAddPhotoError(null)
@@ -475,19 +478,19 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
           <div style={{ marginTop: '12px' }}>
             <FormField
               id={`${formId}-add-img-alt`}
-              label="Texto alternativo accesible (alt)"
+              label={t('stages.addModal.altLabel')}
               onChange={setAddPhotoAlt}
-              placeholder="Descripción para personas con lectores de pantalla"
+              placeholder={t('stages.addModal.altPlaceholder')}
               value={addPhotoAlt}
             />
           </div>
 
           <div className="cms-form-actions">
             <Button onClick={handleCloseAddPhotoClick} type="button" variant="secondary">
-              Cancelar
+              {t('stages.addModal.cancel')}
             </Button>
             <Button onClick={handleConfirmAddPhoto} type="button" variant="primary">
-              Añadir fotografía
+              {t('stages.addModal.submit')}
             </Button>
           </div>
         </div>
@@ -495,21 +498,21 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
       {/* Confirmación de eliminación: Fotografía */}
       <StandardConfirmDialog
-        cancelLabel="Cancelar"
-        confirmLabel="Eliminar"
-        message="¿Está seguro de que desea eliminar esta fotografía de la etapa?"
+        cancelLabel={t('stages.editModal.deleteDialog.cancel')}
+        confirmLabel={t('stages.editModal.deleteDialog.confirm')}
+        message={t('stages.editModal.deleteDialog.message')}
         onCancel={() => setImageToDelete(null)}
         onConfirm={handleConfirmDeleteDraftImage}
         open={imageToDelete !== null}
         severity="danger"
-        title="Eliminar fotografía"
+        title={t('stages.editModal.deleteDialog.title')}
       />
 
       {/* Confirmación de descarte: General */}
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
         onCancel={() => setConfirmDiscardGeneral(false)}
         onConfirm={() => {
           setConfirmDiscardGeneral(false)
@@ -517,14 +520,14 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         }}
         open={confirmDiscardGeneral}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={t('discardDialog.title')}
       />
 
       {/* Confirmación de descarte: Editar fotografías */}
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, no se aplicarán los cambios realizados a las fotografías."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('stages.editModal.discardDialog.message')}
         onCancel={() => setConfirmDiscardEditPhotos(false)}
         onConfirm={() => {
           setConfirmDiscardEditPhotos(false)
@@ -532,14 +535,14 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         }}
         open={confirmDiscardEditPhotos}
         severity="warning"
-        title="Descartar cambios de fotografías"
+        title={t('stages.editModal.discardDialog.title')}
       />
 
       {/* Confirmación de descarte: Añadir fotografía */}
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, la fotografía seleccionada no se agregará a la etapa."
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('stages.addModal.discardDialog.message')}
         onCancel={() => setConfirmDiscardAddPhoto(false)}
         onConfirm={() => {
           setConfirmDiscardAddPhoto(false)
@@ -547,7 +550,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         }}
         open={confirmDiscardAddPhoto}
         severity="warning"
-        title="Descartar nueva fotografía"
+        title={t('stages.addModal.discardDialog.title')}
       />
     </div>
   )

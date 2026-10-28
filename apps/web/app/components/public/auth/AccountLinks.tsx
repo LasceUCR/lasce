@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { LogIn, LogOut, User } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import type { UserRole } from '@lasce/db'
 
 import { isActivePath } from '@/app/components/public/NavGroup'
-import { accountMenuCopy, canSeeAdminNavigation } from '@/app/lib/auth/account'
+import { canSeeAdminNavigation } from '@/app/lib/auth/account'
 import { ACCESS_PATH } from '@/app/lib/auth/login'
 
 import { AccountMenu } from './AccountMenu'
@@ -43,6 +44,7 @@ export function AccountLinks({
   onSignOut,
   onNavigate,
 }: AccountLinksProps) {
+  const t = useTranslations('account')
   const isHeader = variant === 'header'
 
   function linkProps(href: string, headerClass: string) {
@@ -62,7 +64,7 @@ export function AccountLinks({
       <Link {...linkProps(ACCESS_PATH, 'login-link')}>
         <span className="mobile-account-link-content">
           <LogIn aria-hidden="true" size={18} strokeWidth={1.8} />
-          <span>{accountMenuCopy.signIn}</span>
+          <span>{t('signIn')}</span>
         </span>
       </Link>
     )
@@ -91,13 +93,13 @@ export function AccountLinks({
           href="/administracion"
           onClick={onNavigate}
         >
-          {accountMenuCopy.administracion}
+          {t('administration')}
         </Link>
       ) : null}
       <Link {...linkProps('/cuenta', '')}>
         <span className="mobile-account-link-content">
           <User aria-hidden="true" size={18} strokeWidth={1.8} />
-          <span>{accountMenuCopy.account}</span>
+          <span>{t('myAccount')}</span>
         </span>
       </Link>
       <SignOutButton
