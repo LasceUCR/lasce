@@ -32,6 +32,7 @@ import {
 } from './gallery-schema'
 
 export * from './gallery-schema'
+export { galeriaHero, galeriaMeta } from './gallery-content'
 
 /**
  * Real content for the public gallery.
@@ -49,18 +50,6 @@ const imageBase = '/images/galeria'
 export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
 
 export type AlbumSlug = (typeof albumSlugs)[number]
-
-export const galeriaMeta = {
-  title: 'Galería | LASCE',
-  description:
-    'Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación y vida cotidiana del equipo.',
-} as const
-
-export const galeriaHero = {
-  kicker: 'Portal público LASCE',
-  title: 'Galería',
-  lead: 'Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes.',
-} as const
 
 const previosMontajeMedia = [
   {

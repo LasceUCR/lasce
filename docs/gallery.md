@@ -17,26 +17,44 @@ MinIO.
        └─ ul.media-grid › li      AlbumMediaGrid     button per file, image alt=""
             └─ MediaLightbox      composes Lightbox  h2 + figure/figcaption, real alt
                  └─ Lightbox      native <dialog>    shared shell, also used by /datos
+
+loading.tsx (every route above)   GalleryPageSkeleton / AlbumPageSkeleton — placeholders only
+                                   for the database-backed parts; static copy renders for real
+error.tsx (/galeria, bubbles up)  GalleryErrorState — a Notice and a "Reintentar" button
 ```
 
-| Piece                 | File                                            | Covered by                     |
-| --------------------- | ----------------------------------------------- | ------------------------------ |
-| Mock data and helpers | `app/lib/gallery.ts`                            | `app/lib/gallery.test.ts`      |
-| Gallery write actions | `app/lib/gallery.ts`                            | `app/lib/gallery.test.ts`      |
-| Index page            | `app/components/public/gallery/GalleryPage.tsx` | `GalleryPage.test.tsx`         |
-| One album block       | `…/GalleryGroupSection.tsx`                     | `GalleryGroupSection.test.tsx` |
-| Album / sub-album     | `…/AlbumPage.tsx`                               | `AlbumPage.test.tsx`           |
-| Album cover tile      | `…/AlbumTile.tsx`                               | `AlbumTile.test.tsx`           |
-| Masonry grid          | `…/AlbumMediaGrid.tsx`                          | `AlbumMediaGrid.test.tsx`      |
-| Framed image          | `…/MediaFrame.tsx`                              | `MediaFrame.test.tsx`          |
-| Full-screen view      | `…/MediaLightbox.tsx`                           | `MediaLightbox.test.tsx`       |
-| Dialog shell          | `app/components/public/Lightbox.tsx`            | `Lightbox.test.tsx`            |
+| Piece                 | File                                                                                   | Covered by                     |
+| --------------------- | -------------------------------------------------------------------------------------- | ------------------------------ |
+| Mock data and helpers | `app/lib/gallery.ts`                                                                   | `app/lib/gallery.test.ts`      |
+| Gallery write actions | `app/lib/gallery.ts`                                                                   | `app/lib/gallery.test.ts`      |
+| Index page            | `app/components/public/gallery/GalleryPage.tsx`                                        | `GalleryPage.test.tsx`         |
+| One album block       | `…/GalleryGroupSection.tsx`                                                            | `GalleryGroupSection.test.tsx` |
+| Album / sub-album     | `…/AlbumPage.tsx`                                                                      | `AlbumPage.test.tsx`           |
+| Album cover tile      | `…/AlbumTile.tsx`                                                                      | `AlbumTile.test.tsx`           |
+| Masonry grid          | `…/AlbumMediaGrid.tsx`                                                                 | `AlbumMediaGrid.test.tsx`      |
+| Framed image          | `…/MediaFrame.tsx`                                                                     | `MediaFrame.test.tsx`          |
+| Full-screen view      | `…/MediaLightbox.tsx`                                                                  | `MediaLightbox.test.tsx`       |
+| Dialog shell          | `app/components/public/Lightbox.tsx`                                                   | `Lightbox.test.tsx`            |
+| Index page, loading   | `galeria/loading.tsx` → `…/GalleryPageSkeleton.tsx`                                    | `GalleryPageSkeleton.test.tsx` |
+| Album pages, loading  | `galeria/[slug]/loading.tsx`, `.../[subalbum]/loading.tsx` → `…/AlbumPageSkeleton.tsx` | `AlbumPageSkeleton.test.tsx`   |
+| A failed load         | `galeria/error.tsx` → `…/GalleryErrorState.tsx`                                        | `GalleryErrorState.test.tsx`   |
 
 The album pages and the sitemap read the database: `getGalleryAlbums` serves the routes and
 `getGalleryPaths` feeds `getPublicPaths()` in `app/lib/site.ts`, so a new album appears in
 `/sitemap.xml` and a deleted one drops out. `galleryAlbumList` is only seed data
 (`packages/db/prisma/seed.ts`) and the fixture for the tests; the e2e specs run against the seeded
 albums, so they need `pnpm db:seed` first.
+
+## Loading and error states
+
+Every route here (`/galeria`, `/galeria/[slug]`, `/galeria/[slug]/[subalbum]`) is
+`force-dynamic`: it reads the database directly in a Server Component, with no client-side fetch
+to show a spinner around. Next's own `loading.tsx` fills that gap — it is shown while the Server
+Component's render is pending and swapped automatically for the real page once it resolves — and
+`error.tsx`, placed once at the `/galeria` segment, catches a thrown `getGalleryAlbums` (a database
+failure) for the whole subtree, since the nested routes define no `error.tsx` of their own. Both
+reuse the shared `Skeleton` primitive from `docs/skeletons.md`, not a gallery-specific one: see
+that doc for why the gallery's placeholders cannot use `LoadingRegion` the way `/datos` does.
 
 ## Album translations
 
@@ -152,3 +170,11 @@ These are deliberate. Please do not "fix" them back.
   file. Both need a look from someone who can see it.
 - `/galeria/[slug]/[subalbum]/page.tsx` composes its own summary line instead of using
   `albumMediaMeta()`, because it also names the parent album.
+- **A missing album or sub-album answers `200`, not `404`.** `loading.tsx` streams the response as
+  soon as it starts, which commits the status to `200` before `notFound()` runs anywhere in that
+  subtree — a Next.js limitation (confirmed against a production build, not a dev-mode artefact),
+  not something this page's code controls. The content is still the correct "This page could not
+  be found." page; only the HTTP status is wrong. Accepted deliberately so album and sub-album
+  pages keep their loading skeleton (#403); see the comment above the two affected tests in
+  `tests/e2e/public-portal.spec.ts`. Removing every `loading.tsx` in the `/galeria` tree restores
+  the real `404`, at the cost of the skeleton.
