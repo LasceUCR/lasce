@@ -361,6 +361,7 @@ test('displays the back button at the bottom of the gallery index and returns ho
   page,
 }) => {
   await page.goto('/galeria')
+  await expect(page.getByRole('status')).toBeHidden()
 
   const backLink = page.getByRole('link', { name: 'Volver al inicio' })
   const heading = page.getByRole('heading', { level: 1, name: 'Galería' })
@@ -396,7 +397,10 @@ for (const album of galleryAlbumList) {
     await page.goto('/galeria')
 
     await expect(page.getByRole('heading', { level: 2, name: album.title })).toBeVisible()
-    await page.getByRole('link', { name: new RegExp(album.title) }).click()
+    await page
+      .getByRole('region', { name: album.title })
+      .getByRole('link', { name: 'Ver álbum completo' })
+      .click()
 
     await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
     await expect(page.getByRole('heading', { level: 1, name: album.title })).toBeVisible()
