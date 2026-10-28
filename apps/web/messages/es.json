@@ -1829,15 +1829,22 @@
       }
     }
   },
-  "fileDrop": {
-    "dropHere": "Arrastre una imagen aquí",
-    "browseFiles": "haga clic para seleccionarla del equipo",
-    "description": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo",
-    "rejectionFormat": "Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.",
-    "rejectionSize": "La imagen supera el tamaño máximo de 25 MB.",
-    "removeFile": "Quitar imagen",
-    "removeLabel": "Quitar imagen",
-    "previewAlt": "Vista previa de {label}",
-    "imagePreviewAlt": "Vista previa de {label}"
+  "account": {
+    "signIn": "Ingresar",
+    "myAccount": "Mi cuenta",
+    "administration": "Administración",
+    "signOut": "Cerrar sesión",
+    "signingOut": "Cerrando sesión...",
+    "roles": {
+      "VISITOR": "Visitante",
+      "ASSISTANT": "Asistente",
+      "ADMIN": "Persona administradora"
+    },
+    "signOutDialog": {
+      "title": "¿Cerrar sesión?",
+      "body": "Tu sesión en este navegador terminará y tendrás que volver a ingresar.",
+      "confirm": "Cerrar sesión",
+      "cancel": "Cancelar"
+    }
   }
 }
