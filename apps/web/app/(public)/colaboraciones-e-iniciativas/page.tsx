@@ -3,6 +3,7 @@ import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { CollaborationsPage } from '@/app/components/public/collaborations/CollaborationsPage'
 import { getCollaborationRecords } from '@/app/lib/collaboration-records'
+import { getInitiativeRecords } from '@/app/lib/initiative-records'
 import { getCollaborationsContent } from '@/app/lib/collaborations'
 import { userHasPermission } from '@/app/lib/auth/authorization'
 import { resolveLocale } from '@/app/lib/i18n/locale'
@@ -26,9 +27,11 @@ export default async function CollaborationsRoute() {
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
-  const collaborations = await getCollaborationRecords(resolveLocale(locale), {
-    includeEditingData: canEdit,
-  })
+  const [collaborations, initiatives] = await Promise.all([
+    getCollaborationRecords(resolveLocale(locale), { includeEditingData: canEdit }),
+    getInitiativeRecords(resolveLocale(locale), { includeEditingData: canEdit }),
+  ])
+  const content = getCollaborationsContent(messages)
 
   return (
     <CollaborationsPage
@@ -36,7 +39,7 @@ export default async function CollaborationsRoute() {
       canCreate={canCreate}
       canEdit={canEdit}
       canDelete={canDelete}
-      content={getCollaborationsContent(messages)}
+      content={{ ...content, initiatives: { ...content.initiatives, items: initiatives } }}
     />
   )
 }
