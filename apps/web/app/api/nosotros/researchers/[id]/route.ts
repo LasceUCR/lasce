@@ -51,11 +51,11 @@ export async function PATCH(
   const { id } = await params
   if (!isUuid(id)) return invalidId(errors.invalidId ?? INVALID_ID_MESSAGE)
 
-  const json = await readJson(request)
+  const json = await readJson(request, errors.invalidJson)
   if (!json.ok) return json.response
 
   const parsed = getNosotrosResearcherUpdateSchema(locale).safeParse(json.body)
-  if (!parsed.success) return invalidBody(parsed.error)
+  if (!parsed.success) return invalidBody(parsed.error, errors.invalidBody)
 
   try {
     const result = await updateNosotrosResearcher(id, parsed.data, guard.user.id)

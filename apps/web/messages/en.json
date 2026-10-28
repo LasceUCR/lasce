@@ -1404,7 +1404,9 @@
       "conflict": "The researcher changed since you opened it. Reload and reapply your changes.",
       "saveError": "Could not save the researcher.",
       "updateError": "Could not save changes.",
-      "deleteError": "Could not delete the researcher."
+      "deleteError": "Could not delete the researcher.",
+      "invalidBody": "Required fields are missing or invalid.",
+      "invalidJson": "The request body is not valid JSON."
     },
     "validation": {
       "nameRequired": "Name is required.",
@@ -1423,6 +1425,7 @@
       "deleteConfirmTitle": "Delete researcher",
       "deleteConfirmMessage": "Do you want to delete \"{name}\"? This action cannot be undone.",
       "deleteConfirm": "Delete",
+      "deleteCancel": "Cancel",
       "photoLabel": "Photo",
       "photoHelp": "Optional. Researcher portrait, in JPG or PNG format.",
       "roleLabel": "Role",
@@ -1433,6 +1436,11 @@
       "institutionRequired": "Institution is required.",
       "descriptionLabel": "Description",
       "contactLabel": "Contact",
+      "contactCount": "{count, plural, =0 {No emails} one {# email} other {# emails}}",
+      "contactListLabel": "Contact emails",
+      "emailPlaceholder": "Type an email...",
+      "emailPlaceholderAnother": "Type another email...",
+      "emailRequired": "Email is required.",
       "addContact": "Add contact",
       "deleteContact": "Delete {address}",
       "addContactTitle": "Add contact",

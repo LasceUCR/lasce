@@ -242,6 +242,32 @@ describe('PATCH /api/nosotros/researchers/[id]', () => {
       adminUser.id,
     )
   })
+
+  test('returns 400 with English invalid-body error when validation fails and English is selected', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.getLocale.mockResolvedValue('en')
+
+    const response = await PATCH(patchRequest({ version: VERSION, name: ' ' }), { params })
+
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.code).toBe('invalid-body')
+    expect(body.error).toBe('Required fields are missing or invalid.')
+    expect(body.issues).toEqual([{ path: 'name', message: 'Name is required.' }])
+  })
+
+  test('returns 400 with English invalid-json error when malformed body and English is selected', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.getLocale.mockResolvedValue('en')
+
+    const response = await PATCH(patchRequest('not json'), { params })
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({
+      error: 'The request body is not valid JSON.',
+      code: 'invalid-json',
+    })
+  })
 })
 
 describe('DELETE /api/nosotros/researchers/[id]', () => {

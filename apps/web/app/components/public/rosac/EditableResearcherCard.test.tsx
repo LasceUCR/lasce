@@ -214,10 +214,16 @@ describe('EditableResearcherCard: bilingual mode', () => {
     )
 
     const editBtn = screen.getByRole('button', { name: `Edit ${editArgs.researcher.name}` })
+    const deleteBtn = screen.getByRole('button', { name: `Delete ${editArgs.researcher.name}` })
     expect(editBtn).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: `Delete ${editArgs.researcher.name}` }),
-    ).toBeInTheDocument()
+    expect(deleteBtn).toBeInTheDocument()
+
+    await user.click(deleteBtn)
+    const deleteDialog = screen.getByRole('dialog', { name: 'Delete researcher' })
+    expect(deleteDialog).toBeInTheDocument()
+    expect(within(deleteDialog).getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(within(deleteDialog).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    await user.click(within(deleteDialog).getByRole('button', { name: 'Cancel' }))
 
     await user.click(editBtn)
     expect(screen.getByRole('dialog', { name: 'Edit researcher' })).toBeInTheDocument()

@@ -143,6 +143,7 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
   return (
     <>
       <EditableWrapper
+        deleteCancelLabel={tResearchers('editor.deleteCancel')}
         deleteConfirmLabel={tResearchers('editor.deleteConfirm')}
         deleteConfirmMessage={tResearchers('editor.deleteConfirmMessage', {
           name: researcher.name,

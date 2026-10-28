@@ -207,7 +207,21 @@ describe('POST /api/nosotros/researchers', () => {
     expect(response.status).toBe(400)
     const body = await response.json()
     expect(body.code).toBe('invalid-body')
+    expect(body.error).toBe('Required fields are missing or invalid.')
     expect(body.issues).toEqual([{ path: 'name', message: 'Name is required.' }])
+  })
+
+  test('rejects a malformed body with English error when English is selected', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.getLocale.mockResolvedValue('en')
+
+    const response = await POST(postRequest('not json'))
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({
+      error: 'The request body is not valid JSON.',
+      code: 'invalid-json',
+    })
   })
 
   test('answers an unexpected failure in English when English is selected', async () => {

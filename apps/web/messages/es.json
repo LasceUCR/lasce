@@ -1404,7 +1404,9 @@
       "conflict": "El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.",
       "saveError": "No se pudo guardar el investigador.",
       "updateError": "No se pudieron guardar los cambios.",
-      "deleteError": "No se pudo eliminar el investigador."
+      "deleteError": "No se pudo eliminar el investigador.",
+      "invalidBody": "Faltan campos obligatorios o no son válidos.",
+      "invalidJson": "El cuerpo de la solicitud no es JSON válido."
     },
     "validation": {
       "nameRequired": "El nombre es obligatorio.",
@@ -1423,6 +1425,7 @@
       "deleteConfirmTitle": "Eliminar investigador",
       "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
       "deleteConfirm": "Eliminar",
+      "deleteCancel": "Cancelar",
       "photoLabel": "Foto",
       "photoHelp": "Opcional. Retrato del investigador, en formato JPG o PNG.",
       "roleLabel": "Rol",
@@ -1433,6 +1436,11 @@
       "institutionRequired": "La institución es obligatoria.",
       "descriptionLabel": "Descripción",
       "contactLabel": "Contacto",
+      "contactCount": "{count, plural, =0 {Sin correos} one {# correo} other {# correos}}",
+      "contactListLabel": "Correos de contacto",
+      "emailPlaceholder": "Escribir un correo...",
+      "emailPlaceholderAnother": "Escribir otro correo...",
+      "emailRequired": "El correo es obligatorio.",
       "addContact": "Añadir contacto",
       "deleteContact": "Eliminar {address}",
       "addContactTitle": "Añadir contacto",

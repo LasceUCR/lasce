@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import en from '@/messages/en.json' with { type: 'json' }
+import es from '@/messages/es.json' with { type: 'json' }
 import { versionSchema } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
@@ -58,36 +60,11 @@ export type NosotrosResearcherEditingData = {
   version: string
 }
 
-interface ResearcherValidationMessages {
-  nameRequired: string
-  institutionRequired: string
-  invalidEmail: string
-  maxEmails: string
-  versionRequired: string
-  confirmationsOnlyWithContent: string
-  noFieldsToUpdate: string
-}
+export type ResearcherValidationMessages = typeof es.researchers.validation
 
 const validationMessages: Record<Locale, ResearcherValidationMessages> = {
-  es: {
-    nameRequired: 'El nombre es obligatorio.',
-    institutionRequired: 'La institución es obligatoria.',
-    invalidEmail: 'Uno o más correos no son válidos.',
-    maxEmails: 'Máximo 2 correos de contacto.',
-    versionRequired: 'La versión del investigador es obligatoria y debe ser la que se cargó.',
-    confirmationsOnlyWithContent:
-      'Las confirmaciones solo aplican a una actualización de contenido (content).',
-    noFieldsToUpdate: 'La solicitud no incluye ningún campo para actualizar.',
-  },
-  en: {
-    nameRequired: 'Name is required.',
-    institutionRequired: 'Institution is required.',
-    invalidEmail: 'One or more email addresses are invalid.',
-    maxEmails: 'Maximum 2 contact email addresses.',
-    versionRequired: 'The researcher version is required and must match what was loaded.',
-    confirmationsOnlyWithContent: 'Confirmations only apply to a content update.',
-    noFieldsToUpdate: 'The request does not include any fields to update.',
-  },
+  es: es.researchers.validation,
+  en: en.researchers.validation,
 }
 
 function createSharedSchemas(messages: ResearcherValidationMessages) {

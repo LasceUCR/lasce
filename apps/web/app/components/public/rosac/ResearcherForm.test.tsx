@@ -632,12 +632,21 @@ describe('ResearcherForm: bilingual mode', () => {
 
     const emailInput = screen.getByRole('textbox', { name: 'Email address' })
     expect(emailInput).toBeInTheDocument()
+    expect(emailInput).toHaveAttribute('placeholder', 'Type an email...')
+    expect(screen.getByText('No emails')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
+
+    // Test empty email validation in English
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Email is required.')
 
     // Test add contact and validation in English
     await user.type(emailInput, 'ada@example.com')
     await user.click(screen.getByRole('button', { name: 'Add' }))
     expect(screen.getByText('ada@example.com')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Contact emails' })).toBeInTheDocument()
+    expect(screen.getByText('1 email')).toBeInTheDocument()
+    expect(emailInput).toHaveAttribute('placeholder', 'Type another email...')
     expect(screen.getByRole('button', { name: 'Delete ada@example.com' })).toBeInTheDocument()
 
     await user.type(emailInput, 'not-an-email')
