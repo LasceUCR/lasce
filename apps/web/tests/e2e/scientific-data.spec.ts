@@ -643,7 +643,10 @@ test('changes the daily band and range without modifying the lower query or relo
   await expect(solar.getByRole('radio', { name: '171 Å' })).toBeChecked()
   await expect(solar.getByRole('img', { name: 'Imagen solar de GOES: 171 Å' })).toHaveCount(5)
   await solar.getByRole('radio', { name: '171 Å' }).press('ArrowLeft')
-  await expect(solar.getByRole('status')).toContainText('Aún no hay imágenes para esta selección')
+  // LoadingRegion keeps its (now empty) status mounted, so target the empty state by its text.
+  await expect(
+    solar.getByRole('status').filter({ hasText: 'Aún no hay imágenes para esta selección' }),
+  ).toBeVisible()
   await solar.getByRole('radio', { name: '131 Å' }).press('ArrowRight')
   await expect(solar.getByRole('img')).toHaveCount(5)
   const requestPromise = page.waitForRequest(

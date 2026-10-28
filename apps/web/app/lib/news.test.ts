@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => {
   }
 
   const prisma = {
-    news: { findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
+    news: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
   }
 
@@ -44,7 +44,9 @@ const {
   deleteNews,
   getNews,
   getNewsById,
+  getNewsPage,
   newsCreateSchema,
+  newsSearchWhere,
   newsUpdateSchema,
   updateNews,
 } = await import('./news')
@@ -133,13 +135,17 @@ describe('getNews', () => {
     })
   })
 
-  test('orders newest first with undated items last, and loads the stored translations', async () => {
+  test('orders newest first with undated items last, breaking ties, and loads the stored translations', async () => {
     prisma.news.findMany.mockResolvedValue([])
 
     await getNews('en')
 
     expect(prisma.news.findMany).toHaveBeenCalledWith({
-      orderBy: { publishedAt: { sort: 'desc', nulls: 'last' } },
+      orderBy: [
+        { publishedAt: { sort: 'desc', nulls: 'last' } },
+        { createdAt: 'desc' },
+        { id: 'desc' },
+      ],
       include: {
         source: true,
         authors: { orderBy: { position: 'asc' }, include: { newsAuthor: true } },
@@ -243,6 +249,162 @@ describe('getNews', () => {
       version: VERSION,
     })
     expect(legacy?.editing).toMatchObject({ content: { en: null }, isLegacy: true })
+  })
+})
+
+const stableOrder = [
+  { publishedAt: { sort: 'desc', nulls: 'last' } },
+  { createdAt: 'desc' },
+  { id: 'desc' },
+]
+
+describe('newsSearchWhere', () => {
+  const text = { contains: 'sol', mode: 'insensitive' }
+
+  test('matches every item when there is no search', () => {
+    expect(newsSearchWhere('', 'es')).toEqual({})
+    expect(newsSearchWhere('', 'en')).toEqual({})
+  })
+
+  test('searches the base title and abstract, the source and the authors in Spanish', () => {
+    expect(newsSearchWhere('sol', 'es')).toEqual({
+      OR: [
+        { OR: [{ title: text }, { abstract: text }] },
+        { source: { name: text } },
+        { authors: { some: { newsAuthor: { name: text } } } },
+      ],
+    })
+  })
+
+  test('matches % and _ literally', () => {
+    const literal = { contains: '100\\%', mode: 'insensitive' }
+
+    expect(newsSearchWhere('100%', 'es')).toMatchObject({
+      OR: [{ OR: [{ title: literal }, { abstract: literal }] }, {}, {}],
+    })
+  })
+
+  test('searches the English text of a translated item, and the base text of one without it', () => {
+    expect(newsSearchWhere('sol', 'en')).toEqual({
+      OR: [
+        {
+          OR: [
+            {
+              translations: {
+                some: { locale: 'en', OR: [{ title: text }, { abstract: text }] },
+              },
+            },
+            { translations: { none: { locale: 'en' } }, OR: [{ title: text }, { abstract: text }] },
+          ],
+        },
+        { source: { name: text } },
+        { authors: { some: { newsAuthor: { name: text } } } },
+      ],
+    })
+  })
+})
+
+describe('getNewsPage', () => {
+  function rows(count: number) {
+    return Array.from({ length: count }, (_, index) => newsRow({ id: `news-${index + 1}` }))
+  }
+
+  test('loads only the first page, in a stable order, when no page is asked for', async () => {
+    prisma.news.count.mockResolvedValue(23)
+    prisma.news.findMany.mockResolvedValue(rows(10))
+
+    const page = await getNewsPage('es')
+
+    expect(prisma.news.count).toHaveBeenCalledWith({ where: {} })
+    expect(prisma.news.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {}, orderBy: stableOrder, skip: 0, take: 10 }),
+    )
+    expect(page).toMatchObject({
+      page: 1,
+      pageSize: 10,
+      totalItems: 23,
+      totalPages: 3,
+      query: '',
+    })
+    expect(page.articles).toHaveLength(10)
+  })
+
+  test('skips the items of the earlier pages', async () => {
+    prisma.news.count.mockResolvedValue(23)
+    prisma.news.findMany.mockResolvedValue(rows(3))
+
+    const page = await getNewsPage('es', { page: 3 })
+
+    expect(prisma.news.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 20, take: 10 }),
+    )
+    expect(page).toMatchObject({ page: 3, totalPages: 3 })
+    expect(page.articles).toHaveLength(3)
+  })
+
+  test('shows the last page when the page asked for is past the end', async () => {
+    prisma.news.count.mockResolvedValue(23)
+    prisma.news.findMany.mockResolvedValue(rows(3))
+
+    const page = await getNewsPage('es', { page: 9 })
+
+    expect(prisma.news.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 20 }))
+    expect(page.page).toBe(3)
+  })
+
+  test('shows the first page when the page asked for is zero or negative', async () => {
+    prisma.news.count.mockResolvedValue(23)
+    prisma.news.findMany.mockResolvedValue(rows(10))
+
+    expect((await getNewsPage('es', { page: 0 })).page).toBe(1)
+    expect((await getNewsPage('es', { page: -4 })).page).toBe(1)
+    expect(prisma.news.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ skip: 0 }))
+  })
+
+  test('filters before paginating, and counts only the matching items', async () => {
+    prisma.news.count.mockResolvedValue(12)
+    prisma.news.findMany.mockResolvedValue(rows(2))
+
+    const page = await getNewsPage('en', { query: '  sol  ', page: 2 })
+    const where = newsSearchWhere('sol', 'en')
+
+    expect(prisma.news.count).toHaveBeenCalledWith({ where })
+    expect(prisma.news.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where, skip: 10, take: 10 }),
+    )
+    expect(page).toMatchObject({ page: 2, totalItems: 12, totalPages: 2, query: 'sol' })
+  })
+
+  test('reports no pages and loads nothing when no item matches', async () => {
+    prisma.news.count.mockResolvedValue(0)
+
+    const page = await getNewsPage('es', { query: 'nada', page: 4 })
+
+    expect(prisma.news.findMany).not.toHaveBeenCalled()
+    expect(page).toMatchObject({ page: 1, totalItems: 0, totalPages: 0, articles: [] })
+  })
+
+  test('shows each item in the language asked for', async () => {
+    prisma.news.count.mockResolvedValue(1)
+    prisma.news.findMany.mockResolvedValue([bilingualRow])
+
+    const { articles } = await getNewsPage('en')
+
+    expect(articles[0]).toMatchObject({
+      title: 'UCR brings a radio telescope online to study the Sun',
+      contentLocale: 'en',
+    })
+  })
+
+  test('leaves editing data out unless asked for it', async () => {
+    prisma.news.count.mockResolvedValue(1)
+    prisma.news.findMany.mockResolvedValue([bilingualRow])
+
+    const visitor = await getNewsPage('es')
+    const editor = await getNewsPage('es', { includeEditingData: true })
+
+    expect(visitor.articles[0]).not.toHaveProperty('editing')
+    expect(editor.articles[0]?.editing).toMatchObject({ version: VERSION })
   })
 })
 

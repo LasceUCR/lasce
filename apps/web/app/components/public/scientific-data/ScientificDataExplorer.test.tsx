@@ -546,3 +546,110 @@ describe('ScientificDataExplorer', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })
+
+describe('ScientificDataExplorer: loading placeholders', () => {
+  /** A request that stays pending until the test answers it. */
+  function pendingFetch() {
+    let answer!: (value: unknown) => void
+    const fetchMock = vi.fn().mockReturnValue(
+      new Promise((resolve) => {
+        answer = resolve
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    return { fetchMock, answer: (value: unknown) => answer(value) }
+  }
+
+  function resultsArea(container: HTMLElement) {
+    return container.querySelector<HTMLElement>('#scientific-results')
+  }
+
+  test('draws the results card as a chart while a time series loads, then the result in place', async () => {
+    const request = pendingFetch()
+    const user = userEvent.setup()
+    const { container } = renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+
+    const area = resultsArea(container)!
+    expect(area).toHaveAttribute('aria-busy', 'true')
+    const placeholders = area.querySelector('[inert]')!
+    expect(placeholders).toHaveAttribute('aria-hidden', 'true')
+    expect(placeholders.querySelector('[data-visualization="time-series"]')).not.toBeNull()
+    expect(screen.queryByText('No hay datos disponibles')).not.toBeInTheDocument()
+
+    await act(async () => request.answer({ ok: true, json: async () => resultFixture }))
+
+    expect(resultsArea(container)).toBe(area)
+    expect(area).not.toHaveAttribute('aria-busy')
+    expect(
+      within(area).getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' }),
+    ).toBeInTheDocument()
+  })
+
+  test('draws an image grid while SUVI images load', async () => {
+    pendingFetch()
+    const user = userEvent.setup()
+    const { container } = renderWithIntl(
+      <ScientificDataExplorer {...suviArgs} initialResult={undefined} />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+
+    const placeholders = resultsArea(container)!.querySelector('[inert]')!
+    expect(placeholders.querySelector('[data-visualization="image-sequence"]')).not.toBeNull()
+    expect(placeholders.querySelectorAll('li')).toHaveLength(4)
+  })
+
+  test('announces the load once, through the progress bar', async () => {
+    pendingFetch()
+    const user = userEvent.setup()
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />, { locale: 'en' })
+
+    await user.click(screen.getByRole('button', { name: 'Query data' }))
+
+    expect(
+      screen.getAllByRole('status').filter((status) => status.textContent?.includes('Loading')),
+    ).toHaveLength(1)
+  })
+
+  test('removes the placeholders and shows the error when the query fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+    const user = userEvent.setup()
+    const { container } = renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No fue posible consultar')
+    expect(resultsArea(container)).toBeNull()
+    expect(container.querySelector('[aria-busy]')).toBeNull()
+  })
+
+  test('removes the placeholders when the visitor cancels the query', async () => {
+    pendingFetch()
+    const user = userEvent.setup()
+    const { container } = renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+    await user.click(screen.getByRole('button', { name: 'Cancelar consulta' }))
+
+    expect(resultsArea(container)).toBeNull()
+    expect(screen.getByRole('button', { name: 'Consultar datos' })).toBeEnabled()
+  })
+
+  test('shows the empty result in place of the placeholders when nothing matched', async () => {
+    const request = pendingFetch()
+    const user = userEvent.setup()
+    const { container } = renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+    await act(async () =>
+      request.answer({ ok: true, json: async () => withoutResultsArgs.initialResult }),
+    )
+
+    const area = resultsArea(container)!
+    expect(area).not.toHaveAttribute('aria-busy')
+    expect(within(area).getByRole('status')).toHaveTextContent('No hay datos disponibles')
+    expect(area.querySelector('[inert]')).toBeNull()
+  })
+})

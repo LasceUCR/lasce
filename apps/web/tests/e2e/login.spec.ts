@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect as baseExpect, test, type Page } from '@playwright/test'
 
-import { accountMenuCopy, cuentaIntro, signOutDialogCopy } from '@/app/lib/auth/account'
+import { cuentaIntro } from '@/app/lib/auth/account'
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
@@ -51,18 +51,16 @@ const headerActions = (page: Page) => page.locator('.header-actions')
 async function openAccountMenu(page: Page) {
   // The header holds two disclosures, the language menu and the account menu.
   await headerActions(page).locator('.account-menu summary').press('Enter')
-  await expect(
-    headerActions(page).getByRole('link', { name: accountMenuCopy.account }),
-  ).toBeVisible()
+  await expect(headerActions(page).getByRole('link', { name: 'Mi cuenta' })).toBeVisible()
 }
 
 const signOutButton = (page: Page) =>
-  headerActions(page).getByRole('button', { name: accountMenuCopy.signOut })
-const signOutDialog = (page: Page) => page.getByRole('dialog', { name: signOutDialogCopy.title })
+  headerActions(page).getByRole('button', { name: 'Cerrar sesión' })
+const signOutDialog = (page: Page) => page.getByRole('dialog', { name: '¿Cerrar sesión?' })
 
 // Every sign-out control asks first; this answers yes.
 async function confirmSignOut(page: Page) {
-  await signOutDialog(page).getByRole('button', { name: signOutDialogCopy.confirm }).click()
+  await signOutDialog(page).getByRole('button', { name: 'Cerrar sesión' }).click()
 }
 
 // Typing before React has attached to the form loses the values when hydration
@@ -90,7 +88,7 @@ const LOGIN_REDIRECT = /\/acceso\?next=%2Fcuenta&reason=auth$/
 // so the navigation carries the page they came from.
 async function signInFromHeader(page: Page, originPath: string) {
   await page.goto(originPath)
-  await headerActions(page).getByRole('link', { name: accountMenuCopy.signIn }).click()
+  await headerActions(page).getByRole('link', { name: 'Ingresar' }).click()
   await waitForHydration(page, '.login-card form')
   await loginField(page, 'email').fill(account.email)
   await loginField(page, 'password').fill(account.password)
@@ -162,9 +160,10 @@ test('opens on the login tab and switches to registration without leaving the pa
   await expect(
     loginCard(page).getByRole('link', { name: loginFormCopy.noAccountLink }),
   ).toHaveAttribute('href', REGISTRATION_HREF)
-  await expect(
-    headerActions(page).getByRole('link', { name: accountMenuCopy.signIn }),
-  ).toHaveAttribute('href', ACCESS_PATH)
+  await expect(headerActions(page).getByRole('link', { name: 'Ingresar' })).toHaveAttribute(
+    'href',
+    ACCESS_PATH,
+  )
 
   // The card's own link must open the registration tab, not only rewrite the address bar.
   await loginCard(page).getByRole('link', { name: loginFormCopy.noAccountLink }).click()
@@ -178,12 +177,9 @@ test('opens on the login tab and switches to registration without leaving the pa
   await page.getByLabel('Abrir navegación', { exact: true }).click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   const names = await menu.getByRole('link').allTextContents()
-  expect(names.slice(-1)).toEqual([accountMenuCopy.signIn])
+  expect(names.slice(-1)).toEqual(['Ingresar'])
   await expect(menu.getByRole('link', { name: 'Crear cuenta' })).toHaveCount(0)
-  await expect(menu.getByRole('link', { name: accountMenuCopy.signIn })).toHaveAttribute(
-    'href',
-    ACCESS_PATH,
-  )
+  await expect(menu.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', ACCESS_PATH)
 })
 
 test('rejects a wrong password and an unknown address with the same message', async ({ page }) => {
@@ -253,19 +249,17 @@ test('shows the profile on the account page once signed in', async ({ page }) =>
   await expect(page.locator('.space-page-bg img')).toBeVisible()
 
   await openAccountMenu(page)
-  await expect(
-    headerActions(page).getByRole('link', { name: accountMenuCopy.account }),
-  ).toHaveAttribute('href', '/cuenta')
+  await expect(headerActions(page).getByRole('link', { name: 'Mi cuenta' })).toHaveAttribute(
+    'href',
+    '/cuenta',
+  )
   await expect(signOutButton(page)).toBeVisible()
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByLabel('Abrir navegación', { exact: true }).click()
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
-  await expect(menu.getByRole('link', { name: accountMenuCopy.account })).toHaveAttribute(
-    'href',
-    '/cuenta',
-  )
-  await expect(menu.getByRole('button', { name: accountMenuCopy.signOut })).toBeVisible()
+  await expect(menu.getByRole('link', { name: 'Mi cuenta' })).toHaveAttribute('href', '/cuenta')
+  await expect(menu.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
 })
 
 test('returns to a safe path after login and ignores an off-site one', async ({ page }) => {
@@ -305,9 +299,7 @@ test('signs out from the header and loses access to the account page', async ({ 
   await confirmSignOut(page)
 
   await expect(page).toHaveURL(/\/$/)
-  await expect(
-    headerActions(page).getByRole('link', { name: accountMenuCopy.signIn }),
-  ).toBeVisible()
+  await expect(headerActions(page).getByRole('link', { name: 'Ingresar' })).toBeVisible()
   await expect(signOutButton(page)).toHaveCount(0)
 
   await page.goto('/cuenta')
@@ -321,9 +313,13 @@ test('asks before signing out and keeps the session when cancelled', async ({ pa
 
   await signOutButton(page).click()
   await expect(signOutDialog(page)).toBeVisible()
-  await expect(signOutDialog(page).getByText(signOutDialogCopy.body)).toBeVisible()
+  await expect(
+    signOutDialog(page).getByText(
+      'Tu sesión en este navegador terminará y tendrás que volver a ingresar.',
+    ),
+  ).toBeVisible()
 
-  await signOutDialog(page).getByRole('button', { name: signOutDialogCopy.cancel }).click()
+  await signOutDialog(page).getByRole('button', { name: 'Cancelar' }).click()
   await expect(signOutDialog(page)).toHaveCount(0)
   await openAccountMenu(page)
   await expect(signOutButton(page)).toBeVisible()
@@ -343,7 +339,7 @@ test('a revoked session cookie no longer opens the account page', async ({ page,
   expect(session).toBeDefined()
 
   // The form on the page itself, which works without JavaScript.
-  await page.getByRole('main').getByRole('button', { name: accountMenuCopy.signOut }).click()
+  await page.getByRole('main').getByRole('button', { name: 'Cerrar sesión' }).click()
   await confirmSignOut(page)
   await expect(page).toHaveURL(/\/$/)
 
@@ -364,6 +360,31 @@ test('sends a signed-in visitor away from the login page', async ({ page }) => {
 
   await page.goto(`${ACCESS_PATH}?next=%2Fdatos`)
   await expect(page).toHaveURL(/\/datos$/)
+})
+
+test('shows the account menu and sign-out dialog in English once the interface language is English', async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
+  await signIn(page)
+  await expect(page).toHaveURL(/\/$/)
+
+  await headerActions(page).locator('.account-menu summary').press('Enter')
+  await expect(headerActions(page).getByRole('link', { name: 'My account' })).toBeVisible()
+  const englishSignOut = headerActions(page).getByRole('button', { name: 'Sign out' })
+  await expect(englishSignOut).toBeVisible()
+
+  await englishSignOut.click()
+  const dialog = page.getByRole('dialog', { name: 'Sign out?' })
+  await expect(dialog).toBeVisible()
+  await expect(
+    dialog.getByText('Your session in this browser will end and you will have to sign in again.'),
+  ).toBeVisible()
+
+  await dialog.getByRole('button', { name: 'Sign out' }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(headerActions(page).getByRole('link', { name: 'Sign in' })).toBeVisible()
 })
 
 test('the old sign-in and sign-up routes redirect to the access page, query included', async ({

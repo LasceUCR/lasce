@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
-import { accountMenuCopy, shortName, signOutDialogCopy } from '@/app/lib/auth/account'
+import { shortName } from '@/app/lib/auth/account'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AccountMenu, type AccountMenuProps } from './AccountMenu'
 import { Administrator, Open, SigningOut, Visitor } from './AccountMenu.stories'
@@ -20,7 +21,7 @@ const details = () => trigger().closest('details') as HTMLDetailsElement
 
 describe('AccountMenu', () => {
   test('shows the short name on the trigger, closed by default', () => {
-    render(<AccountMenu {...visitorArgs} />)
+    renderWithIntl(<AccountMenu {...visitorArgs} />)
 
     expect(details()).not.toHaveAttribute('open')
     expect(trigger()).toHaveTextContent(shortName(visitorArgs.account))
@@ -28,27 +29,22 @@ describe('AccountMenu', () => {
 
   test('opens to show the name, role, "Mi cuenta" and "Cerrar sesión", but not "Administración" for a visitor', async () => {
     const user = userEvent.setup()
-    render(<AccountMenu {...visitorArgs} />)
+    renderWithIntl(<AccountMenu {...visitorArgs} />)
 
     await user.click(trigger())
 
     expect(details()).toHaveAttribute('open')
     expect(screen.getByText(visitorArgs.account, { selector: 'p' })).toBeVisible()
     expect(screen.getByText('Visitante')).toBeVisible()
-    expect(screen.getByRole('link', { name: accountMenuCopy.account })).toHaveAttribute(
-      'href',
-      '/cuenta',
-    )
-    expect(screen.getByRole('button', { name: accountMenuCopy.signOut })).toBeVisible()
-    expect(
-      screen.queryByRole('link', { name: accountMenuCopy.administracion }),
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Mi cuenta' })).toHaveAttribute('href', '/cuenta')
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
+    expect(screen.queryByRole('link', { name: 'Administración' })).not.toBeInTheDocument()
   })
 
   test('shows "Administración" for an administrator, linking to /administracion', () => {
-    render(<AccountMenu {...adminArgs} />)
+    renderWithIntl(<AccountMenu {...adminArgs} />)
 
-    expect(screen.getByRole('link', { name: accountMenuCopy.administracion })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Administración' })).toHaveAttribute(
       'href',
       '/administracion',
     )
@@ -57,29 +53,29 @@ describe('AccountMenu', () => {
   test('signs out only after confirming', async () => {
     const user = userEvent.setup()
     const onSignOut = vi.fn()
-    render(<AccountMenu {...openArgs} onSignOut={onSignOut} />)
+    renderWithIntl(<AccountMenu {...openArgs} onSignOut={onSignOut} />)
 
-    await user.click(screen.getByRole('button', { name: accountMenuCopy.signOut }))
+    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
     expect(onSignOut).not.toHaveBeenCalled()
 
     await user.click(
-      within(screen.getByRole('dialog')).getByRole('button', { name: signOutDialogCopy.confirm }),
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Cerrar sesión' }),
     )
 
     expect(onSignOut).toHaveBeenCalledTimes(1)
   })
 
   test('disables the sign-out control and says so while signing out', () => {
-    render(<AccountMenu {...signingOutArgs} />)
+    renderWithIntl(<AccountMenu {...signingOutArgs} />)
 
-    expect(screen.getByRole('button', { name: accountMenuCopy.signingOut })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Cerrando sesión...' })).toBeDisabled()
   })
 
   test('closes on Escape and returns focus to the trigger', async () => {
     const user = userEvent.setup()
-    render(<AccountMenu {...openArgs} />)
+    renderWithIntl(<AccountMenu {...openArgs} />)
 
-    screen.getByRole('link', { name: accountMenuCopy.account }).focus()
+    screen.getByRole('link', { name: 'Mi cuenta' }).focus()
     await user.keyboard('{Escape}')
 
     expect(details()).not.toHaveAttribute('open')
@@ -87,7 +83,7 @@ describe('AccountMenu', () => {
   })
 
   test('closes on a pointer outside the group', () => {
-    render(<AccountMenu {...openArgs} />)
+    renderWithIntl(<AccountMenu {...openArgs} />)
 
     fireEvent.pointerDown(document.body)
 
@@ -96,17 +92,17 @@ describe('AccountMenu', () => {
 
   test('closes when focus leaves the group', async () => {
     const user = userEvent.setup()
-    render(
+    renderWithIntl(
       <>
         <AccountMenu {...openArgs} />
         <a href="/noticias">Noticias</a>
       </>,
     )
 
-    screen.getByRole('link', { name: accountMenuCopy.account }).focus()
+    screen.getByRole('link', { name: 'Mi cuenta' }).focus()
     await user.tab()
 
-    expect(screen.getByRole('button', { name: accountMenuCopy.signOut })).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toHaveFocus()
     expect(details()).toHaveAttribute('open')
     await user.tab()
 

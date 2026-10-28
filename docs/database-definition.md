@@ -169,7 +169,7 @@ follows under `research`.
 
 > `published_at` is nullable rather than defaulted to a sentinel date: some coverage (e.g.
 > corporate blog posts) doesn't carry a publish date at all. The card renders these as
-> "Sin fecha" ("Undated" in English) and `getNews()` sorts them after every dated record
+> "Sin fecha" ("Undated" in English) and `getNewsPage()` sorts them after every dated record
 > (`nulls: 'last'`) instead of showing a fabricated date.
 
 Relationships: belongs to one `news_sources` row; has many `news_cross_authors` (its authors,
@@ -821,10 +821,12 @@ worker writes them yet: a future job would upsert the indices by `code`, set `so
 `observed_at`, and leave `position` alone; see
 [`home-page.md`](home-page.md#future-automatic-loading).
 
-`apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` with its non-Spanish
-`news_record_translations` (newest `published_at` first, nulls last, authors ordered by
-`position`) and maps each row to the `NewsArticle` shape `/noticias` renders, in the visitor's
-language when the item has it and in its base text otherwise. `createNews()`, `updateNews()` and
+`apps/web/app/lib/news.ts`'s `getNewsPage()` loads one page of `news_records` with its
+non-Spanish `news_record_translations`: searched, ordered (newest `published_at` first, nulls
+last, then newest `created_at`, then `id`, so pages never overlap) and cut to the page in
+PostgreSQL, with authors ordered by `position` (see [`pagination.md`](pagination.md)). It maps
+each row to the `NewsArticle` shape `/noticias` renders, in the visitor's language when the item
+has it and in its base text otherwise. `getNews()` loads every item in the same order. `createNews()`, `updateNews()` and
 `deleteNews()` write the base row and its translations in one transaction; an update writes only
 while `updated_at` still equals the version the editor loaded.
 

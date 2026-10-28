@@ -1,8 +1,7 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from 'react'
-
-import { accountMenuCopy, signOutDialogCopy } from '@/app/lib/auth/account'
 
 export interface SignOutButtonProps {
   /** Runs once the person confirms. Not needed when `submitsForm` is set. */
@@ -34,6 +33,7 @@ export function SignOutButton({
   className,
   icon,
 }: SignOutButtonProps) {
+  const t = useTranslations('account')
   const [isOpen, setIsOpen] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -89,12 +89,12 @@ export function SignOutButton({
         {icon ? (
           <span className="mobile-account-link-content">
             {icon}
-            <span>{isSigningOut ? accountMenuCopy.signingOut : accountMenuCopy.signOut}</span>
+            <span>{isSigningOut ? t('signingOut') : t('signOut')}</span>
           </span>
         ) : isSigningOut ? (
-          accountMenuCopy.signingOut
+          t('signingOut')
         ) : (
-          accountMenuCopy.signOut
+          t('signOut')
         )}
       </button>
 
@@ -105,14 +105,14 @@ export function SignOutButton({
           className="confirm-dialog"
           ref={dialogRef}
         >
-          <h2 id={titleId}>{signOutDialogCopy.title}</h2>
-          <p id={bodyId}>{signOutDialogCopy.body}</p>
+          <h2 id={titleId}>{t('signOutDialog.title')}</h2>
+          <p id={bodyId}>{t('signOutDialog.body')}</p>
           <div className="confirm-dialog-actions">
             <button autoFocus className="button button-secondary" onClick={close} type="button">
-              {signOutDialogCopy.cancel}
+              {t('signOutDialog.cancel')}
             </button>
             <button className="button button-brand" onClick={confirm} type="button">
-              {signOutDialogCopy.confirm}
+              {t('signOutDialog.confirm')}
             </button>
           </div>
         </dialog>
