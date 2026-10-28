@@ -2,6 +2,7 @@
 
 import { ImagePlus, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { IconButton } from './IconButton'
 
@@ -44,10 +45,14 @@ export function FileDropInput({
   helperText,
   required = false,
   errorMessage,
-  rejectionFormatMessage = 'Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.',
-  rejectionSizeMessage = 'La imagen supera el tamaño máximo de 25 MB.',
-  descriptionText = 'Arrastre una imagen aquí o haga clic para seleccionarla del equipo',
+  rejectionFormatMessage,
+  rejectionSizeMessage,
+  descriptionText,
 }: FileDropInputProps) {
+  const t = useTranslations('fileDrop')
+  const resolvedDescription = descriptionText ?? t('description')
+  const resolvedRejectionFormat = rejectionFormatMessage ?? t('rejectionFormat')
+  const resolvedRejectionSize = rejectionSizeMessage ?? t('rejectionSize')
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const objectUrlRef = useRef<string | null>(null)
@@ -67,12 +72,12 @@ export function FileDropInput({
 
   function selectFile(file: File | null) {
     if (file && !isAccepted(file, accept)) {
-      setRejection(rejectionFormatMessage)
+      setRejection(resolvedRejectionFormat)
       if (inputRef.current) inputRef.current.value = ''
       return
     }
     if (file && file.size > MAX_FILE_BYTES) {
-      setRejection(rejectionSizeMessage)
+      setRejection(resolvedRejectionSize)
       if (inputRef.current) inputRef.current.value = ''
       return
     }
@@ -159,7 +164,7 @@ export function FileDropInput({
           {previewUrl ? (
             <div className="file-drop-preview-wrap">
               <img
-                alt={`Vista previa de ${label.toLowerCase()}`}
+                alt={t('previewAlt', { label: label.toLowerCase() })}
                 className="file-drop-preview"
                 src={previewUrl}
               />
@@ -171,7 +176,7 @@ export function FileDropInput({
           )}
 
           <div className="file-drop-copy">
-            <p>{descriptionText}</p>
+            <p>{resolvedDescription}</p>
             {helperText && <p className="file-drop-helper">{helperText}</p>}
           </div>
         </div>
@@ -180,7 +185,7 @@ export function FileDropInput({
           <IconButton
             className="file-drop-remove"
             icon={<X size={12} strokeWidth={1.8} />}
-            label="Quitar imagen"
+            label={t('removeLabel')}
             onClick={handleRemove}
           />
         ) : null}

@@ -1,0 +1,134 @@
+/*
+ * Placeholders shown while content loads (#377). Decorative only: every placeholder is
+ * `aria-hidden`, and `LoadingRegion` announces the loading state instead.
+ */
+
+.skeleton {
+  --skeleton-base: #e3ebf1;
+  --skeleton-highlight: #f4f8fb;
+  display: block;
+  width: 100%;
+  height: 1rem;
+  border-radius: 6px;
+  background: linear-gradient(
+      90deg,
+      var(--skeleton-base) 0%,
+      var(--skeleton-highlight) 50%,
+      var(--skeleton-base) 100%
+    )
+    0 0 / 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* On the dark frames of solar images (`--space-black`). */
+.dark {
+  --skeleton-base: #13263a;
+  --skeleton-highlight: #1e3850;
+}
+
+/* A line of text: as tall as the text it stands for, so the layout does not move on load. */
+.text {
+  height: 0.8em;
+  margin: 0.2em 0;
+  border-radius: 4px;
+}
+
+.circle {
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--skeleton-base);
+  }
+}
+
+/* High contrast mode drops backgrounds: keep an outline so the shape is still visible. */
+@media (forced-colors: active) {
+  .skeleton {
+    border: 1px solid GrayText;
+    background: Canvas;
+  }
+}
+
+/* SkeletonText */
+.lines {
+  display: grid;
+  gap: 0.35em;
+}
+
+/* SkeletonImageCard: the same box as a figure of `.data-image-grid`. */
+.imageCard {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--space-black);
+}
+
+.imageFrame {
+  border-radius: 0;
+}
+
+.imageCaption {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  background: var(--white);
+}
+
+.imageCaption .skeleton {
+  margin-inline: auto;
+}
+
+/* SkeletonChart: the same boxes as `.data-summary` and `.data-chart-figure`. */
+.chart {
+  display: block;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.summaryTile {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.chartFigure {
+  display: block;
+  max-width: 48rem;
+  margin: 1.25rem auto 0;
+}
+
+.chartArea {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.chartCaption {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+/* LoadingRegion */
+.placeholders {
+  display: block;
+}

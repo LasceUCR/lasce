@@ -27,6 +27,7 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import type { RosacAcknowledgment, RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 import type { ConstructionStage } from '@/app/lib/rosac-construction'
@@ -54,8 +55,6 @@ import { RosacInstrumentForm, type RosacInstrumentFormValues } from './RosacInst
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
 import { RosacStageForm, type RosacStageFormValues } from './RosacStageForm'
 import { TeamGallery } from './TeamGallery'
-
-const SAVE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Inténtelo de nuevo.'
 
 const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
@@ -128,32 +127,25 @@ export function RosacInfoPage({
   const router = useRouter()
   const { editMode } = useEditMode()
   const tResearchers = useTranslations('researchers')
+  const tEditor = useTranslations('rosac.editor')
   const sendWithFeedback = useRequestFeedback()
+  const toast = useToast()
 
   // --- Section 1: Characteristics State (Edit only, fixed 4 cards) ---
   const [characteristics, setCharacteristics] = useState(content.characteristics.items)
   const [editingCharacteristicId, setEditingCharacteristicId] = useState<string | null>(null)
-  const [characteristicSaveError, setCharacteristicSaveError] = useState<string | null>(null)
 
   // --- Section 3: Activities State (Edit only, fixed 3 cards) ---
   const [activities, setActivities] = useState(content.activities.items)
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
-  const [activitySaveError, setActivitySaveError] = useState<string | null>(null)
 
   // --- Section 4: Construction Stages State (Edit only, fixed 5 stages) ---
   const [constructionStages, setConstructionStages] = useState(content.construction.stages)
   const [editingStageId, setEditingStageId] = useState<string | null>(null)
-  const [stageSaveError, setStageSaveError] = useState<string | null>(null)
 
   // --- Section 6: Instruments State (Create, Edit, Delete) ---
   const [instruments, setInstruments] = useState(content.instruments.items)
   const [editingInstrumentId, setEditingInstrumentId] = useState<string | null>(null)
-  const [instrumentSaveError, setInstrumentSaveError] = useState<string | null>(null)
-  const [instrumentCreateError, setInstrumentCreateError] = useState<string | null>(null)
-  const [instrumentListError, setInstrumentListError] = useState<string | null>(null)
-
-  // --- Section 7: Researchers State ---
-  const [listError, setListError] = useState<string | null>(null)
 
   // --- Section 8: Acknowledgments State (Create, Edit, Delete) ---
   const [acknowledgments, setAcknowledgments] = useState<RosacAcknowledgment[]>(() =>
@@ -162,8 +154,6 @@ export function RosacInfoPage({
       ...inst,
     })),
   )
-  const [acknowledgmentCreateError, setAcknowledgmentCreateError] = useState<string | null>(null)
-  const [acknowledgmentListError, setAcknowledgmentListError] = useState<string | null>(null)
 
   const displayCharacteristics = characteristics
   const displayActivities = activities
@@ -235,12 +225,10 @@ export function RosacInfoPage({
   const editingCharacteristic = characteristics.find((item) => item.id === editingCharacteristicId)
 
   function openCharacteristicEditor(id: string) {
-    setCharacteristicSaveError(null)
     setEditingCharacteristicId(id)
   }
 
   function closeCharacteristicEditor() {
-    setCharacteristicSaveError(null)
     setEditingCharacteristicId(null)
   }
 
@@ -250,7 +238,7 @@ export function RosacInfoPage({
     if (onSaveCharacteristic) {
       const err = await onSaveCharacteristic(editingCharacteristicId, values)
       if (err) {
-        setCharacteristicSaveError(err)
+        toast.show('error', err)
         return
       }
     }
@@ -274,12 +262,10 @@ export function RosacInfoPage({
   const editingActivity = activities.find((item) => item.id === editingActivityId)
 
   function openActivityEditor(id: string) {
-    setActivitySaveError(null)
     setEditingActivityId(id)
   }
 
   function closeActivityEditor() {
-    setActivitySaveError(null)
     setEditingActivityId(null)
   }
 
@@ -289,7 +275,7 @@ export function RosacInfoPage({
     if (onSaveActivity) {
       const err = await onSaveActivity(editingActivityId, values)
       if (err) {
-        setActivitySaveError(err)
+        toast.show('error', err)
         return
       }
     }
@@ -313,12 +299,10 @@ export function RosacInfoPage({
   const editingStage = constructionStages.find((s) => s.id === editingStageId)
 
   function openStageEditor(id: string) {
-    setStageSaveError(null)
     setEditingStageId(id)
   }
 
   function closeStageEditor() {
-    setStageSaveError(null)
     setEditingStageId(null)
   }
 
@@ -328,7 +312,7 @@ export function RosacInfoPage({
     if (onSaveStage) {
       const err = await onSaveStage(editingStageId, values)
       if (err) {
-        setStageSaveError(err)
+        toast.show('error', err)
         return
       }
     }
@@ -355,12 +339,10 @@ export function RosacInfoPage({
   const editingInstrument = instruments.find((inst) => inst.id === editingInstrumentId)
 
   function openInstrumentEditor(id: string) {
-    setInstrumentSaveError(null)
     setEditingInstrumentId(id)
   }
 
   function closeInstrumentEditor() {
-    setInstrumentSaveError(null)
     setEditingInstrumentId(null)
   }
 
@@ -370,7 +352,7 @@ export function RosacInfoPage({
     if (onSaveInstrument) {
       const err = await onSaveInstrument(editingInstrumentId, values)
       if (err) {
-        setInstrumentSaveError(err)
+        toast.show('error', err)
         return
       }
     }
@@ -392,12 +374,10 @@ export function RosacInfoPage({
   }
 
   async function handleCreateInstrument(values: RosacInstrumentFormValues, close: () => void) {
-    setInstrumentCreateError(null)
-
     if (onCreateInstrument) {
       const err = await onCreateInstrument(values)
       if (err) {
-        setInstrumentCreateError(err)
+        toast.show('error', err)
         return
       }
     }
@@ -418,12 +398,10 @@ export function RosacInfoPage({
   }
 
   async function handleDeleteInstrument(id: string) {
-    setInstrumentListError(null)
-
     if (onDeleteInstrument) {
       const err = await onDeleteInstrument(id)
       if (err) {
-        setInstrumentListError(err)
+        toast.show('error', err)
         return
       }
     }
@@ -472,24 +450,18 @@ export function RosacInfoPage({
     )
   }
 
+  // Reports the outcome in a toast once the request is done, the same way the save and create
+  // handlers above do.
   async function handleDeleteResearcher(id: string) {
-    setListError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/researchers/${id}`, { method: 'DELETE' })
-    } catch {
-      setListError(SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setListError(body?.error ?? SAVE_ERROR_MESSAGE)
-      return
-    }
-
-    router.refresh()
+    await sendWithFeedback(
+      `/api/researchers/${id}`,
+      { method: 'DELETE' },
+      {
+        success: tResearchers('deleted'),
+        fallback: tResearchers('errors.deleteUnknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
   // --- Section 8: Acknowledgments Handlers ---
@@ -522,12 +494,10 @@ export function RosacInfoPage({
     values: RosacAcknowledgmentFormValues,
     close: () => void,
   ) {
-    setAcknowledgmentCreateError(null)
-
     if (onCreateAcknowledgment) {
       const err = await onCreateAcknowledgment(values)
       if (err) {
-        setAcknowledgmentCreateError(err)
+        toast.show('error', err)
         return
       }
     }
@@ -546,12 +516,10 @@ export function RosacInfoPage({
   }
 
   async function handleDeleteAcknowledgment(id: string) {
-    setAcknowledgmentListError(null)
-
     if (onDeleteAcknowledgment) {
       const err = await onDeleteAcknowledgment(id)
       if (err) {
-        setAcknowledgmentListError(err)
+        toast.show('error', err)
         return
       }
     }
@@ -599,7 +567,7 @@ export function RosacInfoPage({
             return (
               <EditableWrapper
                 key={item.id}
-                editLabel={`Editar ${item.title}`}
+                editLabel={tEditor('characteristics.editLabel', { title: item.title })}
                 onEdit={() => openCharacteristicEditor(item.id)}
               >
                 <InfoCard title={item.title} description={item.description} icon={icon} />
@@ -640,7 +608,7 @@ export function RosacInfoPage({
             return (
               <EditableWrapper
                 key={item.id}
-                editLabel={`Editar ${item.title}`}
+                editLabel={tEditor('activities.editLabel', { title: item.title })}
                 onEdit={() => openActivityEditor(item.id)}
               >
                 <InfoCard title={item.title} description={item.description} icon={icon} />
@@ -704,34 +672,18 @@ export function RosacInfoPage({
         className={styles.instrumentsSection}
         wide
       >
-        {instrumentListError ? (
-          <p className="form-alert" role="alert">
-            {instrumentListError}
-          </p>
-        ) : null}
-
         {instruments.length > 3 || (editMode && canCreate) ? (
           <InstrumentsGallery
             label={content.instruments.title}
             trailingSlide={
               editMode && canCreate ? (
-                <AddItemCard label="Añadir instrumento">
+                <AddItemCard label={tEditor('instruments.addCard')}>
                   {({ close }) => (
-                    <>
-                      {instrumentCreateError ? (
-                        <p className="form-alert" role="alert">
-                          {instrumentCreateError}
-                        </p>
-                      ) : null}
-                      <RosacInstrumentForm
-                        instrument={null}
-                        onCancel={() => {
-                          setInstrumentCreateError(null)
-                          close()
-                        }}
-                        onSave={(values) => handleCreateInstrument(values, close)}
-                      />
-                    </>
+                    <RosacInstrumentForm
+                      instrument={null}
+                      onCancel={close}
+                      onSave={(values) => handleCreateInstrument(values, close)}
+                    />
                   )}
                 </AddItemCard>
               ) : undefined
@@ -747,10 +699,10 @@ export function RosacInfoPage({
               return (
                 <EditableWrapper
                   key={instrument.id}
-                  deleteConfirmMessage="Esta acción no se puede deshacer y borrará el instrumento científico."
-                  deleteConfirmTitle="Eliminar instrumento"
-                  deleteLabel={`Eliminar ${instrument.name}`}
-                  editLabel={`Editar ${instrument.name}`}
+                  deleteConfirmMessage={tEditor('instruments.deleteConfirmMessage')}
+                  deleteConfirmTitle={tEditor('instruments.deleteConfirmTitle')}
+                  deleteLabel={tEditor('instruments.deleteLabel', { name: instrument.name })}
+                  editLabel={tEditor('instruments.editLabel', { name: instrument.name })}
                   onDelete={canDelete ? () => handleDeleteInstrument(instrument.id) : undefined}
                   onEdit={canEdit ? () => openInstrumentEditor(instrument.id) : undefined}
                 >
@@ -771,10 +723,10 @@ export function RosacInfoPage({
               return (
                 <EditableWrapper
                   key={instrument.id}
-                  deleteConfirmMessage="Esta acción no se puede deshacer y borrará el instrumento científico."
-                  deleteConfirmTitle="Eliminar instrumento"
-                  deleteLabel={`Eliminar ${instrument.name}`}
-                  editLabel={`Editar ${instrument.name}`}
+                  deleteConfirmMessage={tEditor('instruments.deleteConfirmMessage')}
+                  deleteConfirmTitle={tEditor('instruments.deleteConfirmTitle')}
+                  deleteLabel={tEditor('instruments.deleteLabel', { name: instrument.name })}
+                  editLabel={tEditor('instruments.editLabel', { name: instrument.name })}
                   onDelete={canDelete ? () => handleDeleteInstrument(instrument.id) : undefined}
                   onEdit={canEdit ? () => openInstrumentEditor(instrument.id) : undefined}
                 >
@@ -795,12 +747,6 @@ export function RosacInfoPage({
         titleId="rosac-team-title"
         wide
       >
-        {listError ? (
-          <p className="form-alert" role="alert">
-            {listError}
-          </p>
-        ) : null}
-
         <TeamGallery
           emptyMessage={content.team.emptyMessage}
           hint={content.team.hint}
@@ -819,7 +765,7 @@ export function RosacInfoPage({
           )}
           trailingSlide={
             editMode && canCreate ? (
-              <AddItemCard label="Añadir investigador">
+              <AddItemCard label={tResearchers('editor.addCard')}>
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
@@ -870,12 +816,6 @@ export function RosacInfoPage({
         titleId="rosac-acknowledgments-title"
         wide
       >
-        {acknowledgmentListError ? (
-          <p className="form-alert" role="alert">
-            {acknowledgmentListError}
-          </p>
-        ) : null}
-
         <AcknowledgmentsGallery
           institutions={displayAcknowledgments}
           label={content.acknowledgments.title}
@@ -890,23 +830,13 @@ export function RosacInfoPage({
           )}
           trailingSlide={
             editMode && canCreate ? (
-              <AddItemCard label="Añadir institución">
+              <AddItemCard label={tEditor('acknowledgments.addCard')}>
                 {({ close }) => (
-                  <>
-                    {acknowledgmentCreateError ? (
-                      <p className="form-alert" role="alert">
-                        {acknowledgmentCreateError}
-                      </p>
-                    ) : null}
-                    <RosacAcknowledgmentForm
-                      institution={null}
-                      onCancel={() => {
-                        setAcknowledgmentCreateError(null)
-                        close()
-                      }}
-                      onSave={(values) => handleCreateAcknowledgment(values, close)}
-                    />
-                  </>
+                  <RosacAcknowledgmentForm
+                    institution={null}
+                    onCancel={close}
+                    onSave={(values) => handleCreateAcknowledgment(values, close)}
+                  />
                 )}
               </AddItemCard>
             ) : undefined
@@ -923,23 +853,16 @@ export function RosacInfoPage({
         open={editingCharacteristic !== undefined}
         title={
           editingCharacteristic
-            ? `Editar "${editingCharacteristic.title}"`
-            : 'Editar característica'
+            ? tEditor('characteristics.editModalTitle', { title: editingCharacteristic.title })
+            : tEditor('characteristics.defaultModalTitle')
         }
       >
         {editingCharacteristic ? (
-          <>
-            {characteristicSaveError ? (
-              <p className="form-alert" role="alert">
-                {characteristicSaveError}
-              </p>
-            ) : null}
-            <RosacCharacteristicForm
-              characteristic={editingCharacteristic}
-              onCancel={closeCharacteristicEditor}
-              onSave={handleSaveCharacteristic}
-            />
-          </>
+          <RosacCharacteristicForm
+            characteristic={editingCharacteristic}
+            onCancel={closeCharacteristicEditor}
+            onSave={handleSaveCharacteristic}
+          />
         ) : null}
       </Modal>
 
@@ -947,21 +870,18 @@ export function RosacInfoPage({
       <Modal
         onClose={closeActivityEditor}
         open={editingActivity !== undefined}
-        title={editingActivity ? `Editar "${editingActivity.title}"` : 'Editar actividad'}
+        title={
+          editingActivity
+            ? tEditor('activities.editModalTitle', { title: editingActivity.title })
+            : tEditor('activities.defaultModalTitle')
+        }
       >
         {editingActivity ? (
-          <>
-            {activitySaveError ? (
-              <p className="form-alert" role="alert">
-                {activitySaveError}
-              </p>
-            ) : null}
-            <RosacActivityForm
-              activity={editingActivity}
-              onCancel={closeActivityEditor}
-              onSave={handleSaveActivity}
-            />
-          </>
+          <RosacActivityForm
+            activity={editingActivity}
+            onCancel={closeActivityEditor}
+            onSave={handleSaveActivity}
+          />
         ) : null}
       </Modal>
 
@@ -969,21 +889,18 @@ export function RosacInfoPage({
       <Modal
         onClose={closeStageEditor}
         open={editingStage !== undefined}
-        title={editingStage ? `Editar "${editingStage.title}"` : 'Editar etapa'}
+        title={
+          editingStage
+            ? tEditor('stages.editModalTitle', { title: editingStage.title })
+            : tEditor('stages.defaultModalTitle')
+        }
       >
         {editingStage ? (
-          <>
-            {stageSaveError ? (
-              <p className="form-alert" role="alert">
-                {stageSaveError}
-              </p>
-            ) : null}
-            <RosacStageForm
-              onCancel={closeStageEditor}
-              onSave={handleSaveStage}
-              stage={editingStage}
-            />
-          </>
+          <RosacStageForm
+            onCancel={closeStageEditor}
+            onSave={handleSaveStage}
+            stage={editingStage}
+          />
         ) : null}
       </Modal>
 
@@ -992,21 +909,18 @@ export function RosacInfoPage({
         onClose={closeInstrumentEditor}
         open={editingInstrument !== undefined}
         size="large"
-        title={editingInstrument ? `Editar "${editingInstrument.name}"` : 'Editar instrumento'}
+        title={
+          editingInstrument
+            ? tEditor('instruments.editModalTitle', { name: editingInstrument.name })
+            : tEditor('instruments.defaultModalTitle')
+        }
       >
         {editingInstrument ? (
-          <>
-            {instrumentSaveError ? (
-              <p className="form-alert" role="alert">
-                {instrumentSaveError}
-              </p>
-            ) : null}
-            <RosacInstrumentForm
-              instrument={editingInstrument}
-              onCancel={closeInstrumentEditor}
-              onSave={handleSaveInstrument}
-            />
-          </>
+          <RosacInstrumentForm
+            instrument={editingInstrument}
+            onCancel={closeInstrumentEditor}
+            onSave={handleSaveInstrument}
+          />
         ) : null}
       </Modal>
     </article>

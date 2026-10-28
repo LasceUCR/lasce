@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadAcknowledgmentLogo: vi.fn(),
@@ -19,10 +21,12 @@ const editArgs = EditModeOn.args as EditableAcknowledgmentCardProps
 const assistantArgs = AssistantMode.args as EditableAcknowledgmentCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableAcknowledgmentCardProps) {
-  return render(
-    <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
-      <EditableAcknowledgmentCard {...props} />
-    </EditModeContext.Provider>,
+  return renderWithIntl(
+    <ToastProvider>
+      <EditModeContext.Provider value={{ editMode, setEditMode: () => {} }}>
+        <EditableAcknowledgmentCard {...props} />
+      </EditModeContext.Provider>
+    </ToastProvider>,
   )
 }
 
@@ -78,6 +82,18 @@ describe('EditableAcknowledgmentCard', () => {
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('shows the error in a toast and keeps the modal open when the save fails', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue('No se pudo guardar la institución.')
+    renderWithEditMode(true, { ...editArgs, onSave })
+
+    await user.click(screen.getByRole('button', { name: `Editar ${editArgs.institution.name}` }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(await screen.findByText('No se pudo guardar la institución.')).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Editar institución' })).toBeInTheDocument()
   })
 
   test('confirms and calls onDelete when the delete action is confirmed', async () => {
