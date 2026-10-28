@@ -1,8 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-
-import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 const mocks = vi.hoisted(() => ({
   uploadConstructionStageImage: vi.fn(),
@@ -15,7 +14,15 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
 
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+
 import { RosacStageForm, type RosacStageFormProps } from './RosacStageForm'
+
+/** The form reports a failed upload with a toast, so it renders inside the app's providers. */
+function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
+}
 
 const sampleImages = [
   {
@@ -60,7 +67,7 @@ const defaultArgs: RosacStageFormProps = {
 function renderForm(props: Partial<RosacStageFormProps> = {}, locale: 'es' | 'en' = 'es') {
   const onSave = vi.fn()
   const onCancel = vi.fn()
-  renderWithIntl(
+  render(
     <RosacStageForm {...defaultArgs} onCancel={onCancel} onSave={onSave} {...props} />,
     { locale },
   )
@@ -304,5 +311,44 @@ describe('RosacStageForm', () => {
         ]),
       }),
     )
+  })
+
+  test('shows the error in a toast and does not save when a photo upload fails', async () => {
+    mocks.uploadConstructionStageImage.mockResolvedValueOnce({
+      ok: false,
+      error: 'La imagen es demasiado grande.',
+    })
+    const { onSave, user } = renderForm()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
+    const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['fake-image'], 'foto.jpg', { type: 'image/jpeg' }))
+    await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+    // A toast, not a custom message inside the form.
+    expect(document.querySelector('.cms-form .form-alert')).toBeNull()
+  })
+
+  test('shows a toast when a photo upload throws', async () => {
+    mocks.uploadConstructionStageImage.mockRejectedValueOnce(new Error('network error'))
+    const { onSave, user } = renderForm()
+
+    await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
+    const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
+    const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
+    await user.upload(fileInput, new File(['fake-image'], 'foto.jpg', { type: 'image/jpeg' }))
+    await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      await screen.findByText('Error al subir las fotografías. Inténtelo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
   })
 })

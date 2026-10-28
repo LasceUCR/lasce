@@ -13,6 +13,7 @@ import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadConstructionStageImage } from '@/app/(public)/radioastronomia/actions'
 import { defaultLocale, isLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
 import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
@@ -99,7 +100,10 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
   // General form submission & discard
   const [confirmDiscardGeneral, setConfirmDiscardGeneral] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const toast = useToast()
+  // A failed upload is an action outcome, so it is reported with a toast (see "Feedback" in
+  // `AGENTS.md`). The previous attempt's toast is dismissed on retry so errors do not pile up.
+  const uploadErrorToast = useRef<number | null>(null)
 
   useEffect(() => {
     if (focusRequest === 0) return
@@ -242,12 +246,16 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
     if (isUploading) return
 
+    if (uploadErrorToast.current !== null) {
+      toast.dismiss(uploadErrorToast.current)
+      uploadErrorToast.current = null
+    }
+
     const finalImages: ConstructionImage[] = []
     const pendingUploads = images.filter((img) => Boolean(img.file))
 
     if (pendingUploads.length > 0) {
       setIsUploading(true)
-      setUploadError(null)
 
       try {
         for (const item of images) {
@@ -257,7 +265,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
             const result = await uploadConstructionStageImage(formData)
             if (!result.ok) {
               setIsUploading(false)
-              setUploadError(result.error)
+              uploadErrorToast.current = toast.show('error', result.error)
               return
             }
             finalImages.push({ src: result.imageUrl, alt: item.alt })
@@ -267,7 +275,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         }
       } catch {
         setIsUploading(false)
-        setUploadError(t('stages.uploadError'))
+        uploadErrorToast.current = toast.show('error', t('stages.uploadError'))
         return
       }
 
@@ -308,12 +316,6 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
 
   return (
     <div className="cms-form" ref={formRef}>
-      {uploadError ? (
-        <p className="form-alert" role="alert">
-          {uploadError}
-        </p>
-      ) : null}
-
       <LanguageTabs
         copyLang={uiLocale}
         flags={languageTabFlags(stored, errors, needed, confirmed, uiLocale)}
