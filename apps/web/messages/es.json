@@ -620,6 +620,9 @@
       "cancel": "Cancelar",
       "save": "Confirmar",
       "reload": "Cerrar y cargar la versión actual",
+      "created": "Publicación agregada correctamente.",
+      "updated": "Publicación actualizada correctamente.",
+      "deleted": "Publicación eliminada correctamente.",
       "uploadingImage": "Subiendo imagen...",
       "altTextField": "Texto alternativo ({language})",
       "FileDropDescriptionText": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo.",
@@ -1412,7 +1415,7 @@
       "save": "Confirmar",
       "uploading": "Subiendo imagen...",
       "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo.",
-      "maxEmails": "Máximo {max} correos de contacto.",
+      "maxEmails": "No es posible agregar más de dos correos electrónicos.",
       "invalidEmail": "El correo no es válido.",
       "duplicateEmail": "Ese correo ya fue agregado."
     },
