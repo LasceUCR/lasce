@@ -1,12 +1,13 @@
 'use client'
 
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadInstrumentImage } from '@/app/(public)/radioastronomia/actions'
 import { rosacInstruments } from '@/app/lib/scientific-data'
 import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
@@ -93,7 +94,10 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageRemoved, setImageRemoved] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const toast = useToast()
+  // A failed upload is an action outcome, so it is reported with a toast (see "Feedback" in
+  // `AGENTS.md`). The previous attempt's toast is dismissed on retry so errors do not pile up.
+  const uploadErrorToast = useRef<number | null>(null)
   const imageSrc = instrument?.image?.src ?? ''
   const [imageAlt, setImageAlt] = useState(instrument?.image?.alt ?? '')
 
@@ -188,23 +192,27 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
 
     if (isUploading) return
 
+    if (uploadErrorToast.current !== null) {
+      toast.dismiss(uploadErrorToast.current)
+      uploadErrorToast.current = null
+    }
+
     let finalImageUrl = imageRemoved ? '' : imageSrc
     if (imageFile) {
       setIsUploading(true)
-      setUploadError(null)
       try {
         const formData = new FormData()
         formData.set('file', imageFile)
         const result = await uploadInstrumentImage(formData)
         if (!result.ok) {
           setIsUploading(false)
-          setUploadError(result.error)
+          uploadErrorToast.current = toast.show('error', result.error)
           return
         }
         finalImageUrl = result.imageUrl
       } catch {
         setIsUploading(false)
-        setUploadError(t('instruments.uploadError'))
+        uploadErrorToast.current = toast.show('error', t('instruments.uploadError'))
         return
       }
       setIsUploading(false)
@@ -245,12 +253,6 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
 
   return (
     <div className="cms-form">
-      {uploadError ? (
-        <p className="form-alert" role="alert">
-          {uploadError}
-        </p>
-      ) : null}
-
       <FormField
         errorMessage={nameError}
         id={`${formId}-name`}
