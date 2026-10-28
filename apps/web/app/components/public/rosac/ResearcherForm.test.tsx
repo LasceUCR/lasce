@@ -627,15 +627,22 @@ describe('ResearcherForm: bilingual mode', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument()
     expect(screen.getByText('Contact')).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Institution' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Add contact' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
 
-    // Test add contact modal in English
-    await user.click(screen.getByRole('button', { name: 'Add contact' }))
-    const modal = screen.getByRole('dialog', { name: 'Add contact' })
-    expect(within(modal).getByRole('textbox', { name: 'Email address' })).toBeInTheDocument()
-    await user.click(within(modal).getByRole('button', { name: 'Cancel' }))
+    const emailInput = screen.getByRole('textbox', { name: 'Email address' })
+    expect(emailInput).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
+
+    // Test add contact and validation in English
+    await user.type(emailInput, 'ada@example.com')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByText('ada@example.com')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete ada@example.com' })).toBeInTheDocument()
+
+    await user.type(emailInput, 'not-an-email')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('The email is not valid.')
 
     // Test discard dialog in English
     await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Ada Lovelace')

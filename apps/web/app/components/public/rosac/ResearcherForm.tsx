@@ -387,7 +387,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
               value={newEmail}
             />
             <Button className="publication-authors-add" onClick={addEmail} variant="secondary">
-              Agregar
+              {t('editor.add')}
             </Button>
           </div>
         </div>
