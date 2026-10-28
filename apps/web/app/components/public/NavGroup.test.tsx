@@ -12,6 +12,7 @@ const activeArgs = WithActiveItem.args as NavGroupProps
 const summary = () => screen.getByText(closedArgs.label)
 const details = () => summary().closest('details') as HTMLDetailsElement
 const link = (label: string) => screen.getByRole('link', { name: label })
+const group = (label: string) => screen.getByText(label).closest('details') as HTMLDetailsElement
 
 describe('isActivePath', () => {
   test('matches the page and its descendants only', () => {
@@ -130,5 +131,49 @@ describe('NavGroup', () => {
     expect(details()).toHaveAttribute('open')
 
     vi.useRealTimers()
+  })
+
+  test('opening another group closes the previous one without waiting for its grace period', () => {
+    vi.useFakeTimers()
+    render(
+      <>
+        <NavGroup {...closedArgs} label="Investigación" />
+        <NavGroup {...closedArgs} label="Divulgación" />
+      </>,
+    )
+
+    fireEvent.mouseEnter(group('Investigación'))
+    fireEvent.mouseLeave(group('Investigación'))
+    // Still inside the first group's grace period.
+    vi.advanceTimersByTime(30)
+    fireEvent.mouseEnter(group('Divulgación'))
+
+    expect(group('Investigación')).not.toHaveAttribute('open')
+    expect(group('Divulgación')).toHaveAttribute('open')
+
+    // The first group's cancelled timer does not close the second one.
+    vi.advanceTimersByTime(120)
+    expect(group('Divulgación')).toHaveAttribute('open')
+
+    vi.useRealTimers()
+  })
+
+  test('opening another group by keyboard closes the previous one', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <NavGroup {...closedArgs} label="Investigación" />
+        <NavGroup {...closedArgs} label="Divulgación" />
+      </>,
+    )
+
+    await user.click(screen.getByText('Investigación'))
+    expect(group('Investigación')).toHaveAttribute('open')
+
+    screen.getByText('Divulgación').focus()
+    await user.keyboard('{Enter}')
+
+    expect(group('Investigación')).not.toHaveAttribute('open')
+    expect(group('Divulgación')).toHaveAttribute('open')
   })
 })
