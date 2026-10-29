@@ -257,6 +257,6 @@ describe('DELETE /api/nosotros/activities/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteNosotrosActivity).toHaveBeenCalledWith(activityId)
+    expect(mocks.deleteNosotrosActivity).toHaveBeenCalledWith(activityId, expect.anything())
   })
 })
