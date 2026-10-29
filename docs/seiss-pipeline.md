@@ -4,12 +4,13 @@
 ingests one GOES **SEISS** product, one UTC day per job, into InfluxDB, and records the day in
 Postgres. The payload's `product` says which:
 
-| Product | `/datos` product           | NOAA file                              | Cadence   | Series | Measurement |
-| ------- | -------------------------- | -------------------------------------- | --------- | -----: | ----------- |
-| `EHIS`  | Energetic heavy ions       | L1b daily aggregation `seis-l1b-ehis`  | 5 minutes |     25 | `ehis_flux` |
-| `SGPS`  | Solar and galactic protons | L2 one-minute averages `sgps-l2-avg1m` | 1 minute  |     28 | `sgps_flux` |
+| Product | `/datos` product                     | NOAA file                                      | Cadence   | Series | Measurement |
+| ------- | ------------------------------------ | ---------------------------------------------- | --------- | -----: | ----------- |
+| `EHIS`  | Energetic heavy ions                 | L1b daily aggregation `seis-l1b-ehis`          | 5 minutes |     25 | `ehis_flux` |
+| `SGPS`  | Solar and galactic protons           | L2 one-minute averages `sgps-l2-avg1m`         | 1 minute  |     28 | `sgps_flux` |
+| `MPSH`  | Magnetospheric electrons and protons | L2 one-minute averages `mpsh-l2-avg1m_science` | 1 minute  |    105 | `mpsh_flux` |
 
-MPSH and MPSL are not ingested yet; see [Out of scope](#out-of-scope).
+MPSL is not ingested; see [Out of scope](#out-of-scope).
 
 It is a sibling of [`mag-pipeline`](mag-pipeline.md) and [`exis-pipeline`](exis-pipeline.md):
 same archive, same daily layout, same handling of republished days. Read those documents for the
@@ -45,7 +46,7 @@ goes19/l2/data/sgps-l2-avg1m/2026/10/sci_sgps-l2-avg1m_g19_d20261027_v3-0-3.nc
 
 - One file per product per UTC day, in one directory per month; it lands around 04:30 UTC the
   next morning.
-- EHIS is about 300 KB a day; SGPS 0.4 MB (2.5 MB for the late-2024 versions).
+- EHIS is about 300 KB a day; SGPS 0.4 MB (2.5 MB for the late-2024 versions); MPSH 1 MB.
 - NOAA can republish a day under the same name (newer `Last-Modified`) or a higher `_vX-Y-Z`, and
   does rewrite older days after newer ones appear.
 - NOAA publishes **no L2 product for EHIS**, so its L1b daily aggregation is read. SGPS is read
@@ -56,14 +57,14 @@ goes19/l2/data/sgps-l2-avg1m/2026/10/sci_sgps-l2-avg1m_g19_d20261027_v3-0-3.nc
 
 Defined once in `packages/contracts/src/jobs.ts` and mirrored in `apps/worker/app/models/jobs.py`:
 
-| Field          | Type               | Default | Meaning                                                          |
-| -------------- | ------------------ | ------- | ---------------------------------------------------------------- |
-| `product`      | `EHIS` \| `SGPS`   | —       | Which SEISS product to ingest                                    |
-| `spacecraft`   | `16`–`19`          | `19`    | GOES satellite number                                            |
-| `lookbackDays` | `int`, 1–31        | `3`     | How many days before today to consider                           |
-| `date`         | ISO date, optional | —       | Ingest exactly this day instead (backfill); ignores the lookback |
+| Field          | Type                       | Default | Meaning                                                          |
+| -------------- | -------------------------- | ------- | ---------------------------------------------------------------- |
+| `product`      | `EHIS` \| `SGPS` \| `MPSH` | —       | Which SEISS product to ingest                                    |
+| `spacecraft`   | `16`–`19`                  | `19`    | GOES satellite number                                            |
+| `lookbackDays` | `int`, 1–31                | `3`     | How many days before today to consider                           |
+| `date`         | ISO date, optional         | —       | Ingest exactly this day instead (backfill); ignores the lookback |
 
-`packages/jobs/src/schedules.ts` fires EHIS **every hour at minute 35** and SGPS **at minute 40**,
+`packages/jobs/src/schedules.ts` fires EHIS **every hour at minute 35**, SGPS **at minute 40** and MPSH **at minute 45**,
 after MAG, each with a 3-day lookback.
 
 To backfill:
@@ -89,7 +90,7 @@ list_recent()/list_day()  ──►  modified_at() vs catalogue  ──►  fetc
    the spacecraft, the title and the units, and drops fill values (`-1e31`), negative fluxes and
    non-finite values or times. What else it drops is the product's quality rule, below.
 4. **Store: InfluxDB first, then Postgres.** Points go to the product's measurement, tags
-   `satellite` (`G19`), `product` (`EHIS`, `SGPS`), `channel`, fields `value` and `valid`. A
+   `satellite` (`G19`), `product` (`EHIS`, `SGPS`, `MPSH`), `channel`, fields `value` and `valid`. A
    re-ingested day first rewrites readings the new file dropped as `valid=false`. Then the
    `solar.seiss_files` row is upserted; it is what marks the day done.
 
@@ -160,6 +161,25 @@ do not drop an average: as with degraded EHIS readings, a flagged-but-valid aver
 best measurement there is, and the high-flux storm minutes are the ones most often flagged. On the
 real 2026-10-27 GOES-19 file this keeps 1 438 of 1 440 minutes in every channel.
 
+## MPSH
+
+Five electron and five proton telescopes (`T1`–`T5`, each its own viewing direction), coded
+`<species>:T<telescope>:E<band>`:
+
+| Channel code                         | Variable              | Unit                        |
+| ------------------------------------ | --------------------- | --------------------------- |
+| `electron:T1:E1` … `electron:T5:E10` | `AvgDiffElectronFlux` | `electrons/(cm^2 sr keV s)` |
+| `proton:T1:E1` … `proton:T5:E11`     | `AvgDiffProtonFlux`   | `protons/(cm^2 sr keV s)`   |
+
+The archive has two MPSH directories. `mpsh-l2-avg1m` stopped being updated in January 2026, so
+`mpsh-l2-avg1m_science` (same variables) is read. The file must say `platform = "g19"` and carry a
+title naming `SEISS/MPS-HI` one-minute averages. The quality rule is the SGPS one, with the
+`DiffElectronValidL1bSamplesInAvg` and `DiffProtonValidL1bSamplesInAvg` counts. The integral
+electron channel (> 2 MeV) is not stored.
+
+NOAA itself writes fill into the highest electron band when it has too few counts: on the real
+2026-10-27 GOES-19 file `electron:T5:E10` kept 861 minutes, every other channel close to 1 440.
+
 ## What a run returns
 
 ```jsonc
@@ -187,24 +207,20 @@ real 2026-10-27 GOES-19 file this keeps 1 438 of 1 440 minutes in every channel.
 
 ## How `/datos` reads it
 
-The SEISS products are not all ingested yet, so `apps/web/app/services/scientific-data/index.ts`
-routes EHIS and SGPS with **product-level overrides** (the third argument of
-`createInstrumentRoutedDataSource`), while MPSH keeps the SEISS instrument provider (CITIC through
-`query-goes-archive`). Each reader queries its measurement with the same helper as EXIS and MAG
+`apps/web/app/services/scientific-data/index.ts` routes EHIS, SGPS and MPSH with
+**product-level overrides** (the third argument of `createInstrumentRoutedDataSource`). The SEISS
+instrument provider (CITIC through `query-goes-archive`) is still registered but no longer reached:
+MPSL, the only other SEISS product, is not offered. Retiring it is a follow-up. Each reader queries its measurement with the same helper as EXIS and MAG
 (`goesReadingsDataSource.ts`): only `valid = true`, only the satellite that observed last. An EHIS
-day has at most 288 readings and is never sampled; an SGPS day of 1 440 minutes is sampled to 360
-points inside the query, and the notice says so. A day never ingested is an empty series.
+day has at most 288 readings and is never sampled; an SGPS or MPSH day of 1 440 minutes is sampled
+inside the query to at most 360 points (about 290 for a full day), and the notice says so. A day never ingested is an empty series.
 
 ## Out of scope
 
-- **MPSH.** It has an L2 one-minute product (`mpsh-l2-avg1m_science`) and is the next product to
-  add; until then it is read through `query-goes-archive`.
 - **MPSL.** NOAA publishes **no L2 one-minute product** for MPS-LO (`mpsl-l2-avg1m` does not
   exist); only an L1b daily aggregation of about 220 MB a day. Ingesting it needs its own channel
   catalogue and a decision on averaging, so it stays pending on `/datos`.
-- **Data (CSV) downloads.** Download policies are set per instrument, and SEISS offers PNG only
-  until every available SEISS product has a full-resolution path. See [`downloads.md`](downloads.md).
-- **EHIS Be–Cu elements and SGPS alphas.** Adding them means channels in the decoder and
+- **EHIS Be–Cu elements, SGPS alphas and the MPSH integral electron channel.** Adding them means channels in the decoder and
   parameters in the catalogue.
 - **GOES-18.** The schedule ingests GOES-19 only; trigger the job with `"spacecraft": 18` to load
   another satellite.
