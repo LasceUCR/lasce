@@ -2,9 +2,9 @@
 
 Every SEISS product is written the same way, so this module holds what the
 per-product decoders (:mod:`app.services.seiss.ehis`,
-:mod:`app.services.seiss.sgps`) do not: the decoded shape, the InfluxDB points,
-the withdrawal of readings a republished day dropped, and the catalogue row in
-``solar.seiss_files``.
+:mod:`app.services.seiss.sgps`, :mod:`app.services.seiss.mpsh`) do not: the
+decoded shape, the InfluxDB points, the withdrawal of readings a republished
+day dropped, and the catalogue row in ``solar.seiss_files``.
 
 Each product has its own InfluxDB measurement, because the products tag their
 channels differently, but every point carries the same tags (``satellite``,

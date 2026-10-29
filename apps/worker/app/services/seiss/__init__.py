@@ -9,7 +9,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from app.clients.seiss import SeissProduct
-from app.services.seiss import ehis, sgps
+from app.services.seiss import ehis, mpsh, sgps
 from app.services.seiss.readings import SeissDecoded, SeissReadings
 
 
@@ -24,6 +24,7 @@ class Decoder:
 DECODERS: dict[SeissProduct, Decoder] = {
     SeissProduct.EHIS: Decoder(ehis.MEASUREMENT, ehis.decode),
     SeissProduct.SGPS: Decoder(sgps.MEASUREMENT, sgps.decode),
+    SeissProduct.MPSH: Decoder(mpsh.MEASUREMENT, mpsh.decode),
 }
 
 __all__ = ["DECODERS", "Decoder", "SeissDecoded", "SeissReadings"]

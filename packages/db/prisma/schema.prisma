@@ -550,12 +550,12 @@ model MagFile {
 
 /// One daily SEISS file (one product, one UTC day) whose readings are in InfluxDB.
 /// Written only by the worker's `seiss-pipeline` job; the readings themselves live in the
-/// product's InfluxDB measurement (`ehis_flux`, `sgps_flux`), not here.
+/// product's InfluxDB measurement (`ehis_flux`, `sgps_flux`, `mpsh_flux`), not here.
 model SeissFile {
   id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// The spacecraft, e.g. "G19" (EHIS reads `platform_ID`, the L2 products `platform`).
   satellite        String
-  /// The SEISS product code: "EHIS" or "SGPS".
+  /// The SEISS product code: "EHIS", "SGPS" or "MPSH".
   product          String
   /// The UTC day the file covers, from its name.
   day              DateTime  @db.Date

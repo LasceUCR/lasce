@@ -7,6 +7,7 @@ NetCDF per UTC day, in one directory per month, about a day late (around
 
     goes19/l1b/seis-l1b-ehis/2026/10/ops_seis-l1b-ehis_g19_d20261014_v0-0-2.nc
     goes19/l2/data/sgps-l2-avg1m/2026/10/sci_sgps-l2-avg1m_g19_d20261027_v3-0-3.nc
+    goes19/l2/data/mpsh-l2-avg1m_science/2026/10/sci_mpsh-l2-avg1m_g19_d20261027_v2-0-3.nc
 
 So the same three things shape this client: the newest file is usually
 yesterday's, a window can cross a month boundary, and a day can be
@@ -19,6 +20,9 @@ The products differ only in where they live and how they are named:
 - **EHIS** has no L2 product, so its L1b daily aggregation (5-minute fluxes,
   about 300 KB a day) is read.
 - **SGPS** is read from NOAA's L2 one-minute averages (0.4 to 2.5 MB a day).
+- **MPSH** is read from NOAA's L2 one-minute averages too (about 1 MB a day),
+  from ``mpsh-l2-avg1m_science``: the directory without the suffix stopped
+  being updated in January 2026.
 
 MPS-LO is absent on purpose: NOAA publishes no L2 one-minute product for it,
 only a ~220 MB L1b day. See `docs/seiss-pipeline.md`.
@@ -47,6 +51,7 @@ class SeissProduct(StrEnum):
 
     EHIS = "EHIS"
     SGPS = "SGPS"
+    MPSH = "MPSH"
 
     @property
     def directory(self) -> str:
@@ -62,11 +67,13 @@ class SeissProduct(StrEnum):
 _DIRECTORIES = {
     SeissProduct.EHIS: "l1b/seis-l1b-ehis",
     SeissProduct.SGPS: "l2/data/sgps-l2-avg1m",
+    SeissProduct.MPSH: "l2/data/mpsh-l2-avg1m_science",
 }
 
 _FILE_PATTERNS = {
     SeissProduct.EHIS: re.compile(r"^ops_seis-l1b-ehis_g(\d{2})_d(\d{8})_v(\d+)-(\d+)-(\d+)\.nc$"),
     SeissProduct.SGPS: re.compile(r"^sci_sgps-l2-avg1m_g(\d{2})_d(\d{8})_v(\d+)-(\d+)-(\d+)\.nc$"),
+    SeissProduct.MPSH: re.compile(r"^sci_mpsh-l2-avg1m_g(\d{2})_d(\d{8})_v(\d+)-(\d+)-(\d+)\.nc$"),
 }
 
 
