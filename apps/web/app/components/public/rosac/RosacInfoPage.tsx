@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { Modal } from '@/app/components/public/Modal'
@@ -46,21 +46,20 @@ import {
   RosacAcknowledgmentForm,
   type RosacAcknowledgmentFormValues,
 } from './RosacAcknowledgmentForm'
-import { RosacActivityForm, type RosacActivityFormValues } from './RosacActivityForm'
+import { RosacActivityForm, type RosacActivityFormBody } from './RosacActivityForm'
 import {
   RosacCharacteristicForm,
-  type RosacCharacteristicFormValues,
+  type RosacCharacteristicFormBody,
 } from './RosacCharacteristicForm'
-import { RosacInstrumentForm, type RosacInstrumentFormValues } from './RosacInstrumentForm'
+import { RosacInstrumentForm, type RosacInstrumentFormBody } from './RosacInstrumentForm'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
-import { RosacStageForm, type RosacStageFormValues } from './RosacStageForm'
+import { RosacStageForm, type RosacStageFormBody } from './RosacStageForm'
 import { TeamGallery } from './TeamGallery'
 
 const icons: Record<RosacCardIcon, LucideIcon> = {
   antenna: RadioTower,
   location: MapPin,
   frequency: Waves,
-  waves: Waves,
   sun: Sun,
   tracking: Crosshair,
   control: Settings,
@@ -76,15 +75,12 @@ export interface RosacInfoPageProps {
   canDelete?: boolean
   onSaveCharacteristic?: (
     id: string,
-    values: RosacCharacteristicFormValues,
+    values: RosacCharacteristicFormBody,
   ) => Promise<string | null> | void
-  onSaveActivity?: (id: string, values: RosacActivityFormValues) => Promise<string | null> | void
-  onSaveStage?: (id: string, values: RosacStageFormValues) => Promise<string | null> | void
-  onCreateInstrument?: (values: RosacInstrumentFormValues) => Promise<string | null> | void
-  onSaveInstrument?: (
-    id: string,
-    values: RosacInstrumentFormValues,
-  ) => Promise<string | null> | void
+  onSaveActivity?: (id: string, values: RosacActivityFormBody) => Promise<string | null> | void
+  onSaveStage?: (id: string, values: RosacStageFormBody) => Promise<string | null> | void
+  onCreateInstrument?: (values: RosacInstrumentFormBody) => Promise<string | null> | void
+  onSaveInstrument?: (id: string, values: RosacInstrumentFormBody) => Promise<string | null> | void
   onDeleteInstrument?: (id: string) => Promise<string | null> | void
   onCreateAcknowledgment?: (values: RosacAcknowledgmentFormValues) => Promise<string | null> | void
   onSaveAcknowledgment?: (
@@ -110,6 +106,7 @@ export function RosacInfoPage({
   onDeleteAcknowledgment,
 }: RosacInfoPageProps) {
   const router = useRouter()
+  const siteLocale = useLocale()
   const { editMode } = useEditMode()
   const tResearchers = useTranslations('researchers')
   const tEditor = useTranslations('rosac.editor')
@@ -177,7 +174,7 @@ export function RosacInfoPage({
     setEditingCharacteristicId(null)
   }
 
-  async function handleSaveCharacteristic(values: RosacCharacteristicFormValues) {
+  async function handleSaveCharacteristic(values: RosacCharacteristicFormBody) {
     if (!editingCharacteristicId) return
 
     if (onSaveCharacteristic) {
@@ -203,17 +200,41 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const updated = characteristics.map((item) =>
-      item.id === editingCharacteristicId
-        ? {
-            ...item,
-            icon: values.icon,
-            title: values.title,
-            description: values.description,
-          }
-        : item,
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
+
+    setCharacteristics((prev) =>
+      prev.map((item) =>
+        item.id === editingCharacteristicId
+          ? {
+              ...item,
+              ...(values.icon ? { icon: values.icon } : {}),
+              ...(title ? { title } : {}),
+              ...(description ? { description } : {}),
+              ...(values.content && item.editing
+                ? {
+                    editing: {
+                      ...item.editing,
+                      content: {
+                        es: values.content.es ?? item.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : item.editing.content.en,
+                      },
+                    },
+                  }
+                : {}),
+            }
+          : item,
+      ),
     )
-    setCharacteristics(updated)
     closeCharacteristicEditor()
   }
 
@@ -228,7 +249,7 @@ export function RosacInfoPage({
     setEditingActivityId(null)
   }
 
-  async function handleSaveActivity(values: RosacActivityFormValues) {
+  async function handleSaveActivity(values: RosacActivityFormBody) {
     if (!editingActivityId) return
 
     if (onSaveActivity) {
@@ -254,17 +275,41 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const updated = activities.map((item) =>
-      item.id === editingActivityId
-        ? {
-            ...item,
-            icon: values.icon,
-            title: values.title,
-            description: values.description,
-          }
-        : item,
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
+
+    setActivities((prev) =>
+      prev.map((item) =>
+        item.id === editingActivityId
+          ? {
+              ...item,
+              ...(values.icon ? { icon: values.icon } : {}),
+              ...(title ? { title } : {}),
+              ...(description ? { description } : {}),
+              ...(values.content && item.editing
+                ? {
+                    editing: {
+                      ...item.editing,
+                      content: {
+                        es: values.content.es ?? item.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : item.editing.content.en,
+                      },
+                    },
+                  }
+                : {}),
+            }
+          : item,
+      ),
     )
-    setActivities(updated)
     closeActivityEditor()
   }
 
@@ -279,7 +324,7 @@ export function RosacInfoPage({
     setEditingStageId(null)
   }
 
-  async function handleSaveStage(values: RosacStageFormValues) {
+  async function handleSaveStage(values: RosacStageFormBody) {
     if (!editingStageId) return
 
     if (onSaveStage) {
@@ -305,17 +350,42 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const updated = constructionStages.map((s) =>
-      s.id === editingStageId
-        ? ({
-            ...s,
-            title: values.title,
-            description: values.description,
-            images: values.images && values.images.length > 0 ? values.images : s.images,
-          } as ConstructionStage)
-        : s,
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
+
+    setConstructionStages(
+      (prev) =>
+        prev.map((s) =>
+          s.id === editingStageId
+            ? ({
+                ...s,
+                ...(title ? { title, navigationLabel: title } : {}),
+                ...(description ? { description } : {}),
+                ...(values.images && values.images.length > 0 ? { images: values.images } : {}),
+                ...(values.content && s.editing
+                  ? {
+                      editing: {
+                        ...s.editing,
+                        content: {
+                          es: values.content.es ?? s.editing.content.es,
+                          en:
+                            values.content.en !== undefined
+                              ? values.content.en
+                              : s.editing.content.en,
+                        },
+                      },
+                    }
+                  : {}),
+              } as unknown as ConstructionStage)
+            : s,
+        ) as unknown as readonly [ConstructionStage, ...ConstructionStage[]],
     )
-    setConstructionStages(updated as unknown as typeof constructionStages)
     closeStageEditor()
   }
 
@@ -330,7 +400,7 @@ export function RosacInfoPage({
     setEditingInstrumentId(null)
   }
 
-  async function handleSaveInstrument(values: RosacInstrumentFormValues) {
+  async function handleSaveInstrument(values: RosacInstrumentFormBody) {
     if (!editingInstrumentId) return
 
     if (onSaveInstrument) {
@@ -356,22 +426,63 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
-    const updated = instruments.map((inst) =>
-      inst.id === editingInstrumentId
-        ? {
-            ...inst,
-            name: values.name,
-            pendingMessage: undefined,
-            image: values.image ?? inst.image,
-            consultation: values.consultation ?? inst.consultation,
-          }
-        : inst,
+    const name =
+      (siteLocale === 'en' ? values.content?.en?.name : undefined) ??
+      values.content?.es?.name ??
+      values.name
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.pendingMessage
+
+    setInstruments((prev) =>
+      prev.map((inst) =>
+        inst.id === editingInstrumentId
+          ? {
+              ...inst,
+              ...(name ? { name } : {}),
+              ...(description !== undefined
+                ? {
+                    pendingMessage: description || undefined,
+                    consultation: inst.consultation
+                      ? { ...inst.consultation, notice: description || undefined }
+                      : undefined,
+                  }
+                : {}),
+              ...(values.image ? { image: values.image } : {}),
+              ...(values.consultation !== undefined
+                ? {
+                    consultation: values.consultation
+                      ? {
+                          href: values.consultation.href,
+                          label: values.consultation.label,
+                          notice: description || inst.consultation?.notice,
+                        }
+                      : undefined,
+                  }
+                : {}),
+              ...(values.content && inst.editing
+                ? {
+                    editing: {
+                      ...inst.editing,
+                      content: {
+                        es: values.content.es ?? inst.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : inst.editing.content.en,
+                      },
+                    },
+                  }
+                : {}),
+            }
+          : inst,
+      ),
     )
-    setInstruments(updated)
     closeInstrumentEditor()
   }
 
-  async function handleCreateInstrument(values: RosacInstrumentFormValues, close: () => void) {
+  async function handleCreateInstrument(values: RosacInstrumentFormBody, close: () => void) {
     const created: { instrument: Partial<RosacInstrumentCardContent> | null } = { instrument: null }
 
     if (onCreateInstrument) {
@@ -405,12 +516,30 @@ export function RosacInfoPage({
       if (!ok) return
     }
 
+    const name =
+      (siteLocale === 'en' ? values.content?.en?.name : undefined) ??
+      values.content?.es?.name ??
+      values.name ??
+      ''
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.pendingMessage
+
     const newInstrument: RosacInstrumentCardContent = {
       id: created.instrument?.id ?? `instrument-${Date.now()}`,
-      name: created.instrument?.name ?? values.name,
-      pendingMessage: created.instrument?.pendingMessage ?? values.pendingMessage,
+      name: created.instrument?.name ?? name,
+      pendingMessage: created.instrument?.pendingMessage ?? description,
       image: created.instrument?.image ?? values.image,
-      consultation: created.instrument?.consultation ?? values.consultation,
+      consultation:
+        created.instrument?.consultation ??
+        (values.consultation
+          ? {
+              href: values.consultation.href,
+              label: values.consultation.label,
+              notice: description,
+            }
+          : undefined),
     }
 
     setInstruments((prev) => [newInstrument, ...prev])
