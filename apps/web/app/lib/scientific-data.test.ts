@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest'
 
+import en from '@/messages/en.json' with { type: 'json' }
+
 import {
   findScientificProduct,
+  getScientificSources,
   GOES_PRODUCT_CODES,
   goesInstruments,
   rosacInstruments,
@@ -50,6 +53,33 @@ describe('scientific data catalog and query validation', () => {
       product: { code: 'Fe171', name: 'Imágenes solares: 171 Å (Fe171)' },
     })
     expect(findScientificProduct('ROSAC', 'SFXR')).toBeNull()
+  })
+
+  test('resolves a product from the sources it is given, in their language', () => {
+    expect(findScientificProduct('GOES', 'SFXR', getScientificSources(en))).toMatchObject({
+      product: { name: 'Solar flux: X-rays' },
+    })
+  })
+
+  test('labels EHIS channels and their unit in the language of the catalogue', () => {
+    const spanish = findScientificProduct('GOES', 'EHIS')!.product.parameters
+    const english = findScientificProduct('GOES', 'EHIS', getScientificSources(en))!.product
+      .parameters
+
+    expect(spanish).toHaveLength(25)
+    expect(spanish[0]).toEqual({
+      code: 'H:E1',
+      label: 'Hidrógeno (H): banda de energía 1',
+      unit: 'partículas/(cm²·s·sr·MeV/nucleón)',
+    })
+    expect(english.map((parameter) => parameter.code)).toEqual(
+      spanish.map((parameter) => parameter.code),
+    )
+    expect(english[24]).toEqual({
+      code: 'ClNi:E5',
+      label: 'Chlorine-nickel (Cl-Ni): energy band 5',
+      unit: 'particles/(cm²·s·sr·MeV/nucleon)',
+    })
   })
 
   test('accepts a valid source, product, parameter, calendar day and time range', () => {

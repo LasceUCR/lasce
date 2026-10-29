@@ -126,21 +126,6 @@ export interface DynamicSpectrumDataResult extends ScientificDataResultBase {
 export type ScientificDataResult =
   TimeSeriesDataResult | ImageSequenceDataResult | DynamicSpectrumDataResult
 
-const ehisGroups = [
-  ['H', 'Hidrógeno (H)'],
-  ['He', 'Helio (He)'],
-  ['CNO', 'Carbono-nitrógeno-oxígeno (CNO)'],
-  ['NeS', 'Neón-azufre (Ne-S)'],
-  ['ClNi', 'Cloro-níquel (Cl-Ni)'],
-] as const
-
-const ehisParameters: ScientificParameter[] = ehisGroups.flatMap(([group, name]) =>
-  Array.from({ length: 5 }, (_, band) => ({
-    code: `${group}:E${band + 1}`,
-    label: `${name}: banda de energía ${band + 1}`,
-    unit: 'partículas/(cm²·s·sr·MeV/nucleón)',
-  })),
-)
 /** The parts of a message catalogue the scientific data page reads. */
 export type ScientificDataMessages = Pick<typeof es, 'scientificData'>
 
@@ -181,6 +166,7 @@ export function getScientificSources(messages: ScientificDataMessages): Scientif
   const pfu = units?.pfu ?? es.scientificData.units.pfu
   const protonUnit = units?.protonUnit ?? es.scientificData.units.protonUnit
   const imageUnit = units?.image ?? es.scientificData.units.image
+  const ehisUnit = units?.ehisUnit ?? es.scientificData.units.ehisUnit
 
   const xray = parameters?.xray ?? es.scientificData.parameters.xray
   const xrayParameters: ScientificParameter[] = [
@@ -270,6 +256,22 @@ export function getScientificSources(messages: ScientificDataMessages): Scientif
           unit: particles,
         })),
       ).flat(),
+  )
+
+  const ehis = parameters?.ehis ?? es.scientificData.parameters.ehis
+  const ehisLabelTemplate = ehis?.label ?? es.scientificData.parameters.ehis.label
+  const ehisGroups = ['H', 'He', 'CNO', 'NeS', 'ClNi'] as const
+  const ehisParameters: ScientificParameter[] = ehisGroups.flatMap((group) =>
+    Array.from({ length: 5 }, (_, band) => ({
+      code: `${group}:E${band + 1}`,
+      label: ehisLabelTemplate
+        .replace(
+          '{group}',
+          ehis?.groups?.[group] ?? es.scientificData.parameters.ehis.groups[group],
+        )
+        .replace('{band}', String(band + 1)),
+      unit: ehisUnit,
+    })),
   )
 
   const sgps = parameters?.sgps ?? es.scientificData.parameters.sgps
@@ -494,11 +496,16 @@ function isCalendarDate(value: string) {
   )
 }
 
+/**
+ * Looks a product up in `sources`, which defaults to the Spanish catalogue. A client component
+ * passes the sources it received for the visitor's language so the copy it shows matches.
+ */
 export function findScientificProduct(
   sourceCode: ScientificSourceCode,
   productCode: ScientificProductCode,
+  sources: readonly ScientificSource[] = scientificSources,
 ) {
-  const source = scientificSources.find((candidate) => candidate.code === sourceCode)
+  const source = sources.find((candidate) => candidate.code === sourceCode)
   if (!source) return null
 
   for (const instrument of source.instruments) {

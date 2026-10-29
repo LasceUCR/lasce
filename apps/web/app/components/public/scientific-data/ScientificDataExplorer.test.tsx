@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { getScientificSources } from '@/app/lib/scientific-data'
+import en from '@/messages/en.json' with { type: 'json' }
 
 import { ScientificDataExplorer, type ScientificDataExplorerProps } from './ScientificDataExplorer'
 import {
@@ -311,6 +313,21 @@ describe('ScientificDataExplorer', () => {
       screen.getByRole('complementary', { name: 'Consultation and download permissions' }),
     ).toHaveTextContent('For GOES (EXIS), only the chart is available')
     expect(screen.getByRole('progressbar', { name: 'Loading data' })).toBeInTheDocument()
+  })
+
+  test('shows the product hint from the sources it receives, in English', () => {
+    renderWithIntl(
+      <ScientificDataExplorer
+        {...defaultArgs}
+        sources={getScientificSources(en)}
+        initialQuery={{ ...defaultArgs.initialQuery, product: 'EHIS', parameter: 'H:E1' }}
+        initialResult={undefined}
+      />,
+      { locale: 'en' },
+    )
+
+    expect(screen.getByText(/Select the mass group and energy band/)).toBeInTheDocument()
+    expect(screen.queryByText(/Seleccione el grupo de masa/)).not.toBeInTheDocument()
   })
 
   test('offers the GOES chart image but not GOES data without the GOES data grant', () => {
