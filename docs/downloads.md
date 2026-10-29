@@ -39,9 +39,10 @@ ScientificDataExplorer ── requestResourceDownload (Server Action, app/(publi
                               1. getSessionUser()       → none: `unauthenticated`
                               2. getPermissionsForRole  → the role's grants, read on this request
                               3. validateResourceDownload (app/services/downloads/downloadAccess.ts)
-                                   invalid      the query or format does not parse, or a future GOES date
+                                   invalid      the query or format does not parse
+                                   futureDate   a GOES date after today
                                    unsupported  the product offers no such format (SUVI, …)
-                                   forbidden    a required grant is missing; the message names it
+                                   forbidden    a required grant is missing, named in `permission`
 ```
 
 - An expired session is the same as no session: `getSessionUser()` returns `null`, so the user
@@ -49,8 +50,12 @@ ScientificDataExplorer ── requestResourceDownload (Server Action, app/(publi
 - Grants are read from `auth.role_permissions` on every attempt, never cached in the session, so
   a permission revoked a moment ago is already refused.
 - "Not signed in" and "not permitted" are told apart: the first sends the user to `/acceso`, the
-  second shows the denial message from `PERMISSION_DENIED`, for example _No tienes autorización
-  para descargar recursos GOES._
+  second shows the permission's denial message, `access.permissions.<permission>.denied`, for
+  example _No tienes autorización para descargar recursos GOES._
+- The service returns only a reason (`invalid`, `futureDate`, `unsupported`, `forbidden`, and
+  `pending` or `empty` from the download itself). The Server Action words it in the visitor's
+  language from `scientificData.errors`, because it is the one place with the request's locale.
+- The button labels are `scientificData.downloads.formats.<format>`.
 
 ## How a download is produced
 
@@ -90,9 +95,18 @@ again on every attempt, so retrying a failed download never skips a permission c
 
 ### Exporters (`exporters/`)
 
+Every exporter writes in the language the download was asked in. `requestResourceDownload` builds
+an `ExportCopy` (`exporters/copy.ts`) from the request's locale and catalogue and passes it through
+`createResourceDownload` to `Exporter.export(result, copy)`. It carries the catalogue (for the
+instrument, product and channel names), `scientificData.origins` (provider and notice),
+`scientificData.files` (the labels around the data) and the axis number format. Anything that
+calls the service without one gets Spanish.
+
 - **`csv.ts`** follows RFC 4180: CRLF line endings, a UTF-8 BOM, and `#` metadata lines first
   (source, instrument, product, channel, unit, satellite, UTC range, provider, notice, generation
-  time). Columns are `timestamp_utc,value`, or `timestamp_utc,frequency_mhz,value` for a spectrum.
+  time). Columns are `timestamp_utc,value`, or `timestamp_utc,frequency_mhz,value` for a spectrum:
+  the metadata is translated, the column names are not, so a script reading the file works in
+  either language.
 - **`png.ts`** builds a standalone SVG from the layouts in `app/lib/charts/`, then rasterizes it at
   2× with `@resvg/resvg-js`. The on-screen `ScientificDataChart` and `DynamicSpectrumChart` use the
   same layouts, so the image matches the screen. Its header and footer carry the source,

@@ -241,9 +241,17 @@ kinds and availability stay in the lib module, and only their copy is looked up 
 query form's own validation (`scientificData.validation`) is a schema factory,
 `getScientificDataQuerySchema(messages)`, called with `useTranslations` on the client and
 `getTranslations` in the `/api/scientific-data` route handler and the `requestResourceDownload`
-Server Action — the first case of either in this codebase. The download-eligibility chain under
-`services/downloads/` has no request context to translate from and is still Spanish, same as the
-rest of the "Not tied to one page" list below.
+Server Action — the first case of either in this codebase.
+
+A query result is built on the server, which has no catalogue of its own, so it carries codes, not
+copy: `origin.dataset` and `origin.resolution` instead of a provider and a notice, and no image alt
+text. `app/lib/scientific-data-copy.ts` turns it into the visitor's language:
+`localizeResultNames(result, sources)` takes the instrument, product and channel names from the
+catalogue, and `describeOrigin(origin, t)` reads `scientificData.origins`. The page uses them with
+`useTranslations`; the downloaded files use them through the `ExportCopy` that
+`requestResourceDownload` builds (see [`downloads.md`](downloads.md#exporters-exporters)), and
+the same action words the download refusals, which the service returns as bare reasons. SUVI image
+alt text is `scientificData.images.alt`, written by `SuviImageSequence`.
 
 ### Still to do
 
@@ -260,9 +268,8 @@ rest of the "Not tied to one page" list below.
    (`lib/nosotros.ts`, `lib/auth/login.ts`, ...) become factories that take `t`.
    Server Actions and route handlers under `app/api/` call `getTranslations`; the cookie is
    available in both.
-2. **Formatting.** Four `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
-   (`cuenta/page.tsx`, `lib/auth/countries.ts`,
-   `services/downloads/exporters/png.ts`, `UserRoleChangeDialog.tsx`). Replace them with
+2. **Formatting.** Three `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
+   (`cuenta/page.tsx`, `lib/auth/countries.ts`, `UserRoleChangeDialog.tsx`). Replace them with
    next-intl's `useFormatter` / `getFormatter`, which follow the request's locale and time zone —
    `scientific-data/` (`ScientificDataExplorer.tsx`, `SolarToday.tsx`, `ScientificDataChart.tsx`)
    already does.

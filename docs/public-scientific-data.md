@@ -101,7 +101,7 @@ GOES products are served by three backends, chosen by instrument (the SEISS prod
 SUVI, EXIS and MAG are filled by the worker's `suvi-pipeline`, `exis-pipeline` and `mag-pipeline`
 jobs (see [`suvi-pipeline.md`](suvi-pipeline.md), [`exis-pipeline.md`](exis-pipeline.md) and
 [`mag-pipeline.md`](mag-pipeline.md)); only days those
-jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. SUVI and EXIS now read the worker's own stores (`suvi_frames` + MinIO, and InfluxDB `exis_irradiance`) rather than the CITIC archive; MAG reads NOAA's L2 1-minute averages from InfluxDB `mag_field`. EXIS and MAG queries keep only `valid = true` readings, so points withdrawn by a re-ingest never appear.
+jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. A result names its provenance with codes (`origin.dataset`, `origin.resolution`, `origin.sampledPoints`), and the page and the downloaded files turn them into text from `scientificData.origins` in the visitor's language (see [internationalization.md](internationalization.md)). SUVI and EXIS now read the worker's own stores (`suvi_frames` + MinIO, and InfluxDB `exis_irradiance`) rather than the CITIC archive; MAG reads NOAA's L2 1-minute averages from InfluxDB `mag_field`. EXIS and MAG queries keep only `valid = true` readings, so points withdrawn by a re-ingest never appear.
 
 The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
@@ -206,7 +206,9 @@ a backend (for example, reading GOES time series from the database instead of th
 implement `ScientificDataProvider` and change its entry there. A synchronous provider returns the
 result directly. Only asynchronous ones return `{ state: 'pending', jobId, progress }`, which the
 route sends as `202`. GOES time-series providers should build their result with
-`buildGoesTimeSeriesResult` so provenance is described consistently. To add a source, extend
+`buildGoesTimeSeriesResult` so provenance is described consistently: give it the dataset code,
+never copy, and add the dataset's provider and notice to `scientificData.origins` in both
+catalogues. To add a source, extend
 `SCIENTIFIC_SOURCE_CODES` and the catalog in `app/lib/scientific-data.ts`, then register one
 more source in `index.ts`.
 
