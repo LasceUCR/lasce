@@ -180,7 +180,7 @@ inventory taken when the static pages were migrated.
 | `/colaboraciones-e-iniciativas`          | `collaborations`                                | `lib/collaborations.ts`, `lib/research-collaborations.ts`                                                      |
 | `/investigacion/**`                      | `researchAreas`                                 | `(public)/investigacion/**`, `research/*`                                                                      |
 | `/actividades-academicas`                | `academicActivities`                            | `lib/academic-activities.ts`, `AcademicActivitiesPage.tsx`                                                     |
-| `/galeria/**`                            | `gallery`                                        | `gallery/*`, `lib/gallery.ts`, `(public)/galeria/**`                                                           |
+| `/galeria/**`                            | `gallery`                                       | `gallery/*`, `lib/gallery.ts`, `(public)/galeria/**`                                                           |
 | `/publicaciones`                         | `publications`                                  | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                                                          |
 | `/noticias`                              | `news`, `academicActivities`                    | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
 | `/radioastronomia`                       | `rosac`                                         | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`                                        |
