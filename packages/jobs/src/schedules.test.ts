@@ -37,6 +37,7 @@ describe('schedules', () => {
     expect(seiss.map((schedule) => [schedule.cron, schedule.data])).toEqual([
       ['35 * * * *', { product: 'EHIS', spacecraft: 19, lookbackDays: 3 }],
       ['40 * * * *', { product: 'SGPS', spacecraft: 19, lookbackDays: 3 }],
+      ['45 * * * *', { product: 'MPSH', spacecraft: 19, lookbackDays: 3 }],
     ])
   })
 })
