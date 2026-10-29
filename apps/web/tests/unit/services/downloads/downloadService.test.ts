@@ -44,6 +44,7 @@ import type { Permission } from '@/app/lib/auth/permissions'
 import type { ScientificDataQuery } from '@/app/lib/scientific-data'
 import { resetDownloadStorage } from '@/app/services/downloads/downloadStorage'
 import { createResourceDownload, downloadFilename } from '@/app/services/downloads/downloadService'
+import { scientificDataSources } from '@/app/services/scientific-data'
 import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'
 
 const now = new Date('2026-09-28T12:00:00Z')
@@ -190,19 +191,38 @@ describe('createResourceDownload', () => {
     expect(mocks.putObject).not.toHaveBeenCalled()
   })
 
-  test('refuses SEISS data, which has no full-resolution export yet', async () => {
-    expect(await download({ query: seissQuery, format: 'csv' })).toMatchObject({
-      ok: false,
-      reason: 'unsupported',
+  test('exports full-resolution SEISS data from the product measurement', async () => {
+    const result = await download({ query: seissQuery, format: 'csv' })
+
+    expect(result).toMatchObject({
+      ok: true,
+      filename: 'GOES_SEISS_MPSH_electron-T1-E1_2026-09-27_0800-0900.csv',
     })
+    const [sql, params] = mocks.queryInfluxSql.mock.calls[0]!
+    expect(sql).toContain('FROM mpsh_flux')
+    expect(sql).not.toContain('ROW_NUMBER')
+    expect(params).toMatchObject({ product: 'MPSH', channel: 'electron:T1:E1' })
+    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    const [, objectKey] = mocks.putObject.mock.calls[0]!
+    expect(objectKey).toMatch(/^GOES\/SEISS\/2026-09-28\/[0-9a-f-]{36}\.csv$/)
   })
 
-  test('asks to wait while an asynchronous query is still running', async () => {
-    mocks.queryCiticScientificData.mockResolvedValue({ state: 'pending', jobId: 'j', progress: 10 })
+  test('refuses SEISS data without the GOES data grant', async () => {
+    expect(await download({ query: seissQuery, format: 'csv' }, VISITOR)).toMatchObject({
+      ok: false,
+      reason: 'forbidden',
+    })
+    expect(mocks.queryInfluxSql).not.toHaveBeenCalled()
+  })
+
+  test('asks to wait while the chart backend is still answering', async () => {
+    const query = vi
+      .spyOn(scientificDataSources, 'query')
+      .mockResolvedValue({ state: 'pending', jobId: 'j', progress: 10 })
 
     const result = await download({ query: seissQuery, format: 'png', jobId: 'j' }, VISITOR)
 
-    expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(seissQuery, 'j')
+    expect(query).toHaveBeenCalledWith({ query: seissQuery, jobId: 'j' })
     expect(result).toMatchObject({ ok: false, reason: 'pending' })
     expect(mocks.create).not.toHaveBeenCalled()
   })
