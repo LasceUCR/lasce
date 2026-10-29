@@ -21,10 +21,9 @@ never text a visitor reads.
   description), the **researcher profiles** on `/nosotros` (role and description), the **LASCE
   section** of `/fisica-solar` (title and text), the **home page** (the hero banner's title and
   subtitle, and the geomagnetic indices' descriptions), the **contact cards** on `/contacto` (title
-  and description), **the research areas on `/investigacion`** (title and description), **the
-  gallery** (album and media content), and the **"¿Por qué estudiarlo desde Costa Rica?" card** on
-  `/clima-espacial` (title and text) use it, read and edited in Spanish and English. Every other
-  editable entity is still single-language. See [Dynamic content](#dynamic-content) and
+  and description), **the research areas on `/investigacion`** (title and description), and the **"¿Por qué estudiarlo desde Costa Rica?" card** on `/clima-espacial` (title and text) use it,
+  read and edited in Spanish and English. Every other editable entity is still single-language.
+  See [Dynamic content](#dynamic-content) and
   [`translate-database-content.md`](translate-database-content.md).
 
 ## How it works
