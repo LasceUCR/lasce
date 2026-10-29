@@ -9,11 +9,15 @@ Laboratory **resources** are a separate concern: downloading them (`download_res
 
 ## Defaults
 
-| Role          | Permissions                                                                                                                                        |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Visitante     | `download_resources`                                                                                                                               |
-| Asistente     | `edit_components`, `download_resources`                                                                                                            |
-| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions` |
+| Role          | Permissions                                                                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitante     | `download_resources`                                                                                                                                                 |
+| Asistente     | `edit_components`, `download_resources`                                                                                                                              |
+| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions`, `view_audit_log` |
+
+`view_audit_log` opens the Auditoría section (`/administracion/auditoria`, see
+[audit-log.md](audit-log.md)). Only administrators hold it by default; an assistant gets it
+from the matrix.
 
 The component-management grants gate the "¿Qué hacemos?" cards on `/nosotros`
 when Modo edición is on. Assistants may edit; administrators may also create
