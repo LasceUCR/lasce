@@ -20,6 +20,7 @@ export const PERMISSIONS = [
   'download_goes_resources',
   'manage_users',
   'manage_permissions',
+  'view_audit_log',
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
@@ -32,6 +33,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   download_goes_resources: 'Descargar recursos GOES',
   manage_users: 'Administrar usuarios',
   manage_permissions: 'Configurar permisos',
+  view_audit_log: 'Consultar la auditoría',
 }
 
 export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
@@ -42,6 +44,7 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   download_goes_resources: 'Descargar datos de los satélites GOES.',
   manage_users: 'Consultar cuentas y asignar o retirar roles.',
   manage_permissions: 'Ver y cambiar los permisos asociados a cada rol.',
+  view_audit_log: 'Consultar el registro de acciones administrativas del portal.',
 }
 
 export const PERMISSION_DENIED: Record<Permission, string> = {
@@ -52,6 +55,7 @@ export const PERMISSION_DENIED: Record<Permission, string> = {
   download_goes_resources: 'No tienes autorización para descargar recursos GOES.',
   manage_users: 'No tienes autorización para administrar usuarios.',
   manage_permissions: 'No tienes autorización para configurar los permisos de los roles.',
+  view_audit_log: 'No tienes autorización para consultar la auditoría.',
 }
 
 /** Seeded by the role-permissions migration; administrators can change it later. */
@@ -66,6 +70,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> =
     'download_goes_resources',
     'manage_users',
     'manage_permissions',
+    'view_audit_log',
   ],
 }
 

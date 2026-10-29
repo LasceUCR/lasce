@@ -9,12 +9,14 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     researcherTranslation: { upsert: vi.fn() },
+    auditEvent: { create: vi.fn() },
   }
 
   const prisma = {
-    researcher: { findMany: vi.fn(), deleteMany: vi.fn(), create: vi.fn() },
+    researcher: { findMany: vi.fn(), deleteMany: vi.fn(), create: tx.researcher.create },
     $transaction: vi.fn(),
   }
 
@@ -65,6 +67,8 @@ function researcherRow(overrides: Partial<Record<string, unknown>> = {}) {
     ...overrides,
   }
 }
+
+const actor = { id: 'user-1' }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -232,21 +236,38 @@ describe('createResearcher', () => {
 })
 
 describe('deleteResearcher', () => {
-  test('returns false when no row was deleted', async () => {
-    deleteMany.mockResolvedValue({ count: 0 })
+  test('returns false without deleting when the id does not exist', async () => {
+    tx.researcher.findUnique.mockResolvedValue(null)
 
-    const result = await deleteResearcher('missing-id')
+    const result = await deleteResearcher('missing-id', actor)
+
+    expect(result).toBe(false)
+    expect(tx.researcher.deleteMany).not.toHaveBeenCalled()
+  })
+
+  test('returns false when no row was deleted', async () => {
+    tx.researcher.findUnique.mockResolvedValue(researcherRow())
+    tx.researcher.deleteMany.mockResolvedValue({ count: 0 })
+
+    const result = await deleteResearcher('missing-id', actor)
 
     expect(result).toBe(false)
   })
 
   test('deletes the row and returns true when it exists', async () => {
-    deleteMany.mockResolvedValue({ count: 1 })
+    tx.researcher.findUnique.mockResolvedValue(researcherRow())
+    tx.researcher.deleteMany.mockResolvedValue({ count: 1 })
 
-    const result = await deleteResearcher('researcher-1')
+    const result = await deleteResearcher('researcher-1', actor)
 
-    expect(deleteMany).toHaveBeenCalledWith({ where: { id: 'researcher-1' } })
+    expect(tx.researcher.deleteMany).toHaveBeenCalledWith({ where: { id: 'researcher-1' } })
     expect(result).toBe(true)
+    expect(tx.auditEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'rosac_researcher.delete',
+        summary: 'Investigador ROSAC eliminado: Dra. Carolina Salas Matamoros',
+      }),
+    })
   })
 })
 

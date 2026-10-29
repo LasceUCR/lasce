@@ -3,7 +3,8 @@ import { z } from 'zod'
 
 import es from '@/messages/es.json' with { type: 'json' }
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from './audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import { translationLocales, type ReviewConfirmation } from '@/app/lib/i18n/content/definition'
@@ -850,23 +851,36 @@ export async function createResearcher(
 ): Promise<TeamMember> {
   const { content } = data
   const base = baseContent(rosacResearcherContent, content)
-  const row = await prisma.researcher.create({
-    data: {
-      photoUrl: normalizeOptional(data.src),
-      name: data.name,
-      institution: data.institution,
-      email: data.email ?? [],
-      role: base.role,
-      description: normalizeOptional(base.description),
-      modifiedBy,
-      translations: {
-        create: translationRows(rosacResearcherContent, content).map(({ locale, ...text }) => ({
-          locale,
-          ...text,
-        })),
+  const row = await prisma.$transaction(async (tx) => {
+    const created = await tx.researcher.create({
+      data: {
+        photoUrl: normalizeOptional(data.src),
+        name: data.name,
+        institution: data.institution,
+        email: data.email ?? [],
+        role: base.role,
+        description: normalizeOptional(base.description),
+        modifiedBy,
+        translations: {
+          create: translationRows(rosacResearcherContent, content).map(({ locale, ...text }) => ({
+            locale,
+            ...text,
+          })),
+        },
       },
-    },
-    include: researcherInclude,
+      include: researcherInclude,
+    })
+    await recordUserAuditEvent(
+      tx,
+      { id: modifiedBy },
+      {
+        action: 'rosac_researcher.create',
+        summary: `Investigador ROSAC agregado: ${created.name}`,
+        entityType: 'rosac_researcher',
+        entityId: created.id,
+      },
+    )
+    return created
   })
 
   return toTeamMember(row, defaultLocale, true)
@@ -945,10 +959,24 @@ export async function updateResearcher(
         }
       }
 
-      return tx.researcher.findUniqueOrThrow({
+      const updated = await tx.researcher.findUniqueOrThrow({
         where: { id },
         include: researcherInclude,
       })
+
+      await recordUserAuditEvent(
+        tx,
+        { id: modifiedBy },
+        {
+          action: 'rosac_researcher.update',
+          summary: `Investigador ROSAC actualizado: ${updated.name}`,
+          entityType: 'rosac_researcher',
+          entityId: id,
+          metadata: { fields: changedFieldNames(input) },
+        },
+      )
+
+      return updated
     },
   )
 
@@ -957,9 +985,18 @@ export async function updateResearcher(
     : result
 }
 
-export async function deleteResearcher(id: string): Promise<boolean> {
-  const { count } = await prisma.researcher.deleteMany({ where: { id } })
-  return count > 0
+export async function deleteResearcher(id: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) => tx.researcher.findUnique({ where: { id }, select: { name: true } }),
+    (tx) => tx.researcher.deleteMany({ where: { id } }),
+    (tx, researcher) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'rosac_researcher.delete',
+        summary: `Investigador ROSAC eliminado: ${researcher.name}`,
+        entityType: 'rosac_researcher',
+        entityId: id,
+      }),
+  )
 }
 
 // ---------------------------------------------------------------------------

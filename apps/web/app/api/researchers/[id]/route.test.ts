@@ -166,6 +166,6 @@ describe('DELETE /api/researchers/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteResearcher).toHaveBeenCalledWith(researcherId)
+    expect(mocks.deleteResearcher).toHaveBeenCalledWith(researcherId, expect.anything())
   })
 })

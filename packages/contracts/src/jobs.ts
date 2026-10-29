@@ -15,6 +15,7 @@ export const JOB_NAMES = {
   suviPipeline: 'suvi-pipeline',
   exisPipeline: 'exis-pipeline',
   magPipeline: 'mag-pipeline',
+  ehisPipeline: 'ehis-pipeline',
 } as const
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES]
@@ -65,6 +66,16 @@ export const magPipelinePayload = z.object({
   date: z.iso.date().optional(),
 })
 
+/**
+ * Ingest one daily SEISS EHIS L1b heavy ion file (5-minute fluxes: H, He, CNO, Ne-S and Cl-Ni in
+ * five energy bands) into InfluxDB. Without `date`, the newest day within `lookbackDays` is used.
+ */
+export const ehisPipelinePayload = z.object({
+  spacecraft: z.union([z.literal(16), z.literal(17), z.literal(18), z.literal(19)]).default(19),
+  lookbackDays: z.number().int().min(1).max(31).default(3),
+  date: z.iso.date().optional(),
+})
+
 /** Lookup table used by `enqueue()` and by the HTTP trigger route to validate input. */
 export const jobPayloads = {
   [JOB_NAMES.ingestReadings]: ingestReadingsPayload,
@@ -72,6 +83,7 @@ export const jobPayloads = {
   [JOB_NAMES.suviPipeline]: suviPipelinePayload,
   [JOB_NAMES.exisPipeline]: exisPipelinePayload,
   [JOB_NAMES.magPipeline]: magPipelinePayload,
+  [JOB_NAMES.ehisPipeline]: ehisPipelinePayload,
 } as const satisfies Record<JobName, z.ZodType>
 
 export type JobPayloads = {

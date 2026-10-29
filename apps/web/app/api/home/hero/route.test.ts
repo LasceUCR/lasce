@@ -94,7 +94,7 @@ describe('PATCH /api/home/hero', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
-    expect(mocks.updateHero).toHaveBeenCalledWith(body)
+    expect(mocks.updateHero).toHaveBeenCalledWith(body, expect.anything())
     expect(answer.hero.title).toBe('Exploramos el Sol')
   })
 

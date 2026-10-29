@@ -150,7 +150,7 @@ export function ScientificDataExplorer({
 
   const selectedSource = sources.find((source) => source.code === query.source)!
   const selected = useMemo(
-    () => findScientificProduct(query.source, query.product),
+    () => findScientificProduct(query.source, query.product, sources),
     [query.product, query.source],
   )
   const invalidRange = query.startTime >= query.endTime
@@ -244,7 +244,7 @@ export function ScientificDataExplorer({
   }
 
   function selectProduct(productCode: ScientificProductCode) {
-    const selection = findScientificProduct(query.source, productCode)!
+    const selection = findScientificProduct(query.source, productCode, sources)!
     setQuery({
       ...query,
       product: productCode,

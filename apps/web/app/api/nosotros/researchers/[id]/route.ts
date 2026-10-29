@@ -80,7 +80,7 @@ export async function DELETE(
   if (!isUuid(id)) return invalidId(INVALID_ID_MESSAGE)
 
   try {
-    if (!(await deleteNosotrosResearcher(id))) return notFound(RESEARCHER_GONE_MESSAGE)
+    if (!(await deleteNosotrosResearcher(id, guard.user))) return notFound(RESEARCHER_GONE_MESSAGE)
   } catch (error) {
     return internalError('No se pudo eliminar el investigador.', error)
   }
