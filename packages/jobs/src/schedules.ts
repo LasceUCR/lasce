@@ -133,4 +133,14 @@ export const schedules: Schedule[] = [
       lookbackDays: 3,
     },
   },
+  {
+    id: 'seiss-pipeline-mpsh',
+    name: 'seiss-pipeline',
+    cron: '45 * * * *',
+    data: {
+      product: 'MPSH',
+      spacecraft: 19,
+      lookbackDays: 3,
+    },
+  },
 ]
