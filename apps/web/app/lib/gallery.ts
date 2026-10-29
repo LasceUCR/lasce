@@ -32,6 +32,7 @@ import {
 } from './gallery-schema'
 
 export * from './gallery-schema'
+export { galeriaHero, galeriaMeta } from './gallery-content'
 
 /**
  * Real content for the public gallery.
@@ -49,18 +50,6 @@ const imageBase = '/images/galeria'
 export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
 
 export type AlbumSlug = (typeof albumSlugs)[number]
-
-export const galeriaMeta = {
-  title: 'Galería | LASCE',
-  description:
-    'Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación y vida cotidiana del equipo.',
-} as const
-
-export const galeriaHero = {
-  kicker: 'Portal público LASCE',
-  title: 'Galería',
-  lead: 'Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes.',
-} as const
 
 const previosMontajeMedia = [
   {
@@ -2072,7 +2061,7 @@ const albumInclude = {
 
 const topLevelAlbumInclude = {
   ...albumInclude,
-  subAlbums: { orderBy: { createdAt: 'asc' }, include: albumInclude },
+  subAlbums: { orderBy: { createdAt: 'desc' }, include: albumInclude },
 } satisfies Prisma.GalleryAlbumInclude
 
 type AlbumRecord = Prisma.GalleryAlbumGetPayload<{ include: typeof albumInclude }>
@@ -2122,7 +2111,8 @@ function toGalleryAlbum(
 }
 
 /**
- * Loads top-level albums and their nested albums/media in display order, including database IDs.
+ * Loads top-level albums and their nested albums/media newest first, including database IDs.
+ * A file keeps `position` order, with a new file stored at the front.
  *
  * `title` and `description` are in `locale` when the album has that translation, and fall back to
  * the base text otherwise; `contentLocale` says which one was used. Pass `includeEditingData`
@@ -2134,7 +2124,7 @@ export async function getGalleryAlbums(
 ): Promise<GalleryAlbum[]> {
   const records = await prisma.galleryAlbum.findMany({
     where: { parentAlbumId: null },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
     include: topLevelAlbumInclude,
   })
 
@@ -2145,8 +2135,8 @@ export async function getGalleryAlbums(
 export async function getGalleryPaths(): Promise<string[]> {
   const records = await prisma.galleryAlbum.findMany({
     where: { parentAlbumId: null },
-    orderBy: { createdAt: 'asc' },
-    select: { slug: true, subAlbums: { orderBy: { createdAt: 'asc' }, select: { slug: true } } },
+    orderBy: { createdAt: 'desc' },
+    select: { slug: true, subAlbums: { orderBy: { createdAt: 'desc' }, select: { slug: true } } },
   })
 
   return records.flatMap((album) => [
@@ -2335,7 +2325,7 @@ const mediaRecordInclude = {
   translations: mediaTranslationsInclude,
 } satisfies Prisma.GalleryMediaInclude
 
-/** Adds a file to an album at the next position, with its text in every language. */
+/** Adds a file at the front of an album, with its text in every language. */
 export async function createGalleryMedia(
   albumId: string,
   data: GalleryMediaInput,
@@ -2346,9 +2336,9 @@ export async function createGalleryMedia(
       throw new WriteAbort<GalleryMediaWriteFailure>({ ok: false, reason: 'album-not-found' })
     }
 
-    const lastMedia = await tx.galleryMedia.findFirst({
+    const firstMedia = await tx.galleryMedia.findFirst({
       where: { albumId },
-      orderBy: { position: 'desc' },
+      orderBy: { position: 'asc' },
       select: { position: true },
     })
 
@@ -2363,7 +2353,7 @@ export async function createGalleryMedia(
         rowSpan: data.rowSpan,
         capturedAt: new Date(`${data.date}T00:00:00.000Z`),
         uploaderName: data.uploader,
-        position: (lastMedia?.position ?? -1) + 1,
+        position: firstMedia ? firstMedia.position - 1 : 0,
         translations: { create: translationRows(mediaContent, data.content) },
       },
       include: mediaRecordInclude,

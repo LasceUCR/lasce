@@ -636,7 +636,7 @@ describe('getGalleryAlbums', () => {
 
     expect(prisma.galleryAlbum.findMany).toHaveBeenCalledWith({
       where: { parentAlbumId: null },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       include: {
         media: {
           orderBy: { position: 'asc' },
@@ -652,7 +652,7 @@ describe('getGalleryAlbums', () => {
           select: { locale: true, title: true, description: true },
         },
         subAlbums: {
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: 'desc' },
           include: {
             media: {
               orderBy: { position: 'asc' },
@@ -1101,7 +1101,7 @@ describe('createGallerySubAlbum', () => {
 })
 
 describe('createGalleryMedia', () => {
-  test('creates media at the next album position and maps it to gallery fields', async () => {
+  test('creates media at the front of the album and maps it to gallery fields', async () => {
     tx.galleryAlbum.findUnique.mockResolvedValue({ id: albumId })
     tx.galleryMedia.findFirst.mockResolvedValue({ position: 3 })
     tx.galleryMedia.create.mockResolvedValue(mediaRecord())
@@ -1144,7 +1144,7 @@ describe('createGalleryMedia', () => {
         rowSpan: mediaInput.rowSpan,
         capturedAt: new Date('2026-02-16T00:00:00.000Z'),
         uploaderName: mediaInput.uploader,
-        position: 4,
+        position: 2,
         translations: {
           create: [
             {

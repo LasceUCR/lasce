@@ -37,11 +37,12 @@ working through Claude Code.
 | How do I add a job across both languages?            | [`docs/add-a-job.md`](docs/add-a-job.md)                                   |
 | How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                       |
 | How do I truncate long text with "Leer más"?         | [`docs/truncated-text.md`](docs/truncated-text.md)                         |
+| How do I show skeletons while data loads?            | [`docs/skeletons.md`](docs/skeletons.md)                                   |
+| How do I paginate and search a listing via the URL?  | [`docs/pagination.md`](docs/pagination.md)                                 |
 | How does the SUVI pipeline job orchestrate a run?    | [`docs/suvi-pipeline.md`](docs/suvi-pipeline.md)                           |
 | How does the EXIS pipeline job ingest a day?         | [`docs/exis-pipeline.md`](docs/exis-pipeline.md)                           |
 | How does the MAG pipeline job ingest a day?          | [`docs/mag-pipeline.md`](docs/mag-pipeline.md)                             |
 | How do `/datos` chart and data downloads work?       | [`docs/downloads.md`](docs/downloads.md)                                   |
-| How do I add a UI component?                         | [`docs/add-a-component.md`](docs/add-a-component.md)                       |
 | How do I isolate a widget that might crash the page? | [`docs/error-boundary.md`](docs/error-boundary.md)                         |
 | How do I make content editable in "Modo edición"?    | [`docs/add-a-cms-feature.md`](docs/add-a-cms-feature.md)                   |
 | How is the home page's content edited and reordered? | [`docs/home-page.md`](docs/home-page.md)                                   |

@@ -26,7 +26,9 @@ test('lists news as compact, text-only cards that open the source article', asyn
   await expect(link).toHaveAttribute('href', /^https?:\/\//)
 })
 
-test('keeps news in chronological order, newest first and undated last', async ({ page }) => {
+test('keeps news in chronological order on the first page, newest first and undated last', async ({
+  page,
+}) => {
   await page.goto('/noticias')
 
   const cards = newsList(page).getByRole('article')
@@ -144,6 +146,11 @@ test('allows an admin to create, view, edit, and delete a news article', async (
 
     await expect(page.getByText('Noticia agregada correctamente.')).toBeVisible()
     await expect(addDialog).toBeHidden()
+
+    // An undated item is listed last, past the first page: search for it, which keeps it on
+    // screen through the edit and the deletion below.
+    await page.getByRole('searchbox', { name: 'Buscar noticias' }).fill(uniqueTitle)
+    await expect(page).toHaveURL(/\?q=/)
 
     // 3. Newly created article is in list and displays its content
     const createdCard = newsList(page).getByRole('article').filter({ hasText: uniqueTitle })

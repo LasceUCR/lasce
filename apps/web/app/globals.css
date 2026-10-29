@@ -926,6 +926,7 @@ a {
 
 .button {
   min-height: 43px;
+  box-sizing: border-box;
   padding: 0 26px;
   display: inline-flex;
   align-items: center;
@@ -935,6 +936,9 @@ a {
   border-radius: 7px;
   font-size: 14px;
   font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
 }
 
 .button-primary {
@@ -950,7 +954,7 @@ a {
 }
 
 .button-secondary {
-  border-color: var(--action);
+  border: 1px solid var(--action);
   background: transparent;
   color: var(--action);
 }
@@ -2363,6 +2367,23 @@ a {
   opacity: 0;
 }
 
+/* Fills the frame until the image has loaded (`SuviImageSequence`); the frame clips its corners. */
+.data-image-frame .data-image-skeleton {
+  height: 100%;
+  border-radius: 0;
+}
+
+/* The image fades in over its placeholder instead of popping in. */
+.data-image-grid img {
+  transition: opacity 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .data-image-grid img {
+    transition: none;
+  }
+}
+
 .data-image-status {
   align-self: center;
   margin: 0;
@@ -2513,28 +2534,6 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-.solar-today-loading > span {
-  display: block;
-  margin-bottom: 0.75rem;
-  color: var(--muted);
-  font-size: 0.875rem;
-}
-
-.solar-today-placeholders {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.solar-today-placeholders > div {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1;
-  border-radius: 12px;
-  background: var(--space-black);
-  color: var(--white);
-}
-
 .solar-today-empty {
   display: grid;
   justify-items: center;
@@ -2599,14 +2598,6 @@ a {
 @media (max-width: 600px) {
   .data-image-strip {
     grid-auto-columns: 72%;
-  }
-
-  .solar-today-placeholders {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .solar-today-placeholders > div:nth-child(n + 4) {
-    display: none;
   }
 }
 
@@ -3002,6 +2993,22 @@ a {
   margin-bottom: 20px;
 }
 
+/* Focused by `NewsExplorer` when the page changes: keep it clear of the sticky header. */
+.news > h2 {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.news > h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.news-summary {
+  margin: -6px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .news-list {
   margin-top: 0;
   display: flex;
@@ -3071,6 +3078,7 @@ a {
   text-overflow: ellipsis;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 /* Same look as `.news-abstract`, but unclamped — a donation write-up has no
@@ -4238,7 +4246,8 @@ a {
   .card-grid-equal .info-card,
   .card-grid-equal .researcher-card {
     height: auto;
-    align-self: start;
+    align-self: stretch;
+    width: 100%;
   }
 
   .card-grid-equal .editable {
@@ -6536,11 +6545,13 @@ a.acknowledgments-card:focus-visible {
 }
 
 .cms-form-actions {
-  margin-top: 20px;
-  padding-bottom: 4px;
+  margin-top: 24px;
+  padding: 8px 0;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .nosotros-activity-form {
@@ -6549,11 +6560,13 @@ a.acknowledgments-card:focus-visible {
 }
 
 .nosotros-activity-form-actions {
-  margin-top: 20px;
-  padding-bottom: 4px;
+  margin-top: 24px;
+  padding: 8px 0;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .news-article-form {
@@ -6889,12 +6902,9 @@ a.acknowledgments-card:focus-visible {
      clearance here, that outline ran past this box's edge and got clipped by
      its scroll/overflow boundary instead of rendering in full. The negative
      horizontal margin cancels the padding back out so the fields still line
-     up exactly with the title/actions above and below, which don't scroll and
-     don't need it. Vertical padding gives the top focus outline and the
-     bottom action buttons breathing room when scrolled to the extremities,
-     preventing bottom button borders/shadows from being clipped by the
-     scroll container edge. */
-  padding: 4px 6px 14px;
+     up exactly with the title above. The action bar below owns the space
+     under the buttons, so this box does not add a second bottom gap. */
+  padding: 4px 6px 0;
   margin: 0 -6px;
 }
 
@@ -6921,15 +6931,39 @@ a.acknowledgments-card:focus-visible {
 }
 
 .modal-actions {
-  margin-top: 20px;
-  padding-bottom: 4px;
+  margin-top: 24px;
+  padding: 8px 0;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 
-/* A white bar pinned to the bottom of the dialog. The form scrolls underneath it. The shadow
-   continues that white down to the dialog edge, so field text cannot show past the buttons. */
+/* A white bar pinned to the bottom of every CMS dialog. The margin above it stays outside the
+   white, so the last field's border is fully visible instead of sliding under the buttons.
+   The padding below the buttons is the same on every one of these bars. */
+.modal
+  :is(
+    .modal-actions,
+    .cms-form-actions,
+    .news-article-form-actions,
+    .nosotros-activity-form-actions,
+    .confirm-dialog-actions,
+    .std-confirm-actions,
+    .mgmt-form-actions
+  ) {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--white);
+  margin-top: 20px;
+  margin-bottom: 0;
+  margin-left: -6px;
+  margin-right: -6px;
+  padding: 16px 6px 16px;
+}
+
 .modal
   :is(
     .modal-actions,
@@ -6938,17 +6972,10 @@ a.acknowledgments-card:focus-visible {
     .nosotros-activity-form-actions,
     .confirm-dialog-actions,
     .mgmt-form-actions
-  ) {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  background: var(--white);
-  box-shadow: 0 48px 0 var(--white);
-  margin-top: 12px;
-  margin-bottom: -14px;
-  margin-left: -6px;
-  margin-right: -6px;
-  padding: 14px 6px 18px;
+  )
+  .button {
+  height: 44px;
+  line-height: 1;
 }
 
 @media (max-width: 760px) {

@@ -1,6 +1,8 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl as render } from '@/app/lib/i18n/testing'
 
 import {
   RosacCharacteristicForm,

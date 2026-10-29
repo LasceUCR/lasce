@@ -2,13 +2,21 @@ import { screen, within } from '@testing-library/react'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import userEvent from '@testing-library/user-event'
+import type { ReactElement } from 'react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
+
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 
 import { PublicationsExplorer, type PublicationsExplorerProps } from './PublicationsExplorer'
 import { Default, Empty } from './PublicationsExplorer.stories'
 
 const defaultArgs = Default.args as PublicationsExplorerProps
 const emptyArgs = Empty.args as PublicationsExplorerProps
+
+/** The explorer reports outcomes with a toast, so it renders inside the app's providers. */
+function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
+}
 
 const navigation = vi.hoisted(() => ({ refresh: vi.fn(), editMode: false }))
 
@@ -71,7 +79,7 @@ async function selectResearchGroup(
 
 describe('PublicationsExplorer', () => {
   test('renders one card per publication it is given', () => {
-    renderWithIntl(<PublicationsExplorer {...defaultArgs} />)
+    render(<PublicationsExplorer {...defaultArgs} />)
 
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
       defaultArgs.publications.length,
@@ -79,7 +87,7 @@ describe('PublicationsExplorer', () => {
   })
 
   test('shows the total number of publications in the KPI', () => {
-    renderWithIntl(<PublicationsExplorer {...defaultArgs} />)
+    render(<PublicationsExplorer {...defaultArgs} />)
 
     const kpi = screen.getByLabelText('Cantidad de publicaciones')
 
@@ -89,7 +97,7 @@ describe('PublicationsExplorer', () => {
 
   test('narrows the list and KPI to publications matching the search query', async () => {
     const user = userEvent.setup()
-    renderWithIntl(<PublicationsExplorer {...defaultArgs} />)
+    render(<PublicationsExplorer {...defaultArgs} />)
 
     await user.type(screen.getByRole('searchbox', { name: 'Buscar publicaciones' }), 'ROSAC')
 
@@ -133,7 +141,7 @@ describe('PublicationsExplorer', () => {
       },
     ]
 
-    renderWithIntl(<PublicationsExplorer publications={publications} />)
+    render(<PublicationsExplorer publications={publications} />)
 
     await user.type(
       screen.getByRole('searchbox', { name: 'Buscar publicaciones' }),
@@ -146,7 +154,7 @@ describe('PublicationsExplorer', () => {
   })
 
   test('shows an empty state when there are no publications', () => {
-    renderWithIntl(<PublicationsExplorer {...emptyArgs} />)
+    render(<PublicationsExplorer {...emptyArgs} />)
 
     expect(screen.getByRole('heading', { name: 'Publicaciones recientes' })).toBeInTheDocument()
 
@@ -158,7 +166,7 @@ describe('PublicationsExplorer', () => {
   test('filters publications by LASCE', async () => {
     const user = userEvent.setup()
 
-    renderWithIntl(<PublicationsExplorer publications={filterPublications} />)
+    render(<PublicationsExplorer publications={filterPublications} />)
 
     await selectResearchGroup(user, 'LASCE')
 
@@ -180,7 +188,7 @@ describe('PublicationsExplorer', () => {
   test('filters publications by ROSAC', async () => {
     const user = userEvent.setup()
 
-    renderWithIntl(<PublicationsExplorer publications={filterPublications} />)
+    render(<PublicationsExplorer publications={filterPublications} />)
 
     await selectResearchGroup(user, 'ROSAC')
 
@@ -202,7 +210,7 @@ describe('PublicationsExplorer', () => {
   test('returns to all publications when the group filter is reset', async () => {
     const user = userEvent.setup()
 
-    renderWithIntl(<PublicationsExplorer publications={filterPublications} />)
+    render(<PublicationsExplorer publications={filterPublications} />)
 
     await selectResearchGroup(user, 'LASCE')
 
@@ -221,7 +229,7 @@ describe('PublicationsExplorer', () => {
   test('combines the group filter with the search query', async () => {
     const user = userEvent.setup()
 
-    renderWithIntl(<PublicationsExplorer publications={filterPublications} />)
+    render(<PublicationsExplorer publications={filterPublications} />)
 
     await selectResearchGroup(user, 'LASCE')
 
@@ -249,7 +257,7 @@ describe('PublicationsExplorer', () => {
       (publication) => publication.researchGroup === 'ROSAC',
     )
 
-    renderWithIntl(<PublicationsExplorer publications={otherGroupPublications} />)
+    render(<PublicationsExplorer publications={otherGroupPublications} />)
 
     await selectResearchGroup(user, 'LASCE')
 
@@ -262,7 +270,7 @@ describe('PublicationsExplorer', () => {
   test('shows a group-specific empty state when the search has no matches', async () => {
     const user = userEvent.setup()
 
-    renderWithIntl(<PublicationsExplorer {...defaultArgs} />)
+    render(<PublicationsExplorer {...defaultArgs} />)
 
     await selectResearchGroup(user, 'LASCE')
 
@@ -340,7 +348,7 @@ function requestBody(call = 0) {
 function renderEditor(publications = [bilingual, legacy], locale: 'es' | 'en' = 'es') {
   navigation.editMode = true
   vi.stubGlobal('fetch', fetchMock)
-  renderWithIntl(<PublicationsExplorer canCreate canDelete canEdit publications={publications} />, {
+  render(<PublicationsExplorer canCreate canDelete canEdit publications={publications} />, {
     locale,
   })
   return userEvent.setup()
@@ -365,7 +373,7 @@ afterEach(() => {
 
 describe('PublicationsExplorer: content language', () => {
   test('marks each card with the language of its text', () => {
-    renderWithIntl(<PublicationsExplorer publications={[bilingual, legacy]} />)
+    render(<PublicationsExplorer publications={[bilingual, legacy]} />)
 
     expect(screen.getByRole('heading', { name: 'Actividad solar' })).toHaveAttribute('lang', 'es')
     expect(screen.getByRole('heading', { name: 'Non-thermal electrons' })).toHaveAttribute(
@@ -375,7 +383,7 @@ describe('PublicationsExplorer: content language', () => {
   })
 
   test('tells visitors nothing about missing translations', () => {
-    renderWithIntl(<PublicationsExplorer publications={[legacy]} />)
+    render(<PublicationsExplorer publications={[legacy]} />)
 
     expect(screen.queryByText(/Sin versión en inglés/)).not.toBeInTheDocument()
   })
@@ -426,6 +434,7 @@ describe('PublicationsExplorer: saving', () => {
       researchGroup: 'LASCE',
     })
     expect(navigation.refresh).toHaveBeenCalled()
+    expect(await screen.findByText('Publicación agregada correctamente.')).toBeInTheDocument()
   })
 
   test('sends only the changed shared field, with the version, for a legacy record', async () => {
@@ -442,6 +451,7 @@ describe('PublicationsExplorer: saving', () => {
     )
     expect(requestBody()).toEqual({ version: VERSION, DOI: '10.5555/fixed' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(await screen.findByText('Publicación actualizada correctamente.')).toBeInTheDocument()
   })
 
   test('sends both languages and the explicit confirmation for a content edit', async () => {
@@ -593,7 +603,7 @@ describe('PublicationsExplorer: saving', () => {
     expect(labelled('Revista/Publicación')).toHaveValue('Nature')
   })
 
-  test('reports a failed delete outside the editor', async () => {
+  test('reports a failed delete in a toast outside the editor', async () => {
     const user = renderEditor()
     respond(403, { error: 'No tiene permisos para modificar este contenido.' })
 
@@ -601,9 +611,9 @@ describe('PublicationsExplorer: saving', () => {
     const dialog = screen.getByRole('dialog', { name: 'Eliminar publicación' })
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'No tiene permisos para modificar este contenido.',
-    )
+    expect(
+      await screen.findByText('No tiene permisos para modificar este contenido.'),
+    ).toBeInTheDocument()
   })
 })
 
@@ -676,6 +686,7 @@ describe('PublicationsExplorer: closing and deleting', () => {
       `/api/publicaciones/${bilingual.slug}`,
       expect.objectContaining({ method: 'DELETE' }),
     )
+    expect(await screen.findByText('Publicación eliminada correctamente.')).toBeInTheDocument()
   })
 })
 
@@ -702,9 +713,9 @@ describe('PublicationsExplorer: in English, the language the site is shown in', 
     )
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'You do not have permission to modify this content.',
-    )
+    expect(
+      await screen.findByText('You do not have permission to modify this content.'),
+    ).toBeInTheDocument()
   })
 
   test('explains a concurrent change in English and offers to reload', async () => {
@@ -737,7 +748,7 @@ describe('PublicationsExplorer: in English, the language the site is shown in', 
 
 describe('PublicationsExplorer: the page in English', () => {
   test('shows the search, the filter, the count and the heading in English', () => {
-    renderWithIntl(<PublicationsExplorer publications={[bilingual, legacy]} />, { locale: 'en' })
+    render(<PublicationsExplorer publications={[bilingual, legacy]} />, { locale: 'en' })
 
     expect(screen.getByRole('searchbox', { name: 'Search publications' })).toHaveAttribute(
       'placeholder',
@@ -753,13 +764,13 @@ describe('PublicationsExplorer: the page in English', () => {
   })
 
   test('counts one publication in the singular, in both languages', () => {
-    const { unmount } = renderWithIntl(<PublicationsExplorer publications={[bilingual]} />)
+    const { unmount } = render(<PublicationsExplorer publications={[bilingual]} />)
     expect(screen.getByLabelText('Cantidad de publicaciones')).toHaveTextContent(
       '1publicación en total',
     )
     unmount()
 
-    renderWithIntl(<PublicationsExplorer publications={[bilingual]} />, { locale: 'en' })
+    render(<PublicationsExplorer publications={[bilingual]} />, { locale: 'en' })
     expect(screen.getByLabelText('Number of publications')).toHaveTextContent(
       '1publication in total',
     )
@@ -767,7 +778,7 @@ describe('PublicationsExplorer: the page in English', () => {
 
   test('explains an empty search in English', async () => {
     const user = userEvent.setup()
-    renderWithIntl(<PublicationsExplorer publications={[bilingual, legacy]} />, { locale: 'en' })
+    render(<PublicationsExplorer publications={[bilingual, legacy]} />, { locale: 'en' })
 
     await user.type(screen.getByRole('searchbox', { name: 'Search publications' }), 'zzz')
 
@@ -794,13 +805,13 @@ describe('PublicationsExplorer: adding with nothing listed', () => {
 
   test('does not offer to add without the create permission', () => {
     navigation.editMode = true
-    renderWithIntl(<PublicationsExplorer canEdit publications={[]} />)
+    render(<PublicationsExplorer canEdit publications={[]} />)
 
     expect(screen.queryByRole('button', { name: 'Agregar publicación' })).not.toBeInTheDocument()
   })
 
   test('does not offer to add outside edit mode', () => {
-    renderWithIntl(<PublicationsExplorer canCreate publications={[]} />)
+    render(<PublicationsExplorer canCreate publications={[]} />)
 
     expect(screen.queryByRole('button', { name: 'Agregar publicación' })).not.toBeInTheDocument()
   })

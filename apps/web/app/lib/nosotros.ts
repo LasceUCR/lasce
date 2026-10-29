@@ -550,9 +550,10 @@ function translationColumns(content: NosotrosActivityCreateInput['content']) {
 }
 
 /**
- * Loads the activity flashcards from Postgres, in display order. Ordered by
+ * Loads the activity flashcards from Postgres, newest first. Ordered by
  * `createdAt` rather than `modifiedAt` on purpose — editing a card's text
- * updates `modifiedAt` too, and that must not also move the card.
+ * updates `modifiedAt` too, and that must not also move the card. A card just
+ * created is the first one.
  *
  * `title` and `description` are in `locale` when the card has that translation, and fall back to
  * the base text otherwise; `contentLocale` says which one was used. Pass `includeEditingData`
@@ -563,7 +564,7 @@ export async function getNosotrosActivities(
   { includeEditingData = false }: { includeEditingData?: boolean } = {},
 ): Promise<NosotrosActivityRecord[]> {
   const rows = await prisma.nosotrosActivity.findMany({
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
     include: activityInclude,
   })
   return rows.map((row) => toActivityRecord(row, locale, includeEditingData))
@@ -585,7 +586,7 @@ async function writeActivity(
 /**
  * Creates a new activity flashcard in every language at once, authored by the admin who
  * submitted it. `createdAt` defaults to now, which — since the list is ordered by it — puts the
- * new card at the end, same place `AddItemCard` prompted from. A create has no expected failure.
+ * new card first, just after `AddItemCard`. A create has no expected failure.
  */
 export async function createNosotrosActivity(
   input: NosotrosActivityCreateInput,
@@ -791,8 +792,8 @@ export async function getNosotrosResearchers(
 /**
  * Creates a new Nosotros researcher profile in every language at once, authored by the admin
  * who submitted it. `createdAt` defaults to now, which — since the list is ordered by it — puts
- * the new profile at the end, same place `AddItemCard` prompted from. A create has no expected
- * failure.
+ * the new profile at the end. The add card itself stays at the front of the gallery. A create
+ * has no expected failure.
  */
 export async function createNosotrosResearcher(
   input: NosotrosResearcherCreateInput,

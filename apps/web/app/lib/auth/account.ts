@@ -143,23 +143,12 @@ export function notifyAccountChanged(): void {
   for (const listener of listeners) listener()
 }
 
-export const accountMenuCopy = {
-  signIn: 'Ingresar',
-  account: 'Mi cuenta',
-  administracion: 'Administración',
-  greeting: (fullName: string) => `Hola, ${shortName(fullName)}`,
-  signOut: 'Cerrar sesión',
-  signingOut: 'Cerrando sesión...',
-} as const
-
-/** The confirmation asked before a session is ended. */
-export const signOutDialogCopy = {
-  title: '¿Cerrar sesión?',
-  body: 'Tu sesión en este navegador terminará y tendrás que volver a ingresar.',
-  confirm: 'Cerrar sesión',
-  cancel: 'Cancelar',
-} as const
-
+/**
+ * The account menu, its mobile equivalent and the sign-out confirmation read their copy from the
+ * `account` catalogue namespace (`useTranslations('account')`) instead of this module, so it
+ * follows the site's language. `ROLE_LABELS` below stays Spanish-only: it also backs the
+ * `/administracion/usuarios` role list and the `/cuenta` page, both still untranslated.
+ */
 export const ROLE_LABELS: Record<UserRole, string> = {
   VISITOR: 'Visitante',
   ASSISTANT: 'Asistente',
