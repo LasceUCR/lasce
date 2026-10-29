@@ -1487,7 +1487,8 @@
         "unavailableNote": "Este producto GOES y sus canales aún están pendientes de integración.",
         "products": {
           "ehis": {
-            "name": "Iones pesados energéticos"
+            "name": "Iones pesados energéticos",
+            "availabilityNote": "Seleccione el grupo de masa y la banda de energía. El archivo nivel 1b reporta un flujo cada 5 minutos y NOAA publica cada día con aproximadamente un día de retraso."
           },
           "mpsl": {
             "name": "Electrones y protones magnetosféricos: baja energía"
@@ -1549,6 +1550,16 @@
         "proton": "Protones",
         "label": "{species}: telescopio {telescope}, banda {band}"
       },
+      "ehis": {
+        "groups": {
+          "H": "Hidrógeno (H)",
+          "He": "Helio (He)",
+          "CNO": "Carbono-nitrógeno-oxígeno (CNO)",
+          "NeS": "Neón-azufre (Ne-S)",
+          "ClNi": "Cloro-níquel (Cl-Ni)"
+        },
+        "label": "{group}: banda de energía {band}"
+      },
       "sgps": {
         "integral": "> 500 MeV (integral)",
         "differential": "{channel} (diferencial)",
@@ -1566,6 +1577,7 @@
       "relativeIntensity": "intensidad relativa",
       "pfu": "pfu",
       "protonUnit": "protones/(cm²·s·sr·keV)",
+      "ehisUnit": "partículas/(cm²·s·sr·MeV/nucleón)",
       "image": "imagen"
     },
     "today": {
@@ -1615,7 +1627,7 @@
       "endTimeLabel": "Hora de fin (UTC)",
       "submitLoading": "Consultando…",
       "submit": "Consultar datos",
-      "noticeGoes": "Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos. EHIS y MPSL están pendientes de integración.",
+      "noticeGoes": "Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos. MPSL está pendiente de integración.",
       "noticeRosac": "ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están definidos; todos los resultados de esta fuente son simulados y están rotulados como tal.",
       "permissionsTitle": "Permisos de consulta y descarga",
       "permissionsText": "Puede consultar información histórica de GOES sin una cuenta. Para descargar, necesita una cuenta e iniciar sesión. Las imágenes de las gráficas se pueden descargar para cualquier fuente; los datos en CSV de ROSAC están disponibles para toda cuenta, y los de GOES requieren un permiso de descarga de datos GOES. Las imágenes solares SUVI no se pueden descargar desde esta plataforma. Cada enlace de descarga vence en 30 minutos.",

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.models.jobs import (
+    EhisPipelinePayload,
     ExisPipelinePayload,
     IngestReadingsPayload,
     JobPayload,
@@ -18,6 +19,7 @@ from app.models.jobs import (
     SuviPipelinePayload,
 )
 from app.processors import (
+    ehis_pipeline,
     exis_pipeline,
     ingest_readings,
     mag_pipeline,
@@ -48,6 +50,7 @@ REGISTRY: dict[str, JobHandler] = {
     "suvi-pipeline": JobHandler(SuviPipelinePayload, suvi_pipeline.run),
     "exis-pipeline": JobHandler(ExisPipelinePayload, exis_pipeline.run),
     "mag-pipeline": JobHandler(MagPipelinePayload, mag_pipeline.run),
+    "ehis-pipeline": JobHandler(EhisPipelinePayload, ehis_pipeline.run),
 }
 
 
