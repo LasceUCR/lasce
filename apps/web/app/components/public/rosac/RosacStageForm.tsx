@@ -34,7 +34,8 @@ import {
   type ContentDraft,
 } from '@/app/lib/i18n/content/form'
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
-import { rosacStageContent, type RosacStageField, type RosacStageInput } from '@/app/lib/rosac'
+import { rosacStageContent } from '@/app/lib/rosac-editor-content'
+import type { RosacStageField, RosacStageInput } from '@/app/lib/rosac'
 import type { ConstructionImage, ConstructionStage } from '@/app/lib/rosac-construction'
 
 export type RosacStageFormBody = RosacStageInput
