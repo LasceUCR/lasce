@@ -85,4 +85,38 @@ describe('UserRoleChangeDialog', () => {
     render(<UserRoleChangeDialog {...(SaveSeveralRoles.args as UserRoleChangeDialogProps)} />)
     expect(screen.getByText(/Visitante y Asistente/)).toBeInTheDocument()
   })
+
+  test('uses the permissions text it is given and reports a failure instead of showing it', async () => {
+    const user = userEvent.setup()
+    const onError = vi.fn()
+    render(
+      <UserRoleChangeDialog
+        {...(SavePermissions.args as UserRoleChangeDialogProps)}
+        permissionsCopy={{
+          title: 'Confirm permission change',
+          question: 'Save the permissions of Assistant?',
+          summary: 'It applies right away.',
+          confirm: 'Yes, save permissions',
+          cancel: 'No, cancel',
+          savingStatus: 'Saving permission change…',
+          savingButton: 'Saving…',
+          reload: 'Reload page',
+          unknownError: 'We could not confirm the change.',
+        }}
+        onError={onError}
+        onConfirm={async () => {
+          throw new Error('Unavailable')
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Confirm permission change' })).toBeInTheDocument()
+    expect(screen.getByText('Save the permissions of Assistant?')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Yes, save permissions' }))
+
+    expect(onError).toHaveBeenCalledWith('We could not confirm the change.')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reload page' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'No, cancel' })).toBeEnabled()
+  })
 })
