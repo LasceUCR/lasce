@@ -1140,4 +1140,36 @@ describe('NosotrosPage', () => {
     expect(screen.getByText('Principal investigator')).toBeInTheDocument()
     expect(screen.getAllByText('Collaborating researcher').length).toBeGreaterThan(0)
   })
+
+  test('renders researcher editor controls and delete confirmation in English when edit mode is on', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(
+      <ToastProvider>
+        <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+          <NosotrosPage {...getNosotrosPageEnglishProps()} {...adminGrants} />
+        </EditModeContext.Provider>
+      </ToastProvider>,
+      { locale: 'en' },
+    )
+
+    const researchers = screen.getByRole('region', { name: /LASCE Researchers/i })
+    expect(within(researchers).getByRole('button', { name: 'Add researcher' })).toBeInTheDocument()
+    const [firstEditButton] = within(researchers).getAllByRole('button', { name: /^Edit / })
+    const [firstDeleteButton] = within(researchers).getAllByRole('button', { name: /^Delete / })
+    expect(firstEditButton).toBeInTheDocument()
+    expect(firstDeleteButton).toBeInTheDocument()
+
+    await user.click(firstDeleteButton as HTMLElement)
+    const deleteDialog = screen.getByRole('dialog', { name: 'Delete researcher' })
+    expect(deleteDialog).toBeInTheDocument()
+    expect(within(deleteDialog).getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(within(deleteDialog).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    await user.click(within(deleteDialog).getByRole('button', { name: 'Cancel' }))
+
+    await user.click(firstEditButton as HTMLElement)
+    const editDialog = screen.getByRole('dialog', { name: 'Edit researcher' })
+    expect(editDialog).toBeInTheDocument()
+    expect(within(editDialog).getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(within(editDialog).getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+  })
 })
