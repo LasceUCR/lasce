@@ -23,7 +23,9 @@ describe('decideDownload', () => {
     ['GOES', 'GEOF', 'csv', VISITOR, 'forbidden'],
     ['GOES', 'GEOF', 'csv', GOES_HOLDER, 'allowed'],
     ['GOES', 'MPSH', 'png', VISITOR, 'allowed'],
-    ['GOES', 'SGPS', 'csv', GOES_HOLDER, 'unsupported'],
+    ['GOES', 'SGPS', 'csv', VISITOR, 'forbidden'],
+    ['GOES', 'SGPS', 'csv', GOES_HOLDER, 'allowed'],
+    ['GOES', 'EHIS', 'csv', GOES_HOLDER, 'allowed'],
     ['GOES', 'Fe171', 'png', GOES_HOLDER, 'unsupported'],
     ['GOES', 'Fe171', 'csv', GOES_HOLDER, 'unsupported'],
     ['ROSAC', 'ROSAC-I1', 'csv', VISITOR, 'allowed'],
@@ -56,9 +58,10 @@ describe('getDownloadOptions', () => {
     ])
   })
 
-  test('offers only the image for instruments without a data export', () => {
+  test('offers the image and the data export for SEISS', () => {
     expect(getDownloadOptions(target('GOES', 'MPSH'), GOES_HOLDER).map((o) => o.format)).toEqual([
       'png',
+      'csv',
     ])
   })
 

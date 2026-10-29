@@ -1495,7 +1495,7 @@
           },
           "mpsh": {
             "name": "Electrones y protones magnetosféricos: energía media y alta",
-            "availabilityNote": "Seleccione el telescopio y la banda del archivo nivel 1b. Cada telescopio conserva su dirección de observación."
+            "availabilityNote": "Seleccione el telescopio y la banda. NOAA publica cada día promedios de 1 minuto (nivel 2) con aproximadamente un día de retraso; cada telescopio conserva su dirección de observación."
           },
           "sgps": {
             "name": "Protones solares y galácticos",

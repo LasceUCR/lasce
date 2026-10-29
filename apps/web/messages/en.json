@@ -1495,7 +1495,7 @@
           },
           "mpsh": {
             "name": "Magnetospheric Electrons and Protons: medium and high energy",
-            "availabilityNote": "Select the telescope and the band from the level 1b file. Each telescope keeps its own viewing direction."
+            "availabilityNote": "Select the telescope and the band. NOAA publishes 1-minute averages (level 2) daily with approximately a one-day delay; each telescope keeps its own viewing direction."
           },
           "sgps": {
             "name": "Solar and Galactic Protons",

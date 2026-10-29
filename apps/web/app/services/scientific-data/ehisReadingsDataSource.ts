@@ -19,3 +19,6 @@ const ehisReadings = createGoesReadings({
 })
 
 export const queryEhisReadings = ehisReadings.query
+
+/** Every stored EHIS reading in the window, for the CSV export; never the chart. */
+export const queryEhisReadingsFull = ehisReadings.queryFull
