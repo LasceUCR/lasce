@@ -11,10 +11,9 @@ const videoArgs = Video.args as MediaLightboxProps
 
 function renderLightbox(overrides: Partial<MediaLightboxProps> = {}, locale?: Locale) {
   const handlers = { onClose: vi.fn(), onPrevious: vi.fn(), onNext: vi.fn() }
-  const view = renderWithIntl(
-    <MediaLightbox {...photographArgs} {...handlers} {...overrides} />,
-    { locale },
-  )
+  const view = renderWithIntl(<MediaLightbox {...photographArgs} {...handlers} {...overrides} />, {
+    locale,
+  })
 
   return { ...handlers, ...view }
 }

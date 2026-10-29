@@ -400,7 +400,7 @@ for (const album of galleryAlbumList) {
     await albumLink.click()
 
     await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: album.title })).toBeVisible()
     await expect(
       page.getByRole('button', { name: /^Ver a tama\u00f1o completo:/ }).first(),
     ).toBeVisible()
