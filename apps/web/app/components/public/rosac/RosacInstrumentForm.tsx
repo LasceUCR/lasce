@@ -31,11 +31,8 @@ import {
   type ContentDraft,
 } from '@/app/lib/i18n/content/form'
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
-import {
-  rosacInstrumentContent,
-  type RosacInstrumentField,
-  type RosacInstrumentInput,
-} from '@/app/lib/rosac'
+import { rosacInstrumentContent, type RosacInstrumentField } from '@/app/lib/rosac-editor-content'
+import type { RosacInstrumentInput } from '@/app/lib/rosac'
 import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 import { rosacInstruments } from '@/app/lib/scientific-data'
 

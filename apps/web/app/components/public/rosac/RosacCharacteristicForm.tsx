@@ -33,9 +33,8 @@ import {
   rosacCharacteristicContent,
   type RosacCardIcon,
   type RosacCharacteristicField,
-  type RosacCharacteristicItem,
-  type RosacCharacteristicInput,
-} from '@/app/lib/rosac'
+} from '@/app/lib/rosac-editor-content'
+import type { RosacCharacteristicInput, RosacCharacteristicItem } from '@/app/lib/rosac'
 
 export type RosacCharacteristicFormBody = RosacCharacteristicInput
 
