@@ -36,11 +36,14 @@ const shared = {
 }
 
 function create(overrides: Record<string, unknown> = {}) {
-  return createPublication(publicationCreateSchema.parse({ content, ...shared, ...overrides }))
+  return createPublication(
+    publicationCreateSchema.parse({ content, ...shared, ...overrides }),
+    actor,
+  )
 }
 
 function update(id: string, body: Record<string, unknown>) {
-  return updatePublication(id, publicationUpdateSchema.parse(body))
+  return updatePublication(id, publicationUpdateSchema.parse(body), actor)
 }
 
 function stored(
@@ -136,6 +139,8 @@ afterAll(async () => {
   await prisma.researchAuthor.deleteMany({ where: { name: { contains: RUN } } })
   await prisma.$disconnect()
 })
+
+const actor = { id: 'user-1' }
 
 describe('creating', () => {
   test('stores both languages at once: Spanish on the record, English as a translation', async () => {
@@ -404,7 +409,7 @@ describe('integrity', () => {
   test('deleting a publication removes its translations and author links, not its authors', async () => {
     const publication = stored(await create())
 
-    expect(await deletePublication(publication.slug)).toBe(true)
+    expect(await deletePublication(publication.slug, actor)).toBe(true)
     expect(
       await prisma.researchTranslation.count({ where: { researchId: publication.slug } }),
     ).toBe(0)
@@ -414,15 +419,15 @@ describe('integrity', () => {
     expect(
       await prisma.researchAuthor.findUnique({ where: { name: `Autora ${RUN}` } }),
     ).not.toBeNull()
-    expect(await deletePublication(publication.slug)).toBe(false)
+    expect(await deletePublication(publication.slug, actor)).toBe(false)
   })
 
   test('two concurrent deletes of one publication: one deletes it, the other finds nothing', async () => {
     const publication = stored(await create())
 
     const results = await Promise.all([
-      deletePublication(publication.slug),
-      deletePublication(publication.slug),
+      deletePublication(publication.slug, actor),
+      deletePublication(publication.slug, actor),
     ])
 
     expect([...results].sort()).toEqual([false, true])

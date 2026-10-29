@@ -34,7 +34,7 @@ With the default matrix:
 | Anonymous     | Redirect to `/acceso?next=/administracion&reason=auth` |
 | Visitante     | Acceso denegado, no menu                               |
 | Asistente     | Resumen, Descargas, Infraestructura                    |
-| Administrador | all five                                               |
+| Administrador | all six                                                |
 
 A visitor holds `download_resources` by default, but the panel gate comes first, so that grant
 does not open `/administracion/descargas` for them. Changing the matrix on

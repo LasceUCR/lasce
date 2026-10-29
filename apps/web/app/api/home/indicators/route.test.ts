@@ -67,10 +67,13 @@ describe('PUT /api/home/indicators', () => {
     const { response, body } = await put({ ids: [ID_B, ID_A] })
 
     expect(response.status).toBe(200)
-    expect(mocks.reorderIndicators).toHaveBeenCalledWith({
-      ids: [ID_B, ID_A],
-      positionField: 'position',
-    })
+    expect(mocks.reorderIndicators).toHaveBeenCalledWith(
+      {
+        ids: [ID_B, ID_A],
+        positionField: 'position',
+      },
+      expect.anything(),
+    )
     expect(body).toEqual({ ids: [ID_B, ID_A] })
   })
 

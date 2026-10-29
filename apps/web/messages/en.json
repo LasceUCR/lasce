@@ -1489,7 +1489,8 @@
         "unavailableNote": "This GOES product and its channels are still pending integration.",
         "products": {
           "ehis": {
-            "name": "Energetic Heavy Ions"
+            "name": "Energetic Heavy Ions",
+            "availabilityNote": "Select the mass group and energy band. The level 1b file reports flux every 5 minutes and NOAA publishes daily with approximately a one-day delay."
           },
           "mpsl": {
             "name": "Magnetospheric Electrons and Protons: low energy"
@@ -1551,6 +1552,16 @@
         "proton": "Protons",
         "label": "{species}: telescope {telescope}, band {band}"
       },
+      "ehis": {
+        "groups": {
+          "H": "Hydrogen (H)",
+          "He": "Helium (He)",
+          "CNO": "Carbon-nitrogen-oxygen (CNO)",
+          "NeS": "Neon-sulfur (Ne-S)",
+          "ClNi": "Chlorine-nickel (Cl-Ni)"
+        },
+        "label": "{group}: energy band {band}"
+      },
       "sgps": {
         "integral": "> 500 MeV (integral)",
         "differential": "{channel} (differential)",
@@ -1568,6 +1579,7 @@
       "relativeIntensity": "relative intensity",
       "pfu": "pfu",
       "protonUnit": "protons/(cm²·s·sr·keV)",
+      "ehisUnit": "particles/(cm²·s·sr·MeV/nucleon)",
       "image": "image"
     },
     "today": {
@@ -1617,7 +1629,7 @@
       "endTimeLabel": "End time (UTC)",
       "submitLoading": "Querying…",
       "submit": "Query data",
-      "noticeGoes": "Source: GOES. Availability depends on the product and the date; a historical query can take several minutes. EHIS and MPSL are still pending integration.",
+      "noticeGoes": "Source: GOES. Availability depends on the product and the date; a historical query can take several minutes. MPSL is still pending integration.",
       "noticeRosac": "ROSAC is an integration preview. Its instruments and real data are not yet defined; every result from this source is simulated and labelled as such.",
       "permissionsTitle": "Query and download permissions",
       "permissionsText": "You can query GOES historical information without an account. Downloading requires an account and signing in. Chart images can be downloaded for any source; ROSAC's CSV data is available to every account, and GOES's requires a GOES data download permission. SUVI solar images cannot be downloaded from this platform. Every download link expires after 30 minutes.",
@@ -1702,7 +1714,8 @@
         "descargas": "Downloads",
         "usuarios": "Users",
         "permisos": "Permissions",
-        "infraestructura": "Infrastructure"
+        "infraestructura": "Infrastructure",
+        "auditoria": "Audit trail"
       }
     },
     "summary": {
@@ -1783,6 +1796,87 @@
         "savingButton": "Saving…",
         "reload": "Reload page"
       }
+    },
+    "audit": {
+      "metaTitle": "Audit trail | Administration | LASCE",
+      "title": "Audit trail",
+      "description": "Review who made each administrative change in the portal, and when.",
+      "filters": {
+        "label": "Audit trail filters",
+        "from": "From",
+        "to": "To",
+        "actor": "Person",
+        "entityType": "Item type",
+        "action": "Action",
+        "all": "All",
+        "allActors": "Everyone",
+        "allEntityTypes": "All types",
+        "allActions": "All actions",
+        "apply": "Filter",
+        "clear": "Clear filters"
+      },
+      "table": {
+        "label": "Audit events",
+        "date": "Date and time",
+        "actor": "Person",
+        "action": "Action",
+        "summary": "Summary"
+      },
+      "empty": "No audit events have been recorded yet.",
+      "emptyFiltered": "No event matches the filters.",
+      "results": "{count, plural, one {# event} other {# events}}",
+      "paginationLabel": "Audit trail pages",
+      "actors": {
+        "system": "System",
+        "worker": "Worker",
+        "deletedUser": "Deleted account"
+      }
+    },
+    "auditSummary": {
+      "noRole": "No role",
+      "unknownAccount": "an account",
+      "events": {
+        "news_create": "News article added: {name}",
+        "news_update": "News article updated: {name}",
+        "news_delete": "News article deleted: {name}",
+        "publication_create": "Publication added: {name}",
+        "publication_update": "Publication updated: {name}",
+        "publication_delete": "Publication deleted: {name}",
+        "research_area_create": "Research area added: {name}",
+        "research_area_update": "Research area updated: {name}",
+        "research_area_delete": "Research area deleted: {name}",
+        "collaboration_create": "Collaboration added: {name}",
+        "collaboration_update": "Collaboration updated: {name}",
+        "collaboration_delete": "Collaboration deleted: {name}",
+        "contact_channel_create": "Contact channel added: {name}",
+        "contact_channel_update": "Contact channel updated: {name}",
+        "contact_channel_delete": "Contact channel deleted: {name}",
+        "nosotros_activity_create": "Nosotros activity added: {name}",
+        "nosotros_activity_update": "Nosotros activity updated: {name}",
+        "nosotros_activity_delete": "Nosotros activity deleted: {name}",
+        "nosotros_researcher_create": "Nosotros researcher added: {name}",
+        "nosotros_researcher_update": "Nosotros researcher updated: {name}",
+        "nosotros_researcher_delete": "Nosotros researcher deleted: {name}",
+        "rosac_researcher_create": "ROSAC researcher added: {name}",
+        "rosac_researcher_update": "ROSAC researcher updated: {name}",
+        "rosac_researcher_delete": "ROSAC researcher deleted: {name}",
+        "gallery_album_create": "Gallery album added: {name}",
+        "gallery_album_update": "Gallery album updated: {name}",
+        "gallery_album_delete": "Gallery album deleted: {name}",
+        "gallery_sub_album_create": "Gallery sub-album added: {name}",
+        "gallery_sub_album_update": "Gallery sub-album updated: {name}",
+        "gallery_sub_album_delete": "Gallery sub-album deleted: {name}",
+        "gallery_media_create": "Gallery file added: {name}",
+        "gallery_media_update": "Gallery file updated: {name}",
+        "gallery_media_delete": "Gallery file deleted: {name}",
+        "home_hero_update": "Home banner updated: {name}",
+        "geomagnetic_index_update": "Geomagnetic index updated: {name}",
+        "geomagnetic_index_reorder": "Geomagnetic index order updated",
+        "space_weather_section_update": "Space weather card updated: {name}",
+        "solar_physics_section_update": "Solar physics section updated: {name}",
+        "role_permissions_update": "Permissions updated for the {role} role",
+        "user_role_change": "{name}'s role changed from {previous} to {next}"
+      }
     }
   },
   "access": {
@@ -1826,6 +1920,11 @@
         "label": "Configure permissions",
         "description": "View and change the permissions of each role.",
         "denied": "You are not authorized to configure role permissions."
+      },
+      "view_audit_log": {
+        "label": "View the audit trail",
+        "description": "Review the log of the portal's administrative actions.",
+        "denied": "You are not authorized to view the audit trail."
       }
     },
     "accessDenied": {
