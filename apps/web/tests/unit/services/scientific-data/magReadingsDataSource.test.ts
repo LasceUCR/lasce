@@ -67,9 +67,7 @@ describe('queryMagReadings', () => {
         { timestamp: '2026-10-14T00:01:00Z', value: -37.8 },
       ],
     })
-    expect(result.origin.provider).toContain('MAG')
-    expect(result.origin.notice).toContain('calidad degradada')
-    expect(result.origin.notice).not.toContain('negativos')
+    expect(result.origin.dataset).toBe('mag')
   })
 
   test('announces sampling for a full day of 1-minute readings', async () => {
@@ -81,7 +79,7 @@ describe('queryMagReadings', () => {
     const result = await queryMagReadings(query)
 
     expect(result.points).toHaveLength(360)
-    expect(result.origin.notice).toContain('360 observaciones distribuidas uniformemente')
+    expect(result.origin.sampledPoints).toBe(360)
   })
 
   test('returns an empty series for a day that was never ingested', async () => {
@@ -116,7 +114,7 @@ describe('queryMagReadingsFull', () => {
     expect(sql).not.toContain('ROW_NUMBER')
     expect(params).toMatchObject({ product: 'GEOF', channel: 'total' })
     expect(result.points).toHaveLength(2)
-    expect(result.origin.notice).toContain('sin muestreo')
+    expect(result.origin.resolution).toBe('full')
   })
 
   test('refuses GOES products that are not MAG', async () => {

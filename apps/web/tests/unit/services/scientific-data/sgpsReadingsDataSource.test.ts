@@ -67,8 +67,7 @@ describe('querySgpsReadings', () => {
         { timestamp: '2026-10-27T00:01:00Z', value: 0.0031 },
       ],
     })
-    expect(result.origin.provider).toContain('SGPS')
-    expect(result.origin.notice).toContain('sin muestras válidas')
+    expect(result.origin.dataset).toBe('sgps')
   })
 
   test('announces sampling for a full day of 1-minute readings', async () => {
@@ -80,7 +79,7 @@ describe('querySgpsReadings', () => {
     const result = await querySgpsReadings(query)
 
     expect(result.points).toHaveLength(360)
-    expect(result.origin.notice).toContain('distribuidas uniformemente')
+    expect(result.origin.sampledPoints).toBe(360)
   })
 
   test('returns an empty series for a day that was never ingested', async () => {

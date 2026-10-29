@@ -13,20 +13,23 @@ export const Default: Story = {
       {
         timestamp: '2026-09-10T08:30:00Z',
         imageUrl: '/images/decorative/Solar-Flare.png',
-        alt: 'Imagen solar de demostración del componente',
       },
     ],
+    productName: 'Imágenes solares: 171 Å (Fe171)',
+    satellite: 19,
   },
 }
 
 export const UnavailableImage: Story = {
   args: {
+    ...Default.args,
     images: [{ ...Default.args!.images![0]!, imageUrl: '/unavailable-solar-image.png' }],
   },
 }
 
 export const MultipleImages: Story = {
   args: {
+    ...Default.args,
     images: [
       Default.args!.images![0]!,
       { ...Default.args!.images![0]!, timestamp: '2026-09-10T08:45:00Z' },

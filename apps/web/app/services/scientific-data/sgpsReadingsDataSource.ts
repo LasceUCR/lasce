@@ -10,12 +10,7 @@ const sgpsReadings = createGoesReadings({
   measurement: 'sgps_flux',
   products: ['SGPS'],
   unsupportedMessage: 'The SGPS readings only accept SGPS',
-  provider:
-    'CITIC-UCR — protones solares y galácticos SEISS SGPS nivel 2 de NOAA (promedios de 1 minuto)',
-  notice:
-    'Promedios de 1 minuto del sensor SGPS (nivel 2) ingeridos diariamente por CITIC-UCR; NOAA publica cada día con aproximadamente un día de retraso. Se excluyen valores de relleno y promedios sin muestras válidas; se conservan los que incluyen muestras marcadas por los controles de calidad del instrumento.',
-  fullNotice:
-    'Promedios de 1 minuto del sensor SGPS (nivel 2) ingeridos diariamente por CITIC-UCR, sin muestreo: incluye todas las observaciones válidas del intervalo.',
+  dataset: 'sgps',
 })
 
 export const querySgpsReadings = sgpsReadings.query
