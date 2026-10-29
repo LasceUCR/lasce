@@ -6,6 +6,11 @@
   "shell": {
     "skipToContent": "Skip to main content"
   },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The address you entered does not match any available page. Check the address or return to the home page.",
+    "kicker": "Error 404"
+  },
   "nav": {
     "goHome": "Go to the home page",
     "mainLabel": "Main navigation",
