@@ -17,26 +17,18 @@ import { UnsupportedScientificQueryError } from '@/app/services/scientific-data/
 
 import { validateResourceDownload, type DownloadAccessDenied } from './downloadAccess'
 import { storeDownload } from './downloadStorage'
-import { EXPORTERS } from './exporters'
+import { EXPORTERS, exportCopy, type ExportCopy } from './exporters'
 import { findDownloadLoader } from './loaders'
 
+/** A refusal is a reason only; the Server Action words it in the visitor's language. */
 export type ResourceDownloadResult =
   | { ok: true; url: string; filename: string; expiresAt: string }
   | DownloadAccessDenied
-  | { ok: false; reason: 'pending' | 'empty'; message: string }
+  | { ok: false; reason: 'pending' | 'empty' }
 
-const PENDING: ResourceDownloadResult = {
-  ok: false,
-  reason: 'pending',
-  message:
-    'La consulta todavía se está procesando. Espere a que termine e intente la descarga nuevamente.',
-}
+const PENDING: ResourceDownloadResult = { ok: false, reason: 'pending' }
 
-const EMPTY: ResourceDownloadResult = {
-  ok: false,
-  reason: 'empty',
-  message: 'No hay datos para descargar con los criterios seleccionados.',
-}
+const EMPTY: ResourceDownloadResult = { ok: false, reason: 'empty' }
 
 function hasRows(result: ScientificDataResult) {
   switch (result.visualization) {
@@ -71,6 +63,8 @@ export interface CreateResourceDownloadInput {
   userId: string
   grants: Iterable<Permission>
   request: unknown
+  /** The language the file is written in; Spanish when omitted. */
+  copy?: ExportCopy
   now?: Date
 }
 
@@ -86,6 +80,7 @@ export async function createResourceDownload({
   userId,
   grants,
   request,
+  copy = exportCopy(),
   now = new Date(),
 }: CreateResourceDownloadInput): Promise<ResourceDownloadResult> {
   const access = validateResourceDownload(request, grants, now)
@@ -104,7 +99,7 @@ export async function createResourceDownload({
   if (!hasRows(response)) return EMPTY
 
   const definition = DOWNLOAD_FORMAT_DEFINITIONS[format]
-  const file = await EXPORTERS[format].export(response)
+  const file = await EXPORTERS[format].export(response, copy)
   const objectKey = [
     query.source,
     instrument,
