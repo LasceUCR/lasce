@@ -1491,7 +1491,8 @@
         "unavailableNote": "This GOES product and its channels are still pending integration.",
         "products": {
           "ehis": {
-            "name": "Energetic Heavy Ions"
+            "name": "Energetic Heavy Ions",
+            "availabilityNote": "Select the mass group and energy band. The level 1b file reports flux every 5 minutes and NOAA publishes daily with approximately a one-day delay."
           },
           "mpsl": {
             "name": "Magnetospheric Electrons and Protons: low energy"
@@ -1553,6 +1554,16 @@
         "proton": "Protons",
         "label": "{species}: telescope {telescope}, band {band}"
       },
+      "ehis": {
+        "groups": {
+          "H": "Hydrogen (H)",
+          "He": "Helium (He)",
+          "CNO": "Carbon-nitrogen-oxygen (CNO)",
+          "NeS": "Neon-sulfur (Ne-S)",
+          "ClNi": "Chlorine-nickel (Cl-Ni)"
+        },
+        "label": "{group}: energy band {band}"
+      },
       "sgps": {
         "integral": "> 500 MeV (integral)",
         "differential": "{channel} (differential)",
@@ -1570,6 +1581,7 @@
       "relativeIntensity": "relative intensity",
       "pfu": "pfu",
       "protonUnit": "protons/(cm²·s·sr·keV)",
+      "ehisUnit": "particles/(cm²·s·sr·MeV/nucleon)",
       "image": "image"
     },
     "today": {
@@ -1619,7 +1631,7 @@
       "endTimeLabel": "End time (UTC)",
       "submitLoading": "Querying…",
       "submit": "Query data",
-      "noticeGoes": "Source: GOES. Availability depends on the product and the date; a historical query can take several minutes. EHIS and MPSL are still pending integration.",
+      "noticeGoes": "Source: GOES. Availability depends on the product and the date; a historical query can take several minutes. MPSL is still pending integration.",
       "noticeRosac": "ROSAC is an integration preview. Its instruments and real data are not yet defined; every result from this source is simulated and labelled as such.",
       "permissionsTitle": "Query and download permissions",
       "permissionsText": "You can query GOES historical information without an account. Downloading requires an account and signing in. Chart images can be downloaded for any source; ROSAC's CSV data is available to every account, and GOES's requires a GOES data download permission. SUVI solar images cannot be downloaded from this platform. Every download link expires after 30 minutes.",
