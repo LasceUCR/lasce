@@ -81,7 +81,7 @@ export async function DELETE(
   if (!isUuid(id)) return invalidId(INVALID_ID_MESSAGE)
 
   try {
-    if (!(await deleteNosotrosActivity(id))) return notFound(ACTIVITY_GONE_MESSAGE)
+    if (!(await deleteNosotrosActivity(id, guard.user))) return notFound(ACTIVITY_GONE_MESSAGE)
   } catch (error) {
     return internalError('No se pudo eliminar la actividad.', error)
   }

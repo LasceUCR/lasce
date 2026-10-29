@@ -32,7 +32,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const { area } = await createResearchArea(parsed.data)
+    const { area } = await createResearchArea(parsed.data, guard.user)
     return ok({ area }, 201)
   } catch (error) {
     return internalError('No se pudo crear el área de investigación.', error)

@@ -57,7 +57,7 @@ describe('AdminShell', () => {
       menu()
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Resumen', 'Descargas', 'Usuarios', 'Permisos', 'Infraestructura'])
+    ).toEqual(['Resumen', 'Descargas', 'Usuarios', 'Permisos', 'Auditoría', 'Infraestructura'])
   })
 
   test('hides the sections whose grant is missing', () => {

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const card = await createContactChannel(parsed.data)
+    const card = await createContactChannel(parsed.data, guard.user)
     return ok({ card }, 201)
   } catch (error) {
     return internalError('No se pudo crear el canal de contacto.', error)

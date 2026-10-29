@@ -1545,7 +1545,8 @@
         "unavailableNote": "Este producto GOES y sus canales aún están pendientes de integración.",
         "products": {
           "ehis": {
-            "name": "Iones pesados energéticos"
+            "name": "Iones pesados energéticos",
+            "availabilityNote": "Seleccione el grupo de masa y la banda de energía. El archivo nivel 1b reporta un flujo cada 5 minutos y NOAA publica cada día con aproximadamente un día de retraso."
           },
           "mpsl": {
             "name": "Electrones y protones magnetosféricos: baja energía"
@@ -1607,6 +1608,16 @@
         "proton": "Protones",
         "label": "{species}: telescopio {telescope}, banda {band}"
       },
+      "ehis": {
+        "groups": {
+          "H": "Hidrógeno (H)",
+          "He": "Helio (He)",
+          "CNO": "Carbono-nitrógeno-oxígeno (CNO)",
+          "NeS": "Neón-azufre (Ne-S)",
+          "ClNi": "Cloro-níquel (Cl-Ni)"
+        },
+        "label": "{group}: banda de energía {band}"
+      },
       "sgps": {
         "integral": "> 500 MeV (integral)",
         "differential": "{channel} (diferencial)",
@@ -1624,6 +1635,7 @@
       "relativeIntensity": "intensidad relativa",
       "pfu": "pfu",
       "protonUnit": "protones/(cm²·s·sr·keV)",
+      "ehisUnit": "partículas/(cm²·s·sr·MeV/nucleón)",
       "image": "imagen"
     },
     "today": {
@@ -1673,7 +1685,7 @@
       "endTimeLabel": "Hora de fin (UTC)",
       "submitLoading": "Consultando…",
       "submit": "Consultar datos",
-      "noticeGoes": "Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos. EHIS y MPSL están pendientes de integración.",
+      "noticeGoes": "Fuente: GOES. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos. MPSL está pendiente de integración.",
       "noticeRosac": "ROSAC es una previsión de integración. Sus instrumentos y datos reales aún no están definidos; todos los resultados de esta fuente son simulados y están rotulados como tal.",
       "permissionsTitle": "Permisos de consulta y descarga",
       "permissionsText": "Puede consultar información histórica de GOES sin una cuenta. Para descargar, necesita una cuenta e iniciar sesión. Las imágenes de las gráficas se pueden descargar para cualquier fuente; los datos en CSV de ROSAC están disponibles para toda cuenta, y los de GOES requieren un permiso de descarga de datos GOES. Las imágenes solares SUVI no se pueden descargar desde esta plataforma. Cada enlace de descarga vence en 30 minutos.",
@@ -1758,7 +1770,8 @@
         "descargas": "Descargas",
         "usuarios": "Usuarios",
         "permisos": "Permisos",
-        "infraestructura": "Infraestructura"
+        "infraestructura": "Infraestructura",
+        "auditoria": "Auditoría"
       }
     },
     "summary": {
@@ -1839,6 +1852,87 @@
         "savingButton": "Guardando…",
         "reload": "Recargar página"
       }
+    },
+    "audit": {
+      "metaTitle": "Auditoría | Administración | LASCE",
+      "title": "Auditoría",
+      "description": "Consulta quién hizo cada cambio administrativo en el portal y cuándo.",
+      "filters": {
+        "label": "Filtros de la auditoría",
+        "from": "Desde",
+        "to": "Hasta",
+        "actor": "Persona",
+        "entityType": "Tipo de elemento",
+        "action": "Acción",
+        "all": "Todas",
+        "allActors": "Todas las personas",
+        "allEntityTypes": "Todos los tipos",
+        "allActions": "Todas las acciones",
+        "apply": "Filtrar",
+        "clear": "Limpiar filtros"
+      },
+      "table": {
+        "label": "Eventos de auditoría",
+        "date": "Fecha y hora",
+        "actor": "Persona",
+        "action": "Acción",
+        "summary": "Resumen"
+      },
+      "empty": "Aún no hay eventos de auditoría registrados.",
+      "emptyFiltered": "Ningún evento coincide con los filtros.",
+      "results": "{count, plural, one {# evento} other {# eventos}}",
+      "paginationLabel": "Páginas de la auditoría",
+      "actors": {
+        "system": "Sistema",
+        "worker": "Worker",
+        "deletedUser": "Cuenta eliminada"
+      }
+    },
+    "auditSummary": {
+      "noRole": "Sin rol",
+      "unknownAccount": "una cuenta",
+      "events": {
+        "news_create": "Noticia agregada: {name}",
+        "news_update": "Noticia actualizada: {name}",
+        "news_delete": "Noticia eliminada: {name}",
+        "publication_create": "Publicación agregada: {name}",
+        "publication_update": "Publicación actualizada: {name}",
+        "publication_delete": "Publicación eliminada: {name}",
+        "research_area_create": "Área de investigación agregada: {name}",
+        "research_area_update": "Área de investigación actualizada: {name}",
+        "research_area_delete": "Área de investigación eliminada: {name}",
+        "collaboration_create": "Colaboración agregada: {name}",
+        "collaboration_update": "Colaboración actualizada: {name}",
+        "collaboration_delete": "Colaboración eliminada: {name}",
+        "contact_channel_create": "Canal de contacto agregado: {name}",
+        "contact_channel_update": "Canal de contacto actualizado: {name}",
+        "contact_channel_delete": "Canal de contacto eliminado: {name}",
+        "nosotros_activity_create": "Actividad de Nosotros agregada: {name}",
+        "nosotros_activity_update": "Actividad de Nosotros actualizada: {name}",
+        "nosotros_activity_delete": "Actividad de Nosotros eliminada: {name}",
+        "nosotros_researcher_create": "Investigador de Nosotros agregado: {name}",
+        "nosotros_researcher_update": "Investigador de Nosotros actualizado: {name}",
+        "nosotros_researcher_delete": "Investigador de Nosotros eliminado: {name}",
+        "rosac_researcher_create": "Investigador ROSAC agregado: {name}",
+        "rosac_researcher_update": "Investigador ROSAC actualizado: {name}",
+        "rosac_researcher_delete": "Investigador ROSAC eliminado: {name}",
+        "gallery_album_create": "Álbum de galería agregado: {name}",
+        "gallery_album_update": "Álbum de galería actualizado: {name}",
+        "gallery_album_delete": "Álbum de galería eliminado: {name}",
+        "gallery_sub_album_create": "Subálbum de galería agregado: {name}",
+        "gallery_sub_album_update": "Subálbum de galería actualizado: {name}",
+        "gallery_sub_album_delete": "Subálbum de galería eliminado: {name}",
+        "gallery_media_create": "Archivo de galería agregado: {name}",
+        "gallery_media_update": "Archivo de galería actualizado: {name}",
+        "gallery_media_delete": "Archivo de galería eliminado: {name}",
+        "home_hero_update": "Banner de inicio actualizado: {name}",
+        "geomagnetic_index_update": "Índice geomagnético actualizado: {name}",
+        "geomagnetic_index_reorder": "Orden de los índices geomagnéticos actualizado",
+        "space_weather_section_update": "Tarjeta de clima espacial actualizada: {name}",
+        "solar_physics_section_update": "Sección de física solar actualizada: {name}",
+        "role_permissions_update": "Permisos actualizados para el rol {role}",
+        "user_role_change": "Rol de {name} cambiado de {previous} a {next}"
+      }
     }
   },
   "access": {
@@ -1882,6 +1976,11 @@
         "label": "Configurar permisos",
         "description": "Ver y cambiar los permisos asociados a cada rol.",
         "denied": "No tienes autorización para configurar los permisos de los roles."
+      },
+      "view_audit_log": {
+        "label": "Consultar la auditoría",
+        "description": "Consultar el registro de acciones administrativas del portal.",
+        "denied": "No tienes autorización para consultar la auditoría."
       }
     },
     "accessDenied": {

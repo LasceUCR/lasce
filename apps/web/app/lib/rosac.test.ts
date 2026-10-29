@@ -7,10 +7,17 @@ const findUnique = vi.fn()
 const update = vi.fn()
 const create = vi.fn()
 const del = vi.fn()
+const auditCreate = vi.fn()
 
-vi.mock('@lasce/db', () => ({
-  prisma: { researcher: { findMany, findUnique, update, create, delete: del } },
-}))
+vi.mock('@lasce/db', () => {
+  const tx = {
+    researcher: { findMany, findUnique, update, create, deleteMany: del },
+    auditEvent: { create: auditCreate },
+  }
+  return {
+    prisma: { ...tx, $transaction: (write: (client: typeof tx) => unknown) => write(tx) },
+  }
+})
 
 const {
   createResearcher,
@@ -39,6 +46,8 @@ function researcherRow(overrides: Partial<Record<string, unknown>> = {}) {
     ...overrides,
   }
 }
+
+const actor = { id: 'user-1' }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -335,7 +344,7 @@ describe('deleteResearcher', () => {
   test('returns false without deleting when the id does not exist', async () => {
     findUnique.mockResolvedValue(null)
 
-    const result = await deleteResearcher('missing-id')
+    const result = await deleteResearcher('missing-id', actor)
 
     expect(result).toBe(false)
     expect(del).not.toHaveBeenCalled()
@@ -343,11 +352,18 @@ describe('deleteResearcher', () => {
 
   test('deletes the row and returns true when it exists', async () => {
     findUnique.mockResolvedValue(researcherRow())
+    del.mockResolvedValue({ count: 1 })
 
-    const result = await deleteResearcher('researcher-1')
+    const result = await deleteResearcher('researcher-1', actor)
 
     expect(del).toHaveBeenCalledWith({ where: { id: 'researcher-1' } })
     expect(result).toBe(true)
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'rosac_researcher.delete',
+        summary: 'Investigador ROSAC eliminado: Dra. Carolina Salas Matamoros',
+      }),
+    })
   })
 })
 

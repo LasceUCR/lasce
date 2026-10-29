@@ -10,13 +10,16 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
+    auditEvent: { create: vi.fn() },
     nosotrosActivityTranslation: { upsert: vi.fn() },
     nosotrosResearcher: {
       create: vi.fn(),
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
     nosotrosResearcherTranslation: { upsert: vi.fn() },
   }
@@ -36,10 +39,11 @@ vi.mock('@lasce/db', () => ({
 }))
 
 const { tx, prisma } = mocks
-const { findMany, deleteMany } = prisma.nosotrosActivity
+const { findMany } = prisma.nosotrosActivity
+const { deleteMany } = tx.nosotrosActivity
 
 const researcherFindMany = prisma.nosotrosResearcher.findMany
-const researcherDeleteMany = prisma.nosotrosResearcher.deleteMany
+const researcherDeleteMany = tx.nosotrosResearcher.deleteMany
 
 const {
   createNosotrosActivity,
@@ -126,6 +130,8 @@ const bilingualResearcherContent = {
     description: "Design, development and implementation of LASCE's computing platform.",
   },
 }
+
+const actor = { id: 'user-1' }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -441,20 +447,28 @@ describe('updateNosotrosActivity', () => {
 
 describe('deleteNosotrosActivity', () => {
   test('returns false when no row was deleted', async () => {
+    tx.nosotrosActivity.findUnique.mockResolvedValue({ title: 'Ciencia' })
     deleteMany.mockResolvedValue({ count: 0 })
 
-    const result = await deleteNosotrosActivity('missing-id')
+    const result = await deleteNosotrosActivity('missing-id', actor)
 
     expect(deleteMany).toHaveBeenCalledWith({ where: { id: 'missing-id' } })
     expect(result).toBe(false)
   })
 
   test('returns true when the row was deleted', async () => {
+    tx.nosotrosActivity.findUnique.mockResolvedValue({ title: 'Ciencia' })
     deleteMany.mockResolvedValue({ count: 1 })
 
-    const result = await deleteNosotrosActivity('activity-1')
+    const result = await deleteNosotrosActivity('activity-1', actor)
 
     expect(result).toBe(true)
+    expect(tx.auditEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'nosotros_activity.delete',
+        summary: 'Actividad de Nosotros eliminada: Ciencia',
+      }),
+    })
   })
 })
 
@@ -847,18 +861,20 @@ describe('updateNosotrosResearcher', () => {
 
 describe('deleteNosotrosResearcher', () => {
   test('returns false when no row was deleted', async () => {
+    tx.nosotrosResearcher.findUnique.mockResolvedValue({ name: 'Ana' })
     researcherDeleteMany.mockResolvedValue({ count: 0 })
 
-    const result = await deleteNosotrosResearcher('missing-id')
+    const result = await deleteNosotrosResearcher('missing-id', actor)
 
     expect(researcherDeleteMany).toHaveBeenCalledWith({ where: { id: 'missing-id' } })
     expect(result).toBe(false)
   })
 
   test('returns true when the row was deleted', async () => {
+    tx.nosotrosResearcher.findUnique.mockResolvedValue({ name: 'Ana' })
     researcherDeleteMany.mockResolvedValue({ count: 1 })
 
-    const result = await deleteNosotrosResearcher('researcher-1')
+    const result = await deleteNosotrosResearcher('researcher-1', actor)
 
     expect(result).toBe(true)
   })

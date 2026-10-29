@@ -1,7 +1,8 @@
 import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
@@ -281,7 +282,10 @@ async function replaceAuthors(
  * Creates a news item in every language at once, together with its source and its ordered
  * authors. Either all of it is stored or none of it is.
  */
-export async function createNews(input: NewsCreateInput): Promise<NewsWriteResult> {
+export async function createNews(
+  input: NewsCreateInput,
+  actor: AuditActor,
+): Promise<NewsWriteResult> {
   return writeNews(async (tx) => {
     const source = await upsertSource(tx, input.source)
 
@@ -297,7 +301,17 @@ export async function createNews(input: NewsCreateInput): Promise<NewsWriteResul
 
     await replaceAuthors(tx, record.id, input.authors)
 
-    return tx.news.findUniqueOrThrow({ where: { id: record.id }, include: newsRecordInclude })
+    const created = await tx.news.findUniqueOrThrow({
+      where: { id: record.id },
+      include: newsRecordInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'news.create',
+      summary: `Noticia agregada: ${created.title}`,
+      entityType: 'news',
+      entityId: created.id,
+    })
+    return created
   })
 }
 
@@ -313,7 +327,11 @@ export async function createNews(input: NewsCreateInput): Promise<NewsWriteResul
  * loaded. The base row is updated only while it still has that value, and every save moves it
  * forward, so of two editors who loaded the same version the second one gets `conflict`.
  */
-export async function updateNews(id: string, input: NewsUpdateInput): Promise<NewsWriteResult> {
+export async function updateNews(
+  id: string,
+  input: NewsUpdateInput,
+  actor: AuditActor,
+): Promise<NewsWriteResult> {
   const expectedUpdatedAt = parseVersion(input.version)
 
   return writeNews(async (tx) => {
@@ -379,14 +397,31 @@ export async function updateNews(id: string, input: NewsUpdateInput): Promise<Ne
       await replaceAuthors(tx, id, input.authors)
     }
 
-    return tx.news.findUniqueOrThrow({ where: { id }, include: newsRecordInclude })
+    const updated = await tx.news.findUniqueOrThrow({ where: { id }, include: newsRecordInclude })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'news.update',
+      summary: `Noticia actualizada: ${updated.title}`,
+      entityType: 'news',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 }
 
 /** Deletes a news item. Its translations and author links go with it (`ON DELETE CASCADE`). */
-export async function deleteNews(id: string): Promise<boolean> {
+export async function deleteNews(id: string, actor: AuditActor): Promise<boolean> {
   // One statement that reports how many rows it removed: a concurrent delete of the same item
   // finds nothing and answers "not found", instead of failing between a check and the delete.
-  const { count } = await prisma.news.deleteMany({ where: { id } })
-  return count > 0
+  return runAuditedDelete(
+    (tx) => tx.news.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.news.deleteMany({ where: { id } }),
+    (tx, news) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'news.delete',
+        summary: `Noticia eliminada: ${news.title}`,
+        entityType: 'news',
+        entityId: id,
+      }),
+  )
 }
