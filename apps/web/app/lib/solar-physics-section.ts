@@ -1,5 +1,6 @@
 import { prisma, type Prisma } from '@lasce/db'
 
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
 import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
@@ -89,6 +90,7 @@ export async function getSolarPhysicsSection(
  */
 export async function updateSolarPhysicsSection(
   input: SolarPhysicsSectionUpdateInput,
+  actor: AuditActor,
 ): Promise<SolarPhysicsSectionWriteResult> {
   const expectedUpdatedAt = parseVersion(input.version)
   const { content } = input
@@ -149,10 +151,18 @@ export async function updateSolarPhysicsSection(
       })
     }
 
-    return tx.solarPhysicsSection.findUniqueOrThrow({
+    const updated = await tx.solarPhysicsSection.findUniqueOrThrow({
       where: { key: LASCE_SECTION_KEY },
       include: sectionInclude,
     })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'solar_physics_section.update',
+      summary: `Sección de física solar actualizada: ${updated.title}`,
+      entityType: 'solar_physics_section',
+      entityId: updated.id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 
   return result.ok ? { ok: true, section: toSection(result.value, defaultLocale, true) } : result

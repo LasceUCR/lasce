@@ -3,6 +3,8 @@ import { useFormatter, useTranslations } from 'next-intl'
 
 import type { ActivityItem } from '@/app/lib/audit-log'
 
+import { useAuditSummary } from './useAuditSummary'
+
 export interface RecentActivityPanelProps {
   items: ActivityItem[]
   /** The reference for "hace 12 min", passed in so server and client render the same text. */
@@ -16,6 +18,7 @@ export interface RecentActivityPanelProps {
 export function RecentActivityPanel({ items, now }: RecentActivityPanelProps) {
   const t = useTranslations('administration.activity')
   const format = useFormatter()
+  const summarize = useAuditSummary()
 
   function actorLabel(item: ActivityItem) {
     if (item.actorType === 'user') return item.actorName ?? t('actors.deletedUser')
@@ -40,7 +43,7 @@ export function RecentActivityPanel({ items, now }: RecentActivityPanelProps) {
                 <span className="admin-activity-index" aria-hidden="true">
                   {index + 1}
                 </span>
-                <strong className="admin-activity-title">{item.summary}</strong>
+                <strong className="admin-activity-title">{summarize(item)}</strong>
                 <span className="admin-activity-time">
                   <time dateTime={item.occurredAt}>
                     {format.relativeTime(new Date(item.occurredAt), now)}

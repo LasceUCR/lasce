@@ -3,7 +3,8 @@ import type { NosotrosActivityIcon, Prisma } from '@lasce/db'
 
 import es from '@/messages/es.json' with { type: 'json' }
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
@@ -605,8 +606,8 @@ export async function createNosotrosActivity(
   input: NosotrosActivityCreateInput,
   modifiedBy: string,
 ): Promise<NosotrosActivityRecord> {
-  const result = await runWrite<NosotrosActivityRow, never>((tx) =>
-    tx.nosotrosActivity.create({
+  const result = await runWrite<NosotrosActivityRow, never>(async (tx) => {
+    const created = await tx.nosotrosActivity.create({
       data: {
         icon: ICON_TO_DB[input.icon],
         ...baseColumns(input.content),
@@ -614,8 +615,19 @@ export async function createNosotrosActivity(
         translations: { create: translationColumns(input.content) },
       },
       include: activityInclude,
-    }),
-  )
+    })
+    await recordUserAuditEvent(
+      tx,
+      { id: modifiedBy },
+      {
+        action: 'nosotros_activity.create',
+        summary: `Actividad de Nosotros agregada: ${created.title}`,
+        entityType: 'nosotros_activity',
+        entityId: created.id,
+      },
+    )
+    return created
+  })
 
   return toActivityRecord(result.value, defaultLocale, true)
 }
@@ -704,16 +716,40 @@ export async function updateNosotrosActivity(
       }
     }
 
-    return tx.nosotrosActivity.findUniqueOrThrow({ where: { id }, include: activityInclude })
+    const updated = await tx.nosotrosActivity.findUniqueOrThrow({
+      where: { id },
+      include: activityInclude,
+    })
+    await recordUserAuditEvent(
+      tx,
+      { id: modifiedBy },
+      {
+        action: 'nosotros_activity.update',
+        summary: `Actividad de Nosotros actualizada: ${updated.title}`,
+        entityType: 'nosotros_activity',
+        entityId: id,
+        metadata: { fields: changedFieldNames(input) },
+      },
+    )
+    return updated
   })
 }
 
 /** Deletes one activity flashcard. Its translations go with it (`ON DELETE CASCADE`). */
-export async function deleteNosotrosActivity(id: string): Promise<boolean> {
+export async function deleteNosotrosActivity(id: string, actor: AuditActor): Promise<boolean> {
   // One statement that reports how many rows it removed: a concurrent delete of the same card
   // finds nothing and answers "not found", instead of failing between a check and the delete.
-  const { count } = await prisma.nosotrosActivity.deleteMany({ where: { id } })
-  return count > 0
+  return runAuditedDelete(
+    (tx) => tx.nosotrosActivity.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.nosotrosActivity.deleteMany({ where: { id } }),
+    (tx, activity) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'nosotros_activity.delete',
+        summary: `Actividad de Nosotros eliminada: ${activity.title}`,
+        entityType: 'nosotros_activity',
+        entityId: id,
+      }),
+  )
 }
 
 /**
@@ -812,8 +848,8 @@ export async function createNosotrosResearcher(
   input: NosotrosResearcherCreateInput,
   modifiedBy: string,
 ): Promise<NosotrosResearcher> {
-  const result = await runWrite<NosotrosResearcherRow, never>((tx) =>
-    tx.nosotrosResearcher.create({
+  const result = await runWrite<NosotrosResearcherRow, never>(async (tx) => {
+    const created = await tx.nosotrosResearcher.create({
       data: {
         photoUrl: photoUrlFrom(input.src),
         name: input.name,
@@ -824,8 +860,19 @@ export async function createNosotrosResearcher(
         translations: { create: translationRows(nosotrosResearcherContent, input.content) },
       },
       include: researcherInclude,
-    }),
-  )
+    })
+    await recordUserAuditEvent(
+      tx,
+      { id: modifiedBy },
+      {
+        action: 'nosotros_researcher.create',
+        summary: `Investigador de Nosotros agregado: ${created.name}`,
+        entityType: 'nosotros_researcher',
+        entityId: created.id,
+      },
+    )
+    return created
+  })
 
   return toNosotrosResearcher(result.value, defaultLocale, true)
 }
@@ -919,10 +966,22 @@ export async function updateNosotrosResearcher(
         }
       }
 
-      return tx.nosotrosResearcher.findUniqueOrThrow({
+      const updated = await tx.nosotrosResearcher.findUniqueOrThrow({
         where: { id },
         include: researcherInclude,
       })
+      await recordUserAuditEvent(
+        tx,
+        { id: modifiedBy },
+        {
+          action: 'nosotros_researcher.update',
+          summary: `Investigador de Nosotros actualizado: ${updated.name}`,
+          entityType: 'nosotros_researcher',
+          entityId: id,
+          metadata: { fields: changedFieldNames(input) },
+        },
+      )
+      return updated
     },
   )
 
@@ -932,9 +991,18 @@ export async function updateNosotrosResearcher(
 }
 
 /** Deletes one researcher profile. Its translations go with it (`ON DELETE CASCADE`). */
-export async function deleteNosotrosResearcher(id: string): Promise<boolean> {
+export async function deleteNosotrosResearcher(id: string, actor: AuditActor): Promise<boolean> {
   // One statement that reports how many rows it removed: a concurrent delete of the same profile
   // finds nothing and answers "not found", instead of failing between a check and the delete.
-  const { count } = await prisma.nosotrosResearcher.deleteMany({ where: { id } })
-  return count > 0
+  return runAuditedDelete(
+    (tx) => tx.nosotrosResearcher.findUnique({ where: { id }, select: { name: true } }),
+    (tx) => tx.nosotrosResearcher.deleteMany({ where: { id } }),
+    (tx, researcher) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'nosotros_researcher.delete',
+        summary: `Investigador de Nosotros eliminado: ${researcher.name}`,
+        entityType: 'nosotros_researcher',
+        entityId: id,
+      }),
+  )
 }

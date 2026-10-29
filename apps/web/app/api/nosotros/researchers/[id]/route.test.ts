@@ -322,7 +322,7 @@ describe('DELETE /api/nosotros/researchers/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteNosotrosResearcher).toHaveBeenCalledWith(researcherId)
+    expect(mocks.deleteNosotrosResearcher).toHaveBeenCalledWith(researcherId, expect.anything())
   })
 
   test('returns 404 with English message when researcher does not exist and English is selected', async () => {

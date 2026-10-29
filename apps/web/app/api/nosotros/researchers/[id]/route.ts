@@ -92,7 +92,7 @@ export async function DELETE(
   if (!isUuid(id)) return invalidId(errors.invalidId ?? INVALID_ID_MESSAGE)
 
   try {
-    if (!(await deleteNosotrosResearcher(id))) {
+    if (!(await deleteNosotrosResearcher(id, guard.user))) {
       return notFound(errors.notFound ?? RESEARCHER_GONE_MESSAGE)
     }
   } catch (error) {

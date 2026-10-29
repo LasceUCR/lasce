@@ -125,12 +125,16 @@ describe('POST /api/gallery/albums/[albumId]/media', () => {
       code: 'not-found',
       error: 'No existe el álbum indicado.',
     })
-    expect(mocks.createGalleryMedia).toHaveBeenCalledWith(albumId, {
-      ...body,
-      isVideo: false,
-      colSpan: 1,
-      rowSpan: 1,
-    })
+    expect(mocks.createGalleryMedia).toHaveBeenCalledWith(
+      albumId,
+      {
+        ...body,
+        isVideo: false,
+        colSpan: 1,
+        rowSpan: 1,
+      },
+      expect.anything(),
+    )
 
     mocks.createGalleryMedia.mockResolvedValueOnce({ ok: false, reason: 'conflict' })
     const conflict = await post(body)
