@@ -30,7 +30,7 @@ export async function PATCH(
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updateNews(id, parsed.data)
+    const result = await updateNews(id, parsed.data, guard.user)
     if (!result.ok) return writeFailure(result)
 
     return ok({ article: result.article })
@@ -51,7 +51,7 @@ export async function DELETE(
   if (!isUuid(id)) return invalidId()
 
   try {
-    const deleted = await deleteNews(id)
+    const deleted = await deleteNews(id, guard.user)
     if (!deleted) return notFound()
   } catch (error) {
     return internalError('No se pudo eliminar la noticia.', error)
