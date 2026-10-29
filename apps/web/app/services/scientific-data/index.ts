@@ -1,4 +1,5 @@
 import { queryCiticScientificData } from './citicScientificDataSource'
+import { queryEhisReadings } from './ehisReadingsDataSource'
 import { queryExisReadings } from './exisReadingsDataSource'
 import { queryMagReadings } from './magReadingsDataSource'
 import { createInstrumentRoutedDataSource } from './instrumentRoutedDataSource'
@@ -25,6 +26,10 @@ const magReadings: ScientificDataProvider = {
   query: ({ query }) => queryMagReadings(query),
 }
 
+const ehisReadings: ScientificDataProvider = {
+  query: ({ query }) => queryEhisReadings(query),
+}
+
 const citicArchive: ScientificDataProvider = {
   query: ({ query, jobId }) => queryCiticScientificData(query, jobId),
 }
@@ -34,12 +39,17 @@ const rosacSimulation: ScientificDataProvider = {
 }
 
 export const scientificDataSources = new ScientificDataSourceManager([
-  createInstrumentRoutedDataSource('GOES', {
-    SUVI: suviArchive,
-    EXIS: exisReadings,
-    MAG: magReadings,
-    SEISS: citicArchive,
-  }),
+  createInstrumentRoutedDataSource(
+    'GOES',
+    {
+      SUVI: suviArchive,
+      EXIS: exisReadings,
+      MAG: magReadings,
+      SEISS: citicArchive,
+    },
+    // SEISS EHIS is ingested daily by the worker; the other SEISS products stay on CITIC.
+    { EHIS: ehisReadings },
+  ),
   createInstrumentRoutedDataSource('ROSAC', {
     'ROSAC-I1': rosacSimulation,
     'ROSAC-I2': rosacSimulation,

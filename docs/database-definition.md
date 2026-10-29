@@ -519,6 +519,19 @@ fields `value`, `valid`), not here. Differences:
 - `version` looks like `"2-0-4"`, and `point_count` like
   `{"EPN-x": 1440, "EPN-y": 1440, "EPN-z": 1440, "total": 1440}`.
 
+### `ehis_files`
+
+One daily SEISS EHIS L1b heavy ion file (`seis-l1b-ehis`, one UTC day) ingested by the worker's
+`ehis-pipeline` job (`apps/worker/app/services/ehis_readings.py`) — see
+[`ehis-pipeline.md`](ehis-pipeline.md). Same columns, constraints and upsert key as `exis_files`;
+the readings are in the InfluxDB measurement `ehis_flux` (tags `satellite`, `product`, `channel`;
+fields `value`, `valid`), not here. Differences:
+
+- `satellite` comes from the NetCDF `platform_ID` attribute (`"G19"`).
+- `product` is always `"EHIS"`.
+- `version` looks like `"0-0-2"`, and `point_count` has one entry per channel, 25 in all, like
+  `{"H:E1": 288, …, "ClNi:E5": 0}`.
+
 ## `public` schema (downloads)
 
 ### `resource_downloads`

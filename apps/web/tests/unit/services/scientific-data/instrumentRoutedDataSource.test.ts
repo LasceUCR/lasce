@@ -35,6 +35,19 @@ describe('instrument-routed data source', () => {
     expect(archive.query).toHaveBeenCalledExactlyOnceWith({ query: xrayQuery, jobId: 'job-1' })
   })
 
+  test('a product provider overrides its instrument provider for that product only', async () => {
+    const archive = fakeProvider('archive')
+    const readings = fakeProvider('readings')
+    const goes = createInstrumentRoutedDataSource('GOES', { SEISS: archive }, { EHIS: readings })
+    const ehisQuery = { ...xrayQuery, product: 'EHIS', parameter: 'H:E1' } as const
+    const mpshQuery = { ...xrayQuery, product: 'MPSH', parameter: 'electron:T1:E1' } as const
+
+    expect(await goes.query({ query: ehisQuery })).toMatchObject({ jobId: 'readings' })
+    expect(await goes.query({ query: mpshQuery })).toMatchObject({ jobId: 'archive' })
+    expect(readings.query).toHaveBeenCalledExactlyOnceWith({ query: ehisQuery })
+    expect(archive.query).toHaveBeenCalledExactlyOnceWith({ query: mpshQuery })
+  })
+
   test('rejects a product whose instrument has no provider', async () => {
     const goes = createInstrumentRoutedDataSource('GOES', { SUVI: fakeProvider('images') })
 
