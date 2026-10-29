@@ -490,13 +490,15 @@ test('walks through the album lightbox with the next control', async ({ page }) 
 test('shows the not-found page for an album that does not exist', async ({ page }) => {
   await page.goto('/galeria/album-inexistente')
 
-  await expect(page.getByText('This page could not be found.')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
 })
 
 test('shows the not-found page for a sub-album that does not exist', async ({ page }) => {
   await page.goto('/galeria/rosac/subalbum-inexistente')
 
-  await expect(page.getByText('This page could not be found.')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
 })
 
 for (const { locale, title, description, backLink, homeHeading } of [
