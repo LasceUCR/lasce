@@ -23,6 +23,7 @@ from app.clients.seiss import (
 
 EHIS = SeissProduct.EHIS
 SGPS = SeissProduct.SGPS
+MPSH = SeissProduct.MPSH
 
 FILE = "ops_seis-l1b-ehis_g19_d20261014_v0-0-2.nc"
 ROOT = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes19/"
@@ -79,9 +80,21 @@ def test_an_sgps_file_name_is_read_from_its_l2_name() -> None:
     assert parse_file_name(SGPS, FILE) is None
 
 
+def test_an_mpsh_file_name_is_read_from_its_l2_name() -> None:
+    mpsh = "sci_mpsh-l2-avg1m_g19_d20261027_v2-0-3.nc"
+    file = parse_file_name(MPSH, mpsh)
+    assert file is not None
+    assert (file.product, file.day, file.version_label) == (MPSH, date(2026, 10, 27), "2-0-3")
+    assert parse_file_name(SGPS, mpsh) is None
+
+
 @pytest.mark.parametrize(
     ("product", "directory"),
-    [(EHIS, "l1b/seis-l1b-ehis"), (SGPS, "l2/data/sgps-l2-avg1m")],
+    [
+        (EHIS, "l1b/seis-l1b-ehis"),
+        (SGPS, "l2/data/sgps-l2-avg1m"),
+        (MPSH, "l2/data/mpsh-l2-avg1m_science"),
+    ],
 )
 def test_each_product_lists_its_own_archive_directory(
     product: SeissProduct, directory: str
