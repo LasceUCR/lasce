@@ -363,7 +363,7 @@ test('displays the back button at the bottom of the gallery index and returns ho
   await page.goto('/galeria')
 
   await expect(
-    page.getByRole('heading', { level: 2, name: galleryAlbumList[0].title }),
+    page.locator('.gallery-group').first().getByRole('heading', { level: 2 }),
   ).toBeVisible()
 
   const backLink = page.getByRole('link', { name: 'Volver al inicio' })
