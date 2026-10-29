@@ -1150,6 +1150,31 @@
       "label": "Volver a las áreas"
     },
     "editor": {
+      "languageTabs": "Idioma del contenido",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el texto, revíselo también.",
+      "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el texto debe completar ambos idiomas; los campos compartidos se pueden cambiar sin traducirla.",
+      "titleIn": "Título ({language})",
+      "descriptionIn": "Descripción ({language})",
+      "nameIn": "Nombre ({language})",
+      "icon": "Ícono",
+      "icons": {
+        "antenna": "Antena",
+        "location": "Ubicación",
+        "frequency": "Frecuencia",
+        "sun": "Sol",
+        "tracking": "Apuntado y seguimiento",
+        "control": "Control",
+        "receiver": "Receptor",
+        "maintenance": "Mantenimiento e infraestructura",
+        "education": "Educación"
+      },
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando...",
+      "discardTitle": "¿Descartar cambios?",
+      "discardMessage": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "discardCancel": "Seguir editando",
+      "discardConfirm": "Descartar",
       "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo.",
       "discardDialog": {
         "title": "Descartar cambios no guardados",
@@ -1224,6 +1249,7 @@
         "editModal": {
           "title": "Editar fotografías",
           "help": "Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no correspondan a esta etapa.",
+          "noPhotos": "No hay fotografías registradas en esta etapa.",
           "altLabel": "Texto alternativo de la fotografía {index}",
           "altPlaceholder": "Texto alternativo accesible de la fotografía",
           "deleteLabel": "Eliminar fotografía {index}",

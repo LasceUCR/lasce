@@ -1150,6 +1150,31 @@
       "label": "Back to work areas"
     },
     "editor": {
+      "languageTabs": "Content language",
+      "legacyBaseText": "This text was recorded before language versions existed and might not be in Spanish. If you change the text, review it as well.",
+      "legacyNoTranslation": "This section does not have an English version yet. To change the text you must complete both languages; shared fields can be changed without translating it.",
+      "titleIn": "Title ({language})",
+      "descriptionIn": "Description ({language})",
+      "nameIn": "Name ({language})",
+      "icon": "Icon",
+      "icons": {
+        "antenna": "Antenna",
+        "location": "Location",
+        "frequency": "Frequency",
+        "sun": "Sun",
+        "tracking": "Pointing and tracking",
+        "control": "Control",
+        "receiver": "Receiver",
+        "maintenance": "Maintenance and infrastructure",
+        "education": "Education"
+      },
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "discardTitle": "Discard changes?",
+      "discardMessage": "If you discard now, all entered data that has not been saved will be lost.",
+      "discardCancel": "Keep editing",
+      "discardConfirm": "Discard",
       "saveError": "Could not save changes. Please try again.",
       "discardDialog": {
         "title": "Discard unsaved changes",
@@ -1224,6 +1249,7 @@
         "editModal": {
           "title": "Edit photographs",
           "help": "Modify the accessible description (alt) of each photograph or remove those that no longer correspond to this stage.",
+          "noPhotos": "No photos registered in this stage.",
           "altLabel": "Alternative text for photograph {index}",
           "altPlaceholder": "Accessible alternative text for photograph",
           "deleteLabel": "Delete photograph {index}",
