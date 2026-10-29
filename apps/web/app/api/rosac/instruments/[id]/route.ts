@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import {
+  RosacConflictError,
+  RosacReviewRequiredError,
   deleteRosacInstrument,
   rosacInstrumentInputSchema,
   updateRosacInstrument,
@@ -38,12 +40,39 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const instrument = await updateRosacInstrument(id, parsed.data)
-  if (!instrument) {
-    return NextResponse.json({ error: `No existe un instrumento con id "${id}".` }, { status: 404 })
-  }
+  try {
+    const instrument = await updateRosacInstrument(id, parsed.data)
+    if (!instrument) {
+      return NextResponse.json(
+        { error: `No existe un instrumento con id "${id}".` },
+        { status: 404 },
+      )
+    }
 
-  return NextResponse.json({ instrument }, { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json({ instrument }, { headers: { 'Cache-Control': 'no-store' } })
+  } catch (error) {
+    if (error instanceof RosacConflictError) {
+      return NextResponse.json(
+        { error: error.message, code: 'conflict' },
+        { status: 409, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+    if (error instanceof RosacReviewRequiredError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: 'review-required',
+          pending: error.pending.map(({ locale, field }) => ({
+            path: `content.${locale}.${field}`,
+            locale,
+            field,
+          })),
+        },
+        { status: 400, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+    throw error
+  }
 }
 
 export async function DELETE(

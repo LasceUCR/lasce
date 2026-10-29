@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import type * as RosacLib from '@/app/lib/rosac'
+import { RosacConflictError, RosacReviewRequiredError } from '@/app/lib/rosac'
 
 const mocks = vi.hoisted(() => ({
   requireApiPermission: vi.fn(),
@@ -105,6 +106,35 @@ describe('PATCH /api/rosac/instruments/[id]', () => {
       '00000000-0000-0000-0000-000000000001',
       validBody,
     )
+  })
+
+  test('returns 409 when the instrument changed since it was opened', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateRosacInstrument.mockRejectedValue(
+      new RosacConflictError('El instrumento cambió desde que lo abrió.'),
+    )
+
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({
+      error: 'El instrumento cambió desde que lo abrió.',
+      code: 'conflict',
+    })
+  })
+
+  test('returns 400 listing the translations that still need review', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateRosacInstrument.mockRejectedValue(
+      new RosacReviewRequiredError([{ locale: 'en', field: 'name' }]),
+    )
+
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.code).toBe('review-required')
+    expect(body.pending).toEqual([{ path: 'content.en.name', locale: 'en', field: 'name' }])
   })
 })
 

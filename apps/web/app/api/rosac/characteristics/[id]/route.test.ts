@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import type * as RosacLib from '@/app/lib/rosac'
+import { RosacConflictError, RosacReviewRequiredError } from '@/app/lib/rosac'
 
 const mocks = vi.hoisted(() => ({
   requireApiPermission: vi.fn(),
@@ -95,5 +96,34 @@ describe('PATCH /api/rosac/characteristics/[id]', () => {
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ characteristic: updated })
     expect(mocks.updateRosacCharacteristic).toHaveBeenCalledWith('antenna', validBody)
+  })
+
+  test('returns 409 when the characteristic changed since it was opened', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateRosacCharacteristic.mockRejectedValue(
+      new RosacConflictError('La característica cambió desde que la abrió.'),
+    )
+
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({
+      error: 'La característica cambió desde que la abrió.',
+      code: 'conflict',
+    })
+  })
+
+  test('returns 400 listing the translations that still need review', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateRosacCharacteristic.mockRejectedValue(
+      new RosacReviewRequiredError([{ locale: 'en', field: 'title' }]),
+    )
+
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.code).toBe('review-required')
+    expect(body.pending).toEqual([{ path: 'content.en.title', locale: 'en', field: 'title' }])
   })
 })

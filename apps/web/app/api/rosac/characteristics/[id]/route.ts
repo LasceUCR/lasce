@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { rosacCharacteristicInputSchema, updateRosacCharacteristic } from '@/app/lib/rosac'
+import {
+  RosacConflictError,
+  RosacReviewRequiredError,
+  rosacCharacteristicInputSchema,
+  updateRosacCharacteristic,
+} from '@/app/lib/rosac'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,13 +39,37 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const characteristic = await updateRosacCharacteristic(id, parsed.data)
-  if (!characteristic) {
-    return NextResponse.json(
-      { error: `No existe una característica con id "${id}".` },
-      { status: 404 },
-    )
-  }
+  try {
+    const characteristic = await updateRosacCharacteristic(id, parsed.data)
+    if (!characteristic) {
+      return NextResponse.json(
+        { error: `No existe una característica con id "${id}".` },
+        { status: 404 },
+      )
+    }
 
-  return NextResponse.json({ characteristic }, { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json({ characteristic }, { headers: { 'Cache-Control': 'no-store' } })
+  } catch (error) {
+    if (error instanceof RosacConflictError) {
+      return NextResponse.json(
+        { error: error.message, code: 'conflict' },
+        { status: 409, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+    if (error instanceof RosacReviewRequiredError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: 'review-required',
+          pending: error.pending.map(({ locale, field }) => ({
+            path: `content.${locale}.${field}`,
+            locale,
+            field,
+          })),
+        },
+        { status: 400, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+    throw error
+  }
 }
