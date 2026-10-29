@@ -1,10 +1,13 @@
+import type { UserRole } from '@lasce/db'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getMessages, getTranslations } from 'next-intl/server'
 
 import { AccessDenied } from '@/app/components/administracion/AccessDenied'
 import { AdminPlaceholder } from '@/app/components/administracion/AdminPlaceholder'
 import { RolePermissionsEditor } from '@/app/components/administracion/RolePermissionsEditor'
 import { UserRoleAssignment } from '@/app/components/administracion/UserRoleAssignment'
+import { permissionText, roleName } from '@/app/lib/access-messages'
 import { adminSections, getAdminSection } from '@/app/lib/admin-sections'
 import { requirePermission } from '@/app/lib/auth/authorization'
 import { PERMISSION_DENIED } from '@/app/lib/auth/permissions'
@@ -32,6 +35,12 @@ export async function generateMetadata({
 
   if (!content) {
     return {}
+  }
+
+  // Permisos is translated (LASCE-SEC-008); the other sections still show Spanish.
+  if (section === 'permisos') {
+    const t = await getTranslations('administration.permissions')
+    return { title: t('metaTitle'), description: t('description') }
   }
 
   return {
@@ -73,16 +82,30 @@ export default async function AdministracionSectionPage({
   }
 
   if (section === 'permisos') {
-    const { allowed } = await requirePermission('manage_permissions', '/administracion/permisos')
+    const [{ allowed }, messages, t] = await Promise.all([
+      requirePermission('manage_permissions', '/administracion/permisos'),
+      getMessages(),
+      getTranslations('administration.permissions'),
+    ])
     if (!allowed) {
-      return <AccessDenied message={PERMISSION_DENIED.manage_permissions} />
+      return (
+        <AccessDenied
+          message={permissionText('manage_permissions', messages).denied}
+          title={messages.access.accessDenied.title}
+        />
+      )
     }
     const matrix = await getPermissionMatrix()
+    // Roles keep their identifiers; only the names shown follow the site's language.
+    const roles = availableRoles().map((role) => ({
+      ...role,
+      name: roleName(role.id as UserRole, messages),
+    }))
     return (
       <RolePermissionsEditor
-        title={content.title}
-        description={content.description}
-        roles={availableRoles()}
+        title={t('title')}
+        description={t('description')}
+        roles={roles}
         matrix={matrix}
         saveAction={saveRolePermissions}
       />
