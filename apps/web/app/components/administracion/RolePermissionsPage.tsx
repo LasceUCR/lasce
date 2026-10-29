@@ -1,3 +1,6 @@
+import { useTranslations } from 'next-intl'
+import type { Ref } from 'react'
+
 import type { Permission } from '@/app/lib/auth/permissions'
 import type { OverviewRole } from '@/app/lib/user-overview'
 import { Button } from '@/app/components/public/Button'
@@ -8,8 +11,15 @@ import tableStyles from './UsersRolesTable.module.css'
 export interface RolePermissionRow {
   id: Permission
   label: string
+  /** What the permission allows, shown under its label. */
+  description?: string
 }
 
+/**
+ * The permission matrix of `/administracion/permisos`. Its own fixed text comes from the
+ * `administration.permissions` catalogue; roles and permissions arrive already named in the
+ * site's language (`roleName`, `permissionRows` in `app/lib/access-messages.ts`).
+ */
 export interface RolePermissionsPageProps {
   title: string
   description: string
@@ -21,11 +31,21 @@ export interface RolePermissionsPageProps {
   onSave: () => Promise<void>
   onDiscard?: () => void
   saving?: boolean
+  /**
+   * The save confirmation is open: the controls wait for it like they wait for a save, but the
+   * button still says "Guardar cambios", since nothing is being saved yet.
+   */
+  confirming?: boolean
   canSave?: boolean
   pendingChanges?: number
   dirtyPermissionIds?: readonly Permission[]
   error?: string
   status?: string
+  /**
+   * The scrollable table region. The editor moves focus to it after the confirmation closes or
+   * the draft is discarded, because the button that was used is disabled by then.
+   */
+  tableRegionRef?: Ref<HTMLDivElement>
 }
 
 export function RolePermissionsPage({
@@ -39,14 +59,15 @@ export function RolePermissionsPage({
   onSave,
   onDiscard,
   saving = false,
+  confirming = false,
   canSave = true,
   pendingChanges = 0,
   dirtyPermissionIds = [],
   error,
   status,
+  tableRegionRef,
 }: RolePermissionsPageProps) {
-  const pendingCopy =
-    pendingChanges === 1 ? '1 cambio sin guardar' : `${pendingChanges} cambios sin guardar`
+  const t = useTranslations('administration.permissions')
   return (
     <div>
       <div className="section-heading">
@@ -62,16 +83,15 @@ export function RolePermissionsPage({
           void onSave()
         }}
       >
-        <h2 id="role-permissions-title">Permisos por rol</h2>
+        <h2 id="role-permissions-title">{t('tableTitle')}</h2>
         <p id="role-permissions-help" className={styles.help}>
-          Cada casilla indica si el rol puede hacer esa acción. Los permisos de la persona
-          administradora no se pueden cambiar. Guardar cambios pide confirmación antes de
-          aplicarlos.
+          {t('help')}
         </p>
         <div
+          ref={tableRegionRef}
           className={tableStyles.scroll}
           role="region"
-          aria-label="Tabla de permisos por rol"
+          aria-label={t('tableLabel')}
           tabIndex={0}
         >
           <table
@@ -81,10 +101,15 @@ export function RolePermissionsPage({
           >
             <thead>
               <tr>
-                <th scope="col">Permiso</th>
+                <th scope="col" className={styles.permissionColumn}>
+                  {t('permissionColumn')}
+                </th>
                 {roles.map((role) => (
                   <th scope="col" key={role.id} className={tableStyles.assignment}>
                     {role.name}
+                    {lockedRoleIds.includes(role.id) ? (
+                      <span className={styles.lockedNote}>{t('lockedRole')}</span>
+                    ) : null}
                   </th>
                 ))}
               </tr>
@@ -98,8 +123,13 @@ export function RolePermissionsPage({
                       <span className={styles.permissionLabel}>
                         {dirty ? <span className={styles.dirtyMark} aria-hidden="true" /> : null}
                         {permission.label}
-                        {dirty ? <span className="sr-only">, sin guardar</span> : null}
+                        {dirty ? <span className="sr-only">{t('unsavedSuffix')}</span> : null}
                       </span>
+                      {permission.description ? (
+                        <span className={styles.permissionDescription}>
+                          {permission.description}
+                        </span>
+                      ) : null}
                     </th>
                     {roles.map((role) => {
                       const locked = lockedRoleIds.includes(role.id)
@@ -109,12 +139,11 @@ export function RolePermissionsPage({
                             <input
                               type="checkbox"
                               checked={granted[role.id]?.includes(permission.id) ?? false}
-                              disabled={locked || saving}
-                              aria-label={
-                                locked
-                                  ? `${permission.label}: ${role.name} (no se puede cambiar)`
-                                  : `${permission.label}: ${role.name}`
-                              }
+                              disabled={locked || saving || confirming}
+                              aria-label={t(locked ? 'checkboxLocked' : 'checkbox', {
+                                permission: permission.label,
+                                role: role.name,
+                              })}
                               onChange={() => onTogglePermission(role.id, permission.id)}
                             />
                           </label>
@@ -139,11 +168,9 @@ export function RolePermissionsPage({
                 <span className={styles.dot} aria-hidden="true" />
                 <div>
                   <p className={styles.pendingTitle} role="status" aria-atomic="true">
-                    {pendingCopy}
+                    {t('pending', { count: pendingChanges })}
                   </p>
-                  <p className={styles.pendingHelp}>
-                    Tienes cambios pendientes de guardar en los permisos.
-                  </p>
+                  <p className={styles.pendingHelp}>{t('pendingHelp')}</p>
                 </div>
               </>
             ) : (
@@ -156,13 +183,13 @@ export function RolePermissionsPage({
             <Button
               type="button"
               variant="secondary"
-              disabled={saving || pendingChanges === 0}
+              disabled={saving || confirming || pendingChanges === 0}
               onClick={onDiscard}
             >
-              Descartar
+              {t('discard')}
             </Button>
-            <Button type="submit" disabled={saving || !canSave}>
-              {saving ? 'Guardando...' : 'Guardar cambios'}
+            <Button type="submit" disabled={saving || confirming || !canSave}>
+              {saving ? t('saving') : t('save')}
             </Button>
           </div>
         </div>

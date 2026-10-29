@@ -1750,6 +1750,88 @@
         "rosacResearchers": "Investigadores ROSAC",
         "instruments": "Instrumentos consultables"
       }
+    },
+    "permissions": {
+      "metaTitle": "Permisos | Administración | LASCE",
+      "title": "Permisos",
+      "description": "Configura los permisos asociados a cada rol del sistema.",
+      "tableTitle": "Permisos por rol",
+      "help": "Cada casilla indica si el rol puede hacer esa acción. Los permisos de la persona administradora no se pueden cambiar. Guardar cambios pide confirmación antes de aplicarlos.",
+      "tableLabel": "Tabla de permisos por rol",
+      "permissionColumn": "Permiso",
+      "lockedRole": "No se puede cambiar",
+      "unsavedSuffix": ", sin guardar",
+      "checkbox": "{permission}: {role}",
+      "checkboxLocked": "{permission}: {role} (no se puede cambiar)",
+      "pending": "{count, plural, one {# cambio sin guardar} other {# cambios sin guardar}}",
+      "pendingHelp": "Tienes cambios pendientes de guardar en los permisos.",
+      "discard": "Descartar",
+      "save": "Guardar cambios",
+      "saving": "Guardando...",
+      "updated": "Permisos actualizados para {roles}.",
+      "errors": {
+        "unauthorized": "Tu sesión terminó o ya no tienes autorización para configurar permisos. Recarga la página para comprobar tu acceso.",
+        "locked": "Los permisos de la persona administradora no se pueden cambiar.",
+        "conflict": "La información de este rol cambió. Recarga la página antes de volver a guardarlo.",
+        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar los permisos actuales antes de volver a intentarlo."
+      },
+      "dialog": {
+        "title": "Confirmar cambio de permisos",
+        "question": "¿Quieres guardar los permisos de <strong>{roles}</strong>?",
+        "summary": "El cambio se aplica de inmediato a las cuentas con ese rol. No hace falta que vuelvan a iniciar sesión.",
+        "confirm": "Sí, guardar permisos",
+        "cancel": "No, cancelar",
+        "savingStatus": "Guardando cambio de permisos…",
+        "savingButton": "Guardando…",
+        "reload": "Recargar página"
+      }
+    }
+  },
+  "access": {
+    "roles": {
+      "VISITOR": "Visitante",
+      "ASSISTANT": "Asistente",
+      "ADMIN": "Persona administradora"
+    },
+    "permissions": {
+      "create_components": {
+        "label": "Crear componentes",
+        "description": "Crear componentes del portal cuando esa función esté disponible.",
+        "denied": "No tienes autorización para crear componentes."
+      },
+      "edit_components": {
+        "label": "Editar componentes",
+        "description": "Editar componentes del portal cuando esa función esté disponible.",
+        "denied": "No tienes autorización para editar componentes."
+      },
+      "delete_components": {
+        "label": "Eliminar componentes",
+        "description": "Eliminar componentes del portal cuando esa función esté disponible.",
+        "denied": "No tienes autorización para eliminar componentes."
+      },
+      "download_resources": {
+        "label": "Descargar recursos",
+        "description": "Descargar recursos del laboratorio y consultar el historial de descargas.",
+        "denied": "No tienes autorización para acceder a las descargas."
+      },
+      "download_goes_resources": {
+        "label": "Descargar recursos GOES",
+        "description": "Descargar datos de los satélites GOES.",
+        "denied": "No tienes autorización para descargar recursos GOES."
+      },
+      "manage_users": {
+        "label": "Administrar usuarios",
+        "description": "Consultar cuentas y asignar o retirar roles.",
+        "denied": "No tienes autorización para administrar usuarios."
+      },
+      "manage_permissions": {
+        "label": "Configurar permisos",
+        "description": "Ver y cambiar los permisos asociados a cada rol.",
+        "denied": "No tienes autorización para configurar los permisos de los roles."
+      }
+    },
+    "accessDenied": {
+      "title": "Acceso denegado"
     }
   },
   "account": {
