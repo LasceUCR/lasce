@@ -4,22 +4,41 @@ const findMany = vi.fn()
 const findUnique = vi.fn()
 const findFirst = vi.fn()
 const update = vi.fn()
+const updateMany = vi.fn()
 const create = vi.fn()
 const del = vi.fn()
 const aggregate = vi.fn()
 const upsert = vi.fn()
 
 const prismaMock = {
-  researcher: { findMany, findUnique, update, create, delete: del },
-  rosacCharacteristic: { findMany, findFirst, findUnique, update },
+  researcher: { findMany, findUnique, update, updateMany, create, delete: del },
+  rosacCharacteristic: { findMany, findFirst, findUnique, update, updateMany },
   rosacCharacteristicTranslation: { upsert },
-  rosacActivity: { findMany, findFirst, findUnique, update },
+  rosacActivity: { findMany, findFirst, findUnique, update, updateMany },
   rosacActivityTranslation: { upsert },
-  rosacStage: { findMany, findFirst, findUnique, update },
+  rosacStage: { findMany, findFirst, findUnique, update, updateMany },
   rosacStageTranslation: { upsert },
-  rosacInstrument: { findMany, findFirst, findUnique, update, create, delete: del, aggregate },
+  rosacInstrument: {
+    findMany,
+    findFirst,
+    findUnique,
+    update,
+    updateMany,
+    create,
+    delete: del,
+    aggregate,
+  },
   rosacInstrumentTranslation: { upsert },
-  rosacAcknowledgment: { findMany, findFirst, findUnique, update, create, delete: del, aggregate },
+  rosacAcknowledgment: {
+    findMany,
+    findFirst,
+    findUnique,
+    update,
+    updateMany,
+    create,
+    delete: del,
+    aggregate,
+  },
   $transaction: vi.fn(async (cb: (tx: typeof prismaMock) => Promise<unknown>) => cb(prismaMock)),
 }
 
@@ -55,6 +74,9 @@ const {
   updateRosacAcknowledgment,
   deleteRosacAcknowledgment,
   rosacAcknowledgmentInputSchema,
+  safeUrlSchema,
+  RosacConflictError,
+  RosacReviewRequiredError,
 } = await import('./rosac')
 const { getMessages } = await import('./i18n/messages')
 
@@ -859,5 +881,163 @@ describe('rosac acknowledgments CRUD and validation', () => {
       logo: { src: '/images/logo.webp', alt: 'Logo Institución' },
     })
     expect(created.name).toBe('Nueva Institución')
+  })
+})
+
+describe('safeUrlSchema', () => {
+  test('accepts valid relative URLs starting with a single slash', () => {
+    expect(safeUrlSchema.safeParse('/datos?source=ROSAC').success).toBe(true)
+    expect(safeUrlSchema.safeParse('/contacto').success).toBe(true)
+  })
+
+  test('accepts valid http and https URLs', () => {
+    expect(safeUrlSchema.safeParse('https://example.com/test').success).toBe(true)
+    expect(safeUrlSchema.safeParse('http://example.org').success).toBe(true)
+  })
+
+  test('rejects protocol-relative URLs', () => {
+    expect(safeUrlSchema.safeParse('//external.example').success).toBe(false)
+    expect(safeUrlSchema.safeParse('//example.com/path').success).toBe(false)
+  })
+
+  test('rejects javascript: and other dangerous schemes', () => {
+    expect(safeUrlSchema.safeParse('javascript:alert(1)').success).toBe(false)
+    expect(safeUrlSchema.safeParse('data:text/html,<script>').success).toBe(false)
+  })
+})
+
+describe('rosac optimistic concurrency and reviews', () => {
+  const staleDate = new Date('2026-01-01T00:00:00.000Z')
+  const currentDate = new Date('2026-01-02T00:00:00.000Z')
+  const staleVersion = '2026-01-01T00:00:00.000Z'
+
+  test('updateRosacCharacteristic throws RosacConflictError when version is stale', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000010',
+      key: 'antenna',
+      icon: 'antenna',
+      title: 'Antena',
+      description: 'Desc',
+      updatedAt: currentDate,
+      translations: [],
+    })
+
+    await expect(
+      updateRosacCharacteristic('antenna', {
+        version: staleVersion,
+        title: 'Nuevo título',
+        description: 'Nueva desc',
+      }),
+    ).rejects.toThrow(RosacConflictError)
+  })
+
+  test('updateRosacCharacteristic throws RosacConflictError when updateMany affects 0 rows', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000010',
+      key: 'antenna',
+      icon: 'antenna',
+      title: 'Antena',
+      description: 'Desc',
+      updatedAt: staleDate,
+      translations: [],
+    })
+    updateMany.mockResolvedValueOnce({ count: 0 })
+
+    await expect(
+      updateRosacCharacteristic('antenna', {
+        version: staleVersion,
+        title: 'Nuevo título',
+        description: 'Nueva desc',
+      }),
+    ).rejects.toThrow(RosacConflictError)
+  })
+
+  test('updateRosacCharacteristic throws RosacReviewRequiredError when review is missing', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000010',
+      key: 'antenna',
+      icon: 'antenna',
+      title: 'Antena',
+      description: 'Desc',
+      updatedAt: staleDate,
+      translations: [
+        {
+          locale: 'en',
+          title: 'Antenna',
+          description: 'Desc EN',
+        },
+      ],
+    })
+
+    await expect(
+      updateRosacCharacteristic('antenna', {
+        content: {
+          es: { title: 'Antena Editada', description: 'Desc' },
+          en: { title: 'Antenna', description: 'Desc EN' },
+        },
+      }),
+    ).rejects.toThrow(RosacReviewRequiredError)
+  })
+
+  test('updateRosacActivity throws RosacConflictError when version is stale', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000020',
+      key: 'tracking',
+      icon: 'tracking',
+      title: 'Seguimiento',
+      description: 'Desc',
+      updatedAt: currentDate,
+      translations: [],
+    })
+
+    await expect(
+      updateRosacActivity('tracking', {
+        version: staleVersion,
+        title: 'Nuevo',
+        description: 'Desc',
+      }),
+    ).rejects.toThrow(RosacConflictError)
+  })
+
+  test('updateRosacStage throws RosacConflictError when version is stale', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000030',
+      key: 'preparacion',
+      title: 'Preparación',
+      description: 'Desc',
+      images: [],
+      updatedAt: currentDate,
+      translations: [],
+    })
+
+    await expect(
+      updateRosacStage('preparacion', {
+        version: staleVersion,
+        title: 'Nuevo',
+        description: 'Desc',
+      }),
+    ).rejects.toThrow(RosacConflictError)
+  })
+
+  test('updateRosacInstrument throws RosacConflictError when version is stale', async () => {
+    findUnique.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000040',
+      name: 'Instrumento',
+      pendingMessage: null,
+      imageSrc: null,
+      imageAlt: null,
+      consultationHref: null,
+      consultationLabel: 'Ver',
+      consultationNotice: null,
+      updatedAt: currentDate,
+      translations: [],
+    })
+
+    await expect(
+      updateRosacInstrument('00000000-0000-0000-0000-000000000040', {
+        version: staleVersion,
+        name: 'Nuevo Nombre',
+      }),
+    ).rejects.toThrow(RosacConflictError)
   })
 })

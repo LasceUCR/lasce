@@ -12,7 +12,10 @@ export interface ConstructionStage {
   description: string
   images: readonly [ConstructionImage, ConstructionImage, ...ConstructionImage[]]
   editing?: {
-    content: unknown
+    content: {
+      es: { title: string; description: string }
+      en: { title: string; description: string } | null
+    }
     isLegacy: boolean
     version: string
   }
