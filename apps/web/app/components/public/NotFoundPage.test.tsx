@@ -12,7 +12,7 @@ describe('NotFoundPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeVisible()
     expect(
       screen.getByText(
-        'La dirección que ingresaste no corresponde a una página disponible. Verifica la dirección o vuelve al inicio.',
+        'La dirección ingresada no corresponde a una página disponible. Verifica la dirección o vuelve al inicio.',
       ),
     ).toBeVisible()
   })
