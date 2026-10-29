@@ -362,16 +362,21 @@ test('displays the back button at the bottom of the gallery index and returns ho
 }) => {
   await page.goto('/galeria')
 
+  await expect(
+    page.getByRole('heading', { level: 2, name: galleryAlbumList[0].title }),
+  ).toBeVisible()
+
   const backLink = page.getByRole('link', { name: 'Volver al inicio' })
   const heading = page.getByRole('heading', { level: 1, name: 'Galería' })
 
   await expect(backLink).toBeVisible()
+  await expect(backLink).toHaveAttribute('href', '/')
   const backBox = await backLink.boundingBox()
   const headingBox = await heading.boundingBox()
   expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
 
   await backLink.click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL('http://localhost:3000/')
 })
 
 test('displays the back button at the bottom of an album page and returns to gallery', async ({
