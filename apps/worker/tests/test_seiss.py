@@ -1,7 +1,9 @@
-"""The SEISS EHIS daily archive client, exercised without touching the network.
+"""The SEISS daily archive client, exercised without touching the network.
 
 The file names follow the real GOES-19 archive, where one file holds one day
-and lives in a per-month directory under ``l1b/seis-l1b-ehis``.
+and lives in a per-month directory: ``l1b/seis-l1b-ehis`` for EHIS and
+``l2/data/sgps-l2-avg1m`` for SGPS. Most cases use EHIS; what differs per
+product (directory and file name) is checked for every product.
 """
 
 from datetime import UTC, date, datetime
@@ -10,8 +12,17 @@ from typing import Any
 import httpx
 import pytest
 
-from app.clients import ehis
-from app.clients.ehis import EhisDownloader, EhisFile, month_urls, parse_file_name
+from app.clients import seiss
+from app.clients.seiss import (
+    SeissDownloader,
+    SeissFile,
+    SeissProduct,
+    month_urls,
+    parse_file_name,
+)
+
+EHIS = SeissProduct.EHIS
+SGPS = SeissProduct.SGPS
 
 FILE = "ops_seis-l1b-ehis_g19_d20261014_v0-0-2.nc"
 ROOT = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes19/"
@@ -28,7 +39,9 @@ def listing(*names: str) -> str:
     return f'<html><body><a href="?C=M;O=A">sort</a><a href="../">Parent</a>{links}</body></html>'
 
 
-def downloader(handler: Any, spacecraft: int = 19) -> tuple[EhisDownloader, list[str]]:
+def downloader(
+    handler: Any, spacecraft: int = 19, product: SeissProduct = EHIS
+) -> tuple[SeissDownloader, list[str]]:
     requested: list[str] = []
 
     def recording(request: httpx.Request) -> httpx.Response:
@@ -37,20 +50,45 @@ def downloader(handler: Any, spacecraft: int = 19) -> tuple[EhisDownloader, list
         return response
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(recording))
-    return EhisDownloader(client, spacecraft=spacecraft), requested
+    return SeissDownloader(client, product, spacecraft=spacecraft), requested
 
 
 def test_file_name_gives_the_spacecraft_day_and_version() -> None:
-    file = parse_file_name(FILE, f"{OCTOBER}{FILE}")
-    assert file == EhisFile(
+    file = parse_file_name(EHIS, FILE, f"{OCTOBER}{FILE}")
+    assert file == SeissFile(
         name=FILE,
         url=f"{OCTOBER}{FILE}",
+        product=EHIS,
         spacecraft=19,
         day=date(2026, 10, 14),
         version=(0, 0, 2),
     )
     assert file.version_label == "0-0-2"
-    assert parse_file_name(FILE) == EhisFile(FILE, FILE, 19, date(2026, 10, 14), (0, 0, 2))
+    assert parse_file_name(EHIS, FILE) == SeissFile(
+        FILE, FILE, EHIS, 19, date(2026, 10, 14), (0, 0, 2)
+    )
+
+
+def test_an_sgps_file_name_is_read_from_its_l2_name() -> None:
+    sgps = "sci_sgps-l2-avg1m_g19_d20261027_v3-0-3.nc"
+    file = parse_file_name(SGPS, sgps)
+    assert file is not None
+    assert (file.product, file.day, file.version_label) == (SGPS, date(2026, 10, 27), "3-0-3")
+    # Each product reads only its own files.
+    assert parse_file_name(EHIS, sgps) is None
+    assert parse_file_name(SGPS, FILE) is None
+
+
+@pytest.mark.parametrize(
+    ("product", "directory"),
+    [(EHIS, "l1b/seis-l1b-ehis"), (SGPS, "l2/data/sgps-l2-avg1m")],
+)
+def test_each_product_lists_its_own_archive_directory(
+    product: SeissProduct, directory: str
+) -> None:
+    assert month_urls(product, 19, date(2026, 10, 1), date(2026, 10, 2)) == [
+        f"{ROOT}{directory}/2026/10/"
+    ]
 
 
 @pytest.mark.parametrize(
@@ -64,22 +102,22 @@ def test_file_name_gives_the_spacecraft_day_and_version() -> None:
     ],
 )
 def test_anything_that_is_not_a_daily_ehis_file_is_skipped(candidate: str) -> None:
-    assert parse_file_name(candidate) is None
+    assert parse_file_name(EHIS, candidate) is None
 
 
 def test_a_window_crossing_a_month_lists_both_months() -> None:
-    assert month_urls(19, date(2026, 9, 29), date(2026, 10, 2)) == [SEPTEMBER, OCTOBER]
+    assert month_urls(EHIS, 19, date(2026, 9, 29), date(2026, 10, 2)) == [SEPTEMBER, OCTOBER]
 
 
 def test_a_window_crossing_the_year_rolls_the_year_over() -> None:
-    urls = month_urls(18, date(2025, 12, 30), date(2026, 1, 1))
+    urls = month_urls(EHIS, 18, date(2025, 12, 30), date(2026, 1, 1))
     assert [url.rsplit("/seis-l1b-ehis/", 1)[1] for url in urls] == ["2025/12/", "2026/01/"]
     assert urls[0].startswith(f"{ROOT.replace('goes19', 'goes18')}l1b/")
 
 
 def test_a_backwards_window_is_rejected() -> None:
     with pytest.raises(ValueError, match="start"):
-        month_urls(19, date(2026, 10, 2), date(2026, 10, 1))
+        month_urls(EHIS, 19, date(2026, 10, 2), date(2026, 10, 1))
 
 
 async def test_recent_files_span_both_months_keep_the_newest_version_and_the_window() -> None:
@@ -134,7 +172,7 @@ async def test_the_lookback_must_cover_at_least_one_day() -> None:
 
 def test_an_unknown_spacecraft_is_rejected() -> None:
     with pytest.raises(ValueError, match="Invalid GOES spacecraft"):
-        EhisDownloader(httpx.AsyncClient(), spacecraft=15)
+        SeissDownloader(httpx.AsyncClient(), EHIS, spacecraft=15)
 
 
 @pytest.mark.parametrize(
@@ -152,7 +190,7 @@ async def test_modified_at_reads_the_servers_last_modified(
     headers: dict[str, str], expected: datetime | None
 ) -> None:
     client, requested = downloader(lambda _: httpx.Response(200, headers=headers))
-    file = parse_file_name(FILE, f"{OCTOBER}{FILE}")
+    file = parse_file_name(EHIS, FILE, f"{OCTOBER}{FILE}")
     assert file is not None
     assert await client.modified_at(file) == expected
     assert requested == [f"HEAD {OCTOBER}{FILE}"]
@@ -160,7 +198,7 @@ async def test_modified_at_reads_the_servers_last_modified(
 
 async def test_modified_at_raises_for_a_missing_file() -> None:
     client, _ = downloader(lambda _: httpx.Response(404))
-    file = parse_file_name(FILE, f"{OCTOBER}{FILE}")
+    file = parse_file_name(EHIS, FILE, f"{OCTOBER}{FILE}")
     assert file is not None
     with pytest.raises(httpx.HTTPStatusError):
         await client.modified_at(file)
@@ -168,7 +206,7 @@ async def test_modified_at_raises_for_a_missing_file() -> None:
 
 async def test_fetch_downloads_the_file() -> None:
     client, _ = downloader(lambda _: httpx.Response(200, content=b"netcdf"))
-    file = parse_file_name(FILE, f"{OCTOBER}{FILE}")
+    file = parse_file_name(EHIS, FILE, f"{OCTOBER}{FILE}")
     assert file is not None
     download = await client.fetch(file)
     assert download.file is file
@@ -176,9 +214,9 @@ async def test_fetch_downloads_the_file() -> None:
 
 
 async def test_fetch_gives_up_on_an_oversized_file(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(ehis, "MAX_FILE_BYTES", 4)
+    monkeypatch.setattr(seiss, "MAX_FILE_BYTES", 4)
     client, _ = downloader(lambda _: httpx.Response(200, content=b"far too large"))
-    file = parse_file_name(FILE, f"{OCTOBER}{FILE}")
+    file = parse_file_name(EHIS, FILE, f"{OCTOBER}{FILE}")
     assert file is not None
     with pytest.raises(ValueError, match="size limit"):
         await client.fetch(file)
