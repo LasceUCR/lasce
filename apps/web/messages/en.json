@@ -688,6 +688,7 @@
   "gallery": {
     "meta": {
       "title": "Gallery | LASCE",
+      "albumTitle": "{album} | Gallery LASCE",
       "description": "Photographs and video of the activities of the Laboratorio de Ciencias Espaciales: construction and instrumentation, observation, and daily life of the team."
     },
     "hero": {

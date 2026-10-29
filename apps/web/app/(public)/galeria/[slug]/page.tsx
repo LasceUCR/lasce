@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: AlbumRouteProps): Promise<Met
   }
 
   return {
-    title: `${album.title} ${t('title')}`,
+    title: t('albumTitle', { album: album.title }),
     description: album.description,
   }
 }
