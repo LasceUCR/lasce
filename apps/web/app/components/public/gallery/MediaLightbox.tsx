@@ -45,7 +45,7 @@ export function MediaLightbox({
 
   return (
     <Lightbox
-      announcement={`Archivo ${position} de ${total}: ${item.title}.`}
+      announcement={tMedia('announcement', { position, total, title: item.title })}
       describedBy={descriptionId}
       labelledBy={titleId}
       labels={labels}
@@ -53,7 +53,7 @@ export function MediaLightbox({
       onNext={onNext}
       onPrevious={onPrevious}
       position={position}
-      positionLabel={`Archivo ${position} de ${total}`}
+      positionLabel={tMedia('position', { position, total })}
       total={total}
     >
       <figure className="lightbox-stage">

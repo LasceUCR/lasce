@@ -712,6 +712,8 @@
       "close": "Cerrar",
       "previous": "Anterior",
       "next": "Siguiente",
+      "position": "Archivo {position} de {total}",
+      "announcement": "Archivo {position} de {total}: {title}.",
       "dateCaptured": "Fecha de captura: {date}",
       "format": "Formato: {format}",
       "uploadedBy": "Subido por: {user}"
