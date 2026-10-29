@@ -29,7 +29,7 @@ vi.mock('@lasce/db', () => ({
 }))
 
 const { tx, prisma } = mocks
-const { findMany, deleteMany } = prisma.researcher
+const { findMany } = prisma.researcher
 
 const {
   createResearcher,
