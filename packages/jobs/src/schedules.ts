@@ -110,13 +110,25 @@ export const schedules: Schedule[] = [
       lookbackDays: 3,
     },
   },
-  // NOAA publishes the EHIS daily file around 04:30 UTC the next morning, and sometimes
-  // republishes a day. Hourly, ten minutes after MAG so the daily pipelines do not share a minute.
+  // NOAA publishes each SEISS daily file around 04:30 UTC the next morning, and sometimes
+  // republishes a day. One entry per product, so a failed run of one never holds up another, each
+  // hourly on its own minute after MAG so the daily pipelines do not share a minute.
   {
-    id: 'ehis-pipeline-ehis',
-    name: 'ehis-pipeline',
+    id: 'seiss-pipeline-ehis',
+    name: 'seiss-pipeline',
     cron: '35 * * * *',
     data: {
+      product: 'EHIS',
+      spacecraft: 19,
+      lookbackDays: 3,
+    },
+  },
+  {
+    id: 'seiss-pipeline-sgps',
+    name: 'seiss-pipeline',
+    cron: '40 * * * *',
+    data: {
+      product: 'SGPS',
       spacecraft: 19,
       lookbackDays: 3,
     },
