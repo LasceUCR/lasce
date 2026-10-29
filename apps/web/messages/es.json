@@ -1431,7 +1431,7 @@
       "title": "Permisos de consulta y descarga",
       "goesConsultation": "Puede consultar los datos de GOES ({instrument}) sin una cuenta. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos.",
       "rosacConsultation": "Puede consultar los datos de ROSAC ({instrument}) sin una cuenta. ROSAC es una previsión de integración: sus instrumentos y datos reales aún no están definidos; todos los resultados son simulados.",
-      "pendingProducts": "EHIS y MPSL están pendientes de integración.",
+      "pendingProducts": "MPSL está pendiente de integración.",
       "rosacDownloads": "Todos los datos de ROSAC ({instrument}) están disponibles para descargar en CSV, junto con la gráfica en PNG.",
       "goesChartOnly": "Para GOES ({instrument}), solo está disponible la descarga de la gráfica en PNG con los permisos de una cuenta básica.",
       "goesDataDownloads": "Sus permisos permiten descargar los datos de GOES ({instrument}) en CSV y la gráfica en PNG.",
@@ -1499,7 +1499,7 @@
           },
           "sgps": {
             "name": "Protones solares y galácticos",
-            "availabilityNote": "Seleccione la unidad SGPS−X o SGPS+X. El archivo nivel 1b incluye canales diferenciales y el integral > 500 MeV."
+            "availabilityNote": "Seleccione la unidad SGPS−X o SGPS+X y el canal. NOAA publica cada día promedios de 1 minuto (nivel 2) de los canales diferenciales y del integral > 500 MeV, con aproximadamente un día de retraso."
           }
         }
       },

@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   queryExisReadings: vi.fn(),
   queryMagReadings: vi.fn(),
   queryEhisReadings: vi.fn(),
+  querySgpsReadings: vi.fn(),
   queryCiticScientificData: vi.fn(),
 }))
 
@@ -65,6 +66,10 @@ vi.mock('@/app/services/scientific-data/magReadingsDataSource', () => ({
 
 vi.mock('@/app/services/scientific-data/ehisReadingsDataSource', () => ({
   queryEhisReadings: mocks.queryEhisReadings,
+}))
+
+vi.mock('@/app/services/scientific-data/sgpsReadingsDataSource', () => ({
+  querySgpsReadings: mocks.querySgpsReadings,
 }))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
@@ -158,6 +163,7 @@ describe('GET /api/scientific-data', () => {
     expect(mocks.queryExisReadings).not.toHaveBeenCalled()
     expect(mocks.queryMagReadings).not.toHaveBeenCalled()
     expect(mocks.queryEhisReadings).not.toHaveBeenCalled()
+    expect(mocks.querySgpsReadings).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
 
@@ -173,6 +179,22 @@ describe('GET /api/scientific-data', () => {
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual(expected)
       expect(mocks.queryEhisReadings).toHaveBeenCalledWith(ehis)
+      expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    },
+  )
+
+  test.each(['minus:P1', 'plus:P8AF', 'plus:P11'])(
+    'routes SEISS SGPS %s to the InfluxDB readings synchronously',
+    async (parameter) => {
+      const expected = { visualization: 'time-series', points: [] }
+      mocks.querySgpsReadings.mockResolvedValue(expected)
+      const sgps = { ...validGoesQuery, product: 'SGPS', parameter }
+
+      const response = await GET(request(sgps))
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual(expected)
+      expect(mocks.querySgpsReadings).toHaveBeenCalledWith(sgps)
       expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
     },
   )

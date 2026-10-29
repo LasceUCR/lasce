@@ -6,6 +6,7 @@ import { createInstrumentRoutedDataSource } from './instrumentRoutedDataSource'
 import { queryMockScientificData } from './mockScientificDataSource'
 import type { ScientificDataProvider } from './scientificDataSource'
 import { ScientificDataSourceManager } from './scientificDataSourceManager'
+import { querySgpsReadings } from './sgpsReadingsDataSource'
 import { querySuviFrames } from './suviFrameDataSource'
 
 /*
@@ -30,6 +31,10 @@ const ehisReadings: ScientificDataProvider = {
   query: ({ query }) => queryEhisReadings(query),
 }
 
+const sgpsReadings: ScientificDataProvider = {
+  query: ({ query }) => querySgpsReadings(query),
+}
+
 const citicArchive: ScientificDataProvider = {
   query: ({ query, jobId }) => queryCiticScientificData(query, jobId),
 }
@@ -47,8 +52,8 @@ export const scientificDataSources = new ScientificDataSourceManager([
       MAG: magReadings,
       SEISS: citicArchive,
     },
-    // SEISS EHIS is ingested daily by the worker; the other SEISS products stay on CITIC.
-    { EHIS: ehisReadings },
+    // SEISS EHIS and SGPS are ingested daily by the worker's seiss-pipeline; MPSH stays on CITIC.
+    { EHIS: ehisReadings, SGPS: sgpsReadings },
   ),
   createInstrumentRoutedDataSource('ROSAC', {
     'ROSAC-I1': rosacSimulation,
