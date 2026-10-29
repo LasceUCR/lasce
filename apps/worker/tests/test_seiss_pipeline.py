@@ -24,6 +24,7 @@ from app.models.jobs import SeissPipelinePayload
 from app.processors import seiss_pipeline
 from app.services.seiss import SeissReadings
 from app.services.seiss.readings import IngestedFile
+from tests.test_seiss_mpsh import mpsh_netcdf
 from tests.test_seiss_readings import ehis_netcdf
 from tests.test_seiss_sgps import sgps_netcdf
 
@@ -36,6 +37,8 @@ TODAY = datetime.now(UTC).date()
 def name(day: date, product: str = "EHIS") -> str:
     if product == "SGPS":
         return f"sci_sgps-l2-avg1m_g19_d{day:%Y%m%d}_v3-0-3.nc"
+    if product == "MPSH":
+        return f"sci_mpsh-l2-avg1m_g19_d{day:%Y%m%d}_v2-0-3.nc"
     return f"ops_seis-l1b-ehis_g19_d{day:%Y%m%d}_v0-0-2.nc"
 
 
@@ -179,6 +182,21 @@ async def test_sgps_is_listed_decoded_and_stored_as_its_own_product(
     assert downloads(requested) == [f"GET {result['file']['url']}"]
     ((stored,),) = [readings]
     assert (stored.product, stored.measurement) == ("SGPS", "sgps_flux")
+    persist.assert_awaited_once()
+
+
+async def test_mpsh_is_read_from_its_science_directory(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    yesterday = TODAY - timedelta(days=1)
+    serve(monkeypatch, archive([yesterday], mpsh_netcdf(tmp_path), product="MPSH"))
+    persist = mock_readings(monkeypatch)
+
+    result = await seiss_pipeline.run(payload(product="MPSH"), AsyncMock())
+
+    assert result["product"] == "MPSH"
+    assert "/l2/data/mpsh-l2-avg1m_science/" in result["file"]["url"]
+    assert len(result["points"]) == 105
     persist.assert_awaited_once()
 
 

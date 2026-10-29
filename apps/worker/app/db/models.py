@@ -680,7 +680,7 @@ class SeissFile(Base):
     """One daily SEISS file (one product, one UTC day). Written by
     ``app.services.seiss.readings.SeissReadings``, the only writer this table
     has. The readings themselves are in the product's InfluxDB measurement
-    (``ehis_flux``, ``sgps_flux``); this row records that the day was ingested,
+    (``ehis_flux``, ``sgps_flux``, ``mpsh_flux``); this row records that the day was ingested,
     from which version of the archive's file, and how many points each channel
     produced.
     """
