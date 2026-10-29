@@ -96,10 +96,6 @@ export function AlbumPage({
   const createForm = useRef<AlbumFormHandle>(null)
   const editForm = useRef<AlbumFormHandle>(null)
 
-  function albumMediaMeta(media: readonly GalleryMedia[]): string {
-    return `${media.length} ${t('albumFiles')}`
-  }
-
   async function handleCreate(values: AlbumFormValues, close: () => void): Promise<void> {
     if (!parentAlbumId || createInProgress.current) return
 
@@ -205,7 +201,7 @@ export function AlbumPage({
       <TopicHero kicker={tCommon('gallery')} lead={description} notice={meta} title={title} />
 
       {parentSlug && (subAlbums.length > 0 || (editMode && canCreate && parentAlbumId)) ? (
-        <TopicSection title={tCommon('subalbums')} titleId="album-subalbums">
+        <TopicSection title={tCommon('subalbumsTitle')} titleId="album-subalbums">
           <ul className="card-grid card-grid-3 tile-list gallery-subalbum-list">
             {editMode && canCreate && parentAlbumId ? (
               <li className="gallery-subalbum-add">
@@ -250,7 +246,7 @@ export function AlbumPage({
                     >
                       <AlbumTile
                         href={subAlbumPath(parentSlug, subAlbum.slug)}
-                        meta={`${subAlbum.media.length} ${tCommon('files')}`}
+                        meta={tCommon('files', { count: subAlbum.media.length })}
                         src={subAlbum.src}
                         title={subAlbum.title}
                       />
@@ -258,7 +254,7 @@ export function AlbumPage({
                   ) : (
                     <AlbumTile
                       href={subAlbumPath(parentSlug, subAlbum.slug)}
-                      meta={`${subAlbum.media.length} ${tCommon('files')}`}
+                      meta={tCommon('files', { count: subAlbum.media.length })}
                       src={subAlbum.src}
                       title={subAlbum.title}
                     />
@@ -270,7 +266,11 @@ export function AlbumPage({
         </TopicSection>
       ) : null}
 
-      <TopicSection badge={albumMediaMeta(media)} title={t('albumContent')} titleId="album-media">
+      <TopicSection
+        badge={t('albumFiles', { count: media.length })}
+        title={t('albumContent')}
+        titleId="album-media"
+      >
         <AlbumMediaGrid
           albumTitle={title}
           media={media}

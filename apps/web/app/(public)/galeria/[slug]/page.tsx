@@ -57,7 +57,11 @@ export default async function AlbumRoute({ params }: AlbumRouteProps) {
       canEdit={canEdit}
       description={album.description}
       media={album.media}
-      meta={albumMeta(album, tCommon('files'), tCommon('subalbums'))}
+      meta={albumMeta(
+        album,
+        (count) => tCommon('files', { count }),
+        (count) => tCommon('subalbums', { count }),
+      )}
       parentSlug={album.slug}
       parentAlbumId={album.id}
       subAlbums={album.subAlbums}

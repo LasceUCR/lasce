@@ -697,14 +697,15 @@
       "lead": "Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes."
     },
     "common": {
-      "files": "Archivos",
-      "subalbums": "Subálbumes",
+      "files": "{count, plural, one {# archivo} other {# archivos}}",
+      "subalbums": "{count, plural, one {# subálbum} other {# subálbumes}}",
+      "subalbumsTitle": "Subálbumes",
       "backToGallery": "Volver a la galería",
       "backToAlbum": "Volver a {album}",
       "gallery": "Galería LASCE"
     },
     "albumPage": {
-      "albumFiles": "archivos en este álbum",
+      "albumFiles": "{count, plural, one {# archivo en este álbum} other {# archivos en este álbum}}",
       "albumContent": "Fotografías y video de este álbum"
     },
     "media": {

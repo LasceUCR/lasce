@@ -7,6 +7,8 @@ import { WithoutSubAlbums, WithSubAlbums } from './GalleryGroupSection.stories'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { albumFileCount } from '@/app/lib/gallery'
+import type { Locale } from '@/app/lib/i18n/config'
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -19,23 +21,25 @@ vi.mock('next/navigation', () => ({
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
 function albumMeta(album: GalleryGroupSectionProps['album']): string {
-  const fileCount = album.subAlbums.reduce(
-    (total, subAlbum) => total + subAlbum.media.length,
-    album.media.length,
-  )
-  return `${album.subAlbums.length ? `${album.subAlbums.length} Subálbumes · ` : ''}${fileCount} Archivos · ${album.years}`
+  const subAlbumCount = album.subAlbums.length
+  const fileCount = albumFileCount(album)
+  const subAlbumLabel = subAlbumCount === 1 ? 'subálbum' : 'subálbumes'
+  const fileLabel = fileCount === 1 ? 'archivo' : 'archivos'
+
+  return `${subAlbumCount ? `${subAlbumCount} ${subAlbumLabel} · ` : ''}${fileCount} ${fileLabel} · ${album.years}`
 }
 
 const withSubAlbums = WithSubAlbums.args as GalleryGroupSectionProps
 const withoutSubAlbums = WithoutSubAlbums.args as GalleryGroupSectionProps
 
-function renderSection(props: GalleryGroupSectionProps, editMode = false) {
+function renderSection(props: GalleryGroupSectionProps, editMode = false, locale?: Locale) {
   return renderWithIntl(
     <ToastProvider>
       <EditModeContext.Provider value={{ editMode, setEditMode: () => undefined }}>
         <GalleryGroupSection {...props} />
       </EditModeContext.Provider>
     </ToastProvider>,
+    { locale },
   )
 }
 
@@ -84,8 +88,32 @@ describe('GalleryGroupSection', () => {
     for (const subAlbum of album.subAlbums) {
       const tile = screen.getByRole('link', { name: new RegExp(subAlbum.title) })
 
-      expect(tile).toHaveTextContent(`${subAlbum.media.length} Archivos`)
+      const fileLabel =
+        subAlbum.media.length === 1
+          ? `${subAlbum.media.length} archivo`
+          : `${subAlbum.media.length} archivos`
+      expect(tile).toHaveTextContent(fileLabel)
     }
+  })
+
+  test('uses English singular forms for a single sub-album and file', () => {
+    const subAlbum = withSubAlbums.album.subAlbums.find((candidate) => candidate.slug === 'montaje')
+    if (!subAlbum) throw new Error('The gallery fixture is missing its sub-album')
+    const media = subAlbum.media[0]
+    if (!media) throw new Error('The gallery sub-album fixture is missing media')
+
+    const album = {
+      ...withSubAlbums.album,
+      media: [],
+      subAlbums: [{ ...subAlbum, media: [media] }],
+    }
+
+    renderSection({ ...withSubAlbums, album }, false, 'en')
+
+    expect(screen.getAllByText('1 subalbum · 1 file · 2019–2023')).toHaveLength(2)
+    expect(screen.getByRole('link', { name: new RegExp(subAlbum.title) })).toHaveTextContent(
+      '1 file',
+    )
   })
 
   test('presents the cover and its sub-albums as one list', () => {

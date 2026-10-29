@@ -697,14 +697,15 @@
       "lead": "Photographs and video of the laboratory's activities: construction and instrumentation, observation, and daily life of the team. Organized by albums."
     },
     "common": {
-      "files": "Files",
-      "subalbums": "Subalbums",
+      "files": "{count, plural, one {# file} other {# files}}",
+      "subalbums": "{count, plural, one {# subalbum} other {# subalbums}}",
+      "subalbumsTitle": "Subalbums",
       "backToGallery": "Back to gallery",
       "backToAlbum": "Back to {album}",
       "gallery": "LASCE Gallery"
     },
     "albumPage": {
-      "albumFiles": "files in this album",
+      "albumFiles": "{count, plural, one {# file in this album} other {# files in this album}}",
       "albumContent": "Photographs and video of this album"
     },
     "media": {

@@ -1936,19 +1936,18 @@ export function albumFileCount(album: GalleryAlbum): number {
 }
 
 /** Summary line for an album: sub-albums, total files and the years covered. */
-export function albumMeta(album: GalleryAlbum, files: string, subalbums: string): string {
-  const parts = [`${albumFileCount(album)} ${files}`, album.years]
+export function albumMeta(
+  album: GalleryAlbum,
+  files: (count: number) => string,
+  subalbums: (count: number) => string,
+): string {
+  const parts = [files(albumFileCount(album)), album.years]
 
   if (album.subAlbums.length > 0) {
-    parts.unshift(`${album.subAlbums.length} ${subalbums}`)
+    parts.unshift(subalbums(album.subAlbums.length))
   }
 
   return parts.join(' · ')
-}
-
-/** The "N archivos en este álbum" counter shown beside a media grid. */
-export function albumMediaMeta(media: readonly GalleryMedia[]): string {
-  return `${media.length} archivos en este álbum`
 }
 
 /** Placeholder caption for a media tile whose file has not been uploaded. */

@@ -60,7 +60,7 @@ export default async function SubAlbumRoute({ params }: SubAlbumRouteProps) {
       canEdit={canEdit}
       description={subAlbum.description}
       media={subAlbum.media}
-      meta={`${subAlbum.media.length} ${tCommon('files')} · ${album.title}`}
+      meta={`${tCommon('files', { count: subAlbum.media.length })} · ${album.title}`}
       title={subAlbum.title}
     />
   )

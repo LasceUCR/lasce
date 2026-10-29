@@ -71,20 +71,15 @@ export function GalleryGroupSection({
   const createForm = useRef<AlbumFormHandle>(null)
   const saveInProgress = useRef(false)
   const editForm = useRef<AlbumFormHandle>(null)
-
-  function albumMeta(album: GalleryAlbum): string {
-    const fileCount = album.subAlbums.reduce(
-      (total, subAlbum) => total + subAlbum.media.length,
-      album.media.length,
-    )
-    const parts = [`${fileCount} ${t('files')}`, album.years]
-
-    if (album.subAlbums.length > 0) {
-      parts.unshift(`${album.subAlbums.length} ${t('subalbums')}`)
-    }
-
-    return parts.join(' · ')
+  const fileCount = album.subAlbums.reduce(
+    (total, subAlbum) => total + subAlbum.media.length,
+    album.media.length,
+  )
+  const summaryParts = [t('files', { count: fileCount }), album.years]
+  if (album.subAlbums.length > 0) {
+    summaryParts.unshift(t('subalbums', { count: album.subAlbums.length }))
   }
+  const summary = summaryParts.join(' · ')
 
   async function handleCreate(values: AlbumFormValues, close: () => void): Promise<void> {
     const slug = slugFromTitle(values.title)
@@ -188,7 +183,7 @@ export function GalleryGroupSection({
   const cover = (
     <AlbumTile
       href={albumPath(album.slug)}
-      meta={albumMeta(album)}
+      meta={summary}
       src={album.coverObjectKey}
       title={album.title}
       variant="cover"
@@ -199,7 +194,7 @@ export function GalleryGroupSection({
     <section aria-labelledby={headingId} className="gallery-group">
       <div className="gallery-group-heading">
         <h2 id={headingId}>{album.title}</h2>
-        <span className="gallery-group-meta">{albumMeta(album)}</span>
+        <span className="gallery-group-meta">{summary}</span>
       </div>
       <p className="gallery-group-description">{album.description}</p>
 
@@ -252,7 +247,7 @@ export function GalleryGroupSection({
           const tile = (
             <AlbumTile
               href={subAlbumPath(album.slug, subAlbum.slug)}
-              meta={`${subAlbum.media.length} ${t('files')}`}
+              meta={t('files', { count: subAlbum.media.length })}
               src={subAlbum.coverObjectKey}
               title={subAlbum.title}
             />
