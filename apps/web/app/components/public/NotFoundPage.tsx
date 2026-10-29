@@ -1,4 +1,3 @@
-
 import { useTranslations } from 'next-intl'
 
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
