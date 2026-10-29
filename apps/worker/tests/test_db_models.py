@@ -12,7 +12,6 @@ from app.db import (
     CollaborationTranslation,
     ContactChannel,
     ContactChannelTranslation,
-    EhisFile,
     ExisFile,
     GalleryAlbum,
     GalleryMedia,
@@ -36,6 +35,7 @@ from app.db import (
     ResearchTranslation,
     ResourceDownload,
     RolePermission,
+    SeissFile,
     SolarPhysicsSection,
     SolarPhysicsSectionTranslation,
     SpaceWeatherSection,
@@ -487,12 +487,12 @@ def test_mag_file_is_unique_per_satellite_product_and_day() -> None:
     assert "mag_files_satellite_product_day_key" in constraint_names
 
 
-def test_ehis_files_live_in_the_solar_schema() -> None:
-    assert EhisFile.__table__.schema == "solar"
+def test_seiss_files_live_in_the_solar_schema() -> None:
+    assert SeissFile.__table__.schema == "solar"
 
 
-def test_ehis_file_matches_the_prisma_columns() -> None:
-    columns = EhisFile.__table__.columns
+def test_seiss_file_matches_the_prisma_columns() -> None:
+    columns = SeissFile.__table__.columns
 
     assert set(columns.keys()) == {
         "id",
@@ -516,9 +516,9 @@ def test_ehis_file_matches_the_prisma_columns() -> None:
     assert columns["first_observed_at"].nullable
 
 
-def test_ehis_file_is_unique_per_satellite_product_and_day() -> None:
-    constraint_names = {constraint.name for constraint in EhisFile.__table__.constraints}
-    assert "ehis_files_satellite_product_day_key" in constraint_names
+def test_seiss_file_is_unique_per_satellite_product_and_day() -> None:
+    constraint_names = {constraint.name for constraint in SeissFile.__table__.constraints}
+    assert "seiss_files_satellite_product_day_key" in constraint_names
 
 
 def test_resource_downloads_live_in_the_public_schema() -> None:
