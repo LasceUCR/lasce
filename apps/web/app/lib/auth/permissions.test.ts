@@ -24,6 +24,7 @@ describe('permission catalogue', () => {
       'download_goes_resources',
       'manage_users',
       'manage_permissions',
+      'view_audit_log',
     ])
   })
 

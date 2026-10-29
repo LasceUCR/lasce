@@ -1,6 +1,7 @@
 import { prisma, type Prisma } from '@lasce/db'
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
@@ -156,6 +157,7 @@ async function replaceAuthors(tx: Prisma.TransactionClient, researchId: string, 
  */
 export async function createPublication(
   input: PublicationCreateInput,
+  actor: AuditActor,
 ): Promise<PublicationWriteResult> {
   return writePublication(async (tx) => {
     const publisher = await upsertPublisher(tx, input.venue)
@@ -174,7 +176,17 @@ export async function createPublication(
 
     await replaceAuthors(tx, research.id, input.authors)
 
-    return tx.research.findUniqueOrThrow({ where: { id: research.id }, include: recordInclude })
+    const created = await tx.research.findUniqueOrThrow({
+      where: { id: research.id },
+      include: recordInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'publication.create',
+      summary: `Publicación agregada: ${created.title}`,
+      entityType: 'publication',
+      entityId: created.id,
+    })
+    return created
   })
 }
 
@@ -195,6 +207,7 @@ export async function createPublication(
 export async function updatePublication(
   id: string,
   input: PublicationUpdateInput,
+  actor: AuditActor,
 ): Promise<PublicationWriteResult> {
   const expectedUpdatedAt = parseVersion(input.version)
 
@@ -266,15 +279,32 @@ export async function updatePublication(
       await replaceAuthors(tx, id, input.authors)
     }
 
-    return tx.research.findUniqueOrThrow({ where: { id }, include: recordInclude })
+    const updated = await tx.research.findUniqueOrThrow({ where: { id }, include: recordInclude })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'publication.update',
+      summary: `Publicación actualizada: ${updated.title}`,
+      entityType: 'publication',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 }
 
 /** Deletes a publication. Its translations and author links go with it (`ON DELETE CASCADE`). */
-export async function deletePublication(id: string): Promise<boolean> {
+export async function deletePublication(id: string, actor: AuditActor): Promise<boolean> {
   // One statement that reports how many rows it removed: a concurrent delete of the same
   // publication finds nothing and answers "not found", instead of failing between a check and
   // the delete. Translations and author links go with it (`onDelete: Cascade`).
-  const { count } = await prisma.research.deleteMany({ where: { id } })
-  return count > 0
+  return runAuditedDelete(
+    (tx) => tx.research.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.research.deleteMany({ where: { id } }),
+    (tx, publication) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'publication.delete',
+        summary: `Publicación eliminada: ${publication.title}`,
+        entityType: 'publication',
+        entityId: id,
+      }),
+  )
 }

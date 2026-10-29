@@ -115,7 +115,7 @@ describe('PATCH /api/news/[id]', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     await expect(response.json()).resolves.toEqual({ article })
-    expect(mocks.updateNews).toHaveBeenCalledWith(newsId, contentBody)
+    expect(mocks.updateNews).toHaveBeenCalledWith(newsId, contentBody, expect.anything())
   })
 
   test('passes a shared-field update through without content', async () => {
@@ -124,10 +124,14 @@ describe('PATCH /api/news/[id]', () => {
 
     await PATCH(patchRequest({ version: VERSION, source: 'Delfino.cr' }), { params })
 
-    expect(mocks.updateNews).toHaveBeenCalledWith(newsId, {
-      version: VERSION,
-      source: 'Delfino.cr',
-    })
+    expect(mocks.updateNews).toHaveBeenCalledWith(
+      newsId,
+      {
+        version: VERSION,
+        source: 'Delfino.cr',
+      },
+      expect.anything(),
+    )
   })
 
   test('answers 404 when the item does not exist, saying it may have been deleted', async () => {
@@ -241,6 +245,6 @@ describe('DELETE /api/news/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteNews).toHaveBeenCalledWith(newsId)
+    expect(mocks.deleteNews).toHaveBeenCalledWith(newsId, expect.anything())
   })
 })
