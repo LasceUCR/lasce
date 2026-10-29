@@ -45,7 +45,7 @@ test('shows the gallery listing in Spanish and English', async ({ page }) => {
 
 for (const { locale, albumTitle, pageTitle } of [
   { locale: 'es', albumTitle: 'Fotos del ROSAC', pageTitle: 'Fotos del ROSAC | Galería LASCE' },
-  { locale: 'en', albumTitle: 'ROSAC Photos', pageTitle: 'ROSAC Photos | Gallery  LASCE' },
+  { locale: 'en', albumTitle: 'ROSAC Photos', pageTitle: 'ROSAC Photos | Gallery LASCE' },
 ] as const) {
   test(`shows the ROSAC album in ${locale === 'es' ? 'Spanish' : 'English'}`, async ({
     context,
@@ -90,7 +90,7 @@ test('switches language on the ROSAC album without leaving the album page', asyn
   await expect(
     page.getByRole('heading', { name: 'Photographs and video of this album' }),
   ).toBeVisible()
-  await expect(page).toHaveTitle('ROSAC Photos | Gallery  LASCE')
+  await expect(page).toHaveTitle('ROSAC Photos | Gallery LASCE')
   await expect(
     page.getByRole('button', { name: 'View full size: Nighttime Work on the Radio Telescope' }),
   ).toBeVisible()
@@ -177,7 +177,7 @@ test('switches language on a ROSAC sub-album and translates its media and naviga
       'Site preparation, foundation work, and logistical arrangements for the observatory components.',
     ),
   ).toBeVisible()
-  await expect(page).toHaveTitle('Preparatory Work Before Assembly | Gallery  LASCE')
+  await expect(page).toHaveTitle('Preparatory Work Before Assembly | Gallery LASCE')
   await expect(
     page.getByRole('button', { name: 'View full size: Storage of the Base and Azimuth Mechanism' }),
   ).toBeVisible()
