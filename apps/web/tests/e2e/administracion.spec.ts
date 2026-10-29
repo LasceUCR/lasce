@@ -207,6 +207,7 @@ test('shows an administrator every section', async ({ page, context }) => {
       'Descargas',
       'Usuarios',
       'Permisos',
+      'Auditoría',
       'Infraestructura',
     ])
   } finally {

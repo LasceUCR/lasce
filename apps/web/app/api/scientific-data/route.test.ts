@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   querySuviFrames: vi.fn(),
   queryExisReadings: vi.fn(),
   queryMagReadings: vi.fn(),
+  queryEhisReadings: vi.fn(),
   queryCiticScientificData: vi.fn(),
 }))
 
@@ -60,6 +61,10 @@ vi.mock('@/app/services/scientific-data/exisReadingsDataSource', () => ({
 
 vi.mock('@/app/services/scientific-data/magReadingsDataSource', () => ({
   queryMagReadings: mocks.queryMagReadings,
+}))
+
+vi.mock('@/app/services/scientific-data/ehisReadingsDataSource', () => ({
+  queryEhisReadings: mocks.queryEhisReadings,
 }))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
@@ -152,8 +157,25 @@ describe('GET /api/scientific-data', () => {
     expect(mocks.querySuviFrames).not.toHaveBeenCalled()
     expect(mocks.queryExisReadings).not.toHaveBeenCalled()
     expect(mocks.queryMagReadings).not.toHaveBeenCalled()
+    expect(mocks.queryEhisReadings).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
+
+  test.each(['H:E1', 'He:E5', 'ClNi:E3'])(
+    'routes SEISS EHIS %s to the InfluxDB readings synchronously',
+    async (parameter) => {
+      const expected = { visualization: 'time-series', points: [] }
+      mocks.queryEhisReadings.mockResolvedValue(expected)
+      const ehis = { ...validGoesQuery, product: 'EHIS', parameter }
+
+      const response = await GET(request(ehis))
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual(expected)
+      expect(mocks.queryEhisReadings).toHaveBeenCalledWith(ehis)
+      expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    },
+  )
 
   test.each(['EPN-x', 'EPN-y', 'EPN-z', 'total'])(
     'routes MAG %s to the InfluxDB readings synchronously',
