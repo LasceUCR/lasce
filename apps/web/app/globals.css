@@ -7377,7 +7377,7 @@ a.acknowledgments-card:focus-visible {
 
 .audit-action {
   font-size: 13px;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .audit-date {
@@ -7459,7 +7459,9 @@ a.acknowledgments-card:focus-visible {
     font-weight: 600;
   }
 
-  .audit-date {
+  .audit-date,
+  .audit-action {
     white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
