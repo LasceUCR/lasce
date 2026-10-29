@@ -26,8 +26,8 @@ const GOES_DATA: readonly Permission[] = ['download_resources', 'download_goes_r
  * download service (to enforce) read this table, so they cannot disagree.
  *
  * - Chart images: every charted instrument.
- * - Data: free for non-GOES sources; GOES data needs `download_goes_resources`. EXIS and MAG
- *   have full-resolution readers in the web today; SEISS data comes later.
+ * - Data: free for non-GOES sources; GOES data needs `download_goes_resources`. EXIS, MAG and
+ *   SEISS (EHIS, SGPS, MPSH) are read at full resolution from InfluxDB.
  * - SUVI: nothing, by design. Leave it out rather than adding an empty entry.
  */
 export const DOWNLOAD_POLICIES: Partial<
@@ -36,7 +36,7 @@ export const DOWNLOAD_POLICIES: Partial<
   GOES: {
     EXIS: { png: GRAPHIC, csv: GOES_DATA },
     MAG: { png: GRAPHIC, csv: GOES_DATA },
-    SEISS: { png: GRAPHIC },
+    SEISS: { png: GRAPHIC, csv: GOES_DATA },
   },
   ROSAC: {
     'ROSAC-I1': { png: GRAPHIC, csv: OPEN_DATA },
