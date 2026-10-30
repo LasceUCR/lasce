@@ -173,6 +173,7 @@
       "readLess": "Read less"
     },
     "loading": "Loading…",
+    "loadingMap": "Loading the map…",
     "pagination": {
       "label": "Pagination",
       "previous": "Previous",
@@ -212,6 +213,7 @@
       "lead": "Official channels of the Laboratorio de Astrofísica Solar y Clima Espacial."
     },
     "channelsTitle": "Contact information",
+    "loading": "Loading contact…",
     "cards": {
       "add": "Add contact channel",
       "editTitle": "Edit contact channel",
