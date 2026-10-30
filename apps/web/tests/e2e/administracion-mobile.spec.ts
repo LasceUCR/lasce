@@ -109,11 +109,7 @@ test('offers an assistant only the sections its grants unlock in the bar', async
 
     await menuToggle(page).click()
 
-    await expect(adminMenu(page).getByRole('link')).toHaveText([
-      'Resumen',
-      'Descargas',
-      'Infraestructura',
-    ])
+    await expect(adminMenu(page).getByRole('link')).toHaveText(['Resumen', 'Infraestructura'])
   } finally {
     await fixture.cleanup()
   }
