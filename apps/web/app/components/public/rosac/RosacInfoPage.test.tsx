@@ -437,7 +437,13 @@ describe('RosacInfoPage', () => {
     expect(
       screen.queryByRole('heading', { name: 'Preparación para el montaje' }),
     ).not.toBeInTheDocument()
-    expect(screen.getByText('Investigadora principal')).toBeInTheDocument()
+    expect(screen.getByText('Principal Investigator')).toBeInTheDocument()
+    expect(screen.queryByText('Investigadora principal')).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument.',
+      ),
+    ).toBeInTheDocument()
     expect(screen.getAllByText(/^Institution:/).length).toBeGreaterThan(0)
     expect(screen.queryByText(/^Institución:/)).not.toBeInTheDocument()
   })
