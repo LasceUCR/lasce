@@ -2935,6 +2935,11 @@ a {
   gap: 16px;
 }
 
+/* The dedicated page's own empty state, not the shared `.content-empty` box other surfaces use. */
+#academic-activities-loading-region .content-empty {
+  text-align: center;
+}
+
 /* Only on the dedicated `/actividades-academicas` page, not the `/noticias` teaser — that one
    already gets its own bottom spacing from `.academic-activities`'s 32px padding-bottom. Matches
    `.publications`'s 56px before its own `TopicBackLink` footer: a list of cards reads better with
