@@ -906,11 +906,15 @@ for (const researcher of researchers) {
  */
 type SeedNosotrosResearcher = {
   photoUrl: string
-  role: string
   name: string
   email?: string[]
   institution: string
+  role: string
   description?: string
+  en: {
+    role: string
+    description?: string
+  }
 }
 
 const nosotrosResearchers: SeedNosotrosResearcher[] = [
@@ -922,6 +926,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Centro de Investigaciones Espaciales, CINESPA',
     description:
       'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
+    en: {
+      role: 'Principal investigator',
+      description:
+        'Besides serving as principal investigator, she guides the definition of the research lines and coordinates the integration of solar astrophysics, radio astronomy, space weather, data analysis and artificial intelligence; she also links the scientific work to the development of infrastructure and our own observation capabilities, particularly through the ROSAC radio telescope. Her experience in the joint study of flares, X-ray emissions, coronal mass ejections and the prediction of ICME arrival times at Earth provides the scientific basis to drive monitoring and forecasting tools adapted to Costa Rica. She also promotes interdisciplinary and international collaboration, the training of students and young researchers, and the transfer of scientific knowledge into applications that help understand and anticipate the effects of solar activity on the terrestrial environment and technological systems.',
+    },
   },
   {
     photoUrl: '/images/Researchers/AllanBerrocal.jpg',
@@ -931,6 +940,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
     description:
       'Diseño, desarrollo e implementación de la plataforma informática del LASCE. Las tareas puntuales abarcan la captura de datos masivos de diferentes fuentes con información sobre el clima solar, el almacenamiento de los datos procesados y de interés para el proyecto en sistemas de bases de datos adecuadas para el dominio, y finalmente la habilitación de una interfaz de consulta mediante servicios web. Adicionalmente apoyar en los objetivos de análisis de datos sobre el clima solar junto a investigadores(as) especialistas en la materia como astrofísicos(as) solares.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        "Design, development and implementation of LASCE's computing platform. The specific tasks cover capturing massive data from different sources with space weather information, storing the processed data of interest to the project in database systems suited to the domain, and finally providing a query interface through web services. He also supports the data analysis objectives on space weather alongside specialist researchers such as solar astrophysicists.",
+    },
   },
   {
     photoUrl: '/images/Researchers/LuisEsquivel.jpeg',
@@ -938,6 +952,9 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     role: 'Investigador colaborador',
     email: ['luis.esquivel@ucr.ac.cr'],
     institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+    en: {
+      role: 'Collaborating researcher',
+    },
   },
   {
     photoUrl: '/images/Researchers/IvanniaCalvo.png',
@@ -947,6 +964,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Centro de Investigaciones Espaciales',
     description:
       'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        'Technical and computing support, and in charge of the San José Astronomical Observatory (OAS).',
+    },
   },
   {
     photoUrl: '/images/Researchers/FelipeMeza.jpg',
@@ -957,6 +979,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
       'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
     description:
       'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        'Development of intelligent models for the analysis, interpretation and prediction of signals associated with space weather phenomena, integrating artificial intelligence, signal processing and solar radio astronomy.',
+    },
   },
   {
     photoUrl: '/images/Researchers/AlonsoVega.jpeg',
@@ -966,6 +993,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Escuela de Ingeniería Topográfica, UCR',
     description:
       'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        'Processing and analysis of GNSS data from continuously operating stations co-located with the ROSAC radio telescope, as well as stations of the SIRGAS-CON network, to characterize variations in the ionospheric electron content and their possible relation to solar activity.',
+    },
   },
   {
     photoUrl: '/images/Researchers/MolinaMariaGraciela.jpg',
@@ -976,6 +1008,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
       'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina; Istituto Nazionale di Geofisica e Vulcanologia (INGV), Italia',
     description:
       'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        'Her contribution focuses on the analysis and modeling of large volumes of data through machine learning, time series and high-performance computing, with special emphasis on monitoring and predicting the state of the ionosphere under different solar and geomagnetic conditions. She also contributes her experience in ionospheric instrumentation and in developing software for the automatic detection of signals from geophysical radars, strengthening the integration of observations, advanced data processing and predictive tools within the laboratory.',
+    },
   },
   {
     photoUrl: '/images/Researchers/YencaMigoya.jpg',
@@ -986,6 +1023,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
       'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
     description:
       'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        "Her contribution includes the development and implementation of physical and computational models, including machine learning techniques, to analyze, interpret, predict and classify space phenomena. She also takes part in processing and studying observational data and simulations, strengthening the laboratory's capacity to turn large volumes of information into scientific knowledge. Her experience also contributes to consolidating LASCE as a space for interdisciplinary research and scientific cooperation with a Latin American reach.",
+    },
   },
   {
     photoUrl: '/images/Researchers/JohanaCamacho.jpeg',
@@ -995,14 +1037,31 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Instituto Costarricense de Electricidad; Universidad de Costa Rica',
     description:
       'Es geofísica de exploración del Instituto Costarricense de Electricidad (ICE), donde cuenta con más de 17 años de experiencia en la aplicación de métodos geofísicos para la caracterización del subsuelo y el desarrollo de proyectos de investigación aplicada. Asimismo, posee 8 años de experiencia como docente universitaria en la Escuela de Física de la Universidad de Costa Rica, impartiendo laboratorios de Física General. Actualmente es estudiante de doctorado e investigadora del Laboratorio de Clima Espacial (LASCE), donde desarrolla investigaciones relacionadas con geomagnetismo, ionósfera y clima espacial, utilizando registros de campo magnético terrestre en tiempo real. Su trabajo se enfoca en el análisis de la interacción entre la actividad geomagnética y la ionósfera, así como en sus aplicaciones para el estudio del clima espacial en Costa Rica. A lo largo de su trayectoria profesional ha participado en numerosos estudios e informes de investigación geofísica aplicados a infraestructura, exploración del subsuelo, energía e ingeniería, mediante el uso de técnicas como radar de penetración terrestre (GPR), tomografía de resistividad eléctrica y otros métodos geofísicos. Sus principales áreas de interés incluyen la geofísica aplicada, el geomagnetismo, el clima espacial y la formación de nuevas generaciones de científicos e Ingenieros.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        "She is an exploration geophysicist at the Costa Rican Electricity Institute (ICE), with more than 17 years of experience applying geophysical methods to characterize the subsurface and to develop applied research projects. She also has 8 years of experience as a university lecturer at the School of Physics of the University of Costa Rica, teaching General Physics laboratories. She is currently a doctoral student and researcher at the Space Weather Laboratory (LASCE), where she carries out research on geomagnetism, the ionosphere and space weather using real-time records of the Earth's magnetic field. Her work focuses on analyzing the interaction between geomagnetic activity and the ionosphere, and on its applications to the study of space weather in Costa Rica. Throughout her career she has taken part in numerous geophysical research studies and reports applied to infrastructure, subsurface exploration, energy and engineering, using techniques such as ground-penetrating radar (GPR), electrical resistivity tomography and other geophysical methods. Her main areas of interest include applied geophysics, geomagnetism, space weather and the training of new generations of scientists and engineers.",
+    },
   },
 ]
 
 await prisma.nosotrosResearcher.deleteMany()
 
-for (const researcher of nosotrosResearchers) {
+for (const { en, ...researcher } of nosotrosResearchers) {
   await prisma.nosotrosResearcher.create({
-    data: { ...researcher, modifiedBy: seedContentAuthor.id },
+    data: {
+      ...researcher,
+      modifiedBy: seedContentAuthor.id,
+      translations: {
+        create: [
+          {
+            locale: 'en',
+            role: en.role,
+            description: en.description ?? null,
+          },
+        ],
+      },
+    },
   })
 }
 

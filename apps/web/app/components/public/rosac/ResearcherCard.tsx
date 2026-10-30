@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { Fragment, useId, useLayoutEffect, useRef, useState, type WheelEvent } from 'react'
 
 /** Front-of-card institution text. Longer affiliations end with `...` after this many characters. */
@@ -52,14 +53,16 @@ export function ResearcherCard({
   description,
   email,
   contentLang,
-  institutionLabel = 'Institución',
+  institutionLabel,
 }: ResearcherCardProps) {
+  const t = useTranslations('researchers')
+  const resolvedInstitutionLabel = institutionLabel ?? t('institutionLabel')
   const [flipped, setFlipped] = useState(false)
   const descriptionId = useId()
   const institutionId = useId()
   const institutionText = institutionPreview(institution)
   const canFlip = Boolean(description) || institutionText !== institution
-  const detailsLabel = description ? `Ver descripción de ${name}` : `Ver institución de ${name}`
+  const detailsLabel = description ? t('viewDescription', { name }) : t('viewInstitution', { name })
   const detailsId = description ? descriptionId : institutionId
   const frontButtonRef = useRef<HTMLButtonElement>(null)
   const backButtonRef = useRef<HTMLButtonElement>(null)
@@ -139,7 +142,7 @@ export function ResearcherCard({
               </p>
             ) : null}
             <p className="researcher-card-institution">
-              {institutionLabel}: {institutionText}
+              {resolvedInstitutionLabel}: {institutionText}
             </p>
           </div>
         </div>
@@ -153,7 +156,7 @@ export function ResearcherCard({
             <button
               aria-controls={detailsId}
               aria-expanded={flipped}
-              aria-label={`Volver a la ficha de ${name}`}
+              aria-label={t('returnToCard', { name })}
               className="researcher-card-flip-hit"
               onClick={toggleFlip}
               onWheel={handleBackWheel}
@@ -166,12 +169,12 @@ export function ResearcherCard({
                 className="researcher-card-institution"
                 id={description ? undefined : institutionId}
               >
-                {institutionLabel}: {institution}
+                {resolvedInstitutionLabel}: {institution}
               </p>
             </div>
             {description ? (
               <div
-                aria-label={`Descripción de ${name}`}
+                aria-label={t('descriptionRegion', { name })}
                 className="researcher-card-description-scroll"
                 id={descriptionId}
                 ref={descriptionScrollRef}

@@ -228,16 +228,14 @@ activities section above the news uses `academicActivities`. Each card links out
 article, which is the item's detail view: there is no news page of its own to translate.
 
 `/nosotros` is translated, database content included: the fixed copy, the editor labels and
-dialogs of the activity cards (`nosotros.activities.form`) and the researcher messages and the
-labels of the bilingual part of the researcher editor (`nosotros.researchers`, `form`), with the
-researcher create, edit and delete feedback in the shared `researchers.*` namespace. The
-activity cards and the role and description of the researcher profiles are bilingual. The rest of
-the researcher editor (photo, name, contact, institution and its dialogs) comes from the
-components shared with ROSAC (`ResearcherForm`, `EditableResearcherCard`, `TeamGallery`), which
-still show Spanish; they turn the bilingual part on only when `/nosotros` passes `translation`.
-The API's own error messages are still Spanish. ROSAC researchers temporarily take their English
-translations from the message catalogue (`en.json` under `rosac.team.people` via
-`localizeResearchers`) until a dedicated translation table is introduced.
+`/nosotros` is translated, database content included: the fixed copy, the editor labels and
+dialogs of the activity cards (`nosotros.activities.form`), the researcher messages and labels of
+the bilingual part of the researcher editor (`nosotros.researchers`, `form`), and the researcher
+card, gallery controls and editor interface in the shared `researchers.*` namespace (`ResearcherForm`,
+`EditableResearcherCard`, `TeamGallery`). The activity cards and the role and description of the
+researcher profiles are bilingual, backed by `nosotros_researcher_translations`. The shared researcher
+editor components, cards and the researcher API error messages follow the site's selected language.
+ROSAC researchers temporarily take their English translations from the message catalogue (`en.json` under `rosac.team.people` via `localizeResearchers`) until a dedicated translation table is introduced.
 
 `/datos` has no database content; everything is `lib/scientific-data.ts` and the
 `scientific-data/*` components. `getScientificSources(messages)` follows the "content built on the
