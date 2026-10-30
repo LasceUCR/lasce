@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto'
 
 import { prisma, type Prisma } from '@lasce/db'
 
-import { runWrite, WriteAbort, type WriteFailure } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import {
+  runAuditedDelete,
+  runWrite,
+  WriteAbort,
+  type WriteFailure,
+} from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
@@ -32,6 +38,7 @@ import {
 } from './gallery-schema'
 
 export * from './gallery-schema'
+export { galeriaHero, galeriaMeta } from './gallery-content'
 
 /**
  * Real content for the public gallery.
@@ -49,18 +56,6 @@ const imageBase = '/images/galeria'
 export const albumSlugs = ['rosac', 'workshop-ml-2026'] as const
 
 export type AlbumSlug = (typeof albumSlugs)[number]
-
-export const galeriaMeta = {
-  title: 'Galería | LASCE',
-  description:
-    'Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación y vida cotidiana del equipo.',
-} as const
-
-export const galeriaHero = {
-  kicker: 'Portal público LASCE',
-  title: 'Galería',
-  lead: 'Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes.',
-} as const
 
 const previosMontajeMedia = [
   {
@@ -1915,7 +1910,7 @@ export const galleryAlbums = {
   },
   'workshop-ml-2026': {
     slug: 'workshop-ml-2026',
-    title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+    title: 'Taller 2026 de aprendizaje automático aplicado al clima espacial y GNSS',
     description:
       'Taller enfocado en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial y los sistemas GNSS.',
     years: 'febrero 2026',
@@ -1947,19 +1942,18 @@ export function albumFileCount(album: GalleryAlbum): number {
 }
 
 /** Summary line for an album: sub-albums, total files and the years covered. */
-export function albumMeta(album: GalleryAlbum): string {
-  const parts = [`${albumFileCount(album)} archivos`, album.years]
+export function albumMeta(
+  album: GalleryAlbum,
+  files: (count: number) => string,
+  subalbums: (count: number) => string,
+): string {
+  const parts = [files(albumFileCount(album)), album.years]
 
   if (album.subAlbums.length > 0) {
-    parts.unshift(`${album.subAlbums.length} subálbumes`)
+    parts.unshift(subalbums(album.subAlbums.length))
   }
 
   return parts.join(' · ')
-}
-
-/** The "N archivos en este álbum" counter shown beside a media grid. */
-export function albumMediaMeta(media: readonly GalleryMedia[]): string {
-  return `${media.length} archivos en este álbum`
 }
 
 /** Placeholder caption for a media tile whose file has not been uploaded. */
@@ -2072,7 +2066,7 @@ const albumInclude = {
 
 const topLevelAlbumInclude = {
   ...albumInclude,
-  subAlbums: { orderBy: { createdAt: 'asc' }, include: albumInclude },
+  subAlbums: { orderBy: { createdAt: 'desc' }, include: albumInclude },
 } satisfies Prisma.GalleryAlbumInclude
 
 type AlbumRecord = Prisma.GalleryAlbumGetPayload<{ include: typeof albumInclude }>
@@ -2122,7 +2116,8 @@ function toGalleryAlbum(
 }
 
 /**
- * Loads top-level albums and their nested albums/media in display order, including database IDs.
+ * Loads top-level albums and their nested albums/media newest first, including database IDs.
+ * A file keeps `position` order, with a new file stored at the front.
  *
  * `title` and `description` are in `locale` when the album has that translation, and fall back to
  * the base text otherwise; `contentLocale` says which one was used. Pass `includeEditingData`
@@ -2134,7 +2129,7 @@ export async function getGalleryAlbums(
 ): Promise<GalleryAlbum[]> {
   const records = await prisma.galleryAlbum.findMany({
     where: { parentAlbumId: null },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
     include: topLevelAlbumInclude,
   })
 
@@ -2145,8 +2140,8 @@ export async function getGalleryAlbums(
 export async function getGalleryPaths(): Promise<string[]> {
   const records = await prisma.galleryAlbum.findMany({
     where: { parentAlbumId: null },
-    orderBy: { createdAt: 'asc' },
-    select: { slug: true, subAlbums: { orderBy: { createdAt: 'asc' }, select: { slug: true } } },
+    orderBy: { createdAt: 'desc' },
+    select: { slug: true, subAlbums: { orderBy: { createdAt: 'desc' }, select: { slug: true } } },
   })
 
   return records.flatMap((album) => [
@@ -2173,12 +2168,13 @@ async function writeAlbum<F extends WriteFailure>(
   return result.ok ? { ok: true, album: toSubAlbum(result.value, defaultLocale, true) } : result
 }
 
-function createAlbumRecord(
+async function createAlbumRecord(
   tx: Prisma.TransactionClient,
   input: AlbumCreateInput,
   parentAlbumId: string | null,
+  actor: AuditActor,
 ): Promise<AlbumRecord> {
-  return tx.galleryAlbum.create({
+  const created = await tx.galleryAlbum.create({
     data: {
       ...baseContent(albumContent, input.content),
       slug: input.slug,
@@ -2189,6 +2185,13 @@ function createAlbumRecord(
     },
     include: albumInclude,
   })
+  await recordUserAuditEvent(tx, actor, {
+    action: parentAlbumId ? 'gallery_sub_album.create' : 'gallery_album.create',
+    summary: `${parentAlbumId ? 'Subálbum' : 'Álbum'} de galería agregado: ${created.title}`,
+    entityType: parentAlbumId ? 'gallery_sub_album' : 'gallery_album',
+    entityId: created.id,
+  })
+  return created
 }
 
 /**
@@ -2197,12 +2200,16 @@ function createAlbumRecord(
  */
 export async function createTopLevelGalleryAlbum(
   input: AlbumCreateInput,
+  actor: AuditActor,
 ): Promise<GalleryAlbumWriteResult> {
-  const first = await writeAlbum((tx) => createAlbumRecord(tx, input, null), duplicateSlugFailure)
+  const first = await writeAlbum(
+    (tx) => createAlbumRecord(tx, input, null, actor),
+    duplicateSlugFailure,
+  )
   if (first.ok || first.reason !== 'duplicate-slug') return first
 
   return writeAlbum(
-    (tx) => createAlbumRecord(tx, { ...input, slug: `${input.slug}-${randomUUID()}` }, null),
+    (tx) => createAlbumRecord(tx, { ...input, slug: `${input.slug}-${randomUUID()}` }, null, actor),
     duplicateSlugFailure,
   )
 }
@@ -2211,6 +2218,7 @@ export async function createTopLevelGalleryAlbum(
 export async function createGallerySubAlbum(
   parentAlbumId: string,
   input: SubAlbumCreateInput,
+  actor: AuditActor,
 ): Promise<{ ok: true; album: GallerySubAlbum } | GallerySubAlbumCreateFailure> {
   return writeAlbum<GallerySubAlbumCreateFailure>(async (tx) => {
     const parent = await tx.galleryAlbum.findUnique({
@@ -2228,7 +2236,7 @@ export async function createGallerySubAlbum(
       })
     }
 
-    return createAlbumRecord(tx, input, parent.id)
+    return createAlbumRecord(tx, input, parent.id, actor)
   }, duplicateSlugFailure)
 }
 
@@ -2246,6 +2254,7 @@ export async function createGallerySubAlbum(
 export async function updateGalleryAlbum(
   albumId: string,
   input: AlbumUpdateInput,
+  actor: AuditActor,
 ): Promise<GalleryAlbumWriteResult> {
   const expectedUpdatedAt = parseVersion(input.version)
 
@@ -2309,14 +2318,38 @@ export async function updateGalleryAlbum(
       }
     }
 
-    return tx.galleryAlbum.findUniqueOrThrow({ where: { id: albumId }, include: albumInclude })
+    const updated = await tx.galleryAlbum.findUniqueOrThrow({
+      where: { id: albumId },
+      include: albumInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: updated.parentAlbumId ? 'gallery_sub_album.update' : 'gallery_album.update',
+      summary: `${updated.parentAlbumId ? 'Subálbum' : 'Álbum'} de galería actualizado: ${updated.title}`,
+      entityType: updated.parentAlbumId ? 'gallery_sub_album' : 'gallery_album',
+      entityId: albumId,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   }, duplicateSlugFailure)
 }
 
 /** Deletes an album. Its translations, sub-albums and media records go with it (`ON DELETE CASCADE`). */
-export async function deleteGalleryAlbum(albumId: string): Promise<boolean> {
-  const { count } = await prisma.galleryAlbum.deleteMany({ where: { id: albumId } })
-  return count > 0
+export async function deleteGalleryAlbum(albumId: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) =>
+      tx.galleryAlbum.findUnique({
+        where: { id: albumId },
+        select: { title: true, parentAlbumId: true },
+      }),
+    (tx) => tx.galleryAlbum.deleteMany({ where: { id: albumId } }),
+    (tx, album) =>
+      recordUserAuditEvent(tx, actor, {
+        action: album.parentAlbumId ? 'gallery_sub_album.delete' : 'gallery_album.delete',
+        summary: `${album.parentAlbumId ? 'Subálbum' : 'Álbum'} de galería eliminado: ${album.title}`,
+        entityType: album.parentAlbumId ? 'gallery_sub_album' : 'gallery_album',
+        entityId: albumId,
+      }),
+  )
 }
 
 /** Any unique violation on media is a clash with the file key or the position it was given. */
@@ -2335,10 +2368,11 @@ const mediaRecordInclude = {
   translations: mediaTranslationsInclude,
 } satisfies Prisma.GalleryMediaInclude
 
-/** Adds a file to an album at the next position, with its text in every language. */
+/** Adds a file at the front of an album, with its text in every language. */
 export async function createGalleryMedia(
   albumId: string,
   data: GalleryMediaInput,
+  actor: AuditActor,
 ): Promise<GalleryMediaWriteResult> {
   return writeMedia(async (tx) => {
     const album = await tx.galleryAlbum.findUnique({ where: { id: albumId }, select: { id: true } })
@@ -2346,13 +2380,13 @@ export async function createGalleryMedia(
       throw new WriteAbort<GalleryMediaWriteFailure>({ ok: false, reason: 'album-not-found' })
     }
 
-    const lastMedia = await tx.galleryMedia.findFirst({
+    const firstMedia = await tx.galleryMedia.findFirst({
       where: { albumId },
-      orderBy: { position: 'desc' },
+      orderBy: { position: 'asc' },
       select: { position: true },
     })
 
-    return tx.galleryMedia.create({
+    const created = await tx.galleryMedia.create({
       data: {
         ...baseContent(mediaContent, data.content),
         albumId,
@@ -2363,11 +2397,19 @@ export async function createGalleryMedia(
         rowSpan: data.rowSpan,
         capturedAt: new Date(`${data.date}T00:00:00.000Z`),
         uploaderName: data.uploader,
-        position: (lastMedia?.position ?? -1) + 1,
+        position: firstMedia ? firstMedia.position - 1 : 0,
         translations: { create: translationRows(mediaContent, data.content) },
       },
       include: mediaRecordInclude,
     })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'gallery_media.create',
+      summary: `Archivo de galería agregado: ${created.title}`,
+      entityType: 'gallery_media',
+      entityId: created.id,
+      metadata: { albumId },
+    })
+    return created
   })
 }
 
@@ -2382,6 +2424,7 @@ export async function createGalleryMedia(
 export async function updateGalleryMedia(
   mediaId: string,
   data: GalleryMediaUpdate,
+  actor: AuditActor,
 ): Promise<GalleryMediaWriteResult> {
   const expectedUpdatedAt = parseVersion(data.version)
 
@@ -2450,15 +2493,32 @@ export async function updateGalleryMedia(
       }
     }
 
-    return tx.galleryMedia.findUniqueOrThrow({
+    const updated = await tx.galleryMedia.findUniqueOrThrow({
       where: { id: mediaId },
       include: mediaRecordInclude,
     })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'gallery_media.update',
+      summary: `Archivo de galería actualizado: ${updated.title}`,
+      entityType: 'gallery_media',
+      entityId: mediaId,
+      metadata: { fields: changedFieldNames(data) },
+    })
+    return updated
   })
 }
 
 /** Deletes the media database record and its translations only; the asset is left untouched. */
-export async function deleteGalleryMedia(mediaId: string): Promise<boolean> {
-  const { count } = await prisma.galleryMedia.deleteMany({ where: { id: mediaId } })
-  return count > 0
+export async function deleteGalleryMedia(mediaId: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) => tx.galleryMedia.findUnique({ where: { id: mediaId }, select: { title: true } }),
+    (tx) => tx.galleryMedia.deleteMany({ where: { id: mediaId } }),
+    (tx, media) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'gallery_media.delete',
+        summary: `Archivo de galería eliminado: ${media.title}`,
+        entityType: 'gallery_media',
+        entityId: mediaId,
+      }),
+  )
 }

@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { Modal } from '@/app/components/public/Modal'
@@ -27,6 +27,7 @@ import { InfoCard } from '@/app/components/public/topic/InfoCard'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import type { RosacAcknowledgment, RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
 import type { ConstructionStage } from '@/app/lib/rosac-construction'
@@ -45,14 +46,14 @@ import {
   RosacAcknowledgmentForm,
   type RosacAcknowledgmentFormValues,
 } from './RosacAcknowledgmentForm'
-import { RosacActivityForm, type RosacActivityFormValues } from './RosacActivityForm'
+import { RosacActivityForm, type RosacActivityFormBody } from './RosacActivityForm'
 import {
   RosacCharacteristicForm,
-  type RosacCharacteristicFormValues,
+  type RosacCharacteristicFormBody,
 } from './RosacCharacteristicForm'
-import { RosacInstrumentForm, type RosacInstrumentFormValues } from './RosacInstrumentForm'
+import { RosacInstrumentForm, type RosacInstrumentFormBody } from './RosacInstrumentForm'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
-import { RosacStageForm, type RosacStageFormValues } from './RosacStageForm'
+import { RosacStageForm, type RosacStageFormBody } from './RosacStageForm'
 import { TeamGallery } from './TeamGallery'
 
 const icons: Record<RosacCardIcon, LucideIcon> = {
@@ -74,15 +75,12 @@ export interface RosacInfoPageProps {
   canDelete?: boolean
   onSaveCharacteristic?: (
     id: string,
-    values: RosacCharacteristicFormValues,
+    values: RosacCharacteristicFormBody,
   ) => Promise<string | null> | void
-  onSaveActivity?: (id: string, values: RosacActivityFormValues) => Promise<string | null> | void
-  onSaveStage?: (id: string, values: RosacStageFormValues) => Promise<string | null> | void
-  onCreateInstrument?: (values: RosacInstrumentFormValues) => Promise<string | null> | void
-  onSaveInstrument?: (
-    id: string,
-    values: RosacInstrumentFormValues,
-  ) => Promise<string | null> | void
+  onSaveActivity?: (id: string, values: RosacActivityFormBody) => Promise<string | null> | void
+  onSaveStage?: (id: string, values: RosacStageFormBody) => Promise<string | null> | void
+  onCreateInstrument?: (values: RosacInstrumentFormBody) => Promise<string | null> | void
+  onSaveInstrument?: (id: string, values: RosacInstrumentFormBody) => Promise<string | null> | void
   onDeleteInstrument?: (id: string) => Promise<string | null> | void
   onCreateAcknowledgment?: (values: RosacAcknowledgmentFormValues) => Promise<string | null> | void
   onSaveAcknowledgment?: (
@@ -90,22 +88,6 @@ export interface RosacInfoPageProps {
     values: RosacAcknowledgmentFormValues,
   ) => Promise<string | null> | void
   onDeleteAcknowledgment?: (id: string) => Promise<string | null> | void
-}
-
-const ROSAC_STORAGE_KEYS = {
-  characteristics: 'lasce_rosac_characteristics_v1',
-  activities: 'lasce_rosac_activities_v1',
-  stages: 'lasce_rosac_stages_v1',
-  instruments: 'lasce_rosac_instruments_v1',
-  acknowledgments: 'lasce_rosac_acknowledgments_v1',
-} as const
-
-function saveToLocalStorage<T>(key: string, data: T) {
-  try {
-    localStorage.setItem(key, JSON.stringify(data))
-  } catch {
-    // ignore storage errors
-  }
 }
 
 export function RosacInfoPage({
@@ -124,35 +106,28 @@ export function RosacInfoPage({
   onDeleteAcknowledgment,
 }: RosacInfoPageProps) {
   const router = useRouter()
+  const siteLocale = useLocale()
   const { editMode } = useEditMode()
   const tResearchers = useTranslations('researchers')
   const tEditor = useTranslations('rosac.editor')
   const sendWithFeedback = useRequestFeedback()
+  const toast = useToast()
 
   // --- Section 1: Characteristics State (Edit only, fixed 4 cards) ---
   const [characteristics, setCharacteristics] = useState(content.characteristics.items)
   const [editingCharacteristicId, setEditingCharacteristicId] = useState<string | null>(null)
-  const [characteristicSaveError, setCharacteristicSaveError] = useState<string | null>(null)
 
   // --- Section 3: Activities State (Edit only, fixed 3 cards) ---
   const [activities, setActivities] = useState(content.activities.items)
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
-  const [activitySaveError, setActivitySaveError] = useState<string | null>(null)
 
   // --- Section 4: Construction Stages State (Edit only, fixed 5 stages) ---
   const [constructionStages, setConstructionStages] = useState(content.construction.stages)
   const [editingStageId, setEditingStageId] = useState<string | null>(null)
-  const [stageSaveError, setStageSaveError] = useState<string | null>(null)
 
   // --- Section 6: Instruments State (Create, Edit, Delete) ---
   const [instruments, setInstruments] = useState(content.instruments.items)
   const [editingInstrumentId, setEditingInstrumentId] = useState<string | null>(null)
-  const [instrumentSaveError, setInstrumentSaveError] = useState<string | null>(null)
-  const [instrumentCreateError, setInstrumentCreateError] = useState<string | null>(null)
-  const [instrumentListError, setInstrumentListError] = useState<string | null>(null)
-
-  // --- Section 7: Researchers State ---
-  const [listError, setListError] = useState<string | null>(null)
 
   // --- Section 8: Acknowledgments State (Create, Edit, Delete) ---
   const [acknowledgments, setAcknowledgments] = useState<RosacAcknowledgment[]>(() =>
@@ -161,8 +136,6 @@ export function RosacInfoPage({
       ...inst,
     })),
   )
-  const [acknowledgmentCreateError, setAcknowledgmentCreateError] = useState<string | null>(null)
-  const [acknowledgmentListError, setAcknowledgmentListError] = useState<string | null>(null)
 
   const displayCharacteristics = characteristics
   const displayActivities = activities
@@ -170,58 +143,18 @@ export function RosacInfoPage({
   const displayInstruments = instruments
   const displayAcknowledgments = acknowledgments
 
-  // Restore persisted state from localStorage if available, or synchronize from props
+  // Synchronize state from content props when updated from server
   useEffect(() => {
-    try {
-      const storedInstruments = localStorage.getItem(ROSAC_STORAGE_KEYS.instruments)
-      if (storedInstruments) {
-        const parsed = JSON.parse(storedInstruments)
-        if (Array.isArray(parsed)) setInstruments(parsed)
-      } else {
-        setInstruments(content.instruments.items)
-      }
-
-      const storedCharacteristics = localStorage.getItem(ROSAC_STORAGE_KEYS.characteristics)
-      if (storedCharacteristics) {
-        const parsed = JSON.parse(storedCharacteristics)
-        if (Array.isArray(parsed)) setCharacteristics(parsed)
-      } else {
-        setCharacteristics(content.characteristics.items)
-      }
-
-      const storedActivities = localStorage.getItem(ROSAC_STORAGE_KEYS.activities)
-      if (storedActivities) {
-        const parsed = JSON.parse(storedActivities)
-        if (Array.isArray(parsed)) setActivities(parsed)
-      } else {
-        setActivities(content.activities.items)
-      }
-
-      const storedStages = localStorage.getItem(ROSAC_STORAGE_KEYS.stages)
-      if (storedStages) {
-        const parsed = JSON.parse(storedStages)
-        if (Array.isArray(parsed)) {
-          setConstructionStages(parsed as unknown as typeof content.construction.stages)
-        }
-      } else {
-        setConstructionStages(content.construction.stages)
-      }
-
-      const storedAcknowledgments = localStorage.getItem(ROSAC_STORAGE_KEYS.acknowledgments)
-      if (storedAcknowledgments) {
-        const parsed = JSON.parse(storedAcknowledgments)
-        if (Array.isArray(parsed)) setAcknowledgments(parsed)
-      } else {
-        setAcknowledgments(
-          content.acknowledgments.institutions.map((inst, index) => ({
-            id: inst.id ?? `ack-${index}`,
-            ...inst,
-          })),
-        )
-      }
-    } catch {
-      // ignore storage errors
-    }
+    setCharacteristics(content.characteristics.items)
+    setActivities(content.activities.items)
+    setConstructionStages(content.construction.stages)
+    setInstruments(content.instruments.items)
+    setAcknowledgments(
+      content.acknowledgments.institutions.map((inst, index) => ({
+        id: inst.id ?? `ack-${index}`,
+        ...inst,
+      })),
+    )
   }, [
     content.characteristics.items,
     content.activities.items,
@@ -234,38 +167,74 @@ export function RosacInfoPage({
   const editingCharacteristic = characteristics.find((item) => item.id === editingCharacteristicId)
 
   function openCharacteristicEditor(id: string) {
-    setCharacteristicSaveError(null)
     setEditingCharacteristicId(id)
   }
 
   function closeCharacteristicEditor() {
-    setCharacteristicSaveError(null)
     setEditingCharacteristicId(null)
   }
 
-  async function handleSaveCharacteristic(values: RosacCharacteristicFormValues) {
+  async function handleSaveCharacteristic(values: RosacCharacteristicFormBody) {
     if (!editingCharacteristicId) return
 
     if (onSaveCharacteristic) {
       const err = await onSaveCharacteristic(editingCharacteristicId, values)
       if (err) {
-        setCharacteristicSaveError(err)
+        toast.show('error', err)
         return
       }
+    } else {
+      const ok = await sendWithFeedback(
+        `/api/rosac/characteristics/${editingCharacteristicId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        },
+        {
+          success: tEditor('characteristics.updated'),
+          fallback: tEditor('characteristics.errors.saveUnknown'),
+          onSuccess: () => router.refresh(),
+        },
+      )
+      if (!ok) return
     }
 
-    const updated = characteristics.map((item) =>
-      item.id === editingCharacteristicId
-        ? {
-            ...item,
-            icon: values.icon,
-            title: values.title,
-            description: values.description,
-          }
-        : item,
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
+
+    setCharacteristics((prev) =>
+      prev.map((item) =>
+        item.id === editingCharacteristicId
+          ? {
+              ...item,
+              ...(values.icon ? { icon: values.icon } : {}),
+              ...(title ? { title } : {}),
+              ...(description ? { description } : {}),
+              ...(values.content && item.editing
+                ? {
+                    editing: {
+                      ...item.editing,
+                      content: {
+                        es: values.content.es ?? item.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : item.editing.content.en,
+                      },
+                    },
+                  }
+                : {}),
+            }
+          : item,
+      ),
     )
-    setCharacteristics(updated)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.characteristics, updated)
     closeCharacteristicEditor()
   }
 
@@ -273,38 +242,74 @@ export function RosacInfoPage({
   const editingActivity = activities.find((item) => item.id === editingActivityId)
 
   function openActivityEditor(id: string) {
-    setActivitySaveError(null)
     setEditingActivityId(id)
   }
 
   function closeActivityEditor() {
-    setActivitySaveError(null)
     setEditingActivityId(null)
   }
 
-  async function handleSaveActivity(values: RosacActivityFormValues) {
+  async function handleSaveActivity(values: RosacActivityFormBody) {
     if (!editingActivityId) return
 
     if (onSaveActivity) {
       const err = await onSaveActivity(editingActivityId, values)
       if (err) {
-        setActivitySaveError(err)
+        toast.show('error', err)
         return
       }
+    } else {
+      const ok = await sendWithFeedback(
+        `/api/rosac/activities/${editingActivityId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        },
+        {
+          success: tEditor('activities.updated'),
+          fallback: tEditor('activities.errors.saveUnknown'),
+          onSuccess: () => router.refresh(),
+        },
+      )
+      if (!ok) return
     }
 
-    const updated = activities.map((item) =>
-      item.id === editingActivityId
-        ? {
-            ...item,
-            icon: values.icon,
-            title: values.title,
-            description: values.description,
-          }
-        : item,
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
+
+    setActivities((prev) =>
+      prev.map((item) =>
+        item.id === editingActivityId
+          ? {
+              ...item,
+              ...(values.icon ? { icon: values.icon } : {}),
+              ...(title ? { title } : {}),
+              ...(description ? { description } : {}),
+              ...(values.content && item.editing
+                ? {
+                    editing: {
+                      ...item.editing,
+                      content: {
+                        es: values.content.es ?? item.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : item.editing.content.en,
+                      },
+                    },
+                  }
+                : {}),
+            }
+          : item,
+      ),
     )
-    setActivities(updated)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.activities, updated)
     closeActivityEditor()
   }
 
@@ -312,41 +317,75 @@ export function RosacInfoPage({
   const editingStage = constructionStages.find((s) => s.id === editingStageId)
 
   function openStageEditor(id: string) {
-    setStageSaveError(null)
     setEditingStageId(id)
   }
 
   function closeStageEditor() {
-    setStageSaveError(null)
     setEditingStageId(null)
   }
 
-  async function handleSaveStage(values: RosacStageFormValues) {
+  async function handleSaveStage(values: RosacStageFormBody) {
     if (!editingStageId) return
 
     if (onSaveStage) {
       const err = await onSaveStage(editingStageId, values)
       if (err) {
-        setStageSaveError(err)
+        toast.show('error', err)
         return
       }
+    } else {
+      const ok = await sendWithFeedback(
+        `/api/rosac/stages/${editingStageId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        },
+        {
+          success: tEditor('stages.updated'),
+          fallback: tEditor('stages.errors.saveUnknown'),
+          onSuccess: () => router.refresh(),
+        },
+      )
+      if (!ok) return
     }
 
-    const updated = constructionStages.map((s) =>
-      s.id === editingStageId
-        ? ({
-            ...s,
-            title: values.title,
-            description: values.description,
-            images:
-              values.images && values.images.length > 0
-                ? (values.images as unknown as typeof s.images)
-                : s.images,
-          } as ConstructionStage)
-        : s,
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
+
+    setConstructionStages(
+      (prev) =>
+        prev.map((s) =>
+          s.id === editingStageId
+            ? ({
+                ...s,
+                ...(title ? { title, navigationLabel: title } : {}),
+                ...(description ? { description } : {}),
+                ...(values.images && values.images.length > 0 ? { images: values.images } : {}),
+                ...(values.content && s.editing
+                  ? {
+                      editing: {
+                        ...s.editing,
+                        content: {
+                          es: values.content.es ?? s.editing.content.es,
+                          en:
+                            values.content.en !== undefined
+                              ? values.content.en
+                              : s.editing.content.en,
+                        },
+                      },
+                    }
+                  : {}),
+              } as unknown as ConstructionStage)
+            : s,
+        ) as unknown as readonly [ConstructionStage, ...ConstructionStage[]],
     )
-    setConstructionStages(updated as unknown as typeof constructionStages)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.stages, updated)
     closeStageEditor()
   }
 
@@ -354,82 +393,180 @@ export function RosacInfoPage({
   const editingInstrument = instruments.find((inst) => inst.id === editingInstrumentId)
 
   function openInstrumentEditor(id: string) {
-    setInstrumentSaveError(null)
     setEditingInstrumentId(id)
   }
 
   function closeInstrumentEditor() {
-    setInstrumentSaveError(null)
     setEditingInstrumentId(null)
   }
 
-  async function handleSaveInstrument(values: RosacInstrumentFormValues) {
+  async function handleSaveInstrument(values: RosacInstrumentFormBody) {
     if (!editingInstrumentId) return
 
     if (onSaveInstrument) {
       const err = await onSaveInstrument(editingInstrumentId, values)
       if (err) {
-        setInstrumentSaveError(err)
+        toast.show('error', err)
         return
       }
+    } else {
+      const ok = await sendWithFeedback(
+        `/api/rosac/instruments/${editingInstrumentId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        },
+        {
+          success: tEditor('instruments.updated'),
+          fallback: tEditor('instruments.errors.saveUnknown'),
+          onSuccess: () => router.refresh(),
+        },
+      )
+      if (!ok) return
     }
 
-    const updated = instruments.map((inst) =>
-      inst.id === editingInstrumentId
-        ? {
-            ...inst,
-            name: values.name,
-            pendingMessage: undefined,
-            image: values.image ?? inst.image,
-            consultation: values.consultation ?? inst.consultation,
-          }
-        : inst,
+    const name =
+      (siteLocale === 'en' ? values.content?.en?.name : undefined) ??
+      values.content?.es?.name ??
+      values.name
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.pendingMessage
+
+    setInstruments((prev) =>
+      prev.map((inst) =>
+        inst.id === editingInstrumentId
+          ? {
+              ...inst,
+              ...(name ? { name } : {}),
+              ...(description !== undefined
+                ? {
+                    pendingMessage: description || undefined,
+                    consultation: inst.consultation
+                      ? { ...inst.consultation, notice: description || undefined }
+                      : undefined,
+                  }
+                : {}),
+              ...(values.image ? { image: values.image } : {}),
+              ...(values.consultation !== undefined
+                ? {
+                    consultation: values.consultation
+                      ? {
+                          href: values.consultation.href,
+                          label: values.consultation.label,
+                          notice: description || inst.consultation?.notice,
+                        }
+                      : undefined,
+                  }
+                : {}),
+              ...(values.content && inst.editing
+                ? {
+                    editing: {
+                      ...inst.editing,
+                      content: {
+                        es: values.content.es ?? inst.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : inst.editing.content.en,
+                      },
+                    },
+                  }
+                : {}),
+            }
+          : inst,
+      ),
     )
-    setInstruments(updated)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.instruments, updated)
     closeInstrumentEditor()
   }
 
-  async function handleCreateInstrument(values: RosacInstrumentFormValues, close: () => void) {
-    setInstrumentCreateError(null)
+  async function handleCreateInstrument(values: RosacInstrumentFormBody, close: () => void) {
+    const created: { instrument: Partial<RosacInstrumentCardContent> | null } = { instrument: null }
 
     if (onCreateInstrument) {
       const err = await onCreateInstrument(values)
       if (err) {
-        setInstrumentCreateError(err)
+        toast.show('error', err)
         return
       }
+    } else {
+      const ok = await sendWithFeedback(
+        '/api/rosac/instruments',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        },
+        {
+          success: tEditor('instruments.created'),
+          fallback: tEditor('instruments.errors.saveUnknown'),
+          onSuccess: async (response) => {
+            const data = (await response.json().catch(() => null)) as {
+              instrument?: RosacInstrumentCardContent
+            } | null
+            if (data?.instrument) {
+              created.instrument = data.instrument
+            }
+            router.refresh()
+          },
+        },
+      )
+      if (!ok) return
     }
 
-    const newId = `instrument-${Date.now()}`
+    const name =
+      (siteLocale === 'en' ? values.content?.en?.name : undefined) ??
+      values.content?.es?.name ??
+      values.name ??
+      ''
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.pendingMessage
+
     const newInstrument: RosacInstrumentCardContent = {
-      id: newId,
-      name: values.name,
-      pendingMessage: values.pendingMessage,
-      image: values.image,
-      consultation: values.consultation,
+      id: created.instrument?.id ?? `instrument-${Date.now()}`,
+      name: created.instrument?.name ?? name,
+      pendingMessage: created.instrument?.pendingMessage ?? description,
+      image: created.instrument?.image ?? values.image,
+      consultation:
+        created.instrument?.consultation ??
+        (values.consultation
+          ? {
+              href: values.consultation.href,
+              label: values.consultation.label,
+              notice: description,
+            }
+          : undefined),
     }
 
-    const updated = [...instruments, newInstrument]
-    setInstruments(updated)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.instruments, updated)
+    setInstruments((prev) => [newInstrument, ...prev])
     close()
   }
 
   async function handleDeleteInstrument(id: string) {
-    setInstrumentListError(null)
-
     if (onDeleteInstrument) {
       const err = await onDeleteInstrument(id)
       if (err) {
-        setInstrumentListError(err)
+        toast.show('error', err)
         return
       }
+    } else {
+      const ok = await sendWithFeedback(
+        `/api/rosac/instruments/${id}`,
+        { method: 'DELETE' },
+        {
+          success: tEditor('instruments.deleted'),
+          fallback: tEditor('instruments.errors.deleteUnknown'),
+          onSuccess: () => router.refresh(),
+        },
+      )
+      if (!ok) return
     }
 
-    const updated = instruments.filter((inst) => inst.id !== id)
-    setInstruments(updated)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.instruments, updated)
+    setInstruments(instruments.filter((inst) => inst.id !== id))
   }
 
   // --- Section 7: Researcher Handlers ---
@@ -471,24 +608,18 @@ export function RosacInfoPage({
     )
   }
 
+  // Reports the outcome in a toast once the request is done, the same way the save and create
+  // handlers above do.
   async function handleDeleteResearcher(id: string) {
-    setListError(null)
-
-    let response: Response
-    try {
-      response = await fetch(`/api/researchers/${id}`, { method: 'DELETE' })
-    } catch {
-      setListError(tEditor('saveError'))
-      return
-    }
-
-    if (!response.ok) {
-      const body: { error?: string } | null = await response.json().catch(() => null)
-      setListError(body?.error ?? tEditor('saveError'))
-      return
-    }
-
-    router.refresh()
+    await sendWithFeedback(
+      `/api/researchers/${id}`,
+      { method: 'DELETE' },
+      {
+        success: tResearchers('deleted'),
+        fallback: tResearchers('errors.deleteUnknown'),
+        onSuccess: () => router.refresh(),
+      },
+    )
   }
 
   // --- Section 8: Acknowledgments Handlers ---
@@ -501,6 +632,21 @@ export function RosacInfoPage({
       if (err) {
         return err
       }
+    } else {
+      const ok = await sendWithFeedback(
+        `/api/rosac/acknowledgments/${id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        },
+        {
+          success: tEditor('acknowledgments.updated'),
+          fallback: tEditor('acknowledgments.errors.saveUnknown'),
+          onSuccess: () => router.refresh(),
+        },
+      )
+      if (!ok) return 'Error al guardar la institución'
     }
 
     const updated = acknowledgments.map((inst) =>
@@ -508,12 +654,12 @@ export function RosacInfoPage({
         ? {
             ...inst,
             name: values.name,
+            href: values.href,
             logo: values.logo,
           }
         : inst,
     )
     setAcknowledgments(updated)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
     return null
   }
 
@@ -521,43 +667,73 @@ export function RosacInfoPage({
     values: RosacAcknowledgmentFormValues,
     close: () => void,
   ) {
-    setAcknowledgmentCreateError(null)
+    const created: { acknowledgment: Partial<RosacAcknowledgment> | null } = {
+      acknowledgment: null,
+    }
 
     if (onCreateAcknowledgment) {
       const err = await onCreateAcknowledgment(values)
       if (err) {
-        setAcknowledgmentCreateError(err)
+        toast.show('error', err)
         return
       }
+    } else {
+      const ok = await sendWithFeedback(
+        '/api/rosac/acknowledgments',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        },
+        {
+          success: tEditor('acknowledgments.created'),
+          fallback: tEditor('acknowledgments.errors.saveUnknown'),
+          onSuccess: async (response) => {
+            const data = (await response.json().catch(() => null)) as {
+              acknowledgment?: RosacAcknowledgment
+            } | null
+            if (data?.acknowledgment) {
+              created.acknowledgment = data.acknowledgment
+            }
+            router.refresh()
+          },
+        },
+      )
+      if (!ok) return
     }
 
-    const newId = `ack-${Date.now()}`
     const newInstitution: RosacAcknowledgment = {
-      id: newId,
-      name: values.name,
-      logo: values.logo,
+      id: created.acknowledgment?.id ?? `ack-${Date.now()}`,
+      name: created.acknowledgment?.name ?? values.name,
+      href: created.acknowledgment?.href ?? values.href,
+      logo: created.acknowledgment?.logo ?? values.logo,
     }
 
-    const updated = [...acknowledgments, newInstitution]
-    setAcknowledgments(updated)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
+    setAcknowledgments((prev) => [newInstitution, ...prev])
     close()
   }
 
   async function handleDeleteAcknowledgment(id: string) {
-    setAcknowledgmentListError(null)
-
     if (onDeleteAcknowledgment) {
       const err = await onDeleteAcknowledgment(id)
       if (err) {
-        setAcknowledgmentListError(err)
+        toast.show('error', err)
         return
       }
+    } else {
+      const ok = await sendWithFeedback(
+        `/api/rosac/acknowledgments/${id}`,
+        { method: 'DELETE' },
+        {
+          success: tEditor('acknowledgments.deleted'),
+          fallback: tEditor('acknowledgments.errors.deleteUnknown'),
+          onSuccess: () => router.refresh(),
+        },
+      )
+      if (!ok) return
     }
 
-    const updated = acknowledgments.filter((inst) => inst.id !== id)
-    setAcknowledgments(updated)
-    saveToLocalStorage(ROSAC_STORAGE_KEYS.acknowledgments, updated)
+    setAcknowledgments(acknowledgments.filter((inst) => inst.id !== id))
   }
 
   return (
@@ -580,7 +756,7 @@ export function RosacInfoPage({
       >
         <CardGrid columns={4} equalHeight>
           {displayCharacteristics.map((item) => {
-            const Icon = icons[item.icon]
+            const Icon = icons[item.icon] ?? RadioTower
             const icon = <Icon size={22} strokeWidth={1.8} />
             const showEditor = editMode && canEdit
 
@@ -621,7 +797,7 @@ export function RosacInfoPage({
       <TopicSection title={content.activities.title} titleId="rosac-activities-title" index="3">
         <CardGrid columns={3} equalHeight>
           {displayActivities.map((item) => {
-            const Icon = icons[item.icon]
+            const Icon = icons[item.icon] ?? RadioTower
             const icon = <Icon size={22} strokeWidth={1.8} />
             const showEditor = editMode && canEdit
 
@@ -703,34 +879,18 @@ export function RosacInfoPage({
         className={styles.instrumentsSection}
         wide
       >
-        {instrumentListError ? (
-          <p className="form-alert" role="alert">
-            {instrumentListError}
-          </p>
-        ) : null}
-
         {instruments.length > 3 || (editMode && canCreate) ? (
           <InstrumentsGallery
             label={content.instruments.title}
-            trailingSlide={
+            leadingSlide={
               editMode && canCreate ? (
                 <AddItemCard label={tEditor('instruments.addCard')}>
                   {({ close }) => (
-                    <>
-                      {instrumentCreateError ? (
-                        <p className="form-alert" role="alert">
-                          {instrumentCreateError}
-                        </p>
-                      ) : null}
-                      <RosacInstrumentForm
-                        instrument={null}
-                        onCancel={() => {
-                          setInstrumentCreateError(null)
-                          close()
-                        }}
-                        onSave={(values) => handleCreateInstrument(values, close)}
-                      />
-                    </>
+                    <RosacInstrumentForm
+                      instrument={null}
+                      onCancel={close}
+                      onSave={(values) => handleCreateInstrument(values, close)}
+                    />
                   )}
                 </AddItemCard>
               ) : undefined
@@ -794,12 +954,6 @@ export function RosacInfoPage({
         titleId="rosac-team-title"
         wide
       >
-        {listError ? (
-          <p className="form-alert" role="alert">
-            {listError}
-          </p>
-        ) : null}
-
         <TeamGallery
           emptyMessage={content.team.emptyMessage}
           hint={content.team.hint}
@@ -810,13 +964,14 @@ export function RosacInfoPage({
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
+              contentLang={person.contentLang}
               institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
               onSave={(values) => handleSaveResearcher(person.id, values)}
               researcher={person}
             />
           )}
-          trailingSlide={
+          leadingSlide={
             editMode && canCreate ? (
               <AddItemCard label={tResearchers('editor.addCard')}>
                 {({ close }) => (
@@ -869,12 +1024,6 @@ export function RosacInfoPage({
         titleId="rosac-acknowledgments-title"
         wide
       >
-        {acknowledgmentListError ? (
-          <p className="form-alert" role="alert">
-            {acknowledgmentListError}
-          </p>
-        ) : null}
-
         <AcknowledgmentsGallery
           institutions={displayAcknowledgments}
           label={content.acknowledgments.title}
@@ -887,25 +1036,15 @@ export function RosacInfoPage({
               onSave={(values) => handleSaveAcknowledgment(institution.id!, values)}
             />
           )}
-          trailingSlide={
+          leadingSlide={
             editMode && canCreate ? (
               <AddItemCard label={tEditor('acknowledgments.addCard')}>
                 {({ close }) => (
-                  <>
-                    {acknowledgmentCreateError ? (
-                      <p className="form-alert" role="alert">
-                        {acknowledgmentCreateError}
-                      </p>
-                    ) : null}
-                    <RosacAcknowledgmentForm
-                      institution={null}
-                      onCancel={() => {
-                        setAcknowledgmentCreateError(null)
-                        close()
-                      }}
-                      onSave={(values) => handleCreateAcknowledgment(values, close)}
-                    />
-                  </>
+                  <RosacAcknowledgmentForm
+                    institution={null}
+                    onCancel={close}
+                    onSave={(values) => handleCreateAcknowledgment(values, close)}
+                  />
                 )}
               </AddItemCard>
             ) : undefined
@@ -927,18 +1066,11 @@ export function RosacInfoPage({
         }
       >
         {editingCharacteristic ? (
-          <>
-            {characteristicSaveError ? (
-              <p className="form-alert" role="alert">
-                {characteristicSaveError}
-              </p>
-            ) : null}
-            <RosacCharacteristicForm
-              characteristic={editingCharacteristic}
-              onCancel={closeCharacteristicEditor}
-              onSave={handleSaveCharacteristic}
-            />
-          </>
+          <RosacCharacteristicForm
+            characteristic={editingCharacteristic}
+            onCancel={closeCharacteristicEditor}
+            onSave={handleSaveCharacteristic}
+          />
         ) : null}
       </Modal>
 
@@ -953,18 +1085,11 @@ export function RosacInfoPage({
         }
       >
         {editingActivity ? (
-          <>
-            {activitySaveError ? (
-              <p className="form-alert" role="alert">
-                {activitySaveError}
-              </p>
-            ) : null}
-            <RosacActivityForm
-              activity={editingActivity}
-              onCancel={closeActivityEditor}
-              onSave={handleSaveActivity}
-            />
-          </>
+          <RosacActivityForm
+            activity={editingActivity}
+            onCancel={closeActivityEditor}
+            onSave={handleSaveActivity}
+          />
         ) : null}
       </Modal>
 
@@ -979,18 +1104,11 @@ export function RosacInfoPage({
         }
       >
         {editingStage ? (
-          <>
-            {stageSaveError ? (
-              <p className="form-alert" role="alert">
-                {stageSaveError}
-              </p>
-            ) : null}
-            <RosacStageForm
-              onCancel={closeStageEditor}
-              onSave={handleSaveStage}
-              stage={editingStage}
-            />
-          </>
+          <RosacStageForm
+            onCancel={closeStageEditor}
+            onSave={handleSaveStage}
+            stage={editingStage}
+          />
         ) : null}
       </Modal>
 
@@ -1006,18 +1124,11 @@ export function RosacInfoPage({
         }
       >
         {editingInstrument ? (
-          <>
-            {instrumentSaveError ? (
-              <p className="form-alert" role="alert">
-                {instrumentSaveError}
-              </p>
-            ) : null}
-            <RosacInstrumentForm
-              instrument={editingInstrument}
-              onCancel={closeInstrumentEditor}
-              onSave={handleSaveInstrument}
-            />
-          </>
+          <RosacInstrumentForm
+            instrument={editingInstrument}
+            onCancel={closeInstrumentEditor}
+            onSave={handleSaveInstrument}
+          />
         ) : null}
       </Modal>
     </article>

@@ -77,6 +77,9 @@ again on every attempt, so retrying a failed download never skips a permission c
   that result is sampled to 360 points. For SEISS it is the worker's `query-goes-archive` job:
   the page passes along the `jobId` that answered its query, so the download reuses the finished
   job instead of queueing a new one. While a job is still running, the action answers `pending`.
+  SEISS EHIS is the exception: its chart reads InfluxDB synchronously
+  ([`ehis-pipeline.md`](ehis-pipeline.md)), so its PNG never waits on a job. It still has no CSV,
+  because the download policy is per instrument and the rest of SEISS has no full-resolution path.
 - **EXIS CSV** reads InfluxDB **without sampling** (`queryExisReadingsFull`), keeping only the
   latest satellite in the window, as the chart does. A full SFXR day is about 86 000 rows, around
   3 MB.

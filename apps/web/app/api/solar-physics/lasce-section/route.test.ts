@@ -144,7 +144,7 @@ describe('PATCH /api/solar-physics/lasce-section: saving', () => {
 
     expect(response.status).toBe(200)
     expect(body).toEqual({ section: storedSection })
-    expect(mocks.updateSolarPhysicsSection).toHaveBeenCalledWith(validBody)
+    expect(mocks.updateSolarPhysicsSection).toHaveBeenCalledWith(validBody, expect.anything())
   })
 
   test('answers 404 when the section does not exist', async () => {
