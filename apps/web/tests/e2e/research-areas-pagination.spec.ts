@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 
 import { test, expect, cards, pagination, switchToEnglish } from './helpers/research-collection'
 import { createSignedInUser } from './helpers/admin-users'
+import { enableEditMode } from './helpers/edit-mode'
 
 test.use({ viewport: { width: 1600, height: 900 } })
 
@@ -95,16 +96,26 @@ test('preserves the URL page on reload, back, forward, language changes and deta
   await collection.add(23)
   await page.goto('/investigacion')
   await pagination(page).getByRole('link', { name: 'Página 2', exact: true }).click()
+  await expect(page).toHaveURL(/page=2$/)
   await expect(cards(page).first()).toContainText(collection.titles[10]!)
   await pagination(page).getByRole('link', { name: 'Página 3', exact: true }).click()
+  // Both pages can contain ten cards. Wait for the destination before using browser history.
+  await expect(page).toHaveURL(/page=3$/)
+  await expect(cards(page).first()).toContainText(collection.titles[20]!)
   await expect(cards(page)).toHaveCount(Math.min(10, collection.baseCount + 3))
   await page.goBack()
   await expect(page).toHaveURL(/page=2$/)
   await expect(cards(page).first()).toContainText(collection.titles[10]!)
   await page.goForward()
+  await expect(page).toHaveURL(/page=3$/)
+  await expect(cards(page).first()).toContainText(collection.titles[20]!)
   await expect(cards(page)).toHaveCount(Math.min(10, collection.baseCount + 3))
   await page.goBack()
+  await expect(page).toHaveURL(/page=2$/)
+  await expect(cards(page).first()).toContainText(collection.titles[10]!)
   await page.reload()
+  await expect(page).toHaveURL(/page=2$/)
+  await expect(cards(page).first()).toContainText(collection.titles[10]!)
   await expect(cards(page)).toHaveCount(10)
   await switchToEnglish(page)
   await expect(page).toHaveURL(/page=2$/)
@@ -112,7 +123,9 @@ test('preserves the URL page on reload, back, forward, language changes and deta
   await expect(cards(page).nth(1).getByRole('heading')).toHaveAttribute('lang', '')
   await expect(cards(page).nth(1)).toContainText(collection.titles[11]!)
   await expect(
-    page.getByText(`Showing 11–20 of ${collection.baseCount + 23} research areas.`),
+    page.getByRole('status').filter({
+      hasText: `Showing 11–20 of ${collection.baseCount + 23} research areas.`,
+    }),
   ).toBeVisible()
   await expect(pagination(page).getByRole('link', { name: 'Page 2', exact: true })).toHaveAttribute(
     'aria-current',
@@ -123,6 +136,7 @@ test('preserves the URL page on reload, back, forward, language changes and deta
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Area 11 ${collection.tag}`)
   await page.goBack()
   await expect(page).toHaveURL(/page=2$/)
+  await expect(cards(page).first()).toContainText(`Area 11 ${collection.tag}`)
 })
 
 test('refreshes totals after creation and preserves valid pages after deletion', async ({
@@ -137,7 +151,7 @@ test('refreshes totals after creation and preserves valid pages after deletion',
   const account = await createSignedInUser(context, 'ADMIN')
   try {
     await page.goto('/administracion')
-    await page.getByRole('switch', { name: 'Modo edición' }).click()
+    await enableEditMode(page)
     await page.goto(`/investigacion?page=${lastPage}`)
     // Uploads have their own form tests. Create through the real API using a repository photo;
     // component tests also assert that the form success handler calls router.refresh().
@@ -155,7 +169,9 @@ test('refreshes totals after creation and preserves valid pages after deletion',
     await expect(page).toHaveURL(new RegExp(`page=${lastPage}$`))
     await expect(cards(page)).toHaveCount(2)
     await expect(
-      page.getByText(`Mostrando ${total}–${total + 1} de ${total + 1} áreas de investigación.`),
+      page.getByRole('status').filter({
+        hasText: `Mostrando ${total}–${total + 1} de ${total + 1} áreas de investigación.`,
+      }),
     ).toBeVisible()
     for (let remaining = 2; remaining > 0; remaining -= 1) {
       const title = await cards(page).first().getByRole('heading').innerText()
@@ -187,7 +203,7 @@ test('shows the empty state after deleting the only remaining area', async ({
   const account = await createSignedInUser(context, 'ADMIN')
   try {
     await page.goto('/administracion')
-    await page.getByRole('switch', { name: 'Modo edición' }).click()
+    await enableEditMode(page)
     await page.goto('/investigacion')
     await page
       .getByRole('button', { name: `Eliminar ${collection.titles[0]}`, exact: true })
