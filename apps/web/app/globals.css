@@ -2935,8 +2935,11 @@ a {
   gap: 16px;
 }
 
-/* The dedicated page's own empty state, not the shared `.content-empty` box other surfaces use. */
+/* The dedicated page's own empty state, not the shared `.content-empty` box other surfaces use:
+   a narrower box centered on the page, instead of stretching edge to edge. */
 #academic-activities-loading-region .content-empty {
+  max-width: 520px;
+  margin-inline: auto;
   text-align: center;
 }
 
