@@ -478,7 +478,8 @@
       "national": "Nacional",
       "international": "Internacional",
       "acronym": "Siglas:",
-      "website": "Sitio web oficial"
+      "websiteLabel": "Sitio web oficial de {name} (abre en una pestaña nueva)",
+      "logoAlt": "Logotipo de {name}"
     },
     "countries": {
       "cr": "Costa Rica",
