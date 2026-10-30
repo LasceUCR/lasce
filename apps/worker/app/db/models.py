@@ -677,21 +677,22 @@ class MagFile(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
-class EhisFile(Base):
-    """One daily SEISS EHIS L1b heavy ion file (one UTC day). Written by
-    ``app.services.ehis_readings.EhisReadings``, the only writer this table
-    has. The readings themselves are in the ``ehis_flux`` InfluxDB
-    measurement; this row records that the day was ingested, from which
-    version of the archive's file, and how many points each channel produced.
+class SeissFile(Base):
+    """One daily SEISS file (one product, one UTC day). Written by
+    ``app.services.seiss.readings.SeissReadings``, the only writer this table
+    has. The readings themselves are in the product's InfluxDB measurement
+    (``ehis_flux``, ``sgps_flux``); this row records that the day was ingested,
+    from which version of the archive's file, and how many points each channel
+    produced.
     """
 
-    __tablename__ = "ehis_files"
+    __tablename__ = "seiss_files"
     __table_args__ = (
         UniqueConstraint(
             "satellite",
             "product",
             "day",
-            name="ehis_files_satellite_product_day_key",
+            name="seiss_files_satellite_product_day_key",
         ),
         {"schema": "solar"},
     )

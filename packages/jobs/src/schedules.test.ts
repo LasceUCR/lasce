@@ -4,7 +4,7 @@ import { schedules } from './schedules'
 
 const exis = schedules.filter((schedule) => schedule.name === 'exis-pipeline')
 const mag = schedules.filter((schedule) => schedule.name === 'mag-pipeline')
-const ehis = schedules.filter((schedule) => schedule.name === 'ehis-pipeline')
+const seiss = schedules.filter((schedule) => schedule.name === 'seiss-pipeline')
 
 describe('schedules', () => {
   test('every scheduler entry has its own id', () => {
@@ -31,10 +31,12 @@ describe('schedules', () => {
     expect(mag[0]?.data).toEqual({ spacecraft: 19, lookbackDays: 3 })
   })
 
-  // NOAA publishes one EHIS file per day; docs/ehis-pipeline.md promises hourly at minute 35.
-  test('EHIS ingests GOES-19 hourly at minute 35', () => {
-    expect(ehis).toHaveLength(1)
-    expect(ehis[0]?.cron).toBe('35 * * * *')
-    expect(ehis[0]?.data).toEqual({ spacecraft: 19, lookbackDays: 3 })
+  // NOAA publishes one file per SEISS product per day; docs/seiss-pipeline.md promises each product
+  // hourly on its own minute.
+  test('SEISS ingests each GOES-19 product hourly on its own minute', () => {
+    expect(seiss.map((schedule) => [schedule.cron, schedule.data])).toEqual([
+      ['35 * * * *', { product: 'EHIS', spacecraft: 19, lookbackDays: 3 }],
+      ['40 * * * *', { product: 'SGPS', spacecraft: 19, lookbackDays: 3 }],
+    ])
   })
 })

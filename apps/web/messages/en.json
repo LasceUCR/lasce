@@ -1632,7 +1632,7 @@
       "title": "Consultation and download permissions",
       "goesConsultation": "You can view GOES ({instrument}) data without an account. Availability depends on the product and date; historical queries may take several minutes.",
       "rosacConsultation": "You can view ROSAC ({instrument}) data without an account. ROSAC is planned for future integration: its instruments and real data have not been defined yet; all results are simulated.",
-      "pendingProducts": "EHIS and MPSL are pending integration.",
+      "pendingProducts": "MPSL is pending integration.",
       "rosacDownloads": "All ROSAC ({instrument}) data is available to download as CSV, along with the chart as PNG.",
       "goesChartOnly": "For GOES ({instrument}), only the chart is available to download as PNG with basic account permissions.",
       "goesDataDownloads": "Your permissions allow you to download GOES ({instrument}) data as CSV and the chart as PNG.",
@@ -1700,7 +1700,7 @@
           },
           "sgps": {
             "name": "Solar and Galactic Protons",
-            "availabilityNote": "Select the SGPS−X or SGPS+X unit. The level 1b file includes differential channels and the > 500 MeV integral one."
+            "availabilityNote": "Select the SGPS−X or SGPS+X unit and the channel. NOAA publishes 1-minute averages (level 2) of the differential channels and the > 500 MeV integral one daily, with approximately a one-day delay."
           }
         }
       },

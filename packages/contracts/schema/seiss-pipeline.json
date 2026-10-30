@@ -1,9 +1,16 @@
 {
-  "$id": "https://lasce.local/schema/jobs/ehis-pipeline.json",
-  "title": "ehis-pipeline",
+  "$id": "https://lasce.local/schema/jobs/seiss-pipeline.json",
+  "title": "seiss-pipeline",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "product": {
+      "type": "string",
+      "enum": [
+        "EHIS",
+        "SGPS"
+      ]
+    },
     "spacecraft": {
       "default": 19,
       "anyOf": [
@@ -38,6 +45,7 @@
     }
   },
   "required": [
+    "product",
     "spacecraft",
     "lookbackDays"
   ],
