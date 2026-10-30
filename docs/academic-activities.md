@@ -111,13 +111,27 @@ an `AddItemCard` (shown with `create_components`), and the `useRequestFeedback` 
 `/api/academic-activities` — the same shape as `NewsExplorer`/`EditableNewsCard`.
 
 `AcademicActivityForm` follows the standard CMS form conventions: every field required except the
-end date, validated on blur and on submit attempt (`FormField`'s `validate`), a required
-`FileDropInput` for the photo plus a required, separate "texto alternativo" field (same shape as
-`RosacInstrumentForm`'s image field), and a `StandardConfirmDialog` guarding an unsaved discard.
-The image itself is uploaded through `uploadAcademicActivityImage`
-(`app/(public)/actividades-academicas/actions.ts`), a `'use server'` action that requires either
-`create_components` or `edit_components` and returns the asset's permanent public URL — the same
-pattern `uploadResearchAreaImage`/`uploadInstrumentImage` use.
+end date, validated on submit attempt, a required `FileDropInput` for the photo plus a required,
+separate "texto alternativo" field (same shape as `RosacInstrumentForm`'s image field), and a
+`StandardConfirmDialog` guarding an unsaved discard. All of its copy — field labels, placeholders,
+buttons and dialogs — comes from the `academicActivities.editor`/`.validation`/`.discardDialog`
+message namespaces, following the site's language like every other CMS form. The image itself is
+uploaded through `uploadAcademicActivityImage` (`app/(public)/actividades-academicas/actions.ts`),
+a `'use server'` action that requires either `create_components` or `edit_components` and returns
+the asset's permanent public URL — the same pattern `uploadResearchAreaImage`/`uploadInstrumentImage`
+use.
+
+`endDate`, when given, cannot be earlier than `startDate`: `academicActivityInputSchema`
+(`app/lib/academic-activities.ts`) rejects that with a `.refine()` attached to the `endDate` path,
+so the API answers with that field's own message in `issues.endDate` (see
+`app/lib/api-feedback.ts`); the form mirrors the same check client-side, showing the error under
+the end-date field instead of only after a round trip to the server.
+
+`AcademicActivityForm` takes a `busy` prop, set by `AcademicActivitiesPage`'s `send()` wrapper
+while a create, update or delete request is in flight (the same `pending.current` ref plus `busy`
+state pattern `NewsExplorer` uses): the whole field set is disabled and the submit button reads
+"Guardando…"/"Saving…", so a second click while the request is pending cannot send a duplicate
+request.
 
 ### Dedicated list page (`AcademicActivitiesPage`)
 
@@ -133,6 +147,26 @@ the way `/noticias`' teaser has one. An empty list with no create grant shows
 CMS permissions are global, not per-feature: `create_components`, `edit_components` and
 `delete_components` (`app/lib/auth/permissions.ts`) are shared across every CMS surface (News,
 Nosotros, ResearchArea, Rosac, and this one) — there is no activity-specific permission key.
+
+## Skeleton loading states
+
+While academic activities are being retrieved on an uncached visit (#410), both the dedicated list
+at `/actividades-academicas` (`AcademicActivitiesPage`) and the teaser on `/noticias`
+(`AcademicActivitiesSection`) display skeleton placeholders shaped like the activity cards,
+preventing empty areas or noticeable layout shifts:
+
+- **Placeholders**: `AcademicActivityCardSkeleton` follows the `.news-card` metrics (280px photo
+  column with min-height 190px on desktop; 200px stacked photo banner on mobile `<= 700px`),
+  category badge, title, metadata line, and clamped description lines.
+  `AcademicActivitiesListSkeleton` renders multiple card placeholders inside
+  `.academic-activities-list`.
+- **Loading region & accessibility**: Built on `LoadingRegion`, which marks the list area
+  `aria-busy="true"`, announces the loading state politely to assistive technologies ("Cargando
+  actividades académicas…" / "Loading academic activities…"), and marks all placeholder markup
+  `aria-hidden="true"` and `inert`.
+- **Transitions**: When loading finishes, placeholders are replaced by the loaded cards, the
+  empty state (`academicActivities.section.empty`), or an error notice (`Notice tone="error"`).
+- **Reduced motion**: Shimmer animations stop under `prefers-reduced-motion: reduce`.
 
 ## Sitemap and SEO
 

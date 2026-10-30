@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useId, useState } from 'react'
 
 import { uploadAcademicActivityImage } from '@/app/(public)/actividades-academicas/actions'
@@ -8,14 +9,6 @@ import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import type { AcademicActivity } from '@/app/lib/academic-activities'
-
-/** Messages match `academicActivityInputSchema` (apps/web/app/lib/academic-activities.ts) so a
- * rejection reads the same whether it's caught here or by the server after submission. */
-function requireNonEmpty(message: string) {
-  return (value: string) => {
-    if (value.trim() === '') throw new Error(message)
-  }
-}
 
 /** The editable fields of an academic activity, as `/api/academic-activities` expects them. */
 export interface AcademicActivityFormValues {
@@ -34,10 +27,20 @@ export interface AcademicActivityFormProps {
   activity: AcademicActivity | null
   onSave: (values: AcademicActivityFormValues) => void
   onCancel: () => void
+  /** True while a save is in flight: the fields and buttons are disabled. */
+  busy?: boolean
 }
 
-export function AcademicActivityForm({ activity, onSave, onCancel }: AcademicActivityFormProps) {
+export function AcademicActivityForm({
+  activity,
+  onSave,
+  onCancel,
+  busy = false,
+}: AcademicActivityFormProps) {
   const formId = useId()
+  const t = useTranslations('academicActivities.editor')
+  const validation = useTranslations('academicActivities.validation')
+  const discardT = useTranslations('academicActivities.discardDialog')
 
   const [title, setTitle] = useState(activity?.title ?? '')
   const [category, setCategory] = useState(activity?.category ?? '')
@@ -57,25 +60,24 @@ export function AcademicActivityForm({ activity, onSave, onCancel }: AcademicAct
   const photoUrl = activity?.photoUrl ?? ''
   const hasPhoto = photoFile !== null || (Boolean(photoUrl) && !photoRemoved)
 
-  const titleError = hasAttemptedSubmit && title.trim() === '' ? 'El título es obligatorio.' : null
-  const categoryError =
-    hasAttemptedSubmit && category.trim() === '' ? 'La categoría es obligatoria.' : null
+  const titleError = hasAttemptedSubmit && title.trim() === '' ? validation('title') : null
+  const categoryError = hasAttemptedSubmit && category.trim() === '' ? validation('category') : null
   const startDateError =
-    hasAttemptedSubmit && startDate.trim() === '' ? 'La fecha de inicio es obligatoria.' : null
-  const locationError =
-    hasAttemptedSubmit && location.trim() === '' ? 'La ubicación es obligatoria.' : null
+    hasAttemptedSubmit && startDate.trim() === '' ? validation('startDate') : null
+  const endDateIsBeforeStart =
+    endDate.trim() !== '' && startDate.trim() !== '' && endDate < startDate
+  const endDateError = hasAttemptedSubmit && endDateIsBeforeStart ? validation('endDate') : null
+  const locationError = hasAttemptedSubmit && location.trim() === '' ? validation('location') : null
   const descriptionError =
-    hasAttemptedSubmit && description.trim() === '' ? 'La descripción es obligatoria.' : null
-  const photoError = hasAttemptedSubmit && !hasPhoto ? 'La imagen es obligatoria.' : null
-  const photoAltError =
-    hasAttemptedSubmit && photoAlt.trim() === ''
-      ? 'El texto alternativo de la imagen es obligatorio.'
-      : null
+    hasAttemptedSubmit && description.trim() === '' ? validation('description') : null
+  const photoError = hasAttemptedSubmit && !hasPhoto ? validation('photo') : null
+  const photoAltError = hasAttemptedSubmit && photoAlt.trim() === '' ? validation('photoAlt') : null
 
   const isFormValid =
     title.trim() !== '' &&
     category.trim() !== '' &&
     startDate.trim() !== '' &&
+    !endDateIsBeforeStart &&
     location.trim() !== '' &&
     description.trim() !== '' &&
     hasPhoto &&
@@ -93,6 +95,7 @@ export function AcademicActivityForm({ activity, onSave, onCancel }: AcademicAct
     photoAlt !== (activity?.photoAlt ?? '')
 
   function handleCancelClick() {
+    if (busy) return
     if (isDirty) {
       setConfirmDiscardOpen(true)
     } else {
@@ -106,6 +109,7 @@ export function AcademicActivityForm({ activity, onSave, onCancel }: AcademicAct
   }
 
   async function handleSave() {
+    if (busy) return
     setHasAttemptedSubmit(true)
 
     if (!isFormValid) {
@@ -115,6 +119,8 @@ export function AcademicActivityForm({ activity, onSave, onCancel }: AcademicAct
         document.getElementById(`${formId}-category`)?.focus()
       } else if (startDate.trim() === '') {
         document.getElementById(`${formId}-start-date`)?.focus()
+      } else if (endDateIsBeforeStart) {
+        document.getElementById(`${formId}-end-date`)?.focus()
       } else if (location.trim() === '') {
         document.getElementById(`${formId}-location`)?.focus()
       } else if (description.trim() === '') {
@@ -143,7 +149,7 @@ export function AcademicActivityForm({ activity, onSave, onCancel }: AcademicAct
         finalPhotoUrl = result.imageUrl
       } catch {
         setIsUploading(false)
-        setUploadError('No se pudo subir la imagen. Inténtelo de nuevo.')
+        setUploadError(validation('uploadFailed'))
         return
       }
       setIsUploading(false)
@@ -169,109 +175,106 @@ export function AcademicActivityForm({ activity, onSave, onCancel }: AcademicAct
         </p>
       ) : null}
 
-      <FormField
-        errorMessage={titleError}
-        id={`${formId}-title`}
-        label="Título"
-        onChange={setTitle}
-        required
-        validate={requireNonEmpty('El título es obligatorio.')}
-        value={title}
-      />
-
-      <div className="news-article-form-row">
+      <fieldset className="cms-form-fields" disabled={busy}>
         <FormField
-          errorMessage={categoryError}
-          id={`${formId}-category`}
-          label="Categoría"
-          onChange={setCategory}
-          placeholder="Taller, charla, curso, conferencia..."
+          errorMessage={titleError}
+          id={`${formId}-title`}
+          label={t('titleField')}
+          onChange={setTitle}
           required
-          validate={requireNonEmpty('La categoría es obligatoria.')}
-          value={category}
+          value={title}
         />
+
+        <div className="news-article-form-row">
+          <FormField
+            errorMessage={categoryError}
+            id={`${formId}-category`}
+            label={t('categoryField')}
+            onChange={setCategory}
+            placeholder={t('categoryPlaceholder')}
+            required
+            value={category}
+          />
+          <FormField
+            errorMessage={locationError}
+            id={`${formId}-location`}
+            label={t('locationField')}
+            onChange={setLocation}
+            required
+            value={location}
+          />
+        </div>
+
+        <div className="news-article-form-row">
+          <FormField
+            errorMessage={startDateError}
+            id={`${formId}-start-date`}
+            label={t('startDateField')}
+            onChange={setStartDate}
+            required
+            type="date"
+            value={startDate}
+          />
+          <FormField
+            errorMessage={endDateError}
+            id={`${formId}-end-date`}
+            label={t('endDateField')}
+            onChange={setEndDate}
+            type="date"
+            value={endDate}
+          />
+        </div>
+
         <FormField
-          errorMessage={locationError}
-          id={`${formId}-location`}
-          label="Ubicación"
-          onChange={setLocation}
+          errorMessage={descriptionError}
+          id={`${formId}-description`}
+          label={t('descriptionField')}
+          multiline
+          onChange={setDescription}
           required
-          validate={requireNonEmpty('La ubicación es obligatoria.')}
-          value={location}
+          value={description}
         />
-      </div>
 
-      <div className="news-article-form-row">
-        <FormField
-          errorMessage={startDateError}
-          id={`${formId}-start-date`}
-          label="Fecha de inicio"
-          onChange={setStartDate}
+        <FileDropInput
+          errorMessage={photoError}
+          existingImageUrl={!photoRemoved && photoUrl ? photoUrl : undefined}
+          helperText={t('photoHelperText')}
+          label={t('photoField')}
+          onFileSelect={(file) => {
+            setPhotoFile(file)
+            setPhotoRemoved(file === null)
+          }}
           required
-          type="date"
-          validate={requireNonEmpty('La fecha de inicio es obligatoria.')}
-          value={startDate}
         />
+
         <FormField
-          id={`${formId}-end-date`}
-          label="Fecha de finalización"
-          onChange={setEndDate}
-          type="date"
-          value={endDate}
+          errorMessage={photoAltError}
+          id={`${formId}-photo-alt`}
+          label={t('photoAltField')}
+          onChange={setPhotoAlt}
+          required
+          value={photoAlt}
         />
-      </div>
 
-      <FormField
-        errorMessage={descriptionError}
-        id={`${formId}-description`}
-        label="Descripción"
-        multiline
-        onChange={setDescription}
-        required
-        validate={requireNonEmpty('La descripción es obligatoria.')}
-        value={description}
-      />
-
-      <FileDropInput
-        errorMessage={photoError}
-        existingImageUrl={!photoRemoved && photoUrl ? photoUrl : undefined}
-        helperText="Imagen ilustrativa de la actividad, en formato JPG, PNG, WebP o GIF."
-        label="Imagen"
-        onFileSelect={(file) => {
-          setPhotoFile(file)
-          setPhotoRemoved(file === null)
-        }}
-        required
-      />
-
-      <FormField
-        errorMessage={photoAltError}
-        id={`${formId}-photo-alt`}
-        label="Texto alternativo de la imagen (Accesibilidad)"
-        onChange={setPhotoAlt}
-        required
-        validate={requireNonEmpty('El texto alternativo de la imagen es obligatorio.')}
-        value={photoAlt}
-      />
-
-      <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
-          Cancelar
-        </Button>
-        <Button disabled={isUploading} onClick={handleSave} variant="primary">
-          {isUploading ? 'Subiendo imagen...' : 'Confirmar'}
-        </Button>
-      </div>
+        <div className="cms-form-actions">
+          <Button onClick={handleCancelClick} variant="secondary">
+            {t('cancel')}
+          </Button>
+          <Button disabled={isUploading} onClick={handleSave} variant="primary">
+            {isUploading ? t('uploadingImage') : busy ? t('saving') : t('save')}
+          </Button>
+        </div>
+      </fieldset>
 
       <StandardConfirmDialog
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        message="Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados."
+        cancelLabel={discardT('keepEditing')}
+        confirmLabel={discardT('discard')}
+        message={discardT('message')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={handleConfirmDiscard}
         open={confirmDiscardOpen}
         severity="warning"
-        title="Descartar cambios no guardados"
+        title={discardT('title')}
       />
     </div>
   )

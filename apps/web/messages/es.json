@@ -553,7 +553,9 @@
     "section": {
       "title": "Actividades académicas",
       "description": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
-      "empty": "No hay actividades académicas disponibles en este momento."
+      "empty": "No hay actividades académicas disponibles en este momento.",
+      "loading": "Cargando actividades académicas…",
+      "error": "No fue posible cargar las actividades académicas. Inténtelo de nuevo más tarde."
     },
     "card": {
       "badge": "Actividad académica"
@@ -571,6 +573,49 @@
     "errors": {
       "saveUnknown": "No se pudo guardar la actividad. Inténtelo de nuevo.",
       "deleteUnknown": "No se pudo eliminar la actividad. Inténtelo de nuevo."
+    },
+    "editor": {
+      "addCard": "Agregar actividad",
+      "editTitle": "Editar actividad académica",
+      "editLabel": "Editar",
+      "deleteLabel": "Eliminar",
+      "titleField": "Título",
+      "categoryField": "Categoría",
+      "categoryPlaceholder": "Taller, charla, curso, conferencia...",
+      "locationField": "Ubicación",
+      "startDateField": "Fecha de inicio",
+      "endDateField": "Fecha de finalización",
+      "descriptionField": "Descripción",
+      "photoField": "Imagen",
+      "photoHelperText": "Imagen ilustrativa de la actividad, en formato JPG, PNG, WebP o GIF.",
+      "photoAltField": "Texto alternativo de la imagen (Accesibilidad)",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando...",
+      "uploadingImage": "Subiendo imagen..."
+    },
+    "validation": {
+      "title": "El título es obligatorio.",
+      "category": "La categoría es obligatoria.",
+      "startDate": "La fecha de inicio es obligatoria.",
+      "endDate": "La fecha de finalización debe ser igual o posterior a la fecha de inicio.",
+      "location": "La ubicación es obligatoria.",
+      "description": "La descripción es obligatoria.",
+      "photo": "La imagen es obligatoria.",
+      "photoAlt": "El texto alternativo de la imagen es obligatorio.",
+      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
+    },
+    "deleteDialog": {
+      "title": "Eliminar actividad académica",
+      "message": "Esta acción no se puede deshacer y borrará la actividad del catálogo público.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
     }
   },
   "publications": {

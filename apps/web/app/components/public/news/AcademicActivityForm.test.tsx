@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -11,6 +11,7 @@ vi.mock('@/app/(public)/actividades-academicas/actions', () => ({
 }))
 
 import type { AcademicActivity } from '@/app/lib/academic-activities'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AcademicActivityForm } from './AcademicActivityForm'
 
@@ -32,14 +33,14 @@ URL.revokeObjectURL = vi.fn()
 
 describe('AcademicActivityForm', () => {
   test('starts blank for a new activity', () => {
-    render(<AcademicActivityForm activity={null} onCancel={() => {}} onSave={() => {}} />)
+    renderWithIntl(<AcademicActivityForm activity={null} onCancel={() => {}} onSave={() => {}} />)
 
     expect(screen.getByRole('textbox', { name: 'Título' })).toHaveValue('')
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
   test('starts pre-filled with the activity being edited', () => {
-    render(
+    renderWithIntl(
       <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={() => {}} />,
     )
 
@@ -60,7 +61,7 @@ describe('AcademicActivityForm', () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
 
-    render(<AcademicActivityForm activity={null} onCancel={onCancel} onSave={() => {}} />)
+    renderWithIntl(<AcademicActivityForm activity={null} onCancel={onCancel} onSave={() => {}} />)
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
@@ -72,7 +73,7 @@ describe('AcademicActivityForm', () => {
     const onSave = vi.fn()
     const user = userEvent.setup()
 
-    render(<AcademicActivityForm activity={null} onCancel={() => {}} onSave={onSave} />)
+    renderWithIntl(<AcademicActivityForm activity={null} onCancel={() => {}} onSave={onSave} />)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -88,11 +89,50 @@ describe('AcademicActivityForm', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
+  test('rejects an end date earlier than the start date and does not save', async () => {
+    const onSave = vi.fn()
+    const user = userEvent.setup()
+
+    renderWithIntl(
+      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />,
+    )
+
+    const endDateInput = screen.getByLabelText('Fecha de finalización')
+    await user.clear(endDateInput)
+    await user.type(endDateInput, '2026-02-01')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(
+      screen.getByText('La fecha de finalización debe ser igual o posterior a la fecha de inicio.'),
+    ).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('accepts an end date equal to the start date', async () => {
+    const onSave = vi.fn()
+    const user = userEvent.setup()
+
+    renderWithIntl(
+      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />,
+    )
+
+    const endDateInput = screen.getByLabelText('Fecha de finalización')
+    await user.clear(endDateInput)
+    await user.type(endDateInput, existingActivity.startDate)
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ endDate: existingActivity.startDate }),
+    )
+  })
+
   test('saves edited values while keeping the existing image', async () => {
     const onSave = vi.fn()
     const user = userEvent.setup()
 
-    render(<AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />)
+    renderWithIntl(
+      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />,
+    )
 
     await user.clear(screen.getByRole('textbox', { name: 'Título' }))
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Taller actualizado')
@@ -114,7 +154,7 @@ describe('AcademicActivityForm', () => {
     const onSave = vi.fn()
     const user = userEvent.setup()
 
-    render(
+    renderWithIntl(
       <AcademicActivityForm
         activity={{ ...existingActivity, endDate: null }}
         onCancel={() => {}}
@@ -135,7 +175,9 @@ describe('AcademicActivityForm', () => {
       imageUrl: 'https://s3.example/lasce/nueva.png',
     })
 
-    render(<AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />)
+    renderWithIntl(
+      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />,
+    )
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
@@ -155,7 +197,9 @@ describe('AcademicActivityForm', () => {
       error: 'La imagen es demasiado grande.',
     })
 
-    render(<AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />)
+    renderWithIntl(
+      <AcademicActivityForm activity={existingActivity} onCancel={() => {}} onSave={onSave} />,
+    )
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
@@ -169,7 +213,7 @@ describe('AcademicActivityForm', () => {
     const onCancel = vi.fn()
     const user = userEvent.setup()
 
-    render(
+    renderWithIntl(
       <AcademicActivityForm activity={existingActivity} onCancel={onCancel} onSave={() => {}} />,
     )
 
@@ -181,5 +225,33 @@ describe('AcademicActivityForm', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('disables every field and shows a saving label while busy', () => {
+    renderWithIntl(
+      <AcademicActivityForm
+        activity={existingActivity}
+        busy
+        onCancel={() => {}}
+        onSave={() => {}}
+      />,
+    )
+
+    expect(screen.getByRole('textbox', { name: 'Título' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Guardando...' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled()
+  })
+
+  test('ignores a submit while busy, so a second click cannot send twice', async () => {
+    const onSave = vi.fn()
+    const user = userEvent.setup()
+
+    renderWithIntl(
+      <AcademicActivityForm activity={existingActivity} busy onCancel={() => {}} onSave={onSave} />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Guardando...' }))
+
+    expect(onSave).not.toHaveBeenCalled()
   })
 })

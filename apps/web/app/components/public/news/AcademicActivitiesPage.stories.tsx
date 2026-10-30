@@ -7,6 +7,7 @@ import { mockActivity } from './AcademicActivityCard.stories'
 
 const meta: Meta<typeof AcademicActivitiesPage> = {
   component: AcademicActivitiesPage,
+  title: 'Public/News/AcademicActivitiesPage',
   parameters: { layout: 'fullscreen' },
   decorators: [
     (Story) => (
@@ -18,7 +19,6 @@ const meta: Meta<typeof AcademicActivitiesPage> = {
 }
 
 export default meta
-
 type Story = StoryObj<typeof AcademicActivitiesPage>
 
 export const Default: Story = {
@@ -43,4 +43,18 @@ export const EditMode: Story = {
       </EditModeContext.Provider>
     ),
   ],
+}
+
+export const Loading: Story = {
+  args: {
+    activities: [],
+    loading: true,
+  },
+}
+
+export const ErrorState: Story = {
+  args: {
+    activities: [],
+    error: 'No fue posible cargar las actividades académicas. Inténtelo de nuevo más tarde.',
+  },
 }
