@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
@@ -12,7 +13,24 @@ test('creates, reviews, updates and deletes bilingual initiatives with persisten
 }, testInfo) => {
   const account = await createSignedInUser(context, 'ADMIN')
   const title = `Initiative ${randomUUID()}`
+  const logoUrl = `/api/initiatives/logos/${randomUUID()}.png`
+  const logoFile = fileURLToPath(new URL('../../public/brand/logo-ISWI.png', import.meta.url))
+  let uploadCount = 0
   try {
+    const logoBytes = await readFile(logoFile)
+    // CI supplies PostgreSQL and Redis. Stub the image service at its HTTP boundary;
+    // initiative create/update/delete requests still use the real API and database.
+    await page.route('**/api/initiatives/logos?mode=create', async (route) => {
+      const request = route.request()
+      expect(request.method()).toBe('POST')
+      expect(request.headers()['content-type']).toContain('multipart/form-data;')
+      uploadCount += 1
+      await route.fulfill({ status: 201, json: { logoUrl } })
+    })
+    await page.route(
+      (url) => url.pathname === logoUrl,
+      (route) => route.fulfill({ path: logoFile, contentType: 'image/png' }),
+    )
     await page.addInitScript(() => localStorage.setItem('lasce:cms-edit-mode', 'true'))
     await page.goto('/colaboraciones-e-iniciativas')
     await page.getByRole('button', { name: 'Añadir iniciativa' }).click()
@@ -35,9 +53,13 @@ test('creates, reviews, updates and deletes bilingual initiatives with persisten
       'true',
     )
     await dialog.getByRole('textbox', { name: /Sitio web oficial/ }).fill('https://example.com')
-    await dialog
-      .locator('input[type="file"]')
-      .setInputFiles(fileURLToPath(new URL('../../public/brand/logo-ISWI.png', import.meta.url)))
+    await dialog.locator('input[type="file"]').setInputFiles(logoFile)
+    expect(
+      await dialog.locator('input[type="file"]').evaluate((input: HTMLInputElement) => {
+        const file = input.files?.[0]
+        return file ? { name: file.name, type: file.type, size: file.size } : null
+      }),
+    ).toEqual({ name: 'logo-ISWI.png', type: 'image/png', size: logoBytes.length })
     expect(
       (
         await new AxeBuilder({ page })
@@ -57,7 +79,14 @@ test('creates, reviews, updates and deletes bilingual initiatives with persisten
         }),
       { times: 1 },
     )
+    const uploadResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/initiatives/logos?mode=create') &&
+        response.request().method() === 'POST',
+    )
     await dialog.getByRole('button', { name: 'Confirmar' }).click()
+    const uploaded = await uploadResponse
+    expect(uploaded.status(), await uploaded.text()).toBe(201)
     await expect(dialog.getByText('No se pudo conectar con la base de datos.')).toBeVisible()
     await expect(dialog.getByRole('textbox', { name: /Título \(English\)/ })).toHaveValue(title)
     expect(await account.prisma.initiative.count({ where: { title } })).toBe(0)
@@ -69,12 +98,26 @@ test('creates, reviews, updates and deletes bilingual initiatives with persisten
       'href',
       'https://example.com',
     )
-    await expect(card.getByRole('img')).toHaveAttribute(
-      'src',
-      /\/api\/initiatives\/logos\/[a-f0-9-]+\.png$/,
-    )
+    expect(uploadCount).toBe(1)
+    const saved = await account.prisma.initiative.findFirstOrThrow({
+      where: { title },
+      select: { logoUrl: true },
+    })
+    expect(saved.logoUrl).toBe(logoUrl)
+    await expect(card.getByRole('img')).toHaveAttribute('src', logoUrl)
     await page.reload()
     await expect(card.getByText('Descripción de la iniciativa.')).toBeVisible()
+    await expect(card.getByRole('img')).toHaveAttribute('src', logoUrl)
+    await expect
+      .poll(() =>
+        card
+          .getByRole('img')
+          .evaluate(
+            (image) =>
+              image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0,
+          ),
+      )
+      .toBe(true)
 
     await page.getByRole('button', { name: `Editar iniciativa ${title}`, exact: true }).click()
     const edit = page.getByRole('dialog', { name: 'Editar iniciativa' })

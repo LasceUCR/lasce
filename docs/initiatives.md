@@ -74,11 +74,16 @@ does not delete the stored object. Unreferenced images require a separate cleanu
 - `tests/integration/initiatives.test.ts` checks the migration against the original content,
   actual PostgreSQL persistence, concurrent saves, translation rollback and cascading deletion.
   Use the existing integration guard with a separate local `*_test` database and applied migrations.
-- `tests/e2e/initiative-cms.spec.ts` requires MinIO in addition to PostgreSQL and exercises image
-  selection, persistence and removal, the real routes and editor, anonymous/assistant/visitor
+- `tests/e2e/initiative-cms.spec.ts` stubs the logo upload and image HTTP endpoints, so it runs
+  with CI's existing PostgreSQL and Redis services. It checks file selection, multipart upload,
+  reuse on retry, the logo path persisted in PostgreSQL and the image after reload. Initiative
+  create/update/delete requests use the real API and database. It also exercises removal,
+  the editor, anonymous/assistant/visitor
   permissions, invalid JSON and input, review and stale versions, English feedback, keyboard labels,
   accessibility and a mobile viewport. The existing initiative description tests preserve expansion
   behavior and reduced-motion support.
+- `tests/unit/services/initiatives/logoStorage.test.ts` covers storage with the MinIO SDK mocked:
+  object keys, image type and size validation, reads and bucket creation races.
 
 Follow [testing.md](testing.md) for the workspace checks and
 [translate-database-content.md](translate-database-content.md) for the shared translation contract.
