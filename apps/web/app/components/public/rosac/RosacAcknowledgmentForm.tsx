@@ -1,5 +1,3 @@
-'use client'
-
 import Image from 'next/image'
 import { useId, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -14,6 +12,7 @@ import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 export interface RosacAcknowledgmentFormValues {
   name: string
+  href?: string
   logo: {
     src: string
     alt: string
@@ -32,6 +31,7 @@ export interface PredefinedAcknowledgmentLogo {
   src: string
   defaultAlt: string
   defaultAltEn: string
+  defaultHref?: string
 }
 
 export const PREDEFINED_ACKNOWLEDGMENT_LOGOS: readonly PredefinedAcknowledgmentLogo[] = [
@@ -40,96 +40,112 @@ export const PREDEFINED_ACKNOWLEDGMENT_LOGOS: readonly PredefinedAcknowledgmentL
     src: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
     defaultAlt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
     defaultAltEn: 'Logo of the Vice-Rectorate for Research, University of Costa Rica',
+    defaultHref: 'https://vinv.ucr.ac.cr',
   },
   {
     label: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     src: '/images/ROSAC/acknowledgments/cinespa.webp',
     defaultAlt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
     defaultAltEn: 'Logo of the Space Research Center (CINESPA)',
+    defaultHref: 'https://cinespa.ucr.ac.cr',
   },
   {
     label: 'Escuela de Física, UCR',
     src: '/images/ROSAC/acknowledgments/efis.webp',
     defaultAlt: 'Logo de la Escuela de Física, UCR',
     defaultAltEn: 'Logo of the School of Physics, UCR',
+    defaultHref: 'https://fisica.ucr.ac.cr',
   },
   {
     label: 'Escuela de Ingeniería Mecánica, UCR',
     src: '/images/ROSAC/acknowledgments/eim.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
     defaultAltEn: 'Logo of the School of Mechanical Engineering, UCR',
+    defaultHref: 'https://www.ucr.ac.cr/directorio/escuela-de-ingenieria-mecanica.html',
   },
   {
     label: 'Escuela de Ingeniería Topográfica, UCR',
     src: '/images/ROSAC/acknowledgments/eit.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
     defaultAltEn: 'Logo of the School of Surveying Engineering, UCR',
+    defaultHref: 'https://eit.ucr.ac.cr/',
   },
   {
     label: 'Escuela de Ingeniería Eléctrica, UCR',
     src: '/images/ROSAC/acknowledgments/eie.webp',
     defaultAlt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
     defaultAltEn: 'Logo of the School of Electrical Engineering, UCR',
+    defaultHref: 'https://eie.ucr.ac.cr',
   },
   {
     label: 'Recinto de Santa Cruz, UCR',
     src: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
     defaultAlt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
     defaultAltEn: 'Logo of the Santa Cruz Campus, University of Costa Rica',
+    defaultHref: 'https://www.ucr.ac.cr/directorio/recinto-universitario-de-santa-cruz/',
   },
   {
     label: 'Oficina de Servicios Generales (OSG), UCR',
     src: '/images/ROSAC/acknowledgments/osg.webp',
     defaultAlt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
     defaultAltEn: 'Logo of the General Services Office (OSG), UCR',
+    defaultHref: 'https://osg.ucr.ac.cr',
   },
   {
     label: 'LanammeUCR',
     src: '/images/ROSAC/acknowledgments/lanamme.webp',
     defaultAlt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
     defaultAltEn: 'Logo of the National Laboratory of Materials and Structural Models (LanammeUCR)',
+    defaultHref: 'https://www.lanamme.ucr.ac.cr/',
   },
   {
     label: 'Radiográfica Costarricense S.A. (RACSA)',
     src: '/images/ROSAC/acknowledgments/racsa.webp',
     defaultAlt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
     defaultAltEn: 'Logo of Radiográfica Costarricense S.A. (RACSA)',
+    defaultHref: 'https://www.racsa.go.cr/',
   },
   {
     label: 'Bomberos de Costa Rica',
     src: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
     defaultAlt: 'Logo de Bomberos de Costa Rica',
     defaultAltEn: 'Logo of the Costa Rica Fire Department',
+    defaultHref: 'https://www.bomberos.go.cr',
   },
   {
     label: 'Instituto Geográfico Nacional',
     src: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
     defaultAlt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
     defaultAltEn: 'Logo of the National Geographic Institute, National Registry of Costa Rica',
+    defaultHref: 'https://www.snitcr.go.cr/ign_ign',
   },
   {
     label: 'INDI CR',
     src: '/images/ROSAC/acknowledgments/indi.webp',
     defaultAlt: 'Logo de INDI, Ingeniería y Diseño',
     defaultAltEn: 'Logo of INDI, Engineering and Design',
+    defaultHref: 'https://www.indicr.com/',
   },
   {
     label: 'Prysmian Group',
     src: '/images/ROSAC/acknowledgments/prysmian-group.webp',
     defaultAlt: 'Logo de Prysmian Group',
     defaultAltEn: 'Logo of Prysmian Group',
+    defaultHref: '',
   },
   {
     label: 'EATON Costa Rica',
     src: '/images/ROSAC/acknowledgments/eaton.webp',
     defaultAlt: 'Logo de EATON Costa Rica',
     defaultAltEn: 'Logo of EATON Costa Rica',
+    defaultHref: 'https://www.eaton.com/cr/es-mx/company.html',
   },
   {
     label: 'INAOE, México',
     src: '/images/ROSAC/acknowledgments/inaoe.webp',
     defaultAlt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
     defaultAltEn: 'Logo of the National Institute of Astrophysics, Optics and Electronics (INAOE)',
+    defaultHref: 'https://www.inaoep.mx',
   },
   {
     label: 'AMEXCID',
@@ -137,7 +153,25 @@ export const PREDEFINED_ACKNOWLEDGMENT_LOGOS: readonly PredefinedAcknowledgmentL
     defaultAlt:
       'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
     defaultAltEn: 'Logo of the Mexican Agency for International Development Cooperation (AMEXCID)',
+    defaultHref: 'https://www.gob.mx/amexcid',
   },
+]
+
+function isValidUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+export const LOGO_SOURCE_OPTIONS: FormFieldOption[] = [
+  { value: 'custom', label: 'Subir logo personalizado' },
+  ...PREDEFINED_ACKNOWLEDGMENT_LOGOS.map((item, index) => ({
+    value: String(index),
+    label: `Seleccionar de la lista: ${item.label}`,
+  })),
 ]
 
 export function RosacAcknowledgmentForm({
@@ -149,6 +183,7 @@ export function RosacAcknowledgmentForm({
   const locale = useLocale()
   const formId = useId()
   const [name, setName] = useState(institution?.name ?? '')
+  const [href, setHref] = useState(institution?.href ?? '')
   const [logoAlt, setLogoAlt] = useState(institution?.logo?.alt ?? '')
 
   // Determine initial logo selection (defaults to custom upload for new institutions)
@@ -198,14 +233,21 @@ export function RosacAcknowledgmentForm({
 
   // Validation
   const trimmedName = name.trim()
+  const trimmedHref = href.trim()
   const nameError =
     hasAttemptedSubmit && trimmedName === '' ? t('acknowledgments.nameRequired') : null
+  const hrefError =
+    hasAttemptedSubmit && trimmedHref !== '' && !isValidUrl(trimmedHref)
+      ? t('acknowledgments.institutionUrlInvalid')
+      : null
   const logoError = hasAttemptedSubmit && !hasLogo ? t('acknowledgments.logoRequired') : null
 
-  const isFormValid = trimmedName !== '' && hasLogo
+  const isFormValid =
+    trimmedName !== '' && hasLogo && (trimmedHref === '' || isValidUrl(trimmedHref))
 
   const isDirty =
     name !== (institution?.name ?? '') ||
+    href !== (institution?.href ?? '') ||
     logoAlt !== (institution?.logo?.alt ?? '') ||
     logoFile !== null ||
     logoRemoved ||
@@ -224,6 +266,8 @@ export function RosacAcknowledgmentForm({
     if (!isFormValid) {
       if (trimmedName === '') {
         document.getElementById(`${formId}-name`)?.focus()
+      } else if (trimmedHref !== '' && !isValidUrl(trimmedHref)) {
+        document.getElementById(`${formId}-href`)?.focus()
       }
       return
     }
@@ -271,6 +315,7 @@ export function RosacAcknowledgmentForm({
 
     onSave({
       name: trimmedName,
+      href: trimmedHref || undefined,
       logo: {
         src: finalLogoUrl,
         alt: finalAlt,
@@ -295,6 +340,15 @@ export function RosacAcknowledgmentForm({
         value={name}
       />
 
+      <FormField
+        errorMessage={hrefError}
+        id={`${formId}-href`}
+        label={t('acknowledgments.institutionUrlLabel')}
+        onChange={setHref}
+        placeholder={t('acknowledgments.institutionUrlPlaceholder')}
+        value={href}
+      />
+
       <div className="cms-form-field">
         <FormField
           id={`${formId}-logo-selection`}
@@ -306,13 +360,16 @@ export function RosacAcknowledgmentForm({
               if (preset) {
                 setName(preset.label)
                 setLogoAlt(locale === 'en' ? preset.defaultAltEn : preset.defaultAlt)
+                setHref(preset.defaultHref ?? '')
               }
             } else {
               if (initialPresetIndex === -1 && institution) {
                 setName(institution.name)
+                setHref(institution.href ?? '')
                 setLogoAlt(institution.logo?.alt ?? '')
               } else {
                 setName('')
+                setHref('')
                 setLogoAlt('')
               }
             }
