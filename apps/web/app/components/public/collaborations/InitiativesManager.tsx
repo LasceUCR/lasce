@@ -14,6 +14,7 @@ import { initiativeContent } from '@/app/lib/initiative-schema'
 import type { CollaborationInitiative } from '@/app/lib/collaborations'
 import { InitiativeForm, type InitiativeFormHandle } from './InitiativeForm'
 import { InitiativeCard } from './InitiativeCard'
+import styles from './InitiativesManager.module.css'
 
 export interface InitiativesManagerProps {
   initiatives: readonly CollaborationInitiative[]
@@ -111,6 +112,24 @@ export function InitiativesManager({
 
   return (
     <div>
+      {editMode && canCreate ? (
+        <div className={styles.addCard}>
+          <AddItemCard
+            label={t('editor.add')}
+            size="large"
+            onRequestClose={() => createForm.current?.requestCancel()}
+          >
+            {({ close }) => (
+              <InitiativeForm
+                ref={createForm}
+                busy={busy}
+                onCancel={close}
+                onSave={(body) => void mutate('POST', undefined, body, close)}
+              />
+            )}
+          </AddItemCard>
+        </div>
+      ) : null}
       {initiatives.length === 0 ? <p className="content-empty">{t('empty')}</p> : null}
       {initiatives.map((record) => (
         <EditableWrapper
@@ -131,22 +150,6 @@ export function InitiativesManager({
           <InitiativeCard initiative={record} />
         </EditableWrapper>
       ))}
-      {editMode && canCreate ? (
-        <AddItemCard
-          label={t('editor.add')}
-          size="large"
-          onRequestClose={() => createForm.current?.requestCancel()}
-        >
-          {({ close }) => (
-            <InitiativeForm
-              ref={createForm}
-              busy={busy}
-              onCancel={close}
-              onSave={(body) => void mutate('POST', undefined, body, close)}
-            />
-          )}
-        </AddItemCard>
-      ) : null}
       {editing && editMode && canEdit ? (
         <Modal
           open

@@ -1,0 +1,15 @@
+.addCard {
+  margin-top: 18px;
+}
+
+.addCard > :global(.add-item-card) {
+  min-height: 210px;
+  padding: 28px 32px;
+  border-radius: 12px;
+}
+
+@media (max-width: 760px) {
+  .addCard > :global(.add-item-card) {
+    padding: 22px 18px;
+  }
+}
