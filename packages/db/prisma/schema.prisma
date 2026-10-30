@@ -1061,3 +1061,160 @@ model SpaceWeatherSectionTranslation {
   @@map("space_weather_section_translations")
   @@schema("public")
 }
+
+/// A characteristic card shown on `/radioastronomia` (Section 1).
+model RosacCharacteristic {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  icon        String
+  title       String
+  description String   @db.Text
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations RosacCharacteristicTranslation[]
+
+  @@map("rosac_characteristics")
+  @@schema("public")
+}
+
+/// The translatable text of a `RosacCharacteristic` in a language other than Spanish.
+model RosacCharacteristicTranslation {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  characteristicId String   @map("characteristic_id") @db.Uuid
+  locale           String   @db.VarChar(5)
+  title            String
+  description      String   @db.Text
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  characteristic RosacCharacteristic @relation(fields: [characteristicId], references: [id], onDelete: Cascade)
+
+  @@unique([characteristicId, locale])
+  @@map("rosac_characteristic_translations")
+  @@schema("public")
+}
+
+/// A scientific activity card shown on `/radioastronomia` (Section 3).
+model RosacActivity {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  icon        String
+  title       String
+  description String   @db.Text
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations RosacActivityTranslation[]
+
+  @@map("rosac_activities")
+  @@schema("public")
+}
+
+/// The translatable text of a `RosacActivity` in a language other than Spanish.
+model RosacActivityTranslation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  activityId  String   @map("activity_id") @db.Uuid
+  locale      String   @db.VarChar(5)
+  title       String
+  description String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  activity RosacActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, locale])
+  @@map("rosac_activity_translations")
+  @@schema("public")
+}
+
+/// A construction stage shown in the carousel on `/radioastronomia` (Section 4).
+model RosacStage {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  title       String
+  description String   @db.Text
+  images      Json     @default("[]")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations RosacStageTranslation[]
+
+  @@map("rosac_stages")
+  @@schema("public")
+}
+
+/// The translatable text of a `RosacStage` in a language other than Spanish.
+model RosacStageTranslation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stageId     String   @map("stage_id") @db.Uuid
+  locale      String   @db.VarChar(5)
+  title       String
+  description String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  stage RosacStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@unique([stageId, locale])
+  @@map("rosac_stage_translations")
+  @@schema("public")
+}
+
+/// A scientific instrument card shown on `/radioastronomia` (Section 6).
+model RosacInstrument {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  pendingMessage     String?  @map("pending_message") @db.Text
+  imageSrc           String?  @map("image_src")
+  imageAlt           String?  @map("image_alt")
+  consultationHref   String?  @map("consultation_href")
+  consultationLabel  String   @map("consultation_label")
+  consultationNotice String?  @map("consultation_notice") @db.Text
+  position           Int      @default(0)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations RosacInstrumentTranslation[]
+
+  @@map("rosac_instruments")
+  @@schema("public")
+}
+
+/// The translatable text of a `RosacInstrument` in a language other than Spanish.
+model RosacInstrumentTranslation {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  instrumentId       String   @map("instrument_id") @db.Uuid
+  locale             String   @db.VarChar(5)
+  name               String
+  pendingMessage     String?  @map("pending_message") @db.Text
+  consultationLabel  String?  @map("consultation_label")
+  consultationNotice String?  @map("consultation_notice") @db.Text
+  imageAlt           String?  @map("image_alt")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  instrument RosacInstrument @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+
+  @@unique([instrumentId, locale])
+  @@map("rosac_instrument_translations")
+  @@schema("public")
+}
+
+/// An institution acknowledgment card shown on `/radioastronomia` (Section 9).
+model RosacAcknowledgment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  href      String?
+  logoSrc   String   @map("logo_src")
+  logoAlt   String   @map("logo_alt")
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("rosac_acknowledgments")
+  @@schema("public")
+}
