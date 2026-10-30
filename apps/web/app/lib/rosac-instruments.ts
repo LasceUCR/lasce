@@ -24,6 +24,14 @@ export interface RosacInstrumentCardContent {
    */
   consultation?: { href?: string; label: string; notice?: string }
   labels?: InstrumentCardLabels
+  editing?: {
+    content: {
+      es: { name: string; description: string }
+      en: { name: string; description: string } | null
+    }
+    isLegacy: boolean
+    version: string
+  }
 }
 
 export interface RosacInstrumentsContent {

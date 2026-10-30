@@ -621,23 +621,22 @@ a {
   gap: 10px;
 }
 
-/* From the 1400px mobile breakpoint up to 1700px the Spanish navigation, the language menu
-   and the account links do not fit on one row at the default 28px spacing, so the navigation
-   closes up there. The range got wider (it used to stop at 1500px) once "Actividades
-   académicas" joined the top-level entries — the longest label in the bar — and pushed the
-   overlap further out than before. */
-@media (min-width: 1401px) and (max-width: 1700px) {
+/* Just above the 1400px mobile breakpoint the navigation, the language menu and the account
+   links do not fit on one row at the default 28px spacing, so the spacing steps down there
+   while the labels keep their normal 13px size. Measured with the Spanish labels and the
+   signed-out "Iniciar sesión" pill (the widest header actions): from 1500px the default
+   28px fits, from 1441px 20px does, and at 1401px 16px does (with the tighter header gaps
+   below). This used to squeeze everything to 4px and 12px all the way up to 1700px, back
+   when "Actividades académicas" was a top-level entry; it now lives under "Divulgación". */
+@media (min-width: 1401px) and (max-width: 1499px) {
   .desktop-nav {
-    gap: 4px;
+    gap: 20px;
   }
+}
 
-  .desktop-nav a,
-  .desktop-nav .nav-group summary {
-    font-size: 12px;
-  }
-
-  .desktop-nav .nav-group summary {
-    gap: 2px;
+@media (min-width: 1401px) and (max-width: 1440px) {
+  .desktop-nav {
+    gap: 16px;
   }
 }
 
