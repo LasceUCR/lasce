@@ -32,20 +32,6 @@ function albumPath(slug: string): string {
   return `/galeria/${slug}`
 }
 
-function albumMeta(album: GalleryAlbum): string {
-  const fileCount = album.subAlbums.reduce(
-    (total, subAlbum) => total + subAlbum.media.length,
-    album.media.length,
-  )
-  const parts = [`${fileCount} archivos`, album.years]
-
-  if (album.subAlbums.length > 0) {
-    parts.unshift(`${album.subAlbums.length} subálbumes`)
-  }
-
-  return parts.join(' · ')
-}
-
 export interface GalleryGroupSectionProps {
   album: GalleryAlbum
   canEdit?: boolean
@@ -57,9 +43,8 @@ export interface GalleryGroupSectionProps {
 
 /**
  * One block of the gallery page, features photos from the album and its
- * sub-albums, laid out as a horizontal carousel. Every tile keeps the same
- * fixed size; the track scrollssideways, and * the previous/next buttons
- * scroll it by about one card.
+ * sub-albums, laid out as a horizontal carousel. Every card keeps the same
+ * fixed size, and the previous/next buttons scroll it by about one card.
  */
 export function GalleryGroupSection({
   album,
@@ -74,7 +59,8 @@ export function GalleryGroupSection({
   const headingId = `galeria-${album.slug}`
   const [isEditing, setIsEditing] = useState(false)
   const [editingSubAlbum, setEditingSubAlbum] = useState<GallerySubAlbum | null>(null)
-  const t = useTranslations('gallery.feedback')
+  const t = useTranslations('gallery.common')
+  const tFeedback = useTranslations('gallery.feedback')
   const tActions = useTranslations('gallery.actions')
   const sendWithFeedback = useRequestFeedback()
   const [isSaving, setIsSaving] = useState(false)
@@ -86,6 +72,15 @@ export function GalleryGroupSection({
     media: GalleryMedia
     albumId: string
   } | null>(null)
+  const fileCount = album.subAlbums.reduce(
+    (total, subAlbum) => total + subAlbum.media.length,
+    album.media.length,
+  )
+  const summaryParts = [t('files', { count: fileCount }), album.years]
+  if (album.subAlbums.length > 0) {
+    summaryParts.unshift(t('subalbums', { count: album.subAlbums.length }))
+  }
+  const summary = summaryParts.join(' · ')
 
   const trackRef = useRef<HTMLUListElement>(null)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
@@ -150,8 +145,8 @@ export function GalleryGroupSection({
       `/api/gallery/albums/${target.id}`,
       { method: 'DELETE' },
       {
-        success: t(isSub ? 'subAlbumDeleted' : 'albumDeleted'),
-        fallback: t(isSub ? 'subAlbumDeleteFailed' : 'albumDeleteFailed'),
+        success: tFeedback(isSub ? 'subAlbumDeleted' : 'albumDeleted'),
+        fallback: tFeedback(isSub ? 'subAlbumDeleteFailed' : 'albumDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -162,8 +157,8 @@ export function GalleryGroupSection({
       `/api/gallery/media/${mediaId}`,
       { method: 'DELETE' },
       {
-        success: t('fileDeleted'),
-        fallback: t('fileDeleteFailed'),
+        success: tFeedback('fileDeleted'),
+        fallback: tFeedback('fileDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -205,8 +200,8 @@ export function GalleryGroupSection({
           }),
         },
         {
-          success: t(isSub ? 'subAlbumUpdated' : 'albumUpdated'),
-          fallback: t(isSub ? 'subAlbumSaveFailed' : 'albumSaveFailed'),
+          success: tFeedback(isSub ? 'subAlbumUpdated' : 'albumUpdated'),
+          fallback: tFeedback(isSub ? 'subAlbumSaveFailed' : 'albumSaveFailed'),
           onSuccess: () => {
             closeEditor()
             router.refresh()
@@ -239,7 +234,7 @@ export function GalleryGroupSection({
         )}
       </div>
       <p className="gallery-group-description">{album.description}</p>
-      <span className="gallery-group-meta">{albumMeta(album)}</span>
+      <span className="gallery-group-meta">{summary}</span>
 
       <ul
         aria-label={album.title}

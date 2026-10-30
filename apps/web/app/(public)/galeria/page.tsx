@@ -1,15 +1,19 @@
 import type { Metadata } from 'next'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 import { GalleryPage } from '@/app/components/public/gallery/GalleryPage'
 import { getSessionUser } from '@/app/lib/auth/session'
 import { userHasPermission } from '@/app/lib/auth/authorization'
-import { galeriaMeta, getGalleryAlbums } from '@/app/lib/gallery'
+import { getGalleryAlbums } from '@/app/lib/gallery'
 import { resolveLocale } from '@/app/lib/i18n/locale'
 
-export const metadata: Metadata = {
-  title: galeriaMeta.title,
-  description: galeriaMeta.description,
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('gallery.meta')
+
+  return {
+    title: t('title'),
+    description: t('description'),
+  }
 }
 
 export const dynamic = 'force-dynamic'
