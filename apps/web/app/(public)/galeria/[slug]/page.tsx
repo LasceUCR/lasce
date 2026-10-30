@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 import { AlbumPage } from '@/app/components/public/gallery/AlbumPage'
 import { getSessionUser } from '@/app/lib/auth/session'
@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: AlbumRouteProps): Promise<Metadata> {
   const { slug } = await params
   const albums = await getGalleryAlbums(resolveLocale(await getLocale()))
+  const t = await getTranslations('gallery.meta')
   const album = albums.find((item) => item.slug === slug)
 
   if (!album) {
@@ -24,18 +25,19 @@ export async function generateMetadata({ params }: AlbumRouteProps): Promise<Met
   }
 
   return {
-    title: `${album.title} | Galería LASCE`,
+    title: t('albumTitle', { album: album.title }),
     description: album.description,
   }
 }
 
 export default async function AlbumRoute({ params }: AlbumRouteProps) {
   const { slug } = await params
-  const [locale, canCreate, canEdit, canDelete, user] = await Promise.all([
+  const [locale, canCreate, canEdit, canDelete, tCommon, user] = await Promise.all([
     getLocale().then(resolveLocale),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
+    getTranslations('gallery.common'),
     getSessionUser(),
   ])
   const albums = await getGalleryAlbums(locale, { includeEditingData: canEdit })
@@ -49,12 +51,17 @@ export default async function AlbumRoute({ params }: AlbumRouteProps) {
     <AlbumPage
       albumId={album.id}
       uploader={user?.fullName}
+      backLabel={tCommon('backToGallery')}
       canCreate={canCreate}
       canDelete={canDelete}
       canEdit={canEdit}
       description={album.description}
       media={album.media}
-      meta={albumMeta(album)}
+      meta={albumMeta(
+        album,
+        (count) => tCommon('files', { count }),
+        (count) => tCommon('subalbums', { count }),
+      )}
       parentSlug={album.slug}
       parentAlbumId={album.id}
       subAlbums={album.subAlbums}

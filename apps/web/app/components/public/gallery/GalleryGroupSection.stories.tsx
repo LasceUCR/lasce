@@ -30,7 +30,7 @@ const albumWithSubAlbums: GalleryAlbum = {
       title: 'Montaje de la estructura',
       description: 'Registro del montaje.',
       src: '/images/galeria/rosac/montaje/1.jpeg',
-      media: [sampleMedia],
+      media: [{ ...sampleMedia, id: 'story-sub-media', title: 'Subálbum de montaje' }],
     },
   ],
   media: [sampleMedia],
@@ -66,7 +66,7 @@ const albumWithoutSubAlbums: GalleryAlbum = {
   media: [sampleMedia],
 }
 
-/** An album with no children: the cover tile takes the full width. */
+/** An album with no children: its photos still fill the carousel. */
 export const WithoutSubAlbums: Story = {
   args: { album: albumWithoutSubAlbums },
 }

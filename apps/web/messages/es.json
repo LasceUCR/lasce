@@ -700,6 +700,40 @@
     }
   },
   "gallery": {
+    "meta": {
+      "title": "Galería | LASCE",
+      "albumTitle": "{album} | Galería LASCE",
+      "description": "Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación, y vida cotidiana del equipo."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Galería",
+      "lead": "Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes."
+    },
+    "common": {
+      "files": "{count, plural, one {# archivo} other {# archivos}}",
+      "subalbums": "{count, plural, one {# subálbum} other {# subálbumes}}",
+      "subalbumsTitle": "Subálbumes",
+      "backToGallery": "Volver a la galería",
+      "backToAlbum": "Volver a {album}",
+      "gallery": "Galería LASCE"
+    },
+    "albumPage": {
+      "albumFiles": "{count, plural, one {# archivo en este álbum} other {# archivos en este álbum}}",
+      "albumContent": "Fotografías y video de este álbum"
+    },
+    "media": {
+      "viewFullSize": "Ver a tamaño completo: {title}",
+      "video": "Video",
+      "close": "Cerrar",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "position": "Archivo {position} de {total}",
+      "announcement": "Archivo {position} de {total}: {title}.",
+      "dateCaptured": "Fecha de captura: {date}",
+      "format": "Formato: {format}",
+      "uploadedBy": "Subido por: {user}"
+    },
     "editor": {
       "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o la descripción, revíselo también.",
       "legacyNoTranslation": "Este álbum aún no tiene versión en inglés. Para cambiar el título o la descripción debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",
@@ -729,6 +763,10 @@
       "addAlbum": "Añadir álbum",
       "addSubAlbum": "Añadir subálbum",
       "addFile": "Añadir imagen",
+      "viewAlbum": "Ver álbum completo",
+      "carouselPrevious": "Imágenes anteriores",
+      "carouselNext": "Imágenes siguientes",
+      "viewImageFullSize": "Ver imagen a pantalla completa: {title}",
       "creatingAlbum": "Creando álbum...",
       "creatingSubAlbum": "Creando subálbum...",
       "savingAlbum": "Guardando álbum...",
