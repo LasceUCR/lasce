@@ -104,10 +104,12 @@ test('creates, reviews, updates and deletes bilingual initiatives with persisten
       select: { logoUrl: true },
     })
     expect(saved.logoUrl).toBe(logoUrl)
-    await expect(card.getByRole('img')).toHaveAttribute('src', logoUrl)
+    // Compare the resolved URL, whether the rendered attribute is relative or absolute.
+    const resolvedLogoUrl = new URL(logoUrl, page.url()).href
+    await expect(card.getByRole('img')).toHaveJSProperty('src', resolvedLogoUrl)
     await page.reload()
     await expect(card.getByText('Descripción de la iniciativa.')).toBeVisible()
-    await expect(card.getByRole('img')).toHaveAttribute('src', logoUrl)
+    await expect(card.getByRole('img')).toHaveJSProperty('src', resolvedLogoUrl)
     await expect
       .poll(() =>
         card
