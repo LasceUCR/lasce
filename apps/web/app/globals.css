@@ -83,6 +83,10 @@ body {
   line-height: 1.45;
 }
 
+body:has(.not-found) {
+  background: var(--space-black);
+}
+
 /* Body copy on the public site. Headings, navigation and buttons stay start-aligned. */
 .public-shell-content p {
   text-align: justify;
@@ -139,6 +143,10 @@ a {
   place-items: center;
   background: #000918;
   color: var(--white);
+}
+
+.not-found {
+  flex: 1;
 }
 
 .public-route-content {
