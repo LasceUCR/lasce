@@ -211,7 +211,9 @@ editor's copy is in `spaceWeather.editor`, `spaceWeather.discardDialog` and
 copy (`page`, built in `(public)/publicaciones/page.tsx` and `PublicationsExplorer.tsx`), the
 cards' buttons (`card`), the editor of "Modo edición" with its popups, validation and save
 messages (`editor`, `authorDialog`, `discardDialog`, `deleteDialog`, `validation`, `saveErrors`),
-and the publications themselves, which are database content.
+and the publications themselves, which are database content. The listing is paginated like
+`/noticias`: `getPublicationsPage()` searches the text shown in the visitor's language, and the
+page controls' own text is in `common.pagination` (see [`pagination.md`](pagination.md)).
 
 `/noticias` follows the same shape in the `news` namespace: the page's fixed copy (`page`), the
 cards' labels (`card`, including "Sin fecha" for an undated item), the editor with its popups,

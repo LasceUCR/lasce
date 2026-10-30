@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Download, LayoutDashboard, Server, Shield, Users } from 'lucide-react'
+import { Download, LayoutDashboard, ScrollText, Server, Shield, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Toggle } from '@/app/components/public/Toggle'
@@ -18,6 +18,7 @@ const icons: Record<AdminMenuKey, ReactNode> = {
   descargas: <Download size={18} strokeWidth={1.8} />,
   usuarios: <Users size={18} strokeWidth={1.8} />,
   permisos: <Shield size={18} strokeWidth={1.8} />,
+  auditoria: <ScrollText size={18} strokeWidth={1.8} />,
   infraestructura: <Server size={18} strokeWidth={1.8} />,
 }
 

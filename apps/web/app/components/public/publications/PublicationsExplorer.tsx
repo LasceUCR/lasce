@@ -1,21 +1,21 @@
 'use client'
 
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { PublicationCard } from './PublicationCard'
+
+import { Pagination } from '@/app/components/public/Pagination'
 import { Select } from '@/app/components/public/Select'
 import { SearchBar } from '@/app/components/public/SearchBar'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import type { Publication, ResearchGroup } from '@/app/lib/publications'
 import { Modal } from '@/app/components/public/Modal'
 import { Button } from '@/app/components/public/Button'
-import { PublicationForm, type PublicationFormHandle } from './PublicationForm'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { sendJson } from '@/app/lib/cms/save'
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
+import { PAGE_SIZE } from '@/app/lib/pagination'
 import {
   buildCreateRequest,
   buildUpdateRequest,
@@ -28,20 +28,37 @@ import {
   type PublicationFormInitial,
   type SaveFailure,
 } from '@/app/lib/publication-form'
-import type { ReviewConfirmation } from '@/app/lib/publication-schema'
+import { publicationListingHref } from '@/app/lib/publication-listing'
+import type { Publication, ResearchGroup, ReviewConfirmation } from '@/app/lib/publication-schema'
+import { parseSearchParam } from '@/app/lib/search-query'
 
+import { PublicationCard } from './PublicationCard'
+import { PublicationForm, type PublicationFormHandle } from './PublicationForm'
 import { usePublicationEditorLanguage } from './usePublicationEditorLanguage'
 
 export interface PublicationsExplorerProps {
+  /**
+   * The items on the page shown, already searched, filtered, ordered and cut to the page on the
+   * server (`getPublicationsPage`), and in the site's language.
+   */
   publications: Publication[]
+  /** The search the server applied; `''` for none. */
+  query?: string
+  /** The research group the server applied. `null` is every group. */
+  group?: ResearchGroup | null
+  /** The page shown, from 1. */
+  page?: number
+  /** Matching items across every page. Defaults to the items given. */
+  totalItems?: number
+  /** Defaults to what `totalItems` fills at `PAGE_SIZE` per page. */
+  totalPages?: number
   canCreate?: boolean
   canEdit?: boolean
   canDelete?: boolean
 }
 
-function matches(value: string, query: string) {
-  return value.toLowerCase().includes(query.trim().toLowerCase())
-}
+/** How long typing has to pause before the search runs. */
+export const SEARCH_DELAY_MS = 300
 
 /** Sends a JSON request and reads the failure, if any, the way the editor shows it. */
 async function send(
@@ -68,11 +85,17 @@ interface Editing {
 
 export function PublicationsExplorer({
   publications,
+  query = '',
+  group = null,
+  page = 1,
+  totalItems = publications.length,
+  totalPages = Math.ceil(totalItems / PAGE_SIZE),
   canCreate = false,
   canEdit = false,
   canDelete = false,
 }: PublicationsExplorerProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { editMode } = useEditMode()
   // The editing controls and messages follow the site's language.
   const t = useTranslations('publications')
@@ -90,10 +113,56 @@ export function PublicationsExplorer({
   // The open forms, so the modal's close button and Escape ask before discarding their changes.
   const createForm = useRef<PublicationFormHandle>(null)
   const editForm = useRef<PublicationFormHandle>(null)
+  const heading = useRef<HTMLHeadingElement>(null)
+  const shownPage = useRef(page)
+  // What is typed in the search box. The URL, and so `query`, follows it once typing pauses.
+  const [input, setInput] = useState(query)
+  const [syncedQuery, setSyncedQuery] = useState(query)
+  const [navigating, startNavigation] = useTransition()
 
-  const [query, setQuery] = useState('')
+  // The URL changed without the box: back or forward, or a link. Show its search in the box,
+  // unless the box already says the same (say, with a trailing space still being typed).
+  if (query !== syncedQuery) {
+    setSyncedQuery(query)
+    if (parseSearchParam(input) !== query) setInput(query)
+  }
 
-  const [selectedGroup, setSelectedGroup] = useState<ResearchGroup | null>(null)
+  /** Shows the first page of `next`, keeping the group and replacing the URL instead of adding one. */
+  const search = useCallback(
+    (next: string) => {
+      startNavigation(() => {
+        router.replace(publicationListingHref(pathname, { query: next, group }), { scroll: false })
+      })
+    },
+    [group, pathname, router],
+  )
+
+  // Searches once typing pauses. The server searches the whole collection, in the language the
+  // visitor reads, and a new search starts again from the first page.
+  useEffect(() => {
+    const next = parseSearchParam(input)
+    if (next === query) return
+
+    const timer = setTimeout(() => search(next), SEARCH_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [input, query, search])
+
+  // A new page moves focus to the list's heading, so keyboard and screen reader users start
+  // reading the new items instead of staying on the link they followed at the bottom.
+  useEffect(() => {
+    if (shownPage.current === page) return
+    shownPage.current = page
+    heading.current?.focus()
+  }, [page])
+
+  function selectGroup(value: string) {
+    const next = value === '' ? null : (value as ResearchGroup)
+    if (next === group) return
+
+    startNavigation(() => {
+      router.replace(publicationListingHref(pathname, { query, group: next }), { scroll: false })
+    })
+  }
 
   function openEditor(publication: Publication) {
     setSaveFailure(null)
@@ -165,35 +234,35 @@ export function PublicationsExplorer({
     router.refresh()
   }
 
-  const filtered = useMemo(() => {
-    return publications.filter((publication) => {
-      const matchesGroup = selectedGroup === null || publication.researchGroup === selectedGroup
-
-      const matchesSearch =
-        query.trim() === '' ||
-        matches(publication.title, query) ||
-        publication.authors.some((author) => matches(author, query)) ||
-        matches(publication.abstract, query)
-
-      return matchesGroup && matchesSearch
-    })
-  }, [publications, query, selectedGroup])
-
   function getEmptyMessage() {
-    if (selectedGroup !== null && query.trim() !== '') {
-      return t('page.emptyGroupAndQuery', { group: selectedGroup, query })
+    if (group !== null && query !== '') {
+      return t('page.emptyGroupAndQuery', { group, query })
     }
 
-    if (selectedGroup !== null) {
-      return t('page.emptyGroup', { group: selectedGroup })
+    if (group !== null) {
+      return t('page.emptyGroup', { group })
     }
 
-    if (query.trim() !== '') {
+    if (query !== '') {
       return t('page.emptyQuery', { query })
     }
 
     return t('page.empty')
   }
+
+  const hasQuery = query !== ''
+  const firstShown = (page - 1) * PAGE_SIZE + 1
+  const lastShown = Math.min(page * PAGE_SIZE, totalItems)
+  const summary = [
+    hasQuery && totalItems > 0 ? t('page.results', { count: totalItems }) : null,
+    totalPages <= 1
+      ? null
+      : firstShown === lastShown
+        ? t('page.rangeOne', { position: firstShown, total: totalItems })
+        : t('page.range', { from: firstShown, to: lastShown, total: totalItems }),
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <section aria-labelledby="publications-title" className="publications page-width">
@@ -201,38 +270,48 @@ export function PublicationsExplorer({
         <SearchBar
           className="publications-search"
           label={t('page.searchLabel')}
-          onQueryChange={setQuery}
+          onQueryChange={setInput}
+          onSubmit={() => {
+            const next = parseSearchParam(input)
+            if (next !== query) search(next)
+          }}
           placeholder={t('page.searchPlaceholder')}
-          query={query}
+          query={input}
         />
 
         <div className="publications-group-filter">
           <Select
             id="publication-research-group"
             label={t('page.groupLabel')}
-            onChange={(value) => setSelectedGroup(value === '' ? null : (value as ResearchGroup))}
+            onChange={selectGroup}
             options={[
               { value: '', label: t('page.allGroups') },
               { value: 'LASCE', label: 'LASCE' },
               { value: 'ROSAC', label: 'ROSAC' },
             ]}
-            value={selectedGroup ?? ''}
+            value={group ?? ''}
           />
         </div>
 
         <div aria-label={t('page.countLabel')} aria-live="polite" className="publications-kpi">
-          <strong>{filtered.length}</strong>
+          <strong>{totalItems}</strong>
           <span>
-            {selectedGroup
-              ? t('page.countInGroup', { count: filtered.length, group: selectedGroup })
-              : t('page.countTotal', { count: filtered.length })}
+            {group
+              ? t('page.countInGroup', { count: totalItems, group })
+              : t('page.countTotal', { count: totalItems })}
           </span>
         </div>
       </div>
 
-      <h2 id="publications-title">{t('page.recent')}</h2>
+      <h2 id="publications-title" ref={heading} tabIndex={-1}>
+        {t('page.recent')}
+      </h2>
 
-      {filtered.length === 0 ? (
+      <p aria-live="polite" className={summary === '' ? 'sr-only' : 'publications-summary'}>
+        {summary}
+      </p>
+
+      {publications.length === 0 ? (
         <p className="content-empty" role="status">
           {getEmptyMessage()}
         </p>
@@ -240,8 +319,8 @@ export function PublicationsExplorer({
 
       {/* The add card stays available with nothing listed, so the first publication can be
           created and a search with no results does not hide it. */}
-      {filtered.length > 0 || (editMode && canCreate) ? (
-        <div className="publication-list">
+      {publications.length > 0 || (editMode && canCreate) ? (
+        <div aria-busy={navigating || undefined} className="publication-list">
           {editMode && canCreate ? (
             <AddItemCard
               label={t('editor.addCard')}
@@ -266,7 +345,7 @@ export function PublicationsExplorer({
             </AddItemCard>
           ) : null}
 
-          {filtered.map((publication) => {
+          {publications.map((publication) => {
             const card = (
               <PublicationCard
                 abstract={publication.abstract}
@@ -303,6 +382,14 @@ export function PublicationsExplorer({
           })}
         </div>
       ) : null}
+
+      <Pagination
+        currentPage={page}
+        hrefForPage={(target) => publicationListingHref(pathname, { query, group, page: target })}
+        label={t('page.paginationLabel')}
+        scroll={false}
+        totalPages={totalPages}
+      />
 
       <Modal
         onClose={() => {

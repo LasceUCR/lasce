@@ -34,7 +34,7 @@ export async function PATCH(
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updatePublication(id, parsed.data)
+    const result = await updatePublication(id, parsed.data, guard.user)
     if (!result.ok) return writeFailure(id, result)
 
     return ok({ publication: result.publication })
@@ -54,7 +54,7 @@ export async function DELETE(
   if (!isUuid(id)) return invalidId()
 
   try {
-    const deleted = await deletePublication(id)
+    const deleted = await deletePublication(id, guard.user)
     if (!deleted) return notFound(id)
   } catch (error) {
     return internalError('No se pudo eliminar la publicación.', error)

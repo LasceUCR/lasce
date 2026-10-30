@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto'
 
 import { prisma, type Prisma } from '@lasce/db'
 
-import { runWrite, WriteAbort, type WriteFailure } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import {
+  runAuditedDelete,
+  runWrite,
+  WriteAbort,
+  type WriteFailure,
+} from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
@@ -2162,12 +2168,13 @@ async function writeAlbum<F extends WriteFailure>(
   return result.ok ? { ok: true, album: toSubAlbum(result.value, defaultLocale, true) } : result
 }
 
-function createAlbumRecord(
+async function createAlbumRecord(
   tx: Prisma.TransactionClient,
   input: AlbumCreateInput,
   parentAlbumId: string | null,
+  actor: AuditActor,
 ): Promise<AlbumRecord> {
-  return tx.galleryAlbum.create({
+  const created = await tx.galleryAlbum.create({
     data: {
       ...baseContent(albumContent, input.content),
       slug: input.slug,
@@ -2178,6 +2185,13 @@ function createAlbumRecord(
     },
     include: albumInclude,
   })
+  await recordUserAuditEvent(tx, actor, {
+    action: parentAlbumId ? 'gallery_sub_album.create' : 'gallery_album.create',
+    summary: `${parentAlbumId ? 'Subálbum' : 'Álbum'} de galería agregado: ${created.title}`,
+    entityType: parentAlbumId ? 'gallery_sub_album' : 'gallery_album',
+    entityId: created.id,
+  })
+  return created
 }
 
 /**
@@ -2186,12 +2200,16 @@ function createAlbumRecord(
  */
 export async function createTopLevelGalleryAlbum(
   input: AlbumCreateInput,
+  actor: AuditActor,
 ): Promise<GalleryAlbumWriteResult> {
-  const first = await writeAlbum((tx) => createAlbumRecord(tx, input, null), duplicateSlugFailure)
+  const first = await writeAlbum(
+    (tx) => createAlbumRecord(tx, input, null, actor),
+    duplicateSlugFailure,
+  )
   if (first.ok || first.reason !== 'duplicate-slug') return first
 
   return writeAlbum(
-    (tx) => createAlbumRecord(tx, { ...input, slug: `${input.slug}-${randomUUID()}` }, null),
+    (tx) => createAlbumRecord(tx, { ...input, slug: `${input.slug}-${randomUUID()}` }, null, actor),
     duplicateSlugFailure,
   )
 }
@@ -2200,6 +2218,7 @@ export async function createTopLevelGalleryAlbum(
 export async function createGallerySubAlbum(
   parentAlbumId: string,
   input: SubAlbumCreateInput,
+  actor: AuditActor,
 ): Promise<{ ok: true; album: GallerySubAlbum } | GallerySubAlbumCreateFailure> {
   return writeAlbum<GallerySubAlbumCreateFailure>(async (tx) => {
     const parent = await tx.galleryAlbum.findUnique({
@@ -2217,7 +2236,7 @@ export async function createGallerySubAlbum(
       })
     }
 
-    return createAlbumRecord(tx, input, parent.id)
+    return createAlbumRecord(tx, input, parent.id, actor)
   }, duplicateSlugFailure)
 }
 
@@ -2235,6 +2254,7 @@ export async function createGallerySubAlbum(
 export async function updateGalleryAlbum(
   albumId: string,
   input: AlbumUpdateInput,
+  actor: AuditActor,
 ): Promise<GalleryAlbumWriteResult> {
   const expectedUpdatedAt = parseVersion(input.version)
 
@@ -2298,14 +2318,38 @@ export async function updateGalleryAlbum(
       }
     }
 
-    return tx.galleryAlbum.findUniqueOrThrow({ where: { id: albumId }, include: albumInclude })
+    const updated = await tx.galleryAlbum.findUniqueOrThrow({
+      where: { id: albumId },
+      include: albumInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: updated.parentAlbumId ? 'gallery_sub_album.update' : 'gallery_album.update',
+      summary: `${updated.parentAlbumId ? 'Subálbum' : 'Álbum'} de galería actualizado: ${updated.title}`,
+      entityType: updated.parentAlbumId ? 'gallery_sub_album' : 'gallery_album',
+      entityId: albumId,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   }, duplicateSlugFailure)
 }
 
 /** Deletes an album. Its translations, sub-albums and media records go with it (`ON DELETE CASCADE`). */
-export async function deleteGalleryAlbum(albumId: string): Promise<boolean> {
-  const { count } = await prisma.galleryAlbum.deleteMany({ where: { id: albumId } })
-  return count > 0
+export async function deleteGalleryAlbum(albumId: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) =>
+      tx.galleryAlbum.findUnique({
+        where: { id: albumId },
+        select: { title: true, parentAlbumId: true },
+      }),
+    (tx) => tx.galleryAlbum.deleteMany({ where: { id: albumId } }),
+    (tx, album) =>
+      recordUserAuditEvent(tx, actor, {
+        action: album.parentAlbumId ? 'gallery_sub_album.delete' : 'gallery_album.delete',
+        summary: `${album.parentAlbumId ? 'Subálbum' : 'Álbum'} de galería eliminado: ${album.title}`,
+        entityType: album.parentAlbumId ? 'gallery_sub_album' : 'gallery_album',
+        entityId: albumId,
+      }),
+  )
 }
 
 /** Any unique violation on media is a clash with the file key or the position it was given. */
@@ -2328,6 +2372,7 @@ const mediaRecordInclude = {
 export async function createGalleryMedia(
   albumId: string,
   data: GalleryMediaInput,
+  actor: AuditActor,
 ): Promise<GalleryMediaWriteResult> {
   return writeMedia(async (tx) => {
     const album = await tx.galleryAlbum.findUnique({ where: { id: albumId }, select: { id: true } })
@@ -2341,7 +2386,7 @@ export async function createGalleryMedia(
       select: { position: true },
     })
 
-    return tx.galleryMedia.create({
+    const created = await tx.galleryMedia.create({
       data: {
         ...baseContent(mediaContent, data.content),
         albumId,
@@ -2357,6 +2402,14 @@ export async function createGalleryMedia(
       },
       include: mediaRecordInclude,
     })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'gallery_media.create',
+      summary: `Archivo de galería agregado: ${created.title}`,
+      entityType: 'gallery_media',
+      entityId: created.id,
+      metadata: { albumId },
+    })
+    return created
   })
 }
 
@@ -2371,6 +2424,7 @@ export async function createGalleryMedia(
 export async function updateGalleryMedia(
   mediaId: string,
   data: GalleryMediaUpdate,
+  actor: AuditActor,
 ): Promise<GalleryMediaWriteResult> {
   const expectedUpdatedAt = parseVersion(data.version)
 
@@ -2439,15 +2493,32 @@ export async function updateGalleryMedia(
       }
     }
 
-    return tx.galleryMedia.findUniqueOrThrow({
+    const updated = await tx.galleryMedia.findUniqueOrThrow({
       where: { id: mediaId },
       include: mediaRecordInclude,
     })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'gallery_media.update',
+      summary: `Archivo de galería actualizado: ${updated.title}`,
+      entityType: 'gallery_media',
+      entityId: mediaId,
+      metadata: { fields: changedFieldNames(data) },
+    })
+    return updated
   })
 }
 
 /** Deletes the media database record and its translations only; the asset is left untouched. */
-export async function deleteGalleryMedia(mediaId: string): Promise<boolean> {
-  const { count } = await prisma.galleryMedia.deleteMany({ where: { id: mediaId } })
-  return count > 0
+export async function deleteGalleryMedia(mediaId: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) => tx.galleryMedia.findUnique({ where: { id: mediaId }, select: { title: true } }),
+    (tx) => tx.galleryMedia.deleteMany({ where: { id: mediaId } }),
+    (tx, media) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'gallery_media.delete',
+        summary: `Archivo de galería eliminado: ${media.title}`,
+        entityType: 'gallery_media',
+        entityId: mediaId,
+      }),
+  )
 }

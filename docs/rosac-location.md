@@ -24,6 +24,8 @@ Marker PNG imports are normalized to URL strings for both Next's static image ob
 - The attribution link remains underlined, so color is not its only distinguishing feature.
 - Wheel zoom is disabled so scrolling over the map continues scrolling the page.
 - The map reserves its height during loading and fits the content width. The address remains readable if the map fails.
+- While the map script downloads, `LocationMapSkeleton` fills that box with the shared `Skeleton`
+  shimmer and a polite status announces the load. The address stays outside the placeholder.
 
 ## Verification
 
