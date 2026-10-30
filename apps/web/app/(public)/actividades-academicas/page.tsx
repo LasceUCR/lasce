@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getMessages, getTranslations } from 'next-intl/server'
 
 import { AcademicActivitiesPage } from '@/app/components/public/news/AcademicActivitiesPage'
@@ -11,10 +12,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = 'force-dynamic'
 
-export default async function ActividadesAcademicasPage() {
+async function AcademicActivitiesLoader() {
   const messages = await getMessages()
 
   return (
     <AcademicActivitiesPage activities={getAcademicActivities(messages.academicActivities.items)} />
+  )
+}
+
+export default async function ActividadesAcademicasPage() {
+  return (
+    <Suspense fallback={<AcademicActivitiesPage loading={true} />}>
+      <AcademicActivitiesLoader />
+    </Suspense>
   )
 }

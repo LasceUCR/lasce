@@ -11,13 +11,15 @@ a `Skeleton` of its own until it arrives — see "Where it is used" below.
 
 ## The pieces
 
-| Component           | Stands in for                                                              |
-| ------------------- | -------------------------------------------------------------------------- |
-| `Skeleton`          | One shape: `block`, `text` (a line) or `circle`; a size or an aspect ratio |
-| `SkeletonText`      | A paragraph of N lines, the last one shorter                               |
-| `SkeletonImageCard` | One card of `.data-image-grid`: a dark square frame and its caption        |
-| `SkeletonChart`     | A time-series result: the `.data-summary` tiles and the chart              |
-| `LoadingRegion`     | The area that loads: placeholders while loading, then what loaded          |
+| Component                        | Stands in for                                                              |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| `Skeleton`                       | One shape: `block`, `text` (a line) or `circle`; a size or an aspect ratio |
+| `SkeletonText`                   | A paragraph of N lines, the last one shorter                               |
+| `SkeletonImageCard`              | One card of `.data-image-grid`: a dark square frame and its caption        |
+| `SkeletonChart`                  | A time-series result: the `.data-summary` tiles and the chart              |
+| `AcademicActivityCardSkeleton`   | One activity card: 280px photo column on desktop, 200px banner on mobile   |
+| `AcademicActivitiesListSkeleton` | Multiple activity card placeholders inside `.academic-activities-list`     |
+| `LoadingRegion`                  | The area that loads: placeholders while loading, then what loaded          |
 
 `Skeleton` takes `tone="dark"` on dark surfaces, such as the frames of solar images.
 
@@ -109,6 +111,8 @@ its loading message stays for screen readers only, while the placeholder fills t
 | `/galeria`                                         | `gallery/GalleryPageSkeleton.tsx`                         | The static hero renders for real; album groups get `GalleryTileSkeleton`s |
 | `/galeria/[slug]` and `/galeria/[slug]/[subalbum]` | `gallery/AlbumPageSkeleton.tsx`                           | Hero text, sub-album tiles (top-level album only) and the media grid      |
 | Every `/galeria` route's data fetch failing        | `gallery/GalleryErrorState.tsx` (via `galeria/error.tsx`) | A `Notice` and a "Reintentar" button                                      |
+| Academic activities on `/actividades-academicas`   | `news/AcademicActivitiesPage.tsx`                         | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
+| Academic activities teaser on `/noticias`          | `news/AcademicActivitiesSection.tsx`                      | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
 | `/publicaciones`                                   | `publications/PublicationsPageSkeleton.tsx`               | Static hero, listing heading and back link; the toolbar, cards and pager  |
 | A failed load of `/publicaciones`                  | `publications/PublicationsErrorState.tsx`                 | A `Notice` and a retry button, in the site's language                     |
 
