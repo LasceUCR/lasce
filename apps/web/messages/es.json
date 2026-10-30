@@ -167,6 +167,7 @@
       "readMore": "Leer más",
       "readLess": "Leer menos"
     },
+    "loading": "Cargando…",
     "pagination": {
       "label": "Paginación",
       "previous": "Anterior",
@@ -183,6 +184,17 @@
     "next": "Siguiente",
     "position": "Imagen {position} de {total}",
     "announcement": "Imagen {position} de {total}: {time}."
+  },
+  "fileDrop": {
+    "dropHere": "Arrastre una imagen aquí",
+    "browseFiles": "haga clic para seleccionarla del equipo",
+    "description": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo",
+    "rejectionFormat": "Formato no admitido. Use una imagen JPG, PNG, WebP o GIF.",
+    "rejectionSize": "La imagen supera el tamaño máximo de 25 MB.",
+    "removeFile": "Quitar imagen",
+    "removeLabel": "Quitar imagen",
+    "previewAlt": "Vista previa de {label}",
+    "imagePreviewAlt": "Vista previa de {label}"
   },
   "contact": {
     "meta": {
@@ -609,6 +621,9 @@
       "cancel": "Cancelar",
       "save": "Confirmar",
       "reload": "Cerrar y cargar la versión actual",
+      "created": "Publicación agregada correctamente.",
+      "updated": "Publicación actualizada correctamente.",
+      "deleted": "Publicación eliminada correctamente.",
       "uploadingImage": "Subiendo imagen...",
       "altTextField": "Texto alternativo ({language})",
       "FileDropDescriptionText": "Arrastre una imagen aquí o haga clic para seleccionarla del equipo.",
@@ -1134,6 +1149,175 @@
     },
     "backLink": {
       "label": "Volver a las áreas"
+    },
+    "editor": {
+      "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo.",
+      "discardDialog": {
+        "title": "Descartar cambios no guardados",
+        "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+        "keepEditing": "Seguir editando",
+        "discard": "Descartar"
+      },
+      "characteristics": {
+        "editLabel": "Editar {title}",
+        "editModalTitle": "Editar \"{title}\"",
+        "defaultModalTitle": "Editar característica",
+        "iconLabel": "Ícono",
+        "titleLabel": "Título",
+        "descriptionLabel": "Descripción",
+        "titleRequired": "El título es obligatorio.",
+        "descriptionRequired": "La descripción es obligatoria.",
+        "cancel": "Cancelar",
+        "save": "Confirmar",
+        "icons": {
+          "antenna": "Antena",
+          "location": "Ubicación",
+          "frequency": "Frecuencia",
+          "sun": "Sol",
+          "tracking": "Apuntado y seguimiento",
+          "control": "Control",
+          "receiver": "Receptor",
+          "maintenance": "Mantenimiento e infraestructura",
+          "education": "Educación"
+        }
+      },
+      "activities": {
+        "editLabel": "Editar {title}",
+        "editModalTitle": "Editar \"{title}\"",
+        "defaultModalTitle": "Editar actividad",
+        "iconLabel": "Ícono",
+        "titleLabel": "Título",
+        "descriptionLabel": "Descripción",
+        "titleRequired": "El título es obligatorio.",
+        "descriptionRequired": "La descripción es obligatoria.",
+        "cancel": "Cancelar",
+        "save": "Confirmar"
+      },
+      "stages": {
+        "editStage": "Editar etapa",
+        "editModalTitle": "Editar \"{title}\"",
+        "defaultModalTitle": "Editar etapa",
+        "titleLabel": "Título",
+        "descriptionLabel": "Descripción",
+        "photosTitle": "Fotografías de la etapa",
+        "registeredCount": "{count, plural, one {# fotografía registrada} other {# fotografías registradas}}",
+        "editPhotos": "Editar fotografías",
+        "addPhoto": "Añadir fotografía",
+        "cancel": "Cancelar",
+        "save": "Confirmar",
+        "uploading": "Subiendo fotografías...",
+        "titleRequired": "El título es obligatorio.",
+        "descriptionRequired": "La descripción es obligatoria.",
+        "imagesRequired": "La etapa debe contener al menos una fotografía.",
+        "uploadError": "Error al subir las fotografías. Inténtelo de nuevo.",
+        "editModal": {
+          "title": "Editar fotografías",
+          "help": "Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no correspondan a esta etapa.",
+          "altLabel": "Texto alternativo de la fotografía {index}",
+          "altPlaceholder": "Texto alternativo accesible de la fotografía",
+          "deleteLabel": "Eliminar fotografía {index}",
+          "deleteMinTitle": "Debe haber al menos una foto en la etapa",
+          "deleteTooltip": "Eliminar esta fotografía",
+          "savePhotos": "Guardar fotografías",
+          "cancel": "Cancelar",
+          "deleteDialog": {
+            "title": "Eliminar fotografía",
+            "message": "¿Está seguro de que desea eliminar esta fotografía de la etapa?",
+            "confirm": "Eliminar",
+            "cancel": "Cancelar"
+          },
+          "discardDialog": {
+            "title": "Descartar cambios de fotografías",
+            "message": "Si descarta ahora, no se aplicarán los cambios realizados a las fotografías."
+          }
+        },
+        "addModal": {
+          "title": "Añadir fotografía",
+          "fileLabel": "Archivo de imagen",
+          "fileHelp": "Formatos JPG, PNG o WebP (máx. 10 MB).",
+          "fileRequired": "Debe seleccionar un archivo de imagen.",
+          "altLabel": "Texto alternativo accesible (alt)",
+          "altPlaceholder": "Descripción para personas con lectores de pantalla",
+          "altDefault": "Fotografía de {title}",
+          "submit": "Añadir fotografía",
+          "cancel": "Cancelar",
+          "discardDialog": {
+            "title": "Descartar nueva fotografía",
+            "message": "Si descarta ahora, la fotografía seleccionada no se agregará a la etapa."
+          }
+        }
+      },
+      "instruments": {
+        "addCard": "Añadir instrumento",
+        "editLabel": "Editar {name}",
+        "deleteLabel": "Eliminar {name}",
+        "deleteConfirmTitle": "Eliminar instrumento",
+        "deleteConfirmMessage": "Esta acción no se puede deshacer y borrará el instrumento científico.",
+        "editModalTitle": "Editar \"{name}\"",
+        "defaultModalTitle": "Editar instrumento",
+        "nameLabel": "Nombre del instrumento",
+        "nameRequired": "El nombre es obligatorio.",
+        "descriptionLabel": "Descripción",
+        "descriptionRequired": "La descripción es obligatoria.",
+        "imageLabel": "Imagen del instrumento",
+        "imageHelp": "Formatos JPG, PNG, WebP o AVIF (máx. 10 MB).",
+        "imageRequired": "La imagen es obligatoria.",
+        "imageAltLabel": "Texto alternativo de la imagen (Accesibilidad)",
+        "imageAltPlaceholder": "Descripción breve de la imagen para lectores de pantalla",
+        "imageAltDefault": "Imagen ilustrativa de {name}",
+        "actionSectionLabel": "Acción de consulta científica",
+        "actionTypeLabel": "Tipo de acción",
+        "modes": {
+          "simulation": "Simulación del catálogo de datos (ROSAC)",
+          "custom": "Enlace externo o personalizado",
+          "disabled": "En integración / Próximamente (sin enlace)"
+        },
+        "simulationTargetLabel": "Instrumento de simulación asociado",
+        "simulationTargetOption": "Instrumento {index}{product} ({code})",
+        "simulationAutoUrl": "Enlace automático:",
+        "customHrefLabel": "Enlace de consulta (URL)",
+        "customHrefPlaceholder": "https://... o /datos/...",
+        "customHrefRequired": "El enlace es obligatorio para un destino personalizado.",
+        "disabledHint": "El botón se mostrará deshabilitado indicando que la simulación está pendiente o en integración.",
+        "consultationLabel": "Etiqueta del botón",
+        "consultationLabelPlaceholder": "Consultar simulación de {name}",
+        "consultationLabelDefault": "Consultar simulación",
+        "cancel": "Cancelar",
+        "save": "Confirmar",
+        "saving": "Guardando...",
+        "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo."
+      },
+      "acknowledgments": {
+        "addCard": "Añadir institución",
+        "editLabel": "Editar {name}",
+        "deleteLabel": "Eliminar {name}",
+        "deleteConfirmTitle": "Eliminar institución",
+        "deleteConfirmMessage": "¿Desea eliminar la institución \"{name}\" de los agradecimientos? Esta acción no se puede deshacer.",
+        "editModalTitle": "Editar institución",
+        "nameLabel": "Nombre de la institución",
+        "namePlaceholder": "Ej. Centro de Investigaciones Espaciales (CINESPA), UCR",
+        "nameRequired": "El nombre de la institución es obligatorio.",
+        "logoSourceLabel": "Escoger un logo personalizado o seleccionar uno de la lista",
+        "logoSourceCustom": "Subir logo personalizado",
+        "logoSourcePreset": "Seleccionar de la lista: {label}",
+        "logoFileLabel": "Archivo del logo",
+        "logoFileHelp": "Formatos WebP, PNG, SVG o JPG (máx. 10 MB).",
+        "logoRequired": "Debe seleccionar o subir un logo para la institución.",
+        "logoAltLabel": "Texto alternativo del logo (Accesibilidad)",
+        "logoAltPlaceholder": "Descripción accesible del logo institucional",
+        "logoAltDefault": "Logo de {name}",
+        "selectedLogo": "Logo seleccionado:",
+        "institutional": "Institucional",
+        "institutionUrlLabel": "Sitio web de la institución (opcional)",
+        "institutionUrlPlaceholder": "https://ejemplo.ucr.ac.cr",
+        "institutionUrlInvalid": "El enlace debe ser una URL válida que empiece con http:// o https://.",
+        "logoUnavailable": "Logo no disponible",
+        "cancel": "Cancelar",
+        "save": "Guardar cambios",
+        "add": "Agregar institución",
+        "saving": "Guardando...",
+        "uploadError": "No se pudo subir el logo. Inténtelo de nuevo."
+      }
     }
   },
   "researchAreas": {
@@ -1204,6 +1388,43 @@
     "errors": {
       "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo.",
       "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo."
+    },
+    "editor": {
+      "addCard": "Añadir investigador",
+      "editTitle": "Editar investigador",
+      "editLabel": "Editar a {name}",
+      "deleteLabel": "Eliminar a {name}",
+      "deleteConfirmTitle": "Eliminar investigador",
+      "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
+      "deleteConfirm": "Eliminar",
+      "photoLabel": "Foto",
+      "photoHelp": "Opcional. Retrato del investigador, en formato JPG o PNG.",
+      "roleLabel": "Rol",
+      "roleRequired": "El rol es obligatorio.",
+      "nameLabel": "Nombre",
+      "nameRequired": "El nombre es obligatorio.",
+      "institutionLabel": "Institución",
+      "institutionRequired": "La institución es obligatoria.",
+      "descriptionLabel": "Descripción",
+      "contactLabel": "Contacto",
+      "addContact": "Añadir contacto",
+      "deleteContact": "Eliminar {address}",
+      "addContactTitle": "Añadir contacto",
+      "emailLabel": "Correo electrónico",
+      "add": "Añadir",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "uploading": "Subiendo imagen...",
+      "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo.",
+      "maxEmails": "No es posible agregar más de dos correos electrónicos.",
+      "invalidEmail": "El correo no es válido.",
+      "duplicateEmail": "Ese correo ya fue agregado."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
     }
   },
   "scientificData": {
@@ -1526,6 +1747,24 @@
         "rosacResearchers": "Investigadores ROSAC",
         "instruments": "Instrumentos consultables"
       }
+    }
+  },
+  "account": {
+    "signIn": "Ingresar",
+    "myAccount": "Mi cuenta",
+    "administration": "Administración",
+    "signOut": "Cerrar sesión",
+    "signingOut": "Cerrando sesión...",
+    "roles": {
+      "VISITOR": "Visitante",
+      "ASSISTANT": "Asistente",
+      "ADMIN": "Persona administradora"
+    },
+    "signOutDialog": {
+      "title": "¿Cerrar sesión?",
+      "body": "Tu sesión en este navegador terminará y tendrás que volver a ingresar.",
+      "confirm": "Cerrar sesión",
+      "cancel": "Cancelar"
     }
   }
 }

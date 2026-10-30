@@ -13,6 +13,7 @@ import { Modal } from '@/app/components/public/Modal'
 import { Button } from '@/app/components/public/Button'
 import { PublicationForm, type PublicationFormHandle } from './PublicationForm'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { sendJson } from '@/app/lib/cms/save'
 import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 import {
@@ -75,10 +76,10 @@ export function PublicationsExplorer({
   const { editMode } = useEditMode()
   // The editing controls and messages follow the site's language.
   const t = useTranslations('publications')
+  const toast = useToast()
   const language = usePublicationEditorLanguage()
   const [editing, setEditing] = useState<Editing | null>(null)
   const [saveFailure, setSaveFailure] = useState<SaveFailure | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [createFailure, setCreateFailure] = useState<SaveFailure | null>(null)
   const [createInitial, setCreateInitial] = useState<PublicationFormInitial>(() => emptyInitial())
 
@@ -124,9 +125,11 @@ export function PublicationsExplorer({
     saving.current = false
     if (failure) {
       setSaveFailure(failure)
+      toast.show('error', failure.message)
       return
     }
 
+    toast.show('success', t('editor.updated'))
     closeEditor()
     router.refresh()
   }
@@ -140,24 +143,25 @@ export function PublicationsExplorer({
     saving.current = false
     if (failure) {
       setCreateFailure(failure)
+      toast.show('error', failure.message)
       return
     }
 
+    toast.show('success', t('editor.created'))
     setCreateInitial(emptyInitial())
     close()
     router.refresh()
   }
 
   async function handleDeletePublication(id: string) {
-    setDeleteError(null)
-
     const result = await sendJson(`/api/publicaciones/${id}`, 'DELETE')
 
     if (!result.ok) {
-      setDeleteError(describeDeleteFailure(result.status, result.body, language))
+      toast.show('error', describeDeleteFailure(result.status, result.body, language))
       return
     }
 
+    toast.show('success', t('editor.deleted'))
     router.refresh()
   }
 
@@ -228,12 +232,6 @@ export function PublicationsExplorer({
 
       <h2 id="publications-title">{t('page.recent')}</h2>
 
-      {deleteError ? (
-        <p className="form-alert" role="alert">
-          {deleteError}
-        </p>
-      ) : null}
-
       {filtered.length === 0 ? (
         <p className="content-empty" role="status">
           {getEmptyMessage()}
@@ -254,24 +252,16 @@ export function PublicationsExplorer({
               }}
             >
               {({ close }) => (
-                <>
-                  {createFailure ? (
-                    <p className="form-alert" role="alert">
-                      {createFailure.message}
-                    </p>
-                  ) : null}
-
-                  <PublicationForm
-                    initial={createInitial}
-                    onCancel={() => {
-                      setCreateFailure(null)
-                      close()
-                    }}
-                    onSave={(draft) => handleCreatePublication(draft, close)}
-                    ref={createForm}
-                    serverErrors={createFailure?.fieldErrors}
-                  />
-                </>
+                <PublicationForm
+                  initial={createInitial}
+                  onCancel={() => {
+                    setCreateFailure(null)
+                    close()
+                  }}
+                  onSave={(draft) => handleCreatePublication(draft, close)}
+                  ref={createForm}
+                  serverErrors={createFailure?.fieldErrors}
+                />
               )}
             </AddItemCard>
           ) : null}
@@ -325,21 +315,16 @@ export function PublicationsExplorer({
       >
         {editing ? (
           <>
-            {saveFailure ? (
-              <div className="form-alert" role="alert">
-                <p>{saveFailure.message}</p>
-                {saveFailure.reopen ? (
-                  <Button
-                    onClick={() => {
-                      closeEditor()
-                      router.refresh()
-                    }}
-                    variant="secondary"
-                  >
-                    {t('editor.reload')}
-                  </Button>
-                ) : null}
-              </div>
+            {saveFailure?.reopen ? (
+              <Button
+                onClick={() => {
+                  closeEditor()
+                  router.refresh()
+                }}
+                variant="secondary"
+              >
+                {t('editor.reload')}
+              </Button>
             ) : null}
 
             <PublicationForm

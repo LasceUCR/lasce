@@ -172,7 +172,8 @@ edit and delete permissions independently, using the existing `*_components` per
 Only users with edit permission receive bilingual editing metadata and the version token.
 
 `CollaborationsManager` connects the existing `AddItemCard`, `EditableWrapper`, `Modal` and
-`useRequestFeedback`. `CollaborationForm` is shared by creation and editing and uses `FormField`,
+`useRequestFeedback`. The add card is the first item in the grid, and a new organization is
+stored at the front of the display order. `CollaborationForm` is shared by creation and editing and uses `FormField`,
 `LanguageTabs`, `TranslationReview` and `StandardConfirmDialog`. Cancelling a changed form asks
 before discarding; a failed request leaves its values intact and reports the reason in a toast.
 The editor labels, validation and feedback follow the site's language. Countries are entered

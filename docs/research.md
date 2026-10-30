@@ -115,7 +115,8 @@ with what was typed. A photo the server refuses to upload is reported in an erro
 ## Adding an area
 
 In "Modo edición", with `create_components`, use the "Agregar área de investigación" card on
-`/investigacion`: fill in the title and the description in Spanish and in English, and upload a
+`/investigacion`. That card is the first item in the list, and the area just created is shown
+first. Fill in the title and the description in Spanish and in English, and upload a
 photograph (landscape works best; it is cropped to fill the 280px column, and to a 200px-high band
 on phones).
 

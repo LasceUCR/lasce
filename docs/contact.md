@@ -23,8 +23,8 @@ section route remains only for a work area that does not have its own page yet.
   │    └─ RosacLocationMapLoader  satellite map, marker "LASCE"
   ├─ ContactChannelSection        h2 "Información de contacto"
   │    └─ CardGrid columns=3      InfoCard, or EditableWrapper while editing
-  │         ├─ existing cards     icon, title, description
-  │         └─ AddItemCard        only in edit mode, with create permission
+  │         ├─ AddItemCard        first, only in edit mode, with create permission
+  │         └─ existing cards     icon, title, description; a new channel is stored first
   └─ .topic-page-footer           TopicBackLink "Volver al inicio"
 ```
 

@@ -159,6 +159,26 @@ export function ContactChannelSection({
       titleId="informacion-de-contacto-titulo"
     >
       <CardGrid columns={3} equalHeight>
+        {editMode && canCreate ? (
+          <AddItemCard
+            label={t('add')}
+            onRequestClose={(close) => {
+              if (createForm.current) createForm.current.requestCancel()
+              else close()
+            }}
+          >
+            {({ close }) => (
+              <ContactChannelForm
+                card={null}
+                onCancel={close}
+                onSave={(body) => {
+                  void save('/api/contacto/canales', 'POST', body, close)
+                }}
+                ref={createForm}
+              />
+            )}
+          </AddItemCard>
+        ) : null}
         {visible.map((card) => {
           const body = (
             <InfoCard
@@ -201,26 +221,6 @@ export function ContactChannelSection({
             </EditableWrapper>
           )
         })}
-        {editMode && canCreate ? (
-          <AddItemCard
-            label={t('add')}
-            onRequestClose={(close) => {
-              if (createForm.current) createForm.current.requestCancel()
-              else close()
-            }}
-          >
-            {({ close }) => (
-              <ContactChannelForm
-                card={null}
-                onCancel={close}
-                onSave={(body) => {
-                  void save('/api/contacto/canales', 'POST', body, close)
-                }}
-                ref={createForm}
-              />
-            )}
-          </AddItemCard>
-        ) : null}
       </CardGrid>
 
       <Modal
