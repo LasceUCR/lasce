@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   updateMany: vi.fn(),
   findUniqueOrThrow: vi.fn(),
   upsert: vi.fn(),
+  auditCreate: vi.fn(),
 }))
 
 vi.mock('@lasce/db', () => ({
@@ -22,10 +23,14 @@ vi.mock('@lasce/db', () => ({
     $transaction: (write: (tx: unknown) => Promise<unknown>) =>
       write({
         contactChannel: {
+          aggregate: mocks.aggregate,
+          create: mocks.create,
+          deleteMany: mocks.deleteMany,
           findUnique: mocks.findUnique,
           updateMany: mocks.updateMany,
           findUniqueOrThrow: mocks.findUniqueOrThrow,
         },
+        auditEvent: { create: mocks.auditCreate },
         contactChannelTranslation: { upsert: mocks.upsert },
       }),
   },
@@ -65,6 +70,8 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+const actor = { id: 'user-1' }
+
 describe('contact channels', () => {
   test('reads cards in position order and falls back per card', async () => {
     mocks.findMany.mockResolvedValue([row()])
@@ -86,16 +93,19 @@ describe('contact channels', () => {
     })
   })
 
-  test('appends a card after the last position and drops a link on a non-social icon', async () => {
-    mocks.aggregate.mockResolvedValue({ _max: { position: 1 } })
+  test('places a card before the first position and drops a link on a non-social icon', async () => {
+    mocks.aggregate.mockResolvedValue({ _min: { position: 1 } })
     mocks.create.mockResolvedValue(row())
 
-    const card = await createContactChannel({ icon: 'phone', href: 'https://example.com', content })
+    const card = await createContactChannel(
+      { icon: 'phone', href: 'https://example.com', content },
+      actor,
+    )
 
     expect(card.title).toBe('Teléfono')
     expect(mocks.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ icon: 'PHONE', href: null, position: 2 }),
+        data: expect.objectContaining({ icon: 'PHONE', href: null, position: 0 }),
       }),
     )
   })
@@ -107,12 +117,16 @@ describe('contact channels', () => {
     })
 
     await expect(
-      updateContactChannel(id, {
-        icon: 'phone',
-        href: null,
-        content,
-        version: toVersion(updatedAt),
-      }),
+      updateContactChannel(
+        id,
+        {
+          icon: 'phone',
+          href: null,
+          content,
+          version: toVersion(updatedAt),
+        },
+        actor,
+      ),
     ).resolves.toEqual({ ok: false, reason: 'conflict' })
     expect(mocks.updateMany).not.toHaveBeenCalled()
   })
@@ -126,12 +140,16 @@ describe('contact channels', () => {
     mocks.updateMany.mockResolvedValue({ count: 1 })
     mocks.findUniqueOrThrow.mockResolvedValue(row('FACEBOOK', 'https://www.facebook.com/lasce'))
 
-    const result = await updateContactChannel(id, {
-      icon: 'facebook',
-      href: 'https://www.facebook.com/lasce',
-      content: facebook,
-      version: toVersion(updatedAt),
-    })
+    const result = await updateContactChannel(
+      id,
+      {
+        icon: 'facebook',
+        href: 'https://www.facebook.com/lasce',
+        content: facebook,
+        version: toVersion(updatedAt),
+      },
+      actor,
+    )
 
     expect(result.ok).toBe(true)
     expect(mocks.updateMany).toHaveBeenCalledWith(
@@ -150,9 +168,20 @@ describe('contact channels', () => {
   })
 
   test('reports how many rows a delete removed', async () => {
+    mocks.findUnique.mockResolvedValue({ title: 'Teléfono' })
     mocks.deleteMany.mockResolvedValue({ count: 0 })
 
-    await expect(deleteContactChannel(id)).resolves.toBe(false)
+    await expect(deleteContactChannel(id, actor)).resolves.toBe(false)
     expect(mocks.deleteMany).toHaveBeenCalledWith({ where: { id } })
+    expect(mocks.auditCreate).not.toHaveBeenCalled()
+
+    mocks.deleteMany.mockResolvedValue({ count: 1 })
+    await expect(deleteContactChannel(id, actor)).resolves.toBe(true)
+    expect(mocks.auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'contact_channel.delete',
+        summary: 'Canal de contacto eliminado: Teléfono',
+      }),
+    })
   })
 })

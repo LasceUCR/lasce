@@ -27,16 +27,16 @@ and CI genuinely runs on pushes, not only on PRs.
 All eight run in parallel. The names are stable so a branch ruleset can require
 them (LASCE-INF-001-016).
 
-| Job               | Proves                                                                                   |
-| ----------------- | ---------------------------------------------------------------------------------------- |
-| `lint`            | Prettier formatting is clean and ESLint passes on every Node workspace.                  |
-| `typecheck`       | `tsc --noEmit` passes. Depends on `^build`, so the Prisma client is generated first.     |
-| `test`            | `turbo run test` across every TypeScript workspace, with coverage floors enforced.       |
-| `build`           | `turbo run build`: `prisma generate` then `next build`.                                  |
-| `worker`          | ruff (lint + format check), mypy `--strict`, and pytest, on Python 3.13.                 |
-| `e2e`             | Playwright/Chromium against `next dev`, with real Postgres and Redis service containers. |
-| `docker (web)`    | `infra/docker/web.Dockerfile` builds. Not pushed.                                        |
-| `docker (worker)` | `infra/docker/worker.Dockerfile` builds. Not pushed.                                     |
+| Job               | Proves                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| `lint`            | Prettier formatting is clean and ESLint passes on every Node workspace.                     |
+| `typecheck`       | `tsc --noEmit` passes. Depends on `^build`, so the Prisma client is generated first.        |
+| `test`            | `turbo run test` across every TypeScript workspace, with coverage floors enforced.          |
+| `build`           | `turbo run build`: `prisma generate` then `next build`.                                     |
+| `worker`          | ruff (lint + format check), mypy `--strict`, and pytest, on Python 3.13.                    |
+| `e2e`             | Playwright against the production build, in four shards, each with real Postgres and Redis. |
+| `docker (web)`    | `infra/docker/web.Dockerfile` builds. Not pushed.                                           |
+| `docker (worker)` | `infra/docker/worker.Dockerfile` builds. Not pushed.                                        |
 
 These are the display names GitHub reports on a pull request, and all eight are
 required by the branch rulesets. The `docker` job pins `name:` to the matrix
@@ -132,6 +132,10 @@ step rather than as a separate CI step, which could not abort atomically.
 
 Web is redeployed before worker so the schema is current before the worker
 (which reads it through SQLAlchemy) restarts.
+
+### Seeding new content after migration (ROSAC CMS)
+
+When deploying the migrations adding ROSAC CMS persistence (`20261023160000_add_rosac_translations` and predecessor `20261020053041_add_rosac_cms_content`), run the database seed once against staging and production (via `.github/workflows/ops.yml` or `pnpm db:seed` with `DATABASE_URL` pointing to the environment database). The seed checks each table with `count() === 0` before inserting, ensuring initial content and English translations are safely populated without overwriting existing edits.
 
 ## 5. Secrets and variables
 

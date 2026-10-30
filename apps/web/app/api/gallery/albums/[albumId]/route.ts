@@ -25,7 +25,7 @@ export async function DELETE(
   if (!isUuid(albumId)) return invalidAlbumId()
 
   try {
-    const deleted = await deleteGalleryAlbum(albumId)
+    const deleted = await deleteGalleryAlbum(albumId, guard.user)
     if (!deleted) return albumNotFound()
   } catch (error) {
     return internalError('No se pudo eliminar el álbum.', error)
@@ -56,7 +56,7 @@ export async function PATCH(
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updateGalleryAlbum(albumId, parsed.data)
+    const result = await updateGalleryAlbum(albumId, parsed.data, guard.user)
     if (!result.ok) return albumWriteFailure(result)
 
     return ok({ album: result.album })
@@ -83,7 +83,7 @@ export async function POST(
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await createGallerySubAlbum(parentAlbumId, parsed.data)
+    const result = await createGallerySubAlbum(parentAlbumId, parsed.data, guard.user)
     if (!result.ok) return albumWriteFailure(result)
 
     return ok({ album: result.album }, 201)

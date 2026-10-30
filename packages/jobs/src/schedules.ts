@@ -110,4 +110,15 @@ export const schedules: Schedule[] = [
       lookbackDays: 3,
     },
   },
+  // NOAA publishes the EHIS daily file around 04:30 UTC the next morning, and sometimes
+  // republishes a day. Hourly, ten minutes after MAG so the daily pipelines do not share a minute.
+  {
+    id: 'ehis-pipeline-ehis',
+    name: 'ehis-pipeline',
+    cron: '35 * * * *',
+    data: {
+      spacecraft: 19,
+      lookbackDays: 3,
+    },
+  },
 ]

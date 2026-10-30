@@ -1,7 +1,7 @@
 'use client'
 
-import { Plus, X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { X } from 'lucide-react'
+import { useId, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -9,7 +9,6 @@ import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDi
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { IconButton } from '@/app/components/public/IconButton'
-import { Modal } from '@/app/components/public/Modal'
 import {
   uploadResearcherImage,
   type UploadResearcherImageResult,
@@ -35,10 +34,14 @@ export interface PersonProfile {
   src: string
   role: string
   name: string
-  /** Zero, one or two public addresses — edited here as chips, each with its own "quitar". */
+  /** Zero, one or two public addresses — edited as chips, the same way publication authors are. */
   email?: string | readonly string[]
   institution: string
   description?: string
+  /** The stored base role before UI localization, used to initialize single-language edit forms. */
+  storedRole?: string
+  /** The stored base description before UI localization, used to initialize single-language edit forms. */
+  storedDescription?: string | null
 }
 
 export interface ResearcherFormValues {
@@ -135,14 +138,20 @@ export function ResearcherForm(props: ResearcherFormProps) {
   const t = useTranslations('researchers')
   const bilingual = props.translation !== undefined
   const contentRef = useRef<ResearcherContentHandle>(null)
-  const [role, setRole] = useState(researcher?.role ?? '')
+  const initialRole =
+    researcher?.storedRole !== undefined ? (researcher.storedRole ?? '') : (researcher?.role ?? '')
+  const initialDescription =
+    researcher?.storedDescription !== undefined
+      ? (researcher.storedDescription ?? '')
+      : (researcher?.description ?? '')
+  const [role, setRole] = useState(initialRole)
   const [name, setName] = useState(researcher?.name ?? '')
+  const emailFieldId = useId()
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
-  const [isAddingEmail, setIsAddingEmail] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [newEmailError, setNewEmailError] = useState<string | null>(null)
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
-  const [description, setDescription] = useState(researcher?.description ?? '')
+  const [description, setDescription] = useState(initialDescription)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
@@ -168,7 +177,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
   function isDirty() {
     const textChanged = bilingual
       ? (contentRef.current?.isDirty() ?? false)
-      : role !== (researcher?.role ?? '') || description !== (researcher?.description ?? '')
+      : role !== initialRole || description !== initialDescription
 
     return (
       name !== (researcher?.name ?? '') ||
@@ -268,33 +277,34 @@ export function ResearcherForm(props: ResearcherFormProps) {
     props.onSave({ role, name, email: emails.join(', '), institution, description, src })
   }
 
-  function openAddEmail() {
-    setNewEmail('')
-    setNewEmailError(null)
-    setIsAddingEmail(true)
-  }
-
-  function closeAddEmail() {
-    setIsAddingEmail(false)
-  }
-
-  function handleAddEmail() {
+  function addEmail() {
     const trimmed = newEmail.trim()
     if (emails.length >= MAX_EMAILS) {
-      setNewEmailError(t('editor.maxEmails', { max: MAX_EMAILS }))
+      setNewEmailError(t('editor.maxEmails'))
+      return
+    }
+    if (trimmed === '') {
+      setNewEmailError('El correo es obligatorio.')
       return
     }
     if (!isValidEmail(trimmed)) {
       setNewEmailError(t('editor.invalidEmail'))
       return
     }
-    if (emails.includes(trimmed)) {
+    if (emails.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
       setNewEmailError(t('editor.duplicateEmail'))
       return
     }
 
     setEmails([...emails, trimmed])
-    closeAddEmail()
+    setNewEmail('')
+    setNewEmailError(null)
+  }
+
+  function handleEmailKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== 'Enter') return
+    event.preventDefault()
+    addEmail()
   }
 
   function handleRemoveEmail(address: string) {
@@ -335,59 +345,68 @@ export function ResearcherForm(props: ResearcherFormProps) {
         value={name}
       />
 
-      <div className="cms-form-field">
-        <span className="cms-form-field-label" id="researcher-email-label">
-          {t('editor.contactLabel')}
-        </span>
-        <div aria-labelledby="researcher-email-label" className="email-chip-field" role="group">
-          {emails.map((address) => (
-            <span className="email-chip" key={address}>
-              {address}
-              <IconButton
-                className="email-chip-remove"
-                icon={<X size={12} strokeWidth={2} />}
-                label={t('editor.deleteContact', { address })}
-                onClick={() => handleRemoveEmail(address)}
-              />
-            </span>
-          ))}
-          {emails.length < MAX_EMAILS ? (
-            <IconButton
-              className="email-chip-add"
-              icon={<Plus size={14} strokeWidth={2} />}
-              label={t('editor.addContact')}
-              onClick={openAddEmail}
-            />
-          ) : null}
-        </div>
-      </div>
-
-      <Modal
-        onClose={closeAddEmail}
-        open={isAddingEmail}
-        size="small"
-        title={t('editor.addContactTitle')}
+      <div
+        aria-labelledby="researcher-email-label"
+        className="cms-form-field publication-authors"
+        role="group"
       >
-        <FormField
-          errorMessage={newEmailError}
-          id="new-researcher-email"
-          label={t('editor.emailLabel')}
-          onChange={(value) => {
-            setNewEmail(value)
-            setNewEmailError(null)
-          }}
-          type="email"
-          value={newEmail}
-        />
-        <div className="cms-form-actions">
-          <Button onClick={closeAddEmail} variant="secondary">
-            {t('editor.cancel')}
-          </Button>
-          <Button disabled={newEmail.trim() === ''} onClick={handleAddEmail} variant="primary">
-            {t('editor.add')}
-          </Button>
+        <div className="publication-authors-header">
+          <span className="cms-form-field-label" id="researcher-email-label">
+            {t('editor.contactLabel')}
+          </span>
+          <span aria-live="polite" className="publication-authors-count">
+            {emails.length === 0
+              ? 'Sin correos'
+              : emails.length === 1
+                ? '1 correo'
+                : `${emails.length} correos`}
+          </span>
         </div>
-      </Modal>
+        <div
+          className={
+            newEmailError ? 'publication-authors-box is-invalid' : 'publication-authors-box'
+          }
+        >
+          {emails.length > 0 ? (
+            <ul aria-label="Correos de contacto" className="publication-authors-list">
+              {emails.map((address) => (
+                <li className="email-chip" key={address}>
+                  {address}
+                  <IconButton
+                    className="email-chip-remove"
+                    icon={<X size={12} strokeWidth={2} />}
+                    label={t('editor.deleteContact', { address })}
+                    onClick={() => handleRemoveEmail(address)}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="publication-authors-entry">
+            <input
+              aria-describedby={newEmailError ? emailFieldId : undefined}
+              aria-invalid={newEmailError ? true : undefined}
+              aria-label={t('editor.emailLabel')}
+              onChange={(event) => {
+                setNewEmail(event.target.value)
+                setNewEmailError(null)
+              }}
+              onKeyDown={handleEmailKeyDown}
+              placeholder={emails.length > 0 ? 'Escribir otro correo...' : 'Escribir un correo...'}
+              type="email"
+              value={newEmail}
+            />
+            <Button className="publication-authors-add" onClick={addEmail} variant="secondary">
+              Agregar
+            </Button>
+          </div>
+        </div>
+        {newEmailError ? (
+          <p className="form-field-error" id={emailFieldId} role="alert">
+            {newEmailError}
+          </p>
+        ) : null}
+      </div>
 
       <FormField
         errorMessage={institutionError}

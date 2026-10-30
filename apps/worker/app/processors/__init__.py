@@ -1,4 +1,5 @@
 from app.processors import (
+    ehis_pipeline,
     exis_pipeline,
     ingest_readings,
     mag_pipeline,
@@ -7,6 +8,7 @@ from app.processors import (
 )
 
 __all__ = [
+    "ehis_pipeline",
     "exis_pipeline",
     "ingest_readings",
     "mag_pipeline",

@@ -25,7 +25,7 @@ export async function POST(
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await createGalleryMedia(albumId, parsed.data)
+    const result = await createGalleryMedia(albumId, parsed.data, guard.user)
     if (!result.ok) return mediaWriteFailure(result)
 
     return ok({ media: result.media }, 201)
