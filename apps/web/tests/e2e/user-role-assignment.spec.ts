@@ -54,7 +54,7 @@ for (const width of [390, 1440]) {
       })
       await visitor.click()
       await page.getByRole('button', { name: 'Sí, cambiar rol' }).click()
-      await expect(page.getByRole('alert')).toBeVisible()
+      await expect(page.getByText(/Tu sesión terminó o ya no tienes autorización/)).toBeVisible()
       expect(
         (await fixture.prisma.user.findUniqueOrThrow({ where: { id: fixture.target.id } })).role,
       ).toBeNull()

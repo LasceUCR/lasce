@@ -1,8 +1,9 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { shortName } from '@/app/lib/auth/account'
+import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AccountLinks, type AccountLinksProps } from './AccountLinks'
@@ -19,6 +20,15 @@ const signedInHeaderArgs = SignedInHeader.args as AccountLinksProps
 const signedOutMobileArgs = SignedOutMobile.args as AccountLinksProps
 const signedInMobileArgs = SignedInMobile.args as AccountLinksProps
 const signedInMobileAdminArgs = SignedInMobileAdmin.args as AccountLinksProps
+
+// The edit mode is kept in `localStorage`, which outlives a test inside one file: start each from off.
+beforeEach(() => {
+  try {
+    window.localStorage.clear()
+  } catch {
+    // Storage unavailable in this runtime: nothing was stored either.
+  }
+})
 
 describe('AccountLinks', () => {
   test('offers sign-in only when signed out, on the desktop header', () => {
@@ -65,11 +75,48 @@ describe('AccountLinks', () => {
   })
 
   test('offers Administración in the mobile menu for an authorized role', () => {
-    renderWithIntl(<AccountLinks {...signedInMobileAdminArgs} />)
+    renderWithIntl(
+      <EditModeProvider>
+        <AccountLinks {...signedInMobileAdminArgs} />
+      </EditModeProvider>,
+    )
 
     expect(screen.getByRole('link', { name: 'Administración' })).toHaveAttribute(
       'href',
       '/administracion',
     )
+  })
+
+  test('offers the "Modo edición" switch in the mobile menu to an editor, and it toggles', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(
+      <EditModeProvider>
+        <AccountLinks {...signedInMobileAdminArgs} />
+      </EditModeProvider>,
+    )
+
+    await user.click(screen.getByRole('switch', { name: 'Modo edición' }))
+
+    expect(screen.getByRole('switch', { name: 'Modo edición' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+  })
+
+  test('hides the switch from a visitor in the mobile menu', () => {
+    renderWithIntl(<AccountLinks {...signedInMobileArgs} />)
+
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+  })
+
+  test('labels the mobile switch in English', () => {
+    renderWithIntl(
+      <EditModeProvider>
+        <AccountLinks {...signedInMobileAdminArgs} />
+      </EditModeProvider>,
+      { locale: 'en' },
+    )
+
+    expect(screen.getByRole('switch', { name: 'Edit mode' })).toBeInTheDocument()
   })
 })
