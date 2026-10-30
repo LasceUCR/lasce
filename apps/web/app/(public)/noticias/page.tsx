@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
@@ -69,10 +70,12 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     <article className="topic-page">
       <TopicHero kicker={t('kicker')} lead={t('lead')} title={t('title')} />
 
-      <AcademicActivitiesSection
-        activities={getAcademicActivities(messages.academicActivities.items)}
-        id="academic-activities"
-      />
+      <Suspense fallback={<AcademicActivitiesSection id="academic-activities" loading={true} />}>
+        <AcademicActivitiesSection
+          activities={getAcademicActivities(messages.academicActivities.items)}
+          id="academic-activities"
+        />
+      </Suspense>
 
       <NewsExplorer
         canCreate={canCreate}
