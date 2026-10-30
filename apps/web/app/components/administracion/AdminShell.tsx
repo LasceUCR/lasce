@@ -5,8 +5,6 @@ import { useTranslations } from 'next-intl'
 import { Download, LayoutDashboard, ScrollText, Server, Shield, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
-import { Toggle } from '@/app/components/public/Toggle'
-import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { visibleAdminMenu, type AdminMenuKey } from '@/app/lib/admin-sections'
 import type { Permission } from '@/app/lib/auth/permissions'
 
@@ -35,7 +33,6 @@ export interface AdminShellProps {
 export function AdminShell({ children, granted }: AdminShellProps) {
   const t = useTranslations('administration.shell')
   const pathname = usePathname()
-  const { editMode, setEditMode } = useEditMode()
   const items = visibleAdminMenu(granted).map((item) => ({
     label: t(`items.${item.key}`),
     href: item.href,
@@ -48,13 +45,6 @@ export function AdminShell({ children, granted }: AdminShellProps) {
       <div className="admin-content">
         <div className="admin-header">
           <p className="topic-kicker">{t('panel')}</p>
-          {/* The same name in every language, so it stays recognisable as the CMS switch. */}
-          <Toggle
-            checked={editMode}
-            id="edit-mode-toggle"
-            label="Modo edición"
-            onChange={setEditMode}
-          />
         </div>
         {children}
       </div>

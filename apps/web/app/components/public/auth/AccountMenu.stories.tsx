@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
+import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+
 import { AccountMenu } from './AccountMenu'
 
 const meta: Meta<typeof AccountMenu> = {
@@ -8,9 +10,11 @@ const meta: Meta<typeof AccountMenu> = {
   // The header actions cell gives the trigger its context and the panel its anchor.
   decorators: [
     (Story) => (
-      <div className="header-actions">
-        <Story />
-      </div>
+      <EditModeProvider>
+        <div className="header-actions">
+          <Story />
+        </div>
+      </EditModeProvider>
     ),
   ],
 }
