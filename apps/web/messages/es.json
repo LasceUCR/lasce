@@ -553,7 +553,9 @@
     "section": {
       "title": "Actividades académicas",
       "description": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
-      "empty": "No hay actividades académicas disponibles en este momento."
+      "empty": "No hay actividades académicas disponibles en este momento.",
+      "loading": "Cargando actividades académicas…",
+      "error": "No fue posible cargar las actividades académicas. Inténtelo de nuevo más tarde."
     },
     "card": {
       "badge": "Actividad académica"
@@ -1538,12 +1540,41 @@
   },
   "researchers": {
     "institutionLabel": "Institución",
+    "viewDescription": "Ver descripción de {name}",
+    "viewInstitution": "Ver institución de {name}",
+    "returnToCard": "Volver a la ficha de {name}",
+    "descriptionRegion": "Descripción de {name}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "editModalTitle": "Editar investigador",
+    "editLabel": "Editar a {name}",
+    "deleteLabel": "Eliminar a {name}",
+    "deleteConfirmTitle": "Eliminar investigador",
+    "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
+    "deleteConfirm": "Eliminar",
     "created": "Investigador agregado correctamente.",
     "updated": "Investigador actualizado correctamente.",
     "deleted": "Investigador eliminado correctamente.",
     "errors": {
       "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo.",
-      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo."
+      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo.",
+      "invalidId": "El identificador del investigador no es válido.",
+      "notFound": "Este investigador ya no existe. Es posible que otra persona lo haya eliminado; recargue la página.",
+      "conflict": "El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.",
+      "saveError": "No se pudo guardar el investigador.",
+      "updateError": "No se pudieron guardar los cambios.",
+      "deleteError": "No se pudo eliminar el investigador.",
+      "invalidBody": "Faltan campos obligatorios o no son válidos.",
+      "invalidJson": "El cuerpo de la solicitud no es JSON válido."
+    },
+    "validation": {
+      "nameRequired": "El nombre es obligatorio.",
+      "institutionRequired": "La institución es obligatoria.",
+      "invalidEmail": "Uno o más correos no son válidos.",
+      "maxEmails": "Máximo 2 correos de contacto.",
+      "versionRequired": "La versión del investigador es obligatoria y debe ser la que se cargó.",
+      "confirmationsOnlyWithContent": "Las confirmaciones solo aplican a una actualización de contenido (content).",
+      "noFieldsToUpdate": "La solicitud no incluye ningún campo para actualizar."
     },
     "editor": {
       "addCard": "Añadir investigador",
@@ -1553,6 +1584,7 @@
       "deleteConfirmTitle": "Eliminar investigador",
       "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
       "deleteConfirm": "Eliminar",
+      "deleteCancel": "Cancelar",
       "photoLabel": "Foto",
       "photoHelp": "Opcional. Retrato del investigador, en formato JPG o PNG.",
       "roleLabel": "Rol",
@@ -1563,11 +1595,16 @@
       "institutionRequired": "La institución es obligatoria.",
       "descriptionLabel": "Descripción",
       "contactLabel": "Contacto",
+      "contactCount": "{count, plural, =0 {Sin correos} one {# correo} other {# correos}}",
+      "contactListLabel": "Correos de contacto",
+      "emailPlaceholder": "Escribir un correo...",
+      "emailPlaceholderAnother": "Escribir otro correo...",
+      "emailRequired": "El correo es obligatorio.",
       "addContact": "Añadir contacto",
       "deleteContact": "Eliminar {address}",
       "addContactTitle": "Añadir contacto",
       "emailLabel": "Correo electrónico",
-      "add": "Añadir",
+      "add": "Agregar",
       "cancel": "Cancelar",
       "save": "Confirmar",
       "uploading": "Subiendo imagen...",
@@ -1988,6 +2025,66 @@
       "paginationLabel": "Páginas del historial de descargas",
       "deletedUser": "Cuenta eliminada",
       "noRange": "—"
+    },
+    "users": {
+      "metaTitle": "Usuarios | Administración | LASCE",
+      "title": "Usuarios",
+      "description": "Consulta los usuarios registrados y sus roles actuales.",
+      "panelTitle": "Usuarios y roles",
+      "demoNotice": "Datos de prueba: los usuarios y roles mostrados son ficticios.",
+      "demoChanges": "Los cambios son de prueba y se pierden al recargar la página.",
+      "helpEditable": "Cada usuario puede tener un solo rol. Selecciona otro para cambiarlo o pulsa el rol actual para retirarlo. Se pedirá confirmación antes de aplicar el cambio.",
+      "helpReadOnly": "Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.",
+      "noRoles": "No hay roles disponibles para mostrar.",
+      "empty": "No hay usuarios para mostrar.",
+      "search": {
+        "label": "Buscar usuarios",
+        "placeholder": "Buscar por nombre o correo electrónico...",
+        "clear": "Limpiar búsqueda"
+      },
+      "results": "{count, plural, one {# usuario encontrado.} other {# usuarios encontrados.}}",
+      "noResults": "No se encontraron usuarios para “{query}”.",
+      "table": {
+        "region": "Tabla de usuarios y roles",
+        "label": "Usuarios y roles",
+        "name": "Nombre",
+        "email": "Correo electrónico"
+      },
+      "checkbox": "{role}: {name} ({email})",
+      "updated": "Rol actualizado para {name}: {role}.",
+      "removed": "Rol retirado de {name}.",
+      "details": {
+        "title": "Información del usuario",
+        "close": "Cerrar",
+        "fullName": "Nombre completo",
+        "email": "Correo electrónico",
+        "institution": "Institución",
+        "country": "País",
+        "institutionMissing": "No registrada",
+        "countryMissing": "No registrado"
+      },
+      "dialog": {
+        "changeTitle": "Confirmar cambio de rol",
+        "removeTitle": "Confirmar retiro de rol",
+        "assignQuestion": "¿Quieres asignar el rol <strong>{role}</strong> a <strong>{name}</strong>?",
+        "removeQuestion": "¿Quieres retirar el rol de <strong>{name}</strong>?",
+        "currentRole": "Rol actual: {roles}",
+        "noRole": "Sin rol",
+        "ownRole": "Estás modificando tu propio rol. Al dejar de ser administrador perderás el acceso a esta pantalla.",
+        "leftWithoutRole": "El usuario quedará sin un rol asignado.",
+        "replaces": "El nuevo rol reemplazará al actual. El usuario no conservará ambos roles.",
+        "confirmChange": "Sí, cambiar rol",
+        "confirmRemove": "Sí, retirar rol",
+        "cancel": "No, cancelar",
+        "savingStatus": "Guardando cambio de rol…",
+        "savingButton": "Guardando…",
+        "reload": "Recargar página"
+      },
+      "errors": {
+        "conflict": "La información de este usuario cambió. Recarga la página para ver sus roles actuales antes de volver a intentarlo.",
+        "unauthorized": "Tu sesión terminó o ya no tienes autorización para cambiar roles. Recarga la página para comprobar tu acceso.",
+        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo."
+      }
     },
     "audit": {
       "metaTitle": "Auditoría | Administración | LASCE",

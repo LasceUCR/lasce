@@ -1,7 +1,7 @@
 import type { UserRole } from '@lasce/db'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getMessages, getTranslations } from 'next-intl/server'
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { AuditTrailPage } from '@/app/components/administracion/AuditTrailPage'
 import { AccessDenied } from '@/app/components/administracion/AccessDenied'
@@ -48,9 +48,14 @@ export async function generateMetadata({
     return {}
   }
 
-  // Descargas, Permisos and Auditoría are translated; the other sections still show Spanish.
+  // Descargas, Usuarios, Permisos and Auditoría are translated; the other sections still show Spanish.
   if (section === 'descargas') {
     const t = await getTranslations('administration.downloads')
+    return { title: t('metaTitle'), description: t('description') }
+  }
+
+  if (section === 'usuarios') {
+    const t = await getTranslations('administration.users')
     return { title: t('metaTitle'), description: t('description') }
   }
 
@@ -118,20 +123,35 @@ export default async function AdministracionSectionPage({
   }
 
   if (section === 'usuarios') {
-    const { user, allowed } = await requirePermission('manage_users', '/administracion/usuarios')
+    const [{ user, allowed }, messages, t, locale] = await Promise.all([
+      requirePermission('manage_users', '/administracion/usuarios'),
+      getMessages(),
+      getTranslations('administration.users'),
+      getLocale(),
+    ])
     if (!allowed) {
-      return <AccessDenied message={PERMISSION_DENIED.manage_users} />
+      return (
+        <AccessDenied
+          message={permissionText('manage_users', messages).denied}
+          title={messages.access.accessDenied.title}
+        />
+      )
     }
-    const users = await getUserOverview()
+    const users = await getUserOverview(locale)
+    // Role identifiers stay the ids; only the names shown follow the site's language.
+    const roles = availableRoles().map((role) => ({
+      ...role,
+      name: roleName(role.id as UserRole, messages),
+    }))
     return (
       <UserRoleAssignment
         currentUserId={user.id}
         key={JSON.stringify(users)}
         users={users}
-        roles={availableRoles()}
+        roles={roles}
         saveAction={saveUserRole}
-        description={content.description}
-        title={content.title}
+        description={t('description')}
+        title={t('title')}
       />
     )
   }

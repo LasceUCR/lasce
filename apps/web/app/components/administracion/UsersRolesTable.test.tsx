@@ -1,10 +1,19 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import { UsersRolesTable, type UsersRolesTableProps } from './UsersRolesTable'
 import { Default } from './UsersRolesTable.stories'
+import type { ReactElement } from 'react'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import type { Locale } from '@/app/lib/i18n/config'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 const args = Default.args as UsersRolesTableProps
+
+/** The component as the page renders it: with the site's catalogue and the toast provider. */
+function render(ui: ReactElement, locale: Locale = 'es') {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, { locale })
+}
 
 describe('UsersRolesTable', () => {
   test('shows users and their current assignments as non-editable indicators', () => {
