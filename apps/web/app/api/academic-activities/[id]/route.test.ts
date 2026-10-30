@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 
 // `@/app/lib/academic-activities` imports `prisma` at module scope, which throws if
 // `DATABASE_URL` is unset — as it is here. The real module is still loaded below (via
-// `importOriginal`) so `academicActivityInputSchema` stays real, but with `prisma` stubbed out
+// `importOriginal`) so `academicActivityUpdateSchema` stays real, but with `prisma` stubbed out
 // first so importing it never touches a client.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 
@@ -31,15 +31,30 @@ import { DELETE, PATCH } from './route'
 const activityId = '5f0b1c9e-3d2a-4f6b-9c8d-7e6f5a4b3c2d'
 const params = Promise.resolve({ id: activityId })
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
+const VERSION = '2026-01-01T00:00:00.000Z'
+
+const content = {
+  es: {
+    title: 'Taller de prueba',
+    category: 'Taller',
+    description: 'Descripción.',
+    photoAlt: 'Texto alternativo.',
+  },
+  en: {
+    title: 'Test workshop',
+    category: 'Workshop',
+    description: 'Description.',
+    photoAlt: 'Alt text.',
+  },
+}
+
 const validBody = {
-  title: 'Taller de prueba',
-  category: 'Taller',
+  version: VERSION,
+  content,
   startDate: '2026-02-16',
   endDate: '2026-02-20',
   location: 'San José, Costa Rica',
-  description: 'Descripción.',
   photoUrl: '/images/mock.jpg',
-  photoAlt: 'Texto alternativo.',
 }
 
 function patchRequest(body: unknown) {
@@ -87,22 +102,40 @@ describe('PATCH /api/academic-activities/[id]', () => {
   test('rejects a body missing required fields and lists which ones', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
-    const response = await PATCH(patchRequest({ ...validBody, title: '', location: '' }), {
-      params,
-    })
+    const response = await PATCH(
+      patchRequest({
+        ...validBody,
+        content: { ...content, es: { ...content.es, title: '' } },
+        location: '',
+      }),
+      { params },
+    )
 
     expect(response.status).toBe(400)
     const body = await response.json()
-    expect(body.issues).toMatchObject({
-      title: expect.any(Array),
-      location: expect.any(Array),
+    expect(body.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: 'content.es.title' }),
+        expect.objectContaining({ path: 'location' }),
+      ]),
+    )
+    expect(mocks.updateAcademicActivity).not.toHaveBeenCalled()
+  })
+
+  test('returns 400 for an id that is not a uuid, without querying the database', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+
+    const response = await PATCH(patchRequest(validBody), {
+      params: Promise.resolve({ id: 'abc' }),
     })
+
+    expect(response.status).toBe(400)
     expect(mocks.updateAcademicActivity).not.toHaveBeenCalled()
   })
 
   test('returns 404 when the activity does not exist, saying it may have been deleted', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    mocks.updateAcademicActivity.mockResolvedValue(null)
+    mocks.updateAcademicActivity.mockResolvedValue({ ok: false, reason: 'not-found' })
 
     const response = await PATCH(patchRequest(validBody), { params })
 
@@ -112,15 +145,30 @@ describe('PATCH /api/academic-activities/[id]', () => {
     )
   })
 
-  test('returns 404 for an id that is not a uuid, without querying the database', async () => {
+  test('returns a conflict when the activity changed since it was loaded', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateAcademicActivity.mockResolvedValue({ ok: false, reason: 'conflict' })
 
-    const response = await PATCH(patchRequest(validBody), {
-      params: Promise.resolve({ id: 'abc' }),
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(409)
+    expect((await response.json()).code).toBe('conflict')
+  })
+
+  test('asks the editor to review when a translation changed in one language only', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.updateAcademicActivity.mockResolvedValue({
+      ok: false,
+      reason: 'review-required',
+      pending: [{ locale: 'en', field: 'title' }],
     })
 
-    expect(response.status).toBe(404)
-    expect(mocks.updateAcademicActivity).not.toHaveBeenCalled()
+    const response = await PATCH(patchRequest(validBody), { params })
+
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.code).toBe('review-required')
+    expect(body.pending).toEqual([{ path: 'content.en.title', locale: 'en', field: 'title' }])
   })
 
   test('explains a database failure instead of throwing', async () => {
@@ -130,15 +178,13 @@ describe('PATCH /api/academic-activities/[id]', () => {
     const response = await PATCH(patchRequest(validBody), { params })
 
     expect(response.status).toBe(500)
-    expect((await response.json()).error).toBe(
-      'No se pudieron guardar los cambios: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
-    )
+    expect((await response.json()).error).toBe('No se pudieron guardar los cambios.')
   })
 
   test('saves the change and stamps modifiedBy with the current admin', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
-    const saved = { id: activityId, ...validBody, date: '16-20 febrero, 2026' }
-    mocks.updateAcademicActivity.mockResolvedValue(saved)
+    const saved = { id: activityId, title: 'Taller de prueba', date: '16-20 febrero, 2026' }
+    mocks.updateAcademicActivity.mockResolvedValue({ ok: true, activity: saved })
 
     const response = await PATCH(patchRequest(validBody), { params })
 
@@ -160,12 +206,12 @@ describe('DELETE /api/academic-activities/[id]', () => {
     expect(mocks.deleteAcademicActivity).not.toHaveBeenCalled()
   })
 
-  test('returns 404 for an id that is not a uuid, without querying the database', async () => {
+  test('returns 400 for an id that is not a uuid, without querying the database', async () => {
     mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
 
     const response = await DELETE(deleteRequest(), { params: Promise.resolve({ id: 'abc' }) })
 
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(400)
     expect(mocks.deleteAcademicActivity).not.toHaveBeenCalled()
   })
 
@@ -176,9 +222,7 @@ describe('DELETE /api/academic-activities/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(500)
-    expect((await response.json()).error).toBe(
-      'No se pudo eliminar la actividad: la base de datos no respondió. Inténtelo de nuevo en unos minutos.',
-    )
+    expect((await response.json()).error).toBe('No se pudo eliminar la actividad.')
   })
 
   test('returns 404 when the activity does not exist', async () => {
@@ -197,6 +241,6 @@ describe('DELETE /api/academic-activities/[id]', () => {
     const response = await DELETE(deleteRequest(), { params })
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteAcademicActivity).toHaveBeenCalledWith(activityId)
+    expect(mocks.deleteAcademicActivity).toHaveBeenCalledWith(activityId, adminUser)
   })
 })

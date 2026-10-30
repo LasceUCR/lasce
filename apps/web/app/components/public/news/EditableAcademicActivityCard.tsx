@@ -1,15 +1,20 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { Modal } from '@/app/components/public/Modal'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
-import type { AcademicActivity } from '@/app/lib/academic-activities'
+import {
+  initialFromActivity,
+  type AcademicActivityDraft,
+  type AcademicActivityFormInitial,
+} from '@/app/lib/academic-activities-form'
+import type { AcademicActivity, ReviewConfirmation } from '@/app/lib/academic-activities'
 
 import { AcademicActivityCard } from './AcademicActivityCard'
-import { AcademicActivityForm, type AcademicActivityFormValues } from './AcademicActivityForm'
+import { AcademicActivityForm, type AcademicActivityFormHandle } from './AcademicActivityForm'
 
 export interface EditableAcademicActivityCardProps {
   activity: AcademicActivity
@@ -18,11 +23,17 @@ export interface EditableAcademicActivityCardProps {
   /** True while a save or delete is in flight. */
   busy?: boolean
   /**
-   * Persists the edit. Calls `close` once it is saved, so the modal shuts before any success
-   * message; on failure it leaves the modal open with the admin's input and reports the reason
-   * itself (a toast, which renders inside the open modal).
+   * Persists the edit made from `initial`. Calls `close` once it is saved, so the modal shuts
+   * before any success message; on failure it leaves the modal open with the admin's input and
+   * reports the reason itself (a toast, which renders inside the open modal).
    */
-  onSave: (values: AcademicActivityFormValues, close: () => void) => void | Promise<void>
+  onSave: (
+    initial: AcademicActivityFormInitial,
+    draft: AcademicActivityDraft,
+    confirmed: ReviewConfirmation[],
+    newPhotoUrl: string | null,
+    close: () => void,
+  ) => void | Promise<void>
   onDelete: () => void
 }
 
@@ -42,24 +53,15 @@ export function EditableAcademicActivityCard({
   const t = useTranslations('academicActivities.editor')
   const deleteT = useTranslations('academicActivities.deleteDialog')
   const { editMode } = useEditMode()
-  const [isEditing, setIsEditing] = useState(false)
+  // Taken when the editor opens, so a refresh behind it cannot change what it saves against.
+  const [editing, setEditing] = useState<AcademicActivityFormInitial | null>(null)
+  const form = useRef<AcademicActivityFormHandle>(null)
 
   const card = <AcademicActivityCard activity={activity} />
 
   function close() {
-    setIsEditing(false)
+    setEditing(null)
   }
-
-  const editModal = (
-    <Modal onClose={close} open={isEditing} size="large" title={t('editTitle')}>
-      <AcademicActivityForm
-        activity={activity}
-        busy={busy}
-        onCancel={close}
-        onSave={(values) => onSave(values, close)}
-      />
-    </Modal>
-  )
 
   const showEditor = editMode && (canEdit || canDelete)
 
@@ -77,11 +79,32 @@ export function EditableAcademicActivityCard({
         deleteLabel={t('deleteLabel')}
         editLabel={t('editLabel')}
         onDelete={canDelete && !busy ? onDelete : undefined}
-        onEdit={canEdit && !busy ? () => setIsEditing(true) : undefined}
+        onEdit={canEdit && !busy ? () => setEditing(initialFromActivity(activity)) : undefined}
       >
         {card}
       </EditableWrapper>
-      {editModal}
+
+      <Modal
+        onClose={() => {
+          if (form.current) form.current.requestCancel()
+          else close()
+        }}
+        open={editing !== null}
+        size="large"
+        title={t('editTitle')}
+      >
+        {editing ? (
+          <AcademicActivityForm
+            busy={busy}
+            initial={editing}
+            onCancel={close}
+            onSave={(draft, confirmed, newPhotoUrl) =>
+              onSave(editing, draft, confirmed, newPhotoUrl, close)
+            }
+            ref={form}
+          />
+        ) : null}
+      </Modal>
     </>
   )
 }

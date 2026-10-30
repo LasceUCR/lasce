@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 
-import { mockActivity } from './AcademicActivityCard.stories'
+import { editableActivity, legacyActivity } from './AcademicActivityForm.stories'
 import { EditableAcademicActivityCard } from './EditableAcademicActivityCard'
 
 const meta: Meta<typeof EditableAcademicActivityCard> = {
@@ -18,9 +18,9 @@ type Story = StoryObj<typeof EditableAcademicActivityCard>
 
 export const ViewMode: Story = {
   args: {
-    activity: mockActivity,
+    activity: editableActivity,
     onDelete: () => {},
-    onSave: (_values, close) => close(),
+    onSave: (_initial, _draft, _confirmed, _newPhotoUrl, close) => close(),
   },
   decorators: [
     (Story) => (
@@ -33,11 +33,11 @@ export const ViewMode: Story = {
 
 export const EditModeOn: Story = {
   args: {
-    activity: mockActivity,
+    activity: editableActivity,
     canEdit: true,
     canDelete: true,
     onDelete: () => {},
-    onSave: (_values, close) => close(),
+    onSave: (_initial, _draft, _confirmed, _newPhotoUrl, close) => close(),
   },
   decorators: [
     (Story) => (
@@ -51,11 +51,11 @@ export const EditModeOn: Story = {
 /** An assistant account: `edit_components` but not `delete_components` — only the pencil shows. */
 export const AssistantMode: Story = {
   args: {
-    activity: mockActivity,
+    activity: editableActivity,
     canEdit: true,
     canDelete: false,
     onDelete: () => {},
-    onSave: (_values, close) => close(),
+    onSave: (_initial, _draft, _confirmed, _newPhotoUrl, close) => close(),
   },
   decorators: [
     (Story) => (
@@ -64,4 +64,10 @@ export const AssistantMode: Story = {
       </EditModeContext.Provider>
     ),
   ],
+}
+
+/** An activity with no English version yet: editors see a note in the form. */
+export const LegacyActivity: Story = {
+  args: { ...EditModeOn.args, activity: legacyActivity },
+  decorators: EditModeOn.decorators,
 }

@@ -386,12 +386,13 @@ model NosotrosActivity {
 
 /// A workshop, talk, course or conference organized or co-organized by LASCE, shown on
 /// `/noticias` and on its own dedicated list at `/actividades-academicas`. Every field is
-/// required: there is no draft state, an activity is either fully filled in or not created yet.
-/// `id` doubles as the card's stable identifier — the public types' `slug` is just this `id`,
-/// same convention as `Research`/`Publication`.
+/// required except `endDate`: there is no draft state, an activity is either fully filled in or
+/// not created yet. `id` doubles as the card's stable identifier — the public types' `slug` is
+/// just this `id`, same convention as `Research`/`Publication`.
 ///
-/// Single language for now (no translation table yet), unlike the bilingual `Research`/`News`
-/// records.
+/// `title`, `category`, `description` and `photoAlt` are bilingual: the Spanish text for a new
+/// record stays here, and every other language lives in `AcademicActivityTranslation`.
+/// `startDate`, `endDate`, `location` and `photoUrl` are shared and never translated.
 model AcademicActivity {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
@@ -408,12 +409,40 @@ model AcademicActivity {
   photoAlt    String    @map("photo_alt")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   modifiedBy  String    @map("modified_by") @db.Uuid
+  /// Also the version an editor saves against (optimistic concurrency).
   modifiedAt  DateTime  @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
-  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  modifier     User                          @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  translations AcademicActivityTranslation[]
 
   @@index([startDate])
   @@map("academic_activities")
+  @@schema("news")
+}
+
+/// The translatable text of an `AcademicActivity` in a language other than Spanish (see
+/// "Dynamic content" in docs/internationalization.md). The base row keeps the source-language
+/// `title`, `category`, `description` and `photoAlt`; this table holds one row per additional
+/// locale. `startDate`, `endDate`, `location` and `photoUrl` are shared and stay on the base row.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a language needs
+/// no migration. An activity created before translations existed has no row here, and its base
+/// text is in whatever language it was entered in.
+model AcademicActivityTranslation {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  academicActivityId String   @map("academic_activity_id") @db.Uuid
+  locale             String   @db.VarChar(5)
+  title              String
+  category           String
+  description        String   @db.Text
+  photoAlt           String   @map("photo_alt")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  academicActivity AcademicActivity @relation(fields: [academicActivityId], references: [id], onDelete: Cascade)
+
+  @@unique([academicActivityId, locale])
+  @@map("academic_activity_translations")
   @@schema("news")
 }
 

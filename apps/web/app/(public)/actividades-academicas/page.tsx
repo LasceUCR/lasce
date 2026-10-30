@@ -26,8 +26,11 @@ async function AcademicActivitiesLoader({
   canDelete,
 }: AcademicActivitiesLoaderProps) {
   // The date shown on each card follows the language chosen in the header (the `lasce_locale`
-  // cookie), same as `getResearchAreas`.
-  const activities = await getAcademicActivities(resolveLocale(await getLocale()))
+  // cookie), same as `getResearchAreas`. Editing data (both languages and the version to save
+  // against) is sent to the browser only for someone who can edit.
+  const activities = await getAcademicActivities(resolveLocale(await getLocale()), {
+    includeEditingData: canEdit,
+  })
 
   return (
     <AcademicActivitiesPage

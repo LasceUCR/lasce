@@ -26,6 +26,8 @@ import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { AcademicActivitiesPage, type AcademicActivitiesPageProps } from './AcademicActivitiesPage'
 import { ErrorState, Loading } from './AcademicActivitiesPage.stories'
 
+const VERSION = '2026-01-01T00:00:00.000Z'
+
 const activity: AcademicActivity = {
   id: '00000000-0000-4000-8000-000000000001',
   title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
@@ -37,6 +39,25 @@ const activity: AcademicActivity = {
   description: 'Descripción de prueba.',
   photoUrl: '/images/mock.jpg',
   photoAlt: 'Texto alternativo.',
+  contentLocale: 'es',
+  editing: {
+    content: {
+      es: {
+        title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+        category: 'Taller',
+        description: 'Descripción de prueba.',
+        photoAlt: 'Texto alternativo.',
+      },
+      en: {
+        title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+        category: 'Workshop',
+        description: 'Test description.',
+        photoAlt: 'Alt text.',
+      },
+    },
+    isLegacy: false,
+    version: VERSION,
+  },
 }
 
 const defaultArgs: AcademicActivitiesPageProps = { activities: [activity] }
@@ -80,14 +101,17 @@ async function deleteFirstActivity(user: User) {
   await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 }
 
-/** Edits the first activity's title and submits it. */
+/**
+ * Edits the first activity's location (a shared field, so a single click saves it without
+ * triggering the bilingual cross-language review) and submits it.
+ */
 async function submitActivityEdit(user: User) {
   const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
   await user.click(firstEditButton as HTMLElement)
   const dialog = screen.getByRole('dialog', { name: 'Editar actividad académica' })
-  const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
-  await user.clear(titleInput)
-  await user.type(titleInput, 'Título editado')
+  const locationInput = within(dialog).getByRole('textbox', { name: 'Ubicación' })
+  await user.clear(locationInput)
+  await user.type(locationInput, 'Ubicación editada')
   await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
   return dialog
 }
@@ -169,7 +193,10 @@ describe('AcademicActivitiesPage', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/academic-activities/${activity.id}`,
-      expect.objectContaining({ method: 'PATCH', body: expect.stringContaining('Título editado') }),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('Ubicación editada'),
+      }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -189,6 +216,7 @@ describe('AcademicActivitiesPage', () => {
     const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar actividad académica' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Ubicación' }), ' editada')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(within(dialog).getByRole('button', { name: 'Guardando...' })).toBeDisabled()
@@ -214,7 +242,9 @@ describe('AcademicActivitiesPage', () => {
     expect(
       await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
     ).toBeInTheDocument()
-    expect(within(dialog).getByRole('textbox', { name: 'Título' })).toHaveValue('Título editado')
+    expect(within(dialog).getByRole('textbox', { name: 'Ubicación' })).toHaveValue(
+      'Ubicación editada',
+    )
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
