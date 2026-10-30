@@ -8,8 +8,9 @@ import type { UserRole } from '@lasce/db'
 
 import { isActivePath } from '@/app/components/public/NavGroup'
 import { useDisclosure } from '@/app/components/public/useDisclosure'
-import { canSeeAdminNavigation, shortName } from '@/app/lib/auth/account'
+import { canEditContent, canSeeAdminNavigation, shortName } from '@/app/lib/auth/account'
 
+import { EditModeSwitch } from './EditModeSwitch'
 import { SignOutButton } from './SignOutButton'
 
 export interface AccountMenuProps {
@@ -32,7 +33,8 @@ export interface AccountMenuProps {
  * so this is a plain nav-group visually and structurally, not a second
  * dropdown style: same box, same vertical origin, same caret. The panel
  * opens on an informational name/role block (not a link), then
- * "Administración" (only when the role can see it) and "Mi cuenta", then
+ * "Administración" (only when the role can see it) and "Mi cuenta", the "Modo edición" switch (only
+ * for roles that can edit content), then
  * "Cerrar sesión" with the same icon and neutral color the mobile menu gives
  * it (not red — this isn't a destructive-looking control, just the last
  * item), which keeps its own confirmation dialog via `SignOutButton`.
@@ -57,6 +59,7 @@ export function AccountMenu({
     handleBlur,
   } = useDisclosure()
   const showAdmin = canSeeAdminNavigation(role)
+  const showEditMode = canEditContent(role)
   const roleLabel = role ? t(`roles.${role}`) : null
 
   return (
@@ -98,6 +101,12 @@ export function AccountMenu({
         >
           {t('myAccount')}
         </Link>
+        {showEditMode ? (
+          <>
+            <hr aria-hidden="true" className="account-menu-divider" />
+            <EditModeSwitch className="account-menu-edit-mode" id="account-menu-edit-mode" />
+          </>
+        ) : null}
         <hr aria-hidden="true" className="account-menu-divider" />
         <SignOutButton
           className="account-menu-signout"

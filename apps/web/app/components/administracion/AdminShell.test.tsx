@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
@@ -27,27 +26,13 @@ function menu() {
 }
 
 describe('AdminShell', () => {
-  test('renders the admin navigation, its children and the edit mode toggle', () => {
+  test('renders the admin navigation and its children, without the edit mode switch', () => {
     renderShell()
 
     expect(screen.getByRole('navigation', { name: 'Panel de administración' })).toBeInTheDocument()
     expect(screen.getByText('Contenido de la sección')).toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: 'Modo edición' })).toHaveAttribute(
-      'aria-checked',
-      'false',
-    )
-  })
-
-  test('flips the shared edit mode state when the toggle is switched on', async () => {
-    const user = userEvent.setup()
-    renderShell()
-
-    await user.click(screen.getByRole('switch', { name: 'Modo edición' }))
-
-    expect(screen.getByRole('switch', { name: 'Modo edición' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    )
+    // The switch lives in the account menu now, so there is a single place to change it.
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
   })
 
   test('shows every section when all grants are held', () => {
@@ -57,7 +42,7 @@ describe('AdminShell', () => {
       menu()
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Resumen', 'Descargas', 'Usuarios', 'Permisos', 'Infraestructura'])
+    ).toEqual(['Resumen', 'Descargas', 'Usuarios', 'Permisos', 'Auditoría'])
   })
 
   test('hides the sections whose grant is missing', () => {
@@ -75,10 +60,10 @@ describe('AdminShell', () => {
       menu()
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Resumen', 'Infraestructura'])
+    ).toEqual(['Resumen'])
   })
 
-  test('speaks English when the site does, keeping the Modo edición name', () => {
+  test('speaks English when the site does', () => {
     renderWithIntl(
       <EditModeProvider>
         <AdminShell {...defaultArgs} />
@@ -89,6 +74,5 @@ describe('AdminShell', () => {
     const nav = within(screen.getByRole('navigation', { name: 'Administration panel' }))
     expect(nav.getByRole('link', { name: 'Summary' })).toBeInTheDocument()
     expect(nav.getByRole('button', { name: /Menu/ })).toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: 'Modo edición' })).toBeInTheDocument()
   })
 })

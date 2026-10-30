@@ -105,6 +105,30 @@ describe('academic-activities', () => {
     expect(result.success).toBe(true)
   })
 
+  test('rejects an end date earlier than the start date, as an endDate field error', () => {
+    const result = academicActivityInputSchema.safeParse({
+      ...input,
+      startDate: '2026-10-26',
+      endDate: '2026-10-13',
+    })
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.endDate).toEqual([
+        'La fecha de finalización debe ser igual o posterior a la fecha de inicio.',
+      ])
+    }
+  })
+
+  test('accepts an end date equal to the start date', () => {
+    const result = academicActivityInputSchema.safeParse({
+      ...input,
+      startDate: '2026-10-26',
+      endDate: '2026-10-26',
+    })
+    expect(result.success).toBe(true)
+  })
+
   test('creates a new activity, stamped with the admin who submitted it', async () => {
     mocks.create.mockResolvedValue(row)
 

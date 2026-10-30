@@ -28,6 +28,7 @@ import type { AcademicActivity } from '@/app/lib/academic-activities'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { listingHref } from '@/app/lib/pagination'
 
+import { ErrorState, Loading } from './AcademicActivitiesPage.stories'
 import {
   AcademicActivitiesPage,
   SEARCH_DELAY_MS,
@@ -49,6 +50,8 @@ const activity: AcademicActivity = {
 
 const defaultArgs: AcademicActivitiesPageProps = { activities: [activity] }
 const emptyArgs: AcademicActivitiesPageProps = { activities: [] }
+const loadingArgs = Loading.args as AcademicActivitiesPageProps
+const errorArgs = ErrorState.args as AcademicActivitiesPageProps
 const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
 
 function renderPage(props: AcademicActivitiesPageProps = defaultArgs, locale?: 'es' | 'en') {
@@ -220,9 +223,9 @@ describe('AcademicActivitiesPage', () => {
     mocks.query = 'q=no+existe'
     renderPage()
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'No se encontraron actividades académicas para “no existe”.',
-    )
+    expect(
+      screen.getByText('No se encontraron actividades académicas para “no existe”.'),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
   })
 
@@ -282,6 +285,32 @@ describe('AcademicActivitiesPage', () => {
     expect(await screen.findByText('Actividad actualizada correctamente.')).toBeInTheDocument()
   })
 
+  test('disables the confirm button while the edit request is in flight', async () => {
+    const user = userEvent.setup()
+    let resolveFetch: (value: { ok: boolean; json: () => Promise<unknown> }) => void = () => {}
+    fetchMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve
+      }),
+    )
+    renderPageInEditMode()
+
+    const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
+    await user.click(firstEditButton as HTMLElement)
+    const dialog = screen.getByRole('dialog', { name: 'Editar actividad académica' })
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
+
+    expect(within(dialog).getByRole('button', { name: 'Guardando...' })).toBeDisabled()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    // A second click while the request is still pending must not send another request.
+    await user.click(within(dialog).getByRole('button', { name: 'Guardando...' }))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    resolveFetch({ ok: true, json: async () => ({ activity: {} }) })
+    expect(await screen.findByText('Actividad actualizada correctamente.')).toBeInTheDocument()
+  })
+
   test('explains a failed edit inside the open modal and keeps what was typed', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue(
@@ -324,5 +353,72 @@ describe('AcademicActivitiesPage', () => {
     expect(await screen.findByText(reason)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: activity.title })).toBeInTheDocument()
     expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  test('shows skeleton placeholders and marks area busy while loading', () => {
+    const { container } = renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <AcademicActivitiesPage {...loadingArgs} />
+        </EditModeProvider>
+      </ToastProvider>,
+    )
+
+    const region = container.querySelector('#academic-activities-loading-region')
+    expect(region).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando actividades académicas…')
+
+    const skeletons = container.querySelectorAll('.academic-activity-card')
+    expect(skeletons.length).toBeGreaterThan(0)
+    for (const skeleton of skeletons) {
+      expect(skeleton).toHaveAttribute('aria-hidden', 'true')
+    }
+  })
+
+  test('hides empty message while loading', () => {
+    renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <AcademicActivitiesPage {...loadingArgs} />
+        </EditModeProvider>
+      </ToastProvider>,
+    )
+
+    expect(
+      screen.queryByText('No hay actividades académicas disponibles en este momento.'),
+    ).not.toBeInTheDocument()
+  })
+
+  test('keeps hero and footer link functional while loading', () => {
+    renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <AcademicActivitiesPage {...loadingArgs} />
+        </EditModeProvider>
+      </ToastProvider>,
+    )
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Volver al inicio/i })).toHaveAttribute('href', '/')
+  })
+
+  test('displays error notice and removes busy state when loading fails', () => {
+    const { container } = renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <AcademicActivitiesPage {...errorArgs} />
+        </EditModeProvider>
+      </ToastProvider>,
+    )
+
+    const region = container.querySelector('#academic-activities-loading-region')
+    expect(region).not.toHaveAttribute('aria-busy')
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'No fue posible cargar las actividades académicas. Inténtelo de nuevo más tarde.',
+    )
+    expect(container.querySelectorAll('[aria-hidden="true"].news-card')).toHaveLength(0)
   })
 })

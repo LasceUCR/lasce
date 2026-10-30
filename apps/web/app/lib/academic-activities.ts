@@ -95,17 +95,26 @@ export async function getAcademicActivities(
   return rows.map((row) => toAcademicActivity(row, locale))
 }
 
-/** Shared by create and update: every field on `AcademicActivity` is required except `endDate`. */
-export const academicActivityInputSchema = z.object({
-  title: z.string().trim().min(1, 'El título es obligatorio.'),
-  category: z.string().trim().min(1, 'La categoría es obligatoria.'),
-  startDate: z.string().date('La fecha de inicio es obligatoria.'),
-  endDate: z.string().date().nullable(),
-  location: z.string().trim().min(1, 'La ubicación es obligatoria.'),
-  description: z.string().trim().min(1, 'La descripción es obligatoria.'),
-  photoUrl: z.string().trim().min(1, 'La imagen es obligatoria.'),
-  photoAlt: z.string().trim().min(1, 'El texto alternativo de la imagen es obligatorio.'),
-})
+/**
+ * Shared by create and update: every field on `AcademicActivity` is required except `endDate`.
+ * `endDate`, when given, must not come before `startDate` — the error attaches to `endDate` so
+ * it reaches the client as that field's own message (`issueMessages` in `app/lib/api-feedback.ts`).
+ */
+export const academicActivityInputSchema = z
+  .object({
+    title: z.string().trim().min(1, 'El título es obligatorio.'),
+    category: z.string().trim().min(1, 'La categoría es obligatoria.'),
+    startDate: z.string().date('La fecha de inicio es obligatoria.'),
+    endDate: z.string().date().nullable(),
+    location: z.string().trim().min(1, 'La ubicación es obligatoria.'),
+    description: z.string().trim().min(1, 'La descripción es obligatoria.'),
+    photoUrl: z.string().trim().min(1, 'La imagen es obligatoria.'),
+    photoAlt: z.string().trim().min(1, 'El texto alternativo de la imagen es obligatorio.'),
+  })
+  .refine((data) => !data.endDate || data.endDate >= data.startDate, {
+    message: 'La fecha de finalización debe ser igual o posterior a la fecha de inicio.',
+    path: ['endDate'],
+  })
 
 export type AcademicActivityInput = z.infer<typeof academicActivityInputSchema>
 

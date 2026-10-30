@@ -41,11 +41,45 @@ describe('stored collaboration translations', () => {
       const migrated = (await getCollaborationRecords(locale)).filter(({ name }) => names.has(name))
 
       expect(
-        migrated.map(({ name, acronym, country, scope }) => ({ name, acronym, country, scope })),
+        migrated.map(({ name, acronym, country, scope, logoPath, websiteUrl }) => ({
+          name,
+          acronym,
+          country,
+          scope,
+          logoPath,
+          websiteUrl,
+        })),
       ).toEqual(
-        original.map(({ name, acronym, country, scope }) => ({ name, acronym, country, scope })),
+        original.map(({ name, acronym, country, scope, logoPath, websiteUrl }) => ({
+          name,
+          acronym,
+          country,
+          scope,
+          logoPath,
+          websiteUrl,
+        })),
       )
     }
+  })
+
+  test('keeps media associated after a rename and allows records without media', async () => {
+    const record = await createOrganization('Costa Rica', 'Costa Rica')
+    expect((await getCollaborationRecords()).find(({ id }) => id === record.id)).not.toHaveProperty(
+      'logoPath',
+    )
+    await prisma.collaboration.update({
+      where: { id: record.id },
+      data: { logoPath: '/brand/collaborations/tec.png', websiteUrl: 'https://www.tec.ac.cr/' },
+    })
+    await prisma.collaboration.update({
+      where: { id: record.id },
+      data: { name: 'Renamed partner' },
+    })
+    expect((await getCollaborationRecords('en')).find(({ id }) => id === record.id)).toMatchObject({
+      name: 'Renamed partner',
+      logoPath: '/brand/collaborations/tec.png',
+      websiteUrl: 'https://www.tec.ac.cr/',
+    })
   })
 
   test('resolves each record in both languages and reads updated translations', async () => {

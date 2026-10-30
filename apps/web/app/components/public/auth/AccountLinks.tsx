@@ -5,10 +5,11 @@ import { useTranslations } from 'next-intl'
 import type { UserRole } from '@lasce/db'
 
 import { isActivePath } from '@/app/components/public/NavGroup'
-import { canSeeAdminNavigation } from '@/app/lib/auth/account'
+import { canEditContent, canSeeAdminNavigation } from '@/app/lib/auth/account'
 import { ACCESS_PATH } from '@/app/lib/auth/login'
 
 import { AccountMenu } from './AccountMenu'
+import { EditModeSwitch } from './EditModeSwitch'
 import { SignOutButton } from './SignOutButton'
 
 export interface AccountLinksProps {
@@ -102,6 +103,9 @@ export function AccountLinks({
           <span>{t('myAccount')}</span>
         </span>
       </Link>
+      {canEditContent(role) ? (
+        <EditModeSwitch className="mobile-edit-mode" id="mobile-edit-mode" />
+      ) : null}
       <SignOutButton
         icon={<LogOut aria-hidden="true" size={18} strokeWidth={1.8} />}
         isSigningOut={isSigningOut}

@@ -32,10 +32,10 @@ describe('admin-sections', () => {
     ])
 
     expect(matrix).toEqual([
-      ['descargas', 'download_resources'],
+      ['descargas', 'view_download_history'],
       ['usuarios', 'manage_users'],
       ['permisos', 'manage_permissions'],
-      ['infraestructura', undefined],
+      ['auditoria', 'view_audit_log'],
     ])
   })
 
@@ -45,31 +45,23 @@ describe('admin-sections', () => {
       '/administracion/descargas',
       '/administracion/usuarios',
       '/administracion/permisos',
-      '/administracion/infraestructura',
+      '/administracion/auditoria',
     ])
   })
 
   test('shows only the public sections when no grant is held', () => {
-    expect(visibleLabels([])).toEqual(['Resumen', 'Infraestructura'])
+    expect(visibleLabels([])).toEqual(['Resumen'])
   })
 
   test('adds each section as its grant is held', () => {
-    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.VISITOR)).toEqual([
-      'Resumen',
-      'Descargas',
-      'Infraestructura',
-    ])
-    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ASSISTANT)).toEqual([
-      'Resumen',
-      'Descargas',
-      'Infraestructura',
-    ])
+    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.VISITOR)).toEqual(['Resumen'])
+    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ASSISTANT)).toEqual(['Resumen'])
     expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ADMIN)).toEqual([
       'Resumen',
       'Descargas',
       'Usuarios',
       'Permisos',
-      'Infraestructura',
+      'Auditoría',
     ])
     expect(visibleLabels(PERMISSIONS)).toHaveLength(adminMenu.length)
   })

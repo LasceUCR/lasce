@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl'
+
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
 
 import styles from './UsersRolesTable.module.css'
@@ -23,19 +25,21 @@ export function UsersRolesTable({
   visibleUserIds,
   currentUserId,
 }: UsersRolesTableProps) {
+  const t = useTranslations('administration.users.table')
+
   return (
     <div
       className={styles.scroll}
       role="region"
-      aria-label="Tabla de usuarios y roles"
+      aria-label={t('region')}
       tabIndex={0}
       hidden={visibleUserIds?.length === 0}
     >
-      <table className={styles.table} aria-label="Usuarios y roles" aria-describedby={describedBy}>
+      <table className={styles.table} aria-label={t('label')} aria-describedby={describedBy}>
         <thead>
           <tr>
-            <th scope="col">Nombre</th>
-            <th scope="col">Correo electrónico</th>
+            <th scope="col">{t('name')}</th>
+            <th scope="col">{t('email')}</th>
             {roles.map((role) => (
               <th scope="col" key={role.id} className={styles.assignment}>
                 {role.name}

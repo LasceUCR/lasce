@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getLocale, getTranslations } from 'next-intl/server'
 
 import { AcademicActivitiesPage } from '@/app/components/public/news/AcademicActivitiesPage'
@@ -13,17 +14,20 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = 'force-dynamic'
 
-export default async function ActividadesAcademicasPage() {
-  const [locale, canCreate, canEdit, canDelete] = await Promise.all([
-    getLocale(),
-    userHasPermission('create_components'),
-    userHasPermission('edit_components'),
-    userHasPermission('delete_components'),
-  ])
+interface AcademicActivitiesLoaderProps {
+  canCreate: boolean
+  canEdit: boolean
+  canDelete: boolean
+}
 
+async function AcademicActivitiesLoader({
+  canCreate,
+  canEdit,
+  canDelete,
+}: AcademicActivitiesLoaderProps) {
   // The date shown on each card follows the language chosen in the header (the `lasce_locale`
   // cookie), same as `getResearchAreas`.
-  const activities = await getAcademicActivities(resolveLocale(locale))
+  const activities = await getAcademicActivities(resolveLocale(await getLocale()))
 
   return (
     <AcademicActivitiesPage
@@ -32,5 +36,19 @@ export default async function ActividadesAcademicasPage() {
       canDelete={canDelete}
       canEdit={canEdit}
     />
+  )
+}
+
+export default async function ActividadesAcademicasPage() {
+  const [canCreate, canEdit, canDelete] = await Promise.all([
+    userHasPermission('create_components'),
+    userHasPermission('edit_components'),
+    userHasPermission('delete_components'),
+  ])
+
+  return (
+    <Suspense fallback={<AcademicActivitiesPage loading={true} />}>
+      <AcademicActivitiesLoader canCreate={canCreate} canDelete={canDelete} canEdit={canEdit} />
+    </Suspense>
   )
 }

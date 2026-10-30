@@ -114,6 +114,7 @@ describe('getCollaborationRecords', () => {
         scope: true,
         country: true,
         websiteUrl: true,
+        logoPath: true,
         updatedAt: true,
         translations: {
           where: { locale: { in: ['en'] } },
@@ -126,6 +127,29 @@ describe('getCollaborationRecords', () => {
   test('returns an empty directory when no organizations remain', async () => {
     findMany.mockResolvedValue([])
     expect(await getCollaborationRecords('en')).toEqual([])
+  })
+
+  test('keeps stored media attached to the record in both languages even after a name change', async () => {
+    findMany.mockResolvedValue([
+      {
+        ...organizations[0],
+        name: 'Updated official name',
+        logoPath: '/brand/collaborations/tec.png',
+        websiteUrl: 'https://www.tec.ac.cr/',
+      },
+      { ...organizations[1], logoPath: null, websiteUrl: null },
+    ])
+    for (const locale of ['es', 'en'] as const) {
+      const records = await getCollaborationRecords(locale)
+      expect(records[0]).toMatchObject({
+        name: 'Updated official name',
+        logoPath: '/brand/collaborations/tec.png',
+        websiteUrl: 'https://www.tec.ac.cr/',
+        scope: 'national',
+      })
+      expect(records[1]).not.toHaveProperty('logoPath')
+      expect(records[1]).not.toHaveProperty('websiteUrl')
+    }
   })
 
   test('does not replace a database failure with the static fixture directory', async () => {

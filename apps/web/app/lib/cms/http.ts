@@ -52,23 +52,29 @@ export function issuesOf(error: z.ZodError): ApiIssue[] {
   )
 }
 
-export function invalidJson(): NextResponse {
-  return errorResponse(400, 'invalid-json', 'El cuerpo de la solicitud no es JSON válido.')
+export function invalidJson(
+  message = 'El cuerpo de la solicitud no es JSON válido.',
+): NextResponse {
+  return errorResponse(400, 'invalid-json', message)
 }
 
 /** The request body, or the `invalid-json` response to answer with when it is not JSON. */
 export async function readJson(
   request: Request,
+  invalidJsonMessage?: string,
 ): Promise<{ ok: true; body: unknown } | { ok: false; response: NextResponse }> {
   try {
     return { ok: true, body: await request.json() }
   } catch {
-    return { ok: false, response: invalidJson() }
+    return { ok: false, response: invalidJson(invalidJsonMessage) }
   }
 }
 
-export function invalidBody(error: z.ZodError): NextResponse {
-  return errorResponse(400, 'invalid-body', 'Faltan campos obligatorios o no son válidos.', {
+export function invalidBody(
+  error: z.ZodError,
+  message = 'Faltan campos obligatorios o no son válidos.',
+): NextResponse {
+  return errorResponse(400, 'invalid-body', message, {
     issues: issuesOf(error),
   })
 }

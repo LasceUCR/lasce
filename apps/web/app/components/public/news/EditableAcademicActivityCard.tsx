@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
 import { Modal } from '@/app/components/public/Modal'
@@ -14,6 +15,8 @@ export interface EditableAcademicActivityCardProps {
   activity: AcademicActivity
   canEdit?: boolean
   canDelete?: boolean
+  /** True while a save or delete is in flight. */
+  busy?: boolean
   /**
    * Persists the edit. Calls `close` once it is saved, so the modal shuts before any success
    * message; on failure it leaves the modal open with the admin's input and reports the reason
@@ -32,9 +35,12 @@ export function EditableAcademicActivityCard({
   activity,
   canEdit = false,
   canDelete = false,
+  busy = false,
   onSave,
   onDelete,
 }: EditableAcademicActivityCardProps) {
+  const t = useTranslations('academicActivities.editor')
+  const deleteT = useTranslations('academicActivities.deleteDialog')
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
 
@@ -45,9 +51,10 @@ export function EditableAcademicActivityCard({
   }
 
   const editModal = (
-    <Modal onClose={close} open={isEditing} size="large" title="Editar actividad académica">
+    <Modal onClose={close} open={isEditing} size="large" title={t('editTitle')}>
       <AcademicActivityForm
         activity={activity}
+        busy={busy}
         onCancel={close}
         onSave={(values) => onSave(values, close)}
       />
@@ -63,11 +70,14 @@ export function EditableAcademicActivityCard({
   return (
     <>
       <EditableWrapper
-        deleteConfirmLabel="Eliminar"
-        deleteConfirmMessage="Esta acción no se puede deshacer y borrará la actividad del catálogo público."
-        deleteConfirmTitle="Eliminar actividad académica"
-        onDelete={canDelete ? onDelete : undefined}
-        onEdit={canEdit ? () => setIsEditing(true) : undefined}
+        deleteConfirmLabel={deleteT('confirm')}
+        deleteConfirmMessage={deleteT('message')}
+        deleteConfirmTitle={deleteT('title')}
+        deleteCancelLabel={deleteT('cancel')}
+        deleteLabel={t('deleteLabel')}
+        editLabel={t('editLabel')}
+        onDelete={canDelete && !busy ? onDelete : undefined}
+        onEdit={canEdit && !busy ? () => setIsEditing(true) : undefined}
       >
         {card}
       </EditableWrapper>

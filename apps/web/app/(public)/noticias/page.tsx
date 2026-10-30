@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
@@ -36,6 +37,12 @@ interface NewsPageProps {
   searchParams: Promise<Record<string, SearchParamValue>>
 }
 
+async function AcademicActivitiesLoader() {
+  const activities = await getAcademicActivities(resolveLocale(await getLocale()))
+
+  return <AcademicActivitiesSection activities={activities} id="academic-activities" />
+}
+
 /**
  * `?q=` searches the news and `?page=` picks a page of the results (see `getNewsPage`). Both are
  * validated here, on the server; a URL that asks for something else than what is shown (a
@@ -52,7 +59,6 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
-  const activities = await getAcademicActivities(resolveLocale(locale))
 
   // Every language goes to the browser only for someone who can edit.
   const news = await getNewsPage(resolveLocale(locale), {
@@ -69,7 +75,9 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     <article className="topic-page">
       <TopicHero kicker={t('kicker')} lead={t('lead')} title={t('title')} />
 
-      <AcademicActivitiesSection activities={activities} id="academic-activities" />
+      <Suspense fallback={<AcademicActivitiesSection id="academic-activities" loading={true} />}>
+        <AcademicActivitiesLoader />
+      </Suspense>
 
       <NewsExplorer
         canCreate={canCreate}

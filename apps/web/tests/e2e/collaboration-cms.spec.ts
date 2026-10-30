@@ -47,7 +47,7 @@ test('manages bilingual collaborations and optional fields through the shared CM
     await edit.getByRole('textbox', { name: 'Sitio web (opcional)' }).fill('https://example.com')
     await edit.getByRole('button', { name: 'Confirmar' }).click()
     await expect(page.getByText('Colaboración actualizada correctamente.')).toBeVisible()
-    await expect(card.getByRole('link', { name: 'Sitio web oficial' })).toHaveAttribute(
+    await expect(card.getByRole('link', { name, exact: true })).toHaveAttribute(
       'href',
       'https://example.com',
     )

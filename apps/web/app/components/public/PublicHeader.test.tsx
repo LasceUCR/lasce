@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ACCOUNT_COOKIE, encodeAccountCookie, shortName } from '@/app/lib/auth/account'
+import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import type { Locale } from '@/app/lib/i18n/config'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
@@ -19,7 +20,9 @@ function renderHeader({
   setLocaleAction = async () => undefined,
 }: { locale?: Locale; setLocaleAction?: (locale: Locale) => Promise<void> } = {}) {
   return renderWithIntl(
-    <PublicHeader logoutAction={async () => undefined} setLocaleAction={setLocaleAction} />,
+    <EditModeProvider>
+      <PublicHeader logoutAction={async () => undefined} setLocaleAction={setLocaleAction} />
+    </EditModeProvider>,
     { locale },
   )
 }
