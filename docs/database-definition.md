@@ -524,12 +524,12 @@ fields `value`, `valid`), not here. Differences:
 One daily SEISS file (one product, one UTC day) ingested by the worker's `seiss-pipeline` job
 (`apps/worker/app/services/seiss/readings.py`) — see [`seiss-pipeline.md`](seiss-pipeline.md).
 Same columns, constraints and upsert key as `exis_files`; the readings are in the product's
-InfluxDB measurement (`ehis_flux`, `sgps_flux`; tags `satellite`, `product`, `channel`; fields
+InfluxDB measurement (`ehis_flux`, `sgps_flux`, `mpsh_flux`; tags `satellite`, `product`, `channel`; fields
 `value`, `valid`), not here. It was `ehis_files` until SGPS joined it. Differences:
 
 - `satellite` is `"G19"`, from the NetCDF `platform_ID` attribute (EHIS) or the upper-cased
-  `platform` attribute (SGPS).
-- `product` is `"EHIS"` or `"SGPS"`.
+  `platform` attribute (SGPS, MPSH).
+- `product` is `"EHIS"`, `"SGPS"` or `"MPSH"`.
 - `version` looks like `"0-0-2"` (EHIS) or `"3-0-3"` (SGPS), and `point_count` has one entry per
   channel: 25 for EHIS, like `{"H:E1": 288, …, "ClNi:E5": 0}`, and 28 for SGPS, like
   `{"minus:P1": 1438, …, "plus:P11": 1438}`.

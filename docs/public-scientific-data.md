@@ -86,7 +86,7 @@ the values are `observed` or `simulated`; these states must never be inferred fr
 
 ### GOES
 
-GOES products are served by three backends, chosen by instrument (EHIS and SGPS are routed on their own, by product):
+GOES products are served by three backends, chosen by instrument (the SEISS products are routed one by one, by product):
 
 | Instrument | Backend                                                                                                 |
 | ---------- | ------------------------------------------------------------------------------------------------------- |
@@ -96,6 +96,7 @@ GOES products are served by three backends, chosen by instrument (EHIS and SGPS 
 | SEISS      | The [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo) via the worker |
 | SEISS EHIS | InfluxDB measurement `ehis_flux`, read the same way as EXIS (a product-level override)                  |
 | SEISS SGPS | InfluxDB measurement `sgps_flux`, read the same way as EXIS (a product-level override)                  |
+| SEISS MPSH | InfluxDB measurement `mpsh_flux`, read the same way as EXIS (a product-level override)                  |
 
 SUVI, EXIS and MAG are filled by the worker's `suvi-pipeline`, `exis-pipeline` and `mag-pipeline`
 jobs (see [`suvi-pipeline.md`](suvi-pipeline.md), [`exis-pipeline.md`](exis-pipeline.md) and
@@ -104,22 +105,22 @@ jobs ingested have data, and any other day is an empty result. No adapter substi
 
 The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
-| Product    | Archive path                | Selection                                                                                        |
-| ---------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
-| SFXR       | InfluxDB `exis_irradiance`  | XRS-A or XRS-B, using each report's primary detector flag                                        |
-| SFEU       | InfluxDB `exis_irradiance`  | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio                           |
-| GEOF       | InfluxDB `mag_field`        | L2 1-minute EPN x/y/z or total magnitude (`mag-pipeline`)                                        |
-| MPSH       | SEIS/MPSH                   | Electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5                            |
-| SGPS       | InfluxDB `sgps_flux`        | L2 1-minute SGPS−X or SGPS+X differential channels or integral P11 (>500 MeV) (`seiss-pipeline`) |
-| SUVI bands | `solar.suvi_frames` + MinIO | Up to eight clean frames per query, spread evenly, most recent satellite only                    |
-| EHIS       | InfluxDB `ehis_flux`        | L1b 5-minute H, He, CNO, Ne-S or Cl-Ni flux in energy bands 1–5 (`seiss-pipeline`)               |
-| MPSL       | Present under SEIS          | Pending: NOAA publishes no L2 one-minute product for it (see `seiss-pipeline.md`)                |
+| Product    | Archive path                | Selection                                                                                            |
+| ---------- | --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| SFXR       | InfluxDB `exis_irradiance`  | XRS-A or XRS-B, using each report's primary detector flag                                            |
+| SFEU       | InfluxDB `exis_irradiance`  | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio                               |
+| GEOF       | InfluxDB `mag_field`        | L2 1-minute EPN x/y/z or total magnitude (`mag-pipeline`)                                            |
+| MPSH       | InfluxDB `mpsh_flux`        | L2 1-minute electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5 (`seiss-pipeline`) |
+| SGPS       | InfluxDB `sgps_flux`        | L2 1-minute SGPS−X or SGPS+X differential channels or integral P11 (>500 MeV) (`seiss-pipeline`)     |
+| SUVI bands | `solar.suvi_frames` + MinIO | Up to eight clean frames per query, spread evenly, most recent satellite only                        |
+| EHIS       | InfluxDB `ehis_flux`        | L1b 5-minute H, He, CNO, Ne-S or Cl-Ni flux in energy bands 1–5 (`seiss-pipeline`)                   |
+| MPSL       | Present under SEIS          | Pending: NOAA publishes no L2 one-minute product for it (see `seiss-pipeline.md`)                    |
 
 Operational SWPC channels are not interchangeable with L1b selectors. The former MPSH nominal energies are replaced with archive band/telescope identifiers. SGPS L1b does not supply the previous integral thresholds below 500 MeV. EPN components retain their native axis names; no undocumented coordinate transform or directional averaging is applied. Flux units are checked against NetCDF metadata.
 
 The web enqueues `query-goes-archive`; only the Python worker downloads and decodes NetCDF. The endpoint responds with `202` and `{ state: 'pending', jobId, progress }` during processing. The browser polls the same criteria with `jobId` every two seconds. Completed work returns the existing time-series response with GOES as the public source. Identical requests share a deterministic job identifier; current-day requests refresh in ten-minute buckets. BullMQ retains completed results for up to 24 hours, subject to its count cap. A new submission can retry failed work; polling never retries or re-enqueues expired jobs.
 
-The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` reads that store synchronously for EXIS, sampling at most 360 points per satellite inside the InfluxDB query, the scheduled `mag-pipeline` does the same for MAG (see [`mag-pipeline.md`](mag-pipeline.md)), the scheduled `seiss-pipeline` does the same for SEISS EHIS and SGPS (see [`seiss-pipeline.md`](seiss-pipeline.md)), and only SEISS MPSH still goes through `query-goes-archive`. The worker still accepts `SGPS` there, but `/datos` no longer routes it. The same holds for `GEOF`: `/datos` no longer routes MAG to it.
+The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` reads that store synchronously for EXIS, sampling at most 360 points per satellite inside the InfluxDB query, the scheduled `mag-pipeline` does the same for MAG (see [`mag-pipeline.md`](mag-pipeline.md)), the scheduled `seiss-pipeline` does the same for SEISS EHIS, SGPS and MPSH (see [`seiss-pipeline.md`](seiss-pipeline.md)), so no `/datos` product goes through `query-goes-archive` any more. The worker still accepts `MPSH` and `SGPS` there, but `/datos` no longer routes them; retiring the job is a follow-up. The same holds for `GEOF`: `/datos` no longer routes MAG to it.
 
 Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. The web reads InfluxDB through `INFLUXDB_HOST`, `INFLUXDB_TOKEN` and `INFLUXDB_DATABASE`, so deployment needs `INFLUXDB_*` on the web service as well (see [`deployment.md`](deployment.md#10-known-gaps)). SUVI, EXIS, MAG and provisional ROSAC are synchronous.
 
@@ -195,7 +196,7 @@ which backend serves the query:
 ```text
 route.ts → ScientificDataSourceManager ─ by query.source ─→ GOES  ─ by instrument ─→ SUVI → suvi_frames + MinIO
                                                                                       EXIS, MAG → InfluxDB
-                                                                                      SEISS EHIS, SGPS → InfluxDB (by product)
+                                                                                      SEISS EHIS, SGPS, MPSH → InfluxDB (by product)
                                                                                       SEISS → CITIC worker
                                                           → ROSAC ─ by instrument ─→ ROSAC-I1, ROSAC-I2 → simulation
 ```

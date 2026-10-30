@@ -19,3 +19,6 @@ const sgpsReadings = createGoesReadings({
 })
 
 export const querySgpsReadings = sgpsReadings.query
+
+/** Every stored SGPS reading in the window, for the CSV export; never the chart. */
+export const querySgpsReadingsFull = sgpsReadings.queryFull

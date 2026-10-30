@@ -11,7 +11,7 @@ stored in a private MinIO bucket, handed back as a **30-minute presigned link**,
 | ------------------- | -------------------- | ------------------------------------------------ |
 | GOES / EXIS         | `download_resources` | `download_resources` + `download_goes_resources` |
 | GOES / MAG          | `download_resources` | `download_resources` + `download_goes_resources` |
-| GOES / SEISS        | `download_resources` | not offered yet (needs a full-resolution path)   |
+| GOES / SEISS        | `download_resources` | `download_resources` + `download_goes_resources` |
 | GOES / SUVI         | not offered          | not offered                                      |
 | ROSAC / any         | `download_resources` | `download_resources`                             |
 
@@ -40,7 +40,7 @@ ScientificDataExplorer ── requestResourceDownload (Server Action, app/(publi
                               2. getPermissionsForRole  → the role's grants, read on this request
                               3. validateResourceDownload (app/services/downloads/downloadAccess.ts)
                                    invalid      the query or format does not parse, or a future GOES date
-                                   unsupported  the product offers no such format (SUVI, SEISS CSV, …)
+                                   unsupported  the product offers no such format (SUVI, …)
                                    forbidden    a required grant is missing; the message names it
 ```
 
@@ -74,17 +74,18 @@ again on every attempt, so retrying a failed download never skips a permission c
 ### Where the data comes from (`loaders.ts`)
 
 - **PNG** uses the same result the page shows (`scientificDataSources.query`). For EXIS and MAG
-  that result is sampled to 360 points. For SEISS it is the worker's `query-goes-archive` job:
-  the page passes along the `jobId` that answered its query, so the download reuses the finished
-  job instead of queueing a new one. While a job is still running, the action answers `pending`.
-  SEISS EHIS and SGPS are the exception: their charts read InfluxDB synchronously
-  ([`seiss-pipeline.md`](seiss-pipeline.md)), so their PNG never waits on a job. They still have no
-  CSV, because the download policy is per instrument and MPSH has no full-resolution path yet.
+  that result is sampled to 360 points, and so is SEISS, whose products (EHIS, SGPS, MPSH) all
+  read InfluxDB synchronously ([`seiss-pipeline.md`](seiss-pipeline.md)). The action still
+  forwards the `jobId` that answered the page's query and answers `pending` if a backend is still
+  working; no `/datos` product is served by an asynchronous job any more.
 - **EXIS CSV** reads InfluxDB **without sampling** (`queryExisReadingsFull`), keeping only the
   latest satellite in the window, as the chart does. A full SFXR day is about 86 000 rows, around
   3 MB.
 - **MAG CSV** does the same over `mag_field` (`queryMagReadingsFull`): at most 1 440 one-minute
   readings a day.
+- **SEISS CSV** reads the product's own measurement (`ehis_flux`, `sgps_flux`, `mpsh_flux`)
+  without sampling (`query{Ehis,Sgps,Mpsh}ReadingsFull`), dispatched on the product: at most
+  1 440 one-minute readings a day (288 for EHIS).
 - **ROSAC CSV** uses the simulated result, which is already complete.
 
 ### Exporters (`exporters/`)
@@ -152,11 +153,11 @@ read-only: no re-download, no delete, no CSV export.
 
 ## Adding an instrument or a format
 
-**An instrument** (say SEISS data):
+**An instrument** (say SUVI data):
 
-1. Add a reader that returns a `ScientificDataResult`. For SEISS, this means a full-resolution
-   path through the worker first, because `query-goes-archive` samples to 360 points. MAG did
-   this with a pipeline into InfluxDB ([`mag-pipeline.md`](mag-pipeline.md)).
+1. Add a reader that returns a `ScientificDataResult` at full resolution. MAG and SEISS did this
+   with a pipeline into InfluxDB ([`mag-pipeline.md`](mag-pipeline.md),
+   [`seiss-pipeline.md`](seiss-pipeline.md)).
 2. Add its formats to `DOWNLOAD_POLICIES` (`app/lib/downloads/policy.ts`).
 3. Add the loader to `DOWNLOAD_LOADERS` (`app/services/downloads/loaders.ts`).
    `loaders.test.ts` fails while a policy entry has no loader.
