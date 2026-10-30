@@ -1995,6 +1995,66 @@
         "reload": "Recargar página"
       }
     },
+    "users": {
+      "metaTitle": "Usuarios | Administración | LASCE",
+      "title": "Usuarios",
+      "description": "Consulta los usuarios registrados y sus roles actuales.",
+      "panelTitle": "Usuarios y roles",
+      "demoNotice": "Datos de prueba: los usuarios y roles mostrados son ficticios.",
+      "demoChanges": "Los cambios son de prueba y se pierden al recargar la página.",
+      "helpEditable": "Cada usuario puede tener un solo rol. Selecciona otro para cambiarlo o pulsa el rol actual para retirarlo. Se pedirá confirmación antes de aplicar el cambio.",
+      "helpReadOnly": "Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.",
+      "noRoles": "No hay roles disponibles para mostrar.",
+      "empty": "No hay usuarios para mostrar.",
+      "search": {
+        "label": "Buscar usuarios",
+        "placeholder": "Buscar por nombre o correo electrónico...",
+        "clear": "Limpiar búsqueda"
+      },
+      "results": "{count, plural, one {# usuario encontrado.} other {# usuarios encontrados.}}",
+      "noResults": "No se encontraron usuarios para “{query}”.",
+      "table": {
+        "region": "Tabla de usuarios y roles",
+        "label": "Usuarios y roles",
+        "name": "Nombre",
+        "email": "Correo electrónico"
+      },
+      "checkbox": "{role}: {name} ({email})",
+      "updated": "Rol actualizado para {name}: {role}.",
+      "removed": "Rol retirado de {name}.",
+      "details": {
+        "title": "Información del usuario",
+        "close": "Cerrar",
+        "fullName": "Nombre completo",
+        "email": "Correo electrónico",
+        "institution": "Institución",
+        "country": "País",
+        "institutionMissing": "No registrada",
+        "countryMissing": "No registrado"
+      },
+      "dialog": {
+        "changeTitle": "Confirmar cambio de rol",
+        "removeTitle": "Confirmar retiro de rol",
+        "assignQuestion": "¿Quieres asignar el rol <strong>{role}</strong> a <strong>{name}</strong>?",
+        "removeQuestion": "¿Quieres retirar el rol de <strong>{name}</strong>?",
+        "currentRole": "Rol actual: {roles}",
+        "noRole": "Sin rol",
+        "ownRole": "Estás modificando tu propio rol. Al dejar de ser administrador perderás el acceso a esta pantalla.",
+        "leftWithoutRole": "El usuario quedará sin un rol asignado.",
+        "replaces": "El nuevo rol reemplazará al actual. El usuario no conservará ambos roles.",
+        "confirmChange": "Sí, cambiar rol",
+        "confirmRemove": "Sí, retirar rol",
+        "cancel": "No, cancelar",
+        "savingStatus": "Guardando cambio de rol…",
+        "savingButton": "Guardando…",
+        "reload": "Recargar página"
+      },
+      "errors": {
+        "conflict": "La información de este usuario cambió. Recarga la página para ver sus roles actuales antes de volver a intentarlo.",
+        "unauthorized": "Tu sesión terminó o ya no tienes autorización para cambiar roles. Recarga la página para comprobar tu acceso.",
+        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo."
+      }
+    },
     "audit": {
       "metaTitle": "Auditoría | Administración | LASCE",
       "title": "Auditoría",

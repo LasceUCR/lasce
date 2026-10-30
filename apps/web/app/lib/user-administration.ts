@@ -13,7 +13,8 @@ export function availableRoles(): OverviewRole[] {
   return Object.values(UserRole).map((id) => ({ id, name: ROLE_LABELS[id] }))
 }
 
-export async function getUserOverview(): Promise<OverviewUser[]> {
+/** `locale` only chooses the language of the country name; names and e-mails are user data. */
+export async function getUserOverview(locale: string = 'es'): Promise<OverviewUser[]> {
   if (!(await userHasPermission('manage_users'))) throw new Error('Unauthorized')
   const users = await prisma.user.findMany({
     orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
@@ -31,7 +32,7 @@ export async function getUserOverview(): Promise<OverviewUser[]> {
     name: user.fullName,
     email: user.email,
     institution: user.institution,
-    country: countryName(user.countryCode),
+    country: countryName(user.countryCode, locale),
     roleIds: user.role ? [user.role] : [],
   }))
 }

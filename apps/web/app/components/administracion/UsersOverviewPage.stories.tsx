@@ -23,3 +23,14 @@ export const Demo: Story = {
 
 export const Empty: Story = { args: { ...Demo.args, users: [] } }
 export const NoRoles: Story = { args: { ...Demo.args, roles: [] } }
+
+/** In English: the page's text, search announcements and empty states follow the site's language. */
+export const English: Story = {
+  args: {
+    ...Demo.args,
+    title: 'Users',
+    description: 'View the registered users and their current roles.',
+    onSaveRoles: async () => {},
+  },
+  globals: { locale: 'en' },
+}

@@ -1995,6 +1995,66 @@
         "reload": "Reload page"
       }
     },
+    "users": {
+      "metaTitle": "Users | Administration | LASCE",
+      "title": "Users",
+      "description": "View the registered users and their current roles.",
+      "panelTitle": "Users and roles",
+      "demoNotice": "Sample data: the users and roles shown are fictional.",
+      "demoChanges": "Changes are for demonstration only and are lost when the page is reloaded.",
+      "helpEditable": "Each user can have a single role. Select another one to change it, or press the current role to remove it. You will be asked to confirm before the change is applied.",
+      "helpReadOnly": "View only. The checkboxes show the assigned roles and cannot be used to change them.",
+      "noRoles": "There are no roles to show.",
+      "empty": "There are no users to show.",
+      "search": {
+        "label": "Search users",
+        "placeholder": "Search by name or email address...",
+        "clear": "Clear search"
+      },
+      "results": "{count, plural, one {# user found.} other {# users found.}}",
+      "noResults": "No users found for “{query}”.",
+      "table": {
+        "region": "Users and roles table",
+        "label": "Users and roles",
+        "name": "Name",
+        "email": "Email address"
+      },
+      "checkbox": "{role}: {name} ({email})",
+      "updated": "Role updated for {name}: {role}.",
+      "removed": "Role removed from {name}.",
+      "details": {
+        "title": "User information",
+        "close": "Close",
+        "fullName": "Full name",
+        "email": "Email address",
+        "institution": "Institution",
+        "country": "Country",
+        "institutionMissing": "Not provided",
+        "countryMissing": "Not provided"
+      },
+      "dialog": {
+        "changeTitle": "Confirm role change",
+        "removeTitle": "Confirm role removal",
+        "assignQuestion": "Do you want to assign the role <strong>{role}</strong> to <strong>{name}</strong>?",
+        "removeQuestion": "Do you want to remove the role of <strong>{name}</strong>?",
+        "currentRole": "Current role: {roles}",
+        "noRole": "No role",
+        "ownRole": "You are changing your own role. Once you are no longer an administrator you will lose access to this screen.",
+        "leftWithoutRole": "The user will be left without an assigned role.",
+        "replaces": "The new role will replace the current one. The user will not keep both roles.",
+        "confirmChange": "Yes, change role",
+        "confirmRemove": "Yes, remove role",
+        "cancel": "No, cancel",
+        "savingStatus": "Saving the role change…",
+        "savingButton": "Saving…",
+        "reload": "Reload page"
+      },
+      "errors": {
+        "conflict": "This user's information changed. Reload the page to see their current roles before trying again.",
+        "unauthorized": "Your session ended or you are no longer authorized to change roles. Reload the page to check your access.",
+        "unknown": "We could not confirm the change. Reload the page to check the current role before trying again."
+      }
+    },
     "audit": {
       "metaTitle": "Audit trail | Administration | LASCE",
       "title": "Audit trail",
