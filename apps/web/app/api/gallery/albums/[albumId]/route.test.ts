@@ -201,10 +201,14 @@ describe('POST /api/gallery/albums/[albumId]', () => {
     expect(response.status).toBe(201)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(body.album).toMatchObject({ id: 'sub-1', slug: 'cimentacion' })
-    expect(mocks.createGallerySubAlbum).toHaveBeenCalledWith(albumId, {
-      ...subAlbumBody,
-      yearsLabel: null,
-    })
+    expect(mocks.createGallerySubAlbum).toHaveBeenCalledWith(
+      albumId,
+      {
+        ...subAlbumBody,
+        yearsLabel: null,
+      },
+      expect.anything(),
+    )
   })
 })
 
@@ -298,7 +302,7 @@ describe('PATCH /api/gallery/albums/[albumId]', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(body.album).toMatchObject({ id: albumId, title: 'ROSAC actualizado' })
-    expect(mocks.updateGalleryAlbum).toHaveBeenCalledWith(albumId, patchBody)
+    expect(mocks.updateGalleryAlbum).toHaveBeenCalledWith(albumId, patchBody, expect.anything())
   })
 })
 
@@ -342,6 +346,6 @@ describe('DELETE /api/gallery/albums/[albumId]', () => {
 
     expect(response.status).toBe(204)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
-    expect(mocks.deleteGalleryAlbum).toHaveBeenCalledWith(albumId)
+    expect(mocks.deleteGalleryAlbum).toHaveBeenCalledWith(albumId, expect.anything())
   })
 })

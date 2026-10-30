@@ -66,7 +66,8 @@ Three rules keep the transition still:
 
 `LoadingRegion` assumes a `loading` boolean the caller toggles, which fits a client component
 fetching its own data. A page that instead reads the database directly in a Server Component (as
-`/galeria`'s do, all `force-dynamic`) has no such boolean — the only "loading" moment is Next's own
+`/galeria` and `/publicaciones` do, all `force-dynamic`) has no such boolean — the only "loading"
+moment is Next's own
 Suspense boundary around that component's render, shown through the route's `loading.tsx` while it
 is pending and swapped automatically for the real page once it resolves. There, a page composes
 `Skeleton` (and `SkeletonText`) directly into its own markup — `GalleryPageSkeleton.tsx` and
@@ -74,7 +75,8 @@ is pending and swapped automatically for the real page once it resolves. There, 
 for `LoadingRegion`'s announcement, since there is no single mounted element to attach it to across
 the loading/loaded swap. A thrown `getGalleryAlbums` is caught the same native way, by the route's
 `error.tsx`, which never reuses the skeleton: it renders a `Notice tone="error"` and a retry button
-instead (`GalleryErrorState.tsx`).
+instead (`GalleryErrorState.tsx`). `/publicaciones` does the same for `getPublicationsPage`
+(`PublicationsPageSkeleton.tsx`, `PublicationsErrorState.tsx`).
 
 ## Accessibility
 
@@ -105,12 +107,15 @@ its loading message stays for screen readers only, while the placeholder fills t
 | `/galeria`                                         | `gallery/GalleryPageSkeleton.tsx`                         | The static hero renders for real; album groups get `GalleryTileSkeleton`s |
 | `/galeria/[slug]` and `/galeria/[slug]/[subalbum]` | `gallery/AlbumPageSkeleton.tsx`                           | Hero text, sub-album tiles (top-level album only) and the media grid      |
 | Every `/galeria` route's data fetch failing        | `gallery/GalleryErrorState.tsx` (via `galeria/error.tsx`) | A `Notice` and a "Reintentar" button                                      |
+| `/publicaciones`                                   | `publications/PublicationsPageSkeleton.tsx`               | Static hero, listing heading and back link; the toolbar, cards and pager  |
+| A failed load of `/publicaciones`                  | `publications/PublicationsErrorState.tsx`                 | A `Notice` and a retry button, in the site's language                     |
 
 ## Tests
 
 - The components: `skeleton/*.test.tsx`, and the Gallery's own
   `gallery/GalleryTileSkeleton.test.tsx`, `MediaTileSkeleton.test.tsx`,
-  `GalleryPageSkeleton.test.tsx`, `AlbumPageSkeleton.test.tsx` and `GalleryErrorState.test.tsx`.
+  `GalleryPageSkeleton.test.tsx`, `AlbumPageSkeleton.test.tsx` and `GalleryErrorState.test.tsx`,
+  and publications' `PublicationsPageSkeleton.test.tsx` and `PublicationsErrorState.test.tsx`.
 - Each view's loading, result, empty and error states: `SolarToday.test.tsx`,
   `SolarTodayLive.test.tsx`, `SuviImageSequence.test.tsx`, `ScientificDataExplorer.test.tsx`.
 - In a browser: `tests/e2e/skeleton-loading.spec.ts` for `/datos` (data API answered by the test;

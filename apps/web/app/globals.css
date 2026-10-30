@@ -1487,6 +1487,22 @@ a {
   margin-top: 28px;
 }
 
+/* Focused by `PublicationsExplorer` when the page changes: keep it clear of the sticky header. */
+.publications > h2 {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.publications > h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.publications-summary {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .content-empty {
   margin: 24px 0 0;
   padding: 16px 20px;
@@ -7342,5 +7358,134 @@ a.acknowledgments-card:focus-visible {
 
   .mgmt-form-actions .button {
     width: 100%;
+  }
+}
+
+/* Auditoría section (AuditTrailPage). */
+.audit-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+.audit-filters input[type='date'],
+.audit-filters input[type='date']::-webkit-datetime-edit,
+.audit-filters input[type='date']::-webkit-datetime-edit-fields-wrapper,
+.audit-filters input[type='date']::-webkit-datetime-edit-text,
+.audit-filters input[type='date']::-webkit-datetime-edit-day-field,
+.audit-filters input[type='date']::-webkit-datetime-edit-month-field,
+.audit-filters input[type='date']::-webkit-datetime-edit-year-field {
+  color: var(--ink);
+  -webkit-text-fill-color: var(--ink);
+  opacity: 1;
+}
+
+.audit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.audit-actions .button {
+  min-height: 44px;
+}
+
+.audit-count {
+  margin: 0 0 12px;
+  color: #355066;
+  font-size: 14px;
+}
+
+.audit-action {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.audit-date {
+  white-space: nowrap;
+}
+
+.audit-empty {
+  margin: 0;
+  color: #355066;
+}
+
+.audit-pagination {
+  margin-top: 24px;
+}
+
+/* Mobile: the Actividad reciente rows wrap their time under the title, and the Auditoría filters
+   and table stack instead of scrolling sideways. */
+@media (max-width: 640px) {
+  .admin-activity-list li {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .admin-activity-time {
+    flex: 1 0 100%;
+    padding-left: 36px;
+    white-space: normal;
+  }
+
+  .audit-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .audit-actions .button {
+    width: 100%;
+  }
+
+  .audit-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .audit-table,
+  .audit-table tbody,
+  .audit-table tr,
+  .audit-table td {
+    display: block;
+  }
+
+  .audit-table tr {
+    padding: 8px 0;
+    border-bottom: 1px solid #dce5ed;
+  }
+
+  .audit-table td {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px;
+    min-width: 0;
+    padding: 6px 12px;
+    border: 0;
+  }
+
+  .audit-table tr > * + * {
+    border-left: 0;
+  }
+
+  .audit-table td::before {
+    content: attr(data-label);
+    color: #244359;
+    font-weight: 600;
+  }
+
+  .audit-date,
+  .audit-action {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
