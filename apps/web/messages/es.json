@@ -1952,6 +1952,43 @@
         "reload": "Recargar página"
       }
     },
+    "downloads": {
+      "metaTitle": "Descargas | Administración | LASCE",
+      "title": "Descargas",
+      "description": "Historial y control de descargas de datos del laboratorio.",
+      "filters": {
+        "label": "Filtros del historial de descargas",
+        "from": "Desde",
+        "to": "Hasta",
+        "source": "Fuente",
+        "instrument": "Instrumento",
+        "format": "Formato",
+        "user": "Persona",
+        "allSources": "Todas las fuentes",
+        "allInstruments": "Todos los instrumentos",
+        "allFormats": "Todos los formatos",
+        "allUsers": "Todas las personas",
+        "apply": "Filtrar",
+        "clear": "Limpiar filtros"
+      },
+      "table": {
+        "label": "Historial de descargas",
+        "date": "Fecha y hora (UTC)",
+        "user": "Persona",
+        "source": "Fuente",
+        "instrument": "Instrumento",
+        "product": "Producto",
+        "format": "Formato",
+        "range": "Rango consultado"
+      },
+      "empty": "Aún no hay descargas registradas.",
+      "emptyFiltered": "Ninguna descarga coincide con los filtros.",
+      "results": "{count, plural, one {# descarga} other {# descargas}}",
+      "pageSummary": "Página {page} de {total}",
+      "paginationLabel": "Páginas del historial de descargas",
+      "deletedUser": "Cuenta eliminada",
+      "noRange": "—"
+    },
     "audit": {
       "metaTitle": "Auditoría | Administración | LASCE",
       "title": "Auditoría",
