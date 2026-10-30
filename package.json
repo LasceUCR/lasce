@@ -19,6 +19,7 @@
     "db:migrate": "pnpm --filter @lasce/db migrate",
     "db:migrate:deploy": "pnpm --filter @lasce/db migrate:deploy",
     "db:seed": "pnpm --filter @lasce/db seed",
+    "db:backfill:nosotros-researchers": "pnpm --filter @lasce/db backfill:nosotros-researchers",
     "db:studio": "pnpm --filter @lasce/db studio",
     "accounts:create": "pnpm --filter @lasce/db accounts:create",
     "contracts:export": "pnpm --filter @lasce/contracts export-schema",
