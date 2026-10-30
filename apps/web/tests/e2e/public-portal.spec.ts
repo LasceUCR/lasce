@@ -402,9 +402,11 @@ for (const album of galleryAlbumList) {
   test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
     await page.goto('/galeria')
 
-    const albumLink = page.locator(`a[href="/galeria/${album.slug}"]`)
-    await expect(albumLink).toBeVisible()
-    await albumLink.click()
+    await expect(page.getByRole('heading', { level: 2, name: album.title })).toBeVisible()
+    await page
+      .getByRole('region', { name: album.title })
+      .getByRole('link', { name: 'Ver álbum completo' })
+      .click()
 
     await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
     await expect(page.getByRole('heading', { level: 1, name: album.title })).toBeVisible()

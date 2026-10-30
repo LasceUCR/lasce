@@ -7,6 +7,7 @@ import type { GalleryAlbum } from '@/app/lib/gallery-schema'
 
 export interface GalleryPageProps {
   albums: readonly GalleryAlbum[]
+  uploader?: string
   canCreate?: boolean
   canEdit?: boolean
   canDelete?: boolean
@@ -14,6 +15,7 @@ export interface GalleryPageProps {
 
 export async function GalleryPage({
   albums,
+  uploader,
   canCreate = false,
   canEdit = false,
   canDelete = false,
@@ -31,9 +33,11 @@ export async function GalleryPage({
           <GalleryGroupSection
             album={album}
             key={album.slug}
+            uploader={uploader}
             canCreate={canCreate}
             canEdit={canEdit}
             canDelete={canDelete}
+            featuredImageLimit={10}
           />
         ))}
       </div>

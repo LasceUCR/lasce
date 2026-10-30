@@ -4431,7 +4431,7 @@ a {
 
 .gallery-group-heading {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
@@ -4443,7 +4443,22 @@ a {
   line-height: 1.2;
 }
 
+.gallery-group-title-editable {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding-right: 82px;
+}
+
+.gallery-group-title-editable > .editable-actions {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
 .gallery-group-meta {
+  display: block;
+  margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
 }
@@ -4469,19 +4484,8 @@ a {
   display: flex;
 }
 
-.gallery-grid > li > .gallery-tile,
 .card-grid.tile-list > li > .gallery-tile {
   flex: 1;
-}
-
-.gallery-grid-add {
-  min-height: 260px;
-}
-
-.gallery-grid-add > .add-item-card {
-  flex: 1;
-  min-height: 0;
-  border-radius: 8px;
 }
 
 .gallery-subalbum-list {
@@ -4497,16 +4501,6 @@ a {
   flex: 1;
 }
 
-/* In edit mode the album's cover tile fix. */
-.gallery-grid > li > .gallery-grid-editable {
-  display: flex;
-  flex: 1;
-}
-
-.gallery-grid-editable > .gallery-tile {
-  flex: 1;
-}
-
 .gallery-subalbum-add {
   min-height: 260px;
 }
@@ -4517,9 +4511,7 @@ a {
   border-radius: 8px;
 }
 
-/* Fixed tracks, not fractions: the cards keep one size and the grid wraps, so
-   an album with a single cover and no sub-albums shows one normal card rather
-   than one stretched across the page. */
+/* Keep the add-album card at the same width as album tiles. */
 .gallery-grid {
   margin-top: 16px;
   display: grid;
@@ -4578,18 +4570,23 @@ a.gallery-tile:focus-visible {
 }
 
 .gallery-tile-title {
+  display: -webkit-box;
+  min-height: 2.6em;
   margin: 0;
+  overflow: hidden;
   font-size: 14px;
   line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .gallery-tile-meta {
+  overflow: hidden;
   color: var(--muted);
   font-size: 12px;
-}
-
-.gallery-album-back {
-  padding-top: 28px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gallery-album-footer {
@@ -7485,4 +7482,66 @@ a.acknowledgments-card:focus-visible {
     white-space: normal;
     overflow-wrap: anywhere;
   }
+}
+
+.gallery-carousel-track {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin: 0;
+  padding: 4px 4px 12px;
+  overflow-x: auto;
+  overflow-anchor: none;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.gallery-carousel-track:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
+.gallery-carousel-track > li {
+  display: flex;
+  flex: 0 0 260px; /* same fixed track the grid used; matches AlbumTile `sizes` */
+  scroll-snap-align: start;
+}
+
+.gallery-carousel-track > li > .gallery-carousel-media-editable {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .gallery-carousel-track > li {
+    flex-basis: 80vw; /* peek at the next card on phones */
+  }
+}
+
+.gallery-carousel-image-button {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: zoom-in;
+}
+
+.gallery-carousel-image-button:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: -3px;
+}
+
+.gallery-carousel-image-button > .gallery-tile-media {
+  flex: 1 1 auto;
+  min-height: 0; /* lets it shrink instead of overflowing */
+  width: 100%;
 }

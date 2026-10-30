@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -56,35 +56,31 @@ describe('GalleryPage', () => {
     }
   })
 
-  test('links every album and every sub-album to a page of its own', async () => {
+  test('links each album to its detail page', async () => {
     await renderGalleryPage()
 
     for (const album of galleryAlbumList) {
-      expect(screen.getByRole('link', { name: new RegExp(album.title) })).toHaveAttribute(
+      const section = screen.getByRole('region', { name: album.title })
+      expect(within(section).getByRole('link', { name: 'Ver álbum completo' })).toHaveAttribute(
         'href',
         `/galeria/${album.slug}`,
       )
-
-      for (const subAlbum of album.subAlbums) {
-        expect(screen.getByRole('link', { name: new RegExp(subAlbum.title) })).toHaveAttribute(
-          'href',
-          `/galeria/${album.slug}/${subAlbum.slug}`,
-        )
-      }
     }
   })
 
-  // Every album is an h2 and every tile beneath it an h3, so the outline never
-  // skips a level and can be used to move around the page.
-  test('nests every tile heading under the heading of its album', async () => {
+  test('shows up to ten photos from each album and its sub-albums', async () => {
     await renderGalleryPage()
 
-    const expected = galleryAlbumList.flatMap((album) => [
-      album.title,
-      ...album.subAlbums.map((subAlbum) => subAlbum.title),
-    ])
-
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(expected.length)
+    for (const album of galleryAlbumList) {
+      const section = screen.getByRole('region', { name: album.title })
+      const expectedMedia = [
+        ...album.media,
+        ...album.subAlbums.flatMap((subAlbum) => subAlbum.media),
+      ].filter((media) => !media.isVideo && media.src)
+      expect(
+        within(section).getAllByRole('button', { name: /^Ver imagen a pantalla completa:/ }),
+      ).toHaveLength(Math.min(expectedMedia.length, 10))
+    }
   })
 
   test('presents each album block as its own list', async () => {
