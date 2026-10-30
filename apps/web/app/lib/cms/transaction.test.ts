@@ -24,7 +24,8 @@ vi.mock('@lasce/db', () => ({
   Prisma: { PrismaClientKnownRequestError: mocks.PrismaClientKnownRequestError },
 }))
 
-const { runWrite, uniqueViolationColumns, WriteAbort } = await import('./transaction')
+const { runAuditedDelete, runWrite, uniqueViolationColumns, WriteAbort } =
+  await import('./transaction')
 
 type Failure = { ok: false; reason: 'missing' } | { ok: false; reason: 'taken'; field: string }
 
@@ -137,5 +138,59 @@ describe('uniqueViolationColumns', () => {
     expect(uniqueViolationColumns(new Error('P2002'))).toBeNull()
     expect(uniqueViolationColumns({ code: 'P2002', meta: { target: ['slug'] } })).toBeNull()
     expect(uniqueViolationColumns(null)).toBeNull()
+  })
+})
+
+describe('runAuditedDelete', () => {
+  test('finds, removes and audits the record in one transaction', async () => {
+    const calls: string[] = []
+    const deleted = await runAuditedDelete(
+      async () => ({ title: 'Aurora' }),
+      async () => {
+        calls.push('remove')
+        return { count: 1 }
+      },
+      async (_tx, found) => {
+        calls.push(`audit ${found.title}`)
+      },
+    )
+
+    expect(deleted).toBe(true)
+    expect(calls).toEqual(['remove', 'audit Aurora'])
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1)
+  })
+
+  test('writes nothing when the record does not exist', async () => {
+    const remove = vi.fn()
+    const audit = vi.fn()
+
+    await expect(runAuditedDelete(async () => null, remove, audit)).resolves.toBe(false)
+    expect(remove).not.toHaveBeenCalled()
+    expect(audit).not.toHaveBeenCalled()
+  })
+
+  test('records nothing when another request removed the row first', async () => {
+    const audit = vi.fn()
+
+    await expect(
+      runAuditedDelete(
+        async () => ({}),
+        async () => ({ count: 0 }),
+        audit,
+      ),
+    ).resolves.toBe(false)
+    expect(audit).not.toHaveBeenCalled()
+  })
+
+  test('lets a failing audit write undo the delete by rejecting', async () => {
+    await expect(
+      runAuditedDelete(
+        async () => ({}),
+        async () => ({ count: 1 }),
+        async () => {
+          throw new Error('audit failed')
+        },
+      ),
+    ).rejects.toThrow('audit failed')
   })
 })

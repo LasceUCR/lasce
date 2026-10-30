@@ -60,6 +60,8 @@ afterAll(async () => {
   await prisma.$disconnect()
 })
 
+const actor = { id: 'user-1' }
+
 describe('research areas against PostgreSQL', () => {
   test('reads a complete area in Spanish and in English', async () => {
     const area = await createBilingual()
@@ -159,7 +161,10 @@ async function withFailingTranslations(run: () => Promise<void>) {
 
 describe('writing research areas against PostgreSQL', () => {
   test('creates an area and its translation together', async () => {
-    const { area } = await createResearchArea(researchAreaCreateSchema.parse({ content, src: SRC }))
+    const { area } = await createResearchArea(
+      researchAreaCreateSchema.parse({ content, src: SRC }),
+      actor,
+    )
 
     await expect(getResearchAreaById(area.id, 'en')).resolves.toMatchObject({
       title: `Created ${RUN}`,
@@ -182,6 +187,7 @@ describe('writing research areas against PostgreSQL', () => {
               en: { title: FAILING_TITLE, description: 'Changed.' },
             },
           }),
+          actor,
         ),
       ).rejects.toThrow()
     })
@@ -206,6 +212,7 @@ describe('writing research areas against PostgreSQL', () => {
               en: { title: `Attempt ${attempt} ${RUN}`, description: 'Description.' },
             },
           }),
+          actor,
         ),
       ),
     )
@@ -225,10 +232,18 @@ describe('writing research areas against PostgreSQL', () => {
   test('refuses a save against a stale version', async () => {
     const area = await createBilingual()
     const version = await editingVersion(area.id)
-    await updateResearchArea(area.id, researchAreaUpdateSchema.parse({ version, src: '/a.jpg' }))
+    await updateResearchArea(
+      area.id,
+      researchAreaUpdateSchema.parse({ version, src: '/a.jpg' }),
+      actor,
+    )
 
     expect(
-      await updateResearchArea(area.id, researchAreaUpdateSchema.parse({ version, src: '/b.jpg' })),
+      await updateResearchArea(
+        area.id,
+        researchAreaUpdateSchema.parse({ version, src: '/b.jpg' }),
+        actor,
+      ),
     ).toEqual({ ok: false, reason: 'conflict' })
   })
 
@@ -239,6 +254,7 @@ describe('writing research areas against PostgreSQL', () => {
     const result = await updateResearchArea(
       area.id,
       researchAreaUpdateSchema.parse({ version, src: '/nueva.jpg' }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -253,7 +269,10 @@ describe('writing research areas against PostgreSQL', () => {
   test('of two concurrent deletes, one succeeds and the other finds nothing', async () => {
     const area = await createBilingual()
 
-    const results = await Promise.all([deleteResearchArea(area.id), deleteResearchArea(area.id)])
+    const results = await Promise.all([
+      deleteResearchArea(area.id, actor),
+      deleteResearchArea(area.id, actor),
+    ])
 
     expect(results.sort()).toEqual([false, true])
   })

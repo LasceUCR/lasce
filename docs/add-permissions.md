@@ -41,6 +41,7 @@ Reuse the existing names when they already match:
 | `download_goes_resources` | GOES data (CSV) downloads on `/datos`           |
 | `manage_users`            | `/administracion/usuarios`                      |
 | `manage_permissions`      | `/administracion/permisos`                      |
+| `view_audit_log`          | `/administracion/auditoria`                     |
 
 Assistant defaults include `edit_components` only. Admin defaults include create, edit and
 delete. A visitor has none of those three, so they see the public page with no tools.

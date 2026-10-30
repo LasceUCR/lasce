@@ -23,7 +23,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await reorderIndicators(parsed.data)
+    const result = await reorderIndicators(parsed.data, guard.user)
     if (!result.ok) return orderConflict()
 
     return ok({ ids: parsed.data.ids })
