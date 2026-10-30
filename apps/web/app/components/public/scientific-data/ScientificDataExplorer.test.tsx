@@ -509,6 +509,29 @@ describe('ScientificDataExplorer', () => {
     expect(screen.queryByText(/CITIC|LASCE|NOAA/)).not.toBeInTheDocument()
   })
 
+  test('describes a result in the visitor language, whatever language the server named it in', () => {
+    renderWithIntl(
+      <ScientificDataExplorer {...withResultsArgs} sources={getScientificSources(en)} />,
+      { locale: 'en' },
+    )
+    const results = screen.getByRole('region', { name: 'Solar flux: X-rays (SFXR)' })
+
+    expect(within(results).getByText('Long band (0.1–0.8 nm)')).toBeInTheDocument()
+    expect(within(results).getByText(/^Historical level 1b observations\./)).toBeInTheDocument()
+    expect(within(results).getByText(/Observations from GOES\./)).toBeInTheDocument()
+    expect(within(results).queryByText(/Flujo solar|Banda larga|Observaciones/)).toBeNull()
+  })
+
+  test('offers the download formats in the visitor language', () => {
+    renderWithIntl(
+      <ScientificDataExplorer {...goesHolderDownloadArgs} sources={getScientificSources(en)} />,
+      { locale: 'en' },
+    )
+
+    expect(screen.getByRole('button', { name: 'Download chart (PNG)' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Download data (CSV)' })).toBeInTheDocument()
+  })
+
   test('switches instruments and their parameters without requesting observations', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)

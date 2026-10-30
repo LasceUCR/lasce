@@ -24,6 +24,8 @@ export interface SolarTodayProps {
   range: string
   date: string
   images: ScientificImage[]
+  /** The GOES spacecraft that took `images`, when known. */
+  satellite?: number
   state: 'loading' | 'success' | 'error'
   disabled?: boolean
   onProductChange: (product: ScientificProductCode) => void
@@ -37,6 +39,7 @@ export function SolarToday({
   range,
   date,
   images,
+  satellite,
   state,
   disabled,
   onProductChange,
@@ -152,7 +155,12 @@ export function SolarToday({
               strip.scrollTo({ left, behavior: 'instant' })
             }}
           >
-            <SuviImageSequence images={images} variant="strip" />
+            <SuviImageSequence
+              images={images}
+              productName={selected?.name ?? product}
+              satellite={satellite}
+              variant="strip"
+            />
           </div>
         )}
       </LoadingRegion>

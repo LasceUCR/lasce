@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
   findScientificProduct,
   type ScientificDataQuery,
+  type ScientificDataset,
   type TimeSeriesDataResult,
 } from '@/app/lib/scientific-data'
 
@@ -79,11 +80,8 @@ export interface GoesReadingsOptions {
   products: readonly string[]
   /** The error raised for any other product. */
   unsupportedMessage: string
-  provider: string
-  /** The notice of a chart; the sampling sentence is appended when it applies. */
-  notice: string
-  /** The notice of a full-resolution export. */
-  fullNotice: string
+  /** Names the provider and notice a result is described with (`scientificData.origins`). */
+  dataset: ScientificDataset
 }
 
 /**
@@ -119,12 +117,9 @@ export function createGoesReadings(options: GoesReadingsOptions) {
       query,
       readings.map(({ time, value }) => ({ timestamp: toIsoTimestamp(time), value })),
       {
-        provider: options.provider,
-        notice:
-          options.notice +
-          (sampled
-            ? ` Se muestran ${MAX_POINTS} observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.`
-            : ''),
+        dataset: options.dataset,
+        resolution: 'sampled',
+        ...(sampled ? { sampledPoints: MAX_POINTS } : {}),
         satellite: satellite ? satelliteNumber(satellite) : null,
       },
     )
@@ -143,8 +138,8 @@ export function createGoesReadings(options: GoesReadingsOptions) {
       query,
       readings.map(({ time, value }) => ({ timestamp: toIsoTimestamp(time), value })),
       {
-        provider: options.provider,
-        notice: options.fullNotice,
+        dataset: options.dataset,
+        resolution: 'full',
         satellite: satellite ? satelliteNumber(satellite) : null,
       },
     )

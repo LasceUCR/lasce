@@ -47,7 +47,8 @@ EXAMPLES: dict[str, dict[str, Any]] = {
         "lookbackDays": 3,
         "date": "2026-10-14",
     },
-    "ehis-pipeline": {
+    "seiss-pipeline": {
+        "product": "SGPS",
         "spacecraft": 19,
         "lookbackDays": 3,
         "date": "2026-10-14",

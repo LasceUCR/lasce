@@ -47,9 +47,8 @@ function resultBase(query: ScientificDataQuery) {
     parameter,
     origin: {
       kind: 'simulated' as const,
-      provider: 'Prototipo ROSAC — UCR',
-      notice:
-        'Datos simulados para preparar la integración de ROSAC. Los nombres, canales y valores reales se definirán con el equipo científico.',
+      dataset: 'rosac' as const,
+      resolution: 'sampled' as const,
     },
   }
 }

@@ -62,12 +62,9 @@ export async function queryCiticScientificData(
       throw new Error('Historical result does not match the query')
     }
     return buildGoesTimeSeriesResult(query, result.points, {
-      provider: 'GOES',
-      notice:
-        'Fuente: GOES. Observaciones históricas de nivel 1b. Se excluyen valores de relleno y observaciones marcadas con calidad degradada o inválida.' +
-        (result.sampled
-          ? ' Se muestran 360 observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.'
-          : ''),
+      dataset: 'goesArchive',
+      resolution: 'sampled',
+      ...(result.sampled ? { sampledPoints: 360 } : {}),
       satellite: result.satellite,
     })
   } catch (error) {

@@ -20,7 +20,6 @@ export const Default: Story = {
     images: [0, 3, 6, 9, 12].map((hour) => ({
       timestamp: `2026-09-25T${String(hour).padStart(2, '0')}:00:00Z`,
       imageUrl: '/images/decorative/Solar-Flare.png',
-      alt: `Imagen solar de demostración a las ${hour}:00 UTC`,
     })),
     onProductChange: () => {},
     onRangeChange: () => {},

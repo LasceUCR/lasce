@@ -42,7 +42,7 @@ describe('queryMockScientificData', () => {
     expect(result.timestamps).toHaveLength(3)
     expect(result.frequencies).toEqual([100, 200, 300, 400, 500, 600, 700, 800, 900, 1000])
     expect(result.cells).toHaveLength(30)
-    expect(result.origin.notice).toMatch(/simulados/i)
+    expect(result.origin).toMatchObject({ kind: 'simulated', dataset: 'rosac' })
   })
 
   test('rejects attempts to fabricate GOES data', async () => {

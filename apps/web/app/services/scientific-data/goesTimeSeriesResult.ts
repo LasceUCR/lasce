@@ -1,13 +1,15 @@
 import {
   findScientificProduct,
+  type ScientificDataOrigin,
   type ScientificDataPoint,
   type ScientificDataQuery,
   type TimeSeriesDataResult,
 } from '@/app/lib/scientific-data'
 
-export interface GoesTimeSeriesOrigin {
-  provider: string
-  notice: string
+export interface GoesTimeSeriesOrigin extends Pick<
+  ScientificDataOrigin,
+  'dataset' | 'resolution' | 'sampledPoints'
+> {
   satellite: number | null
 }
 
@@ -40,8 +42,9 @@ export function buildGoesTimeSeriesResult(
     points,
     origin: {
       kind: 'observed',
-      provider: origin.provider,
-      notice: origin.notice,
+      dataset: origin.dataset,
+      resolution: origin.resolution,
+      ...(origin.sampledPoints ? { sampledPoints: origin.sampledPoints } : {}),
       ...(origin.satellite ? { satellite: origin.satellite } : {}),
     },
   }
