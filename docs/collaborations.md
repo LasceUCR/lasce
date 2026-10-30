@@ -16,6 +16,15 @@ stories and tests, not a second public data source.
 
 ## Translation mapping
 
+| Content                                                                 | Source                                                                              | Localization                                                                 |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Metadata, hero, section heading, description and empty state            | `collaborations.meta`, `.hero`, `.section`                                          | Spanish/English catalogues                                                   |
+| National/international badge, acronym label, logo alt and website label | `collaborations.card`                                                               | Spanish/English catalogues; organization name interpolated for accessibility |
+| Organization's country                                                  | `research.collaborations.country` and `research.collaboration_translations.country` | Spanish base row, English translation keyed by collaboration id and locale   |
+| Official organization name, acronym, scope and display order            | `research.collaborations`                                                           | Shared, never translated                                                     |
+| Initiative title, paragraphs, logo alt text and link label              | `collaborations.initiatives`                                                        | Existing Spanish/English catalogues                                          |
+| Initiative logo files and external URLs                                 | `lib/collaborations.ts`                                                             | Shared, never translated                                                     |
+| Back link label                                                         | `common.backToHome`                                                                 | Spanish/English catalogues                                                   |
 | Content                                                      | Source                                                                              | Localization                                                               |
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | Metadata, hero, section heading, description and empty state | `collaborations.meta`, `.hero`, `.section`                                          | Spanish/English catalogues                                                 |
@@ -28,7 +37,7 @@ stories and tests, not a second public data source.
 | Back link label                                              | `common.backToHome`                                                                 | Spanish/English catalogues                                                 |
 
 Country is the only translatable text field in the current organization card. The optional
-organization website URL is a shared field; initiative logos and
+organization website URL and bundled logo path are shared fields; initiative logos and
 websites remain independent. `collaborationContent` defines the country with
 `defineTranslatableContent`, so the editor uses the same bilingual validation and review
 helpers as publications without treating official organization names as translated text.
@@ -45,7 +54,8 @@ URL; neither organization identity nor classification depends on translated labe
 
 Apply `20261013120000_add_collaboration_translations`,
 `20261014120000_add_collaboration_media`, and
-`20261014130000_drop_collaboration_logo_url` before running the updated page:
+`20261014130000_drop_collaboration_logo_url`, and
+`20261027010000_add_collaboration_partner_logos` before running the updated page:
 
 ```bash
 pnpm db:generate
@@ -58,6 +68,12 @@ needed. The media migration originally added nullable `logo_url` and `website_ur
 The follow-up migration removes the unused `logo_url` column while retaining `website_url`.
 It also removes any values stored in that placeholder column. The earlier migration remains
 unchanged to preserve migration history; collaboration logo uploads are deferred.
+LASCE-PUB-002 adds a nullable `logo_path` for the supplied, bundled institutional images.
+Its data migration matches the eight original partners by name, acronym and scope once, sets
+their local logo paths, and fills only empty website URLs. Thereafter media belongs to the
+record's UUID, so renaming or reordering a partner keeps its logo. Existing non-empty editor
+URLs are preserved. Records changed before this migration that no longer match the original
+identity require a reviewed data update; the migration does not guess associations by position.
 Restart `pnpm dev` after generating Prisma so its cached client
 knows the new fields. Translation rows are unique by `(collaboration_id, locale)` and are deleted with their
 organization. Existing data in other tables is untouched. Prisma owns the migration; the worker
@@ -108,8 +124,17 @@ it is an accordion that starts closed.
 ## Layout
 
 **Organizations.** A grid of cards: four columns above 1080px, two columns down to 760px, one
-column below that. Each card shows a "Nacional" or "Internacional" badge, the country, the
-organization name as an `h3`, and the acronym when the entry has one. There is no search field
+column below that. Each card shows a "Nacional" or "Internacional" badge, the country, an optional
+institutional logo, the organization name as an `h3`, and the acronym when the entry has one.
+Logos use Next Image in a 144px-high area, up to 240px wide, with `object-fit: contain` and a white
+background to preserve transparent dark marks. The source images are bundled unmodified under
+`public/brand/collaborations/`; Next serves appropriately sized variants. A missing logo omits
+the image area. Each logo is itself the hyperlink to the partner's official website, without a
+separate visible website label. If a partner has a website but no logo, its organization name
+becomes the link. A missing or unsafe website leaves the logo and name unlinked. HTTP(S) links
+without credentials open in a new tab with `noopener noreferrer`, have a 44px minimum target
+height and visible keyboard focus, and announce the organization and new-tab behavior. Logo
+alt text and accessible link names follow the visitor's language. There is no search field
 and no scope filter. An empty list renders the status text "No hay información de colaboraciones
 disponible actualmente." `.research-collaborations` uses 8px of top padding so the heading sits
 close to the hero lead.
@@ -140,9 +165,11 @@ The directory reads `Collaboration` records. An organization has:
 - `position`: display order, independent of language.
 - `acronym`: optional. A null value omits the "Siglas" line.
 - `websiteUrl`: optional HTTP(S) URL; empty values are stored as null.
+- `logoPath`: optional path to a bundled institutional image. This is public presentation data,
+  populated by the migration, not an editable upload or a form field.
 
-Organization logos are deferred. A later implementation will allow image uploads (such as PNG)
-and display them on organization cards; the current editor does not accept a logo URL.
+Managing organization logos is deferred. A later implementation may allow image uploads
+(such as PNG); the current editor does not accept a logo URL or alter `logoPath`.
 The existing gallery storage pattern keeps the file in MinIO and stores its object key as text
 in the database. That key identifies an uploaded file; it is not a URL entered by an editor.
 
@@ -180,16 +207,42 @@ integration suite checks real persistence, concurrent edits and rollback on tran
 against a disposable `*_test` database. `collaboration-cms.spec.ts` exercises the CRUD workflow,
 permission boundaries, accessibility and mobile editing in Playwright.
 
-## Managing initiatives
+## Partner resources (LASCE-PUB-002)
 
-Enable edit mode on the public page using an account with the corresponding content permission.
-Choose **Añadir iniciativa**, enter the title and description in Spanish and English, and optionally
-set the logo URL and official website. Save with **Confirmar**. Existing initiative cards expose
-edit and delete controls according to each permission; deletion requires confirmation.
+The eight PNGs were supplied by LASCE for this PBI. Official website identities were checked
+on 2026-10-26 using the institutions' own sites; these links are also the source references:
 
-Initiative content is stored in the database. Do not add production initiatives to
-`getCollaborationsContent` or the historical catalogue fixtures. See
-[initiatives.md](initiatives.md) for validation, translation review, concurrency and migration details.
+| Partner    | Bundled file under `public/brand/collaborations/` | Official website                                                                     |
+| ---------- | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| TEC        | `tec.png`                                         | [Tecnológico de Costa Rica](https://www.tec.ac.cr/)                                  |
+| ICE        | `ice.png`                                         | [Grupo ICE](https://www.grupoice.com/)                                               |
+| FACET, UNT | `facet-unt.png`                                   | [Facultad de Ciencias Exactas y Tecnología](https://www.facet.unt.edu.ar/)           |
+| INGV       | `ingv.png`                                        | [Istituto Nazionale di Geofisica e Vulcanologia](https://www.ingv.it/)               |
+| ICTP       | `ictp.png`                                        | [The Abdus Salam International Centre for Theoretical Physics](https://www.ictp.it/) |
+| OPM        | `observatoire-de-paris.png`                       | [Observatoire de Paris – PSL](https://observatoiredeparis.psl.eu/)                   |
+| SCiESMEX   | `sciesmex.png`                                    | [Servicio de Clima Espacial México](https://www.sciesmex.unam.mx/)                   |
+| INAOE      | `inaoe.png`                                       | [Instituto Nacional de Astrofísica, Óptica y Electrónica](https://www.inaoep.mx/)    |
+
+`CollaborationCard` stories and unit tests include missing-logo, missing-link and text-only
+states, translated accessible names, keyboard focus and unsafe-URL rejection. Section tests
+check every logo/link association. Database integration tests check migrated resources and
+association after renaming. `tests/e2e/collaboration-logos.spec.ts` checks loaded images,
+layout at 320/768/1440px, axe accessibility and a keyboard-triggered new tab with no opener.
+The external navigation test intercepts the partner response so it does not depend on a
+third-party server. Existing language, CMS and initiative tests cover the surrounding behavior.
+
+## Adding an initiative
+
+Add initiative structure to `getCollaborationsContent` in `app/lib/collaborations.ts` and its
+text to the `collaborations.initiatives` namespace in both catalogues:
+
+- `id`, `title`, and one or more `paragraphs`.
+- `href` and `linkLabel` together. Both are required for the button; either one missing hides it.
+- `logo`: optional `{ src, alt, width, height }`. `src` is a path under `apps/web/public/`
+  (the current marks are `/brand/logo-ISWI.png` and
+  `/brand/logo-Iniciativa-VLBI-Ibero-Americana.png`). `width` and `height` are the image's
+  intrinsic size, which Next.js uses for the pre-load box; CSS then scales the logo to the column.
+  `alt` is the accessible name of the image, so describe the mark. Do not leave it empty.
 
 A card without a logo is a single text column; a missing website omits its button. The section
 heading remains fixed interface copy under `collaborations.initiatives.title`.

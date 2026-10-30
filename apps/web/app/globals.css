@@ -83,6 +83,10 @@ body {
   line-height: 1.45;
 }
 
+body:has(.not-found) {
+  background: var(--space-black);
+}
+
 /* Body copy on the public site. Headings, navigation and buttons stay start-aligned. */
 .public-shell-content p {
   text-align: justify;
@@ -139,6 +143,10 @@ a {
   place-items: center;
   background: #000918;
   color: var(--white);
+}
+
+.not-found {
+  flex: 1;
 }
 
 .public-route-content {
@@ -507,6 +515,15 @@ a {
 .account-menu-panel button.account-menu-signout:disabled {
   cursor: progress;
   opacity: 0.6;
+}
+
+.account-menu-edit-mode {
+  padding: 8px 14px;
+}
+
+.account-menu-edit-mode .toggle {
+  width: 100%;
+  justify-content: space-between;
 }
 
 .login-link {
@@ -3291,6 +3308,29 @@ a {
   .mobile-menu nav button:disabled {
     cursor: progress;
     opacity: 0.6;
+  }
+
+  /* The "Modo edición" switch is a button too, but must keep its own track look. */
+  .mobile-edit-mode {
+    padding: 10px 12px;
+  }
+
+  .mobile-edit-mode .toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mobile-menu nav .mobile-edit-mode button.toggle-track {
+    width: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--white);
+  }
+
+  .mobile-menu nav .mobile-edit-mode button.toggle-track.toggle-track-on {
+    border-color: var(--blue);
+    background: var(--blue);
   }
 
   .indicator-grid {
@@ -6975,11 +7015,17 @@ a.acknowledgments-card:focus-visible {
     .news-article-form-actions,
     .nosotros-activity-form-actions,
     .confirm-dialog-actions,
-    .mgmt-form-actions
+    .mgmt-form-actions,
+    .cms-stage-photo-actions
   )
   .button {
   height: 44px;
   line-height: 1;
+}
+
+.cms-stage-photo-actions .button {
+  width: 100%;
+  white-space: nowrap;
 }
 
 @media (max-width: 760px) {

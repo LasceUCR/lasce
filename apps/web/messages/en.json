@@ -6,6 +6,12 @@
   "shell": {
     "skipToContent": "Skip to main content"
   },
+  "notFound": {
+    "metaTitle": "Page not found | LASCE",
+    "title": "Page not found",
+    "description": "The address you entered does not match any available page. Check the address or return to the home page.",
+    "kicker": "Error 404"
+  },
   "nav": {
     "goHome": "Go to the home page",
     "mainLabel": "Main navigation",
@@ -472,7 +478,8 @@
       "national": "National",
       "international": "International",
       "acronym": "Acronym:",
-      "website": "Official website"
+      "websiteLabel": "Official website of {name} (opens in a new tab)",
+      "logoAlt": "Logo of {name}"
     },
     "countries": {
       "cr": "Costa Rica",
@@ -553,7 +560,9 @@
     "section": {
       "title": "Academic activities",
       "description": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
-      "empty": "No academic activities are available at the moment."
+      "empty": "No academic activities are available at the moment.",
+      "loading": "Loading academic activities…",
+      "error": "Could not load academic activities. Please try again later."
     },
     "card": {
       "badge": "Academic activity"
@@ -1538,12 +1547,41 @@
   },
   "researchers": {
     "institutionLabel": "Institution",
+    "viewDescription": "View description of {name}",
+    "viewInstitution": "View institution of {name}",
+    "returnToCard": "Return to {name}'s card",
+    "descriptionRegion": "Description of {name}",
+    "previous": "Previous",
+    "next": "Next",
+    "editModalTitle": "Edit researcher",
+    "editLabel": "Edit {name}",
+    "deleteLabel": "Delete {name}",
+    "deleteConfirmTitle": "Delete researcher",
+    "deleteConfirmMessage": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "deleteConfirm": "Delete",
     "created": "Researcher added successfully.",
     "updated": "Researcher updated successfully.",
     "deleted": "Researcher deleted successfully.",
     "errors": {
       "unknown": "The researcher could not be saved. Try again.",
-      "deleteUnknown": "The researcher could not be deleted. Try again."
+      "deleteUnknown": "The researcher could not be deleted. Try again.",
+      "invalidId": "The researcher identifier is invalid.",
+      "notFound": "This researcher no longer exists. Another person may have deleted it; reload the page.",
+      "conflict": "The researcher changed since you opened it. Reload and reapply your changes.",
+      "saveError": "Could not save the researcher.",
+      "updateError": "Could not save changes.",
+      "deleteError": "Could not delete the researcher.",
+      "invalidBody": "Required fields are missing or invalid.",
+      "invalidJson": "The request body is not valid JSON."
+    },
+    "validation": {
+      "nameRequired": "Name is required.",
+      "institutionRequired": "Institution is required.",
+      "invalidEmail": "One or more email addresses are invalid.",
+      "maxEmails": "Maximum 2 contact email addresses.",
+      "versionRequired": "The researcher version is required and must match what was loaded.",
+      "confirmationsOnlyWithContent": "Confirmations only apply to a content update.",
+      "noFieldsToUpdate": "The request does not include any fields to update."
     },
     "editor": {
       "addCard": "Add researcher",
@@ -1553,6 +1591,7 @@
       "deleteConfirmTitle": "Delete researcher",
       "deleteConfirmMessage": "Do you want to delete \"{name}\"? This action cannot be undone.",
       "deleteConfirm": "Delete",
+      "deleteCancel": "Cancel",
       "photoLabel": "Photo",
       "photoHelp": "Optional. Researcher portrait, in JPG or PNG format.",
       "roleLabel": "Role",
@@ -1563,6 +1602,11 @@
       "institutionRequired": "Institution is required.",
       "descriptionLabel": "Description",
       "contactLabel": "Contact",
+      "contactCount": "{count, plural, =0 {No emails} one {# email} other {# emails}}",
+      "contactListLabel": "Contact emails",
+      "emailPlaceholder": "Type an email...",
+      "emailPlaceholderAnother": "Type another email...",
+      "emailRequired": "Email is required.",
       "addContact": "Add contact",
       "deleteContact": "Delete {address}",
       "addContactTitle": "Add contact",
@@ -1952,6 +1996,103 @@
         "reload": "Reload page"
       }
     },
+    "downloads": {
+      "metaTitle": "Downloads | Administration | LASCE",
+      "title": "Downloads",
+      "description": "History and control of the laboratory data downloads.",
+      "filters": {
+        "label": "Download history filters",
+        "from": "From",
+        "to": "To",
+        "source": "Source",
+        "instrument": "Instrument",
+        "format": "Format",
+        "user": "Person",
+        "allSources": "All sources",
+        "allInstruments": "All instruments",
+        "allFormats": "All formats",
+        "allUsers": "All people",
+        "apply": "Filter",
+        "clear": "Clear filters"
+      },
+      "table": {
+        "label": "Download history",
+        "date": "Date and time (UTC)",
+        "user": "Person",
+        "source": "Source",
+        "instrument": "Instrument",
+        "product": "Product",
+        "format": "Format",
+        "range": "Queried range"
+      },
+      "empty": "No downloads have been recorded yet.",
+      "emptyFiltered": "No downloads match the filters.",
+      "results": "{count, plural, one {# download} other {# downloads}}",
+      "pageSummary": "Page {page} of {total}",
+      "paginationLabel": "Download history pages",
+      "deletedUser": "Deleted account",
+      "noRange": "—"
+    },
+    "users": {
+      "metaTitle": "Users | Administration | LASCE",
+      "title": "Users",
+      "description": "View the registered users and their current roles.",
+      "panelTitle": "Users and roles",
+      "demoNotice": "Sample data: the users and roles shown are fictional.",
+      "demoChanges": "Changes are for demonstration only and are lost when the page is reloaded.",
+      "helpEditable": "Each user can have a single role. Select another one to change it, or press the current role to remove it. You will be asked to confirm before the change is applied.",
+      "helpReadOnly": "View only. The checkboxes show the assigned roles and cannot be used to change them.",
+      "noRoles": "There are no roles to show.",
+      "empty": "There are no users to show.",
+      "search": {
+        "label": "Search users",
+        "placeholder": "Search by name or email address...",
+        "clear": "Clear search"
+      },
+      "results": "{count, plural, one {# user found.} other {# users found.}}",
+      "noResults": "No users found for “{query}”.",
+      "table": {
+        "region": "Users and roles table",
+        "label": "Users and roles",
+        "name": "Name",
+        "email": "Email address"
+      },
+      "checkbox": "{role}: {name} ({email})",
+      "updated": "Role updated for {name}: {role}.",
+      "removed": "Role removed from {name}.",
+      "details": {
+        "title": "User information",
+        "close": "Close",
+        "fullName": "Full name",
+        "email": "Email address",
+        "institution": "Institution",
+        "country": "Country",
+        "institutionMissing": "Not provided",
+        "countryMissing": "Not provided"
+      },
+      "dialog": {
+        "changeTitle": "Confirm role change",
+        "removeTitle": "Confirm role removal",
+        "assignQuestion": "Do you want to assign the role <strong>{role}</strong> to <strong>{name}</strong>?",
+        "removeQuestion": "Do you want to remove the role of <strong>{name}</strong>?",
+        "currentRole": "Current role: {roles}",
+        "noRole": "No role",
+        "ownRole": "You are changing your own role. Once you are no longer an administrator you will lose access to this screen.",
+        "leftWithoutRole": "The user will be left without an assigned role.",
+        "replaces": "The new role will replace the current one. The user will not keep both roles.",
+        "confirmChange": "Yes, change role",
+        "confirmRemove": "Yes, remove role",
+        "cancel": "No, cancel",
+        "savingStatus": "Saving the role change…",
+        "savingButton": "Saving…",
+        "reload": "Reload page"
+      },
+      "errors": {
+        "conflict": "This user's information changed. Reload the page to see their current roles before trying again.",
+        "unauthorized": "Your session ended or you are no longer authorized to change roles. Reload the page to check your access.",
+        "unknown": "We could not confirm the change. Reload the page to check the current role before trying again."
+      }
+    },
     "audit": {
       "metaTitle": "Audit trail | Administration | LASCE",
       "title": "Audit trail",
@@ -2058,7 +2199,7 @@
       },
       "download_resources": {
         "label": "Download resources",
-        "description": "Download laboratory resources and view the download history.",
+        "description": "Download laboratory resources from the data page.",
         "denied": "You are not authorized to access downloads."
       },
       "download_goes_resources": {
@@ -2080,6 +2221,11 @@
         "label": "View the audit trail",
         "description": "Review the log of the portal's administrative actions.",
         "denied": "You are not authorized to view the audit trail."
+      },
+      "view_download_history": {
+        "label": "View the download history",
+        "description": "See who downloaded which laboratory resources and when.",
+        "denied": "You are not authorized to view the download history."
       }
     },
     "accessDenied": {
@@ -2090,6 +2236,7 @@
     "signIn": "Sign in",
     "myAccount": "My account",
     "administration": "Administration",
+    "editMode": "Edit mode",
     "signOut": "Sign out",
     "signingOut": "Signing out...",
     "roles": {
