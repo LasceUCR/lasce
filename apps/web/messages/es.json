@@ -2058,7 +2058,7 @@
       },
       "download_resources": {
         "label": "Descargar recursos",
-        "description": "Descargar recursos del laboratorio y consultar el historial de descargas.",
+        "description": "Descargar recursos del laboratorio desde la página de datos.",
         "denied": "No tienes autorización para acceder a las descargas."
       },
       "download_goes_resources": {
@@ -2080,6 +2080,11 @@
         "label": "Consultar la auditoría",
         "description": "Consultar el registro de acciones administrativas del portal.",
         "denied": "No tienes autorización para consultar la auditoría."
+      },
+      "view_download_history": {
+        "label": "Consultar el historial de descargas",
+        "description": "Consultar quién descargó qué recursos del laboratorio y cuándo.",
+        "denied": "No tienes autorización para consultar el historial de descargas."
       }
     },
     "accessDenied": {

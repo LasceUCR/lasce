@@ -21,7 +21,7 @@ export const adminSections = [
     slug: 'descargas',
     title: 'Descargas',
     description: 'Historial y control de descargas de datos del laboratorio.',
-    permission: 'download_resources',
+    permission: 'view_download_history',
   },
   {
     slug: 'usuarios',

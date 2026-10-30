@@ -2058,7 +2058,7 @@
       },
       "download_resources": {
         "label": "Download resources",
-        "description": "Download laboratory resources and view the download history.",
+        "description": "Download laboratory resources from the data page.",
         "denied": "You are not authorized to access downloads."
       },
       "download_goes_resources": {
@@ -2080,6 +2080,11 @@
         "label": "View the audit trail",
         "description": "Review the log of the portal's administrative actions.",
         "denied": "You are not authorized to view the audit trail."
+      },
+      "view_download_history": {
+        "label": "View the download history",
+        "description": "See who downloaded which laboratory resources and when.",
+        "denied": "You are not authorized to view the download history."
       }
     },
     "accessDenied": {
