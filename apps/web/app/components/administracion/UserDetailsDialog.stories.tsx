@@ -8,3 +8,5 @@ type Story = StoryObj<typeof UserDetailsDialog>
 
 export const Default: Story = { args: { user: demoUsers[0]!, onClose: () => {} } }
 export const MissingDetails: Story = { args: { ...Default.args, user: demoUsers[3]! } }
+
+export const English: Story = { args: { ...MissingDetails.args }, globals: { locale: 'en' } }

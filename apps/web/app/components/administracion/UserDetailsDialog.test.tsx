@@ -1,10 +1,14 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { UserDetailsDialog, type UserDetailsDialogProps } from './UserDetailsDialog'
 import { Default, MissingDetails } from './UserDetailsDialog.stories'
 import { UsersOverviewPage, type UsersOverviewPageProps } from './UsersOverviewPage'
 import { Demo } from './UsersOverviewPage.stories'
+import type { ReactElement } from 'react'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import type { Locale } from '@/app/lib/i18n/config'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 // JSDOM does not implement the native dialog lifecycle.
 const originalShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal')
@@ -33,6 +37,11 @@ afterEach(() => {
     else Reflect.deleteProperty(HTMLDialogElement.prototype, name)
   }
 })
+
+/** The component as the page renders it: with the site's catalogue and the toast provider. */
+function render(ui: ReactElement, locale: Locale = 'es') {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, { locale })
+}
 
 describe('UserDetailsDialog', () => {
   test('opens the selected user details and restores focus when closed without losing search', async () => {
@@ -72,5 +81,18 @@ describe('UserDetailsDialog', () => {
     const user = { ...args.user, password: 'must-never-be-rendered' }
     render(<UserDetailsDialog {...args} user={user} />)
     expect(screen.queryByText('must-never-be-rendered')).not.toBeInTheDocument()
+  })
+})
+
+describe('UserDetailsDialog in English', () => {
+  test('labels the profile fields and the missing values in English', () => {
+    render(<UserDetailsDialog {...(MissingDetails.args as UserDetailsDialogProps)} />, 'en')
+
+    expect(screen.getByRole('heading', { name: 'User information' })).toBeVisible()
+    expect(screen.getByText('Full name')).toBeVisible()
+    expect(screen.getByText('Email address')).toBeVisible()
+    expect(screen.getByText('Institution')).toBeVisible()
+    expect(screen.getAllByText('Not provided')).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Close' })).toBeVisible()
   })
 })
