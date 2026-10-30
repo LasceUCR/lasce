@@ -35,6 +35,7 @@ describe('admin-sections', () => {
       ['descargas', 'download_resources'],
       ['usuarios', 'manage_users'],
       ['permisos', 'manage_permissions'],
+      ['auditoria', 'view_audit_log'],
       ['infraestructura', undefined],
     ])
   })
@@ -45,6 +46,7 @@ describe('admin-sections', () => {
       '/administracion/descargas',
       '/administracion/usuarios',
       '/administracion/permisos',
+      '/administracion/auditoria',
       '/administracion/infraestructura',
     ])
   })
@@ -69,6 +71,7 @@ describe('admin-sections', () => {
       'Descargas',
       'Usuarios',
       'Permisos',
+      'Auditoría',
       'Infraestructura',
     ])
     expect(visibleLabels(PERMISSIONS)).toHaveLength(adminMenu.length)

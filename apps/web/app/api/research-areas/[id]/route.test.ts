@@ -106,10 +106,14 @@ describe('PATCH /api/research-areas/[id]', () => {
     const { response, body } = await patch({ version: VERSION, src: '/nueva.jpg' })
 
     expect(response.status).toBe(200)
-    expect(mocks.updateResearchArea).toHaveBeenCalledWith(ID, {
-      version: VERSION,
-      src: '/nueva.jpg',
-    })
+    expect(mocks.updateResearchArea).toHaveBeenCalledWith(
+      ID,
+      {
+        version: VERSION,
+        src: '/nueva.jpg',
+      },
+      expect.anything(),
+    )
     expect(body).toEqual({ area: { id: ID } })
   })
 
@@ -185,7 +189,7 @@ describe('DELETE /api/research-areas/[id]', () => {
     const response = await remove()
 
     expect(response.status).toBe(204)
-    expect(mocks.deleteResearchArea).toHaveBeenCalledWith(ID)
+    expect(mocks.deleteResearchArea).toHaveBeenCalledWith(ID, expect.anything())
   })
 
   test('answers 404 when there was nothing to delete', async () => {
