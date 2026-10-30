@@ -1995,6 +1995,43 @@
         "reload": "Reload page"
       }
     },
+    "downloads": {
+      "metaTitle": "Downloads | Administration | LASCE",
+      "title": "Downloads",
+      "description": "History and control of the laboratory data downloads.",
+      "filters": {
+        "label": "Download history filters",
+        "from": "From",
+        "to": "To",
+        "source": "Source",
+        "instrument": "Instrument",
+        "format": "Format",
+        "user": "Person",
+        "allSources": "All sources",
+        "allInstruments": "All instruments",
+        "allFormats": "All formats",
+        "allUsers": "All people",
+        "apply": "Filter",
+        "clear": "Clear filters"
+      },
+      "table": {
+        "label": "Download history",
+        "date": "Date and time (UTC)",
+        "user": "Person",
+        "source": "Source",
+        "instrument": "Instrument",
+        "product": "Product",
+        "format": "Format",
+        "range": "Queried range"
+      },
+      "empty": "No downloads have been recorded yet.",
+      "emptyFiltered": "No downloads match the filters.",
+      "results": "{count, plural, one {# download} other {# downloads}}",
+      "pageSummary": "Page {page} of {total}",
+      "paginationLabel": "Download history pages",
+      "deletedUser": "Deleted account",
+      "noRange": "—"
+    },
     "users": {
       "metaTitle": "Users | Administration | LASCE",
       "title": "Users",
@@ -2161,7 +2198,7 @@
       },
       "download_resources": {
         "label": "Download resources",
-        "description": "Download laboratory resources and view the download history.",
+        "description": "Download laboratory resources from the data page.",
         "denied": "You are not authorized to access downloads."
       },
       "download_goes_resources": {
@@ -2183,6 +2220,11 @@
         "label": "View the audit trail",
         "description": "Review the log of the portal's administrative actions.",
         "denied": "You are not authorized to view the audit trail."
+      },
+      "view_download_history": {
+        "label": "View the download history",
+        "description": "See who downloaded which laboratory resources and when.",
+        "denied": "You are not authorized to view the download history."
       }
     },
     "accessDenied": {
@@ -2193,6 +2235,7 @@
     "signIn": "Sign in",
     "myAccount": "My account",
     "administration": "Administration",
+    "editMode": "Edit mode",
     "signOut": "Sign out",
     "signingOut": "Signing out...",
     "roles": {

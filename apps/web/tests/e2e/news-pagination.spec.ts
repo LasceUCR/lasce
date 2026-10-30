@@ -4,6 +4,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
 import { createSignedInUser } from './helpers/admin-users'
+import { enableEditMode } from './helpers/edit-mode'
 
 // LASCE-PAG-001: the news listing is searched and paginated on the server, 10 items per page.
 // Every test creates its own 23 items, tagged so a search finds them and nothing else, and
@@ -335,7 +336,7 @@ test('refreshes the results and the totals after news is added or deleted', asyn
   const added = `Noticia agregada ${fixtures.tag}`
   try {
     await page.goto('/administracion')
-    await page.getByRole('switch', { name: 'Modo edición' }).click()
+    await enableEditMode(page)
 
     // Adding an item keeps the page shown and counts it in the totals.
     await page.goto(search(fixtures.tag, 2))

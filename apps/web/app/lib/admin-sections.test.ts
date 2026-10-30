@@ -32,7 +32,7 @@ describe('admin-sections', () => {
     ])
 
     expect(matrix).toEqual([
-      ['descargas', 'download_resources'],
+      ['descargas', 'view_download_history'],
       ['usuarios', 'manage_users'],
       ['permisos', 'manage_permissions'],
       ['auditoria', 'view_audit_log'],
@@ -56,14 +56,9 @@ describe('admin-sections', () => {
   })
 
   test('adds each section as its grant is held', () => {
-    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.VISITOR)).toEqual([
-      'Resumen',
-      'Descargas',
-      'Infraestructura',
-    ])
+    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.VISITOR)).toEqual(['Resumen', 'Infraestructura'])
     expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ASSISTANT)).toEqual([
       'Resumen',
-      'Descargas',
       'Infraestructura',
     ])
     expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ADMIN)).toEqual([

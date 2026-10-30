@@ -1,9 +1,11 @@
 import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, test, vi } from 'vitest'
+import type { ReactElement } from 'react'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { shortName } from '@/app/lib/auth/account'
-import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+import { renderWithIntl as renderIntl, type RenderWithIntlOptions } from '@/app/lib/i18n/testing'
 
 import { AccountMenu, type AccountMenuProps } from './AccountMenu'
 import { Administrator, Open, SigningOut, Visitor } from './AccountMenu.stories'
@@ -16,12 +18,25 @@ const signingOutArgs = SigningOut.args as AccountMenuProps
 // The trigger's own text is the short name, same as NavGroup.test.tsx finds
 // "Recursos" by its text; { selector: 'summary' } is needed only because the
 // open panel repeats the full name, which would otherwise also match.
+function renderMenu(ui: ReactElement, options?: RenderWithIntlOptions) {
+  return renderIntl(<EditModeProvider>{ui}</EditModeProvider>, options)
+}
+
 const trigger = () => screen.getByText(shortName(visitorArgs.account), { selector: 'summary' })
 const details = () => trigger().closest('details') as HTMLDetailsElement
 
+// The edit mode is kept in `localStorage`, which outlives a test inside one file: start each from off.
+beforeEach(() => {
+  try {
+    window.localStorage.clear()
+  } catch {
+    // Storage unavailable in this runtime: nothing was stored either.
+  }
+})
+
 describe('AccountMenu', () => {
   test('shows the short name on the trigger, closed by default', () => {
-    renderWithIntl(<AccountMenu {...visitorArgs} />)
+    renderMenu(<AccountMenu {...visitorArgs} />)
 
     expect(details()).not.toHaveAttribute('open')
     expect(trigger()).toHaveTextContent(shortName(visitorArgs.account))
@@ -29,7 +44,7 @@ describe('AccountMenu', () => {
 
   test('opens to show the name, role, "Mi cuenta" and "Cerrar sesión", but not "Administración" for a visitor', async () => {
     const user = userEvent.setup()
-    renderWithIntl(<AccountMenu {...visitorArgs} />)
+    renderMenu(<AccountMenu {...visitorArgs} />)
 
     await user.click(trigger())
 
@@ -42,7 +57,7 @@ describe('AccountMenu', () => {
   })
 
   test('shows "Administración" for an administrator, linking to /administracion', () => {
-    renderWithIntl(<AccountMenu {...adminArgs} />)
+    renderMenu(<AccountMenu {...adminArgs} />)
 
     expect(screen.getByRole('link', { name: 'Administración' })).toHaveAttribute(
       'href',
@@ -53,7 +68,7 @@ describe('AccountMenu', () => {
   test('signs out only after confirming', async () => {
     const user = userEvent.setup()
     const onSignOut = vi.fn()
-    renderWithIntl(<AccountMenu {...openArgs} onSignOut={onSignOut} />)
+    renderMenu(<AccountMenu {...openArgs} onSignOut={onSignOut} />)
 
     await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
     expect(onSignOut).not.toHaveBeenCalled()
@@ -66,14 +81,14 @@ describe('AccountMenu', () => {
   })
 
   test('disables the sign-out control and says so while signing out', () => {
-    renderWithIntl(<AccountMenu {...signingOutArgs} />)
+    renderMenu(<AccountMenu {...signingOutArgs} />)
 
     expect(screen.getByRole('button', { name: 'Cerrando sesión...' })).toBeDisabled()
   })
 
   test('closes on Escape and returns focus to the trigger', async () => {
     const user = userEvent.setup()
-    renderWithIntl(<AccountMenu {...openArgs} />)
+    renderMenu(<AccountMenu {...openArgs} />)
 
     screen.getByRole('link', { name: 'Mi cuenta' }).focus()
     await user.keyboard('{Escape}')
@@ -83,7 +98,7 @@ describe('AccountMenu', () => {
   })
 
   test('closes on a pointer outside the group', () => {
-    renderWithIntl(<AccountMenu {...openArgs} />)
+    renderMenu(<AccountMenu {...openArgs} />)
 
     fireEvent.pointerDown(document.body)
 
@@ -92,7 +107,7 @@ describe('AccountMenu', () => {
 
   test('closes when focus leaves the group', async () => {
     const user = userEvent.setup()
-    renderWithIntl(
+    renderMenu(
       <>
         <AccountMenu {...openArgs} />
         <a href="/noticias">Noticias</a>
@@ -108,5 +123,56 @@ describe('AccountMenu', () => {
 
     expect(screen.getByRole('link', { name: 'Noticias' })).toHaveFocus()
     expect(details()).not.toHaveAttribute('open')
+  })
+
+  test('offers the "Modo edición" switch to an administrator and flips the shared state', async () => {
+    const user = userEvent.setup()
+    renderMenu(<AccountMenu {...adminArgs} />)
+
+    const edit = screen.getByRole('switch', { name: 'Modo edición' })
+    expect(edit).toHaveAttribute('aria-checked', 'false')
+
+    await user.click(edit)
+
+    expect(screen.getByRole('switch', { name: 'Modo edición' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(details()).toHaveAttribute('open')
+  })
+
+  test('offers the switch to an assistant but not to a visitor', () => {
+    const { unmount } = renderMenu(<AccountMenu {...adminArgs} role="ASSISTANT" />)
+    expect(screen.getByRole('switch', { name: 'Modo edición' })).toBeInTheDocument()
+    unmount()
+
+    renderMenu(<AccountMenu {...openArgs} />)
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+  })
+
+  test('toggles with the keyboard without closing the menu', async () => {
+    const user = userEvent.setup()
+    renderMenu(<AccountMenu {...adminArgs} />)
+
+    screen.getByRole('link', { name: 'Mi cuenta' }).focus()
+    await user.tab()
+    expect(screen.getByRole('switch', { name: 'Modo edición' })).toHaveFocus()
+    await user.keyboard('{Enter}')
+
+    expect(screen.getByRole('switch', { name: 'Modo edición' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(details()).toHaveAttribute('open')
+  })
+
+  test('speaks English: the switch and the other items follow the site language', () => {
+    renderMenu(<AccountMenu {...adminArgs} />, { locale: 'en' })
+
+    expect(screen.getByRole('switch', { name: 'Edit mode' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Administration' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'My account' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeVisible()
+    expect(document.body.textContent).not.toMatch(/account\.\w+/)
   })
 })

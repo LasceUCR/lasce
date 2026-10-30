@@ -517,6 +517,15 @@ a {
   opacity: 0.6;
 }
 
+.account-menu-edit-mode {
+  padding: 8px 14px;
+}
+
+.account-menu-edit-mode .toggle {
+  width: 100%;
+  justify-content: space-between;
+}
+
 .login-link {
   /* .header-actions now stretches its children to the full header height
      (to match .desktop-nav, see below); keep the pill at its own size,
@@ -3299,6 +3308,29 @@ a {
   .mobile-menu nav button:disabled {
     cursor: progress;
     opacity: 0.6;
+  }
+
+  /* The "Modo edición" switch is a button too, but must keep its own track look. */
+  .mobile-edit-mode {
+    padding: 10px 12px;
+  }
+
+  .mobile-edit-mode .toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mobile-menu nav .mobile-edit-mode button.toggle-track {
+    width: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--white);
+  }
+
+  .mobile-menu nav .mobile-edit-mode button.toggle-track.toggle-track-on {
+    border-color: var(--blue);
+    background: var(--blue);
   }
 
   .indicator-grid {

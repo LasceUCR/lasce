@@ -5,6 +5,7 @@ import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { AuditTrailPage } from '@/app/components/administracion/AuditTrailPage'
 import { AccessDenied } from '@/app/components/administracion/AccessDenied'
+import { DownloadHistoryPage } from '@/app/components/administracion/DownloadHistoryPage'
 import { AdminPlaceholder } from '@/app/components/administracion/AdminPlaceholder'
 import { RolePermissionsEditor } from '@/app/components/administracion/RolePermissionsEditor'
 import { UserRoleAssignment } from '@/app/components/administracion/UserRoleAssignment'
@@ -12,6 +13,7 @@ import { permissionText, roleName } from '@/app/lib/access-messages'
 import { adminSections, getAdminSection } from '@/app/lib/admin-sections'
 import { requirePermission } from '@/app/lib/auth/authorization'
 import { getAuditTrailPage } from '@/app/lib/audit-trail'
+import { getDownloadHistoryPage } from '@/app/lib/download-history'
 import { PERMISSION_DENIED } from '@/app/lib/auth/permissions'
 import { requireUser } from '@/app/lib/auth/session'
 import { parsePageParam, type SearchParamValue } from '@/app/lib/pagination'
@@ -46,7 +48,12 @@ export async function generateMetadata({
     return {}
   }
 
-  // Usuarios, Permisos and Auditoría are translated; the other sections still show Spanish.
+  // Descargas, Usuarios, Permisos and Auditoría are translated; the other sections still show Spanish.
+  if (section === 'descargas') {
+    const t = await getTranslations('administration.downloads')
+    return { title: t('metaTitle'), description: t('description') }
+  }
+
   if (section === 'usuarios') {
     const t = await getTranslations('administration.users')
     return { title: t('metaTitle'), description: t('description') }
@@ -81,6 +88,39 @@ export default async function AdministracionSectionPage({
 
   // Every section needs a session, so login returns the visitor to this exact section.
   await requireUser(`/administracion/${section}`)
+
+  if (section === 'descargas') {
+    const [{ allowed }, messages, t, query] = await Promise.all([
+      requirePermission('view_download_history', '/administracion/descargas'),
+      getMessages(),
+      getTranslations('administration.downloads'),
+      searchParams,
+    ])
+    if (!allowed) {
+      return (
+        <AccessDenied
+          message={permissionText('view_download_history', messages).denied}
+          title={messages.access.accessDenied.title}
+        />
+      )
+    }
+    const history = await getDownloadHistoryPage(parsePageParam(query.page), {
+      from: single(query.from),
+      to: single(query.to),
+      source: single(query.source),
+      instrument: single(query.instrument),
+      format: single(query.format),
+      user: single(query.user),
+    })
+    return (
+      <DownloadHistoryPage
+        title={t('title')}
+        description={t('description')}
+        pathname="/administracion/descargas"
+        history={history}
+      />
+    )
+  }
 
   if (section === 'usuarios') {
     const [{ user, allowed }, messages, t, locale] = await Promise.all([

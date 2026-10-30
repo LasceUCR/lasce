@@ -33,11 +33,11 @@ With the default matrix:
 | ------------- | ------------------------------------------------------ |
 | Anonymous     | Redirect to `/acceso?next=/administracion&reason=auth` |
 | Visitante     | Acceso denegado, no menu                               |
-| Asistente     | Resumen, Descargas, Infraestructura                    |
+| Asistente     | Resumen, Infraestructura                               |
 | Administrador | all six                                                |
 
-A visitor holds `download_resources` by default, but the panel gate comes first, so that grant
-does not open `/administracion/descargas` for them. Changing the matrix on
+Descargas is unlocked by `view_download_history`, which only administrators hold by default.
+`download_resources` (held by every role) does not open it. Changing the matrix on
 `/administracion/permisos` changes the menu on the next request; no new login is needed. Hiding a
 link is not authorization: every section page still calls `requirePermission`, as
 [add-permissions.md](add-permissions.md) describes.
@@ -72,3 +72,9 @@ sidebar starts exactly under the header at every width. Measure again if the hea
 | Menu filtered by `granted`                         | `app/components/administracion/AdminShell.tsx`   | `AdminShell.test.tsx`                                                 |
 | Toggle, Escape, outside pointer, close on navigate | `app/components/administracion/AdminSidebar.tsx` | `AdminSidebar.test.tsx`, `tests/e2e/administracion-mobile.spec.ts`    |
 | Breakpoint, sticky offset, no overflow             | `app/globals.css`                                | `tests/e2e/administracion-mobile.spec.ts` (390px, 320px, 1440px, axe) |
+
+## "Modo edición"
+
+The "Modo edición" switch is not in the panel: it lives in the signed-in account menu of the top
+bar (and in the mobile menu), so it can be changed from any page. See
+[header-and-navigation.md](header-and-navigation.md#modo-edición-in-the-account-menu).
