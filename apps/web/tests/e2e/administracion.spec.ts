@@ -149,7 +149,7 @@ test('keeps the account menu link current while browsing the other sidebar secti
   page,
   context,
 }) => {
-  const fixture = await createSignedInUser(context, 'ASSISTANT')
+  const fixture = await createSignedInUser(context, 'ADMIN')
   try {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/administracion')
@@ -159,11 +159,10 @@ test('keeps the account menu link current while browsing the other sidebar secti
       .locator('.header-actions')
       .getByRole('link', { name: 'Administración', exact: true })
 
-    await sidebar.getByRole('link', { name: 'Infraestructura' }).click()
+    await sidebar.getByRole('link', { name: 'Descargas' }).click()
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Infraestructura' })).toBeVisible()
-    await expect(page.getByText('Contenido en preparación')).toBeVisible()
-    await expect(sidebar.getByRole('link', { name: 'Infraestructura' })).toHaveAttribute(
+    await expect(page.getByRole('heading', { level: 1, name: 'Descargas' })).toBeVisible()
+    await expect(sidebar.getByRole('link', { name: 'Descargas' })).toHaveAttribute(
       'aria-current',
       'page',
     )
@@ -191,10 +190,7 @@ test('shows an assistant the sections its grants unlock', async ({ page, context
     // The download history has its own grant, which assistants do not hold by default.
     await expect(menu.getByRole('link', { name: 'Descargas', exact: true })).toHaveCount(0)
 
-    await menu.getByRole('link', { name: 'Infraestructura', exact: true }).click()
-
-    await expect(page).toHaveURL(/\/administracion\/infraestructura$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Infraestructura' })).toBeVisible()
+    await expect(menu.getByRole('link')).toHaveText(['Resumen'])
   } finally {
     await fixture.cleanup()
   }
@@ -211,7 +207,6 @@ test('shows an administrator every section', async ({ page, context }) => {
       'Usuarios',
       'Permisos',
       'Auditoría',
-      'Infraestructura',
     ])
   } finally {
     await fixture.cleanup()
@@ -238,7 +233,7 @@ test('follows the permission matrix, not only the role', async ({ page, context 
     await page.reload()
 
     await expect(descargas).toHaveCount(0)
-    await expect(adminMenu(page).getByRole('link')).toHaveText(['Resumen', 'Infraestructura'])
+    await expect(adminMenu(page).getByRole('link')).toHaveText(['Resumen'])
     await page.goto('/administracion/descargas')
     await expect(page.getByRole('heading', { name: 'Acceso denegado' })).toBeVisible()
   } finally {
