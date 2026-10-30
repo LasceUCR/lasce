@@ -589,11 +589,18 @@
       "countLabel": "Number of publications",
       "countTotal": "{count, plural, one {publication in total} other {publications in total}}",
       "countInGroup": "{count, plural, one {publication} other {publications}} ({group})",
+      "results": "{count, plural, one {# publication found.} other {# publications found.}}",
+      "range": "Showing {from}–{to} of {total}.",
+      "rangeOne": "Showing publication {position} of {total}.",
+      "paginationLabel": "Publication pages",
       "recent": "Recent publications",
       "emptyGroupAndQuery": "No {group} publications were found for “{query}”.",
       "emptyGroup": "There are no {group} publications.",
       "emptyQuery": "No publications were found for “{query}”.",
-      "empty": "There are no publications available."
+      "empty": "There are no publications available.",
+      "loading": "Loading publications…",
+      "loadError": "The publications could not be loaded. Try again.",
+      "retry": "Try again"
     },
     "card": {
       "externalLink": "DOI / External link",

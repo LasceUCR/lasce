@@ -29,7 +29,7 @@ const mocks = vi.hoisted(() => {
   }
 
   const prisma = {
-    research: { findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
+    research: { findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn(), count: vi.fn() },
     $transaction: vi.fn(),
   }
 
@@ -46,6 +46,7 @@ const {
   deletePublication,
   findPendingReviews,
   getPublications,
+  getPublicationsPage,
   publicationCreateSchema,
   publicationUpdateSchema,
   updatePublication,
@@ -154,7 +155,7 @@ describe('getPublications', () => {
     await getPublications()
 
     expect(prisma.research.findMany).toHaveBeenCalledWith({
-      orderBy: { publicationDate: 'desc' },
+      orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
       include: {
         publisher: true,
         authors: { orderBy: { position: 'asc' }, include: { researchAuthor: true } },
@@ -239,6 +240,51 @@ describe('getPublications', () => {
       version: VERSION,
     })
     expect(legacy?.editing).toMatchObject({ content: { en: null }, isLegacy: true })
+  })
+})
+
+describe('getPublicationsPage', () => {
+  test('loads one page of the matching records and reports the search and the group', async () => {
+    prisma.research.count.mockResolvedValue(23)
+    prisma.research.findMany.mockResolvedValue([bilingualRow])
+
+    const page = await getPublicationsPage('es', { query: '  sol  ', page: 2, group: 'LASCE' })
+
+    expect(prisma.research.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({ AND: expect.any(Array) }),
+    })
+    expect(prisma.research.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+        skip: 10,
+        take: 10,
+      }),
+    )
+    expect(page).toMatchObject({
+      page: 2,
+      pageSize: 10,
+      totalItems: 23,
+      totalPages: 3,
+      query: 'sol',
+      group: 'LASCE',
+    })
+    expect(page.publications).toHaveLength(1)
+  })
+
+  test('loads nothing when the search matches no record', async () => {
+    prisma.research.count.mockResolvedValue(0)
+
+    const page = await getPublicationsPage('en', { query: 'nada' })
+
+    expect(prisma.research.findMany).not.toHaveBeenCalled()
+    expect(page).toMatchObject({
+      page: 1,
+      totalItems: 0,
+      totalPages: 0,
+      query: 'nada',
+      group: null,
+      publications: [],
+    })
   })
 })
 
