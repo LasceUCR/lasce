@@ -96,6 +96,10 @@ export function canSeeAdminNavigation(role: UserRole | null | undefined): boolea
   return role === 'ASSISTANT' || role === 'ADMIN'
 }
 
+export function canEditContent(role: UserRole | null | undefined): boolean {
+  return role === 'ASSISTANT' || role === 'ADMIN'
+}
+
 /** Shown by the `administracion` layout to a signed-in account the rule above rejects. */
 export const adminAccessDeniedMessage =
   'La administración está disponible solo para asistentes y personas administradoras.'

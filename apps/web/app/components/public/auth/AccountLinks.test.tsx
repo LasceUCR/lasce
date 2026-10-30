@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { shortName } from '@/app/lib/auth/account'
+import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AccountLinks, type AccountLinksProps } from './AccountLinks'
@@ -65,11 +66,48 @@ describe('AccountLinks', () => {
   })
 
   test('offers Administración in the mobile menu for an authorized role', () => {
-    renderWithIntl(<AccountLinks {...signedInMobileAdminArgs} />)
+    renderWithIntl(
+      <EditModeProvider>
+        <AccountLinks {...signedInMobileAdminArgs} />
+      </EditModeProvider>,
+    )
 
     expect(screen.getByRole('link', { name: 'Administración' })).toHaveAttribute(
       'href',
       '/administracion',
     )
+  })
+
+  test('offers the "Modo edición" switch in the mobile menu to an editor, and it toggles', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(
+      <EditModeProvider>
+        <AccountLinks {...signedInMobileAdminArgs} />
+      </EditModeProvider>,
+    )
+
+    await user.click(screen.getByRole('switch', { name: 'Modo edición' }))
+
+    expect(screen.getByRole('switch', { name: 'Modo edición' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+  })
+
+  test('hides the switch from a visitor in the mobile menu', () => {
+    renderWithIntl(<AccountLinks {...signedInMobileArgs} />)
+
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+  })
+
+  test('labels the mobile switch in English', () => {
+    renderWithIntl(
+      <EditModeProvider>
+        <AccountLinks {...signedInMobileAdminArgs} />
+      </EditModeProvider>,
+      { locale: 'en' },
+    )
+
+    expect(screen.getByRole('switch', { name: 'Edit mode' })).toBeInTheDocument()
   })
 })
