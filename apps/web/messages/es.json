@@ -7,8 +7,9 @@
     "skipToContent": "Saltar al contenido principal"
   },
   "notFound": {
+    "metaTitle": "Página no encontrada | LASCE",
     "title": "Página no encontrada",
-    "description": "La dirección ingresada no corresponde a una página disponible. Verifica la dirección o vuelve al inicio.",
+    "description": "La dirección ingresada no corresponde a una página disponible. Verifique la dirección o vuelva al inicio.",
     "kicker": "Error 404"
   },
   "nav": {

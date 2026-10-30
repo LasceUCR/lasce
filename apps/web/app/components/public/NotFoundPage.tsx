@@ -9,6 +9,7 @@ export function NotFoundPage() {
 
   return (
     <article className="public-route not-found">
+      <title>{t('metaTitle')}</title>
       <div className="page-width">
         <TopicHero kicker={t('kicker')} lead={t('description')} title={t('title')} />
         <div className="topic-page-footer page-width">

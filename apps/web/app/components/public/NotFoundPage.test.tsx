@@ -9,10 +9,11 @@ describe('NotFoundPage', () => {
   test('shows the localized not-found title and description in Spanish', () => {
     renderWithIntl(<NotFoundPage />)
 
+    expect(document.title).toBe('Página no encontrada | LASCE')
     expect(screen.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeVisible()
     expect(
       screen.getByText(
-        'La dirección ingresada no corresponde a una página disponible. Verifica la dirección o vuelve al inicio.',
+        'La dirección ingresada no corresponde a una página disponible. Verifique la dirección o vuelva al inicio.',
       ),
     ).toBeVisible()
   })
@@ -26,6 +27,7 @@ describe('NotFoundPage', () => {
   test('shows the not-found page in English when rendered in English', () => {
     renderWithIntl(<NotFoundPage />, { locale: 'en' })
 
+    expect(document.title).toBe('Page not found | LASCE')
     expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible()
     expect(
       screen.getByText(
