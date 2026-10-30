@@ -24,8 +24,8 @@ panel and then builds the menu:
 2. `canSeeAdminNavigation(role)`, the same rule that hides the header tab, turns a signed-in
    visitor away with Acceso denegado. Only assistants and administrators continue.
 3. `getPermissionsForRole()` (memoised per request) gives the held grants, passed to `AdminShell`
-   as `granted`. `visibleAdminMenu(granted)` keeps the entries without a grant (Resumen,
-   Infraestructura) and those whose grant is held.
+   as `granted`. `visibleAdminMenu(granted)` keeps the entries without a grant (just Resumen today)
+   and those whose grant is held.
 
 With the default matrix:
 
@@ -33,8 +33,8 @@ With the default matrix:
 | ------------- | ------------------------------------------------------ |
 | Anonymous     | Redirect to `/acceso?next=/administracion&reason=auth` |
 | Visitante     | Acceso denegado, no menu                               |
-| Asistente     | Resumen, Infraestructura                               |
-| Administrador | all six                                                |
+| Asistente     | Resumen                                                |
+| Administrador | all five                                               |
 
 Descargas is unlocked by `view_download_history`, which only administrators hold by default.
 `download_resources` (held by every role) does not open it. Changing the matrix on

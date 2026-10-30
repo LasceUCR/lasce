@@ -42,7 +42,7 @@ describe('AdminShell', () => {
       menu()
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Resumen', 'Descargas', 'Usuarios', 'Permisos', 'Auditoría', 'Infraestructura'])
+    ).toEqual(['Resumen', 'Descargas', 'Usuarios', 'Permisos', 'Auditoría'])
   })
 
   test('hides the sections whose grant is missing', () => {
@@ -60,7 +60,7 @@ describe('AdminShell', () => {
       menu()
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Resumen', 'Infraestructura'])
+    ).toEqual(['Resumen'])
   })
 
   test('speaks English when the site does', () => {
