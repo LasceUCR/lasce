@@ -3,6 +3,7 @@ import { z } from 'zod'
 import es from '@/messages/es.json' with { type: 'json' }
 import { versionSchema } from './cms/version'
 import { defineTranslatableContent } from './i18n/content/definition'
+import { INITIATIVE_LOGO_PATH } from './initiative-logo'
 
 export const initiativeContent = defineTranslatableContent({
   title: {
@@ -42,11 +43,12 @@ export function initiativeFieldSchemas(messages: InitiativeFieldMessages) {
       }, message)
   return {
     websiteUrl: optional(url(messages.websiteUrl)),
-    // Keep the existing bundled logos usable, without allowing protocol-relative URLs.
+    // Uploaded paths and existing logos remain usable, without protocol-relative URLs.
     logoUrl: optional(
       z.union(
         [
           url(messages.logoUrl),
+          z.string().regex(INITIATIVE_LOGO_PATH, messages.logoUrl),
           z.string().regex(/^\/brand\/[a-zA-Z0-9_-]+\.(?:png|jpe?g|webp|svg)$/i, messages.logoUrl),
         ],
         { error: messages.logoUrl },

@@ -28,18 +28,31 @@ or explicitly confirming that it remains correct. Shared-only changes leave tran
 including on legacy rows. Incomplete legacy records use the shared fallback and unknown language
 marker rather than copying or inventing translations.
 
-Optional website URLs accept HTTP(S) without embedded credentials. Logos accept the same URLs or
-bundled `/brand/<filename>` image paths. Blank values clear the field. Logo management is by URL;
-this feature does not upload files or use MinIO. Images load directly in the browser, without
-server fetching or Next image optimization. Broken images are hidden while the text remains
-readable. External website links use `noopener noreferrer`.
+Optional website URLs accept HTTP(S) without embedded credentials. The logo field uses the shared
+`FileDropInput`: select or drop a PNG, JPEG, WebP or GIF (up to 25 MiB), preview it, replace it or
+remove it. Saving uploads a selected file before saving the record. Upload failures preserve the
+form and show a translated toast; retrying a failed record save reuses the successful upload.
+The form cannot be closed or changed during a save. Existing URLs and bundled `/brand/<filename>`
+logos remain readable; editors no longer enter a logo URL. Blank values clear the field.
 
-| Endpoint                       | Permission          | Result                                      |
-| ------------------------------ | ------------------- | ------------------------------------------- |
-| `GET /api/initiatives`         | Public              | Localized content, no editing metadata      |
-| `POST /api/initiatives`        | `create_components` | Bilingual create, 201                       |
-| `PATCH /api/initiatives/[id]`  | `edit_components`   | Changed fields plus required `version`, 200 |
-| `DELETE /api/initiatives/[id]` | `delete_components` | Cascading delete, 204                       |
+Uploaded images use UUID filenames under `assets/initiatives/` in `MINIO_BUCKET` and are served
+through `/api/initiatives/logos/[filename]`. The handler bounds the request size and validates the
+image's MIME type and signature. The storage helper constructs its client lazily and never changes
+the shared bucket's access policy or accesses worker objects. Serving through the application also
+works when MinIO is reachable only on an internal Docker hostname. No new migration is needed:
+`logo_url` stores the application's image path. MinIO must be running and configured for uploads.
+Broken images are hidden while the text remains readable. External website links use
+`noopener noreferrer`.
+
+| Endpoint                                  | Permission          | Result                                           |
+| ----------------------------------------- | ------------------- | ------------------------------------------------ |
+| `GET /api/initiatives`                    | Public              | Localized content, no editing metadata           |
+| `POST /api/initiatives`                   | `create_components` | Bilingual create, 201                            |
+| `PATCH /api/initiatives/[id]`             | `edit_components`   | Changed fields plus required `version`, 200      |
+| `DELETE /api/initiatives/[id]`            | `delete_components` | Cascading delete, 204                            |
+| `POST /api/initiatives/logos?mode=create` | `create_components` | Multipart image upload, 201                      |
+| `POST /api/initiatives/logos?mode=edit`   | `edit_components`   | Multipart image upload, 201                      |
+| `GET /api/initiatives/logos/[filename]`   | Public              | Image bytes, restricted to the initiative prefix |
 
 The server page includes `editing.content` and `editing.version` only after checking edit permission.
 Each write endpoint independently enforces its permission, parses JSON and validates its schema.
@@ -51,6 +64,9 @@ The editor retains values after failures and shows translated outcome toasts thr
 `useRequestFeedback`. Field validation remains beside the inputs, including API field errors.
 The Spanish and English UI labels live under `initiatives` in the message catalogues.
 
+As with the existing image editors, replacing/removing a logo or abandoning a form after an upload
+does not delete the stored object. Unreferenced images require a separate cleanup policy.
+
 ## Verification
 
 - Unit tests cover URL/text validation, review in either direction, partial patches, legacy
@@ -58,7 +74,8 @@ The Spanish and English UI labels live under `initiatives` in the message catalo
 - `tests/integration/initiatives.test.ts` checks the migration against the original content,
   actual PostgreSQL persistence, concurrent saves, translation rollback and cascading deletion.
   Use the existing integration guard with a separate local `*_test` database and applied migrations.
-- `tests/e2e/initiative-cms.spec.ts` exercises the real routes and editor, anonymous/assistant/visitor
+- `tests/e2e/initiative-cms.spec.ts` requires MinIO in addition to PostgreSQL and exercises image
+  selection, persistence and removal, the real routes and editor, anonymous/assistant/visitor
   permissions, invalid JSON and input, review and stale versions, English feedback, keyboard labels,
   accessibility and a mobile viewport. The existing initiative description tests preserve expansion
   behavior and reduced-motion support.

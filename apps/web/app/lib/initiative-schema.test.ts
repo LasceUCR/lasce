@@ -75,4 +75,17 @@ describe('initiative validation', () => {
       websiteUrl: null,
     })
   })
+  test('accepts uploaded logo paths and rejects paths outside their namespace', () => {
+    const filename = '01200000-0000-4000-8000-000000000003.png'
+    expect(
+      initiativeCreateSchema.safeParse({ content, logoUrl: `/api/initiatives/logos/${filename}` })
+        .success,
+    ).toBe(true)
+    for (const value of [
+      `/api/initiatives/logos/../${filename}`,
+      '/api/initiatives/logos/readings/file.png',
+    ]) {
+      expect(initiativeCreateSchema.safeParse({ content, logoUrl: value }).success).toBe(false)
+    }
+  })
 })

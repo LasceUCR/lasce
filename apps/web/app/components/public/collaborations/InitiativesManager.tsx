@@ -41,6 +41,29 @@ export function InitiativesManager({
   const createForm = useRef<InitiativeFormHandle>(null)
   const editForm = useRef<InitiativeFormHandle>(null)
 
+  async function uploadLogo(file: File, mode: 'create' | 'edit'): Promise<string | null> {
+    const data = new FormData()
+    data.set('file', file)
+    let logoUrl: string | null = null
+    await send(
+      `/api/initiatives/logos?mode=${mode}`,
+      { method: 'POST', body: data },
+      {
+        success: t('upload.uploaded'),
+        fallback: t('upload.failed'),
+        describeFailure: async (response) => {
+          if (response.status === 401 || response.status === 403) return t('feedback.forbidden')
+          return null
+        },
+        onSuccess: async (response) => {
+          const result = (await response.json()) as { logoUrl: string }
+          logoUrl = result.logoUrl
+        },
+      },
+    )
+    return logoUrl
+  }
+
   async function mutate(
     method: 'POST' | 'PATCH' | 'DELETE',
     id?: string,
@@ -124,7 +147,8 @@ export function InitiativesManager({
                 ref={createForm}
                 busy={busy}
                 onCancel={close}
-                onSave={(body) => void mutate('POST', undefined, body, close)}
+                onUploadLogo={(file) => uploadLogo(file, 'create')}
+                onSave={(body) => mutate('POST', undefined, body, close)}
               />
             )}
           </AddItemCard>
@@ -163,7 +187,8 @@ export function InitiativesManager({
             initiative={editing}
             busy={busy}
             onCancel={() => setEditing(null)}
-            onSave={(body) => void mutate('PATCH', editing.id, body, () => setEditing(null))}
+            onUploadLogo={(file) => uploadLogo(file, 'edit')}
+            onSave={(body) => mutate('PATCH', editing.id, body, () => setEditing(null))}
           />
         </Modal>
       ) : null}

@@ -4,6 +4,7 @@ import styles from './InitiativeForm.module.css'
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { Button } from '@/app/components/public/Button'
+import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
@@ -32,6 +33,7 @@ import {
 } from '@/app/lib/i18n/content/form'
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
 import { initiativeContent } from '@/app/lib/initiative-schema'
+import { INITIATIVE_LOGO_ACCEPT } from '@/app/lib/initiative-logo'
 import type { CollaborationInitiative } from '@/app/lib/collaborations'
 
 export interface InitiativeFormHandle {
@@ -40,7 +42,8 @@ export interface InitiativeFormHandle {
 }
 export interface InitiativeFormProps {
   initiative?: CollaborationInitiative
-  onSave: (body: Record<string, unknown> | null) => void
+  onSave: (body: Record<string, unknown> | null) => void | Promise<void>
+  onUploadLogo: (file: File) => Promise<string | null>
   onCancel: () => void
   busy?: boolean
   ref?: Ref<InitiativeFormHandle>
@@ -50,6 +53,7 @@ export interface InitiativeFormProps {
 export function InitiativeForm({
   initiative,
   onSave,
+  onUploadLogo,
   onCancel,
   busy = false,
   ref,
@@ -62,6 +66,11 @@ export function InitiativeForm({
   const headerSlot = useModalHeaderSlot()
   const [initial] = useState(() => initiativeDraft(initiative))
   const [draft, setDraftState] = useState(initial)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const uploadedLogo = useRef<{ file: File; url: string } | null>(null)
+  const pending = useRef(false)
+  const [saving, setSaving] = useState(false)
+  const isBusy = busy || saving
   const [serverErrors, setServerErrors] = useState<FormErrors>({})
   const [confirmed, setConfirmed] = useState<ReviewConfirmation<'title' | 'description'>[]>([])
   const [tab, setTab] = useState<Locale>(defaultLocale)
@@ -83,15 +92,15 @@ export function InitiativeForm({
   }
 
   useEffect(() => {
-    if (!focusRequest || busy) return
+    if (!focusRequest || isBusy) return
     Array.from(formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? [])
       .find((element) => !element.closest('[hidden]'))
       ?.focus()
-  }, [focusRequest, busy])
+  }, [focusRequest, isBusy])
 
   function requestCancel() {
-    if (busy) return
-    if (JSON.stringify(initial) !== JSON.stringify(draft)) setDiscard(true)
+    if (busy || pending.current) return
+    if (logoFile || JSON.stringify(initial) !== JSON.stringify(draft)) setDiscard(true)
     else onCancel()
   }
   useImperativeHandle(ref, () => ({
@@ -104,6 +113,45 @@ export function InitiativeForm({
     },
   }))
 
+  async function handleSave() {
+    if (busy || pending.current) return
+    setServerErrors({})
+    setAttempted(true)
+    const found = validate()
+    if (Object.keys(found).length) {
+      const target = tabWithErrors(found, tab)
+      if (target) setTab(target)
+      setFocusRequest((value) => value + 1)
+      return
+    }
+    pending.current = true
+    setSaving(true)
+    try {
+      let nextDraft = draft
+      if (logoFile) {
+        // Retrying a failed record save reuses the uploaded file.
+        const url =
+          uploadedLogo.current?.file === logoFile
+            ? uploadedLogo.current.url
+            : await onUploadLogo(logoFile)
+        if (!url) return
+        uploadedLogo.current = { file: logoFile, url }
+        nextDraft = { ...draft, logoUrl: url }
+      }
+      await onSave(
+        initiativeRequest(
+          initiative,
+          initial,
+          nextDraft,
+          confirmationsStillNeeded(confirmed, needed),
+        ),
+      )
+    } finally {
+      pending.current = false
+      setSaving(false)
+    }
+  }
+
   return (
     <form
       className="initiative-form"
@@ -111,27 +159,10 @@ export function InitiativeForm({
       ref={formRef}
       onSubmit={(event) => {
         event.preventDefault()
-        if (busy) return
-        setServerErrors({})
-        setAttempted(true)
-        const found = validate()
-        if (Object.keys(found).length) {
-          const target = tabWithErrors(found, tab)
-          if (target) setTab(target)
-          setFocusRequest((value) => value + 1)
-          return
-        }
-        onSave(
-          initiativeRequest(
-            initiative,
-            initial,
-            draft,
-            confirmationsStillNeeded(confirmed, needed),
-          ),
-        )
+        void handleSave()
       }}
     >
-      <fieldset className={styles.fields} disabled={busy}>
+      <fieldset className={styles.fields} disabled={isBusy}>
         <LanguageTabs
           copyLang={uiLocale}
           label={t('editor.languages')}
@@ -196,12 +227,18 @@ export function InitiativeForm({
             )
           }}
         </LanguageTabs>
-        <FormField
-          id={formId + '-logo'}
-          label={t('editor.logoUrl')}
-          value={draft.logoUrl}
-          error={errors.logoUrl}
-          onChange={(logoUrl) => setDraft((value) => ({ ...value, logoUrl }))}
+        <FileDropInput
+          label={t('editor.logo')}
+          helperText={t('editor.logoHelp')}
+          accept={INITIATIVE_LOGO_ACCEPT}
+          disabled={isBusy}
+          existingImageUrl={initial.logoUrl || undefined}
+          errorMessage={errors.logoUrl}
+          onFileSelect={(file) => {
+            setLogoFile(file)
+            uploadedLogo.current = null
+            setDraft((value) => ({ ...value, logoUrl: '' }))
+          }}
         />
         <FormField
           id={`${formId}-website`}
@@ -212,11 +249,11 @@ export function InitiativeForm({
           onChange={(websiteUrl) => setDraft((value) => ({ ...value, websiteUrl }))}
         />
         <div className="cms-form-actions">
-          <Button onClick={requestCancel} variant="secondary" disabled={busy}>
+          <Button onClick={requestCancel} variant="secondary" disabled={isBusy}>
             {t('editor.cancel')}
           </Button>
-          <Button type="submit" variant="primary" disabled={busy}>
-            {t(busy ? 'editor.saving' : 'editor.save')}
+          <Button type="submit" variant="primary" disabled={isBusy}>
+            {t(isBusy ? 'editor.saving' : 'editor.save')}
           </Button>
         </div>
       </fieldset>

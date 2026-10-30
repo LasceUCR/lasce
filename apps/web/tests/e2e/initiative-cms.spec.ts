@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { createSignedInUser } from './helpers/admin-users'
@@ -34,7 +35,9 @@ test('creates, reviews, updates and deletes bilingual initiatives with persisten
       'true',
     )
     await dialog.getByRole('textbox', { name: /Sitio web oficial/ }).fill('https://example.com')
-    await dialog.getByRole('textbox', { name: /URL del logo/ }).fill('/brand/logo-ISWI.png')
+    await dialog
+      .locator('input[type="file"]')
+      .setInputFiles(fileURLToPath(new URL('../../public/brand/logo-ISWI.png', import.meta.url)))
     expect(
       (
         await new AxeBuilder({ page })
@@ -66,7 +69,10 @@ test('creates, reviews, updates and deletes bilingual initiatives with persisten
       'href',
       'https://example.com',
     )
-    await expect(card.getByRole('img')).toHaveAttribute('src', /\/brand\/logo-ISWI\.png$/)
+    await expect(card.getByRole('img')).toHaveAttribute(
+      'src',
+      /\/api\/initiatives\/logos\/[a-f0-9-]+\.png$/,
+    )
     await page.reload()
     await expect(card.getByText('Descripción de la iniciativa.')).toBeVisible()
 
@@ -96,7 +102,7 @@ test('creates, reviews, updates and deletes bilingual initiatives with persisten
       'true',
     )
     expect((await mobile.boundingBox())!.width).toBeLessThanOrEqual(390)
-    await mobile.getByRole('textbox', { name: 'Logo URL (optional)' }).fill('')
+    await mobile.getByRole('button', { name: 'Remove image' }).click()
     await mobile.getByRole('textbox', { name: 'Official website (optional)' }).fill('')
     await page.screenshot({ path: testInfo.outputPath('initiative-editor-mobile.png') })
     await mobile.getByRole('button', { name: 'Confirm' }).click()

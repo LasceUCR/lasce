@@ -2113,7 +2113,8 @@
       "title": "Title ({language})",
       "description": "Description ({language})",
       "languages": "Initiative translations",
-      "logoUrl": "Logo URL (optional)",
+      "logo": "Logo (optional)",
+      "logoHelp": "Select or drop a PNG, JPG, WebP or GIF image up to 25 MiB.",
       "websiteUrl": "Official website (optional)",
       "cancel": "Cancel",
       "save": "Confirm",
@@ -2122,7 +2123,14 @@
     },
     "validation": {
       "websiteUrl": "Enter a valid http or https URL without credentials.",
-      "logoUrl": "Enter a valid http or https URL without credentials, or an image in /brand/."
+      "logoUrl": "Select a valid image for the logo."
+    },
+    "upload": {
+      "uploaded": "Logo uploaded successfully.",
+      "failed": "The logo could not be uploaded. Please try again.",
+      "missing": "Select an image for the logo.",
+      "tooLarge": "The image must not exceed 25 MiB.",
+      "invalidType": "Select a valid PNG, JPG, WebP or GIF image."
     },
     "feedback": {
       "created": "Initiative added successfully.",

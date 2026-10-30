@@ -2113,7 +2113,8 @@
       "title": "Título ({language})",
       "description": "Descripción ({language})",
       "languages": "Traducciones de la iniciativa",
-      "logoUrl": "URL del logo (opcional)",
+      "logo": "Logo (opcional)",
+      "logoHelp": "Seleccione o arrastre una imagen PNG, JPG, WebP o GIF de hasta 25 MiB.",
       "websiteUrl": "Sitio web oficial (opcional)",
       "cancel": "Cancelar",
       "save": "Confirmar",
@@ -2122,7 +2123,14 @@
     },
     "validation": {
       "websiteUrl": "Ingrese una URL http o https válida, sin credenciales.",
-      "logoUrl": "Ingrese una URL http o https válida, sin credenciales, o una imagen de /brand/."
+      "logoUrl": "Seleccione una imagen válida para el logo."
+    },
+    "upload": {
+      "uploaded": "Logo cargado correctamente.",
+      "failed": "No se pudo subir el logo. Inténtelo de nuevo.",
+      "missing": "Seleccione una imagen para el logo.",
+      "tooLarge": "La imagen no debe superar los 25 MiB.",
+      "invalidType": "Seleccione una imagen PNG, JPG, WebP o GIF válida."
     },
     "feedback": {
       "created": "Iniciativa agregada correctamente.",

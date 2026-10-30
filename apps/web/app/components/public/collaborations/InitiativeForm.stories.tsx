@@ -3,7 +3,11 @@ import { InitiativeForm } from './InitiativeForm'
 
 const meta: Meta<typeof InitiativeForm> = {
   component: InitiativeForm,
-  args: { onSave: () => {}, onCancel: () => {} },
+  args: {
+    onSave: () => {},
+    onCancel: () => {},
+    onUploadLogo: async () => '/brand/logo-ISWI.png',
+  },
 }
 export default meta
 type Story = StoryObj<typeof InitiativeForm>
@@ -40,3 +44,12 @@ export const Legacy: Story = {
   },
 }
 export const Saving: Story = { args: { ...Edit.args, busy: true } }
+export const WithLogo: Story = {
+  args: {
+    ...Edit.args,
+    initiative: {
+      ...Edit.args!.initiative!,
+      logo: { src: '/brand/logo-ISWI.png', alt: 'ISWI', width: 300, height: 192 },
+    },
+  },
+}
