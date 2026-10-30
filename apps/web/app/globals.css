@@ -2952,12 +2952,25 @@ a {
   gap: 16px;
 }
 
+/* Match the dedicated page's empty state to the full-width search bar above it. */
+#academic-activities-loading-region .content-empty {
+  width: 100%;
+  text-align: center;
+}
+
 /* Only on the dedicated `/actividades-academicas` page, not the `/noticias` teaser — that one
    already gets its own bottom spacing from `.academic-activities`'s 32px padding-bottom. Matches
    `.publications`'s 56px before its own `TopicBackLink` footer: a list of cards reads better with
    more room above the footer than a plain `TopicSection` of text gets. */
 .academic-activities-list-standalone {
   padding-bottom: 56px;
+}
+
+.academic-activities-error-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
 }
 
 .academic-activity-card-header {
@@ -3017,6 +3030,10 @@ a {
   margin-bottom: 20px;
 }
 
+.academic-activities-explorer .search-filter-bar {
+  margin-bottom: 20px;
+}
+
 /* Focused by `NewsExplorer` when the page changes: keep it clear of the sticky header. */
 .news > h2 {
   scroll-margin-top: calc(var(--header-height) + 16px);
@@ -3026,7 +3043,8 @@ a {
   outline: none;
 }
 
-.news-summary {
+.news-summary,
+.academic-activities-summary {
   margin: -6px 0 14px;
   color: var(--muted);
   font-size: 13px;

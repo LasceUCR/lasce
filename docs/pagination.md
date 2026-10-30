@@ -17,6 +17,13 @@ the database is read again. A search
 or a group change that is already on screen still marks the list `aria-busy` instead of swapping
 in that skeleton.
 
+`/actividades-academicas` follows the same URL and database pagination rules. Its data query is
+`getAcademicActivitiesPage()` in `apps/web/app/lib/academic-activities.ts`; the page validates and
+canonicalizes `?q=` and `?page=`, and `AcademicActivitiesPage.tsx` renders page controls while
+preserving the search when navigating. Activity dates remain searchable in the localized format
+shown on their cards. Its route `error.tsx` gives visitors a localized retry action if loading
+fails.
+
 Four pieces are shared, so another listing reuses them instead of writing its own:
 
 | Piece                    | File                                            | What it does                                                    |
@@ -169,11 +176,15 @@ link), the box shows the URL's search, unless it already says the same with spac
 | Search text, wildcard escaping          | `apps/web/app/lib/search-query.test.ts`                                |
 | The component                           | `apps/web/app/components/public/Pagination.test.tsx`                   |
 | The news query, against a real database | `apps/web/tests/integration/news.test.ts`                              |
+| The academic activities query           | `apps/web/app/lib/academic-activities.test.ts`                         |
 | The publications query, the same way    | `apps/web/tests/integration/publications.test.ts`                      |
 | News, in a browser                      | `apps/web/tests/e2e/news-pagination.spec.ts`                           |
+| Academic activities, in a browser       | `apps/web/tests/e2e/academic-activities-pagination.spec.ts`            |
 | Publications, in a browser              | `apps/web/tests/e2e/publications-pagination.spec.ts`                   |
 | Publications, loading and a failed read | `PublicationsPageSkeleton.test.tsx`, `PublicationsErrorState.test.tsx` |
 
 The news seed has more than 10 items, so an e2e test that creates an undated item (listed last)
 searches for it to find it, rather than expecting it on page 1. The publications seed fits on one
 page, so `publications-pagination.spec.ts` creates its own 23 items and searches for them.
+`academic-activities-pagination.spec.ts` also creates and cleans up its own 23 activities, so its
+pagination assertions are independent of the seed.

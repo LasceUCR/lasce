@@ -50,10 +50,7 @@ export function AcademicActivitiesSection({
         ) : (
           <div className="academic-activities-list">
             {activities.map((activity) => (
-              <AcademicActivityCard
-                activity={activity}
-                key={activity.slug ?? (activity as { id?: string }).id}
-              />
+              <AcademicActivityCard activity={activity} key={activity.id} />
             ))}
           </div>
         )}

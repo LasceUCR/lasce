@@ -572,18 +572,66 @@
       "metaDescription": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
       "kicker": "LASCE public portal",
       "title": "Academic activities",
-      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE."
+      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
+      "searchLabel": "Search academic activities",
+      "searchPlaceholder": "Search by title, category, date or keyword...",
+      "paginationLabel": "Academic activities pages",
+      "loadError": "The academic activities could not be loaded. Try again.",
+      "retry": "Try again",
+      "results": "{count, plural, one {# academic activity found.} other {# academic activities found.}}",
+      "range": "Showing {from}-{to} of {total}.",
+      "rangeOne": "Showing activity {position} of {total}.",
+      "emptyQuery": "No academic activities were found for “{query}”."
     },
-    "items": {
-      "machineLearningWorkshop": {
-        "category": "Workshop",
-        "date": "16-20 February 2026",
-        "p1": "As part of the LASCE project, the Workshop on Machine Learning Applied to Space Weather and Global Navigation Satellite Systems (GNSS) was held from 16 to 20 February 2026 in San José, Costa Rica. For five days the activity brought together students, early-career researchers and specialists to strengthen their skills in the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather.",
-        "p2": "The programme combined lectures, discussion sessions and computational practice devoted to ionospheric processes, the effects of space weather on GNSS systems, scientific computing and data analysis with machine learning tools. This approach made it possible to combine the physical understanding of solar and terrestrial phenomena with modern methods of processing, modelling and prediction, while also promoting the use of open data and reproducible procedures.",
-        "p3": "The workshop had 52 in-person participants from 17 countries; 37.2% were women and 70% came from developing countries. It was organised with the participation of the Space Research Center of the University of Costa Rica, the United Nations Office for Outer Space Affairs, the International Committee on GNSS, COSPAR, INGV and SCOSTEP, together with contributions from the National University of Tucumán and the Abdus Salam International Centre for Theoretical Physics.",
-        "p4": "This activity strengthened the international profile of LASCE, widened its networks of scientific collaboration and contributed to building regional capabilities for researching, monitoring and predicting the effects of space weather on the ionosphere and on technological systems. It also created a space for identifying new scientific challenges, opportunities for cooperation and future initiatives that combine space weather physics with advanced data analysis tools.",
-        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop"
-      }
+    "created": "Activity added successfully.",
+    "updated": "Activity updated successfully.",
+    "deleted": "Activity deleted successfully.",
+    "errors": {
+      "saveUnknown": "The activity could not be saved. Try again.",
+      "deleteUnknown": "The activity could not be deleted. Try again."
+    },
+    "editor": {
+      "addCard": "Add activity",
+      "editTitle": "Edit academic activity",
+      "editLabel": "Edit",
+      "deleteLabel": "Delete",
+      "titleField": "Title",
+      "categoryField": "Category",
+      "categoryPlaceholder": "Workshop, talk, course, conference...",
+      "locationField": "Location",
+      "startDateField": "Start date",
+      "endDateField": "End date",
+      "descriptionField": "Description",
+      "photoField": "Image",
+      "photoHelperText": "Illustrative image of the activity, in JPG, PNG, WebP or GIF format.",
+      "photoAltField": "Image alternative text (Accessibility)",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "uploadingImage": "Uploading image..."
+    },
+    "validation": {
+      "title": "The title is required.",
+      "category": "The category is required.",
+      "startDate": "The start date is required.",
+      "endDate": "The end date must be on or after the start date.",
+      "location": "The location is required.",
+      "description": "The description is required.",
+      "photo": "The image is required.",
+      "photoAlt": "The image alternative text is required.",
+      "uploadFailed": "The image could not be uploaded. Try again."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all the data entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
+    "deleteDialog": {
+      "title": "Delete academic activity",
+      "message": "This action cannot be undone and will remove the activity from the public catalog.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
     }
   },
   "publications": {
