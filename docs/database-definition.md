@@ -901,9 +901,13 @@ The institution acknowledgment cards shown in Section 9 of `/radioastronomia`.
 
 ## Where this is read and written
 
-`apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
-`research_record_translations` (newest `publication_date` first, authors ordered by `position`)
-and maps each row to the `Publication` shape `/publicaciones` renders, in the requested language.
+`apps/web/app/lib/publications.ts`'s `getPublicationsPage()` loads one page of `research_records`
+with its non-Spanish `research_record_translations`: searched (the text shown in the visitor's
+language, plus the author names), optionally limited to one `research_group`, ordered (newest
+`publication_date` first, then newest `created_at`, then `id`, so pages never overlap) and cut to
+the page in PostgreSQL, with authors ordered by `position` (see [`pagination.md`](pagination.md)).
+It maps each row to the `Publication` shape `/publicaciones` renders. `getPublications()` loads
+every record in the same order, which `GET /api/publicaciones` still returns in full.
 `createPublication()` and `updatePublication()` write the base row, its translations, its
 publisher and its author links in one transaction. `updatePublication()` writes only the fields
 it is given: with `content` it rewrites the base row's Spanish text and upserts the translations;

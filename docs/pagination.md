@@ -3,7 +3,19 @@
 How a public listing shows its items a page at a time, searched and paginated by the database,
 with the page and the search in the URL. `/noticias` is the reference implementation
 (LASCE-PAG-001): `getNewsPage()` in `apps/web/app/lib/news.ts`, the page in
-`apps/web/app/(public)/noticias/page.tsx` and `NewsExplorer.tsx`.
+`apps/web/app/(public)/noticias/page.tsx` and `NewsExplorer.tsx`. `/publicaciones` uses the same
+pieces (`getPublicationsPage()`, `(public)/publicaciones/page.tsx`, `PublicationsExplorer.tsx`)
+and adds one filter of its own, `?group=LASCE` or `?group=ROSAC`, written by
+`publicationListingHref` in `apps/web/app/lib/publication-listing.ts`. An unknown group is left
+out of the URL. A new search or a new group starts again from the first page. While that read is
+pending, `(public)/publicaciones/loading.tsx` shows `PublicationsPageSkeleton`: the hero, the
+"Publicaciones recientes" heading and the back link are catalogue copy and render for real; the
+toolbar, the result line, one page of cards and the page controls are placeholders. If
+`getPublicationsPage` throws, `error.tsx` shows a notice and a retry button
+(`PublicationsErrorState`). The button refreshes the server render and then clears the error, so
+the database is read again. A search
+or a group change that is already on screen still marks the list `aria-busy` instead of swapping
+in that skeleton.
 
 Four pieces are shared, so another listing reuses them instead of writing its own:
 
@@ -151,13 +163,17 @@ link), the box shows the URL's search, unless it already says the same with spac
 
 ## Tests
 
-| What                                    | Where                                                |
-| --------------------------------------- | ---------------------------------------------------- |
-| Page parsing, windows, URLs             | `apps/web/app/lib/pagination.test.ts`                |
-| Search text, wildcard escaping          | `apps/web/app/lib/search-query.test.ts`              |
-| The component                           | `apps/web/app/components/public/Pagination.test.tsx` |
-| The query, against a real database      | `apps/web/tests/integration/news.test.ts`            |
-| Every acceptance scenario, in a browser | `apps/web/tests/e2e/news-pagination.spec.ts`         |
+| What                                    | Where                                                                  |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| Page parsing, windows, URLs             | `apps/web/app/lib/pagination.test.ts`                                  |
+| Search text, wildcard escaping          | `apps/web/app/lib/search-query.test.ts`                                |
+| The component                           | `apps/web/app/components/public/Pagination.test.tsx`                   |
+| The news query, against a real database | `apps/web/tests/integration/news.test.ts`                              |
+| The publications query, the same way    | `apps/web/tests/integration/publications.test.ts`                      |
+| News, in a browser                      | `apps/web/tests/e2e/news-pagination.spec.ts`                           |
+| Publications, in a browser              | `apps/web/tests/e2e/publications-pagination.spec.ts`                   |
+| Publications, loading and a failed read | `PublicationsPageSkeleton.test.tsx`, `PublicationsErrorState.test.tsx` |
 
-The listing has more than 10 items once the seed is loaded, so an e2e test that creates an
-undated item (listed last) searches for it to find it, rather than expecting it on page 1.
+The news seed has more than 10 items, so an e2e test that creates an undated item (listed last)
+searches for it to find it, rather than expecting it on page 1. The publications seed fits on one
+page, so `publications-pagination.spec.ts` creates its own 23 items and searches for them.
