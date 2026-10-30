@@ -2968,6 +2968,13 @@ a {
   padding-bottom: 56px;
 }
 
+.academic-activities-error-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
 .academic-activity-card-header {
   display: flex;
   align-items: center;

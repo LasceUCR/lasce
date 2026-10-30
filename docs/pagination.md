@@ -21,7 +21,8 @@ in that skeleton.
 `getAcademicActivitiesPage()` in `apps/web/app/lib/academic-activities.ts`; the page validates and
 canonicalizes `?q=` and `?page=`, and `AcademicActivitiesPage.tsx` renders page controls while
 preserving the search when navigating. Activity dates remain searchable in the localized format
-shown on their cards.
+shown on their cards. Its route `error.tsx` gives visitors a localized retry action if loading
+fails.
 
 Four pieces are shared, so another listing reuses them instead of writing its own:
 
