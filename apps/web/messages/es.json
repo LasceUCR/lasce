@@ -559,7 +559,9 @@
     "section": {
       "title": "Actividades académicas",
       "description": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
-      "empty": "No hay actividades académicas disponibles en este momento."
+      "empty": "No hay actividades académicas disponibles en este momento.",
+      "loading": "Cargando actividades académicas…",
+      "error": "No fue posible cargar las actividades académicas. Inténtelo de nuevo más tarde."
     },
     "card": {
       "badge": "Actividad académica"
