@@ -1,6 +1,13 @@
 'use client'
 
-import { useEffect, useRef, type FocusEvent, type KeyboardEvent, type MouseEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react'
 
 export interface Disclosure {
   detailsRef: React.RefObject<HTMLDetailsElement | null>
@@ -38,10 +45,25 @@ export interface Disclosure {
  */
 const HOVER_CLOSE_DELAY_MS = 120
 
+interface OpenDisclosure {
+  close: () => void
+}
+
+// Only one header dropdown is shown at a time. The hover grace period above
+// keeps a dropdown open for a moment after the pointer leaves it, so moving
+// quickly from one group to the next ("Investigación" -> "Divulgación") used
+// to leave both panels open and overlapping. Whichever disclosure opens
+// registers itself here and closes the previous one immediately, skipping
+// its grace period.
+let activeDisclosure: OpenDisclosure | null = null
+
 export function useDisclosure(): Disclosure {
   const detailsRef = useRef<HTMLDetailsElement>(null)
   const summaryRef = useRef<HTMLElement>(null)
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // A stable identity for this disclosure in `activeDisclosure`. `close` only
+  // touches refs, so the one captured on the first render stays correct.
+  const [self] = useState<OpenDisclosure>(() => ({ close: () => close() }))
 
   function cancelScheduledClose() {
     if (closeTimeoutRef.current === null) return
@@ -49,13 +71,24 @@ export function useDisclosure(): Disclosure {
     closeTimeoutRef.current = null
   }
 
+  function releaseActive() {
+    if (activeDisclosure === self) {
+      activeDisclosure = null
+    }
+  }
+
   function open() {
     cancelScheduledClose()
+    if (activeDisclosure && activeDisclosure !== self) {
+      activeDisclosure.close()
+    }
+    activeDisclosure = self
     detailsRef.current?.setAttribute('open', '')
   }
 
   function close() {
     cancelScheduledClose()
+    releaseActive()
     detailsRef.current?.removeAttribute('open')
   }
 
@@ -68,11 +101,18 @@ export function useDisclosure(): Disclosure {
     cancelScheduledClose()
     closeTimeoutRef.current = setTimeout(() => {
       closeTimeoutRef.current = null
+      releaseActive()
       detailsRef.current?.removeAttribute('open')
     }, HOVER_CLOSE_DELAY_MS)
   }
 
-  useEffect(() => cancelScheduledClose, [])
+  useEffect(
+    () => () => {
+      cancelScheduledClose()
+      releaseActive()
+    },
+    [],
+  )
 
   // The native default just toggles; prevent it and always open instead, so a
   // click while the pointer already opened it via hover cannot close it again.
@@ -88,6 +128,7 @@ export function useDisclosure(): Disclosure {
         return
       }
 
+      releaseActive()
       element.removeAttribute('open')
     }
 

@@ -37,20 +37,6 @@ function subAlbumPath(albumSlug: string, subAlbumSlug: string): string {
   return `/galeria/${albumSlug}/${subAlbumSlug}`
 }
 
-function albumMeta(album: GalleryAlbum): string {
-  const fileCount = album.subAlbums.reduce(
-    (total, subAlbum) => total + subAlbum.media.length,
-    album.media.length,
-  )
-  const parts = [`${fileCount} archivos`, album.years]
-
-  if (album.subAlbums.length > 0) {
-    parts.unshift(`${album.subAlbums.length} subálbumes`)
-  }
-
-  return parts.join(' · ')
-}
-
 export interface GalleryGroupSectionProps {
   album: GalleryAlbum
   canEdit?: boolean
@@ -75,7 +61,8 @@ export function GalleryGroupSection({
   const headingId = `galeria-${album.slug}`
   const [isEditing, setIsEditing] = useState(false)
   const [editingSubAlbum, setEditingSubAlbum] = useState<GallerySubAlbum | null>(null)
-  const t = useTranslations('gallery.feedback')
+  const t = useTranslations('gallery.common')
+  const tFeedback = useTranslations('gallery.feedback')
   const tActions = useTranslations('gallery.actions')
   const sendWithFeedback = useRequestFeedback()
   const [isSaving, setIsSaving] = useState(false)
@@ -84,6 +71,15 @@ export function GalleryGroupSection({
   const createForm = useRef<AlbumFormHandle>(null)
   const saveInProgress = useRef(false)
   const editForm = useRef<AlbumFormHandle>(null)
+  const fileCount = album.subAlbums.reduce(
+    (total, subAlbum) => total + subAlbum.media.length,
+    album.media.length,
+  )
+  const summaryParts = [t('files', { count: fileCount }), album.years]
+  if (album.subAlbums.length > 0) {
+    summaryParts.unshift(t('subalbums', { count: album.subAlbums.length }))
+  }
+  const summary = summaryParts.join(' · ')
 
   async function handleCreate(values: AlbumFormValues, close: () => void): Promise<void> {
     const slug = slugFromTitle(values.title)
@@ -106,8 +102,8 @@ export function GalleryGroupSection({
           }),
         },
         {
-          success: t('subAlbumCreated'),
-          fallback: t('subAlbumCreateFailed'),
+          success: tFeedback('subAlbumCreated'),
+          fallback: tFeedback('subAlbumCreateFailed'),
           onSuccess: () => {
             close()
             router.refresh()
@@ -127,8 +123,8 @@ export function GalleryGroupSection({
       `/api/gallery/albums/${target.id}`,
       { method: 'DELETE' },
       {
-        success: t(isSub ? 'subAlbumDeleted' : 'albumDeleted'),
-        fallback: t(isSub ? 'subAlbumDeleteFailed' : 'albumDeleteFailed'),
+        success: tFeedback(isSub ? 'subAlbumDeleted' : 'albumDeleted'),
+        fallback: tFeedback(isSub ? 'subAlbumDeleteFailed' : 'albumDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -170,8 +166,8 @@ export function GalleryGroupSection({
           }),
         },
         {
-          success: t(isSub ? 'subAlbumUpdated' : 'albumUpdated'),
-          fallback: t(isSub ? 'subAlbumSaveFailed' : 'albumSaveFailed'),
+          success: tFeedback(isSub ? 'subAlbumUpdated' : 'albumUpdated'),
+          fallback: tFeedback(isSub ? 'subAlbumSaveFailed' : 'albumSaveFailed'),
           onSuccess: () => {
             closeEditor()
             router.refresh()
@@ -187,7 +183,7 @@ export function GalleryGroupSection({
   const cover = (
     <AlbumTile
       href={albumPath(album.slug)}
-      meta={albumMeta(album)}
+      meta={summary}
       src={album.coverObjectKey}
       title={album.title}
       variant="cover"
@@ -198,7 +194,7 @@ export function GalleryGroupSection({
     <section aria-labelledby={headingId} className="gallery-group">
       <div className="gallery-group-heading">
         <h2 id={headingId}>{album.title}</h2>
-        <span className="gallery-group-meta">{albumMeta(album)}</span>
+        <span className="gallery-group-meta">{summary}</span>
       </div>
       <p className="gallery-group-description">{album.description}</p>
 
@@ -251,7 +247,7 @@ export function GalleryGroupSection({
           const tile = (
             <AlbumTile
               href={subAlbumPath(album.slug, subAlbum.slug)}
-              meta={`${subAlbum.media.length} archivos`}
+              meta={t('files', { count: subAlbum.media.length })}
               src={subAlbum.coverObjectKey}
               title={subAlbum.title}
             />
