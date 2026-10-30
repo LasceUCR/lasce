@@ -234,7 +234,9 @@ activity cards and the role and description of the researcher profiles are bilin
 the researcher editor (photo, name, contact, institution and its dialogs) comes from the
 components shared with ROSAC (`ResearcherForm`, `EditableResearcherCard`, `TeamGallery`), which
 still show Spanish; they turn the bilingual part on only when `/nosotros` passes `translation`.
-The API's own error messages are still Spanish.
+The API's own error messages are still Spanish. ROSAC researchers temporarily take their English
+translations from the message catalogue (`en.json` under `rosac.team.people` via
+`localizeResearchers`) until a dedicated translation table is introduced.
 
 `/datos` has no database content; everything is `lib/scientific-data.ts` and the
 `scientific-data/*` components. `getScientificSources(messages)` follows the "content built on the
@@ -323,7 +325,9 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
   (`ResearchArea`), and the space weather page's sections (`SpaceWeatherSection`: `title` and
   `body`). The same pattern is meant for `News`, `Researcher` (ROSAC), `GalleryAlbum` and
   `GalleryMedia`, each with its own translation table holding only its translatable columns
-  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
+  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`). As noted
+  above, ROSAC researchers temporarily take their English text from `en.json`
+  (`rosac.team.people`) until their translation table is created.
 - **Tables:** [`database-definition.md`](database-definition.md).
 
 The editor's language tabs only choose which translation is being edited; the header selector

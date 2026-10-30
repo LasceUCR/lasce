@@ -3876,4 +3876,557 @@ for (const album of galleryAlbums) {
   await seedGalleryAlbum(album)
 }
 
+// Seed ROSAC CMS tables
+const defaultCharacteristics = [
+  {
+    key: 'antenna-system',
+    icon: 'antenna',
+    title: 'Antena de 11 metros',
+    description:
+      'Una antena parabólica se adapta para uso astronómico con una nueva montura y sistemas de movimiento y apuntado.',
+    position: 0,
+    en: {
+      title: '11-meter antenna',
+      description:
+        'A parabolic antenna is adapted for astronomical use with a new mount and motion and pointing systems.',
+    },
+  },
+  {
+    key: 'digital-backend',
+    icon: 'location',
+    title: 'Santa Cruz, Guanacaste',
+    description:
+      'El proyecto se desarrolla en el Recinto de Santa Cruz de la Universidad de Costa Rica.',
+    position: 1,
+    en: {
+      title: 'Santa Cruz, Guanacaste',
+      description:
+        'The project is developed at the Santa Cruz Campus of the University of Costa Rica.',
+    },
+  },
+  {
+    key: 'frequency-range',
+    icon: 'frequency',
+    title: 'Entre 100 y 1000 MHz',
+    description:
+      'Se preparan observaciones en este rango de frecuencias de radio, como parte del desarrollo del radiotelescopio.',
+    position: 2,
+    en: {
+      title: 'Between 100 and 1000 MHz',
+      description:
+        'Observations are prepared in this radio frequency range as part of the radio telescope development.',
+    },
+  },
+  {
+    key: 'science-goals',
+    icon: 'sun',
+    title: 'El Sol y otras fuentes celestes',
+    description:
+      'Se desarrollan capacidades para apuntar, seguir fuentes astronómicas y registrar sus emisiones de radio.',
+    position: 3,
+    en: {
+      title: 'The Sun and other celestial sources',
+      description:
+        'Capabilities are developed to point at, track astronomical sources, and record their radio emissions.',
+    },
+  },
+]
+
+if ((await prisma.rosacCharacteristic.count()) === 0) {
+  for (const { en, ...char } of defaultCharacteristics) {
+    const created = await prisma.rosacCharacteristic.create({
+      data: char,
+    })
+    await prisma.rosacCharacteristicTranslation.create({
+      data: {
+        characteristicId: created.id,
+        locale: 'en',
+        title: en.title,
+        description: en.description,
+      },
+    })
+  }
+}
+
+const defaultActivities = [
+  {
+    key: 'tracking',
+    icon: 'tracking',
+    title: 'Apuntado y seguimiento',
+    description: 'Desarrollamos un radiotelescopio capaz de apuntar y seguir fuentes astronómicas.',
+    position: 0,
+    en: {
+      title: 'Pointing and tracking',
+      description:
+        'We develop a radio telescope capable of pointing at and tracking astronomical sources.',
+    },
+  },
+  {
+    key: 'observations',
+    icon: 'sun',
+    title: 'Observaciones en radio',
+    description:
+      'Preparamos observaciones del Sol y de otras fuentes celestes entre 100 y 1000 MHz.',
+    position: 1,
+    en: {
+      title: 'Radio observations',
+      description:
+        'We prepare observations of the Sun and other celestial sources between 100 and 1000 MHz.',
+    },
+  },
+  {
+    key: 'control',
+    icon: 'control',
+    title: 'Control y procesamiento de señales',
+    description:
+      'Diseñamos y probamos sistemas de control, seguimiento, posicionamiento, adquisición y procesamiento de señales.',
+    position: 2,
+    en: {
+      title: 'Control and signal processing',
+      description:
+        'We design and test control, tracking, positioning, acquisition, and signal processing systems.',
+    },
+  },
+  {
+    key: 'receivers',
+    icon: 'receiver',
+    title: 'Receptores de radio',
+    description:
+      'Desarrollamos y evaluamos receptores para registrar emisiones de radio asociadas con objetos celestes.',
+    position: 3,
+    en: {
+      title: 'Radio receivers',
+      description:
+        'We develop and evaluate receivers to record radio emissions associated with celestial objects.',
+    },
+  },
+  {
+    key: 'infrastructure',
+    icon: 'maintenance',
+    title: 'Capacidades técnicas locales',
+    description:
+      'Generamos experiencia local en construcción, operación, calibración y mantenimiento de infraestructura de radioastronomía.',
+    position: 4,
+    en: {
+      title: 'Local technical capabilities',
+      description:
+        'We build local expertise in the construction, operation, calibration, and maintenance of radio astronomy infrastructure.',
+    },
+  },
+  {
+    key: 'education',
+    icon: 'education',
+    title: 'Investigación, docencia y divulgación',
+    description:
+      'Impulsamos la ciencia desde Guanacaste, ampliando la participación regional en ciencia y tecnología.',
+    position: 5,
+    en: {
+      title: 'Research, teaching, and outreach',
+      description:
+        'We promote science from Guanacaste, expanding regional participation in science and technology.',
+    },
+  },
+]
+
+if ((await prisma.rosacActivity.count()) === 0) {
+  for (const { en, ...act } of defaultActivities) {
+    const created = await prisma.rosacActivity.create({
+      data: act,
+    })
+    await prisma.rosacActivityTranslation.create({
+      data: {
+        activityId: created.id,
+        locale: 'en',
+        title: en.title,
+        description: en.description,
+      },
+    })
+  }
+}
+
+const defaultStages = [
+  {
+    key: 'preparacion',
+    title: 'Preparación para el montaje',
+    description:
+      'Antes del montaje principal se realizaron trabajos de preparación del sitio y de los componentes que posteriormente formarían parte de la estructura. Esta etapa reúne parte de la logística y adecuación previa necesaria para iniciar el ensamblaje.',
+    images: [
+      {
+        src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_1.jpg',
+        alt: 'Personas sobre y alrededor de una base de concreto, con una antena al fondo.',
+      },
+      {
+        src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_2.jpg',
+        alt: 'Camión con grúa y componentes metálicos junto al sitio de la antena.',
+      },
+      {
+        src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_3.jpg',
+        alt: 'Base circular de concreto con pernos de anclaje y agua acumulada en su interior, junto a una antena parabólica pequeña.',
+      },
+      {
+        src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_4.jpg',
+        alt: 'Montacargas transporta un componente cilíndrico metálico envuelto y asegurado con correas.',
+      },
+      {
+        src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_5.jpg',
+        alt: 'Vista a nivel del suelo de la base circular de concreto, con pernos de anclaje y una placa metálica oxidada en primer plano.',
+      },
+    ],
+    position: 0,
+    en: {
+      title: 'Preparation for assembly',
+      description:
+        'Before main assembly, site preparation and work on components that would later form the structure took place. This stage brings together the logistics and prior adaptation needed to begin assembly.',
+    },
+  },
+  {
+    key: 'estructura',
+    title: 'Montaje de la estructura',
+    description:
+      'El montaje integró progresivamente los componentes principales de la estructura del radiotelescopio. Las fotografías muestran el posicionamiento y la elevación de estos elementos con grúa, antes de que el reflector recibiera sus paneles.',
+    images: [
+      {
+        src: '/images/ROSAC/construction/Montaje/montaje_1.jpeg',
+        alt: 'Grúa situada sobre un soporte cilíndrico durante los trabajos de montaje.',
+      },
+      {
+        src: '/images/ROSAC/construction/Montaje/montaje_2.jpeg',
+        alt: 'Componente metálico con baranda suspendido junto al soporte de la antena.',
+      },
+      {
+        src: '/images/ROSAC/construction/Montaje/montaje_3.jpg',
+        alt: 'Vista desde abajo del vértice central de la estructura radial de la antena, con dos personas trabajando junto a él.',
+      },
+      {
+        src: '/images/ROSAC/construction/Montaje/montaje_4.jpg',
+        alt: 'Dos personas trabajan sobre una plataforma con el mecanismo motorizado de rotación de la antena, con una grúa al fondo.',
+      },
+      {
+        src: '/images/ROSAC/construction/Montaje/montaje_5.jpg',
+        alt: 'Grúa móvil y camión junto a una base cónica metálica de gran tamaño, colocada sobre el pasto.',
+      },
+    ],
+    position: 1,
+    en: {
+      title: 'Structure assembly',
+      description:
+        'Assembly progressively integrated the main components of the radio telescope structure. Photographs show positioning and crane lifting of these elements before the reflector received its panels.',
+    },
+  },
+  {
+    key: 'paneles',
+    title: 'Montaje de paneles',
+    description:
+      'Con la estructura ya montada, el trabajo continuó sobre el reflector con la instalación de sus paneles. Las fotografías muestran los trabajos realizados directamente sobre la antena, incluyendo el traslado de paneles hasta su posición final.',
+    images: [
+      {
+        src: '/images/ROSAC/construction/Montaje%20Paneles/montaje_1.jpg',
+        alt: 'Persona asegura con cadenas un panel curvo del reflector sobre el pasto, junto a una plataforma elevadora.',
+      },
+      {
+        src: '/images/ROSAC/construction/Montaje%20Paneles/montaje_2.jpg',
+        alt: 'Vista aérea de una persona en una plataforma elevadora izando un panel triangular del reflector con cuerdas.',
+      },
+      {
+        src: '/images/ROSAC/construction/Montaje%20Paneles/montaje_3.jpeg',
+        alt: 'Plataforma elevadora junto a la estructura metálica del reflector.',
+      },
+      {
+        src: '/images/ROSAC/construction/Montaje%20Paneles/montaje_4.jpg',
+        alt: 'Grupo de personas en la base de la antena, bajo la estructura del reflector.',
+      },
+      {
+        src: '/images/ROSAC/construction/Montaje%20Paneles/montaje_5.jpg',
+        alt: 'Personas en una plataforma elevadora junto a la antena, con un panel suspendido.',
+      },
+    ],
+    position: 2,
+    en: {
+      title: 'Panel assembly',
+      description:
+        'With the structure assembled, work continued on the reflector with the installation of its panels. Photographs show work carried out directly on the antenna, including moving panels to their final position.',
+    },
+  },
+  {
+    key: 'fotogrametria',
+    title: 'Fotogrametría y nivelación de paneles',
+    description:
+      'Una vez instalados los paneles del reflector, se realizaron trabajos de observación y levantamiento fotogramétrico para verificar la geometría y nivelación de la superficie resultante. Estas labores permitieron documentar las condiciones de la antena tras el montaje.',
+    images: [
+      {
+        src: '/images/ROSAC/construction/Fotogrametria/Fotogrametria_1.jpg',
+        alt: 'Vista nocturna de dos antenas y una plataforma elevadora junto a una de ellas.',
+      },
+      {
+        src: '/images/ROSAC/construction/Fotogrametria/Fotogrametria_2.jpeg',
+        alt: 'Dos personas trabajan junto a la abertura central del reflector de la antena.',
+      },
+      {
+        src: '/images/ROSAC/construction/Fotogrametria/Fotogrametria_3.jpeg',
+        alt: 'Dos personas sentadas sobre la superficie ya ensamblada del reflector, midiendo con una regla metálica junto a la abertura central.',
+      },
+    ],
+    position: 3,
+    en: {
+      title: 'Photogrammetry and panel leveling',
+      description:
+        'Once reflector panels were installed, observation and photogrammetric surveying were performed to verify the geometry and leveling of the resulting surface. This documented the condition of the antenna following assembly.',
+    },
+  },
+  {
+    key: 'instalacion',
+    title: 'Instalación eléctrica',
+    description:
+      'La adecuación eléctrica comprendió trabajos sobre diferentes puntos de la infraestructura del observatorio. Las fotografías documentan la instalación y conexión de componentes eléctricos, trabajos de cableado y labores realizadas tanto en el entorno de la antena como en sus sistemas asociados.',
+    images: [
+      {
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_1.jpeg',
+        alt: 'Persona junto a los mecanismos y el cableado bajo la estructura de la antena.',
+      },
+      {
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_2.jpg',
+        alt: 'Equipo de trabajo reunido frente a la base de la antena.',
+      },
+      {
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_3.jpeg',
+        alt: 'Personas y cables junto a una edificación cercana a la antena.',
+      },
+      {
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_4.jpeg',
+        alt: 'Persona manipulando cables junto a un tablero eléctrico abierto.',
+      },
+      {
+        src: '/images/ROSAC/construction/Intalacion%20Electrica/elect_5.jpeg',
+        alt: 'Personas trabajando en la plataforma bajo el reflector, junto a cables y la estructura.',
+      },
+    ],
+    position: 4,
+    en: {
+      title: 'Electrical installation',
+      description:
+        'Electrical adaptation covered work across different points of the observatory infrastructure. Photographs document installation and connection of electrical components, cabling, and work in both the antenna area and associated systems.',
+    },
+  },
+]
+
+if ((await prisma.rosacStage.count()) === 0) {
+  for (const { en, ...stage } of defaultStages) {
+    const created = await prisma.rosacStage.create({
+      data: stage,
+    })
+    await prisma.rosacStageTranslation.create({
+      data: {
+        stageId: created.id,
+        locale: 'en',
+        title: en.title,
+        description: en.description,
+      },
+    })
+  }
+}
+
+const defaultInstruments = [
+  {
+    name: 'ROSAC-SABER',
+    imageSrc: '/images/ROSAC/construction/Fotogrametria/Fotogrametria_1.jpg',
+    imageAlt:
+      'Imagen ilustrativa de la galería ROSAC: dos antenas de noche y una plataforma elevadora.',
+    consultationHref: '/datos?source=ROSAC&instrument=ROSAC-I1#scientific-query-title',
+    consultationLabel: 'Consultar simulación del ROSAC-SABER',
+    consultationNotice:
+      'Serie temporal de prueba. Los resultados son simulados; no corresponden a observaciones del instrumento.',
+    position: 0,
+    en: {
+      name: 'ROSAC-SABER',
+      consultationLabel: 'View ROSAC-SABER simulation',
+      consultationNotice:
+        'Test time series. Results are simulated; they do not correspond to instrument observations.',
+      imageAlt:
+        'Illustrative image from the ROSAC gallery: two antennas at night and an aerial lift.',
+    },
+  },
+  {
+    name: 'ROSAC-MIRA 9GHz',
+    imageSrc: '/images/ROSAC/construction/Montaje/montaje_4.jpg',
+    imageAlt:
+      'Imagen ilustrativa de la galería ROSAC: trabajos en el mecanismo de rotación de la antena.',
+    consultationHref: '/datos?source=ROSAC&instrument=ROSAC-I2#scientific-query-title',
+    consultationLabel: 'Consultar simulación del ROSAC-MIRA 9GHz',
+    consultationNotice:
+      'Espectro dinámico de prueba. Los resultados son simulados; no corresponden a observaciones del instrumento.',
+    position: 1,
+    en: {
+      name: 'ROSAC-MIRA 9GHz',
+      consultationLabel: 'View ROSAC-MIRA 9GHz simulation',
+      consultationNotice:
+        'Test dynamic spectrum. Results are simulated; they do not correspond to instrument observations.',
+      imageAlt:
+        'Illustrative image from the ROSAC gallery: work on the antenna rotation mechanism.',
+    },
+  },
+  {
+    name: 'ROSAC-HIROS',
+    pendingMessage: 'Información pendiente de confirmación e integración en la sección de datos.',
+    imageSrc: '/images/ROSAC/construction/Montaje/montaje_3.jpg',
+    imageAlt:
+      'Imagen ilustrativa de la galería ROSAC: montaje de la estructura radial de la antena.',
+    consultationHref: null,
+    consultationLabel: 'Consultar simulación del ROSAC-HIROS',
+    position: 2,
+    en: {
+      name: 'ROSAC-HIROS',
+      pendingMessage: 'Information pending confirmation and integration into the data section.',
+      consultationLabel: 'View ROSAC-HIROS simulation',
+      imageAlt:
+        'Illustrative image from the ROSAC gallery: assembly of the antenna radial structure.',
+    },
+  },
+]
+
+if ((await prisma.rosacInstrument.count()) === 0) {
+  for (const { en, ...inst } of defaultInstruments) {
+    const created = await prisma.rosacInstrument.create({ data: inst })
+    await prisma.rosacInstrumentTranslation.create({
+      data: {
+        instrumentId: created.id,
+        locale: 'en',
+        name: en.name,
+        pendingMessage: en.pendingMessage,
+        consultationLabel: en.consultationLabel,
+        consultationNotice: en.consultationNotice,
+        imageAlt: en.imageAlt,
+      },
+    })
+  }
+}
+
+const defaultAcknowledgments = [
+  {
+    name: 'Vicerrectoría de Investigación, UCR',
+    href: 'https://vinv.ucr.ac.cr',
+    logoSrc: '/images/ROSAC/acknowledgments/vicerrectoria-investigacion.webp',
+    logoAlt: 'Logo de la Vicerrectoría de Investigación de la Universidad de Costa Rica',
+    position: 0,
+  },
+  {
+    name: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+    href: 'https://cinespa.ucr.ac.cr',
+    logoSrc: '/images/ROSAC/acknowledgments/cinespa.webp',
+    logoAlt: 'Logo del Centro de Investigaciones Espaciales (CINESPA)',
+    position: 1,
+  },
+  {
+    name: 'Escuela de Física, UCR',
+    href: 'https://fisica.ucr.ac.cr',
+    logoSrc: '/images/ROSAC/acknowledgments/efis.webp',
+    logoAlt: 'Logo de la Escuela de Física, UCR',
+    position: 2,
+  },
+  {
+    name: 'Escuela de Ingeniería Mecánica, UCR',
+    href: 'https://www.ucr.ac.cr/directorio/escuela-de-ingenieria-mecanica.html',
+    logoSrc: '/images/ROSAC/acknowledgments/eim.webp',
+    logoAlt: 'Logo de la Escuela de Ingeniería Mecánica, UCR',
+    position: 3,
+  },
+  {
+    name: 'Escuela de Ingeniería Topográfica, UCR',
+    href: 'https://eit.ucr.ac.cr/',
+    logoSrc: '/images/ROSAC/acknowledgments/eit.webp',
+    logoAlt: 'Logo de la Escuela de Ingeniería Topográfica, UCR',
+    position: 4,
+  },
+  {
+    name: 'Escuela de Ingeniería Eléctrica, UCR',
+    href: 'https://eie.ucr.ac.cr',
+    logoSrc: '/images/ROSAC/acknowledgments/eie.webp',
+    logoAlt: 'Logo de la Escuela de Ingeniería Eléctrica, UCR',
+    position: 5,
+  },
+  {
+    name: 'Recinto de Santa Cruz',
+    href: 'https://www.ucr.ac.cr/directorio/recinto-universitario-de-santa-cruz/',
+    logoSrc: '/images/ROSAC/acknowledgments/recinto-santa-cruz.webp',
+    logoAlt: 'Logo del Recinto de Santa Cruz, Universidad de Costa Rica',
+    position: 6,
+  },
+  {
+    name: 'Oficina de Servicios Generales (OSG), UCR',
+    href: 'https://osg.ucr.ac.cr',
+    logoSrc: '/images/ROSAC/acknowledgments/osg.webp',
+    logoAlt: 'Logo de la Oficina de Servicios Generales (OSG), UCR',
+    position: 7,
+  },
+  {
+    name: 'Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR), UCR',
+    href: 'https://www.lanamme.ucr.ac.cr/',
+    logoSrc: '/images/ROSAC/acknowledgments/lanamme.webp',
+    logoAlt: 'Logo del Laboratorio Nacional de Materiales y Modelos Estructurales (LanammeUCR)',
+    position: 8,
+  },
+  {
+    name: 'Radiográfica Costarricense S.A. (RACSA)',
+    href: 'https://www.racsa.go.cr/',
+    logoSrc: '/images/ROSAC/acknowledgments/racsa.webp',
+    logoAlt: 'Logo de Radiográfica Costarricense S.A. (RACSA)',
+    position: 9,
+  },
+  {
+    name: 'Bomberos de Costa Rica',
+    href: 'https://www.bomberos.go.cr',
+    logoSrc: '/images/ROSAC/acknowledgments/bomberos-costa-rica.webp',
+    logoAlt: 'Logo de Bomberos de Costa Rica',
+    position: 10,
+  },
+  {
+    name: 'Instituto Geográfico Nacional',
+    href: 'https://www.snitcr.go.cr/ign_ign',
+    logoSrc: '/images/ROSAC/acknowledgments/instituto-geografico-nacional.webp',
+    logoAlt: 'Logo del Instituto Geográfico Nacional, Registro Nacional de Costa Rica',
+    position: 11,
+  },
+  {
+    name: 'INDI CR',
+    href: 'https://www.indicr.com/',
+    logoSrc: '/images/ROSAC/acknowledgments/indi.webp',
+    logoAlt: 'Logo de INDI, Ingeniería y Diseño',
+    position: 12,
+  },
+  {
+    name: 'Prysmian Group',
+    href: null,
+    logoSrc: '/images/ROSAC/acknowledgments/prysmian-group.webp',
+    logoAlt: 'Logo de Prysmian Group',
+    position: 13,
+  },
+  {
+    name: 'EATON Costa Rica',
+    href: 'https://www.eaton.com/cr/es-mx/company.html',
+    logoSrc: '/images/ROSAC/acknowledgments/eaton.webp',
+    logoAlt: 'Logo de EATON Costa Rica',
+    position: 14,
+  },
+  {
+    name: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), México',
+    href: 'https://www.inaoep.mx',
+    logoSrc: '/images/ROSAC/acknowledgments/inaoe.webp',
+    logoAlt: 'Logo del Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE)',
+    position: 15,
+  },
+  {
+    name: 'Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    href: 'https://www.gob.mx/amexcid',
+    logoSrc: '/images/ROSAC/acknowledgments/amexcid.webp',
+    logoAlt:
+      'Logo de la Agencia Mexicana de Cooperación Internacional para el Desarrollo (AMEXCID)',
+    position: 16,
+  },
+]
+
+if ((await prisma.rosacAcknowledgment.count()) === 0) {
+  for (const ack of defaultAcknowledgments) {
+    await prisma.rosacAcknowledgment.create({ data: ack })
+  }
+}
+
 await prisma.$disconnect()
