@@ -357,15 +357,35 @@ describe('GalleryGroupSection', () => {
 
     const track = screen.getByRole('list', { name: withSubAlbums.album.title })
     expect(track).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('button', { name: 'Imágenes anteriores' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Imágenes siguientes' })).toBeDisabled()
 
     const scrollBy = vi.fn()
     Object.defineProperty(track, 'scrollBy', { value: scrollBy, writable: true })
     Object.defineProperty(track, 'clientWidth', { configurable: true, value: 600 })
+    Object.defineProperty(track, 'scrollWidth', { configurable: true, value: 1800 })
+    Object.defineProperty(track, 'scrollLeft', { configurable: true, writable: true, value: 600 })
+    fireEvent.scroll(track)
 
-    await user.click(screen.getByRole('button', { name: 'Imágenes siguientes' }))
+    const previous = screen.getByRole('button', { name: 'Imágenes anteriores' })
+    const next = screen.getByRole('button', { name: 'Imágenes siguientes' })
+    expect(previous).toBeEnabled()
+    expect(next).toBeEnabled()
+
+    await user.click(next)
     expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: 120 })
 
-    await user.click(screen.getByRole('button', { name: 'Imágenes anteriores' }))
+    track.scrollLeft = 0
+    fireEvent.scroll(track)
+    expect(previous).toBeDisabled()
+    expect(next).toBeEnabled()
+    await user.click(next)
+
+    track.scrollLeft = 1200
+    fireEvent.scroll(track)
+    expect(previous).toBeEnabled()
+    expect(next).toBeDisabled()
+    await user.click(previous)
     expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: -120 })
   })
 

@@ -85,6 +85,8 @@ export function GalleryGroupSection({
   const trackRef = useRef<HTMLUListElement>(null)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
   const [openIndex, setOpenIndex] = useState(closed)
+  const [canScrollPrevious, setCanScrollPrevious] = useState(false)
+  const [canScrollNext, setCanScrollNext] = useState(false)
   const featuredMedia = [
     ...album.media
       .filter((media) => !media.isVideo && media.src)
@@ -114,6 +116,31 @@ export function GalleryGroupSection({
 
     return () => cancelAnimationFrame(frame)
   }, [])
+
+  useLayoutEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+
+    const updateScrollControls = (): void => {
+      setCanScrollPrevious(track.scrollLeft > 0)
+      setCanScrollNext(track.scrollLeft + track.clientWidth < track.scrollWidth - 1)
+    }
+
+    track.addEventListener('scroll', updateScrollControls, { passive: true })
+    window.addEventListener('resize', updateScrollControls)
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateScrollControls)
+    observer?.observe(track)
+    updateScrollControls()
+    const frame = requestAnimationFrame(updateScrollControls)
+
+    return () => {
+      track.removeEventListener('scroll', updateScrollControls)
+      window.removeEventListener('resize', updateScrollControls)
+      observer?.disconnect()
+      cancelAnimationFrame(frame)
+    }
+  }, [featuredMedia.length, showAddCard])
 
   function scrollByCards(direction: 1 | -1): void {
     const track = trackRef.current
@@ -320,6 +347,7 @@ export function GalleryGroupSection({
             <button
               aria-label={tActions('carouselPrevious')}
               className="team-gallery-control"
+              disabled={!canScrollPrevious}
               onClick={() => scrollByCards(-1)}
               type="button"
             >
@@ -328,6 +356,7 @@ export function GalleryGroupSection({
             <button
               aria-label={tActions('carouselNext')}
               className="team-gallery-control"
+              disabled={!canScrollNext}
               onClick={() => scrollByCards(1)}
               type="button"
             >

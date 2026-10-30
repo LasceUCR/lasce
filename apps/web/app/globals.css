@@ -5313,10 +5313,15 @@ a.gallery-tile:focus-visible {
   cursor: pointer;
 }
 
-.team-gallery-control:hover,
+.team-gallery-control:not(:disabled):hover,
 .team-gallery-control:focus-visible {
   border-color: var(--action);
   background: color-mix(in srgb, var(--action) 7%, var(--white));
+}
+
+.team-gallery-control:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 @media (max-width: 760px) {
