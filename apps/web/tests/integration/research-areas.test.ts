@@ -90,10 +90,14 @@ describe('research areas against PostgreSQL', () => {
     const areas = await getResearchAreas('en')
     const mine = areas.filter((area) => area.id === bilingual.id || area.id === legacy.id)
 
-    expect(mine.map((area) => [area.title, area.contentLocale])).toEqual([
-      [`Area ${RUN}`, 'en'],
-      [`Legacy ${RUN}`, null],
-    ])
+    // This test checks language resolution; pagination tests assert the deterministic order.
+    expect(mine).toHaveLength(2)
+    expect(mine.map((area) => [area.title, area.contentLocale])).toEqual(
+      expect.arrayContaining([
+        [`Area ${RUN}`, 'en'],
+        [`Legacy ${RUN}`, null],
+      ]),
+    )
   })
 
   test('refuses a second translation for the same language', async () => {
