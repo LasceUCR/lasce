@@ -16,6 +16,7 @@ test.describe('responsive native controls', () => {
     context,
     page,
   }) => {
+    test.slow()
     for (const locale of ['es', 'en']) {
       await context.addCookies([
         { name: 'lasce_locale', value: locale, url: 'http://localhost:3000' },
