@@ -168,6 +168,7 @@
       "readLess": "Read less"
     },
     "loading": "Loading…",
+    "loadingMap": "Loading the map…",
     "pagination": {
       "label": "Pagination",
       "previous": "Previous",
@@ -207,6 +208,7 @@
       "lead": "Official channels of the Laboratorio de Astrofísica Solar y Clima Espacial."
     },
     "channelsTitle": "Contact information",
+    "loading": "Loading contact…",
     "cards": {
       "add": "Add contact channel",
       "editTitle": "Edit contact channel",
@@ -591,11 +593,18 @@
       "countLabel": "Number of publications",
       "countTotal": "{count, plural, one {publication in total} other {publications in total}}",
       "countInGroup": "{count, plural, one {publication} other {publications}} ({group})",
+      "results": "{count, plural, one {# publication found.} other {# publications found.}}",
+      "range": "Showing {from}–{to} of {total}.",
+      "rangeOne": "Showing publication {position} of {total}.",
+      "paginationLabel": "Publication pages",
       "recent": "Recent publications",
       "emptyGroupAndQuery": "No {group} publications were found for “{query}”.",
       "emptyGroup": "There are no {group} publications.",
       "emptyQuery": "No publications were found for “{query}”.",
-      "empty": "There are no publications available."
+      "empty": "There are no publications available.",
+      "loading": "Loading publications…",
+      "loadError": "The publications could not be loaded. Try again.",
+      "retry": "Try again"
     },
     "card": {
       "externalLink": "DOI / External link",
@@ -1116,7 +1125,65 @@
       "intro": "The people developing the Santa Cruz Radio Observatory (ROSAC), a project bringing together astrophysics, physics, topographic, electrical, and mechanical engineering, electronics, and computing, with national and international collaboration.",
       "hint": "Click on a card to see more information.",
       "emptyMessage": "No researcher information available at this time.",
-      "institutionLabel": "Institution"
+      "institutionLabel": "Institution",
+      "people": {
+        "carolinaSalas": {
+          "role": "Principal Investigator",
+          "description": "Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument."
+        },
+        "miguelVelazquez": {
+          "role": "Researcher",
+          "description": "In charge of instrumentation development at ROSAC."
+        },
+        "davidGale": {
+          "role": "Researcher",
+          "description": "Installation and alignment of telescope reflectors. Mechanical systems, motion testing, lightning protection. General support."
+        },
+        "oscarNunez": {
+          "role": "Researcher",
+          "description": "In charge of the electrical system and technical support for gear motors."
+        },
+        "federicoRuiz": {
+          "role": "Researcher",
+          "description": "In charge of the implementation and commissioning of sensors and actuators, as well as the development of the controller and software systems associated with the ROSAC radio telescope."
+        },
+        "gustavoLara": {
+          "role": "Researcher",
+          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
+        },
+        "andresFallas": {
+          "role": "Researcher",
+          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
+        },
+        "wagnerMejias": {
+          "role": "Researcher",
+          "description": "Mechanical installation of the structure, preventive and corrective maintenance, adaptations and improvements to the general structure."
+        },
+        "eduardoIbarra": {
+          "role": "External collaborator",
+          "description": "Collaborator in the development and testing of the reception stage in the 100 MHz to 1.1 GHz range, receiver sensitivity analysis, radio telescope design, and electrical installation and antenna guidance system control tasks."
+        },
+        "andresCorrales": {
+          "role": "External collaborator",
+          "description": "Designer, developer, and maintainer of the radio telescope control software and end-user software."
+        },
+        "andresGamboa": {
+          "role": "External collaborator",
+          "description": "Support in radio telescope maintenance tasks, as well as electromechanical work related to instrument assembly."
+        },
+        "jelmuthRojas": {
+          "role": "External collaborator",
+          "description": "Support in structure leveling tasks."
+        },
+        "barnaldBocker": {
+          "role": "Assistant",
+          "description": "Support in the development and maintenance of ROSAC control software and communication protocols."
+        },
+        "fabianChaverri": {
+          "role": "Prospective doctoral student",
+          "description": "Prospective doctoral student with a thesis in astronomical instrumentation linked to the project."
+        }
+      }
     },
     "donations": {
       "title": "ROSAC donations",

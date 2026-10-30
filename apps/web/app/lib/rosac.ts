@@ -58,6 +58,12 @@ export interface TeamMember {
   /** Provisional institution shown as `Institución: {institution}`. */
   institution: string
   description?: string
+  /** The lang of role and description, e.g. 'es' or 'en'. */
+  contentLang?: string
+  /** The stored base role before UI localization, used to initialize single-language edit forms. */
+  storedRole?: string
+  /** The stored base description before UI localization, used to initialize single-language edit forms. */
+  storedDescription?: string | null
 }
 
 interface RosacTextSection {
@@ -442,6 +448,81 @@ export const rosacInstitutions: readonly RosacAcknowledgment[] = [
 
 export type RosacMessages = Pick<typeof es, 'rosac'>
 
+const personKeyBySlugOrName: Record<string, keyof typeof es.rosac.team.people> = {
+  'carolina-salas': 'carolinaSalas',
+  'miguel-velazquez': 'miguelVelazquez',
+  'david-gale': 'davidGale',
+  'oscar-nunez': 'oscarNunez',
+  'federico-ruiz': 'federicoRuiz',
+  'gustavo-lara': 'gustavoLara',
+  'andres-fallas': 'andresFallas',
+  'wagner-mejias': 'wagnerMejias',
+  'eduardo-ibarra': 'eduardoIbarra',
+  'andres-corrales': 'andresCorrales',
+  'andres-gamboa': 'andresGamboa',
+  'jelmuth-rojas': 'jelmuthRojas',
+  'barnald-bocker': 'barnaldBocker',
+  'fabian-chaverri': 'fabianChaverri',
+  'dra. carolina salas matamoros': 'carolinaSalas',
+  'dr. miguel velázquez': 'miguelVelazquez',
+  'dr. david gale': 'davidGale',
+  'dr. óscar núñez': 'oscarNunez',
+  'dr. oscar nunez': 'oscarNunez',
+  'dr. federico ruiz': 'federicoRuiz',
+  'msc. gustavo lara': 'gustavoLara',
+  'ing. andrés fallas': 'andresFallas',
+  'ing. andres fallas': 'andresFallas',
+  'msc. wagner mejías': 'wagnerMejias',
+  'msc. wagner mejias': 'wagnerMejias',
+  'dr. eduardo ibarra': 'eduardoIbarra',
+  'ing. andrés corrales': 'andresCorrales',
+  'ing. andres corrales': 'andresCorrales',
+  'ing. andrés gamboa': 'andresGamboa',
+  'ing. andres gamboa': 'andresGamboa',
+  'jelmuth rojas': 'jelmuthRojas',
+  'barnald bocker': 'barnaldBocker',
+  'msc. fabián chaverri': 'fabianChaverri',
+  'msc. fabian chaverri': 'fabianChaverri',
+}
+
+export function localizeResearchers(
+  people: readonly TeamMember[],
+  locale: string = 'es',
+  messages?: RosacMessages,
+): TeamMember[] {
+  if (locale === 'es') {
+    return [...people]
+  }
+
+  const peopleMessages = messages?.rosac?.team?.people ?? es.rosac.team.people
+  if (!peopleMessages) return [...people]
+
+  return people.map((person) => {
+    const key =
+      personKeyBySlugOrName[person.id] ?? personKeyBySlugOrName[person.name.toLowerCase().trim()]
+
+    if (!key) return { ...person, contentLang: 'es' }
+
+    const translation = peopleMessages[key]
+    if (!translation) return { ...person, contentLang: 'es' }
+
+    const storedRole = person.storedRole ?? person.role
+    const storedDescription =
+      person.storedDescription !== undefined
+        ? person.storedDescription
+        : (person.description ?? null)
+
+    return {
+      ...person,
+      storedRole,
+      storedDescription,
+      role: translation.role ?? person.role,
+      description: translation.description ?? person.description,
+      contentLang: 'en',
+    }
+  })
+}
+
 export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
   const rosac = messages?.rosac ?? es.rosac
   const hero = rosac.hero ?? es.rosac.hero
@@ -455,6 +536,9 @@ export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
   const donations = rosac.donations ?? es.rosac.donations
   const acknowledgments = rosac.acknowledgments ?? es.rosac.acknowledgments
   const backLink = rosac.backLink ?? es.rosac.backLink
+
+  const isEnglish = (team.title ?? es.rosac.team.title) === 'Researchers'
+  const teamLocale = isEnglish ? 'en' : 'es'
 
   return {
     construction: getRosacConstructionContent(messages),
@@ -585,7 +669,7 @@ export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
       hint: team.hint,
       emptyMessage: team.emptyMessage,
       institutionLabel: (team as { institutionLabel?: string }).institutionLabel ?? 'Institución',
-      people: defaultTeamPeople,
+      people: localizeResearchers(defaultTeamPeople, teamLocale, messages),
     },
     acknowledgments: {
       title: acknowledgments.title,
