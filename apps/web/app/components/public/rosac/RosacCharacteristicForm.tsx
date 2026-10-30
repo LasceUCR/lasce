@@ -33,11 +33,10 @@ import {
   rosacCharacteristicContent,
   type RosacCardIcon,
   type RosacCharacteristicField,
-  type RosacCharacteristicItem,
-  type RosacCharacteristicUpdateInput,
-} from '@/app/lib/rosac-schema'
+} from '@/app/lib/rosac-editor-content'
+import type { RosacCharacteristicInput, RosacCharacteristicItem } from '@/app/lib/rosac'
 
-export type RosacCharacteristicFormBody = RosacCharacteristicUpdateInput
+export type RosacCharacteristicFormBody = RosacCharacteristicInput
 
 export interface RosacCharacteristicFormProps {
   characteristic: RosacCharacteristicItem
@@ -113,9 +112,8 @@ export function RosacCharacteristicForm({
     return {
       version,
       ...(iconChanged ? { icon } : {}),
-      ...(contentChanged
-        ? { content, confirmedUnchanged: confirmationsStillNeeded(confirmed, needed) }
-        : {}),
+      content,
+      confirmedUnchanged: confirmationsStillNeeded(confirmed, needed),
     }
   }
 
@@ -127,11 +125,6 @@ export function RosacCharacteristicForm({
       const target = tabWithErrors(found, tab)
       if (target) setTab(target)
       setFocusRequest((current) => current + 1)
-      return
-    }
-
-    if (!iconChanged && !contentChanged) {
-      onCancel()
       return
     }
 
@@ -174,7 +167,7 @@ export function RosacCharacteristicForm({
             ) : null}
 
             <FormField
-              error={errors[contentPath(locale, 'title')]}
+              errorMessage={errors[contentPath(locale, 'title')]}
               id={`${formId}-${locale}-title`}
               label={t('titleIn', { language: localeLabels[locale] })}
               lang={contentFieldLang(stored, locale)}
@@ -185,7 +178,7 @@ export function RosacCharacteristicForm({
             {reviewControl(locale, 'title')}
 
             <FormField
-              error={errors[contentPath(locale, 'description')]}
+              errorMessage={errors[contentPath(locale, 'description')]}
               id={`${formId}-${locale}-description`}
               label={t('descriptionIn', { language: localeLabels[locale] })}
               lang={contentFieldLang(stored, locale)}

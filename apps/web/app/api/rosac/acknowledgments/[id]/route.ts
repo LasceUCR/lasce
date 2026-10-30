@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
 import {
   deleteRosacAcknowledgment,
-  rosacAcknowledgmentUpdateSchema,
+  rosacAcknowledgmentInputSchema,
   updateRosacAcknowledgment,
 } from '@/app/lib/rosac'
-
-import { notFound, writeFailure } from '../../http'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,22 +16,37 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  const { id } = await params
-
-  const json = await readJson(request)
-  if (!json.ok) return json.response
-
-  const parsed = rosacAcknowledgmentUpdateSchema.safeParse(json.body)
-  if (!parsed.success) return invalidBody(parsed.error)
-
+  let body: unknown
   try {
-    const result = await updateRosacAcknowledgment(id, parsed.data)
-    if (!result.ok) return writeFailure('la institución', id, result)
-
-    return ok({ acknowledgment: result.acknowledgment })
-  } catch (error) {
-    return internalError('No se pudo guardar la institución.', error)
+    body = await request.json()
+  } catch {
+    return NextResponse.json(
+      { error: 'El cuerpo de la solicitud no es JSON válido.' },
+      { status: 400 },
+    )
   }
+
+  const parsed = rosacAcknowledgmentInputSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error: 'Faltan campos obligatorios o no son válidos.',
+        issues: parsed.error.flatten().fieldErrors,
+      },
+      { status: 400 },
+    )
+  }
+
+  const { id } = await params
+  const acknowledgment = await updateRosacAcknowledgment(id, parsed.data)
+  if (!acknowledgment) {
+    return NextResponse.json(
+      { error: `No existe una institución con id "${id}".` },
+      { status: 404 },
+    )
+  }
+
+  return NextResponse.json({ acknowledgment }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
 export async function DELETE(
@@ -45,12 +57,12 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-
-  try {
-    const deleted = await deleteRosacAcknowledgment(id)
-    if (!deleted) return notFound('la institución', id)
-  } catch (error) {
-    return internalError('No se pudo eliminar la institución.', error)
+  const deleted = await deleteRosacAcknowledgment(id)
+  if (!deleted) {
+    return NextResponse.json(
+      { error: `No existe una institución con id "${id}".` },
+      { status: 404 },
+    )
   }
 
   return new NextResponse(null, { status: 204 })

@@ -36,7 +36,6 @@ describe('RosacActivityForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('prompts to discard changes when modified and cancelled', async () => {

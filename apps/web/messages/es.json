@@ -1239,9 +1239,9 @@
       "save": "Confirmar",
       "saving": "Guardando...",
       "discardTitle": "¿Descartar cambios?",
-      "discardMessage": "Hay cambios sin guardar. Si cierra el formulario, se perderán.",
+      "discardMessage": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "discardCancel": "Seguir editando",
       "discardConfirm": "Descartar",
-      "discardCancel": "Continuar editando",
       "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo.",
       "discardDialog": {
         "title": "Descartar cambios no guardados",
@@ -1249,38 +1249,11 @@
         "keepEditing": "Seguir editando",
         "discard": "Descartar"
       },
-      "acknowledgments": {
-        "addCard": "Añadir institución",
-        "editLabel": "Editar {name}",
-        "deleteLabel": "Eliminar {name}",
-        "deleteConfirmTitle": "Eliminar institución",
-        "deleteConfirmMessage": "¿Desea eliminar la institución \"{name}\" de los agradecimientos? Esta acción no se puede deshacer.",
-        "editModalTitle": "Editar institución",
-        "nameLabel": "Nombre de la institución",
-        "namePlaceholder": "Ej. Centro de Investigaciones Espaciales (CINESPA), UCR",
-        "nameRequired": "El nombre de la institución es obligatorio.",
-        "logoSourceLabel": "Escoger un logo personalizado o seleccionar uno de la lista",
-        "logoSourceCustom": "Subir logo personalizado",
-        "logoSourcePreset": "Seleccionar de la lista: {label}",
-        "logoFileLabel": "Archivo del logo",
-        "logoFileHelp": "Formatos WebP, PNG, SVG o JPG (máx. 10 MB).",
-        "logoRequired": "Debe seleccionar o subir un logo para la institución.",
-        "logoAltLabel": "Texto alternativo del logo (Accesibilidad)",
-        "logoAltPlaceholder": "Descripción accesible del logo institucional",
-        "logoAltDefault": "Logo de {name}",
-        "selectedLogo": "Logo seleccionado:",
-        "institutional": "Institucional",
-        "institutionUrlLabel": "Sitio web de la institución (opcional)",
-        "institutionUrlPlaceholder": "https://ejemplo.ucr.ac.cr",
-        "institutionUrlInvalid": "El enlace debe ser una URL válida que empiece con http:// o https://.",
-        "logoUnavailable": "Logo no disponible",
-        "cancel": "Cancelar",
-        "save": "Guardar cambios",
-        "add": "Agregar institución",
-        "saving": "Guardando...",
-        "uploadError": "No se pudo subir el logo. Inténtelo de nuevo."
-      },
       "characteristics": {
+        "updated": "Característica actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la característica. Inténtelo de nuevo."
+        },
         "editLabel": "Editar {title}",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar característica",
@@ -1304,6 +1277,10 @@
         }
       },
       "activities": {
+        "updated": "Actividad actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la actividad. Inténtelo de nuevo."
+        },
         "editLabel": "Editar {title}",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar actividad",
@@ -1316,6 +1293,10 @@
         "save": "Confirmar"
       },
       "stages": {
+        "updated": "Etapa actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la etapa. Inténtelo de nuevo."
+        },
         "editStage": "Editar etapa",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar etapa",
@@ -1333,14 +1314,14 @@
         "imagesRequired": "La etapa debe contener al menos una fotografía.",
         "uploadError": "Error al subir las fotografías. Inténtelo de nuevo.",
         "editModal": {
-          "title": "Editar fotografías de la etapa",
+          "title": "Editar fotografías",
           "help": "Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no correspondan a esta etapa.",
-          "altLabel": "Texto alternativo accesible (alt)",
+          "noPhotos": "No hay fotografías registradas en esta etapa.",
+          "altLabel": "Texto alternativo de la fotografía {index}",
           "altPlaceholder": "Texto alternativo accesible de la fotografía",
-          "deleteLabel": "Eliminar fotografía",
+          "deleteLabel": "Eliminar fotografía {index}",
           "deleteMinTitle": "Debe haber al menos una foto en la etapa",
           "deleteTooltip": "Eliminar esta fotografía",
-          "noPhotos": "No hay fotografías registradas en esta etapa.",
           "savePhotos": "Guardar fotografías",
           "cancel": "Cancelar",
           "deleteDialog": {
@@ -1371,6 +1352,13 @@
         }
       },
       "instruments": {
+        "created": "Instrumento agregado correctamente.",
+        "updated": "Instrumento actualizado correctamente.",
+        "deleted": "Instrumento eliminado correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar el instrumento. Inténtelo de nuevo.",
+          "deleteUnknown": "No se pudo eliminar el instrumento. Inténtelo de nuevo."
+        },
         "addCard": "Añadir instrumento",
         "editLabel": "Editar {name}",
         "deleteLabel": "Eliminar {name}",
@@ -1409,6 +1397,44 @@
         "save": "Confirmar",
         "saving": "Guardando...",
         "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo."
+      },
+      "acknowledgments": {
+        "created": "Institución agregada correctamente.",
+        "updated": "Institución actualizada correctamente.",
+        "deleted": "Institución eliminada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la institución. Inténtelo de nuevo.",
+          "deleteUnknown": "No se pudo eliminar la institución. Inténtelo de nuevo."
+        },
+        "addCard": "Añadir institución",
+        "editLabel": "Editar {name}",
+        "deleteLabel": "Eliminar {name}",
+        "deleteConfirmTitle": "Eliminar institución",
+        "deleteConfirmMessage": "¿Desea eliminar la institución \"{name}\" de los agradecimientos? Esta acción no se puede deshacer.",
+        "editModalTitle": "Editar institución",
+        "nameLabel": "Nombre de la institución",
+        "namePlaceholder": "Ej. Centro de Investigaciones Espaciales (CINESPA), UCR",
+        "nameRequired": "El nombre de la institución es obligatorio.",
+        "logoSourceLabel": "Escoger un logo personalizado o seleccionar uno de la lista",
+        "logoSourceCustom": "Subir logo personalizado",
+        "logoSourcePreset": "Seleccionar de la lista: {label}",
+        "logoFileLabel": "Archivo del logo",
+        "logoFileHelp": "Formatos WebP, PNG, SVG o JPG (máx. 10 MB).",
+        "logoRequired": "Debe seleccionar o subir un logo para la institución.",
+        "logoAltLabel": "Texto alternativo del logo (Accesibilidad)",
+        "logoAltPlaceholder": "Descripción accesible del logo institucional",
+        "logoAltDefault": "Logo de {name}",
+        "selectedLogo": "Logo seleccionado:",
+        "institutional": "Institucional",
+        "institutionUrlLabel": "Sitio web de la institución (opcional)",
+        "institutionUrlPlaceholder": "https://ejemplo.ucr.ac.cr",
+        "institutionUrlInvalid": "El enlace debe ser una URL válida que empiece con http:// o https://.",
+        "logoUnavailable": "Logo no disponible",
+        "cancel": "Cancelar",
+        "save": "Guardar cambios",
+        "add": "Agregar institución",
+        "saving": "Guardando...",
+        "uploadError": "No se pudo subir el logo. Inténtelo de nuevo."
       }
     }
   },

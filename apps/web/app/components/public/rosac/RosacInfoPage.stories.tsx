@@ -1,9 +1,96 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
-import { rosacInfoContent } from '@/app/lib/rosac'
+import type { ConstructionStage } from '@/app/lib/rosac-construction'
+import { rosacInfoContent, type RosacInfoContent } from '@/app/lib/rosac'
+import en from '@/messages/en.json'
 
 import { RosacInfoPage } from './RosacInfoPage'
+
+const editModeRosacContent: RosacInfoContent = {
+  ...rosacInfoContent,
+  characteristics: {
+    ...rosacInfoContent.characteristics,
+    items: rosacInfoContent.characteristics.items.map((item) => {
+      const enItem =
+        en.rosac.characteristics.items[item.id as keyof typeof en.rosac.characteristics.items]
+      return {
+        ...item,
+        editing: {
+          content: {
+            es: { title: item.title, description: item.description },
+            en: enItem ? { title: enItem.title, description: enItem.description } : null,
+          },
+          isLegacy: false,
+          version: '1',
+        },
+      }
+    }),
+  },
+  activities: {
+    ...rosacInfoContent.activities,
+    items: rosacInfoContent.activities.items.map((item) => {
+      const enItem = en.rosac.activities.items[item.id as keyof typeof en.rosac.activities.items]
+      return {
+        ...item,
+        editing: {
+          content: {
+            es: { title: item.title, description: item.description },
+            en: enItem ? { title: enItem.title, description: enItem.description } : null,
+          },
+          isLegacy: false,
+          version: '1',
+        },
+      }
+    }),
+  },
+  construction: {
+    ...rosacInfoContent.construction,
+    stages: rosacInfoContent.construction.stages.map((stage) => {
+      const enStage =
+        en.rosac.construction.stages[stage.id as keyof typeof en.rosac.construction.stages]
+      return {
+        ...stage,
+        editing: {
+          content: {
+            es: { title: stage.title, description: stage.description },
+            en: enStage ? { title: enStage.title, description: enStage.description } : null,
+          },
+          isLegacy: false,
+          version: '1',
+        },
+      }
+    }) as unknown as readonly [ConstructionStage, ...ConstructionStage[]],
+  },
+  instruments: {
+    ...rosacInfoContent.instruments,
+    items: rosacInfoContent.instruments.items.map((item, index) => {
+      const enNames = ['ROSAC-SABER', 'ROSAC-MIRA 9GHz', 'ROSAC-HIROS']
+      const enDescs = [
+        'Band between 100 and 1000 MHz',
+        '9 GHz band',
+        'Neutral hydrogen observation at 1.4 GHz',
+      ]
+      return {
+        ...item,
+        editing: {
+          content: {
+            es: {
+              name: item.name,
+              description: item.characteristics?.[0] ?? '',
+            },
+            en: {
+              name: enNames[index] ?? item.name,
+              description: enDescs[index] ?? item.characteristics?.[0] ?? '',
+            },
+          },
+          isLegacy: false,
+          version: '1',
+        },
+      }
+    }),
+  },
+}
 
 const meta: Meta<typeof RosacInfoPage> = {
   component: RosacInfoPage,
@@ -34,103 +121,9 @@ export const EmptyResearchers: Story = {
   },
 }
 
-const editModeContent = {
-  ...rosacInfoContent,
-  characteristics: {
-    ...rosacInfoContent.characteristics,
-    items: rosacInfoContent.characteristics.items.map((item) => ({
-      ...item,
-      editing: {
-        content: {
-          es: { title: item.title, description: item.description },
-          en: { title: item.title, description: item.description },
-        },
-        isLegacy: false,
-        version: '1',
-      },
-    })),
-  },
-  activities: {
-    ...rosacInfoContent.activities,
-    items: rosacInfoContent.activities.items.map((item) => ({
-      ...item,
-      editing: {
-        content: {
-          es: { title: item.title, description: item.description },
-          en: { title: item.title, description: item.description },
-        },
-        isLegacy: false,
-        version: '1',
-      },
-    })),
-  },
-  construction: {
-    ...rosacInfoContent.construction,
-    stages: rosacInfoContent.construction.stages.map((stage) => ({
-      ...stage,
-      editing: {
-        content: {
-          es: { title: stage.title, description: stage.description },
-          en: { title: stage.title, description: stage.description },
-        },
-        isLegacy: false,
-        version: '1',
-      },
-    })) as unknown as typeof rosacInfoContent.construction.stages,
-  },
-  instruments: {
-    ...rosacInfoContent.instruments,
-    items: rosacInfoContent.instruments.items.map((item) => ({
-      ...item,
-      editing: {
-        content: {
-          es: {
-            name: item.name,
-            description: item.consultation?.notice ?? item.pendingMessage ?? '',
-          },
-          en: {
-            name: item.name,
-            description: item.consultation?.notice ?? item.pendingMessage ?? '',
-          },
-        },
-        isLegacy: false,
-        version: '1',
-      },
-    })),
-  },
-  team: {
-    ...rosacInfoContent.team,
-    people: rosacInfoContent.team.people.map((person) => ({
-      ...person,
-      editing: {
-        content: {
-          es: { role: person.role, description: person.description ?? null },
-          en: { role: person.role, description: person.description ?? null },
-        },
-        isLegacy: false,
-        version: '1',
-      },
-    })),
-  },
-  acknowledgments: {
-    ...rosacInfoContent.acknowledgments,
-    institutions: rosacInfoContent.acknowledgments.institutions.map((inst) => ({
-      ...inst,
-      editing: {
-        content: {
-          es: { name: inst.name },
-          en: { name: inst.name },
-        },
-        isLegacy: false,
-        version: '1',
-      },
-    })),
-  },
-}
-
 export const EditMode: Story = {
   args: {
-    content: editModeContent,
+    content: editModeRosacContent,
     canCreate: true,
     canEdit: true,
     canDelete: true,

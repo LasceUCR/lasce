@@ -1,10 +1,12 @@
-import type { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
-import { rosacActivityUpdateSchema, updateRosacActivity } from '@/app/lib/rosac'
-
-import { writeFailure } from '../../http'
+import {
+  RosacConflictError,
+  RosacReviewRequiredError,
+  rosacActivityInputSchema,
+  updateRosacActivity,
+} from '@/app/lib/rosac'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,20 +17,59 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  const { id } = await params
-
-  const json = await readJson(request)
-  if (!json.ok) return json.response
-
-  const parsed = rosacActivityUpdateSchema.safeParse(json.body)
-  if (!parsed.success) return invalidBody(parsed.error)
-
+  let body: unknown
   try {
-    const result = await updateRosacActivity(id, parsed.data)
-    if (!result.ok) return writeFailure('la actividad', id, result)
+    body = await request.json()
+  } catch {
+    return NextResponse.json(
+      { error: 'El cuerpo de la solicitud no es JSON válido.' },
+      { status: 400 },
+    )
+  }
 
-    return ok({ activity: result.activity })
+  const parsed = rosacActivityInputSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error: 'Faltan campos obligatorios o no son válidos.',
+        issues: parsed.error.flatten().fieldErrors,
+      },
+      { status: 400 },
+    )
+  }
+
+  const { id } = await params
+  try {
+    const activity = await updateRosacActivity(id, parsed.data)
+    if (!activity) {
+      return NextResponse.json(
+        { error: `No existe una actividad con id "${id}".` },
+        { status: 404 },
+      )
+    }
+
+    return NextResponse.json({ activity }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
-    return internalError('No se pudo guardar la actividad.', error)
+    if (error instanceof RosacConflictError) {
+      return NextResponse.json(
+        { error: error.message, code: 'conflict' },
+        { status: 409, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+    if (error instanceof RosacReviewRequiredError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: 'review-required',
+          pending: error.pending.map(({ locale, field }) => ({
+            path: `content.${locale}.${field}`,
+            locale,
+            field,
+          })),
+        },
+        { status: 400, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+    throw error
   }
 }

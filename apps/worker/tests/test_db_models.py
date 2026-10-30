@@ -33,13 +33,10 @@ from app.db import (
     ResearchAreaTranslation,
     ResearchAuthor,
     ResearchCrossAuthor,
-    Researcher,
-    ResearcherTranslation,
     ResearchTranslation,
     ResourceDownload,
     RolePermission,
     RosacAcknowledgment,
-    RosacAcknowledgmentTranslation,
     RosacActivity,
     RosacActivityTranslation,
     RosacCharacteristic,
@@ -753,8 +750,6 @@ def test_space_weather_section_translation_is_unique_per_section_and_locale() ->
 
 def test_rosac_tables_live_in_the_public_schema() -> None:
     for model in (
-        Researcher,
-        ResearcherTranslation,
         RosacCharacteristic,
         RosacCharacteristicTranslation,
         RosacActivity,
@@ -764,38 +759,28 @@ def test_rosac_tables_live_in_the_public_schema() -> None:
         RosacInstrument,
         RosacInstrumentTranslation,
         RosacAcknowledgment,
-        RosacAcknowledgmentTranslation,
     ):
         assert model.__table__.schema == "public"
 
 
-def test_researcher_translation_is_unique_per_researcher_and_locale() -> None:
-    columns = ResearcherTranslation.__table__.columns
-    (fk,) = columns["researcher_id"].foreign_keys
-
+def test_rosac_characteristic_matches_prisma_columns() -> None:
+    columns = RosacCharacteristic.__table__.columns
     assert set(columns.keys()) == {
         "id",
-        "researcher_id",
-        "locale",
-        "role",
+        "key",
+        "icon",
+        "title",
         "description",
+        "position",
         "created_at",
         "updated_at",
     }
-    assert fk.target_fullname == "public.researchers.id"
-    assert fk.ondelete == "CASCADE"
-    assert columns["locale"].type.length == 5
-    assert any(
-        {column.name for column in constraint.columns} == {"researcher_id", "locale"}
-        for constraint in ResearcherTranslation.__table__.constraints
-        if isinstance(constraint, UniqueConstraint)
-    )
+    assert columns["key"].unique
 
 
-def test_rosac_characteristic_translation_is_unique_per_card_and_locale() -> None:
+def test_rosac_characteristic_translation_matches_prisma() -> None:
     columns = RosacCharacteristicTranslation.__table__.columns
     (fk,) = columns["characteristic_id"].foreign_keys
-
     assert set(columns.keys()) == {
         "id",
         "characteristic_id",
@@ -809,16 +794,30 @@ def test_rosac_characteristic_translation_is_unique_per_card_and_locale() -> Non
     assert fk.ondelete == "CASCADE"
     assert columns["locale"].type.length == 5
     assert any(
-        {column.name for column in constraint.columns} == {"characteristic_id", "locale"}
-        for constraint in RosacCharacteristicTranslation.__table__.constraints
-        if isinstance(constraint, UniqueConstraint)
+        {col.name for col in c.columns} == {"characteristic_id", "locale"}
+        for c in RosacCharacteristicTranslation.__table__.constraints
+        if isinstance(c, UniqueConstraint)
     )
 
 
-def test_rosac_activity_translation_is_unique_per_activity_and_locale() -> None:
+def test_rosac_activity_matches_prisma_columns() -> None:
+    columns = RosacActivity.__table__.columns
+    assert set(columns.keys()) == {
+        "id",
+        "key",
+        "icon",
+        "title",
+        "description",
+        "position",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["key"].unique
+
+
+def test_rosac_activity_translation_matches_prisma() -> None:
     columns = RosacActivityTranslation.__table__.columns
     (fk,) = columns["activity_id"].foreign_keys
-
     assert set(columns.keys()) == {
         "id",
         "activity_id",
@@ -832,16 +831,30 @@ def test_rosac_activity_translation_is_unique_per_activity_and_locale() -> None:
     assert fk.ondelete == "CASCADE"
     assert columns["locale"].type.length == 5
     assert any(
-        {column.name for column in constraint.columns} == {"activity_id", "locale"}
-        for constraint in RosacActivityTranslation.__table__.constraints
-        if isinstance(constraint, UniqueConstraint)
+        {col.name for col in c.columns} == {"activity_id", "locale"}
+        for c in RosacActivityTranslation.__table__.constraints
+        if isinstance(c, UniqueConstraint)
     )
 
 
-def test_rosac_stage_translation_is_unique_per_stage_and_locale() -> None:
+def test_rosac_stage_matches_prisma_columns() -> None:
+    columns = RosacStage.__table__.columns
+    assert set(columns.keys()) == {
+        "id",
+        "key",
+        "title",
+        "description",
+        "images",
+        "position",
+        "created_at",
+        "updated_at",
+    }
+    assert columns["key"].unique
+
+
+def test_rosac_stage_translation_matches_prisma() -> None:
     columns = RosacStageTranslation.__table__.columns
     (fk,) = columns["stage_id"].foreign_keys
-
     assert set(columns.keys()) == {
         "id",
         "stage_id",
@@ -855,24 +868,41 @@ def test_rosac_stage_translation_is_unique_per_stage_and_locale() -> None:
     assert fk.ondelete == "CASCADE"
     assert columns["locale"].type.length == 5
     assert any(
-        {column.name for column in constraint.columns} == {"stage_id", "locale"}
-        for constraint in RosacStageTranslation.__table__.constraints
-        if isinstance(constraint, UniqueConstraint)
+        {col.name for col in c.columns} == {"stage_id", "locale"}
+        for c in RosacStageTranslation.__table__.constraints
+        if isinstance(c, UniqueConstraint)
     )
 
 
-def test_rosac_instrument_translation_is_unique_per_instrument_and_locale() -> None:
+def test_rosac_instrument_matches_prisma_columns() -> None:
+    columns = RosacInstrument.__table__.columns
+    assert set(columns.keys()) == {
+        "id",
+        "name",
+        "pending_message",
+        "image_src",
+        "image_alt",
+        "consultation_href",
+        "consultation_label",
+        "consultation_notice",
+        "position",
+        "created_at",
+        "updated_at",
+    }
+
+
+def test_rosac_instrument_translation_matches_prisma() -> None:
     columns = RosacInstrumentTranslation.__table__.columns
     (fk,) = columns["instrument_id"].foreign_keys
-
     assert set(columns.keys()) == {
         "id",
         "instrument_id",
         "locale",
         "name",
+        "pending_message",
         "consultation_label",
         "consultation_notice",
-        "pending_message",
+        "image_alt",
         "created_at",
         "updated_at",
     }
@@ -880,29 +910,21 @@ def test_rosac_instrument_translation_is_unique_per_instrument_and_locale() -> N
     assert fk.ondelete == "CASCADE"
     assert columns["locale"].type.length == 5
     assert any(
-        {column.name for column in constraint.columns} == {"instrument_id", "locale"}
-        for constraint in RosacInstrumentTranslation.__table__.constraints
-        if isinstance(constraint, UniqueConstraint)
+        {col.name for col in c.columns} == {"instrument_id", "locale"}
+        for c in RosacInstrumentTranslation.__table__.constraints
+        if isinstance(c, UniqueConstraint)
     )
 
 
-def test_rosac_acknowledgment_translation_is_unique_per_acknowledgment_and_locale() -> None:
-    columns = RosacAcknowledgmentTranslation.__table__.columns
-    (fk,) = columns["acknowledgment_id"].foreign_keys
-
+def test_rosac_acknowledgment_matches_prisma_columns() -> None:
+    columns = RosacAcknowledgment.__table__.columns
     assert set(columns.keys()) == {
         "id",
-        "acknowledgment_id",
-        "locale",
         "name",
+        "href",
+        "logo_src",
+        "logo_alt",
+        "position",
         "created_at",
         "updated_at",
     }
-    assert fk.target_fullname == "public.rosac_acknowledgments.id"
-    assert fk.ondelete == "CASCADE"
-    assert columns["locale"].type.length == 5
-    assert any(
-        {column.name for column in constraint.columns} == {"acknowledgment_id", "locale"}
-        for constraint in RosacAcknowledgmentTranslation.__table__.constraints
-        if isinstance(constraint, UniqueConstraint)
-    )

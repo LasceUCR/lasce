@@ -67,7 +67,7 @@ describe('EditableAcknowledgmentCard', () => {
     await user.click(screen.getByRole('button', { name: `Editar ${editArgs.institution.name}` }))
 
     expect(screen.getByRole('dialog', { name: 'Editar institución' })).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: 'Nombre (Español)' })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).toHaveValue(
       editArgs.institution.name,
     )
   })
@@ -78,7 +78,7 @@ describe('EditableAcknowledgmentCard', () => {
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: `Editar ${editArgs.institution.name}` }))
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -90,7 +90,7 @@ describe('EditableAcknowledgmentCard', () => {
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: `Editar ${editArgs.institution.name}` }))
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(await screen.findByText('No se pudo guardar la institución.')).toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: 'Editar institución' })).toBeInTheDocument()

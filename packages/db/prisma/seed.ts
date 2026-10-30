@@ -2294,25 +2294,12 @@ for (const album of galleryAlbums) {
 // Seed ROSAC CMS tables
 const defaultCharacteristics = [
   {
-    key: 'frequency-range',
-    icon: 'frequency',
-    title: 'Entre 100 y 1000 MHz',
-    description:
-      'Se preparan observaciones en este rango de frecuencias de radio, como parte del desarrollo del radiotelescopio.',
-    position: 0,
-    en: {
-      title: 'Between 100 and 1000 MHz',
-      description:
-        'Observations are prepared in this radio frequency range as part of the radio telescope development.',
-    },
-  },
-  {
     key: 'antenna-system',
     icon: 'antenna',
     title: 'Antena de 11 metros',
     description:
       'Una antena parabólica se adapta para uso astronómico con una nueva montura y sistemas de movimiento y apuntado.',
-    position: 1,
+    position: 0,
     en: {
       title: '11-meter antenna',
       description:
@@ -2325,11 +2312,24 @@ const defaultCharacteristics = [
     title: 'Santa Cruz, Guanacaste',
     description:
       'El proyecto se desarrolla en el Recinto de Santa Cruz de la Universidad de Costa Rica.',
-    position: 2,
+    position: 1,
     en: {
       title: 'Santa Cruz, Guanacaste',
       description:
         'The project is developed at the Santa Cruz Campus of the University of Costa Rica.',
+    },
+  },
+  {
+    key: 'frequency-range',
+    icon: 'frequency',
+    title: 'Entre 100 y 1000 MHz',
+    description:
+      'Se preparan observaciones en este rango de frecuencias de radio, como parte del desarrollo del radiotelescopio.',
+    position: 2,
+    en: {
+      title: 'Between 100 and 1000 MHz',
+      description:
+        'Observations are prepared in this radio frequency range as part of the radio telescope development.',
     },
   },
   {
@@ -2347,30 +2347,20 @@ const defaultCharacteristics = [
   },
 ]
 
-for (const { en, ...char } of defaultCharacteristics) {
-  const record = await prisma.rosacCharacteristic.upsert({
-    where: { key: char.key },
-    update: char,
-    create: char,
-  })
-  await prisma.rosacCharacteristicTranslation.upsert({
-    where: {
-      characteristicId_locale: {
-        characteristicId: record.id,
+if ((await prisma.rosacCharacteristic.count()) === 0) {
+  for (const { en, ...char } of defaultCharacteristics) {
+    const created = await prisma.rosacCharacteristic.create({
+      data: char,
+    })
+    await prisma.rosacCharacteristicTranslation.create({
+      data: {
+        characteristicId: created.id,
         locale: 'en',
+        title: en.title,
+        description: en.description,
       },
-    },
-    update: {
-      title: en.title,
-      description: en.description,
-    },
-    create: {
-      characteristicId: record.id,
-      locale: 'en',
-      title: en.title,
-      description: en.description,
-    },
-  })
+    })
+  }
 }
 
 const defaultActivities = [
@@ -2453,30 +2443,20 @@ const defaultActivities = [
   },
 ]
 
-for (const { en, ...act } of defaultActivities) {
-  const record = await prisma.rosacActivity.upsert({
-    where: { key: act.key },
-    update: act,
-    create: act,
-  })
-  await prisma.rosacActivityTranslation.upsert({
-    where: {
-      activityId_locale: {
-        activityId: record.id,
+if ((await prisma.rosacActivity.count()) === 0) {
+  for (const { en, ...act } of defaultActivities) {
+    const created = await prisma.rosacActivity.create({
+      data: act,
+    })
+    await prisma.rosacActivityTranslation.create({
+      data: {
+        activityId: created.id,
         locale: 'en',
+        title: en.title,
+        description: en.description,
       },
-    },
-    update: {
-      title: en.title,
-      description: en.description,
-    },
-    create: {
-      activityId: record.id,
-      locale: 'en',
-      title: en.title,
-      description: en.description,
-    },
-  })
+    })
+  }
 }
 
 const defaultStages = [
@@ -2644,30 +2624,20 @@ const defaultStages = [
   },
 ]
 
-for (const { en, ...stage } of defaultStages) {
-  const record = await prisma.rosacStage.upsert({
-    where: { key: stage.key },
-    update: stage,
-    create: stage,
-  })
-  await prisma.rosacStageTranslation.upsert({
-    where: {
-      stageId_locale: {
-        stageId: record.id,
+if ((await prisma.rosacStage.count()) === 0) {
+  for (const { en, ...stage } of defaultStages) {
+    const created = await prisma.rosacStage.create({
+      data: stage,
+    })
+    await prisma.rosacStageTranslation.create({
+      data: {
+        stageId: created.id,
         locale: 'en',
+        title: en.title,
+        description: en.description,
       },
-    },
-    update: {
-      title: en.title,
-      description: en.description,
-    },
-    create: {
-      stageId: record.id,
-      locale: 'en',
-      title: en.title,
-      description: en.description,
-    },
-  })
+    })
+  }
 }
 
 const defaultInstruments = [
@@ -2720,48 +2690,29 @@ const defaultInstruments = [
     position: 2,
     en: {
       name: 'ROSAC-HIROS',
-      consultationLabel: 'View ROSAC-HIROS simulation',
       pendingMessage: 'Information pending confirmation and integration into the data section.',
+      consultationLabel: 'View ROSAC-HIROS simulation',
       imageAlt:
         'Illustrative image from the ROSAC gallery: assembly of the antenna radial structure.',
     },
   },
 ]
 
-for (const { en, ...inst } of defaultInstruments) {
-  let record = await prisma.rosacInstrument.findFirst({
-    where: { name: inst.name },
-  })
-  if (!record) {
-    record = await prisma.rosacInstrument.create({ data: inst })
-  } else {
-    record = await prisma.rosacInstrument.update({
-      where: { id: record.id },
-      data: inst,
+if ((await prisma.rosacInstrument.count()) === 0) {
+  for (const { en, ...inst } of defaultInstruments) {
+    const created = await prisma.rosacInstrument.create({ data: inst })
+    await prisma.rosacInstrumentTranslation.create({
+      data: {
+        instrumentId: created.id,
+        locale: 'en',
+        name: en.name,
+        pendingMessage: en.pendingMessage,
+        consultationLabel: en.consultationLabel,
+        consultationNotice: en.consultationNotice,
+        imageAlt: en.imageAlt,
+      },
     })
   }
-  await prisma.rosacInstrumentTranslation.upsert({
-    where: {
-      instrumentId_locale: {
-        instrumentId: record.id,
-        locale: 'en',
-      },
-    },
-    update: {
-      name: en.name,
-      consultationLabel: en.consultationLabel,
-      consultationNotice: en.consultationNotice,
-      pendingMessage: en.pendingMessage,
-    },
-    create: {
-      instrumentId: record.id,
-      locale: 'en',
-      name: en.name,
-      consultationLabel: en.consultationLabel,
-      consultationNotice: en.consultationNotice,
-      pendingMessage: en.pendingMessage,
-    },
-  })
 }
 
 const defaultAcknowledgments = [
@@ -2887,9 +2838,10 @@ const defaultAcknowledgments = [
   },
 ]
 
-await prisma.rosacAcknowledgment.deleteMany({})
-for (const ack of defaultAcknowledgments) {
-  await prisma.rosacAcknowledgment.create({ data: ack })
+if ((await prisma.rosacAcknowledgment.count()) === 0) {
+  for (const ack of defaultAcknowledgments) {
+    await prisma.rosacAcknowledgment.create({ data: ack })
+  }
 }
 
 await prisma.$disconnect()

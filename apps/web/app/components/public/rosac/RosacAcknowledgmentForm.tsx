@@ -1,50 +1,28 @@
 import Image from 'next/image'
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
-import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
-import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
-import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadAcknowledgmentLogo } from '@/app/(public)/radioastronomia/actions'
-import { defaultLocale, isLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
-import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
-import {
-  confirmationsStillNeeded,
-  contentFieldLang,
-  contentPath,
-  draftFromStored,
-  hasContentChanges,
-  isConfirmed,
-  languageTabFlags,
-  resetConfirmations,
-  reviewsNeeded,
-  tabWithErrors,
-  toContentInput,
-  validateContent,
-  withConfirmation,
-  type ContentDraft,
-} from '@/app/lib/i18n/content/form'
-import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
-import {
-  rosacAcknowledgmentContent,
-  type RosacAcknowledgment,
-  type RosacAcknowledgmentCreateInput,
-  type RosacAcknowledgmentField,
-  type RosacAcknowledgmentUpdateInput,
-} from '@/app/lib/rosac-schema'
+import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
-export type RosacAcknowledgmentFormBody =
-  RosacAcknowledgmentCreateInput | RosacAcknowledgmentUpdateInput
+export interface RosacAcknowledgmentFormValues {
+  name: string
+  href?: string
+  logo: {
+    src: string
+    alt: string
+  }
+}
 
 export interface RosacAcknowledgmentFormProps {
   /** Existing institution acknowledgment or null when creating a new one. */
   institution: RosacAcknowledgment | null
-  onSave: (values: RosacAcknowledgmentFormBody) => void
+  onSave: (values: RosacAcknowledgmentFormValues) => void
   onCancel: () => void
 }
 
@@ -202,35 +180,9 @@ export function RosacAcknowledgmentForm({
   onCancel,
 }: RosacAcknowledgmentFormProps) {
   const t = useTranslations('rosac.editor')
-  const siteLocale = useLocale()
-  const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
-  const stored =
-    institution?.editing?.content ??
-    (institution
-      ? {
-          es: { name: institution.name },
-          en: null,
-        }
-      : null)
-
-  const formRef = useRef<HTMLDivElement>(null)
+  const locale = useLocale()
   const formId = useId()
-  const logoSourceOptions: FormFieldOption[] = useMemo(
-    () => [
-      { value: 'custom', label: t('acknowledgments.logoSourceCustom') },
-      ...PREDEFINED_ACKNOWLEDGMENT_LOGOS.map((item, index) => ({
-        value: String(index),
-        label: t('acknowledgments.logoSourcePreset', { label: item.label }),
-      })),
-    ],
-    [t],
-  )
-
-  const [tab, setTab] = useState<Locale>(defaultLocale)
-  const [draft, setDraft] = useState<ContentDraft<RosacAcknowledgmentField>>(() =>
-    draftFromStored(rosacAcknowledgmentContent, stored),
-  )
-  const [confirmed, setConfirmed] = useState<ReviewConfirmation<RosacAcknowledgmentField>[]>([])
+  const [name, setName] = useState(institution?.name ?? '')
   const [href, setHref] = useState(institution?.href ?? '')
   const [logoAlt, setLogoAlt] = useState(institution?.logo?.alt ?? '')
 
@@ -251,9 +203,19 @@ export function RosacAcknowledgmentForm({
   // `AGENTS.md`). The previous attempt's toast is dismissed on retry so errors do not pile up.
   const uploadErrorToast = useRef<number | null>(null)
 
-  const [attempted, setAttempted] = useState(false)
-  const [focusRequest, setFocusRequest] = useState(0)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
+
+  const logoSourceOptions: FormFieldOption[] = useMemo(
+    () => [
+      { value: 'custom', label: t('acknowledgments.logoSourceCustom') },
+      ...PREDEFINED_ACKNOWLEDGMENT_LOGOS.map((item, index) => ({
+        value: String(index),
+        label: t('acknowledgments.logoSourcePreset', { label: item.label }),
+      })),
+    ],
+    [t],
+  )
 
   const isCustomMode = logoSelection === 'custom'
   const selectedPreset =
@@ -269,64 +231,44 @@ export function RosacAcknowledgmentForm({
 
   const hasLogo = !logoRemoved && (Boolean(activeLogoSrc) || Boolean(logoFile))
 
-  useEffect(() => {
-    if (focusRequest === 0) return
-    const invalid = formRef.current?.querySelectorAll<HTMLElement>('[aria-invalid="true"]') ?? []
-    Array.from(invalid)
-      .find((element) => !element.closest('[hidden]'))
-      ?.focus()
-  }, [focusRequest])
-
-  const needed = reviewsNeeded(rosacAcknowledgmentContent, stored, draft)
-  const errors = attempted
-    ? validateContent(rosacAcknowledgmentContent, stored, draft, confirmed, uiLocale)
-    : {}
-
+  // Validation
+  const trimmedName = name.trim()
   const trimmedHref = href.trim()
+  const nameError =
+    hasAttemptedSubmit && trimmedName === '' ? t('acknowledgments.nameRequired') : null
   const hrefError =
-    attempted && trimmedHref !== '' && !isValidUrl(trimmedHref)
+    hasAttemptedSubmit && trimmedHref !== '' && !isValidUrl(trimmedHref)
       ? t('acknowledgments.institutionUrlInvalid')
       : null
+  const logoError = hasAttemptedSubmit && !hasLogo ? t('acknowledgments.logoRequired') : null
 
-  const logoError = attempted && !hasLogo ? t('acknowledgments.logoRequired') : null
+  const isFormValid =
+    trimmedName !== '' && hasLogo && (trimmedHref === '' || isValidUrl(trimmedHref))
 
-  const contentChanged = hasContentChanges(rosacAcknowledgmentContent, stored, draft)
-  const isLogoDirty =
-    activeLogoSrc !== (institution?.logo?.src ?? '') ||
-    logoAlt.trim() !== (institution?.logo?.alt ?? '').trim()
-  const isHrefDirty = trimmedHref !== (institution?.href ?? '')
-  const isDirty = contentChanged || isLogoDirty || isHrefDirty || logoFile !== null || logoRemoved
-
-  function setContent(locale: Locale, field: RosacAcknowledgmentField, value: string) {
-    setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
-    setConfirmed((current) => resetConfirmations(current, field))
-  }
+  const isDirty =
+    name !== (institution?.name ?? '') ||
+    href !== (institution?.href ?? '') ||
+    logoAlt !== (institution?.logo?.alt ?? '') ||
+    logoFile !== null ||
+    logoRemoved ||
+    activeLogoSrc !== (institution?.logo?.src ?? '')
 
   function handleCancelClick() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
-      return
+    } else {
+      onCancel()
     }
-    onCancel()
   }
 
-  async function handleConfirmClick() {
-    setAttempted(true)
-    const found = validateContent(rosacAcknowledgmentContent, stored, draft, confirmed, uiLocale)
-
-    if (Object.keys(found).length > 0) {
-      const target = tabWithErrors(found, tab)
-      if (target) setTab(target)
-      setFocusRequest((current) => current + 1)
-      return
-    }
-
-    if (trimmedHref !== '' && !isValidUrl(trimmedHref)) {
-      document.getElementById(`${formId}-href`)?.focus()
-      return
-    }
-
-    if (!hasLogo) {
+  async function handleSaveClick() {
+    setHasAttemptedSubmit(true)
+    if (!isFormValid) {
+      if (trimmedName === '') {
+        document.getElementById(`${formId}-name`)?.focus()
+      } else if (trimmedHref !== '' && !isValidUrl(trimmedHref)) {
+        document.getElementById(`${formId}-href`)?.focus()
+      }
       return
     }
 
@@ -365,87 +307,38 @@ export function RosacAcknowledgmentForm({
       finalLogoUrl = selectedPreset.src
     }
 
-    const currentName = draft[defaultLocale].name.trim()
-    const content = toContentInput(rosacAcknowledgmentContent, draft)
-    const finalAlt = logoAlt.trim() || t('acknowledgments.logoAltDefault', { name: currentName })
-    const logo = {
-      src: finalLogoUrl,
-      alt: finalAlt,
-    }
-
-    const finalHref = trimmedHref || undefined
-
-    if (!institution) {
-      onSave({
-        content,
-        href: finalHref,
-        logo,
+    const finalAlt =
+      logoAlt.trim() ||
+      t('acknowledgments.logoAltDefault', {
+        name: trimmedName,
       })
-    } else {
-      onSave({
-        version: institution.editing?.version ?? '',
-        ...(contentChanged
-          ? { content, confirmedUnchanged: confirmationsStillNeeded(confirmed, needed) }
-          : {}),
-        ...(isHrefDirty ? { href: finalHref } : {}),
-        ...(isLogoDirty ? { logo } : {}),
-      })
-    }
-  }
 
-  function reviewControl(locale: Locale, field: RosacAcknowledgmentField) {
-    const review = needed.find((each) => each.locale === locale && each.field === field)
-    if (!review) return null
-
-    return (
-      <TranslationReview
-        checked={isConfirmed(confirmed, review)}
-        label={confirmationLabel(rosacAcknowledgmentContent, review, uiLocale)}
-        message={reviewMessage(rosacAcknowledgmentContent, review, stored, draft, uiLocale)}
-        onChange={(checked) =>
-          setConfirmed((current) => withConfirmation(current, review, checked))
-        }
-      />
-    )
+    onSave({
+      name: trimmedName,
+      href: trimmedHref || undefined,
+      logo: {
+        src: finalLogoUrl,
+        alt: finalAlt,
+      },
+    })
   }
 
   return (
-    <div className="cms-form" ref={formRef}>
-      <LanguageTabs
-        copyLang={uiLocale}
-        flags={languageTabFlags(stored, errors, needed, confirmed, uiLocale)}
-        label={t('languageTabs')}
-        onSelect={setTab}
-        selected={tab}
-      >
-        {(locale) => (
-          <>
-            {institution?.editing?.isLegacy && locale === defaultLocale ? (
-              <Notice>{t('legacyBaseText')}</Notice>
-            ) : null}
-
-            {institution?.editing?.isLegacy && locale !== defaultLocale ? (
-              <Notice tone="warning">{t('legacyNoTranslation')}</Notice>
-            ) : null}
-
-            <FormField
-              error={errors[contentPath(locale, 'name')]}
-              id={`${formId}-${locale}-name`}
-              label={t('nameIn', { language: localeLabels[locale] })}
-              lang={contentFieldLang(stored, locale)}
-              onChange={(value) => {
-                setContent(locale, 'name', value)
-                if (locale === defaultLocale && !logoAlt && !institution) {
-                  setLogoAlt(`Logo de ${value.trim()}`)
-                }
-              }}
-              required
-              value={draft[locale].name}
-            />
-            {reviewControl(locale, 'name')}
-          </>
-        )}
-      </LanguageTabs>
+    <div className="cms-form">
+      <FormField
+        errorMessage={nameError}
+        id={`${formId}-name`}
+        label={t('acknowledgments.nameLabel')}
+        onChange={(val) => {
+          setName(val)
+          if (!logoAlt && !institution) {
+            setLogoAlt(t('acknowledgments.logoAltDefault', { name: val.trim() }))
+          }
+        }}
+        placeholder={t('acknowledgments.namePlaceholder')}
+        required
+        value={name}
+      />
 
       <FormField
         errorMessage={hrefError}
@@ -465,17 +358,17 @@ export function RosacAcknowledgmentForm({
             if (val !== 'custom') {
               const preset = PREDEFINED_ACKNOWLEDGMENT_LOGOS[Number(val)]
               if (preset) {
-                setContent(defaultLocale, 'name', preset.label)
-                setLogoAlt(siteLocale === 'en' ? preset.defaultAltEn : preset.defaultAlt)
+                setName(preset.label)
+                setLogoAlt(locale === 'en' ? preset.defaultAltEn : preset.defaultAlt)
                 setHref(preset.defaultHref ?? '')
               }
             } else {
               if (initialPresetIndex === -1 && institution) {
-                setContent(defaultLocale, 'name', institution.name)
+                setName(institution.name)
                 setHref(institution.href ?? '')
                 setLogoAlt(institution.logo?.alt ?? '')
               } else {
-                setContent(defaultLocale, 'name', '')
+                setName('')
                 setHref('')
                 setLogoAlt('')
               }
@@ -520,12 +413,7 @@ export function RosacAcknowledgmentForm({
             }}
           >
             <Image
-              alt={
-                logoAlt ||
-                t('acknowledgments.logoAltDefault', {
-                  name: draft[tab].name || institution?.name || '',
-                })
-              }
+              alt={logoAlt || 'Vista previa del logo'}
               fill
               sizes="90px"
               src={activeLogoSrc}
@@ -550,18 +438,22 @@ export function RosacAcknowledgmentForm({
       />
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
-          {t('cancel')}
+        <Button onClick={handleCancelClick} type="button" variant="secondary">
+          {t('acknowledgments.cancel')}
         </Button>
-        <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">
-          {isUploading ? t('saving') : t('save')}
+        <Button disabled={isUploading} onClick={handleSaveClick} type="button" variant="primary">
+          {isUploading
+            ? t('acknowledgments.saving')
+            : institution
+              ? t('acknowledgments.save')
+              : t('acknowledgments.add')}
         </Button>
       </div>
 
       <StandardConfirmDialog
-        cancelLabel={t('discardCancel')}
-        confirmLabel={t('discardConfirm')}
-        message={t('discardMessage')}
+        cancelLabel={t('discardDialog.keepEditing')}
+        confirmLabel={t('discardDialog.discard')}
+        message={t('discardDialog.message')}
         onCancel={() => setConfirmDiscardOpen(false)}
         onConfirm={() => {
           setConfirmDiscardOpen(false)
@@ -569,7 +461,7 @@ export function RosacAcknowledgmentForm({
         }}
         open={confirmDiscardOpen}
         severity="warning"
-        title={t('discardTitle')}
+        title={t('discardDialog.title')}
       />
     </div>
   )

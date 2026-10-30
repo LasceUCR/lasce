@@ -1218,8 +1218,8 @@
     },
     "editor": {
       "languageTabs": "Content language",
-      "legacyBaseText": "This text was recorded before language versions existed and might not be in Spanish. If you change it, review this too.",
-      "legacyNoTranslation": "This section does not yet have an English version. To change text you must complete both languages; shared fields can be changed without translating.",
+      "legacyBaseText": "This text was recorded before language versions existed and might not be in Spanish. If you change the text, review it as well.",
+      "legacyNoTranslation": "This section does not have an English version yet. To change the text you must complete both languages; shared fields can be changed without translating it.",
       "titleIn": "Title ({language})",
       "descriptionIn": "Description ({language})",
       "nameIn": "Name ({language})",
@@ -1239,48 +1239,21 @@
       "save": "Confirm",
       "saving": "Saving...",
       "discardTitle": "Discard changes?",
-      "discardMessage": "There are unsaved changes. If you close the form, they will be lost.",
-      "discardConfirm": "Discard",
+      "discardMessage": "If you discard now, all entered data that has not been saved will be lost.",
       "discardCancel": "Keep editing",
-      "saveError": "The change could not be saved. Try again.",
+      "discardConfirm": "Discard",
+      "saveError": "Could not save changes. Please try again.",
       "discardDialog": {
         "title": "Discard unsaved changes",
         "message": "If you discard now, all entered data that has not been saved will be lost.",
         "keepEditing": "Keep editing",
         "discard": "Discard"
       },
-      "acknowledgments": {
-        "addCard": "Add institution",
-        "editLabel": "Edit {name}",
-        "deleteLabel": "Delete {name}",
-        "deleteConfirmTitle": "Delete institution",
-        "deleteConfirmMessage": "Do you want to delete the institution \"{name}\" from acknowledgments? This action cannot be undone.",
-        "editModalTitle": "Edit institution",
-        "nameLabel": "Institution name",
-        "namePlaceholder": "E.g. Center for Space Research (CINESPA), UCR",
-        "nameRequired": "Institution name is required.",
-        "logoSourceLabel": "Choose a custom logo or select one from the list",
-        "logoSourceCustom": "Upload custom logo",
-        "logoSourcePreset": "Select from list: {label}",
-        "logoFileLabel": "Logo file",
-        "logoFileHelp": "WebP, PNG, SVG or JPG formats (max. 10 MB).",
-        "logoRequired": "You must select or upload a logo for the institution.",
-        "logoAltLabel": "Logo alternative text (Accessibility)",
-        "logoAltPlaceholder": "Accessible description of the institutional logo",
-        "logoAltDefault": "Logo of {name}",
-        "selectedLogo": "Selected logo:",
-        "institutional": "Institutional",
-        "institutionUrlLabel": "Institution website (optional)",
-        "institutionUrlPlaceholder": "https://example.ucr.ac.cr",
-        "institutionUrlInvalid": "The link must be a valid URL starting with http:// or https://.",
-        "logoUnavailable": "Logo unavailable",
-        "cancel": "Cancel",
-        "save": "Save changes",
-        "add": "Add institution",
-        "saving": "Saving...",
-        "uploadError": "The logo could not be uploaded. Try again."
-      },
       "characteristics": {
+        "updated": "Characteristic updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the characteristic. Please try again."
+        },
         "editLabel": "Edit {title}",
         "editModalTitle": "Edit \"{title}\"",
         "defaultModalTitle": "Edit characteristic",
@@ -1304,6 +1277,10 @@
         }
       },
       "activities": {
+        "updated": "Activity updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the activity. Please try again."
+        },
         "editLabel": "Edit {title}",
         "editModalTitle": "Edit \"{title}\"",
         "defaultModalTitle": "Edit activity",
@@ -1316,6 +1293,10 @@
         "save": "Confirm"
       },
       "stages": {
+        "updated": "Stage updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the stage. Please try again."
+        },
         "editStage": "Edit stage",
         "editModalTitle": "Edit \"{title}\"",
         "defaultModalTitle": "Edit stage",
@@ -1333,14 +1314,14 @@
         "imagesRequired": "The stage must contain at least one photograph.",
         "uploadError": "Error uploading photographs. Try again.",
         "editModal": {
-          "title": "Edit stage photographs",
+          "title": "Edit photographs",
           "help": "Modify the accessible description (alt) of each photograph or remove those that no longer correspond to this stage.",
-          "altLabel": "Accessible alternative text (alt)",
+          "noPhotos": "No photos registered in this stage.",
+          "altLabel": "Alternative text for photograph {index}",
           "altPlaceholder": "Accessible alternative text for photograph",
-          "deleteLabel": "Delete photograph",
+          "deleteLabel": "Delete photograph {index}",
           "deleteMinTitle": "There must be at least one photo in the stage",
           "deleteTooltip": "Delete this photograph",
-          "noPhotos": "No photographs registered in this stage.",
           "savePhotos": "Save photographs",
           "cancel": "Cancel",
           "deleteDialog": {
@@ -1371,6 +1352,13 @@
         }
       },
       "instruments": {
+        "created": "Instrument added successfully.",
+        "updated": "Instrument updated successfully.",
+        "deleted": "Instrument deleted successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the instrument. Please try again.",
+          "deleteUnknown": "Could not delete the instrument. Please try again."
+        },
         "addCard": "Add instrument",
         "editLabel": "Edit {name}",
         "deleteLabel": "Delete {name}",
@@ -1409,6 +1397,44 @@
         "save": "Confirm",
         "saving": "Saving...",
         "uploadError": "The image could not be uploaded. Try again."
+      },
+      "acknowledgments": {
+        "created": "Institution added successfully.",
+        "updated": "Institution updated successfully.",
+        "deleted": "Institution deleted successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the institution. Please try again.",
+          "deleteUnknown": "Could not delete the institution. Please try again."
+        },
+        "addCard": "Add institution",
+        "editLabel": "Edit {name}",
+        "deleteLabel": "Delete {name}",
+        "deleteConfirmTitle": "Delete institution",
+        "deleteConfirmMessage": "Do you want to delete the institution \"{name}\" from acknowledgments? This action cannot be undone.",
+        "editModalTitle": "Edit institution",
+        "nameLabel": "Institution name",
+        "namePlaceholder": "E.g. Center for Space Research (CINESPA), UCR",
+        "nameRequired": "Institution name is required.",
+        "logoSourceLabel": "Choose a custom logo or select one from the list",
+        "logoSourceCustom": "Upload custom logo",
+        "logoSourcePreset": "Select from list: {label}",
+        "logoFileLabel": "Logo file",
+        "logoFileHelp": "WebP, PNG, SVG or JPG formats (max. 10 MB).",
+        "logoRequired": "You must select or upload a logo for the institution.",
+        "logoAltLabel": "Logo alternative text (Accessibility)",
+        "logoAltPlaceholder": "Accessible description of the institutional logo",
+        "logoAltDefault": "Logo of {name}",
+        "selectedLogo": "Selected logo:",
+        "institutional": "Institutional",
+        "institutionUrlLabel": "Institution website (optional)",
+        "institutionUrlPlaceholder": "https://example.ucr.ac.cr",
+        "institutionUrlInvalid": "The link must be a valid URL starting with http:// or https://.",
+        "logoUnavailable": "Logo unavailable",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add institution",
+        "saving": "Saving...",
+        "uploadError": "The logo could not be uploaded. Try again."
       }
     }
   },

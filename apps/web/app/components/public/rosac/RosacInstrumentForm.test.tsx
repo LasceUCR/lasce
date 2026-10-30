@@ -1,6 +1,6 @@
+import type { ReactElement } from 'react'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({

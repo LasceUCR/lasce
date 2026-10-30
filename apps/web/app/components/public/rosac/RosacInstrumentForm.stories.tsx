@@ -75,7 +75,7 @@ export const EditDisabled: Story = {
           },
           en: {
             name: 'Instrument 3 (to be defined)',
-            description: 'Information pending confirmation and integration into the data section.',
+            description: 'Information pending confirmation and integration in the data section.',
           },
         },
         isLegacy: false,

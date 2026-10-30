@@ -31,12 +31,8 @@ import {
   type ContentDraft,
 } from '@/app/lib/i18n/content/form'
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
-import {
-  rosacInstrumentContent,
-  type RosacInstrumentCreateInput,
-  type RosacInstrumentField,
-  type RosacInstrumentUpdateInput,
-} from '@/app/lib/rosac-schema'
+import { rosacInstrumentContent, type RosacInstrumentField } from '@/app/lib/rosac-editor-content'
+import type { RosacInstrumentInput } from '@/app/lib/rosac'
 import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 import { rosacInstruments } from '@/app/lib/scientific-data'
 
@@ -92,7 +88,7 @@ function getInitialConsultationState(instrument: RosacInstrumentCardContent | nu
   }
 }
 
-export type RosacInstrumentFormBody = RosacInstrumentCreateInput | RosacInstrumentUpdateInput
+export type RosacInstrumentFormBody = RosacInstrumentInput
 
 export interface RosacInstrumentFormProps {
   instrument: RosacInstrumentCardContent | null

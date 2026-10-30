@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { Modal } from '@/app/components/public/Modal'
@@ -29,15 +29,9 @@ import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
-import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
-import type {
-  RosacAcknowledgment,
-  RosacCardIcon,
-  RosacInfoContent,
-  RosacResearcher,
-  RosacResearcherCreateBody,
-  RosacResearcherUpdateBody,
-} from '@/app/lib/rosac'
+import type { RosacAcknowledgment, RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
+import type { ConstructionStage } from '@/app/lib/rosac-construction'
+import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 
 import styles from './RosacInfoPage.module.css'
 import { AcknowledgmentsGallery } from './AcknowledgmentsGallery'
@@ -47,10 +41,10 @@ import { EditableAcknowledgmentCard } from './EditableAcknowledgmentCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { InstrumentCard } from './InstrumentCard'
 import { InstrumentsGallery } from './InstrumentsGallery'
-import { ResearcherForm, type BilingualResearcherFormValues } from './ResearcherForm'
+import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
 import {
   RosacAcknowledgmentForm,
-  type RosacAcknowledgmentFormBody,
+  type RosacAcknowledgmentFormValues,
 } from './RosacAcknowledgmentForm'
 import { RosacActivityForm, type RosacActivityFormBody } from './RosacActivityForm'
 import {
@@ -74,35 +68,6 @@ const icons: Record<RosacCardIcon, LucideIcon> = {
   education: GraduationCap,
 }
 
-function emailText(email: RosacResearcher['email']): string {
-  if (!email) return ''
-  return typeof email === 'string' ? email : email.join(', ')
-}
-
-function researcherUpdateBody(
-  person: RosacResearcher,
-  version: string,
-  values: BilingualResearcherFormValues,
-): RosacResearcherUpdateBody | null {
-  const changes: Omit<RosacResearcherUpdateBody, 'version'> = {
-    ...(values.src === person.src ? {} : { src: values.src }),
-    ...(values.name.trim() === person.name ? {} : { name: values.name }),
-    ...(values.email === emailText(person.email) ? {} : { email: values.email }),
-    ...(values.institution.trim() === person.institution
-      ? {}
-      : { institution: values.institution }),
-    ...(values.content
-      ? {
-          content: values.content as unknown as RosacResearcherUpdateBody['content'],
-          confirmedUnchanged:
-            values.confirmedUnchanged as unknown as RosacResearcherUpdateBody['confirmedUnchanged'],
-        }
-      : {}),
-  }
-
-  return Object.keys(changes).length === 0 ? null : { version, ...changes }
-}
-
 export interface RosacInfoPageProps {
   content: RosacInfoContent
   canCreate?: boolean
@@ -117,10 +82,10 @@ export interface RosacInfoPageProps {
   onCreateInstrument?: (values: RosacInstrumentFormBody) => Promise<string | null> | void
   onSaveInstrument?: (id: string, values: RosacInstrumentFormBody) => Promise<string | null> | void
   onDeleteInstrument?: (id: string) => Promise<string | null> | void
-  onCreateAcknowledgment?: (values: RosacAcknowledgmentFormBody) => Promise<string | null> | void
+  onCreateAcknowledgment?: (values: RosacAcknowledgmentFormValues) => Promise<string | null> | void
   onSaveAcknowledgment?: (
     id: string,
-    values: RosacAcknowledgmentFormBody,
+    values: RosacAcknowledgmentFormValues,
   ) => Promise<string | null> | void
   onDeleteAcknowledgment?: (id: string) => Promise<string | null> | void
 }
@@ -141,6 +106,7 @@ export function RosacInfoPage({
   onDeleteAcknowledgment,
 }: RosacInfoPageProps) {
   const router = useRouter()
+  const siteLocale = useLocale()
   const { editMode } = useEditMode()
   const tResearchers = useTranslations('researchers')
   const tEditor = useTranslations('rosac.editor')
@@ -226,13 +192,22 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Característica actualizada correctamente.',
-          fallback: 'No se pudo guardar la característica. Inténtelo de nuevo.',
+          success: tEditor('characteristics.updated'),
+          fallback: tEditor('characteristics.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
       if (!ok) return
     }
+
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
 
     setCharacteristics((prev) =>
       prev.map((item) =>
@@ -240,9 +215,21 @@ export function RosacInfoPage({
           ? {
               ...item,
               ...(values.icon ? { icon: values.icon } : {}),
-              ...(values.content?.es?.title ? { title: values.content.es.title } : {}),
-              ...(values.content?.es?.description
-                ? { description: values.content.es.description }
+              ...(title ? { title } : {}),
+              ...(description ? { description } : {}),
+              ...(values.content && item.editing
+                ? {
+                    editing: {
+                      ...item.editing,
+                      content: {
+                        es: values.content.es ?? item.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : item.editing.content.en,
+                      },
+                    },
+                  }
                 : {}),
             }
           : item,
@@ -280,13 +267,22 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Actividad actualizada correctamente.',
-          fallback: 'No se pudo guardar la actividad. Inténtelo de nuevo.',
+          success: tEditor('activities.updated'),
+          fallback: tEditor('activities.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
       if (!ok) return
     }
+
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
 
     setActivities((prev) =>
       prev.map((item) =>
@@ -294,9 +290,21 @@ export function RosacInfoPage({
           ? {
               ...item,
               ...(values.icon ? { icon: values.icon } : {}),
-              ...(values.content?.es?.title ? { title: values.content.es.title } : {}),
-              ...(values.content?.es?.description
-                ? { description: values.content.es.description }
+              ...(title ? { title } : {}),
+              ...(description ? { description } : {}),
+              ...(values.content && item.editing
+                ? {
+                    editing: {
+                      ...item.editing,
+                      content: {
+                        es: values.content.es ?? item.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : item.editing.content.en,
+                      },
+                    },
+                  }
                 : {}),
             }
           : item,
@@ -334,28 +342,49 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Etapa actualizada correctamente.',
-          fallback: 'No se pudo guardar la etapa. Inténtelo de nuevo.',
+          success: tEditor('stages.updated'),
+          fallback: tEditor('stages.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
       if (!ok) return
     }
 
+    const title =
+      (siteLocale === 'en' ? values.content?.en?.title : undefined) ??
+      values.content?.es?.title ??
+      values.title
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.description
+
     setConstructionStages(
       (prev) =>
-        prev.map((item) =>
-          item.id === editingStageId
-            ? {
-                ...item,
-                ...(values.content?.es?.title ? { title: values.content.es.title } : {}),
-                ...(values.content?.es?.description
-                  ? { description: values.content.es.description }
+        prev.map((s) =>
+          s.id === editingStageId
+            ? ({
+                ...s,
+                ...(title ? { title, navigationLabel: title } : {}),
+                ...(description ? { description } : {}),
+                ...(values.images && values.images.length > 0 ? { images: values.images } : {}),
+                ...(values.content && s.editing
+                  ? {
+                      editing: {
+                        ...s.editing,
+                        content: {
+                          es: values.content.es ?? s.editing.content.es,
+                          en:
+                            values.content.en !== undefined
+                              ? values.content.en
+                              : s.editing.content.en,
+                        },
+                      },
+                    }
                   : {}),
-                ...(values.images ? { images: values.images } : {}),
-              }
-            : item,
-        ) as unknown as typeof prev,
+              } as unknown as ConstructionStage)
+            : s,
+        ) as unknown as readonly [ConstructionStage, ...ConstructionStage[]],
     )
     closeStageEditor()
   }
@@ -389,22 +418,63 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Instrumento actualizado correctamente.',
-          fallback: 'No se pudo guardar el instrumento. Inténtelo de nuevo.',
+          success: tEditor('instruments.updated'),
+          fallback: tEditor('instruments.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
       if (!ok) return
     }
 
+    const name =
+      (siteLocale === 'en' ? values.content?.en?.name : undefined) ??
+      values.content?.es?.name ??
+      values.name
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.pendingMessage
+
     setInstruments((prev) =>
       prev.map((inst) =>
         inst.id === editingInstrumentId
           ? {
               ...inst,
-              ...(values.content?.es?.name ? { name: values.content.es.name } : {}),
+              ...(name ? { name } : {}),
+              ...(description !== undefined
+                ? {
+                    pendingMessage: description || undefined,
+                    consultation: inst.consultation
+                      ? { ...inst.consultation, notice: description || undefined }
+                      : undefined,
+                  }
+                : {}),
               ...(values.image ? { image: values.image } : {}),
-              ...(values.consultation ? { consultation: values.consultation } : {}),
+              ...(values.consultation !== undefined
+                ? {
+                    consultation: values.consultation
+                      ? {
+                          href: values.consultation.href,
+                          label: values.consultation.label,
+                          notice: description || inst.consultation?.notice,
+                        }
+                      : undefined,
+                  }
+                : {}),
+              ...(values.content && inst.editing
+                ? {
+                    editing: {
+                      ...inst.editing,
+                      content: {
+                        es: values.content.es ?? inst.editing.content.es,
+                        en:
+                          values.content.en !== undefined
+                            ? values.content.en
+                            : inst.editing.content.en,
+                      },
+                    },
+                  }
+                : {}),
             }
           : inst,
       ),
@@ -413,6 +483,8 @@ export function RosacInfoPage({
   }
 
   async function handleCreateInstrument(values: RosacInstrumentFormBody, close: () => void) {
+    const created: { instrument: Partial<RosacInstrumentCardContent> | null } = { instrument: null }
+
     if (onCreateInstrument) {
       const err = await onCreateInstrument(values)
       if (err) {
@@ -428,23 +500,49 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Instrumento agregado correctamente.',
-          fallback: 'No se pudo guardar el instrumento. Inténtelo de nuevo.',
-          onSuccess: () => router.refresh(),
+          success: tEditor('instruments.created'),
+          fallback: tEditor('instruments.errors.saveUnknown'),
+          onSuccess: async (response) => {
+            const data = (await response.json().catch(() => null)) as {
+              instrument?: RosacInstrumentCardContent
+            } | null
+            if (data?.instrument) {
+              created.instrument = data.instrument
+            }
+            router.refresh()
+          },
         },
       )
       if (!ok) return
     }
 
-    setInstruments((prev) => [
-      {
-        id: `inst-${Date.now()}`,
-        name: values.content?.es?.name ?? '',
-        image: values.image,
-        consultation: values.consultation,
-      },
-      ...prev,
-    ])
+    const name =
+      (siteLocale === 'en' ? values.content?.en?.name : undefined) ??
+      values.content?.es?.name ??
+      values.name ??
+      ''
+    const description =
+      (siteLocale === 'en' ? values.content?.en?.description : undefined) ??
+      values.content?.es?.description ??
+      values.pendingMessage
+
+    const newInstrument: RosacInstrumentCardContent = {
+      id: created.instrument?.id ?? `instrument-${Date.now()}`,
+      name: created.instrument?.name ?? name,
+      pendingMessage: created.instrument?.pendingMessage ?? description,
+      image: created.instrument?.image ?? values.image,
+      consultation:
+        created.instrument?.consultation ??
+        (values.consultation
+          ? {
+              href: values.consultation.href,
+              label: values.consultation.label,
+              notice: description,
+            }
+          : undefined),
+    }
+
+    setInstruments((prev) => [newInstrument, ...prev])
     close()
   }
 
@@ -460,33 +558,26 @@ export function RosacInfoPage({
         `/api/rosac/instruments/${id}`,
         { method: 'DELETE' },
         {
-          success: 'Instrumento eliminado correctamente.',
-          fallback: 'No se pudo eliminar el instrumento. Inténtelo de nuevo.',
+          success: tEditor('instruments.deleted'),
+          fallback: tEditor('instruments.errors.deleteUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
       if (!ok) return
     }
 
-    setInstruments((prev) => prev.filter((inst) => inst.id !== id))
+    setInstruments(instruments.filter((inst) => inst.id !== id))
   }
 
   // --- Section 7: Researcher Handlers ---
-  async function handleSaveResearcher(
-    person: RosacResearcher,
-    values: BilingualResearcherFormValues,
-  ): Promise<boolean> {
-    if (!person.editing) return false
-
-    const body = researcherUpdateBody(person, person.editing.version, values)
-    if (!body) return true
-
+  // Reports the outcome in a toast once the request is done, then refreshes the team.
+  async function handleSaveResearcher(id: string, values: ResearcherFormValues): Promise<boolean> {
     return sendWithFeedback(
-      `/api/researchers/${person.id}`,
+      `/api/researchers/${id}`,
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(values),
       },
       {
         success: tResearchers('updated'),
@@ -496,23 +587,15 @@ export function RosacInfoPage({
     )
   }
 
-  async function handleCreateResearcher(values: BilingualResearcherFormValues, close: () => void) {
-    if (!values.content) return
-
-    const body: RosacResearcherCreateBody = {
-      src: values.src,
-      name: values.name,
-      email: values.email,
-      institution: values.institution,
-      content: values.content as unknown as RosacResearcherCreateBody['content'],
-    }
-
+  // Reports the outcome in a toast once the request is done. On success the "Añadir" modal
+  // closes and the page refreshes; on failure it stays open with what was typed.
+  async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
     await sendWithFeedback(
       '/api/researchers',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(values),
       },
       {
         success: tResearchers('created'),
@@ -542,7 +625,7 @@ export function RosacInfoPage({
   // --- Section 8: Acknowledgments Handlers ---
   async function handleSaveAcknowledgment(
     id: string,
-    values: RosacAcknowledgmentFormBody,
+    values: RosacAcknowledgmentFormValues,
   ): Promise<string | null> {
     if (onSaveAcknowledgment) {
       const err = await onSaveAcknowledgment(id, values)
@@ -558,34 +641,36 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Institución actualizada correctamente.',
-          fallback: 'No se pudo guardar la institución. Inténtelo de nuevo.',
+          success: tEditor('acknowledgments.updated'),
+          fallback: tEditor('acknowledgments.errors.saveUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
       if (!ok) return 'Error al guardar la institución'
     }
 
-    setAcknowledgments((prev) =>
-      prev.map((inst) =>
-        inst.id === id
-          ? {
-              ...inst,
-              ...(values.content?.es?.name ? { name: values.content.es.name } : {}),
-              ...(values.href !== undefined ? { href: values.href } : {}),
-              ...(values.logo ? { logo: values.logo } : {}),
-            }
-          : inst,
-      ),
+    const updated = acknowledgments.map((inst) =>
+      inst.id === id
+        ? {
+            ...inst,
+            name: values.name,
+            href: values.href,
+            logo: values.logo,
+          }
+        : inst,
     )
-
+    setAcknowledgments(updated)
     return null
   }
 
   async function handleCreateAcknowledgment(
-    values: RosacAcknowledgmentFormBody,
+    values: RosacAcknowledgmentFormValues,
     close: () => void,
   ) {
+    const created: { acknowledgment: Partial<RosacAcknowledgment> | null } = {
+      acknowledgment: null,
+    }
+
     if (onCreateAcknowledgment) {
       const err = await onCreateAcknowledgment(values)
       if (err) {
@@ -601,23 +686,30 @@ export function RosacInfoPage({
           body: JSON.stringify(values),
         },
         {
-          success: 'Institución agregada correctamente.',
-          fallback: 'No se pudo guardar la institución. Inténtelo de nuevo.',
-          onSuccess: () => router.refresh(),
+          success: tEditor('acknowledgments.created'),
+          fallback: tEditor('acknowledgments.errors.saveUnknown'),
+          onSuccess: async (response) => {
+            const data = (await response.json().catch(() => null)) as {
+              acknowledgment?: RosacAcknowledgment
+            } | null
+            if (data?.acknowledgment) {
+              created.acknowledgment = data.acknowledgment
+            }
+            router.refresh()
+          },
         },
       )
       if (!ok) return
     }
 
-    setAcknowledgments((prev) => [
-      {
-        id: `ack-${Date.now()}`,
-        name: values.content?.es?.name ?? '',
-        href: values.href,
-        logo: values.logo ?? { src: '', alt: '' },
-      },
-      ...prev,
-    ])
+    const newInstitution: RosacAcknowledgment = {
+      id: created.acknowledgment?.id ?? `ack-${Date.now()}`,
+      name: created.acknowledgment?.name ?? values.name,
+      href: created.acknowledgment?.href ?? values.href,
+      logo: created.acknowledgment?.logo ?? values.logo,
+    }
+
+    setAcknowledgments((prev) => [newInstitution, ...prev])
     close()
   }
 
@@ -633,8 +725,8 @@ export function RosacInfoPage({
         `/api/rosac/acknowledgments/${id}`,
         { method: 'DELETE' },
         {
-          success: 'Institución eliminada correctamente.',
-          fallback: 'No se pudo eliminar la institución. Inténtelo de nuevo.',
+          success: tEditor('acknowledgments.deleted'),
+          fallback: tEditor('acknowledgments.errors.deleteUnknown'),
           onSuccess: () => router.refresh(),
         },
       )
@@ -872,14 +964,11 @@ export function RosacInfoPage({
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
-              contentLang={person.contentLang ?? contentLangAttribute(person.contentLocale)}
+              contentLang={person.contentLang}
               institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
-              onSave={(values: BilingualResearcherFormValues) =>
-                handleSaveResearcher(person, values)
-              }
+              onSave={(values) => handleSaveResearcher(person.id, values)}
               researcher={person}
-              translation={{ editing: person.editing ?? null }}
             />
           )}
           leadingSlide={
@@ -888,11 +977,8 @@ export function RosacInfoPage({
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
-                    onSave={(values: BilingualResearcherFormValues) =>
-                      handleCreateResearcher(values, close)
-                    }
+                    onSave={(values) => handleCreateResearcher(values, close)}
                     researcher={null}
-                    translation={{ editing: null }}
                   />
                 )}
               </AddItemCard>
@@ -1030,7 +1116,7 @@ export function RosacInfoPage({
       <Modal
         onClose={closeInstrumentEditor}
         open={editingInstrument !== undefined}
-        size="medium"
+        size="large"
         title={
           editingInstrument
             ? tEditor('instruments.editModalTitle', { name: editingInstrument.name })

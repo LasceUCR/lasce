@@ -1,18 +1,14 @@
 import { NextResponse } from 'next/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import {
-  conflict,
-  internalError,
-  invalidBody,
-  isUuid,
-  notFound as notFoundResponse,
-  ok,
-  readJson,
-  reviewRequired,
-} from '@/app/lib/cms/http'
-import { deleteResearcher, rosacResearcherUpdateSchema, updateResearcher } from '@/app/lib/rosac'
+import { deleteResearcher, researcherInputSchema, updateResearcher } from '@/app/lib/rosac'
 
+/**
+ * Updates or deletes one ROSAC researcher profile (LASCE-CON-012-085). PATCH
+ * needs `edit_components`; DELETE needs `delete_components`. Hiding the
+ * pencil or trash is not enough — this is the write path the public GET
+ * sibling deliberately has none of.
+ */
 export const dynamic = 'force-dynamic'
 
 export async function PATCH(
@@ -22,36 +18,37 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  const { id } = await params
-  if (!isUuid(id)) {
-    return notFoundResponse(`No existe un investigador con id "${id}".`)
-  }
-
-  const json = await readJson(request)
-  if (!json.ok) return json.response
-
-  const parsed = rosacResearcherUpdateSchema.safeParse(json.body)
-  if (!parsed.success) return invalidBody(parsed.error)
-
+  let body: unknown
   try {
-    const result = await updateResearcher(id, parsed.data, guard.user.id)
-    if (!result.ok) {
-      switch (result.reason) {
-        case 'not-found':
-          return notFoundResponse(`No existe un investigador con id "${id}".`)
-        case 'conflict':
-          return conflict(
-            'El perfil del investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.',
-          )
-        case 'review-required':
-          return reviewRequired(result.pending)
-      }
-    }
-
-    return ok({ researcher: result.researcher })
-  } catch (error) {
-    return internalError('No se pudo guardar el investigador.', error)
+    body = await request.json()
+  } catch {
+    return NextResponse.json(
+      { error: 'El cuerpo de la solicitud no es JSON válido.' },
+      { status: 400 },
+    )
   }
+
+  const parsed = researcherInputSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error: 'Faltan campos obligatorios o no son válidos.',
+        issues: parsed.error.flatten().fieldErrors,
+      },
+      { status: 400 },
+    )
+  }
+
+  const { id } = await params
+  const researcher = await updateResearcher(id, parsed.data, guard.user.id)
+  if (!researcher) {
+    return NextResponse.json(
+      { error: `No existe un investigador con id "${id}".` },
+      { status: 404 },
+    )
+  }
+
+  return NextResponse.json({ researcher }, { headers: { 'Cache-Control': 'no-store' } })
 }
 
 export async function DELETE(
@@ -62,17 +59,12 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  if (!isUuid(id)) {
-    return notFoundResponse(`No existe un investigador con id "${id}".`)
-  }
-
-  try {
-    const deleted = await deleteResearcher(id, guard.user)
-    if (!deleted) {
-      return notFoundResponse(`No existe un investigador con id "${id}".`)
-    }
-  } catch (error) {
-    return internalError('No se pudo eliminar el investigador.', error)
+  const deleted = await deleteResearcher(id, guard.user)
+  if (!deleted) {
+    return NextResponse.json(
+      { error: `No existe un investigador con id "${id}".` },
+      { status: 404 },
+    )
   }
 
   return new NextResponse(null, { status: 204 })

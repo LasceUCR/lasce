@@ -34,14 +34,11 @@ import {
   type ContentDraft,
 } from '@/app/lib/i18n/content/form'
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
-import {
-  rosacStageContent,
-  type RosacStageField,
-  type RosacStageUpdateInput,
-} from '@/app/lib/rosac-schema'
+import { rosacStageContent } from '@/app/lib/rosac-editor-content'
+import type { RosacStageField, RosacStageInput } from '@/app/lib/rosac'
 import type { ConstructionImage, ConstructionStage } from '@/app/lib/rosac-construction'
 
-export type RosacStageFormBody = RosacStageUpdateInput
+export type RosacStageFormBody = RosacStageInput
 
 export interface RosacStageFormProps {
   stage: ConstructionStage
@@ -435,7 +432,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
                 paddingRight: '8px',
               }}
             >
-              {draftEditImages.map((img) => (
+              {draftEditImages.map((img, index) => (
                 <div
                   key={img.id}
                   style={{
@@ -468,7 +465,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
                   <div style={{ flex: 1 }}>
                     <FormField
                       id={`edit-alt-${img.id}`}
-                      label={t('stages.editModal.altLabel')}
+                      label={t('stages.editModal.altLabel', { index: index + 1 })}
                       onChange={(val) => handleUpdateDraftImageAlt(img.id, val)}
                       placeholder={t('stages.editModal.altPlaceholder')}
                       value={img.alt}
@@ -476,7 +473,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
                   </div>
 
                   <button
-                    aria-label={t('stages.editModal.deleteLabel')}
+                    aria-label={t('stages.editModal.deleteLabel', { index: index + 1 })}
                     className="icon-button icon-button--danger"
                     disabled={draftEditImages.length <= 1}
                     onClick={() => handleDeleteDraftImageClick(img.id)}

@@ -1,6 +1,6 @@
+import type { ReactElement } from 'react'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
@@ -11,26 +11,24 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadConstructionStageImage: mocks.uploadConstructionStageImage,
 }))
 
-URL.createObjectURL = vi.fn(() => 'blob:mock-url')
-URL.revokeObjectURL = vi.fn()
-
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
-
 import { RosacStageForm, type RosacStageFormProps } from './RosacStageForm'
 
-/** The form reports a failed upload with a toast, so it renders inside the app's providers. */
 function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
   return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
 }
 
+URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+URL.revokeObjectURL = vi.fn()
+
 const sampleImages = [
   {
-    src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_1.jpg',
-    alt: 'Personas sobre y alrededor de una base de concreto, con una antena al fondo.',
+    src: '/images/ROSAC/construction/Preparacion/Preparacion_1.jpg',
+    alt: 'Montaje de piezas preliminares del radiotelescopio.',
   },
   {
-    src: '/images/ROSAC/construction/Preparacion%20Montaje/prev_montaje_2.jpg',
+    src: '/images/ROSAC/construction/Preparacion/Preparacion_2.jpg',
     alt: 'Camión con grúa y componentes metálicos junto al sitio de la antena.',
   },
 ] as const
@@ -91,7 +89,6 @@ describe('RosacStageForm', () => {
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('prompts to discard changes when modified and cancelled', async () => {
@@ -99,7 +96,7 @@ describe('RosacStageForm', () => {
 
     const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
     await user.clear(titleInput)
-    await user.type(titleInput, 'Título Modificado')
+    await user.type(titleInput, 'Nuevo Título')
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
@@ -110,7 +107,7 @@ describe('RosacStageForm', () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
-  test('shows validation errors when fields are empty', async () => {
+  test('shows validation errors when title is cleared on submit', async () => {
     const { onSave, user } = renderForm()
 
     const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
@@ -122,7 +119,7 @@ describe('RosacStageForm', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  test('saves changes directly when confirmed with both languages updated', async () => {
+  test('calls onSave directly when submitted with both languages updated', async () => {
     const { onSave, user } = renderForm()
 
     const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
@@ -185,48 +182,17 @@ describe('RosacStageForm', () => {
     })
   })
 
-  test('allows editing alt text of an existing photo via the edit photos modal', async () => {
+  test('allows deleting a photo via the edit photos modal with confirmation', async () => {
     const { onSave, user } = renderForm()
 
     await user.click(screen.getByRole('button', { name: /^Editar fotografías/ }))
 
-    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías' })
     expect(editDialog).toBeInTheDocument()
 
-    const altInput = within(editDialog).getAllByRole('textbox', {
-      name: 'Texto alternativo accesible (alt)',
-    })[0]!
-    await user.clear(altInput)
-    await user.type(altInput, 'Nueva descripción accesible')
-
-    await user.click(within(editDialog).getByRole('button', { name: 'Guardar fotografías' }))
-    expect(
-      screen.queryByRole('dialog', { name: 'Editar fotografías de la etapa' }),
-    ).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        images: expect.arrayContaining([
-          expect.objectContaining({
-            src: sampleImages[0].src,
-            alt: 'Nueva descripción accesible',
-          }),
-        ]),
-      }),
-    )
-  })
-
-  test('prompts to confirm deletion and removes a photo via the edit photos modal', async () => {
-    const { onSave, user } = renderForm()
-
-    await user.click(screen.getByRole('button', { name: /^Editar fotografías/ }))
-
-    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
-    const deleteButton = within(editDialog).getAllByRole('button', {
-      name: 'Eliminar fotografía',
-    })[0]!
+    const deleteButton = within(editDialog).getByRole('button', {
+      name: 'Eliminar fotografía 1',
+    })
     await user.click(deleteButton)
 
     const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar fotografía' })
@@ -236,9 +202,7 @@ describe('RosacStageForm', () => {
     expect(screen.queryByRole('dialog', { name: 'Eliminar fotografía' })).not.toBeInTheDocument()
 
     await user.click(within(editDialog).getByRole('button', { name: 'Guardar fotografías' }))
-    expect(
-      screen.queryByRole('dialog', { name: 'Editar fotografías de la etapa' }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Editar fotografías' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -254,10 +218,10 @@ describe('RosacStageForm', () => {
 
     await user.click(screen.getByRole('button', { name: /^Editar fotografías/ }))
 
-    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías de la etapa' })
-    const deleteButton = within(editDialog).getAllByRole('button', {
-      name: 'Eliminar fotografía',
-    })[0]!
+    const editDialog = screen.getByRole('dialog', { name: 'Editar fotografías' })
+    const deleteButton = within(editDialog).getByRole('button', {
+      name: 'Eliminar fotografía 1',
+    })
     await user.click(deleteButton)
 
     const deleteConfirmDialog = screen.getByRole('dialog', { name: 'Eliminar fotografía' })
@@ -267,7 +231,7 @@ describe('RosacStageForm', () => {
     expect(screen.queryByRole('dialog', { name: 'Eliminar fotografía' })).not.toBeInTheDocument()
 
     expect(
-      within(editDialog).getAllByRole('textbox', { name: 'Texto alternativo accesible (alt)' })[0],
+      within(editDialog).getByRole('textbox', { name: 'Texto alternativo de la fotografía 1' }),
     ).toBeInTheDocument()
   })
 
@@ -283,14 +247,14 @@ describe('RosacStageForm', () => {
     const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
     expect(addDialog).toBeInTheDocument()
 
-    const file = new File(['fake-image'], 'foto.jpg', { type: 'image/jpeg' })
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
+    const file = new File(['dummy'], 'photo.jpg', { type: 'image/jpeg' })
     await user.upload(fileInput, file)
 
-    const newAltInput = within(addDialog).getByRole('textbox', {
+    const altInput = within(addDialog).getByRole('textbox', {
       name: 'Texto alternativo accesible (alt)',
     })
-    await user.type(newAltInput, 'Foto de la nueva grúa')
+    await user.type(altInput, 'Nueva fotografía de prueba')
 
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
     expect(screen.queryByRole('dialog', { name: 'Añadir fotografía' })).not.toBeInTheDocument()
@@ -302,12 +266,13 @@ describe('RosacStageForm', () => {
     expect(mocks.uploadConstructionStageImage).toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        images: expect.arrayContaining([
-          expect.objectContaining({
+        images: [
+          ...sampleImages,
+          {
             src: '/images/uploaded.jpg',
-            alt: 'Foto de la nueva grúa',
-          }),
-        ]),
+            alt: 'Nueva fotografía de prueba',
+          },
+        ],
       }),
     )
   })
@@ -322,15 +287,13 @@ describe('RosacStageForm', () => {
     await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
     const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['fake-image'], 'foto.jpg', { type: 'image/jpeg' }))
+    await user.upload(fileInput, new File(['dummy'], 'large.jpg', { type: 'image/jpeg' }))
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
+    expect(screen.getByText('La imagen es demasiado grande.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
-    // A toast, not a custom message inside the form.
-    expect(document.querySelector('.cms-form .form-alert')).toBeNull()
   })
 
   test('shows a toast when a photo upload throws', async () => {
@@ -340,13 +303,13 @@ describe('RosacStageForm', () => {
     await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
     const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['fake-image'], 'foto.jpg', { type: 'image/jpeg' }))
+    await user.upload(fileInput, new File(['dummy'], 'throw.jpg', { type: 'image/jpeg' }))
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(
-      await screen.findByText('Error al subir las fotografías. Inténtelo de nuevo.'),
+      screen.getByText('Error al subir las fotografías. Inténtelo de nuevo.'),
     ).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })

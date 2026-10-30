@@ -32,12 +32,11 @@ import {
   rosacActivityContent,
   rosacCardIcons,
   type RosacActivityField,
-  type RosacActivityItem,
-  type RosacActivityUpdateInput,
   type RosacCardIcon,
-} from '@/app/lib/rosac-schema'
+} from '@/app/lib/rosac-editor-content'
+import type { RosacActivityInput, RosacActivityItem } from '@/app/lib/rosac'
 
-export type RosacActivityFormBody = RosacActivityUpdateInput
+export type RosacActivityFormBody = RosacActivityInput
 
 export interface RosacActivityFormProps {
   activity: RosacActivityItem

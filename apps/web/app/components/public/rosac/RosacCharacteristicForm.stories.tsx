@@ -14,7 +14,7 @@ type Story = StoryObj<typeof RosacCharacteristicForm>
 export const Default: Story = {
   args: {
     characteristic: {
-      id: 'characteristic-1',
+      id: 'antenna-system',
       icon: 'antenna',
       title: 'Antena de 11 metros',
       description:

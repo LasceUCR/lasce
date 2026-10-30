@@ -31,12 +31,10 @@ import { GET, POST } from './route'
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
 const validBody = {
   src: '/images/ROSAC/team/New.jpg',
+  role: 'Investigador',
   name: 'Persona Nueva',
   institution: 'UCR',
-  content: {
-    es: { role: 'Investigador', description: 'Texto de prueba.' },
-    en: { role: 'Researcher', description: 'Test text.' },
-  },
+  description: 'Texto de prueba.',
 }
 
 function postRequest(body: unknown) {
@@ -94,7 +92,6 @@ describe('POST /api/researchers', () => {
     const response = await POST(postRequest('not json'))
 
     expect(response.status).toBe(400)
-    expect((await response.json()).code).toBe('invalid-json')
     expect(mocks.createResearcher).not.toHaveBeenCalled()
   })
 
@@ -105,8 +102,9 @@ describe('POST /api/researchers', () => {
 
     expect(response.status).toBe(400)
     const body = await response.json()
-    expect(body.code).toBe('invalid-body')
-    expect(body.issues).toEqual([{ path: 'name', message: 'El nombre es obligatorio.' }])
+    expect(body.issues).toMatchObject({
+      name: expect.any(Array),
+    })
     expect(mocks.createResearcher).not.toHaveBeenCalled()
   })
 

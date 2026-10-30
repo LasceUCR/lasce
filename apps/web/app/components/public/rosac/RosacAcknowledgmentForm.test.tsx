@@ -13,6 +13,7 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+
 import {
   RosacAcknowledgmentForm,
   type RosacAcknowledgmentFormProps,
@@ -30,18 +31,11 @@ function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]
 URL.createObjectURL = vi.fn(() => 'blob:mock-url')
 URL.revokeObjectURL = vi.fn()
 
-function renderForm(
-  props: RosacAcknowledgmentFormProps,
-  options?: Parameters<typeof renderWithIntl>[1],
-) {
-  return render(<RosacAcknowledgmentForm {...props} />, options)
-}
-
 describe('RosacAcknowledgmentForm', () => {
   test('starts pre-filled when editing an existing institution', () => {
-    renderForm(editArgs)
+    render(<RosacAcknowledgmentForm {...editArgs} />)
 
-    expect(screen.getByRole('textbox', { name: 'Nombre (Español)' })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).toHaveValue(
       editArgs.institution!.name,
     )
     expect(
@@ -53,19 +47,19 @@ describe('RosacAcknowledgmentForm', () => {
   })
 
   test('starts blank when adding a new institution', () => {
-    renderForm(addArgs)
+    render(<RosacAcknowledgmentForm {...addArgs} />)
 
-    expect(screen.getByRole('textbox', { name: 'Nombre (Español)' })).toHaveValue('')
+    expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).toHaveValue('')
     expect(
       screen.getByRole('textbox', { name: 'Sitio web de la institución (opcional)' }),
     ).toHaveValue('')
-    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Agregar institución' })).toBeEnabled()
   })
 
   test('calls onCancel directly when untouched', async () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
-    renderForm({ ...editArgs, onCancel })
+    render(<RosacAcknowledgmentForm {...editArgs} onCancel={onCancel} />)
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
@@ -74,14 +68,14 @@ describe('RosacAcknowledgmentForm', () => {
   test('prompts to discard changes when modified and cancelled', async () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
-    renderForm({ ...addArgs, onCancel })
+    render(<RosacAcknowledgmentForm {...addArgs} onCancel={onCancel} />)
 
-    const nameInput = screen.getByRole('textbox', { name: 'Nombre (Español)' })
+    const nameInput = screen.getByRole('textbox', { name: 'Nombre de la institución' })
     await user.type(nameInput, 'Instituto Tecnológico')
 
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
-    const discardDialog = screen.getByRole('dialog', { name: '¿Descartar cambios?' })
+    const discardDialog = screen.getByRole('dialog', { name: 'Descartar cambios no guardados' })
     expect(discardDialog).toBeInTheDocument()
 
     await user.click(within(discardDialog).getByRole('button', { name: 'Descartar' }))
@@ -91,18 +85,18 @@ describe('RosacAcknowledgmentForm', () => {
   test('shows validation errors when name is empty', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    renderForm({ ...addArgs, onSave })
+    render(<RosacAcknowledgmentForm {...addArgs} onSave={onSave} />)
 
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
 
-    expect(screen.getByText('El nombre en español es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('El nombre de la institución es obligatorio.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
   })
 
   test('validates url format when href is provided', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    renderForm({ ...editArgs, onSave })
+    render(<RosacAcknowledgmentForm {...editArgs} onSave={onSave} />)
 
     const hrefInput = screen.getByRole('textbox', {
       name: 'Sitio web de la institución (opcional)',
@@ -110,7 +104,7 @@ describe('RosacAcknowledgmentForm', () => {
     await user.clear(hrefInput)
     await user.type(hrefInput, 'enlace-invalido')
 
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(
       screen.getByText('El enlace debe ser una URL válida que empiece con http:// o https://.'),
@@ -119,7 +113,7 @@ describe('RosacAcknowledgmentForm', () => {
 
     await user.clear(hrefInput)
     await user.type(hrefInput, 'https://cinespa.ucr.ac.cr/nuevo')
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -128,76 +122,32 @@ describe('RosacAcknowledgmentForm', () => {
     )
   })
 
-  test('saves institution directly when both languages are updated', async () => {
+  test('saves institution directly without extra confirmation dialog', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    renderForm({ ...editArgs, onSave })
+    render(<RosacAcknowledgmentForm {...editArgs} onSave={onSave} />)
 
-    const nameInput = screen.getByRole('textbox', { name: 'Nombre (Español)' })
+    const nameInput = screen.getByRole('textbox', { name: 'Nombre de la institución' })
     await user.clear(nameInput)
     await user.type(nameInput, 'CINESPA Editado')
 
-    await user.click(screen.getByRole('tab', { name: /^English/ }))
-    const enNameInput = screen.getByRole('textbox', { name: 'Nombre (English)' })
-    await user.clear(enNameInput)
-    await user.type(enNameInput, 'CINESPA Edited')
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        version: '1',
-        content: {
-          es: {
-            name: 'CINESPA Editado',
-          },
-          en: {
-            name: 'CINESPA Edited',
-          },
-        },
-        confirmedUnchanged: [],
-      }),
-    )
-  })
-
-  test('asks to review the other language when only one language changed', async () => {
-    const user = userEvent.setup()
-    const onSave = vi.fn()
-    renderForm({ ...editArgs, onSave })
-
-    const nameInput = screen.getByRole('textbox', { name: 'Nombre (Español)' })
-    await user.clear(nameInput)
-    await user.type(nameInput, 'CINESPA Editado')
-
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    expect(onSave).not.toHaveBeenCalled()
-    expect(screen.getByRole('tab', { name: /^English/ })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('switch')).not.toBeChecked()
-
-    await user.click(screen.getByRole('switch'))
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        version: '1',
-        content: {
-          es: {
-            name: 'CINESPA Editado',
-          },
-          en: {
-            name: editArgs.institution!.editing!.content.en?.name,
-          },
-        },
-        confirmedUnchanged: [{ locale: 'en', field: 'name' }],
+        name: 'CINESPA Editado',
+        href: editArgs.institution!.href,
+        logo: expect.objectContaining({
+          src: editArgs.institution!.logo.src,
+        }),
       }),
     )
   })
 
   test('clears name, alt and href when switching from a preset back to custom logo', async () => {
     const user = userEvent.setup()
-    renderForm(addArgs)
+    render(<RosacAcknowledgmentForm {...addArgs} />)
 
     const select = screen.getByRole('combobox', {
       name: 'Escoger un logo personalizado o seleccionar uno de la lista',
@@ -205,14 +155,14 @@ describe('RosacAcknowledgmentForm', () => {
 
     // Select preset 0
     await user.selectOptions(select, '0')
-    expect(screen.getByRole('textbox', { name: 'Nombre (Español)' })).not.toHaveValue('')
+    expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).not.toHaveValue('')
     expect(
       screen.getByRole('textbox', { name: 'Sitio web de la institución (opcional)' }),
     ).toHaveValue('https://vinv.ucr.ac.cr')
 
     // Switch back to custom
     await user.selectOptions(select, 'custom')
-    expect(screen.getByRole('textbox', { name: 'Nombre (Español)' })).toHaveValue('')
+    expect(screen.getByRole('textbox', { name: 'Nombre de la institución' })).toHaveValue('')
     expect(
       screen.getByRole('textbox', { name: 'Sitio web de la institución (opcional)' }),
     ).toHaveValue('')
@@ -228,20 +178,15 @@ describe('RosacAcknowledgmentForm', () => {
       ok: false,
       error: 'El logo es demasiado grande.',
     })
-    renderForm({ ...addArgs, onSave })
+    render(<RosacAcknowledgmentForm {...addArgs} onSave={onSave} />)
 
     await user.type(
-      screen.getByRole('textbox', { name: 'Nombre (Español)' }),
+      screen.getByRole('textbox', { name: 'Nombre de la institución' }),
       'Instituto Tecnológico',
-    )
-    await user.click(screen.getByRole('tab', { name: /^English/ }))
-    await user.type(
-      screen.getByRole('textbox', { name: 'Nombre (English)' }),
-      'Technological Institute',
     )
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['logo'], 'logo.png', { type: 'image/png' }))
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
 
     expect(await screen.findByText('El logo es demasiado grande.')).toBeInTheDocument()
     expect(onSave).not.toHaveBeenCalled()
@@ -253,20 +198,15 @@ describe('RosacAcknowledgmentForm', () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     mocks.uploadAcknowledgmentLogo.mockRejectedValue(new Error('network error'))
-    renderForm({ ...addArgs, onSave })
+    render(<RosacAcknowledgmentForm {...addArgs} onSave={onSave} />)
 
     await user.type(
-      screen.getByRole('textbox', { name: 'Nombre (Español)' }),
+      screen.getByRole('textbox', { name: 'Nombre de la institución' }),
       'Instituto Tecnológico',
-    )
-    await user.click(screen.getByRole('tab', { name: /^English/ }))
-    await user.type(
-      screen.getByRole('textbox', { name: 'Nombre (English)' }),
-      'Technological Institute',
     )
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['logo'], 'logo.png', { type: 'image/png' }))
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
 
     expect(
       await screen.findByText('No se pudo subir el logo. Inténtelo de nuevo.'),
