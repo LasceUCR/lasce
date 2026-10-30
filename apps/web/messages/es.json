@@ -1219,6 +1219,31 @@
       "label": "Volver a las áreas"
     },
     "editor": {
+      "languageTabs": "Idioma del contenido",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el texto, revíselo también.",
+      "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el texto debe completar ambos idiomas; los campos compartidos se pueden cambiar sin traducirla.",
+      "titleIn": "Título ({language})",
+      "descriptionIn": "Descripción ({language})",
+      "nameIn": "Nombre ({language})",
+      "icon": "Ícono",
+      "icons": {
+        "antenna": "Antena",
+        "location": "Ubicación",
+        "frequency": "Frecuencia",
+        "sun": "Sol",
+        "tracking": "Apuntado y seguimiento",
+        "control": "Control",
+        "receiver": "Receptor",
+        "maintenance": "Mantenimiento e infraestructura",
+        "education": "Educación"
+      },
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando...",
+      "discardTitle": "¿Descartar cambios?",
+      "discardMessage": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "discardCancel": "Seguir editando",
+      "discardConfirm": "Descartar",
       "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo.",
       "discardDialog": {
         "title": "Descartar cambios no guardados",
@@ -1227,6 +1252,10 @@
         "discard": "Descartar"
       },
       "characteristics": {
+        "updated": "Característica actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la característica. Inténtelo de nuevo."
+        },
         "editLabel": "Editar {title}",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar característica",
@@ -1250,6 +1279,10 @@
         }
       },
       "activities": {
+        "updated": "Actividad actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la actividad. Inténtelo de nuevo."
+        },
         "editLabel": "Editar {title}",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar actividad",
@@ -1262,6 +1295,10 @@
         "save": "Confirmar"
       },
       "stages": {
+        "updated": "Etapa actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la etapa. Inténtelo de nuevo."
+        },
         "editStage": "Editar etapa",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar etapa",
@@ -1281,6 +1318,7 @@
         "editModal": {
           "title": "Editar fotografías",
           "help": "Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no correspondan a esta etapa.",
+          "noPhotos": "No hay fotografías registradas en esta etapa.",
           "altLabel": "Texto alternativo de la fotografía {index}",
           "altPlaceholder": "Texto alternativo accesible de la fotografía",
           "deleteLabel": "Eliminar fotografía {index}",
@@ -1316,6 +1354,13 @@
         }
       },
       "instruments": {
+        "created": "Instrumento agregado correctamente.",
+        "updated": "Instrumento actualizado correctamente.",
+        "deleted": "Instrumento eliminado correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar el instrumento. Inténtelo de nuevo.",
+          "deleteUnknown": "No se pudo eliminar el instrumento. Inténtelo de nuevo."
+        },
         "addCard": "Añadir instrumento",
         "editLabel": "Editar {name}",
         "deleteLabel": "Eliminar {name}",
@@ -1356,6 +1401,13 @@
         "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo."
       },
       "acknowledgments": {
+        "created": "Institución agregada correctamente.",
+        "updated": "Institución actualizada correctamente.",
+        "deleted": "Institución eliminada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la institución. Inténtelo de nuevo.",
+          "deleteUnknown": "No se pudo eliminar la institución. Inténtelo de nuevo."
+        },
         "addCard": "Añadir institución",
         "editLabel": "Editar {name}",
         "deleteLabel": "Eliminar {name}",

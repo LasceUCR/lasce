@@ -4,20 +4,51 @@ import type { RosacMessages } from './rosac'
 
 const findMany = vi.fn()
 const findUnique = vi.fn()
+const findFirst = vi.fn()
 const update = vi.fn()
+const updateMany = vi.fn()
 const create = vi.fn()
 const del = vi.fn()
+const aggregate = vi.fn()
+const upsert = vi.fn()
 const auditCreate = vi.fn()
 
-vi.mock('@lasce/db', () => {
-  const tx = {
-    researcher: { findMany, findUnique, update, create, deleteMany: del },
-    auditEvent: { create: auditCreate },
-  }
-  return {
-    prisma: { ...tx, $transaction: (write: (client: typeof tx) => unknown) => write(tx) },
-  }
-})
+const prismaMock = {
+  researcher: { findMany, findUnique, update, updateMany, create, delete: del, deleteMany: del },
+  rosacCharacteristic: { findMany, findFirst, findUnique, update, updateMany },
+  rosacCharacteristicTranslation: { upsert },
+  rosacActivity: { findMany, findFirst, findUnique, update, updateMany },
+  rosacActivityTranslation: { upsert },
+  rosacStage: { findMany, findFirst, findUnique, update, updateMany },
+  rosacStageTranslation: { upsert },
+  rosacInstrument: {
+    findMany,
+    findFirst,
+    findUnique,
+    update,
+    updateMany,
+    create,
+    delete: del,
+    aggregate,
+  },
+  rosacInstrumentTranslation: { upsert },
+  rosacAcknowledgment: {
+    findMany,
+    findFirst,
+    findUnique,
+    update,
+    updateMany,
+    create,
+    delete: del,
+    aggregate,
+  },
+  auditEvent: { create: auditCreate },
+  $transaction: vi.fn(async (cb: (tx: typeof prismaMock) => Promise<unknown>) => cb(prismaMock)),
+}
+
+vi.mock('@lasce/db', () => ({
+  prisma: prismaMock,
+}))
 
 const {
   createResearcher,
@@ -29,6 +60,28 @@ const {
   getRosacInfoContent,
   rosacInfoContent,
   rosacInfoMeta,
+  getRosacCharacteristics,
+  updateRosacCharacteristic,
+  rosacCharacteristicInputSchema,
+  getRosacActivities,
+  updateRosacActivity,
+  rosacActivityInputSchema,
+  getRosacStages,
+  updateRosacStage,
+  rosacStageInputSchema,
+  getRosacInstruments,
+  createRosacInstrument,
+  updateRosacInstrument,
+  deleteRosacInstrument,
+  rosacInstrumentInputSchema,
+  getRosacAcknowledgments,
+  createRosacAcknowledgment,
+  updateRosacAcknowledgment,
+  deleteRosacAcknowledgment,
+  rosacAcknowledgmentInputSchema,
+  safeUrlSchema,
+  RosacConflictError,
+  RosacReviewRequiredError,
 } = await import('./rosac')
 const { getMessages } = await import('./i18n/messages')
 
@@ -461,6 +514,545 @@ describe('rosac content', () => {
     expect(partial.construction.title).toBe(rosacInfoContent.construction.title)
     expect(partial.instruments.title).toBe(rosacInfoContent.instruments.title)
     expect(partial.backLink.label).toBe(rosacInfoContent.backLink.label)
+  })
+})
+
+describe('rosac characteristics CRUD and validation', () => {
+  test('validates characteristic input schema', () => {
+    expect(
+      rosacCharacteristicInputSchema.safeParse({
+        icon: 'antenna',
+        title: 'Antena 11m',
+        description: 'Descripción',
+      }).success,
+    ).toBe(true)
+
+    expect(
+      rosacCharacteristicInputSchema.safeParse({
+        icon: 'invalid',
+        title: 'Antena 11m',
+        description: 'Descripción',
+      }).success,
+    ).toBe(false)
+
+    expect(
+      rosacCharacteristicInputSchema.safeParse({
+        icon: 'antenna',
+        title: '   ',
+        description: 'Descripción',
+      }).success,
+    ).toBe(false)
+  })
+
+  test('getRosacCharacteristics returns mapped rows when rows exist', async () => {
+    findMany.mockResolvedValueOnce([
+      {
+        id: '00000000-0000-0000-0000-000000000010',
+        key: 'antenna',
+        icon: 'antenna',
+        title: 'Antena de 11 metros',
+        description: 'Descripción de la antena',
+        updatedAt: new Date(),
+        translations: [],
+      },
+    ])
+    const items = await getRosacCharacteristics('es')
+    expect(items).toHaveLength(1)
+    expect(items[0]?.title).toBe('Antena de 11 metros')
+  })
+
+  test('updateRosacCharacteristic returns null when key or id does not exist', async () => {
+    findFirst.mockResolvedValueOnce(null)
+    const result = await updateRosacCharacteristic('no-such-id', {
+      icon: 'antenna',
+      title: 'Antena',
+      description: 'Desc',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('updateRosacCharacteristic updates existing row and returns it', async () => {
+    const existingRow = {
+      id: '00000000-0000-0000-0000-000000000010',
+      key: 'antenna',
+      icon: 'antenna',
+      title: 'Viejo título',
+      description: 'Vieja desc',
+      updatedAt: new Date(),
+      translations: [],
+    }
+    findFirst.mockResolvedValueOnce(existingRow)
+    update.mockResolvedValueOnce(existingRow)
+    findUnique.mockResolvedValueOnce({
+      ...existingRow,
+      title: 'Nuevo título',
+      description: 'Nueva desc',
+    })
+
+    const result = await updateRosacCharacteristic('antenna', {
+      icon: 'antenna',
+      title: 'Nuevo título',
+      description: 'Nueva desc',
+    })
+
+    expect(result).not.toBeNull()
+    expect(result?.title).toBe('Nuevo título')
+  })
+})
+
+describe('rosac activities CRUD and validation', () => {
+  test('validates activity input schema', () => {
+    expect(
+      rosacActivityInputSchema.safeParse({
+        icon: 'tracking',
+        title: 'Seguimiento',
+        description: 'Descripción de la actividad',
+      }).success,
+    ).toBe(true)
+
+    expect(
+      rosacActivityInputSchema.safeParse({
+        icon: 'tracking',
+        title: '',
+        description: 'Descripción',
+      }).success,
+    ).toBe(false)
+  })
+
+  test('updateRosacActivity returns null when record is missing', async () => {
+    findFirst.mockResolvedValueOnce(null)
+    const result = await updateRosacActivity('missing-key', {
+      icon: 'tracking',
+      title: 'Seguimiento',
+      description: 'Desc',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('updateRosacActivity updates existing record', async () => {
+    const existing = {
+      id: '00000000-0000-0000-0000-000000000020',
+      key: 'tracking',
+      icon: 'tracking',
+      title: 'Antiguo',
+      description: 'Antiguo',
+      updatedAt: new Date(),
+      translations: [],
+    }
+    findFirst.mockResolvedValueOnce(existing)
+    update.mockResolvedValueOnce(existing)
+    findUnique.mockResolvedValueOnce({
+      ...existing,
+      title: 'Nuevo',
+    })
+
+    const result = await updateRosacActivity('tracking', {
+      icon: 'tracking',
+      title: 'Nuevo',
+      description: 'Antiguo',
+    })
+    expect(result?.title).toBe('Nuevo')
+  })
+
+  test('getRosacActivities returns mapped activities', async () => {
+    findMany.mockResolvedValueOnce([
+      {
+        id: '00000000-0000-0000-0000-000000000021',
+        key: 'tracking',
+        icon: 'tracking',
+        title: 'Seguimiento',
+        description: 'Desc',
+        updatedAt: new Date(),
+        translations: [],
+      },
+    ])
+    const items = await getRosacActivities('es')
+    expect(items).toHaveLength(1)
+    expect(items[0]?.title).toBe('Seguimiento')
+  })
+})
+
+describe('rosac construction stages CRUD and validation', () => {
+  test('validates stage input schema', () => {
+    expect(
+      rosacStageInputSchema.safeParse({
+        title: 'Preparación',
+        description: 'Descripción de la etapa',
+        images: [{ src: '/img.jpg', alt: 'Alt' }],
+      }).success,
+    ).toBe(true)
+
+    expect(
+      rosacStageInputSchema.safeParse({
+        title: '',
+        description: 'Descripción',
+      }).success,
+    ).toBe(false)
+  })
+
+  test('updateRosacStage returns null when not found', async () => {
+    findFirst.mockResolvedValueOnce(null)
+    const result = await updateRosacStage('stage-missing', {
+      title: 'Etapa',
+      description: 'Desc',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('getRosacStages returns mapped stages', async () => {
+    findMany.mockResolvedValueOnce([
+      {
+        id: '00000000-0000-0000-0000-000000000031',
+        key: 'preparation',
+        title: 'Preparación',
+        description: 'Desc',
+        images: [],
+        updatedAt: new Date(),
+        translations: [],
+      },
+    ])
+    const stages = await getRosacStages('es')
+    expect(stages).toHaveLength(1)
+    expect(stages[0]?.title).toBe('Preparación')
+  })
+})
+
+describe('rosac instruments CRUD and validation', () => {
+  test('rejects javascript: URL in consultation href', () => {
+    expect(
+      rosacInstrumentInputSchema.safeParse({
+        name: 'Instrumento',
+        consultation: { label: 'Consultar', href: 'javascript:alert(1)' },
+      }).success,
+    ).toBe(false)
+  })
+
+  test('accepts valid http and https consultation href', () => {
+    expect(
+      rosacInstrumentInputSchema.safeParse({
+        name: 'Instrumento',
+        consultation: { label: 'Consultar', href: 'https://ejemplo.ucr.ac.cr' },
+      }).success,
+    ).toBe(true)
+  })
+
+  test('updateRosacInstrument returns null for non-UUID id', async () => {
+    const result = await updateRosacInstrument('not-a-uuid', {
+      name: 'Instrumento',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('updateRosacInstrument returns null when UUID not found in database', async () => {
+    findUnique.mockResolvedValueOnce(null)
+    const result = await updateRosacInstrument('00000000-0000-0000-0000-000000000000', {
+      name: 'Instrumento',
+    })
+    expect(result).toBeNull()
+  })
+
+  test('deleteRosacInstrument returns false for non-UUID id or when not found', async () => {
+    expect(await deleteRosacInstrument('not-a-uuid')).toBe(false)
+
+    findUnique.mockResolvedValueOnce(null)
+    expect(await deleteRosacInstrument('00000000-0000-0000-0000-000000000000')).toBe(false)
+  })
+
+  test('deleteRosacInstrument deletes existing instrument and returns true', async () => {
+    const existing = { id: '00000000-0000-0000-0000-000000000001' }
+    findUnique.mockResolvedValueOnce(existing)
+    del.mockResolvedValueOnce(existing)
+
+    expect(await deleteRosacInstrument('00000000-0000-0000-0000-000000000001')).toBe(true)
+  })
+
+  test('getRosacInstruments returns mapped instruments', async () => {
+    findMany.mockResolvedValueOnce([
+      {
+        id: '00000000-0000-0000-0000-000000000041',
+        name: 'Polarímetro',
+        pendingMessage: null,
+        imageSrc: null,
+        imageAlt: null,
+        consultationHref: null,
+        consultationLabel: null,
+        consultationNotice: null,
+        updatedAt: new Date(),
+        translations: [],
+      },
+    ])
+    const instruments = await getRosacInstruments('es')
+    expect(instruments).toHaveLength(1)
+    expect(instruments[0]?.name).toBe('Polarímetro')
+  })
+
+  test('createRosacInstrument creates a new instrument', async () => {
+    aggregate.mockResolvedValueOnce({ _max: { position: 2 } })
+    const createdRow = {
+      id: '00000000-0000-0000-0000-000000000042',
+      name: 'Nuevo Instrumento',
+      pendingMessage: null,
+      imageSrc: null,
+      imageAlt: null,
+      consultationHref: null,
+      consultationLabel: null,
+      consultationNotice: null,
+      updatedAt: new Date(),
+      translations: [],
+    }
+    create.mockResolvedValueOnce(createdRow)
+    findUnique.mockResolvedValueOnce(createdRow)
+
+    const created = await createRosacInstrument({ name: 'Nuevo Instrumento' })
+    expect(created.name).toBe('Nuevo Instrumento')
+  })
+})
+
+describe('rosac acknowledgments CRUD and validation', () => {
+  test('rejects javascript: URL in href', () => {
+    expect(
+      rosacAcknowledgmentInputSchema.safeParse({
+        name: 'Institución',
+        href: 'javascript:alert(1)',
+        logo: { src: '/logo.png', alt: 'Logo' },
+      }).success,
+    ).toBe(false)
+  })
+
+  test('accepts valid http and https href', () => {
+    expect(
+      rosacAcknowledgmentInputSchema.safeParse({
+        name: 'Institución',
+        href: 'https://ucr.ac.cr',
+        logo: { src: '/logo.png', alt: 'Logo' },
+      }).success,
+    ).toBe(true)
+  })
+
+  test('updateRosacAcknowledgment returns null for non-UUID id', async () => {
+    const result = await updateRosacAcknowledgment('non-uuid-name', {
+      name: 'Institución',
+      logo: { src: '/logo.png', alt: 'Logo' },
+    })
+    expect(result).toBeNull()
+  })
+
+  test('updateRosacAcknowledgment returns null when UUID not found', async () => {
+    findUnique.mockResolvedValueOnce(null)
+    const result = await updateRosacAcknowledgment('00000000-0000-0000-0000-000000000000', {
+      name: 'Institución',
+      logo: { src: '/logo.png', alt: 'Logo' },
+    })
+    expect(result).toBeNull()
+  })
+
+  test('deleteRosacAcknowledgment returns false for non-UUID id', async () => {
+    expect(await deleteRosacAcknowledgment('some-name')).toBe(false)
+  })
+
+  test('deleteRosacAcknowledgment returns false when UUID not found', async () => {
+    findUnique.mockResolvedValueOnce(null)
+    expect(await deleteRosacAcknowledgment('00000000-0000-0000-0000-000000000000')).toBe(false)
+  })
+
+  test('deleteRosacAcknowledgment deletes existing row and returns true', async () => {
+    const existing = { id: '00000000-0000-0000-0000-000000000002' }
+    findUnique.mockResolvedValueOnce(existing)
+    del.mockResolvedValueOnce(existing)
+
+    expect(await deleteRosacAcknowledgment('00000000-0000-0000-0000-000000000002')).toBe(true)
+  })
+
+  test('getRosacAcknowledgments returns mapped acknowledgments', async () => {
+    findMany.mockResolvedValueOnce([
+      {
+        id: '00000000-0000-0000-0000-000000000051',
+        name: 'INAOE',
+        href: 'https://inaoe.mx',
+        logoSrc: '/images/inaoe.webp',
+        logoAlt: 'Logo INAOE',
+      },
+    ])
+    const acks = await getRosacAcknowledgments()
+    expect(acks).toHaveLength(1)
+    expect(acks[0]?.name).toBe('INAOE')
+  })
+
+  test('createRosacAcknowledgment creates a new acknowledgment', async () => {
+    aggregate.mockResolvedValueOnce({ _max: { position: 5 } })
+    const createdRow = {
+      id: '00000000-0000-0000-0000-000000000052',
+      name: 'Nueva Institución',
+      href: 'https://ejemplo.ucr.ac.cr',
+      logoSrc: '/images/logo.webp',
+      logoAlt: 'Logo Institución',
+    }
+    create.mockResolvedValueOnce(createdRow)
+
+    const created = await createRosacAcknowledgment({
+      name: 'Nueva Institución',
+      href: 'https://ejemplo.ucr.ac.cr',
+      logo: { src: '/images/logo.webp', alt: 'Logo Institución' },
+    })
+    expect(created.name).toBe('Nueva Institución')
+  })
+})
+
+describe('safeUrlSchema', () => {
+  test('accepts valid relative URLs starting with a single slash', () => {
+    expect(safeUrlSchema.safeParse('/datos?source=ROSAC').success).toBe(true)
+    expect(safeUrlSchema.safeParse('/contacto').success).toBe(true)
+  })
+
+  test('accepts valid http and https URLs', () => {
+    expect(safeUrlSchema.safeParse('https://example.com/test').success).toBe(true)
+    expect(safeUrlSchema.safeParse('http://example.org').success).toBe(true)
+  })
+
+  test('rejects protocol-relative URLs', () => {
+    expect(safeUrlSchema.safeParse('//external.example').success).toBe(false)
+    expect(safeUrlSchema.safeParse('//example.com/path').success).toBe(false)
+  })
+
+  test('rejects javascript: and other dangerous schemes', () => {
+    expect(safeUrlSchema.safeParse('javascript:alert(1)').success).toBe(false)
+    expect(safeUrlSchema.safeParse('data:text/html,<script>').success).toBe(false)
+  })
+})
+
+describe('rosac optimistic concurrency and reviews', () => {
+  const staleDate = new Date('2026-01-01T00:00:00.000Z')
+  const currentDate = new Date('2026-01-02T00:00:00.000Z')
+  const staleVersion = '2026-01-01T00:00:00.000Z'
+
+  test('updateRosacCharacteristic throws RosacConflictError when version is stale', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000010',
+      key: 'antenna',
+      icon: 'antenna',
+      title: 'Antena',
+      description: 'Desc',
+      updatedAt: currentDate,
+      translations: [],
+    })
+
+    await expect(
+      updateRosacCharacteristic('antenna', {
+        version: staleVersion,
+        title: 'Nuevo título',
+        description: 'Nueva desc',
+      }),
+    ).rejects.toThrow(RosacConflictError)
+  })
+
+  test('updateRosacCharacteristic throws RosacConflictError when updateMany affects 0 rows', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000010',
+      key: 'antenna',
+      icon: 'antenna',
+      title: 'Antena',
+      description: 'Desc',
+      updatedAt: staleDate,
+      translations: [],
+    })
+    updateMany.mockResolvedValueOnce({ count: 0 })
+
+    await expect(
+      updateRosacCharacteristic('antenna', {
+        version: staleVersion,
+        title: 'Nuevo título',
+        description: 'Nueva desc',
+      }),
+    ).rejects.toThrow(RosacConflictError)
+  })
+
+  test('updateRosacCharacteristic throws RosacReviewRequiredError when review is missing', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000010',
+      key: 'antenna',
+      icon: 'antenna',
+      title: 'Antena',
+      description: 'Desc',
+      updatedAt: staleDate,
+      translations: [
+        {
+          locale: 'en',
+          title: 'Antenna',
+          description: 'Desc EN',
+        },
+      ],
+    })
+
+    await expect(
+      updateRosacCharacteristic('antenna', {
+        content: {
+          es: { title: 'Antena Editada', description: 'Desc' },
+          en: { title: 'Antenna', description: 'Desc EN' },
+        },
+      }),
+    ).rejects.toThrow(RosacReviewRequiredError)
+  })
+
+  test('updateRosacActivity throws RosacConflictError when version is stale', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000020',
+      key: 'tracking',
+      icon: 'tracking',
+      title: 'Seguimiento',
+      description: 'Desc',
+      updatedAt: currentDate,
+      translations: [],
+    })
+
+    await expect(
+      updateRosacActivity('tracking', {
+        version: staleVersion,
+        title: 'Nuevo',
+        description: 'Desc',
+      }),
+    ).rejects.toThrow(RosacConflictError)
+  })
+
+  test('updateRosacStage throws RosacConflictError when version is stale', async () => {
+    findFirst.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000030',
+      key: 'preparacion',
+      title: 'Preparación',
+      description: 'Desc',
+      images: [],
+      updatedAt: currentDate,
+      translations: [],
+    })
+
+    await expect(
+      updateRosacStage('preparacion', {
+        version: staleVersion,
+        title: 'Nuevo',
+        description: 'Desc',
+      }),
+    ).rejects.toThrow(RosacConflictError)
+  })
+
+  test('updateRosacInstrument throws RosacConflictError when version is stale', async () => {
+    findUnique.mockResolvedValueOnce({
+      id: '00000000-0000-0000-0000-000000000040',
+      name: 'Instrumento',
+      pendingMessage: null,
+      imageSrc: null,
+      imageAlt: null,
+      consultationHref: null,
+      consultationLabel: 'Ver',
+      consultationNotice: null,
+      updatedAt: currentDate,
+      translations: [],
+    })
+
+    await expect(
+      updateRosacInstrument('00000000-0000-0000-0000-000000000040', {
+        version: staleVersion,
+        name: 'Nuevo Nombre',
+      }),
+    ).rejects.toThrow(RosacConflictError)
   })
 })
 
