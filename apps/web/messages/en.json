@@ -1320,6 +1320,10 @@
     }
   },
   "researchAreas": {
+    "loading": "Loading research areas…",
+    "empty": "No research areas are available.",
+    "paginationLabel": "Research area pages",
+    "results": "Showing {from}–{to} of {total} research areas.",
     "page": {
       "metaTitle": "Research | LASCE",
       "metaDescription": "Research areas of the Solar Astrophysics and Space Weather Laboratory of the Universidad de Costa Rica.",
