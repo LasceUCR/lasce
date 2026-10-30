@@ -597,7 +597,10 @@
       "emptyGroupAndQuery": "No se encontraron publicaciones de {group} para “{query}”.",
       "emptyGroup": "No hay publicaciones de {group}.",
       "emptyQuery": "No se encontraron publicaciones para “{query}”.",
-      "empty": "No hay publicaciones disponibles."
+      "empty": "No hay publicaciones disponibles.",
+      "loading": "Cargando publicaciones…",
+      "loadError": "No se pudieron cargar las publicaciones. Inténtelo de nuevo.",
+      "retry": "Reintentar"
     },
     "card": {
       "externalLink": "DOI / Enlace externo",
