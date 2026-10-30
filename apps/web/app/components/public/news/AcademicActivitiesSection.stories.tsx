@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
-import { academicActivities } from '@/app/lib/academic-activities'
-
 import { AcademicActivitiesSection } from './AcademicActivitiesSection'
+import { mockActivity } from './AcademicActivityCard.stories'
 
 const meta: Meta<typeof AcademicActivitiesSection> = {
   component: AcademicActivitiesSection,
@@ -14,7 +13,8 @@ type Story = StoryObj<typeof AcademicActivitiesSection>
 
 export const Default: Story = {
   args: {
-    activities: academicActivities,
+    activities: [mockActivity],
+    id: 'academic-activities',
   },
 }
 

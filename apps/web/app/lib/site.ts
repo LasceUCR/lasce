@@ -1,4 +1,3 @@
-import { academicActivities } from './academic-activities'
 import { getGalleryPaths } from './gallery'
 import { workAreaPath, workAreaSlugs } from './work-areas'
 
@@ -17,7 +16,6 @@ export const publicPaths = [
   '/acceso',
   '/actividades-academicas',
   ...workAreaSlugs.map((slug) => workAreaPath(slug)),
-  ...academicActivities.map(({ slug }) => `/noticias/actividades/${slug}`),
 ] as const
 
 /** Every public page, with the gallery's albums read from the database so deletions and additions show. */

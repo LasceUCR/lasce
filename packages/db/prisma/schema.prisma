@@ -67,6 +67,7 @@ model User {
   nosotrosActivities  NosotrosActivity[]
   researchers         Researcher[]
   nosotrosResearchers NosotrosResearcher[]
+  academicActivities  AcademicActivity[]
   auditEvents         AuditEvent[]
 
   @@map("users")
@@ -382,6 +383,39 @@ model NosotrosActivity {
 
   @@map("nosotros_activities")
   @@schema("public")
+}
+
+/// A workshop, talk, course or conference organized or co-organized by LASCE, shown on
+/// `/noticias` and on its own dedicated list at `/actividades-academicas`. Every field is
+/// required: there is no draft state, an activity is either fully filled in or not created yet.
+/// `id` doubles as the card's stable identifier — the public types' `slug` is just this `id`,
+/// same convention as `Research`/`Publication`.
+///
+/// Single language for now (no translation table yet), unlike the bilingual `Research`/`News`
+/// records.
+model AcademicActivity {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  /// Free text, not an enum: "Taller", "Charla", "Curso", "Conferencia" and so on are editorial
+  /// categories an admin types, not a fixed set the system enforces (unlike `ResearchGroup`).
+  category    String
+  startDate   DateTime  @map("start_date") @db.Date
+  /// Null for a single-day activity. Set when it spans several days, shown as a range
+  /// ("16-20 febrero, 2026").
+  endDate     DateTime? @map("end_date") @db.Date
+  location    String
+  description String    @db.Text
+  photoUrl    String    @map("photo_url")
+  photoAlt    String    @map("photo_alt")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy  String    @map("modified_by") @db.Uuid
+  modifiedAt  DateTime  @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
+
+  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+
+  @@index([startDate])
+  @@map("academic_activities")
+  @@schema("news")
 }
 
 /// The translatable text of a `NosotrosActivity` in a language other than the
