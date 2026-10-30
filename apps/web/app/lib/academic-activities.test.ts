@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
+  count: vi.fn(),
   findUnique: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
@@ -12,6 +13,7 @@ vi.mock('@lasce/db', () => ({
   prisma: {
     academicActivity: {
       findMany: mocks.findMany,
+      count: mocks.count,
       findUnique: mocks.findUnique,
       create: mocks.create,
       update: mocks.update,
@@ -25,6 +27,7 @@ import {
   createAcademicActivity,
   deleteAcademicActivity,
   getAcademicActivities,
+  getAcademicActivitiesPage,
   updateAcademicActivity,
 } from './academic-activities'
 
@@ -61,7 +64,9 @@ describe('academic-activities', () => {
 
     const activities = await getAcademicActivities()
 
-    expect(mocks.findMany).toHaveBeenCalledWith({ orderBy: { startDate: 'desc' } })
+    expect(mocks.findMany).toHaveBeenCalledWith({
+      orderBy: [{ startDate: 'desc' }, { id: 'desc' }],
+    })
     expect(activities).toEqual([
       {
         id: row.id,
@@ -93,6 +98,59 @@ describe('academic-activities', () => {
     const [activity] = await getAcademicActivities('en')
 
     expect(activity?.date).toBe('16-20 February 2026')
+  })
+
+  test('loads only the requested page with a stable order', async () => {
+    mocks.count.mockResolvedValue(12)
+    mocks.findMany.mockResolvedValue([row])
+
+    const result = await getAcademicActivitiesPage('es', { page: 2 })
+
+    expect(mocks.count).toHaveBeenCalledWith({ where: {} })
+    expect(mocks.findMany).toHaveBeenCalledWith({
+      where: {},
+      orderBy: [{ startDate: 'desc' }, { id: 'desc' }],
+      skip: 10,
+      take: 10,
+    })
+    expect(result).toMatchObject({
+      page: 2,
+      pageSize: 10,
+      totalItems: 12,
+      totalPages: 2,
+      query: '',
+      activities: [{ id: row.id, date: '16-20 febrero, 2026' }],
+    })
+  })
+
+  test('searches the localized date string as well as activity text', async () => {
+    mocks.findMany
+      .mockResolvedValueOnce([{ id: row.id, startDate: row.startDate, endDate: row.endDate }])
+      .mockResolvedValueOnce([row])
+    mocks.count.mockResolvedValue(1)
+
+    await getAcademicActivitiesPage('es', { query: ' FEBRERO ' })
+
+    expect(mocks.count).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { title: { contains: 'FEBRERO', mode: 'insensitive' } },
+          { category: { contains: 'FEBRERO', mode: 'insensitive' } },
+          { location: { contains: 'FEBRERO', mode: 'insensitive' } },
+          { description: { contains: 'FEBRERO', mode: 'insensitive' } },
+          { id: { in: [row.id] } },
+        ],
+      },
+    })
+    expect(mocks.findMany).toHaveBeenNthCalledWith(1, {
+      select: { id: true, startDate: true, endDate: true },
+    })
+    expect(mocks.findMany).toHaveBeenNthCalledWith(2, {
+      where: expect.any(Object),
+      orderBy: [{ startDate: 'desc' }, { id: 'desc' }],
+      skip: 0,
+      take: 10,
+    })
   })
 
   test('rejects an input missing a required field', () => {

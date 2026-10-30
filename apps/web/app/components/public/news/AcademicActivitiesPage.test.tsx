@@ -5,14 +5,12 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   replace: vi.fn(),
-  query: '',
   uploadAcademicActivityImage: vi.fn(),
 }))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: mocks.refresh, replace: mocks.replace }),
   usePathname: () => '/actividades-academicas',
-  useSearchParams: () => new URLSearchParams(mocks.query),
 }))
 
 vi.mock('@/app/(public)/actividades-academicas/actions', () => ({
@@ -105,7 +103,6 @@ async function submitActivityEdit(user: User) {
 }
 
 afterEach(() => {
-  mocks.query = ''
   vi.clearAllMocks()
 })
 
@@ -137,9 +134,7 @@ describe('AcademicActivitiesPage', () => {
   })
 
   test('filters activities using the query from the URL', () => {
-    mocks.replace.mockClear()
-    mocks.query = 'q=machine+learning'
-    renderPage()
+    renderPage({ ...defaultArgs, query: 'machine learning' })
 
     expect(
       screen.getByRole('heading', {
@@ -169,13 +164,73 @@ describe('AcademicActivitiesPage', () => {
     )
   })
 
-  test('shows the visible range and total for multiple activities', () => {
-    const activity = defaultArgs.activities[0]!
+  test('shows the visible range and total when results span multiple pages', () => {
+    const item = activity
     renderPage({
-      activities: [activity, { ...activity, id: `${activity.id}-2` }],
+      activities: Array.from({ length: 10 }, (_, index) => ({
+        ...item,
+        id: `${item.id}-${index + 1}`,
+      })),
+      totalItems: 12,
+      totalPages: 2,
     })
 
-    expect(screen.getByText('Mostrando 1-2 de 2.')).toBeInTheDocument()
+    expect(screen.getByText('Mostrando 1-10 de 12.')).toBeInTheDocument()
+    expect(
+      screen.getByRole('navigation', { name: 'Páginas de actividades académicas' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Página 2' })).toHaveAttribute(
+      'href',
+      '/actividades-academicas?page=2',
+    )
+  })
+
+  test('preserves the query in page links and starts a new search at page one', async () => {
+    const user = userEvent.setup()
+    renderPage({
+      activities: [activity],
+      page: 2,
+      query: 'space weather',
+      totalItems: 12,
+      totalPages: 2,
+    })
+
+    expect(screen.getByRole('link', { name: 'Página 1' })).toHaveAttribute(
+      'href',
+      '/actividades-academicas?q=space+weather',
+    )
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Buscar actividades académicas' }),
+      ' new',
+    )
+    fireEvent.submit(screen.getByRole('search'))
+
+    expect(mocks.replace).toHaveBeenCalledWith(
+      listingHref('/actividades-academicas', { query: 'space weather new' }),
+      { scroll: false },
+    )
+  })
+
+  test('moves focus to the activity listing when the page changes', () => {
+    const { rerender } = renderPage({
+      activities: [activity],
+      page: 1,
+      totalItems: 12,
+      totalPages: 2,
+    })
+    const listing = screen.getByRole('region', { name: 'Actividades académicas' })
+
+    rerender(
+      pageTree({
+        activities: [activity],
+        page: 2,
+        totalItems: 12,
+        totalPages: 2,
+      }),
+    )
+
+    expect(listing).toHaveFocus()
   })
 
   test('submits the search query in the URL', async () => {
@@ -196,8 +251,7 @@ describe('AcademicActivitiesPage', () => {
   })
 
   test('initializes the search from the URL query', () => {
-    mocks.query = 'q=machine+learning'
-    renderPage()
+    renderPage({ ...defaultArgs, query: 'machine learning' })
 
     expect(screen.getByRole('searchbox', { name: 'Buscar actividades académicas' })).toHaveValue(
       'machine learning',
@@ -208,11 +262,9 @@ describe('AcademicActivitiesPage', () => {
   })
 
   test('syncs the search box when the URL query changes', () => {
-    mocks.query = 'q=machine+learning'
-    const { rerender } = renderPage()
+    const { rerender } = renderPage({ ...defaultArgs, query: 'machine learning' })
 
-    mocks.query = 'q=space+weather'
-    rerender(pageTree())
+    rerender(pageTree({ ...defaultArgs, query: 'space weather' }))
 
     expect(screen.getByRole('searchbox', { name: 'Buscar actividades académicas' })).toHaveValue(
       'space weather',
@@ -220,8 +272,7 @@ describe('AcademicActivitiesPage', () => {
   })
 
   test('shows a search-specific empty message when the URL query has no matches', () => {
-    mocks.query = 'q=no+existe'
-    renderPage()
+    renderPage({ activities: [], query: 'no existe' })
 
     expect(
       screen.getByText('No se encontraron actividades académicas para “no existe”.'),

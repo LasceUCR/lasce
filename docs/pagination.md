@@ -17,6 +17,12 @@ the database is read again. A search
 or a group change that is already on screen still marks the list `aria-busy` instead of swapping
 in that skeleton.
 
+`/actividades-academicas` follows the same URL and database pagination rules. Its data query is
+`getAcademicActivitiesPage()` in `apps/web/app/lib/academic-activities.ts`; the page validates and
+canonicalizes `?q=` and `?page=`, and `AcademicActivitiesPage.tsx` renders page controls while
+preserving the search when navigating. Activity dates remain searchable in the localized format
+shown on their cards.
+
 Four pieces are shared, so another listing reuses them instead of writing its own:
 
 | Piece                    | File                                            | What it does                                                    |
@@ -169,6 +175,7 @@ link), the box shows the URL's search, unless it already says the same with spac
 | Search text, wildcard escaping          | `apps/web/app/lib/search-query.test.ts`                                |
 | The component                           | `apps/web/app/components/public/Pagination.test.tsx`                   |
 | The news query, against a real database | `apps/web/tests/integration/news.test.ts`                              |
+| The academic activities query           | `apps/web/app/lib/academic-activities.test.ts`                         |
 | The publications query, the same way    | `apps/web/tests/integration/publications.test.ts`                      |
 | News, in a browser                      | `apps/web/tests/e2e/news-pagination.spec.ts`                           |
 | Publications, in a browser              | `apps/web/tests/e2e/publications-pagination.spec.ts`                   |

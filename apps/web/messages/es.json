@@ -575,6 +575,7 @@
       "lead": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
       "searchLabel": "Buscar actividades académicas",
       "searchPlaceholder": "Buscar por título, categoría, fecha o palabra clave...",
+      "paginationLabel": "Páginas de actividades académicas",
       "results": "{count, plural, one {Se encontró # actividad académica.} other {Se encontraron # actividades académicas.}}",
       "range": "Mostrando {from}-{to} de {total}.",
       "rangeOne": "Mostrando la actividad {position} de {total}.",

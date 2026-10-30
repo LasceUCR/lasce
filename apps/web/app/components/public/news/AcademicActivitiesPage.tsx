@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 
+import { Pagination } from '@/app/components/public/Pagination'
 import { SearchBar } from '@/app/components/public/SearchBar'
 import { Notice } from '@/app/components/public/Notice'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
@@ -13,8 +14,8 @@ import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeed
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import type { AcademicActivity } from '@/app/lib/academic-activities'
-import { listingHref } from '@/app/lib/pagination'
-import { parseSearchParam, SEARCH_PARAM } from '@/app/lib/search-query'
+import { listingHref, PAGE_SIZE } from '@/app/lib/pagination'
+import { parseSearchParam } from '@/app/lib/search-query'
 
 import { AcademicActivitiesListSkeleton } from './AcademicActivitiesListSkeleton'
 import { AcademicActivityForm, type AcademicActivityFormValues } from './AcademicActivityForm'
@@ -22,6 +23,10 @@ import { EditableAcademicActivityCard } from './EditableAcademicActivityCard'
 
 export interface AcademicActivitiesPageProps {
   activities?: AcademicActivity[]
+  query?: string
+  page?: number
+  totalItems?: number
+  totalPages?: number
   loading?: boolean
   error?: string | null
   canCreate?: boolean
@@ -46,6 +51,10 @@ export const SEARCH_DELAY_MS = 300
  */
 export function AcademicActivitiesPage({
   activities = [],
+  query = '',
+  page = 1,
+  totalItems = activities.length,
+  totalPages = Math.ceil(totalItems / PAGE_SIZE),
   loading = false,
   error = null,
   canCreate = false,
@@ -54,9 +63,6 @@ export function AcademicActivitiesPage({
 }: AcademicActivitiesPageProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const queryValues = searchParams.getAll(SEARCH_PARAM)
-  const query = parseSearchParam(queryValues.length === 1 ? queryValues[0] : undefined)
   const t = useTranslations('academicActivities')
   const listT = useTranslations('academicActivities.listPage')
   const common = useTranslations('common')
@@ -65,6 +71,9 @@ export function AcademicActivitiesPage({
   const [input, setInput] = useState(query)
   const [syncedQuery, setSyncedQuery] = useState(query)
   const [busy, setBusy] = useState(false)
+  const [navigating, startNavigation] = useTransition()
+  const section = useRef<HTMLElement>(null)
+  const shownPage = useRef(page)
   const pending = useRef(false)
 
   if (query !== syncedQuery) {
@@ -74,7 +83,9 @@ export function AcademicActivitiesPage({
 
   const search = useCallback(
     (next: string) => {
-      router.replace(listingHref(pathname, { query: next }), { scroll: false })
+      startNavigation(() => {
+        router.replace(listingHref(pathname, { query: next }), { scroll: false })
+      })
     },
     [pathname, router],
   )
@@ -87,33 +98,31 @@ export function AcademicActivitiesPage({
     return () => clearTimeout(timer)
   }, [input, query, search])
 
-  const normalizedQuery = query.toLocaleLowerCase()
-  const filteredActivities = activities.filter((activity) =>
-    [
-      activity.title,
-      activity.category,
-      activity.date,
-      activity.location,
-      activity.description,
-    ].some((value) => value?.toLocaleLowerCase().includes(normalizedQuery)),
-  )
-  const totalItems = filteredActivities.length
+  useEffect(() => {
+    if (shownPage.current === page) return
+    shownPage.current = page
+    section.current?.focus()
+  }, [page])
+
   const hasQuery = query !== ''
-  const summary = hasQuery
-    ? totalItems > 0
-      ? listT('results', { count: totalItems })
-      : ''
-    : totalItems === 1
-      ? listT('rangeOne', { position: 1, total: totalItems })
-      : totalItems > 1
-        ? listT('range', { from: 1, to: totalItems, total: totalItems })
-        : ''
+  const firstShown = (page - 1) * PAGE_SIZE + 1
+  const lastShown = Math.min(page * PAGE_SIZE, totalItems)
+  const summary = [
+    hasQuery && totalItems > 0 ? listT('results', { count: totalItems }) : null,
+    totalPages <= 1
+      ? null
+      : firstShown === lastShown
+        ? listT('rangeOne', { position: firstShown, total: totalItems })
+        : listT('range', { from: firstShown, to: lastShown, total: totalItems }),
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   /**
    * Sends one request and reports its outcome in a toast through `useRequestFeedback`. On failure
    * nothing else happens: the form stays open with the admin's input and the list is not
-   * refreshed. `router.refresh()` re-runs the server component's `getAcademicActivities()` so the
-   * list reflects a saved change immediately, without an optimistic guess.
+   * refreshed. `router.refresh()` re-runs the server component's `getAcademicActivitiesPage()` so
+   * the list reflects a saved change immediately, without an optimistic guess.
    */
   async function send(
     url: string,
@@ -177,7 +186,13 @@ export function AcademicActivitiesPage({
     <article className="topic-page">
       <TopicHero kicker={listT('kicker')} lead={listT('lead')} title={listT('title')} />
 
-      <section aria-label={listT('title')} className="academic-activities-explorer page-width">
+      <section
+        aria-label={listT('title')}
+        aria-busy={navigating || undefined}
+        className="academic-activities-explorer page-width"
+        ref={section}
+        tabIndex={-1}
+      >
         <SearchBar
           label={listT('searchLabel')}
           onQueryChange={setInput}
@@ -230,7 +245,7 @@ export function AcademicActivitiesPage({
                 </AddItemCard>
               ) : null}
 
-              {filteredActivities.map((activity) => (
+              {activities.map((activity) => (
                 <EditableAcademicActivityCard
                   activity={activity}
                   busy={busy}
@@ -244,6 +259,14 @@ export function AcademicActivitiesPage({
             </div>
           )}
         </LoadingRegion>
+
+        <Pagination
+          currentPage={page}
+          hrefForPage={(target) => listingHref(pathname, { query, page: target })}
+          label={listT('paginationLabel')}
+          scroll={false}
+          totalPages={totalPages}
+        />
       </section>
 
       <div className="topic-page-footer page-width">
