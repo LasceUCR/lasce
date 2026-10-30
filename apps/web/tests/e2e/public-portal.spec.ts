@@ -361,6 +361,7 @@ test('displays the back button at the bottom of the gallery index and returns ho
   page,
 }) => {
   await page.goto('/galeria')
+  await expect(page.getByRole('status')).toBeHidden()
 
   const backLink = page.getByRole('link', { name: 'Volver al inicio' })
   const heading = page.getByRole('heading', { level: 1, name: 'Galería' })
@@ -378,6 +379,7 @@ test('displays the back button at the bottom of an album page and returns to gal
   page,
 }) => {
   await page.goto('/galeria/rosac')
+  await expect(page.getByRole('status')).toBeHidden()
 
   const backLink = page.getByRole('link', { name: 'Volver a la galería' })
   const heading = page.getByRole('heading', { level: 1, name: galleryAlbums.rosac.title })

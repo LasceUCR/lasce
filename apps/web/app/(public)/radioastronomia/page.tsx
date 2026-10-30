@@ -12,6 +12,7 @@ import {
   getRosacInfoContent,
   getRosacInstruments,
   getRosacStages,
+  localizeResearchers,
   type RosacMessages,
 } from '@/app/lib/rosac'
 import { workAreaPath } from '@/app/lib/work-areas'
@@ -49,6 +50,11 @@ export default async function RadioastronomiaRoute() {
   ])
 
   const content = getRosacInfoContent(messages as unknown as RosacMessages)
+  const teamPeople = localizeResearchers(
+    people.length > 0 ? people : content.team.people,
+    locale,
+    messages as unknown as RosacMessages,
+  )
 
   return (
     <RosacInfoPage
@@ -76,7 +82,7 @@ export default async function RadioastronomiaRoute() {
           ...content.instruments,
           items: instruments.length > 0 ? instruments : content.instruments.items,
         },
-        team: { ...content.team, people },
+        team: { ...content.team, people: teamPeople },
         acknowledgments: {
           ...content.acknowledgments,
           institutions:

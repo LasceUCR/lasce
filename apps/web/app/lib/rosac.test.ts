@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import type { RosacMessages } from './rosac'
+
 const findMany = vi.fn()
 const findUnique = vi.fn()
 const findFirst = vi.fn()
@@ -52,6 +54,7 @@ const {
   createResearcher,
   deleteResearcher,
   getResearchers,
+  localizeResearchers,
   researcherInputSchema,
   updateResearcher,
   getRosacInfoContent,
@@ -475,7 +478,7 @@ describe('rosac content', () => {
     ])
     expect(english.team.title).toBe('Researchers')
     expect(english.team.institutionLabel).toBe('Institution')
-    expect(english.team.people[0]?.role).toBe('Investigadora principal')
+    expect(english.team.people[0]?.role).toBe('Principal Investigator')
     expect(english.characteristics.items[0]?.title).toBe('11-meter antenna')
     expect(english.construction.stages[0]?.title).toBe('Preparation for assembly')
     expect(english.construction.stages[4]?.title).toBe('Electrical installation')
@@ -1050,5 +1053,53 @@ describe('rosac optimistic concurrency and reviews', () => {
         name: 'Nuevo Nombre',
       }),
     ).rejects.toThrow(RosacConflictError)
+  })
+})
+
+describe('localizeResearchers', () => {
+  const basePeople = [
+    {
+      id: 'carolina-salas',
+      src: '/images/ROSAC/team/CarolinaSalas.jpg',
+      name: 'Dra. Carolina Salas Matamoros',
+      role: 'Investigadora principal',
+      institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
+      description: 'Responsable de la planificación estratégica.',
+    },
+    {
+      id: 'miguel-velazquez',
+      src: '/images/ROSAC/team/MiguelVelazquez.jpg',
+      name: 'Dr. Miguel Velázquez',
+      role: 'Investigador',
+      institution: 'INAOE, México',
+      description: undefined,
+    },
+  ]
+
+  test('returns the original array unchanged when locale is es', () => {
+    const result = localizeResearchers(basePeople, 'es')
+    expect(result).toEqual(basePeople)
+  })
+
+  test('localizes to English, preserving base role and description in storedRole and storedDescription', () => {
+    const result = localizeResearchers(basePeople, 'en', getMessages('en') as RosacMessages)
+
+    expect(result[0]?.role).toBe('Principal Investigator')
+    expect(result[0]?.description).toBe(
+      'Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument.',
+    )
+    expect(result[0]?.storedRole).toBe('Investigadora principal')
+    expect(result[0]?.storedDescription).toBe('Responsable de la planificación estratégica.')
+    expect(result[0]?.contentLang).toBe('en')
+  })
+
+  test('preserves null as storedDescription when base description is undefined', () => {
+    const result = localizeResearchers(basePeople, 'en', getMessages('en') as RosacMessages)
+
+    expect(result[1]?.role).toBe('Researcher')
+    expect(result[1]?.description).toBe('In charge of instrumentation development at ROSAC.')
+    expect(result[1]?.storedRole).toBe('Investigador')
+    expect(result[1]?.storedDescription).toBeNull()
+    expect(result[1]?.contentLang).toBe('en')
   })
 })
