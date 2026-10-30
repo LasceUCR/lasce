@@ -3,7 +3,7 @@ import type * as ResearchAreas from '@/app/lib/research-areas'
 
 const mocks = vi.hoisted(() => ({
   getLocale: vi.fn(),
-  getResearchAreas: vi.fn(),
+  getResearchAreasPage: vi.fn(),
   createResearchArea: vi.fn(),
   requireApiPermission: vi.fn(),
 }))
@@ -13,7 +13,7 @@ vi.mock('@lasce/db', () => ({ prisma: {} }))
 
 vi.mock('@/app/lib/research-areas', async (importOriginal) => ({
   ...(await importOriginal<typeof ResearchAreas>()),
-  getResearchAreas: mocks.getResearchAreas,
+  getResearchAreasPage: mocks.getResearchAreasPage,
   createResearchArea: mocks.createResearchArea,
 }))
 
@@ -55,14 +55,37 @@ afterEach(() => {
 describe('GET /api/research-areas', () => {
   test('returns the areas in the request language as never-cached JSON', async () => {
     mocks.getLocale.mockResolvedValue('en')
-    mocks.getResearchAreas.mockResolvedValue([{ id: 'area-1', title: 'New area' }])
+    const result = {
+      areas: [{ id: 'area-1', title: 'New area' }],
+      page: 1,
+      pageSize: 10,
+      totalItems: 1,
+      totalPages: 1,
+      skip: 0,
+      take: 10,
+    }
+    mocks.getResearchAreasPage.mockResolvedValue(result)
 
-    const response = await GET()
+    const response = await GET(new Request('http://localhost/api/research-areas'))
 
-    expect(mocks.getResearchAreas).toHaveBeenCalledWith('en')
+    expect(mocks.getResearchAreasPage).toHaveBeenCalledWith('en', { page: 1 })
+    expect(mocks.requireApiPermission).not.toHaveBeenCalled()
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
-    await expect(response.json()).resolves.toEqual({ areas: [{ id: 'area-1', title: 'New area' }] })
+    await expect(response.json()).resolves.toEqual(result)
+  })
+
+  test.each([
+    ['page=2', 2],
+    ['page=0', 1],
+    ['page=-1', 1],
+    ['page=abc', 1],
+    ['page=2&page=3', 1],
+  ])('validates %s on the server', async (query, page) => {
+    mocks.getLocale.mockResolvedValue('es')
+    mocks.getResearchAreasPage.mockResolvedValue({ areas: [] })
+    await GET(new Request(`http://localhost/api/research-areas?${query}`))
+    expect(mocks.getResearchAreasPage).toHaveBeenCalledWith('es', { page })
   })
 })
 
