@@ -481,6 +481,7 @@ export function RosacInfoPage({
         ? {
             ...inst,
             name: values.name,
+            href: values.href,
             logo: values.logo,
           }
         : inst,
@@ -506,6 +507,7 @@ export function RosacInfoPage({
     const newInstitution: RosacAcknowledgment = {
       id: newId,
       name: values.name,
+      href: values.href,
       logo: values.logo,
     }
 
@@ -757,6 +759,7 @@ export function RosacInfoPage({
             <EditableResearcherCard
               canDelete={canDelete}
               canEdit={canEdit}
+              contentLang={person.contentLang}
               institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
               onSave={(values) => handleSaveResearcher(person.id, values)}

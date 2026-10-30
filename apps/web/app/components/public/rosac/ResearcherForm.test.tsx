@@ -57,6 +57,50 @@ describe('ResearcherForm', () => {
     expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(researcher.description)
   })
 
+  test('starts pre-filled with storedRole and storedDescription instead of localized ones', () => {
+    const localizedResearcher = {
+      ...editArgs.researcher!,
+      role: 'Principal Investigator',
+      description: 'Responsible for strategic planning...',
+      storedRole: 'Investigadora principal',
+      storedDescription: 'Responsable de la planificación estratégica...',
+    }
+    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
+
+    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
+    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(
+      'Responsable de la planificación estratégica...',
+    )
+  })
+
+  test('starts with an empty description when storedDescription is null, without falling back to localized description', () => {
+    const localizedResearcher = {
+      ...editArgs.researcher!,
+      role: 'Principal Investigator',
+      description: 'Responsible for strategic planning...',
+      storedRole: 'Investigadora principal',
+      storedDescription: null,
+    }
+    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
+
+    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
+    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue('')
+  })
+
+  test('starts with an empty description when storedDescription is empty string, without falling back to localized description', () => {
+    const localizedResearcher = {
+      ...editArgs.researcher!,
+      role: 'Principal Investigator',
+      description: 'Responsible for strategic planning...',
+      storedRole: 'Investigadora principal',
+      storedDescription: '',
+    }
+    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
+
+    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
+    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue('')
+  })
+
   test('starts blank for a new researcher', () => {
     render(<ResearcherForm {...addArgs} />)
 

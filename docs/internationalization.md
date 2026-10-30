@@ -226,13 +226,14 @@ activities section above the news uses `academicActivities`. Each card links out
 article, which is the item's detail view: there is no news page of its own to translate.
 
 `/nosotros` is translated, database content included: the fixed copy, the editor labels and
+`/nosotros` is translated, database content included: the fixed copy, the editor labels and
 dialogs of the activity cards (`nosotros.activities.form`), the researcher messages and labels of
 the bilingual part of the researcher editor (`nosotros.researchers`, `form`), and the researcher
 card, gallery controls and editor interface in the shared `researchers.*` namespace (`ResearcherForm`,
 `EditableResearcherCard`, `TeamGallery`). The activity cards and the role and description of the
 researcher profiles are bilingual, backed by `nosotros_researcher_translations`. The shared researcher
 editor components, cards and the researcher API error messages follow the site's selected language.
-Single-language ROSAC continues to work unchanged using Spanish defaults.
+ROSAC researchers temporarily take their English translations from the message catalogue (`en.json` under `rosac.team.people` via `localizeResearchers`) until a dedicated translation table is introduced.
 
 `/datos` has no database content; everything is `lib/scientific-data.ts` and the
 `scientific-data/*` components. `getScientificSources(messages)` follows the "content built on the
@@ -322,7 +323,9 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
   (`ResearchArea`), and the space weather page's sections (`SpaceWeatherSection`: `title` and
   `body`). The same pattern is meant for `News`, `Researcher` (ROSAC), `GalleryAlbum` and
   `GalleryMedia`, each with its own translation table holding only its translatable columns
-  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`).
+  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`). As noted
+  above, ROSAC researchers temporarily take their English text from `en.json`
+  (`rosac.team.people`) until their translation table is created.
 - **Tables:** [`database-definition.md`](database-definition.md).
 
 The editor's language tabs only choose which translation is being edited; the header selector
