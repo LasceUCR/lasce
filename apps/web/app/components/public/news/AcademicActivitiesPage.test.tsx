@@ -247,7 +247,13 @@ describe('AcademicActivitiesPage', () => {
   })
 
   test('shows skeleton placeholders and marks area busy while loading', () => {
-    const { container } = renderWithIntl(<AcademicActivitiesPage {...loadingArgs} />)
+    const { container } = renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <AcademicActivitiesPage {...loadingArgs} />
+        </EditModeProvider>
+      </ToastProvider>,
+    )
 
     const region = container.querySelector('#academic-activities-loading-region')
     expect(region).toHaveAttribute('aria-busy', 'true')
@@ -261,7 +267,13 @@ describe('AcademicActivitiesPage', () => {
   })
 
   test('hides empty message while loading', () => {
-    renderWithIntl(<AcademicActivitiesPage {...loadingArgs} />)
+    renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <AcademicActivitiesPage {...loadingArgs} />
+        </EditModeProvider>
+      </ToastProvider>,
+    )
 
     expect(
       screen.queryByText('No hay actividades académicas disponibles en este momento.'),
@@ -269,7 +281,13 @@ describe('AcademicActivitiesPage', () => {
   })
 
   test('keeps hero and footer link functional while loading', () => {
-    renderWithIntl(<AcademicActivitiesPage {...loadingArgs} />)
+    renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <AcademicActivitiesPage {...loadingArgs} />
+        </EditModeProvider>
+      </ToastProvider>,
+    )
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
@@ -278,7 +296,13 @@ describe('AcademicActivitiesPage', () => {
   })
 
   test('displays error notice and removes busy state when loading fails', () => {
-    const { container } = renderWithIntl(<AcademicActivitiesPage {...errorArgs} />)
+    const { container } = renderWithIntl(
+      <ToastProvider>
+        <EditModeProvider>
+          <AcademicActivitiesPage {...errorArgs} />
+        </EditModeProvider>
+      </ToastProvider>,
+    )
 
     const region = container.querySelector('#academic-activities-loading-region')
     expect(region).not.toHaveAttribute('aria-busy')
