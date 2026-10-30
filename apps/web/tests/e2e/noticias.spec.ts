@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 import { createSignedInUser } from './helpers/admin-users'
+import { enableEditMode } from './helpers/edit-mode'
 
 // Runs against the seeded news (`pnpm db:seed`, which CI runs before this suite).
 
@@ -118,7 +119,7 @@ test('allows an admin to create, view, edit, and delete a news article', async (
 
   try {
     await page.goto('/administracion')
-    await page.getByRole('switch', { name: 'Modo edición' }).click()
+    await enableEditMode(page)
     await page.goto('/noticias')
 
     // 1. Validation test on creation

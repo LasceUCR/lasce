@@ -136,7 +136,7 @@ describe('POST /api/research-areas', () => {
     const { response, body } = await post(validBody)
 
     expect(response.status).toBe(201)
-    expect(mocks.createResearchArea).toHaveBeenCalledWith(validBody)
+    expect(mocks.createResearchArea).toHaveBeenCalledWith(validBody, expect.anything())
     expect(body).toEqual({ area: { id: 'area-1' } })
   })
 

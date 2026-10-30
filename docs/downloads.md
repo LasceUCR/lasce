@@ -77,6 +77,9 @@ again on every attempt, so retrying a failed download never skips a permission c
   that result is sampled to 360 points. For SEISS it is the worker's `query-goes-archive` job:
   the page passes along the `jobId` that answered its query, so the download reuses the finished
   job instead of queueing a new one. While a job is still running, the action answers `pending`.
+  SEISS EHIS is the exception: its chart reads InfluxDB synchronously
+  ([`ehis-pipeline.md`](ehis-pipeline.md)), so its PNG never waits on a job. It still has no CSV,
+  because the download policy is per instrument and the rest of SEISS has no full-resolution path.
 - **EXIS CSV** reads InfluxDB **without sampling** (`queryExisReadingsFull`), keeping only the
   latest satellite in the window, as the chart does. A full SFXR day is about 86 000 rows, around
   3 MB.
@@ -127,6 +130,26 @@ download:
 
 The object expires after a day. The row stays.
 
+### The history page
+
+`/administracion/descargas` (grant `view_download_history`, held by administrators by default;
+**not** `download_resources`, which every role holds) lists these rows, newest first. It is
+read-only: no re-download, no delete, no CSV export.
+
+- `getDownloadHistoryPage` (`app/lib/download-history.ts`) checks the grant itself, counts the
+  matching rows, and reads **10** (`DOWNLOAD_HISTORY_PAGE_SIZE`) with `skip`/`take`, ordered by
+  `createdAt desc, id desc` so pages never overlap. `object_key` and `expires_at` are never
+  selected, so no key or link reaches the client.
+- The page is `?page=N`, brought to the nearest real page by `paginate`; a non-number means page 1.
+- Filters are query parameters of a plain GET form, so applying them restarts at page 1 and the
+  URL can be shared: `from`, `to` (inclusive UTC days), `source`, `instrument`, `format`, `user`.
+  A value outside the catalogue (an unknown source, a malformed date or id) is ignored, never an
+  error. `source`/`instrument` are checked against `scientific-data.ts`, `format` against
+  `DOWNLOAD_FORMATS`.
+- Times are shown in UTC, like `/datos`. A row whose account was deleted reads "Cuenta eliminada".
+- The two indexes on the table, `(user_id, created_at)` and `(source, instrument, created_at)`,
+  serve the user and the source/instrument filters.
+
 ## Adding an instrument or a format
 
 **An instrument** (say SEISS data):
@@ -154,15 +177,17 @@ table, like `RolePermission.permission`.
 
 ## Tests
 
-| What                 | Where                                                                 |
-| -------------------- | --------------------------------------------------------------------- |
-| Policy table         | `apps/web/app/lib/downloads/policy.test.ts`                           |
-| Access validation    | `apps/web/tests/unit/services/downloads/downloadAccess.test.ts`       |
-| Chart layouts        | `apps/web/app/lib/charts/charts.test.ts`                              |
-| Exporters, storage   | `apps/web/tests/unit/services/downloads/`                             |
-| Server Action        | `apps/web/app/(public)/datos/actions.test.ts`                         |
-| Buttons and explorer | `ResourceDownloadActions.test.tsx`, `ScientificDataExplorer.test.tsx` |
-| End to end (gating)  | `apps/web/tests/e2e/scientific-data.spec.ts`, `describe('downloads')` |
+| What                 | Where                                                                    |
+| -------------------- | ------------------------------------------------------------------------ |
+| Policy table         | `apps/web/app/lib/downloads/policy.test.ts`                              |
+| Access validation    | `apps/web/tests/unit/services/downloads/downloadAccess.test.ts`          |
+| Chart layouts        | `apps/web/app/lib/charts/charts.test.ts`                                 |
+| Exporters, storage   | `apps/web/tests/unit/services/downloads/`                                |
+| Server Action        | `apps/web/app/(public)/datos/actions.test.ts`                            |
+| Buttons and explorer | `ResourceDownloadActions.test.tsx`, `ScientificDataExplorer.test.tsx`    |
+| End to end (gating)  | `apps/web/tests/e2e/scientific-data.spec.ts`, `describe('downloads')`    |
+| History query        | `apps/web/app/lib/download-history.test.ts`                              |
+| History page         | `DownloadHistoryPage.test.tsx`; e2e `tests/e2e/download-history.spec.ts` |
 
 CI's e2e job has no MinIO, so the Playwright suite checks who gets which button and the sign-in
 redirect, not the file itself. The unit tests cover generation; check a real download locally

@@ -188,10 +188,13 @@ test('shows an assistant the sections its grants unlock', async ({ page, context
     await expect(menu.getByRole('link', { name: 'Usuarios', exact: true })).toHaveCount(0)
     await expect(menu.getByRole('link', { name: 'Permisos', exact: true })).toHaveCount(0)
 
-    await menu.getByRole('link', { name: 'Descargas', exact: true }).click()
+    // The download history has its own grant, which assistants do not hold by default.
+    await expect(menu.getByRole('link', { name: 'Descargas', exact: true })).toHaveCount(0)
 
-    await expect(page).toHaveURL(/\/administracion\/descargas$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Descargas' })).toBeVisible()
+    await menu.getByRole('link', { name: 'Infraestructura', exact: true }).click()
+
+    await expect(page).toHaveURL(/\/administracion\/infraestructura$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Infraestructura' })).toBeVisible()
   } finally {
     await fixture.cleanup()
   }
@@ -207,6 +210,7 @@ test('shows an administrator every section', async ({ page, context }) => {
       'Descargas',
       'Usuarios',
       'Permisos',
+      'Auditoría',
       'Infraestructura',
     ])
   } finally {
@@ -219,10 +223,17 @@ test('follows the permission matrix, not only the role', async ({ page, context 
   try {
     await page.goto('/administracion')
     const descargas = adminMenu(page).getByRole('link', { name: 'Descargas', exact: true })
+    // Assistants do not hold the download history grant by default.
+    await expect(descargas).toHaveCount(0)
+
+    await fixture.prisma.rolePermission.create({
+      data: { role: 'ASSISTANT', permission: 'view_download_history' },
+    })
+    await page.reload()
     await expect(descargas).toBeVisible()
 
     await fixture.prisma.rolePermission.deleteMany({
-      where: { role: 'ASSISTANT', permission: 'download_resources' },
+      where: { role: 'ASSISTANT', permission: 'view_download_history' },
     })
     await page.reload()
 

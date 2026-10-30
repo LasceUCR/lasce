@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
@@ -30,6 +30,21 @@ describe('ResearchCollaborationsSection', () => {
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(
       defaultArgs.collaborations.length,
     )
+  })
+
+  test('associates every logo and official website with the correct organization', () => {
+    renderWithIntl(<ResearchCollaborationsSection {...defaultArgs} />)
+    for (const collaboration of defaultArgs.collaborations) {
+      const card = screen
+        .getAllByRole('article')
+        .find((article) => within(article).queryByRole('heading', { name: collaboration.name }))!
+      expect(
+        within(card).getByRole('img', {
+          name: `Logotipo de ${collaboration.name}`,
+        }),
+      ).toHaveAttribute('src', collaboration.logoPath)
+      expect(within(card).getByRole('link')).toHaveAttribute('href', collaboration.websiteUrl)
+    }
   })
 
   test('distinguishes between national and international collaborations', () => {

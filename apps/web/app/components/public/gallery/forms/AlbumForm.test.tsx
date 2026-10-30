@@ -168,6 +168,22 @@ describe('AlbumForm', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
+  test('creates an album without showing or requiring a cover when configured', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    const { container } = render(<AlbumForm {...createArgs} showCover={false} onSave={onSave} />)
+
+    expect(container.querySelector('input[type="file"]')).not.toBeInTheDocument()
+    await fillNewAlbum(user)
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce())
+    expect(onSave.mock.calls[0]?.[0]).toMatchObject({
+      title: 'Álbum nuevo',
+      coverObjectKey: '',
+    })
+  })
+
   test('uploads the cover and saves the new album in both languages', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()

@@ -38,6 +38,10 @@ export interface PersonProfile {
   email?: string | readonly string[]
   institution: string
   description?: string
+  /** The stored base role before UI localization, used to initialize single-language edit forms. */
+  storedRole?: string
+  /** The stored base description before UI localization, used to initialize single-language edit forms. */
+  storedDescription?: string | null
 }
 
 export interface ResearcherFormValues {
@@ -134,14 +138,20 @@ export function ResearcherForm(props: ResearcherFormProps) {
   const t = useTranslations('researchers')
   const bilingual = props.translation !== undefined
   const contentRef = useRef<ResearcherContentHandle>(null)
-  const [role, setRole] = useState(researcher?.role ?? '')
+  const initialRole =
+    researcher?.storedRole !== undefined ? (researcher.storedRole ?? '') : (researcher?.role ?? '')
+  const initialDescription =
+    researcher?.storedDescription !== undefined
+      ? (researcher.storedDescription ?? '')
+      : (researcher?.description ?? '')
+  const [role, setRole] = useState(initialRole)
   const [name, setName] = useState(researcher?.name ?? '')
   const emailFieldId = useId()
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
   const [newEmail, setNewEmail] = useState('')
   const [newEmailError, setNewEmailError] = useState<string | null>(null)
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
-  const [description, setDescription] = useState(researcher?.description ?? '')
+  const [description, setDescription] = useState(initialDescription)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
@@ -167,7 +177,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
   function isDirty() {
     const textChanged = bilingual
       ? (contentRef.current?.isDirty() ?? false)
-      : role !== (researcher?.role ?? '') || description !== (researcher?.description ?? '')
+      : role !== initialRole || description !== initialDescription
 
     return (
       name !== (researcher?.name ?? '') ||
@@ -274,7 +284,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
       return
     }
     if (trimmed === '') {
-      setNewEmailError('El correo es obligatorio.')
+      setNewEmailError(t('editor.emailRequired'))
       return
     }
     if (!isValidEmail(trimmed)) {
@@ -345,11 +355,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
             {t('editor.contactLabel')}
           </span>
           <span aria-live="polite" className="publication-authors-count">
-            {emails.length === 0
-              ? 'Sin correos'
-              : emails.length === 1
-                ? '1 correo'
-                : `${emails.length} correos`}
+            {t('editor.contactCount', { count: emails.length })}
           </span>
         </div>
         <div
@@ -358,7 +364,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
           }
         >
           {emails.length > 0 ? (
-            <ul aria-label="Correos de contacto" className="publication-authors-list">
+            <ul aria-label={t('editor.contactListLabel')} className="publication-authors-list">
               {emails.map((address) => (
                 <li className="email-chip" key={address}>
                   {address}
@@ -382,12 +388,16 @@ export function ResearcherForm(props: ResearcherFormProps) {
                 setNewEmailError(null)
               }}
               onKeyDown={handleEmailKeyDown}
-              placeholder={emails.length > 0 ? 'Escribir otro correo...' : 'Escribir un correo...'}
+              placeholder={
+                emails.length > 0
+                  ? t('editor.emailPlaceholderAnother')
+                  : t('editor.emailPlaceholder')
+              }
               type="email"
               value={newEmail}
             />
             <Button className="publication-authors-add" onClick={addEmail} variant="secondary">
-              Agregar
+              {t('editor.add')}
             </Button>
           </div>
         </div>

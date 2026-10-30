@@ -1,11 +1,12 @@
 """What every reader of NOAA's NGDC GOES archive shares.
 
 The archive at ``BASE_URL`` is a tree of plain Apache directory listings, one
-tree per spacecraft and product. SUVI (:mod:`app.clients.suvi`) and EXIS
-(:mod:`app.clients.exis`) and MAG (:mod:`app.clients.mag`) differ in how
-their files are named and how often they appear, but not in how a listing is
-read or a file is fetched, so that part lives here once. EXIS and MAG are both
-daily products filed by month, so their month walk lives here too.
+tree per spacecraft and product. SUVI (:mod:`app.clients.suvi`), EXIS
+(:mod:`app.clients.exis`), MAG (:mod:`app.clients.mag`) and EHIS
+(:mod:`app.clients.ehis`) differ in how their files are named and how often
+they appear, but not in how a listing is read or a file is fetched, so that
+part lives here once. EXIS, MAG and EHIS are all daily products filed by
+month, so their month walk lives here too.
 """
 
 from collections.abc import Sequence
@@ -35,7 +36,7 @@ class DailyFile(Protocol):
 def month_directories(product_root: str, start: date, end: date) -> list[str]:
     """One ``product_root/YYYY/MM/`` URL per month the window touches, oldest first.
 
-    Daily products (EXIS, MAG) are filed in one directory per month. A window
+    Daily products (EXIS, MAG, EHIS) are filed in one directory per month. A window
     that crosses the first of a month spans two directories, and both have to
     be listed or the older half of the window is silently invisible.
     """

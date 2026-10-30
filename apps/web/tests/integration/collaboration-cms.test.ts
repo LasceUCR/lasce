@@ -20,6 +20,7 @@ async function create() {
       scope: 'international',
       content: { es: { country: 'Italia' }, en: { country: 'Italy' } },
     }),
+    actor,
   )
   if (!result.ok) throw new Error(result.reason)
   ids.push(result.value.id)
@@ -32,6 +33,8 @@ afterAll(async () => {
   await prisma.collaboration.deleteMany({ where: { id: { in: ids } } })
   await prisma.$disconnect()
 })
+
+const actor = { id: 'user-1' }
 
 describe('collaboration CMS persistence', () => {
   test('creates bilingual records, preserves classification and does not expose editor metadata publicly', async () => {
@@ -56,6 +59,7 @@ describe('collaboration CMS persistence', () => {
           websiteUrl: 'https://example.com',
           scope: 'national',
         }),
+        actor,
       ),
     ).toMatchObject({ ok: true })
     const changed = (await getCollaborationRecords('en', { includeEditingData: true })).find(
@@ -75,6 +79,7 @@ describe('collaboration CMS persistence', () => {
           acronym: '',
           websiteUrl: '',
         }),
+        actor,
       ),
     ).toMatchObject({ ok: true })
     expect(await prisma.collaboration.findUnique({ where: { id: record.id } })).toMatchObject({
@@ -91,7 +96,7 @@ describe('collaboration CMS persistence', () => {
       content: { es: { country: 'República Italiana' }, en: { country: 'Italy' } },
     }
     expect(
-      await updateCollaboration(record.id, collaborationUpdateSchema.parse(update)),
+      await updateCollaboration(record.id, collaborationUpdateSchema.parse(update), actor),
     ).toMatchObject({
       ok: false,
       reason: 'review-required',
@@ -108,6 +113,7 @@ describe('collaboration CMS persistence', () => {
           ...update,
           confirmedUnchanged: [{ locale: 'en', field: 'country' }],
         }),
+        actor,
       ),
     ).toMatchObject({ ok: true })
   })
@@ -115,13 +121,17 @@ describe('collaboration CMS persistence', () => {
     const record = await create()
     const results = await Promise.all(
       ['A', 'B'].map((name) =>
-        updateCollaboration(record.id, { version: record.editing!.version, name }),
+        updateCollaboration(record.id, { version: record.editing!.version, name }, actor),
       ),
     )
     expect(results.filter(({ ok }) => ok)).toHaveLength(1)
     expect(results.filter(({ ok }) => !ok)).toEqual([{ ok: false, reason: 'conflict' }])
     expect(
-      await updateCollaboration(record.id, { version: record.editing!.version, name: 'Stale' }),
+      await updateCollaboration(
+        record.id,
+        { version: record.editing!.version, name: 'Stale' },
+        actor,
+      ),
     ).toEqual({ ok: false, reason: 'conflict' })
   })
   test('rolls back base edits when the database rejects the translation write', async () => {
@@ -137,11 +147,15 @@ describe('collaboration CMS persistence', () => {
     )
     try {
       await expect(
-        updateCollaboration(record.id, {
-          version: record.editing!.version,
-          name: 'Must roll back',
-          content: { es: { country: 'Alemania' }, en: { country: 'Germany' } },
-        }),
+        updateCollaboration(
+          record.id,
+          {
+            version: record.editing!.version,
+            name: 'Must roll back',
+            content: { es: { country: 'Alemania' }, en: { country: 'Germany' } },
+          },
+          actor,
+        ),
       ).rejects.toThrow()
       expect(
         await prisma.collaboration.findUnique({
@@ -163,13 +177,17 @@ describe('collaboration CMS persistence', () => {
   })
   test('deletes the record and its translations and reports an already deleted record', async () => {
     const record = await create()
-    expect(await deleteCollaboration(record.id)).toBe(true)
+    expect(await deleteCollaboration(record.id, actor)).toBe(true)
     expect(
       await prisma.collaborationTranslation.count({ where: { collaborationId: record.id } }),
     ).toBe(0)
-    expect(await deleteCollaboration(record.id)).toBe(false)
+    expect(await deleteCollaboration(record.id, actor)).toBe(false)
     expect(
-      await updateCollaboration(record.id, { version: record.editing!.version, name: 'Deleted' }),
+      await updateCollaboration(
+        record.id,
+        { version: record.editing!.version, name: 'Deleted' },
+        actor,
+      ),
     ).toEqual({ ok: false, reason: 'not-found' })
   })
 })

@@ -110,6 +110,8 @@ export interface AlbumFormProps {
   onCancel: () => void
   /** Creating an album: its URL identifier comes from the title, so the title needs a letter or digit. */
   requireSlug?: boolean
+  /** Hides the cover upload when this form creates an album without a cover. */
+  showCover?: boolean
   /** Routes modal close requests through the unsaved-changes confirmation. */
   ref?: Ref<AlbumFormHandle>
 }
@@ -126,6 +128,7 @@ export function AlbumForm({
   onSave,
   onCancel,
   requireSlug = false,
+  showCover = true,
   ref,
 }: AlbumFormProps) {
   // Everything the editor says follows the site's language; the tabs only pick the translation.
@@ -271,7 +274,7 @@ export function AlbumForm({
       return
     }
 
-    if (!isEdit && !hasCover) return
+    if (showCover && !isEdit && !hasCover) return
 
     if (currentPeriodError) return
 
@@ -328,22 +331,26 @@ export function AlbumForm({
 
   return (
     <div className="gallery-album-form">
-      <FileDropInput
-        existingImageUrl={album.coverObjectKey}
-        helperText={tGallery('editor.albumCoverHelperText')}
-        errorMessage={
-          hasAttemptedSubmit && !isEdit && !hasCover ? tGallery('editor.albumCoverRequired') : null
-        }
-        label={tGallery('editor.albumCoverField')}
-        onFileSelect={(file) => {
-          setCoverFile(file)
-          setCoverRemoved(file === null)
-        }}
-        required={!isEdit}
-        descriptionText={t('editor.FileDropDescriptionText')}
-        rejectionFormatMessage={t('editor.FileDropRejectionFormatMessage')}
-        rejectionSizeMessage={t('editor.FileDropRejectionSizeMessage')}
-      />
+      {showCover ? (
+        <FileDropInput
+          existingImageUrl={album.coverObjectKey}
+          helperText={tGallery('editor.albumCoverHelperText')}
+          errorMessage={
+            hasAttemptedSubmit && !isEdit && !hasCover
+              ? tGallery('editor.albumCoverRequired')
+              : null
+          }
+          label={tGallery('editor.albumCoverField')}
+          onFileSelect={(file) => {
+            setCoverFile(file)
+            setCoverRemoved(file === null)
+          }}
+          required={!isEdit}
+          descriptionText={t('editor.FileDropDescriptionText')}
+          rejectionFormatMessage={t('editor.FileDropRejectionFormatMessage')}
+          rejectionSizeMessage={t('editor.FileDropRejectionSizeMessage')}
+        />
+      ) : null}
 
       <LanguageTabs
         copyLang={uiLocale}

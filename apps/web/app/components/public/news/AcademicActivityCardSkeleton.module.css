@@ -1,0 +1,32 @@
+.card {
+  pointer-events: none;
+  user-select: none;
+}
+
+.imageFrame {
+  position: relative;
+  min-height: 190px;
+}
+
+.imageSkeleton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 190px;
+  border-radius: 0;
+}
+
+.title {
+  margin: 0 0 6px;
+}
+
+.meta {
+  margin: 0 0 10px;
+}
+
+@media (max-width: 700px) {
+  .imageFrame,
+  .imageSkeleton {
+    min-height: 200px;
+  }
+}

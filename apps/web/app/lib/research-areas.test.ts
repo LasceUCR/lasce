@@ -9,7 +9,9 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
+    auditEvent: { create: vi.fn() },
     researchAreaTranslation: { upsert: vi.fn() },
   }
 
@@ -67,6 +69,8 @@ const content = {
   es: { title: 'Geomagnetismo en Costa Rica', description: 'Estudia el campo magnético.' },
   en: { title: 'Geomagnetism in Costa Rica', description: 'Studies the magnetic field.' },
 }
+
+const actor = { id: 'user-1' }
 
 beforeEach(() => {
   prisma.$transaction.mockImplementation((write: (client: typeof tx) => unknown) => write(tx))
@@ -173,7 +177,10 @@ describe('createResearchArea', () => {
   test('creates the Spanish base row and the other languages in one transaction', async () => {
     tx.researchArea.create.mockResolvedValue(bilingualRow)
 
-    const result = await createResearchArea({ content, src: '/images/research/geomagnetismo.jpg' })
+    const result = await createResearchArea(
+      { content, src: '/images/research/geomagnetismo.jpg' },
+      actor,
+    )
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
     expect(tx.researchArea.create).toHaveBeenCalledWith({
@@ -194,7 +201,7 @@ describe('updateResearchArea', () => {
     tx.researchArea.updateMany.mockResolvedValue({ count: 1 })
     tx.researchArea.findUniqueOrThrow.mockResolvedValue({ ...bilingualRow, src: '/nueva.jpg' })
 
-    const result = await updateResearchArea(ID, { version: VERSION, src: '/nueva.jpg' })
+    const result = await updateResearchArea(ID, { version: VERSION, src: '/nueva.jpg' }, actor)
 
     expect(tx.researchArea.updateMany).toHaveBeenCalledWith({
       where: { id: ID, updatedAt: new Date(VERSION) },
@@ -213,7 +220,7 @@ describe('updateResearchArea', () => {
     tx.researchArea.updateMany.mockResolvedValue({ count: 1 })
     tx.researchArea.findUniqueOrThrow.mockResolvedValue(bilingualRow)
 
-    await updateResearchArea(ID, { version: VERSION, content: next })
+    await updateResearchArea(ID, { version: VERSION, content: next }, actor)
 
     expect(tx.researchArea.updateMany).toHaveBeenCalledWith({
       where: { id: ID, updatedAt: new Date(VERSION) },
@@ -228,7 +235,7 @@ describe('updateResearchArea', () => {
 
   test('is not found for an unknown area, and a conflict for a stale or lost version', async () => {
     tx.researchArea.findUnique.mockResolvedValueOnce(null)
-    expect(await updateResearchArea(ID, { version: VERSION, src: '/a.jpg' })).toEqual({
+    expect(await updateResearchArea(ID, { version: VERSION, src: '/a.jpg' }, actor)).toEqual({
       ok: false,
       reason: 'not-found',
     })
@@ -237,14 +244,14 @@ describe('updateResearchArea', () => {
       ...bilingualRow,
       updatedAt: new Date(LATER),
     })
-    expect(await updateResearchArea(ID, { version: VERSION, src: '/a.jpg' })).toEqual({
+    expect(await updateResearchArea(ID, { version: VERSION, src: '/a.jpg' }, actor)).toEqual({
       ok: false,
       reason: 'conflict',
     })
 
     tx.researchArea.findUnique.mockResolvedValueOnce(bilingualRow)
     tx.researchArea.updateMany.mockResolvedValueOnce({ count: 0 })
-    expect(await updateResearchArea(ID, { version: VERSION, src: '/a.jpg' })).toEqual({
+    expect(await updateResearchArea(ID, { version: VERSION, src: '/a.jpg' }, actor)).toEqual({
       ok: false,
       reason: 'conflict',
     })
@@ -254,7 +261,7 @@ describe('updateResearchArea', () => {
     const oneSided = { es: { ...content.es, title: 'Geomagnetismo regional' }, en: content.en }
     tx.researchArea.findUnique.mockResolvedValue(bilingualRow)
 
-    expect(await updateResearchArea(ID, { version: VERSION, content: oneSided })).toEqual({
+    expect(await updateResearchArea(ID, { version: VERSION, content: oneSided }, actor)).toEqual({
       ok: false,
       reason: 'review-required',
       pending: [{ locale: 'en', field: 'title' }],
@@ -263,23 +270,34 @@ describe('updateResearchArea', () => {
 
     tx.researchArea.updateMany.mockResolvedValue({ count: 1 })
     tx.researchArea.findUniqueOrThrow.mockResolvedValue(bilingualRow)
-    const confirmed = await updateResearchArea(ID, {
-      version: VERSION,
-      content: oneSided,
-      confirmedUnchanged: [{ locale: 'en', field: 'title' }],
-    })
+    const confirmed = await updateResearchArea(
+      ID,
+      {
+        version: VERSION,
+        content: oneSided,
+        confirmedUnchanged: [{ locale: 'en', field: 'title' }],
+      },
+      actor,
+    )
     expect(confirmed.ok).toBe(true)
   })
 })
 
 describe('deleteResearchArea', () => {
   test('deletes in one statement and reports whether anything was removed', async () => {
-    prisma.researchArea.deleteMany.mockResolvedValueOnce({ count: 1 })
-    await expect(deleteResearchArea(ID)).resolves.toBe(true)
-    expect(prisma.researchArea.deleteMany).toHaveBeenCalledWith({ where: { id: ID } })
+    tx.researchArea.findUnique.mockResolvedValue({ title: 'Sol' })
+    tx.researchArea.deleteMany.mockResolvedValueOnce({ count: 1 })
+    await expect(deleteResearchArea(ID, actor)).resolves.toBe(true)
+    expect(tx.researchArea.deleteMany).toHaveBeenCalledWith({ where: { id: ID } })
+    expect(tx.auditEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'research_area.delete',
+        summary: 'Área de investigación eliminada: Sol',
+      }),
+    })
 
-    prisma.researchArea.deleteMany.mockResolvedValueOnce({ count: 0 })
-    await expect(deleteResearchArea(ID)).resolves.toBe(false)
+    tx.researchArea.deleteMany.mockResolvedValueOnce({ count: 0 })
+    await expect(deleteResearchArea(ID, actor)).resolves.toBe(false)
   })
 })
 

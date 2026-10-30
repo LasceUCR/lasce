@@ -83,6 +83,10 @@ body {
   line-height: 1.45;
 }
 
+body:has(.not-found) {
+  background: var(--space-black);
+}
+
 /* Body copy on the public site. Headings, navigation and buttons stay start-aligned. */
 .public-shell-content p {
   text-align: justify;
@@ -139,6 +143,10 @@ a {
   place-items: center;
   background: #000918;
   color: var(--white);
+}
+
+.not-found {
+  flex: 1;
 }
 
 .public-route-content {
@@ -509,6 +517,15 @@ a {
   opacity: 0.6;
 }
 
+.account-menu-edit-mode {
+  padding: 8px 14px;
+}
+
+.account-menu-edit-mode .toggle {
+  width: 100%;
+  justify-content: space-between;
+}
+
 .login-link {
   /* .header-actions now stretches its children to the full header height
      (to match .desktop-nav, see below); keep the pill at its own size,
@@ -613,23 +630,22 @@ a {
   gap: 10px;
 }
 
-/* From the 1400px mobile breakpoint up to 1700px the Spanish navigation, the language menu
-   and the account links do not fit on one row at the default 28px spacing, so the navigation
-   closes up there. The range got wider (it used to stop at 1500px) once "Actividades
-   académicas" joined the top-level entries — the longest label in the bar — and pushed the
-   overlap further out than before. */
-@media (min-width: 1401px) and (max-width: 1700px) {
+/* Just above the 1400px mobile breakpoint the navigation, the language menu and the account
+   links do not fit on one row at the default 28px spacing, so the spacing steps down there
+   while the labels keep their normal 13px size. Measured with the Spanish labels and the
+   signed-out "Iniciar sesión" pill (the widest header actions): from 1500px the default
+   28px fits, from 1441px 20px does, and at 1401px 16px does (with the tighter header gaps
+   below). This used to squeeze everything to 4px and 12px all the way up to 1700px, back
+   when "Actividades académicas" was a top-level entry; it now lives under "Divulgación". */
+@media (min-width: 1401px) and (max-width: 1499px) {
   .desktop-nav {
-    gap: 4px;
+    gap: 20px;
   }
+}
 
-  .desktop-nav a,
-  .desktop-nav .nav-group summary {
-    font-size: 12px;
-  }
-
-  .desktop-nav .nav-group summary {
-    gap: 2px;
+@media (min-width: 1401px) and (max-width: 1440px) {
+  .desktop-nav {
+    gap: 16px;
   }
 }
 
@@ -1477,6 +1493,22 @@ a {
 
 .publications h2 {
   margin-top: 28px;
+}
+
+/* Focused by `PublicationsExplorer` when the page changes: keep it clear of the sticky header. */
+.publications > h2 {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.publications > h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.publications-summary {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .content-empty {
@@ -3278,6 +3310,29 @@ a {
     opacity: 0.6;
   }
 
+  /* The "Modo edición" switch is a button too, but must keep its own track look. */
+  .mobile-edit-mode {
+    padding: 10px 12px;
+  }
+
+  .mobile-edit-mode .toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mobile-menu nav .mobile-edit-mode button.toggle-track {
+    width: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--white);
+  }
+
+  .mobile-menu nav .mobile-edit-mode button.toggle-track.toggle-track-on {
+    border-color: var(--blue);
+    background: var(--blue);
+  }
+
   .indicator-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -4411,12 +4466,12 @@ a {
 }
 
 .gallery-group {
-  margin-top: 44px;
+  margin-top: 8px;
 }
 
 .gallery-group-heading {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
@@ -4428,7 +4483,22 @@ a {
   line-height: 1.2;
 }
 
+.gallery-group-title-editable {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding-right: 82px;
+}
+
+.gallery-group-title-editable > .editable-actions {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
 .gallery-group-meta {
+  display: block;
+  margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
 }
@@ -4454,19 +4524,8 @@ a {
   display: flex;
 }
 
-.gallery-grid > li > .gallery-tile,
 .card-grid.tile-list > li > .gallery-tile {
   flex: 1;
-}
-
-.gallery-grid-add {
-  min-height: 260px;
-}
-
-.gallery-grid-add > .add-item-card {
-  flex: 1;
-  min-height: 0;
-  border-radius: 8px;
 }
 
 .gallery-subalbum-list {
@@ -4482,16 +4541,6 @@ a {
   flex: 1;
 }
 
-/* In edit mode the album's cover tile fix. */
-.gallery-grid > li > .gallery-grid-editable {
-  display: flex;
-  flex: 1;
-}
-
-.gallery-grid-editable > .gallery-tile {
-  flex: 1;
-}
-
 .gallery-subalbum-add {
   min-height: 260px;
 }
@@ -4502,9 +4551,7 @@ a {
   border-radius: 8px;
 }
 
-/* Fixed tracks, not fractions: the cards keep one size and the grid wraps, so
-   an album with a single cover and no sub-albums shows one normal card rather
-   than one stretched across the page. */
+/* Keep the add-album card at the same width as album tiles. */
 .gallery-grid {
   margin-top: 16px;
   display: grid;
@@ -4563,18 +4610,23 @@ a.gallery-tile:focus-visible {
 }
 
 .gallery-tile-title {
+  display: -webkit-box;
+  min-height: 2.6em;
   margin: 0;
+  overflow: hidden;
   font-size: 14px;
   line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .gallery-tile-meta {
+  overflow: hidden;
   color: var(--muted);
   font-size: 12px;
-}
-
-.gallery-album-back {
-  padding-top: 28px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gallery-album-footer {
@@ -6963,11 +7015,17 @@ a.acknowledgments-card:focus-visible {
     .news-article-form-actions,
     .nosotros-activity-form-actions,
     .confirm-dialog-actions,
-    .mgmt-form-actions
+    .mgmt-form-actions,
+    .cms-stage-photo-actions
   )
   .button {
   height: 44px;
   line-height: 1;
+}
+
+.cms-stage-photo-actions .button {
+  width: 100%;
+  white-space: nowrap;
 }
 
 @media (max-width: 760px) {
@@ -7335,4 +7393,195 @@ a.acknowledgments-card:focus-visible {
   .mgmt-form-actions .button {
     width: 100%;
   }
+}
+
+/* Auditoría section (AuditTrailPage). */
+.audit-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+.audit-filters input[type='date'],
+.audit-filters input[type='date']::-webkit-datetime-edit,
+.audit-filters input[type='date']::-webkit-datetime-edit-fields-wrapper,
+.audit-filters input[type='date']::-webkit-datetime-edit-text,
+.audit-filters input[type='date']::-webkit-datetime-edit-day-field,
+.audit-filters input[type='date']::-webkit-datetime-edit-month-field,
+.audit-filters input[type='date']::-webkit-datetime-edit-year-field {
+  color: var(--ink);
+  -webkit-text-fill-color: var(--ink);
+  opacity: 1;
+}
+
+.audit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.audit-actions .button {
+  min-height: 44px;
+}
+
+.audit-count {
+  margin: 0 0 12px;
+  color: #355066;
+  font-size: 14px;
+}
+
+.audit-action {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.audit-date {
+  white-space: nowrap;
+}
+
+.audit-empty {
+  margin: 0;
+  color: #355066;
+}
+
+.audit-pagination {
+  margin-top: 24px;
+}
+
+/* Mobile: the Actividad reciente rows wrap their time under the title, and the Auditoría filters
+   and table stack instead of scrolling sideways. */
+@media (max-width: 640px) {
+  .admin-activity-list li {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .admin-activity-time {
+    flex: 1 0 100%;
+    padding-left: 36px;
+    white-space: normal;
+  }
+
+  .audit-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .audit-actions .button {
+    width: 100%;
+  }
+
+  .audit-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .audit-table,
+  .audit-table tbody,
+  .audit-table tr,
+  .audit-table td {
+    display: block;
+  }
+
+  .audit-table tr {
+    padding: 8px 0;
+    border-bottom: 1px solid #dce5ed;
+  }
+
+  .audit-table td {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px;
+    min-width: 0;
+    padding: 6px 12px;
+    border: 0;
+  }
+
+  .audit-table tr > * + * {
+    border-left: 0;
+  }
+
+  .audit-table td::before {
+    content: attr(data-label);
+    color: #244359;
+    font-weight: 600;
+  }
+
+  .audit-date,
+  .audit-action {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+.gallery-carousel-track {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin: 0;
+  padding: 4px 4px 12px;
+  overflow-x: auto;
+  overflow-anchor: none;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.gallery-carousel-track:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
+.gallery-carousel-track > li {
+  display: flex;
+  flex: 0 0 260px; /* same fixed track the grid used; matches AlbumTile `sizes` */
+  scroll-snap-align: start;
+}
+
+.gallery-carousel-track > li > .gallery-carousel-media-editable {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .gallery-carousel-track > li {
+    flex-basis: 80vw; /* peek at the next card on phones */
+  }
+}
+
+.gallery-carousel-image-button {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: zoom-in;
+}
+
+.gallery-carousel-image-button:focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: -3px;
+}
+
+.gallery-carousel-image-button > .gallery-tile-media {
+  flex: 1 1 auto;
+  min-height: 0; /* lets it shrink instead of overflowing */
+  width: 100%;
 }
