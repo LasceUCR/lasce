@@ -1,7 +1,8 @@
 import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import { translationLocales } from '@/app/lib/i18n/content/definition'
@@ -159,17 +160,25 @@ export type ResearchAreaWriteResult = { ok: true; area: ResearchArea } | Researc
  */
 export async function createResearchArea(
   input: ResearchAreaCreateInput,
+  actor: AuditActor,
 ): Promise<{ ok: true; area: ResearchArea }> {
-  const result = await runWrite<ResearchAreaRecord, never>((tx) =>
-    tx.researchArea.create({
+  const result = await runWrite<ResearchAreaRecord, never>(async (tx) => {
+    const created = await tx.researchArea.create({
       data: {
         ...baseContent(researchAreaContent, input.content),
         src: input.src,
         translations: { create: translationRows(researchAreaContent, input.content) },
       },
       include: areaInclude,
-    }),
-  )
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'research_area.create',
+      summary: `Área de investigación agregada: ${created.title}`,
+      entityType: 'research_area',
+      entityId: created.id,
+    })
+    return created
+  })
 
   return { ok: true, area: toResearchArea(result.value, defaultLocale, true) }
 }
@@ -182,6 +191,7 @@ export async function createResearchArea(
 export async function updateResearchArea(
   id: string,
   input: ResearchAreaUpdateInput,
+  actor: AuditActor,
 ): Promise<ResearchAreaWriteResult> {
   const expected = parseVersion(input.version)
 
@@ -232,7 +242,18 @@ export async function updateResearchArea(
       }
     }
 
-    return tx.researchArea.findUniqueOrThrow({ where: { id }, include: areaInclude })
+    const updated = await tx.researchArea.findUniqueOrThrow({
+      where: { id },
+      include: areaInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'research_area.update',
+      summary: `Área de investigación actualizada: ${updated.title}`,
+      entityType: 'research_area',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 
   return result.ok ? { ok: true, area: toResearchArea(result.value, defaultLocale, true) } : result
@@ -242,7 +263,16 @@ export async function updateResearchArea(
  * Deletes an area in one statement that reports what it removed, so two concurrent deletes give
  * one success and one "not found". Its translations go with it (`ON DELETE CASCADE`).
  */
-export async function deleteResearchArea(id: string): Promise<boolean> {
-  const { count } = await prisma.researchArea.deleteMany({ where: { id } })
-  return count > 0
+export async function deleteResearchArea(id: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) => tx.researchArea.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.researchArea.deleteMany({ where: { id } }),
+    (tx, area) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'research_area.delete',
+        summary: `Área de investigación eliminada: ${area.title}`,
+        entityType: 'research_area',
+        entityId: id,
+      }),
+  )
 }

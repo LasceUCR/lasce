@@ -3,6 +3,8 @@ import { z } from 'zod'
 
 import es from '@/messages/es.json' with { type: 'json' }
 
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from './audit-log'
+import { runAuditedDelete } from './cms/transaction'
 import { locationMapProvider, type LocationMapLabels } from './location-map'
 import { getRosacConstructionContent, type ConstructionContent } from './rosac-construction'
 import { getRosacInstrumentsContent, type RosacInstrumentsContent } from './rosac-instruments'
@@ -712,16 +714,29 @@ export async function createResearcher(
   data: ResearcherInput,
   modifiedBy: string,
 ): Promise<TeamMember> {
-  const row = await prisma.researcher.create({
-    data: {
-      photoUrl: normalizeOptional(data.src),
-      role: data.role,
-      name: data.name,
-      email: data.email ?? [],
-      institution: data.institution,
-      description: normalizeOptional(data.description),
-      modifiedBy,
-    },
+  const row = await prisma.$transaction(async (tx) => {
+    const created = await tx.researcher.create({
+      data: {
+        photoUrl: normalizeOptional(data.src),
+        role: data.role,
+        name: data.name,
+        email: data.email ?? [],
+        institution: data.institution,
+        description: normalizeOptional(data.description),
+        modifiedBy,
+      },
+    })
+    await recordUserAuditEvent(
+      tx,
+      { id: modifiedBy },
+      {
+        action: 'rosac_researcher.create',
+        summary: `Investigador ROSAC agregado: ${created.name}`,
+        entityType: 'rosac_researcher',
+        entityId: created.id,
+      },
+    )
+    return created
   })
 
   return toTeamMember(row)
@@ -737,23 +752,37 @@ export async function updateResearcher(
   data: ResearcherInput,
   modifiedBy: string,
 ): Promise<TeamMember | null> {
-  const existing = await prisma.researcher.findUnique({ where: { id } })
-  if (!existing) return null
+  const row = await prisma.$transaction(async (tx) => {
+    const existing = await tx.researcher.findUnique({ where: { id } })
+    if (!existing) return null
 
-  const row = await prisma.researcher.update({
-    where: { id },
-    data: {
-      photoUrl: normalizeOptional(data.src),
-      role: data.role,
-      name: data.name,
-      email: data.email ?? [],
-      institution: data.institution,
-      description: normalizeOptional(data.description),
-      modifiedBy,
-    },
+    const updated = await tx.researcher.update({
+      where: { id },
+      data: {
+        photoUrl: normalizeOptional(data.src),
+        role: data.role,
+        name: data.name,
+        email: data.email ?? [],
+        institution: data.institution,
+        description: normalizeOptional(data.description),
+        modifiedBy,
+      },
+    })
+    await recordUserAuditEvent(
+      tx,
+      { id: modifiedBy },
+      {
+        action: 'rosac_researcher.update',
+        summary: `Investigador ROSAC actualizado: ${updated.name}`,
+        entityType: 'rosac_researcher',
+        entityId: id,
+        metadata: { fields: changedFieldNames(data) },
+      },
+    )
+    return updated
   })
 
-  return toTeamMember(row)
+  return row ? toTeamMember(row) : null
 }
 
 /**
@@ -761,10 +790,16 @@ export async function updateResearcher(
  * any row, rather than throwing, so the route handler can turn that into a
  * 404 — same pre-check pattern as `updateResearcher`.
  */
-export async function deleteResearcher(id: string): Promise<boolean> {
-  const existing = await prisma.researcher.findUnique({ where: { id } })
-  if (!existing) return false
-
-  await prisma.researcher.delete({ where: { id } })
-  return true
+export async function deleteResearcher(id: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) => tx.researcher.findUnique({ where: { id }, select: { name: true } }),
+    (tx) => tx.researcher.deleteMany({ where: { id } }),
+    (tx, researcher) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'rosac_researcher.delete',
+        summary: `Investigador ROSAC eliminado: ${researcher.name}`,
+        entityType: 'rosac_researcher',
+        entityId: id,
+      }),
+  )
 }

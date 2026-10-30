@@ -36,6 +36,12 @@ export const adminSections = [
     permission: 'manage_permissions',
   },
   {
+    slug: 'auditoria',
+    title: 'Auditoría',
+    description: 'Consulta quién hizo cada cambio administrativo en el portal y cuándo.',
+    permission: 'view_audit_log',
+  },
+  {
     slug: 'infraestructura',
     title: 'Infraestructura',
     description: 'Estado de los servicios, procesos e instrumentos del laboratorio.',

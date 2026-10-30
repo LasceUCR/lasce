@@ -25,7 +25,9 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
+    auditEvent: { create: vi.fn() },
     galleryAlbumTranslation: { upsert: vi.fn() },
     galleryMediaTranslation: { upsert: vi.fn() },
     galleryMedia: {
@@ -34,6 +36,7 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
   }
 
@@ -234,6 +237,8 @@ function everyMedia(): GalleryMedia[] {
     ...album.subAlbums.flatMap((subAlbum) => [...subAlbum.media]),
   ])
 }
+
+const actor = { id: 'user-1' }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -743,7 +748,7 @@ describe('createTopLevelGalleryAlbum', () => {
   test('stores Spanish on the base row and English as a translation', async () => {
     tx.galleryAlbum.create.mockResolvedValue(albumRecord({ subAlbums: [] }))
 
-    const result = await createTopLevelGalleryAlbum(albumCreateSchema.parse(topLevelInput))
+    const result = await createTopLevelGalleryAlbum(albumCreateSchema.parse(topLevelInput), actor)
 
     expect(result).toEqual({
       ok: true,
@@ -809,7 +814,7 @@ describe('createTopLevelGalleryAlbum', () => {
       .mockRejectedValueOnce(uniqueViolation({ target: ['slug'] }))
       .mockResolvedValueOnce(albumRecord({ slug: 'rosac-9f3ce6d7-f3c9-4b43-8a93-40cd86b49798' }))
 
-    const result = await createTopLevelGalleryAlbum(albumCreateSchema.parse(topLevelInput))
+    const result = await createTopLevelGalleryAlbum(albumCreateSchema.parse(topLevelInput), actor)
 
     expect(result.ok).toBe(true)
     expect(tx.galleryAlbum.create).toHaveBeenCalledTimes(2)
@@ -829,7 +834,7 @@ describe('createTopLevelGalleryAlbum', () => {
       .mockRejectedValueOnce(uniqueViolation({ target: ['slug'] }))
 
     await expect(
-      createTopLevelGalleryAlbum(albumCreateSchema.parse(topLevelInput)),
+      createTopLevelGalleryAlbum(albumCreateSchema.parse(topLevelInput), actor),
     ).resolves.toEqual({
       ok: false,
       reason: 'duplicate-slug',
@@ -864,6 +869,7 @@ describe('updateGalleryAlbum', () => {
         yearsLabel: null,
         coverObjectKey: null,
       }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -922,7 +928,7 @@ describe('updateGalleryAlbum', () => {
       },
     })
 
-    const result = await updateGalleryAlbum(albumId, input)
+    const result = await updateGalleryAlbum(albumId, input, actor)
 
     expect(result.ok).toBe(true)
     expect(tx.galleryAlbum.updateMany).toHaveBeenCalledWith({
@@ -963,7 +969,7 @@ describe('updateGalleryAlbum', () => {
     })
 
     await expect(
-      updateGalleryAlbum(albumId, albumUpdateSchema.parse({ version, slug: 'rosac-2026' })),
+      updateGalleryAlbum(albumId, albumUpdateSchema.parse({ version, slug: 'rosac-2026' }), actor),
     ).resolves.toEqual({ ok: false, reason: 'conflict' })
 
     expect(tx.galleryAlbum.updateMany).not.toHaveBeenCalled()
@@ -996,6 +1002,7 @@ describe('updateGalleryAlbum', () => {
             en: topLevelInput.content.en,
           },
         }),
+        actor,
       ),
     ).resolves.toEqual({
       ok: false,
@@ -1009,16 +1016,23 @@ describe('updateGalleryAlbum', () => {
 
 describe('deleteGalleryAlbum', () => {
   test('deletes the album database record and returns true', async () => {
-    prisma.galleryAlbum.deleteMany.mockResolvedValue({ count: 1 })
+    tx.galleryAlbum.findUnique.mockResolvedValue({ title: 'Eclipse', parentAlbumId: null })
+    tx.galleryAlbum.deleteMany.mockResolvedValue({ count: 1 })
 
-    await expect(deleteGalleryAlbum(albumId)).resolves.toBe(true)
-    expect(prisma.galleryAlbum.deleteMany).toHaveBeenCalledWith({ where: { id: albumId } })
+    await expect(deleteGalleryAlbum(albumId, actor)).resolves.toBe(true)
+    expect(tx.galleryAlbum.deleteMany).toHaveBeenCalledWith({ where: { id: albumId } })
+    expect(tx.auditEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'gallery_album.delete',
+        summary: 'Álbum de galería eliminado: Eclipse',
+      }),
+    })
   })
 
   test('returns false when the album does not exist', async () => {
-    prisma.galleryAlbum.deleteMany.mockResolvedValue({ count: 0 })
+    tx.galleryAlbum.findUnique.mockResolvedValue(null)
 
-    await expect(deleteGalleryAlbum('missing-id')).resolves.toBe(false)
+    await expect(deleteGalleryAlbum('missing-id', actor)).resolves.toBe(false)
   })
 })
 
@@ -1030,6 +1044,7 @@ describe('createGallerySubAlbum', () => {
     const result = await createGallerySubAlbum(
       parentAlbumId,
       subAlbumCreateSchema.parse(subAlbumInput),
+      actor,
     )
 
     expect(result).toEqual({
@@ -1078,7 +1093,7 @@ describe('createGallerySubAlbum', () => {
     tx.galleryAlbum.findUnique.mockResolvedValueOnce(null)
 
     await expect(
-      createGallerySubAlbum(parentAlbumId, subAlbumCreateSchema.parse(subAlbumInput)),
+      createGallerySubAlbum(parentAlbumId, subAlbumCreateSchema.parse(subAlbumInput), actor),
     ).resolves.toEqual({
       ok: false,
       reason: 'parent-not-found',
@@ -1090,7 +1105,7 @@ describe('createGallerySubAlbum', () => {
     })
 
     await expect(
-      createGallerySubAlbum(parentAlbumId, subAlbumCreateSchema.parse(subAlbumInput)),
+      createGallerySubAlbum(parentAlbumId, subAlbumCreateSchema.parse(subAlbumInput), actor),
     ).resolves.toEqual({
       ok: false,
       reason: 'parent-not-top-level',
@@ -1106,7 +1121,7 @@ describe('createGalleryMedia', () => {
     tx.galleryMedia.findFirst.mockResolvedValue({ position: 3 })
     tx.galleryMedia.create.mockResolvedValue(mediaRecord())
 
-    await expect(createGalleryMedia(albumId, mediaInput)).resolves.toEqual({
+    await expect(createGalleryMedia(albumId, mediaInput, actor)).resolves.toEqual({
       ok: true,
       media: {
         id: 'media-id',
@@ -1168,7 +1183,7 @@ describe('createGalleryMedia', () => {
   test('reports a missing album and a unique-key conflict', async () => {
     tx.galleryAlbum.findUnique.mockResolvedValueOnce(null)
 
-    await expect(createGalleryMedia(albumId, mediaInput)).resolves.toEqual({
+    await expect(createGalleryMedia(albumId, mediaInput, actor)).resolves.toEqual({
       ok: false,
       reason: 'album-not-found',
     })
@@ -1177,7 +1192,7 @@ describe('createGalleryMedia', () => {
     tx.galleryMedia.findFirst.mockResolvedValueOnce(null)
     tx.galleryMedia.create.mockRejectedValueOnce(uniqueViolation({ target: ['object_key'] }))
 
-    await expect(createGalleryMedia(albumId, mediaInput)).resolves.toEqual({
+    await expect(createGalleryMedia(albumId, mediaInput, actor)).resolves.toEqual({
       ok: false,
       reason: 'conflict',
     })
@@ -1209,22 +1224,26 @@ describe('updateGalleryMedia', () => {
     )
 
     await expect(
-      updateGalleryMedia('media-id', {
-        version,
-        rowSpan: 3,
-        content: {
-          es: {
-            title: 'Montaje actualizado',
-            description: 'Montaje del reflector actualizado.',
-            altText: 'Reflector actualizado durante el montaje.',
-          },
-          en: {
-            title: 'Updated assembly',
-            description: 'Updated assembly of the dish.',
-            altText: 'Updated dish during assembly.',
+      updateGalleryMedia(
+        'media-id',
+        {
+          version,
+          rowSpan: 3,
+          content: {
+            es: {
+              title: 'Montaje actualizado',
+              description: 'Montaje del reflector actualizado.',
+              altText: 'Reflector actualizado durante el montaje.',
+            },
+            en: {
+              title: 'Updated assembly',
+              description: 'Updated assembly of the dish.',
+              altText: 'Updated dish during assembly.',
+            },
           },
         },
-      }),
+        actor,
+      ),
     ).resolves.toEqual({
       ok: true,
       media: {
@@ -1301,10 +1320,14 @@ describe('updateGalleryMedia', () => {
     )
 
     await expect(
-      updateGalleryMedia('media-id', {
-        version,
-        rowSpan: 4,
-      }),
+      updateGalleryMedia(
+        'media-id',
+        {
+          version,
+          rowSpan: 4,
+        },
+        actor,
+      ),
     ).resolves.toEqual({
       ok: false,
       reason: 'conflict',
@@ -1317,13 +1340,17 @@ describe('updateGalleryMedia', () => {
     tx.galleryMedia.findUnique.mockResolvedValueOnce(mediaRecord())
 
     await expect(
-      updateGalleryMedia('media-id', {
-        version,
-        content: {
-          es: { ...mediaInput.content.es, title: 'Montaje actualizado' },
-          en: mediaInput.content.en,
+      updateGalleryMedia(
+        'media-id',
+        {
+          version,
+          content: {
+            es: { ...mediaInput.content.es, title: 'Montaje actualizado' },
+            en: mediaInput.content.en,
+          },
         },
-      }),
+        actor,
+      ),
     ).resolves.toEqual({
       ok: false,
       reason: 'review-required',
@@ -1345,7 +1372,7 @@ describe('updateGalleryMedia', () => {
       }),
     )
 
-    await updateGalleryMedia('media-id', { version, date: '2026-03-01' })
+    await updateGalleryMedia('media-id', { version, date: '2026-03-01' }, actor)
     expect(tx.galleryMedia.updateMany).toHaveBeenCalledWith({
       where: { id: 'media-id', updatedAt: new Date(version) },
       data: {
@@ -1355,15 +1382,17 @@ describe('updateGalleryMedia', () => {
     })
 
     tx.galleryMedia.findUnique.mockResolvedValueOnce(null)
-    await expect(updateGalleryMedia('missing-id', { version, rowSpan: 2 })).resolves.toEqual({
-      ok: false,
-      reason: 'not-found',
-    })
+    await expect(updateGalleryMedia('missing-id', { version, rowSpan: 2 }, actor)).resolves.toEqual(
+      {
+        ok: false,
+        reason: 'not-found',
+      },
+    )
 
     tx.galleryMedia.findUnique.mockResolvedValueOnce(mediaRecord())
     tx.galleryMedia.updateMany.mockRejectedValueOnce(uniqueViolation({ target: ['object_key'] }))
     await expect(
-      updateGalleryMedia('media-id', { version, objectKey: 'already-used.jpg' }),
+      updateGalleryMedia('media-id', { version, objectKey: 'already-used.jpg' }, actor),
     ).resolves.toEqual({
       ok: false,
       reason: 'conflict',
@@ -1374,15 +1403,22 @@ describe('updateGalleryMedia', () => {
 
 describe('deleteGalleryMedia', () => {
   test('deletes only the matching database record', async () => {
-    prisma.galleryMedia.deleteMany.mockResolvedValue({ count: 1 })
+    tx.galleryMedia.findUnique.mockResolvedValue({ title: 'Corona' })
+    tx.galleryMedia.deleteMany.mockResolvedValue({ count: 1 })
 
-    await expect(deleteGalleryMedia('media-id')).resolves.toBe(true)
-    expect(prisma.galleryMedia.deleteMany).toHaveBeenCalledWith({ where: { id: 'media-id' } })
+    await expect(deleteGalleryMedia('media-id', actor)).resolves.toBe(true)
+    expect(tx.galleryMedia.deleteMany).toHaveBeenCalledWith({ where: { id: 'media-id' } })
+    expect(tx.auditEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'gallery_media.delete',
+        summary: 'Archivo de galería eliminado: Corona',
+      }),
+    })
   })
 
   test('returns false when no matching record exists', async () => {
-    prisma.galleryMedia.deleteMany.mockResolvedValue({ count: 0 })
+    tx.galleryMedia.findUnique.mockResolvedValue(null)
 
-    await expect(deleteGalleryMedia('missing-id')).resolves.toBe(false)
+    await expect(deleteGalleryMedia('missing-id', actor)).resolves.toBe(false)
   })
 })

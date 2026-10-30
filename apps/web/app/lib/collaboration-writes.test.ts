@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
     deleteMany: vi.fn(),
   },
   translation: { upsert: vi.fn() },
+  audit: { create: vi.fn() },
   transaction: vi.fn(),
 }))
 vi.mock('@lasce/db', () => ({
@@ -22,10 +23,16 @@ import {
 } from './collaboration-writes'
 import { collaborationCreateSchema } from './collaboration-schema'
 const version = '2026-10-14T12:00:00.000Z'
+const actor = { id: 'user-1' }
+
 beforeEach(() => {
   vi.resetAllMocks()
   mocks.transaction.mockImplementation((fn) =>
-    fn({ collaboration: mocks.record, collaborationTranslation: mocks.translation }),
+    fn({
+      collaboration: mocks.record,
+      collaborationTranslation: mocks.translation,
+      auditEvent: mocks.audit,
+    }),
   )
   mocks.record.findUnique.mockResolvedValue({
     id: 'partner',
@@ -45,7 +52,7 @@ describe('collaboration writes', () => {
       scope: 'international',
       content: { es: { country: 'Italia' }, en: { country: 'Italy' } },
     })
-    expect(await createCollaboration(input)).toEqual({ ok: true, value: { id: 'partner' } })
+    expect(await createCollaboration(input, actor)).toEqual({ ok: true, value: { id: 'partner' } })
     expect(mocks.record.create).toHaveBeenCalledWith({
       data: {
         name: 'Partner',
@@ -61,7 +68,7 @@ describe('collaboration writes', () => {
   })
   test('updates only supplied shared fields and preserves translation rows', async () => {
     expect(
-      await updateCollaboration('partner', { version, name: 'Revised', websiteUrl: null }),
+      await updateCollaboration('partner', { version, name: 'Revised', websiteUrl: null }, actor),
     ).toMatchObject({ ok: true })
     expect(mocks.record.updateMany).toHaveBeenCalledWith({
       where: { id: 'partner', updatedAt: new Date(version) },
@@ -71,13 +78,17 @@ describe('collaboration writes', () => {
   })
   test('rejects an outdated version before writing anything', async () => {
     expect(
-      await updateCollaboration('partner', { version: '2026-10-13T12:00:00.000Z', name: 'Stale' }),
+      await updateCollaboration(
+        'partner',
+        { version: '2026-10-13T12:00:00.000Z', name: 'Stale' },
+        actor,
+      ),
     ).toEqual({ ok: false, reason: 'conflict' })
     expect(mocks.record.updateMany).not.toHaveBeenCalled()
   })
   test('rejects a concurrent update after reading the current version', async () => {
     mocks.record.updateMany.mockResolvedValue({ count: 0 })
-    expect(await updateCollaboration('partner', { version, name: 'Stale' })).toEqual({
+    expect(await updateCollaboration('partner', { version, name: 'Stale' }, actor)).toEqual({
       ok: false,
       reason: 'conflict',
     })
@@ -85,11 +96,15 @@ describe('collaboration writes', () => {
   })
   test('rejects unreviewed country changes before saving any shared fields', async () => {
     expect(
-      await updateCollaboration('partner', {
-        version,
-        name: 'Revised',
-        content: { es: { country: 'República Italiana' }, en: { country: 'Italy' } },
-      }),
+      await updateCollaboration(
+        'partner',
+        {
+          version,
+          name: 'Revised',
+          content: { es: { country: 'República Italiana' }, en: { country: 'Italy' } },
+        },
+        actor,
+      ),
     ).toEqual({
       ok: false,
       reason: 'review-required',
@@ -99,11 +114,15 @@ describe('collaboration writes', () => {
   })
   test('writes both country versions when every language changes', async () => {
     expect(
-      await updateCollaboration('partner', {
-        version,
-        scope: 'national',
-        content: { es: { country: 'Alemania' }, en: { country: 'Germany' } },
-      }),
+      await updateCollaboration(
+        'partner',
+        {
+          version,
+          scope: 'national',
+          content: { es: { country: 'Alemania' }, en: { country: 'Germany' } },
+        },
+        actor,
+      ),
     ).toMatchObject({ ok: true })
     expect(mocks.record.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -118,12 +137,20 @@ describe('collaboration writes', () => {
   })
   test('reports missing records and only reports successful deletion when a row was removed', async () => {
     mocks.record.findUnique.mockResolvedValue(null)
-    expect(await updateCollaboration('partner', { version, name: 'Missing' })).toEqual({
+    expect(await updateCollaboration('partner', { version, name: 'Missing' }, actor)).toEqual({
       ok: false,
       reason: 'not-found',
     })
+    mocks.record.findUnique.mockResolvedValue({ name: 'Partner' })
     mocks.record.deleteMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 })
-    expect(await deleteCollaboration('partner')).toBe(true)
-    expect(await deleteCollaboration('partner')).toBe(false)
+    expect(await deleteCollaboration('partner', actor)).toBe(true)
+    expect(await deleteCollaboration('partner', actor)).toBe(false)
+    expect(mocks.audit.create).toHaveBeenCalledTimes(1)
+    expect(mocks.audit.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'collaboration.delete',
+        summary: 'Colaboración eliminada: Partner',
+      }),
+    })
   })
 })

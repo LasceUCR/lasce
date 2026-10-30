@@ -184,6 +184,7 @@ inventory taken when the static pages were migrated.
 | `/noticias`                              | `news`, `academicActivities`                    | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
 | `/radioastronomia`                       | `rosac`                                         | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`                                        |
 | `/datos`                                 | `scientificData`                                | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts`                                  |
+| `/administracion/permisos`               | `administration.permissions`, `access`          | `RolePermissions{Page,Editor}.tsx`, `lib/access-messages.ts`                                                   |
 
 The top menu's user dropdown (`AccountLinks.tsx`, `AccountMenu.tsx`, its mobile equivalent, and
 the shared `SignOutButton.tsx` confirmation dialog) reads its copy from the `account` namespace:
@@ -209,7 +210,9 @@ editor's copy is in `spaceWeather.editor`, `spaceWeather.discardDialog` and
 copy (`page`, built in `(public)/publicaciones/page.tsx` and `PublicationsExplorer.tsx`), the
 cards' buttons (`card`), the editor of "Modo edición" with its popups, validation and save
 messages (`editor`, `authorDialog`, `discardDialog`, `deleteDialog`, `validation`, `saveErrors`),
-and the publications themselves, which are database content.
+and the publications themselves, which are database content. The listing is paginated like
+`/noticias`: `getPublicationsPage()` searches the text shown in the visitor's language, and the
+page controls' own text is in `common.pagination` (see [`pagination.md`](pagination.md)).
 
 `/noticias` follows the same shape in the `news` namespace: the page's fixed copy (`page`), the
 cards' labels (`card`, including "Sin fecha" for an undated item), the editor with its popups,
@@ -250,7 +253,7 @@ rest of the "Not tied to one page" list below.
 | -------------------- | ------------------------------------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/galeria/**`        | `lib/gallery.ts`, `gallery/*`                                      | 400 strings, 5,050 words           | 127 media items with title, description and alt text. Counts built by hand with no singular (`N archivos`). Client components import `mediaPlaceholder` from the lib module. Dates are display strings. The `gallery.*` tables exist, so this may become database content instead                                                                    |
 | `/acceso`, `/cuenta` | `lib/auth/login.ts`, `registration.ts`, `account.ts`               | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's own account links moved to the `account` namespace (see the Translated table above); `ROLE_LABELS`, `accountSummaryCopy` and the rest of this page's body copy are still Spanish-only |
-| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Three hand-written plurals, `Intl.ListFormat('es')`, a list joined with a hardcoded "y". About 35 strings are demonstration data                                                                                                                                                                                                                     |
+| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Permisos is done (see [`role-permissions.md`](role-permissions.md#languages)); role and permission names are in `access.*` for the other sections to reuse. The user-role flow still has hand-written plurals and `Intl.ListFormat('es')`. About 35 strings are demonstration data                                                                   |
 | `(public)/[section]` | inline in the page                                                 | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                                                                                         |
 
 ### Not tied to one page
