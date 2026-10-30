@@ -152,7 +152,7 @@ describe('createResourceDownload', () => {
     expect(result).toEqual({
       ok: false,
       reason: 'forbidden',
-      message: 'No tienes autorización para descargar recursos GOES.',
+      permission: 'download_goes_resources',
     })
     expect(mocks.queryInfluxSql).not.toHaveBeenCalled()
     expect(mocks.putObject).not.toHaveBeenCalled()
@@ -233,7 +233,6 @@ describe('createResourceDownload', () => {
     expect(await download({ query: exisQuery, format: 'png' })).toEqual({
       ok: false,
       reason: 'empty',
-      message: 'No hay datos para descargar con los criterios seleccionados.',
     })
   })
 
@@ -241,17 +240,14 @@ describe('createResourceDownload', () => {
     expect(await download({ query: exisQuery, format: 'json' })).toEqual({
       ok: false,
       reason: 'invalid',
-      message: 'Seleccione un formato de descarga válido.',
     })
     expect(await download({ query: { ...exisQuery, startTime: '10:00' }, format: 'png' })).toEqual({
       ok: false,
       reason: 'invalid',
-      message: 'La hora de inicio debe ser anterior a la hora de fin.',
     })
     expect(await download({ query: { ...exisQuery, date: '2026-09-29' }, format: 'png' })).toEqual({
       ok: false,
-      reason: 'invalid',
-      message: 'Seleccione una fecha que no sea posterior a hoy.',
+      reason: 'futureDate',
     })
   })
 

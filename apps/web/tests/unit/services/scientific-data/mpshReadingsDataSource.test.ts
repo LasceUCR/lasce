@@ -60,8 +60,7 @@ describe('queryMpshReadings', () => {
       origin: { kind: 'observed', satellite: 19 },
       points: [{ timestamp: '2026-10-27T00:00:00Z', value: 21822.5 }],
     })
-    expect(result.origin.provider).toContain('MPS-HI')
-    expect(result.origin.notice).toContain('sin muestras válidas')
+    expect(result.origin.dataset).toBe('mpsh')
   })
 
   test('reads every stored reading, unsampled, for the data export', async () => {

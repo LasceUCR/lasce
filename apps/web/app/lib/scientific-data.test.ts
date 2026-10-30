@@ -105,9 +105,9 @@ describe('scientific data catalog and query validation', () => {
       instrument: { code: 'SUVI', name: 'Generador de imágenes solares ultravioleta' },
       product: { code: 'Fe171', name: 'Imágenes solares: 171 Å (Fe171)' },
       parameter: { code: 'image', label: 'Imagen calibrada', unit: 'imagen' },
-      origin: { kind: 'observed', provider: 'CITIC-UCR', notice: 'Ilustrativa.' },
+      origin: { kind: 'observed', dataset: 'suvi', resolution: 'sampled' },
       visualization: 'image-sequence',
-      images: [{ timestamp: '2026-09-10T08:30:00Z', imageUrl, alt: 'Imagen solar' }],
+      images: [{ timestamp: '2026-09-10T08:30:00Z', imageUrl }],
     }
   }
 
