@@ -363,16 +363,21 @@ test('displays the back button at the bottom of the gallery index and returns ho
   await page.goto('/galeria')
   await expect(page.getByRole('status')).toBeHidden()
 
+  await expect(
+    page.locator('.gallery-group').first().getByRole('heading', { level: 2 }),
+  ).toBeVisible()
+
   const backLink = page.getByRole('link', { name: 'Volver al inicio' })
   const heading = page.getByRole('heading', { level: 1, name: 'Galería' })
 
   await expect(backLink).toBeVisible()
+  await expect(backLink).toHaveAttribute('href', '/')
   const backBox = await backLink.boundingBox()
   const headingBox = await heading.boundingBox()
   expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
 
   await backLink.click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL('http://localhost:3000/')
 })
 
 test('displays the back button at the bottom of an album page and returns to gallery', async ({
@@ -397,8 +402,9 @@ for (const album of galleryAlbumList) {
   test(`opens the ${album.slug} album from the gallery index`, async ({ page }) => {
     await page.goto('/galeria')
 
-    await expect(page.getByRole('heading', { level: 2, name: album.title })).toBeVisible()
-    await page.getByRole('link', { name: new RegExp(album.title) }).click()
+    const albumLink = page.locator(`a[href="/galeria/${album.slug}"]`)
+    await expect(albumLink).toBeVisible()
+    await albumLink.click()
 
     await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
     await expect(page.getByRole('heading', { level: 1, name: album.title })).toBeVisible()

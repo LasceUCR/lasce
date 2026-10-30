@@ -1910,7 +1910,7 @@ export const galleryAlbums = {
   },
   'workshop-ml-2026': {
     slug: 'workshop-ml-2026',
-    title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+    title: 'Taller 2026 de aprendizaje automático aplicado al clima espacial y GNSS',
     description:
       'Taller enfocado en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial y los sistemas GNSS.',
     years: 'febrero 2026',
@@ -1942,19 +1942,18 @@ export function albumFileCount(album: GalleryAlbum): number {
 }
 
 /** Summary line for an album: sub-albums, total files and the years covered. */
-export function albumMeta(album: GalleryAlbum): string {
-  const parts = [`${albumFileCount(album)} archivos`, album.years]
+export function albumMeta(
+  album: GalleryAlbum,
+  files: (count: number) => string,
+  subalbums: (count: number) => string,
+): string {
+  const parts = [files(albumFileCount(album)), album.years]
 
   if (album.subAlbums.length > 0) {
-    parts.unshift(`${album.subAlbums.length} subálbumes`)
+    parts.unshift(subalbums(album.subAlbums.length))
   }
 
   return parts.join(' · ')
-}
-
-/** The "N archivos en este álbum" counter shown beside a media grid. */
-export function albumMediaMeta(media: readonly GalleryMedia[]): string {
-  return `${media.length} archivos en este álbum`
 }
 
 /** Placeholder caption for a media tile whose file has not been uploaded. */
