@@ -2952,11 +2952,9 @@ a {
   gap: 16px;
 }
 
-/* The dedicated page's own empty state, not the shared `.content-empty` box other surfaces use:
-   a narrower box centered on the page, instead of stretching edge to edge. */
+/* Match the dedicated page's empty state to the full-width search bar above it. */
 #academic-activities-loading-region .content-empty {
-  max-width: 520px;
-  margin-inline: auto;
+  width: 100%;
   text-align: center;
 }
 
