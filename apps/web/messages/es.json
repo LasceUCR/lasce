@@ -6,6 +6,12 @@
   "shell": {
     "skipToContent": "Saltar al contenido principal"
   },
+  "notFound": {
+    "metaTitle": "Página no encontrada | LASCE",
+    "title": "Página no encontrada",
+    "description": "La dirección ingresada no corresponde a una página disponible. Verifique la dirección o vuelva al inicio.",
+    "kicker": "Error 404"
+  },
   "nav": {
     "goHome": "Ir al inicio",
     "mainLabel": "Navegación principal",
@@ -472,7 +478,8 @@
       "national": "Nacional",
       "international": "Internacional",
       "acronym": "Siglas:",
-      "website": "Sitio web oficial"
+      "websiteLabel": "Sitio web oficial de {name} (abre en una pestaña nueva)",
+      "logoAlt": "Logotipo de {name}"
     },
     "countries": {
       "cr": "Costa Rica",

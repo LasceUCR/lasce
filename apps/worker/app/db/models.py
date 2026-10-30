@@ -233,6 +233,7 @@ class Collaboration(Base):
     name: Mapped[str] = mapped_column(Text)
     acronym: Mapped[str | None] = mapped_column(Text)
     website_url: Mapped[str | None] = mapped_column(Text)
+    logo_path: Mapped[str | None] = mapped_column(Text)
     country: Mapped[str] = mapped_column(Text)
     scope: Mapped[CollaborationScope] = mapped_column(
         ENUM(
