@@ -1,6 +1,7 @@
-import { prisma, type Prisma } from '@lasce/db'
+import type { Prisma } from '@lasce/db'
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion } from '@/app/lib/cms/version'
 import { baseContent, storedContentFrom, translationRows } from '@/app/lib/i18n/content/resolve'
 import { findPendingReviews } from '@/app/lib/i18n/content/review'
@@ -15,11 +16,11 @@ export type CollaborationWriteFailure =
 
 const scopes = { national: 'NATIONAL', international: 'INTERNATIONAL' } as const
 
-export async function createCollaboration(input: CollaborationCreateInput) {
+export async function createCollaboration(input: CollaborationCreateInput, actor: AuditActor) {
   return runWrite<{ id: string }, CollaborationWriteFailure>(async (tx) => {
     const first = await tx.collaboration.aggregate({ _min: { position: true } })
     const earliest = first._min.position
-    return tx.collaboration.create({
+    const created = await tx.collaboration.create({
       data: {
         name: input.name,
         acronym: input.acronym,
@@ -31,10 +32,21 @@ export async function createCollaboration(input: CollaborationCreateInput) {
       },
       select: { id: true },
     })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'collaboration.create',
+      summary: `Colaboración agregada: ${input.name}`,
+      entityType: 'collaboration',
+      entityId: created.id,
+    })
+    return created
   })
 }
 
-export async function updateCollaboration(id: string, input: CollaborationUpdateInput) {
+export async function updateCollaboration(
+  id: string,
+  input: CollaborationUpdateInput,
+  actor: AuditActor,
+) {
   return runWrite<{ id: string }, CollaborationWriteFailure>(async (tx) => {
     const current = await tx.collaboration.findUnique({
       where: { id },
@@ -83,11 +95,27 @@ export async function updateCollaboration(id: string, input: CollaborationUpdate
         })
       }
     }
+    await recordUserAuditEvent(tx, actor, {
+      action: 'collaboration.update',
+      summary: `Colaboración actualizada: ${input.name ?? current.name}`,
+      entityType: 'collaboration',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
     return { id }
   })
 }
 
-export async function deleteCollaboration(id: string) {
-  const { count } = await prisma.collaboration.deleteMany({ where: { id } })
-  return count > 0
+export async function deleteCollaboration(id: string, actor: AuditActor) {
+  return runAuditedDelete(
+    (tx) => tx.collaboration.findUnique({ where: { id }, select: { name: true } }),
+    (tx) => tx.collaboration.deleteMany({ where: { id } }),
+    (tx, collaboration) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'collaboration.delete',
+        summary: `Colaboración eliminada: ${collaboration.name}`,
+        entityType: 'collaboration',
+        entityId: id,
+      }),
+  )
 }

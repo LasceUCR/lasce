@@ -32,9 +32,10 @@ describe('admin-sections', () => {
     ])
 
     expect(matrix).toEqual([
-      ['descargas', 'download_resources'],
+      ['descargas', 'view_download_history'],
       ['usuarios', 'manage_users'],
       ['permisos', 'manage_permissions'],
+      ['auditoria', 'view_audit_log'],
       ['infraestructura', undefined],
     ])
   })
@@ -45,6 +46,7 @@ describe('admin-sections', () => {
       '/administracion/descargas',
       '/administracion/usuarios',
       '/administracion/permisos',
+      '/administracion/auditoria',
       '/administracion/infraestructura',
     ])
   })
@@ -54,14 +56,9 @@ describe('admin-sections', () => {
   })
 
   test('adds each section as its grant is held', () => {
-    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.VISITOR)).toEqual([
-      'Resumen',
-      'Descargas',
-      'Infraestructura',
-    ])
+    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.VISITOR)).toEqual(['Resumen', 'Infraestructura'])
     expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ASSISTANT)).toEqual([
       'Resumen',
-      'Descargas',
       'Infraestructura',
     ])
     expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ADMIN)).toEqual([
@@ -69,6 +66,7 @@ describe('admin-sections', () => {
       'Descargas',
       'Usuarios',
       'Permisos',
+      'Auditoría',
       'Infraestructura',
     ])
     expect(visibleLabels(PERMISSIONS)).toHaveLength(adminMenu.length)

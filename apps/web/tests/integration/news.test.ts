@@ -47,11 +47,12 @@ function create(overrides: Record<string, unknown> = {}) {
       externalUrl: link(),
       ...overrides,
     }),
+    actor,
   )
 }
 
 function update(id: string, body: Record<string, unknown>) {
-  return updateNews(id, newsUpdateSchema.parse(body))
+  return updateNews(id, newsUpdateSchema.parse(body), actor)
 }
 
 function stored(result: NewsWriteResult): NewsArticle & Required<Pick<NewsArticle, 'editing'>> {
@@ -139,6 +140,8 @@ afterAll(async () => {
   await prisma.newsAuthor.deleteMany({ where: { name: { contains: RUN } } })
   await prisma.$disconnect()
 })
+
+const actor = { id: 'user-1' }
 
 describe('creating', () => {
   test('stores both languages at once: Spanish on the record, English as a translation', async () => {
@@ -393,9 +396,9 @@ describe('deleting and integrity', () => {
   test('deleting an item removes its translations with it', async () => {
     const article = stored(await create())
 
-    expect(await deleteNews(article.slug)).toBe(true)
+    expect(await deleteNews(article.slug, actor)).toBe(true)
     expect(await prisma.newsTranslation.count({ where: { newsId: article.slug } })).toBe(0)
-    expect(await deleteNews(article.slug)).toBe(false)
+    expect(await deleteNews(article.slug, actor)).toBe(false)
   })
 
   test('the database refuses an orphan translation and a second row for one locale', async () => {

@@ -1,11 +1,20 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 import { mockDialog } from '@/tests/unit/helpers/mock-dialog'
 import { UserRoleAssignmentDemo, type UserRoleAssignmentDemoProps } from './UserRoleAssignmentDemo'
 import { Default, SaveFailure } from './UserRoleAssignmentDemo.stories'
+import type { ReactElement } from 'react'
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
+import type { Locale } from '@/app/lib/i18n/config'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 mockDialog()
+
+/** The component as the page renders it: with the site's catalogue and the toast provider. */
+function render(ui: ReactElement, locale: Locale = 'es') {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, { locale })
+}
 
 describe('UserRoleAssignmentDemo', () => {
   test('replaces rather than combines roles and leaves other users unchanged', async () => {
@@ -63,7 +72,7 @@ describe('UserRoleAssignmentDemo', () => {
     })
     await user.click(visitor)
     await user.click(screen.getByRole('button', { name: 'Sí, cambiar rol' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos confirmar el cambio')
+    expect(await screen.findByText(/No pudimos confirmar el cambio/)).toBeVisible()
     expect(admin).toBeChecked()
     expect(visitor).not.toBeChecked()
     await user.click(screen.getByRole('button', { name: 'No, cancelar' }))

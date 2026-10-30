@@ -44,7 +44,7 @@ export function GalleryPageSkeleton() {
       </div>
 
       <div className="topic-page-footer page-width">
-        <TopicBackLink href="/#areas-de-trabajo" label="Volver al inicio" />
+        <TopicBackLink href="/" label="Volver al inicio" />
       </div>
     </article>
   )

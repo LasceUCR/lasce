@@ -11,10 +11,7 @@ describe('GalleryPageSkeleton', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: galeriaHero.title })).toBeInTheDocument()
     expect(screen.getByText(galeriaHero.lead)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute(
-      'href',
-      '/#areas-de-trabajo',
-    )
+    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
   })
 
   test('announces the load and hides the album placeholders from assistive technology', () => {

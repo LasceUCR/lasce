@@ -28,21 +28,38 @@ section route remains only for a work area that does not have its own page yet.
   └─ .topic-page-footer           TopicBackLink "Volver al inicio"
 ```
 
-| Piece           | File                                                    | Covered by                                                   |
-| --------------- | ------------------------------------------------------- | ------------------------------------------------------------ |
-| Page shell      | `app/lib/contact.ts`                                    | `app/lib/contact.test.ts`                                    |
-| Cards           | `app/lib/contact-channels.ts`, `contact-channel-schema` | `contact-channels.test.ts`, `contact-channel-schema.test.ts` |
-| Editor          | `ContactChannelForm.tsx`, `ContactChannelSection.tsx`   | `ContactChannelForm.test.tsx`, `ContactPage.test.tsx`        |
-| Location map    | `RosacLocationMapLoader`                                | `ContactPage.test.tsx`, `tests/e2e/contacto.spec.ts`         |
-| Page            | `app/components/public/contact/ContactPage.tsx`         | `ContactPage.test.tsx`, `ContactPage.stories.tsx`            |
-| Route           | `app/(public)/contacto/page.tsx`                        | `tests/e2e/contacto.spec.ts`                                 |
-| API             | `app/api/contacto/canales`                              | the route handlers                                           |
-| Sitemap and SEO | `app/lib/site.ts` (`publicPaths`)                       | `tests/e2e/accessibility-seo.spec.ts`                        |
-| Header link     | `app/components/public/PublicHeader.tsx`                | `tests/e2e/public-portal.spec.ts`                            |
+| Piece           | File                                                    | Covered by                                                                           |
+| --------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Page shell      | `app/lib/contact.ts`                                    | `app/lib/contact.test.ts`                                                            |
+| Cards           | `app/lib/contact-channels.ts`, `contact-channel-schema` | `contact-channels.test.ts`, `contact-channel-schema.test.ts`                         |
+| Editor          | `ContactChannelForm.tsx`, `ContactChannelSection.tsx`   | `ContactChannelForm.test.tsx`, `ContactPage.test.tsx`                                |
+| Location map    | `RosacLocationMapLoader`, `LocationMapSkeleton`         | `ContactPage.test.tsx`, `LocationMapSkeleton.test.tsx`, `tests/e2e/contacto.spec.ts` |
+| Page, loading   | `ContactPageSkeleton.tsx`, `contacto/loading.tsx`       | `ContactPageSkeleton.test.tsx`                                                       |
+| Page            | `app/components/public/contact/ContactPage.tsx`         | `ContactPage.test.tsx`, `ContactPage.stories.tsx`                                    |
+| Route           | `app/(public)/contacto/page.tsx`                        | `tests/e2e/contacto.spec.ts`                                                         |
+| API             | `app/api/contacto/canales`                              | the route handlers                                                                   |
+| Sitemap and SEO | `app/lib/site.ts` (`publicPaths`)                       | `tests/e2e/accessibility-seo.spec.ts`                                                |
+| Header link     | `app/components/public/PublicHeader.tsx`                | `tests/e2e/public-portal.spec.ts`                                                    |
 
 `Contacto` is its own item in the header, after **Recursos**. The footer also links to `/contacto`.
 The footer element itself uses `id="contacto"` on every page. The section on this page uses
 `id="informacion-de-contacto"`, so the two ids do not collide.
+
+## Loading
+
+The hero, the location heading, the address, the channels heading and the back link are catalogue
+copy. They render immediately. Two parts of the page are not ready with that copy, and each keeps
+a placeholder the size of the finished content. `/datos` does the same: the headings stay, and
+only the strip or the query result is a skeleton.
+
+- The channel cards come from the database. While that read is in flight, `contacto/loading.tsx`
+  renders `ContactPageSkeleton`: the static copy above, two card placeholders in the same
+  three-column grid (phone and Instagram, the channels the page ships with), and a block the size
+  of the map. A polite status announces "Cargando contacto…" ("Loading contact…").
+- The map loads in the browser. Until that script arrives, `LocationMapSkeleton` fills the map's
+  box and announces "Cargando el mapa…". The address stays on the page.
+
+The placeholders are hidden from assistive technology, and nothing in them can take focus.
 
 ## Cards
 
