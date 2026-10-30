@@ -53,8 +53,8 @@ describe('decideDownload', () => {
 describe('getDownloadOptions', () => {
   test('lists the formats in a fixed order, marking the ones the grants do not cover', () => {
     expect(getDownloadOptions(target('GOES', 'SFXR'), VISITOR)).toEqual([
-      { format: 'png', label: 'Descargar gráfica (PNG)', kind: 'graphic', allowed: true },
-      { format: 'csv', label: 'Descargar datos (CSV)', kind: 'data', allowed: false },
+      { format: 'png', kind: 'graphic', allowed: true },
+      { format: 'csv', kind: 'data', allowed: false },
     ])
   })
 

@@ -10,12 +10,7 @@ const mpshReadings = createGoesReadings({
   measurement: 'mpsh_flux',
   products: ['MPSH'],
   unsupportedMessage: 'The MPSH readings only accept MPSH',
-  provider:
-    'CITIC-UCR — electrones y protones magnetosféricos SEISS MPS-HI nivel 2 de NOAA (promedios de 1 minuto)',
-  notice:
-    'Promedios de 1 minuto del sensor MPS-HI (nivel 2) ingeridos diariamente por CITIC-UCR; NOAA publica cada día con aproximadamente un día de retraso. Se excluyen valores de relleno y promedios sin muestras válidas; se conservan los que incluyen muestras marcadas por los controles de calidad del instrumento.',
-  fullNotice:
-    'Promedios de 1 minuto del sensor MPS-HI (nivel 2) ingeridos diariamente por CITIC-UCR, sin muestreo: incluye todas las observaciones válidas del intervalo.',
+  dataset: 'mpsh',
 })
 
 export const queryMpshReadings = mpshReadings.query

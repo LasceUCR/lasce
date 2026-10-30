@@ -7,8 +7,10 @@ import {
   resultToCsv,
   toCsv,
 } from '@/app/services/downloads/exporters/csv'
+import { exportCopy } from '@/app/services/downloads/exporters/copy'
 import { UnexportableResultError } from '@/app/services/downloads/exporters/types'
 import { queryMockScientificData } from '@/app/services/scientific-data/mockScientificDataSource'
+import en from '@/messages/en.json' with { type: 'json' }
 
 const series: TimeSeriesDataResult = {
   query: {
@@ -22,12 +24,7 @@ const series: TimeSeriesDataResult = {
   instrument: { code: 'EXIS', name: 'Sensores EXIS' },
   product: { code: 'SFXR', name: 'Flujo solar: rayos X' },
   parameter: { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
-  origin: {
-    kind: 'observed',
-    provider: 'CITIC-UCR — lecturas EXIS',
-    notice: 'Sin muestreo.\nTodas las observaciones.',
-    satellite: 19,
-  },
+  origin: { kind: 'observed', dataset: 'exis', resolution: 'full', satellite: 19 },
   visualization: 'time-series',
   points: [
     { timestamp: '2026-09-27T08:00:00.377Z', value: 5.9e-7 },
@@ -67,12 +64,17 @@ describe('resultToCsv', () => {
 
     expect(rowCount).toBe(2)
     expect(lines).toContain('# Fuente: GOES')
-    expect(lines).toContain('# Instrumento: EXIS — Sensores EXIS')
+    expect(lines).toContain(
+      '# Instrumento: EXIS — Sensores de irradiancia ultravioleta extrema y rayos X',
+    )
     expect(lines).toContain('# Unidad: W/m²')
     expect(lines).toContain('# Satélite: GOES-19')
     expect(lines).toContain('# Intervalo (UTC): 08:00–09:00')
     expect(lines).toContain('# Tipo de datos: observados')
-    expect(lines).toContain('# Nota: Sin muestreo. Todas las observaciones.')
+    expect(lines).toContain('# Proveedor: GOES')
+    expect(lines).toContainEqual(
+      expect.stringMatching(/^# Nota: Lecturas EXIS de nivel 1b\. .* Sin muestreo/),
+    )
     expect(lines).toContain('# Generado (UTC): 2026-09-28T00:00:00.000Z')
     expect(lines.slice(-4)).toEqual([
       'timestamp_utc,value',
@@ -80,6 +82,20 @@ describe('resultToCsv', () => {
       '2026-09-27T08:00:01.377Z,6.1e-7',
       '',
     ])
+  })
+
+  test('writes the metadata and the catalogue names in the language it is asked for', () => {
+    const { text } = resultToCsv(series, generatedAt, exportCopy('en', en))
+    const lines = text.replace('\uFEFF', '').split('\r\n')
+
+    expect(lines).toContain('# Source: GOES')
+    expect(lines).toContain('# Instrument: EXIS — Extreme Ultraviolet and X-ray Irradiance Sensors')
+    expect(lines).toContain('# Product: SFXR — Solar flux: X-rays')
+    expect(lines).toContain('# Data type: observed')
+    expect(lines).toContainEqual(
+      expect.stringMatching(/^# Note: EXIS level 1b readings\. .* Not sampled/),
+    )
+    expect(text).not.toMatch(/Fuente|Instrumento|observados/)
   })
 
   test('exports a dynamic spectrum one cell per row', async () => {
@@ -113,7 +129,7 @@ describe('resultToCsv', () => {
 
 describe('csvExporter', () => {
   test('returns UTF-8 bytes and the row count', async () => {
-    const file = await csvExporter.export(series)
+    const file = await csvExporter.export(series, exportCopy())
 
     expect(file.rowCount).toBe(2)
     expect(file.body.toString('utf8')).toContain('W/m²')

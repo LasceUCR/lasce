@@ -53,7 +53,6 @@ export type DownloadDecision =
 
 export interface DownloadOption {
   format: DownloadFormat
-  label: string
   kind: DownloadFormatDefinition['kind']
   allowed: boolean
 }
@@ -94,7 +93,6 @@ export function getDownloadOptions(
     return [
       {
         format,
-        label: DOWNLOAD_FORMAT_DEFINITIONS[format].label,
         kind: DOWNLOAD_FORMAT_DEFINITIONS[format].kind,
         allowed: decision.status === 'allowed',
       },

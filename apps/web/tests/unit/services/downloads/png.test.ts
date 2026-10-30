@@ -30,8 +30,10 @@ import {
   renderResultSvg,
   renderTimeSeriesSvg,
 } from '@/app/services/downloads/exporters/png'
+import { exportCopy } from '@/app/services/downloads/exporters/copy'
 import { UnexportableResultError } from '@/app/services/downloads/exporters/types'
 import { queryMockScientificData } from '@/app/services/scientific-data/mockScientificDataSource'
+import en from '@/messages/en.json' with { type: 'json' }
 
 const series: TimeSeriesDataResult = {
   query: {
@@ -45,7 +47,7 @@ const series: TimeSeriesDataResult = {
   instrument: { code: 'EXIS', name: 'Sensores EXIS' },
   product: { code: 'SFXR', name: 'Flujo solar: rayos X' },
   parameter: { code: '0.1-0.8nm', label: 'Banda larga <0,1–0,8 nm>', unit: 'W/m²' },
-  origin: { kind: 'observed', provider: 'CITIC-UCR & NOAA', notice: '', satellite: 19 },
+  origin: { kind: 'observed', dataset: 'exis', resolution: 'sampled', satellite: 19 },
   visualization: 'time-series',
   points: [
     { timestamp: '2026-09-27T08:00:00Z', value: 1e-7 },
@@ -82,11 +84,21 @@ describe('renderTimeSeriesSvg', () => {
     expect(svg).not.toContain('var(--')
   })
 
-  test('escapes text taken from the result', () => {
-    const svg = renderTimeSeriesSvg(series)
+  test('escapes the text it draws', () => {
+    const svg = renderTimeSeriesSvg(series, { ...exportCopy(), origins: () => 'A & <B>' })
 
-    expect(svg).toContain('Banda larga &lt;0,1–0,8 nm&gt;')
-    expect(svg).toContain('CITIC-UCR &amp; NOAA')
+    expect(svg).toContain('Fuente: A &amp; &lt;B&gt;.')
+  })
+
+  test('draws the title, channel and footer in the language it is asked for', () => {
+    const svg = renderTimeSeriesSvg(series, exportCopy('en', en))
+
+    expect(svg).toContain('Solar flux: X-rays (SFXR)')
+    expect(svg).toContain('Long band (0.1–0.8 nm)')
+    expect(svg).toContain('Source: GOES. Unit: W/m².')
+    expect(exportCopy('en', en).formatValue(1.5e-7)).toBe('1.5E-7')
+    expect(exportCopy().formatValue(1.5e-7)).toBe('1,5E-7')
+    expect(svg).not.toMatch(/Fuente|Unidad|rayos X/)
   })
 
   test('labels simulated data as such', async () => {
@@ -119,6 +131,7 @@ describe('renderDynamicSpectrumSvg', () => {
     expect(svg).toContain('Baja')
     expect(svg).toContain('Alta')
     expect(svg).not.toContain('color-mix')
+    expect(renderResultSvg(spectrum, exportCopy('en', en))).toContain('(simulated data)')
   })
 
   test('refuses an empty spectrum', async () => {
@@ -164,7 +177,7 @@ describe('pngExporter', () => {
   })
 
   test('rasterizes at twice the size with the bundled font only', async () => {
-    const file = await pngExporter.export(series)
+    const file = await pngExporter.export(series, exportCopy())
 
     expect(file).toEqual({ body: Buffer.from('png-bytes'), rowCount: null })
     expect(mocks.svg).toHaveBeenCalledWith(renderTimeSeriesSvg(series))
