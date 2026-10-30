@@ -67,7 +67,6 @@ vi.mock('@lasce/db', () => ({
 const {
   albumCreateSchema,
   albumFileCount,
-  albumMediaMeta,
   albumMeta,
   albumPath,
   albumSlugs,
@@ -281,9 +280,13 @@ describe('gallery', () => {
   })
 
   test('builds the summary line from the files actually present', () => {
-    expect(albumMeta(galleryAlbums.rosac)).toBe(
-      `5 subálbumes · ${albumFileCount(galleryAlbums.rosac)} archivos · 2019–2023`,
-    )
+    expect(
+      albumMeta(
+        galleryAlbums.rosac,
+        (count) => `${count} archivos`,
+        (count) => `${count} subálbumes`,
+      ),
+    ).toBe(`5 subálbumes · ${albumFileCount(galleryAlbums.rosac)} archivos · 2019–2023`)
   })
 
   test('leaves the sub-album count out for an album that has none', () => {
@@ -296,13 +299,20 @@ describe('gallery', () => {
       media: galleryAlbums.rosac.media,
     }
 
-    expect(albumMeta(standalone)).toBe(`${galleryAlbums.rosac.media.length} archivos · 2024`)
-    expect(albumMeta(standalone)).not.toContain('subálbumes')
-  })
-
-  test('counts the files shown on a single page', () => {
-    expect(albumMediaMeta(galleryAlbums.rosac.media)).toBe('16 archivos en este álbum')
-    expect(albumMediaMeta([])).toBe('0 archivos en este álbum')
+    expect(
+      albumMeta(
+        standalone,
+        (count) => `${count} archivos`,
+        (count) => `${count} subálbumes`,
+      ),
+    ).toBe(`${galleryAlbums.rosac.media.length} archivos · 2024`)
+    expect(
+      albumMeta(
+        standalone,
+        (count) => `${count} archivos`,
+        (count) => `${count} subálbumes`,
+      ),
+    ).not.toContain('subálbumes')
   })
 
   test('tells video apart from photography in the placeholder caption', () => {

@@ -1,6 +1,8 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl as render } from '@/app/lib/i18n/testing'
 
 // `ResearcherCard.stories` pulls in `rosacInfoContent` from `@/app/lib/rosac`,
 // which imports `prisma` at module scope — this stubs it out so loading that
@@ -291,5 +293,25 @@ describe('ResearcherCard', () => {
     const image = container.querySelector('img')
     expect(image).toHaveAttribute('src', DEFAULT_RESEARCHER_PHOTO)
     expect(image).toHaveAttribute('alt', '')
+  })
+
+  test('renders in English when the site language is English', async () => {
+    const user = userEvent.setup()
+    render(<ResearcherCard {...defaultArgs} />, { locale: 'en' })
+
+    expect(
+      screen.getByText(`Institution: ${institutionPreview(defaultArgs.institution)}`),
+    ).toBeInTheDocument()
+
+    const flip = screen.getByRole('button', { name: `View description of ${defaultArgs.name}` })
+    expect(flip).toBeInTheDocument()
+    await user.click(flip)
+
+    expect(
+      screen.getByRole('region', { name: `Description of ${defaultArgs.name}` }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: `Return to ${defaultArgs.name}'s card` }),
+    ).toBeInTheDocument()
   })
 })

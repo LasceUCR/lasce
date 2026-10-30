@@ -9,7 +9,9 @@ MinIO.
 ```
 /galeria                          GalleryPage        h1 "Galería"
   └─ GalleryGroupSection          section + h2       one block per album
-       └─ ul.gallery-grid › li    AlbumTile          h3, cover alt=""
+       ├─ ul.gallery-carousel-track › li   image button, optional edit controls
+       │    └─ MediaLightbox      full-screen image viewer
+       └─ team-gallery-controls   previous/next + "Ver álbum"
 /galeria/[slug]                   AlbumPage          h1 album title
   ├─ TopicSection "Subálbumes"    h2
   │    └─ ul.card-grid › li       AlbumTile          h3, cover alt=""
@@ -44,6 +46,25 @@ The album pages and the sitemap read the database: `getGalleryAlbums` serves the
 `/sitemap.xml` and a deleted one drops out. `galleryAlbumList` is only seed data
 (`packages/db/prisma/seed.ts`) and the fixture for the tests; the e2e specs run against the seeded
 albums, so they need `pnpm db:seed` first.
+
+## Gallery overview carousel
+
+Each top-level album on `/galeria` has a horizontal carousel of up to 10
+featured images. It collects eligible images from the top-level album first, then its sub-albums,
+preserving each album's media order. Videos and media without an image source are excluded. The
+limit applies to featured images; it does not count the edit-mode add-image card.
+
+The overview no longer shows album or sub-album cover tiles. The previous and next controls sit
+below the carousel and scroll its native horizontal track; the adjacent **Ver álbum** button opens
+the top-level album page. Selecting a featured image opens the full-screen lightbox, with previous
+and next image navigation, Escape to close, and focus returned to the image trigger on close.
+
+When edit mode is active, users with the relevant permissions can edit or delete the album from its
+heading and edit or delete featured media using the editable wrappers. The add-image card appears
+only when the user can create content and an uploader is available; it adds media to the
+top-level album. Featured images from sub-albums retain their owning album, so editing one submits
+the update to the correct album. Album and sub-album cover tiles remain on album detail pages; the
+image-only carousel applies only to the gallery overview.
 
 ## Loading and error states
 
@@ -135,10 +156,9 @@ The house rules:
 
 These are deliberate. Please do not "fix" them back.
 
-- **Album covers and grid thumbnails are `alt=""`.** In both places the image sits inside a control
-  that already names it: the album tile is one link wrapping the `h3` and the meta line, and each
-  grid tile has an overlay button labelled `Ver a tamaño completo: <title>`. A described image there
-  makes a screen reader say the same thing twice, sixty times over on a large album.
+- **Album covers and carousel/grid thumbnails are `alt=""`.** Album covers sit inside a tile link
+  that already names the album. Carousel and grid thumbnails sit inside buttons labelled
+  `Ver a tamaño completo: <title>`. A described thumbnail there would repeat the control's name.
 - **The lightbox image carries the real alt.** It is the one place the photograph is the content
   rather than a thumbnail of a link.
 - **Media titles are not headings.** Album and sub-album tiles are `h3`, but the per-file titles stay

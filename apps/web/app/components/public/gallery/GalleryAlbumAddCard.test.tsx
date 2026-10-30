@@ -20,8 +20,10 @@ vi.mock('@/app/components/public/gallery/forms/AlbumForm', () => ({
   AlbumForm: ({
     onCancel,
     onSave,
+    showCover = true,
   }: {
     onCancel: () => void
+    showCover?: boolean
     onSave: (values: {
       title: string
       description: string
@@ -30,7 +32,7 @@ vi.mock('@/app/components/public/gallery/forms/AlbumForm', () => ({
       coverObjectKey: string
     }) => void
   }) => (
-    <div>
+    <div data-testid="album-form" data-show-cover={showCover}>
       <button
         onClick={() =>
           onSave({
@@ -41,7 +43,7 @@ vi.mock('@/app/components/public/gallery/forms/AlbumForm', () => ({
               en: { title: 'New album', description: 'Album description.' },
             },
             yearsLabel: '',
-            coverObjectKey: 'gallery/albums/album-nuevo.jpg',
+            coverObjectKey: '',
           })
         }
         type="button"
@@ -81,7 +83,6 @@ describe('GalleryAlbumAddCard', () => {
     renderCard()
 
     expect(screen.getByRole('button', { name: 'Añadir álbum' })).toBeInTheDocument()
-    expect(screen.getByRole('list')).toBeInTheDocument()
   })
 
   test('does not render without create permission', () => {
@@ -98,6 +99,7 @@ describe('GalleryAlbumAddCard', () => {
 
     expect(screen.getByRole('dialog', { name: 'Añadir álbum' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Guardar formulario' })).toBeInTheDocument()
+    expect(screen.getByTestId('album-form')).toHaveAttribute('data-show-cover', 'false')
   })
 
   test('posts the album, closes the modal, and refreshes the album list', async () => {
@@ -120,7 +122,7 @@ describe('GalleryAlbumAddCard', () => {
             en: { title: 'New album', description: 'Album description.' },
           },
           yearsLabel: null,
-          coverObjectKey: 'gallery/albums/album-nuevo.jpg',
+          coverObjectKey: null,
         }),
       })
     })
