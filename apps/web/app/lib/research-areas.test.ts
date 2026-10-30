@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 const mocks = vi.hoisted(() => {
   const tx = {
     researchArea: {
+      count: vi.fn(),
+      findMany: vi.fn(),
       create: vi.fn(),
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
@@ -26,6 +28,7 @@ import {
   deleteResearchArea,
   getResearchAreaById,
   getResearchAreas,
+  getResearchAreasPage,
   researchAreaIds,
   researchAreas,
   updateResearchArea,
@@ -146,7 +149,7 @@ describe('reading research areas', () => {
     expect(area).not.toHaveProperty('editing')
     expect(prisma.researchArea.findMany).toHaveBeenCalledWith({
       include: areaInclude,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     })
   })
 
@@ -277,5 +280,52 @@ describe('deleteResearchArea', () => {
 
     prisma.researchArea.deleteMany.mockResolvedValueOnce({ count: 0 })
     await expect(deleteResearchArea(ID)).resolves.toBe(false)
+  })
+})
+
+describe('paginated research areas', () => {
+  test.each([
+    [0, 1, 1, 0, 0],
+    [10, 1, 1, 1, 0],
+    [11, 2, 2, 2, 10],
+    [23, 3, 3, 3, 20],
+    [23, 999, 3, 3, 20],
+    [23, -1, 1, 3, 0],
+    [23, 1.5, 1, 3, 0],
+  ])(
+    'bounds %i rows requested at %i to page %i',
+    async (totalItems, requested, page, totalPages, skip) => {
+      tx.researchArea.count.mockResolvedValue(totalItems)
+      tx.researchArea.findMany.mockResolvedValue([bilingualRow])
+      const result = await getResearchAreasPage('en', { page: requested })
+      expect(result).toMatchObject({ page, pageSize: 10, totalItems, totalPages, skip, take: 10 })
+      expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+        isolationLevel: 'RepeatableRead',
+      })
+      if (totalItems === 0) {
+        expect(result.areas).toEqual([])
+        expect(tx.researchArea.findMany).not.toHaveBeenCalled()
+      } else {
+        expect(tx.researchArea.findMany).toHaveBeenCalledWith({
+          include: areaInclude,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          skip,
+          take: 10,
+        })
+        expect(result.areas[0]?.title).toBe('Geomagnetism in Costa Rica')
+        expect(result.areas[0]).not.toHaveProperty('editing')
+      }
+    },
+  )
+
+  test('defaults to page one in Spanish and includes editing data only on request', async () => {
+    tx.researchArea.count.mockResolvedValue(1)
+    tx.researchArea.findMany.mockResolvedValue([bilingualRow])
+    const visitor = await getResearchAreasPage()
+    expect(visitor.page).toBe(1)
+    expect(visitor.areas[0]?.title).toBe(content.es.title)
+    expect(visitor.areas[0]).not.toHaveProperty('editing')
+    const editor = await getResearchAreasPage('es', { includeEditingData: true })
+    expect(editor.areas[0]?.editing?.version).toBe(VERSION)
   })
 })
