@@ -1479,6 +1479,22 @@ a {
   margin-top: 28px;
 }
 
+/* Focused by `PublicationsExplorer` when the page changes: keep it clear of the sticky header. */
+.publications > h2 {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.publications > h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.publications-summary {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .content-empty {
   margin: 24px 0 0;
   padding: 16px 20px;
