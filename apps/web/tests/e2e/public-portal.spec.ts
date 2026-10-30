@@ -516,7 +516,7 @@ for (const { locale, title, description, backLink, homeHeading } of [
     locale: 'es',
     title: 'Página no encontrada',
     description:
-      'La dirección ingresada no corresponde a una página disponible. Verifica la dirección o vuelve al inicio.',
+      'La dirección ingresada no corresponde a una página disponible. Verifique la dirección o vuelva al inicio.',
     backLink: 'Volver al inicio',
     homeHeading: 'Exploramos el Sol para comprender el clima espacial',
   },
