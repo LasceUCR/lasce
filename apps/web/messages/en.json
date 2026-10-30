@@ -561,7 +561,13 @@
       "metaDescription": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
       "kicker": "LASCE public portal",
       "title": "Academic activities",
-      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE."
+      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
+      "searchLabel": "Search academic activities",
+      "searchPlaceholder": "Search by title, category, date or keyword...",
+      "results": "{count, plural, one {# academic activity found.} other {# academic activities found.}}",
+      "range": "Showing {from}-{to} of {total}.",
+      "rangeOne": "Showing activity {position} of {total}.",
+      "emptyQuery": "No academic activities were found for “{query}”."
     },
     "items": {
       "machineLearningWorkshop": {
