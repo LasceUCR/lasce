@@ -6,6 +6,12 @@
   "shell": {
     "skipToContent": "Saltar al contenido principal"
   },
+  "notFound": {
+    "metaTitle": "Página no encontrada | LASCE",
+    "title": "Página no encontrada",
+    "description": "La dirección ingresada no corresponde a una página disponible. Verifique la dirección o vuelva al inicio.",
+    "kicker": "Error 404"
+  },
   "nav": {
     "goHome": "Ir al inicio",
     "mainLabel": "Navegación principal",
@@ -168,6 +174,7 @@
       "readLess": "Leer menos"
     },
     "loading": "Cargando…",
+    "loadingMap": "Cargando el mapa…",
     "pagination": {
       "label": "Paginación",
       "previous": "Anterior",
@@ -207,6 +214,7 @@
       "lead": "Canales oficiales del Laboratorio de Astrofísica Solar y Clima Espacial."
     },
     "channelsTitle": "Información de contacto",
+    "loading": "Cargando contacto…",
     "cards": {
       "add": "Agregar canal de contacto",
       "editTitle": "Editar canal de contacto",
@@ -349,7 +357,7 @@
       "items": {
         "release": {
           "title": "El Sol libera energía",
-          "description": "Los ‘flares’ producen incrementos intensos de radiación y se asocian al origen de las eyecciones de masa coronal (CMEs, por sus siglas en inglés), las cuales son grandes estructuras de plasma y campo magnético. Algunos de estos eventos aceleran partículas a altas energías."
+          "description": "Las fulguraciones producen incrementos intensos de radiación y se asocian al origen de las eyecciones de masa coronal (CMEs, por sus siglas en inglés), las cuales son grandes estructuras de plasma y campo magnético. Algunos de estos eventos aceleran partículas a altas energías."
         },
         "propagation": {
           "title": "La perturbación se propaga",
@@ -470,7 +478,8 @@
       "national": "Nacional",
       "international": "Internacional",
       "acronym": "Siglas:",
-      "website": "Sitio web oficial"
+      "websiteLabel": "Sitio web oficial de {name} (abre en una pestaña nueva)",
+      "logoAlt": "Logotipo de {name}"
     },
     "countries": {
       "cr": "Costa Rica",
@@ -551,7 +560,9 @@
     "section": {
       "title": "Actividades académicas",
       "description": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
-      "empty": "No hay actividades académicas disponibles en este momento."
+      "empty": "No hay actividades académicas disponibles en este momento.",
+      "loading": "Cargando actividades académicas…",
+      "error": "No fue posible cargar las actividades académicas. Inténtelo de nuevo más tarde."
     },
     "card": {
       "badge": "Actividad académica"
@@ -589,11 +600,18 @@
       "countLabel": "Cantidad de publicaciones",
       "countTotal": "{count, plural, one {publicación en total} other {publicaciones en total}}",
       "countInGroup": "{count, plural, one {publicación} other {publicaciones}} ({group})",
+      "results": "{count, plural, one {Se encontró # publicación.} other {Se encontraron # publicaciones.}}",
+      "range": "Mostrando {from}–{to} de {total}.",
+      "rangeOne": "Mostrando la publicación {position} de {total}.",
+      "paginationLabel": "Páginas de publicaciones",
       "recent": "Publicaciones recientes",
       "emptyGroupAndQuery": "No se encontraron publicaciones de {group} para “{query}”.",
       "emptyGroup": "No hay publicaciones de {group}.",
       "emptyQuery": "No se encontraron publicaciones para “{query}”.",
-      "empty": "No hay publicaciones disponibles."
+      "empty": "No hay publicaciones disponibles.",
+      "loading": "Cargando publicaciones…",
+      "loadError": "No se pudieron cargar las publicaciones. Inténtelo de nuevo.",
+      "retry": "Reintentar"
     },
     "card": {
       "externalLink": "DOI / Enlace externo",
@@ -686,6 +704,40 @@
     }
   },
   "gallery": {
+    "meta": {
+      "title": "Galería | LASCE",
+      "albumTitle": "{album} | Galería LASCE",
+      "description": "Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación, y vida cotidiana del equipo."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Galería",
+      "lead": "Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes."
+    },
+    "common": {
+      "files": "{count, plural, one {# archivo} other {# archivos}}",
+      "subalbums": "{count, plural, one {# subálbum} other {# subálbumes}}",
+      "subalbumsTitle": "Subálbumes",
+      "backToGallery": "Volver a la galería",
+      "backToAlbum": "Volver a {album}",
+      "gallery": "Galería LASCE"
+    },
+    "albumPage": {
+      "albumFiles": "{count, plural, one {# archivo en este álbum} other {# archivos en este álbum}}",
+      "albumContent": "Fotografías y video de este álbum"
+    },
+    "media": {
+      "viewFullSize": "Ver a tamaño completo: {title}",
+      "video": "Video",
+      "close": "Cerrar",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "position": "Archivo {position} de {total}",
+      "announcement": "Archivo {position} de {total}: {title}.",
+      "dateCaptured": "Fecha de captura: {date}",
+      "format": "Formato: {format}",
+      "uploadedBy": "Subido por: {user}"
+    },
     "editor": {
       "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o la descripción, revíselo también.",
       "legacyNoTranslation": "Este álbum aún no tiene versión en inglés. Para cambiar el título o la descripción debe completar ambos idiomas; los demás campos se pueden editar sin traducirlo.",
@@ -715,6 +767,10 @@
       "addAlbum": "Añadir álbum",
       "addSubAlbum": "Añadir subálbum",
       "addFile": "Añadir imagen",
+      "viewAlbum": "Ver álbum completo",
+      "carouselPrevious": "Imágenes anteriores",
+      "carouselNext": "Imágenes siguientes",
+      "viewImageFullSize": "Ver imagen a pantalla completa: {title}",
       "creatingAlbum": "Creando álbum...",
       "creatingSubAlbum": "Creando subálbum...",
       "savingAlbum": "Guardando álbum...",
@@ -1114,7 +1170,65 @@
       "intro": "Las personas que desarrollan el Radio Observatorio de Santa Cruz (ROSAC), un proyecto que reúne astrofísica, física, ingeniería topográfica, eléctrica y mecánica, electrónica y computación, con colaboración nacional e internacional.",
       "hint": "Haga clic en una ficha para ver más información.",
       "emptyMessage": "No hay información de investigadores disponible en este momento.",
-      "institutionLabel": "Institución"
+      "institutionLabel": "Institución",
+      "people": {
+        "carolinaSalas": {
+          "role": "Investigadora principal",
+          "description": "Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento."
+        },
+        "miguelVelazquez": {
+          "role": "Investigador",
+          "description": "Encargado del desarrollo de la instrumentación en ROSAC."
+        },
+        "davidGale": {
+          "role": "Investigador",
+          "description": "Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general."
+        },
+        "oscarNunez": {
+          "role": "Investigador",
+          "description": "Encargado del sistema eléctrico y soporte técnico en los motorreductores."
+        },
+        "federicoRuiz": {
+          "role": "Investigador",
+          "description": "Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC."
+        },
+        "gustavoLara": {
+          "role": "Investigador",
+          "description": "Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio."
+        },
+        "andresFallas": {
+          "role": "Investigador",
+          "description": "Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio."
+        },
+        "wagnerMejias": {
+          "role": "Investigador",
+          "description": "Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general."
+        },
+        "eduardoIbarra": {
+          "role": "Colaborador externo",
+          "description": "Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena."
+        },
+        "andresCorrales": {
+          "role": "Colaborador externo",
+          "description": "Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final."
+        },
+        "andresGamboa": {
+          "role": "Colaborador externo",
+          "description": "Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos."
+        },
+        "jelmuthRojas": {
+          "role": "Colaborador externo",
+          "description": "Apoyo en tareas de nivelación de la estructura."
+        },
+        "barnaldBocker": {
+          "role": "Asistente",
+          "description": "Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación."
+        },
+        "fabianChaverri": {
+          "role": "Futuro estudiante de doctorado",
+          "description": "Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto."
+        }
+      }
     },
     "donations": {
       "title": "Donaciones ROSAC",
@@ -1150,6 +1264,31 @@
       "label": "Volver a las áreas"
     },
     "editor": {
+      "languageTabs": "Idioma del contenido",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el texto, revíselo también.",
+      "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el texto debe completar ambos idiomas; los campos compartidos se pueden cambiar sin traducirla.",
+      "titleIn": "Título ({language})",
+      "descriptionIn": "Descripción ({language})",
+      "nameIn": "Nombre ({language})",
+      "icon": "Ícono",
+      "icons": {
+        "antenna": "Antena",
+        "location": "Ubicación",
+        "frequency": "Frecuencia",
+        "sun": "Sol",
+        "tracking": "Apuntado y seguimiento",
+        "control": "Control",
+        "receiver": "Receptor",
+        "maintenance": "Mantenimiento e infraestructura",
+        "education": "Educación"
+      },
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando...",
+      "discardTitle": "¿Descartar cambios?",
+      "discardMessage": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "discardCancel": "Seguir editando",
+      "discardConfirm": "Descartar",
       "saveError": "No se pudo guardar el cambio. Inténtelo de nuevo.",
       "discardDialog": {
         "title": "Descartar cambios no guardados",
@@ -1158,6 +1297,10 @@
         "discard": "Descartar"
       },
       "characteristics": {
+        "updated": "Característica actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la característica. Inténtelo de nuevo."
+        },
         "editLabel": "Editar {title}",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar característica",
@@ -1181,6 +1324,10 @@
         }
       },
       "activities": {
+        "updated": "Actividad actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la actividad. Inténtelo de nuevo."
+        },
         "editLabel": "Editar {title}",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar actividad",
@@ -1193,6 +1340,10 @@
         "save": "Confirmar"
       },
       "stages": {
+        "updated": "Etapa actualizada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la etapa. Inténtelo de nuevo."
+        },
         "editStage": "Editar etapa",
         "editModalTitle": "Editar \"{title}\"",
         "defaultModalTitle": "Editar etapa",
@@ -1212,6 +1363,7 @@
         "editModal": {
           "title": "Editar fotografías",
           "help": "Modifique la descripción accesible (alt) de cada fotografía o elimine aquellas que ya no correspondan a esta etapa.",
+          "noPhotos": "No hay fotografías registradas en esta etapa.",
           "altLabel": "Texto alternativo de la fotografía {index}",
           "altPlaceholder": "Texto alternativo accesible de la fotografía",
           "deleteLabel": "Eliminar fotografía {index}",
@@ -1247,6 +1399,13 @@
         }
       },
       "instruments": {
+        "created": "Instrumento agregado correctamente.",
+        "updated": "Instrumento actualizado correctamente.",
+        "deleted": "Instrumento eliminado correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar el instrumento. Inténtelo de nuevo.",
+          "deleteUnknown": "No se pudo eliminar el instrumento. Inténtelo de nuevo."
+        },
         "addCard": "Añadir instrumento",
         "editLabel": "Editar {name}",
         "deleteLabel": "Eliminar {name}",
@@ -1287,6 +1446,13 @@
         "uploadError": "No se pudo subir la imagen. Inténtelo de nuevo."
       },
       "acknowledgments": {
+        "created": "Institución agregada correctamente.",
+        "updated": "Institución actualizada correctamente.",
+        "deleted": "Institución eliminada correctamente.",
+        "errors": {
+          "saveUnknown": "No se pudo guardar la institución. Inténtelo de nuevo.",
+          "deleteUnknown": "No se pudo eliminar la institución. Inténtelo de nuevo."
+        },
         "addCard": "Añadir institución",
         "editLabel": "Editar {name}",
         "deleteLabel": "Eliminar {name}",
@@ -1381,12 +1547,41 @@
   },
   "researchers": {
     "institutionLabel": "Institución",
+    "viewDescription": "Ver descripción de {name}",
+    "viewInstitution": "Ver institución de {name}",
+    "returnToCard": "Volver a la ficha de {name}",
+    "descriptionRegion": "Descripción de {name}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "editModalTitle": "Editar investigador",
+    "editLabel": "Editar a {name}",
+    "deleteLabel": "Eliminar a {name}",
+    "deleteConfirmTitle": "Eliminar investigador",
+    "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
+    "deleteConfirm": "Eliminar",
     "created": "Investigador agregado correctamente.",
     "updated": "Investigador actualizado correctamente.",
     "deleted": "Investigador eliminado correctamente.",
     "errors": {
       "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo.",
-      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo."
+      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo.",
+      "invalidId": "El identificador del investigador no es válido.",
+      "notFound": "Este investigador ya no existe. Es posible que otra persona lo haya eliminado; recargue la página.",
+      "conflict": "El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.",
+      "saveError": "No se pudo guardar el investigador.",
+      "updateError": "No se pudieron guardar los cambios.",
+      "deleteError": "No se pudo eliminar el investigador.",
+      "invalidBody": "Faltan campos obligatorios o no son válidos.",
+      "invalidJson": "El cuerpo de la solicitud no es JSON válido."
+    },
+    "validation": {
+      "nameRequired": "El nombre es obligatorio.",
+      "institutionRequired": "La institución es obligatoria.",
+      "invalidEmail": "Uno o más correos no son válidos.",
+      "maxEmails": "Máximo 2 correos de contacto.",
+      "versionRequired": "La versión del investigador es obligatoria y debe ser la que se cargó.",
+      "confirmationsOnlyWithContent": "Las confirmaciones solo aplican a una actualización de contenido (content).",
+      "noFieldsToUpdate": "La solicitud no incluye ningún campo para actualizar."
     },
     "editor": {
       "addCard": "Añadir investigador",
@@ -1396,6 +1591,7 @@
       "deleteConfirmTitle": "Eliminar investigador",
       "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
       "deleteConfirm": "Eliminar",
+      "deleteCancel": "Cancelar",
       "photoLabel": "Foto",
       "photoHelp": "Opcional. Retrato del investigador, en formato JPG o PNG.",
       "roleLabel": "Rol",
@@ -1406,11 +1602,16 @@
       "institutionRequired": "La institución es obligatoria.",
       "descriptionLabel": "Descripción",
       "contactLabel": "Contacto",
+      "contactCount": "{count, plural, =0 {Sin correos} one {# correo} other {# correos}}",
+      "contactListLabel": "Correos de contacto",
+      "emailPlaceholder": "Escribir un correo...",
+      "emailPlaceholderAnother": "Escribir otro correo...",
+      "emailRequired": "El correo es obligatorio.",
       "addContact": "Añadir contacto",
       "deleteContact": "Eliminar {address}",
       "addContactTitle": "Añadir contacto",
       "emailLabel": "Correo electrónico",
-      "add": "Añadir",
+      "add": "Agregar",
       "cancel": "Cancelar",
       "save": "Confirmar",
       "uploading": "Subiendo imagen...",
@@ -1778,7 +1979,8 @@
         "descargas": "Descargas",
         "usuarios": "Usuarios",
         "permisos": "Permisos",
-        "infraestructura": "Infraestructura"
+        "infraestructura": "Infraestructura",
+        "auditoria": "Auditoría"
       }
     },
     "summary": {
@@ -1859,6 +2061,184 @@
         "savingButton": "Guardando…",
         "reload": "Recargar página"
       }
+    },
+    "downloads": {
+      "metaTitle": "Descargas | Administración | LASCE",
+      "title": "Descargas",
+      "description": "Historial y control de descargas de datos del laboratorio.",
+      "filters": {
+        "label": "Filtros del historial de descargas",
+        "from": "Desde",
+        "to": "Hasta",
+        "source": "Fuente",
+        "instrument": "Instrumento",
+        "format": "Formato",
+        "user": "Persona",
+        "allSources": "Todas las fuentes",
+        "allInstruments": "Todos los instrumentos",
+        "allFormats": "Todos los formatos",
+        "allUsers": "Todas las personas",
+        "apply": "Filtrar",
+        "clear": "Limpiar filtros"
+      },
+      "table": {
+        "label": "Historial de descargas",
+        "date": "Fecha y hora (UTC)",
+        "user": "Persona",
+        "source": "Fuente",
+        "instrument": "Instrumento",
+        "product": "Producto",
+        "format": "Formato",
+        "range": "Rango consultado"
+      },
+      "empty": "Aún no hay descargas registradas.",
+      "emptyFiltered": "Ninguna descarga coincide con los filtros.",
+      "results": "{count, plural, one {# descarga} other {# descargas}}",
+      "pageSummary": "Página {page} de {total}",
+      "paginationLabel": "Páginas del historial de descargas",
+      "deletedUser": "Cuenta eliminada",
+      "noRange": "—"
+    },
+    "users": {
+      "metaTitle": "Usuarios | Administración | LASCE",
+      "title": "Usuarios",
+      "description": "Consulta los usuarios registrados y sus roles actuales.",
+      "panelTitle": "Usuarios y roles",
+      "demoNotice": "Datos de prueba: los usuarios y roles mostrados son ficticios.",
+      "demoChanges": "Los cambios son de prueba y se pierden al recargar la página.",
+      "helpEditable": "Cada usuario puede tener un solo rol. Selecciona otro para cambiarlo o pulsa el rol actual para retirarlo. Se pedirá confirmación antes de aplicar el cambio.",
+      "helpReadOnly": "Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.",
+      "noRoles": "No hay roles disponibles para mostrar.",
+      "empty": "No hay usuarios para mostrar.",
+      "search": {
+        "label": "Buscar usuarios",
+        "placeholder": "Buscar por nombre o correo electrónico...",
+        "clear": "Limpiar búsqueda"
+      },
+      "results": "{count, plural, one {# usuario encontrado.} other {# usuarios encontrados.}}",
+      "noResults": "No se encontraron usuarios para “{query}”.",
+      "table": {
+        "region": "Tabla de usuarios y roles",
+        "label": "Usuarios y roles",
+        "name": "Nombre",
+        "email": "Correo electrónico"
+      },
+      "checkbox": "{role}: {name} ({email})",
+      "updated": "Rol actualizado para {name}: {role}.",
+      "removed": "Rol retirado de {name}.",
+      "details": {
+        "title": "Información del usuario",
+        "close": "Cerrar",
+        "fullName": "Nombre completo",
+        "email": "Correo electrónico",
+        "institution": "Institución",
+        "country": "País",
+        "institutionMissing": "No registrada",
+        "countryMissing": "No registrado"
+      },
+      "dialog": {
+        "changeTitle": "Confirmar cambio de rol",
+        "removeTitle": "Confirmar retiro de rol",
+        "assignQuestion": "¿Quieres asignar el rol <strong>{role}</strong> a <strong>{name}</strong>?",
+        "removeQuestion": "¿Quieres retirar el rol de <strong>{name}</strong>?",
+        "currentRole": "Rol actual: {roles}",
+        "noRole": "Sin rol",
+        "ownRole": "Estás modificando tu propio rol. Al dejar de ser administrador perderás el acceso a esta pantalla.",
+        "leftWithoutRole": "El usuario quedará sin un rol asignado.",
+        "replaces": "El nuevo rol reemplazará al actual. El usuario no conservará ambos roles.",
+        "confirmChange": "Sí, cambiar rol",
+        "confirmRemove": "Sí, retirar rol",
+        "cancel": "No, cancelar",
+        "savingStatus": "Guardando cambio de rol…",
+        "savingButton": "Guardando…",
+        "reload": "Recargar página"
+      },
+      "errors": {
+        "conflict": "La información de este usuario cambió. Recarga la página para ver sus roles actuales antes de volver a intentarlo.",
+        "unauthorized": "Tu sesión terminó o ya no tienes autorización para cambiar roles. Recarga la página para comprobar tu acceso.",
+        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo."
+      }
+    },
+    "audit": {
+      "metaTitle": "Auditoría | Administración | LASCE",
+      "title": "Auditoría",
+      "description": "Consulta quién hizo cada cambio administrativo en el portal y cuándo.",
+      "filters": {
+        "label": "Filtros de la auditoría",
+        "from": "Desde",
+        "to": "Hasta",
+        "actor": "Persona",
+        "entityType": "Tipo de elemento",
+        "action": "Acción",
+        "all": "Todas",
+        "allActors": "Todas las personas",
+        "allEntityTypes": "Todos los tipos",
+        "allActions": "Todas las acciones",
+        "apply": "Filtrar",
+        "clear": "Limpiar filtros"
+      },
+      "table": {
+        "label": "Eventos de auditoría",
+        "date": "Fecha y hora",
+        "actor": "Persona",
+        "action": "Acción",
+        "summary": "Resumen"
+      },
+      "empty": "Aún no hay eventos de auditoría registrados.",
+      "emptyFiltered": "Ningún evento coincide con los filtros.",
+      "results": "{count, plural, one {# evento} other {# eventos}}",
+      "paginationLabel": "Páginas de la auditoría",
+      "actors": {
+        "system": "Sistema",
+        "worker": "Worker",
+        "deletedUser": "Cuenta eliminada"
+      }
+    },
+    "auditSummary": {
+      "noRole": "Sin rol",
+      "unknownAccount": "una cuenta",
+      "events": {
+        "news_create": "Noticia agregada: {name}",
+        "news_update": "Noticia actualizada: {name}",
+        "news_delete": "Noticia eliminada: {name}",
+        "publication_create": "Publicación agregada: {name}",
+        "publication_update": "Publicación actualizada: {name}",
+        "publication_delete": "Publicación eliminada: {name}",
+        "research_area_create": "Área de investigación agregada: {name}",
+        "research_area_update": "Área de investigación actualizada: {name}",
+        "research_area_delete": "Área de investigación eliminada: {name}",
+        "collaboration_create": "Colaboración agregada: {name}",
+        "collaboration_update": "Colaboración actualizada: {name}",
+        "collaboration_delete": "Colaboración eliminada: {name}",
+        "contact_channel_create": "Canal de contacto agregado: {name}",
+        "contact_channel_update": "Canal de contacto actualizado: {name}",
+        "contact_channel_delete": "Canal de contacto eliminado: {name}",
+        "nosotros_activity_create": "Actividad de Nosotros agregada: {name}",
+        "nosotros_activity_update": "Actividad de Nosotros actualizada: {name}",
+        "nosotros_activity_delete": "Actividad de Nosotros eliminada: {name}",
+        "nosotros_researcher_create": "Investigador de Nosotros agregado: {name}",
+        "nosotros_researcher_update": "Investigador de Nosotros actualizado: {name}",
+        "nosotros_researcher_delete": "Investigador de Nosotros eliminado: {name}",
+        "rosac_researcher_create": "Investigador ROSAC agregado: {name}",
+        "rosac_researcher_update": "Investigador ROSAC actualizado: {name}",
+        "rosac_researcher_delete": "Investigador ROSAC eliminado: {name}",
+        "gallery_album_create": "Álbum de galería agregado: {name}",
+        "gallery_album_update": "Álbum de galería actualizado: {name}",
+        "gallery_album_delete": "Álbum de galería eliminado: {name}",
+        "gallery_sub_album_create": "Subálbum de galería agregado: {name}",
+        "gallery_sub_album_update": "Subálbum de galería actualizado: {name}",
+        "gallery_sub_album_delete": "Subálbum de galería eliminado: {name}",
+        "gallery_media_create": "Archivo de galería agregado: {name}",
+        "gallery_media_update": "Archivo de galería actualizado: {name}",
+        "gallery_media_delete": "Archivo de galería eliminado: {name}",
+        "home_hero_update": "Banner de inicio actualizado: {name}",
+        "geomagnetic_index_update": "Índice geomagnético actualizado: {name}",
+        "geomagnetic_index_reorder": "Orden de los índices geomagnéticos actualizado",
+        "space_weather_section_update": "Tarjeta de clima espacial actualizada: {name}",
+        "solar_physics_section_update": "Sección de física solar actualizada: {name}",
+        "role_permissions_update": "Permisos actualizados para el rol {role}",
+        "user_role_change": "Rol de {name} cambiado de {previous} a {next}"
+      }
     }
   },
   "access": {
@@ -1885,7 +2265,7 @@
       },
       "download_resources": {
         "label": "Descargar recursos",
-        "description": "Descargar recursos del laboratorio y consultar el historial de descargas.",
+        "description": "Descargar recursos del laboratorio desde la página de datos.",
         "denied": "No tienes autorización para acceder a las descargas."
       },
       "download_goes_resources": {
@@ -1902,6 +2282,16 @@
         "label": "Configurar permisos",
         "description": "Ver y cambiar los permisos asociados a cada rol.",
         "denied": "No tienes autorización para configurar los permisos de los roles."
+      },
+      "view_audit_log": {
+        "label": "Consultar la auditoría",
+        "description": "Consultar el registro de acciones administrativas del portal.",
+        "denied": "No tienes autorización para consultar la auditoría."
+      },
+      "view_download_history": {
+        "label": "Consultar el historial de descargas",
+        "description": "Consultar quién descargó qué recursos del laboratorio y cuándo.",
+        "denied": "No tienes autorización para consultar el historial de descargas."
       }
     },
     "accessDenied": {
@@ -1912,6 +2302,7 @@
     "signIn": "Ingresar",
     "myAccount": "Mi cuenta",
     "administration": "Administración",
+    "editMode": "Modo edición",
     "signOut": "Cerrar sesión",
     "signingOut": "Cerrando sesión...",
     "roles": {

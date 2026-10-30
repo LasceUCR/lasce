@@ -1,6 +1,7 @@
 import { prisma, type ContactChannelIcon as DbContactChannelIcon, type Prisma } from '@lasce/db'
 
-import { WriteAbort, runWrite } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { WriteAbort, runAuditedDelete, runWrite } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import type { Locale } from '@/app/lib/i18n/config'
 import { findPendingReviews } from '@/app/lib/i18n/content/review'
@@ -79,27 +80,40 @@ export type ContactChannelWriteFailure =
   | { ok: false; reason: 'conflict' }
   | { ok: false; reason: 'review-required'; pending: { locale: Locale; field: string }[] }
 
-export async function createContactChannel(input: ContactChannelCreateInput): Promise<ContactCard> {
-  const first = await prisma.contactChannel.aggregate({ _min: { position: true } })
-  const earliest = first._min.position
-  const position = earliest === null || earliest === undefined ? 0 : earliest - 1
-  const created = await prisma.contactChannel.create({
-    data: {
-      icon: ICON_TO_DB[input.icon],
-      href: storedHref(input.icon, input.href),
-      position,
-      ...baseContent(contactChannelContent, input.content),
-      translations: { create: translationRows(contactChannelContent, input.content) },
-    },
-    include: recordInclude,
+export async function createContactChannel(
+  input: ContactChannelCreateInput,
+  actor: AuditActor,
+): Promise<ContactCard> {
+  const result = await runWrite<ContactCard, never>(async (tx) => {
+    const first = await tx.contactChannel.aggregate({ _min: { position: true } })
+    const earliest = first._min.position
+    const position = earliest === null || earliest === undefined ? 0 : earliest - 1
+    const created = await tx.contactChannel.create({
+      data: {
+        icon: ICON_TO_DB[input.icon],
+        href: storedHref(input.icon, input.href),
+        position,
+        ...baseContent(contactChannelContent, input.content),
+        translations: { create: translationRows(contactChannelContent, input.content) },
+      },
+      include: recordInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'contact_channel.create',
+      summary: `Canal de contacto agregado: ${created.title}`,
+      entityType: 'contact_channel',
+      entityId: created.id,
+    })
+    return toCard(created, 'es', true)
   })
 
-  return toCard(created, 'es', true)
+  return result.value
 }
 
 export async function updateContactChannel(
   id: string,
   input: ContactChannelUpdateInput,
+  actor: AuditActor,
 ): Promise<{ ok: true; card: ContactCard } | ContactChannelWriteFailure> {
   const expected = parseVersion(input.version)
 
@@ -159,13 +173,30 @@ export async function updateContactChannel(
       include: recordInclude,
     })
 
+    await recordUserAuditEvent(tx, actor, {
+      action: 'contact_channel.update',
+      summary: `Canal de contacto actualizado: ${saved.title}`,
+      entityType: 'contact_channel',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+
     return toCard(saved, 'es', true)
   })
 
   return result.ok ? { ok: true, card: result.value } : result
 }
 
-export async function deleteContactChannel(id: string): Promise<boolean> {
-  const { count } = await prisma.contactChannel.deleteMany({ where: { id } })
-  return count > 0
+export async function deleteContactChannel(id: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) => tx.contactChannel.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.contactChannel.deleteMany({ where: { id } }),
+    (tx, channel) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'contact_channel.delete',
+        summary: `Canal de contacto eliminado: ${channel.title}`,
+        entityType: 'contact_channel',
+        entityId: id,
+      }),
+  )
 }

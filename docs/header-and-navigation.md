@@ -118,11 +118,30 @@ translateX(-50%)`), not right-anchored as it originally was.
 - Covered by `PublicHeader.test.tsx` (touch outside) and `tests/e2e/responsive-controls.spec.ts`
   (outside tap after scrolling the panel, last option in landscape).
 
+## "Modo edición" in the account menu
+
+Assistants and administrators (`canEditContent(role)` in `app/lib/auth/account.ts`, which mirrors
+who holds `edit_components` by default) see a "Modo edición" switch (`EditModeSwitch.tsx`) in the
+desktop account dropdown, between "Mi cuenta" and "Cerrar sesión", and in the mobile menu's account
+section. Visitors and anonymous visitors do not. The role comes from the account cookie, so this is
+a visibility rule only: every edit is still authorized by its Server Action.
+
+- It reads and writes the shared `EditModeProvider` (`useEditMode`), so the current page updates at
+  once; the value is kept in `localStorage`, so it survives navigation and reload.
+- It is a `role="switch"` button with `aria-checked`, reachable with Tab inside the open dropdown.
+  Clicking or pressing Enter on it does not close the menu (`useDisclosure` only closes on a link,
+  Escape, an outside pointer or focus leaving the group).
+- It is no longer in `AdminShell`, so there is one place to change it.
+- Its label and every other dropdown item come from the `account` namespace of the catalogues
+  (`account.editMode`: "Modo edición" / "Edit mode").
+- In e2e, `enableEditMode(page)` in `tests/e2e/helpers/edit-mode.ts` opens the menu and flips it.
+
 ## Covered by
 
-| Piece                            | File                                     | Covered by                                           |
-| -------------------------------- | ---------------------------------------- | ---------------------------------------------------- |
-| Institutional lockup             | `app/components/public/Brand.tsx`        | (no dedicated unit test yet)                         |
-| Desktop group disclosure         | `app/components/public/NavGroup.tsx`     | `NavGroup.test.tsx`                                  |
-| Header layout + mobile accordion | `app/components/public/PublicHeader.tsx` | `PublicHeader.test.tsx`                              |
-| Responsive rules for both        | `app/globals.css`                        | `tests/e2e/responsive-controls.spec.ts`, plus manual |
+| Piece                            | File                                                               | Covered by                                           |
+| -------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------- |
+| Institutional lockup             | `app/components/public/Brand.tsx`                                  | (no dedicated unit test yet)                         |
+| Desktop group disclosure         | `app/components/public/NavGroup.tsx`                               | `NavGroup.test.tsx`                                  |
+| Header layout + mobile accordion | `app/components/public/PublicHeader.tsx`                           | `PublicHeader.test.tsx`                              |
+| Account menu and its edit switch | `app/components/public/auth/AccountMenu.tsx`, `EditModeSwitch.tsx` | `AccountMenu.test.tsx`, `AccountLinks.test.tsx`      |
+| Responsive rules for both        | `app/globals.css`                                                  | `tests/e2e/responsive-controls.spec.ts`, plus manual |

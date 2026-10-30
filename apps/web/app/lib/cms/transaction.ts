@@ -80,3 +80,26 @@ export async function runWrite<T, F extends WriteFailure>(
     throw error
   }
 }
+
+/**
+ * Deletes a record and reports it in one transaction: `find` reads what the audit event needs to
+ * name (it must still read after the record is gone), `remove` deletes it in one statement that
+ * counts the rows it removed, and `audit` records the event. Resolves `false`, writing nothing,
+ * when the record is already gone, so a concurrent delete answers "not found".
+ */
+export async function runAuditedDelete<T>(
+  find: (tx: Prisma.TransactionClient) => Promise<T | null>,
+  remove: (tx: Prisma.TransactionClient, found: T) => Promise<{ count: number }>,
+  audit: (tx: Prisma.TransactionClient, found: T) => Promise<void>,
+): Promise<boolean> {
+  return prisma.$transaction(async (tx) => {
+    const found = await find(tx)
+    if (!found) return false
+
+    const { count } = await remove(tx, found)
+    if (count === 0) return false
+
+    await audit(tx, found)
+    return true
+  })
+}

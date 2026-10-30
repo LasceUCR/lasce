@@ -1,6 +1,8 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl as render } from '@/app/lib/i18n/testing'
 
 // `TeamGallery.stories` pulls in `rosacInfoContent` from `@/app/lib/rosac`,
 // which imports `prisma` at module scope — this stubs it out so loading that
@@ -178,5 +180,12 @@ describe('TeamGallery', () => {
     const track = screen.getByRole('list', { name: emptyArgs.label })
     expect(within(track).getAllByRole('listitem')).toHaveLength(1)
     expect(screen.getByRole('button', { name: 'Añadir' })).toBeInTheDocument()
+  })
+
+  test('renders control labels in English when English is selected', () => {
+    render(<TeamGallery {...defaultArgs} />, { locale: 'en' })
+
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument()
   })
 })

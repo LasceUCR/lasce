@@ -32,7 +32,7 @@ export const Default: Story = {
 export const PartialGrants: Story = {
   args: {
     ...Default.args,
-    granted: ['edit_components', 'download_resources'],
+    granted: ['edit_components', 'view_download_history'],
   },
 }
 

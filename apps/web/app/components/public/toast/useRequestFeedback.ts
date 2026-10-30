@@ -13,7 +13,7 @@ export interface RequestFeedbackOptions {
   /** Shown when a failure below 500 gives no reason, e.g. "No se pudo guardar la noticia." */
   fallback: string
   /** Runs once the request succeeded, before the success toast: close the form, refresh. */
-  onSuccess?: () => void
+  onSuccess?: (response: Response) => void | Promise<void>
   /** Entity-specific, localized failure text. Receives a clone so the default reader still works. */
   describeFailure?: (response: Response) => Promise<string | null>
 }
@@ -56,15 +56,17 @@ export function useRequestFeedback(): SendWithFeedback {
       }
 
       if (!response.ok) {
+        const resForFailure = typeof response.clone === 'function' ? response.clone() : response
         const reason =
-          (describeFailure ? await describeFailure(response.clone()) : null) ??
+          (describeFailure ? await describeFailure(resForFailure) : null) ??
           (await readFailureReason(response)) ??
           (response.status >= 500 ? t('server') : fallback)
         lastError.current = toast.show('error', reason)
         return false
       }
 
-      onSuccess?.()
+      const resForSuccess = typeof response.clone === 'function' ? response.clone() : response
+      await onSuccess?.(resForSuccess)
       toast.show('success', success)
       return true
     },

@@ -21,7 +21,7 @@ export const adminSections = [
     slug: 'descargas',
     title: 'Descargas',
     description: 'Historial y control de descargas de datos del laboratorio.',
-    permission: 'download_resources',
+    permission: 'view_download_history',
   },
   {
     slug: 'usuarios',
@@ -34,6 +34,12 @@ export const adminSections = [
     title: 'Permisos',
     description: 'Configura los permisos asociados a cada rol del sistema.',
     permission: 'manage_permissions',
+  },
+  {
+    slug: 'auditoria',
+    title: 'Auditoría',
+    description: 'Consulta quién hizo cada cambio administrativo en el portal y cuándo.',
+    permission: 'view_audit_log',
   },
   {
     slug: 'infraestructura',

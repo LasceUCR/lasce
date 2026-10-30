@@ -108,7 +108,7 @@ describe('POST /api/news', () => {
     expect(response.status).toBe(201)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     await expect(response.json()).resolves.toEqual({ article })
-    expect(mocks.createNews).toHaveBeenCalledWith(validBody)
+    expect(mocks.createNews).toHaveBeenCalledWith(validBody, expect.anything())
   })
 
   test('answers 409 when another item already uses the link', async () => {

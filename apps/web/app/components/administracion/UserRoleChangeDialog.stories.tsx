@@ -63,3 +63,6 @@ export const PermissionConflict: Story = {
     },
   },
 }
+
+/** In English: the question, the warnings and the buttons follow the site's language. */
+export const English: Story = { args: { ...OwnRole.args }, globals: { locale: 'en' } }

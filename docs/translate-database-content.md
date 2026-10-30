@@ -1075,8 +1075,7 @@ Known limitations of the current implementation:
 
 - Publications, research areas, the home page, the contact cards and the space weather card use it. The rest of `/publicaciones` (its fixed copy and the editor) follows the site's language too, from the `publications` namespace of the message catalogue.
 
-- Search on `/publicaciones` matches the text in the current language only.
-- An editor receives every language of every publication with the page; there is no pagination.
+- Search and the research-group filter on `/publicaciones` run in PostgreSQL, on the text shown in the visitor's language, and the listing is paginated (`getPublicationsPage`, see [`pagination.md`](pagination.md)). An editor receives every language of the publications on the page shown.
 - The 401 and 403 bodies from `requireApiPermission` carry no `code`.
 - The database integration tests are not run in CI yet.
 

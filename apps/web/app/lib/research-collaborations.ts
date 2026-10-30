@@ -21,6 +21,8 @@ export interface ResearchCollaboration {
   name: string
   acronym?: string
   websiteUrl?: string
+  /** Bundled institutional logo under public/brand/collaborations. */
+  logoPath?: string
   editing?: {
     content: StoredContent<typeof collaborationContent.specs>
     isLegacy: boolean
@@ -45,6 +47,8 @@ interface Organization extends Omit<ResearchCollaboration, 'country'> {
 const organizations: Organization[] = [
   {
     id: 'tec',
+    logoPath: '/brand/collaborations/tec.png',
+    websiteUrl: 'https://www.tec.ac.cr/',
     name: 'Instituto Tecnológico de Costa Rica',
     acronym: 'TEC',
     country: 'cr',
@@ -52,6 +56,8 @@ const organizations: Organization[] = [
   },
   {
     id: 'ice',
+    logoPath: '/brand/collaborations/ice.png',
+    websiteUrl: 'https://www.grupoice.com/',
     name: 'Instituto Costarricense de Electricidad',
     acronym: 'ICE',
     country: 'cr',
@@ -59,6 +65,8 @@ const organizations: Organization[] = [
   },
   {
     id: 'facet-unt',
+    logoPath: '/brand/collaborations/facet-unt.png',
+    websiteUrl: 'https://www.facet.unt.edu.ar/',
     name: 'Facultad de Ciencias Exactas y Tecnología',
     acronym: 'FACET, UNT',
     country: 'ar',
@@ -66,6 +74,8 @@ const organizations: Organization[] = [
   },
   {
     id: 'ingv',
+    logoPath: '/brand/collaborations/ingv.png',
+    websiteUrl: 'https://www.ingv.it/',
     name: 'Istituto Nazionale di Geofisica e Vulcanologia',
     acronym: 'INGV',
     country: 'it',
@@ -73,6 +83,8 @@ const organizations: Organization[] = [
   },
   {
     id: 'ictp',
+    logoPath: '/brand/collaborations/ictp.png',
+    websiteUrl: 'https://www.ictp.it/',
     name: 'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics',
     acronym: 'ICTP',
     country: 'it',
@@ -80,6 +92,8 @@ const organizations: Organization[] = [
   },
   {
     id: 'opm',
+    logoPath: '/brand/collaborations/observatoire-de-paris.png',
+    websiteUrl: 'https://observatoiredeparis.psl.eu/',
     name: 'Observatoire de Paris, Meudon',
     acronym: 'OPM',
     country: 'fr',
@@ -87,6 +101,8 @@ const organizations: Organization[] = [
   },
   {
     id: 'sciesmex',
+    logoPath: '/brand/collaborations/sciesmex.png',
+    websiteUrl: 'https://www.sciesmex.unam.mx/',
     name: 'Servicio de Clima Espacial México',
     acronym: 'SCiESMEX',
     country: 'mx',
@@ -94,6 +110,8 @@ const organizations: Organization[] = [
   },
   {
     id: 'inaoe',
+    logoPath: '/brand/collaborations/inaoe.png',
+    websiteUrl: 'https://www.inaoep.mx/',
     name: 'Instituto Nacional de Astrofísica, Óptica y Electrónica',
     acronym: 'INAOE',
     country: 'mx',
