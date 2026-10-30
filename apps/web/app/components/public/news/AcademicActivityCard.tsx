@@ -18,14 +18,12 @@ export function AcademicActivityCard({ activity }: AcademicActivityCardProps) {
 
   return (
     <article className="surface-card news-card academic-activity-card">
-      <div
-        className={`news-card-image${activity.imageAlt === '' ? ' news-card-image-decorative' : ''}`}
-      >
+      <div className="news-card-image">
         <Image
-          alt={activity.imageAlt}
+          alt={activity.photoAlt}
           fill
           sizes="(max-width: 768px) 100vw, 320px"
-          src={activity.imageUrl}
+          src={activity.photoUrl}
         />
       </div>
 

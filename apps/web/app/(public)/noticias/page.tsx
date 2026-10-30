@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
-import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { AcademicActivitiesSection } from '@/app/components/public/news/AcademicActivitiesSection'
 import { NewsExplorer } from '@/app/components/public/news/NewsExplorer'
@@ -44,15 +44,15 @@ interface NewsPageProps {
  */
 export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams
-  const [locale, messages, t, common, canCreate, canEdit, canDelete] = await Promise.all([
+  const [locale, t, common, canCreate, canEdit, canDelete] = await Promise.all([
     getLocale(),
-    getMessages(),
     getTranslations('news.page'),
     getTranslations('common'),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
+  const activities = await getAcademicActivities(resolveLocale(locale))
 
   // Every language goes to the browser only for someone who can edit.
   const news = await getNewsPage(resolveLocale(locale), {
@@ -69,10 +69,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     <article className="topic-page">
       <TopicHero kicker={t('kicker')} lead={t('lead')} title={t('title')} />
 
-      <AcademicActivitiesSection
-        activities={getAcademicActivities(messages.academicActivities.items)}
-        id="academic-activities"
-      />
+      <AcademicActivitiesSection activities={activities} id="academic-activities" />
 
       <NewsExplorer
         canCreate={canCreate}
