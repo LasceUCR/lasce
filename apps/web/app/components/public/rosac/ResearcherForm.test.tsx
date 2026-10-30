@@ -662,6 +662,51 @@ describe('ResearcherForm: bilingual mode', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  test('renders form labels, actions, dialogs and errors in English when English is selected', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...bilingualCreateArgs} onCancel={onCancel} />, { locale: 'en' })
+
+    expect(screen.getByText('Photo')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument()
+    expect(screen.getByText('Contact')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Institution' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+
+    const emailInput = screen.getByRole('textbox', { name: 'Email address' })
+    expect(emailInput).toBeInTheDocument()
+    expect(emailInput).toHaveAttribute('placeholder', 'Type an email...')
+    expect(screen.getByText('No emails')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
+
+    // Test empty email validation in English
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Email is required.')
+
+    // Test add contact and validation in English
+    await user.type(emailInput, 'ada@example.com')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByText('ada@example.com')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Contact emails' })).toBeInTheDocument()
+    expect(screen.getByText('1 email')).toBeInTheDocument()
+    expect(emailInput).toHaveAttribute('placeholder', 'Type another email...')
+    expect(screen.getByRole('button', { name: 'Delete ada@example.com' })).toBeInTheDocument()
+
+    await user.type(emailInput, 'not-an-email')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('The email is not valid.')
+
+    // Test discard dialog in English
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Ada Lovelace')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    const discardDialog = screen.getByRole('dialog', { name: 'Discard unsaved changes' })
+    expect(discardDialog).toBeInTheDocument()
+    expect(within(discardDialog).getByRole('button', { name: 'Keep editing' })).toBeInTheDocument()
+    await user.click(within(discardDialog).getByRole('button', { name: 'Discard' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
   test('renders photo file drop area fully in English under en locale', () => {
     render(<ResearcherForm {...editArgs} />, { locale: 'en' })
 

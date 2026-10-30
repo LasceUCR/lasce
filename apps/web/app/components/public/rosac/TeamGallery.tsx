@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 
 import { ResearcherCard, type ResearcherCardProps } from './ResearcherCard'
@@ -44,6 +45,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
   leadingSlide,
   trailingSlide,
 }: TeamGalleryProps<T>) {
+  const t = useTranslations('researchers')
   const trackRef = useRef<HTMLUListElement>(null)
 
   useLayoutEffect(() => {
@@ -114,7 +116,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
 
       <div className="team-gallery-controls">
         <button
-          aria-label="Anterior"
+          aria-label={t('previous')}
           className="team-gallery-control"
           onClick={() => scrollByCards(-1)}
           type="button"
@@ -122,7 +124,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
           <ChevronLeft aria-hidden="true" size={20} strokeWidth={1.8} />
         </button>
         <button
-          aria-label="Siguiente"
+          aria-label={t('next')}
           className="team-gallery-control"
           onClick={() => scrollByCards(1)}
           type="button"

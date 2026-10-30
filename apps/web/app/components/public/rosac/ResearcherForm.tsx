@@ -284,7 +284,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
       return
     }
     if (trimmed === '') {
-      setNewEmailError('El correo es obligatorio.')
+      setNewEmailError(t('editor.emailRequired'))
       return
     }
     if (!isValidEmail(trimmed)) {
@@ -355,11 +355,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
             {t('editor.contactLabel')}
           </span>
           <span aria-live="polite" className="publication-authors-count">
-            {emails.length === 0
-              ? 'Sin correos'
-              : emails.length === 1
-                ? '1 correo'
-                : `${emails.length} correos`}
+            {t('editor.contactCount', { count: emails.length })}
           </span>
         </div>
         <div
@@ -368,7 +364,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
           }
         >
           {emails.length > 0 ? (
-            <ul aria-label="Correos de contacto" className="publication-authors-list">
+            <ul aria-label={t('editor.contactListLabel')} className="publication-authors-list">
               {emails.map((address) => (
                 <li className="email-chip" key={address}>
                   {address}
@@ -392,12 +388,16 @@ export function ResearcherForm(props: ResearcherFormProps) {
                 setNewEmailError(null)
               }}
               onKeyDown={handleEmailKeyDown}
-              placeholder={emails.length > 0 ? 'Escribir otro correo...' : 'Escribir un correo...'}
+              placeholder={
+                emails.length > 0
+                  ? t('editor.emailPlaceholderAnother')
+                  : t('editor.emailPlaceholder')
+              }
               type="email"
               value={newEmail}
             />
             <Button className="publication-authors-add" onClick={addEmail} variant="secondary">
-              Agregar
+              {t('editor.add')}
             </Button>
           </div>
         </div>

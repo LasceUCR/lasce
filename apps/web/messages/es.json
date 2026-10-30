@@ -554,7 +554,9 @@
     "section": {
       "title": "Actividades académicas",
       "description": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
-      "empty": "No hay actividades académicas disponibles en este momento."
+      "empty": "No hay actividades académicas disponibles en este momento.",
+      "loading": "Cargando actividades académicas…",
+      "error": "No fue posible cargar las actividades académicas. Inténtelo de nuevo más tarde."
     },
     "card": {
       "badge": "Actividad académica"
@@ -1539,12 +1541,41 @@
   },
   "researchers": {
     "institutionLabel": "Institución",
+    "viewDescription": "Ver descripción de {name}",
+    "viewInstitution": "Ver institución de {name}",
+    "returnToCard": "Volver a la ficha de {name}",
+    "descriptionRegion": "Descripción de {name}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "editModalTitle": "Editar investigador",
+    "editLabel": "Editar a {name}",
+    "deleteLabel": "Eliminar a {name}",
+    "deleteConfirmTitle": "Eliminar investigador",
+    "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
+    "deleteConfirm": "Eliminar",
     "created": "Investigador agregado correctamente.",
     "updated": "Investigador actualizado correctamente.",
     "deleted": "Investigador eliminado correctamente.",
     "errors": {
       "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo.",
-      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo."
+      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo.",
+      "invalidId": "El identificador del investigador no es válido.",
+      "notFound": "Este investigador ya no existe. Es posible que otra persona lo haya eliminado; recargue la página.",
+      "conflict": "El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.",
+      "saveError": "No se pudo guardar el investigador.",
+      "updateError": "No se pudieron guardar los cambios.",
+      "deleteError": "No se pudo eliminar el investigador.",
+      "invalidBody": "Faltan campos obligatorios o no son válidos.",
+      "invalidJson": "El cuerpo de la solicitud no es JSON válido."
+    },
+    "validation": {
+      "nameRequired": "El nombre es obligatorio.",
+      "institutionRequired": "La institución es obligatoria.",
+      "invalidEmail": "Uno o más correos no son válidos.",
+      "maxEmails": "Máximo 2 correos de contacto.",
+      "versionRequired": "La versión del investigador es obligatoria y debe ser la que se cargó.",
+      "confirmationsOnlyWithContent": "Las confirmaciones solo aplican a una actualización de contenido (content).",
+      "noFieldsToUpdate": "La solicitud no incluye ningún campo para actualizar."
     },
     "editor": {
       "addCard": "Añadir investigador",
@@ -1554,6 +1585,7 @@
       "deleteConfirmTitle": "Eliminar investigador",
       "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
       "deleteConfirm": "Eliminar",
+      "deleteCancel": "Cancelar",
       "photoLabel": "Foto",
       "photoHelp": "Opcional. Retrato del investigador, en formato JPG o PNG.",
       "roleLabel": "Rol",
@@ -1564,11 +1596,16 @@
       "institutionRequired": "La institución es obligatoria.",
       "descriptionLabel": "Descripción",
       "contactLabel": "Contacto",
+      "contactCount": "{count, plural, =0 {Sin correos} one {# correo} other {# correos}}",
+      "contactListLabel": "Correos de contacto",
+      "emailPlaceholder": "Escribir un correo...",
+      "emailPlaceholderAnother": "Escribir otro correo...",
+      "emailRequired": "El correo es obligatorio.",
       "addContact": "Añadir contacto",
       "deleteContact": "Eliminar {address}",
       "addContactTitle": "Añadir contacto",
       "emailLabel": "Correo electrónico",
-      "add": "Añadir",
+      "add": "Agregar",
       "cancel": "Cancelar",
       "save": "Confirmar",
       "uploading": "Subiendo imagen...",

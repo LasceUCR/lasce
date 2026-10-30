@@ -305,22 +305,35 @@ const englishResearcherText: Record<string, ResearcherFixtureText> = {
  * researcher has them. The editing data is only read by the editor, so a visitor's page ignores
  * it.
  */
-function fixtureResearcher(person: NosotrosResearcher): NosotrosResearcher {
+function fixtureResearcher(
+  person: NosotrosResearcher,
+  locale: Locale = defaultLocale,
+): NosotrosResearcher {
   const en = englishResearcherText[person.id] ?? null
   const es: ResearcherFixtureText = {
     role: person.role,
     description: person.description ?? null,
   }
+  const isEn = locale === 'en' && en !== null
   return {
     ...person,
-    contentLocale: 'es',
+    role: isEn ? en.role : person.role,
+    description: isEn ? (en.description ?? undefined) : person.description,
+    contentLocale: isEn ? 'en' : 'es',
     editing: { content: { es, en }, isLegacy: false, version: '2026-10-15T15:00:00.000Z' },
   }
 }
 
 /** Spanish stand-ins for the `nosotros_researchers` rows, for Storybook and tests. */
 export const nosotrosResearcherFixtures: readonly NosotrosResearcher[] =
-  spanishResearcherFixtures.map(fixtureResearcher)
+  spanishResearcherFixtures.map((person) => fixtureResearcher(person, defaultLocale))
+
+/** Stand-ins for the `nosotros_researchers` rows in `locale`. */
+export function getNosotrosResearcherFixtures(
+  locale: Locale = defaultLocale,
+): readonly NosotrosResearcher[] {
+  return spanishResearcherFixtures.map((person) => fixtureResearcher(person, locale))
+}
 
 type FixtureText = { title: string; description: string }
 

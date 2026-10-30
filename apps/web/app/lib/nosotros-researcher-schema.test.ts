@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest'
 
 import {
+  getNosotrosResearcherCreateSchema,
+  getNosotrosResearcherUpdateSchema,
   nosotrosResearcherContent,
   nosotrosResearcherCreateSchema,
   nosotrosResearcherUpdateSchema,
@@ -275,5 +277,29 @@ describe('nosotrosResearcherUpdateSchema', () => {
     })
 
     expect(result.success).toBe(false)
+  })
+
+  test('validates in English with getNosotrosResearcherCreateSchema and getNosotrosResearcherUpdateSchema', () => {
+    const enCreateSchema = getNosotrosResearcherCreateSchema('en')
+    const createResult = enCreateSchema.safeParse({
+      name: '',
+      institution: '',
+      content,
+    })
+    expect(createResult.success).toBe(false)
+    expect(issuesOf(createResult)).toEqual([
+      expect.objectContaining({ path: ['name'], message: 'Name is required.' }),
+      expect.objectContaining({ path: ['institution'], message: 'Institution is required.' }),
+    ])
+
+    const enUpdateSchema = getNosotrosResearcherUpdateSchema('en')
+    const updateResult = enUpdateSchema.safeParse({ version: VERSION })
+    expect(updateResult.success).toBe(false)
+    expect(issuesOf(updateResult)).toEqual([
+      expect.objectContaining({
+        path: [],
+        message: 'The request does not include any fields to update.',
+      }),
+    ])
   })
 })

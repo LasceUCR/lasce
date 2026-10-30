@@ -201,4 +201,31 @@ describe('EditableResearcherCard: bilingual mode', () => {
     expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
+
+  test('renders edit and delete controls in English when English is selected', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(
+      <ToastProvider>
+        <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
+          <EditableResearcherCard {...editArgs} />
+        </EditModeContext.Provider>
+      </ToastProvider>,
+      { locale: 'en' },
+    )
+
+    const editBtn = screen.getByRole('button', { name: `Edit ${editArgs.researcher.name}` })
+    const deleteBtn = screen.getByRole('button', { name: `Delete ${editArgs.researcher.name}` })
+    expect(editBtn).toBeInTheDocument()
+    expect(deleteBtn).toBeInTheDocument()
+
+    await user.click(deleteBtn)
+    const deleteDialog = screen.getByRole('dialog', { name: 'Delete researcher' })
+    expect(deleteDialog).toBeInTheDocument()
+    expect(within(deleteDialog).getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(within(deleteDialog).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    await user.click(within(deleteDialog).getByRole('button', { name: 'Cancel' }))
+
+    await user.click(editBtn)
+    expect(screen.getByRole('dialog', { name: 'Edit researcher' })).toBeInTheDocument()
+  })
 })

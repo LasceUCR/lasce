@@ -52,6 +52,7 @@ const {
   deleteNosotrosActivity,
   deleteNosotrosResearcher,
   getNosotrosActivities,
+  getNosotrosResearcherFixtures,
   getNosotrosResearchers,
   nosotrosActivityFixtures,
   nosotrosResearcherFixtures,
@@ -607,6 +608,28 @@ describe('nosotrosResearcherFixtures', () => {
         fixture.description === undefined,
       )
     }
+  })
+})
+
+describe('getNosotrosResearcherFixtures', () => {
+  test('returns fixtures in Spanish when requested in Spanish', () => {
+    const fixtures = getNosotrosResearcherFixtures('es')
+    expect(fixtures[0]).toMatchObject({
+      role: 'Investigadora principal',
+      contentLocale: 'es',
+    })
+  })
+
+  test('returns fixtures with English role and description when requested in English', () => {
+    const fixtures = getNosotrosResearcherFixtures('en')
+    expect(fixtures[0]).toMatchObject({
+      role: 'Principal investigator',
+      contentLocale: 'en',
+    })
+    expect(fixtures[1]).toMatchObject({
+      role: 'Collaborating researcher',
+      contentLocale: 'en',
+    })
   })
 })
 
