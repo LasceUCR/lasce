@@ -9,11 +9,20 @@ Laboratory **resources** are a separate concern: downloading them (`download_res
 
 ## Defaults
 
-| Role          | Permissions                                                                                                                                        |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Visitante     | `download_resources`                                                                                                                               |
-| Asistente     | `edit_components`, `download_resources`                                                                                                            |
-| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions` |
+| Role          | Permissions                                                                                                                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitante     | `download_resources`                                                                                                                                                                          |
+| Asistente     | `edit_components`, `download_resources`                                                                                                                                                       |
+| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions`, `view_audit_log`, `view_download_history` |
+
+`view_audit_log` opens the Auditoría section (`/administracion/auditoria`, see
+[audit-log.md](audit-log.md)). Only administrators hold it by default; an assistant gets it
+from the matrix.
+
+`view_download_history` opens the Descargas section (`/administracion/descargas`, see
+[downloads.md](downloads.md#the-history-page)). It is separate from `download_resources` on
+purpose: every role holds that one to download files, and it must not expose who downloaded what.
+Only administrators hold it by default.
 
 The component-management grants gate the "¿Qué hacemos?" cards on `/nosotros`
 when Modo edición is on. Assistants may edit; administrators may also create
@@ -39,7 +48,7 @@ configurable without letting an administrator lock themselves out.
 | Admin menu catalogue and visibility rule      | `apps/web/app/lib/admin-sections.ts`                                            |
 | JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                    |
 | Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)       |
-| Resource downloads                            | `/administracion/descargas` (`download_resources`)                              |
+| Download history                              | `/administracion/descargas` (`view_download_history`)                           |
 | `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)                 |
 | Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md)   |
 
@@ -105,8 +114,8 @@ import { PERMISSION_DENIED } from '@/app/lib/auth/permissions'
 export const dynamic = 'force-dynamic'
 
 export default async function DescargasPage() {
-  const { allowed } = await requirePermission('download_resources', '/administracion/descargas')
-  if (!allowed) return <AccessDenied message={PERMISSION_DENIED.download_resources} />
+  const { allowed } = await requirePermission('view_download_history', '/administracion/descargas')
+  if (!allowed) return <AccessDenied message={PERMISSION_DENIED.view_download_history} />
   // ...
 }
 ```
@@ -115,7 +124,7 @@ Anonymous visitors are redirected to `/acceso` by `requireUser`. A signed-in acc
 grant sees "Acceso denegado" and the Server Action still refuses the write.
 
 `requireAnyPermission` is for a hub that several grants can unlock.
-Downloads use `requirePermission('download_resources')` on `/administracion/descargas`.
+The download history uses `requirePermission('view_download_history')` on `/administracion/descargas`.
 
 Do not call these helpers from the shared `(public)` layout.
 

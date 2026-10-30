@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 import { AlbumPage } from '@/app/components/public/gallery/AlbumPage'
 import { getSessionUser } from '@/app/lib/auth/session'
@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: SubAlbumRouteProps): Promise<Metadata> {
   const { slug, subalbum } = await params
   const albums = await getGalleryAlbums(resolveLocale(await getLocale()))
+  const t = await getTranslations('gallery.meta')
   const album = albums.find((item) => item.slug === slug)
   const subAlbum = album?.subAlbums.find((item) => item.slug === subalbum)
 
@@ -25,18 +26,19 @@ export async function generateMetadata({ params }: SubAlbumRouteProps): Promise<
   }
 
   return {
-    title: `${subAlbum.title} | Galería LASCE`,
+    title: t('albumTitle', { album: subAlbum.title }),
     description: subAlbum.description,
   }
 }
 
 export default async function SubAlbumRoute({ params }: SubAlbumRouteProps) {
   const { slug, subalbum } = await params
-  const [locale, canCreate, canEdit, canDelete, user] = await Promise.all([
+  const [locale, canCreate, canEdit, canDelete, tCommon, user] = await Promise.all([
     getLocale().then(resolveLocale),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
+    getTranslations('gallery.common'),
     getSessionUser(),
   ])
   const albums = await getGalleryAlbums(locale, { includeEditingData: canEdit })
@@ -52,13 +54,13 @@ export default async function SubAlbumRoute({ params }: SubAlbumRouteProps) {
       albumId={subAlbum.id}
       uploader={user?.fullName}
       backHref={albumPath(album.slug)}
-      backLabel={`Volver a ${album.title}`}
+      backLabel={tCommon('backToAlbum', { album: album.title })}
       canCreate={canCreate}
       canDelete={canDelete}
       canEdit={canEdit}
       description={subAlbum.description}
       media={subAlbum.media}
-      meta={`${subAlbum.media.length} archivos · ${album.title}`}
+      meta={`${tCommon('files', { count: subAlbum.media.length })} · ${album.title}`}
       title={subAlbum.title}
     />
   )

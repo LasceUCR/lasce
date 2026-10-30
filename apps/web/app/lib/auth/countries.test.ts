@@ -51,3 +51,15 @@ describe('countryName', () => {
     expect(countryName('XX')).toBe('XX')
   })
 })
+
+describe('countryName in another language', () => {
+  test('names a known code in the language asked for', () => {
+    expect(countryName('CR', 'en')).toBe('Costa Rica')
+    expect(countryName('DE', 'en')).toBe('Germany')
+    expect(countryName('DE')).toBe('Alemania')
+  })
+
+  test('echoes an unknown code in any language', () => {
+    expect(countryName('XX', 'en')).toBe('XX')
+  })
+})

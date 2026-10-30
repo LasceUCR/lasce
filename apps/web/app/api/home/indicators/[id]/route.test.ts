@@ -89,7 +89,11 @@ describe('PATCH /api/home/indicators/[id]', () => {
     const { response, body } = await patch({ version: VERSION, value: '-40 nT' })
 
     expect(response.status).toBe(200)
-    expect(mocks.updateIndicator).toHaveBeenCalledWith(ID, { version: VERSION, value: '-40 nT' })
+    expect(mocks.updateIndicator).toHaveBeenCalledWith(
+      ID,
+      { version: VERSION, value: '-40 nT' },
+      expect.anything(),
+    )
     expect(body.indicator.value).toBe('-40 nT')
   })
 

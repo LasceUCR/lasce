@@ -37,6 +37,11 @@ test('shows the current matrix and applies a saved change to access control', as
   const assistant = await createSignedInUser(assistantContext, 'ASSISTANT')
   const assistantPage = await assistantContext.newPage()
   try {
+    // Assistants do not hold the download history grant by default; give it so the change below
+    // has something to take away.
+    await admin.prisma.rolePermission.create({
+      data: { role: 'ASSISTANT', permission: 'view_download_history' },
+    })
     await page.goto('/administracion/permisos')
     await expect(page.getByRole('heading', { level: 1, name: 'Permisos' })).toBeVisible()
     await expect(page.getByRole('table', { name: 'Permisos por rol' })).toBeVisible()
@@ -56,7 +61,7 @@ test('shows the current matrix and applies a saved change to access control', as
       }),
     ).toBeDisabled()
     await expect(
-      page.getByRole('checkbox', { name: 'Descargar recursos: Asistente' }),
+      page.getByRole('checkbox', { name: 'Consultar el historial de descargas: Asistente' }),
     ).toBeChecked()
 
     await assistantPage.goto('/administracion/descargas')
@@ -64,7 +69,9 @@ test('shows the current matrix and applies a saved change to access control', as
     await assistantPage.goto('/administracion/usuarios')
     await expect(assistantPage.getByRole('heading', { name: 'Acceso denegado' })).toBeVisible()
 
-    await page.getByRole('checkbox', { name: 'Descargar recursos: Asistente' }).uncheck()
+    await page
+      .getByRole('checkbox', { name: 'Consultar el historial de descargas: Asistente' })
+      .uncheck()
     await page.getByRole('button', { name: 'Guardar cambios' }).click()
     const dialog = page.getByRole('dialog', { name: 'Confirmar cambio de permisos' })
     await expect(dialog).toBeVisible()
@@ -89,14 +96,14 @@ test('shows the current matrix and applies a saved change to access control', as
   }
 })
 
-test('lets an assistant reach downloads and denies user administration', async ({
+test('denies the download history and user administration to an assistant by default', async ({
   page,
   context,
 }) => {
   const fixture = await createSignedInUser(context, 'ASSISTANT')
   try {
     await page.goto('/administracion/descargas')
-    await expect(page.getByRole('heading', { level: 1, name: 'Descargas' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Acceso denegado' })).toBeVisible()
     await page.goto('/administracion/usuarios')
     await expect(page.getByRole('heading', { name: 'Acceso denegado' })).toBeVisible()
   } finally {

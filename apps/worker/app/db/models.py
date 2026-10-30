@@ -233,6 +233,7 @@ class Collaboration(Base):
     name: Mapped[str] = mapped_column(Text)
     acronym: Mapped[str | None] = mapped_column(Text)
     website_url: Mapped[str | None] = mapped_column(Text)
+    logo_path: Mapped[str | None] = mapped_column(Text)
     country: Mapped[str] = mapped_column(Text)
     scope: Mapped[CollaborationScope] = mapped_column(
         ENUM(
@@ -950,5 +951,187 @@ class SpaceWeatherSectionTranslation(Base):
     locale: Mapped[str] = mapped_column(String(5))
     title: Mapped[str] = mapped_column(Text)
     body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacCharacteristic(Base):
+    """One characteristic card on `/radioastronomia` (Section 1)."""
+
+    __tablename__ = "rosac_characteristics"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    icon: Mapped[str] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacCharacteristicTranslation(Base):
+    """The ``title`` and ``description`` of a `RosacCharacteristic` in another language."""
+
+    __tablename__ = "rosac_characteristic_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "characteristic_id",
+            "locale",
+            name="rosac_characteristic_translations_characteristic_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    characteristic_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_characteristics.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacActivity(Base):
+    """One activity card on `/radioastronomia` (Section 3)."""
+
+    __tablename__ = "rosac_activities"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    icon: Mapped[str] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacActivityTranslation(Base):
+    """The ``title`` and ``description`` of a `RosacActivity` in another language."""
+
+    __tablename__ = "rosac_activity_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "activity_id",
+            "locale",
+            name="rosac_activity_translations_activity_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    activity_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_activities.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacStage(Base):
+    """One construction stage on `/radioastronomia` (Section 4)."""
+
+    __tablename__ = "rosac_stages"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    key: Mapped[str] = mapped_column(Text, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    images: Mapped[list[Any]] = mapped_column(JSONB, default=list)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacStageTranslation(Base):
+    """The ``title`` and ``description`` of a `RosacStage` in another language."""
+
+    __tablename__ = "rosac_stage_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "stage_id",
+            "locale",
+            name="rosac_stage_translations_stage_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    stage_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_stages.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacInstrument(Base):
+    """One scientific instrument card on `/radioastronomia` (Section 6)."""
+
+    __tablename__ = "rosac_instruments"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(Text)
+    pending_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_src: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_alt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    consultation_href: Mapped[str | None] = mapped_column(Text, nullable=True)
+    consultation_label: Mapped[str] = mapped_column(Text)
+    consultation_notice: Mapped[str | None] = mapped_column(Text, nullable=True)
+    position: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacInstrumentTranslation(Base):
+    """The translatable fields of a `RosacInstrument` in another language."""
+
+    __tablename__ = "rosac_instrument_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "instrument_id",
+            "locale",
+            name="rosac_instrument_translations_instrument_id_locale_key",
+        ),
+        {"schema": "public"},
+    )
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    instrument_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("public.rosac_instruments.id", ondelete="CASCADE")
+    )
+    locale: Mapped[str] = mapped_column(String(5))
+    name: Mapped[str] = mapped_column(Text)
+    pending_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    consultation_label: Mapped[str | None] = mapped_column(Text, nullable=True)
+    consultation_notice: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_alt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RosacAcknowledgment(Base):
+    """One institution acknowledgment card on `/radioastronomia` (Section 9)."""
+
+    __tablename__ = "rosac_acknowledgments"
+    __table_args__ = {"schema": "public"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    name: Mapped[str] = mapped_column(Text)
+    href: Mapped[str | None] = mapped_column(Text, nullable=True)
+    logo_src: Mapped[str] = mapped_column(Text)
+    logo_alt: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

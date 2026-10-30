@@ -5,19 +5,21 @@ an empty area, a spinner or a lone "Cargando…". The shared pieces are in
 `apps/web/app/components/public/skeleton/`. `/datos` is where they first shipped: "Sol hoy", each
 solar image, and the results of an instrument query. `/galeria` (#403) is the second consumer, and
 a different one: it has no client-side loading state to toggle, so it reaches for the plain
-`Skeleton` shape directly rather than `LoadingRegion` — see "Where it is used" below.
-`apps/web/app/components/public/skeleton/`; `/datos` is where they are used today: "Sol hoy",
-each solar image, and the results of an instrument query.
+`Skeleton` shape directly rather than `LoadingRegion`. `/contacto` does both: `loading.tsx` keeps
+the catalogue copy and placeholders the map and the channel cards, and the map script then keeps
+a `Skeleton` of its own until it arrives — see "Where it is used" below.
 
 ## The pieces
 
-| Component           | Stands in for                                                              |
-| ------------------- | -------------------------------------------------------------------------- |
-| `Skeleton`          | One shape: `block`, `text` (a line) or `circle`; a size or an aspect ratio |
-| `SkeletonText`      | A paragraph of N lines, the last one shorter                               |
-| `SkeletonImageCard` | One card of `.data-image-grid`: a dark square frame and its caption        |
-| `SkeletonChart`     | A time-series result: the `.data-summary` tiles and the chart              |
-| `LoadingRegion`     | The area that loads: placeholders while loading, then what loaded          |
+| Component                        | Stands in for                                                              |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| `Skeleton`                       | One shape: `block`, `text` (a line) or `circle`; a size or an aspect ratio |
+| `SkeletonText`                   | A paragraph of N lines, the last one shorter                               |
+| `SkeletonImageCard`              | One card of `.data-image-grid`: a dark square frame and its caption        |
+| `SkeletonChart`                  | A time-series result: the `.data-summary` tiles and the chart              |
+| `AcademicActivityCardSkeleton`   | One activity card: 280px photo column on desktop, 200px banner on mobile   |
+| `AcademicActivitiesListSkeleton` | Multiple activity card placeholders inside `.academic-activities-list`     |
+| `LoadingRegion`                  | The area that loads: placeholders while loading, then what loaded          |
 
 `Skeleton` takes `tone="dark"` on dark surfaces, such as the frames of solar images.
 
@@ -66,7 +68,8 @@ Three rules keep the transition still:
 
 `LoadingRegion` assumes a `loading` boolean the caller toggles, which fits a client component
 fetching its own data. A page that instead reads the database directly in a Server Component (as
-`/galeria`'s do, all `force-dynamic`) has no such boolean — the only "loading" moment is Next's own
+`/galeria` and `/publicaciones` do, all `force-dynamic`) has no such boolean — the only "loading"
+moment is Next's own
 Suspense boundary around that component's render, shown through the route's `loading.tsx` while it
 is pending and swapped automatically for the real page once it resolves. There, a page composes
 `Skeleton` (and `SkeletonText`) directly into its own markup — `GalleryPageSkeleton.tsx` and
@@ -74,7 +77,8 @@ is pending and swapped automatically for the real page once it resolves. There, 
 for `LoadingRegion`'s announcement, since there is no single mounted element to attach it to across
 the loading/loaded swap. A thrown `getGalleryAlbums` is caught the same native way, by the route's
 `error.tsx`, which never reuses the skeleton: it renders a `Notice tone="error"` and a retry button
-instead (`GalleryErrorState.tsx`).
+instead (`GalleryErrorState.tsx`). `/publicaciones` does the same for `getPublicationsPage`
+(`PublicationsPageSkeleton.tsx`, `PublicationsErrorState.tsx`).
 
 ## Accessibility
 
@@ -102,15 +106,23 @@ its loading message stays for screen readers only, while the placeholder fills t
 | "Sol hoy" on `/datos`                              | `scientific-data/SolarToday.tsx`                          | 5 `SkeletonImageCard`s in the strip                                       |
 | Each solar image                                   | `scientific-data/SuviImageSequence.tsx`                   | A dark `Skeleton` filling the frame                                       |
 | An instrument query result                         | `scientific-data/ScientificResultsSkeleton.tsx`           | Heading, metadata, and a chart or image grid, by product                  |
+| `/contacto`                                        | `contact/ContactPageSkeleton.tsx`                         | Static hero, address and back link; the map and the channel cards         |
+| The location map while its script loads            | `rosac/LocationMapSkeleton.tsx`                           | A block the size of the map; the address stays outside it                 |
 | `/galeria`                                         | `gallery/GalleryPageSkeleton.tsx`                         | The static hero renders for real; album groups get `GalleryTileSkeleton`s |
 | `/galeria/[slug]` and `/galeria/[slug]/[subalbum]` | `gallery/AlbumPageSkeleton.tsx`                           | Hero text, sub-album tiles (top-level album only) and the media grid      |
 | Every `/galeria` route's data fetch failing        | `gallery/GalleryErrorState.tsx` (via `galeria/error.tsx`) | A `Notice` and a "Reintentar" button                                      |
+| Academic activities on `/actividades-academicas`   | `news/AcademicActivitiesPage.tsx`                         | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
+| Academic activities teaser on `/noticias`          | `news/AcademicActivitiesSection.tsx`                      | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
+| `/publicaciones`                                   | `publications/PublicationsPageSkeleton.tsx`               | Static hero, listing heading and back link; the toolbar, cards and pager  |
+| A failed load of `/publicaciones`                  | `publications/PublicationsErrorState.tsx`                 | A `Notice` and a retry button, in the site's language                     |
 
 ## Tests
 
-- The components: `skeleton/*.test.tsx`, and the Gallery's own
+- The components: `skeleton/*.test.tsx`, the Gallery's own
   `gallery/GalleryTileSkeleton.test.tsx`, `MediaTileSkeleton.test.tsx`,
-  `GalleryPageSkeleton.test.tsx`, `AlbumPageSkeleton.test.tsx` and `GalleryErrorState.test.tsx`.
+  `GalleryPageSkeleton.test.tsx`, `AlbumPageSkeleton.test.tsx` and `GalleryErrorState.test.tsx`,
+  publications' `PublicationsPageSkeleton.test.tsx` and `PublicationsErrorState.test.tsx`, and
+  contact's `ContactPageSkeleton.test.tsx` and `LocationMapSkeleton.test.tsx`.
 - Each view's loading, result, empty and error states: `SolarToday.test.tsx`,
   `SolarTodayLive.test.tsx`, `SuviImageSequence.test.tsx`, `ScientificDataExplorer.test.tsx`.
 - In a browser: `tests/e2e/skeleton-loading.spec.ts` for `/datos` (data API answered by the test;
