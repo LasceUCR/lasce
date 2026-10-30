@@ -572,6 +572,7 @@ export function RosacInfoPage({
           ? {
               ...inst,
               ...(values.content?.es?.name ? { name: values.content.es.name } : {}),
+              ...(values.href !== undefined ? { href: values.href } : {}),
               ...(values.logo ? { logo: values.logo } : {}),
             }
           : inst,
@@ -612,6 +613,7 @@ export function RosacInfoPage({
       {
         id: `ack-${Date.now()}`,
         name: values.content?.es?.name ?? '',
+        href: values.href,
         logo: values.logo ?? { src: '', alt: '' },
       },
       ...prev,

@@ -104,7 +104,7 @@ export interface TeamMember {
   /** The stored base role before UI localization, used to initialize single-language edit forms. */
   storedRole?: string
   /** The stored base description before UI localization, used to initialize single-language edit forms. */
-  storedDescription?: string
+  storedDescription?: string | null
 }
 
 export type RosacResearcher = TeamMember
@@ -543,10 +543,16 @@ export function localizeResearchers(
     const translation = peopleMessages[key]
     if (!translation) return { ...person, contentLang: 'es' }
 
+    const storedRole = person.storedRole ?? person.role
+    const storedDescription =
+      person.storedDescription !== undefined
+        ? person.storedDescription
+        : (person.description ?? null)
+
     return {
       ...person,
-      storedRole: person.storedRole ?? person.role,
-      storedDescription: person.storedDescription ?? person.description,
+      storedRole,
+      storedDescription,
       role: translation.role ?? person.role,
       description: translation.description ?? person.description,
       contentLang: 'en',
