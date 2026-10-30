@@ -1,4 +1,8 @@
-"""Decoding and storing a daily SEISS EHIS L1b file.
+"""Decoding a daily SEISS EHIS L1b file, and storing any SEISS product's day.
+
+Storing is shared by every product (:mod:`app.services.seiss.readings`), so it
+is exercised here with EHIS readings, plus one SGPS case for what changes per
+product: the measurement and the ``product`` tag.
 
 The synthetic files mirror the real ``seis-l1b-ehis`` daily aggregation: a
 ``report_number`` dimension, ``ELF_StartStopTime`` as (report, start/stop),
@@ -20,16 +24,17 @@ import pytest
 from netCDF4 import Dataset
 from sqlalchemy.dialects import postgresql
 
-from app.clients.ehis import parse_file_name
-from app.services import ehis_readings
-from app.services.ehis_readings import (
-    CHANNELS,
-    EhisDecoded,
-    EhisReadings,
+from app.clients.seiss import SeissProduct, parse_file_name
+from app.services.seiss import readings
+from app.services.seiss.ehis import CHANNELS, MEASUREMENT, decode
+from app.services.seiss.readings import (
     IngestedFile,
+    SeissDecoded,
+    SeissReadings,
     build_points,
-    decode,
 )
+
+EHIS = SeissProduct.EHIS
 
 FILE_ID = uuid.UUID("55555555-5555-5555-5555-555555555555")
 DAY = datetime(2026, 10, 14, tzinfo=UTC)
@@ -124,9 +129,13 @@ def ehis_netcdf(
 
 def ehis_file() -> Any:
     name = "ops_seis-l1b-ehis_g19_d20261014_v0-0-2.nc"
-    file = parse_file_name(name, f"https://archive.test/{name}")
+    file = parse_file_name(EHIS, name, f"https://archive.test/{name}")
     assert file is not None
     return file
+
+
+def ehis_readings(influx: Any) -> SeissReadings:
+    return SeissReadings(EHIS, MEASUREMENT, influx=influx)
 
 
 def at(*offsets: int) -> list[datetime]:
@@ -204,15 +213,15 @@ def test_a_day_with_every_reading_invalid_is_empty_not_missing(tmp_path: Path) -
 
 
 def test_one_point_per_reading_tagged_by_satellite_product_and_channel() -> None:
-    decoded = EhisDecoded(
+    decoded = SeissDecoded(
         satellite="G19",
         series={"H:E1": [(DAY, 0.5), (DAY + timedelta(minutes=5), 0.25)], "He:E1": []},
     )
-    lines = [point.to_line_protocol() for point in build_points(decoded)]
+    lines = [point.to_line_protocol() for point in build_points(MEASUREMENT, EHIS, decoded)]
 
     assert len(lines) == 2
     tags, fields, stamp = lines[0].split(" ")
-    assert tags.startswith(f"{ehis_readings.MEASUREMENT},")
+    assert tags.startswith("ehis_flux,")
     assert {"satellite=G19", "product=EHIS", "channel=H:E1"} <= set(tags.split(",")[1:])
     assert set(fields.split(",")) == {"value=0.5", "valid=true"}
     assert int(stamp) == int(DAY.timestamp()) * 10**9
@@ -252,7 +261,7 @@ def fake_database(
     async def fake_session_scope() -> AsyncIterator[_FakeSession]:
         yield session
 
-    monkeypatch.setattr(ehis_readings, "session_scope", fake_session_scope)
+    monkeypatch.setattr(readings, "session_scope", fake_session_scope)
     return session
 
 
@@ -268,10 +277,10 @@ async def test_persist_writes_every_batch_before_the_catalogue_row(
 ) -> None:
     order: list[str] = []
     session = fake_database(monkeypatch, [None, FILE_ID], order)
-    monkeypatch.setattr(ehis_readings, "BATCH_SIZE", 2)
+    monkeypatch.setattr(readings, "BATCH_SIZE", 2)
     influx = AsyncMock()
     influx.write.side_effect = lambda points: order.append(f"influx:{len(points)}")
-    decoded = EhisDecoded(
+    decoded = SeissDecoded(
         satellite="G19",
         series={
             "H:E1": [(DAY + timedelta(minutes=5 * offset), 0.5) for offset in range(3)],
@@ -280,7 +289,7 @@ async def test_persist_writes_every_batch_before_the_catalogue_row(
         attributes={"title": TITLE},
     )
 
-    file_id = await EhisReadings(influx=influx).persist(decoded, ehis_file(), MODIFIED)
+    file_id = await ehis_readings(influx).persist(decoded, ehis_file(), MODIFIED)
 
     assert file_id == FILE_ID
     assert order == ["postgres", "influx:2", "influx:2", "influx:1", "postgres"]
@@ -308,12 +317,12 @@ async def test_a_republished_day_withdraws_the_readings_it_dropped(
         for offset in range(3)
     ]
     influx.write.side_effect = lambda points: order.append("influx")
-    decoded = EhisDecoded(satellite="G19", series={"H:E1": [(DAY, 0.5)]})
+    decoded = SeissDecoded(satellite="G19", series={"H:E1": [(DAY, 0.5)]})
 
-    await EhisReadings(influx=influx).persist(decoded, ehis_file(), MODIFIED)
+    await ehis_readings(influx).persist(decoded, ehis_file(), MODIFIED)
 
     lookup = str(session.executed[0].compile(dialect=postgresql.dialect()))
-    assert "solar.ehis_files.day" in lookup
+    assert "solar.seiss_files.day" in lookup
     sql = influx.query.await_args.args[0]
     assert "FROM ehis_flux" in sql
     assert "satellite = 'G19'" in sql
@@ -329,15 +338,40 @@ async def test_a_republished_day_withdraws_the_readings_it_dropped(
     assert order == ["postgres", "influx", "postgres"]
 
 
+async def test_each_product_writes_and_withdraws_in_its_own_measurement(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = fake_database(monkeypatch, [(DAY, DAY), FILE_ID], [])
+    influx = AsyncMock()
+    influx.query.return_value = []
+    name = "sci_sgps-l2-avg1m_g19_d20261014_v3-0-3.nc"
+    file = parse_file_name(SeissProduct.SGPS, name, f"https://archive.test/{name}")
+    assert file is not None
+    decoded = SeissDecoded(satellite="G19", series={"plus:P1": [(DAY, 0.5)]})
+
+    await SeissReadings(SeissProduct.SGPS, "sgps_flux", influx=influx).persist(
+        decoded, file, MODIFIED
+    )
+
+    sql = influx.query.await_args.args[0]
+    assert "FROM sgps_flux" in sql
+    assert "product = 'SGPS'" in sql
+    (line,) = [point.to_line_protocol() for point in influx.write.await_args.args[0]]
+    assert line.startswith("sgps_flux,")
+    assert "product=SGPS" in line.split(" ")[0]
+    row = session.executed[1].compile(dialect=postgresql.dialect()).params
+    assert (row["product"], row["version"]) == ("SGPS", "3-0-3")
+
+
 @pytest.mark.parametrize("previous", [None, (None, None)])
 async def test_a_first_or_empty_earlier_ingest_withdraws_nothing(
     monkeypatch: pytest.MonkeyPatch, previous: Any
 ) -> None:
     fake_database(monkeypatch, [previous, FILE_ID], [])
     influx = AsyncMock()
-    decoded = EhisDecoded(satellite="G19", series={"H:E1": [(DAY, 0.5)]})
+    decoded = SeissDecoded(satellite="G19", series={"H:E1": [(DAY, 0.5)]})
 
-    await EhisReadings(influx=influx).persist(decoded, ehis_file(), MODIFIED)
+    await ehis_readings(influx).persist(decoded, ehis_file(), MODIFIED)
 
     influx.query.assert_not_awaited()
     (written,) = influx.write.await_args_list
@@ -350,10 +384,10 @@ async def test_a_failed_influx_write_leaves_no_catalogue_row(
     session = fake_database(monkeypatch, [None, FILE_ID], [])
     influx = AsyncMock()
     influx.write.side_effect = RuntimeError("influx is down")
-    decoded = EhisDecoded(satellite="G19", series={"H:E1": [(DAY, 0.5)]})
+    decoded = SeissDecoded(satellite="G19", series={"H:E1": [(DAY, 0.5)]})
 
     with pytest.raises(RuntimeError):
-        await EhisReadings(influx=influx).persist(decoded, ehis_file(), None)
+        await ehis_readings(influx).persist(decoded, ehis_file(), None)
     assert len(session.executed) == 1
 
 
@@ -362,9 +396,9 @@ async def test_ingested_reads_the_recorded_last_modified(
     monkeypatch: pytest.MonkeyPatch, recorded: datetime | None
 ) -> None:
     fake_database(monkeypatch, [(recorded,)], [])
-    assert await EhisReadings.ingested(ehis_file()) == IngestedFile(source_modified_at=recorded)
+    assert await SeissReadings.ingested(ehis_file()) == IngestedFile(source_modified_at=recorded)
 
 
 async def test_a_file_never_ingested_has_no_record(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_database(monkeypatch, [None], [])
-    assert await EhisReadings.ingested(ehis_file()) is None
+    assert await SeissReadings.ingested(ehis_file()) is None

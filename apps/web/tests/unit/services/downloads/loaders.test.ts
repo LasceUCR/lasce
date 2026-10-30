@@ -4,6 +4,9 @@ const mocks = vi.hoisted(() => ({
   query: vi.fn(),
   queryExisReadingsFull: vi.fn(),
   queryMagReadingsFull: vi.fn(),
+  queryEhisReadingsFull: vi.fn(),
+  querySgpsReadingsFull: vi.fn(),
+  queryMpshReadingsFull: vi.fn(),
 }))
 
 vi.mock('@/app/services/scientific-data', () => ({
@@ -14,6 +17,15 @@ vi.mock('@/app/services/scientific-data/exisReadingsDataSource', () => ({
 }))
 vi.mock('@/app/services/scientific-data/magReadingsDataSource', () => ({
   queryMagReadingsFull: mocks.queryMagReadingsFull,
+}))
+vi.mock('@/app/services/scientific-data/ehisReadingsDataSource', () => ({
+  queryEhisReadingsFull: mocks.queryEhisReadingsFull,
+}))
+vi.mock('@/app/services/scientific-data/sgpsReadingsDataSource', () => ({
+  querySgpsReadingsFull: mocks.querySgpsReadingsFull,
+}))
+vi.mock('@/app/services/scientific-data/mpshReadingsDataSource', () => ({
+  queryMpshReadingsFull: mocks.queryMpshReadingsFull,
 }))
 
 import { DOWNLOAD_FORMATS } from '@/app/lib/downloads/formats'
@@ -76,5 +88,27 @@ describe('findDownloadLoader', () => {
 
     expect(mocks.queryMagReadingsFull).toHaveBeenCalledWith(mag)
     expect(mocks.query).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    ['EHIS', 'H:E1', mocks.queryEhisReadingsFull],
+    ['SGPS', 'plus:P1', mocks.querySgpsReadingsFull],
+    ['MPSH', 'electron:T1:E1', mocks.queryMpshReadingsFull],
+  ] as const)(
+    'exports SEISS %s from its own full-resolution reader',
+    async (product, parameter, read) => {
+      const seiss: ScientificDataQuery = { ...query, product, parameter }
+
+      await findDownloadLoader('GOES', 'SEISS', 'csv')!({ query: seiss })
+
+      expect(read).toHaveBeenCalledWith(seiss)
+      expect(mocks.query).not.toHaveBeenCalled()
+    },
+  )
+
+  test('refuses to export a SEISS product the pipeline does not ingest', async () => {
+    await expect(
+      findDownloadLoader('GOES', 'SEISS', 'csv')!({ query: { ...query, product: 'MPSL' } }),
+    ).rejects.toThrow('MPSL has no data export')
   })
 })

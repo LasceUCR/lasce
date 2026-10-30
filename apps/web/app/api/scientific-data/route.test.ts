@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   queryExisReadings: vi.fn(),
   queryMagReadings: vi.fn(),
   queryEhisReadings: vi.fn(),
+  querySgpsReadings: vi.fn(),
+  queryMpshReadings: vi.fn(),
   queryCiticScientificData: vi.fn(),
 }))
 
@@ -65,6 +67,14 @@ vi.mock('@/app/services/scientific-data/magReadingsDataSource', () => ({
 
 vi.mock('@/app/services/scientific-data/ehisReadingsDataSource', () => ({
   queryEhisReadings: mocks.queryEhisReadings,
+}))
+
+vi.mock('@/app/services/scientific-data/sgpsReadingsDataSource', () => ({
+  querySgpsReadings: mocks.querySgpsReadings,
+}))
+
+vi.mock('@/app/services/scientific-data/mpshReadingsDataSource', () => ({
+  queryMpshReadings: mocks.queryMpshReadings,
 }))
 
 vi.mock('@/app/services/scientific-data/citicScientificDataSource', () => ({
@@ -133,31 +143,32 @@ describe('GET /api/scientific-data', () => {
     },
   )
 
-  test('returns pending progress and forwards the poll identifier to CITIC', async () => {
-    mocks.queryCiticScientificData.mockResolvedValue({
-      state: 'pending',
-      jobId: 'goes-1',
-      progress: 20,
-    })
+  // Any provider may answer `pending` (the contract the browser polls on), whichever one it is.
+  test('answers 202 with the progress while a provider is still working', async () => {
+    mocks.queryMpshReadings.mockResolvedValue({ state: 'pending', jobId: 'goes-1', progress: 20 })
+
     const response = await GET(request({ ...validGoesQuery, jobId: 'goes-1' }))
+
     expect(response.status).toBe(202)
     expect(await response.json()).toMatchObject({ state: 'pending', progress: 20 })
-    expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, 'goes-1')
   })
-  test('routes a SEISS query to the CITIC historical adapter', async () => {
+
+  test('routes SEISS MPSH to the InfluxDB readings synchronously, never to CITIC', async () => {
     const expected = { visualization: 'time-series', points: [] }
-    mocks.queryCiticScientificData.mockResolvedValue(expected)
+    mocks.queryMpshReadings.mockResolvedValue(expected)
 
     const response = await GET(request(validGoesQuery))
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual(expected)
-    expect(mocks.queryCiticScientificData).toHaveBeenCalledWith(validGoesQuery, undefined)
+    expect(mocks.queryMpshReadings).toHaveBeenCalledWith(validGoesQuery)
+    expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
     expect(mocks.querySuviFrames).not.toHaveBeenCalled()
     expect(mocks.queryExisReadings).not.toHaveBeenCalled()
     expect(mocks.queryMagReadings).not.toHaveBeenCalled()
     expect(mocks.queryEhisReadings).not.toHaveBeenCalled()
+    expect(mocks.querySgpsReadings).not.toHaveBeenCalled()
     expect(mocks.queryMockScientificData).not.toHaveBeenCalled()
   })
 
@@ -173,6 +184,22 @@ describe('GET /api/scientific-data', () => {
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual(expected)
       expect(mocks.queryEhisReadings).toHaveBeenCalledWith(ehis)
+      expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
+    },
+  )
+
+  test.each(['minus:P1', 'plus:P8AF', 'plus:P11'])(
+    'routes SEISS SGPS %s to the InfluxDB readings synchronously',
+    async (parameter) => {
+      const expected = { visualization: 'time-series', points: [] }
+      mocks.querySgpsReadings.mockResolvedValue(expected)
+      const sgps = { ...validGoesQuery, product: 'SGPS', parameter }
+
+      const response = await GET(request(sgps))
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual(expected)
+      expect(mocks.querySgpsReadings).toHaveBeenCalledWith(sgps)
       expect(mocks.queryCiticScientificData).not.toHaveBeenCalled()
     },
   )
@@ -254,7 +281,7 @@ describe('GET /api/scientific-data', () => {
 
   test('returns a stable server error when a product has no registered provider', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    mocks.queryCiticScientificData.mockRejectedValue(
+    mocks.queryMpshReadings.mockRejectedValue(
       new UnsupportedScientificQueryError('No provider is registered for GOES product GEOF'),
     )
 
@@ -269,8 +296,8 @@ describe('GET /api/scientific-data', () => {
     consoleError.mockRestore()
   })
 
-  test('returns a stable gateway error when CITIC is unavailable', async () => {
-    mocks.queryCiticScientificData.mockRejectedValue(new ScientificDataUpstreamError('offline'))
+  test('returns a stable gateway error when the readings store is unavailable', async () => {
+    mocks.queryMpshReadings.mockRejectedValue(new ScientificDataUpstreamError('offline'))
 
     const response = await GET(request(validGoesQuery))
 
