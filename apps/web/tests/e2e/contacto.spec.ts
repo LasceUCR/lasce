@@ -15,7 +15,7 @@ test('displays official contact information without authentication', async ({ pa
     'href',
     'tel:+50625116566',
   )
-  const location = page.getByRole('region', { name: 'Ubicación' })
+  const location = page.getByRole('region', { name: 'Ubicación', exact: true })
   await expect(location).toContainText(
     'se encuentra al costado sur del Planetario de la Universidad de Costa Rica',
   )

@@ -12,6 +12,7 @@ const activeArgs = WithActiveItem.args as NavGroupProps
 const summary = () => screen.getByText(closedArgs.label)
 const details = () => summary().closest('details') as HTMLDetailsElement
 const link = (label: string) => screen.getByRole('link', { name: label })
+const group = (label: string) => screen.getByText(label).closest('details') as HTMLDetailsElement
 
 describe('isActivePath', () => {
   test('matches the page and its descendants only', () => {
@@ -130,5 +131,49 @@ describe('NavGroup', () => {
     expect(details()).toHaveAttribute('open')
 
     vi.useRealTimers()
+  })
+
+  test('opening another group closes the previous one without waiting for its grace period', () => {
+    vi.useFakeTimers()
+    render(
+      <>
+        <NavGroup {...closedArgs} label="Investigación" />
+        <NavGroup {...closedArgs} label="Divulgación" />
+      </>,
+    )
+
+    fireEvent.mouseEnter(group('Investigación'))
+    fireEvent.mouseLeave(group('Investigación'))
+    // Still inside the first group's grace period.
+    vi.advanceTimersByTime(30)
+    fireEvent.mouseEnter(group('Divulgación'))
+
+    expect(group('Investigación')).not.toHaveAttribute('open')
+    expect(group('Divulgación')).toHaveAttribute('open')
+
+    // The first group's cancelled timer does not close the second one.
+    vi.advanceTimersByTime(120)
+    expect(group('Divulgación')).toHaveAttribute('open')
+
+    vi.useRealTimers()
+  })
+
+  test('opening another group with a click closes the previous one', () => {
+    render(
+      <>
+        <NavGroup {...closedArgs} label="Investigación" />
+        <NavGroup {...closedArgs} label="Divulgación" />
+      </>,
+    )
+
+    // Opened by hover, so no focus moves and no blur can be what closes it below.
+    fireEvent.mouseEnter(group('Investigación'))
+    expect(group('Investigación')).toHaveAttribute('open')
+
+    // A browser activates a focused summary on Enter or Space with this same click event.
+    fireEvent.click(screen.getByText('Divulgación'))
+
+    expect(group('Investigación')).not.toHaveAttribute('open')
+    expect(group('Divulgación')).toHaveAttribute('open')
   })
 })
