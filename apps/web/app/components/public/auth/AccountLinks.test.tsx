@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { shortName } from '@/app/lib/auth/account'
 import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
@@ -20,6 +20,15 @@ const signedInHeaderArgs = SignedInHeader.args as AccountLinksProps
 const signedOutMobileArgs = SignedOutMobile.args as AccountLinksProps
 const signedInMobileArgs = SignedInMobile.args as AccountLinksProps
 const signedInMobileAdminArgs = SignedInMobileAdmin.args as AccountLinksProps
+
+// The edit mode is kept in `localStorage`, which outlives a test inside one file: start each from off.
+beforeEach(() => {
+  try {
+    window.localStorage.clear()
+  } catch {
+    // Storage unavailable in this runtime: nothing was stored either.
+  }
+})
 
 describe('AccountLinks', () => {
   test('offers sign-in only when signed out, on the desktop header', () => {

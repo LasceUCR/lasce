@@ -1,7 +1,7 @@
 import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { shortName } from '@/app/lib/auth/account'
 import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
@@ -24,6 +24,15 @@ function renderMenu(ui: ReactElement, options?: RenderWithIntlOptions) {
 
 const trigger = () => screen.getByText(shortName(visitorArgs.account), { selector: 'summary' })
 const details = () => trigger().closest('details') as HTMLDetailsElement
+
+// The edit mode is kept in `localStorage`, which outlives a test inside one file: start each from off.
+beforeEach(() => {
+  try {
+    window.localStorage.clear()
+  } catch {
+    // Storage unavailable in this runtime: nothing was stored either.
+  }
+})
 
 describe('AccountMenu', () => {
   test('shows the short name on the trigger, closed by default', () => {
