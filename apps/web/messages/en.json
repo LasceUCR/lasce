@@ -2319,5 +2319,59 @@
       "confirm": "Sign out",
       "cancel": "Cancel"
     }
+  },
+  "initiatives": {
+    "editor": {
+      "add": "Add initiative",
+      "edit": "Edit initiative",
+      "editNamed": "Edit initiative {title}",
+      "deleteNamed": "Delete initiative {title}",
+      "title": "Title ({language})",
+      "description": "Description ({language})",
+      "languages": "Initiative translations",
+      "logo": "Logo (optional)",
+      "logoHelp": "Select or drop a PNG, JPG, WebP or GIF image up to 25 MiB.",
+      "websiteUrl": "Official website (optional)",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving…",
+      "legacy": "This initiative retains its original text. Complete both languages when changing the title or description."
+    },
+    "validation": {
+      "websiteUrl": "Enter a valid http or https URL without credentials.",
+      "logoUrl": "Select a valid image for the logo."
+    },
+    "upload": {
+      "uploaded": "Logo uploaded successfully.",
+      "failed": "The logo could not be uploaded. Please try again.",
+      "missing": "Select an image for the logo.",
+      "tooLarge": "The image must not exceed 25 MiB.",
+      "invalidType": "Select a valid PNG, JPG, WebP or GIF image."
+    },
+    "feedback": {
+      "created": "Initiative added successfully.",
+      "updated": "Initiative updated successfully.",
+      "deleted": "Initiative deleted successfully.",
+      "failed": "The initiative could not be saved. Please try again.",
+      "forbidden": "You do not have permission for this action. Sign in with an authorized account.",
+      "notFound": "The initiative no longer exists. Reload the page.",
+      "conflict": "The initiative changed. Reopen the form to load the current version.",
+      "review": "Review the pending translations before saving.",
+      "fields": "Check the highlighted fields."
+    },
+    "delete": {
+      "title": "Delete initiative",
+      "message": "Delete this initiative? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "discard": {
+      "title": "Discard unsaved changes",
+      "message": "Your changes will be lost.",
+      "keepEditing": "Keep editing",
+      "confirm": "Discard"
+    },
+    "empty": "No initiatives are available.",
+    "officialSite": "Official website",
+    "logoAlt": "Logo of {title}"
   }
 }

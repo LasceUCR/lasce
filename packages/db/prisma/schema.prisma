@@ -244,6 +244,40 @@ model CollaborationTranslation {
   @@schema("research")
 }
 
+/// Bilingual initiatives on /colaboraciones-e-iniciativas, independent of partner organizations.
+model Initiative {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String   @db.VarChar(300)
+  description String
+  logoUrl     String?  @map("logo_url")
+  websiteUrl  String?  @map("website_url")
+  position    Int      @unique @default(autoincrement())
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations InitiativeTranslation[]
+
+  @@map("initiatives")
+  @@schema("research")
+}
+
+/// Spanish text stays on Initiative; other languages use the shared content resolver.
+model InitiativeTranslation {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  initiativeId String   @map("initiative_id") @db.Uuid
+  locale       String   @db.VarChar(5)
+  title        String   @db.VarChar(300)
+  description  String
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  initiative Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+
+  @@unique([initiativeId, locale])
+  @@map("initiative_translations")
+  @@schema("research")
+}
+
 /// Many-to-many join between `Research` and `ResearchAuthor`. Keeps `position`
 /// so a record's citation order (first author, second author, ...) can be
 /// reproduced on the public page instead of coming back in arbitrary order.

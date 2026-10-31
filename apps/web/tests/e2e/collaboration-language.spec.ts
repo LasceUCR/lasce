@@ -19,7 +19,9 @@ test.describe('collaboration language', () => {
     const logos = await page
       .getByRole('main')
       .getByRole('img')
-      .evaluateAll((images) => images.map((image) => image.getAttribute('src')))
+      .evaluateAll((images) =>
+        images.map((image) => new URL(image.getAttribute('src')!, document.baseURI).href),
+      )
     await expect(organizations.getByText('Nacional', { exact: true })).toHaveCount(2)
     await expect(organizations.getByText('Internacional', { exact: true })).toHaveCount(6)
     await expect(organizations.getByText('Italia', { exact: true })).toHaveCount(2)
@@ -35,15 +37,18 @@ test.describe('collaboration language', () => {
     await expect(english.getByText('Italy', { exact: true })).toHaveCount(2)
     await expect(english.getByText('France', { exact: true })).toBeVisible()
     await expect(english.getByText('Mexico', { exact: true })).toHaveCount(2)
-    await expect(page.getByRole('link', { name: 'Official IVIA site' })).toHaveAttribute(
-      'href',
-      'https://oaq.epn.edu.ec/ivia-net/index.php/es/',
-    )
+    await expect(
+      page
+        .getByRole('article', { name: 'Ibero-American VLBI Initiative (IVIA)', exact: true })
+        .getByRole('link'),
+    ).toHaveAttribute('href', 'https://oaq.epn.edu.ec/ivia-net/index.php/es/')
     expect(
       await page
         .getByRole('main')
         .getByRole('img')
-        .evaluateAll((images) => images.map((image) => image.getAttribute('src'))),
+        .evaluateAll((images) =>
+          images.map((image) => new URL(image.getAttribute('src')!, document.baseURI).href),
+        ),
     ).toEqual(logos)
 
     await page.reload()

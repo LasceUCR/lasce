@@ -2319,5 +2319,59 @@
       "confirm": "Cerrar sesión",
       "cancel": "Cancelar"
     }
+  },
+  "initiatives": {
+    "editor": {
+      "add": "Añadir iniciativa",
+      "edit": "Editar iniciativa",
+      "editNamed": "Editar iniciativa {title}",
+      "deleteNamed": "Eliminar iniciativa {title}",
+      "title": "Título ({language})",
+      "description": "Descripción ({language})",
+      "languages": "Traducciones de la iniciativa",
+      "logo": "Logo (opcional)",
+      "logoHelp": "Seleccione o arrastre una imagen PNG, JPG, WebP o GIF de hasta 25 MiB.",
+      "websiteUrl": "Sitio web oficial (opcional)",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando…",
+      "legacy": "Esta iniciativa conserva su texto original. Complete ambos idiomas cuando modifique el título o la descripción."
+    },
+    "validation": {
+      "websiteUrl": "Ingrese una URL http o https válida, sin credenciales.",
+      "logoUrl": "Seleccione una imagen válida para el logo."
+    },
+    "upload": {
+      "uploaded": "Logo cargado correctamente.",
+      "failed": "No se pudo subir el logo. Inténtelo de nuevo.",
+      "missing": "Seleccione una imagen para el logo.",
+      "tooLarge": "La imagen no debe superar los 25 MiB.",
+      "invalidType": "Seleccione una imagen PNG, JPG, WebP o GIF válida."
+    },
+    "feedback": {
+      "created": "Iniciativa agregada correctamente.",
+      "updated": "Iniciativa actualizada correctamente.",
+      "deleted": "Iniciativa eliminada correctamente.",
+      "failed": "No se pudo guardar la iniciativa. Inténtelo de nuevo.",
+      "forbidden": "No tiene permisos para realizar esta acción. Inicie sesión con una cuenta autorizada.",
+      "notFound": "La iniciativa ya no existe. Vuelva a cargar la página.",
+      "conflict": "La iniciativa cambió. Vuelva a abrir el formulario para cargar la versión actual.",
+      "review": "Revise las traducciones pendientes antes de guardar.",
+      "fields": "Revise los campos marcados."
+    },
+    "delete": {
+      "title": "Eliminar iniciativa",
+      "message": "¿Desea eliminar esta iniciativa? Esta acción no se puede deshacer.",
+      "confirm": "Eliminar"
+    },
+    "discard": {
+      "title": "Descartar cambios no guardados",
+      "message": "Los cambios que ha realizado se perderán.",
+      "keepEditing": "Seguir editando",
+      "confirm": "Descartar"
+    },
+    "empty": "No hay iniciativas disponibles.",
+    "officialSite": "Sitio web oficial",
+    "logoAlt": "Logo de {title}"
   }
 }

@@ -3,9 +3,11 @@
 How `/colaboraciones-e-iniciativas` is built. Partner organizations are read from PostgreSQL by
 [`collaboration-records.ts`](../apps/web/app/lib/collaboration-records.ts). The route resolves
 their country text using the visitor's `lasce_locale` cookie and the shared database-content
-helpers. The ISWI and IVIA copy and the fixed interface text remain in `apps/web/messages/`;
-[`collaborations.ts`](../apps/web/app/lib/collaborations.ts) keeps initiative structure, logos
-and external URLs. Both Spanish and English are supported.
+helpers. Initiatives are also read from PostgreSQL through
+[`initiative-records.ts`](../apps/web/app/lib/initiative-records.ts), with bilingual titles and
+descriptions, optional logos and official links. Their migration preserves ISWI and IVIA in both
+languages. Fixed interface text remains in `apps/web/messages/`; the former initiative catalogue
+items remain historical fixtures. See [initiatives.md](initiatives.md) for the initiative CMS.
 
 The public reading and persistence portion of LASCE-PUB-002 is extended by the collaboration CMS
 (LASCE-CON-012). Authorized editors manage organizations in place through Modo edición. The static organization list in
@@ -20,8 +22,10 @@ stories and tests, not a second public data source.
 | National/international badge, acronym label, logo alt and website label | `collaborations.card`                                                               | Spanish/English catalogues; organization name interpolated for accessibility |
 | Organization's country                                                  | `research.collaborations.country` and `research.collaboration_translations.country` | Spanish base row, English translation keyed by collaboration id and locale   |
 | Official organization name, acronym, scope and display order            | `research.collaborations`                                                           | Shared, never translated                                                     |
-| Initiative title, paragraphs, logo alt text and link label              | `collaborations.initiatives`                                                        | Existing Spanish/English catalogues                                          |
-| Initiative logo files and external URLs                                 | `lib/collaborations.ts`                                                             | Shared, never translated                                                     |
+| Organization logo path and official website URL                         | `research.collaborations`                                                           | Shared, never translated                                                     |
+| Initiative title and description                                        | `research.initiatives` and `research.initiative_translations`                       | Spanish base row and English translation                                     |
+| Initiative logo URLs and official website URLs                          | `research.initiatives`                                                              | Shared, never translated                                                     |
+| Initiative controls, website label and empty state                      | `initiatives` catalogue namespace                                                   | Spanish/English catalogues                                                   |
 | Back link label                                                         | `common.backToHome`                                                                 | Spanish/English catalogues                                                   |
 
 Country is the only translatable text field in the current organization card. The optional
@@ -232,6 +236,5 @@ text to the `collaborations.initiatives` namespace in both catalogues:
   intrinsic size, which Next.js uses for the pre-load box; CSS then scales the logo to the column.
   `alt` is the accessible name of the image, so describe the mark. Do not leave it empty.
 
-A card without `logo` is a single text column. The section heading
-("Iniciativas internacionales de las que LASCE forma parte") is `initiatives.title` in the same
-namespace, not a per-item field.
+A card without a logo is a single text column; a missing website omits its button. The section
+heading remains fixed interface copy under `collaborations.initiatives.title`.

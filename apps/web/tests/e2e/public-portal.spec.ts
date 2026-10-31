@@ -618,10 +618,14 @@ test('displays research collaborations', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 1, name: 'Colaboraciones e Iniciativas' }),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Sitio oficial de la ISWI' })).toHaveAttribute(
-    'href',
-    'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html',
-  )
+  await expect(
+    page
+      .getByRole('article', {
+        name: 'Iniciativa Internacional de Clima Espacial (ISWI)',
+        exact: true,
+      })
+      .getByRole('link'),
+  ).toHaveAttribute('href', 'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html')
   await expect(page.getByRole('combobox', { name: 'Tipo de colaboración' })).toHaveCount(0)
 })
 

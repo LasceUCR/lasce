@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -101,5 +101,17 @@ describe('FileDropInput', () => {
     const zone = screen.getByRole('button', { name: existingArgs.label })
     const remove = screen.getByRole('button', { name: 'Quitar imagen' })
     expect(zone).not.toContainElement(remove)
+  })
+  test('does not change the image when a file is dropped while disabled', () => {
+    const onFileSelect = vi.fn()
+    renderWithIntl(<FileDropInput {...existingArgs} disabled onFileSelect={onFileSelect} />)
+    const zone = screen.getByRole('button', { name: existingArgs.label })
+    fireEvent.drop(zone, {
+      dataTransfer: { files: [new File(['image'], 'logo.png', { type: 'image/png' })] },
+    })
+    expect(zone).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('button', { name: 'Quitar imagen' })).toBeDisabled()
+    expect(onFileSelect).not.toHaveBeenCalled()
+    expect(screen.getByRole('img')).toHaveAttribute('src', existingArgs.existingImageUrl)
   })
 })
