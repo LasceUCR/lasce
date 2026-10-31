@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { PERMISSION_DENIED, type Permission } from '@/app/lib/auth/permissions'
+import type { Permission } from '@/app/lib/auth/permissions'
 import { DOWNLOAD_FORMATS, type DownloadFormat } from '@/app/lib/downloads/formats'
 import { decideDownload } from '@/app/lib/downloads/policy'
 import {
@@ -12,20 +12,22 @@ import { getAvailabilityMessage, getGoesAvailability } from '@/app/lib/scientifi
 
 export const resourceDownloadRequestSchema = z.object({
   query: scientificDataQuerySchema,
-  format: z.enum(DOWNLOAD_FORMATS, { error: 'Seleccione un formato de descarga válido.' }),
+  format: z.enum(DOWNLOAD_FORMATS),
   /** The asynchronous job that already answered the query on the page, when there was one. */
   jobId: z.string().min(1).max(200).optional(),
 })
 
 export type ResourceDownloadRequest = z.input<typeof resourceDownloadRequestSchema>
 
-export type DownloadAccessFailureReason = 'invalid' | 'unsupported' | 'forbidden'
+/**
+ * Why a download was refused. Only a reason, never copy: the `requestResourceDownload` Server
+ * Action, which knows the visitor's language, turns it into a message.
+ */
+export type DownloadAccessDenied =
+  | { ok: false; reason: 'invalid' | 'futureDate' | 'unsupported' }
+  | { ok: false; reason: 'forbidden'; permission: Permission }
 
-export interface DownloadAccessDenied {
-  ok: false
-  reason: DownloadAccessFailureReason
-  message: string
-}
+export type DownloadAccessFailureReason = DownloadAccessDenied['reason']
 
 export interface DownloadAccessGranted {
   ok: true
@@ -48,34 +50,17 @@ export function validateResourceDownload(
   now = new Date(),
 ): DownloadAccess {
   const parsed = resourceDownloadRequestSchema.safeParse(request)
-  if (!parsed.success) {
-    return {
-      ok: false,
-      reason: 'invalid',
-      message: parsed.error.issues[0]?.message ?? 'La solicitud no es válida.',
-    }
-  }
+  if (!parsed.success) return { ok: false, reason: 'invalid' }
   const { query, format, jobId } = parsed.data
 
-  // This validation chain has no request/locale context to translate from (see
-  // docs/internationalization.md's "Not tied to one page" list); same Spanish text as before.
-  const availabilityMessage = getAvailabilityMessage(
-    query,
-    getGoesAvailability(now),
-    'Seleccione una fecha que no sea posterior a hoy.',
-  )
-  if (availabilityMessage) return { ok: false, reason: 'invalid', message: availabilityMessage }
+  if (getAvailabilityMessage(query, getGoesAvailability(now), 'futureDate')) {
+    return { ok: false, reason: 'futureDate' }
+  }
 
   const decision = decideDownload(query, format, grants)
-  if (decision.status === 'unsupported') {
-    return {
-      ok: false,
-      reason: 'unsupported',
-      message: 'Este producto no ofrece descargas en el formato solicitado.',
-    }
-  }
+  if (decision.status === 'unsupported') return { ok: false, reason: 'unsupported' }
   if (decision.status === 'forbidden') {
-    return { ok: false, reason: 'forbidden', message: PERMISSION_DENIED[decision.missing.at(-1)!] }
+    return { ok: false, reason: 'forbidden', permission: decision.missing.at(-1)! }
   }
 
   return {

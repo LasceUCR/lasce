@@ -7,9 +7,8 @@ export const DOWNLOAD_FORMATS = ['png', 'csv'] as const
 
 export type DownloadFormat = (typeof DOWNLOAD_FORMATS)[number]
 
+/** The button text on `/datos` is `scientificData.downloads.formats.<format>`. */
 export interface DownloadFormatDefinition {
-  /** Button text on `/datos`. */
-  label: string
   /**
    * `graphic` formats are advertised to anonymous visitors as a sign-in prompt; `data` formats
    * are shown only to users who may download them.
@@ -21,13 +20,11 @@ export interface DownloadFormatDefinition {
 
 export const DOWNLOAD_FORMAT_DEFINITIONS: Record<DownloadFormat, DownloadFormatDefinition> = {
   png: {
-    label: 'Descargar gráfica (PNG)',
     kind: 'graphic',
     extension: 'png',
     contentType: 'image/png',
   },
   csv: {
-    label: 'Descargar datos (CSV)',
     kind: 'data',
     extension: 'csv',
     contentType: 'text/csv; charset=utf-8',

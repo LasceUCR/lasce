@@ -548,14 +548,14 @@ model MagFile {
   @@schema("solar")
 }
 
-/// One daily SEISS EHIS L1b heavy ion file (one UTC day) whose readings are in InfluxDB.
-/// Written only by the worker's `ehis-pipeline` job; the readings themselves live in the
-/// `ehis_flux` InfluxDB measurement, not here.
-model EhisFile {
+/// One daily SEISS file (one product, one UTC day) whose readings are in InfluxDB.
+/// Written only by the worker's `seiss-pipeline` job; the readings themselves live in the
+/// product's InfluxDB measurement (`ehis_flux`, `sgps_flux`, `mpsh_flux`), not here.
+model SeissFile {
   id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  /// The NetCDF `platform_ID` attribute, e.g. "G19".
+  /// The spacecraft, e.g. "G19" (EHIS reads `platform_ID`, the L2 products `platform`).
   satellite        String
-  /// Always "EHIS", the catalogue code of the energetic heavy ion product.
+  /// The SEISS product code: "EHIS", "SGPS" or "MPSH".
   product          String
   /// The UTC day the file covers, from its name.
   day              DateTime  @db.Date
@@ -567,7 +567,7 @@ model EhisFile {
   sourceModifiedAt DateTime? @map("source_modified_at") @db.Timestamptz(3)
   firstObservedAt  DateTime? @map("first_observed_at") @db.Timestamptz(3)
   lastObservedAt   DateTime? @map("last_observed_at") @db.Timestamptz(3)
-  /// Points written to InfluxDB per channel code, e.g. {"H:E1": 288}.
+  /// Points written to InfluxDB per channel code, e.g. {"H:E1": 288} or {"plus:P1": 1440}.
   pointCount       Json      @map("point_count")
   /// The NetCDF global attributes, so provenance not promoted to a column is still recoverable.
   attributes       Json
@@ -575,7 +575,7 @@ model EhisFile {
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@unique([satellite, product, day])
-  @@map("ehis_files")
+  @@map("seiss_files")
   @@schema("solar")
 }
 
@@ -700,7 +700,7 @@ model NosotrosResearcher {
   modifiedBy  String   @map("modified_by") @db.Uuid
   modifiedAt  DateTime @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
-  modifier     User                          @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  modifier     User                            @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
   translations NosotrosResearcherTranslation[]
 
   @@map("nosotros_researchers")
