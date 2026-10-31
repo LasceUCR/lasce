@@ -1486,6 +1486,10 @@
     }
   },
   "researchAreas": {
+    "loading": "Cargando áreas de investigación…",
+    "empty": "No hay áreas de investigación disponibles.",
+    "paginationLabel": "Páginas de áreas de investigación",
+    "results": "Mostrando {from}–{to} de {total} áreas de investigación.",
     "page": {
       "metaTitle": "Investigación | LASCE",
       "metaDescription": "Áreas de investigación del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",

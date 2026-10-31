@@ -51,3 +51,22 @@ export const EditMode: Story = {
     ),
   ],
 }
+
+export const SecondPage: Story = {
+  args: {
+    ...Default.args,
+    label: 'Áreas de investigación',
+    areas: Array.from({ length: 10 }, (_, index) => ({
+      ...researchAreas[0]!,
+      id: `area-${index + 11}`,
+      title: `Área ${index + 11}`,
+    })),
+    page: 2,
+    totalItems: 23,
+    totalPages: 3,
+  },
+}
+
+export const LastPage: Story = {
+  args: { ...SecondPage.args, areas: SecondPage.args!.areas!.slice(0, 3), page: 3 },
+}

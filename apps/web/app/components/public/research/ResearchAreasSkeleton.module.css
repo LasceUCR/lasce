@@ -1,0 +1,13 @@
+.description {
+  width: 100%;
+}
+
+.action {
+  width: min(100%, 230px);
+}
+
+@media (max-width: 700px) {
+  .action {
+    width: 100%;
+  }
+}
