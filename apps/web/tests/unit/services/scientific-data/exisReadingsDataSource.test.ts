@@ -76,7 +76,7 @@ describe('queryExisReadings', () => {
         { timestamp: '2026-09-27T08:00:01.377369Z', value: 6.1e-7 },
       ],
     })
-    expect(result.origin.notice).not.toContain('distribuidas uniformemente')
+    expect(result.origin).not.toHaveProperty('sampledPoints')
   })
 
   test('keeps only the spacecraft that observed most recently', async () => {
@@ -103,7 +103,7 @@ describe('queryExisReadings', () => {
     expect(result.points).toHaveLength(360)
     expect(result.points[0]!.value).toBe(0)
     expect(result.points.at(-1)!.value).toBe(360)
-    expect(result.origin.notice).toContain('360 observaciones distribuidas uniformemente')
+    expect(result.origin.sampledPoints).toBe(360)
   })
 
   test('returns an empty series without a satellite for a day that was never ingested', async () => {
@@ -155,7 +155,7 @@ describe('queryExisReadingsFull', () => {
     expect(result.points).toHaveLength(400)
     expect(result.points.some((point) => point.value === -1)).toBe(false)
     expect(result.origin).toMatchObject({ kind: 'observed', satellite: 19 })
-    expect(result.origin.notice).toContain('sin muestreo')
+    expect(result.origin.resolution).toBe('full')
   })
 
   test('returns an empty series for a day that was never ingested', async () => {

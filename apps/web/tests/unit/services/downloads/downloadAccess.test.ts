@@ -49,7 +49,7 @@ describe('validateResourceDownload', () => {
     expect(validateResourceDownload({ query: exisQuery, format: 'csv' }, VISITOR, now)).toEqual({
       ok: false,
       reason: 'forbidden',
-      message: 'No tienes autorización para descargar recursos GOES.',
+      permission: 'download_goes_resources',
     })
   })
 
@@ -57,7 +57,7 @@ describe('validateResourceDownload', () => {
     expect(validateResourceDownload({ query: rosacQuery, format: 'png' }, [], now)).toEqual({
       ok: false,
       reason: 'forbidden',
-      message: 'No tienes autorización para acceder a las descargas.',
+      permission: 'download_resources',
     })
   })
 
@@ -68,7 +68,6 @@ describe('validateResourceDownload', () => {
       expect(validateResourceDownload({ query: suviQuery, format }, GOES_HOLDER, now)).toEqual({
         ok: false,
         reason: 'unsupported',
-        message: 'Este producto no ofrece descargas en el formato solicitado.',
       })
     }
   })
@@ -79,7 +78,6 @@ describe('validateResourceDownload', () => {
     ).toEqual({
       ok: false,
       reason: 'invalid',
-      message: 'Seleccione un formato de descarga válido.',
     })
     expect(validateResourceDownload(null, GOES_HOLDER, now)).toMatchObject({
       ok: false,
@@ -93,8 +91,7 @@ describe('validateResourceDownload', () => {
       ),
     ).toEqual({
       ok: false,
-      reason: 'invalid',
-      message: 'Seleccione una fecha que no sea posterior a hoy.',
+      reason: 'futureDate',
     })
   })
 })

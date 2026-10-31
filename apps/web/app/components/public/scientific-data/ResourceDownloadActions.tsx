@@ -62,7 +62,7 @@ export function ResourceDownloadActions({
               ? t('signInPrompt')
               : pendingFormat === option.format
                 ? t('preparing')
-                : option.label}
+                : t(`formats.${option.format}`)}
           </Button>
         ))}
       </div>

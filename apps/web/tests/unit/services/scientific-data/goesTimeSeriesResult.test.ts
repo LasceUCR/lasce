@@ -16,7 +16,12 @@ const points = [{ timestamp: '2026-09-10T08:00:00Z', value: 0.001 }]
 describe('GOES time-series result', () => {
   test('describes the catalog product and observed provenance of the points', () => {
     expect(
-      buildGoesTimeSeriesResult(query, points, { provider: 'P', notice: 'N', satellite: 19 }),
+      buildGoesTimeSeriesResult(query, points, {
+        dataset: 'exis',
+        resolution: 'sampled',
+        sampledPoints: 360,
+        satellite: 19,
+      }),
     ).toEqual({
       query,
       instrument: { code: 'EXIS', name: expect.any(String) },
@@ -24,21 +29,28 @@ describe('GOES time-series result', () => {
       parameter: expect.objectContaining({ code: '0.1-0.8nm', unit: 'W/m²' }),
       visualization: 'time-series',
       points,
-      origin: { kind: 'observed', provider: 'P', notice: 'N', satellite: 19 },
+      origin: {
+        kind: 'observed',
+        dataset: 'exis',
+        resolution: 'sampled',
+        sampledPoints: 360,
+        satellite: 19,
+      },
     })
   })
 
   test('omits the satellite when the backend did not report one', () => {
     const result = buildGoesTimeSeriesResult(query, points, {
-      provider: 'P',
-      notice: 'N',
+      dataset: 'exis',
+      resolution: 'full',
       satellite: null,
     })
     expect(result.origin).not.toHaveProperty('satellite')
+    expect(result.origin).not.toHaveProperty('sampledPoints')
   })
 
   test('refuses products that are not GOES time series', () => {
-    const origin = { provider: 'P', notice: 'N', satellite: null }
+    const origin = { dataset: 'exis', resolution: 'sampled', satellite: null } as const
     expect(() =>
       buildGoesTimeSeriesResult({ ...query, product: 'Fe171', parameter: 'image' }, [], origin),
     ).toThrow(/GOES time series/)
@@ -48,7 +60,7 @@ describe('GOES time-series result', () => {
   })
 
   test('refuses a parameter the product does not offer', () => {
-    const origin = { provider: 'P', notice: 'N', satellite: null }
+    const origin = { dataset: 'exis', resolution: 'sampled', satellite: null } as const
     expect(() =>
       buildGoesTimeSeriesResult({ ...query, parameter: 'unknown' }, points, origin),
     ).toThrow(/Unknown parameter unknown/)

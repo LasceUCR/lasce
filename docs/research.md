@@ -30,6 +30,54 @@ schema.
 | Detail page        | `…/research/ResearchAreaPage.tsx`                         | `ResearchAreaPage.test.tsx`                   |
 | API                | `app/api/research-areas/**`                               | `route.test.ts` next to each route            |
 
+## Pagination and loading (LASCE-PAG-001 / LASCE-PUB-002)
+
+The index reads `?page=` on the server. `getResearchAreasPage` counts and selects a page in a
+`RepeatableRead` transaction, so both use the same database snapshot. The query applies `skip`
+and `take` using the shared `PAGE_SIZE = 10` in `app/lib/pagination.ts`. Ordering is
+`createdAt DESC, id DESC`: new areas appear first, edits do not move them, and equal timestamps
+cannot shuffle page boundaries. The public response contains no `editing` data; the server
+supplies it only after checking `edit_components` for the index's editor.
+
+The canonical first page is `/investigacion`; later pages use `/investigacion?page=2`. Empty,
+malformed, repeated, zero and negative page parameters redirect to the first page. Pages past
+the end redirect to the last available page. With no areas, the page shows a translated empty
+state and no indicator. Shared `Pagination` links preserve reload, back and forward navigation,
+mark the current page with `aria-current`, and disappear for ten or fewer areas. The cookie-based
+language switch keeps the URL and the same ordering, including legacy translation fallbacks.
+
+Create, edit and delete success handlers refresh the server result. The current page remains
+selected while valid; deleting the last item on the last page redirects to the new last page.
+Creating an area while viewing a later page keeps that page and updates its items and totals.
+
+Only the dynamic section suspends. The title, introductory text and back link render outside
+`Suspense`; `ResearchAreasSkeleton` stays visible until both permissions and data resolve. Its
+three representative cards reuse the real card's responsive classes and shared `Skeleton` /
+`SkeletonText`, with a translated status, a busy region and an inert, hidden decorative list.
+Reduced motion comes from the shared skeleton stylesheet. There is no new cache or loading
+boundary on detail routes.
+
+### Validation
+
+- Unit tests cover bounded queries, empty results, totals, public data, translated status and
+  Suspense replacement, alongside the existing editor success/failure tests.
+- `tests/integration/research-areas-pagination.test.ts` checks actual PostgreSQL ordering and
+  page boundaries, including equal creation timestamps and language changes.
+- The existing Playwright command runs both specs without additional configuration:
+  `pnpm --filter @lasce/web test:e2e research-areas-pagination.spec.ts research-areas-skeleton.spec.ts`.
+  Fixtures add and clean up only their own rows, preserving existing content. Pagination checks
+  account for that content when asserting totals and boundaries.
+- For all exact 0/10/11/23 scenarios, run the command against an empty, migrated, disposable
+  database by supplying its connection through the existing `DATABASE_URL` to both Playwright
+  and its server. Start with port 3000 free so the existing runner starts the correct server.
+  The empty-collection case is skipped when unrelated areas already exist; it never clears them.
+- Skeleton tests briefly lock the research table to observe real streaming, release it in
+  `finally`, then verify reduced motion, replacement and matching geometry. They run only on a
+  local `*_test` database or a local CI service. Unit tests cover the loading component everywhere.
+- Browser tests also cover history, language fallback, details, authorized creation/deletion,
+  accessibility and responsive widths. Creation uses the real API with a repository photo;
+  the form unit tests cover uploads and its success refresh.
+
 ## Layout
 
 The areas are shown the same way `/publicaciones` and `/noticias` show their items: a single
@@ -92,14 +140,14 @@ buttons only show in edit mode. The editor (`ResearchAreaForm`) follows
 - The editor's labels and messages follow the site's language (`researchAreas.editor`,
   `researchAreas.validation`, `researchAreas.discardDialog`, `researchAreas.deleteDialog`).
 
-The API (`/api/research-areas`, all behind the CMS permissions):
+The API (`/api/research-areas`; writes require the corresponding CMS permission):
 
-| Route                      | Method | Body                                                           |
-| -------------------------- | ------ | -------------------------------------------------------------- |
-| `/api/research-areas`      | GET    | none; the areas in the request's language, never editing data  |
-| `/api/research-areas`      | POST   | `{ content: { es, en }, src }`                                 |
-| `/api/research-areas/[id]` | PATCH  | `{ version, content?: { es, en }, confirmedUnchanged?, src? }` |
-| `/api/research-areas/[id]` | DELETE | none; 204, or 404 when there was nothing to delete             |
+| Route                        | Method | Body                                                                                        |
+| ---------------------------- | ------ | ------------------------------------------------------------------------------------------- |
+| `/api/research-areas?page=2` | GET    | public; `{ areas, page, pageSize, totalItems, totalPages, skip, take }`, never editing data |
+| `/api/research-areas`        | POST   | `{ content: { es, en }, src }`                                                              |
+| `/api/research-areas/[id]`   | PATCH  | `{ version, content?: { es, en }, confirmedUnchanged?, src? }`                              |
+| `/api/research-areas/[id]`   | DELETE | none; 204, or 404 when there was nothing to delete                                          |
 
 Errors use the shared envelope of `app/lib/cms/http.ts` (`invalid-body` with paths such as
 `content.en.title`, `review-required`, `conflict` for a stale version, `not-found`). The contracts

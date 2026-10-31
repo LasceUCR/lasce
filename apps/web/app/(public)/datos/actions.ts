@@ -1,17 +1,32 @@
 'use server'
 
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
+import { permissionText, type AccessMessages } from '@/app/lib/access-messages'
 import { getPermissionsForRole } from '@/app/lib/auth/permission-store'
 import { getSessionUser } from '@/app/lib/auth/session'
+import type { ScientificDataMessages } from '@/app/lib/scientific-data'
 import {
   createResourceDownload,
   type ResourceDownloadResult,
 } from '@/app/services/downloads/downloadService'
+import { exportCopy } from '@/app/services/downloads/exporters'
 import { ScientificDataUpstreamError } from '@/app/services/scientific-data/errors'
 
+type ResourceDownloadRefusal = Extract<ResourceDownloadResult, { ok: false }>
+
 export type RequestResourceDownloadResult =
-  ResourceDownloadResult | { ok: false; reason: 'unauthenticated' | 'failed'; message: string }
+  | Extract<ResourceDownloadResult, { ok: true }>
+  | (Pick<ResourceDownloadRefusal, 'ok' | 'reason'> & { message: string })
+  | { ok: false; reason: 'unauthenticated' | 'failed'; message: string }
+
+const REFUSAL_MESSAGES = {
+  invalid: 'downloadInvalid',
+  futureDate: 'dateNotFuture',
+  unsupported: 'downloadUnsupported',
+  pending: 'downloadPending',
+  empty: 'downloadEmpty',
+} as const
 
 /**
  * Generates a chart image or data export for the query shown on `/datos` and returns a
@@ -32,11 +47,22 @@ export async function requestResourceDownload(
   }
 
   try {
-    return await createResourceDownload({
+    const [locale, messages] = await Promise.all([getLocale(), getMessages()])
+    const outcome = await createResourceDownload({
       userId: user.id,
       grants: await getPermissionsForRole(user.role),
       request,
+      copy: exportCopy(locale, messages as ScientificDataMessages),
     })
+    if (outcome.ok) return outcome
+    return {
+      ok: false,
+      reason: outcome.reason,
+      message:
+        outcome.reason === 'forbidden'
+          ? permissionText(outcome.permission, messages as AccessMessages).denied
+          : t(REFUSAL_MESSAGES[outcome.reason]),
+    }
   } catch (error) {
     if (error instanceof ScientificDataUpstreamError) {
       console.error(`Resource download upstream error: ${error.message}`)

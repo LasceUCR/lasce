@@ -22,12 +22,11 @@ function result(product: ScientificProductCode = 'Fe195', count = 8) {
     instrument: { code: instrument.code, name: instrument.name },
     product: { code: product, name: selection.product.name },
     parameter: selection.product.parameters[0],
-    origin: { kind: 'observed', provider: 'GOES', notice: 'Fuente: GOES.' },
+    origin: { kind: 'observed', dataset: 'suvi', resolution: 'sampled', satellite: 19 },
     visualization: 'image-sequence',
     images: Array.from({ length: count }, (_, index) => ({
       timestamp: `2026-09-25T${String(index).padStart(2, '0')}:00:00Z`,
       imageUrl: `https://services.swpc.noaa.gov/test-${product}-${index}.png`,
-      alt: `${product} imagen ${index}`,
     })),
   }
 }
@@ -47,8 +46,8 @@ describe('SolarTodayLive', () => {
     vi.stubGlobal('fetch', fetchMock)
     renderWithIntl(<SolarTodayLive instrument={instrument} initialNow={now} />)
     expect(await screen.findAllByRole('img')).toHaveLength(5)
-    expect(screen.getByRole('img', { name: 'Fe195 imagen 0' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: 'Fe195 imagen 7' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /GOES-19 a las 00:00 UTC$/ })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /GOES-19 a las 07:00 UTC$/ })).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/scientific-data?source=GOES&product=Fe195&parameter=image&date=2026-09-25&startTime=00%3A00&endTime=12%3A30',
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
@@ -83,10 +82,12 @@ describe('SolarTodayLive', () => {
     renderWithIntl(<SolarTodayLive instrument={instrument} initialNow={now} />)
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
     await user.click(screen.getByRole('radio', { name: '171 Å' }))
-    await screen.findByRole('img', { name: 'Fe171 imagen 0' })
+    await screen.findByRole('img', { name: /\(Fe171\) observada por GOES-19 a las 00:00 UTC/ })
     expect(fetchMock.mock.calls[0]![1].signal.aborted).toBe(true)
     await act(async () => resolvePrevious({ ok: true, json: async () => result() }))
-    expect(screen.queryByRole('img', { name: 'Fe195 imagen 0' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('img', { name: /\(Fe195\) observada por GOES-19 a las 00:00 UTC/ }),
+    ).not.toBeInTheDocument()
   })
   test('recovers from source errors and empty bands using the same controls', async () => {
     const fetchMock = vi
