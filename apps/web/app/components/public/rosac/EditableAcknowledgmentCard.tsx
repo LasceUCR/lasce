@@ -3,10 +3,12 @@
 import { Building2 } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 import {
@@ -29,10 +31,11 @@ export function EditableAcknowledgmentCard({
   onSave,
   onDelete,
 }: EditableAcknowledgmentCardProps) {
+  const t = useTranslations('rosac.editor')
   const { editMode } = useEditMode()
+  const toast = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [imageFailed, setImageFailed] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
 
   const logoContent = (
     <>
@@ -59,7 +62,9 @@ export function EditableAcknowledgmentCard({
             }}
           >
             <Building2 aria-hidden="true" size={36} strokeWidth={1.5} />
-            <span style={{ fontSize: '0.75rem', textAlign: 'center' }}>Logo no disponible</span>
+            <span style={{ fontSize: '0.75rem', textAlign: 'center' }}>
+              {t('acknowledgments.logoUnavailable')}
+            </span>
           </div>
         )}
       </div>
@@ -92,34 +97,22 @@ export function EditableAcknowledgmentCard({
   async function handleFormSave(values: RosacAcknowledgmentFormValues) {
     const error = await onSave(values)
     if (error) {
-      setSaveError(error)
+      toast.show('error', error)
       return
     }
-    setSaveError(null)
     setIsEditing(false)
   }
 
   const editModal = (
     <Modal
-      onClose={() => {
-        setSaveError(null)
-        setIsEditing(false)
-      }}
+      onClose={() => setIsEditing(false)}
       open={isEditing}
       size="medium"
-      title="Editar institución"
+      title={t('acknowledgments.editModalTitle')}
     >
-      {saveError ? (
-        <p className="form-alert" role="alert">
-          {saveError}
-        </p>
-      ) : null}
       <RosacAcknowledgmentForm
         institution={institution}
-        onCancel={() => {
-          setSaveError(null)
-          setIsEditing(false)
-        }}
+        onCancel={() => setIsEditing(false)}
         onSave={handleFormSave}
       />
     </Modal>
@@ -132,10 +125,10 @@ export function EditableAcknowledgmentCard({
   return (
     <>
       <EditableWrapper
-        deleteConfirmMessage={`¿Desea eliminar la institución "${institution.name}" de los agradecimientos? Esta acción no se puede deshacer.`}
-        deleteConfirmTitle="Eliminar institución"
-        deleteLabel={`Eliminar ${institution.name}`}
-        editLabel={`Editar ${institution.name}`}
+        deleteConfirmMessage={t('acknowledgments.deleteConfirmMessage', { name: institution.name })}
+        deleteConfirmTitle={t('acknowledgments.deleteConfirmTitle')}
+        deleteLabel={t('acknowledgments.deleteLabel', { name: institution.name })}
+        editLabel={t('acknowledgments.editLabel', { name: institution.name })}
         onDelete={canDelete ? onDelete : undefined}
         onEdit={canEdit ? () => setIsEditing(true) : undefined}
       >

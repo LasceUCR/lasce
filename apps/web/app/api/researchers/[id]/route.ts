@@ -59,7 +59,7 @@ export async function DELETE(
   if (!guard.ok) return guard.response
 
   const { id } = await params
-  const deleted = await deleteResearcher(id)
+  const deleted = await deleteResearcher(id, guard.user)
   if (!deleted) {
     return NextResponse.json(
       { error: `No existe un investigador con id "${id}".` },

@@ -169,7 +169,7 @@ follows under `research`.
 
 > `published_at` is nullable rather than defaulted to a sentinel date: some coverage (e.g.
 > corporate blog posts) doesn't carry a publish date at all. The card renders these as
-> "Sin fecha" ("Undated" in English) and `getNews()` sorts them after every dated record
+> "Sin fecha" ("Undated" in English) and `getNewsPage()` sorts them after every dated record
 > (`nulls: 'last'`) instead of showing a fabricated date.
 
 Relationships: belongs to one `news_sources` row; has many `news_cross_authors` (its authors,
@@ -519,6 +519,21 @@ fields `value`, `valid`), not here. Differences:
 - `version` looks like `"2-0-4"`, and `point_count` like
   `{"EPN-x": 1440, "EPN-y": 1440, "EPN-z": 1440, "total": 1440}`.
 
+### `seiss_files`
+
+One daily SEISS file (one product, one UTC day) ingested by the worker's `seiss-pipeline` job
+(`apps/worker/app/services/seiss/readings.py`) — see [`seiss-pipeline.md`](seiss-pipeline.md).
+Same columns, constraints and upsert key as `exis_files`; the readings are in the product's
+InfluxDB measurement (`ehis_flux`, `sgps_flux`, `mpsh_flux`; tags `satellite`, `product`, `channel`; fields
+`value`, `valid`), not here. It was `ehis_files` until SGPS joined it. Differences:
+
+- `satellite` is `"G19"`, from the NetCDF `platform_ID` attribute (EHIS) or the upper-cased
+  `platform` attribute (SGPS, MPSH).
+- `product` is `"EHIS"`, `"SGPS"` or `"MPSH"`.
+- `version` looks like `"0-0-2"` (EHIS) or `"3-0-3"` (SGPS), and `point_count` has one entry per
+  channel: 25 for EHIS, like `{"H:E1": 288, …, "ClNi:E5": 0}`, and 28 for SGPS, like
+  `{"minus:P1": 1438, …, "plus:P11": 1438}`.
+
 ## `public` schema (downloads)
 
 ### `resource_downloads`
@@ -786,11 +801,115 @@ nothing is created or deleted from the CMS. See [`space-weather.md`](space-weath
 `ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `body`, timestamps. Unique on
 `(section_id, locale)`.
 
+## `public` schema (ROSAC)
+
+### `rosac_characteristics` and `rosac_characteristic_translations`
+
+The 4 characteristic cards shown in Section 1 of `/radioastronomia`, looked up by `key` or `id`.
+Spanish `title` and `description` live on the base row; other languages live in `rosac_characteristic_translations`.
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `key`         | `String`    | `text`           | not null, unique                       |
+| `icon`        | `String`    | `text`           | not null                               |
+| `title`       | `String`    | `text`           | not null; Spanish                      |
+| `description` | `String`    | `text`           | not null; Spanish                      |
+| `position`    | `Int`       | `integer`        | not null, default 0                    |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`rosac_characteristic_translations`: `id`, `characteristic_id` (FK → `rosac_characteristics.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `description`, timestamps. Unique on
+`(characteristic_id, locale)`.
+
+### `rosac_activities` and `rosac_activity_translations`
+
+The 6 scientific activity cards shown in Section 3 of `/radioastronomia`.
+Spanish `title` and `description` live on the base row; other languages live in `rosac_activity_translations`.
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `key`         | `String`    | `text`           | not null, unique                       |
+| `icon`        | `String`    | `text`           | not null                               |
+| `title`       | `String`    | `text`           | not null; Spanish                      |
+| `description` | `String`    | `text`           | not null; Spanish                      |
+| `position`    | `Int`       | `integer`        | not null, default 0                    |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`rosac_activity_translations`: `id`, `activity_id` (FK → `rosac_activities.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `description`, timestamps. Unique on
+`(activity_id, locale)`.
+
+### `rosac_stages` and `rosac_stage_translations`
+
+The 5 construction stages shown in the carousel of Section 4 of `/radioastronomia`.
+Spanish `title` and `description` live on the base row; other languages live in `rosac_stage_translations`. `images` stores array of image objects.
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `key`         | `String`    | `text`           | not null, unique                       |
+| `title`       | `String`    | `text`           | not null; Spanish                      |
+| `description` | `String`    | `text`           | not null; Spanish                      |
+| `images`      | `Json`      | `jsonb`          | not null, default `[]`                 |
+| `position`    | `Int`       | `integer`        | not null, default 0                    |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`rosac_stage_translations`: `id`, `stage_id` (FK → `rosac_stages.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `description`, timestamps. Unique on
+`(stage_id, locale)`.
+
+### `rosac_instruments` and `rosac_instrument_translations`
+
+The scientific instrument cards shown in Section 6 of `/radioastronomia`.
+Spanish fields live on the base row; English translations live in `rosac_instrument_translations`.
+
+| Column                | Prisma type | Postgres type    | Constraints                            |
+| --------------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`                  | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `name`                | `String`    | `text`           | not null                               |
+| `pending_message`     | `String?`   | `text`           | nullable                               |
+| `image_src`           | `String?`   | `text`           | nullable                               |
+| `image_alt`           | `String?`   | `text`           | nullable                               |
+| `consultation_href`   | `String?`   | `text`           | nullable                               |
+| `consultation_label`  | `String`    | `text`           | not null                               |
+| `consultation_notice` | `String?`   | `text`           | nullable                               |
+| `position`            | `Int`       | `integer`        | not null, default 0                    |
+| `created_at`          | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`          | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`rosac_instrument_translations`: `id`, `instrument_id` (FK → `rosac_instruments.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `name`, `pending_message`, `consultation_label`,
+`consultation_notice`, `image_alt`, timestamps. Unique on `(instrument_id, locale)`.
+
+### `rosac_acknowledgments`
+
+The institution acknowledgment cards shown in Section 9 of `/radioastronomia`.
+
+| Column       | Prisma type | Postgres type    | Constraints                            |
+| ------------ | ----------- | ---------------- | -------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `name`       | `String`    | `text`           | not null                               |
+| `href`       | `String?`   | `text`           | nullable                               |
+| `logo_src`   | `String`    | `text`           | not null                               |
+| `logo_alt`   | `String`    | `text`           | not null                               |
+| `position`   | `Int`       | `integer`        | not null, default 0                    |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
 ## Where this is read and written
 
-`apps/web/app/lib/publications.ts`'s `getPublications()` queries `research_records` with its
-`research_record_translations` (newest `publication_date` first, authors ordered by `position`)
-and maps each row to the `Publication` shape `/publicaciones` renders, in the requested language.
+`apps/web/app/lib/publications.ts`'s `getPublicationsPage()` loads one page of `research_records`
+with its non-Spanish `research_record_translations`: searched (the text shown in the visitor's
+language, plus the author names), optionally limited to one `research_group`, ordered (newest
+`publication_date` first, then newest `created_at`, then `id`, so pages never overlap) and cut to
+the page in PostgreSQL, with authors ordered by `position` (see [`pagination.md`](pagination.md)).
+It maps each row to the `Publication` shape `/publicaciones` renders. `getPublications()` loads
+every record in the same order, which `GET /api/publicaciones` still returns in full.
 `createPublication()` and `updatePublication()` write the base row, its translations, its
 publisher and its author links in one transaction. `updatePublication()` writes only the fields
 it is given: with `content` it rewrites the base row's Spanish text and upserts the translations;
@@ -808,10 +927,12 @@ worker writes them yet: a future job would upsert the indices by `code`, set `so
 `observed_at`, and leave `position` alone; see
 [`home-page.md`](home-page.md#future-automatic-loading).
 
-`apps/web/app/lib/news.ts`'s `getNews()` queries `news_records` with its non-Spanish
-`news_record_translations` (newest `published_at` first, nulls last, authors ordered by
-`position`) and maps each row to the `NewsArticle` shape `/noticias` renders, in the visitor's
-language when the item has it and in its base text otherwise. `createNews()`, `updateNews()` and
+`apps/web/app/lib/news.ts`'s `getNewsPage()` loads one page of `news_records` with its
+non-Spanish `news_record_translations`: searched, ordered (newest `published_at` first, nulls
+last, then newest `created_at`, then `id`, so pages never overlap) and cut to the page in
+PostgreSQL, with authors ordered by `position` (see [`pagination.md`](pagination.md)). It maps
+each row to the `NewsArticle` shape `/noticias` renders, in the visitor's language when the item
+has it and in its base text otherwise. `getNews()` loads every item in the same order. `createNews()`, `updateNews()` and
 `deleteNews()` write the base row and its translations in one transaction; an update writes only
 while `updated_at` still equals the version the editor loaded.
 

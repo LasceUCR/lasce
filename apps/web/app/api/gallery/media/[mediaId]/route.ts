@@ -25,7 +25,7 @@ export async function PATCH(
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updateGalleryMedia(mediaId, parsed.data)
+    const result = await updateGalleryMedia(mediaId, parsed.data, guard.user)
     if (!result.ok) return mediaWriteFailure(result)
 
     return ok({ media: result.media })
@@ -45,7 +45,7 @@ export async function DELETE(
   if (!isUuid(mediaId)) return invalidMediaId()
 
   try {
-    const deleted = await deleteGalleryMedia(mediaId)
+    const deleted = await deleteGalleryMedia(mediaId, guard.user)
     if (!deleted) return mediaNotFound()
   } catch (error) {
     return internalError('No se pudo eliminar el archivo.', error)

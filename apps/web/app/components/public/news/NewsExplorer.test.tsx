@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
@@ -10,17 +10,19 @@ import type { NewsArticle } from '@/app/lib/news-schema'
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
+  replace: vi.fn(),
 }))
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
+  useRouter: () => ({ refresh: mocks.refresh, replace: mocks.replace }),
+  usePathname: () => '/noticias',
 }))
 
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
 import { VERSION, englishArticle, legacyArticle, undatedArticle } from './fixtures'
-import { NewsExplorer, type NewsExplorerProps } from './NewsExplorer'
+import { NewsExplorer, SEARCH_DELAY_MS, type NewsExplorerProps } from './NewsExplorer'
 
 /** An item as an editor loads it: Spanish shown, with an English translation stored. */
 function editable(article: NewsArticle): NewsArticle {
@@ -66,16 +68,35 @@ const emptyArgs: NewsExplorerProps = {
 
 const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
 
-function renderExplorer(props: NewsExplorerProps = defaultArgs, locale: Locale = 'es') {
-  return renderWithIntl(
+function explorer(props: NewsExplorerProps) {
+  return (
     <ToastProvider>
       <EditModeProvider>
         <NewsExplorer {...props} />
       </EditModeProvider>
-    </ToastProvider>,
-    { locale },
+    </ToastProvider>
   )
 }
+
+function renderExplorer(props: NewsExplorerProps = defaultArgs, locale: Locale = 'es') {
+  return renderWithIntl(explorer(props), { locale })
+}
+
+/** Longer than the search delay, to check that nothing happened once it has passed. */
+function afterSearchDelay() {
+  return new Promise((resolve) => setTimeout(resolve, SEARCH_DELAY_MS + 100))
+}
+
+function searchbox(name = 'Buscar noticias') {
+  return screen.getByRole('searchbox', { name })
+}
+
+/** Ten distinct items, as one full page of results. */
+const fullPage = Array.from({ length: 10 }, (_, index) => ({
+  ...defaultArgs.news[0]!,
+  slug: `page-item-${index}`,
+  title: `Noticia ${index + 1}`,
+}))
 
 function renderExplorerInEditMode(props: Partial<NewsExplorerProps> = {}, locale: Locale = 'es') {
   return renderWithIntl(
@@ -154,59 +175,81 @@ describe('NewsExplorer: listing', () => {
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(defaultArgs.news.length)
   })
 
-  test('narrows the list to news matching the search query', async () => {
+  test('searches on the server once typing pauses, starting from the first page', async () => {
     const user = userEvent.setup()
-    renderExplorer()
+    renderExplorer({ ...defaultArgs, page: 2, totalItems: 23 })
 
-    const article = defaultArgs.news[0]!
+    await user.type(searchbox(), 'radiotelescopio')
 
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), article.title)
-
-    expect(screen.getByRole('heading', { name: article.title })).toBeInTheDocument()
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
+    await waitFor(() =>
+      expect(mocks.replace).toHaveBeenCalledWith('/noticias?q=radiotelescopio', { scroll: false }),
+    )
+    expect(mocks.replace).toHaveBeenCalledTimes(1)
   })
 
-  test('announces the number of matching results', async () => {
+  test('searches right away when the visitor presses Enter', async () => {
     const user = userEvent.setup()
     renderExplorer()
 
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar noticias' }),
-      'UCR pone en funcionamiento',
-    )
+    await user.type(searchbox(), 'sol{Enter}')
+
+    expect(mocks.replace).toHaveBeenCalledWith('/noticias?q=sol', { scroll: false })
+  })
+
+  test('goes back to the plain listing when the search is cleared', async () => {
+    const user = userEvent.setup()
+    renderExplorer({ ...defaultArgs, query: 'sol', totalItems: 2 })
+
+    await user.clear(searchbox())
+
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/noticias', { scroll: false }))
+  })
+
+  test('does not search again for the same text with spaces around it', async () => {
+    const user = userEvent.setup()
+    renderExplorer({ ...defaultArgs, query: 'sol', totalItems: 2 })
+
+    await user.type(searchbox(), '  ')
+    await afterSearchDelay()
+
+    expect(mocks.replace).not.toHaveBeenCalled()
+    expect(searchbox()).toHaveValue('sol  ')
+  })
+
+  test('shows the search of the URL in the box, after going back or forward', () => {
+    const { rerender } = renderExplorer({ ...defaultArgs, query: 'sol', totalItems: 2 })
+
+    expect(searchbox()).toHaveValue('sol')
+
+    rerender(explorer({ ...defaultArgs, query: 'luna', totalItems: 2 }))
+
+    expect(searchbox()).toHaveValue('luna')
+  })
+
+  test('says how many items matched the search', () => {
+    renderExplorer({ ...defaultArgs, news: [defaultArgs.news[0]!], query: 'UCR', totalItems: 1 })
 
     expect(screen.getByText('Se encontró 1 noticia.')).toBeInTheDocument()
   })
 
-  test('announces multiple matching results', async () => {
-    const user = userEvent.setup()
-    renderExplorer()
+  test('says how many items matched and which of them are shown, across pages', () => {
+    renderExplorer({ news: fullPage, query: 'UCR', page: 2, totalItems: 23 })
 
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), 'UCR')
-
-    expect(screen.getByText('Se encontraron 2 noticias.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Se encontraron 23 noticias. Mostrando 11–20 de 23.'),
+    ).toBeInTheDocument()
   })
 
-  test('matches by source as well as by title', async () => {
-    const user = userEvent.setup()
-    renderExplorer()
+  test('names the one item shown when the last page has only one', () => {
+    renderExplorer({ news: fullPage.slice(0, 1), page: 3, totalItems: 21 })
 
-    const article = defaultArgs.news[0]!
-
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), article.source)
-
-    expect(screen.getByRole('heading', { name: article.title })).toBeInTheDocument()
+    expect(screen.getByText('Mostrando la noticia 21 de 21.')).toBeInTheDocument()
   })
 
-  test('matches by author as well as by title', async () => {
-    const user = userEvent.setup()
-    renderExplorer()
+  test('says which items are shown on the last page', () => {
+    renderExplorer({ news: fullPage.slice(0, 3), page: 3, totalItems: 23 })
 
-    const article = defaultArgs.news[0]!
-
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), article.authors)
-
-    expect(screen.getByRole('heading', { name: article.title })).toBeInTheDocument()
+    expect(screen.getByText('Mostrando 21–23 de 23.')).toBeInTheDocument()
   })
 
   test('shows an empty state when there are no news items', () => {
@@ -224,47 +267,25 @@ describe('NewsExplorer: listing', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
-  test('shows an empty state when nothing matches the search query, without losing the heading', async () => {
-    const user = userEvent.setup()
-    renderExplorer()
-
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar noticias' }),
-      'xyz-no-existe-esta-noticia',
-    )
+  test('shows an empty state when nothing matches the search query, without losing the heading', () => {
+    renderExplorer({ news: [], query: 'xyz-no-existe-esta-noticia', totalItems: 0 })
 
     expect(screen.getByRole('heading', { name: 'Noticias recientes' })).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(
       'No se encontraron noticias para “xyz-no-existe-esta-noticia”.',
     )
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+    expect(searchbox()).toHaveValue('xyz-no-existe-esta-noticia')
   })
 
-  test('keeps the order it was given, which getNews sets (newest first, undated last)', () => {
+  test('keeps the order it was given, which getNewsPage sets (newest first, undated last)', () => {
     renderExplorer()
 
     const titles = screen
       .getAllByRole('heading', { level: 3 })
       .map((heading) => heading.textContent)
     expect(titles).toEqual(defaultArgs.news.map((article) => article.title))
-  })
-
-  test('keeps that order when a search narrows the list', async () => {
-    const user = userEvent.setup()
-    renderExplorer({
-      ...defaultArgs,
-      news: [
-        { ...defaultArgs.news[0]!, slug: 'a', title: 'Zafiro, primera nota' },
-        { ...defaultArgs.news[1]!, slug: 'b', title: 'Otra noticia' },
-        { ...defaultArgs.news[0]!, slug: 'c', title: 'Zafiro, segunda nota' },
-      ],
-    })
-
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar noticias' }), 'Zafiro')
-
-    expect(
-      screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent),
-    ).toEqual(['Zafiro, primera nota', 'Zafiro, segunda nota'])
   })
 
   test('shows no images in the listing', () => {
@@ -277,6 +298,51 @@ describe('NewsExplorer: listing', () => {
     renderExplorer({ news: [undatedArticle] })
 
     expect(screen.getByText(/Sin fecha/)).toBeInTheDocument()
+  })
+})
+
+describe('NewsExplorer: pages', () => {
+  test('links to the other pages of the results, keeping the search', () => {
+    renderExplorer({ news: fullPage, query: 'sol', page: 2, totalItems: 23 })
+
+    const pages = screen.getByRole('navigation', { name: 'Páginas de noticias' })
+    expect(within(pages).getByRole('link', { name: 'Página 2' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(within(pages).getByRole('link', { name: 'Página 3' })).toHaveAttribute(
+      'href',
+      '/noticias?q=sol&page=3',
+    )
+    expect(within(pages).getByRole('link', { name: 'Anterior' })).toHaveAttribute(
+      'href',
+      '/noticias?q=sol',
+    )
+  })
+
+  test('works out the number of pages from the total when it is not given', () => {
+    renderExplorer({ news: fullPage, totalItems: 23 })
+
+    const pages = screen.getByRole('navigation', { name: 'Páginas de noticias' })
+    expect(within(pages).getAllByRole('link', { name: /^Página \d+$/ })).toHaveLength(3)
+  })
+
+  test('shows no page controls when the results fit on one page', () => {
+    renderExplorer({ news: fullPage, totalItems: 10 })
+
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Mostrando/)).not.toBeInTheDocument()
+  })
+
+  test('moves focus to the list heading when another page is shown', () => {
+    const { rerender } = renderExplorer({ news: fullPage, page: 1, totalItems: 23 })
+    const heading = screen.getByRole('heading', { name: 'Noticias recientes' })
+
+    expect(heading).not.toHaveFocus()
+
+    rerender(explorer({ news: fullPage, page: 2, totalItems: 23 }))
+
+    expect(heading).toHaveFocus()
   })
 })
 
@@ -293,14 +359,11 @@ describe('NewsExplorer: languages', () => {
     expect(screen.getByText(/Undated/)).toBeInTheDocument()
   })
 
-  test('searches the language the visitor reads', async () => {
-    const user = userEvent.setup()
-    renderExplorer({ news: [englishArticle, undatedArticle] }, 'en')
+  test('says how many items matched and which are shown in English', () => {
+    renderExplorer({ news: fullPage, query: 'storm', page: 1, totalItems: 12 }, 'en')
 
-    await user.type(screen.getByRole('searchbox', { name: 'Search news' }), 'Nothing happens')
-
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(1)
-    expect(screen.getByText('1 news item found.')).toBeInTheDocument()
+    expect(screen.getByText('12 news items found. Showing 1–10 of 12.')).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'News pages' })).toBeInTheDocument()
   })
 
   test('shows an item without an English version in its base text, without raw keys', () => {

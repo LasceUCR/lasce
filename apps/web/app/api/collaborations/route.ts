@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const parsed = collaborationCreateSchema.safeParse(json.body)
   if (!parsed.success) return invalidBody(parsed.error)
   try {
-    const result = await createCollaboration(parsed.data)
+    const result = await createCollaboration(parsed.data, guard.user)
     return result.ok ? ok({ collaboration: result.value }, 201) : writeFailure(result)
   } catch (error) {
     return internalError('No se pudo crear la colaboración.', error)

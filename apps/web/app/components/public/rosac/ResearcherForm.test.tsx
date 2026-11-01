@@ -12,7 +12,7 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 }))
 
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
-import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { renderWithIntl, type RenderWithIntlOptions } from '@/app/lib/i18n/testing'
 
 import {
   ResearcherForm,
@@ -36,8 +36,8 @@ const bilingualCreateArgs = BilingualCreate.args as BilingualResearcherFormProps
 const bilingualLegacyArgs = BilingualLegacy.args as BilingualResearcherFormProps
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
-function render(ui: ReactElement) {
-  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+function render(ui: ReactElement, options?: RenderWithIntlOptions) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
 }
 
 // jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
@@ -57,13 +57,58 @@ describe('ResearcherForm', () => {
     expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(researcher.description)
   })
 
+  test('starts pre-filled with storedRole and storedDescription instead of localized ones', () => {
+    const localizedResearcher = {
+      ...editArgs.researcher!,
+      role: 'Principal Investigator',
+      description: 'Responsible for strategic planning...',
+      storedRole: 'Investigadora principal',
+      storedDescription: 'Responsable de la planificación estratégica...',
+    }
+    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
+
+    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
+    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(
+      'Responsable de la planificación estratégica...',
+    )
+  })
+
+  test('starts with an empty description when storedDescription is null, without falling back to localized description', () => {
+    const localizedResearcher = {
+      ...editArgs.researcher!,
+      role: 'Principal Investigator',
+      description: 'Responsible for strategic planning...',
+      storedRole: 'Investigadora principal',
+      storedDescription: null,
+    }
+    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
+
+    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
+    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue('')
+  })
+
+  test('starts with an empty description when storedDescription is empty string, without falling back to localized description', () => {
+    const localizedResearcher = {
+      ...editArgs.researcher!,
+      role: 'Principal Investigator',
+      description: 'Responsible for strategic planning...',
+      storedRole: 'Investigadora principal',
+      storedDescription: '',
+    }
+    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
+
+    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
+    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue('')
+  })
+
   test('starts blank for a new researcher', () => {
     render(<ResearcherForm {...addArgs} />)
 
     expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('')
     expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue('')
     expect(screen.queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Añadir contacto' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Agregar' })).toBeEnabled()
+    expect(screen.getByRole('textbox', { name: 'Correo electrónico' })).toHaveValue('')
     // "Confirmar" stays clickable even blank — missing fields are only reported once pressed.
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
   })
@@ -128,52 +173,48 @@ describe('ResearcherForm', () => {
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
   })
 
-  test('adds a contact through the modal and shows it as a chip', async () => {
+  test('adds a contact from the field and shows it as a chip', async () => {
     const user = userEvent.setup()
     render(<ResearcherForm {...editArgs} />)
 
-    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
-    const dialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
-    await user.type(
-      within(dialog).getByRole('textbox', { name: 'Correo electrónico' }),
-      'nuevo@ucr.ac.cr',
-    )
-    await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
+    const emailInput = screen.getByRole('textbox', { name: 'Correo electrónico' })
+    await user.type(emailInput, 'nuevo@ucr.ac.cr')
+    await user.click(screen.getByRole('button', { name: 'Agregar' }))
 
     expect(screen.getByText('nuevo@ucr.ac.cr')).toBeInTheDocument()
-    expect(screen.queryByRole('dialog', { name: 'Añadir contacto' })).not.toBeInTheDocument()
+    expect(emailInput).toHaveValue('')
   })
 
-  test('hides the add-contact button once 2 addresses are present', async () => {
+  test('stops at two addresses', async () => {
     const user = userEvent.setup()
     render(<ResearcherForm {...editArgs} />)
 
-    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
-    const dialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
-    await user.type(
-      within(dialog).getByRole('textbox', { name: 'Correo electrónico' }),
-      'nuevo@ucr.ac.cr',
+    const emailInput = screen.getByRole('textbox', { name: 'Correo electrónico' })
+    await user.type(emailInput, 'nuevo@ucr.ac.cr')
+    await user.click(screen.getByRole('button', { name: 'Agregar' }))
+
+    await user.type(emailInput, 'tercero@ucr.ac.cr')
+    await user.click(screen.getByRole('button', { name: 'Agregar' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'No es posible agregar más de dos correos electrónicos.',
     )
-    await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
-
-    expect(screen.queryByRole('button', { name: 'Añadir contacto' })).not.toBeInTheDocument()
+    expect(screen.queryByText('tercero@ucr.ac.cr')).not.toBeInTheDocument()
   })
 
-  test('rejects a malformed address in the add-contact modal', async () => {
+  test('rejects a malformed address in the contact field', async () => {
     const user = userEvent.setup()
     render(<ResearcherForm {...editArgs} />)
 
-    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
-    const dialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
-    const emailInput = within(dialog).getByRole('textbox', { name: 'Correo electrónico' })
+    const emailInput = screen.getByRole('textbox', { name: 'Correo electrónico' })
     await user.type(emailInput, 'not-an-email')
-    await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
+    await user.click(screen.getByRole('button', { name: 'Agregar' }))
 
-    expect(within(dialog).getByText('El correo no es válido.')).toBeInTheDocument()
+    expect(screen.getByText('El correo no es válido.')).toBeInTheDocument()
     expect(emailInput).toHaveAttribute('aria-invalid', 'true')
     expect(emailInput).toHaveAccessibleDescription('El correo no es válido.')
     expect(emailInput).toHaveValue('not-an-email')
-    expect(screen.queryByText('not-an-email')).not.toBeInTheDocument()
+    expect(screen.queryByRole('listitem', { name: /not-an-email/ })).not.toBeInTheDocument()
   })
 
   test('rejects an address that was already added', async () => {
@@ -181,13 +222,11 @@ describe('ResearcherForm', () => {
     render(<ResearcherForm {...editArgs} />)
     const researcher = editArgs.researcher!
 
-    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
-    const dialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
-    const emailInput = within(dialog).getByRole('textbox', { name: 'Correo electrónico' })
+    const emailInput = screen.getByRole('textbox', { name: 'Correo electrónico' })
     await user.type(emailInput, researcher.email as string)
-    await user.click(within(dialog).getByRole('button', { name: 'Añadir' }))
+    await user.click(screen.getByRole('button', { name: 'Agregar' }))
 
-    expect(within(dialog).getByText('Ese correo ya fue agregado.')).toBeInTheDocument()
+    expect(screen.getByText('Ese correo ya fue agregado.')).toBeInTheDocument()
     expect(emailInput).toHaveAttribute('aria-invalid', 'true')
     expect(emailInput).toHaveAccessibleDescription('Ese correo ya fue agregado.')
   })
@@ -208,13 +247,9 @@ describe('ResearcherForm', () => {
     render(<ResearcherForm {...editArgs} onSave={onSave} />)
     const researcher = editArgs.researcher!
 
-    await user.click(screen.getByRole('button', { name: 'Añadir contacto' }))
-    const addDialog = screen.getByRole('dialog', { name: 'Añadir contacto' })
-    await user.type(
-      within(addDialog).getByRole('textbox', { name: 'Correo electrónico' }),
-      'nuevo@ucr.ac.cr',
-    )
-    await user.click(within(addDialog).getByRole('button', { name: 'Añadir' }))
+    const emailInput = screen.getByRole('textbox', { name: 'Correo electrónico' })
+    await user.type(emailInput, 'nuevo@ucr.ac.cr')
+    await user.click(screen.getByRole('button', { name: 'Agregar' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
@@ -625,5 +660,63 @@ describe('ResearcherForm: bilingual mode', () => {
 
     expect(onCancel).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('renders form labels, actions, dialogs and errors in English when English is selected', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...bilingualCreateArgs} onCancel={onCancel} />, { locale: 'en' })
+
+    expect(screen.getByText('Photo')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument()
+    expect(screen.getByText('Contact')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Institution' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+
+    const emailInput = screen.getByRole('textbox', { name: 'Email address' })
+    expect(emailInput).toBeInTheDocument()
+    expect(emailInput).toHaveAttribute('placeholder', 'Type an email...')
+    expect(screen.getByText('No emails')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
+
+    // Test empty email validation in English
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Email is required.')
+
+    // Test add contact and validation in English
+    await user.type(emailInput, 'ada@example.com')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByText('ada@example.com')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Contact emails' })).toBeInTheDocument()
+    expect(screen.getByText('1 email')).toBeInTheDocument()
+    expect(emailInput).toHaveAttribute('placeholder', 'Type another email...')
+    expect(screen.getByRole('button', { name: 'Delete ada@example.com' })).toBeInTheDocument()
+
+    await user.type(emailInput, 'not-an-email')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('The email is not valid.')
+
+    // Test discard dialog in English
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Ada Lovelace')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    const discardDialog = screen.getByRole('dialog', { name: 'Discard unsaved changes' })
+    expect(discardDialog).toBeInTheDocument()
+    expect(within(discardDialog).getByRole('button', { name: 'Keep editing' })).toBeInTheDocument()
+    await user.click(within(discardDialog).getByRole('button', { name: 'Discard' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('renders photo file drop area fully in English under en locale', () => {
+    render(<ResearcherForm {...editArgs} />, { locale: 'en' })
+
+    expect(screen.getByText('Photo')).toBeInTheDocument()
+    expect(
+      screen.getByText('Optional. Researcher portrait, in JPG or PNG format.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Drag an image here or click to select from your device'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove image' })).toBeInTheDocument()
   })
 })

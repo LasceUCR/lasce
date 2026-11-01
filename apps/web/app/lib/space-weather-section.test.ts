@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => {
       updateMany: vi.fn(),
     },
     spaceWeatherSectionTranslation: { upsert: vi.fn() },
+    auditEvent: { create: vi.fn() },
   }
 
   const prisma = {
@@ -57,6 +58,8 @@ const updateBody = {
     en: { title: 'New title', body: 'New text.' },
   },
 }
+
+const actor = { id: 'user-1' }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -158,7 +161,7 @@ describe('updateSpaceWeatherSection', () => {
       }),
     )
 
-    const result = await updateSpaceWeatherSection(updateBody)
+    const result = await updateSpaceWeatherSection(updateBody, actor)
 
     expect(tx.spaceWeatherSection.updateMany).toHaveBeenCalledWith({
       where: { id: 'section-1', updatedAt: new Date(VERSION) },
@@ -184,7 +187,7 @@ describe('updateSpaceWeatherSection', () => {
   })
 
   test('moves the version strictly forward', async () => {
-    await updateSpaceWeatherSection(updateBody)
+    await updateSpaceWeatherSection(updateBody, actor)
 
     const [{ data }] = tx.spaceWeatherSection.updateMany.mock.calls[0] as [
       { data: { updatedAt: Date } },
@@ -195,7 +198,7 @@ describe('updateSpaceWeatherSection', () => {
   test('reports a missing section and writes nothing', async () => {
     tx.spaceWeatherSection.findUnique.mockResolvedValue(null)
 
-    const result = await updateSpaceWeatherSection(updateBody)
+    const result = await updateSpaceWeatherSection(updateBody, actor)
 
     expect(result).toEqual({ ok: false, reason: 'not-found' })
     expect(tx.spaceWeatherSection.updateMany).not.toHaveBeenCalled()
@@ -206,7 +209,7 @@ describe('updateSpaceWeatherSection', () => {
       sectionRow({ updatedAt: new Date('2026-09-02T00:00:00.000Z') }),
     )
 
-    const result = await updateSpaceWeatherSection(updateBody)
+    const result = await updateSpaceWeatherSection(updateBody, actor)
 
     expect(result).toEqual({ ok: false, reason: 'conflict' })
     expect(tx.spaceWeatherSection.updateMany).not.toHaveBeenCalled()
@@ -216,20 +219,23 @@ describe('updateSpaceWeatherSection', () => {
   test('reports a conflict when another save lands between the check and the write', async () => {
     tx.spaceWeatherSection.updateMany.mockResolvedValue({ count: 0 })
 
-    const result = await updateSpaceWeatherSection(updateBody)
+    const result = await updateSpaceWeatherSection(updateBody, actor)
 
     expect(result).toEqual({ ok: false, reason: 'conflict' })
     expect(tx.spaceWeatherSectionTranslation.upsert).not.toHaveBeenCalled()
   })
 
   test('asks for a review when only the Spanish text changed', async () => {
-    const result = await updateSpaceWeatherSection({
-      version: VERSION,
-      content: {
-        es: { title: 'Nuevo título', body: spanishBody },
-        en: { title: 'Why study it from Costa Rica?', body: englishBody },
+    const result = await updateSpaceWeatherSection(
+      {
+        version: VERSION,
+        content: {
+          es: { title: 'Nuevo título', body: spanishBody },
+          en: { title: 'Why study it from Costa Rica?', body: englishBody },
+        },
       },
-    })
+      actor,
+    )
 
     expect(result).toEqual({
       ok: false,
@@ -240,14 +246,17 @@ describe('updateSpaceWeatherSection', () => {
   })
 
   test('saves a one-sided change once the other language is confirmed', async () => {
-    const result = await updateSpaceWeatherSection({
-      version: VERSION,
-      content: {
-        es: { title: 'Nuevo título', body: spanishBody },
-        en: { title: 'Why study it from Costa Rica?', body: englishBody },
+    const result = await updateSpaceWeatherSection(
+      {
+        version: VERSION,
+        content: {
+          es: { title: 'Nuevo título', body: spanishBody },
+          en: { title: 'Why study it from Costa Rica?', body: englishBody },
+        },
+        confirmedUnchanged: [{ locale: 'en', field: 'title' }],
       },
-      confirmedUnchanged: [{ locale: 'en', field: 'title' }],
-    })
+      actor,
+    )
 
     expect(result.ok).toBe(true)
     expect(tx.spaceWeatherSectionTranslation.upsert).toHaveBeenCalledTimes(1)
@@ -256,24 +265,30 @@ describe('updateSpaceWeatherSection', () => {
   test('completes a legacy section after reviewing its base text', async () => {
     tx.spaceWeatherSection.findUnique.mockResolvedValue(legacyRow)
 
-    const unconfirmed = await updateSpaceWeatherSection({
-      version: VERSION,
-      content: {
-        es: { title: '¿Por qué estudiarlo desde Costa Rica?', body: spanishBody },
-        en: { title: 'Why study it from Costa Rica?', body: englishBody },
+    const unconfirmed = await updateSpaceWeatherSection(
+      {
+        version: VERSION,
+        content: {
+          es: { title: '¿Por qué estudiarlo desde Costa Rica?', body: spanishBody },
+          en: { title: 'Why study it from Costa Rica?', body: englishBody },
+        },
       },
-    })
-    const confirmed = await updateSpaceWeatherSection({
-      version: VERSION,
-      content: {
-        es: { title: '¿Por qué estudiarlo desde Costa Rica?', body: spanishBody },
-        en: { title: 'Why study it from Costa Rica?', body: englishBody },
+      actor,
+    )
+    const confirmed = await updateSpaceWeatherSection(
+      {
+        version: VERSION,
+        content: {
+          es: { title: '¿Por qué estudiarlo desde Costa Rica?', body: spanishBody },
+          en: { title: 'Why study it from Costa Rica?', body: englishBody },
+        },
+        confirmedUnchanged: [
+          { locale: 'es', field: 'title' },
+          { locale: 'es', field: 'body' },
+        ],
       },
-      confirmedUnchanged: [
-        { locale: 'es', field: 'title' },
-        { locale: 'es', field: 'body' },
-      ],
-    })
+      actor,
+    )
 
     expect(unconfirmed).toMatchObject({ ok: false, reason: 'review-required' })
     expect(confirmed.ok).toBe(true)
@@ -282,6 +297,6 @@ describe('updateSpaceWeatherSection', () => {
   test('lets an unexpected database error through for the route to log', async () => {
     tx.spaceWeatherSection.updateMany.mockRejectedValue(new Error('connection lost'))
 
-    await expect(updateSpaceWeatherSection(updateBody)).rejects.toThrow('connection lost')
+    await expect(updateSpaceWeatherSection(updateBody, actor)).rejects.toThrow('connection lost')
   })
 })

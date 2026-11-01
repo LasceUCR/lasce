@@ -8,7 +8,7 @@ const phones = [
   { width: 320, height: 568 },
 ]
 
-const sections = ['Resumen', 'Descargas', 'Usuarios', 'Permisos', 'Infraestructura']
+const sections = ['Resumen', 'Descargas', 'Usuarios', 'Permisos']
 
 function adminMenu(page: Page) {
   return page.getByRole('navigation', { name: 'Panel de administración' })
@@ -109,11 +109,7 @@ test('offers an assistant only the sections its grants unlock in the bar', async
 
     await menuToggle(page).click()
 
-    await expect(adminMenu(page).getByRole('link')).toHaveText([
-      'Resumen',
-      'Descargas',
-      'Infraestructura',
-    ])
+    await expect(adminMenu(page).getByRole('link')).toHaveText(['Resumen'])
   } finally {
     await fixture.cleanup()
   }

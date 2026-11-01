@@ -27,7 +27,7 @@ export async function PATCH(request: Request, { params }: Context) {
   const parsed = collaborationUpdateSchema.safeParse(json.body)
   if (!parsed.success) return invalidBody(parsed.error)
   try {
-    const result = await updateCollaboration(id, parsed.data)
+    const result = await updateCollaboration(id, parsed.data, guard.user)
     return result.ok ? ok({ collaboration: result.value }) : writeFailure(result)
   } catch (error) {
     return internalError('No se pudo actualizar la colaboración.', error)
@@ -40,7 +40,8 @@ export async function DELETE(_request: Request, { params }: Context) {
   const { id } = await params
   if (!isUuid(id)) return invalidId('El identificador de la colaboración no es válido.')
   try {
-    if (!(await deleteCollaboration(id))) return notFound('La colaboración ya no existe.')
+    if (!(await deleteCollaboration(id, guard.user)))
+      return notFound('La colaboración ya no existe.')
     return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     return internalError('No se pudo eliminar la colaboración.', error)

@@ -1,5 +1,6 @@
 import { prisma, type Prisma } from '@lasce/db'
 
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
 import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
@@ -147,7 +148,10 @@ export async function getHomeContent(
 export type HeroWriteResult = { ok: true; hero: HomeHeroData } | HeroWriteFailure
 
 /** Saves the banner's title and subtitle in every language against the version loaded. */
-export async function updateHero(input: HeroUpdateInput): Promise<HeroWriteResult> {
+export async function updateHero(
+  input: HeroUpdateInput,
+  actor: AuditActor,
+): Promise<HeroWriteResult> {
   const expected = parseVersion(input.version)
 
   const result = await runWrite<HeroRecord, HeroWriteFailure>(async (tx) => {
@@ -186,7 +190,18 @@ export async function updateHero(input: HeroUpdateInput): Promise<HeroWriteResul
       })
     }
 
-    return tx.homeHero.findUniqueOrThrow({ where: { id: current.id }, include: heroInclude })
+    const updated = await tx.homeHero.findUniqueOrThrow({
+      where: { id: current.id },
+      include: heroInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'home_hero.update',
+      summary: `Banner de inicio actualizado: ${updated.title}`,
+      entityType: 'home_hero',
+      entityId: current.id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 
   return result.ok ? { ok: true, hero: toHero(result.value, defaultLocale, true) } : result
@@ -203,6 +218,7 @@ export type IndicatorWriteResult =
 export async function updateIndicator(
   id: string,
   input: IndicatorUpdateInput,
+  actor: AuditActor,
 ): Promise<IndicatorWriteResult> {
   const expected = parseVersion(input.version)
 
@@ -256,7 +272,18 @@ export async function updateIndicator(
       }
     }
 
-    return tx.geomagneticIndex.findUniqueOrThrow({ where: { id }, include: indicatorInclude })
+    const updated = await tx.geomagneticIndex.findUniqueOrThrow({
+      where: { id },
+      include: indicatorInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'geomagnetic_index.update',
+      summary: `Índice geomagnético actualizado: ${updated.code}`,
+      entityType: 'geomagnetic_index',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 
   return result.ok
@@ -284,10 +311,10 @@ const positionColumns = {
  * an edit form opened before someone else's reorder then gets a conflict instead of saving over
  * a row it did not load.
  */
-export async function reorderIndicators({
-  ids,
-  positionField,
-}: IndicatorOrderInput): Promise<OrderWriteResult> {
+export async function reorderIndicators(
+  { ids, positionField }: IndicatorOrderInput,
+  actor: AuditActor,
+): Promise<OrderWriteResult> {
   const column = positionColumns[positionField]
 
   const result = await runWrite<null, OrderWriteFailure>(async (tx) => {
@@ -303,6 +330,13 @@ export async function reorderIndicators({
     for (const [index, id] of ids.entries()) {
       await tx.geomagneticIndex.update({ where: { id }, data: { [column]: index } })
     }
+
+    await recordUserAuditEvent(tx, actor, {
+      action: 'geomagnetic_index.reorder',
+      summary: 'Orden de los índices geomagnéticos actualizado',
+      entityType: 'geomagnetic_index',
+      metadata: { order: ids },
+    })
 
     return null
   })

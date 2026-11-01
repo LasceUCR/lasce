@@ -243,6 +243,7 @@ describe('PATCH /api/publicaciones/[id]: content and shared-field updates', () =
     expect(mocks.updatePublication).toHaveBeenCalledWith(
       ID,
       expect.objectContaining({ version: VERSION, content: contentBody.content }),
+      expect.anything(),
     )
   })
 
@@ -252,6 +253,7 @@ describe('PATCH /api/publicaciones/[id]: content and shared-field updates', () =
     expect(mocks.updatePublication).toHaveBeenCalledWith(
       ID,
       expect.objectContaining({ confirmedUnchanged: [{ locale: 'en', field: 'title' }] }),
+      expect.anything(),
     )
   })
 
@@ -259,16 +261,24 @@ describe('PATCH /api/publicaciones/[id]: content and shared-field updates', () =
     const { response } = await patch({ version: VERSION, DOI: '10.5555/new-doi' })
 
     expect(response.status).toBe(200)
-    expect(mocks.updatePublication).toHaveBeenCalledWith(ID, {
-      version: VERSION,
-      DOI: '10.5555/new-doi',
-    })
+    expect(mocks.updatePublication).toHaveBeenCalledWith(
+      ID,
+      {
+        version: VERSION,
+        DOI: '10.5555/new-doi',
+      },
+      expect.anything(),
+    )
   })
 
   test('clears the external link when it is sent as null or empty', async () => {
     await patch({ version: VERSION, href: '' })
 
-    expect(mocks.updatePublication).toHaveBeenCalledWith(ID, { version: VERSION, href: null })
+    expect(mocks.updatePublication).toHaveBeenCalledWith(
+      ID,
+      { version: VERSION, href: null },
+      expect.anything(),
+    )
   })
 
   test('answers 400 with the field to review when one language changed alone', async () => {
@@ -369,7 +379,7 @@ describe('DELETE /api/publicaciones/[id]', () => {
     const response = await DELETE(deleteRequest(), paramsFor(ID))
 
     expect(response.status).toBe(204)
-    expect(mocks.deletePublication).toHaveBeenCalledWith(ID)
+    expect(mocks.deletePublication).toHaveBeenCalledWith(ID, expect.anything())
   })
 
   test('answers 500 without database details when the delete fails', async () => {

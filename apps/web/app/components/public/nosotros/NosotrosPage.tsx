@@ -261,6 +261,19 @@ export function NosotrosPage({
         ) : null}
 
         <CardGrid columns={3} equalHeight>
+          {editMode && canCreate ? (
+            <AddItemCard label={t('add')} size="large">
+              {({ close }) => (
+                <NosotrosActivityForm
+                  editing={null}
+                  icon={blankIcon}
+                  onCancel={close}
+                  onSave={(body) => handleCreateActivity(body, close)}
+                  requireConfirmation={false}
+                />
+              )}
+            </AddItemCard>
+          ) : null}
           {content.activities.items.map((item) => {
             const Icon = icons[item.icon]
             const icon = <Icon size={22} strokeWidth={1.8} />
@@ -301,20 +314,6 @@ export function NosotrosPage({
               </EditableWrapper>
             )
           })}
-
-          {editMode && canCreate ? (
-            <AddItemCard label={t('add')} size="large">
-              {({ close }) => (
-                <NosotrosActivityForm
-                  editing={null}
-                  icon={blankIcon}
-                  onCancel={close}
-                  onSave={(body) => handleCreateActivity(body, close)}
-                  requireConfirmation={false}
-                />
-              )}
-            </AddItemCard>
-          ) : null}
         </CardGrid>
       </TopicSection>
 
@@ -344,7 +343,7 @@ export function NosotrosPage({
               translation={{ editing: person.editing ?? null }}
             />
           )}
-          trailingSlide={
+          leadingSlide={
             editMode && canCreate ? (
               <AddItemCard label={tNosotrosResearchers('add')}>
                 {({ close }) => (

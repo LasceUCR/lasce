@@ -39,11 +39,7 @@ test.beforeEach(async ({ page }) => {
         instrument: { code: selection.instrument.code, name: selection.instrument.name },
         product: { code: selection.product.code, name: selection.product.name },
         parameter: selection.product.parameters[0],
-        origin: {
-          kind: 'observed',
-          provider: 'GOES',
-          notice: 'Fuente: GOES. Imágenes observadas de SUVI.',
-        },
+        origin: { kind: 'observed', dataset: 'suvi', resolution: 'sampled' },
         visualization: 'image-sequence',
         images:
           parameters.get('product') === 'Fe131'
@@ -51,7 +47,6 @@ test.beforeEach(async ({ page }) => {
             : Array.from({ length: 8 }, (_, index) => ({
                 timestamp: new Date(start + ((end - start) * index) / 7).toISOString(),
                 imageUrl: suviFrameUrl(selection.product.code, index),
-                alt: `Imagen solar de GOES: ${selection.product.wavelength}`,
               })),
       },
     })
@@ -64,6 +59,71 @@ async function selectHistoricalXrays(page: Page) {
   await page.getByRole('treeitem', { name: /Flujo solar: rayos X/ }).click()
   await page.getByRole('combobox', { name: 'Canal o parámetro' }).click()
   await page.getByRole('option', { name: /Banda larga/ }).click()
+}
+
+for (const width of [390, 1440]) {
+  test(`updates consultation banners and keeps loading above inputs at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.route('**/api/scientific-data?**', async (route) => {
+      const query = new URL(route.request().url()).searchParams
+      if (query.get('product') !== 'SFXR') return route.fallback()
+      await route.fulfill({
+        status: 202,
+        json: { state: 'pending', jobId: 'banner-query', progress: 35 },
+      })
+    })
+    await page.goto('/datos')
+    const query = page.getByRole('region', { name: 'Configure los datos que desea visualizar' })
+    const banner = query.getByRole('complementary', { name: 'Permisos de consulta y descarga' })
+    await expect(banner).toHaveCount(0)
+    await query.getByRole('button', { name: 'Consultar datos' }).click()
+    await expect(banner).toContainText(
+      'Para GOES (EXIS), solo está disponible la descarga de la gráfica en PNG',
+    )
+    const progress = query.getByRole('progressbar', { name: 'Cargando datos' })
+    await expect(progress).toHaveAttribute('value', '35')
+    const bannerBox = (await banner.boundingBox())!
+    const progressBox = (await progress.boundingBox())!
+    const sourceBox = (await query
+      .getByRole('combobox', { name: 'Fuente de datos' })
+      .boundingBox())!
+    expect(bannerBox.y + bannerBox.height).toBeLessThan(progressBox.y)
+    expect(progressBox.y + progressBox.height).toBeLessThan(sourceBox.y)
+    expect(progressBox.height).toBeGreaterThanOrEqual(6)
+    expect(progressBox.x).toBeGreaterThanOrEqual(0)
+    expect(progressBox.x + progressBox.width).toBeLessThanOrEqual(width)
+    await progress.scrollIntoViewIfNeeded()
+    await expect(progress).toBeInViewport()
+    await page.screenshot({
+      path: testInfo.outputPath(`query-loading-${width}.png`),
+      fullPage: true,
+      animations: 'disabled',
+    })
+    const accessibility = await new AxeBuilder({ page }).include('.data-explorer').analyze()
+    expect(accessibility.violations).toEqual([])
+
+    await query.getByRole('combobox', { name: 'Fuente de datos' }).click()
+    await page.getByRole('option', { name: /ROSAC/ }).click()
+    await expect(progress).toHaveCount(0)
+    await expect(banner).toContainText('Todos los datos de ROSAC (ROSAC-I1) están disponibles')
+    await expect(banner).not.toContainText('GOES')
+    await expect(query.getByRole('note')).toContainText('todos los resultados son simulados')
+    await query.getByRole('combobox', { name: 'Fuente de datos' }).click()
+    await page.getByRole('option', { name: 'GOES', exact: true }).click()
+    await expect(banner).not.toContainText('ROSAC')
+    const product = query.getByRole('combobox', { name: 'Instrumento y producto' })
+    await product.focus()
+    await product.press('Enter')
+    await product.press('End')
+    await product.press('ArrowRight')
+    await product.press('ArrowDown')
+    await product.press('Enter')
+    await expect(banner).toContainText('Las descargas de GOES (SUVI) no están disponibles')
+    await expect(banner).not.toContainText('EXIS')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  })
 }
 
 test.describe('touch controls', () => {
@@ -115,11 +175,15 @@ for (const width of [320, 768, 1440]) {
       true,
     )
     await expect(instruments).toBeVisible()
-    await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).toHaveAttribute(
+    await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).not.toHaveAttribute(
       'aria-disabled',
       'true',
     )
-    await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).toBeInViewport()
+    await expect(page.getByRole('treeitem', { name: /baja energía/ })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    await expect(page.getByRole('treeitem', { name: /baja energía/ })).toBeInViewport()
     await page.screenshot({
       path: testInfo.outputPath(`instruments-${width}.png`),
       animations: 'disabled',
@@ -169,6 +233,33 @@ for (const width of [320, 768, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   })
 }
+
+test('keeps instrument products visible when the form starts near the viewport bottom', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 768, height: 720 })
+  await page.goto('/datos')
+  const product = page.getByRole('combobox', { name: 'Instrumento y producto' })
+  await expect(product).toBeEnabled()
+  await product.evaluate((element) => {
+    window.scrollBy({
+      top: element.getBoundingClientRect().bottom - window.innerHeight + 24,
+      behavior: 'instant',
+    })
+  })
+  const scrollY = await page.evaluate(() => window.scrollY)
+  await product.click()
+  await page.getByRole('treeitem', { name: /^SEISS/ }).click()
+  await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).toBeInViewport()
+  const menu = page.getByRole('tree', { name: 'Instrumento y producto' })
+  const box = (await menu.boundingBox())!
+  expect(box.height).toBeGreaterThanOrEqual(160)
+  expect(box.y).toBeGreaterThanOrEqual(0)
+  expect(box.y + box.height).toBeLessThanOrEqual(720)
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrollY)
+  await page.getByRole('treeitem', { name: /media y alta/ }).click()
+  await expect(product).toContainText('energía media y alta')
+})
 
 test('opens a usable instrument menu with the trigger against the window edge', async ({
   page,
@@ -235,8 +326,8 @@ async function mockObservedXrays(page: Page, points = true, pending = false) {
         parameter: { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
         origin: {
           kind: 'observed',
-          provider: 'GOES',
-          notice: 'Fuente: GOES. Observaciones históricas de nivel 1b.',
+          dataset: 'goesArchive',
+          resolution: 'sampled',
           satellite: 18,
         },
         visualization: 'time-series',
@@ -348,7 +439,12 @@ test.describe('downloads', () => {
           parameter: selection.product.parameters.find(
             (parameter) => parameter.code === parameters.get('parameter'),
           ),
-          origin: { kind: 'observed', provider: 'GOES', notice: 'Fuente: GOES.', satellite: 19 },
+          origin: {
+            kind: 'observed',
+            dataset: 'goesArchive',
+            resolution: 'sampled',
+            satellite: 19,
+          },
           visualization: 'time-series',
           points: [
             { timestamp: '2025-01-05T08:00:00Z', value: 1e-7 },
@@ -484,7 +580,7 @@ for (const width of [320, 768, 1440]) {
     await page.goto('/datos')
     const solar = page.getByRole('region', { name: 'El Sol de hoy', exact: true })
     const query = page.getByRole('region', { name: 'Configure los datos que desea visualizar' })
-    const images = solar.getByRole('img', { name: 'Imagen solar de GOES: 195 Å' })
+    const images = solar.getByRole('img', { name: /195 Å \(Fe195\) observada por GOES a las/ })
     await expect(images).toHaveCount(5)
     await expect
       .poll(() => images.first().evaluate((element: HTMLImageElement) => element.naturalWidth))
@@ -514,7 +610,7 @@ for (const width of [320, 768, 1440]) {
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     const banner = query.getByRole('complementary', { name: 'Permisos de consulta y descarga' })
-    await expect(banner).toContainText('necesita una cuenta e iniciar sesión')
+    await expect(banner).toHaveCount(0)
     await expect(solar).not.toContainText(/CITIC|LASCE|NOAA/)
     await page.screenshot({
       path: testInfo.outputPath(`solar-${width}.png`),
@@ -545,9 +641,14 @@ test('changes the daily band and range without modifying the lower query or relo
   await solar.getByRole('radio', { name: '195 Å' }).focus()
   await solar.getByRole('radio', { name: '195 Å' }).press('ArrowLeft')
   await expect(solar.getByRole('radio', { name: '171 Å' })).toBeChecked()
-  await expect(solar.getByRole('img', { name: 'Imagen solar de GOES: 171 Å' })).toHaveCount(5)
+  await expect(
+    solar.getByRole('img', { name: /171 Å \(Fe171\) observada por GOES a las/ }),
+  ).toHaveCount(5)
   await solar.getByRole('radio', { name: '171 Å' }).press('ArrowLeft')
-  await expect(solar.getByRole('status')).toContainText('Aún no hay imágenes para esta selección')
+  // LoadingRegion keeps its (now empty) status mounted, so target the empty state by its text.
+  await expect(
+    solar.getByRole('status').filter({ hasText: 'Aún no hay imágenes para esta selección' }),
+  ).toBeVisible()
   await solar.getByRole('radio', { name: '131 Å' }).press('ArrowRight')
   await expect(solar.getByRole('img')).toHaveCount(5)
   const requestPromise = page.waitForRequest(
@@ -618,7 +719,11 @@ test('selects instruments without requests and keeps manual SUVI separate from t
   expect(requests).toBe(0)
   await expect(query.getByRole('img')).toHaveCount(0)
   await query.getByRole('button', { name: 'Consultar datos' }).click()
-  await expect(query.getByRole('img', { name: 'Imagen solar de GOES: 171 Å' })).toHaveCount(8)
+  await expect(
+    query.getByRole('img', { name: /171 Å \(Fe171\) observada por GOES a las/ }),
+  ).toHaveCount(8)
   await expect(solar.getByRole('radio', { name: '195 Å' })).toBeChecked()
-  await expect(solar.getByRole('img', { name: 'Imagen solar de GOES: 195 Å' })).toHaveCount(5)
+  await expect(
+    solar.getByRole('img', { name: /195 Å \(Fe195\) observada por GOES a las/ }),
+  ).toHaveCount(5)
 })

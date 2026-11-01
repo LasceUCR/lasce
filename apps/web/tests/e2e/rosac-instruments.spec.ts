@@ -75,12 +75,27 @@ for (const [code, product, parameter] of [
     await page.keyboard.press('Tab')
     await expect(source).toBeFocused()
     await expect(source).not.toHaveCSS('outline-style', 'none')
-    await expect(page.getByText(/todos los resultados de esta fuente son simulados/)).toBeVisible()
+    const query = page.getByRole('region', { name: 'Configure los datos que desea visualizar' })
+    const consultationNotice = query.getByRole('note')
+    const permissions = query.getByRole('complementary', {
+      name: 'Permisos de consulta y descarga',
+    })
+    await expect(consultationNotice).toHaveCount(0)
+    await expect(permissions).toHaveCount(0)
     await productSelect.click()
     await expect(
       page.getByRole('treeitem', { name: /Instrumento [12] \(por definir\)/ }),
     ).toHaveCount(2)
     await expect(page.getByRole('treeitem', { name: /Instrumento 3/ })).toHaveCount(0)
+    await page.keyboard.press('Escape')
+
+    await query.getByRole('button', { name: 'Consultar datos' }).focus()
+    await page.keyboard.press('Enter')
+    await expect(consultationNotice).toBeVisible()
+    await expect(consultationNotice).toContainText(`ROSAC (ROSAC-I${number})`)
+    await expect(consultationNotice).toContainText('todos los resultados son simulados')
+    await expect(permissions).toBeVisible()
+    await expect(permissions).toContainText(`Todos los datos de ROSAC (ROSAC-I${number})`)
   })
 }
 

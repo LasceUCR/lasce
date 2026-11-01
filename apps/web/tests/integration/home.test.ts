@@ -140,6 +140,8 @@ afterAll(async () => {
   await prisma.$disconnect()
 })
 
+const actor = { id: 'user-1' }
+
 describe('home content against PostgreSQL', () => {
   test('reads the seeded banner and indices in both languages', async () => {
     const [es, en] = await Promise.all([getHomeContent('es'), getHomeContent('en')])
@@ -160,6 +162,7 @@ describe('home content against PostgreSQL', () => {
 
     const result = await updateHero(
       heroUpdateSchema.parse({ version: hero.version, content: heroText }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -179,6 +182,7 @@ describe('home content against PostgreSQL', () => {
             version: hero.version,
             content: { es: heroText.es, en: { ...heroText.en, lead: FAILING_LEAD } },
           }),
+          actor,
         ),
       ).rejects.toThrow()
     })
@@ -201,6 +205,7 @@ describe('home content against PostgreSQL', () => {
               en: { ...heroText.en, lead: `Attempt ${attempt} ${RUN}` },
             },
           }),
+          actor,
         ),
       ),
     )
@@ -219,10 +224,10 @@ describe('home content against PostgreSQL', () => {
 
   test('refuses a save against a stale version', async () => {
     const { hero } = await editing()
-    await updateHero(heroUpdateSchema.parse({ version: hero.version, content: heroText }))
+    await updateHero(heroUpdateSchema.parse({ version: hero.version, content: heroText }), actor)
 
     expect(
-      await updateHero(heroUpdateSchema.parse({ version: hero.version, content: heroText })),
+      await updateHero(heroUpdateSchema.parse({ version: hero.version, content: heroText }), actor),
     ).toEqual({ ok: false, reason: 'conflict' })
   })
 
@@ -236,6 +241,7 @@ describe('home content against PostgreSQL', () => {
     const result = await updateIndicator(
       dst.id,
       indicatorUpdateSchema.parse({ version, value: '-40 nT' }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -290,10 +296,14 @@ describe('home content against PostgreSQL', () => {
     // Reversed, every index takes a position another one holds until the transaction ends.
     const ids = seeded.indices.map((index) => index.id).reverse()
 
-    expect(await reorderIndicators(indicatorOrderSchema.parse({ ids }))).toEqual({ ok: true })
+    expect(await reorderIndicators(indicatorOrderSchema.parse({ ids }), actor)).toEqual({
+      ok: true,
+    })
     expect((await getHomeContent()).indicators.map((indicator) => indicator.id)).toEqual(ids)
 
-    expect(await reorderIndicators(indicatorOrderSchema.parse({ ids: ids.slice(1) }))).toEqual({
+    expect(
+      await reorderIndicators(indicatorOrderSchema.parse({ ids: ids.slice(1) }), actor),
+    ).toEqual({
       ok: false,
       reason: 'conflict',
     })

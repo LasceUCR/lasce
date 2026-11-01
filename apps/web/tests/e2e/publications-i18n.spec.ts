@@ -4,6 +4,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
 import { createSignedInUser } from './helpers/admin-users'
+import { enableEditMode } from './helpers/edit-mode'
 
 // Wide enough for the desktop header, where the language menu lives above 1400px.
 test.use({ viewport: { width: 1600, height: 900 } })
@@ -81,7 +82,7 @@ async function switchLanguage(page: Page, from: 'Español' | 'English', to: 'Esp
 
 async function openEditMode(page: Page) {
   await page.goto('/administracion')
-  await page.getByRole('switch', { name: 'Modo edición' }).click()
+  await enableEditMode(page)
   await page.goto('/publicaciones')
 }
 
@@ -347,16 +348,18 @@ test('meets WCAG A and AA automated checks in English and in the bilingual edito
     await expect(dialog.getByText(/may not be in Spanish/)).toBeVisible()
     expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
 
-    // With errors, a pending review and its switch on screen.
+    // Changing the Spanish title asks for the English title, not for the untouched abstract.
     await field(page, 'Title (Español)').fill('Título nuevo')
     await dialog.getByRole('button', { name: 'Confirm' }).click()
+    await expect(dialog.getByRole('tab', { name: /^English · 2 to review/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
     await expect(
-      dialog.getByRole('switch', { name: 'The Spanish abstract is still correct' }),
+      dialog.getByRole('switch', { name: 'The English title is still correct' }),
     ).toBeVisible()
-    expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
-
-    await dialog.getByRole('tab', { name: /^English/ }).click()
     await expect(dialog.getByText('The English title is required.')).toBeVisible()
+    await expect(dialog.getByText('The English abstract is required.')).toBeVisible()
     expect((await axe().include('dialog[open]').analyze()).violations).toEqual([])
 
     await dialog.getByRole('button', { name: 'Cancel' }).click()

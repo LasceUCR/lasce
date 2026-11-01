@@ -144,7 +144,7 @@ describe('PATCH /api/space-weather/costa-rica: saving', () => {
 
     expect(response.status).toBe(200)
     expect(body).toEqual({ section: storedSection })
-    expect(mocks.updateSpaceWeatherSection).toHaveBeenCalledWith(validBody)
+    expect(mocks.updateSpaceWeatherSection).toHaveBeenCalledWith(validBody, expect.anything())
   })
 
   test('answers 404 when the section does not exist', async () => {

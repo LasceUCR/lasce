@@ -13,7 +13,9 @@ export interface AcknowledgmentsGalleryProps {
    * This is how the caller wraps cards with edit affordances in edit mode.
    */
   renderInstitution?: (institution: RosacAcknowledgment, index: number) => ReactNode
-  /** An extra slide appended after institutions, e.g. an "add new" prompt in edit mode. */
+  /** An extra slide before the institutions, e.g. an "add new" prompt in edit mode. */
+  leadingSlide?: ReactNode
+  /** An extra slide appended after institutions. */
   trailingSlide?: ReactNode
 }
 
@@ -27,10 +29,12 @@ export function AcknowledgmentsGallery({
   label,
   institutions,
   renderInstitution,
+  leadingSlide,
   trailingSlide,
 }: AcknowledgmentsGalleryProps) {
   return (
     <ul aria-label={label} className="acknowledgments-grid">
+      {leadingSlide ? <li className="acknowledgments-tile">{leadingSlide}</li> : null}
       {institutions.map((institution, index) => (
         <li className="acknowledgments-tile" key={institution.id ?? institution.name}>
           {renderInstitution ? (

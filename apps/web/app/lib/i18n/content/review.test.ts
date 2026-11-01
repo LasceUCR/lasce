@@ -40,6 +40,13 @@ describe('changedLocales', () => {
         es: { name: 'Workshop', summary: '' },
         en: { name: 'Workshop', summary: null },
       }),
+    ).toEqual([])
+
+    expect(
+      changedLocales('summary', legacy, {
+        es: { name: 'Workshop', summary: '' },
+        en: { name: 'Workshop', summary: 'Session' },
+      }),
     ).toEqual(['en'])
   })
 
@@ -105,6 +112,17 @@ describe('findPendingReviews', () => {
     expect(findPendingReviews(profileContent, profile, next)).toEqual([
       { locale: 'en', field: 'role' },
       { locale: 'en', field: 'biography' },
+    ])
+  })
+
+  test('does not review an untouched field when only another field changes on a legacy record', () => {
+    const next = {
+      es: { name: 'Workshop', summary: 'Sesión.' },
+      en: { name: '', summary: '' },
+    }
+
+    expect(findPendingReviews(eventContent, legacy, next)).toEqual([
+      { locale: 'en', field: 'summary' },
     ])
   })
 

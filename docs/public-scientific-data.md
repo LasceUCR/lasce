@@ -56,13 +56,22 @@ replace the new selection, and automatic updates do not move keyboard focus. Loa
 bands, source errors and individual image failures have visible messages. A failed image is
 removed while its UTC capture time remains visible; switching bands can recover normally.
 
-The visible permissions banner communicates the policy:
+The consultation and permission banners stay hidden until the first query is submitted. Once
+shown, they follow the currently selected source and instrument, even when a change clears the
+results. They appear above the loading indicator, followed by the query inputs and the results.
+The loading bar is 0.375rem thick, with a contrasting blue fill on a pale track. Its compact header
+places the loading status beside a text-style cancel control and only shows a percentage when
+progress is available. The fill transitions smoothly between updates and stays indeterminate until
+progress is available (or throughout an image query). It respects reduced-motion preferences.
+
+The banners communicate only the selected instrument's policy:
 
 - historical GOES information can be consulted without an account;
 - downloading anything requires an account and signing in;
-- chart images can be downloaded for every source;
+- chart images can be downloaded for charted instruments in either source;
 - ROSAC data (CSV) is open to every account;
-- GOES data requires the GOES data download permission (`download_goes_resources`);
+- GOES normally offers only the chart; EXIS also offers CSV to accounts with the GOES data
+  download permission (`download_goes_resources`), which the banner reflects;
 - SUVI solar images cannot be downloaded;
 - every download link expires after 30 minutes.
 
@@ -77,7 +86,7 @@ the values are `observed` or `simulated`; these states must never be inferred fr
 
 ### GOES
 
-GOES products are served by three backends, chosen by instrument:
+GOES products are served by three backends, chosen by instrument (the SEISS products are routed one by one, by product):
 
 | Instrument | Backend                                                                                                 |
 | ---------- | ------------------------------------------------------------------------------------------------------- |
@@ -85,29 +94,33 @@ GOES products are served by three backends, chosen by instrument:
 | EXIS       | InfluxDB measurement `exis_irradiance`, read through its SQL HTTP API (`INFLUXDB_*` variables)          |
 | MAG        | InfluxDB measurement `mag_field`, read the same way                                                     |
 | SEISS      | The [CITIC-UCR public archive](https://nube.citic.ucr.ac.cr/index.php/s/QT3SfLRSDyaDkEo) via the worker |
+| SEISS EHIS | InfluxDB measurement `ehis_flux`, read the same way as EXIS (a product-level override)                  |
+| SEISS SGPS | InfluxDB measurement `sgps_flux`, read the same way as EXIS (a product-level override)                  |
+| SEISS MPSH | InfluxDB measurement `mpsh_flux`, read the same way as EXIS (a product-level override)                  |
 
 SUVI, EXIS and MAG are filled by the worker's `suvi-pipeline`, `exis-pipeline` and `mag-pipeline`
 jobs (see [`suvi-pipeline.md`](suvi-pipeline.md), [`exis-pipeline.md`](exis-pipeline.md) and
 [`mag-pipeline.md`](mag-pipeline.md)); only days those
-jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. SUVI and EXIS now read the worker's own stores (`suvi_frames` + MinIO, and InfluxDB `exis_irradiance`) rather than the CITIC archive; MAG reads NOAA's L2 1-minute averages from InfluxDB `mag_field`. EXIS and MAG queries keep only `valid = true` readings, so points withdrawn by a re-ingest never appear.
+jobs ingested have data, and any other day is an empty result. No adapter substitutes simulated observations on failure. Public source labels, chart captions and source disclaimers identify the source only as **GOES**; archive and transport details remain documented here. Quality filtering and sampling notices are preserved. A result names its provenance with codes (`origin.dataset`, `origin.resolution`, `origin.sampledPoints`), and the page and the downloaded files turn them into text from `scientificData.origins` in the visitor's language (see [internationalization.md](internationalization.md)). SUVI and EXIS now read the worker's own stores (`suvi_frames` + MinIO, and InfluxDB `exis_irradiance`) rather than the CITIC archive; MAG reads NOAA's L2 1-minute averages from InfluxDB `mag_field`. EXIS and MAG queries keep only `valid = true` readings, so points withdrawn by a re-ingest never appear.
 
 The verified WebDAV root is `https://nube.citic.ucr.ac.cr/public.php/dav/files/QT3SfLRSDyaDkEo/GOES/`. Paths are fixed server-side. Days use `YYYYMMDD/` directories of short NetCDF-4 L1b granules; older days may instead be `YYYYMMDD.tar.gz`. The archive uses `SEIS` in paths and filenames, while the instrument is named SEISS in the UI.
 
-| Product    | Archive path                | Selection                                                                          |
-| ---------- | --------------------------- | ---------------------------------------------------------------------------------- |
-| SFXR       | InfluxDB `exis_irradiance`  | XRS-A or XRS-B, using each report's primary detector flag                          |
-| SFEU       | InfluxDB `exis_irradiance`  | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio             |
-| GEOF       | InfluxDB `mag_field`        | L2 1-minute EPN x/y/z or total magnitude (`mag-pipeline`)                          |
-| MPSH       | SEIS/MPSH                   | Electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5              |
-| SGPS       | SEIS/SGPS                   | Explicit SGPS−X or SGPS+X sensor; differential channels or integral P11 (>500 MeV) |
-| SUVI bands | `solar.suvi_frames` + MinIO | Up to eight clean frames per query, spread evenly, most recent satellite only      |
-| EHIS, MPSL | Present under SEIS          | Reader and channel catalog remain pending                                          |
+| Product    | Archive path                | Selection                                                                                            |
+| ---------- | --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| SFXR       | InfluxDB `exis_irradiance`  | XRS-A or XRS-B, using each report's primary detector flag                                            |
+| SFEU       | InfluxDB `exis_irradiance`  | Average irradiance for seven EUV lines, or NOAA historical Mg II ratio                               |
+| GEOF       | InfluxDB `mag_field`        | L2 1-minute EPN x/y/z or total magnitude (`mag-pipeline`)                                            |
+| MPSH       | InfluxDB `mpsh_flux`        | L2 1-minute electron bands 1–10 or proton bands 1–11, with explicit telescope 1–5 (`seiss-pipeline`) |
+| SGPS       | InfluxDB `sgps_flux`        | L2 1-minute SGPS−X or SGPS+X differential channels or integral P11 (>500 MeV) (`seiss-pipeline`)     |
+| SUVI bands | `solar.suvi_frames` + MinIO | Up to eight clean frames per query, spread evenly, most recent satellite only                        |
+| EHIS       | InfluxDB `ehis_flux`        | L1b 5-minute H, He, CNO, Ne-S or Cl-Ni flux in energy bands 1–5 (`seiss-pipeline`)                   |
+| MPSL       | Present under SEIS          | Pending: NOAA publishes no L2 one-minute product for it (see `seiss-pipeline.md`)                    |
 
 Operational SWPC channels are not interchangeable with L1b selectors. The former MPSH nominal energies are replaced with archive band/telescope identifiers. SGPS L1b does not supply the previous integral thresholds below 500 MeV. EPN components retain their native axis names; no undocumented coordinate transform or directional averaging is applied. Flux units are checked against NetCDF metadata.
 
 The web enqueues `query-goes-archive`; only the Python worker downloads and decodes NetCDF. The endpoint responds with `202` and `{ state: 'pending', jobId, progress }` during processing. The browser polls the same criteria with `jobId` every two seconds. Completed work returns the existing time-series response with GOES as the public source. Identical requests share a deterministic job identifier; current-day requests refresh in ten-minute buckets. BullMQ retains completed results for up to 24 hours, subject to its count cap. A new submission can retry failed work; polling never retries or re-enqueues expired jobs.
 
-The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` reads that store synchronously for EXIS, sampling at most 360 points per satellite inside the InfluxDB query, the scheduled `mag-pipeline` does the same for MAG (see [`mag-pipeline.md`](mag-pipeline.md)), and only SEISS still goes through `query-goes-archive`. The worker still accepts `GEOF` there, but `/datos` no longer routes MAG to it.
+The worker's scheduled `exis-pipeline` job stores every SFEU and SFXR channel in InfluxDB, one NOAA daily file at a time (see [`exis-pipeline.md`](exis-pipeline.md)); `/datos` reads that store synchronously for EXIS, sampling at most 360 points per satellite inside the InfluxDB query, the scheduled `mag-pipeline` does the same for MAG (see [`mag-pipeline.md`](mag-pipeline.md)), the scheduled `seiss-pipeline` does the same for SEISS EHIS, SGPS and MPSH (see [`seiss-pipeline.md`](seiss-pipeline.md)), so no `/datos` product goes through `query-goes-archive` any more. The worker still accepts `MPSH` and `SGPS` there, but `/datos` no longer routes them; retiring the job is a follow-up. The same holds for `GEOF`: `/datos` no longer routes MAG to it.
 
 Run `pnpm worker:install` after pulling this change: the worker requires `netCDF4`, `numpy`, and `httpx`. The historical flow now needs Redis and a running worker, in addition to the web server. The web reads InfluxDB through `INFLUXDB_HOST`, `INFLUXDB_TOKEN` and `INFLUXDB_DATABASE`, so deployment needs `INFLUXDB_*` on the web service as well (see [`deployment.md`](deployment.md#10-known-gaps)). SUVI, EXIS, MAG and provisional ROSAC are synchronous.
 
@@ -183,6 +196,7 @@ which backend serves the query:
 ```text
 route.ts → ScientificDataSourceManager ─ by query.source ─→ GOES  ─ by instrument ─→ SUVI → suvi_frames + MinIO
                                                                                       EXIS, MAG → InfluxDB
+                                                                                      SEISS EHIS, SGPS, MPSH → InfluxDB (by product)
                                                                                       SEISS → CITIC worker
                                                           → ROSAC ─ by instrument ─→ ROSAC-I1, ROSAC-I2 → simulation
 ```
@@ -192,7 +206,9 @@ a backend (for example, reading GOES time series from the database instead of th
 implement `ScientificDataProvider` and change its entry there. A synchronous provider returns the
 result directly. Only asynchronous ones return `{ state: 'pending', jobId, progress }`, which the
 route sends as `202`. GOES time-series providers should build their result with
-`buildGoesTimeSeriesResult` so provenance is described consistently. To add a source, extend
+`buildGoesTimeSeriesResult` so provenance is described consistently: give it the dataset code,
+never copy, and add the dataset's provider and notice to `scientificData.origins` in both
+catalogues. To add a source, extend
 `SCIENTIFIC_SOURCE_CODES` and the catalog in `app/lib/scientific-data.ts`, then register one
 more source in `index.ts`.
 
@@ -203,6 +219,9 @@ uses `InstrumentProductSelect`. Both are labeled comboboxes with keyboard naviga
 type-ahead, disabled options, and Escape/outside dismissal. Its popup fits the viewport, uses a
 bounded vertical scrollbar, and wraps long option labels within the menu. Pointer hover uses a
 subtle background; keyboard focus remains visible. Reduced-motion preferences disable animation.
+Popups prefer the form's bounds. If neither side of the trigger has 160 px of usable height,
+they use the viewport's vertical space while keeping the form's horizontal bounds, without
+scrolling the page.
 
 The data page has a compact introduction with **Portal público LASCE**, a prominent **Datos**
 heading, a short description and an anchor linking directly to the query. The solar section keeps

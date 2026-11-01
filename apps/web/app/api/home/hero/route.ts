@@ -23,7 +23,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updateHero(parsed.data)
+    const result = await updateHero(parsed.data, guard.user)
     if (!result.ok) return writeFailure('hero', result)
 
     return ok({ hero: result.hero })

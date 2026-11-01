@@ -20,14 +20,16 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
+    auditEvent: { create: vi.fn() },
     researchTranslation: { upsert: vi.fn() },
     researchAuthor: { upsert: vi.fn() },
     researchCrossAuthor: { deleteMany: vi.fn(), create: vi.fn() },
   }
 
   const prisma = {
-    research: { findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
+    research: { findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn(), count: vi.fn() },
     $transaction: vi.fn(),
   }
 
@@ -44,6 +46,7 @@ const {
   deletePublication,
   findPendingReviews,
   getPublications,
+  getPublicationsPage,
   publicationCreateSchema,
   publicationUpdateSchema,
   updatePublication,
@@ -103,6 +106,8 @@ function uniqueViolation(meta: unknown) {
   })
 }
 
+const actor = { id: 'user-1' }
+
 beforeEach(() => {
   vi.clearAllMocks()
   prisma.$transaction.mockImplementation((write: (client: typeof tx) => unknown) => write(tx))
@@ -150,7 +155,7 @@ describe('getPublications', () => {
     await getPublications()
 
     expect(prisma.research.findMany).toHaveBeenCalledWith({
-      orderBy: { publicationDate: 'desc' },
+      orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
       include: {
         publisher: true,
         authors: { orderBy: { position: 'asc' }, include: { researchAuthor: true } },
@@ -235,6 +240,51 @@ describe('getPublications', () => {
       version: VERSION,
     })
     expect(legacy?.editing).toMatchObject({ content: { en: null }, isLegacy: true })
+  })
+})
+
+describe('getPublicationsPage', () => {
+  test('loads one page of the matching records and reports the search and the group', async () => {
+    prisma.research.count.mockResolvedValue(23)
+    prisma.research.findMany.mockResolvedValue([bilingualRow])
+
+    const page = await getPublicationsPage('es', { query: '  sol  ', page: 2, group: 'LASCE' })
+
+    expect(prisma.research.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({ AND: expect.any(Array) }),
+    })
+    expect(prisma.research.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+        skip: 10,
+        take: 10,
+      }),
+    )
+    expect(page).toMatchObject({
+      page: 2,
+      pageSize: 10,
+      totalItems: 23,
+      totalPages: 3,
+      query: 'sol',
+      group: 'LASCE',
+    })
+    expect(page.publications).toHaveLength(1)
+  })
+
+  test('loads nothing when the search matches no record', async () => {
+    prisma.research.count.mockResolvedValue(0)
+
+    const page = await getPublicationsPage('en', { query: 'nada' })
+
+    expect(prisma.research.findMany).not.toHaveBeenCalled()
+    expect(page).toMatchObject({
+      page: 1,
+      totalItems: 0,
+      totalPages: 0,
+      query: 'nada',
+      group: null,
+      publications: [],
+    })
   })
 })
 
@@ -482,7 +532,7 @@ describe('findPendingReviews', () => {
 
 describe('createPublication', () => {
   test('stores the Spanish text on the record and the English text as its translation', async () => {
-    const result = await createPublication(publicationCreateSchema.parse(createBody))
+    const result = await createPublication(publicationCreateSchema.parse(createBody), actor)
 
     expect(tx.research.create).toHaveBeenCalledWith({
       data: {
@@ -503,7 +553,7 @@ describe('createPublication', () => {
   })
 
   test('writes everything inside one transaction', async () => {
-    await createPublication(publicationCreateSchema.parse(createBody))
+    await createPublication(publicationCreateSchema.parse(createBody), actor)
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
     expect(tx.researchCrossAuthor.create).toHaveBeenCalledTimes(2)
@@ -513,7 +563,10 @@ describe('createPublication', () => {
   })
 
   test('stores an empty link and DOI as null', async () => {
-    await createPublication(publicationCreateSchema.parse({ ...createBody, href: '', DOI: ' ' }))
+    await createPublication(
+      publicationCreateSchema.parse({ ...createBody, href: '', DOI: ' ' }),
+      actor,
+    )
 
     expect(tx.research.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ externalUrl: null, doi: null }),
@@ -528,7 +581,9 @@ describe('createPublication', () => {
       }),
     )
 
-    await expect(createPublication(publicationCreateSchema.parse(createBody))).resolves.toEqual({
+    await expect(
+      createPublication(publicationCreateSchema.parse(createBody), actor),
+    ).resolves.toEqual({
       ok: false,
       reason: 'duplicate',
       field: 'doi',
@@ -538,7 +593,9 @@ describe('createPublication', () => {
   test('reports a duplicate external link separately from a duplicate DOI', async () => {
     tx.research.create.mockRejectedValue(uniqueViolation({ target: ['external_url'] }))
 
-    await expect(createPublication(publicationCreateSchema.parse(createBody))).resolves.toEqual({
+    await expect(
+      createPublication(publicationCreateSchema.parse(createBody), actor),
+    ).resolves.toEqual({
       ok: false,
       reason: 'duplicate',
       field: 'externalUrl',
@@ -549,14 +606,18 @@ describe('createPublication', () => {
     const error = uniqueViolation({ target: 'research_id' })
     tx.research.create.mockRejectedValue(error)
 
-    await expect(createPublication(publicationCreateSchema.parse(createBody))).rejects.toBe(error)
+    await expect(createPublication(publicationCreateSchema.parse(createBody), actor)).rejects.toBe(
+      error,
+    )
   })
 
   test('rethrows any other database error', async () => {
     const error = new Error('connection lost')
     tx.research.create.mockRejectedValue(error)
 
-    await expect(createPublication(publicationCreateSchema.parse(createBody))).rejects.toBe(error)
+    await expect(createPublication(publicationCreateSchema.parse(createBody), actor)).rejects.toBe(
+      error,
+    )
   })
 })
 
@@ -570,7 +631,11 @@ describe('updatePublication', () => {
       },
     }
 
-    const result = await updatePublication('research-1', publicationUpdateSchema.parse(changed))
+    const result = await updatePublication(
+      'research-1',
+      publicationUpdateSchema.parse(changed),
+      actor,
+    )
 
     expect(result.ok).toBe(true)
     expect(tx.research.updateMany).toHaveBeenCalledWith({
@@ -585,14 +650,14 @@ describe('updatePublication', () => {
   })
 
   test('moves the version forward on every save', async () => {
-    await updatePublication('research-1', publicationUpdateSchema.parse(updateBody))
+    await updatePublication('research-1', publicationUpdateSchema.parse(updateBody), actor)
 
     const [args] = tx.research.updateMany.mock.calls[0] ?? []
     expect(args.data.updatedAt.getTime()).toBeGreaterThan(new Date(VERSION).getTime())
   })
 
   test('replaces the author links in the order given', async () => {
-    await updatePublication('research-1', publicationUpdateSchema.parse(updateBody))
+    await updatePublication('research-1', publicationUpdateSchema.parse(updateBody), actor)
 
     expect(tx.researchCrossAuthor.deleteMany).toHaveBeenCalledWith({
       where: { researchId: 'research-1' },
@@ -606,7 +671,7 @@ describe('updatePublication', () => {
     tx.research.findUnique.mockResolvedValue(null)
 
     await expect(
-      updatePublication('missing', publicationUpdateSchema.parse(updateBody)),
+      updatePublication('missing', publicationUpdateSchema.parse(updateBody), actor),
     ).resolves.toEqual({ ok: false, reason: 'not-found' })
     expect(tx.research.updateMany).not.toHaveBeenCalled()
   })
@@ -615,7 +680,7 @@ describe('updatePublication', () => {
     const stale = { ...updateBody, version: '2026-08-01T00:00:00.000Z' }
 
     await expect(
-      updatePublication('research-1', publicationUpdateSchema.parse(stale)),
+      updatePublication('research-1', publicationUpdateSchema.parse(stale), actor),
     ).resolves.toEqual({ ok: false, reason: 'conflict' })
     expect(tx.publisher.upsert).not.toHaveBeenCalled()
   })
@@ -624,7 +689,7 @@ describe('updatePublication', () => {
     tx.research.updateMany.mockResolvedValue({ count: 0 })
 
     await expect(
-      updatePublication('research-1', publicationUpdateSchema.parse(updateBody)),
+      updatePublication('research-1', publicationUpdateSchema.parse(updateBody), actor),
     ).resolves.toEqual({ ok: false, reason: 'conflict' })
     expect(tx.researchTranslation.upsert).not.toHaveBeenCalled()
   })
@@ -636,7 +701,7 @@ describe('updatePublication', () => {
     }
 
     await expect(
-      updatePublication('research-1', publicationUpdateSchema.parse(oneSided)),
+      updatePublication('research-1', publicationUpdateSchema.parse(oneSided), actor),
     ).resolves.toEqual({
       ok: false,
       reason: 'review-required',
@@ -652,7 +717,11 @@ describe('updatePublication', () => {
       confirmedUnchanged: [{ locale: 'en', field: 'title' }],
     }
 
-    const result = await updatePublication('research-1', publicationUpdateSchema.parse(confirmed))
+    const result = await updatePublication(
+      'research-1',
+      publicationUpdateSchema.parse(confirmed),
+      actor,
+    )
 
     expect(result.ok).toBe(true)
   })
@@ -665,7 +734,11 @@ describe('updatePublication', () => {
       translations: [],
     })
 
-    const result = await updatePublication('research-1', publicationUpdateSchema.parse(updateBody))
+    const result = await updatePublication(
+      'research-1',
+      publicationUpdateSchema.parse(updateBody),
+      actor,
+    )
 
     expect(result).toEqual({
       ok: false,
@@ -681,7 +754,7 @@ describe('updatePublication', () => {
     tx.research.updateMany.mockRejectedValue(uniqueViolation({ target: ['doi'] }))
 
     await expect(
-      updatePublication('research-1', publicationUpdateSchema.parse(updateBody)),
+      updatePublication('research-1', publicationUpdateSchema.parse(updateBody), actor),
     ).resolves.toEqual({ ok: false, reason: 'duplicate', field: 'doi' })
   })
 })
@@ -691,6 +764,7 @@ describe('updatePublication: shared fields only', () => {
     const result = await updatePublication(
       'research-1',
       publicationUpdateSchema.parse({ version: VERSION, DOI: '10.5555/new' }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -704,6 +778,7 @@ describe('updatePublication: shared fields only', () => {
     await updatePublication(
       'research-1',
       publicationUpdateSchema.parse({ version: VERSION, researchGroup: 'ROSAC' }),
+      actor,
     )
 
     const [args] = tx.research.updateMany.mock.calls[0] ?? []
@@ -725,6 +800,7 @@ describe('updatePublication: shared fields only', () => {
     const result = await updatePublication(
       'research-1',
       publicationUpdateSchema.parse({ version: VERSION, href: 'https://example.org/new' }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -735,6 +811,7 @@ describe('updatePublication: shared fields only', () => {
     await updatePublication(
       'research-1',
       publicationUpdateSchema.parse({ version: VERSION, href: null }),
+      actor,
     )
 
     expect(tx.research.updateMany).toHaveBeenCalledWith(
@@ -750,6 +827,7 @@ describe('updatePublication: shared fields only', () => {
         venue: 'Astrophysical Journal',
         authors: ['Ana'],
       }),
+      actor,
     )
 
     expect(tx.publisher.upsert).toHaveBeenCalledWith({
@@ -764,6 +842,7 @@ describe('updatePublication: shared fields only', () => {
     const result = await updatePublication(
       'research-1',
       publicationUpdateSchema.parse({ version: '2026-08-01T00:00:00.000Z', DOI: null }),
+      actor,
     )
 
     expect(result).toEqual({ ok: false, reason: 'conflict' })
@@ -779,6 +858,7 @@ describe('updatePublication: changes started from English', () => {
         ...updateBody,
         content: { ...updateBody.content, en: { title: 'Title', abstract: 'Better abstract' } },
       }),
+      actor,
     )
 
     expect(result).toEqual({
@@ -796,6 +876,7 @@ describe('updatePublication: changes started from English', () => {
         content: { ...updateBody.content, en: { title: 'Title', abstract: 'Better abstract' } },
         confirmedUnchanged: [{ locale: 'es', field: 'abstract' }],
       }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -808,16 +889,27 @@ describe('updatePublication: changes started from English', () => {
 })
 
 describe('deletePublication', () => {
-  test('deletes an existing publication in a single statement', async () => {
-    prisma.research.deleteMany.mockResolvedValue({ count: 1 })
+  test('deletes an existing publication in a single statement and records it', async () => {
+    tx.research.findUnique.mockResolvedValue({ title: 'Flares' })
+    tx.research.deleteMany.mockResolvedValue({ count: 1 })
 
-    await expect(deletePublication('research-1')).resolves.toBe(true)
-    expect(prisma.research.deleteMany).toHaveBeenCalledWith({ where: { id: 'research-1' } })
+    await expect(deletePublication('research-1', actor)).resolves.toBe(true)
+    expect(tx.research.deleteMany).toHaveBeenCalledWith({ where: { id: 'research-1' } })
+    expect(tx.auditEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'publication.delete',
+        summary: 'Publicación eliminada: Flares',
+        actorId: 'user-1',
+        entityId: 'research-1',
+      }),
+    })
   })
 
   test('reports a publication that does not exist, or was just deleted by someone else', async () => {
-    prisma.research.deleteMany.mockResolvedValue({ count: 0 })
+    tx.research.findUnique.mockResolvedValue({ title: 'Flares' })
+    tx.research.deleteMany.mockResolvedValue({ count: 0 })
 
-    await expect(deletePublication('missing')).resolves.toBe(false)
+    await expect(deletePublication('missing', actor)).resolves.toBe(false)
+    expect(tx.auditEvent.create).not.toHaveBeenCalled()
   })
 })

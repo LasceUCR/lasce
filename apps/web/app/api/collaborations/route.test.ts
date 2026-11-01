@@ -37,7 +37,7 @@ function request(method: string, data?: unknown) {
 
 beforeEach(() => {
   vi.resetAllMocks()
-  mocks.guard.mockResolvedValue({ ok: true })
+  mocks.guard.mockResolvedValue({ ok: true, user: { id: 'admin-1', role: 'ADMIN' } })
   mocks.create.mockResolvedValue({ ok: true, value: { id } })
   mocks.update.mockResolvedValue({ ok: true, value: { id } })
   mocks.remove.mockResolvedValue(true)
@@ -75,13 +75,20 @@ describe('collaboration API', () => {
   )
   test('creates, updates and deletes with the corresponding permissions and success statuses', async () => {
     expect((await POST(request('POST', body))).status).toBe(201)
-    expect(mocks.create).toHaveBeenCalledWith({
-      ...body,
-      acronym: null,
-      websiteUrl: null,
-    })
+    expect(mocks.create).toHaveBeenCalledWith(
+      {
+        ...body,
+        acronym: null,
+        websiteUrl: null,
+      },
+      expect.objectContaining({ id: 'admin-1' }),
+    )
     expect((await PATCH(request('PATCH', { version, acronym: '' }), context)).status).toBe(200)
-    expect(mocks.update).toHaveBeenCalledWith(id, { version, acronym: null })
+    expect(mocks.update).toHaveBeenCalledWith(
+      id,
+      { version, acronym: null },
+      expect.objectContaining({ id: 'admin-1' }),
+    )
     expect((await DELETE(request('DELETE'), context)).status).toBe(204)
   })
   test('rejects malformed JSON, missing fields, unsafe links and invalid ids without writes', async () => {

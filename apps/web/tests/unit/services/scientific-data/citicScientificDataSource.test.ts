@@ -67,8 +67,8 @@ describe('CITIC historical query', () => {
       origin: {
         kind: 'observed',
         satellite: 18,
-        provider: 'GOES',
-        notice: expect.stringContaining('360 observaciones'),
+        dataset: 'goesArchive',
+        sampledPoints: 360,
       },
     })
     expect(mocks.enqueue).not.toHaveBeenCalled()

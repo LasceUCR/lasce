@@ -85,8 +85,16 @@ cd apps/web && pnpm exec playwright install chromium webkit
 ```
 
 `test` is the unit suite in every workspace and never starts a browser or a
-dev server. The `e2e` job runs Playwright against `next dev` with real Postgres
-and Redis service containers, applying migrations first.
+dev server. In CI, Playwright runs against the production build (the standalone
+server from `next build`), not `next dev`, with real Postgres and Redis service
+containers, applying migrations and the seed first. Locally `pnpm test:e2e`
+still starts `next dev`, so no build is needed.
+
+The suite is split across four `e2e-shard` runners (`--shard=N/4`). Specs share
+one database and mutate global rows, so each runner keeps `workers: 1`; every
+shard gets its own service containers instead. The required `e2e` check merges
+the shards' blob reports into the `playwright-report` artifact and fails when
+any shard failed. To add shards, extend the `shard` matrix in `ci.yml`.
 
 ## Responsive checks
 

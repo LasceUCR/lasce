@@ -25,6 +25,25 @@ describe('InstrumentsGallery', () => {
     }
   })
 
+  test('places a leading slide before the instruments', () => {
+    render(
+      <InstrumentsGallery
+        label={rosacInstrumentsContent.title}
+        leadingSlide={<button type="button">Añadir instrumento</button>}
+      >
+        {rosacInstrumentsContent.items.map((item) => (
+          <InstrumentCard instrument={item} key={item.id} />
+        ))}
+      </InstrumentsGallery>,
+    )
+
+    const track = screen.getByRole('list', { name: rosacInstrumentsContent.title })
+    const items = within(track).getAllByRole('listitem')
+    expect(
+      within(items[0]!).getByRole('button', { name: 'Añadir instrumento' }),
+    ).toBeInTheDocument()
+  })
+
   test('renders trailing slide when provided', () => {
     render(
       <InstrumentsGallery

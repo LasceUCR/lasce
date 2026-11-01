@@ -30,7 +30,7 @@ export async function PATCH(
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updateResearchArea(id, parsed.data)
+    const result = await updateResearchArea(id, parsed.data, guard.user)
     if (!result.ok) return writeFailure(id, result)
 
     return ok({ area: result.area })
@@ -51,7 +51,7 @@ export async function DELETE(
   if (!isUuid(id)) return invalidId()
 
   try {
-    const deleted = await deleteResearchArea(id)
+    const deleted = await deleteResearchArea(id, guard.user)
     if (!deleted) return notFound(id)
   } catch (error) {
     return internalError('No se pudo eliminar el área de investigación.', error)

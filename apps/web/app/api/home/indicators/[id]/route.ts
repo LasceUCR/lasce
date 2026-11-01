@@ -30,7 +30,7 @@ export async function PATCH(
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updateIndicator(id, parsed.data)
+    const result = await updateIndicator(id, parsed.data, guard.user)
     if (!result.ok) return writeFailure('indicator', result)
 
     return ok({ indicator: result.indicator })

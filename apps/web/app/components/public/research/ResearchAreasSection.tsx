@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 
 import { ResearchAreaCard } from './ResearchAreaCard'
 import { Modal } from '@/app/components/public/Modal'
+import { Pagination } from '@/app/components/public/Pagination'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { EditableWrapper } from '@/app/components/public/cms/EditableWrapper'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
@@ -20,6 +21,7 @@ import {
   type ResearchAreaFormInitial,
 } from '@/app/lib/research-area-form'
 import type { ResearchArea } from '@/app/lib/research-area-schema'
+import { listingHref, PAGE_SIZE } from '@/app/lib/pagination'
 
 import {
   ResearchAreaForm,
@@ -45,6 +47,9 @@ export interface ResearchAreasSectionProps {
   id?: string
   /** For an editor, each area carries `editing`: every language and the version to save against. */
   areas: ResearchArea[]
+  page?: number
+  totalItems?: number
+  totalPages?: number
   canCreate?: boolean
   canEdit?: boolean
   canDelete?: boolean
@@ -62,6 +67,9 @@ export function ResearchAreasSection({
   subtitle,
   label,
   areas,
+  page = 1,
+  totalItems = areas.length,
+  totalPages = 1,
   canCreate = false,
   canEdit = false,
   canDelete = false,
@@ -149,13 +157,29 @@ export function ResearchAreasSection({
   }
 
   return (
-    <section className="research-areas page-width" id={id}>
+    <section
+      className="research-areas page-width"
+      id={id}
+      aria-label={title ? undefined : label}
+      aria-labelledby={title ? titleId : undefined}
+      aria-busy="false"
+    >
       {title || subtitle ? (
         <header className="research-areas-header">
           {title ? <h2 id={titleId}>{title}</h2> : null}
           {subtitle ? <p>{subtitle}</p> : null}
         </header>
       ) : null}
+
+      <p className="content-empty" role="status">
+        {totalItems === 0
+          ? t('empty')
+          : t('results', {
+              from: (page - 1) * PAGE_SIZE + 1,
+              to: Math.min(page * PAGE_SIZE, totalItems),
+              total: totalItems,
+            })}
+      </p>
 
       <div className="research-area-content">
         {editMode && canCreate ? (
@@ -222,6 +246,13 @@ export function ResearchAreasSection({
           </ul>
         ) : null}
       </div>
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        label={t('paginationLabel')}
+        hrefForPage={(next) => listingHref('/investigacion', { page: next })}
+      />
 
       <Modal
         onClose={() => {

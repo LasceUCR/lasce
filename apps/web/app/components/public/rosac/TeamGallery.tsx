@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 
 import { ResearcherCard, type ResearcherCardProps } from './ResearcherCard'
@@ -18,7 +19,9 @@ export interface TeamGalleryProps<T extends ResearcherCardProps = ResearcherCard
    * knowing anything about "Modo edición"; `/nosotros` never passes it and keeps the default.
    */
   renderPerson?: (person: T, index: number) => ReactNode
-  /** An extra slide appended after the people, e.g. an "add new" prompt in edit mode. */
+  /** An extra slide before the people, e.g. an "add new" prompt in edit mode. */
+  leadingSlide?: ReactNode
+  /** An extra slide appended after the people. */
   trailingSlide?: ReactNode
 }
 
@@ -39,8 +42,10 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
   institutionLabel,
   people,
   renderPerson,
+  leadingSlide,
   trailingSlide,
 }: TeamGalleryProps<T>) {
+  const t = useTranslations('researchers')
   const trackRef = useRef<HTMLUListElement>(null)
 
   useLayoutEffect(() => {
@@ -69,7 +74,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
     track.scrollBy({ behavior: 'smooth', left: direction * (track.clientWidth * 0.6) })
   }
 
-  if (people.length === 0 && !trailingSlide) {
+  if (people.length === 0 && !leadingSlide && !trailingSlide) {
     return (
       <p className="content-empty" role="status">
         {emptyMessage}
@@ -87,6 +92,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
       ) : null}
       {/* Focusable so the scrollable region is reachable by keyboard, which axe requires. */}
       <ul aria-label={label} className="team-gallery-track" ref={trackRef} tabIndex={0}>
+        {leadingSlide ? <li className="team-gallery-slide">{leadingSlide}</li> : null}
         {people.map((person, index) => (
           <li className="team-gallery-slide" key={person.name}>
             {renderPerson ? (
@@ -110,7 +116,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
 
       <div className="team-gallery-controls">
         <button
-          aria-label="Anterior"
+          aria-label={t('previous')}
           className="team-gallery-control"
           onClick={() => scrollByCards(-1)}
           type="button"
@@ -118,7 +124,7 @@ export function TeamGallery<T extends ResearcherCardProps = ResearcherCardProps>
           <ChevronLeft aria-hidden="true" size={20} strokeWidth={1.8} />
         </button>
         <button
-          aria-label="Siguiente"
+          aria-label={t('next')}
           className="team-gallery-control"
           onClick={() => scrollByCards(1)}
           type="button"

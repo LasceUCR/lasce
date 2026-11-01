@@ -78,10 +78,31 @@ export interface ScientificDataPoint {
   value: number
 }
 
+/**
+ * Where a result's readings come from. The page and the download files describe it in the
+ * visitor's language (`describeOrigin` in `./scientific-data-copy`), so a result carries codes,
+ * never copy: `scientificData.origins.<dataset>` holds the text.
+ */
+export const SCIENTIFIC_DATASETS = [
+  'exis',
+  'mag',
+  'ehis',
+  'sgps',
+  'mpsh',
+  'suvi',
+  'goesArchive',
+  'rosac',
+] as const
+
+export type ScientificDataset = (typeof SCIENTIFIC_DATASETS)[number]
+
 export interface ScientificDataOrigin {
   kind: 'observed' | 'simulated'
-  provider: string
-  notice: string
+  dataset: ScientificDataset
+  /** `sampled` for what the chart draws, `full` for an export with every reading. */
+  resolution: 'sampled' | 'full'
+  /** Set when the readings were thinned to this many evenly spread observations. */
+  sampledPoints?: number
   satellite?: number
 }
 
@@ -98,10 +119,10 @@ export interface TimeSeriesDataResult extends ScientificDataResultBase {
   points: ScientificDataPoint[]
 }
 
+/** One solar image. Its alternative text is written by the page, in the visitor's language. */
 export interface ScientificImage {
   timestamp: string
   imageUrl: string
-  alt: string
 }
 
 export interface ImageSequenceDataResult extends ScientificDataResultBase {
@@ -166,6 +187,7 @@ export function getScientificSources(messages: ScientificDataMessages): Scientif
   const pfu = units?.pfu ?? es.scientificData.units.pfu
   const protonUnit = units?.protonUnit ?? es.scientificData.units.protonUnit
   const imageUnit = units?.image ?? es.scientificData.units.image
+  const ehisUnit = units?.ehisUnit ?? es.scientificData.units.ehisUnit
 
   const xray = parameters?.xray ?? es.scientificData.parameters.xray
   const xrayParameters: ScientificParameter[] = [
@@ -257,6 +279,22 @@ export function getScientificSources(messages: ScientificDataMessages): Scientif
       ).flat(),
   )
 
+  const ehis = parameters?.ehis ?? es.scientificData.parameters.ehis
+  const ehisLabelTemplate = ehis?.label ?? es.scientificData.parameters.ehis.label
+  const ehisGroups = ['H', 'He', 'CNO', 'NeS', 'ClNi'] as const
+  const ehisParameters: ScientificParameter[] = ehisGroups.flatMap((group) =>
+    Array.from({ length: 5 }, (_, band) => ({
+      code: `${group}:E${band + 1}`,
+      label: ehisLabelTemplate
+        .replace(
+          '{group}',
+          ehis?.groups?.[group] ?? es.scientificData.parameters.ehis.groups[group],
+        )
+        .replace('{band}', String(band + 1)),
+      unit: ehisUnit,
+    })),
+  )
+
   const sgps = parameters?.sgps ?? es.scientificData.parameters.sgps
   const sgpsLabelTemplate = sgps?.label ?? es.scientificData.parameters.sgps.label
   const sgpsIntegral = sgps?.integral ?? es.scientificData.parameters.sgps.integral
@@ -332,9 +370,11 @@ export function getScientificSources(messages: ScientificDataMessages): Scientif
           name:
             seiss?.products?.ehis?.name ?? es.scientificData.instruments.seiss.products.ehis.name,
           visualization: 'time-series',
-          available: false,
-          availabilityNote: unavailableFromRollingApi,
-          parameters: [],
+          available: true,
+          availabilityNote:
+            seiss?.products?.ehis?.availabilityNote ??
+            es.scientificData.instruments.seiss.products.ehis.availabilityNote,
+          parameters: ehisParameters,
         },
         {
           code: 'MPSL',
@@ -477,11 +517,16 @@ function isCalendarDate(value: string) {
   )
 }
 
+/**
+ * Looks a product up in `sources`, which defaults to the Spanish catalogue. A client component
+ * passes the sources it received for the visitor's language so the copy it shows matches.
+ */
 export function findScientificProduct(
   sourceCode: ScientificSourceCode,
   productCode: ScientificProductCode,
+  sources: readonly ScientificSource[] = scientificSources,
 ) {
-  const source = scientificSources.find((candidate) => candidate.code === sourceCode)
+  const source = sources.find((candidate) => candidate.code === sourceCode)
   if (!source) return null
 
   for (const instrument of source.instruments) {
@@ -581,8 +626,9 @@ const scientificParameterSchema = z.object({
 })
 const scientificOriginSchema = z.object({
   kind: z.enum(['observed', 'simulated']),
-  provider: z.string(),
-  notice: z.string(),
+  dataset: z.enum(SCIENTIFIC_DATASETS),
+  resolution: z.enum(['sampled', 'full']),
+  sampledPoints: z.number().int().positive().optional(),
   satellite: z.number().int().optional(),
 })
 /** An absolute URL, or a same-origin path such as `/api/suvi/frames/<id>` (never `//host`). */
@@ -606,9 +652,7 @@ export const scientificDataResultSchema: z.ZodType<ScientificDataResult> = z.dis
     }),
     scientificResultBaseSchema.extend({
       visualization: z.literal('image-sequence'),
-      images: z.array(
-        z.object({ timestamp: z.string(), imageUrl: imageUrlSchema, alt: z.string() }),
-      ),
+      images: z.array(z.object({ timestamp: z.string(), imageUrl: imageUrlSchema })),
     }),
     scientificResultBaseSchema.extend({
       visualization: z.literal('dynamic-spectrum'),

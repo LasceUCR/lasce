@@ -15,7 +15,6 @@ import {
   confirmationsStillNeeded,
   contentFieldLang,
   contentPath,
-  errorSummary,
   isConfirmed,
   languageTabFlags,
   resetConfirmations,
@@ -106,7 +105,6 @@ export function IndicatorForm({ initial, onSave, onCancel, ref }: IndicatorFormP
   }
 
   const errors: FormErrors = attempted ? validate() : {}
-  const summary = attempted ? errorSummary(errors, tab, uiLocale) : null
 
   function changeDescription(locale: Locale, field: IndicatorField, value: string) {
     setDraft((current) => ({
@@ -195,12 +193,6 @@ export function IndicatorForm({ initial, onSave, onCancel, ref }: IndicatorFormP
         required
         value={draft.value}
       />
-
-      {summary ? (
-        <Notice role="alert" tone="error">
-          {summary}
-        </Notice>
-      ) : null}
 
       <div className="nosotros-activity-form-actions">
         <Button onClick={requestCancel} variant="secondary">

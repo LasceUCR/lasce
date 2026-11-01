@@ -32,3 +32,17 @@ export const Default: Story = {}
 export const SaveFailure: Story = {
   args: { saveAction: async () => ({ ok: false, reason: 'conflict' }) },
 }
+
+/** In English: names, confirmation and toasts follow the site's language. */
+export const English: Story = {
+  args: {
+    title: 'Permissions',
+    description: 'Configure the permissions of each role in the system.',
+    roles: [
+      { id: 'VISITOR', name: 'Visitor' },
+      { id: 'ASSISTANT', name: 'Assistant' },
+      { id: 'ADMIN', name: 'Administrator' },
+    ],
+  },
+  globals: { locale: 'en' },
+}

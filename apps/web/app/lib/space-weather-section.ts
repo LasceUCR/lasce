@@ -1,5 +1,6 @@
 import { prisma, type Prisma } from '@lasce/db'
 
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
 import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
@@ -96,6 +97,7 @@ export async function getSpaceWeatherSection(
  */
 export async function updateSpaceWeatherSection(
   input: SpaceWeatherSectionUpdateInput,
+  actor: AuditActor,
 ): Promise<SpaceWeatherSectionWriteResult> {
   const expected = parseVersion(input.version)
 
@@ -146,10 +148,18 @@ export async function updateSpaceWeatherSection(
       })
     }
 
-    return tx.spaceWeatherSection.findUniqueOrThrow({
+    const updated = await tx.spaceWeatherSection.findUniqueOrThrow({
       where: { id: current.id },
       include: sectionInclude,
     })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'space_weather_section.update',
+      summary: `Tarjeta de clima espacial actualizada: ${updated.title}`,
+      entityType: 'space_weather_section',
+      entityId: current.id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 
   return result.ok ? { ok: true, section: toSection(result.value, defaultLocale, true) } : result

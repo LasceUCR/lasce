@@ -23,6 +23,40 @@
   gap: 10px;
 }
 
+/* Wide enough for a label and its description to read as a pair on a phone, where the table
+   scrolls sideways instead of squeezing this column. `th.` outranks the shared table's
+   `.table th` minimum. */
+.form th.permissionColumn {
+  min-width: 220px;
+}
+
+/* On a phone the label column gives up a little width; the role columns keep theirs, which is
+   what "Persona administradora" and "Administrator" need to wrap between words, not inside one. */
+@media (max-width: 600px) {
+  .form th.permissionColumn {
+    min-width: 190px;
+  }
+}
+
+.permissionDescription {
+  display: block;
+  max-width: 46ch;
+  margin-top: 4px;
+  color: #536a7c;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+/* Under the administrator's column heading: why its checkboxes are disabled. */
+.lockedNote {
+  display: block;
+  margin-top: 4px;
+  color: #536a7c;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .dirtyRow {
   background: #eef6fb;
 }

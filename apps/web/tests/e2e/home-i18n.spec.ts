@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
 import { createSignedInUser } from './helpers/admin-users'
+import { enableEditMode } from './helpers/edit-mode'
 
 // Wide enough for the desktop header, where the language menu lives above 1400px.
 test.use({ viewport: { width: 1600, height: 900 } })
@@ -78,7 +79,7 @@ async function switchLanguage(page: Page, from: 'Español' | 'English', to: 'Esp
 
 async function openEditMode(page: Page) {
   await page.goto('/administracion')
-  await page.getByRole('switch', { name: 'Modo edición' }).click()
+  await enableEditMode(page)
   await page.goto('/')
 }
 

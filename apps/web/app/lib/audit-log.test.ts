@@ -3,7 +3,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 const { create, findMany } = vi.hoisted(() => ({ create: vi.fn(), findMany: vi.fn() }))
 vi.mock('@lasce/db', () => ({ prisma: { auditEvent: { create, findMany } } }))
 
-import { RECENT_ACTIVITY_LIMIT, getRecentActivity, recordAuditEvent } from './audit-log'
+import {
+  RECENT_ACTIVITY_LIMIT,
+  changedFieldNames,
+  getRecentActivity,
+  recordAuditEvent,
+  recordUserAuditEvent,
+} from './audit-log'
 
 const userId = 'ce0bcbba-04bd-4f14-b5d6-9c9db5f6ed74'
 
@@ -144,5 +150,42 @@ describe('getRecentActivity', () => {
       },
     ])
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 3 }))
+  })
+})
+
+describe('recordUserAuditEvent', () => {
+  test('writes an event of the acting account through the given transaction', async () => {
+    const tx = { auditEvent: { create: vi.fn() } }
+
+    await recordUserAuditEvent(
+      tx as never,
+      { id: userId },
+      {
+        action: 'news.update',
+        summary: 'Noticia actualizada: Aurora',
+        entityType: 'news',
+        entityId: 'n1',
+        metadata: { fields: ['source'] },
+      },
+    )
+
+    expect(tx.auditEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ actorType: 'user', actorId: userId, entityId: 'n1' }),
+    })
+    expect(create).not.toHaveBeenCalled()
+  })
+})
+
+describe('changedFieldNames', () => {
+  test('lists the fields sent, not the editor bookkeeping or the ones left alone', () => {
+    expect(
+      changedFieldNames({
+        version: '2026-10-01T00:00:00.000Z',
+        confirmedUnchanged: ['title'],
+        source: 'UCR',
+        externalUrl: null,
+        authors: undefined,
+      }),
+    ).toEqual(['source', 'externalUrl'])
   })
 })

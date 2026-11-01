@@ -6,6 +6,8 @@ import { Children, useRef, type ReactNode } from 'react'
 export interface InstrumentsGalleryProps {
   label: string
   children: ReactNode
+  /** An extra slide before the instruments, e.g. an "add new" prompt in edit mode. */
+  leadingSlide?: ReactNode
   trailingSlide?: ReactNode
 }
 
@@ -14,7 +16,12 @@ export interface InstrumentsGalleryProps {
  * or when adding new instruments in edit mode. Follows the same interaction pattern
  * as `TeamGallery` and `AcknowledgmentsGallery`.
  */
-export function InstrumentsGallery({ label, children, trailingSlide }: InstrumentsGalleryProps) {
+export function InstrumentsGallery({
+  label,
+  children,
+  leadingSlide,
+  trailingSlide,
+}: InstrumentsGalleryProps) {
   const trackRef = useRef<HTMLUListElement>(null)
 
   function scrollByCards(direction: 1 | -1) {
@@ -26,6 +33,7 @@ export function InstrumentsGallery({ label, children, trailingSlide }: Instrumen
   return (
     <div className="instruments-gallery">
       <ul aria-label={label} className="instruments-track" ref={trackRef} tabIndex={0}>
+        {leadingSlide ? <li className="instruments-slide">{leadingSlide}</li> : null}
         {Children.map(children, (child, index) =>
           child ? (
             <li className="instruments-slide" key={index}>

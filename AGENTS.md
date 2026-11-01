@@ -182,8 +182,9 @@ Recurring jobs are _declared_ in `packages/jobs/src/schedules.ts`. How they fire
 scheduler via `pnpm jobs:register`, or an external cron hitting
 `POST /api/jobs/[name]/trigger` with `Authorization: Bearer $CRON_SECRET`) is a deliberately
 open decision. Both are wired. The deployed environments currently use the first: the `deploy`
-job in `cd.yml` runs `pnpm jobs:register` on every deploy. Changing the mechanism must change
-nothing in the processors.
+job in `cd.yml` calls `POST /api/jobs/schedules`, which runs the same `syncSchedules()` as
+`pnpm jobs:register` from inside the web container, on every deploy. Changing the mechanism must
+change nothing in the processors.
 
 ## Database ownership
 

@@ -15,6 +15,7 @@ from app.models.jobs import (
     JobPayload,
     MagPipelinePayload,
     QueryGoesArchivePayload,
+    SeissPipelinePayload,
     SuviPipelinePayload,
 )
 from app.processors import (
@@ -22,6 +23,7 @@ from app.processors import (
     ingest_readings,
     mag_pipeline,
     query_goes_archive,
+    seiss_pipeline,
     suvi_pipeline,
 )
 
@@ -48,6 +50,7 @@ REGISTRY: dict[str, JobHandler] = {
     "suvi-pipeline": JobHandler(SuviPipelinePayload, suvi_pipeline.run),
     "exis-pipeline": JobHandler(ExisPipelinePayload, exis_pipeline.run),
     "mag-pipeline": JobHandler(MagPipelinePayload, mag_pipeline.run),
+    "seiss-pipeline": JobHandler(SeissPipelinePayload, seiss_pipeline.run),
 }
 
 

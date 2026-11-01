@@ -96,6 +96,10 @@ export function canSeeAdminNavigation(role: UserRole | null | undefined): boolea
   return role === 'ASSISTANT' || role === 'ADMIN'
 }
 
+export function canEditContent(role: UserRole | null | undefined): boolean {
+  return role === 'ASSISTANT' || role === 'ADMIN'
+}
+
 /** Shown by the `administracion` layout to a signed-in account the rule above rejects. */
 export const adminAccessDeniedMessage =
   'La administración está disponible solo para asistentes y personas administradoras.'
@@ -143,23 +147,13 @@ export function notifyAccountChanged(): void {
   for (const listener of listeners) listener()
 }
 
-export const accountMenuCopy = {
-  signIn: 'Ingresar',
-  account: 'Mi cuenta',
-  administracion: 'Administración',
-  greeting: (fullName: string) => `Hola, ${shortName(fullName)}`,
-  signOut: 'Cerrar sesión',
-  signingOut: 'Cerrando sesión...',
-} as const
-
-/** The confirmation asked before a session is ended. */
-export const signOutDialogCopy = {
-  title: '¿Cerrar sesión?',
-  body: 'Tu sesión en este navegador terminará y tendrás que volver a ingresar.',
-  confirm: 'Cerrar sesión',
-  cancel: 'Cancelar',
-} as const
-
+/**
+ * The account menu, its mobile equivalent and the sign-out confirmation read their copy from the
+ * `account` catalogue namespace (`useTranslations('account')`) instead of this module, so it
+ * follows the site's language. `ROLE_LABELS` below stays Spanish-only: it also backs the `/cuenta`
+ * page (still untranslated) and the audit summaries stored in Spanish. `/administracion/usuarios`
+ * names the roles from `access.roles` instead (`roleName`).
+ */
 export const ROLE_LABELS: Record<UserRole, string> = {
   VISITOR: 'Visitante',
   ASSISTANT: 'Asistente',

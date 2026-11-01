@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl'
+
 import { Carousel, type CarouselGroup } from '@/app/components/public/Carousel'
 import type { ConstructionContent, ConstructionStage } from '@/app/lib/rosac-construction'
 
@@ -19,6 +21,8 @@ export function ConstructionCarousel({
   canEdit = false,
   onEditStage,
 }: ConstructionCarouselProps) {
+  const t = useTranslations('rosac.editor')
+
   function handleEditGroup(group: CarouselGroup) {
     if (!onEditStage) return
     const stage = stages.find((s) => s.id === group.id) ?? (group as unknown as ConstructionStage)
@@ -38,7 +42,7 @@ export function ConstructionCarousel({
       previousPhotoLabel={carousel?.previousPhotoLabel}
       groups={stages}
       onEditGroup={canEdit && onEditStage ? handleEditGroup : undefined}
-      editGroupLabel="Editar etapa"
+      editGroupLabel={t('stages.editStage')}
     />
   )
 }

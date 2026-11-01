@@ -9,3 +9,14 @@
 .manager :global(.collaboration-card) {
   height: 100%;
 }
+
+/* The pencil and trash sit on the card's top-right corner. The country lives in that same
+   corner, so the header keeps a gap the width of the two buttons. */
+.manager :global(.editable) :global(.collaboration-card-header) {
+  padding-right: 72px;
+}
+
+.manager :global(.editable) :global(.collaboration-country) {
+  min-width: 0;
+  justify-content: flex-end;
+}

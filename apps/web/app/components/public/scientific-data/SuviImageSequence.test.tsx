@@ -17,11 +17,44 @@ describe('SuviImageSequence', () => {
     renderWithIntl(<SuviImageSequence {...(Default.args as SuviImageSequenceProps)} />)
 
     expect(screen.getByRole('list', { name: 'Secuencia de imágenes solares' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /Imagen solar de demostración/ })).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', {
+        name: 'Imágenes solares: 171 Å (Fe171) observada por GOES-19 a las 08:30 UTC',
+      }),
+    ).toBeInTheDocument()
     expect(screen.getByText('2026-09-10 08:30 UTC')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Cargando imagen solar')
     fireEvent.load(screen.getByRole('img'))
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  test('fills the frame with a placeholder until the image loads, and marks it busy', () => {
+    const { container } = renderWithIntl(
+      <SuviImageSequence {...(Default.args as SuviImageSequenceProps)} />,
+    )
+    const frame = container.querySelector('[data-state]')!
+
+    expect(frame).toHaveAttribute('aria-busy', 'true')
+    expect(frame.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando imagen solar…')
+
+    fireEvent.load(screen.getByRole('img'))
+
+    expect(frame).not.toHaveAttribute('aria-busy')
+    expect(frame.querySelector('[aria-hidden="true"]')).toBeNull()
+    expect(screen.getByRole('img')).toBeInTheDocument()
+  })
+
+  test('stops being busy and explains it when the image fails to load', () => {
+    const { container } = renderWithIntl(
+      <SuviImageSequence {...(UnavailableImage.args as SuviImageSequenceProps)} />,
+      { locale: 'en' },
+    )
+
+    fireEvent.error(screen.getByRole('img'))
+
+    expect(container.querySelector('[aria-busy]')).toBeNull()
+    expect(screen.getByRole('status')).toHaveTextContent('This solar image is not available.')
   })
 
   test('replaces a failed image with an informative message and recovers on a new band', () => {

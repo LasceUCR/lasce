@@ -4,7 +4,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { ResearchAreasSection, type ResearchAreasSectionProps } from './ResearchAreasSection'
-import { Default, EditMode, Empty } from './ResearchAreasSection.stories'
+import { Default, EditMode, Empty, SecondPage, LastPage } from './ResearchAreasSection.stories'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 
@@ -79,6 +79,43 @@ afterEach(() => {
 })
 
 describe('ResearchAreasSection', () => {
+  test('shows translated totals and links for the server page without slicing its items', () => {
+    renderSection(SecondPage.args as ResearchAreasSectionProps)
+    expect(screen.getAllByRole('article')).toHaveLength(10)
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Mostrando 11–20 de 23 áreas de investigación.',
+    )
+    const nav = screen.getByRole('navigation', { name: 'Páginas de áreas de investigación' })
+    expect(within(nav).getByRole('link', { name: 'Página 2' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(within(nav).getByRole('link', { name: 'Siguiente' })).toHaveAttribute(
+      'href',
+      '/investigacion?page=3',
+    )
+    expect(within(nav).getByRole('link', { name: 'Anterior' })).toHaveAttribute(
+      'href',
+      '/investigacion',
+    )
+  })
+
+  test('shows the remaining items and no next link on the last page', () => {
+    renderSection(LastPage.args as ResearchAreasSectionProps)
+    expect(screen.getAllByRole('article')).toHaveLength(3)
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Mostrando 21–23 de 23 áreas de investigación.',
+    )
+    expect(screen.queryByRole('link', { name: 'Siguiente' })).not.toBeInTheDocument()
+  })
+
+  test('announces an empty collection without a page indicator', () => {
+    renderSection(emptyArgs)
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No hay áreas de investigación disponibles.',
+    )
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+  })
   test('lists one item per research area it is given', () => {
     renderSection(defaultArgs)
 

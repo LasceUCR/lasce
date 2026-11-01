@@ -33,10 +33,6 @@ const blankAlbum: AlbumFormValues = {
   coverObjectKey: '',
 }
 
-function albumMediaMeta(media: readonly GalleryMedia[]): string {
-  return `${media.length} archivos en este álbum`
-}
-
 function subAlbumPath(albumSlug: string, subAlbumSlug: string): string {
   return `/galeria/${albumSlug}/${subAlbumSlug}`
 }
@@ -88,7 +84,9 @@ export function AlbumPage({
   const router = useRouter()
   const [editingSubAlbum, setEditingSubAlbum] = useState<GallerySubAlbum | null>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const t = useTranslations('gallery.feedback')
+  const t = useTranslations('gallery.albumPage')
+  const tCommon = useTranslations('gallery.common')
+  const tFeedback = useTranslations('gallery.feedback')
   const tActions = useTranslations('gallery.actions')
   const sendWithFeedback = useRequestFeedback()
   const [isCreating, setIsCreating] = useState(false)
@@ -121,8 +119,8 @@ export function AlbumPage({
           }),
         },
         {
-          success: t('subAlbumCreated'),
-          fallback: t('subAlbumCreateFailed'),
+          success: tFeedback('subAlbumCreated'),
+          fallback: tFeedback('subAlbumCreateFailed'),
           onSuccess: () => {
             close()
             router.refresh()
@@ -140,8 +138,8 @@ export function AlbumPage({
       `/api/gallery/albums/${albumId}`,
       { method: 'DELETE' },
       {
-        success: t('subAlbumDeleted'),
-        fallback: t('subAlbumDeleteFailed'),
+        success: tFeedback('subAlbumDeleted'),
+        fallback: tFeedback('subAlbumDeleteFailed'),
         onSuccess: () => router.refresh(),
       },
     )
@@ -182,8 +180,8 @@ export function AlbumPage({
           }),
         },
         {
-          success: t('subAlbumUpdated'),
-          fallback: t('subAlbumSaveFailed'),
+          success: tFeedback('subAlbumUpdated'),
+          fallback: tFeedback('subAlbumSaveFailed'),
           onSuccess: () => {
             closeEditor()
             router.refresh()
@@ -200,10 +198,10 @@ export function AlbumPage({
 
   return (
     <article className="topic-page">
-      <TopicHero kicker="Galería LASCE" lead={description} notice={meta} title={title} />
+      <TopicHero kicker={tCommon('gallery')} lead={description} notice={meta} title={title} />
 
       {parentSlug && (subAlbums.length > 0 || (editMode && canCreate && parentAlbumId)) ? (
-        <TopicSection title="Subálbumes" titleId="album-subalbums">
+        <TopicSection title={tCommon('subalbumsTitle')} titleId="album-subalbums">
           <ul className="card-grid card-grid-3 tile-list gallery-subalbum-list">
             {editMode && canCreate && parentAlbumId ? (
               <li className="gallery-subalbum-add">
@@ -239,7 +237,7 @@ export function AlbumPage({
                     <EditableWrapper
                       deleteLabel={tActions('deleteItem', { title: subAlbum.title })}
                       deleteConfirmTitle={tActions('deleteSubAlbum')}
-                      deleteConfirmMessage={`¿Desea eliminar "${subAlbum.title}"? Esta acción no se puede deshacer.`}
+                      deleteConfirmMessage={tActions('deleteMessage', { title: subAlbum.title })}
                       editLabel={tActions('editItem', { title: subAlbum.title })}
                       onDelete={
                         canDelete && subAlbumId ? () => handleDelete(subAlbumId) : undefined
@@ -248,7 +246,7 @@ export function AlbumPage({
                     >
                       <AlbumTile
                         href={subAlbumPath(parentSlug, subAlbum.slug)}
-                        meta={`${subAlbum.media.length} archivos`}
+                        meta={tCommon('files', { count: subAlbum.media.length })}
                         src={subAlbum.src}
                         title={subAlbum.title}
                       />
@@ -256,7 +254,7 @@ export function AlbumPage({
                   ) : (
                     <AlbumTile
                       href={subAlbumPath(parentSlug, subAlbum.slug)}
-                      meta={`${subAlbum.media.length} archivos`}
+                      meta={tCommon('files', { count: subAlbum.media.length })}
                       src={subAlbum.src}
                       title={subAlbum.title}
                     />
@@ -269,8 +267,8 @@ export function AlbumPage({
       ) : null}
 
       <TopicSection
-        badge={albumMediaMeta(media)}
-        title="Fotografías y video de este álbum"
+        badge={t('albumFiles', { count: media.length })}
+        title={t('albumContent')}
         titleId="album-media"
       >
         <AlbumMediaGrid

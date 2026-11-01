@@ -192,7 +192,7 @@ describe('PATCH /api/gallery/media/[mediaId]', () => {
         uploader: 'LASCE',
       },
     })
-    expect(mocks.updateGalleryMedia).toHaveBeenCalledWith(mediaId, patchBody)
+    expect(mocks.updateGalleryMedia).toHaveBeenCalledWith(mediaId, patchBody, expect.anything())
   })
 })
 
@@ -236,6 +236,6 @@ describe('DELETE /api/gallery/media/[mediaId]', () => {
 
     expect(response.status).toBe(204)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
-    expect(mocks.deleteGalleryMedia).toHaveBeenCalledWith(mediaId)
+    expect(mocks.deleteGalleryMedia).toHaveBeenCalledWith(mediaId, expect.anything())
   })
 })

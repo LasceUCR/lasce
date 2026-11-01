@@ -1,7 +1,8 @@
 import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import { translationLocales } from '@/app/lib/i18n/content/definition'
@@ -12,6 +13,7 @@ import {
   translationRows,
 } from '@/app/lib/i18n/content/resolve'
 import { findPendingReviews } from '@/app/lib/i18n/content/review'
+import { paginate, type PageWindow } from '@/app/lib/pagination'
 
 import {
   researchAreaContent,
@@ -90,6 +92,12 @@ const areaInclude = {
 
 type ResearchAreaRecord = Prisma.ResearchAreaGetPayload<{ include: typeof areaInclude }>
 
+// The unique tie-breaker keeps page boundaries stable even when creation times are identical.
+const areaOrder = [
+  { createdAt: 'desc' },
+  { id: 'desc' },
+] satisfies Prisma.ResearchAreaOrderByWithRelationInput[]
+
 /**
  * An area in `locale`, falling back per record to its base text: a complete area shows Spanish
  * when it has no row for `locale`, and an area saved before translations existed shows its base
@@ -117,7 +125,9 @@ function toResearchArea(
 }
 
 /**
- * Every area, oldest first, in `locale` (the language of the request's `lasce_locale` cookie).
+ * Every area, newest first, in `locale` (the language of the request's `lasce_locale` cookie).
+ * An area just created is the first card. Editing does not move it, because the order is
+ * `createdAt`.
  * Pass `includeEditingData` only after a server-side check of the edit permission.
  */
 export async function getResearchAreas(
@@ -126,10 +136,42 @@ export async function getResearchAreas(
 ): Promise<ResearchArea[]> {
   const records = await prisma.researchArea.findMany({
     include: areaInclude,
-    orderBy: { createdAt: 'asc' },
+    orderBy: areaOrder,
   })
 
   return records.map((record) => toResearchArea(record, locale, includeEditingData))
+}
+
+export interface ResearchAreasPage extends PageWindow {
+  areas: ResearchArea[]
+}
+
+/** One database page and its totals from the same snapshot, including during concurrent edits. */
+export async function getResearchAreasPage(
+  locale: Locale = defaultLocale,
+  { page = 1, includeEditingData = false }: { page?: number; includeEditingData?: boolean } = {},
+): Promise<ResearchAreasPage> {
+  return prisma.$transaction(
+    async (tx) => {
+      const totalItems = await tx.researchArea.count()
+      const window = paginate(totalItems, page)
+      const records =
+        totalItems === 0
+          ? []
+          : await tx.researchArea.findMany({
+              include: areaInclude,
+              orderBy: areaOrder,
+              skip: window.skip,
+              take: window.take,
+            })
+
+      return {
+        ...window,
+        areas: records.map((record) => toResearchArea(record, locale, includeEditingData)),
+      }
+    },
+    { isolationLevel: 'RepeatableRead' },
+  )
 }
 
 export async function getResearchAreaById(
@@ -157,17 +199,25 @@ export type ResearchAreaWriteResult = { ok: true; area: ResearchArea } | Researc
  */
 export async function createResearchArea(
   input: ResearchAreaCreateInput,
+  actor: AuditActor,
 ): Promise<{ ok: true; area: ResearchArea }> {
-  const result = await runWrite<ResearchAreaRecord, never>((tx) =>
-    tx.researchArea.create({
+  const result = await runWrite<ResearchAreaRecord, never>(async (tx) => {
+    const created = await tx.researchArea.create({
       data: {
         ...baseContent(researchAreaContent, input.content),
         src: input.src,
         translations: { create: translationRows(researchAreaContent, input.content) },
       },
       include: areaInclude,
-    }),
-  )
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'research_area.create',
+      summary: `Área de investigación agregada: ${created.title}`,
+      entityType: 'research_area',
+      entityId: created.id,
+    })
+    return created
+  })
 
   return { ok: true, area: toResearchArea(result.value, defaultLocale, true) }
 }
@@ -180,6 +230,7 @@ export async function createResearchArea(
 export async function updateResearchArea(
   id: string,
   input: ResearchAreaUpdateInput,
+  actor: AuditActor,
 ): Promise<ResearchAreaWriteResult> {
   const expected = parseVersion(input.version)
 
@@ -230,7 +281,18 @@ export async function updateResearchArea(
       }
     }
 
-    return tx.researchArea.findUniqueOrThrow({ where: { id }, include: areaInclude })
+    const updated = await tx.researchArea.findUniqueOrThrow({
+      where: { id },
+      include: areaInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'research_area.update',
+      summary: `Área de investigación actualizada: ${updated.title}`,
+      entityType: 'research_area',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 
   return result.ok ? { ok: true, area: toResearchArea(result.value, defaultLocale, true) } : result
@@ -240,7 +302,16 @@ export async function updateResearchArea(
  * Deletes an area in one statement that reports what it removed, so two concurrent deletes give
  * one success and one "not found". Its translations go with it (`ON DELETE CASCADE`).
  */
-export async function deleteResearchArea(id: string): Promise<boolean> {
-  const { count } = await prisma.researchArea.deleteMany({ where: { id } })
-  return count > 0
+export async function deleteResearchArea(id: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) => tx.researchArea.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.researchArea.deleteMany({ where: { id } }),
+    (tx, area) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'research_area.delete',
+        summary: `Área de investigación eliminada: ${area.title}`,
+        entityType: 'research_area',
+        entityId: id,
+      }),
+  )
 }

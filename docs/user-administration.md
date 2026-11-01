@@ -2,7 +2,8 @@
 
 `/administracion/usuarios` reads `auth.users` through Prisma. It selects only profile
 fields and the assigned role; credentials and session tokens never reach the table.
-Available columns come from Prisma's `UserRole` enum, using the existing Spanish labels.
+Available columns come from Prisma's `UserRole` enum; their names come from the catalogue (see
+[Languages](#languages)).
 The existing dialogs and search remain presentational. Mocks are used only in stories/tests.
 
 One role can be assigned at a time. Removing it stores NULL, displayed as no checked
@@ -60,3 +61,33 @@ set; it neither clears tables nor changes existing accounts. Do not commit its c
 The ordinary seed (`pnpm db:seed`) creates no account you can sign in with. Its
 `contenido@lasce.cinespa.ucr.ac.cr` user only credits the seeded content as `modifiedBy`; its
 password hash can never match. End-to-end fixtures remove only their own UUIDs afterwards.
+
+## Languages
+
+`/administracion/usuarios` is shown in Spanish or English, following the site's language
+(LASCE-ADM-001-379), like [Permisos](role-permissions.md#languages). Role identifiers stay the
+stable `UserRole` values everywhere that matters: the table's checkboxes, the save action, the
+compare-and-set update and authorization use `VISITOR`, `ASSISTANT` and `ADMIN`. Only the text is
+translated, and it is never stored. Changing the language re-renders the same route and saves
+nothing.
+
+| Text                                                | Catalogue keys                                                        |
+| --------------------------------------------------- | --------------------------------------------------------------------- |
+| Role names                                          | `access.roles.<UserRole>` (`roleName`)                                |
+| "Acceso denegado" and the `manage_users` denial     | `access.accessDenied.title`, `access.permissions.manage_users.denied` |
+| Title, table, search, announcements, details dialog | `administration.users.*`                                              |
+| Role-change dialog (assign, remove, self-removal)   | `administration.users.dialog.*`                                       |
+| Conflict, lost authorization and fallback failures  | `administration.users.errors.*`                                       |
+
+- The page (`(public)/administracion/[section]/page.tsx`) maps the role names and the denial text
+  on the server, and passes `getUserOverview(locale)` so the country in the details dialog is named
+  in the site's language. Names and e-mail addresses are user data and are never translated.
+- The result count uses ICU plurals (`administration.users.results`), so the announcement follows
+  each language's plural rules. A key missing from English falls back to Spanish.
+- The outcome of a role change is a toast: success ("Rol actualizado para ...") once the dialog has
+  closed, and failures from the dialog, which stays open with the selection preserved. A failure
+  always has a translated reason (`errors.conflict`, `errors.unauthorized`) or the translated
+  fallback (`errors.unknown`), never the server's raw message.
+- The audit summary of a role change is stored in Spanish when it happens and translated when it
+  is read ([audit-log.md](audit-log.md)); it is not part of this page.
+- The demonstration data in `lib/user-overview-demo.ts` (stories only) stays in Spanish.

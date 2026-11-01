@@ -6,6 +6,12 @@
   "shell": {
     "skipToContent": "Skip to main content"
   },
+  "notFound": {
+    "metaTitle": "Page not found | LASCE",
+    "title": "Page not found",
+    "description": "The address you entered does not match any available page. Check the address or return to the home page.",
+    "kicker": "Error 404"
+  },
   "nav": {
     "goHome": "Go to the home page",
     "mainLabel": "Main navigation",
@@ -166,6 +172,15 @@
     "truncatedText": {
       "readMore": "Read more",
       "readLess": "Read less"
+    },
+    "loading": "Loading…",
+    "loadingMap": "Loading the map…",
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page}",
+      "status": "Page {page} of {total}"
     }
   },
   "solarImageLightbox": {
@@ -176,6 +191,17 @@
     "next": "Next",
     "position": "Image {position} of {total}",
     "announcement": "Image {position} of {total}: {time}."
+  },
+  "fileDrop": {
+    "dropHere": "Drag an image here",
+    "browseFiles": "click to select from your device",
+    "description": "Drag an image here or click to select from your device",
+    "rejectionFormat": "Unsupported format. Use a JPG, PNG, WebP or GIF image.",
+    "rejectionSize": "The image exceeds the maximum size of 25 MB.",
+    "removeFile": "Remove image",
+    "removeLabel": "Remove image",
+    "previewAlt": "Preview of {label}",
+    "imagePreviewAlt": "Preview of {label}"
   },
   "contact": {
     "meta": {
@@ -188,6 +214,7 @@
       "lead": "Official channels of the Laboratorio de Astrofísica Solar y Clima Espacial."
     },
     "channelsTitle": "Contact information",
+    "loading": "Loading contact…",
     "cards": {
       "add": "Add contact channel",
       "editTitle": "Edit contact channel",
@@ -451,7 +478,8 @@
       "national": "National",
       "international": "International",
       "acronym": "Acronym:",
-      "website": "Official website"
+      "websiteLabel": "Official website of {name} (opens in a new tab)",
+      "logoAlt": "Logo of {name}"
     },
     "countries": {
       "cr": "Costa Rica",
@@ -461,6 +489,8 @@
       "mx": "Mexico"
     },
     "initiatives": {
+      "readMore": "Read more",
+      "readLess": "Read less",
       "title": "International initiatives LASCE is part of",
       "items": {
         "iswi": {
@@ -530,7 +560,9 @@
     "section": {
       "title": "Academic activities",
       "description": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
-      "empty": "No academic activities are available at the moment."
+      "empty": "No academic activities are available at the moment.",
+      "loading": "Loading academic activities…",
+      "error": "Could not load academic activities. Please try again later."
     },
     "card": {
       "badge": "Academic activity"
@@ -568,11 +600,18 @@
       "countLabel": "Number of publications",
       "countTotal": "{count, plural, one {publication in total} other {publications in total}}",
       "countInGroup": "{count, plural, one {publication} other {publications}} ({group})",
+      "results": "{count, plural, one {# publication found.} other {# publications found.}}",
+      "range": "Showing {from}–{to} of {total}.",
+      "rangeOne": "Showing publication {position} of {total}.",
+      "paginationLabel": "Publication pages",
       "recent": "Recent publications",
       "emptyGroupAndQuery": "No {group} publications were found for “{query}”.",
       "emptyGroup": "There are no {group} publications.",
       "emptyQuery": "No publications were found for “{query}”.",
-      "empty": "There are no publications available."
+      "empty": "There are no publications available.",
+      "loading": "Loading publications…",
+      "loadError": "The publications could not be loaded. Try again.",
+      "retry": "Try again"
     },
     "card": {
       "externalLink": "DOI / External link",
@@ -599,7 +638,9 @@
       "cancel": "Cancel",
       "save": "Confirm",
       "reload": "Close and load the current version",
-      "yearsLabel": "Time span",
+      "created": "Publication added successfully.",
+      "updated": "Publication updated successfully.",
+      "deleted": "Publication deleted successfully.",
       "uploadingImage": "Uploading image...",
       "altTextField": "Alternative text ({language})",
       "FileDropDescriptionText": "Drag an image here or click to select it from your device.",
@@ -663,6 +704,40 @@
     }
   },
   "gallery": {
+    "meta": {
+      "title": "Gallery | LASCE",
+      "albumTitle": "{album} | Gallery LASCE",
+      "description": "Photographs and video of the activities of the Laboratorio de Ciencias Espaciales: construction and instrumentation, observation, and daily life of the team."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "Gallery",
+      "lead": "Photographs and video of the laboratory's activities: construction and instrumentation, observation, and daily life of the team. Organized by albums."
+    },
+    "common": {
+      "files": "{count, plural, one {# file} other {# files}}",
+      "subalbums": "{count, plural, one {# subalbum} other {# subalbums}}",
+      "subalbumsTitle": "Subalbums",
+      "backToGallery": "Back to gallery",
+      "backToAlbum": "Back to {album}",
+      "gallery": "LASCE Gallery"
+    },
+    "albumPage": {
+      "albumFiles": "{count, plural, one {# file in this album} other {# files in this album}}",
+      "albumContent": "Photographs and video of this album"
+    },
+    "media": {
+      "viewFullSize": "View full size: {title}",
+      "video": "Video",
+      "close": "Close",
+      "previous": "Previous",
+      "next": "Next",
+      "position": "File {position} of {total}",
+      "announcement": "File {position} of {total}: {title}.",
+      "dateCaptured": "Date captured: {date}",
+      "format": "Format: {format}",
+      "uploadedBy": "Uploaded by: {user}"
+    },
     "editor": {
       "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title or the description, check it as well.",
       "legacyNoTranslation": "This album has no English version yet. To change the title or the description you must complete both languages; the other fields can be edited without translating it.",
@@ -677,12 +752,25 @@
       "galleryWidth": "Gallery width (columns)",
       "galleryHeight": "Gallery height (rows)",
       "titleNeedsLettersOrNumbers": "The title must include letters or numbers to generate the identifier.",
-      "uploadFailed": "The image could not be uploaded. Please try again."
+      "uploadFailed": "The image could not be uploaded. Please try again.",
+      "periodStartYear": "Start year",
+      "periodStartMonth": "Start month",
+      "periodEndYear": "End year",
+      "periodEndMonth": "End month",
+      "periodNone": "Not specified",
+      "periodMonthNeedsYear": "Choose the year too.",
+      "periodEndNeedsStart": "Choose the start year.",
+      "periodEndBeforeStart": "The end cannot be before the start.",
+      "periodUnrecognized": "The saved period, “{label}”, is not in month and year form. It is kept until you choose a new one."
     },
     "actions": {
       "addAlbum": "Add album",
       "addSubAlbum": "Add sub-album",
       "addFile": "Add image",
+      "viewAlbum": "View full album",
+      "carouselPrevious": "Previous images",
+      "carouselNext": "Next images",
+      "viewImageFullSize": "View image full screen: {title}",
       "creatingAlbum": "Creating album...",
       "creatingSubAlbum": "Creating sub-album...",
       "savingAlbum": "Saving album...",
@@ -813,7 +901,10 @@
       "searchPlaceholder": "Search by title, author or keyword...",
       "results": "{count, plural, one {# news item found.} other {# news items found.}}",
       "emptyQuery": "No news found for “{query}”.",
-      "empty": "No news has been published yet."
+      "empty": "No news has been published yet.",
+      "range": "Showing {from}–{to} of {total}.",
+      "rangeOne": "Showing item {position} of {total}.",
+      "paginationLabel": "News pages"
     },
     "card": {
       "openSource": "Open source",
@@ -1079,7 +1170,65 @@
       "intro": "The people developing the Santa Cruz Radio Observatory (ROSAC), a project bringing together astrophysics, physics, topographic, electrical, and mechanical engineering, electronics, and computing, with national and international collaboration.",
       "hint": "Click on a card to see more information.",
       "emptyMessage": "No researcher information available at this time.",
-      "institutionLabel": "Institution"
+      "institutionLabel": "Institution",
+      "people": {
+        "carolinaSalas": {
+          "role": "Principal Investigator",
+          "description": "Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument."
+        },
+        "miguelVelazquez": {
+          "role": "Researcher",
+          "description": "In charge of instrumentation development at ROSAC."
+        },
+        "davidGale": {
+          "role": "Researcher",
+          "description": "Installation and alignment of telescope reflectors. Mechanical systems, motion testing, lightning protection. General support."
+        },
+        "oscarNunez": {
+          "role": "Researcher",
+          "description": "In charge of the electrical system and technical support for gear motors."
+        },
+        "federicoRuiz": {
+          "role": "Researcher",
+          "description": "In charge of the implementation and commissioning of sensors and actuators, as well as the development of the controller and software systems associated with the ROSAC radio telescope."
+        },
+        "gustavoLara": {
+          "role": "Researcher",
+          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
+        },
+        "andresFallas": {
+          "role": "Researcher",
+          "description": "In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software."
+        },
+        "wagnerMejias": {
+          "role": "Researcher",
+          "description": "Mechanical installation of the structure, preventive and corrective maintenance, adaptations and improvements to the general structure."
+        },
+        "eduardoIbarra": {
+          "role": "External collaborator",
+          "description": "Collaborator in the development and testing of the reception stage in the 100 MHz to 1.1 GHz range, receiver sensitivity analysis, radio telescope design, and electrical installation and antenna guidance system control tasks."
+        },
+        "andresCorrales": {
+          "role": "External collaborator",
+          "description": "Designer, developer, and maintainer of the radio telescope control software and end-user software."
+        },
+        "andresGamboa": {
+          "role": "External collaborator",
+          "description": "Support in radio telescope maintenance tasks, as well as electromechanical work related to instrument assembly."
+        },
+        "jelmuthRojas": {
+          "role": "External collaborator",
+          "description": "Support in structure leveling tasks."
+        },
+        "barnaldBocker": {
+          "role": "Assistant",
+          "description": "Support in the development and maintenance of ROSAC control software and communication protocols."
+        },
+        "fabianChaverri": {
+          "role": "Prospective doctoral student",
+          "description": "Prospective doctoral student with a thesis in astronomical instrumentation linked to the project."
+        }
+      }
     },
     "donations": {
       "title": "ROSAC donations",
@@ -1113,9 +1262,234 @@
     },
     "backLink": {
       "label": "Back to work areas"
+    },
+    "editor": {
+      "languageTabs": "Content language",
+      "legacyBaseText": "This text was recorded before language versions existed and might not be in Spanish. If you change the text, review it as well.",
+      "legacyNoTranslation": "This section does not have an English version yet. To change the text you must complete both languages; shared fields can be changed without translating it.",
+      "titleIn": "Title ({language})",
+      "descriptionIn": "Description ({language})",
+      "nameIn": "Name ({language})",
+      "icon": "Icon",
+      "icons": {
+        "antenna": "Antenna",
+        "location": "Location",
+        "frequency": "Frequency",
+        "sun": "Sun",
+        "tracking": "Pointing and tracking",
+        "control": "Control",
+        "receiver": "Receiver",
+        "maintenance": "Maintenance and infrastructure",
+        "education": "Education"
+      },
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "discardTitle": "Discard changes?",
+      "discardMessage": "If you discard now, all entered data that has not been saved will be lost.",
+      "discardCancel": "Keep editing",
+      "discardConfirm": "Discard",
+      "saveError": "Could not save changes. Please try again.",
+      "discardDialog": {
+        "title": "Discard unsaved changes",
+        "message": "If you discard now, all entered data that has not been saved will be lost.",
+        "keepEditing": "Keep editing",
+        "discard": "Discard"
+      },
+      "characteristics": {
+        "updated": "Characteristic updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the characteristic. Please try again."
+        },
+        "editLabel": "Edit {title}",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit characteristic",
+        "iconLabel": "Icon",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "icons": {
+          "antenna": "Antenna",
+          "location": "Location",
+          "frequency": "Frequency",
+          "sun": "Sun",
+          "tracking": "Pointing and tracking",
+          "control": "Control",
+          "receiver": "Receiver",
+          "maintenance": "Maintenance and infrastructure",
+          "education": "Education"
+        }
+      },
+      "activities": {
+        "updated": "Activity updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the activity. Please try again."
+        },
+        "editLabel": "Edit {title}",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit activity",
+        "iconLabel": "Icon",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "cancel": "Cancel",
+        "save": "Confirm"
+      },
+      "stages": {
+        "updated": "Stage updated successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the stage. Please try again."
+        },
+        "editStage": "Edit stage",
+        "editModalTitle": "Edit \"{title}\"",
+        "defaultModalTitle": "Edit stage",
+        "titleLabel": "Title",
+        "descriptionLabel": "Description",
+        "photosTitle": "Stage photographs",
+        "registeredCount": "{count, plural, one {# registered photograph} other {# registered photographs}}",
+        "editPhotos": "Edit photographs",
+        "addPhoto": "Add photograph",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "uploading": "Uploading photographs...",
+        "titleRequired": "Title is required.",
+        "descriptionRequired": "Description is required.",
+        "imagesRequired": "The stage must contain at least one photograph.",
+        "uploadError": "Error uploading photographs. Try again.",
+        "editModal": {
+          "title": "Edit photographs",
+          "help": "Modify the accessible description (alt) of each photograph or remove those that no longer correspond to this stage.",
+          "noPhotos": "No photos registered in this stage.",
+          "altLabel": "Alternative text for photograph {index}",
+          "altPlaceholder": "Accessible alternative text for photograph",
+          "deleteLabel": "Delete photograph {index}",
+          "deleteMinTitle": "There must be at least one photo in the stage",
+          "deleteTooltip": "Delete this photograph",
+          "savePhotos": "Save photographs",
+          "cancel": "Cancel",
+          "deleteDialog": {
+            "title": "Delete photograph",
+            "message": "Are you sure you want to delete this photograph from the stage?",
+            "confirm": "Delete",
+            "cancel": "Cancel"
+          },
+          "discardDialog": {
+            "title": "Discard photo changes",
+            "message": "If you discard now, changes made to photographs will not be applied."
+          }
+        },
+        "addModal": {
+          "title": "Add photograph",
+          "fileLabel": "Image file",
+          "fileHelp": "JPG, PNG or WebP formats (max. 10 MB).",
+          "fileRequired": "You must select an image file.",
+          "altLabel": "Accessible alternative text (alt)",
+          "altPlaceholder": "Description for screen reader users",
+          "altDefault": "Photograph of {title}",
+          "submit": "Add photograph",
+          "cancel": "Cancel",
+          "discardDialog": {
+            "title": "Discard new photograph",
+            "message": "If you discard now, the selected photograph will not be added to the stage."
+          }
+        }
+      },
+      "instruments": {
+        "created": "Instrument added successfully.",
+        "updated": "Instrument updated successfully.",
+        "deleted": "Instrument deleted successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the instrument. Please try again.",
+          "deleteUnknown": "Could not delete the instrument. Please try again."
+        },
+        "addCard": "Add instrument",
+        "editLabel": "Edit {name}",
+        "deleteLabel": "Delete {name}",
+        "deleteConfirmTitle": "Delete instrument",
+        "deleteConfirmMessage": "This action cannot be undone and will delete the scientific instrument.",
+        "editModalTitle": "Edit \"{name}\"",
+        "defaultModalTitle": "Edit instrument",
+        "nameLabel": "Instrument name",
+        "nameRequired": "Name is required.",
+        "descriptionLabel": "Description",
+        "descriptionRequired": "Description is required.",
+        "imageLabel": "Instrument image",
+        "imageHelp": "JPG, PNG, WebP or AVIF formats (max. 10 MB).",
+        "imageRequired": "Image is required.",
+        "imageAltLabel": "Image alternative text (Accessibility)",
+        "imageAltPlaceholder": "Short image description for screen readers",
+        "imageAltDefault": "Illustrative image of {name}",
+        "actionSectionLabel": "Scientific consultation action",
+        "actionTypeLabel": "Action type",
+        "modes": {
+          "simulation": "Data catalog simulation (ROSAC)",
+          "custom": "External or custom link",
+          "disabled": "In integration / Coming soon (no link)"
+        },
+        "simulationTargetLabel": "Associated simulation instrument",
+        "simulationTargetOption": "Instrument {index}{product} ({code})",
+        "simulationAutoUrl": "Automatic link:",
+        "customHrefLabel": "Consultation link (URL)",
+        "customHrefPlaceholder": "https://... or /datos/...",
+        "customHrefRequired": "Link is required for a custom destination.",
+        "disabledHint": "The button will appear disabled indicating that the simulation is pending or in integration.",
+        "consultationLabel": "Button label",
+        "consultationLabelPlaceholder": "Consult simulation of {name}",
+        "consultationLabelDefault": "Consult simulation",
+        "cancel": "Cancel",
+        "save": "Confirm",
+        "saving": "Saving...",
+        "uploadError": "The image could not be uploaded. Try again."
+      },
+      "acknowledgments": {
+        "created": "Institution added successfully.",
+        "updated": "Institution updated successfully.",
+        "deleted": "Institution deleted successfully.",
+        "errors": {
+          "saveUnknown": "Could not save the institution. Please try again.",
+          "deleteUnknown": "Could not delete the institution. Please try again."
+        },
+        "addCard": "Add institution",
+        "editLabel": "Edit {name}",
+        "deleteLabel": "Delete {name}",
+        "deleteConfirmTitle": "Delete institution",
+        "deleteConfirmMessage": "Do you want to delete the institution \"{name}\" from acknowledgments? This action cannot be undone.",
+        "editModalTitle": "Edit institution",
+        "nameLabel": "Institution name",
+        "namePlaceholder": "E.g. Center for Space Research (CINESPA), UCR",
+        "nameRequired": "Institution name is required.",
+        "logoSourceLabel": "Choose a custom logo or select one from the list",
+        "logoSourceCustom": "Upload custom logo",
+        "logoSourcePreset": "Select from list: {label}",
+        "logoFileLabel": "Logo file",
+        "logoFileHelp": "WebP, PNG, SVG or JPG formats (max. 10 MB).",
+        "logoRequired": "You must select or upload a logo for the institution.",
+        "logoAltLabel": "Logo alternative text (Accessibility)",
+        "logoAltPlaceholder": "Accessible description of the institutional logo",
+        "logoAltDefault": "Logo of {name}",
+        "selectedLogo": "Selected logo:",
+        "institutional": "Institutional",
+        "institutionUrlLabel": "Institution website (optional)",
+        "institutionUrlPlaceholder": "https://example.ucr.ac.cr",
+        "institutionUrlInvalid": "The link must be a valid URL starting with http:// or https://.",
+        "logoUnavailable": "Logo unavailable",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add institution",
+        "saving": "Saving...",
+        "uploadError": "The logo could not be uploaded. Try again."
+      }
     }
   },
   "researchAreas": {
+    "loading": "Loading research areas…",
+    "empty": "No research areas are available.",
+    "paginationLabel": "Research area pages",
+    "results": "Showing {from}–{to} of {total} research areas.",
     "page": {
       "metaTitle": "Research | LASCE",
       "metaDescription": "Research areas of the Solar Astrophysics and Space Weather Laboratory of the Universidad de Costa Rica.",
@@ -1177,15 +1551,105 @@
   },
   "researchers": {
     "institutionLabel": "Institution",
+    "viewDescription": "View description of {name}",
+    "viewInstitution": "View institution of {name}",
+    "returnToCard": "Return to {name}'s card",
+    "descriptionRegion": "Description of {name}",
+    "previous": "Previous",
+    "next": "Next",
+    "editModalTitle": "Edit researcher",
+    "editLabel": "Edit {name}",
+    "deleteLabel": "Delete {name}",
+    "deleteConfirmTitle": "Delete researcher",
+    "deleteConfirmMessage": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "deleteConfirm": "Delete",
     "created": "Researcher added successfully.",
     "updated": "Researcher updated successfully.",
     "deleted": "Researcher deleted successfully.",
     "errors": {
       "unknown": "The researcher could not be saved. Try again.",
-      "deleteUnknown": "The researcher could not be deleted. Try again."
+      "deleteUnknown": "The researcher could not be deleted. Try again.",
+      "invalidId": "The researcher identifier is invalid.",
+      "notFound": "This researcher no longer exists. Another person may have deleted it; reload the page.",
+      "conflict": "The researcher changed since you opened it. Reload and reapply your changes.",
+      "saveError": "Could not save the researcher.",
+      "updateError": "Could not save changes.",
+      "deleteError": "Could not delete the researcher.",
+      "invalidBody": "Required fields are missing or invalid.",
+      "invalidJson": "The request body is not valid JSON."
+    },
+    "validation": {
+      "nameRequired": "Name is required.",
+      "institutionRequired": "Institution is required.",
+      "invalidEmail": "One or more email addresses are invalid.",
+      "maxEmails": "Maximum 2 contact email addresses.",
+      "versionRequired": "The researcher version is required and must match what was loaded.",
+      "confirmationsOnlyWithContent": "Confirmations only apply to a content update.",
+      "noFieldsToUpdate": "The request does not include any fields to update."
+    },
+    "editor": {
+      "addCard": "Add researcher",
+      "editTitle": "Edit researcher",
+      "editLabel": "Edit {name}",
+      "deleteLabel": "Delete {name}",
+      "deleteConfirmTitle": "Delete researcher",
+      "deleteConfirmMessage": "Do you want to delete \"{name}\"? This action cannot be undone.",
+      "deleteConfirm": "Delete",
+      "deleteCancel": "Cancel",
+      "photoLabel": "Photo",
+      "photoHelp": "Optional. Researcher portrait, in JPG or PNG format.",
+      "roleLabel": "Role",
+      "roleRequired": "Role is required.",
+      "nameLabel": "Name",
+      "nameRequired": "Name is required.",
+      "institutionLabel": "Institution",
+      "institutionRequired": "Institution is required.",
+      "descriptionLabel": "Description",
+      "contactLabel": "Contact",
+      "contactCount": "{count, plural, =0 {No emails} one {# email} other {# emails}}",
+      "contactListLabel": "Contact emails",
+      "emailPlaceholder": "Type an email...",
+      "emailPlaceholderAnother": "Type another email...",
+      "emailRequired": "Email is required.",
+      "addContact": "Add contact",
+      "deleteContact": "Delete {address}",
+      "addContactTitle": "Add contact",
+      "emailLabel": "Email address",
+      "add": "Add",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "uploading": "Uploading image...",
+      "uploadError": "The image could not be uploaded. Try again.",
+      "maxEmails": "It is not possible to add more than two email addresses.",
+      "invalidEmail": "The email is not valid.",
+      "duplicateEmail": "That email was already added."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all entered data that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
     }
   },
   "scientificData": {
+    "banners": {
+      "title": "Consultation and download permissions",
+      "goesConsultation": "You can view GOES ({instrument}) data without an account. Availability depends on the product and date; historical queries may take several minutes.",
+      "rosacConsultation": "You can view ROSAC ({instrument}) data without an account. ROSAC is planned for future integration: its instruments and real data have not been defined yet; all results are simulated.",
+      "pendingProducts": "MPSL is pending integration.",
+      "rosacDownloads": "All ROSAC ({instrument}) data is available to download as CSV, along with the chart as PNG.",
+      "goesChartOnly": "For GOES ({instrument}), only the chart is available to download as PNG with basic account permissions.",
+      "goesDataDownloads": "Your permissions allow you to download GOES ({instrument}) data as CSV and the chart as PNG.",
+      "noDownloads": "Downloads for {source} ({instrument}) are not available on this platform.",
+      "denied": "Your account does not have permission to download resources from {source} ({instrument}).",
+      "signIn": "To download, you need an account and must sign in.",
+      "expiry": "Each download link expires after 30 minutes."
+    },
+    "loading": {
+      "data": "Loading data",
+      "images": "Loading solar images",
+      "cancel": "Cancel query"
+    },
     "page": {
       "metaTitle": "Scientific data | LASCE",
       "description": "Explore images of the Sun and browse the available scientific information.",
@@ -1228,18 +1692,19 @@
         "unavailableNote": "This GOES product and its channels are still pending integration.",
         "products": {
           "ehis": {
-            "name": "Energetic Heavy Ions"
+            "name": "Energetic Heavy Ions",
+            "availabilityNote": "Select the mass group and energy band. The level 1b file reports flux every 5 minutes and NOAA publishes daily with approximately a one-day delay."
           },
           "mpsl": {
             "name": "Magnetospheric Electrons and Protons: low energy"
           },
           "mpsh": {
             "name": "Magnetospheric Electrons and Protons: medium and high energy",
-            "availabilityNote": "Select the telescope and the band from the level 1b file. Each telescope keeps its own viewing direction."
+            "availabilityNote": "Select the telescope and the band. NOAA publishes 1-minute averages (level 2) daily with approximately a one-day delay; each telescope keeps its own viewing direction."
           },
           "sgps": {
             "name": "Solar and Galactic Protons",
-            "availabilityNote": "Select the SGPS−X or SGPS+X unit. The level 1b file includes differential channels and the > 500 MeV integral one."
+            "availabilityNote": "Select the SGPS−X or SGPS+X unit and the channel. NOAA publishes 1-minute averages (level 2) of the differential channels and the > 500 MeV integral one daily, with approximately a one-day delay."
           }
         }
       },
@@ -1290,6 +1755,16 @@
         "proton": "Protons",
         "label": "{species}: telescope {telescope}, band {band}"
       },
+      "ehis": {
+        "groups": {
+          "H": "Hydrogen (H)",
+          "He": "Helium (He)",
+          "CNO": "Carbon-nitrogen-oxygen (CNO)",
+          "NeS": "Neon-sulfur (Ne-S)",
+          "ClNi": "Chlorine-nickel (Cl-Ni)"
+        },
+        "label": "{group}: energy band {band}"
+      },
       "sgps": {
         "integral": "> 500 MeV (integral)",
         "differential": "{channel} (differential)",
@@ -1307,6 +1782,7 @@
       "relativeIntensity": "relative intensity",
       "pfu": "pfu",
       "protonUnit": "protons/(cm²·s·sr·keV)",
+      "ehisUnit": "particles/(cm²·s·sr·MeV/nucleon)",
       "image": "image"
     },
     "today": {
@@ -1333,7 +1809,8 @@
     "images": {
       "sequenceLabel": "Solar image sequence",
       "loading": "Loading solar image…",
-      "unavailable": "This solar image is not available. Check another band or try again."
+      "unavailable": "This solar image is not available. Check another band or try again.",
+      "alt": "{product} observed by {observer} at {time} UTC"
     },
     "instrumentSelect": {
       "placeholder": "Select an option",
@@ -1356,7 +1833,7 @@
       "endTimeLabel": "End time (UTC)",
       "submitLoading": "Querying…",
       "submit": "Query data",
-      "noticeGoes": "Source: GOES. Availability depends on the product and the date; a historical query can take several minutes. EHIS and MPSL are still pending integration.",
+      "noticeGoes": "Source: GOES. Availability depends on the product and the date; a historical query can take several minutes. MPSL is still pending integration.",
       "noticeRosac": "ROSAC is an integration preview. Its instruments and real data are not yet defined; every result from this source is simulated and labelled as such.",
       "permissionsTitle": "Query and download permissions",
       "permissionsText": "You can query GOES historical information without an account. Downloading requires an account and signing in. Chart images can be downloaded for any source; ROSAC's CSV data is available to every account, and GOES's requires a GOES data download permission. SUVI solar images cannot be downloaded from this platform. Every download link expires after 30 minutes.",
@@ -1396,7 +1873,11 @@
     "downloads": {
       "title": "Downloads",
       "signInPrompt": "Sign in to download the chart",
-      "preparing": "Preparing download…"
+      "preparing": "Preparing download…",
+      "formats": {
+        "png": "Download chart (PNG)",
+        "csv": "Download data (CSV)"
+      }
     },
     "charts": {
       "areaLabel": "Chart area: {label}",
@@ -1429,7 +1910,68 @@
       "requestFailedGoes": "It was not possible to query the GOES source right now. Try again later.",
       "requestFailedOther": "It was not possible to query the data. Try again.",
       "downloadFailed": "It was not possible to prepare the download. Try again later.",
-      "downloadUnauthenticated": "Sign in to download resources."
+      "downloadUnauthenticated": "Sign in to download resources.",
+      "downloadInvalid": "The download request is not valid.",
+      "downloadUnsupported": "This product does not offer downloads in the requested format.",
+      "downloadPending": "The query is still being processed. Wait for it to finish and try the download again.",
+      "downloadEmpty": "There is no data to download for the selected criteria."
+    },
+    "origins": {
+      "sampled": "{count} observations evenly spread across the interval are shown; no values were interpolated.",
+      "full": "Not sampled: includes every valid observation in the interval.",
+      "exis": {
+        "provider": "GOES",
+        "notice": "EXIS level 1b readings. Each day is published about one day late. Fill values, negative values and observations flagged with degraded or invalid quality are excluded."
+      },
+      "mag": {
+        "provider": "GOES",
+        "notice": "Magnetometer 1-minute averages (level 2). Each day is published about one day late. Fill values and observations flagged with degraded or invalid quality are excluded."
+      },
+      "ehis": {
+        "provider": "GOES",
+        "notice": "EHIS 5-minute differential fluxes (level 1b). Each day is published about one day late. Fill values and observations flagged as invalid are excluded; those flagged as degraded are kept, which in quiet periods is almost all of them because of low counts."
+      },
+      "sgps": {
+        "provider": "GOES",
+        "notice": "SGPS 1-minute averages (level 2). Each day is published about one day late. Fill values and averages without valid samples are excluded; averages that include samples flagged by the instrument quality checks are kept."
+      },
+      "mpsh": {
+        "provider": "GOES",
+        "notice": "MPS-HI 1-minute averages (level 2). Each day is published about one day late. Fill values and averages without valid samples are excluded; averages that include samples flagged by the instrument quality checks are kept."
+      },
+      "suvi": {
+        "provider": "GOES",
+        "notice": "Illustrative renderings of SUVI level 1b images. Images flagged for contamination or eclipse are excluded."
+      },
+      "goesArchive": {
+        "provider": "GOES",
+        "notice": "Historical level 1b observations. Fill values and observations flagged with degraded or invalid quality are excluded."
+      },
+      "rosac": {
+        "provider": "ROSAC prototype — UCR",
+        "notice": "Simulated data to prepare the ROSAC integration. The real names, channels and values will be defined with the science team."
+      }
+    },
+    "files": {
+      "source": "Source",
+      "instrument": "Instrument",
+      "product": "Product",
+      "channel": "Channel",
+      "unit": "Unit",
+      "satellite": "Satellite",
+      "date": "Date",
+      "interval": "Interval (UTC)",
+      "dataKind": "Data type",
+      "observed": "observed",
+      "simulated": "simulated",
+      "provider": "Provider",
+      "notice": "Note",
+      "generatedAt": "Generated (UTC)",
+      "generatedBy": "Generated by",
+      "footer": "Source: {provider}. Unit: {unit}.",
+      "footerSimulated": "Source: {provider} (simulated data). Unit: {unit}.",
+      "low": "Low",
+      "high": "High"
     }
   },
   "administration": {
@@ -1441,7 +1983,7 @@
         "descargas": "Downloads",
         "usuarios": "Users",
         "permisos": "Permissions",
-        "infraestructura": "Infrastructure"
+        "auditoria": "Audit trail"
       }
     },
     "summary": {
@@ -1487,6 +2029,349 @@
         "rosacResearchers": "ROSAC researchers",
         "instruments": "Queryable instruments"
       }
+    },
+    "permissions": {
+      "metaTitle": "Permissions | Administration | LASCE",
+      "title": "Permissions",
+      "description": "Configure the permissions of each role in the system.",
+      "tableTitle": "Permissions by role",
+      "help": "Each checkbox shows whether the role can perform that action. The administrator's permissions cannot be changed. Saving changes asks for confirmation before applying them.",
+      "tableLabel": "Permissions by role table",
+      "permissionColumn": "Permission",
+      "lockedRole": "Cannot be changed",
+      "unsavedSuffix": ", unsaved",
+      "checkbox": "{permission}: {role}",
+      "checkboxLocked": "{permission}: {role} (cannot be changed)",
+      "pending": "{count, plural, one {# unsaved change} other {# unsaved changes}}",
+      "pendingHelp": "You have permission changes that have not been saved.",
+      "discard": "Discard",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "updated": "Permissions updated for {roles}.",
+      "errors": {
+        "unauthorized": "Your session ended or you are no longer authorized to configure permissions. Reload the page to check your access.",
+        "locked": "The administrator's permissions cannot be changed.",
+        "conflict": "This role's information changed. Reload the page before saving it again.",
+        "unknown": "We could not confirm the change. Reload the page to check the current permissions before trying again."
+      },
+      "dialog": {
+        "title": "Confirm permission change",
+        "question": "Do you want to save the permissions of <strong>{roles}</strong>?",
+        "summary": "The change applies right away to the accounts with that role. They do not need to sign in again.",
+        "confirm": "Yes, save permissions",
+        "cancel": "No, cancel",
+        "savingStatus": "Saving permission change…",
+        "savingButton": "Saving…",
+        "reload": "Reload page"
+      }
+    },
+    "downloads": {
+      "metaTitle": "Downloads | Administration | LASCE",
+      "title": "Downloads",
+      "description": "History and control of the laboratory data downloads.",
+      "filters": {
+        "label": "Download history filters",
+        "from": "From",
+        "to": "To",
+        "source": "Source",
+        "instrument": "Instrument",
+        "format": "Format",
+        "user": "Person",
+        "allSources": "All sources",
+        "allInstruments": "All instruments",
+        "allFormats": "All formats",
+        "allUsers": "All people",
+        "apply": "Filter",
+        "clear": "Clear filters"
+      },
+      "table": {
+        "label": "Download history",
+        "date": "Date and time (UTC)",
+        "user": "Person",
+        "source": "Source",
+        "instrument": "Instrument",
+        "product": "Product",
+        "format": "Format",
+        "range": "Queried range"
+      },
+      "empty": "No downloads have been recorded yet.",
+      "emptyFiltered": "No downloads match the filters.",
+      "results": "{count, plural, one {# download} other {# downloads}}",
+      "pageSummary": "Page {page} of {total}",
+      "paginationLabel": "Download history pages",
+      "deletedUser": "Deleted account",
+      "noRange": "—"
+    },
+    "users": {
+      "metaTitle": "Users | Administration | LASCE",
+      "title": "Users",
+      "description": "View the registered users and their current roles.",
+      "panelTitle": "Users and roles",
+      "demoNotice": "Sample data: the users and roles shown are fictional.",
+      "demoChanges": "Changes are for demonstration only and are lost when the page is reloaded.",
+      "helpEditable": "Each user can have a single role. Select another one to change it, or press the current role to remove it. You will be asked to confirm before the change is applied.",
+      "helpReadOnly": "View only. The checkboxes show the assigned roles and cannot be used to change them.",
+      "noRoles": "There are no roles to show.",
+      "empty": "There are no users to show.",
+      "search": {
+        "label": "Search users",
+        "placeholder": "Search by name or email address...",
+        "clear": "Clear search"
+      },
+      "results": "{count, plural, one {# user found.} other {# users found.}}",
+      "noResults": "No users found for “{query}”.",
+      "table": {
+        "region": "Users and roles table",
+        "label": "Users and roles",
+        "name": "Name",
+        "email": "Email address"
+      },
+      "checkbox": "{role}: {name} ({email})",
+      "updated": "Role updated for {name}: {role}.",
+      "removed": "Role removed from {name}.",
+      "details": {
+        "title": "User information",
+        "close": "Close",
+        "fullName": "Full name",
+        "email": "Email address",
+        "institution": "Institution",
+        "country": "Country",
+        "institutionMissing": "Not provided",
+        "countryMissing": "Not provided"
+      },
+      "dialog": {
+        "changeTitle": "Confirm role change",
+        "removeTitle": "Confirm role removal",
+        "assignQuestion": "Do you want to assign the role <strong>{role}</strong> to <strong>{name}</strong>?",
+        "removeQuestion": "Do you want to remove the role of <strong>{name}</strong>?",
+        "currentRole": "Current role: {roles}",
+        "noRole": "No role",
+        "ownRole": "You are changing your own role. Once you are no longer an administrator you will lose access to this screen.",
+        "leftWithoutRole": "The user will be left without an assigned role.",
+        "replaces": "The new role will replace the current one. The user will not keep both roles.",
+        "confirmChange": "Yes, change role",
+        "confirmRemove": "Yes, remove role",
+        "cancel": "No, cancel",
+        "savingStatus": "Saving the role change…",
+        "savingButton": "Saving…",
+        "reload": "Reload page"
+      },
+      "errors": {
+        "conflict": "This user's information changed. Reload the page to see their current roles before trying again.",
+        "unauthorized": "Your session ended or you are no longer authorized to change roles. Reload the page to check your access.",
+        "unknown": "We could not confirm the change. Reload the page to check the current role before trying again."
+      }
+    },
+    "audit": {
+      "metaTitle": "Audit trail | Administration | LASCE",
+      "title": "Audit trail",
+      "description": "Review who made each administrative change in the portal, and when.",
+      "filters": {
+        "label": "Audit trail filters",
+        "from": "From",
+        "to": "To",
+        "actor": "Person",
+        "entityType": "Item type",
+        "action": "Action",
+        "all": "All",
+        "allActors": "Everyone",
+        "allEntityTypes": "All types",
+        "allActions": "All actions",
+        "apply": "Filter",
+        "clear": "Clear filters"
+      },
+      "table": {
+        "label": "Audit events",
+        "date": "Date and time",
+        "actor": "Person",
+        "action": "Action",
+        "summary": "Summary"
+      },
+      "empty": "No audit events have been recorded yet.",
+      "emptyFiltered": "No event matches the filters.",
+      "results": "{count, plural, one {# event} other {# events}}",
+      "paginationLabel": "Audit trail pages",
+      "actors": {
+        "system": "System",
+        "worker": "Worker",
+        "deletedUser": "Deleted account"
+      }
+    },
+    "auditSummary": {
+      "noRole": "No role",
+      "unknownAccount": "an account",
+      "events": {
+        "news_create": "News article added: {name}",
+        "news_update": "News article updated: {name}",
+        "news_delete": "News article deleted: {name}",
+        "publication_create": "Publication added: {name}",
+        "publication_update": "Publication updated: {name}",
+        "publication_delete": "Publication deleted: {name}",
+        "research_area_create": "Research area added: {name}",
+        "research_area_update": "Research area updated: {name}",
+        "research_area_delete": "Research area deleted: {name}",
+        "collaboration_create": "Collaboration added: {name}",
+        "collaboration_update": "Collaboration updated: {name}",
+        "collaboration_delete": "Collaboration deleted: {name}",
+        "contact_channel_create": "Contact channel added: {name}",
+        "contact_channel_update": "Contact channel updated: {name}",
+        "contact_channel_delete": "Contact channel deleted: {name}",
+        "nosotros_activity_create": "Nosotros activity added: {name}",
+        "nosotros_activity_update": "Nosotros activity updated: {name}",
+        "nosotros_activity_delete": "Nosotros activity deleted: {name}",
+        "nosotros_researcher_create": "Nosotros researcher added: {name}",
+        "nosotros_researcher_update": "Nosotros researcher updated: {name}",
+        "nosotros_researcher_delete": "Nosotros researcher deleted: {name}",
+        "rosac_researcher_create": "ROSAC researcher added: {name}",
+        "rosac_researcher_update": "ROSAC researcher updated: {name}",
+        "rosac_researcher_delete": "ROSAC researcher deleted: {name}",
+        "gallery_album_create": "Gallery album added: {name}",
+        "gallery_album_update": "Gallery album updated: {name}",
+        "gallery_album_delete": "Gallery album deleted: {name}",
+        "gallery_sub_album_create": "Gallery sub-album added: {name}",
+        "gallery_sub_album_update": "Gallery sub-album updated: {name}",
+        "gallery_sub_album_delete": "Gallery sub-album deleted: {name}",
+        "gallery_media_create": "Gallery file added: {name}",
+        "gallery_media_update": "Gallery file updated: {name}",
+        "gallery_media_delete": "Gallery file deleted: {name}",
+        "home_hero_update": "Home banner updated: {name}",
+        "geomagnetic_index_update": "Geomagnetic index updated: {name}",
+        "geomagnetic_index_reorder": "Geomagnetic index order updated",
+        "space_weather_section_update": "Space weather card updated: {name}",
+        "solar_physics_section_update": "Solar physics section updated: {name}",
+        "role_permissions_update": "Permissions updated for the {role} role",
+        "user_role_change": "{name}'s role changed from {previous} to {next}"
+      }
     }
+  },
+  "access": {
+    "roles": {
+      "VISITOR": "Visitor",
+      "ASSISTANT": "Assistant",
+      "ADMIN": "Administrator"
+    },
+    "permissions": {
+      "create_components": {
+        "label": "Create components",
+        "description": "Create portal components when that feature is available.",
+        "denied": "You are not authorized to create components."
+      },
+      "edit_components": {
+        "label": "Edit components",
+        "description": "Edit portal components when that feature is available.",
+        "denied": "You are not authorized to edit components."
+      },
+      "delete_components": {
+        "label": "Delete components",
+        "description": "Delete portal components when that feature is available.",
+        "denied": "You are not authorized to delete components."
+      },
+      "download_resources": {
+        "label": "Download resources",
+        "description": "Download laboratory resources from the data page.",
+        "denied": "You are not authorized to access downloads."
+      },
+      "download_goes_resources": {
+        "label": "Download GOES resources",
+        "description": "Download data from the GOES satellites.",
+        "denied": "You are not authorized to download GOES resources."
+      },
+      "manage_users": {
+        "label": "Manage users",
+        "description": "View accounts and assign or remove roles.",
+        "denied": "You are not authorized to manage users."
+      },
+      "manage_permissions": {
+        "label": "Configure permissions",
+        "description": "View and change the permissions of each role.",
+        "denied": "You are not authorized to configure role permissions."
+      },
+      "view_audit_log": {
+        "label": "View the audit trail",
+        "description": "Review the log of the portal's administrative actions.",
+        "denied": "You are not authorized to view the audit trail."
+      },
+      "view_download_history": {
+        "label": "View the download history",
+        "description": "See who downloaded which laboratory resources and when.",
+        "denied": "You are not authorized to view the download history."
+      }
+    },
+    "accessDenied": {
+      "title": "Access denied"
+    }
+  },
+  "account": {
+    "signIn": "Sign in",
+    "myAccount": "My account",
+    "administration": "Administration",
+    "editMode": "Edit mode",
+    "signOut": "Sign out",
+    "signingOut": "Signing out...",
+    "roles": {
+      "VISITOR": "Visitor",
+      "ASSISTANT": "Assistant",
+      "ADMIN": "Administrator"
+    },
+    "signOutDialog": {
+      "title": "Sign out?",
+      "body": "Your session in this browser will end and you will have to sign in again.",
+      "confirm": "Sign out",
+      "cancel": "Cancel"
+    }
+  },
+  "initiatives": {
+    "editor": {
+      "add": "Add initiative",
+      "edit": "Edit initiative",
+      "editNamed": "Edit initiative {title}",
+      "deleteNamed": "Delete initiative {title}",
+      "title": "Title ({language})",
+      "description": "Description ({language})",
+      "languages": "Initiative translations",
+      "logo": "Logo (optional)",
+      "logoHelp": "Select or drop a PNG, JPG, WebP or GIF image up to 25 MiB.",
+      "websiteUrl": "Official website (optional)",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving…",
+      "legacy": "This initiative retains its original text. Complete both languages when changing the title or description."
+    },
+    "validation": {
+      "websiteUrl": "Enter a valid http or https URL without credentials.",
+      "logoUrl": "Select a valid image for the logo."
+    },
+    "upload": {
+      "uploaded": "Logo uploaded successfully.",
+      "failed": "The logo could not be uploaded. Please try again.",
+      "missing": "Select an image for the logo.",
+      "tooLarge": "The image must not exceed 25 MiB.",
+      "invalidType": "Select a valid PNG, JPG, WebP or GIF image."
+    },
+    "feedback": {
+      "created": "Initiative added successfully.",
+      "updated": "Initiative updated successfully.",
+      "deleted": "Initiative deleted successfully.",
+      "failed": "The initiative could not be saved. Please try again.",
+      "forbidden": "You do not have permission for this action. Sign in with an authorized account.",
+      "notFound": "The initiative no longer exists. Reload the page.",
+      "conflict": "The initiative changed. Reopen the form to load the current version.",
+      "review": "Review the pending translations before saving.",
+      "fields": "Check the highlighted fields."
+    },
+    "delete": {
+      "title": "Delete initiative",
+      "message": "Delete this initiative? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "discard": {
+      "title": "Discard unsaved changes",
+      "message": "Your changes will be lost.",
+      "keepEditing": "Keep editing",
+      "confirm": "Discard"
+    },
+    "empty": "No initiatives are available.",
+    "officialSite": "Official website",
+    "logoAlt": "Logo of {title}"
   }
 }

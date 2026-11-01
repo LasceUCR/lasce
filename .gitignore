@@ -46,10 +46,6 @@ blob-report/
 *storybook.log
 storybook-static
 
-# Railway CLI link state (project ids), written by `railway link`.
-.railway/*
-!.railway/railway.ts
-
 # local IDE files
 # `.vscode/*` rather than `.vscode/`, because git cannot re-include a file
 # whose parent directory is excluded, and settings.json is shared below.

@@ -71,6 +71,30 @@ def bad_quality(dataset: Any, name: str) -> Any:
     return np.bitwise_and(filled, good_mask) != 0
 
 
+def invalid_quality(dataset: Any, name: str) -> Any:
+    """``True`` for every report whose quality flags call it invalid.
+
+    Laxer than :func:`bad_quality`: a *degraded* report is kept. The invalid
+    bits are read from the variable itself, as every ``flag_masks`` entry whose
+    ``flag_meanings`` word starts with ``invalid_``, because they differ
+    between variables (EHIS helium has an extra ``invalid_due_to_sgps_inputs_qf``
+    the other mass groups lack).
+    """
+    quality = dataset.variables[name]
+    masks = np.asarray(quality.flag_masks).ravel()
+    meanings = str(quality.flag_meanings).split()
+    if len(meanings) != len(masks):
+        raise ValueError(f"{name} has {len(masks)} flag masks but {len(meanings)} meanings")
+    invalid_mask = 0
+    for mask, meaning in zip(masks, meanings, strict=True):
+        if meaning.startswith("invalid_"):
+            invalid_mask |= int(mask)
+    flags = quality[:]
+    # A missing flag is not a valid flag: fill it with every bit set.
+    filled = np.ma.filled(flags, np.iinfo(flags.dtype).max)
+    return np.bitwise_and(filled, invalid_mask) != 0
+
+
 def primary_irradiance(dataset: Any, variable: str, unit: str) -> Any:
     """XRS irradiance taken, report by report, from the detector flagged primary.
 
@@ -87,3 +111,18 @@ def primary_irradiance(dataset: Any, variable: str, unit: str) -> Any:
     values = np.ma.where(primary == 0, first[:], second[:])
     values = np.ma.masked_where(~np.isin(primary, [0, 1]), values)
     return np.ma.masked_where(dataset.variables["invalid_flags"][:] != 0, values)
+
+
+def averaged(values: Any, samples: Any) -> tuple[Any, Any]:
+    """An L2 one-minute average as floats, and ``True`` where it is a reading.
+
+    The GOES L2 ``avg1m`` products count, per average, the valid 1-second L1b
+    samples that went into it (``*ValidL1bSamplesInAvg``). An average built
+    from none of them is not a measurement, whatever value it holds. Fill
+    (``-1e31``, masked by netCDF4), non-finite and negative fluxes are dropped
+    too.
+    """
+    filled = np.ma.filled(values.astype(np.float64), np.nan)
+    counted = np.ma.filled(samples, 0) > 0
+    valid = counted & ~np.ma.getmaskarray(values) & np.isfinite(filled) & (filled >= 0)
+    return filled, valid

@@ -5,18 +5,24 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useRef, useState } from 'react'
 import type { Ref } from 'react'
 
-import { SolarImageLightbox, formatTimestamp } from './SolarImageLightbox'
+import { Skeleton } from '@/app/components/public/skeleton/Skeleton'
+
+import { SolarImageLightbox, formatTimestamp, type DescribedSolarImage } from './SolarImageLightbox'
 import type { ScientificImage } from '@/app/lib/scientific-data'
 
 export interface SuviImageSequenceProps {
   images: ScientificImage[]
+  /** The band, in the visitor's language; it names every image's alternative text. */
+  productName: string
+  /** The GOES spacecraft that took the images, when the result says. */
+  satellite?: number
   variant?: 'grid' | 'strip'
 }
 
 const closed = -1
 
 interface SolarImageProps {
-  image: ScientificImage
+  image: DescribedSolarImage
   strip: boolean
   onOpen: () => void
   triggerRef: Ref<HTMLButtonElement>
@@ -29,9 +35,16 @@ function SolarImage({ image, strip, onOpen, triggerRef }: SolarImageProps) {
 
   return (
     <figure>
-      <div className="data-image-frame" data-state={state}>
+      {/* Busy until the image arrives: a placeholder fills the frame meanwhile, and the loading
+          message is only announced. A failure replaces both with a message everyone can read. */}
+      <div
+        aria-busy={state === 'loading' || undefined}
+        className="data-image-frame"
+        data-state={state}
+      >
+        {state === 'loading' ? <Skeleton className="data-image-skeleton" tone="dark" /> : null}
         {state !== 'loaded' ? (
-          <p role="status" className="data-image-status">
+          <p role="status" className={state === 'error' ? 'data-image-status' : 'sr-only'}>
             {state === 'error' ? tImages('unavailable') : tImages('loading')}
           </p>
         ) : null}
@@ -70,8 +83,22 @@ function SolarImage({ image, strip, onOpen, triggerRef }: SolarImageProps) {
  * Owns the lightbox index, so the thumbnails and the dialog agree on which image
  * is open and focus can return to the thumbnail that opened it.
  */
-export function SuviImageSequence({ images, variant = 'grid' }: SuviImageSequenceProps) {
+export function SuviImageSequence({
+  images: sequence,
+  productName,
+  satellite,
+  variant = 'grid',
+}: SuviImageSequenceProps) {
   const tImages = useTranslations('scientificData.images')
+  const observer = satellite ? `GOES-${satellite}` : 'GOES'
+  const images: DescribedSolarImage[] = sequence.map((image) => ({
+    ...image,
+    alt: tImages('alt', {
+      product: productName,
+      observer,
+      time: image.timestamp.slice(11, 16),
+    }),
+  }))
   const [openIndex, setOpenIndex] = useState(closed)
   const triggers = useRef<(HTMLButtonElement | null)[]>([])
 

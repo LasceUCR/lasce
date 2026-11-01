@@ -20,14 +20,16 @@ const mocks = vi.hoisted(() => {
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       updateMany: vi.fn(),
+      deleteMany: vi.fn(),
     },
+    auditEvent: { create: vi.fn() },
     newsTranslation: { upsert: vi.fn() },
     newsAuthor: { upsert: vi.fn() },
     newsCrossAuthor: { deleteMany: vi.fn(), upsert: vi.fn() },
   }
 
   const prisma = {
-    news: { findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
+    news: { count: vi.fn(), findMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
   }
 
@@ -44,7 +46,9 @@ const {
   deleteNews,
   getNews,
   getNewsById,
+  getNewsPage,
   newsCreateSchema,
+  newsSearchWhere,
   newsUpdateSchema,
   updateNews,
 } = await import('./news')
@@ -96,6 +100,8 @@ function uniqueViolation(meta: unknown) {
   })
 }
 
+const actor = { id: 'user-1' }
+
 beforeEach(() => {
   vi.clearAllMocks()
   prisma.$transaction.mockImplementation((write: (client: typeof tx) => unknown) => write(tx))
@@ -133,13 +139,17 @@ describe('getNews', () => {
     })
   })
 
-  test('orders newest first with undated items last, and loads the stored translations', async () => {
+  test('orders newest first with undated items last, breaking ties, and loads the stored translations', async () => {
     prisma.news.findMany.mockResolvedValue([])
 
     await getNews('en')
 
     expect(prisma.news.findMany).toHaveBeenCalledWith({
-      orderBy: { publishedAt: { sort: 'desc', nulls: 'last' } },
+      orderBy: [
+        { publishedAt: { sort: 'desc', nulls: 'last' } },
+        { createdAt: 'desc' },
+        { id: 'desc' },
+      ],
       include: {
         source: true,
         authors: { orderBy: { position: 'asc' }, include: { newsAuthor: true } },
@@ -246,6 +256,162 @@ describe('getNews', () => {
   })
 })
 
+const stableOrder = [
+  { publishedAt: { sort: 'desc', nulls: 'last' } },
+  { createdAt: 'desc' },
+  { id: 'desc' },
+]
+
+describe('newsSearchWhere', () => {
+  const text = { contains: 'sol', mode: 'insensitive' }
+
+  test('matches every item when there is no search', () => {
+    expect(newsSearchWhere('', 'es')).toEqual({})
+    expect(newsSearchWhere('', 'en')).toEqual({})
+  })
+
+  test('searches the base title and abstract, the source and the authors in Spanish', () => {
+    expect(newsSearchWhere('sol', 'es')).toEqual({
+      OR: [
+        { OR: [{ title: text }, { abstract: text }] },
+        { source: { name: text } },
+        { authors: { some: { newsAuthor: { name: text } } } },
+      ],
+    })
+  })
+
+  test('matches % and _ literally', () => {
+    const literal = { contains: '100\\%', mode: 'insensitive' }
+
+    expect(newsSearchWhere('100%', 'es')).toMatchObject({
+      OR: [{ OR: [{ title: literal }, { abstract: literal }] }, {}, {}],
+    })
+  })
+
+  test('searches the English text of a translated item, and the base text of one without it', () => {
+    expect(newsSearchWhere('sol', 'en')).toEqual({
+      OR: [
+        {
+          OR: [
+            {
+              translations: {
+                some: { locale: 'en', OR: [{ title: text }, { abstract: text }] },
+              },
+            },
+            { translations: { none: { locale: 'en' } }, OR: [{ title: text }, { abstract: text }] },
+          ],
+        },
+        { source: { name: text } },
+        { authors: { some: { newsAuthor: { name: text } } } },
+      ],
+    })
+  })
+})
+
+describe('getNewsPage', () => {
+  function rows(count: number) {
+    return Array.from({ length: count }, (_, index) => newsRow({ id: `news-${index + 1}` }))
+  }
+
+  test('loads only the first page, in a stable order, when no page is asked for', async () => {
+    prisma.news.count.mockResolvedValue(23)
+    prisma.news.findMany.mockResolvedValue(rows(10))
+
+    const page = await getNewsPage('es')
+
+    expect(prisma.news.count).toHaveBeenCalledWith({ where: {} })
+    expect(prisma.news.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {}, orderBy: stableOrder, skip: 0, take: 10 }),
+    )
+    expect(page).toMatchObject({
+      page: 1,
+      pageSize: 10,
+      totalItems: 23,
+      totalPages: 3,
+      query: '',
+    })
+    expect(page.articles).toHaveLength(10)
+  })
+
+  test('skips the items of the earlier pages', async () => {
+    prisma.news.count.mockResolvedValue(23)
+    prisma.news.findMany.mockResolvedValue(rows(3))
+
+    const page = await getNewsPage('es', { page: 3 })
+
+    expect(prisma.news.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 20, take: 10 }),
+    )
+    expect(page).toMatchObject({ page: 3, totalPages: 3 })
+    expect(page.articles).toHaveLength(3)
+  })
+
+  test('shows the last page when the page asked for is past the end', async () => {
+    prisma.news.count.mockResolvedValue(23)
+    prisma.news.findMany.mockResolvedValue(rows(3))
+
+    const page = await getNewsPage('es', { page: 9 })
+
+    expect(prisma.news.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 20 }))
+    expect(page.page).toBe(3)
+  })
+
+  test('shows the first page when the page asked for is zero or negative', async () => {
+    prisma.news.count.mockResolvedValue(23)
+    prisma.news.findMany.mockResolvedValue(rows(10))
+
+    expect((await getNewsPage('es', { page: 0 })).page).toBe(1)
+    expect((await getNewsPage('es', { page: -4 })).page).toBe(1)
+    expect(prisma.news.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ skip: 0 }))
+  })
+
+  test('filters before paginating, and counts only the matching items', async () => {
+    prisma.news.count.mockResolvedValue(12)
+    prisma.news.findMany.mockResolvedValue(rows(2))
+
+    const page = await getNewsPage('en', { query: '  sol  ', page: 2 })
+    const where = newsSearchWhere('sol', 'en')
+
+    expect(prisma.news.count).toHaveBeenCalledWith({ where })
+    expect(prisma.news.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where, skip: 10, take: 10 }),
+    )
+    expect(page).toMatchObject({ page: 2, totalItems: 12, totalPages: 2, query: 'sol' })
+  })
+
+  test('reports no pages and loads nothing when no item matches', async () => {
+    prisma.news.count.mockResolvedValue(0)
+
+    const page = await getNewsPage('es', { query: 'nada', page: 4 })
+
+    expect(prisma.news.findMany).not.toHaveBeenCalled()
+    expect(page).toMatchObject({ page: 1, totalItems: 0, totalPages: 0, articles: [] })
+  })
+
+  test('shows each item in the language asked for', async () => {
+    prisma.news.count.mockResolvedValue(1)
+    prisma.news.findMany.mockResolvedValue([bilingualRow])
+
+    const { articles } = await getNewsPage('en')
+
+    expect(articles[0]).toMatchObject({
+      title: 'UCR brings a radio telescope online to study the Sun',
+      contentLocale: 'en',
+    })
+  })
+
+  test('leaves editing data out unless asked for it', async () => {
+    prisma.news.count.mockResolvedValue(1)
+    prisma.news.findMany.mockResolvedValue([bilingualRow])
+
+    const visitor = await getNewsPage('es')
+    const editor = await getNewsPage('es', { includeEditingData: true })
+
+    expect(visitor.articles[0]).not.toHaveProperty('editing')
+    expect(editor.articles[0]?.editing).toMatchObject({ version: VERSION })
+  })
+})
+
 describe('getNewsById', () => {
   const validUuid = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
@@ -297,7 +463,7 @@ describe('getNewsById', () => {
 
 describe('createNews', () => {
   test('stores the Spanish text on the record and the English text as its translation', async () => {
-    const result = await createNews(newsCreateSchema.parse(createBody))
+    const result = await createNews(newsCreateSchema.parse(createBody), actor)
 
     expect(tx.news.create).toHaveBeenCalledWith({
       data: {
@@ -316,7 +482,7 @@ describe('createNews', () => {
   })
 
   test('writes the source and the ordered authors inside one transaction', async () => {
-    await createNews(newsCreateSchema.parse(createBody))
+    await createNews(newsCreateSchema.parse(createBody), actor)
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
     expect(tx.newsSource.upsert).toHaveBeenCalledWith({
@@ -332,7 +498,7 @@ describe('createNews', () => {
   })
 
   test('stores an undated item with no date', async () => {
-    await createNews(newsCreateSchema.parse({ ...createBody, publishedAt: null }))
+    await createNews(newsCreateSchema.parse({ ...createBody, publishedAt: null }), actor)
 
     expect(tx.news.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ publishedAt: null }),
@@ -346,7 +512,7 @@ describe('createNews', () => {
       }),
     )
 
-    await expect(createNews(newsCreateSchema.parse(createBody))).resolves.toEqual({
+    await expect(createNews(newsCreateSchema.parse(createBody), actor)).resolves.toEqual({
       ok: false,
       reason: 'duplicate-link',
     })
@@ -356,14 +522,14 @@ describe('createNews', () => {
     const error = uniqueViolation({ target: ['name'] })
     tx.newsSource.upsert.mockRejectedValue(error)
 
-    await expect(createNews(newsCreateSchema.parse(createBody))).rejects.toBe(error)
+    await expect(createNews(newsCreateSchema.parse(createBody), actor)).rejects.toBe(error)
   })
 
   test('rethrows any other database error', async () => {
     const error = new Error('connection lost')
     tx.news.create.mockRejectedValue(error)
 
-    await expect(createNews(newsCreateSchema.parse(createBody))).rejects.toBe(error)
+    await expect(createNews(newsCreateSchema.parse(createBody), actor)).rejects.toBe(error)
   })
 })
 
@@ -377,7 +543,7 @@ describe('updateNews', () => {
   }
 
   test('saves both languages, conditioned on the version the editor loaded', async () => {
-    const result = await updateNews('news-1', newsUpdateSchema.parse(contentUpdate))
+    const result = await updateNews('news-1', newsUpdateSchema.parse(contentUpdate), actor)
 
     expect(result.ok).toBe(true)
     expect(tx.news.updateMany).toHaveBeenCalledWith({
@@ -392,7 +558,7 @@ describe('updateNews', () => {
   })
 
   test('moves the version forward on every save', async () => {
-    await updateNews('news-1', newsUpdateSchema.parse(contentUpdate))
+    await updateNews('news-1', newsUpdateSchema.parse(contentUpdate), actor)
 
     const [args] = tx.news.updateMany.mock.calls[0] ?? []
     expect(args.data.updatedAt.getTime()).toBeGreaterThan(new Date(VERSION).getTime())
@@ -402,6 +568,7 @@ describe('updateNews', () => {
     const result = await updateNews(
       'news-1',
       newsUpdateSchema.parse({ version: VERSION, source: 'Delfino.cr', publishedAt: null }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -417,6 +584,7 @@ describe('updateNews', () => {
     await updateNews(
       'news-1',
       newsUpdateSchema.parse({ version: VERSION, authors: ['Juan Pérez', 'Ana Mora'] }),
+      actor,
     )
 
     expect(tx.newsCrossAuthor.deleteMany).toHaveBeenCalledWith({ where: { newsId: 'news-1' } })
@@ -438,6 +606,7 @@ describe('updateNews', () => {
     const result = await updateNews(
       'news-1',
       newsUpdateSchema.parse({ version: VERSION, externalUrl: 'https://example.com/otra' }),
+      actor,
     )
 
     expect(result.ok).toBe(true)
@@ -446,7 +615,9 @@ describe('updateNews', () => {
   test('reports an item that does not exist', async () => {
     tx.news.findUnique.mockResolvedValue(null)
 
-    await expect(updateNews('missing', newsUpdateSchema.parse(contentUpdate))).resolves.toEqual({
+    await expect(
+      updateNews('missing', newsUpdateSchema.parse(contentUpdate), actor),
+    ).resolves.toEqual({
       ok: false,
       reason: 'not-found',
     })
@@ -456,7 +627,7 @@ describe('updateNews', () => {
   test('reports a conflict when the item changed since the editor loaded it', async () => {
     const stale = { ...contentUpdate, version: '2026-08-01T00:00:00.000Z' }
 
-    await expect(updateNews('news-1', newsUpdateSchema.parse(stale))).resolves.toEqual({
+    await expect(updateNews('news-1', newsUpdateSchema.parse(stale), actor)).resolves.toEqual({
       ok: false,
       reason: 'conflict',
     })
@@ -466,7 +637,9 @@ describe('updateNews', () => {
   test('reports a conflict when another save wins between the check and the write', async () => {
     tx.news.updateMany.mockResolvedValue({ count: 0 })
 
-    await expect(updateNews('news-1', newsUpdateSchema.parse(contentUpdate))).resolves.toEqual({
+    await expect(
+      updateNews('news-1', newsUpdateSchema.parse(contentUpdate), actor),
+    ).resolves.toEqual({
       ok: false,
       reason: 'conflict',
     })
@@ -482,7 +655,7 @@ describe('updateNews', () => {
       },
     }
 
-    await expect(updateNews('news-1', newsUpdateSchema.parse(oneSided))).resolves.toEqual({
+    await expect(updateNews('news-1', newsUpdateSchema.parse(oneSided), actor)).resolves.toEqual({
       ok: false,
       reason: 'review-required',
       pending: [{ locale: 'en', field: 'title' }],
@@ -500,7 +673,7 @@ describe('updateNews', () => {
       confirmedUnchanged: [{ locale: 'en', field: 'title' }],
     }
 
-    const result = await updateNews('news-1', newsUpdateSchema.parse(confirmed))
+    const result = await updateNews('news-1', newsUpdateSchema.parse(confirmed), actor)
 
     expect(result.ok).toBe(true)
   })
@@ -520,7 +693,7 @@ describe('updateNews', () => {
       },
     }
 
-    await expect(updateNews('news-1', newsUpdateSchema.parse(completed))).resolves.toEqual({
+    await expect(updateNews('news-1', newsUpdateSchema.parse(completed), actor)).resolves.toEqual({
       ok: false,
       reason: 'review-required',
       pending: [
@@ -536,7 +709,9 @@ describe('updateNews', () => {
         { locale: 'es', field: 'abstract' },
       ],
     }
-    await expect(updateNews('news-1', newsUpdateSchema.parse(reviewed))).resolves.toMatchObject({
+    await expect(
+      updateNews('news-1', newsUpdateSchema.parse(reviewed), actor),
+    ).resolves.toMatchObject({
       ok: true,
     })
     expect(tx.newsTranslation.upsert).toHaveBeenCalledTimes(1)
@@ -549,22 +724,42 @@ describe('updateNews', () => {
       updateNews(
         'news-1',
         newsUpdateSchema.parse({ version: VERSION, externalUrl: 'https://example.com/otra' }),
+        actor,
       ),
     ).resolves.toEqual({ ok: false, reason: 'duplicate-link' })
   })
 })
 
 describe('deleteNews', () => {
-  test('deletes the item, whose translations and author links cascade', async () => {
-    prisma.news.deleteMany.mockResolvedValue({ count: 1 })
+  test('deletes the item, whose translations and author links cascade, and records it', async () => {
+    tx.news.findUnique.mockResolvedValue({ title: 'Aurora' })
+    tx.news.deleteMany.mockResolvedValue({ count: 1 })
 
-    await expect(deleteNews('news-1')).resolves.toBe(true)
-    expect(prisma.news.deleteMany).toHaveBeenCalledWith({ where: { id: 'news-1' } })
+    await expect(deleteNews('news-1', actor)).resolves.toBe(true)
+    expect(tx.news.deleteMany).toHaveBeenCalledWith({ where: { id: 'news-1' } })
+    expect(tx.auditEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'news.delete',
+        summary: 'Noticia eliminada: Aurora',
+        actorId: 'user-1',
+        entityType: 'news',
+        entityId: 'news-1',
+      }),
+    })
   })
 
-  test('reports an item that was already gone', async () => {
-    prisma.news.deleteMany.mockResolvedValue({ count: 0 })
+  test('reports an item that was already gone and records nothing', async () => {
+    tx.news.findUnique.mockResolvedValue({ title: 'Aurora' })
+    tx.news.deleteMany.mockResolvedValue({ count: 0 })
 
-    await expect(deleteNews('missing')).resolves.toBe(false)
+    await expect(deleteNews('missing', actor)).resolves.toBe(false)
+    expect(tx.auditEvent.create).not.toHaveBeenCalled()
+  })
+
+  test('reports an item that does not exist without deleting', async () => {
+    tx.news.findUnique.mockResolvedValue(null)
+
+    await expect(deleteNews('missing', actor)).resolves.toBe(false)
+    expect(tx.news.deleteMany).not.toHaveBeenCalled()
   })
 })

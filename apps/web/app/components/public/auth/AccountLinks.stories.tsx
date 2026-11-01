@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
+import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+
 import { AccountLinks } from './AccountLinks'
 
 const meta: Meta<typeof AccountLinks> = {
@@ -9,9 +11,11 @@ const meta: Meta<typeof AccountLinks> = {
   },
   decorators: [
     (Story, context) => (
-      <div className={context.args.variant === 'header' ? 'header-actions' : 'mobile-menu-story'}>
-        <Story />
-      </div>
+      <EditModeProvider>
+        <div className={context.args.variant === 'header' ? 'header-actions' : 'mobile-menu-story'}>
+          <Story />
+        </div>
+      </EditModeProvider>
     ),
   ],
 }

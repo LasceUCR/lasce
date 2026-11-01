@@ -3,8 +3,9 @@ import { prisma, type Prisma } from '@lasce/db'
 /**
  * The audit trail: `public.audit_events`, one append-only row per thing that happened in the
  * portal. `recordAuditEvent()` is the only writer and `getRecentActivity()` feeds the
- * "Actividad reciente" panel of `/administracion`. Nothing records events yet; a feature that
- * wants to adds one call where its write succeeds.
+ * "Actividad reciente" panel of `/administracion`; `getAuditTrailPage()` (`audit-trail.ts`)
+ * feeds the Auditoría section. Every administrative write records its event through
+ * `recordUserAuditEvent()`.
  */
 
 /** Who can act. Mirrored by the `audit_events_actor_type_check` constraint. */
@@ -56,10 +57,42 @@ export async function recordAuditEvent(
   })
 }
 
+/** The account behind an administrative action: the session user the route guard returned. */
+export interface AuditActor {
+  id: string
+}
+
+/**
+ * Records an event done by `actor` in the transaction `db` that makes the change, so neither is
+ * kept without the other. Use it from the service that writes, after the write has succeeded.
+ */
+export function recordUserAuditEvent(
+  db: Prisma.TransactionClient,
+  actor: AuditActor,
+  event: Omit<Extract<AuditEventInput, { actorType: 'user' }>, 'actorType' | 'actorId'>,
+): Promise<void> {
+  return recordAuditEvent({ ...event, actorType: 'user', actorId: actor.id }, db)
+}
+
+/**
+ * The names of the fields an update touched, for an event's metadata. `version` and
+ * `confirmedUnchanged` are the editor's bookkeeping, not fields, and `undefined` means the field
+ * was left alone.
+ */
+export function changedFieldNames(input: object): string[] {
+  return Object.entries(input)
+    .filter(
+      ([name, value]) => name !== 'version' && name !== 'confirmedUnchanged' && value !== undefined,
+    )
+    .map(([name]) => name)
+}
+
 export interface ActivityItem {
   id: string
   action: string
   summary: string
+  /** The event's metadata, which lets the summary be rendered in the site's language. */
+  metadata: Prisma.JsonValue | null
   actorType: AuditActorType
   /** The account's name; null for the system and the worker, or once the account is deleted. */
   actorName: string | null
@@ -67,7 +100,7 @@ export interface ActivityItem {
   occurredAt: string
 }
 
-function isActorType(value: string): value is AuditActorType {
+export function isActorType(value: string): value is AuditActorType {
   return (AUDIT_ACTOR_TYPES as readonly string[]).includes(value)
 }
 
@@ -80,6 +113,7 @@ export async function getRecentActivity(limit = RECENT_ACTIVITY_LIMIT): Promise<
       id: true,
       action: true,
       summary: true,
+      metadata: true,
       actorType: true,
       createdAt: true,
       actor: { select: { fullName: true } },
@@ -90,6 +124,7 @@ export async function getRecentActivity(limit = RECENT_ACTIVITY_LIMIT): Promise<
     id: row.id,
     action: row.action,
     summary: row.summary,
+    metadata: row.metadata,
     // The CHECK constraint keeps other values out; `system` covers a row written around it.
     actorType: isActorType(row.actorType) ? row.actorType : 'system',
     actorName: row.actor?.fullName ?? null,

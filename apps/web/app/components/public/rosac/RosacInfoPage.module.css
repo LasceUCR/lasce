@@ -79,7 +79,6 @@
   text-decoration: underline;
 }
 
-.locationMapSkeleton,
 .locationMapUnavailable {
   display: flex;
   flex-direction: column;
@@ -91,18 +90,23 @@
   text-align: center;
 }
 
-.locationMapSkeleton {
-  background: var(--page);
-}
-
 .locationMapUnavailable p {
   margin: 0;
   max-width: 40ch;
 }
 
+/* The shimmer fills the same box as the Leaflet map. Two classes beat `.skeleton`'s own
+   height, and the card clips the corners. */
+.locationMap .locationMapFill {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+}
+
 @media (max-width: 760px) {
   .locationMap,
-  .locationMapSkeleton,
   .locationMapUnavailable {
     height: 280px;
   }

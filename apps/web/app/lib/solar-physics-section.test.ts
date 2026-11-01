@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => {
       updateMany: vi.fn(),
     },
     solarPhysicsSectionTranslation: { upsert: vi.fn() },
+    auditEvent: { create: vi.fn() },
   }
 
   const prisma = {
@@ -57,6 +58,8 @@ const updateBody = {
     en: { title: 'New title', body: 'New text.' },
   },
 }
+
+const actor = { id: 'user-1' }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -158,7 +161,7 @@ describe('updateSolarPhysicsSection', () => {
       }),
     )
 
-    const result = await updateSolarPhysicsSection(updateBody)
+    const result = await updateSolarPhysicsSection(updateBody, actor)
 
     expect(tx.solarPhysicsSection.updateMany).toHaveBeenCalledWith({
       where: { key: 'lasce', updatedAt: new Date(VERSION) },
@@ -184,7 +187,7 @@ describe('updateSolarPhysicsSection', () => {
   })
 
   test('moves the version strictly forward', async () => {
-    await updateSolarPhysicsSection(updateBody)
+    await updateSolarPhysicsSection(updateBody, actor)
 
     const [{ data }] = tx.solarPhysicsSection.updateMany.mock.calls[0] as [
       { data: { updatedAt: Date } },
@@ -195,7 +198,7 @@ describe('updateSolarPhysicsSection', () => {
   test('reports a missing section and writes nothing', async () => {
     tx.solarPhysicsSection.findUnique.mockResolvedValue(null)
 
-    const result = await updateSolarPhysicsSection(updateBody)
+    const result = await updateSolarPhysicsSection(updateBody, actor)
 
     expect(result).toEqual({ ok: false, reason: 'not-found' })
     expect(tx.solarPhysicsSection.updateMany).not.toHaveBeenCalled()
@@ -206,7 +209,7 @@ describe('updateSolarPhysicsSection', () => {
       sectionRow({ updatedAt: new Date('2026-09-02T00:00:00.000Z') }),
     )
 
-    const result = await updateSolarPhysicsSection(updateBody)
+    const result = await updateSolarPhysicsSection(updateBody, actor)
 
     expect(result).toEqual({ ok: false, reason: 'conflict' })
     expect(tx.solarPhysicsSection.updateMany).not.toHaveBeenCalled()
@@ -216,20 +219,23 @@ describe('updateSolarPhysicsSection', () => {
   test('reports a conflict when another save lands between the check and the write', async () => {
     tx.solarPhysicsSection.updateMany.mockResolvedValue({ count: 0 })
 
-    const result = await updateSolarPhysicsSection(updateBody)
+    const result = await updateSolarPhysicsSection(updateBody, actor)
 
     expect(result).toEqual({ ok: false, reason: 'conflict' })
     expect(tx.solarPhysicsSectionTranslation.upsert).not.toHaveBeenCalled()
   })
 
   test('asks for a review when only the Spanish text changed', async () => {
-    const result = await updateSolarPhysicsSection({
-      version: VERSION,
-      content: {
-        es: { title: 'Nuevo título', body: spanishBody },
-        en: { title: 'LASCE work', body: englishBody },
+    const result = await updateSolarPhysicsSection(
+      {
+        version: VERSION,
+        content: {
+          es: { title: 'Nuevo título', body: spanishBody },
+          en: { title: 'LASCE work', body: englishBody },
+        },
       },
-    })
+      actor,
+    )
 
     expect(result).toEqual({
       ok: false,
@@ -240,14 +246,17 @@ describe('updateSolarPhysicsSection', () => {
   })
 
   test('saves a one-sided change once the other language is confirmed', async () => {
-    const result = await updateSolarPhysicsSection({
-      version: VERSION,
-      content: {
-        es: { title: 'Nuevo título', body: spanishBody },
-        en: { title: 'LASCE work', body: englishBody },
+    const result = await updateSolarPhysicsSection(
+      {
+        version: VERSION,
+        content: {
+          es: { title: 'Nuevo título', body: spanishBody },
+          en: { title: 'LASCE work', body: englishBody },
+        },
+        confirmedUnchanged: [{ locale: 'en', field: 'title' }],
       },
-      confirmedUnchanged: [{ locale: 'en', field: 'title' }],
-    })
+      actor,
+    )
 
     expect(result.ok).toBe(true)
     expect(tx.solarPhysicsSectionTranslation.upsert).toHaveBeenCalledTimes(1)
@@ -256,24 +265,30 @@ describe('updateSolarPhysicsSection', () => {
   test('completes a legacy section after reviewing its base text', async () => {
     tx.solarPhysicsSection.findUnique.mockResolvedValue(legacyRow)
 
-    const unconfirmed = await updateSolarPhysicsSection({
-      version: VERSION,
-      content: {
-        es: { title: 'Trabajo de LASCE', body: spanishBody },
-        en: { title: 'LASCE work', body: englishBody },
+    const unconfirmed = await updateSolarPhysicsSection(
+      {
+        version: VERSION,
+        content: {
+          es: { title: 'Trabajo de LASCE', body: spanishBody },
+          en: { title: 'LASCE work', body: englishBody },
+        },
       },
-    })
-    const confirmed = await updateSolarPhysicsSection({
-      version: VERSION,
-      content: {
-        es: { title: 'Trabajo de LASCE', body: spanishBody },
-        en: { title: 'LASCE work', body: englishBody },
+      actor,
+    )
+    const confirmed = await updateSolarPhysicsSection(
+      {
+        version: VERSION,
+        content: {
+          es: { title: 'Trabajo de LASCE', body: spanishBody },
+          en: { title: 'LASCE work', body: englishBody },
+        },
+        confirmedUnchanged: [
+          { locale: 'es', field: 'title' },
+          { locale: 'es', field: 'body' },
+        ],
       },
-      confirmedUnchanged: [
-        { locale: 'es', field: 'title' },
-        { locale: 'es', field: 'body' },
-      ],
-    })
+      actor,
+    )
 
     expect(unconfirmed).toMatchObject({ ok: false, reason: 'review-required' })
     expect(confirmed.ok).toBe(true)
@@ -282,6 +297,6 @@ describe('updateSolarPhysicsSection', () => {
   test('lets an unexpected database error through for the route to log', async () => {
     tx.solarPhysicsSection.updateMany.mockRejectedValue(new Error('connection lost'))
 
-    await expect(updateSolarPhysicsSection(updateBody)).rejects.toThrow('connection lost')
+    await expect(updateSolarPhysicsSection(updateBody, actor)).rejects.toThrow('connection lost')
   })
 })

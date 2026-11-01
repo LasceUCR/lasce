@@ -170,6 +170,6 @@ describe('POST /api/gallery/albums', () => {
     expect(response.status).toBe(201)
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(body).toEqual({ album: storedAlbum })
-    expect(mocks.createTopLevelGalleryAlbum).toHaveBeenCalledWith(validBody)
+    expect(mocks.createTopLevelGalleryAlbum).toHaveBeenCalledWith(validBody, expect.anything())
   })
 })

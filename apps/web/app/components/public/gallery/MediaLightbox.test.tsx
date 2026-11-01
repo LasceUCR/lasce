@@ -1,15 +1,19 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import type { Locale } from '@/app/lib/i18n/config'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { MediaLightbox, type MediaLightboxProps } from './MediaLightbox'
 import { Photograph, Video } from './MediaLightbox.stories'
 
 const photographArgs = Photograph.args as MediaLightboxProps
 const videoArgs = Video.args as MediaLightboxProps
 
-function renderLightbox(overrides: Partial<MediaLightboxProps> = {}) {
+function renderLightbox(overrides: Partial<MediaLightboxProps> = {}, locale?: Locale) {
   const handlers = { onClose: vi.fn(), onPrevious: vi.fn(), onNext: vi.fn() }
-  const view = render(<MediaLightbox {...photographArgs} {...handlers} {...overrides} />)
+  const view = renderWithIntl(<MediaLightbox {...photographArgs} {...handlers} {...overrides} />, {
+    locale,
+  })
 
   return { ...handlers, ...view }
 }
@@ -78,6 +82,27 @@ describe('MediaLightbox', () => {
 
     expect(screen.getByText('2 / 13')).toBeInTheDocument()
     expect(screen.getByText('Archivo 2 de 13')).toBeInTheDocument()
+  })
+
+  test('translates the position label and paging announcement into English', async () => {
+    const { rerender } = renderLightbox({}, 'en')
+
+    expect(screen.getByText('File 1 of 15')).toBeInTheDocument()
+
+    rerender(
+      <MediaLightbox
+        {...photographArgs}
+        item={videoArgs.item}
+        onClose={vi.fn()}
+        onNext={vi.fn()}
+        onPrevious={vi.fn()}
+        position={2}
+      />,
+    )
+
+    expect(
+      await screen.findByText(`File 2 of ${videoArgs.total}: ${videoArgs.item.title}.`),
+    ).toBeInTheDocument()
   })
 
   // A live region that arrives already populated is read out on top of the

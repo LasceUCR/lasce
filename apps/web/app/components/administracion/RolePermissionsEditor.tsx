@@ -1,15 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useFormatter, useMessages, useTranslations } from 'next-intl'
 import type { UserRole } from '@lasce/db'
 
+import { useToast } from '@/app/components/public/toast/ToastProvider'
+import { permissionRows } from '@/app/lib/access-messages'
 import type { Permission } from '@/app/lib/auth/permissions'
-import {
-  isRolePermissionsLocked,
-  PERMISSION_LABELS,
-  PERMISSIONS,
-  sortPermissions,
-} from '@/app/lib/auth/permissions'
+import { isRolePermissionsLocked, PERMISSIONS, sortPermissions } from '@/app/lib/auth/permissions'
 import type { PermissionChangeResult, RolePermissionMap } from '@/app/lib/role-permissions'
 import { RoleAssignmentError, type OverviewRole } from '@/app/lib/user-overview'
 
@@ -19,6 +17,7 @@ import { RolePermissionsPage } from './RolePermissionsPage'
 export interface RolePermissionsEditorProps {
   title: string
   description: string
+  /** Already named in the site's language (`roleName`). */
   roles: OverviewRole[]
   matrix: RolePermissionMap
   saveAction: (input: {
@@ -64,7 +63,24 @@ export function RolePermissionsEditor({
   const [draft, setDraft] = useState<RolePermissionMap>(initialMatrix)
   const [saving, setSaving] = useState(false)
   const [confirming, setConfirming] = useState(false)
-  const [status, setStatus] = useState('')
+  const t = useTranslations('administration.permissions')
+  const format = useFormatter()
+  const messages = useMessages()
+  const toast = useToast()
+  // The error toast of the previous attempt, dismissed when the next one starts.
+  const errorToast = useRef<number | null>(null)
+  // Focus goes back to the table after the confirmation closes or the draft is discarded: the
+  // button that was used is disabled by then, so focus would otherwise fall to the page itself.
+  const tableRegion = useRef<HTMLDivElement>(null)
+  const [focusRequests, setFocusRequests] = useState(0)
+
+  useEffect(() => {
+    if (focusRequests > 0) tableRegion.current?.focus()
+  }, [focusRequests])
+
+  function returnFocusToTable() {
+    setFocusRequests((count) => count + 1)
+  }
 
   const lockedRoleIds = roles
     .filter((role) => isUserRole(role.id) && isRolePermissionsLocked(role.id))
@@ -75,18 +91,24 @@ export function RolePermissionsEditor({
   const canSave = dirtyRoles.length > 0
   const pending = pendingGrantDiff(draft, matrix)
 
-  const permissions = useMemo(
-    () =>
-      PERMISSIONS.map((id) => ({
-        id,
-        label: PERMISSION_LABELS[id],
-      })),
-    [],
-  )
+  // Identifiers stay the keys; only the text shown comes from the catalogue.
+  const permissions = useMemo(() => permissionRows(messages), [messages])
+
+  function roleNameOf(role: UserRole): string {
+    return roles.find((item) => item.id === role)?.name ?? role
+  }
+
+  /** "Visitante y Asistente", "Visitor and Assistant": a list in the site's language. */
+  function listRoles(names: string[]): string {
+    return format.list(names, { type: 'conjunction' })
+  }
+
+  function showError(message: string) {
+    errorToast.current = toast.show('error', message)
+  }
 
   function togglePermission(roleId: string, permission: Permission) {
     if (!isUserRole(roleId) || isRolePermissionsLocked(roleId)) return
-    setStatus('')
     setDraft((current) => {
       const granted = current[roleId]
       return {
@@ -101,19 +123,19 @@ export function RolePermissionsEditor({
   function discard() {
     if (saving || confirming || !canSave) return
     setDraft(matrix)
-    setStatus('')
+    returnFocusToTable()
   }
 
   function requestSave() {
     if (saving || !canSave) return
-    setStatus('')
     setConfirming(true)
   }
 
   async function persist() {
     if (saving || !canSave) return
     setSaving(true)
-    setStatus('')
+    if (errorToast.current !== null) toast.dismiss(errorToast.current)
+    errorToast.current = null
     let nextMatrix = matrix
     const updated: string[] = []
     try {
@@ -124,34 +146,19 @@ export function RolePermissionsEditor({
           previousPermissions: nextMatrix[role],
         })
         if (!result.ok) {
-          if (result.reason === 'unauthorized') {
-            throw new RoleAssignmentError(
-              'Tu sesión terminó o ya no tienes autorización para configurar permisos. Recarga la página para comprobar tu acceso.',
-              true,
-            )
-          }
-          if (result.reason === 'locked') {
-            throw new RoleAssignmentError(
-              'Los permisos de la persona administradora no se pueden cambiar.',
-              true,
-            )
-          }
-          throw new RoleAssignmentError(
-            'La información de este rol cambió. Recarga la página antes de volver a guardarlo.',
-            true,
-          )
+          // A failure without a reason is a server error: the fallback says to reload and check.
+          const reason = result.reason ?? 'unknown'
+          throw new RoleAssignmentError(t(`errors.${reason}`), true)
         }
         nextMatrix = { ...nextMatrix, [role]: result.permissions }
-        updated.push(roles.find((item) => item.id === role)?.name ?? role)
+        updated.push(roleNameOf(role))
       }
       setMatrix(nextMatrix)
       setDraft(nextMatrix)
-      setStatus(
-        updated.length === 1
-          ? `Permisos actualizados para ${updated[0]}.`
-          : `Permisos actualizados para ${updated.join(' y ')}.`,
-      )
+      // Close first, so the success toast shows on the page rather than in a closing dialog.
       setConfirming(false)
+      returnFocusToTable()
+      toast.show('success', t('updated', { roles: listRoles(updated) }))
     } finally {
       setSaving(false)
     }
@@ -171,17 +178,36 @@ export function RolePermissionsEditor({
           requestSave()
         }}
         onDiscard={discard}
-        saving={saving || confirming}
+        saving={saving}
+        confirming={confirming}
         canSave={canSave}
         pendingChanges={saving || confirming ? 0 : pending.count}
         dirtyPermissionIds={pending.dirtyPermissionIds}
-        status={status}
+        tableRegionRef={tableRegion}
       />
       {confirming ? (
         <UserRoleChangeDialog
-          roleNames={dirtyRoles.map((role) => roles.find((item) => item.id === role)?.name ?? role)}
+          roleNames={dirtyRoles.map(roleNameOf)}
+          permissionsCopy={{
+            title: t('dialog.title'),
+            question: t.rich('dialog.question', {
+              roles: listRoles(dirtyRoles.map(roleNameOf)),
+              strong: (chunks) => <strong>{chunks}</strong>,
+            }),
+            summary: t('dialog.summary'),
+            confirm: t('dialog.confirm'),
+            cancel: t('dialog.cancel'),
+            savingStatus: t('dialog.savingStatus'),
+            savingButton: t('dialog.savingButton'),
+            reload: t('dialog.reload'),
+            unknownError: t('errors.unknown'),
+          }}
+          onError={showError}
           onConfirm={persist}
-          onClose={() => setConfirming(false)}
+          onClose={() => {
+            setConfirming(false)
+            returnFocusToTable()
+          }}
         />
       ) : null}
     </>

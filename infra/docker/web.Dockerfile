@@ -80,9 +80,10 @@ RUN pnpm --filter @lasce/db generate \
  && pnpm --filter @lasce/web build
 
 # --- migrator -----------------------------------------------------------------
-# A flat, npm-installed Prisma CLI for the Railway pre-deploy command. npm and
-# not pnpm: `node-linker=isolated` produces symlinks into a root .pnpm store,
-# which cannot be lifted into another stage on their own.
+# A flat, npm-installed Prisma CLI for the `migrate` service in
+# infra/coolify/compose.yml. npm and not pnpm: `node-linker=isolated` produces
+# symlinks into a root .pnpm store, which cannot be lifted into another stage on
+# their own.
 FROM base AS migrator
 WORKDIR /migrator
 RUN npm init -y > /dev/null \
@@ -107,7 +108,7 @@ COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/static ./apps/web
 # including the favicon tests/e2e/accessibility-seo.spec.ts asserts on, 404s.
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/public ./apps/web/public
 
-# Everything `prisma migrate deploy` needs, for the Railway pre-deploy command:
+# Everything `prisma migrate deploy` needs, for the `migrate` service:
 #   sh -c "cd /repo/migrator && node node_modules/prisma/build/index.js migrate deploy"
 COPY --from=migrator --chown=nextjs:nodejs /migrator/node_modules ./migrator/node_modules
 COPY --from=migrator --chown=nextjs:nodejs /migrator/package.json ./migrator/package.json

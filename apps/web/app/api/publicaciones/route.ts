@@ -40,7 +40,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await createPublication(parsed.data)
+    const result = await createPublication(parsed.data, guard.user)
     if (!result.ok) return writeFailure(null, result)
 
     return ok({ publication: result.publication }, 201)

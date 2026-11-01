@@ -56,7 +56,7 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
             slug,
             content: values.content,
             yearsLabel: values.yearsLabel.trim() || null,
-            coverObjectKey: values.coverObjectKey,
+            coverObjectKey: values.coverObjectKey || null,
           }),
         },
         {
@@ -75,30 +75,27 @@ export function GalleryAlbumAddCard({ canCreate = false }: GalleryAlbumAddCardPr
   }
 
   return (
-    <ul className="gallery-grid tile-list">
-      <li className="gallery-grid-add">
-        <AddItemCard
-          label={tActions('addAlbum')}
-          onRequestClose={(close) => {
-            if (createForm.current) createForm.current.requestCancel()
-            else close()
-          }}
-          size="large"
-        >
-          {({ close }) => (
-            <>
-              {isCreating ? <p role="status">{tActions('creatingAlbum')}</p> : null}
-              <AlbumForm
-                album={blankAlbum}
-                requireSlug
-                onCancel={close}
-                onSave={(values) => handleCreate(values, close)}
-                ref={createForm}
-              />
-            </>
-          )}
-        </AddItemCard>
-      </li>
-    </ul>
+    <AddItemCard
+      label={tActions('addAlbum')}
+      onRequestClose={(close) => {
+        if (createForm.current) createForm.current.requestCancel()
+        else close()
+      }}
+      size="large"
+    >
+      {({ close }) => (
+        <>
+          {isCreating ? <p role="status">{tActions('creatingAlbum')}</p> : null}
+          <AlbumForm
+            album={blankAlbum}
+            requireSlug
+            showCover={false}
+            onCancel={close}
+            onSave={(values) => handleCreate(values, close)}
+            ref={createForm}
+          />
+        </>
+      )}
+    </AddItemCard>
   )
 }

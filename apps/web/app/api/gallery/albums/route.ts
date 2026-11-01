@@ -32,7 +32,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await createTopLevelGalleryAlbum(parsed.data)
+    const result = await createTopLevelGalleryAlbum(parsed.data, guard.user)
     if (!result.ok) return albumWriteFailure(result)
 
     return ok({ album: result.album }, 201)

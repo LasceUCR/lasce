@@ -3,7 +3,6 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
   ACCOUNT_COOKIE,
   ROLE_LABELS,
-  accountMenuCopy,
   canSeeAdminNavigation,
   clearAccountCookie,
   encodeAccountCookie,
@@ -43,7 +42,6 @@ describe('shortName', () => {
   test('keeps the first name only', () => {
     expect(shortName('Ana Pérez Rojas')).toBe('Ana')
     expect(shortName('  Ana  ')).toBe('Ana')
-    expect(accountMenuCopy.greeting('Ana Pérez Rojas')).toBe('Hola, Ana')
   })
 })
 

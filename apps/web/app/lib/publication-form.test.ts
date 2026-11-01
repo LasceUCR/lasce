@@ -180,10 +180,9 @@ describe('validateDraft', () => {
     const initial = initialFromPublication(legacy)
     const errors = validateDraft(initial, withContent(initial.draft, 'es', 'Título nuevo'), [])
 
-    expect(errors).toMatchObject({
+    expect(errors).toEqual({
       'content.en.title': 'El título en inglés es obligatorio.',
       'content.en.abstract': 'El resumen en inglés es obligatorio.',
-      'content.es.abstract': REVIEW_FIELD_MESSAGE,
     })
   })
 

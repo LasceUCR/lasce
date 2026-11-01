@@ -56,7 +56,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updateContactChannel(id, parsed.data)
+    const result = await updateContactChannel(id, parsed.data, guard.user)
     if (!result.ok) return writeFailure(id, result)
     return ok({ card: result.card })
   } catch (error) {
@@ -72,7 +72,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   if (!isUuid(id)) return badId()
 
   try {
-    const deleted = await deleteContactChannel(id)
+    const deleted = await deleteContactChannel(id, guard.user)
     if (!deleted) return missing(id)
     return ok({ id })
   } catch (error) {

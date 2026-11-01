@@ -80,6 +80,26 @@ uses: `TopicHero` (kicker "Portal público LASCE", title and lead from the
 per activity — no second, duplicate section heading the way `/noticias`' teaser has one. An empty
 list shows `academicActivities.section.empty` instead. `TopicBackLink` returns to `/`.
 
+## Skeleton loading states
+
+While academic activities are being retrieved on an uncached visit (#410), both the dedicated list
+at `/actividades-academicas` (`AcademicActivitiesPage`) and the teaser on `/noticias`
+(`AcademicActivitiesSection`) display skeleton placeholders shaped like the activity cards,
+preventing empty areas or noticeable layout shifts:
+
+- **Placeholders**: `AcademicActivityCardSkeleton` follows the `.news-card` metrics (280px photo
+  column with min-height 190px on desktop; 200px stacked photo banner on mobile `<= 700px`),
+  category badge, title, metadata line, and clamped description lines.
+  `AcademicActivitiesListSkeleton` renders multiple card placeholders inside
+  `.academic-activities-list`.
+- **Loading region & accessibility**: Built on `LoadingRegion`, which marks the list area
+  `aria-busy="true"`, announces the loading state politely to assistive technologies ("Cargando
+  actividades académicas…" / "Loading academic activities…"), and marks all placeholder markup
+  `aria-hidden="true"` and `inert`.
+- **Transitions**: When loading finishes, placeholders are replaced by the loaded cards, the
+  empty state (`academicActivities.section.empty`), or an error notice (`Notice tone="error"`).
+- **Reduced motion**: Shimmer animations stop under `prefers-reduced-motion: reduce`.
+
 ## Sitemap and SEO
 
 `/actividades-academicas` is listed in `publicPaths` (`app/lib/site.ts`), ensuring it is included

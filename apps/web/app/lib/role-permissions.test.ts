@@ -1,14 +1,22 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const { findMany, deleteMany, createMany, transaction, getSessionUser, getPermissionsForRole } =
-  vi.hoisted(() => ({
-    findMany: vi.fn(),
-    deleteMany: vi.fn(),
-    createMany: vi.fn(),
-    transaction: vi.fn(),
-    getSessionUser: vi.fn(),
-    getPermissionsForRole: vi.fn(),
-  }))
+const {
+  findMany,
+  deleteMany,
+  createMany,
+  auditCreate,
+  transaction,
+  getSessionUser,
+  getPermissionsForRole,
+} = vi.hoisted(() => ({
+  findMany: vi.fn(),
+  deleteMany: vi.fn(),
+  createMany: vi.fn(),
+  auditCreate: vi.fn(),
+  transaction: vi.fn(),
+  getSessionUser: vi.fn(),
+  getPermissionsForRole: vi.fn(),
+}))
 
 vi.mock('@lasce/db', () => ({
   UserRole: { VISITOR: 'VISITOR', ASSISTANT: 'ASSISTANT', ADMIN: 'ADMIN' },
@@ -29,7 +37,10 @@ beforeEach(() => {
   getSessionUser.mockResolvedValue({ id: 'actor', role: 'ADMIN' })
   getPermissionsForRole.mockResolvedValue(new Set(['manage_permissions']))
   transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
-    fn({ rolePermission: { findMany, deleteMany, createMany } }),
+    fn({
+      rolePermission: { findMany, deleteMany, createMany },
+      auditEvent: { create: auditCreate },
+    }),
   )
 })
 
@@ -61,6 +72,7 @@ describe('role permission matrix', () => {
     ).toEqual({ ok: false, reason: 'unauthorized' })
     expect(findMany).not.toHaveBeenCalled()
     expect(transaction).not.toHaveBeenCalled()
+    expect(auditCreate).not.toHaveBeenCalled()
   })
 
   test('rejects unknown roles or permissions without writing', async () => {
@@ -117,6 +129,27 @@ describe('role permission matrix', () => {
     expect(createMany).toHaveBeenCalledWith({
       data: [{ role: 'ASSISTANT', permission: 'download_resources' }],
     })
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'role_permissions.update',
+        summary: 'Permisos actualizados para el rol Asistente',
+        actorType: 'user',
+        actorId: 'actor',
+        entityType: 'role',
+        entityId: 'ASSISTANT',
+        metadata: { role: 'ASSISTANT', added: [], removed: ['edit_components'] },
+      }),
+    })
+  })
+
+  test('records no event when the saved set equals the stored one', async () => {
+    findMany.mockResolvedValue([{ permission: 'download_resources' }])
+    await updateRolePermissions({
+      role: 'VISITOR',
+      permissions: ['download_resources'],
+      previousPermissions: ['download_resources'],
+    })
+    expect(auditCreate).not.toHaveBeenCalled()
   })
 
   test('clears a role that should have no permissions', async () => {

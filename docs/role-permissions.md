@@ -9,11 +9,20 @@ Laboratory **resources** are a separate concern: downloading them (`download_res
 
 ## Defaults
 
-| Role          | Permissions                                                                                                                                        |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Visitante     | `download_resources`                                                                                                                               |
-| Asistente     | `edit_components`, `download_resources`                                                                                                            |
-| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions` |
+| Role          | Permissions                                                                                                                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitante     | `download_resources`                                                                                                                                                                          |
+| Asistente     | `edit_components`, `download_resources`                                                                                                                                                       |
+| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions`, `view_audit_log`, `view_download_history` |
+
+`view_audit_log` opens the Auditoría section (`/administracion/auditoria`, see
+[audit-log.md](audit-log.md)). Only administrators hold it by default; an assistant gets it
+from the matrix.
+
+`view_download_history` opens the Descargas section (`/administracion/descargas`, see
+[downloads.md](downloads.md#the-history-page)). It is separate from `download_resources` on
+purpose: every role holds that one to download files, and it must not expose who downloaded what.
+Only administrators hold it by default.
 
 The component-management grants gate the "¿Qué hacemos?" cards on `/nosotros`
 when Modo edición is on. Assistants may edit; administrators may also create
@@ -27,20 +36,21 @@ configurable without letting an administrator lock themselves out.
 
 ## The pieces
 
-| Piece                                         | File                                                                          |
-| --------------------------------------------- | ----------------------------------------------------------------------------- |
-| Permission catalogue and Spanish copy         | `apps/web/app/lib/auth/permissions.ts`                                        |
-| Session-aware checks (`requirePermission`, …) | `apps/web/app/lib/auth/authorization.ts`                                      |
-| Matrix read/write                             | `apps/web/app/lib/role-permissions.ts`                                        |
-| Save action                                   | `apps/web/app/(public)/administracion/permission-actions.ts`                  |
-| Management UI                                 | `apps/web/app/components/administracion/RolePermissions{Page,Editor}.tsx`     |
-| Access-denied copy                            | `apps/web/app/components/administracion/AccessDenied.tsx`                     |
-| Admin menu catalogue and visibility rule      | `apps/web/app/lib/admin-sections.ts`                                          |
-| JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                  |
-| Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)     |
-| Resource downloads                            | `/administracion/descargas` (`download_resources`)                            |
-| `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)               |
-| Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md) |
+| Piece                                         | File                                                                            |
+| --------------------------------------------- | ------------------------------------------------------------------------------- |
+| Permission catalogue and Spanish copy         | `apps/web/app/lib/auth/permissions.ts`                                          |
+| Role and permission names, by identifier      | `access.*` in `apps/web/messages/*.json`, `apps/web/app/lib/access-messages.ts` |
+| Session-aware checks (`requirePermission`, …) | `apps/web/app/lib/auth/authorization.ts`                                        |
+| Matrix read/write                             | `apps/web/app/lib/role-permissions.ts`                                          |
+| Save action                                   | `apps/web/app/(public)/administracion/permission-actions.ts`                    |
+| Management UI                                 | `apps/web/app/components/administracion/RolePermissions{Page,Editor}.tsx`       |
+| Access-denied copy                            | `apps/web/app/components/administracion/AccessDenied.tsx`                       |
+| Admin menu catalogue and visibility rule      | `apps/web/app/lib/admin-sections.ts`                                            |
+| JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                    |
+| Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)       |
+| Download history                              | `/administracion/descargas` (`view_download_history`)                           |
+| `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)                 |
+| Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md)   |
 
 The administration panel admits only `ASSISTANT` and `ADMIN` (the `administracion` layout turns
 visitors away), and its menu offers only the sections whose grant the account holds, read from
@@ -49,6 +59,46 @@ link is still not an authorization check: every section page and every write act
 permission lookup, and the role is read from the database each request (same as user
 administration). The public header's Administración tab follows the same role rule from the
 account cookie; that is a convenience, the layout is the check.
+
+## Languages
+
+`/administracion/permisos` is shown in Spanish or English, following the site's language
+(LASCE-SEC-008). Roles and permissions keep their identifiers everywhere that matters: the
+database stores `ASSISTANT` and `manage_permissions`, authorization compares those, and the save
+action sends them. Only the text shown is translated, and it is never stored.
+
+| Text                                          | Catalogue keys                                               |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| Role names                                    | `access.roles.<UserRole>`                                    |
+| Permission label, description, denied message | `access.permissions.<Permission>.label\|description\|denied` |
+| "Acceso denegado"                             | `access.accessDenied.title`                                  |
+| The permissions page, its dialog and toasts   | `administration.permissions.*`                               |
+
+Read the `access.*` keys through `roleName(role, messages)`, `permissionText(permission, messages)`
+and `permissionRows(messages)` in `app/lib/access-messages.ts`, with `messages` from `getMessages()`
+on the server or `useMessages()` on the client. They take an identifier and fall back to the
+Spanish text when a translation is missing or blank, so a screen never shows an empty label or a
+key path. `access-messages.test.ts` fails if a role or permission lacks English text.
+
+What it covers and what it does not, on purpose:
+
+- The page's title, description and `<title>`, the table, the permission descriptions (shown
+  under each label), the accessible names of the checkboxes, the pending-change count (an ICU
+  plural), the confirmation dialog (with the roles listed by `format.list`), the success and
+  error toasts and the access-denied message of this page.
+- `ROLE_LABELS` (`lib/auth/account.ts`), `PERMISSION_LABELS`, `PERMISSION_DESCRIPTIONS` and
+  `PERMISSION_DENIED` are unchanged: `/cuenta`, the header's account menu, `/administracion/usuarios`
+  and the download service still read them, and still show Spanish. A test keeps their text equal
+  to the Spanish catalogue. Move those screens to `roleName` and `permissionText` when they are
+  translated.
+- `UserRoleChangeDialog` is shared with `/administracion/usuarios`. The permissions editor passes
+  it `permissionsCopy` (its text, already translated) and `onError` (report a failure as a toast,
+  inside the dialog). Without them the dialog behaves exactly as before, which is what the user
+  role flow still uses.
+
+A save reports its outcome with a toast: "Permisos actualizados para Visitante y Asistente." on
+success, and on failure the reason (session ended, administrator locked, role changed meanwhile)
+or a fallback, shown inside the open dialog, which keeps the draft and offers to reload.
 
 ## Protecting a page
 
@@ -64,8 +114,8 @@ import { PERMISSION_DENIED } from '@/app/lib/auth/permissions'
 export const dynamic = 'force-dynamic'
 
 export default async function DescargasPage() {
-  const { allowed } = await requirePermission('download_resources', '/administracion/descargas')
-  if (!allowed) return <AccessDenied message={PERMISSION_DENIED.download_resources} />
+  const { allowed } = await requirePermission('view_download_history', '/administracion/descargas')
+  if (!allowed) return <AccessDenied message={PERMISSION_DENIED.view_download_history} />
   // ...
 }
 ```
@@ -74,13 +124,14 @@ Anonymous visitors are redirected to `/acceso` by `requireUser`. A signed-in acc
 grant sees "Acceso denegado" and the Server Action still refuses the write.
 
 `requireAnyPermission` is for a hub that several grants can unlock.
-Downloads use `requirePermission('download_resources')` on `/administracion/descargas`.
+The download history uses `requirePermission('view_download_history')` on `/administracion/descargas`.
 
 Do not call these helpers from the shared `(public)` layout.
 
 ## Changing the catalogue
 
-1. Add the identifier to `PERMISSIONS` and its Spanish strings in `permissions.ts`.
+1. Add the identifier to `PERMISSIONS` and its Spanish strings in `permissions.ts`, and its
+   `access.permissions.<identifier>` label, description and denied message to both catalogues.
 2. Give it to the roles that should have it by default, in `DEFAULT_ROLE_PERMISSIONS` **and** a
    new Prisma migration that inserts the rows (existing databases will not pick up TypeScript
    defaults).

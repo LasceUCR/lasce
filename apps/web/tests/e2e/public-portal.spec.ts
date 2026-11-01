@@ -361,23 +361,30 @@ test('displays the back button at the bottom of the gallery index and returns ho
   page,
 }) => {
   await page.goto('/galeria')
+  await expect(page.getByRole('status')).toBeHidden()
+
+  await expect(
+    page.locator('.gallery-group').first().getByRole('heading', { level: 2 }),
+  ).toBeVisible()
 
   const backLink = page.getByRole('link', { name: 'Volver al inicio' })
   const heading = page.getByRole('heading', { level: 1, name: 'Galería' })
 
   await expect(backLink).toBeVisible()
+  await expect(backLink).toHaveAttribute('href', '/')
   const backBox = await backLink.boundingBox()
   const headingBox = await heading.boundingBox()
   expect(backBox && headingBox && backBox.y > headingBox.y).toBeTruthy()
 
   await backLink.click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL('http://localhost:3000/')
 })
 
 test('displays the back button at the bottom of an album page and returns to gallery', async ({
   page,
 }) => {
   await page.goto('/galeria/rosac')
+  await expect(page.getByRole('status')).toBeHidden()
 
   const backLink = page.getByRole('link', { name: 'Volver a la galería' })
   const heading = page.getByRole('heading', { level: 1, name: galleryAlbums.rosac.title })
@@ -396,7 +403,10 @@ for (const album of galleryAlbumList) {
     await page.goto('/galeria')
 
     await expect(page.getByRole('heading', { level: 2, name: album.title })).toBeVisible()
-    await page.getByRole('link', { name: new RegExp(album.title) }).click()
+    await page
+      .getByRole('region', { name: album.title })
+      .getByRole('link', { name: 'Ver álbum completo' })
+      .click()
 
     await expect(page).toHaveURL(new RegExp(`/galeria/${album.slug}$`))
     await expect(page.getByRole('heading', { level: 1, name: album.title })).toBeVisible()
@@ -483,23 +493,63 @@ test('walks through the album lightbox with the next control', async ({ page }) 
   await expect(lightbox.getByRole('heading', { level: 2 })).toHaveText(first.title)
 })
 
-test('returns 404 for an album that does not exist', async ({ page }) => {
-  const response = await page.goto('/galeria/album-inexistente')
+// `/galeria` and its nested routes carry a `loading.tsx` (#403), which streams the response as
+// soon as it starts: by the time `notFound()` runs, the 200 already sent for that stream cannot
+// be changed to 404 — a Next.js limitation, not a bug in this page. The not-found content itself
+// is still correct, so that is what these two assert instead of the status.
+test('shows the not-found page for an album that does not exist', async ({ page }) => {
+  await page.goto('/galeria/album-inexistente')
 
-  expect(response?.status()).toBe(404)
+  await expect(page.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
 })
 
-test('returns 404 for a sub-album that does not exist', async ({ page }) => {
-  const response = await page.goto('/galeria/rosac/subalbum-inexistente')
+test('shows the not-found page for a sub-album that does not exist', async ({ page }) => {
+  await page.goto('/galeria/rosac/subalbum-inexistente')
 
-  expect(response?.status()).toBe(404)
+  await expect(page.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
 })
 
-test('returns 404 for an unknown public route', async ({ page }) => {
-  const response = await page.goto('/ruta-publica-inexistente')
+for (const { locale, title, description, backLink, homeHeading } of [
+  {
+    locale: 'es',
+    title: 'Página no encontrada',
+    description:
+      'La dirección ingresada no corresponde a una página disponible. Verifique la dirección o vuelva al inicio.',
+    backLink: 'Volver al inicio',
+    homeHeading: 'Exploramos el Sol para comprender el clima espacial',
+  },
+  {
+    locale: 'en',
+    title: 'Page not found',
+    description:
+      'The address you entered does not match any available page. Check the address or return to the home page.',
+    backLink: 'Back to home',
+    homeHeading: 'We explore the Sun to understand space weather',
+  },
+]) {
+  test(`shows the not-found page in ${locale} and returns home from its back link`, async ({
+    context,
+    page,
+  }) => {
+    await context.addCookies([
+      { name: 'lasce_locale', value: locale, url: 'http://localhost:3000' },
+    ])
 
-  expect(response?.status()).toBe(404)
-})
+    const response = await page.goto('/ruta-inexistente')
+
+    expect(response?.status()).toBe(404)
+    await expect(page.locator('html')).toHaveAttribute('lang', locale)
+    await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible()
+    await expect(page.getByText(description)).toBeVisible()
+
+    await page.getByRole('link', { name: backLink }).click()
+
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.getByRole('heading', { level: 1, name: homeHeading })).toBeVisible()
+  })
+}
 
 test('displays academic activities in the news section, with the description in the card', async ({
   page,
@@ -568,10 +618,14 @@ test('displays research collaborations', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 1, name: 'Colaboraciones e Iniciativas' }),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Sitio oficial de la ISWI' })).toHaveAttribute(
-    'href',
-    'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html',
-  )
+  await expect(
+    page
+      .getByRole('article', {
+        name: 'Iniciativa Internacional de Clima Espacial (ISWI)',
+        exact: true,
+      })
+      .getByRole('link'),
+  ).toHaveAttribute('href', 'https://www.unoosa.org/oosa/en/ourwork/psa/bssi/iswi.html')
   await expect(page.getByRole('combobox', { name: 'Tipo de colaboración' })).toHaveCount(0)
 })
 

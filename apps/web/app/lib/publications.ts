@@ -1,6 +1,7 @@
 import { prisma, type Prisma } from '@lasce/db'
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
@@ -9,6 +10,8 @@ import {
   storedContentFrom,
   translationRows,
 } from '@/app/lib/i18n/content/resolve'
+import { paginate, type PageWindow } from '@/app/lib/pagination'
+import { escapeLikeWildcards, parseSearchParam } from '@/app/lib/search-query'
 
 import {
   findPendingReviews,
@@ -17,6 +20,7 @@ import {
   type Publication,
   type PublicationCreateInput,
   type PublicationUpdateInput,
+  type ResearchGroup,
   type ReviewConfirmation,
 } from './publication-schema'
 
@@ -46,6 +50,17 @@ const recordInclude = {
 } satisfies Prisma.ResearchInclude
 
 type ResearchRecord = Prisma.ResearchGetPayload<{ include: typeof recordInclude }>
+
+/**
+ * Newest first, whatever the language. Records that share a publication date are ordered by when
+ * they were created, newest first, and finally by id, so a page boundary falls in the same place
+ * on every query and no publication is shown twice or skipped while the collection does not change.
+ */
+const publicationOrder = [
+  { publicationDate: 'desc' },
+  { createdAt: 'desc' },
+  { id: 'desc' },
+] satisfies Prisma.ResearchOrderByWithRelationInput[]
 
 function toPublication(
   record: ResearchRecord,
@@ -83,20 +98,122 @@ function toPublication(
  * the base text otherwise; `contentLocale` says which one was used. Pass `includeEditingData`
  * only for someone who can edit, because it sends every language to the browser.
  *
- * Ordered newest first. Author order within a record follows
- * `ResearchCrossAuthor.position`, so a citation reads the same as its source
- * rather than in whatever order the join happens to return rows.
+ * Ordered as `publicationOrder` says: newest `publicationDate` first, then newest `createdAt`,
+ * then `id`. Author order within a record follows `ResearchCrossAuthor.position`, so a citation
+ * reads the same as its source rather than in whatever order the join happens to return rows.
  */
 export async function getPublications(
   locale: Locale = defaultLocale,
   { includeEditingData = false }: { includeEditingData?: boolean } = {},
 ): Promise<Publication[]> {
   const records = await prisma.research.findMany({
-    orderBy: { publicationDate: 'desc' },
+    orderBy: publicationOrder,
     include: recordInclude,
   })
 
   return records.map((record) => toPublication(record, locale, includeEditingData))
+}
+
+/**
+ * The publications matching `query`, as a visitor reading in `locale` sees them, and `group`
+ * when one is selected, so a search finds what is on the screen:
+ *
+ * - title and abstract in the text `resolveContent` shows: the `locale` translation when the
+ *   record has one, the base text otherwise (always the base text in the default locale);
+ * - the author names, which every language shares.
+ *
+ * Case is ignored, and `%` and `_` are matched literally. An empty query matches every
+ * publication in the group.
+ */
+export function publicationSearchWhere(
+  query: string,
+  locale: Locale,
+  group: ResearchGroup | null = null,
+): Prisma.ResearchWhereInput {
+  const filters: Prisma.ResearchWhereInput[] = []
+  if (group !== null) filters.push({ researchGroup: group })
+
+  if (query !== '') {
+    const text = {
+      contains: escapeLikeWildcards(query),
+      mode: 'insensitive',
+    } satisfies Prisma.StringFilter
+    const titleOrAbstract = [{ title: text }, { abstract: text }]
+    const shownText: Prisma.ResearchWhereInput =
+      locale === defaultLocale
+        ? { OR: titleOrAbstract }
+        : {
+            OR: [
+              { translations: { some: { locale, OR: titleOrAbstract } } },
+              { translations: { none: { locale } }, OR: titleOrAbstract },
+            ],
+          }
+
+    filters.push({
+      OR: [shownText, { authors: { some: { researchAuthor: { name: text } } } }],
+    })
+  }
+
+  if (filters.length === 0) return {}
+  if (filters.length === 1) return filters[0] ?? {}
+  return { AND: filters }
+}
+
+export interface PublicationsPageRequest {
+  /** The search text. It is trimmed and cut to `SEARCH_MAX_LENGTH`; empty means every item. */
+  query?: string
+  /** The page asked for. A page outside `1..totalPages` is brought within it. */
+  page?: number
+  /** `null` for every research group. */
+  group?: ResearchGroup | null
+  /** Only for someone who can edit: it sends every language to the browser. */
+  includeEditingData?: boolean
+}
+
+export interface PublicationsPage extends PageWindow {
+  /** The items on `page`, shaped as `getPublications` shapes them, in `publicationOrder`. */
+  publications: Publication[]
+  /** The search text actually applied, after trimming and cutting. */
+  query: string
+  /** The group actually applied. `null` is every group. */
+  group: ResearchGroup | null
+}
+
+/**
+ * One page of the publications matching `query` and `group`, read in `locale`. The database
+ * applies the search, the group, the order and the page, so only the items on that page are
+ * loaded. Totals count the matching items, not the whole collection.
+ *
+ * `page` is normalized against the matching items (see `paginate`): the returned `page` is the
+ * one shown, which the caller compares with the one asked for to correct the URL. With no
+ * matching item, `totalPages` is 0, `page` is 1 and `publications` is empty.
+ */
+export async function getPublicationsPage(
+  locale: Locale = defaultLocale,
+  { query = '', page = 1, group = null, includeEditingData = false }: PublicationsPageRequest = {},
+): Promise<PublicationsPage> {
+  const search = parseSearchParam(query)
+  const where = publicationSearchWhere(search, locale, group)
+  const totalItems = await prisma.research.count({ where })
+  const window = paginate(totalItems, page)
+
+  const records =
+    totalItems === 0
+      ? []
+      : await prisma.research.findMany({
+          where,
+          orderBy: publicationOrder,
+          include: recordInclude,
+          skip: window.skip,
+          take: window.take,
+        })
+
+  return {
+    ...window,
+    query: search,
+    group,
+    publications: records.map((record) => toPublication(record, locale, includeEditingData)),
+  }
 }
 
 /**
@@ -156,6 +273,7 @@ async function replaceAuthors(tx: Prisma.TransactionClient, researchId: string, 
  */
 export async function createPublication(
   input: PublicationCreateInput,
+  actor: AuditActor,
 ): Promise<PublicationWriteResult> {
   return writePublication(async (tx) => {
     const publisher = await upsertPublisher(tx, input.venue)
@@ -174,7 +292,17 @@ export async function createPublication(
 
     await replaceAuthors(tx, research.id, input.authors)
 
-    return tx.research.findUniqueOrThrow({ where: { id: research.id }, include: recordInclude })
+    const created = await tx.research.findUniqueOrThrow({
+      where: { id: research.id },
+      include: recordInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'publication.create',
+      summary: `Publicación agregada: ${created.title}`,
+      entityType: 'publication',
+      entityId: created.id,
+    })
+    return created
   })
 }
 
@@ -195,6 +323,7 @@ export async function createPublication(
 export async function updatePublication(
   id: string,
   input: PublicationUpdateInput,
+  actor: AuditActor,
 ): Promise<PublicationWriteResult> {
   const expectedUpdatedAt = parseVersion(input.version)
 
@@ -266,15 +395,32 @@ export async function updatePublication(
       await replaceAuthors(tx, id, input.authors)
     }
 
-    return tx.research.findUniqueOrThrow({ where: { id }, include: recordInclude })
+    const updated = await tx.research.findUniqueOrThrow({ where: { id }, include: recordInclude })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'publication.update',
+      summary: `Publicación actualizada: ${updated.title}`,
+      entityType: 'publication',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 }
 
 /** Deletes a publication. Its translations and author links go with it (`ON DELETE CASCADE`). */
-export async function deletePublication(id: string): Promise<boolean> {
+export async function deletePublication(id: string, actor: AuditActor): Promise<boolean> {
   // One statement that reports how many rows it removed: a concurrent delete of the same
   // publication finds nothing and answers "not found", instead of failing between a check and
   // the delete. Translations and author links go with it (`onDelete: Cascade`).
-  const { count } = await prisma.research.deleteMany({ where: { id } })
-  return count > 0
+  return runAuditedDelete(
+    (tx) => tx.research.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.research.deleteMany({ where: { id } }),
+    (tx, publication) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'publication.delete',
+        summary: `Publicación eliminada: ${publication.title}`,
+        entityType: 'publication',
+        entityId: id,
+      }),
+  )
 }

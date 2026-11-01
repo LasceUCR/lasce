@@ -48,6 +48,7 @@ export function ResearchCollaborationsSection({
                   country={collaboration.country}
                   countryLocale={collaboration.countryLocale}
                   websiteUrl={collaboration.websiteUrl}
+                  logoPath={collaboration.logoPath}
                   name={collaboration.name}
                   scope={collaboration.scope}
                 />

@@ -1,7 +1,8 @@
 import { prisma, type Prisma } from '@lasce/db'
 import { z } from 'zod'
 
-import { runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
@@ -10,6 +11,8 @@ import {
   storedContentFrom,
   translationRows,
 } from '@/app/lib/i18n/content/resolve'
+import { paginate, type PageWindow } from '@/app/lib/pagination'
+import { escapeLikeWildcards, parseSearchParam } from '@/app/lib/search-query'
 
 import {
   findPendingReviews,
@@ -44,6 +47,18 @@ const newsRecordInclude = {
 } satisfies Prisma.NewsInclude
 
 type NewsRecord = Prisma.NewsGetPayload<{ include: typeof newsRecordInclude }>
+
+/**
+ * Newest first, undated items last, whatever the language. Items that share a date are ordered by
+ * when they were created, newest first, and finally by id, so the order never depends on how the
+ * database happens to return ties: a page boundary then falls in the same place on every query,
+ * and no item is shown twice or skipped while the collection does not change.
+ */
+const newsOrder = [
+  { publishedAt: { sort: 'desc', nulls: 'last' } },
+  { createdAt: 'desc' },
+  { id: 'desc' },
+] satisfies Prisma.NewsOrderByWithRelationInput[]
 
 /** "24 de mayo de 2026" or "May 24, 2026". Dates are stored without a time, so read them in UTC. */
 function formatDate(date: Date, locale: Locale): string {
@@ -89,19 +104,107 @@ function toNewsArticle(
  * Pass `includeEditingData` only for someone who can edit, because it sends every language to the
  * browser.
  *
- * Ordered newest first, undated items last, whatever the language. Author order within a record
- * follows `NewsCrossAuthor.position`.
+ * Ordered as `newsOrder` says: newest first, undated items last, whatever the language. Author
+ * order within a record follows `NewsCrossAuthor.position`.
  */
 export async function getNews(
   locale: Locale = defaultLocale,
   { includeEditingData = false }: { includeEditingData?: boolean } = {},
 ): Promise<NewsArticle[]> {
-  const records = await prisma.news.findMany({
-    orderBy: { publishedAt: { sort: 'desc', nulls: 'last' } },
-    include: newsRecordInclude,
-  })
+  const records = await prisma.news.findMany({ orderBy: newsOrder, include: newsRecordInclude })
 
   return records.map((record) => toNewsArticle(record, locale, includeEditingData))
+}
+
+/**
+ * The news items matching `query` as a visitor reading in `locale` sees them, so a search finds
+ * what is on the screen:
+ *
+ * - title and abstract in the text `resolveContent` shows: the `locale` translation when the item
+ *   has one, the base text otherwise (always the base text in the default locale);
+ * - the source and author names, which every language shares.
+ *
+ * Case is ignored, and `%` and `_` are matched literally. An empty query matches every item.
+ */
+export function newsSearchWhere(query: string, locale: Locale): Prisma.NewsWhereInput {
+  if (query === '') return {}
+
+  const text = {
+    contains: escapeLikeWildcards(query),
+    mode: 'insensitive',
+  } satisfies Prisma.StringFilter
+  const titleOrAbstract = [{ title: text }, { abstract: text }]
+
+  const shownText: Prisma.NewsWhereInput =
+    locale === defaultLocale
+      ? { OR: titleOrAbstract }
+      : {
+          OR: [
+            { translations: { some: { locale, OR: titleOrAbstract } } },
+            { translations: { none: { locale } }, OR: titleOrAbstract },
+          ],
+        }
+
+  return {
+    OR: [
+      shownText,
+      { source: { name: text } },
+      { authors: { some: { newsAuthor: { name: text } } } },
+    ],
+  }
+}
+
+export interface NewsPageRequest {
+  /** The search text. It is trimmed and cut to `SEARCH_MAX_LENGTH`; empty means every item. */
+  query?: string
+  /** The page asked for. A page outside `1..totalPages` is brought within it. */
+  page?: number
+  /** Only for someone who can edit: it sends every language to the browser. */
+  includeEditingData?: boolean
+}
+
+export interface NewsPage extends PageWindow {
+  /** The items on `page`, shaped as `getNews` shapes them, in `newsOrder`. */
+  articles: NewsArticle[]
+  /** The search text actually applied, after trimming and cutting. */
+  query: string
+}
+
+/**
+ * One page of the news items matching `query`, read in `locale`. The database applies the search,
+ * the order and the page, so only the items on that page are loaded. Totals count the matching
+ * items, not the whole collection.
+ *
+ * `page` is normalized against the matching items (see `paginate`): the returned `page` is the
+ * one shown, which the caller compares with the one asked for to correct the URL. With no
+ * matching item, `totalPages` is 0, `page` is 1 and `articles` is empty.
+ */
+export async function getNewsPage(
+  locale: Locale = defaultLocale,
+  { query = '', page = 1, includeEditingData = false }: NewsPageRequest = {},
+): Promise<NewsPage> {
+  const search = parseSearchParam(query)
+  const where = newsSearchWhere(search, locale)
+
+  const totalItems = await prisma.news.count({ where })
+  const window = paginate(totalItems, page)
+
+  const records =
+    totalItems === 0
+      ? []
+      : await prisma.news.findMany({
+          where,
+          orderBy: newsOrder,
+          include: newsRecordInclude,
+          skip: window.skip,
+          take: window.take,
+        })
+
+  return {
+    ...window,
+    query: search,
+    articles: records.map((record) => toNewsArticle(record, locale, includeEditingData)),
+  }
 }
 
 /**
@@ -179,7 +282,10 @@ async function replaceAuthors(
  * Creates a news item in every language at once, together with its source and its ordered
  * authors. Either all of it is stored or none of it is.
  */
-export async function createNews(input: NewsCreateInput): Promise<NewsWriteResult> {
+export async function createNews(
+  input: NewsCreateInput,
+  actor: AuditActor,
+): Promise<NewsWriteResult> {
   return writeNews(async (tx) => {
     const source = await upsertSource(tx, input.source)
 
@@ -195,7 +301,17 @@ export async function createNews(input: NewsCreateInput): Promise<NewsWriteResul
 
     await replaceAuthors(tx, record.id, input.authors)
 
-    return tx.news.findUniqueOrThrow({ where: { id: record.id }, include: newsRecordInclude })
+    const created = await tx.news.findUniqueOrThrow({
+      where: { id: record.id },
+      include: newsRecordInclude,
+    })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'news.create',
+      summary: `Noticia agregada: ${created.title}`,
+      entityType: 'news',
+      entityId: created.id,
+    })
+    return created
   })
 }
 
@@ -211,7 +327,11 @@ export async function createNews(input: NewsCreateInput): Promise<NewsWriteResul
  * loaded. The base row is updated only while it still has that value, and every save moves it
  * forward, so of two editors who loaded the same version the second one gets `conflict`.
  */
-export async function updateNews(id: string, input: NewsUpdateInput): Promise<NewsWriteResult> {
+export async function updateNews(
+  id: string,
+  input: NewsUpdateInput,
+  actor: AuditActor,
+): Promise<NewsWriteResult> {
   const expectedUpdatedAt = parseVersion(input.version)
 
   return writeNews(async (tx) => {
@@ -277,14 +397,31 @@ export async function updateNews(id: string, input: NewsUpdateInput): Promise<Ne
       await replaceAuthors(tx, id, input.authors)
     }
 
-    return tx.news.findUniqueOrThrow({ where: { id }, include: newsRecordInclude })
+    const updated = await tx.news.findUniqueOrThrow({ where: { id }, include: newsRecordInclude })
+    await recordUserAuditEvent(tx, actor, {
+      action: 'news.update',
+      summary: `Noticia actualizada: ${updated.title}`,
+      entityType: 'news',
+      entityId: id,
+      metadata: { fields: changedFieldNames(input) },
+    })
+    return updated
   })
 }
 
 /** Deletes a news item. Its translations and author links go with it (`ON DELETE CASCADE`). */
-export async function deleteNews(id: string): Promise<boolean> {
+export async function deleteNews(id: string, actor: AuditActor): Promise<boolean> {
   // One statement that reports how many rows it removed: a concurrent delete of the same item
   // finds nothing and answers "not found", instead of failing between a check and the delete.
-  const { count } = await prisma.news.deleteMany({ where: { id } })
-  return count > 0
+  return runAuditedDelete(
+    (tx) => tx.news.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.news.deleteMany({ where: { id } }),
+    (tx, news) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'news.delete',
+        summary: `Noticia eliminada: ${news.title}`,
+        entityType: 'news',
+        entityId: id,
+      }),
+  )
 }

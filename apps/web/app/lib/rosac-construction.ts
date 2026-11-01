@@ -11,6 +11,14 @@ export interface ConstructionStage {
   navigationLabel: string
   description: string
   images: readonly [ConstructionImage, ConstructionImage, ...ConstructionImage[]]
+  editing?: {
+    content: {
+      es: { title: string; description: string }
+      en: { title: string; description: string } | null
+    }
+    isLegacy: boolean
+    version: string
+  }
 }
 
 export interface ConstructionCarouselCopy {

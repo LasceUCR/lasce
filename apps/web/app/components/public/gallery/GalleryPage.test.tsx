@@ -1,6 +1,25 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+
+const messages = vi.hoisted(() => ({
+  hero: {
+    kicker: 'Portal público LASCE',
+    title: 'Galería',
+    lead: 'Fotografías y video de las actividades del laboratorio: construcción e instrumentación, observación y vida cotidiana del equipo. Organizada por álbumes.',
+  },
+  common: { backToHome: 'Volver al inicio' },
+}))
+
+vi.mock('next-intl/server', () => ({
+  getTranslations: async (namespace: 'gallery.hero' | 'common') => {
+    if (namespace === 'gallery.hero') {
+      return (key: 'kicker' | 'title' | 'lead') => messages.hero[key]
+    }
+
+    return (key: 'backToHome') => messages.common[key]
+  },
+}))
 
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
@@ -20,9 +39,14 @@ function render(ui: ReactElement) {
   )
 }
 
+async function renderGalleryPage() {
+  const page = await GalleryPage({ albums: galleryAlbumList })
+  render(page)
+}
+
 describe('GalleryPage', () => {
-  test('introduces the gallery and lists every album', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('introduces the gallery and lists every album', async () => {
+    await renderGalleryPage()
 
     expect(screen.getByRole('heading', { level: 1, name: galeriaHero.title })).toBeInTheDocument()
     expect(screen.getByText(galeriaHero.lead)).toBeInTheDocument()
@@ -32,45 +56,41 @@ describe('GalleryPage', () => {
     }
   })
 
-  test('links every album and every sub-album to a page of its own', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('links each album to its detail page', async () => {
+    await renderGalleryPage()
 
     for (const album of galleryAlbumList) {
-      expect(screen.getByRole('link', { name: new RegExp(album.title) })).toHaveAttribute(
+      const section = screen.getByRole('region', { name: album.title })
+      expect(within(section).getByRole('link', { name: 'Ver álbum completo' })).toHaveAttribute(
         'href',
         `/galeria/${album.slug}`,
       )
-
-      for (const subAlbum of album.subAlbums) {
-        expect(screen.getByRole('link', { name: new RegExp(subAlbum.title) })).toHaveAttribute(
-          'href',
-          `/galeria/${album.slug}/${subAlbum.slug}`,
-        )
-      }
     }
   })
 
-  // Every album is an h2 and every tile beneath it an h3, so the outline never
-  // skips a level and can be used to move around the page.
-  test('nests every tile heading under the heading of its album', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('shows up to ten photos from each album and its sub-albums', async () => {
+    await renderGalleryPage()
 
-    const expected = galleryAlbumList.flatMap((album) => [
-      album.title,
-      ...album.subAlbums.map((subAlbum) => subAlbum.title),
-    ])
-
-    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(expected.length)
+    for (const album of galleryAlbumList) {
+      const section = screen.getByRole('region', { name: album.title })
+      const expectedMedia = [
+        ...album.media,
+        ...album.subAlbums.flatMap((subAlbum) => subAlbum.media),
+      ].filter((media) => !media.isVideo && media.src)
+      expect(
+        within(section).getAllByRole('button', { name: /^Ver imagen a pantalla completa:/ }),
+      ).toHaveLength(Math.min(expectedMedia.length, 10))
+    }
   })
 
-  test('presents each album block as its own list', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('presents each album block as its own list', async () => {
+    await renderGalleryPage()
 
     expect(screen.getAllByRole('list')).toHaveLength(galleryAlbumList.length)
   })
 
-  test('offers a way back to the home page at the bottom of the page', () => {
-    render(<GalleryPage albums={galleryAlbumList} />)
+  test('offers a way back to the home page at the bottom of the page', async () => {
+    await renderGalleryPage()
 
     const backLink = screen.getByRole('link', { name: 'Volver al inicio' })
     const heading = screen.getByRole('heading', { level: 1, name: galeriaHero.title })

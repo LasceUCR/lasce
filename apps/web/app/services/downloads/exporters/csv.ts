@@ -1,5 +1,7 @@
 import type { ScientificDataResult } from '@/app/lib/scientific-data'
+import { describeOrigin, localizeResultNames } from '@/app/lib/scientific-data-copy'
 
+import { exportCopy, type ExportCopy } from './copy'
 import { UnexportableResultError, type Exporter } from './types'
 
 type Cell = string | number
@@ -30,27 +32,40 @@ export function toCsv({ metadata, columns, rows }: CsvDocument): string {
   return `\uFEFF${lines.join('\r\n')}\r\n`
 }
 
-function describe(result: ScientificDataResult, generatedAt: Date): [string, string][] {
-  const { query, instrument, product, parameter, origin } = result
+function describe(
+  result: ScientificDataResult,
+  copy: ExportCopy,
+  generatedAt: Date,
+): [string, string][] {
+  const { query, instrument, product, parameter, origin } = localizeResultNames(
+    result,
+    copy.sources,
+  )
+  const { provider, notice } = describeOrigin(origin, copy.origins)
+  const t = copy.files
   return [
-    ['Fuente', query.source],
-    ['Instrumento', `${instrument.code} — ${instrument.name}`],
-    ['Producto', `${product.code} — ${product.name}`],
-    ['Canal', `${parameter.code} — ${parameter.label}`],
-    ['Unidad', parameter.unit],
-    ...(origin.satellite ? [['Satélite', `GOES-${origin.satellite}`] as [string, string]] : []),
-    ['Fecha', query.date],
-    ['Intervalo (UTC)', `${query.startTime}–${query.endTime}`],
-    ['Tipo de datos', origin.kind === 'observed' ? 'observados' : 'simulados'],
-    ['Proveedor', origin.provider],
-    ['Nota', origin.notice],
-    ['Generado (UTC)', generatedAt.toISOString()],
-    ['Generado por', 'LASCE — Universidad de Costa Rica'],
+    [t('source'), query.source],
+    [t('instrument'), `${instrument.code} — ${instrument.name}`],
+    [t('product'), `${product.code} — ${product.name}`],
+    [t('channel'), `${parameter.code} — ${parameter.label}`],
+    [t('unit'), parameter.unit],
+    ...(origin.satellite ? [[t('satellite'), `GOES-${origin.satellite}`] as [string, string]] : []),
+    [t('date'), query.date],
+    [t('interval'), `${query.startTime}–${query.endTime}`],
+    [t('dataKind'), t(origin.kind)],
+    [t('provider'), provider],
+    [t('notice'), notice],
+    [t('generatedAt'), generatedAt.toISOString()],
+    [t('generatedBy'), 'LASCE — Universidad de Costa Rica'],
   ]
 }
 
-export function resultToCsv(result: ScientificDataResult, generatedAt = new Date()) {
-  const metadata = describe(result, generatedAt)
+export function resultToCsv(
+  result: ScientificDataResult,
+  generatedAt = new Date(),
+  copy: ExportCopy = exportCopy(),
+) {
+  const metadata = describe(result, copy, generatedAt)
 
   switch (result.visualization) {
     case 'time-series':
@@ -82,8 +97,8 @@ export function resultToCsv(result: ScientificDataResult, generatedAt = new Date
 
 export const csvExporter: Exporter = {
   format: 'csv',
-  async export(result) {
-    const { text, rowCount } = resultToCsv(result)
+  async export(result, copy) {
+    const { text, rowCount } = resultToCsv(result, new Date(), copy)
     return { body: Buffer.from(text, 'utf8'), rowCount }
   },
 }

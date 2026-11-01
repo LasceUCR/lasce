@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => {
       findUniqueOrThrow: vi.fn(),
     },
     geomagneticIndexTranslation: { upsert: vi.fn() },
+    auditEvent: { create: vi.fn() },
   }
 
   const prisma = {
@@ -62,6 +63,8 @@ const heroContent = {
   es: { title: 'Exploramos el Sol', lead: 'Nuevo subtítulo.' },
   en: { title: 'We explore the Sun', lead: 'New subtitle.' },
 }
+
+const actor = { id: 'user-1' }
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -173,7 +176,7 @@ describe('updateHero', () => {
       heroRow({ lead: 'Nuevo subtítulo.', updatedAt: new Date(LATER) }),
     )
 
-    const result = await updateHero({ version: VERSION, content: heroContent })
+    const result = await updateHero({ version: VERSION, content: heroContent }, actor)
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
     expect(tx.homeHero.updateMany).toHaveBeenCalledWith({
@@ -195,7 +198,7 @@ describe('updateHero', () => {
   test('is a conflict when the banner changed since the editor loaded it', async () => {
     tx.homeHero.findFirst.mockResolvedValue(heroRow({ updatedAt: new Date(LATER) }))
 
-    expect(await updateHero({ version: VERSION, content: heroContent })).toEqual({
+    expect(await updateHero({ version: VERSION, content: heroContent }, actor)).toEqual({
       ok: false,
       reason: 'conflict',
     })
@@ -206,7 +209,7 @@ describe('updateHero', () => {
     tx.homeHero.findFirst.mockResolvedValue(heroRow())
     tx.homeHero.updateMany.mockResolvedValue({ count: 0 })
 
-    expect(await updateHero({ version: VERSION, content: heroContent })).toEqual({
+    expect(await updateHero({ version: VERSION, content: heroContent }, actor)).toEqual({
       ok: false,
       reason: 'conflict',
     })
@@ -216,7 +219,7 @@ describe('updateHero', () => {
   test('is not found without a banner row', async () => {
     tx.homeHero.findFirst.mockResolvedValue(null)
 
-    expect(await updateHero({ version: VERSION, content: heroContent })).toEqual({
+    expect(await updateHero({ version: VERSION, content: heroContent }, actor)).toEqual({
       ok: false,
       reason: 'not-found',
     })
@@ -229,7 +232,7 @@ describe('updateHero', () => {
       en: { title: 'We explore the Sun', lead: 'We study solar activity.' },
     }
 
-    expect(await updateHero({ version: VERSION, content: oneSided })).toEqual({
+    expect(await updateHero({ version: VERSION, content: oneSided }, actor)).toEqual({
       ok: false,
       reason: 'review-required',
       pending: [{ locale: 'en', field: 'lead' }],
@@ -238,11 +241,14 @@ describe('updateHero', () => {
 
     tx.homeHero.updateMany.mockResolvedValue({ count: 1 })
     tx.homeHero.findUniqueOrThrow.mockResolvedValue(heroRow())
-    const confirmed = await updateHero({
-      version: VERSION,
-      content: oneSided,
-      confirmedUnchanged: [{ locale: 'en', field: 'lead' }],
-    })
+    const confirmed = await updateHero(
+      {
+        version: VERSION,
+        content: oneSided,
+        confirmedUnchanged: [{ locale: 'en', field: 'lead' }],
+      },
+      actor,
+    )
     expect(confirmed.ok).toBe(true)
   })
 })
@@ -255,7 +261,7 @@ describe('updateIndicator', () => {
     tx.geomagneticIndex.updateMany.mockResolvedValue({ count: 1 })
     tx.geomagneticIndex.findUniqueOrThrow.mockResolvedValue(indicatorRow({ value: '-40 nT' }))
 
-    const result = await updateIndicator(ID, { version: VERSION, value: '-40 nT' })
+    const result = await updateIndicator(ID, { version: VERSION, value: '-40 nT' }, actor)
 
     expect(tx.geomagneticIndex.updateMany).toHaveBeenCalledWith({
       where: { id: ID, updatedAt: new Date(VERSION) },
@@ -275,7 +281,7 @@ describe('updateIndicator', () => {
     tx.geomagneticIndex.updateMany.mockResolvedValue({ count: 1 })
     tx.geomagneticIndex.findUniqueOrThrow.mockResolvedValue(indicatorRow())
 
-    await updateIndicator(ID, { version: VERSION, value: '-60 nT', content })
+    await updateIndicator(ID, { version: VERSION, value: '-60 nT', content }, actor)
 
     expect(tx.geomagneticIndex.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -291,7 +297,7 @@ describe('updateIndicator', () => {
 
   test('is not found for an unknown index, and a conflict for a stale version', async () => {
     tx.geomagneticIndex.findUnique.mockResolvedValueOnce(null)
-    expect(await updateIndicator(ID, { version: VERSION, value: '2' })).toEqual({
+    expect(await updateIndicator(ID, { version: VERSION, value: '2' }, actor)).toEqual({
       ok: false,
       reason: 'not-found',
     })
@@ -299,14 +305,14 @@ describe('updateIndicator', () => {
     tx.geomagneticIndex.findUnique.mockResolvedValueOnce(
       indicatorRow({ updatedAt: new Date(LATER) }),
     )
-    expect(await updateIndicator(ID, { version: VERSION, value: '2' })).toEqual({
+    expect(await updateIndicator(ID, { version: VERSION, value: '2' }, actor)).toEqual({
       ok: false,
       reason: 'conflict',
     })
 
     tx.geomagneticIndex.findUnique.mockResolvedValueOnce(indicatorRow())
     tx.geomagneticIndex.updateMany.mockResolvedValueOnce({ count: 0 })
-    expect(await updateIndicator(ID, { version: VERSION, value: '2' })).toEqual({
+    expect(await updateIndicator(ID, { version: VERSION, value: '2' }, actor)).toEqual({
       ok: false,
       reason: 'conflict',
     })
@@ -315,10 +321,14 @@ describe('updateIndicator', () => {
   test('asks to review the description changed in one language only', async () => {
     tx.geomagneticIndex.findUnique.mockResolvedValue(indicatorRow())
 
-    const result = await updateIndicator(ID, {
-      version: VERSION,
-      content: { es: { description: 'Perturbado' }, en: { description: 'Stable' } },
-    })
+    const result = await updateIndicator(
+      ID,
+      {
+        version: VERSION,
+        content: { es: { description: 'Perturbado' }, en: { description: 'Stable' } },
+      },
+      actor,
+    )
 
     expect(result).toEqual({
       ok: false,
@@ -332,7 +342,9 @@ describe('reorderIndicators', () => {
   test('moves every index aside, then writes its new position, so unique positions never clash', async () => {
     tx.geomagneticIndex.findMany.mockResolvedValue([{ id: ID }, { id: OTHER_ID }])
 
-    expect(await reorderIndicators({ ids: [OTHER_ID, ID], positionField: 'position' })).toEqual({
+    expect(
+      await reorderIndicators({ ids: [OTHER_ID, ID], positionField: 'position' }, actor),
+    ).toEqual({
       ok: true,
     })
     expect(tx.geomagneticIndex.update.mock.calls.map(([call]) => call)).toEqual([
@@ -346,15 +358,18 @@ describe('reorderIndicators', () => {
   test('refuses an order that is not exactly the stored indices', async () => {
     tx.geomagneticIndex.findMany.mockResolvedValue([{ id: ID }, { id: OTHER_ID }])
 
-    expect(await reorderIndicators({ ids: [ID], positionField: 'position' })).toEqual({
+    expect(await reorderIndicators({ ids: [ID], positionField: 'position' }, actor)).toEqual({
       ok: false,
       reason: 'conflict',
     })
     expect(
-      await reorderIndicators({
-        ids: [ID, '9d0c8f9e-1111-4c1a-9b2e-3f4a5b6c7d8e'],
-        positionField: 'position',
-      }),
+      await reorderIndicators(
+        {
+          ids: [ID, '9d0c8f9e-1111-4c1a-9b2e-3f4a5b6c7d8e'],
+          positionField: 'position',
+        },
+        actor,
+      ),
     ).toEqual({ ok: false, reason: 'conflict' })
     expect(tx.geomagneticIndex.update).not.toHaveBeenCalled()
   })

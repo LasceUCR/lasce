@@ -5,7 +5,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { defaultLocale, timeZone, type Locale } from './config'
 import { getMessages } from './messages'
 
-interface RenderWithIntlOptions extends Omit<RenderOptions, 'wrapper'> {
+export interface RenderWithIntlOptions extends Omit<RenderOptions, 'wrapper'> {
   /** Language to render in. Defaults to Spanish, the source language. */
   locale?: Locale
 }

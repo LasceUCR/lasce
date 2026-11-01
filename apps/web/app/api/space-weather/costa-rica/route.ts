@@ -48,7 +48,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   if (!parsed.success) return invalidBody(parsed.error)
 
   try {
-    const result = await updateSpaceWeatherSection(parsed.data)
+    const result = await updateSpaceWeatherSection(parsed.data, guard.user)
     if (!result.ok) return writeFailure(result)
 
     return ok({ section: result.section })

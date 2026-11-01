@@ -7,17 +7,19 @@ import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 import { AlbumPage, type AlbumPageProps } from './AlbumPage'
-import { albumMediaMeta, albumMeta, galleryAlbums } from '@/app/lib/gallery'
+import { albumMeta, galleryAlbums } from '@/app/lib/gallery'
+import type { Locale } from '@/app/lib/i18n/config'
 
 vi.mock('@lasce/db', () => ({ prisma: {} }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 vi.mock('@/app/(public)/galeria/actions', () => ({ uploadGalleryImage: vi.fn() }))
 
-function render(ui: ReactElement, editMode = false) {
+function render(ui: ReactElement, editMode = false, locale?: Locale) {
   return renderWithIntl(
     <EditModeContext.Provider value={{ editMode, setEditMode: () => undefined }}>
       <ToastProvider>{ui}</ToastProvider>
     </EditModeContext.Provider>,
+    { locale },
   )
 }
 
@@ -27,7 +29,11 @@ const [subAlbum] = album.subAlbums
 const albumArgs: AlbumPageProps = {
   title: album.title,
   description: album.description,
-  meta: albumMeta(album),
+  meta: albumMeta(
+    album,
+    (count) => `${count} archivos`,
+    (count) => `${count} subálbumes`,
+  ),
   media: album.media,
   subAlbums: album.subAlbums,
   parentSlug: album.slug,
@@ -39,8 +45,14 @@ describe('AlbumPage', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: album.title })).toBeInTheDocument()
     expect(screen.getByText(album.description)).toBeInTheDocument()
-    expect(screen.getByText(albumMeta(album))).toBeInTheDocument()
-    expect(screen.getByText(albumMediaMeta(album.media))).toBeInTheDocument()
+    expect(screen.getByText(albumArgs.meta)).toBeInTheDocument()
+    expect(screen.getByText(`${album.media.length} archivos en este álbum`)).toBeInTheDocument()
+  })
+
+  test('uses the English singular form when the album has one file', () => {
+    render(<AlbumPage {...albumArgs} media={album.media.slice(0, 1)} subAlbums={[]} />, false, 'en')
+
+    expect(screen.getByText('1 file in this album')).toBeInTheDocument()
   })
 
   test('lists the sub-albums as links and one control per file', () => {

@@ -1,6 +1,9 @@
 import { z } from 'zod'
 
+import en from '@/messages/en.json' with { type: 'json' }
+import es from '@/messages/es.json' with { type: 'json' }
 import { versionSchema } from '@/app/lib/cms/version'
+import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
   defineTranslatableContent,
   type ContentInput,
@@ -57,84 +60,87 @@ export type NosotrosResearcherEditingData = {
   version: string
 }
 
-/**
- * The fields shared by both languages, each as the editor sends it. `email` is a single form
- * field, a comma separated list of zero, one or two addresses, split and validated into an array
- * here, since a researcher can have more than one (matching `ResearcherCard`'s multi-address
- * display). Capped at 2 by both this schema and a database CHECK constraint.
- */
-/** The photo is optional: `''` or a missing value means the researcher has no photo. */
-const srcSchema = z.string().trim()
-const nameSchema = z.string().trim().min(1, 'El nombre es obligatorio.')
-const institutionSchema = z.string().trim().min(1, 'La institución es obligatoria.')
-const emailSchema = z
-  .string()
-  .trim()
-  .transform((value) =>
-    value === ''
-      ? []
-      : value
-          .split(',')
-          .map((address) => address.trim())
-          .filter((address) => address !== ''),
-  )
-  .pipe(
-    z
-      .array(z.email({ error: 'Uno o más correos no son válidos.' }))
-      .max(2, 'Máximo 2 correos de contacto.'),
-  )
+export type ResearcherValidationMessages = typeof es.researchers.validation
 
-/** Body of a create request. Both languages are required, and so are the shared fields but the photo. */
-export const nosotrosResearcherCreateSchema = z.strictObject({
-  content: nosotrosResearcherContent.schema,
-  src: srcSchema.optional(),
-  name: nameSchema,
-  email: emailSchema.optional(),
-  institution: institutionSchema,
-})
+const validationMessages: Record<Locale, ResearcherValidationMessages> = {
+  es: es.researchers.validation,
+  en: en.researchers.validation,
+}
 
-/**
- * Body of an update request. Only the fields present are written.
- *
- * - `version` (required): the `editing.version` the editor loaded. A save against an older
- *   version is rejected instead of overwriting someone else's change.
- * - `content`: present for a bilingual content update, which needs both languages in full;
- *   absent for a shared-field update, which never touches the texts and never asks for a
- *   missing translation.
- * - `confirmedUnchanged`: only with `content`. For a field changed in one language only, the
- *   other language's text must either change too or be listed here, meaning the editor reviewed
- *   it in this operation and it is still correct. Confirmations are never stored.
- */
-export const nosotrosResearcherUpdateSchema = z
-  .strictObject({
-    version: versionSchema(
-      'La versión del investigador es obligatoria y debe ser la que se cargó.',
-    ),
-    content: nosotrosResearcherContent.schema.optional(),
-    confirmedUnchanged: nosotrosResearcherContent.confirmationsSchema.optional(),
+function createSharedSchemas(messages: ResearcherValidationMessages) {
+  const srcSchema = z.string().trim()
+  const nameSchema = z.string().trim().min(1, messages.nameRequired)
+  const institutionSchema = z.string().trim().min(1, messages.institutionRequired)
+  const emailSchema = z
+    .string()
+    .trim()
+    .transform((value) =>
+      value === ''
+        ? []
+        : value
+            .split(',')
+            .map((address) => address.trim())
+            .filter((address) => address !== ''),
+    )
+    .pipe(z.array(z.email({ error: messages.invalidEmail })).max(2, messages.maxEmails))
+
+  return { srcSchema, nameSchema, institutionSchema, emailSchema }
+}
+
+/** Creates the body schema for a create request, localized to `locale`. */
+export function getNosotrosResearcherCreateSchema(locale: Locale = defaultLocale) {
+  const messages = validationMessages[locale] ?? validationMessages[defaultLocale]
+  const { srcSchema, nameSchema, institutionSchema, emailSchema } = createSharedSchemas(messages)
+
+  return z.strictObject({
+    content: nosotrosResearcherContent.schemaIn(locale),
     src: srcSchema.optional(),
-    name: nameSchema.optional(),
+    name: nameSchema,
     email: emailSchema.optional(),
-    institution: institutionSchema.optional(),
+    institution: institutionSchema,
   })
-  .superRefine((input, context) => {
-    if (input.confirmedUnchanged && !input.content) {
-      context.addIssue({
-        code: 'custom',
-        path: ['confirmedUnchanged'],
-        message: 'Las confirmaciones solo aplican a una actualización de contenido (content).',
-      })
-    }
+}
 
-    const { version: _version, confirmedUnchanged: _confirmed, ...changes } = input
-    if (Object.values(changes).every((value) => value === undefined)) {
-      context.addIssue({
-        code: 'custom',
-        path: [],
-        message: 'La solicitud no incluye ningún campo para actualizar.',
-      })
-    }
-  })
+/** Creates the body schema for an update request, localized to `locale`. */
+export function getNosotrosResearcherUpdateSchema(locale: Locale = defaultLocale) {
+  const messages = validationMessages[locale] ?? validationMessages[defaultLocale]
+  const { srcSchema, nameSchema, institutionSchema, emailSchema } = createSharedSchemas(messages)
+
+  return z
+    .strictObject({
+      version: versionSchema(messages.versionRequired),
+      content: nosotrosResearcherContent.schemaIn(locale).optional(),
+      confirmedUnchanged: nosotrosResearcherContent.confirmationsSchema.optional(),
+      src: srcSchema.optional(),
+      name: nameSchema.optional(),
+      email: emailSchema.optional(),
+      institution: institutionSchema.optional(),
+    })
+    .superRefine((input, context) => {
+      if (input.confirmedUnchanged && !input.content) {
+        context.addIssue({
+          code: 'custom',
+          path: ['confirmedUnchanged'],
+          message: messages.confirmationsOnlyWithContent,
+        })
+      }
+
+      const { version: _version, confirmedUnchanged: _confirmed, ...changes } = input
+      if (Object.values(changes).every((value) => value === undefined)) {
+        context.addIssue({
+          code: 'custom',
+          path: [],
+          message: messages.noFieldsToUpdate,
+        })
+      }
+    })
+}
+
+/** Body of a create request in Spanish. */
+export const nosotrosResearcherCreateSchema = getNosotrosResearcherCreateSchema(defaultLocale)
+
+/** Body of an update request in Spanish. */
+export const nosotrosResearcherUpdateSchema = getNosotrosResearcherUpdateSchema(defaultLocale)
 
 export type NosotrosResearcherCreateInput = z.infer<typeof nosotrosResearcherCreateSchema>
 export type NosotrosResearcherUpdateInput = z.infer<typeof nosotrosResearcherUpdateSchema>

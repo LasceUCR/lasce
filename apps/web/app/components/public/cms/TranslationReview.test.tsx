@@ -8,12 +8,10 @@ import { Confirmed, Pending } from './TranslationReview.stories'
 const pendingArgs = Pending.args as TranslationReviewProps
 
 describe('TranslationReview', () => {
-  test('explains the review and offers a switch named after the field and language', () => {
+  test('offers a switch named after the field and language, without a second notice', () => {
     render(<TranslationReview {...pendingArgs} />)
 
-    const message = pendingArgs.message
-    if (!message) throw new Error('Expected a review message')
-    expect(screen.getByRole('note')).toHaveTextContent(message)
+    expect(screen.queryByRole('note')).not.toBeInTheDocument()
     expect(
       screen.getByRole('switch', { name: 'La descripción en español sigue siendo correcta' }),
     ).toHaveAttribute('aria-checked', 'false')

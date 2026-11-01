@@ -13,4 +13,5 @@ export const EXPORTERS: Record<DownloadFormat, Exporter> = {
   csv: csvExporter,
 }
 
+export { exportCopy, type ExportCopy } from './copy'
 export { UnexportableResultError, type ExportedFile, type Exporter } from './types'

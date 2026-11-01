@@ -241,6 +241,7 @@ describe('POST /api/publicaciones: validation', () => {
           en: { title: 'New publication', abstract: 'Abstract' },
         }),
       }),
+      expect.anything(),
     )
   })
 
@@ -303,6 +304,7 @@ describe('POST /api/publicaciones: publication date', () => {
 
     expect(mocks.createPublication).toHaveBeenCalledWith(
       expect.objectContaining({ date: new Date('2026-01-31T00:00:00.000Z') }),
+      expect.anything(),
     )
   })
 })
@@ -317,7 +319,10 @@ describe('POST /api/publicaciones: optional DOI and external link', () => {
     const { response } = await post({ ...validBody, DOI })
 
     expect(response.status).toBe(201)
-    expect(mocks.createPublication).toHaveBeenCalledWith(expect.objectContaining({ DOI: null }))
+    expect(mocks.createPublication).toHaveBeenCalledWith(
+      expect.objectContaining({ DOI: null }),
+      expect.anything(),
+    )
   })
 
   test.each([
@@ -328,7 +333,10 @@ describe('POST /api/publicaciones: optional DOI and external link', () => {
     const { response } = await post({ ...validBody, href })
 
     expect(response.status).toBe(201)
-    expect(mocks.createPublication).toHaveBeenCalledWith(expect.objectContaining({ href: null }))
+    expect(mocks.createPublication).toHaveBeenCalledWith(
+      expect.objectContaining({ href: null }),
+      expect.anything(),
+    )
   })
 
   test('accepts a publication with neither a DOI nor an external link', async () => {
@@ -339,6 +347,7 @@ describe('POST /api/publicaciones: optional DOI and external link', () => {
     expect(response.status).toBe(201)
     expect(mocks.createPublication).toHaveBeenCalledWith(
       expect.objectContaining({ href: null, DOI: null }),
+      expect.anything(),
     )
   })
 
@@ -427,7 +436,10 @@ describe('POST /api/publicaciones: edge cases', () => {
     const { response } = await post({ ...rest, ...optional })
 
     expect(response.status).toBe(201)
-    expect(mocks.createPublication).toHaveBeenCalledWith(expect.objectContaining(stored))
+    expect(mocks.createPublication).toHaveBeenCalledWith(
+      expect.objectContaining(stored),
+      expect.anything(),
+    )
   })
 
   test('accepts the same text in both languages, as for an official title', async () => {
@@ -481,10 +493,13 @@ describe('POST /api/publicaciones: results', () => {
     expect(body).toEqual({
       publication: { ...storedPublication, date: storedPublication.date.toISOString() },
     })
-    expect(mocks.createPublication).toHaveBeenCalledWith({
-      ...validBody,
-      date: new Date('2026-01-01'),
-    })
+    expect(mocks.createPublication).toHaveBeenCalledWith(
+      {
+        ...validBody,
+        date: new Date('2026-01-01'),
+      },
+      expect.anything(),
+    )
   })
 
   test('answers 409 for a duplicate DOI', async () => {

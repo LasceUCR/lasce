@@ -3,6 +3,7 @@ from app.processors import (
     ingest_readings,
     mag_pipeline,
     query_goes_archive,
+    seiss_pipeline,
     suvi_pipeline,
 )
 
@@ -11,5 +12,6 @@ __all__ = [
     "ingest_readings",
     "mag_pipeline",
     "query_goes_archive",
+    "seiss_pipeline",
     "suvi_pipeline",
 ]

@@ -40,8 +40,10 @@ export function sameReview(a: ReviewConfirmation, b: ReviewConfirmation): boolea
 
 /**
  * The locales whose `field` differs from what is stored, ignoring surrounding whitespace and
- * treating `null` as empty. A locale with no stored text counts as changed, and so does every
- * locale when nothing is stored yet (`stored` is `null` while creating).
+ * treating `null` as empty. A locale with no stored text counts as changed only once this field
+ * has text: leaving it blank is not a change, so editing one field does not ask to confirm
+ * another field of the same language. While creating (`stored` is `null`), every locale whose
+ * field has text counts as changed.
  */
 export function changedLocales<F extends string>(
   field: NoInfer<F>,
@@ -50,7 +52,9 @@ export function changedLocales<F extends string>(
 ): Locale[] {
   return locales.filter((locale) => {
     const before = stored?.[locale]
-    return !before || normalize(before[field]) !== normalize(next[locale][field])
+    const after = normalize(next[locale][field])
+    if (!before) return after !== ''
+    return normalize(before[field]) !== after
   })
 }
 
@@ -58,8 +62,9 @@ export function changedLocales<F extends string>(
  * The reviews `next` still needs: for each field changed in some locales but not all, every
  * unchanged locale that is not in `confirmed`.
  *
- * - A locale with no stored text counts as changed. Completing a legacy record therefore asks
- *   to review its base text, which predates languages and may not be in the default locale.
+ * - A locale with no stored text counts as changed only for a field that now has text.
+ *   Completing a legacy record therefore asks to review the base text of that field, which
+ *   predates languages and may not be in the default locale. An untouched field is not reviewed.
  * - A field empty in every locale of `next` needs no review: there is no text to keep in step.
  *   Only optional fields can get here; a blank required field fails validation first.
  */
