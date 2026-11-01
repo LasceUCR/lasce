@@ -3,20 +3,20 @@
 How LASCE gets from a pull request to a running environment, and what to do when
 something goes wrong.
 
-Railway is the **initial** hosting target. Migrating to the UCR server is
-deliberately deferred. See [Pending: UCR server migration](#pending-ucr-server-migration).
+Both environments run on the Universidad de Costa Rica's campus servers, managed
+by a self-hosted [Coolify](https://coolify.io). The first-time setup of a server,
+of Coolify and of the self-hosted runner is in
+[`infra/coolify/README.md`](../infra/coolify/README.md).
 
 ## 1. Pipeline overview
 
-Two workflows, plus a scheduled one and a ruleset check.
-
-| Workflow                          | Trigger                                                        | What it does                                                  |
-| --------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
-| `.github/workflows/ci.yml`        | Pull requests into `development` / `main`, and `workflow_call` | Verification only. Never writes anything.                     |
-| `.github/workflows/cd.yml`        | Push to `development` / `main`, or manual dispatch             | Calls `ci.yml`, publishes images to GHCR, deploys to Railway. |
-| `.github/workflows/cron-jobs.yml` | Manual dispatch only                                           | Enqueues one job, once.                                       |
-| `.github/workflows/ops.yml`       | Manual dispatch only                                           | Registers schedules or seeds a database, by URL.              |
-| `.github/workflows/rulesets.yml`  | Pull requests into `main`, ruleset changes, 12:00 UTC daily    | Fails if the live branch rulesets differ from the JSON files. |
+| Workflow                          | Trigger                                                        | What it does                                                                  |
+| --------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `.github/workflows/ci.yml`        | Pull requests into `development` / `main`, and `workflow_call` | Verification only. Never writes anything.                                     |
+| `.github/workflows/cd.yml`        | Push to `development` / `main`, or manual dispatch             | Calls `ci.yml`, publishes images to GHCR, deploys through Coolify.            |
+| `.github/workflows/cron-jobs.yml` | Manual dispatch only                                           | Enqueues one job, once.                                                       |
+| `.github/workflows/ops.yml`       | Manual dispatch only                                           | Syncs the declared job schedules into one environment, without shipping code. |
+| `.github/workflows/rulesets.yml`  | Pull requests into `main`, ruleset changes, 12:00 UTC daily    | Fails if the live branch rulesets differ from the JSON files.                 |
 
 `cd.yml` calls `ci.yml` as a reusable workflow rather than duplicating triggers,
 so **a delivery is gated on exactly the same jobs that gate a pull request**,
@@ -53,130 +53,209 @@ no secret is involved.
 Adding a workspace does not require restructuring the workflow; the turbo
 filters pick it up.
 
-## 2. Branch → environment map
+## 2. Hosts and environments
 
-| Branch        | Railway environment | Approval                                                       |
-| ------------- | ------------------- | -------------------------------------------------------------- |
-| `development` | `staging`           | None, deploys automatically.                                   |
-| `main`        | `production`        | **Required reviewers** on the `production` GitHub Environment. |
+| Branch        | Environment  | URL                       | Approval                                                       |
+| ------------- | ------------ | ------------------------- | -------------------------------------------------------------- |
+| `development` | `staging`    | `APP_URL_STAGING`         | None, deploys automatically.                                   |
+| `main`        | `production` | `https://lasce.ucr.ac.cr` | **Required reviewers** on the `production` GitHub Environment. |
 
 Manual runs: `gh workflow run cd.yml -f environment=staging`.
 
+| Host             | Role                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `172.16.49.26`   | Coolify (`:8000`) and **both** environments. Public as `163.178.171.26`, ports 80/443. |
+| `172.16.202.224` | Jump host and the self-hosted GitHub Actions runner. Carries no application.           |
+
+Every machine is on the UCR private network, behind the VPN. From outside it,
+only ports 80 and 443 of `172.16.49.26` are reachable, and every public name
+(`lasce.ucr.ac.cr`, the staging name, both storage names) points at that one
+address; Coolify's proxy routes by hostname. Coolify itself is reachable from
+the campus network only.
+
+Until UCR IT creates a `*.lasce.ucr.ac.cr` record, use an [sslip.io](https://sslip.io) name
+instead: any `<label>.163.178.171.26.sslip.io` resolves to the public address, and Let's
+Encrypt issues certificates for it, so the `Secure` cookie and the `next/image` public-host
+rules are both satisfied. Staging uses `staging.163.178.171.26.sslip.io` and
+`archivos-staging.163.178.171.26.sslip.io`. Switching to the real name later means changing the
+domain in Coolify, `APP_URL_*`, `MINIO_PUBLIC_URL` and `MINIO_ENDPOINT_*`, then redeploying so
+the image is rebuilt.
+
+The campus network lets `172.16.202.x` open connections to `172.16.49.26` but
+not the reverse, so Coolify cannot manage a second server on that subnet. That
+is why staging shares the production machine instead of running on its own.
+Give each resource memory limits in Coolify so a runaway staging stack cannot
+starve production.
+
+Each environment is one Coolify **Docker Compose resource** in the `lasce`
+project, built from [`infra/coolify/compose.yml`](../infra/coolify/compose.yml):
+Postgres, Redis, InfluxDB 3, MinIO, a one-shot `migrate` service, `web` and
+`worker`. Staging's resource tracks `development` and production's tracks
+`main`, so each reads the compose file from the branch it deploys. Coolify's
+Traefik proxy terminates TLS with Let's Encrypt certificates for the domains
+assigned to `web` and `minio` in its UI.
+
 ## 3. Image flow
 
-Images are published to GHCR so the environment can move to the UCR server
-without rewriting the pipeline.
+Images are built on GitHub-hosted runners and published to GHCR:
 
 ```
 ghcr.io/lasceucr/lasce-web:staging       ghcr.io/lasceucr/lasce-worker:staging
 ghcr.io/lasceucr/lasce-web:staging-<sha> ghcr.io/lasceucr/lasce-worker:staging-<sha>
 ```
 
-...and the same pair with `production`. The **mutable** tag is what each Railway
-service points at; the **`-<sha>`** tag is immutable and is the rollback target.
+...and the same pair with `production`. The **mutable** tag is what the Coolify
+resource's `LASCE_TAG` points at; the **`-<sha>`** tag is immutable and is the
+rollback target.
 
-Two consequences worth knowing:
-
-- **The Railway CLI cannot change a service's image tag.** So `cd.yml` pushes
-  over the mutable tag and then calls `railway redeploy`, which re-pulls it.
-- **The web image cannot be promoted from staging to production.** `NEXT_PUBLIC_*`
-  is inlined by the Next compiler, and `app/lib/site.ts` feeds `NEXT_PUBLIC_APP_URL`
-  into `metadataBase`, `robots.ts` and `sitemap.ts`, all evaluated during
-  `next build`. The URL is baked into the image, so `cd.yml` builds the web image
-  per target with the right `--build-arg`. The same goes for the storage host that
-  `next/image` is allowed to load from (see [Uploaded images](#uploaded-images)).
-  The worker image has no build-time configuration and is environment-agnostic.
+**The web image cannot be promoted from staging to production.** `NEXT_PUBLIC_*`
+is inlined by the Next compiler, and `app/lib/site.ts` feeds `NEXT_PUBLIC_APP_URL`
+into `metadataBase`, `robots.ts` and `sitemap.ts`, all evaluated during
+`next build`. The URL is baked into the image, so `cd.yml` builds the web image
+per target with the right `--build-arg`. The same goes for the storage host that
+`next/image` is allowed to load from (see [Uploaded images](#uploaded-images)).
+The worker image has no build-time configuration and is environment-agnostic.
 
 Authentication uses the workflow's own `GITHUB_TOKEN` with `packages: write`.
 No personal access token is stored in CI.
 
-## 4. Database migrations
+## 4. The deploy job
 
-`prisma migrate deploy` runs as the web service's **Railway pre-deploy command**:
+Coolify and the servers are unreachable from GitHub's runners, so the `deploy`
+job runs on a **self-hosted runner** on the jump host `172.16.202.224`, labelled
+`lasce-coolify`. It needs only `curl` and `jq`:
+
+1. `POST $COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_RESOURCE_UUID` asks Coolify to
+   redeploy the environment's resource, which pulls the tag the `images` job just
+   pushed. The job then polls `/api/v1/deployments/<uuid>` until Coolify reports
+   `finished`, and fails on `failed` or `cancelled`.
+2. A smoke test polls `$APP_URL/api/health` until it answers 200.
+3. `POST $APP_URL/api/jobs/schedules` syncs the job schedules (see
+   [Scheduling](#scheduling)).
+
+### Runner security
+
+This repository is public, and a self-hosted runner executes whatever a workflow
+sends it. The design keeps that safe:
+
+- Only `cd.yml`'s `deploy` job and `ops.yml` target the `lasce-coolify` label.
+  `ci.yml`, which runs pull requests, never does.
+- The runner runs as an unprivileged user that is **not** in the `docker` group
+  and has no credentials on disk. It cannot touch a container itself, only call
+  Coolify with the token the job hands it.
+- `COOLIFY_TOKEN` is a GitHub **Environment** secret. The environments' branch
+  policies (`staging` ← `development`, `production` ← `main`) mean a workflow
+  from any other branch never receives it.
+- Workflows from forks require approval for every external contributor
+  (Settings → Actions → General).
+
+Anyone with write access can still point a workflow on their own branch at the
+runner. That is the same trust that write access already implies, and it yields
+no deploy token.
+
+## 5. Database migrations
+
+`prisma migrate deploy` runs on every deploy as the **`migrate` service** of the
+compose file: a one-shot container from the web image that runs
 
 ```
 sh -c "cd /repo/migrator && node node_modules/prisma/build/index.js migrate deploy"
 ```
 
-It runs inside the deployment, using the service's own `DATABASE_URL`, which is
-a private `*.railway.internal` address and is unreachable from GitHub Actions,
-which is why the migration cannot run from CI.
+against the environment's own Postgres. `web` and `worker` depend on it with
+`condition: service_completed_successfully`, so **if the migration fails, the
+release stops before the running containers are replaced** and the Coolify
+deployment, and with it the `deploy` job, fails. The web image carries the
+`migrator` directory for this: a flat, npm-installed Prisma CLI plus a verbatim
+copy of `packages/db/prisma.config.ts` and the migrations directory.
+`migrate deploy` does not need the generated client.
 
-The web image carries a `migrator` stage for this: a flat, npm-installed Prisma
-CLI plus a verbatim copy of `packages/db/prisma.config.ts` and the migrations
-directory. `migrate deploy` does not need the generated client.
+To see what is pending without deploying, open the `web` container's terminal in
+Coolify and run the same command with `migrate status`. To apply migrations
+without shipping code, redeploy the resource from Coolify.
 
-### Running migrations by hand
+### Seeding and the first administrator
 
-`.github/workflows/migrate.yml` is the manual counterpart, for applying a
-migration without shipping code or recovering when a release stopped part way.
-Run it from the Actions tab, choosing an environment and either `status` (report
-what is pending) or `deploy` (apply it). Against `production` it waits for the
-same reviewers as a deployment.
+A new environment starts empty. Seed it once, from a machine on the VPN,
+through an SSH tunnel to the loopback-only Postgres port: `15432` for
+production and `15433` for staging, set by `POSTGRES_LOOPBACK_PORT` because both
+share one host.
 
-It needs **no connection string of its own**. It reaches the database through
-the Railway CLI with the same `RAILWAY_TOKEN` the deploy job uses, so Railway
-stays the only place the credentials live. `railway run --service postgres`
-injects that service's variables into the command, and the workflow uses
-`DATABASE_PUBLIC_URL` from them: a GitHub runner cannot reach
-`*.railway.internal`, which is what the private `DATABASE_URL` points at.
+```bash
+# -f backgrounds only once the forward is up; a plain `&` cannot answer the
+# host-key prompt and the seed then fails with P1001 (database not reachable).
+ssh -f -N -o ExitOnForwardFailure=yes -L 15433:127.0.0.1:15433 lasce-coolify   # 15432 for production
+DATABASE_URL='postgresql://lasce:<POSTGRES_PASSWORD>@127.0.0.1:15433/lasce' pnpm db:seed
+pkill -f 'L 15433:127.0.0.1:15433'
+```
 
-That means the Postgres service **must have TCP Proxy enabled** (Settings →
-Networking → TCP Proxy), which is what produces `DATABASE_PUBLIC_URL`. Without
-it the workflow stops with `Postgres has no public proxy` rather than appearing
-to succeed while migrating nothing.
+The tunnel account is `lasce-ops`; see the SSH section of
+[`infra/coolify/README.md`](../infra/coolify/README.md#1-ssh-access).
 
-**If the migration fails, the release aborts and the previous version stays
-live.** That is the intended behaviour, and it is why this runs as a pre-deploy
-step rather than as a separate CI step, which could not abort atomically.
+The seed checks each table before inserting, so running it again is safe. It
+creates no account you can sign in with. Register the first administrator at
+`/registro`, then grant the role through the same tunnel with `psql`, or from the
+`postgres` container's terminal in Coolify:
+`psql -U lasce -d lasce -c "UPDATE users SET role = 'ADMIN' WHERE email = '<email>';"`.
+`pnpm accounts:create` makes throwaway QA accounts only.
 
-Web is redeployed before worker so the schema is current before the worker
-(which reads it through SQLAlchemy) restarts.
-
-### Seeding new content after migration (ROSAC CMS)
-
-When deploying the migrations adding ROSAC CMS persistence (`20261023160000_add_rosac_translations` and predecessor `20261020053041_add_rosac_cms_content`), run the database seed once against staging and production (via `.github/workflows/ops.yml` or `pnpm db:seed` with `DATABASE_URL` pointing to the environment database). The seed checks each table with `count() === 0` before inserting, ensuring initial content and English translations are safely populated without overwriting existing edits.
-
-## 5. Secrets and variables
+## 6. Secrets and variables
 
 Nothing below is committed, and nothing is echoed in workflow logs.
 
+### Coolify (per resource)
+
+Set in the resource's environment variables. The compose file fails the deploy
+when one is missing.
+
+| Variable                 | Value                                                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `LASCE_TAG`              | `staging` or `production`, or `<env>-<sha>` to roll back.                                                 |
+| `POSTGRES_PASSWORD`      | Random, `openssl rand -hex 24`.                                                                           |
+| `CRON_SECRET`            | Random, `openssl rand -hex 32`. Must equal `CRON_SECRET_STAGING` / `CRON_SECRET_PRODUCTION` in GitHub.    |
+| `MINIO_ACCESS_KEY`       | MinIO root user.                                                                                          |
+| `MINIO_SECRET_KEY`       | MinIO root password, random.                                                                              |
+| `MINIO_PUBLIC_URL`       | The `minio` service's public URL, scheme included. Must equal `MINIO_ENDPOINT_STAGING` / `_PRODUCTION`.   |
+| `INFLUXDB_TOKEN`         | `pending` on the first deploy, then the admin token minted in the `influxdb` container (see the runbook). |
+| `WORKER_CONCURRENCY`     | Optional, default `4`. `2` on staging.                                                                    |
+| `LOG_LEVEL`              | Optional, default `info`. `debug` on staging.                                                             |
+| `POSTGRES_LOOPBACK_PORT` | Optional, default `15432`. **`15433` on staging**, which shares the host with production.                 |
+
 ### GitHub Environments
 
-| Environment  | Branch policy      | Protection         | Secret          |
-| ------------ | ------------------ | ------------------ | --------------- |
-| `staging`    | `development` only | none               | `RAILWAY_TOKEN` |
-| `production` | `main` only        | Required reviewers | `RAILWAY_TOKEN` |
+| Environment  | Branch policy      | Protection         | Secret          | Variables                              |
+| ------------ | ------------------ | ------------------ | --------------- | -------------------------------------- |
+| `staging`    | `development` only | none               | `COOLIFY_TOKEN` | `COOLIFY_URL`, `COOLIFY_RESOURCE_UUID` |
+| `production` | `main` only        | Required reviewers | `COOLIFY_TOKEN` | `COOLIFY_URL`, `COOLIFY_RESOURCE_UUID` |
 
-A Railway **project token** is scoped to a single environment in a single
-project, so these are two different tokens that share one secret name, and the
-token alone decides which Railway environment is touched. Never create a
-repo-level `RAILWAY_TOKEN`, and never use a Railway account/workspace token in
-CI: it would grant write access to every project.
+`COOLIFY_URL` is `http://172.16.49.26:8000`. Create the token in Coolify (Keys &
+Tokens → API tokens) with only the **read** and **deploy** permissions; read is
+what lets the job poll the deployment. A Coolify token is scoped to a team, not
+to one environment, so the resource UUID is what picks the environment. Never give CI a token with write or root permissions.
 
 ### Repository level
 
-| Kind     | Name                                            | Used by                                                                           |
-| -------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
-| Variable | `APP_URL_STAGING`, `APP_URL_PRODUCTION`         | `cd.yml` (`context` job, which runs before the approval gate) and `cron-jobs.yml` |
-| Variable | `WEBDOTS_API_URL`                               | `cd.yml` (`images` job). Unset means the annotation widget is off everywhere.     |
-| Variable | `MINIO_ENDPOINT`, `MINIO_USE_SSL`               | `cd.yml` (`images` job). Build args that feed the `next/image` allowlist.         |
-| Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION` | `cron-jobs.yml`                                                                   |
-| Secret   | `WEBDOTS_API_KEY`                               | `cd.yml` (`images` job). Public in the client bundle once set.                    |
-
-Domains are **not** declared in `.railway/railway.ts`. Railway rejects domain
-registration from configuration, so generate or attach the domain in the
-dashboard, then set these variables to whatever Railway actually assigned.
+| Kind     | Name                                                  | Used by                                                                        |
+| -------- | ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Variable | `APP_URL_STAGING`, `APP_URL_PRODUCTION`               | `cd.yml` (`context` job, which runs before the approval gate), `cron-jobs.yml` |
+| Variable | `MINIO_ENDPOINT_STAGING`, `MINIO_ENDPOINT_PRODUCTION` | `cd.yml` (`images` job). Build args that feed the `next/image` allowlist.      |
+| Variable | `MINIO_USE_SSL_STAGING`, `MINIO_USE_SSL_PRODUCTION`   | Same. Ignored when the endpoint is a URL, whose scheme decides.                |
+| Variable | `WEBDOTS_API_URL`                                     | `cd.yml` (`images` job). Unset means the annotation widget is off everywhere.  |
+| Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION`       | `cd.yml` (`deploy` job), `ops.yml`, `cron-jobs.yml`                            |
+| Secret   | `WEBDOTS_API_KEY`                                     | `cd.yml` (`images` job). Public in the client bundle once set.                 |
 
 Both `APP_URL_*` values **must include the scheme**, for example
-`https://lasce-staging.up.railway.app` and not `lasce-staging.up.railway.app`.
-The value becomes `NEXT_PUBLIC_APP_URL`, which `app/lib/site.ts` passes to
-`new URL()`; a bare hostname throws `TypeError: Invalid URL` and fails
-`next build` while collecting `sitemap.xml`. The `context` job rejects a
-schemeless value up front so the failure is immediate and explicit.
+`https://lasce.ucr.ac.cr` and not `lasce.ucr.ac.cr`. The value becomes
+`NEXT_PUBLIC_APP_URL`, which `app/lib/site.ts` passes to `new URL()`; a bare
+hostname throws `TypeError: Invalid URL` and fails `next build` while collecting
+`sitemap.xml`. The `context` job rejects a schemeless value up front so the
+failure is immediate and explicit.
 
-The `CRON_SECRET_*` values duplicate the `CRON_SECRET` set on each Railway web
-service. **Rotating one without the other yields silent 401s.**
+The `CRON_SECRET_*` values duplicate the `CRON_SECRET` set on each Coolify
+resource. **Rotating one without the other yields silent 401s**, and the
+schedule sync at the end of a deploy is where that shows first.
+
+## 7. Build-time configuration
 
 ### Uploaded images
 
@@ -197,13 +276,14 @@ arrive as build args the allowlist is empty and every uploaded photo fails with
 succeeded. `cd.yml` passes both from repository variables, and `web.Dockerfile` exposes them
 as `ARG`/`ENV` in the builder stage.
 
-Set the repository variables `MINIO_ENDPOINT` and `MINIO_USE_SSL` to **the same values the web
-service has**, then redeploy so a new image is built. They hold only the host and
+Set the repository variables `MINIO_ENDPOINT_STAGING` / `MINIO_ENDPOINT_PRODUCTION` to **the same
+value as the resource's `MINIO_PUBLIC_URL`**, then redeploy so a new image is built. They hold only the host and
 a flag, never credentials: do not pass `MINIO_ACCESS_KEY` or `MINIO_SECRET_KEY` as build args,
 because build args can be read from the image metadata and build logs.
 
-The variables are repository-level, so staging and production share one storage host. If they
-ever use different hosts, move them to GitHub Environments.
+The image optimizer also refuses a storage host that resolves to a private or loopback address
+in a production build (`dangerouslyAllowLocalIP` in `next.config.ts`), so the MinIO domain has to
+resolve to a public address, even for staging.
 
 If images still fail after the rebuild, open the raw image URL. A `403` means the bucket does
 not allow anonymous reads; the upload path sets a public-read policy on every upload, but a
@@ -213,7 +293,7 @@ hosted bucket may refuse it.
 
 `AnnotateWidget` mounts the WebDots QA overlay. It is a client component, so the
 package and its configuration are compiled into the browser bundle. **Setting
-`NEXT_PUBLIC_WEBDOTS_*` on the running Railway service does nothing**, in either
+`NEXT_PUBLIC_WEBDOTS_*` on the running service does nothing**, in either
 direction: it cannot switch the widget on, and it cannot switch it off once an
 image was built with it. The values have to reach `next build` as build args, so
 `web.Dockerfile` declares one `ARG` per variable, all defaulting to empty.
@@ -245,52 +325,24 @@ by anyone who opens the site, production included**. That is inherent to the
 both environments, so rotating it affects both. Keep it scoped to annotation
 submission.
 
-## 6. Infrastructure as code
-
-Project topology lives in `.railway/railway.ts` and is applied **by a maintainer,
-never from CI**:
-
-```bash
-railway link                                          # once, interactively
-pnpm railway:plan  --environment staging
-pnpm railway:apply --environment staging  --yes
-pnpm railway:plan  --environment production
-pnpm railway:apply --environment production --yes
-```
-
-`railway config apply` mutates services, plugins and volumes. Running it on every
-push would let a routine code deploy destroy a volume, so code deploys use
-`railway redeploy` only.
-
-> `railway.json` / `railway.toml` (Config as Code) is deprecated and new services
-> cannot opt into it. `.railway/railway.ts` is the replacement.
-
-Do **not** connect a GitHub repo to either Railway service: a Railway deploy
-trigger would race with GitHub Actions.
-
-## 7. Rollback
+## 8. Rollback
 
 1. Find the last good SHA tag: `ghcr.io/lasceucr/lasce-web:production-<sha>`.
-2. In the Railway dashboard, either roll back through the service's deployment
-   history (fastest), or repoint the service's image at that `-<sha>` tag and
-   redeploy.
-3. If the bad release included a migration, roll the schema forward with a new
+2. In Coolify, set the resource's `LASCE_TAG` to `production-<sha>` and redeploy.
+   Both images carry the same tag, so web and worker roll back together.
+3. Set `LASCE_TAG` back to `production` once the fix is merged, or the next
+   deploy will keep running the old version.
+4. If the bad release included a migration, roll the schema forward with a new
    migration rather than reversing it, because `prisma migrate deploy` has no down step.
 
-## 8. Operations
+## 9. Operations
 
-**Health.** Railway's private network is **IPv6 only**. Any client that resolves
-IPv4 only cannot reach `*.railway.internal`, which surfaces as a healthcheck
-that never passes rather than as an obvious error. `packages/jobs/src/connection.ts`
-sets `family: 0` on the Redis connection for exactly this reason; ioredis
-defaults to IPv4. Postgres is unaffected because `@prisma/adapter-pg` lets DNS
-choose. `HOSTNAME=::` in the web image covers the inbound side.
-
-`GET /api/health` returns `200` with
+**Health.** `GET /api/health` returns `200` with
 `{"status":"ok","checks":{"postgres":"ok","redis":"ok"}}` only when both
 dependencies answer, and `503` with `"status":"degraded"` otherwise. It is the
-service healthcheck and the smoke test at the end of every deploy. A Redis error
-here usually means a private-networking or `HOSTNAME` bind problem.
+`web` container's healthcheck and the smoke test at the end of every deploy.
+Coolify's proxy stops routing to a container that is not healthy, so a degraded
+health check takes the site offline rather than serving half of it.
 
 `GET /api/health/services` is **not** a healthcheck: it reports the services a deploy should not
 wait on, for the Servicios panel of `/administracion`. It answers only to accounts that may open
@@ -315,96 +367,36 @@ Poll the returned id at `GET /api/jobs/status/<id>`.
 
 Or through the pipeline: `gh workflow run cron-jobs.yml -f target=staging -f job=ingest-readings`.
 
-**Manual operations.** `ops.yml` runs `pnpm jobs:register` or `pnpm db:seed`
-against a store whose URL you pass as an input:
+**Logs.** In Coolify, open the resource and pick the container. A healthy worker
+logs a `worker ready` line with its queue name and concurrency on boot.
 
-```bash
-gh workflow run ops.yml -f task=register-schedules -f redis_url='<public Redis URL>'
-gh workflow run ops.yml -f task=seed-database -f database_url='<public Postgres URL>'
-```
+### Scheduling
 
-Pass the **public** proxy URL (`REDIS_PUBLIC_URL` / `DATABASE_PUBLIC_URL` on the
-Railway service), because a GitHub runner cannot reach `*.railway.internal`. The
-URL alone decides which environment is touched, and there is no approval gate.
+Recurring jobs are declared once in `packages/jobs/src/schedules.ts` and fired
+by BullMQ's scheduler, which lives in Redis. The deployed Redis is reachable only
+inside its compose network, so the deploy cannot run `pnpm jobs:register`
+against it. Instead the last step of the `deploy` job calls
+`POST /api/jobs/schedules` with the environment's `CRON_SECRET`, and the web app
+runs `syncSchedules()` (`packages/jobs/src/sync-schedules.ts`), the same code
+the script uses. It is idempotent: it upserts every declared entry and removes
+any scheduler that is no longer declared, so editing `schedules.ts` and merging
+is all it takes to change what fires.
 
-This repository is public, so its Actions logs are world-readable and both URLs
-carry a password. The workflow reads the inputs from the event payload and masks
-them before anything else runs, and never references them through
-`${{ inputs.* }}`. Do not change that. If a URL ever does show up in a log,
-rotate that password.
-
-**Logs.** `railway logs --service worker`. A healthy worker logs a `worker ready`
-line with its queue name and concurrency on boot.
-
-**Scheduling.** Recurring jobs are declared once in `packages/jobs/src/schedules.ts`
-and fired by BullMQ's scheduler, which lives in Redis. The last step of the
-`deploy` job in `cd.yml` runs `pnpm jobs:register` against the deployed Redis on
-every deploy. The script is idempotent: it upserts every declared entry and
-removes any scheduler that is no longer declared, so editing `schedules.ts` and
-merging is all it takes to change what fires.
-
-The step runs on the GitHub runner, not inside the image, because the script is
-a `tsx` file with workspace-relative imports and is not present in the
-standalone runtime image. Like `migrate.yml`, it reaches the store through
-`railway run --service redis` and uses `REDIS_PUBLIC_URL`, so the Redis service
-**must have TCP Proxy enabled** in each environment. Without it the step fails
-with a message saying so, after the new version is already live.
+To sync without a deploy: `gh workflow run ops.yml -f target=production`.
 
 `cron-jobs.yml` schedules nothing. It is a manual trigger that enqueues one job
-per run. To stop every schedule without a deploy, run `pnpm jobs:unregister`
-with `REDIS_URL` pointing at that environment's public Redis address.
-
-## 9. Pending: UCR server migration
-
-The UCR server is not yet provisioned. Deferring it is deliberate, and the
-pipeline is shaped so the move is a configuration change rather than a rewrite:
-
-- Both images are already published to GHCR and are **not** Railway-specific.
-- The worker image is fully environment-agnostic. The web image is agnostic apart
-  from `NEXT_PUBLIC_APP_URL`, which is a build arg. Point it at the UCR hostname
-  and rebuild.
-- Configuration is entirely environment variables, listed in `.env.example`.
-- The migration step is a plain `prisma migrate deploy`, runnable as a pre-start
-  hook on any host using the `migrator` directory already inside the web image.
-
-**What the migration actually requires:** pull the same GHCR tags on the UCR
-host, supply the same environment variables, run `prisma migrate deploy` before
-starting the web container, and repoint the `deploy` job in `cd.yml` from
-`railway redeploy` to the new host's mechanism (SSH, Compose, systemd, …).
-
-**No changes to `ci.yml`, and no changes to either Dockerfile.**
+per run.
 
 ## 10. Known gaps
 
-**InfluxDB 3 and MinIO are not provisioned.** Neither has a Railway plugin, and
-both are deferred to a follow-up. Concretely, with the worker's defaults pointing
-at `localhost`:
+**No automated backups yet.** Postgres, InfluxDB and MinIO live in Docker
+volumes on `172.16.49.26`. Until a scheduled `pg_dump` (and a MinIO mirror) to
+another host exists, a lost disk loses the environment's data.
 
-| Job                               | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ingest-readings`                 | Fails on the InfluxDB write, is retried by BullMQ, and logged as `FAILED`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `apps/web`                        | **Boots fine, but asset storage does not work.** `app/services/storage` (server-side upload/delete via the `assetStorage` instance in `app/services/container.ts`) is a service layer only — no route or UI calls it yet — and `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` are optional in `packages/config/src/env.ts` precisely so a missing MinIO does not stop the app from starting. Note the container instantiates the client **eagerly at module scope**, so the first import of `container.ts` is what surfaces a bad endpoint — see the caveat below.                                                                                   |
-| `suvi-pipeline` / `exis-pipeline` | Fail on the MinIO (SUVI previews) or InfluxDB (EXIS readings) write, like `ingest-readings`, so nothing new is ingested.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `/datos` (public explorer)        | **EXIS, the default product, fails**: the web reads `exis_irradiance` from InfluxDB and, with `INFLUXDB_*` unset, `INFLUXDB_HOST` falls back to `http://localhost:8181`. **SUVI returns empty results**: the worker's `suvi-pipeline` cannot store previews without MinIO, and `/api/suvi/frames/[id]` cannot read them. `.railway/railway.ts` now declares `INFLUXDB_*` on `web` with `preserve()`, so setting them in the Railway dashboard for staging and production (along with `MINIO_*` on both services) is what closes this. Do it before the SUVI/EXIS change reaches `development` (staging auto-deploys) to avoid a regression. |
-
-When this is picked up: MinIO maps onto Railway Buckets. Both MinIO SDKs are plain
-S3 clients, so verify SigV4 region negotiation — neither side pins a region:
-`apps/worker/app/clients/storage.py` builds `Minio(...)` with no `region=`, and
-`apps/web/app/services/storage/implementations/MinioAsssetStorage.ts` likewise
-passes none, and creates buckets with `makeBucket(bucket, '')`.
-
-**The web client will not construct against the documented endpoint.** It passes
-`MINIO_ENDPOINT` straight to MinIO's `endPoint`, which rejects a `host:port`
-string with `InvalidEndpointError: Invalid endPoint : localhost:9000` — the value
-`.env.example` ships and `packages/config` defaults to. Provisioning MinIO means
-fixing that first; the port has to be split out, or the variable has to carry a
-bare host. It also reads `MINIO_PORT` and `MINIO_DEFAULT_BUCKET`, neither of which
-is in the `packages/config` schema. See
-[manage-assets.md](manage-assets.md#known-gaps).
-
-InfluxDB needs a container service from `influxdb:3-core` with a volume. Give it a
-real admin token; do not carry over `INFLUXDB3_WITHOUT_AUTH`, which the Compose
-file marks development-only.
+**`/api/health` shows configuration errors to anyone.** When `serverEnv()`
+rejects the environment, the check's message, which names the invalid variable,
+is returned in the response body. It contains no values, but it should be
+logged and replaced by a generic reason.
 
 **Branch rulesets are configured.** See
 [`.github/rulesets/`](../.github/rulesets/) for the committed payloads and
