@@ -63,10 +63,13 @@ services:
         '--object-store',
         'file',
         '--data-dir',
-        '/var/lib/influxdb3/data',
+        '/home/influxdb3/.influxdb3',
       ]
+    # The image runs as uid 1500 and only this directory (its default data dir)
+    # belongs to that user. A volume mounted anywhere else starts out owned by
+    # root and the server crash-loops on a permission error.
     volumes:
-      - influxdb-data:/var/lib/influxdb3/data
+      - influxdb3-data:/home/influxdb3/.influxdb3
 
   # MinIO no longer publishes images (quay.io answers 401 and minio/minio is
   # gone from Docker Hub). pgsty/minio is a maintained community build of the
@@ -176,5 +179,5 @@ services:
 volumes:
   postgres-data:
   redis-data:
-  influxdb-data:
+  influxdb3-data:
   minio-data:
