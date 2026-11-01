@@ -240,9 +240,7 @@ to one environment, so the resource UUID is what picks the environment. Never gi
 | Variable | `APP_URL_STAGING`, `APP_URL_PRODUCTION`               | `cd.yml` (`context` job, which runs before the approval gate), `cron-jobs.yml` |
 | Variable | `MINIO_ENDPOINT_STAGING`, `MINIO_ENDPOINT_PRODUCTION` | `cd.yml` (`images` job). Build args that feed the `next/image` allowlist.      |
 | Variable | `MINIO_USE_SSL_STAGING`, `MINIO_USE_SSL_PRODUCTION`   | Same. Ignored when the endpoint is a URL, whose scheme decides.                |
-| Variable | `WEBDOTS_API_URL`                                     | `cd.yml` (`images` job). Unset means the annotation widget is off everywhere.  |
 | Secret   | `CRON_SECRET_STAGING`, `CRON_SECRET_PRODUCTION`       | `cd.yml` (`deploy` job), `ops.yml`, `cron-jobs.yml`                            |
-| Secret   | `WEBDOTS_API_KEY`                                     | `cd.yml` (`images` job). Public in the client bundle once set.                 |
 
 Both `APP_URL_*` values **must include the scheme**, for example
 `https://lasce.ucr.ac.cr` and not `lasce.ucr.ac.cr`. The value becomes
@@ -288,42 +286,6 @@ resolve to a public address, even for staging.
 If images still fail after the rebuild, open the raw image URL. A `403` means the bucket does
 not allow anonymous reads; the upload path sets a public-read policy on every upload, but a
 hosted bucket may refuse it.
-
-### The annotation widget
-
-`AnnotateWidget` mounts the WebDots QA overlay. It is a client component, so the
-package and its configuration are compiled into the browser bundle. **Setting
-`NEXT_PUBLIC_WEBDOTS_*` on the running service does nothing**, in either
-direction: it cannot switch the widget on, and it cannot switch it off once an
-image was built with it. The values have to reach `next build` as build args, so
-`web.Dockerfile` declares one `ARG` per variable, all defaulting to empty.
-
-**The widget is enabled by configuration alone, in every environment including
-production.** `cd.yml` passes the values unconditionally, and there is exactly
-one way to switch the widget off: leave `WEBDOTS_API_URL` unset, which is the
-default and does not fail the build.
-
-The app also honours `NEXT_PUBLIC_WEBDOTS_DISABLED`, but the pipeline does not
-set it. It exists for builds you run yourself and for the Playwright suite,
-which sets it on the dev server in `playwright.config.ts` so the widget does not
-inject a third-party overlay into pages the axe sweep is about to scan. It is
-deliberately not wired to a repository variable: that would be a second way to
-express what an unset `WEBDOTS_API_URL` already says.
-
-Because the values are inlined rather than read at runtime, turning the widget
-off does not merely hide it. The guard folds to a constant, `init()` becomes
-unreachable and the library is tree-shaken out, so the image ships neither the
-configuration nor the package. Verified for both off states: an unconfigured
-build, and a build with `NEXT_PUBLIC_WEBDOTS_DISABLED=true`. In the second case
-the API key is dropped from the bundle as well, so disabling the widget by hand
-also removes the public exposure described below rather than leaving a dormant
-key in place.
-
-`WEBDOTS_API_KEY` is inlined into the client bundle and is therefore **readable
-by anyone who opens the site, production included**. That is inherent to the
-`NEXT_PUBLIC_` prefix, not something the pipeline can prevent. One key covers
-both environments, so rotating it affects both. Keep it scoped to annotation
-submission.
 
 ## 8. Rollback
 

@@ -5,7 +5,6 @@ import type { ReactNode } from 'react'
 
 import './globals.css'
 import { siteUrl } from './lib/site'
-import { AnnotateWidget } from './components/utils/AnnotateWidget'
 import { EditModeProvider } from './components/public/cms/EditModeProvider'
 import { ToastProvider } from './components/public/toast/ToastProvider'
 
@@ -34,7 +33,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
-      <AnnotateWidget />
       <body>
         <NextIntlClientProvider>
           <ToastProvider>
