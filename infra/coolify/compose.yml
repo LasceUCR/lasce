@@ -68,8 +68,12 @@ services:
     volumes:
       - influxdb-data:/var/lib/influxdb3/data
 
+  # MinIO no longer publishes images (quay.io answers 401 and minio/minio is
+  # gone from Docker Hub). pgsty/minio is a maintained community build of the
+  # same server, packaged like the upstream image. Pinned so a redeploy never
+  # changes the storage server by surprise.
   minio:
-    image: quay.io/minio/minio
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     restart: unless-stopped
     command: ['server', '/data', '--console-address', ':9001']
     environment:
