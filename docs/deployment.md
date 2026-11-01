@@ -125,7 +125,7 @@ Coolify and the servers are unreachable from GitHub's runners, so the `deploy`
 job runs on a **self-hosted runner** on the jump host `172.16.202.224`, labelled
 `lasce-coolify`. It needs only `curl` and `jq`:
 
-1. `GET $COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_RESOURCE_UUID` asks Coolify to
+1. `POST $COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_RESOURCE_UUID` asks Coolify to
    redeploy the environment's resource, which pulls the tag the `images` job just
    pushed. The job then polls `/api/v1/deployments/<uuid>` until Coolify reports
    `finished`, and fails on `failed` or `cancelled`.
@@ -221,9 +221,9 @@ when one is missing.
 | `production` | `main` only        | Required reviewers | `COOLIFY_TOKEN` | `COOLIFY_URL`, `COOLIFY_RESOURCE_UUID` |
 
 `COOLIFY_URL` is `http://172.16.49.26:8000`. Create the token in Coolify (Keys &
-Tokens → API tokens) with the **deploy** permission only. A Coolify token is
-scoped to a team, not to one environment, so the resource UUID is what picks the
-environment. Never give CI a token with write or root permissions.
+Tokens → API tokens) with only the **read** and **deploy** permissions; read is
+what lets the job poll the deployment. A Coolify token is scoped to a team, not
+to one environment, so the resource UUID is what picks the environment. Never give CI a token with write or root permissions.
 
 ### Repository level
 

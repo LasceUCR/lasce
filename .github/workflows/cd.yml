@@ -199,7 +199,7 @@ jobs:
       - name: Deploy through Coolify
         timeout-minutes: 20
         run: |
-          response=$(curl -sS --fail-with-body \
+          response=$(curl -sS --fail-with-body -X POST \
             -H "Authorization: Bearer $COOLIFY_TOKEN" \
             "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_RESOURCE_UUID&force=false")
           deployment=$(jq -r '.deployments[0].deployment_uuid // empty' <<<"$response")
