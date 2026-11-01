@@ -30,13 +30,10 @@
     "services:up": "docker compose --env-file .env -f infra/docker/docker-compose.yml up -d",
     "services:down": "docker compose --env-file .env -f infra/docker/docker-compose.yml down",
     "services:logs": "docker compose --env-file .env -f infra/docker/docker-compose.yml logs -f",
-    "services:reset": "docker compose --env-file .env -f infra/docker/docker-compose.yml down -v",
-    "railway:plan": "railway config plan",
-    "railway:apply": "railway config apply"
+    "services:reset": "docker compose --env-file .env -f infra/docker/docker-compose.yml down -v"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
-    "railway": "3.11.0",
     "turbo": "2.10.11",
     "typescript": "5.9.3"
   }

@@ -16,8 +16,8 @@ permissions:
   contents: read
 
 concurrency:
-  # Never cancel a delivery mid-flight: the pre-deploy migration may already be
-  # running against a real database.
+  # Never cancel a delivery mid-flight: the migration may already be running
+  # against a real database.
   group: cd-${{ github.ref }}
   cancel-in-progress: false
 
@@ -30,6 +30,8 @@ jobs:
       environment: ${{ steps.pick.outputs.environment }}
       tag: ${{ steps.pick.outputs.tag }}
       app_url: ${{ steps.pick.outputs.app_url }}
+      minio_endpoint: ${{ steps.pick.outputs.minio_endpoint }}
+      minio_use_ssl: ${{ steps.pick.outputs.minio_use_ssl }}
       registry: ${{ steps.pick.outputs.registry }}
     steps:
       # These are repo-level variables rather than environment ones because
@@ -42,6 +44,10 @@ jobs:
           MANUAL: ${{ inputs.environment }}
           URL_STAGING: ${{ vars.APP_URL_STAGING }}
           URL_PRODUCTION: ${{ vars.APP_URL_PRODUCTION }}
+          MINIO_STAGING: ${{ vars.MINIO_ENDPOINT_STAGING }}
+          MINIO_PRODUCTION: ${{ vars.MINIO_ENDPOINT_PRODUCTION }}
+          MINIO_SSL_STAGING: ${{ vars.MINIO_USE_SSL_STAGING }}
+          MINIO_SSL_PRODUCTION: ${{ vars.MINIO_USE_SSL_PRODUCTION }}
         run: |
           if [ "$EVENT" = "workflow_dispatch" ]; then
             target="$MANUAL"
@@ -51,10 +57,16 @@ jobs:
             target="staging"
           fi
 
+          # Each environment has its own MinIO, so the storage host that
+          # next/image may load from is resolved per target like the URL.
           if [ "$target" = "production" ]; then
             url="$URL_PRODUCTION"
+            minio="$MINIO_PRODUCTION"
+            minio_ssl="$MINIO_SSL_PRODUCTION"
           else
             url="$URL_STAGING"
+            minio="$MINIO_STAGING"
+            minio_ssl="$MINIO_SSL_STAGING"
           fi
 
           if [ -z "$url" ]; then
@@ -81,6 +93,8 @@ jobs:
           echo "environment=$target" >> "$GITHUB_OUTPUT"
           echo "tag=$target" >> "$GITHUB_OUTPUT"
           echo "app_url=$url" >> "$GITHUB_OUTPUT"
+          echo "minio_endpoint=$minio" >> "$GITHUB_OUTPUT"
+          echo "minio_use_ssl=$minio_ssl" >> "$GITHUB_OUTPUT"
           echo "Target: $target ($url)"
 
   # Delivery is gated on exactly the same jobs that gate a pull request.
@@ -132,18 +146,24 @@ jobs:
             NEXT_PUBLIC_APP_URL=${{ needs.context.outputs.app_url }}
             NEXT_PUBLIC_WEBDOTS_API_URL=${{ vars.WEBDOTS_API_URL }}
             NEXT_PUBLIC_WEBDOTS_API_KEY=${{ secrets.WEBDOTS_API_KEY }}
-            MINIO_ENDPOINT=${{ vars.MINIO_ENDPOINT }}
-            MINIO_USE_SSL=${{ vars.MINIO_USE_SSL }}
+            MINIO_ENDPOINT=${{ needs.context.outputs.minio_endpoint }}
+            MINIO_USE_SSL=${{ needs.context.outputs.minio_use_ssl }}
           tags: |
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}
             ${{ needs.context.outputs.registry }}/lasce-${{ matrix.name }}:${{ needs.context.outputs.tag }}-${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
+  # Coolify, the campus servers and their datastores are reachable only from
+  # inside the UCR network, so this job runs on a self-hosted runner there. It
+  # needs nothing but curl and jq: it asks Coolify to redeploy the
+  # environment's Compose resource (infra/coolify/compose.yml), which pulls the
+  # tag pushed above, runs the `migrate` service and only then replaces web and
+  # worker. A failed migration fails the Coolify deployment, and this job with it.
   deploy:
     name: deploy
     needs: [context, images]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, lasce-coolify]
     timeout-minutes: 30
     permissions:
       contents: read
@@ -153,63 +173,82 @@ jobs:
       name: ${{ needs.context.outputs.environment }}
       url: ${{ needs.context.outputs.app_url }}
     env:
-      # Railway project tokens are scoped to one project AND one environment, so
-      # this secret is defined separately in each GitHub Environment, and the token
-      # alone determines which Railway environment is touched.
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      # Defined separately in each GitHub Environment, whose branch policy is
+      # what keeps the token away from any other branch. The resource UUID alone
+      # decides which environment Coolify redeploys.
+      COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+      COOLIFY_RESOURCE_UUID: ${{ vars.COOLIFY_RESOURCE_UUID }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
       APP_URL: ${{ needs.context.outputs.app_url }}
+      # Repo-level, shared with cron-jobs.yml. Must equal the CRON_SECRET set on
+      # the Coolify resource, or the schedule sync below answers 401.
+      CRON_SECRET: ${{ needs.context.outputs.environment == 'production' && secrets.CRON_SECRET_PRODUCTION || secrets.CRON_SECRET_STAGING }}
     steps:
-      - name: Install the Railway CLI
-        run: npm install -g @railway/cli@5.49.0
+      - name: Check the configuration
+        run: |
+          for name in COOLIFY_URL COOLIFY_RESOURCE_UUID COOLIFY_TOKEN CRON_SECRET; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::$name is not configured for '${{ needs.context.outputs.environment }}'."
+              exit 1
+            fi
+          done
 
-      # The CLI cannot change a service's image tag, so the images job pushed
-      # over the mutable tag and this re-pulls it. Web first: its pre-deploy
-      # applies the migration before the worker (same schema) restarts.
-      - name: Redeploy web
-        run: railway redeploy --service web --yes
+      # The images job pushed over the mutable tag, and a Coolify deploy of a
+      # Compose resource pulls it again. `force=false` keeps Coolify's own image
+      # cache for the datastores.
+      - name: Deploy through Coolify
+        timeout-minutes: 20
+        run: |
+          response=$(curl -sS --fail-with-body \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_RESOURCE_UUID&force=false")
+          deployment=$(jq -r '.deployments[0].deployment_uuid // empty' <<<"$response")
+          if [ -z "$deployment" ]; then
+            echo "::error::Coolify did not queue a deployment: $response"
+            exit 1
+          fi
+          echo "Coolify deployment $deployment"
 
-      - name: Redeploy worker
-        run: railway redeploy --service worker --yes
+          while true; do
+            status=$(curl -sS --fail-with-body \
+              -H "Authorization: Bearer $COOLIFY_TOKEN" \
+              "$COOLIFY_URL/api/v1/deployments/$deployment" | jq -r '.status')
+            echo "status: $status"
+            case "$status" in
+              finished) exit 0 ;;
+              failed|cancelled*)
+                echo "::error::Coolify deployment $deployment ended as '$status'."\
+                     "Its log is in the Coolify UI; a failed migration shows there."
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
 
-      # `railway redeploy` returns once the deployment is queued, so poll until
-      # the new version is actually serving. /api/health is 200 only when both
-      # Postgres and Redis answer, and it returns no connection strings.
+      # /api/health is 200 only when both Postgres and Redis answer, and it
+      # returns no connection strings.
       - name: Smoke test
         run: |
           for attempt in $(seq 1 30); do
-            code=$(curl -sS -o /tmp/health.json -w '%{http_code}' "$APP_URL/api/health" || echo 000)
+            code=$(curl -sS -o "$RUNNER_TEMP/health.json" -w '%{http_code}' "$APP_URL/api/health" || echo 000)
             echo "attempt $attempt -> HTTP $code"
             if [ "$code" = "200" ]; then
-              cat /tmp/health.json
+              cat "$RUNNER_TEMP/health.json"
               exit 0
             fi
             sleep 10
           done
           echo "::error::/api/health never returned 200 after 5 minutes."
-          cat /tmp/health.json || true
+          cat "$RUNNER_TEMP/health.json" || true
           exit 1
 
       # Recurring jobs are declared in packages/jobs/src/schedules.ts and fired
-      # by BullMQ's scheduler, which lives in Redis. This syncs the declared
-      # list into the deployed Redis: upserts every entry and removes any that
-      # is no longer declared, so it is safe to run on every deploy. It runs
-      # after the smoke test so the worker that consumes them is already up.
-      - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/setup
-        with:
-          turbo-cache: 'false'
-
-      # Same approach as migrate.yml: `railway run` injects the Redis service's
-      # own variables and we pick the public proxy address, because a GitHub
-      # runner cannot reach `*.railway.internal`. The setup action wrote a .env
-      # from .env.example, but an already-set variable wins over the file.
-      # QUEUE_NAME must match the web and worker services in .railway/railway.ts.
-      # The timeout matters: ioredis retries an unreachable host forever.
+      # by BullMQ's scheduler, which lives in Redis. The deployed Redis is not
+      # reachable from here, so the web app syncs it itself: every declared
+      # entry is upserted and any that is no longer declared is removed, so it
+      # is safe on every deploy. It runs after the smoke test so the worker that
+      # consumes them is already up.
       - name: Register job schedules
-        timeout-minutes: 5
         run: |
-          railway run --service redis -- sh -c '
-            REDIS_URL="${REDIS_PUBLIC_URL:?Redis has no public proxy; enable TCP Proxy on the service}" \
-            QUEUE_NAME=lasce \
-              pnpm jobs:register
-          '
+          curl -sS --fail-with-body -X POST "$APP_URL/api/jobs/schedules" \
+            -H "Authorization: Bearer $CRON_SECRET"

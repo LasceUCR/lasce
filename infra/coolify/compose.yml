@@ -1,0 +1,176 @@
+# Deployed stack: one copy per environment, run by Coolify as a "Docker Compose"
+# resource that reads this file from the repository (staging tracks
+# `development`, production tracks `main`). See docs/deployment.md and the
+# bootstrap runbook in infra/coolify/README.md.
+#
+# Nothing here builds: both application images are built and pushed to GHCR by
+# .github/workflows/cd.yml, and LASCE_TAG picks the environment's mutable tag
+# (`staging` / `production`), or an immutable `<env>-<sha>` tag to roll back.
+#
+# Every ${VAR} without a default is set in the Coolify UI for the resource, and
+# `:?` makes a missing one fail the deploy instead of starting a broken stack.
+# Domains are not declared here either: assign them in the UI to `web` (port
+# 3000) and `minio` (port 9000).
+#
+# `exclude_from_hc` is a Coolify key, not Compose spec. Plain `docker compose`
+# rejects it, so strip it to validate locally:
+#   sed '/exclude_from_hc/d' infra/coolify/compose.yml | docker compose -f - config
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lasce
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: lasce
+    # Loopback only: for psql, the seed and backups through an SSH tunnel. Never
+    # publish this on a public interface.
+    ports:
+      - '127.0.0.1:${POSTGRES_LOOPBACK_PORT:-15432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lasce -d lasce']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Authentication is on. The admin token is minted once per environment after
+  # the first deploy (`influxdb3 create token --admin` in this container's
+  # terminal) and saved as INFLUXDB_TOKEN; until then writes and reads fail.
+  influxdb:
+    image: influxdb:3-core
+    restart: unless-stopped
+    command:
+      [
+        'influxdb3',
+        'serve',
+        '--node-id',
+        'lasce-node-0',
+        '--object-store',
+        'file',
+        '--data-dir',
+        '/var/lib/influxdb3/data',
+      ]
+    volumes:
+      - influxdb-data:/var/lib/influxdb3/data
+
+  minio:
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Applies pending Prisma migrations, then exits. `web` and `worker` start only
+  # once it has exited 0, so a failed migration stops the release before the
+  # running containers are replaced. Uses the migrator directory baked into the
+  # web image (see infra/docker/web.Dockerfile).
+  migrate:
+    image: ghcr.io/lasceucr/lasce-web:${LASCE_TAG:?}
+    restart: 'no'
+    exclude_from_hc: true
+    command: ['sh', '-c', 'cd /repo/migrator && node node_modules/prisma/build/index.js migrate deploy']
+    environment:
+      DATABASE_URL: postgresql://lasce:${POSTGRES_PASSWORD:?}@postgres:5432/lasce
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    image: ghcr.io/lasceucr/lasce-web:${LASCE_TAG:?}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      # The image binds `::` by default. IPv4 is all a Compose network needs.
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: postgresql://lasce:${POSTGRES_PASSWORD:?}@postgres:5432/lasce
+      REDIS_URL: redis://redis:6379
+      # Must match the worker exactly, or producer and consumer silently use
+      # different queues.
+      QUEUE_NAME: lasce
+      CRON_SECRET: ${CRON_SECRET:?}
+      # The public URL of the `minio` service (scheme included), not
+      # `minio:9000`: the web hands browsers presigned download URLs built from
+      # it. It must equal the MINIO_ENDPOINT_* repository variable cd.yml bakes
+      # into the image for the next/image allowlist.
+      MINIO_ENDPOINT: ${MINIO_PUBLIC_URL:?}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?}
+      MINIO_BUCKET: lasce-files
+      MINIO_DOWNLOADS_BUCKET: lasce-downloads
+      INFLUXDB_HOST: http://influxdb:8181
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:?}
+      INFLUXDB_DATABASE: lasce
+    expose:
+      - '3000'
+    healthcheck:
+      # 200 only when both Postgres and Redis answer.
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/api/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: ghcr.io/lasceucr/lasce-worker:${LASCE_TAG:?}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://lasce:${POSTGRES_PASSWORD:?}@postgres:5432/lasce
+      REDIS_URL: redis://redis:6379
+      QUEUE_NAME: lasce
+      INFLUXDB_HOST: http://influxdb:8181
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:?}
+      INFLUXDB_DATABASE: lasce
+      # The worker never hands out URLs, so it stays on the internal network.
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?}
+      MINIO_BUCKET: lasce-files
+      MINIO_DOWNLOADS_BUCKET: lasce-downloads
+      MINIO_USE_SSL: 'false'
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    # No HTTP listener, so no healthcheck and no domain.
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  influxdb-data:
+  minio-data:
