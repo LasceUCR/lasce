@@ -182,13 +182,21 @@ production and `15433` for staging, set by `POSTGRES_LOOPBACK_PORT` because both
 share one host.
 
 ```bash
-ssh -N -L 15433:127.0.0.1:15433 lasce-coolify &      # 15432 for production
+# -f backgrounds only once the forward is up; a plain `&` cannot answer the
+# host-key prompt and the seed then fails with P1001 (database not reachable).
+ssh -f -N -o ExitOnForwardFailure=yes -L 15433:127.0.0.1:15433 lasce-coolify   # 15432 for production
 DATABASE_URL='postgresql://lasce:<POSTGRES_PASSWORD>@127.0.0.1:15433/lasce' pnpm db:seed
+pkill -f 'L 15433:127.0.0.1:15433'
 ```
+
+The tunnel account is `lasce-ops`; see the SSH section of
+[`infra/coolify/README.md`](../infra/coolify/README.md#1-ssh-access).
 
 The seed checks each table before inserting, so running it again is safe. It
 creates no account you can sign in with. Register the first administrator at
-`/registro`, then grant the role through the same tunnel with `psql`.
+`/registro`, then grant the role through the same tunnel with `psql`, or from the
+`postgres` container's terminal in Coolify:
+`psql -U lasce -d lasce -c "UPDATE users SET role = 'ADMIN' WHERE email = '<email>';"`.
 `pnpm accounts:create` makes throwaway QA accounts only.
 
 ## 6. Secrets and variables

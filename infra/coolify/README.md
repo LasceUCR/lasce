@@ -37,9 +37,15 @@ Host lasce-jump
 
 Host lasce-coolify
   HostName 172.16.49.26
-  User <your account on the Coolify host>
+  User lasce-ops
   ProxyJump lasce-jump
 ```
+
+`lasce-ops` on `172.16.49.26` exists only to open tunnels to the loopback Postgres ports: no
+`sudo`, no `docker` group. To add a workstation's key, open Coolify's **Servers → localhost →
+Terminal** (a root shell on the host) and append the full public key line to
+`/home/lasce-ops/.ssh/authorized_keys`. Connect once interactively (`ssh lasce-coolify`) to accept
+the host key before running a tunnel in the background.
 
 ## 2. Coolify resource (per environment)
 
