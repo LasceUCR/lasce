@@ -50,9 +50,6 @@ importers:
       '@resvg/resvg-js':
         specifier: 2.6.2
         version: 2.6.2
-      '@webdots/annotate-client':
-        specifier: ^0.2.2
-        version: 0.2.2
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
@@ -2461,10 +2458,6 @@ packages:
 
   '@webcontainer/env@1.1.1':
     resolution: {integrity: sha512-6aN99yL695Hi9SuIk1oC88l9o0gmxL1nGWWQ/kNy81HigJ0FoaoTXpytCj6ItzgyCEwA9kF1wixsTuv5cjsgng==}
-
-  '@webdots/annotate-client@0.2.2':
-    resolution: {integrity: sha512-+2T+YnMUi0jYqNPEE/0T3JHXmawcIgNw/j8wKkgzbcZ6qOoi14J/OUdo9EczyU/q7r0KNbh1BITrst/BiHvgpQ==}
-    engines: {node: '>=20'}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -6832,8 +6825,6 @@ snapshots:
       tinyrainbow: 3.1.1
 
   '@webcontainer/env@1.1.1': {}
-
-  '@webdots/annotate-client@0.2.2': {}
 
   acorn-jsx@5.3.2(acorn@8.18.0):
     dependencies:
