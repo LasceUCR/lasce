@@ -180,7 +180,7 @@ export function AcademicActivitiesPage({
     )
   }
 
-  const showEmptyState = totalItems === 0 && !(editMode && canCreate)
+  const showEmptyState = totalItems === 0
 
   return (
     <article className="topic-page">
@@ -226,12 +226,13 @@ export function AcademicActivitiesPage({
             <Notice role="alert" tone="error">
               {error}
             </Notice>
-          ) : showEmptyState ? (
-            <p className="content-empty" role="status">
-              {hasQuery ? listT('emptyQuery', { query }) : t('section.empty')}
-            </p>
           ) : (
             <div className="academic-activities-list academic-activities-list-standalone">
+              {showEmptyState ? (
+                <p className="content-empty" role="status">
+                  {hasQuery ? listT('emptyQuery', { query }) : t('section.empty')}
+                </p>
+              ) : null}
               {editMode && canCreate ? (
                 <AddItemCard label={t('editor.addCard')} size="large">
                   {({ close }) => (
