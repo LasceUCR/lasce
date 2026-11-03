@@ -175,7 +175,7 @@ describe('AcademicActivitiesPage', () => {
       totalPages: 2,
     })
 
-    expect(screen.getByText('Mostrando 1-10 de 12.')).toBeInTheDocument()
+    expect(screen.getByText('Mostrando 1–10 de 12.')).toBeInTheDocument()
     expect(
       screen.getByRole('navigation', { name: 'Páginas de actividades académicas' }),
     ).toBeInTheDocument()

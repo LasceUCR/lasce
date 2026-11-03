@@ -579,7 +579,7 @@
       "loadError": "The academic activities could not be loaded. Try again.",
       "retry": "Try again",
       "results": "{count, plural, one {# academic activity found.} other {# academic activities found.}}",
-      "range": "Showing {from}-{to} of {total}.",
+      "range": "Showing {from}–{to} of {total}.",
       "rangeOne": "Showing activity {position} of {total}.",
       "emptyQuery": "No academic activities were found for “{query}”."
     },

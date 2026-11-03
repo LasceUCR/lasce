@@ -579,7 +579,7 @@
       "loadError": "No se pudieron cargar las actividades académicas. Inténtelo de nuevo.",
       "retry": "Reintentar",
       "results": "{count, plural, one {Se encontró # actividad académica.} other {Se encontraron # actividades académicas.}}",
-      "range": "Mostrando {from}-{to} de {total}.",
+      "range": "Mostrando {from}–{to} de {total}.",
       "rangeOne": "Mostrando la actividad {position} de {total}.",
       "emptyQuery": "No se encontraron actividades académicas para “{query}”."
     },
