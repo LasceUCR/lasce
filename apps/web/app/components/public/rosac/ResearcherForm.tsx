@@ -110,8 +110,8 @@ export interface BilingualResearcherFormProps extends ResearcherFormBaseProps {
 
 export type ResearcherFormProps = SingleLanguageResearcherFormProps | BilingualResearcherFormProps
 
-/** Messages match `researcherInputSchema` / `nosotrosResearcherInputSchema`
- * so a rejection reads the same whether it's caught here or by the server. */
+/** Messages match the researcher create and update schemas, so a rejection reads the same
+ * whether it's caught here or by the server. */
 function requireNonEmpty(message: string) {
   return (value: string) => {
     if (value.trim() === '') throw new Error(message)

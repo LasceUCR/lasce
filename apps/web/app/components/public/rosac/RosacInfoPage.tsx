@@ -29,7 +29,13 @@ import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
-import type { RosacAcknowledgment, RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
+import type { NosotrosResearcherUpdateBody } from '@/app/lib/nosotros-researcher-schema'
+import type {
+  RosacAcknowledgment,
+  RosacCardIcon,
+  RosacInfoContent,
+  TeamMember,
+} from '@/app/lib/rosac'
 import type { ConstructionStage } from '@/app/lib/rosac-construction'
 import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 
@@ -41,7 +47,7 @@ import { EditableAcknowledgmentCard } from './EditableAcknowledgmentCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { InstrumentCard } from './InstrumentCard'
 import { InstrumentsGallery } from './InstrumentsGallery'
-import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
+import { ResearcherForm, type BilingualResearcherFormValues } from './ResearcherForm'
 import {
   RosacAcknowledgmentForm,
   type RosacAcknowledgmentFormValues,
@@ -66,6 +72,37 @@ const icons: Record<RosacCardIcon, LucideIcon> = {
   receiver: Radio,
   maintenance: Wrench,
   education: GraduationCap,
+}
+
+/** The addresses of a researcher as the form shows them, one comma separated string. */
+function emailText(email: TeamMember['email']): string {
+  if (!email) return ''
+  return typeof email === 'string' ? email : email.join(', ')
+}
+
+/**
+ * The update body for an edited researcher: the version, the shared fields that changed and,
+ * only when the role or the description changed, both languages with the reviews the editor
+ * confirmed. `null` when nothing changed.
+ */
+function researcherUpdateBody(
+  person: TeamMember,
+  version: string,
+  values: BilingualResearcherFormValues,
+): NosotrosResearcherUpdateBody | null {
+  const changes: Omit<NosotrosResearcherUpdateBody, 'version'> = {
+    ...(values.src === person.src ? {} : { src: values.src }),
+    ...(values.name.trim() === person.name ? {} : { name: values.name }),
+    ...(values.email === emailText(person.email) ? {} : { email: values.email }),
+    ...(values.institution.trim() === person.institution
+      ? {}
+      : { institution: values.institution }),
+    ...(values.content
+      ? { content: values.content, confirmedUnchanged: values.confirmedUnchanged }
+      : {}),
+  }
+
+  return Object.keys(changes).length === 0 ? null : { version, ...changes }
 }
 
 export interface RosacInfoPageProps {
@@ -571,13 +608,21 @@ export function RosacInfoPage({
 
   // --- Section 7: Researcher Handlers ---
   // Reports the outcome in a toast once the request is done, then refreshes the team.
-  async function handleSaveResearcher(id: string, values: ResearcherFormValues): Promise<boolean> {
+  async function handleSaveResearcher(
+    person: TeamMember,
+    values: BilingualResearcherFormValues,
+  ): Promise<boolean> {
+    if (!person.editing) return false
+    const body = researcherUpdateBody(person, person.editing.version, values)
+    // Nothing to save: close instead of sending an empty update.
+    if (!body) return true
+
     return sendWithFeedback(
-      `/api/researchers/${id}`,
+      `/api/researchers/${person.id}`,
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(body),
       },
       {
         success: tResearchers('updated'),
@@ -589,13 +634,21 @@ export function RosacInfoPage({
 
   // Reports the outcome in a toast once the request is done. On success the "Añadir" modal
   // closes and the page refreshes; on failure it stays open with what was typed.
-  async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
+  async function handleCreateResearcher(values: BilingualResearcherFormValues, close: () => void) {
+    if (!values.content) return
+
     await sendWithFeedback(
       '/api/researchers',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          src: values.src,
+          name: values.name,
+          email: values.email,
+          institution: values.institution,
+          content: values.content,
+        }),
       },
       {
         success: tResearchers('created'),
@@ -967,8 +1020,9 @@ export function RosacInfoPage({
               contentLang={person.contentLang}
               institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
-              onSave={(values) => handleSaveResearcher(person.id, values)}
+              onSave={(values) => handleSaveResearcher(person, values)}
               researcher={person}
+              translation={{ editing: person.editing ?? null }}
             />
           )}
           leadingSlide={
@@ -979,6 +1033,7 @@ export function RosacInfoPage({
                     onCancel={close}
                     onSave={(values) => handleCreateResearcher(values, close)}
                     researcher={null}
+                    translation={{ editing: null }}
                   />
                 )}
               </AddItemCard>
