@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type * as RosacLib from '@/app/lib/rosac'
 
 const mocks = vi.hoisted(() => ({
   requireApiPermission: vi.fn(),
   updateResearcher: vi.fn(),
   deleteResearcher: vi.fn(),
+  getLocale: vi.fn(),
 }))
 
 // `@/app/lib/rosac` imports `prisma` at module scope, which throws if
@@ -12,6 +13,8 @@ const mocks = vi.hoisted(() => ({
 // below (via `importOriginal`) so `researcherInputSchema` stays real, but
 // with `prisma` stubbed out first so importing it never touches a client.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
+
+vi.mock('next-intl/server', () => ({ getLocale: mocks.getLocale }))
 
 vi.mock('@/app/lib/auth/apiGuard', () => ({
   requireApiPermission: mocks.requireApiPermission,
@@ -31,11 +34,14 @@ import { DELETE, PATCH } from './route'
 const params = Promise.resolve({ id: 'abc' })
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
 const validBody = {
+  version: '2026-01-01T00:00:00.000Z',
   src: '/images/ROSAC/team/Updated.jpg',
-  role: 'Investigador asociado',
   name: 'Nuevo nombre',
   institution: 'UCR',
-  description: 'Texto actualizado.',
+  content: {
+    es: { role: 'Investigador asociado', description: 'Texto actualizado.' },
+    en: { role: 'Associate researcher', description: 'Updated text.' },
+  },
 }
 
 function patchRequest(body: unknown) {
@@ -52,6 +58,10 @@ function deleteRequest() {
 function deniedResponse(status: number) {
   return new Response(JSON.stringify({ error: 'denied' }), { status })
 }
+
+beforeEach(() => {
+  mocks.getLocale.mockResolvedValue('es')
+})
 
 afterEach(() => {
   vi.clearAllMocks()

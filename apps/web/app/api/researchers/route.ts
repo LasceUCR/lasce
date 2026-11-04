@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
+import { getLocale } from 'next-intl/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { createResearcher, getResearchers, researcherInputSchema } from '@/app/lib/rosac'
+import { resolveLocale } from '@/app/lib/i18n/locale'
+import { getNosotrosResearcherCreateSchema } from '@/app/lib/nosotros-researcher-schema'
+import { createResearcher, getResearchers } from '@/app/lib/rosac'
 
 /**
  * Reads and creates ROSAC researcher profiles (LASCE-CON-012-085). GET is
@@ -11,7 +14,7 @@ import { createResearcher, getResearchers, researcherInputSchema } from '@/app/l
 export const dynamic = 'force-dynamic'
 
 export async function GET(): Promise<NextResponse> {
-  const researchers = await getResearchers()
+  const researchers = await getResearchers(resolveLocale(await getLocale()))
 
   return NextResponse.json({ researchers }, { headers: { 'Cache-Control': 'no-store' } })
 }
@@ -30,7 +33,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     )
   }
 
-  const parsed = researcherInputSchema.safeParse(body)
+  const parsed = getNosotrosResearcherCreateSchema(resolveLocale(await getLocale())).safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
       {
