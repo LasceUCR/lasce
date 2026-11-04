@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
+import { useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
@@ -58,6 +59,7 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
     label: t(`icons.${value}`),
   }))
 
+  const headerSlot = useModalHeaderSlot()
   const formRef = useRef<HTMLDivElement>(null)
   const formId = useId()
 
@@ -157,6 +159,7 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
         label={t('languageTabs')}
         onSelect={setTab}
         selected={tab}
+        tablistContainer={headerSlot}
       >
         {(locale) => (
           <>
