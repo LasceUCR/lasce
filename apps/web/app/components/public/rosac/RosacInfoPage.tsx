@@ -1020,7 +1020,9 @@ export function RosacInfoPage({
               contentLang={person.contentLang}
               institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
-              onSave={(values) => handleSaveResearcher(person, values)}
+              onSave={(values: BilingualResearcherFormValues) =>
+                handleSaveResearcher(person, values)
+              }
               researcher={person}
               translation={{ editing: person.editing ?? null }}
             />
@@ -1031,7 +1033,9 @@ export function RosacInfoPage({
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
-                    onSave={(values) => handleCreateResearcher(values, close)}
+                    onSave={(values: BilingualResearcherFormValues) =>
+                      handleCreateResearcher(values, close)
+                    }
                     researcher={null}
                     translation={{ editing: null }}
                   />
