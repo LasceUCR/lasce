@@ -5,10 +5,17 @@ import es from '@/messages/es.json' with { type: 'json' }
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import {
   defineTranslatableContent,
+  translationLocales,
   type FieldOf,
   type StoredContent,
 } from '@/app/lib/i18n/content/definition'
-import { baseContent, resolveContent, storedContentFrom } from '@/app/lib/i18n/content/resolve'
+import {
+  baseContent,
+  contentLangAttribute,
+  resolveContent,
+  storedContentFrom,
+  translationRows,
+} from '@/app/lib/i18n/content/resolve'
 import {
   isCurrentVersion,
   nextUpdatedAt,
@@ -33,6 +40,12 @@ import {
   type RosacInstrumentsContent,
 } from './rosac-instruments'
 import { locationMapProvider, type LocationMapLabels } from './location-map'
+import {
+  nosotrosResearcherContent,
+  type NosotrosResearcherCreateInput,
+  type NosotrosResearcherEditingData,
+  type NosotrosResearcherUpdateInput,
+} from './nosotros-researcher-schema'
 
 // Built once and reused in both `location.intro` (as flowing prose) and `location.address`
 // (as its own field, kept for anything that needs the bare address rather than a sentence),
@@ -112,6 +125,11 @@ export interface TeamMember {
   storedRole?: string
   /** The stored base description before UI localization, used to initialize single-language edit forms. */
   storedDescription?: string | null
+  /**
+   * Both languages and the version, only for someone who can edit. Absent for visitors, so the
+   * other language never leaves the server with the public page.
+   */
+  editing?: NosotrosResearcherEditingData
 }
 
 interface RosacTextSection {
@@ -556,6 +574,10 @@ export function localizeResearchers(
   if (!peopleMessages) return [...people]
 
   return people.map((person) => {
+    // A row that already has an English translation is shown as stored. The catalogue only
+    // fills researchers saved before the translation table existed.
+    if (person.contentLang === 'en') return person
+
     const key =
       personKeyBySlugOrName[person.id] ?? personKeyBySlugOrName[person.name.toLowerCase().trim()]
 
@@ -772,101 +794,91 @@ export function getRosacInfoContent(messages: RosacMessages): RosacInfoContent {
 export const rosacInfoContent = getRosacInfoContent(es)
 
 /**
- * The ROSAC researcher profiles (LASCE-CON-012-085), persisted in
- * `researchers` — the only part of the ROSAC page backed by Postgres so far.
- * Rows map directly onto `TeamMember` (the DB's `photo_url` becomes `src`),
- * so `getResearchers()` can be dropped straight into `TeamGallery` with no
- * extra adapter.
+ * The ROSAC researcher profiles (LASCE-CON-012-085), persisted in `researchers`.
+ * Only `role` and `description` are bilingual: Spanish stays on the base row and
+ * every other language in `researcher_translations`. The photo, name, institution
+ * and addresses are shared. `getResearchers()` maps a row onto `TeamMember`.
  */
-type ResearcherRow = {
-  id: string
-  photoUrl: string | null
-  role: string
-  name: string
-  institution: string
-  email: string[]
-  description: string | null
-}
+const researcherInclude = {
+  translations: {
+    where: { locale: { in: [...translationLocales] } },
+    select: { locale: true, role: true, description: true },
+  },
+} satisfies Prisma.ResearcherInclude
 
-function toTeamMember(row: ResearcherRow): TeamMember {
+type ResearcherWithTranslations = Prisma.ResearcherGetPayload<{
+  include: typeof researcherInclude
+}>
+
+function toTeamMember(
+  row: ResearcherWithTranslations,
+  locale: Locale,
+  includeEditingData: boolean,
+): TeamMember {
+  const content = storedContentFrom(nosotrosResearcherContent, row, row.translations)
+  // A complete researcher's base text was written as Spanish. A legacy researcher's base text
+  // was entered before languages existed, so its language is unknown.
+  const { content: shown, contentLocale, isLegacy } = resolveContent(content, locale)
+
   return {
     id: row.id,
     // A researcher without a photo is stored as `null` and reaches the UI as `''`, the same
     // "no photo" value `ResearcherForm` uses.
     src: row.photoUrl ?? '',
-    role: row.role,
+    role: shown.role,
     name: row.name,
     institution: row.institution,
     email: row.email.length > 0 ? row.email : undefined,
-    description: row.description ?? undefined,
+    description: shown.description ?? undefined,
+    contentLang: contentLangAttribute(contentLocale),
+    ...(includeEditingData
+      ? { editing: { content, isLegacy, version: toVersion(row.modifiedAt) } }
+      : {}),
   }
 }
 
-export async function getResearchers(): Promise<TeamMember[]> {
-  const rows = await prisma.researcher.findMany({ orderBy: { createdAt: 'asc' } })
-  return rows.map(toTeamMember)
-}
-
-/** `''` and `undefined` both mean "not set" — stored as `null`, same as an untouched row. */
-function normalizeOptional(value: string | undefined): string | null {
-  return value ? value : null
-}
-
 /**
- * Shared by create and update. `email` is a single form field — a comma
- * separated list of zero, one or two addresses — split and validated into an
- * array here, since a researcher can have more than one (LASCE-CON-012-085
- * follow-up, matching `ResearcherCard`'s multi-address display). Capped at 2
- * by both this schema and a database CHECK constraint.
+ * Loads the ROSAC roster in creation order. `role` and `description` are in `locale` when the
+ * researcher has that translation, and fall back to the base text otherwise. Pass
+ * `includeEditingData` only for someone who can edit, because it sends every language.
  */
-export const researcherInputSchema = z.object({
-  /** Optional: `''` or a missing value means the researcher has no photo. */
-  src: z.string().trim().optional(),
-  role: z.string().trim().min(1, 'El rol es obligatorio.'),
-  name: z.string().trim().min(1, 'El nombre es obligatorio.'),
-  email: z
-    .string()
-    .trim()
-    .transform((value) =>
-      value === ''
-        ? []
-        : value
-            .split(',')
-            .map((address) => address.trim())
-            .filter((address) => address !== ''),
-    )
-    .pipe(
-      z
-        .array(z.email({ error: 'Uno o más correos no son válidos.' }))
-        .max(2, 'Máximo 2 correos de contacto.'),
-    )
-    .optional(),
-  institution: z.string().trim().min(1, 'La institución es obligatoria.'),
-  description: z.string().trim().optional(),
-})
+export async function getResearchers(
+  locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
+): Promise<TeamMember[]> {
+  const rows = await prisma.researcher.findMany({
+    orderBy: { createdAt: 'asc' },
+    include: researcherInclude,
+  })
+  return rows.map((row) => toTeamMember(row, locale, includeEditingData))
+}
 
-export type ResearcherInput = z.infer<typeof researcherInputSchema>
+/** `''` and `undefined` both mean "no photo", stored as `null`. */
+function photoUrlFrom(src: string | undefined): string | null {
+  return src ? src : null
+}
 
 /**
- * Creates a new researcher profile, authored by the admin who submitted it.
- * `createdAt` defaults to now, which — since the list is ordered by it —
- * puts the new profile at the end. The add card itself stays at the front of the gallery.
+ * Creates a researcher in every language at once. `createdAt` puts the new profile at the end
+ * of the roster. The body is the same contract as a Nosotros researcher: shared photo, name,
+ * institution and addresses, plus `role` and an all-or-none `description` in Spanish and English.
  */
 export async function createResearcher(
-  data: ResearcherInput,
+  input: NosotrosResearcherCreateInput,
   modifiedBy: string,
 ): Promise<TeamMember> {
   const row = await prisma.$transaction(async (tx) => {
     const created = await tx.researcher.create({
       data: {
-        photoUrl: normalizeOptional(data.src),
-        role: data.role,
-        name: data.name,
-        email: data.email ?? [],
-        institution: data.institution,
-        description: normalizeOptional(data.description),
+        photoUrl: photoUrlFrom(input.src),
+        name: input.name,
+        email: input.email ?? [],
+        institution: input.institution,
+        ...baseContent(nosotrosResearcherContent, input.content),
         modifiedBy,
+        translations: { create: translationRows(nosotrosResearcherContent, input.content) },
       },
+      include: researcherInclude,
     })
     await recordUserAuditEvent(
       tx,
@@ -881,34 +893,81 @@ export async function createResearcher(
     return created
   })
 
-  return toTeamMember(row)
+  return toTeamMember(row, defaultLocale, true)
 }
 
 /**
- * Updates one researcher profile and stamps `modifiedBy` with the admin who
- * made the change. Returns `null` when `id` does not match any row, rather
- * than throwing, so the route handler can turn that into a 404.
+ * Updates the fields present in `input`. With `content`, both languages are written after every
+ * one-sided change is either edited or confirmed. Without `content`, only the shared fields
+ * change, so a legacy researcher can be corrected without being translated first.
+ *
+ * `input.version` is the `modified_at` the editor loaded. The base row is updated only while it
+ * still has that value. Returns `null` when the id does not exist. A stale version throws
+ * `RosacConflictError`; a one-sided change throws `RosacReviewRequiredError`.
  */
 export async function updateResearcher(
   id: string,
-  data: ResearcherInput,
+  input: NosotrosResearcherUpdateInput,
   modifiedBy: string,
 ): Promise<TeamMember | null> {
-  const row = await prisma.$transaction(async (tx) => {
-    const existing = await tx.researcher.findUnique({ where: { id } })
-    if (!existing) return null
+  const expectedModifiedAt = parseVersion(input.version)
 
-    const updated = await tx.researcher.update({
+  const row = await prisma.$transaction(async (tx) => {
+    const current = await tx.researcher.findUnique({
       where: { id },
+      include: researcherInclude,
+    })
+    if (!current) return null
+
+    if (!isCurrentVersion(current.modifiedAt, expectedModifiedAt)) {
+      throw new RosacConflictError(
+        'El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.',
+      )
+    }
+
+    if (input.content) {
+      const pending = findPendingReviews(
+        nosotrosResearcherContent,
+        storedContentFrom(nosotrosResearcherContent, current, current.translations),
+        input.content,
+        input.confirmedUnchanged ?? [],
+      )
+      if (pending.length > 0) throw new RosacReviewRequiredError(pending)
+    }
+
+    const { count } = await tx.researcher.updateMany({
+      where: { id, modifiedAt: expectedModifiedAt },
       data: {
-        photoUrl: normalizeOptional(data.src),
-        role: data.role,
-        name: data.name,
-        email: data.email ?? [],
-        institution: data.institution,
-        description: normalizeOptional(data.description),
+        ...(input.content ? baseContent(nosotrosResearcherContent, input.content) : {}),
+        ...(input.src === undefined ? {} : { photoUrl: photoUrlFrom(input.src) }),
+        ...(input.name === undefined ? {} : { name: input.name }),
+        ...(input.email === undefined ? {} : { email: input.email }),
+        ...(input.institution === undefined ? {} : { institution: input.institution }),
         modifiedBy,
+        modifiedAt: nextUpdatedAt(expectedModifiedAt),
       },
+    })
+
+    if (count === 0) {
+      throw new RosacConflictError(
+        'El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.',
+      )
+    }
+
+    if (input.content) {
+      const rows = translationRows(nosotrosResearcherContent, input.content)
+      for (const { locale, ...text } of rows) {
+        await tx.researcherTranslation.upsert({
+          where: { researcherId_locale: { researcherId: id, locale } },
+          create: { researcherId: id, locale, ...text },
+          update: text,
+        })
+      }
+    }
+
+    const updated = await tx.researcher.findUniqueOrThrow({
+      where: { id },
+      include: researcherInclude,
     })
     await recordUserAuditEvent(
       tx,
@@ -918,13 +977,13 @@ export async function updateResearcher(
         summary: `Investigador ROSAC actualizado: ${updated.name}`,
         entityType: 'rosac_researcher',
         entityId: id,
-        metadata: { fields: changedFieldNames(data) },
+        metadata: { fields: changedFieldNames(input) },
       },
     )
     return updated
   })
 
-  return row ? toTeamMember(row) : null
+  return row ? toTeamMember(row, defaultLocale, true) : null
 }
 
 /**
