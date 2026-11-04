@@ -30,16 +30,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export const dynamic = 'force-dynamic'
 
 export default async function RadioastronomiaRoute() {
-  const [messages, localeStr, people, canCreate, canEdit, canDelete] = await Promise.all([
+  const [messages, localeStr, canCreate, canEdit, canDelete] = await Promise.all([
     getMessages(),
     getLocale(),
-    getResearchers(),
     userHasPermission('create_components'),
     userHasPermission('edit_components'),
     userHasPermission('delete_components'),
   ])
 
   const locale = localeStr as Locale
+  const people = await getResearchers(locale, { includeEditingData: canEdit })
 
   const [characteristics, activities, stages, instruments, acknowledgments] = await Promise.all([
     getRosacCharacteristics(locale, { includeEditingData: canEdit }),

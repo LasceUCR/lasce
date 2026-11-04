@@ -764,11 +764,15 @@ for (const activity of nosotrosActivities) {
  */
 type SeedResearcher = {
   photoUrl: string
-  role: string
   name: string
   email?: string[]
   institution: string
-  description: string
+  role: string
+  description?: string
+  en: {
+    role: string
+    description?: string
+  }
 }
 
 const researchers: SeedResearcher[] = [
@@ -780,6 +784,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     description:
       'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
+    en: {
+      role: 'Principal Investigator',
+      description:
+        'Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/MiguelVelazquez.jpg',
@@ -788,6 +797,10 @@ const researchers: SeedResearcher[] = [
     email: ['miguel.velazquez@ucr.ac.cr'],
     institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica, México',
     description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
+    en: {
+      role: 'Researcher',
+      description: 'In charge of instrumentation development at ROSAC.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/DavidGale.jpg',
@@ -797,6 +810,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), Puebla, México',
     description:
       'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
+    en: {
+      role: 'Researcher',
+      description:
+        'Installation and alignment of telescope reflectors. Mechanical systems, motion testing, lightning protection. General support.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/OscarNunez.jpg',
@@ -805,6 +823,10 @@ const researchers: SeedResearcher[] = [
     email: ['oscar.nunezmata@ucr.ac.cr'],
     institution: 'Escuela de Ingeniería Eléctrica, UCR',
     description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
+    en: {
+      role: 'Researcher',
+      description: 'In charge of the electrical system and technical support for gear motors.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/FedericoRuiz.png',
@@ -814,6 +836,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Instituto de Investigaciones en Ingeniería (INII), UCR',
     description:
       'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
+    en: {
+      role: 'Researcher',
+      description:
+        'In charge of the implementation and commissioning of sensors and actuators, as well as the development of the controller and software systems associated with the ROSAC radio telescope.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/GustavoLara.jpg',
@@ -823,6 +850,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Escuela de Ingeniería Topográfica, UCR',
     description:
       'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+    en: {
+      role: 'Researcher',
+      description:
+        'In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/AndresFallas.jpg',
@@ -832,6 +864,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Escuela de Ingeniería Topográfica, UCR',
     description:
       'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+    en: {
+      role: 'Researcher',
+      description:
+        'In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/WagnerMejias.jpg',
@@ -841,6 +878,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Escuela de Ingeniería Mecánica, UCR',
     description:
       'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
+    en: {
+      role: 'Researcher',
+      description:
+        'Mechanical installation of the structure, preventive and corrective maintenance, adaptations and improvements to the general structure.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/EduardoIbarra.jpg',
@@ -849,6 +891,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Investigador en ingeniería de microondas en Quantum Motion Technologies, Londres',
     description:
       'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
+    en: {
+      role: 'External collaborator',
+      description:
+        'Collaborator in the development and testing of the reception stage in the 100 MHz to 1.1 GHz range, receiver sensitivity analysis, radio telescope design, and electrical installation and antenna guidance system control tasks.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/AndresCorrales.jpg',
@@ -857,6 +904,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Hewlett Packard Enterprise, Costa Rica',
     description:
       'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
+    en: {
+      role: 'External collaborator',
+      description:
+        'Designer, developer, and maintainer of the radio telescope control software and end-user software.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/AndresGamboa.jpg',
@@ -865,6 +917,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Cirtec Medical Enterprise',
     description:
       'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
+    en: {
+      role: 'External collaborator',
+      description:
+        'Support in radio telescope maintenance tasks, as well as electromechanical work related to instrument assembly.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/JelmutRojas.jpg',
@@ -872,6 +929,10 @@ const researchers: SeedResearcher[] = [
     role: 'Colaborador externo',
     institution: 'INDI CR',
     description: 'Apoyo en tareas de nivelación de la estructura.',
+    en: {
+      role: 'External collaborator',
+      description: 'Support in structure leveling tasks.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/BarnaldBocker-2.jpg',
@@ -880,6 +941,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Estudiante de la Escuela de Física, UCR',
     description:
       'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
+    en: {
+      role: 'Assistant',
+      description:
+        'Support in the development and maintenance of ROSAC control software and communication protocols.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/FabianChaverri.jpg',
@@ -888,14 +954,31 @@ const researchers: SeedResearcher[] = [
     institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     description:
       'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
+    en: {
+      role: 'Prospective doctoral student',
+      description:
+        'Prospective doctoral student with a thesis in astronomical instrumentation linked to the project.',
+    },
   },
 ]
 
 await prisma.researcher.deleteMany()
 
-for (const researcher of researchers) {
+for (const { en, ...researcher } of researchers) {
   await prisma.researcher.create({
-    data: { ...researcher, modifiedBy: seedContentAuthor.id },
+    data: {
+      ...researcher,
+      modifiedBy: seedContentAuthor.id,
+      translations: {
+        create: [
+          {
+            locale: 'en',
+            role: en.role,
+            description: en.description ?? null,
+          },
+        ],
+      },
+    },
   })
 }
 

@@ -47,8 +47,8 @@ export interface ResearcherContentResult {
 
 /**
  * What `ResearcherForm` asks of the fields, in event handlers only: the draft lives here, so the
- * form (which also serves the single-language ROSAC editor and so cannot read the site's
- * language itself) never needs to know about tabs, drafts or reviews.
+ * form never needs to know about tabs, drafts or reviews. The site's language only chooses
+ * the labels; the tabs choose which translation is being edited.
  */
 export interface ResearcherContentHandle {
   /**

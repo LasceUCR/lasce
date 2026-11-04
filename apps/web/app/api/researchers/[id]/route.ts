@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server'
+import { getLocale } from 'next-intl/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
-import { deleteResearcher, researcherInputSchema, updateResearcher } from '@/app/lib/rosac'
+import { resolveLocale } from '@/app/lib/i18n/locale'
+import { getNosotrosResearcherUpdateSchema } from '@/app/lib/nosotros-researcher-schema'
+import {
+  deleteResearcher,
+  RosacConflictError,
+  RosacReviewRequiredError,
+  updateResearcher,
+} from '@/app/lib/rosac'
 
 /**
  * Updates or deletes one ROSAC researcher profile (LASCE-CON-012-085). PATCH
@@ -28,7 +36,7 @@ export async function PATCH(
     )
   }
 
-  const parsed = researcherInputSchema.safeParse(body)
+  const parsed = getNosotrosResearcherUpdateSchema(resolveLocale(await getLocale())).safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
       {
@@ -40,15 +48,39 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const researcher = await updateResearcher(id, parsed.data, guard.user.id)
-  if (!researcher) {
-    return NextResponse.json(
-      { error: `No existe un investigador con id "${id}".` },
-      { status: 404 },
-    )
-  }
+  try {
+    const researcher = await updateResearcher(id, parsed.data, guard.user.id)
+    if (!researcher) {
+      return NextResponse.json(
+        { error: `No existe un investigador con id "${id}".` },
+        { status: 404 },
+      )
+    }
 
-  return NextResponse.json({ researcher }, { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json({ researcher }, { headers: { 'Cache-Control': 'no-store' } })
+  } catch (error) {
+    if (error instanceof RosacConflictError) {
+      return NextResponse.json(
+        { error: error.message, code: 'conflict' },
+        { status: 409, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+    if (error instanceof RosacReviewRequiredError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: 'review-required',
+          pending: error.pending.map(({ locale, field }) => ({
+            path: `content.${locale}.${field}`,
+            locale,
+            field,
+          })),
+        },
+        { status: 400, headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+    throw error
+  }
 }
 
 export async function DELETE(
