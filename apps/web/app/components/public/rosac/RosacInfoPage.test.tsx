@@ -58,11 +58,39 @@ function renderPage(props: RosacInfoPageProps = defaultArgs, locale: 'es' | 'en'
   )
 }
 
+/** Fixture people come from the catalogue, so the editor tests supply both languages. */
+function withResearcherEditing(props: RosacInfoPageProps): RosacInfoPageProps {
+  return {
+    ...props,
+    content: {
+      ...props.content,
+      team: {
+        ...props.content.team,
+        people: props.content.team.people.map((person) =>
+          person.editing
+            ? person
+            : {
+                ...person,
+                editing: {
+                  isLegacy: false,
+                  version: '2026-01-01T00:00:00.000Z',
+                  content: {
+                    es: { role: person.role, description: person.description ?? null },
+                    en: { role: `${person.role} EN`, description: person.description ?? null },
+                  },
+                },
+              },
+        ),
+      },
+    },
+  }
+}
+
 function renderEditMode(props: RosacInfoPageProps = editModeArgs) {
   return renderWithIntl(
     <ToastProvider>
       <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>
-        <RosacInfoPage {...props} />
+        <RosacInfoPage {...withResearcherEditing(props)} />
       </EditModeContext.Provider>
     </ToastProvider>,
   )
@@ -285,6 +313,11 @@ describe('RosacInfoPage', () => {
     const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar a/ })
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
+    expect(within(dialog).getByRole('tab', { name: /^Español/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), ' editado')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -308,6 +341,7 @@ describe('RosacInfoPage', () => {
     const [firstEditButton] = screen.getAllByRole('button', { name: /^Editar a/ })
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar investigador' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), ' editado')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(
@@ -349,13 +383,22 @@ describe('RosacInfoPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
     const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
-    await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
     await user.type(
-      within(dialog).getByRole('textbox', { name: 'Descripción' }),
+      within(dialog).getByRole('textbox', { name: /^Rol \(Español\)/ }),
+      'Investigador',
+    )
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /^Descripción \(Español\)/ }),
       'Texto de prueba.',
     )
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    await user.type(within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ }), 'Researcher')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /^Descripción \(English\)/ }),
+      'Test text.',
+    )
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
     const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
     await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
 
@@ -388,7 +431,12 @@ describe('RosacInfoPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Añadir investigador' }))
     const dialog = screen.getByRole('dialog', { name: 'Añadir investigador' })
-    await user.type(within(dialog).getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(
+      within(dialog).getByRole('textbox', { name: /^Rol \(Español\)/ }),
+      'Investigador',
+    )
+    await user.click(within(dialog).getByRole('tab', { name: /^English/ }))
+    await user.type(within(dialog).getByRole('textbox', { name: /^Rol \(English\)/ }), 'Researcher')
     await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
     await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))

@@ -62,8 +62,8 @@ export type EditableResearcherCardProps =
  * — the `researcher` prop and `onSave`/`onDelete` callbacks are the only
  * seam to whichever content module owns the actual record.
  *
- * `/nosotros` passes `translation` to opt in to the bilingual form; ROSAC passes nothing and
- * keeps the single-language one.
+ * `/nosotros` and `/radioastronomia` both pass `translation`, so the role and the description
+ * are edited in Spanish and English.
  */
 export function EditableResearcherCard(props: EditableResearcherCardProps) {
   const {
