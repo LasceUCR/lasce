@@ -705,9 +705,32 @@ model Researcher {
   modifiedBy  String   @map("modified_by") @db.Uuid
   modifiedAt  DateTime @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
-  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  modifier     User                    @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  translations ResearcherTranslation[]
 
   @@map("researchers")
+  @@schema("public")
+}
+
+/// The translatable text of a ROSAC `Researcher` in a language other than Spanish.
+/// The base row keeps the Spanish `role` and `description`; this table holds one
+/// row per additional locale. `name`, `institution`, `email` and `photoUrl` stay
+/// on the base row. A researcher created before translations existed has no row
+/// here, and the base text is in whatever language it was entered in.
+/// `description` is optional and all-or-none across languages.
+model ResearcherTranslation {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  researcherId String   @map("researcher_id") @db.Uuid
+  locale       String   @db.VarChar(5)
+  role         String
+  description  String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  researcher Researcher @relation(fields: [researcherId], references: [id], onDelete: Cascade)
+
+  @@unique([researcherId, locale])
+  @@map("researcher_translations")
   @@schema("public")
 }
 
