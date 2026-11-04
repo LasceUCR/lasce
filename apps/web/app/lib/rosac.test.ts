@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import type { RosacMessages } from './rosac'
+import type { RosacMessages, TeamMember } from './rosac'
 
 const findMany = vi.fn()
 const findUnique = vi.fn()
@@ -1005,7 +1005,7 @@ describe('rosac optimistic concurrency and reviews', () => {
 })
 
 describe('localizeResearchers', () => {
-  const basePeople = [
+  const basePeople: TeamMember[] = [
     {
       id: 'carolina-salas',
       src: '/images/ROSAC/team/CarolinaSalas.jpg',
@@ -1042,7 +1042,9 @@ describe('localizeResearchers', () => {
   })
 
   test('keeps a stored English translation instead of the catalogue', () => {
-    const stored = [{ ...basePeople[0], role: 'Stored role', contentLang: 'en' }]
+    const first = basePeople[0]
+    if (!first) throw new Error('missing fixture')
+    const stored: TeamMember[] = [{ ...first, role: 'Stored role', contentLang: 'en' }]
 
     const result = localizeResearchers(stored, 'en', getMessages('en') as RosacMessages)
 
