@@ -14,7 +14,21 @@ const upsert = vi.fn()
 const auditCreate = vi.fn()
 
 const prismaMock = {
-  researcher: { findMany, findUnique, update, updateMany, create, delete: del, deleteMany: del },
+  researcher: {
+    findMany,
+    findUnique,
+    findUniqueOrThrow: (...args: unknown[]) =>
+      findUnique(...args).then((row: unknown) => {
+        if (!row) throw new Error('not found')
+        return row
+      }),
+    update,
+    updateMany,
+    create,
+    delete: del,
+    deleteMany: del,
+  },
+  researcherTranslation: { upsert },
   rosacCharacteristic: { findMany, findFirst, findUnique, update, updateMany },
   rosacCharacteristicTranslation: { upsert },
   rosacActivity: { findMany, findFirst, findUnique, update, updateMany },
@@ -55,7 +69,6 @@ const {
   deleteResearcher,
   getResearchers,
   localizeResearchers,
-  researcherInputSchema,
   updateResearcher,
   getRosacInfoContent,
   rosacInfoContent,
@@ -96,6 +109,7 @@ function researcherRow(overrides: Partial<Record<string, unknown>> = {}) {
     description: 'Responsable de la planificación estratégica.',
     createdAt: new Date('2025-12-01T00:00:00.000Z'),
     modifiedAt: new Date('2026-01-01T00:00:00.000Z'),
+    translations: [],
     ...overrides,
   }
 }
@@ -121,6 +135,7 @@ describe('getResearchers', () => {
         institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
         email: undefined,
         description: 'Responsable de la planificación estratégica.',
+        contentLang: '',
       },
     ])
   })
@@ -138,7 +153,15 @@ describe('getResearchers', () => {
 
     await getResearchers()
 
-    expect(findMany).toHaveBeenCalledWith({ orderBy: { createdAt: 'asc' } })
+    expect(findMany).toHaveBeenCalledWith({
+      orderBy: { createdAt: 'asc' },
+      include: {
+        translations: {
+          where: { locale: { in: ['en'] } },
+          select: { locale: true, role: true, description: true },
+        },
+      },
+    })
   })
 
   test('maps a row without a photo to an empty src', async () => {
@@ -150,96 +173,20 @@ describe('getResearchers', () => {
   })
 })
 
-describe('researcherInputSchema', () => {
-  const validInput = {
-    src: '/images/ROSAC/team/Someone.jpg',
-    role: 'Investigador',
-    name: 'Alguien',
-    institution: 'UCR',
-    description: 'Texto de prueba.',
-  }
-
-  test('accepts a well-formed input', () => {
-    expect(researcherInputSchema.safeParse(validInput).success).toBe(true)
-  })
-
-  test('accepts an empty photo — the photo is optional', () => {
-    expect(researcherInputSchema.safeParse({ ...validInput, src: '' }).success).toBe(true)
-  })
-
-  test('accepts a missing photo', () => {
-    const { src: _src, ...withoutPhoto } = validInput
-
-    expect(researcherInputSchema.safeParse(withoutPhoto).success).toBe(true)
-  })
-
-  test('rejects an empty required field', () => {
-    const result = researcherInputSchema.safeParse({ ...validInput, name: '  ' })
-
-    expect(result.success).toBe(false)
-  })
-
-  test('accepts an empty email — no public address', () => {
-    expect(researcherInputSchema.safeParse({ ...validInput, email: '' }).success).toBe(true)
-  })
-
-  test('accepts a well-formed email', () => {
-    expect(
-      researcherInputSchema.safeParse({ ...validInput, email: 'alguien@ucr.ac.cr' }).success,
-    ).toBe(true)
-  })
-
-  test('rejects a malformed email', () => {
-    const result = researcherInputSchema.safeParse({ ...validInput, email: 'not-an-email' })
-
-    expect(result.success).toBe(false)
-  })
-
-  test('splits a comma-separated list into several addresses', () => {
-    const result = researcherInputSchema.safeParse({
-      ...validInput,
-      email: 'uno@ucr.ac.cr, dos@ucr.ac.cr',
-    })
-
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.email).toEqual(['uno@ucr.ac.cr', 'dos@ucr.ac.cr'])
-    }
-  })
-
-  test('rejects the list when any address in it is malformed', () => {
-    const result = researcherInputSchema.safeParse({
-      ...validInput,
-      email: 'uno@ucr.ac.cr, not-an-email',
-    })
-
-    expect(result.success).toBe(false)
-  })
-
-  test('rejects more than 2 addresses', () => {
-    const result = researcherInputSchema.safeParse({
-      ...validInput,
-      email: 'uno@ucr.ac.cr, dos@ucr.ac.cr, tres@ucr.ac.cr',
-    })
-
-    expect(result.success).toBe(false)
-  })
-
-  test('accepts a missing description — optional', () => {
-    const { description: _description, ...withoutDescription } = validInput
-
-    expect(researcherInputSchema.safeParse(withoutDescription).success).toBe(true)
-  })
-})
+const VERSION = '2026-01-01T00:00:00.000Z'
+const bilingualContent = {
+  es: { role: 'Investigador asociado', description: 'Texto actualizado.' },
+  en: { role: 'Associate researcher', description: 'Updated text.' },
+}
 
 describe('updateResearcher', () => {
   const updateInput = {
+    version: VERSION,
     src: '/images/ROSAC/team/Updated.jpg',
-    role: 'Investigador asociado',
     name: 'Nuevo nombre',
     email: ['nuevo.nombre@ucr.ac.cr'],
     institution: 'UCR',
-    description: 'Texto actualizado.',
+    content: bilingualContent,
   }
 
   test('returns null without writing when the id does not exist', async () => {
@@ -248,143 +195,144 @@ describe('updateResearcher', () => {
     const result = await updateResearcher('missing-id', updateInput, 'admin-1')
 
     expect(result).toBeNull()
-    expect(update).not.toHaveBeenCalled()
+    expect(updateMany).not.toHaveBeenCalled()
   })
 
-  test('persists the change, including the email', async () => {
-    findUnique.mockResolvedValue(researcherRow())
-    update.mockResolvedValue(
+  test('writes Spanish on the profile and English on the translation row', async () => {
+    findUnique.mockResolvedValue(
       researcherRow({
         photoUrl: updateInput.src,
-        role: updateInput.role,
+        role: bilingualContent.es.role,
         name: updateInput.name,
         email: updateInput.email,
-        description: updateInput.description,
+        description: bilingualContent.es.description,
+        translations: [
+          {
+            locale: 'en',
+            role: bilingualContent.en.role,
+            description: bilingualContent.en.description,
+          },
+        ],
       }),
     )
+    updateMany.mockResolvedValue({ count: 1 })
 
     const result = await updateResearcher('researcher-1', updateInput, 'admin-1')
 
-    expect(update).toHaveBeenCalledWith({
-      where: { id: 'researcher-1' },
-      data: {
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: 'researcher-1', modifiedAt: new Date(VERSION) },
+      data: expect.objectContaining({
         photoUrl: updateInput.src,
-        role: updateInput.role,
+        role: bilingualContent.es.role,
         name: updateInput.name,
         email: updateInput.email,
         institution: updateInput.institution,
-        description: updateInput.description,
+        description: bilingualContent.es.description,
         modifiedBy: 'admin-1',
-      },
+      }),
     })
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { researcherId_locale: { researcherId: 'researcher-1', locale: 'en' } },
+        create: expect.objectContaining({
+          locale: 'en',
+          role: bilingualContent.en.role,
+          description: bilingualContent.en.description,
+        }),
+      }),
+    )
     expect(result?.name).toBe('Nuevo nombre')
-    expect(result?.email).toEqual(['nuevo.nombre@ucr.ac.cr'])
+    expect(result?.editing?.content.en?.role).toBe('Associate researcher')
   })
 
-  test('persists several addresses', async () => {
+  test('updates the shared fields without touching translations', async () => {
     findUnique.mockResolvedValue(researcherRow())
-    const emails = ['uno@ucr.ac.cr', 'dos@ucr.ac.cr']
-    update.mockResolvedValue(researcherRow({ email: emails }))
+    updateMany.mockResolvedValue({ count: 1 })
 
-    const result = await updateResearcher(
-      'researcher-1',
-      { ...updateInput, email: emails },
-      'admin-1',
-    )
+    await updateResearcher('researcher-1', { version: VERSION, name: 'Nuevo nombre' }, 'admin-1')
 
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ email: emails }) }),
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ role: expect.anything() }),
+      }),
     )
-    expect(result?.email).toEqual(emails)
+    expect(upsert).not.toHaveBeenCalled()
   })
 
-  test('clears the email when the form submits none', async () => {
+  test('rejects a save against a stale version', async () => {
     findUnique.mockResolvedValue(researcherRow())
-    update.mockResolvedValue(researcherRow({ email: [] }))
 
-    await updateResearcher('researcher-1', { ...updateInput, email: [] }, 'admin-1')
-
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ email: [] }) }),
-    )
-  })
-
-  test('stores a cleared photo as null', async () => {
-    findUnique.mockResolvedValue(researcherRow())
-    update.mockResolvedValue(researcherRow({ photoUrl: null }))
-
-    const result = await updateResearcher('researcher-1', { ...updateInput, src: '' }, 'admin-1')
-
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ photoUrl: null }) }),
-    )
-    expect(result?.src).toBe('')
+    await expect(
+      updateResearcher(
+        'researcher-1',
+        { version: '2020-01-01T00:00:00.000Z', name: 'Nuevo nombre' },
+        'admin-1',
+      ),
+    ).rejects.toThrow(RosacConflictError)
+    expect(updateMany).not.toHaveBeenCalled()
   })
 })
 
 describe('createResearcher', () => {
-  test('creates the profile, authored by the given user, with no email', async () => {
+  const content = {
+    es: { role: 'Investigador', description: 'Texto de prueba.' },
+    en: { role: 'Researcher', description: 'Test text.' },
+  }
+
+  test('stores Spanish on the profile and English as a translation', async () => {
     const createInput = {
       src: '/images/ROSAC/team/New.jpg',
-      role: 'Investigador',
       name: 'Persona Nueva',
       institution: 'UCR',
-      description: 'Texto de prueba.',
+      content,
     }
     create.mockResolvedValue(
       researcherRow({
         photoUrl: createInput.src,
-        role: createInput.role,
+        role: content.es.role,
         name: createInput.name,
-        description: createInput.description,
+        description: content.es.description,
         email: [],
+        translations: [
+          { locale: 'en', role: content.en.role, description: content.en.description },
+        ],
       }),
     )
 
     const result = await createResearcher(createInput, 'admin-1')
 
     expect(create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         photoUrl: createInput.src,
-        role: createInput.role,
+        role: content.es.role,
         name: createInput.name,
         email: [],
         institution: createInput.institution,
-        description: createInput.description,
+        description: content.es.description,
         modifiedBy: 'admin-1',
-      },
+        translations: {
+          create: [
+            {
+              locale: 'en',
+              role: content.en.role,
+              description: content.en.description,
+            },
+          ],
+        },
+      }),
+      include: expect.any(Object),
     })
     expect(result.email).toBeUndefined()
-  })
-
-  test('creates the profile with the given email', async () => {
-    const createInput = {
-      src: '/images/ROSAC/team/New.jpg',
-      role: 'Investigador',
-      name: 'Persona Nueva',
-      email: ['persona.nueva@ucr.ac.cr'],
-      institution: 'UCR',
-      description: 'Texto de prueba.',
-    }
-    create.mockResolvedValue(researcherRow({ email: createInput.email }))
-
-    const result = await createResearcher(createInput, 'admin-1')
-
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ email: createInput.email }) }),
-    )
-    expect(result.email).toEqual(createInput.email)
+    expect(result.editing?.content.en?.role).toBe('Researcher')
   })
 
   test('creates the profile without a photo, stored as null', async () => {
-    const createInput = {
-      role: 'Investigador',
-      name: 'Persona Nueva',
-      institution: 'UCR',
-    }
-    create.mockResolvedValue(researcherRow({ photoUrl: null }))
+    create.mockResolvedValue(researcherRow({ photoUrl: null, translations: [] }))
 
-    const result = await createResearcher(createInput, 'admin-1')
+    const result = await createResearcher(
+      { name: 'Persona Nueva', institution: 'UCR', content },
+      'admin-1',
+    )
 
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ photoUrl: null }) }),
@@ -1091,6 +1039,14 @@ describe('localizeResearchers', () => {
     expect(result[0]?.storedRole).toBe('Investigadora principal')
     expect(result[0]?.storedDescription).toBe('Responsable de la planificación estratégica.')
     expect(result[0]?.contentLang).toBe('en')
+  })
+
+  test('keeps a stored English translation instead of the catalogue', () => {
+    const stored = [{ ...basePeople[0], role: 'Stored role', contentLang: 'en' }]
+
+    const result = localizeResearchers(stored, 'en', getMessages('en') as RosacMessages)
+
+    expect(result[0]?.role).toBe('Stored role')
   })
 
   test('preserves null as storedDescription when base description is undefined', () => {
