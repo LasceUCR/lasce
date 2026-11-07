@@ -296,8 +296,8 @@ test('switches language on the account page while preserving user info and sessi
   await expect(main.getByText(account.fullName)).toBeVisible()
   await expect(main.getByText(account.email)).toBeVisible()
   await expect(main.getByText(account.institution)).toBeVisible()
-  await expect(main.getByText('Costa Rica')).toBeVisible()
-  await expect(main.getByText('Visitor')).toBeVisible()
+  await expect(main.getByText('Costa Rica', { exact: true })).toBeVisible()
+  await expect(main.getByText('Visitor', { exact: true })).toBeVisible()
 
   // Profile labels in English
   await expect(main.getByText('Name', { exact: true })).toBeVisible()
