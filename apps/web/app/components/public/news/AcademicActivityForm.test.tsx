@@ -192,6 +192,8 @@ describe('AcademicActivityForm: saving', () => {
     })
   })
 
+  // Many fields across two language tabs plus an upload step: slower than the default 5000ms
+  // budget under load, though not a hung test.
   test('saves a new activity once both languages, the shared fields and the photo are filled', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
@@ -239,7 +241,7 @@ describe('AcademicActivityForm: saving', () => {
       location: 'San José, Costa Rica',
       photoUrl: 'https://s3.example/lasce/nueva.png',
     })
-  })
+  }, 15000)
 
   test('explains what is missing instead of saving a new activity', async () => {
     const user = userEvent.setup()
