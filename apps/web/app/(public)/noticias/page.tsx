@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
-import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 
 import { AcademicActivitiesSection } from '@/app/components/public/news/AcademicActivitiesSection'
 import { NewsExplorer } from '@/app/components/public/news/NewsExplorer'
@@ -37,6 +37,12 @@ interface NewsPageProps {
   searchParams: Promise<Record<string, SearchParamValue>>
 }
 
+async function AcademicActivitiesLoader() {
+  const activities = await getAcademicActivities(resolveLocale(await getLocale()))
+
+  return <AcademicActivitiesSection activities={activities} id="academic-activities" />
+}
+
 /**
  * `?q=` searches the news and `?page=` picks a page of the results (see `getNewsPage`). Both are
  * validated here, on the server; a URL that asks for something else than what is shown (a
@@ -45,9 +51,8 @@ interface NewsPageProps {
  */
 export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams
-  const [locale, messages, t, common, canCreate, canEdit, canDelete] = await Promise.all([
+  const [locale, t, common, canCreate, canEdit, canDelete] = await Promise.all([
     getLocale(),
-    getMessages(),
     getTranslations('news.page'),
     getTranslations('common'),
     userHasPermission('create_components'),
@@ -71,10 +76,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
       <TopicHero kicker={t('kicker')} lead={t('lead')} title={t('title')} />
 
       <Suspense fallback={<AcademicActivitiesSection id="academic-activities" loading={true} />}>
-        <AcademicActivitiesSection
-          activities={getAcademicActivities(messages.academicActivities.items)}
-          id="academic-activities"
-        />
+        <AcademicActivitiesLoader />
       </Suspense>
 
       <NewsExplorer
