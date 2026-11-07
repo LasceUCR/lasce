@@ -200,10 +200,6 @@ jobs:
           restore-keys: |
             nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
       - name: Build web
-        # NEXT_PUBLIC_* is inlined at build time, so the flag playwright.config.ts
-        # gives the server has to be set here as well.
-        env:
-          NEXT_PUBLIC_WEBDOTS_DISABLED: 'true'
         run: pnpm turbo run build --filter=@lasce/web
       - name: Assemble standalone server
         # `output: 'standalone'` leaves out static/ and public/, the same copy

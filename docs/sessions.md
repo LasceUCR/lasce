@@ -35,7 +35,7 @@ other public page stays static; `getSessionUser` must never be called from the s
 
 Both are set by `createSession` and removed by `deleteCurrentSession`, and only there: Next only
 allows cookie writes inside Server Actions and Route Handlers. `Secure` is enforced by the browser
-against the page origin, so it holds behind Railway's TLS termination and still works on
+against the page origin, so it holds behind the reverse proxy's TLS termination (Coolify's Traefik) and still works on
 `http://localhost`, which browsers treat as a secure context. Next URL-encodes cookie values, so the
 JSON is stored raw and decoded once on the client. A cookie that still holds only the display name
 (from a session opened before this payload existed) still greets; its role is unknown, so the

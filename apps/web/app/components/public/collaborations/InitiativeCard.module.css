@@ -1,0 +1,8 @@
+.copy {
+  overflow-wrap: anywhere;
+}
+
+.logo {
+  max-height: 240px;
+  object-fit: contain;
+}
