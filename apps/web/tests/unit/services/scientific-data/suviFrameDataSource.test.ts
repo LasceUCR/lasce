@@ -58,14 +58,8 @@ describe('querySuviFrames', () => {
       instrument: { code: 'SUVI' },
       product: { code: 'Fe171' },
       parameter: { code: 'image' },
-      origin: { kind: 'observed', satellite: 19 },
-      images: [
-        {
-          timestamp: '2026-09-10T08:30:00Z',
-          imageUrl: '/api/suvi/frames/a',
-          alt: 'Imágenes solares: 171 Å (Fe171) observada por GOES-19 a las 08:30 UTC',
-        },
-      ],
+      origin: { kind: 'observed', dataset: 'suvi', resolution: 'sampled', satellite: 19 },
+      images: [{ timestamp: '2026-09-10T08:30:00Z', imageUrl: '/api/suvi/frames/a' }],
     })
   })
 
@@ -108,13 +102,12 @@ describe('querySuviFrames', () => {
     expect(result.origin).not.toHaveProperty('satellite')
   })
 
-  test('describes an unrecognised spacecraft name only as GOES', async () => {
+  test('reports no satellite for an unrecognised spacecraft name', async () => {
     mocks.findMany.mockResolvedValue([frame('a', '2026-09-10T08:30:00.000Z', 'unknown')])
 
     const result = await querySuviFrames(query)
 
     expect(result.origin).not.toHaveProperty('satellite')
-    expect(result.images[0]!.alt).toContain('observada por GOES a las 08:30 UTC')
   })
 
   test('reports a database failure as an upstream error', async () => {

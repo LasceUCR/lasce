@@ -36,14 +36,14 @@ export async function queryInfluxSql<T>(
       signal: AbortSignal.timeout(30_000),
     })
   } catch {
-    throw new ScientificDataUpstreamError('La base de series temporales no respondió.')
+    throw new ScientificDataUpstreamError('The time-series database did not respond.')
   }
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '')
     if (response.status === 400 && TABLE_NOT_FOUND.test(detail)) return []
     throw new ScientificDataUpstreamError(
-      `La base de series temporales respondió con el estado ${response.status}.`,
+      `The time-series database answered with status ${response.status}.`,
     )
   }
 
@@ -52,13 +52,13 @@ export async function queryInfluxSql<T>(
     payload = await response.json()
   } catch {
     throw new ScientificDataUpstreamError(
-      'La base de series temporales devolvió una respuesta incompleta o no válida.',
+      'The time-series database returned an incomplete or invalid response.',
     )
   }
   const parsed = z.array(rowSchema).safeParse(payload)
   if (!parsed.success) {
     throw new ScientificDataUpstreamError(
-      'La base de series temporales devolvió datos con un formato inesperado.',
+      'The time-series database returned data in an unexpected shape.',
     )
   }
 

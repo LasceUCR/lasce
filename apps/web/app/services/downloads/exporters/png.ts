@@ -12,7 +12,9 @@ import type {
   ScientificDataResult,
   TimeSeriesDataResult,
 } from '@/app/lib/scientific-data'
+import { describeOrigin, localizeResultNames } from '@/app/lib/scientific-data-copy'
 
+import { exportCopy, type ExportCopy } from './copy'
 import { UnexportableResultError, type Exporter } from './types'
 
 /*
@@ -40,15 +42,6 @@ const HEADER_HEIGHT = 72
 const FOOTER_HEIGHT = 48
 const LEGEND_HEIGHT = 30
 const PNG_SCALE = 2
-
-const numberFormatter = new Intl.NumberFormat('es-CR', {
-  maximumSignificantDigits: 4,
-  notation: 'scientific',
-})
-
-function formatValue(value: number) {
-  return numberFormatter.format(value)
-}
 
 function formatTime(timestamp: string) {
   return timestamp.slice(11, 16)
@@ -85,8 +78,8 @@ function text(
   return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="${size}" fill="${fill}">${escapeXml(content)}</text>`
 }
 
-function header(result: ScientificDataResult, width: number) {
-  const { query, instrument, product, parameter } = result
+function header(result: ScientificDataResult, copy: ExportCopy, width: number) {
+  const { query, instrument, product, parameter } = localizeResultNames(result, copy.sources)
   const title = product.name.includes(`(${product.code})`)
     ? product.name
     : `${product.name} (${product.code})`
@@ -102,11 +95,15 @@ function header(result: ScientificDataResult, width: number) {
   ].join('')
 }
 
-function footer(result: ScientificDataResult, width: number, top: number) {
+function footer(result: ScientificDataResult, copy: ExportCopy, width: number, top: number) {
   const { origin, parameter } = result
-  const provider = `Fuente: ${origin.provider}${origin.kind === 'simulated' ? ' (datos simulados)' : ''}`
+  const { provider } = describeOrigin(origin, copy.origins)
+  const source = copy.files(origin.kind === 'simulated' ? 'footerSimulated' : 'footer', {
+    provider,
+    unit: parameter.unit,
+  })
   return [
-    text(`${provider}. Unidad: ${parameter.unit}.`, 24, top + 22, { size: 11 }),
+    text(source, 24, top + 22, { size: 11 }),
     text('LASCE — Universidad de Costa Rica', width - 24, top + 40, { anchor: 'end', size: 11 }),
   ].join('')
 }
@@ -119,7 +116,10 @@ function document(width: number, height: number, content: string) {
   )
 }
 
-export function renderTimeSeriesSvg(result: TimeSeriesDataResult): string {
+export function renderTimeSeriesSvg(
+  result: TimeSeriesDataResult,
+  copy: ExportCopy = exportCopy(),
+): string {
   const layout = layoutTimeSeries(result.points)
   if (!layout) throw new UnexportableResultError('png', 'empty time-series')
 
@@ -129,7 +129,7 @@ export function renderTimeSeriesSvg(result: TimeSeriesDataResult): string {
     ...layout.gridLines.map(
       ({ y, value }) =>
         `<line x1="${chart.left}" x2="${chart.width - chart.right}" y1="${y}" y2="${y}" stroke="${COLORS.grid}" stroke-width="1"/>` +
-        text(formatValue(value), chart.left - 12, y + 4, { anchor: 'end' }),
+        text(copy.formatValue(value), chart.left - 12, y + 4, { anchor: 'end' }),
     ),
     `<line x1="${chart.left}" x2="${chart.left}" y1="${chart.top}" y2="${plotBottom}" stroke="${COLORS.text}" stroke-width="1"/>`,
     `<line x1="${chart.left}" x2="${chart.width - chart.right}" y1="${plotBottom}" y2="${plotBottom}" stroke="${COLORS.text}" stroke-width="1"/>`,
@@ -151,13 +151,16 @@ export function renderTimeSeriesSvg(result: TimeSeriesDataResult): string {
   return document(
     chart.width,
     height,
-    header(result, chart.width) +
+    header(result, copy, chart.width) +
       `<g transform="translate(0 ${HEADER_HEIGHT})">${plot}</g>` +
-      footer(result, chart.width, HEADER_HEIGHT + chart.height),
+      footer(result, copy, chart.width, HEADER_HEIGHT + chart.height),
   )
 }
 
-export function renderDynamicSpectrumSvg(result: DynamicSpectrumDataResult): string {
+export function renderDynamicSpectrumSvg(
+  result: DynamicSpectrumDataResult,
+  copy: ExportCopy = exportCopy(),
+): string {
   const layout = layoutDynamicSpectrum(result)
   if (!layout) throw new UnexportableResultError('png', 'empty dynamic-spectrum')
 
@@ -185,28 +188,31 @@ export function renderDynamicSpectrumSvg(result: DynamicSpectrumDataResult): str
   const legendTop = HEADER_HEIGHT + chart.height
   const legend = [
     `<defs><linearGradient id="intensity"><stop offset="0" stop-color="${COLORS.spectrumLow}"/><stop offset="1" stop-color="${COLORS.spectrumHigh}"/></linearGradient></defs>`,
-    text('Baja', chart.left, legendTop + 16),
+    text(copy.files('low'), chart.left, legendTop + 16),
     `<rect x="${chart.left + 40}" y="${legendTop + 6}" width="200" height="12" fill="url(#intensity)" stroke="${COLORS.grid}"/>`,
-    text('Alta', chart.left + 250, legendTop + 16),
+    text(copy.files('high'), chart.left + 250, legendTop + 16),
   ].join('')
 
   const height = HEADER_HEIGHT + chart.height + LEGEND_HEIGHT + FOOTER_HEIGHT
   return document(
     chart.width,
     height,
-    header(result, chart.width) +
+    header(result, copy, chart.width) +
       `<g transform="translate(0 ${HEADER_HEIGHT})">${plot}</g>` +
       legend +
-      footer(result, chart.width, legendTop + LEGEND_HEIGHT),
+      footer(result, copy, chart.width, legendTop + LEGEND_HEIGHT),
   )
 }
 
-export function renderResultSvg(result: ScientificDataResult): string {
+export function renderResultSvg(
+  result: ScientificDataResult,
+  copy: ExportCopy = exportCopy(),
+): string {
   switch (result.visualization) {
     case 'time-series':
-      return renderTimeSeriesSvg(result)
+      return renderTimeSeriesSvg(result, copy)
     case 'dynamic-spectrum':
-      return renderDynamicSpectrumSvg(result)
+      return renderDynamicSpectrumSvg(result, copy)
     default:
       throw new UnexportableResultError('png', result.visualization)
   }
@@ -223,7 +229,7 @@ export function rasterizeSvg(svg: string): Buffer {
 
 export const pngExporter: Exporter = {
   format: 'png',
-  async export(result) {
-    return { body: rasterizeSvg(renderResultSvg(result)), rowCount: null }
+  async export(result, copy) {
+    return { body: rasterizeSvg(renderResultSvg(result, copy)), rowCount: null }
   },
 }

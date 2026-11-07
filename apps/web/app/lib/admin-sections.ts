@@ -41,11 +41,6 @@ export const adminSections = [
     description: 'Consulta quién hizo cada cambio administrativo en el portal y cuándo.',
     permission: 'view_audit_log',
   },
-  {
-    slug: 'infraestructura',
-    title: 'Infraestructura',
-    description: 'Estado de los servicios, procesos e instrumentos del laboratorio.',
-  },
 ] as const satisfies readonly AdminSection[]
 
 export type AdminSectionSlug = (typeof adminSections)[number]['slug']

@@ -36,7 +36,6 @@ describe('admin-sections', () => {
       ['usuarios', 'manage_users'],
       ['permisos', 'manage_permissions'],
       ['auditoria', 'view_audit_log'],
-      ['infraestructura', undefined],
     ])
   })
 
@@ -47,27 +46,22 @@ describe('admin-sections', () => {
       '/administracion/usuarios',
       '/administracion/permisos',
       '/administracion/auditoria',
-      '/administracion/infraestructura',
     ])
   })
 
   test('shows only the public sections when no grant is held', () => {
-    expect(visibleLabels([])).toEqual(['Resumen', 'Infraestructura'])
+    expect(visibleLabels([])).toEqual(['Resumen'])
   })
 
   test('adds each section as its grant is held', () => {
-    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.VISITOR)).toEqual(['Resumen', 'Infraestructura'])
-    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ASSISTANT)).toEqual([
-      'Resumen',
-      'Infraestructura',
-    ])
+    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.VISITOR)).toEqual(['Resumen'])
+    expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ASSISTANT)).toEqual(['Resumen'])
     expect(visibleLabels(DEFAULT_ROLE_PERMISSIONS.ADMIN)).toEqual([
       'Resumen',
       'Descargas',
       'Usuarios',
       'Permisos',
       'Auditoría',
-      'Infraestructura',
     ])
     expect(visibleLabels(PERMISSIONS)).toHaveLength(adminMenu.length)
   })

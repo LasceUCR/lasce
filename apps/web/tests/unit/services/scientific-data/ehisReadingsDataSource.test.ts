@@ -64,9 +64,7 @@ describe('queryEhisReadings', () => {
         { timestamp: '2026-10-14T00:09:02Z', value: 0.0031 },
       ],
     })
-    expect(result.origin.provider).toContain('EHIS')
-    expect(result.origin.notice).toContain('inválidas')
-    expect(result.origin.notice).toContain('degradadas')
+    expect(result.origin.dataset).toBe('ehis')
   })
 
   test('does not announce sampling for a full day of 5-minute readings', async () => {
@@ -78,7 +76,7 @@ describe('queryEhisReadings', () => {
     const result = await queryEhisReadings(query)
 
     expect(result.points).toHaveLength(288)
-    expect(result.origin.notice).not.toContain('distribuidas uniformemente')
+    expect(result.origin).not.toHaveProperty('sampledPoints')
   })
 
   test('returns an empty series for a day that was never ingested', async () => {

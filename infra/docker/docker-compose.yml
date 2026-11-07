@@ -78,8 +78,10 @@ services:
     networks:
       - monitoring-net
 
+  # MinIO no longer publishes images; a community build of the same server.
+  # Keep the tag in step with infra/coolify/compose.yml.
   minio:
-    image: quay.io/minio/minio
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     restart: unless-stopped
     command: ["server", "/data", "--console-address", ":9001"]
     environment:

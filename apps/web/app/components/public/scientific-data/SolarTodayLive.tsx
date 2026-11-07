@@ -19,6 +19,7 @@ interface SolarResponse {
   key: string
   state: 'success' | 'error'
   images: ScientificImage[]
+  satellite?: number
 }
 
 const subscribe = () => () => undefined
@@ -78,7 +79,7 @@ export function SolarTodayLive({ instrument, initialNow }: SolarTodayLiveProps) 
                 (_, index) =>
                   parsed.images[Math.round((index * (parsed.images.length - 1)) / (count - 1))]!,
               )
-        setResponse({ key, state: 'success', images })
+        setResponse({ key, state: 'success', images, satellite: parsed.origin.satellite })
       } catch {
         if (!controller.signal.aborted) setResponse({ key, state: 'error', images: [] })
       }
@@ -100,6 +101,7 @@ export function SolarTodayLive({ instrument, initialNow }: SolarTodayLiveProps) 
       date={now.slice(0, 10)}
       state={current?.state ?? 'loading'}
       images={current?.images ?? []}
+      satellite={current?.satellite}
       disabled={!hydrated}
       onProductChange={(value) => {
         setProduct(value)

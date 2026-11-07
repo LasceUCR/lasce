@@ -9,11 +9,7 @@ const magReadings = createGoesReadings({
   measurement: 'mag_field',
   products: ['GEOF'],
   unsupportedMessage: 'The MAG readings only accept GEOF',
-  provider: 'CITIC-UCR — campo geomagnético MAG nivel 2 de NOAA (promedios de 1 minuto)',
-  notice:
-    'Promedios de 1 minuto del magnetómetro (nivel 2) ingeridos diariamente por CITIC-UCR; NOAA publica cada día con aproximadamente un día de retraso. Se excluyen valores de relleno y observaciones marcadas con calidad degradada o inválida.',
-  fullNotice:
-    'Promedios de 1 minuto del magnetómetro (nivel 2) ingeridos diariamente por CITIC-UCR, sin muestreo: incluye todas las observaciones válidas del intervalo.',
+  dataset: 'mag',
 })
 
 export const queryMagReadings = magReadings.query

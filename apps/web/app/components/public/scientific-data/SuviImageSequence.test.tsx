@@ -17,7 +17,11 @@ describe('SuviImageSequence', () => {
     renderWithIntl(<SuviImageSequence {...(Default.args as SuviImageSequenceProps)} />)
 
     expect(screen.getByRole('list', { name: 'Secuencia de imágenes solares' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: /Imagen solar de demostración/ })).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', {
+        name: 'Imágenes solares: 171 Å (Fe171) observada por GOES-19 a las 08:30 UTC',
+      }),
+    ).toBeInTheDocument()
     expect(screen.getByText('2026-09-10 08:30 UTC')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Cargando imagen solar')
     fireEvent.load(screen.getByRole('img'))

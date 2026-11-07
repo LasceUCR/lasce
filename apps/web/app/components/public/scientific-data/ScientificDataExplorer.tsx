@@ -36,6 +36,7 @@ import {
   type ScientificSource,
   type ScientificSourceCode,
 } from '@/app/lib/scientific-data'
+import { describeOrigin, localizeResultNames } from '@/app/lib/scientific-data-copy'
 
 import { DynamicSpectrumChart } from './DynamicSpectrumChart'
 import { InstrumentProductSelect } from './InstrumentProductSelect'
@@ -101,6 +102,7 @@ export function ScientificDataExplorer({
   const tLoading = useTranslations('scientificData.loading')
   const tValidation = useTranslations('scientificData.validation')
   const tErrors = useTranslations('scientificData.errors')
+  const tOrigins = useTranslations('scientificData.origins')
   const format = useFormatter()
   const querySchema = useMemo(
     () =>
@@ -134,7 +136,15 @@ export function ScientificDataExplorer({
   // Server-rendered controls must wait for React's handlers before accepting input.
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
   const [query, setQuery] = useState(initialQuery)
-  const [result, setResult] = useState<ScientificDataResult | null>(initialResult ?? null)
+  const [rawResult, setResult] = useState<ScientificDataResult | null>(initialResult ?? null)
+  // The server names a result in Spanish; show it with the visitor's catalogue instead.
+  const result = useMemo(
+    () => (rawResult ? localizeResultNames(rawResult, sources) : null),
+    [rawResult, sources],
+  )
+  const origin = result
+    ? describeOrigin(result.origin, (key, values) => tOrigins(key as never, values as never))
+    : null
   const [requestState, setRequestState] = useState<RequestState>(initialResult ? 'success' : 'idle')
   const [hasConsulted, setHasConsulted] = useState(Boolean(initialResult))
   const [message, setMessage] = useState<string | null>(null)
@@ -610,7 +620,7 @@ export function ScientificDataExplorer({
                 </div>
                 <div>
                   <dt>{t('sourceResultLabel')}</dt>
-                  <dd>{result.origin.provider}</dd>
+                  <dd>{origin?.provider}</dd>
                 </div>
                 {result.origin.satellite ? (
                   <div>
@@ -620,7 +630,7 @@ export function ScientificDataExplorer({
                 ) : null}
               </dl>
 
-              <Notice tone="info">{result.origin.notice}</Notice>
+              <Notice tone="info">{origin?.notice}</Notice>
 
               {!hasResults ? (
                 <div className="content-empty" role="status">
@@ -653,7 +663,7 @@ export function ScientificDataExplorer({
                   <ScientificDataChart
                     caption={
                       result.origin.kind === 'observed'
-                        ? t('chartCaptionObserved', { provider: result.origin.provider })
+                        ? t('chartCaptionObserved', { provider: origin?.provider ?? '' })
                         : t('chartCaptionSimulated')
                     }
                     label={result.product.name}
@@ -680,7 +690,11 @@ export function ScientificDataExplorer({
               ) : null}
 
               {result.visualization === 'image-sequence' && result.images.length > 0 ? (
-                <SuviImageSequence images={result.images} />
+                <SuviImageSequence
+                  images={result.images}
+                  productName={result.product.name}
+                  satellite={result.origin.satellite}
+                />
               ) : null}
 
               {result.visualization === 'dynamic-spectrum' && result.cells.length > 0 ? (

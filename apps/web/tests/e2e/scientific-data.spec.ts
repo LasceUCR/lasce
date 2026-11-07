@@ -39,11 +39,7 @@ test.beforeEach(async ({ page }) => {
         instrument: { code: selection.instrument.code, name: selection.instrument.name },
         product: { code: selection.product.code, name: selection.product.name },
         parameter: selection.product.parameters[0],
-        origin: {
-          kind: 'observed',
-          provider: 'GOES',
-          notice: 'Fuente: GOES. Imágenes observadas de SUVI.',
-        },
+        origin: { kind: 'observed', dataset: 'suvi', resolution: 'sampled' },
         visualization: 'image-sequence',
         images:
           parameters.get('product') === 'Fe131'
@@ -51,7 +47,6 @@ test.beforeEach(async ({ page }) => {
             : Array.from({ length: 8 }, (_, index) => ({
                 timestamp: new Date(start + ((end - start) * index) / 7).toISOString(),
                 imageUrl: suviFrameUrl(selection.product.code, index),
-                alt: `Imagen solar de GOES: ${selection.product.wavelength}`,
               })),
       },
     })
@@ -331,8 +326,8 @@ async function mockObservedXrays(page: Page, points = true, pending = false) {
         parameter: { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
         origin: {
           kind: 'observed',
-          provider: 'GOES',
-          notice: 'Fuente: GOES. Observaciones históricas de nivel 1b.',
+          dataset: 'goesArchive',
+          resolution: 'sampled',
           satellite: 18,
         },
         visualization: 'time-series',
@@ -444,7 +439,12 @@ test.describe('downloads', () => {
           parameter: selection.product.parameters.find(
             (parameter) => parameter.code === parameters.get('parameter'),
           ),
-          origin: { kind: 'observed', provider: 'GOES', notice: 'Fuente: GOES.', satellite: 19 },
+          origin: {
+            kind: 'observed',
+            dataset: 'goesArchive',
+            resolution: 'sampled',
+            satellite: 19,
+          },
           visualization: 'time-series',
           points: [
             { timestamp: '2025-01-05T08:00:00Z', value: 1e-7 },
@@ -580,7 +580,7 @@ for (const width of [320, 768, 1440]) {
     await page.goto('/datos')
     const solar = page.getByRole('region', { name: 'El Sol de hoy', exact: true })
     const query = page.getByRole('region', { name: 'Configure los datos que desea visualizar' })
-    const images = solar.getByRole('img', { name: 'Imagen solar de GOES: 195 Å' })
+    const images = solar.getByRole('img', { name: /195 Å \(Fe195\) observada por GOES a las/ })
     await expect(images).toHaveCount(5)
     await expect
       .poll(() => images.first().evaluate((element: HTMLImageElement) => element.naturalWidth))
@@ -641,7 +641,9 @@ test('changes the daily band and range without modifying the lower query or relo
   await solar.getByRole('radio', { name: '195 Å' }).focus()
   await solar.getByRole('radio', { name: '195 Å' }).press('ArrowLeft')
   await expect(solar.getByRole('radio', { name: '171 Å' })).toBeChecked()
-  await expect(solar.getByRole('img', { name: 'Imagen solar de GOES: 171 Å' })).toHaveCount(5)
+  await expect(
+    solar.getByRole('img', { name: /171 Å \(Fe171\) observada por GOES a las/ }),
+  ).toHaveCount(5)
   await solar.getByRole('radio', { name: '171 Å' }).press('ArrowLeft')
   // LoadingRegion keeps its (now empty) status mounted, so target the empty state by its text.
   await expect(
@@ -717,7 +719,11 @@ test('selects instruments without requests and keeps manual SUVI separate from t
   expect(requests).toBe(0)
   await expect(query.getByRole('img')).toHaveCount(0)
   await query.getByRole('button', { name: 'Consultar datos' }).click()
-  await expect(query.getByRole('img', { name: 'Imagen solar de GOES: 171 Å' })).toHaveCount(8)
+  await expect(
+    query.getByRole('img', { name: /171 Å \(Fe171\) observada por GOES a las/ }),
+  ).toHaveCount(8)
   await expect(solar.getByRole('radio', { name: '195 Å' })).toBeChecked()
-  await expect(solar.getByRole('img', { name: 'Imagen solar de GOES: 195 Å' })).toHaveCount(5)
+  await expect(
+    solar.getByRole('img', { name: /195 Å \(Fe195\) observada por GOES a las/ }),
+  ).toHaveCount(5)
 })

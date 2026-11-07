@@ -14,6 +14,7 @@ const recordSelect = {
   scope: true,
   country: true,
   websiteUrl: true,
+  logoPath: true,
   updatedAt: true,
   translations: {
     where: { locale: { in: [...translationLocales] } },
@@ -48,6 +49,7 @@ export async function getCollaborationRecords(
       country: content.country,
       countryLocale: contentLocale,
       ...(record.websiteUrl ? { websiteUrl: record.websiteUrl } : {}),
+      ...(record.logoPath ? { logoPath: record.logoPath } : {}),
       ...(includeEditingData
         ? { editing: { content: stored, isLegacy, version: toVersion(record.updatedAt) } }
         : {}),
