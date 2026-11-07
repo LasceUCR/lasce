@@ -276,8 +276,8 @@ test('switches language on the account page while preserving user info and sessi
   let main = page.getByRole('main')
   await expect(main.getByText(account.fullName)).toBeVisible()
   await expect(main.getByText('Visitante')).toBeVisible()
-  await expect(main.getByRole('term', { name: 'Nombre' })).toBeVisible()
-  await expect(main.getByRole('term', { name: 'Rol' })).toBeVisible()
+  await expect(main.getByText('Nombre', { exact: true })).toBeVisible()
+  await expect(main.getByText('Rol', { exact: true })).toBeVisible()
 
   // Switch to English using the header language menu
   await page.getByRole('banner').getByLabel('Idioma: Español').click()
@@ -300,12 +300,12 @@ test('switches language on the account page while preserving user info and sessi
   await expect(main.getByText('Visitor')).toBeVisible()
 
   // Profile labels in English
-  await expect(main.getByRole('term', { name: 'Name' })).toBeVisible()
-  await expect(main.getByRole('term', { name: 'Email address' })).toBeVisible()
-  await expect(main.getByRole('term', { name: 'Institution' })).toBeVisible()
-  await expect(main.getByRole('term', { name: 'Country' })).toBeVisible()
-  await expect(main.getByRole('term', { name: 'Role' })).toBeVisible()
-  await expect(main.getByRole('term', { name: 'Member since' })).toBeVisible()
+  await expect(main.getByText('Name', { exact: true })).toBeVisible()
+  await expect(main.getByText('Email address', { exact: true })).toBeVisible()
+  await expect(main.getByText('Institution', { exact: true })).toBeVisible()
+  await expect(main.getByText('Country', { exact: true })).toBeVisible()
+  await expect(main.getByText('Role', { exact: true })).toBeVisible()
+  await expect(main.getByText('Member since', { exact: true })).toBeVisible()
 
   // Back link in English
   await expect(page.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
@@ -333,7 +333,7 @@ test('switches language on the account page while preserving user info and sessi
   await expect(page).toHaveURL(/\/cuenta$/)
   await expect(page).toHaveTitle('Mi cuenta | LASCE')
   await expect(page.getByRole('heading', { level: 1, name: 'Mi cuenta' })).toBeVisible()
-  await expect(main.getByText('Visitante')).toBeVisible()
+  await expect(page.getByRole('main').getByText('Visitante')).toBeVisible()
 })
 
 test('returns to a safe path after login and ignores an off-site one', async ({ page }) => {
