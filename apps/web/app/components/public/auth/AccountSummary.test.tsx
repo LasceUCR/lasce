@@ -36,6 +36,30 @@ describe('AccountSummary', () => {
     ])
   })
 
+  test('lists the six profile rows under their English labels when rendered in English', () => {
+    renderWithIntl(<AccountSummary {...visitorArgs} />, { locale: 'en' })
+
+    const terms = screen.getAllByRole('term').map((term) => term.textContent)
+    const definitions = screen.getAllByRole('definition').map((item) => item.textContent)
+
+    expect(terms).toEqual([
+      'Name',
+      'Email address',
+      'Institution',
+      'Country',
+      'Role',
+      'Member since',
+    ])
+    expect(definitions).toEqual([
+      visitorArgs.profile.fullName,
+      visitorArgs.profile.email,
+      visitorArgs.profile.institution,
+      visitorArgs.profile.countryName,
+      visitorArgs.profile.roleLabel,
+      visitorArgs.profile.memberSince,
+    ])
+  })
+
   test('shows the role label it was given', () => {
     renderWithIntl(<AccountSummary {...adminArgs} />)
 
@@ -53,6 +77,30 @@ describe('AccountSummary', () => {
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Cerrar sesión' }),
     )
 
+    await waitFor(() => expect(logoutAction).toHaveBeenCalledTimes(1))
+  })
+
+  test('renders the sign-out trigger and confirmation dialog in English when rendered in English', async () => {
+    const user = userEvent.setup()
+    const logoutAction = vi.fn().mockResolvedValue(undefined)
+    renderWithIntl(<AccountSummary {...visitorArgs} logoutAction={logoutAction} />, {
+      locale: 'en',
+    })
+
+    const trigger = screen.getByRole('button', { name: 'Sign out' })
+    expect(trigger).toBeInTheDocument()
+    await user.click(trigger)
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { level: 2, name: 'Sign out?' })).toBeInTheDocument()
+    expect(
+      within(dialog).getByText(
+        'Your session in this browser will end and you will have to sign in again.',
+      ),
+    ).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Sign out' }))
     await waitFor(() => expect(logoutAction).toHaveBeenCalledTimes(1))
   })
 })

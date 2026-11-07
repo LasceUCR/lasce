@@ -185,16 +185,19 @@ inventory taken when the static pages were migrated.
 | `/noticias`                              | `news`, `academicActivities`                    | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
 | `/radioastronomia`                       | `rosac`                                         | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`                                        |
 | `/datos`                                 | `scientificData`                                | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts`                                  |
+| `/cuenta`                                | `account`, `common`                             | `(public)/cuenta/page.tsx`, `AccountSummary.tsx`, `SignOutButton.tsx`                                          |
 | `/administracion/permisos`               | `administration.permissions`, `access`          | `RolePermissions{Page,Editor}.tsx`, `lib/access-messages.ts`                                                   |
 | `/administracion/usuarios`               | `administration.users`, `access`                | `Users*.tsx`, `UserRole*.tsx`, `UserDetailsDialog.tsx`, `lib/user-administration.ts`                           |
 
 The top menu's user dropdown (`AccountLinks.tsx`, `AccountMenu.tsx`, its mobile equivalent, and
-the shared `SignOutButton.tsx` confirmation dialog) reads its copy from the `account` namespace:
-sign-in/out labels, "Mi cuenta", "Administración", and the `roles` map keyed by `UserRole`. This
-is fixed UI chrome with no per-user content, so it is static catalogue copy, the same choice as
-`nav`/`footer`/`shell`, not database content like `/` or `/clima-espacial` below. `ROLE_LABELS` in
-`lib/auth/account.ts` stays Spanish-only: it also backs the `/cuenta` page, still untranslated.
-`/administracion/usuarios` names the roles from `access.roles` through `roleName`, like Permisos.
+the shared `SignOutButton.tsx` confirmation dialog) and the `/cuenta` page (`(public)/cuenta/page.tsx`,
+`AccountSummary.tsx`) read their copy from the `account` namespace: page intro and metadata, profile
+field labels, sign-in/out labels, "Mi cuenta", "Administración", and the `roles` map keyed by
+`UserRole`. This is fixed UI chrome with no per-user content, so it is static catalogue copy, the
+same choice as `nav`/`footer`/`shell`, not database content like `/` or `/clima-espacial` below.
+`ROLE_LABELS` in `lib/auth/account.ts` stays Spanish-only: it backs the audit summaries stored in
+Spanish and serves as a Spanish fixture for tests. `/administracion/usuarios` names the roles from
+`access.roles` through `roleName`, like Permisos.
 
 On `/`, the hero banner's title and subtitle and the geomagnetic indices' descriptions are
 database content, edited in both languages in "Modo edición" ([`home-page.md`](home-page.md)).
