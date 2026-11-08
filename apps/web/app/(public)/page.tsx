@@ -20,6 +20,9 @@ import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@
 // in every language (docs/internationalization.md, "Add a string").
 const institutionName = 'Laboratorio de Astrofísica Solar y Clima Espacial'
 
+// The indices stay wired up. Flip this to show the section again.
+const showGeomagneticIndicators = false
+
 export const dynamic = 'force-dynamic'
 
 function toWorkAreaItems(areas: AreaCardDefinition[]): WorkAreaItem[] {
@@ -87,12 +90,14 @@ export default async function HomePage() {
       </section>
 
       <div className="home-content">
-        <GeomagneticIndicators
-          canEdit={canEdit}
-          demoNotice={t('indicators.demoNotice')}
-          indicators={indicators}
-          title={t('indicators.title')}
-        />
+        {showGeomagneticIndicators && (
+          <GeomagneticIndicators
+            canEdit={canEdit}
+            demoNotice={t('indicators.demoNotice')}
+            indicators={indicators}
+            title={t('indicators.title')}
+          />
+        )}
 
         <WorkAreasSection
           id={workAreasSectionId}
