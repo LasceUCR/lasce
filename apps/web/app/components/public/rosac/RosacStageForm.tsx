@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/app/components/public/Button'
 import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
-import { Modal } from '@/app/components/public/Modal'
+import { Modal, useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
@@ -62,6 +62,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
     en: null,
   }
 
+  const headerSlot = useModalHeaderSlot()
   const formRef = useRef<HTMLDivElement>(null)
   const formId = useId()
 
@@ -319,6 +320,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
         label={t('languageTabs')}
         onSelect={setTab}
         selected={tab}
+        tablistContainer={headerSlot}
       >
         {(locale) => (
           <>
