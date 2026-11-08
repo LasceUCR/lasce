@@ -159,32 +159,3 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   ASSISTANT: 'Asistente',
   ADMIN: 'Persona administradora',
 }
-
-/** Spanish source copy preserved for stories and test fixtures. */
-export const cuentaMeta = {
-  title: 'Mi cuenta | LASCE',
-  description:
-    'Tu perfil en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-} as const
-
-/** Spanish source copy preserved for stories and test fixtures (e.g. login.spec.ts). */
-export const cuentaIntro = {
-  title: 'Mi cuenta',
-  lead: 'Tu perfil en el portal y el control de tu sesión.',
-} as const
-
-/** Spanish source copy preserved for stories and test fixtures. */
-export const accountSummaryCopy = {
-  fullName: 'Nombre',
-  email: 'Correo electrónico',
-  institution: 'Institución',
-  country: 'País',
-  role: 'Rol',
-  memberSince: 'Miembro desde',
-} as const
-
-/** Spanish source back link preserved for test fixtures. */
-export const cuentaBackLink = {
-  href: '/',
-  label: 'Volver al inicio',
-} as const

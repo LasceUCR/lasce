@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
-import { accountSummaryCopy } from '@/app/lib/auth/account'
+import es from '@/messages/es.json' with { type: 'json' }
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AccountSummary, type AccountSummaryProps } from './AccountSummary'
@@ -19,12 +19,12 @@ describe('AccountSummary', () => {
     const definitions = screen.getAllByRole('definition').map((item) => item.textContent)
 
     expect(terms).toEqual([
-      accountSummaryCopy.fullName,
-      accountSummaryCopy.email,
-      accountSummaryCopy.institution,
-      accountSummaryCopy.country,
-      accountSummaryCopy.role,
-      accountSummaryCopy.memberSince,
+      es.account.profile.fullName,
+      es.account.profile.email,
+      es.account.profile.institution,
+      es.account.profile.country,
+      es.account.profile.role,
+      es.account.profile.memberSince,
     ])
     expect(definitions).toEqual([
       visitorArgs.profile.fullName,

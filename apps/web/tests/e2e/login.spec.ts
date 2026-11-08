@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect as baseExpect, test, type Page } from '@playwright/test'
 
-import { cuentaIntro } from '@/app/lib/auth/account'
+import es from '@/messages/es.json' with { type: 'json' }
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
@@ -240,7 +240,7 @@ test('shows the profile on the account page once signed in', async ({ page }) =>
   await page.goto('/cuenta')
 
   await expect(page).toHaveURL(/\/cuenta$/)
-  await expect(page.getByRole('heading', { level: 1, name: cuentaIntro.title })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
   const main = page.getByRole('main')
   await expect(main.getByText(account.fullName)).toBeVisible()
   await expect(main.getByText(account.email)).toBeVisible()
@@ -270,8 +270,8 @@ test('switches language on the account page while preserving user info and sessi
   await page.goto('/cuenta')
 
   await expect(page).toHaveURL(/\/cuenta$/)
-  await expect(page).toHaveTitle('Mi cuenta | LASCE')
-  await expect(page.getByRole('heading', { level: 1, name: 'Mi cuenta' })).toBeVisible()
+  await expect(page).toHaveTitle(es.account.meta.title)
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
 
   let main = page.getByRole('main')
   await expect(main.getByText(account.fullName)).toBeVisible()
@@ -331,8 +331,8 @@ test('switches language on the account page while preserving user info and sessi
   await page.getByRole('banner').getByRole('button', { name: 'Español' }).click()
 
   await expect(page).toHaveURL(/\/cuenta$/)
-  await expect(page).toHaveTitle('Mi cuenta | LASCE')
-  await expect(page.getByRole('heading', { level: 1, name: 'Mi cuenta' })).toBeVisible()
+  await expect(page).toHaveTitle(es.account.meta.title)
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
   await expect(page.getByRole('main').getByText('Visitante')).toBeVisible()
 })
 
