@@ -2302,6 +2302,22 @@
     }
   },
   "account": {
+    "meta": {
+      "title": "Mi cuenta | LASCE",
+      "description": "Tu perfil en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica."
+    },
+    "page": {
+      "title": "Mi cuenta",
+      "lead": "Tu perfil en el portal y el control de tu sesión."
+    },
+    "profile": {
+      "fullName": "Nombre",
+      "email": "Correo electrónico",
+      "institution": "Institución",
+      "country": "País",
+      "role": "Rol",
+      "memberSince": "Miembro desde"
+    },
     "signIn": "Ingresar",
     "myAccount": "Mi cuenta",
     "administration": "Administración",
@@ -2313,6 +2329,7 @@
       "ASSISTANT": "Asistente",
       "ADMIN": "Persona administradora"
     },
+    "noRole": "Sin rol asignado",
     "signOutDialog": {
       "title": "¿Cerrar sesión?",
       "body": "Tu sesión en este navegador terminará y tendrás que volver a ingresar.",

@@ -2302,6 +2302,22 @@
     }
   },
   "account": {
+    "meta": {
+      "title": "My account | LASCE",
+      "description": "Your profile on the portal of the Laboratorio de Astrofísica Solar y Clima Espacial of the University of Costa Rica."
+    },
+    "page": {
+      "title": "My account",
+      "lead": "Your profile on the portal and your session controls."
+    },
+    "profile": {
+      "fullName": "Name",
+      "email": "Email address",
+      "institution": "Institution",
+      "country": "Country",
+      "role": "Role",
+      "memberSince": "Member since"
+    },
     "signIn": "Sign in",
     "myAccount": "My account",
     "administration": "Administration",
@@ -2313,6 +2329,7 @@
       "ASSISTANT": "Assistant",
       "ADMIN": "Administrator"
     },
+    "noRole": "No role assigned",
     "signOutDialog": {
       "title": "Sign out?",
       "body": "Your session in this browser will end and you will have to sign in again.",
