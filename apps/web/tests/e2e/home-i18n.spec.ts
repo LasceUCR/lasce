@@ -12,6 +12,9 @@ test.use({ viewport: { width: 1600, height: 900 } })
  * reordered by dragging. They are seeded by their migration and cannot be created or deleted, so
  * each test edits the seeded rows and writes them back afterwards. The banner's title is never
  * changed: other specs find the home page by it.
+ *
+ * The geomagnetic index section is commented out on the home page, so the cases that need it
+ * are skipped.
  */
 
 async function snapshot() {
@@ -104,7 +107,7 @@ test.afterEach(async () => {
   await restore()
 })
 
-test('shows the stored banner and indices in the language chosen in the header', async ({
+test.skip('shows the stored banner and indices in the language chosen in the header', async ({
   page,
 }) => {
   await page.goto('/')
@@ -128,7 +131,7 @@ test('shows the stored banner and indices in the language chosen in the header',
   await expect(indicators(page).getByText('Stable')).toHaveAttribute('lang', 'en')
 })
 
-test('edits an index in both languages and caps its text at 15 characters', async ({
+test.skip('edits an index in both languages and caps its text at 15 characters', async ({
   page,
   context,
 }) => {
@@ -163,7 +166,7 @@ test('edits an index in both languages and caps its text at 15 characters', asyn
   }
 })
 
-test('reorders the indices with the keyboard and saves the order on drop', async ({
+test.skip('reorders the indices with the keyboard and saves the order on drop', async ({
   page,
   context,
 }) => {
@@ -200,7 +203,7 @@ test('reorders the indices with the keyboard and saves the order on drop', async
   }
 })
 
-test('reorders the indices by dragging a handle and saves the order on drop', async ({
+test.skip('reorders the indices by dragging a handle and saves the order on drop', async ({
   page,
   context,
 }) => {
@@ -250,7 +253,7 @@ test('edits the banner subtitle in both languages', async ({ page, context }) =>
   }
 })
 
-test('meets WCAG A and AA automated checks in edit mode and in the editors, in both languages', async ({
+test.skip('meets WCAG A and AA automated checks in edit mode and in the editors, in both languages', async ({
   page,
   context,
 }) => {
@@ -285,7 +288,7 @@ test('meets WCAG A and AA automated checks in edit mode and in the editors, in b
   }
 })
 
-test('keeps the edit controls and the editors inside the viewport from phones to desktops', async ({
+test.skip('keeps the edit controls and the editors inside the viewport from phones to desktops', async ({
   page,
   context,
 }) => {
