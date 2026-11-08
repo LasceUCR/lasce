@@ -1,10 +1,12 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createRef } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import {
   RosacCharacteristicForm,
+  type RosacCharacteristicFormHandle,
   type RosacCharacteristicFormProps,
 } from './RosacCharacteristicForm'
 import { Default } from './RosacCharacteristicForm.stories'
@@ -55,6 +57,19 @@ describe('RosacCharacteristicForm', () => {
 
     await user.click(within(discardDialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same question when the modal requests closing', async () => {
+    const ref = createRef<RosacCharacteristicFormHandle>()
+    const { onCancel, user } = renderForm({ ref })
+
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Nuevo Título')
+    act(() => ref.current?.requestCancel())
+
+    expect(screen.getByRole('dialog', { name: '¿Descartar cambios?' })).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   test('shows validation errors when fields are empty on submit', async () => {
