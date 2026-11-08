@@ -22,7 +22,8 @@ async function boxes(page: Page) {
       footer: rect('.site-footer'),
       sidebar: rect('.admin-sidebar'),
       content: rect('.admin-content'),
-      sidebarFixed: getComputedStyle(document.querySelector('.admin-sidebar')!).position === 'fixed',
+      sidebarFixed:
+        getComputedStyle(document.querySelector('.admin-sidebar')!).position === 'fixed',
       pageHeight: document.documentElement.scrollHeight,
       noOverflow: document.documentElement.scrollWidth <= innerWidth,
     }
