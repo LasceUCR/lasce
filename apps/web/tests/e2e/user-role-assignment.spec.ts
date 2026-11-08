@@ -1,5 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+
+import { accesoIntro } from '@/app/lib/auth/login'
+
 import { createAdminFixture } from './helpers/admin-users'
 
 for (const width of [390, 1440]) {
@@ -68,7 +71,11 @@ for (const width of [390, 1440]) {
 }
 
 test('requires authentication before returning user information', async ({ page }) => {
-  await page.goto('/administracion/usuarios')
+  // An anonymous visit is redirected to login. The production server follows that
+  // redirect without firing the `load` event `goto` waits for by default, so the
+  // navigation only has to commit; the heading below is what proves the login page rendered.
+  await page.goto('/administracion/usuarios', { waitUntil: 'commit' })
   await expect(page).toHaveURL(/acceso\?next=%2Fadministracion%2Fusuarios&reason=auth/)
+  await expect(page.getByRole('heading', { level: 1, name: accesoIntro.title })).toBeVisible()
   await expect(page.getByRole('table')).toHaveCount(0)
 })

@@ -1013,7 +1013,7 @@
     },
     "overview": {
       "title": "What is ROSAC?",
-      "p1": "The Santa Cruz Radio Observatory (ROSAC) is a University of Costa Rica project located at the Santa Cruz Campus, Guanacaste. Its development centers on adapting an 11-meter parabolic antenna for astronomical use, through a new mount, motion and pointing systems, receivers, electronics, and control software.",
+      "p1": "The Santa Cruz Radio Observatory (ROSAC) is a project developed by the University of Costa Rica located at the Santa Cruz Campus, Guanacaste. Its development centers on adapting an 11-meter parabolic antenna for astronomical use, through a new mount, motion and pointing systems, receivers, electronics, and control software.",
       "p2": "Its purpose is to develop national capabilities to observe the Sun and other celestial sources at radio frequencies. The project connects astrophysics research with physics, electronics, engineering, telecommunications, automatic control, and software development."
     },
     "characteristics": {
@@ -1079,7 +1079,7 @@
     },
     "construction": {
       "title": "ROSAC construction",
-      "intro": "The development of the Santa Cruz Radio Observatory has involved various stages of study, preparation, assembly, and infrastructure adaptation. This walkthrough presents some of the work carried out during that process.",
+      "intro": "The development of the Santa Cruz Radio Observatory has involved several stages of study, preparation, assembly, and infrastructure adaptation. This walkthrough presents some of the work carried out during that process.",
       "carousel": {
         "ariaLabel": "ROSAC construction process",
         "groupNoun": "Stage",
@@ -1154,12 +1154,12 @@
     },
     "radioObservation": {
       "title": "Why observe in radio?",
-      "p1": "Radio emissions allow tracking accelerated electrons and structures moving through the solar corona and interplanetary medium. These observations complement visible light, ultraviolet, and X-ray images, helping reconstruct the evolution of solar events."
+      "p1": "Radio emissions enable us to trace accelerated electrons and follow the propagation of structures through the solar corona and interplanetary medium. These observations complement visible light, ultraviolet, and X-ray images, helping reconstruct the evolution of solar events."
     },
     "relationship": {
       "title": "ROSAC and LASCE",
       "p1": "LASCE integrates data, models, and analysis methods to study solar activity and its relationship with the Earth's environment. ROSAC provides national infrastructure to observe the Sun at radio frequencies and strengthen those research capabilities.",
-      "p2": "LASCE turns observations into knowledge; ROSAC generates and strengthens an essential part of those observations. Together they connect basic science, technological development, training, and applications of national interest."
+      "p2": "LASCE turns observations into knowledge; ROSAC generates and strengthens an essential part of those observations. Together they connect basic science, technological development, training, and applications of national and international interest."
     },
     "instruments": {
       "title": "Scientific instruments",
