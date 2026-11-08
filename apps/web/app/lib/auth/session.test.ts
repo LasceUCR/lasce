@@ -47,7 +47,7 @@ beforeEach(() => {
 })
 
 describe('createSession', () => {
-  test('stores only the hash of the token it hands to the browser', async () => {
+  test('stores only the hash of the token, and only the name in the readable cookie', async () => {
     create.mockResolvedValue({})
 
     await createSession({ id: 'user-1', fullName: 'Ana Pérez Rojas', role: 'ADMIN' })
@@ -60,7 +60,8 @@ describe('createSession', () => {
     expect(sessionCookie[2].httpOnly).toBe(true)
     expect(accountCookie).toEqual([
       ACCOUNT_COOKIE,
-      JSON.stringify({ name: 'Ana Pérez Rojas', role: 'ADMIN' }),
+      // No role: the browser can edit this cookie, so it must not carry privileges (LASCE-SEC-001).
+      JSON.stringify({ name: 'Ana Pérez Rojas' }),
       expect.objectContaining({ httpOnly: false, expires: sessionCookie[2].expires }),
     ])
 
