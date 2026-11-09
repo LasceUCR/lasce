@@ -357,7 +357,7 @@
       "items": {
         "release": {
           "title": "The Sun releases energy",
-          "description": "Flares produce intense increases in radiation and are associated with the origin of coronal mass ejections (CMEs), which are large structures of plasma and magnetic field. Some of these events accelerate particles to high energies."
+          "description": "Solar flares are among the most energetic phenomena on the Sun. They involve the rapid release of magnetic energy, particle acceleration, and enhanced electromagnetic radiation. Flares are often associated with coronal mass ejections (CMEs), large-scale eruptions of plasma and magnetic field that can reach Earth and trigger geomagnetic storms."
         },
         "propagation": {
           "title": "The disturbance propagates",
@@ -383,15 +383,15 @@
       "items": {
         "solarActivity": {
           "title": "Solar activity",
-          "description": "The Sun is not still. Sunspots, flares and coronal mass ejections release energy, particles and magnetic fields into space."
+          "description": "As part of solar astrophysics, we study the Sun as a dynamic star, including active regions, solar flares, coronal mass ejections, and other phenomena that release energy and particles into space and disturb the interplanetary magnetic field."
         },
         "solarWind": {
           "title": "Solar wind",
-          "description": "It is a continuous stream of plasma leaving the solar corona. Its speed, density and magnetic field change according to what happens on the Sun."
+          "description": "The solar wind is a continuous flow of charged particles in a plasma state that travels outward from the Sun through interplanetary space."
         },
         "magnetosphere": {
           "title": "Magnetosphere",
-          "description": "The Earth's magnetic field deflects most of the solar wind. When that stream intensifies, the magnetosphere is compressed and can be disturbed."
+          "description": "Earth’s magnetosphere is the region surrounding the planet where its magnetic field is dominant and interacts with the solar wind. When the solar wind intensifies, it can compress and disturb the magnetosphere."
         },
         "ionosphere": {
           "title": "Ionosphere",
@@ -403,7 +403,7 @@
         },
         "particles": {
           "title": "Particle radiation",
-          "description": "The Sun can also send protons and other energetic particles. That stream is different from the everyday solar wind and can affect satellites and polar flights."
+          "description": "Solar activity can also accelerate particles to high energies. These solar energetic particles (SEPs) can affect satellites and increase radiation exposure on high-altitude and polar flights."
         }
       },
       "flow": {
@@ -2343,6 +2343,22 @@
     }
   },
   "account": {
+    "meta": {
+      "title": "My account | LASCE",
+      "description": "Your profile on the portal of the Laboratorio de Astrofísica Solar y Clima Espacial of the University of Costa Rica."
+    },
+    "page": {
+      "title": "My account",
+      "lead": "Your profile on the portal and your session controls."
+    },
+    "profile": {
+      "fullName": "Name",
+      "email": "Email address",
+      "institution": "Institution",
+      "country": "Country",
+      "role": "Role",
+      "memberSince": "Member since"
+    },
     "signIn": "Sign in",
     "myAccount": "My account",
     "administration": "Administration",
@@ -2354,6 +2370,7 @@
       "ASSISTANT": "Assistant",
       "ADMIN": "Administrator"
     },
+    "noRole": "No role assigned",
     "signOutDialog": {
       "title": "Sign out?",
       "body": "Your session in this browser will end and you will have to sign in again.",
