@@ -4,21 +4,28 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 
+import { Notice } from '@/app/components/public/Notice'
 import { Pagination } from '@/app/components/public/Pagination'
 import { SearchBar } from '@/app/components/public/SearchBar'
-import { Notice } from '@/app/components/public/Notice'
 import { AddItemCard } from '@/app/components/public/cms/AddItemCard'
 import { useEditMode } from '@/app/components/public/cms/EditModeProvider'
 import { LoadingRegion } from '@/app/components/public/skeleton/LoadingRegion'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
-import type { AcademicActivity } from '@/app/lib/academic-activities'
+import {
+  buildCreateRequest,
+  buildUpdateRequest,
+  emptyInitial,
+  type AcademicActivityDraft,
+  type AcademicActivityFormInitial,
+} from '@/app/lib/academic-activities-form'
+import type { AcademicActivity, ReviewConfirmation } from '@/app/lib/academic-activities'
 import { listingHref, PAGE_SIZE } from '@/app/lib/pagination'
 import { parseSearchParam } from '@/app/lib/search-query'
 
 import { AcademicActivitiesListSkeleton } from './AcademicActivitiesListSkeleton'
-import { AcademicActivityForm, type AcademicActivityFormValues } from './AcademicActivityForm'
+import { AcademicActivityForm, type AcademicActivityFormHandle } from './AcademicActivityForm'
 import { EditableAcademicActivityCard } from './EditableAcademicActivityCard'
 
 export interface AcademicActivitiesPageProps {
@@ -34,20 +41,18 @@ export interface AcademicActivitiesPageProps {
   canDelete?: boolean
 }
 
-function jsonRequest(method: 'POST' | 'PATCH', values: AcademicActivityFormValues): RequestInit {
+function jsonRequest(method: 'POST' | 'PATCH', body: unknown): RequestInit {
   return {
     method,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(values),
+    body: JSON.stringify(body),
   }
 }
 
-/** How long typing has to pause before the search updates the URL. */
-export const SEARCH_DELAY_MS = 300
-
 /**
  * The dedicated `/actividades-academicas` screen — same hero/back-link shell as every other
- * topic page, and the same activity cards used by the `/noticias` teaser section.
+ * topic page, and the same `AcademicActivityCard` the `/noticias` teaser section uses, so both
+ * surfaces stay visually identical without duplicating the card itself.
  */
 export function AcademicActivitiesPage({
   activities = [],
@@ -74,7 +79,11 @@ export function AcademicActivitiesPage({
   const [navigating, startNavigation] = useTransition()
   const section = useRef<HTMLElement>(null)
   const shownPage = useRef(page)
+  // One request at a time: a second click while the first is in flight would send the same
+  // version again and could create or change the same activity twice.
   const pending = useRef(false)
+  const createForm = useRef<AcademicActivityFormHandle>(null)
+  const [createInitial, setCreateInitial] = useState<AcademicActivityFormInitial>(emptyInitial)
 
   if (query !== syncedQuery) {
     setSyncedQuery(query)
@@ -148,24 +157,41 @@ export function AcademicActivitiesPage({
     }
   }
 
-  async function handleSave(id: string, values: AcademicActivityFormValues, close: () => void) {
+  async function handleSave(
+    id: string,
+    initial: AcademicActivityFormInitial,
+    draft: AcademicActivityDraft,
+    confirmed: ReviewConfirmation[],
+    newPhotoUrl: string | null,
+    close: () => void,
+  ) {
+    const body = buildUpdateRequest(initial, draft, confirmed, newPhotoUrl)
+    if (!body) {
+      close()
+      return
+    }
+
     await send(
       `/api/academic-activities/${id}`,
-      jsonRequest('PATCH', values),
-      {
-        success: t('updated'),
-        fallback: t('errors.saveUnknown'),
-      },
+      jsonRequest('PATCH', body),
+      { success: t('updated'), fallback: t('errors.saveUnknown') },
       close,
     )
   }
 
-  async function handleCreate(values: AcademicActivityFormValues, close: () => void) {
+  async function handleCreate(
+    draft: AcademicActivityDraft,
+    newPhotoUrl: string | null,
+    close: () => void,
+  ) {
     await send(
       '/api/academic-activities',
-      jsonRequest('POST', values),
+      jsonRequest('POST', buildCreateRequest(draft, newPhotoUrl ?? '')),
       { success: t('created'), fallback: t('errors.saveUnknown') },
-      close,
+      () => {
+        setCreateInitial(emptyInitial())
+        close()
+      },
     )
   }
 
@@ -179,8 +205,6 @@ export function AcademicActivitiesPage({
       },
     )
   }
-
-  const showEmptyState = totalItems === 0
 
   return (
     <article className="topic-page">
@@ -228,19 +252,29 @@ export function AcademicActivitiesPage({
             </Notice>
           ) : (
             <div className="academic-activities-list academic-activities-list-standalone">
-              {showEmptyState ? (
+              {totalItems === 0 ? (
                 <p className="content-empty" role="status">
                   {hasQuery ? listT('emptyQuery', { query }) : t('section.empty')}
                 </p>
               ) : null}
               {editMode && canCreate ? (
-                <AddItemCard label={t('editor.addCard')} size="large">
+                <AddItemCard
+                  label={t('editor.addCard')}
+                  onRequestClose={(close) => {
+                    if (createForm.current) createForm.current.requestCancel()
+                    else close()
+                  }}
+                  size="large"
+                >
                   {({ close }) => (
                     <AcademicActivityForm
-                      activity={null}
                       busy={busy}
+                      initial={createInitial}
                       onCancel={close}
-                      onSave={(values) => handleCreate(values, close)}
+                      onSave={(draft, _confirmed, newPhotoUrl) =>
+                        handleCreate(draft, newPhotoUrl, close)
+                      }
+                      ref={createForm}
                     />
                   )}
                 </AddItemCard>
@@ -254,7 +288,9 @@ export function AcademicActivitiesPage({
                   canEdit={canEdit}
                   key={activity.id}
                   onDelete={() => handleDelete(activity.id)}
-                  onSave={(values, close) => handleSave(activity.id, values, close)}
+                  onSave={(initial, draft, confirmed, newPhotoUrl, close) =>
+                    handleSave(activity.id, initial, draft, confirmed, newPhotoUrl, close)
+                  }
                 />
               ))}
             </div>
@@ -276,3 +312,6 @@ export function AcademicActivitiesPage({
     </article>
   )
 }
+
+/** How long typing has to pause before the search updates the URL. */
+export const SEARCH_DELAY_MS = 300

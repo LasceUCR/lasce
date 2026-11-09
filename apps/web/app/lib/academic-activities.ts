@@ -1,9 +1,29 @@
 import { prisma, type Prisma } from '@lasce/db'
-import { z } from 'zod'
 
+import { changedFieldNames, recordUserAuditEvent, type AuditActor } from '@/app/lib/audit-log'
+import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transaction'
+import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
+import { translationLocales } from '@/app/lib/i18n/content/definition'
 import { paginate, type PageWindow } from '@/app/lib/pagination'
+import {
+  baseContent,
+  resolveContent,
+  storedContentFrom,
+  translationRows,
+} from '@/app/lib/i18n/content/resolve'
+import { findPendingReviews } from '@/app/lib/i18n/content/review'
 import { escapeLikeWildcards, parseSearchParam } from '@/app/lib/search-query'
+
+import {
+  academicActivityContent,
+  type AcademicActivityCreateInput,
+  type AcademicActivityEditingData,
+  type AcademicActivityUpdateInput,
+  type ReviewConfirmation,
+} from './academic-activities-schema'
+
+export * from './academic-activities-schema'
 
 export interface AcademicActivity {
   id: string
@@ -19,18 +39,13 @@ export interface AcademicActivity {
   description: string
   photoUrl: string
   photoAlt: string
-}
-
-type AcademicActivityRow = {
-  id: string
-  title: string
-  category: string
-  startDate: Date
-  endDate: Date | null
-  location: string
-  description: string
-  photoUrl: string
-  photoAlt: string
+  /**
+   * The language `title`, `category`, `description` and `photoAlt` are actually in. `null` when
+   * the activity is legacy and its base text is shown, because that text's language is unknown.
+   */
+  contentLocale?: Locale | null
+  /** Present only when loaded with `includeEditingData`. */
+  editing?: AcademicActivityEditingData
 }
 
 export interface AcademicActivitiesPageRequest {
@@ -38,6 +53,8 @@ export interface AcademicActivitiesPageRequest {
   query?: string
   /** Page requested, brought within the available results. */
   page?: number
+  /** Include bilingual content and the save version only for an authorized editor. */
+  includeEditingData?: boolean
 }
 
 export interface AcademicActivitiesPageResult extends PageWindow {
@@ -47,7 +64,6 @@ export interface AcademicActivitiesPageResult extends PageWindow {
 
 /** The `Intl` locale each site `Locale` formats dates with. */
 const INTL_LOCALE: Record<Locale, string> = { es: 'es-CR', en: 'en-US' }
-
 const academicActivityOrder = [
   { startDate: 'desc' },
   { id: 'desc' },
@@ -88,175 +104,328 @@ function toIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
-function toAcademicActivity(row: AcademicActivityRow, locale: Locale): AcademicActivity {
+export type AcademicActivityWriteFailure =
+  | { ok: false; reason: 'not-found' }
+  /** The activity changed since the editor loaded it. */
+  | { ok: false; reason: 'conflict' }
+  /** Fields changed in one language whose counterpart was neither changed nor confirmed. */
+  | { ok: false; reason: 'review-required'; pending: ReviewConfirmation[] }
+
+export type AcademicActivityWriteResult =
+  { ok: true; activity: AcademicActivity } | AcademicActivityWriteFailure
+
+const activityInclude = {
+  translations: {
+    where: { locale: { in: [...translationLocales] } },
+    select: { locale: true, title: true, category: true, description: true, photoAlt: true },
+  },
+} satisfies Prisma.AcademicActivityInclude
+
+type AcademicActivityRow = Prisma.AcademicActivityGetPayload<{ include: typeof activityInclude }>
+
+function toAcademicActivity(
+  row: AcademicActivityRow,
+  locale: Locale,
+  includeEditingData: boolean,
+): AcademicActivity {
+  const stored = storedContentFrom(academicActivityContent, row, row.translations)
+  const { content, contentLocale, isLegacy } = resolveContent(stored, locale)
+
   return {
     id: row.id,
-    title: row.title,
-    category: row.category,
+    title: content.title,
+    category: content.category,
     date: formatDateRange(row.startDate, row.endDate, locale),
     startDate: toIsoDate(row.startDate),
     endDate: row.endDate ? toIsoDate(row.endDate) : null,
     location: row.location,
-    description: row.description,
+    description: content.description,
     photoUrl: row.photoUrl,
-    photoAlt: row.photoAlt,
+    photoAlt: content.photoAlt,
+    contentLocale,
+    ...(includeEditingData
+      ? { editing: { content: stored, isLegacy, version: toVersion(row.modifiedAt) } }
+      : {}),
   }
 }
 
 /**
- * Loads the activities from Postgres, most recent start date first, with `date` formatted in
- * `locale` (the language of the request's `lasce_locale` cookie).
+ * Loads the activities from Postgres, most recent start date first, with `title`, `category`,
+ * `description` and `photoAlt` in `locale` (the language of the request's `lasce_locale` cookie)
+ * when the activity has that translation, falling back to the base text otherwise.
+ *
+ * Pass `includeEditingData` only for someone who can edit, because it sends every language to the
+ * browser.
  */
 export async function getAcademicActivities(
   locale: Locale = defaultLocale,
+  { includeEditingData = false }: { includeEditingData?: boolean } = {},
 ): Promise<AcademicActivity[]> {
-  const rows = await prisma.academicActivity.findMany({ orderBy: academicActivityOrder })
-  return rows.map((row) => toAcademicActivity(row, locale))
+  const rows = await prisma.academicActivity.findMany({
+    orderBy: academicActivityOrder,
+    include: activityInclude,
+  })
+  return rows.map((row) => toAcademicActivity(row, locale, includeEditingData))
 }
 
 /**
- * Searches activities in their displayed text, orders them consistently, and loads only the
- * requested page. Date matching uses the same localized range shown on each card.
+ * Searches the text shown to the visitor in `locale`, orders matches consistently, and loads only
+ * the requested page. Date matching uses the same localized range shown on each card.
  */
 export async function getAcademicActivitiesPage(
   locale: Locale = defaultLocale,
-  { query = '', page = 1 }: AcademicActivitiesPageRequest = {},
+  { query = '', page = 1, includeEditingData = false }: AcademicActivitiesPageRequest = {},
 ): Promise<AcademicActivitiesPageResult> {
   const search = parseSearchParam(query)
-  let where: Prisma.AcademicActivityWhereInput = {}
 
-  if (search !== '') {
-    const text = {
-      contains: escapeLikeWildcards(search),
-      mode: 'insensitive',
-    } satisfies Prisma.StringFilter
-    const matches: Prisma.AcademicActivityWhereInput[] = [
-      { title: text },
-      { category: text },
-      { location: text },
-      { description: text },
-    ]
+  return prisma.$transaction(
+    async (tx) => {
+      let where: Prisma.AcademicActivityWhereInput = {}
 
-    // Date strings are formatted for the visitor's locale, so find matching date IDs without
-    // loading every activity's full content into the page.
-    const dates = await prisma.academicActivity.findMany({
-      select: { id: true, startDate: true, endDate: true },
-    })
-    const normalizedSearch = search.toLocaleLowerCase()
-    const matchingDateIds = dates
-      .filter(({ startDate, endDate }) =>
-        formatDateRange(startDate, endDate, locale).toLocaleLowerCase().includes(normalizedSearch),
-      )
-      .map(({ id }) => id)
+      if (search !== '') {
+        const text = {
+          contains: escapeLikeWildcards(search),
+          mode: 'insensitive',
+        } satisfies Prisma.StringFilter
+        const baseFields: Prisma.AcademicActivityWhereInput[] = [
+          { title: text },
+          { category: text },
+          { description: text },
+        ]
+        const contentFields =
+          locale === defaultLocale
+            ? baseFields
+            : [
+                {
+                  translations: {
+                    some: {
+                      locale,
+                      OR: [{ title: text }, { category: text }, { description: text }],
+                    },
+                  },
+                },
+                {
+                  AND: [{ translations: { none: { locale } } }, { OR: baseFields }],
+                },
+              ]
 
-    if (matchingDateIds.length > 0) matches.push({ id: { in: matchingDateIds } })
-    where = { OR: matches }
-  }
-
-  const totalItems = await prisma.academicActivity.count({ where })
-  const window = paginate(totalItems, page)
-  const rows =
-    totalItems === 0
-      ? []
-      : await prisma.academicActivity.findMany({
-          where,
-          orderBy: academicActivityOrder,
-          skip: window.skip,
-          take: window.take,
+        const dateRows = await tx.academicActivity.findMany({
+          select: { id: true, startDate: true, endDate: true },
         })
+        const normalizedSearch = search.toLocaleLowerCase(INTL_LOCALE[locale])
+        const matchingDateIds = dateRows
+          .filter(({ startDate, endDate }) =>
+            formatDateRange(startDate, endDate, locale)
+              .toLocaleLowerCase(INTL_LOCALE[locale])
+              .includes(normalizedSearch),
+          )
+          .map(({ id }) => id)
+        const matches: Prisma.AcademicActivityWhereInput[] = [{ location: text }, ...contentFields]
 
+        if (matchingDateIds.length > 0) matches.push({ id: { in: matchingDateIds } })
+        where = { OR: matches }
+      }
+
+      const totalItems = await tx.academicActivity.count({ where })
+      const window = paginate(totalItems, page)
+      const rows =
+        totalItems === 0
+          ? []
+          : await tx.academicActivity.findMany({
+              where,
+              orderBy: academicActivityOrder,
+              skip: window.skip,
+              take: window.take,
+              include: activityInclude,
+            })
+
+      return {
+        ...window,
+        query: search,
+        activities: rows.map((row) => toAcademicActivity(row, locale, includeEditingData)),
+      }
+    },
+    { isolationLevel: 'RepeatableRead' },
+  )
+}
+
+/** The base row's shared columns for a content input (dates, location, photo). */
+function sharedColumns(input: {
+  startDate: string
+  endDate: string | null
+  location: string
+  photoUrl: string
+}) {
   return {
-    ...window,
-    query: search,
-    activities: rows.map((row) => toAcademicActivity(row, locale)),
+    startDate: new Date(input.startDate),
+    endDate: input.endDate ? new Date(input.endDate) : null,
+    location: input.location,
+    photoUrl: input.photoUrl,
   }
 }
 
-/**
- * Shared by create and update: every field on `AcademicActivity` is required except `endDate`.
- * `endDate`, when given, must not come before `startDate` — the error attaches to `endDate` so
- * it reaches the client as that field's own message (`issueMessages` in `app/lib/api-feedback.ts`).
- */
-export const academicActivityInputSchema = z
-  .object({
-    title: z.string().trim().min(1, 'El título es obligatorio.'),
-    category: z.string().trim().min(1, 'La categoría es obligatoria.'),
-    startDate: z.string().date('La fecha de inicio es obligatoria.'),
-    endDate: z.string().date().nullable(),
-    location: z.string().trim().min(1, 'La ubicación es obligatoria.'),
-    description: z.string().trim().min(1, 'La descripción es obligatoria.'),
-    photoUrl: z.string().trim().min(1, 'La imagen es obligatoria.'),
-    photoAlt: z.string().trim().min(1, 'El texto alternativo de la imagen es obligatorio.'),
-  })
-  .refine((data) => !data.endDate || data.endDate >= data.startDate, {
-    message: 'La fecha de finalización debe ser igual o posterior a la fecha de inicio.',
-    path: ['endDate'],
-  })
-
-export type AcademicActivityInput = z.infer<typeof academicActivityInputSchema>
-
-/**
- * `academicActivityInputSchema` validates dates as bare `yyyy-mm-dd` strings, but Prisma's client
- * rejects that for a `@db.Date` field — same conversion `news.ts`'s `toPublishedAtDate` does.
- */
-function toDate(value: string): Date {
-  return new Date(value)
-}
-
-function academicActivityRowData(data: AcademicActivityInput) {
-  return {
-    title: data.title,
-    category: data.category,
-    startDate: toDate(data.startDate),
-    endDate: data.endDate ? toDate(data.endDate) : null,
-    location: data.location,
-    description: data.description,
-    photoUrl: data.photoUrl,
-    photoAlt: data.photoAlt,
-  }
-}
-
-/** Creates a new activity, authored by the admin who submitted it. */
+/** Creates a new activity in every language at once, authored by the admin who submitted it. */
 export async function createAcademicActivity(
-  data: AcademicActivityInput,
+  input: AcademicActivityCreateInput,
   modifiedBy: string,
 ): Promise<AcademicActivity> {
-  const row = await prisma.academicActivity.create({
-    data: { ...academicActivityRowData(data), modifiedBy },
+  const result = await runWrite<AcademicActivityRow, never>(async (tx) => {
+    const created = await tx.academicActivity.create({
+      data: {
+        ...baseContent(academicActivityContent, input.content),
+        ...sharedColumns(input),
+        modifiedBy,
+        translations: { create: translationRows(academicActivityContent, input.content) },
+      },
+      include: activityInclude,
+    })
+    await recordUserAuditEvent(
+      tx,
+      { id: modifiedBy },
+      {
+        action: 'academic_activity.create',
+        summary: `Actividad académica agregada: ${created.title}`,
+        entityType: 'academic_activity',
+        entityId: created.id,
+      },
+    )
+    return created
   })
 
-  return toAcademicActivity(row, defaultLocale)
+  return toAcademicActivity(result.value, defaultLocale, true)
 }
 
 /**
- * Updates one activity and stamps `modifiedBy` with the admin who made the change. Returns `null`
- * when `id` does not match any row, rather than throwing, so the route handler can turn that into
- * a 404 — same pre-check pattern as `updateNosotrosActivity`.
+ * Updates the fields present in `input` and stamps `modifiedBy` with the admin who made the
+ * change, all at once: either everything is stored or nothing is.
+ *
+ * With `content` it is a bilingual content update: both languages are written, after checking
+ * that every one-sided change has its counterpart changed or confirmed (`findPendingReviews`).
+ * Without `content` it updates only the shared fields present, and the texts and translations are
+ * left exactly as they are, so a legacy activity can be corrected without being translated first.
+ *
+ * Optimistic concurrency applies to both kinds: `input.version` is the `modified_at` the editor
+ * loaded. The base row is updated only while it still has that value, and every save moves it
+ * forward, so of two editors who loaded the same version the second one gets `conflict` instead
+ * of silently overwriting the first. Returns `null`-shaped `not-found` when `id` does not match
+ * any row.
  */
 export async function updateAcademicActivity(
   id: string,
-  data: AcademicActivityInput,
+  input: AcademicActivityUpdateInput,
   modifiedBy: string,
-): Promise<AcademicActivity | null> {
-  const existing = await prisma.academicActivity.findUnique({ where: { id } })
-  if (!existing) return null
+): Promise<AcademicActivityWriteResult> {
+  const expectedModifiedAt = parseVersion(input.version)
 
-  const row = await prisma.academicActivity.update({
-    where: { id },
-    data: { ...academicActivityRowData(data), modifiedBy },
+  const result = await runWrite<AcademicActivityRow, AcademicActivityWriteFailure>(async (tx) => {
+    const current = await tx.academicActivity.findUnique({
+      where: { id },
+      select: {
+        title: true,
+        category: true,
+        description: true,
+        photoAlt: true,
+        modifiedAt: true,
+        translations: activityInclude.translations,
+      },
+    })
+
+    if (!current) {
+      throw new WriteAbort<AcademicActivityWriteFailure>({ ok: false, reason: 'not-found' })
+    }
+
+    if (!isCurrentVersion(current.modifiedAt, expectedModifiedAt)) {
+      throw new WriteAbort<AcademicActivityWriteFailure>({ ok: false, reason: 'conflict' })
+    }
+
+    const { content } = input
+
+    if (content) {
+      const pending = findPendingReviews(
+        academicActivityContent,
+        storedContentFrom(academicActivityContent, current, current.translations),
+        content,
+        input.confirmedUnchanged ?? [],
+      )
+
+      if (pending.length > 0) {
+        throw new WriteAbort<AcademicActivityWriteFailure>({
+          ok: false,
+          reason: 'review-required',
+          pending,
+        })
+      }
+    }
+
+    const { count } = await tx.academicActivity.updateMany({
+      where: { id, modifiedAt: expectedModifiedAt },
+      data: {
+        ...(content ? baseContent(academicActivityContent, content) : {}),
+        // `startDate` and `endDate` always travel together (enforced by the update schema).
+        ...(input.startDate === undefined
+          ? {}
+          : {
+              startDate: new Date(input.startDate),
+              endDate: input.endDate ? new Date(input.endDate) : null,
+            }),
+        ...(input.location === undefined ? {} : { location: input.location }),
+        ...(input.photoUrl === undefined ? {} : { photoUrl: input.photoUrl }),
+        modifiedBy,
+        modifiedAt: nextUpdatedAt(expectedModifiedAt),
+      },
+    })
+
+    if (count === 0) {
+      throw new WriteAbort<AcademicActivityWriteFailure>({ ok: false, reason: 'conflict' })
+    }
+
+    if (content) {
+      for (const { locale, ...text } of translationRows(academicActivityContent, content)) {
+        await tx.academicActivityTranslation.upsert({
+          where: { academicActivityId_locale: { academicActivityId: id, locale } },
+          create: { academicActivityId: id, locale, ...text },
+          update: text,
+        })
+      }
+    }
+
+    const updated = await tx.academicActivity.findUniqueOrThrow({
+      where: { id },
+      include: activityInclude,
+    })
+    await recordUserAuditEvent(
+      tx,
+      { id: modifiedBy },
+      {
+        action: 'academic_activity.update',
+        summary: `Actividad académica actualizada: ${updated.title}`,
+        entityType: 'academic_activity',
+        entityId: id,
+        metadata: { fields: changedFieldNames(input) },
+      },
+    )
+    return updated
   })
 
-  return toAcademicActivity(row, defaultLocale)
+  return result.ok
+    ? { ok: true, activity: toAcademicActivity(result.value, defaultLocale, true) }
+    : result
 }
 
 /**
- * Deletes one activity. Returns `false` when `id` does not match any row, rather than throwing —
- * same pre-check pattern as `deleteNosotrosActivity`.
+ * Deletes one activity. Its translations go with it (`ON DELETE CASCADE`). Returns `false` when
+ * `id` does not match any row, rather than throwing.
  */
-export async function deleteAcademicActivity(id: string): Promise<boolean> {
-  const existing = await prisma.academicActivity.findUnique({ where: { id } })
-  if (!existing) return false
-
-  await prisma.academicActivity.delete({ where: { id } })
-  return true
+export async function deleteAcademicActivity(id: string, actor: AuditActor): Promise<boolean> {
+  return runAuditedDelete(
+    (tx) => tx.academicActivity.findUnique({ where: { id }, select: { title: true } }),
+    (tx) => tx.academicActivity.deleteMany({ where: { id } }),
+    (tx, activity) =>
+      recordUserAuditEvent(tx, actor, {
+        action: 'academic_activity.delete',
+        summary: `Actividad académica eliminada: ${activity.title}`,
+        entityType: 'academic_activity',
+        entityId: id,
+      }),
+  )
 }

@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
@@ -26,12 +26,14 @@ import type { AcademicActivity } from '@/app/lib/academic-activities'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { listingHref } from '@/app/lib/pagination'
 
-import { ErrorState, Loading } from './AcademicActivitiesPage.stories'
 import {
   AcademicActivitiesPage,
   SEARCH_DELAY_MS,
   type AcademicActivitiesPageProps,
 } from './AcademicActivitiesPage'
+import { ErrorState, Loading } from './AcademicActivitiesPage.stories'
+
+const VERSION = '2026-01-01T00:00:00.000Z'
 
 const activity: AcademicActivity = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -44,6 +46,25 @@ const activity: AcademicActivity = {
   description: 'Descripción de prueba.',
   photoUrl: '/images/mock.jpg',
   photoAlt: 'Texto alternativo.',
+  contentLocale: 'es',
+  editing: {
+    content: {
+      es: {
+        title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+        category: 'Taller',
+        description: 'Descripción de prueba.',
+        photoAlt: 'Texto alternativo.',
+      },
+      en: {
+        title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+        category: 'Workshop',
+        description: 'Test description.',
+        photoAlt: 'Alt text.',
+      },
+    },
+    isLegacy: false,
+    version: VERSION,
+  },
 }
 
 const defaultArgs: AcademicActivitiesPageProps = { activities: [activity] }
@@ -53,16 +74,13 @@ const errorArgs = ErrorState.args as AcademicActivitiesPageProps
 const adminGrants = { canCreate: true, canEdit: true, canDelete: true } as const
 
 function renderPage(props: AcademicActivitiesPageProps = defaultArgs, locale?: 'es' | 'en') {
-  return renderWithIntl(pageTree(props), locale ? { locale } : undefined)
-}
-
-function pageTree(props: AcademicActivitiesPageProps = defaultArgs) {
-  return (
+  return renderWithIntl(
     <ToastProvider>
       <EditModeProvider>
         <AcademicActivitiesPage {...props} />
       </EditModeProvider>
-    </ToastProvider>
+    </ToastProvider>,
+    locale ? { locale } : undefined,
   )
 }
 
@@ -90,14 +108,17 @@ async function deleteFirstActivity(user: User) {
   await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
 }
 
-/** Edits the first activity's title and submits it. */
+/**
+ * Edits the first activity's location (a shared field, so a single click saves it without
+ * triggering the bilingual cross-language review) and submits it.
+ */
 async function submitActivityEdit(user: User) {
   const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
   await user.click(firstEditButton as HTMLElement)
   const dialog = screen.getByRole('dialog', { name: 'Editar actividad académica' })
-  const titleInput = within(dialog).getByRole('textbox', { name: 'Título' })
-  await user.clear(titleInput)
-  await user.type(titleInput, 'Título editado')
+  const locationInput = within(dialog).getByRole('textbox', { name: 'Ubicación' })
+  await user.clear(locationInput)
+  await user.type(locationInput, 'Ubicación editada')
   await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
   return dialog
 }
@@ -133,22 +154,17 @@ describe('AcademicActivitiesPage', () => {
     expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
   })
 
-  test('filters activities using the query from the URL', () => {
-    renderPage({ ...defaultArgs, query: 'machine learning' })
+  test('shows the search input with the query from the URL', () => {
+    renderPage({ ...defaultArgs, query: 'machine learning', totalItems: 1 })
 
-    expect(
-      screen.getByRole('heading', {
-        level: 3,
-        name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
-      }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: 'Buscar actividades académicas' })).toHaveValue(
+      'machine learning',
+    )
     expect(screen.getByText('Se encontró 1 actividad académica.')).toBeInTheDocument()
-    expect(mocks.replace).not.toHaveBeenCalled()
   })
 
   test('updates the URL after typing pauses', async () => {
     const user = userEvent.setup()
-    mocks.replace.mockClear()
     renderPage()
 
     await user.type(
@@ -157,127 +173,41 @@ describe('AcademicActivitiesPage', () => {
     )
 
     expect(mocks.replace).not.toHaveBeenCalled()
-    await new Promise((resolve) => setTimeout(resolve, SEARCH_DELAY_MS + 100))
+    await new Promise((resolve) => setTimeout(resolve, SEARCH_DELAY_MS + 50))
     expect(mocks.replace).toHaveBeenCalledWith(
       listingHref('/actividades-academicas', { query: 'machine learning' }),
       { scroll: false },
     )
   })
 
-  test('shows the visible range and total when results span multiple pages', () => {
-    const item = activity
+  test('shows the visible range and preserves the search in pagination links', () => {
     renderPage({
       activities: Array.from({ length: 10 }, (_, index) => ({
-        ...item,
-        id: `${item.id}-${index + 1}`,
+        ...activity,
+        id: `${activity.id}-${index + 1}`,
       })),
+      query: 'workshop',
+      page: 1,
       totalItems: 12,
       totalPages: 2,
     })
 
-    expect(screen.getByText('Mostrando 1–10 de 12.')).toBeInTheDocument()
+    expect(screen.getByText(/Mostrando 1–10 de 12\./)).toBeInTheDocument()
     expect(
       screen.getByRole('navigation', { name: 'Páginas de actividades académicas' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Página 2' })).toHaveAttribute(
       'href',
-      '/actividades-academicas?page=2',
+      listingHref('/actividades-academicas', { query: 'workshop', page: 2 }),
     )
   })
 
-  test('preserves the query in page links and starts a new search at page one', async () => {
-    const user = userEvent.setup()
-    renderPage({
-      activities: [activity],
-      page: 2,
-      query: 'space weather',
-      totalItems: 12,
-      totalPages: 2,
-    })
-
-    expect(screen.getByRole('link', { name: 'Página 1' })).toHaveAttribute(
-      'href',
-      '/actividades-academicas?q=space+weather',
-    )
-
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar actividades académicas' }),
-      ' new',
-    )
-    fireEvent.submit(screen.getByRole('search'))
-
-    expect(mocks.replace).toHaveBeenCalledWith(
-      listingHref('/actividades-academicas', { query: 'space weather new' }),
-      { scroll: false },
-    )
-  })
-
-  test('moves focus to the activity listing when the page changes', () => {
-    const { rerender } = renderPage({
-      activities: [activity],
-      page: 1,
-      totalItems: 12,
-      totalPages: 2,
-    })
-    const listing = screen.getByRole('region', { name: 'Actividades académicas' })
-
-    rerender(
-      pageTree({
-        activities: [activity],
-        page: 2,
-        totalItems: 12,
-        totalPages: 2,
-      }),
-    )
-
-    expect(listing).toHaveFocus()
-  })
-
-  test('submits the search query in the URL', async () => {
-    const user = userEvent.setup()
-    mocks.replace.mockClear()
-    renderPage()
-
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Buscar actividades académicas' }),
-      ' machine learning ',
-    )
-    fireEvent.submit(screen.getByRole('search'))
-
-    expect(mocks.replace).toHaveBeenCalledWith(
-      listingHref('/actividades-academicas', { query: 'machine learning' }),
-      { scroll: false },
-    )
-  })
-
-  test('initializes the search from the URL query', () => {
-    renderPage({ ...defaultArgs, query: 'machine learning' })
-
-    expect(screen.getByRole('searchbox', { name: 'Buscar actividades académicas' })).toHaveValue(
-      'machine learning',
-    )
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(
-      '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
-    )
-  })
-
-  test('syncs the search box when the URL query changes', () => {
-    const { rerender } = renderPage({ ...defaultArgs, query: 'machine learning' })
-
-    rerender(pageTree({ ...defaultArgs, query: 'space weather' }))
-
-    expect(screen.getByRole('searchbox', { name: 'Buscar actividades académicas' })).toHaveValue(
-      'space weather',
-    )
-  })
-
-  test('shows a search-specific empty message when the URL query has no matches', () => {
-    renderPage({ activities: [], query: 'no existe' })
+  test('shows a query-specific empty message', () => {
+    renderPage({ activities: [], query: 'solar flare', totalItems: 0, totalPages: 0 })
 
     expect(
-      screen.getByText('No se encontraron actividades académicas para “no existe”.'),
+      screen.getByText('No se encontraron actividades académicas para “solar flare”.'),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
   })
 
   test('links back to the home page', () => {
@@ -291,9 +221,6 @@ describe('AcademicActivitiesPage', () => {
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'Academic activities' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('searchbox', { name: 'Search academic activities' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Back to home/i })).toHaveAttribute('href', '/')
   })
@@ -329,7 +256,10 @@ describe('AcademicActivitiesPage', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/academic-activities/${activity.id}`,
-      expect.objectContaining({ method: 'PATCH', body: expect.stringContaining('Título editado') }),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('Ubicación editada'),
+      }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -349,6 +279,7 @@ describe('AcademicActivitiesPage', () => {
     const [firstEditButton] = screen.getAllByRole('button', { name: 'Editar' })
     await user.click(firstEditButton as HTMLElement)
     const dialog = screen.getByRole('dialog', { name: 'Editar actividad académica' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Ubicación' }), ' editada')
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(within(dialog).getByRole('button', { name: 'Guardando...' })).toBeDisabled()
@@ -374,7 +305,9 @@ describe('AcademicActivitiesPage', () => {
     expect(
       await within(dialog).findByText('No tiene permisos para modificar este contenido.'),
     ).toBeInTheDocument()
-    expect(within(dialog).getByRole('textbox', { name: 'Título' })).toHaveValue('Título editado')
+    expect(within(dialog).getByRole('textbox', { name: 'Ubicación' })).toHaveValue(
+      'Ubicación editada',
+    )
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
 

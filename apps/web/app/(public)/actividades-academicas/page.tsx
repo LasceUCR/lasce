@@ -40,9 +40,13 @@ async function AcademicActivitiesLoader({
 }: AcademicActivitiesLoaderProps) {
   const params = await searchParams
   const locale = resolveLocale(await getLocale())
+  // The date shown on each card follows the language chosen in the header (the `lasce_locale`
+  // cookie), same as `getResearchAreas`. Editing data (both languages and the version to save
+  // against) is sent to the browser only for someone who can edit.
   const activities = await getAcademicActivitiesPage(locale, {
     query: parseSearchParam(params[SEARCH_PARAM]),
     page: parsePageParam(params[PAGE_PARAM]),
+    includeEditingData: canEdit,
   })
 
   if (!isListingUrl(params, activities)) {
