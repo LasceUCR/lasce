@@ -64,7 +64,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
 
   return (
     <article className="topic-page">
-      <TopicHero title={t('title')} />
+      <TopicHero kicker={t('kicker')} lead={t('lead')} title={t('title')} />
 
       <NewsExplorer
         canCreate={canCreate}

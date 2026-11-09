@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 import { getAcademicActivities } from '@/app/lib/academic-activities'
-import { getMessages } from '@/app/lib/i18n/messages'
+import en from '@/messages/en.json' with { type: 'json' }
+import es from '@/messages/es.json' with { type: 'json' }
 
 import { expectNewsIdentity } from './helpers/news-page'
 
@@ -14,7 +15,7 @@ test.describe('News identity and content separation', () => {
       await context.addCookies([
         { name: 'lasce_locale', value: locale, url: 'http://localhost:3000' },
       ])
-      const messages = getMessages(locale)
+      const messages = { es, en }[locale]
       const activities = getAcademicActivities(messages.academicActivities.items)
 
       await page.goto('/noticias')

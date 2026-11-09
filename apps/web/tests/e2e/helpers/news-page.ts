@@ -5,22 +5,29 @@ import type { Locale } from '@/app/lib/i18n/config'
 const identity = {
   es: {
     title: 'Noticias',
+    kicker: 'Portal público LASCE',
+    lead: 'Noticias sobre el trabajo del LASCE.',
     description:
       'Noticias del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
   },
   en: {
     title: 'News',
+    kicker: 'LASCE public portal',
+    lead: 'News about LASCE’s work.',
     description:
       'News from the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.',
   },
-} satisfies Record<Locale, { title: string; description: string }>
+} satisfies Record<Locale, { title: string; kicker: string; lead: string; description: string }>
 
-/** The hero contains only the localized h1; metadata describes the same news page. */
+/** The localized hero and metadata identify news, with no coverage or outreach wording. */
 export async function expectNewsIdentity(page: Page, locale: Locale) {
-  const { title, description } = identity[locale]
+  const { title, kicker, lead, description } = identity[locale]
   const main = page.getByRole('main')
   await expect(main.getByRole('heading', { level: 1 })).toHaveText(title)
-  await expect(main.locator('header')).toHaveText(title)
+  const hero = main.locator('header')
+  await expect(hero.getByText(kicker, { exact: true })).toBeVisible()
+  await expect(hero.getByText(lead, { exact: true })).toBeVisible()
+  await expect(hero).not.toContainText(/coverage|outreach|cobertura|divulgación/i)
   await expect(page).toHaveTitle(`${title} | LASCE`)
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', description)
 }
