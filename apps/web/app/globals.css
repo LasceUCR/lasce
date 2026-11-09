@@ -2952,9 +2952,8 @@ a {
   gap: 16px;
 }
 
-/* Only on the dedicated `/actividades-academicas` page, not the `/noticias` teaser — that one
-   already gets its own bottom spacing from `.academic-activities`'s 32px padding-bottom. Matches
-   `.publications`'s 56px before its own `TopicBackLink` footer: a list of cards reads better with
+/* Spacing on the dedicated `/actividades-academicas` page. Matches `.publications`'s 56px
+   before its own `TopicBackLink` footer: a list of cards reads better with
    more room above the footer than a plain `TopicSection` of text gets. */
 .academic-activities-list-standalone {
   padding-bottom: 56px;
