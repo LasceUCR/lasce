@@ -892,10 +892,8 @@
   "news": {
     "page": {
       "metaTitle": "Noticias | LASCE",
-      "metaDescription": "Noticias y cobertura mediática del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
-      "kicker": "Portal público LASCE",
-      "title": "Noticias y cobertura mediática",
-      "lead": "Noticias, divulgación y cobertura sobre el trabajo del LASCE.",
+      "metaDescription": "Noticias del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
+      "title": "Noticias",
       "recent": "Noticias recientes",
       "searchLabel": "Buscar noticias",
       "searchPlaceholder": "Buscar por título, autor o palabra clave...",
