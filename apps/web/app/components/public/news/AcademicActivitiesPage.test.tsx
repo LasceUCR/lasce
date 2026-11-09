@@ -4,11 +4,13 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
+  replace: vi.fn(),
   uploadAcademicActivityImage: vi.fn(),
 }))
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
+  useRouter: () => ({ refresh: mocks.refresh, replace: mocks.replace }),
+  usePathname: () => '/actividades-academicas',
 }))
 
 vi.mock('@/app/(public)/actividades-academicas/actions', () => ({
@@ -22,8 +24,13 @@ import { EditModeContext, EditModeProvider } from '@/app/components/public/cms/E
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import type { AcademicActivity } from '@/app/lib/academic-activities'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { listingHref } from '@/app/lib/pagination'
 
-import { AcademicActivitiesPage, type AcademicActivitiesPageProps } from './AcademicActivitiesPage'
+import {
+  AcademicActivitiesPage,
+  SEARCH_DELAY_MS,
+  type AcademicActivitiesPageProps,
+} from './AcademicActivitiesPage'
 import { ErrorState, Loading } from './AcademicActivitiesPage.stories'
 
 const VERSION = '2026-01-01T00:00:00.000Z'
@@ -145,6 +152,62 @@ describe('AcademicActivitiesPage', () => {
       screen.getByText('No hay actividades académicas disponibles en este momento.'),
     ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument()
+  })
+
+  test('shows the search input with the query from the URL', () => {
+    renderPage({ ...defaultArgs, query: 'machine learning', totalItems: 1 })
+
+    expect(screen.getByRole('searchbox', { name: 'Buscar actividades académicas' })).toHaveValue(
+      'machine learning',
+    )
+    expect(screen.getByText('Se encontró 1 actividad académica.')).toBeInTheDocument()
+  })
+
+  test('updates the URL after typing pauses', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Buscar actividades académicas' }),
+      'machine learning',
+    )
+
+    expect(mocks.replace).not.toHaveBeenCalled()
+    await new Promise((resolve) => setTimeout(resolve, SEARCH_DELAY_MS + 50))
+    expect(mocks.replace).toHaveBeenCalledWith(
+      listingHref('/actividades-academicas', { query: 'machine learning' }),
+      { scroll: false },
+    )
+  })
+
+  test('shows the visible range and preserves the search in pagination links', () => {
+    renderPage({
+      activities: Array.from({ length: 10 }, (_, index) => ({
+        ...activity,
+        id: `${activity.id}-${index + 1}`,
+      })),
+      query: 'workshop',
+      page: 1,
+      totalItems: 12,
+      totalPages: 2,
+    })
+
+    expect(screen.getByText(/Mostrando 1–10 de 12\./)).toBeInTheDocument()
+    expect(
+      screen.getByRole('navigation', { name: 'Páginas de actividades académicas' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Página 2' })).toHaveAttribute(
+      'href',
+      listingHref('/actividades-academicas', { query: 'workshop', page: 2 }),
+    )
+  })
+
+  test('shows a query-specific empty message', () => {
+    renderPage({ activities: [], query: 'solar flare', totalItems: 0, totalPages: 0 })
+
+    expect(
+      screen.getByText('No se encontraron actividades académicas para “solar flare”.'),
+    ).toBeInTheDocument()
   })
 
   test('links back to the home page', () => {

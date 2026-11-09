@@ -5,6 +5,7 @@ import { runAuditedDelete, runWrite, WriteAbort } from '@/app/lib/cms/transactio
 import { isCurrentVersion, nextUpdatedAt, parseVersion, toVersion } from '@/app/lib/cms/version'
 import { defaultLocale, type Locale } from '@/app/lib/i18n/config'
 import { translationLocales } from '@/app/lib/i18n/content/definition'
+import { paginate, type PageWindow } from '@/app/lib/pagination'
 import {
   baseContent,
   resolveContent,
@@ -12,6 +13,7 @@ import {
   translationRows,
 } from '@/app/lib/i18n/content/resolve'
 import { findPendingReviews } from '@/app/lib/i18n/content/review'
+import { escapeLikeWildcards, parseSearchParam } from '@/app/lib/search-query'
 
 import {
   academicActivityContent,
@@ -46,8 +48,26 @@ export interface AcademicActivity {
   editing?: AcademicActivityEditingData
 }
 
+export interface AcademicActivitiesPageRequest {
+  /** Search text, trimmed and limited to `SEARCH_MAX_LENGTH`; empty means every activity. */
+  query?: string
+  /** Page requested, brought within the available results. */
+  page?: number
+  /** Include bilingual content and the save version only for an authorized editor. */
+  includeEditingData?: boolean
+}
+
+export interface AcademicActivitiesPageResult extends PageWindow {
+  activities: AcademicActivity[]
+  query: string
+}
+
 /** The `Intl` locale each site `Locale` formats dates with. */
 const INTL_LOCALE: Record<Locale, string> = { es: 'es-CR', en: 'en-US' }
+const academicActivityOrder = [
+  { startDate: 'desc' },
+  { id: 'desc' },
+] satisfies Prisma.AcademicActivityOrderByWithRelationInput[]
 
 function formatDate(date: Date, locale: Locale): string {
   return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
@@ -142,10 +162,91 @@ export async function getAcademicActivities(
   { includeEditingData = false }: { includeEditingData?: boolean } = {},
 ): Promise<AcademicActivity[]> {
   const rows = await prisma.academicActivity.findMany({
-    orderBy: { startDate: 'desc' },
+    orderBy: academicActivityOrder,
     include: activityInclude,
   })
   return rows.map((row) => toAcademicActivity(row, locale, includeEditingData))
+}
+
+/**
+ * Searches the text shown to the visitor in `locale`, orders matches consistently, and loads only
+ * the requested page. Date matching uses the same localized range shown on each card.
+ */
+export async function getAcademicActivitiesPage(
+  locale: Locale = defaultLocale,
+  { query = '', page = 1, includeEditingData = false }: AcademicActivitiesPageRequest = {},
+): Promise<AcademicActivitiesPageResult> {
+  const search = parseSearchParam(query)
+
+  return prisma.$transaction(
+    async (tx) => {
+      let where: Prisma.AcademicActivityWhereInput = {}
+
+      if (search !== '') {
+        const text = {
+          contains: escapeLikeWildcards(search),
+          mode: 'insensitive',
+        } satisfies Prisma.StringFilter
+        const baseFields: Prisma.AcademicActivityWhereInput[] = [
+          { title: text },
+          { category: text },
+          { description: text },
+        ]
+        const contentFields =
+          locale === defaultLocale
+            ? baseFields
+            : [
+                {
+                  translations: {
+                    some: {
+                      locale,
+                      OR: [{ title: text }, { category: text }, { description: text }],
+                    },
+                  },
+                },
+                {
+                  AND: [{ translations: { none: { locale } } }, { OR: baseFields }],
+                },
+              ]
+
+        const dateRows = await tx.academicActivity.findMany({
+          select: { id: true, startDate: true, endDate: true },
+        })
+        const normalizedSearch = search.toLocaleLowerCase(INTL_LOCALE[locale])
+        const matchingDateIds = dateRows
+          .filter(({ startDate, endDate }) =>
+            formatDateRange(startDate, endDate, locale)
+              .toLocaleLowerCase(INTL_LOCALE[locale])
+              .includes(normalizedSearch),
+          )
+          .map(({ id }) => id)
+        const matches: Prisma.AcademicActivityWhereInput[] = [{ location: text }, ...contentFields]
+
+        if (matchingDateIds.length > 0) matches.push({ id: { in: matchingDateIds } })
+        where = { OR: matches }
+      }
+
+      const totalItems = await tx.academicActivity.count({ where })
+      const window = paginate(totalItems, page)
+      const rows =
+        totalItems === 0
+          ? []
+          : await tx.academicActivity.findMany({
+              where,
+              orderBy: academicActivityOrder,
+              skip: window.skip,
+              take: window.take,
+              include: activityInclude,
+            })
+
+      return {
+        ...window,
+        query: search,
+        activities: rows.map((row) => toAcademicActivity(row, locale, includeEditingData)),
+      }
+    },
+    { isolationLevel: 'RepeatableRead' },
+  )
 }
 
 /** The base row's shared columns for a content input (dates, location, photo). */
