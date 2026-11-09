@@ -118,9 +118,19 @@ test('allows an admin to create, view, edit, and delete a news article', async (
   const uniqueUrl = `https://e2e.example.com/noticia-${Date.now()}`
 
   try {
+    await page.goto('/actividades-academicas')
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible()
+    const activitiesBefore = await page.getByRole('main').innerText()
+
     await page.goto('/administracion')
     await enableEditMode(page)
     await page.goto('/noticias')
+    await expect(page.getByRole('heading', { name: 'Actividades académicas' })).toHaveCount(0)
+    await expect(
+      page.getByRole('heading', {
+        name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+      }),
+    ).toHaveCount(0)
 
     // 1. Validation test on creation
     await page.getByRole('button', { name: 'Agregar noticia' }).click()
@@ -207,6 +217,9 @@ test('allows an admin to create, view, edit, and delete a news article', async (
     await expect(newsList(page).getByRole('article').filter({ hasText: updatedTitle })).toHaveCount(
       0,
     )
+
+    await page.goto('/actividades-academicas')
+    await expect(page.getByRole('main')).toHaveText(activitiesBefore, { useInnerText: true })
   } finally {
     // Clean up created news in case test failed before deleting
     await fixture.prisma.news.deleteMany({
