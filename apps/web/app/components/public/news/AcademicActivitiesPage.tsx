@@ -16,9 +16,8 @@ export interface AcademicActivitiesPageProps {
 }
 
 /**
- * The dedicated `/actividades-academicas` screen — same hero/back-link shell as every other
- * topic page, and the same `AcademicActivityCard` the `/noticias` teaser section uses, so both
- * surfaces stay visually identical without duplicating the card itself.
+ * The dedicated `/actividades-academicas` screen, with the standard topic hero and back link.
+ * Each `AcademicActivityCard` keeps the full activity description in this separate listing.
  */
 export function AcademicActivitiesPage({
   activities = [],
