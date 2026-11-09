@@ -357,7 +357,7 @@
       "items": {
         "release": {
           "title": "El Sol libera energía",
-          "description": "Las fulguraciones producen incrementos intensos de radiación y se asocian al origen de las eyecciones de masa coronal (CMEs, por sus siglas en inglés), las cuales son grandes estructuras de plasma y campo magnético. Algunos de estos eventos aceleran partículas a altas energías."
+          "description": "Las fulguraciones o llamaradas solares se encuentran entre los fenómenos más energéticos del Sol. Implican una liberación rápida de energía magnética, la aceleración de partículas y un aumento de la radiación electromagnética. Con frecuencia, están asociadas con eyecciones de masa coronal (CME), erupciones a gran escala de plasma y campo magnético que pueden alcanzar la Tierra y desencadenar tormentas geomagnéticas."
         },
         "propagation": {
           "title": "La perturbación se propaga",
@@ -383,15 +383,15 @@
       "items": {
         "solarActivity": {
           "title": "Actividad solar",
-          "description": "El Sol no está quieto. Las manchas, las fulguraciones y las eyecciones de masa coronal liberan energía, partículas y campos magnéticos al espacio."
+          "description": "Como parte de la astrofísica solar, estudiamos el Sol como una estrella dinámica, incluidas las regiones activas, las llamaradas solares, las eyecciones de masa coronal y otros fenómenos que liberan energía y partículas al espacio y perturban el campo magnético interplanetario."
         },
         "solarWind": {
           "title": "Viento solar",
-          "description": "Es un flujo continuo de plasma que sale de la corona solar. Su velocidad, densidad y campo magnético cambian según lo que ocurra en el Sol."
+          "description": "El viento solar es un flujo continuo de partículas cargadas en estado de plasma que se desplaza desde el Sol hacia el exterior a través del espacio interplanetario."
         },
         "magnetosphere": {
           "title": "Magnetosfera",
-          "description": "El campo magnético terrestre desvía la mayor parte del viento solar. Cuando ese flujo se intensifica, la magnetosfera se comprime y puede perturbarse."
+          "description": "La magnetosfera terrestre es la región que rodea nuestro planeta, donde domina el campo magnético de la Tierra y se produce la interacción con el viento solar. Cuando el viento solar se intensifica, puede comprimir y perturbar la magnetosfera."
         },
         "ionosphere": {
           "title": "Ionosfera",
@@ -403,7 +403,7 @@
         },
         "particles": {
           "title": "Radiación de partículas",
-          "description": "El Sol también puede enviar protones y otras partículas energéticas. Ese flujo es distinto del viento solar cotidiano y puede afectar satélites y vuelos polares."
+          "description": "La actividad solar también puede acelerar partículas hasta alcanzar energías muy altas. Estas partículas energéticas solares (SEP, por sus siglas en inglés) pueden afectar los satélites y aumentar la exposición a la radiación en vuelos de gran altitud y sobre regiones polares."
         }
       },
       "flow": {
@@ -1534,6 +1534,10 @@
     }
   },
   "researchAreas": {
+    "loading": "Cargando áreas de investigación…",
+    "empty": "No hay áreas de investigación disponibles.",
+    "paginationLabel": "Páginas de áreas de investigación",
+    "results": "Mostrando {from}–{to} de {total} áreas de investigación.",
     "page": {
       "metaTitle": "Investigación | LASCE",
       "metaDescription": "Áreas de investigación del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
@@ -2346,6 +2350,22 @@
     }
   },
   "account": {
+    "meta": {
+      "title": "Mi cuenta | LASCE",
+      "description": "Tu perfil en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica."
+    },
+    "page": {
+      "title": "Mi cuenta",
+      "lead": "Tu perfil en el portal y el control de tu sesión."
+    },
+    "profile": {
+      "fullName": "Nombre",
+      "email": "Correo electrónico",
+      "institution": "Institución",
+      "country": "País",
+      "role": "Rol",
+      "memberSince": "Miembro desde"
+    },
     "signIn": "Ingresar",
     "myAccount": "Mi cuenta",
     "administration": "Administración",
@@ -2357,11 +2377,66 @@
       "ASSISTANT": "Asistente",
       "ADMIN": "Persona administradora"
     },
+    "noRole": "Sin rol asignado",
     "signOutDialog": {
       "title": "¿Cerrar sesión?",
       "body": "Tu sesión en este navegador terminará y tendrás que volver a ingresar.",
       "confirm": "Cerrar sesión",
       "cancel": "Cancelar"
     }
+  },
+  "initiatives": {
+    "editor": {
+      "add": "Añadir iniciativa",
+      "edit": "Editar iniciativa",
+      "editNamed": "Editar iniciativa {title}",
+      "deleteNamed": "Eliminar iniciativa {title}",
+      "title": "Título ({language})",
+      "description": "Descripción ({language})",
+      "languages": "Traducciones de la iniciativa",
+      "logo": "Logo (opcional)",
+      "logoHelp": "Seleccione o arrastre una imagen PNG, JPG, WebP o GIF de hasta 25 MiB.",
+      "websiteUrl": "Sitio web oficial (opcional)",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando…",
+      "legacy": "Esta iniciativa conserva su texto original. Complete ambos idiomas cuando modifique el título o la descripción."
+    },
+    "validation": {
+      "websiteUrl": "Ingrese una URL http o https válida, sin credenciales.",
+      "logoUrl": "Seleccione una imagen válida para el logo."
+    },
+    "upload": {
+      "uploaded": "Logo cargado correctamente.",
+      "failed": "No se pudo subir el logo. Inténtelo de nuevo.",
+      "missing": "Seleccione una imagen para el logo.",
+      "tooLarge": "La imagen no debe superar los 25 MiB.",
+      "invalidType": "Seleccione una imagen PNG, JPG, WebP o GIF válida."
+    },
+    "feedback": {
+      "created": "Iniciativa agregada correctamente.",
+      "updated": "Iniciativa actualizada correctamente.",
+      "deleted": "Iniciativa eliminada correctamente.",
+      "failed": "No se pudo guardar la iniciativa. Inténtelo de nuevo.",
+      "forbidden": "No tiene permisos para realizar esta acción. Inicie sesión con una cuenta autorizada.",
+      "notFound": "La iniciativa ya no existe. Vuelva a cargar la página.",
+      "conflict": "La iniciativa cambió. Vuelva a abrir el formulario para cargar la versión actual.",
+      "review": "Revise las traducciones pendientes antes de guardar.",
+      "fields": "Revise los campos marcados."
+    },
+    "delete": {
+      "title": "Eliminar iniciativa",
+      "message": "¿Desea eliminar esta iniciativa? Esta acción no se puede deshacer.",
+      "confirm": "Eliminar"
+    },
+    "discard": {
+      "title": "Descartar cambios no guardados",
+      "message": "Los cambios que ha realizado se perderán.",
+      "keepEditing": "Seguir editando",
+      "confirm": "Descartar"
+    },
+    "empty": "No hay iniciativas disponibles.",
+    "officialSite": "Sitio web oficial",
+    "logoAlt": "Logo de {title}"
   }
 }

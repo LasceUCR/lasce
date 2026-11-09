@@ -24,7 +24,7 @@ const serverEnvSchema = z.object({
   // validates the same variables in apps/worker/app/settings.py.
   //
   // The two credentials are optional rather than required because MinIO is not
-  // provisioned in every environment (docs/deployment.md, "Known gaps"). Making
+  // provisioned in every environment (CI builds and tests run without it). Making
   // them required here would stop the whole web app from booting over a feature
   // most requests never touch; instead MinioAssetStorage.fromEnv() throws,
   // naming the missing variable, the first time storage is actually used.

@@ -31,6 +31,7 @@ export interface FileDropInputProps {
   onFileSelect: (file: File | null) => void
   helperText?: string
   required?: boolean
+  disabled?: boolean
   errorMessage?: string | null
   rejectionFormatMessage?: string
   rejectionSizeMessage?: string
@@ -44,6 +45,7 @@ export function FileDropInput({
   onFileSelect,
   helperText,
   required = false,
+  disabled = false,
   errorMessage,
   rejectionFormatMessage,
   rejectionSizeMessage,
@@ -71,6 +73,7 @@ export function FileDropInput({
   }, [])
 
   function selectFile(file: File | null) {
+    if (disabled) return
     if (file && !isAccepted(file, accept)) {
       setRejection(resolvedRejectionFormat)
       if (inputRef.current) inputRef.current.value = ''
@@ -136,6 +139,7 @@ export function FileDropInput({
           preview's corner. */}
       <div className="file-drop-area">
         <div
+          aria-disabled={disabled || undefined}
           aria-invalid={isInvalid || undefined}
           aria-labelledby={`${inputId}-label`}
           className={[
@@ -145,21 +149,23 @@ export function FileDropInput({
           ]
             .filter(Boolean)
             .join(' ')}
-          onClick={() => inputRef.current?.click()}
+          onClick={() => {
+            if (!disabled) inputRef.current?.click()
+          }}
           onDragLeave={() => setIsDraggingOver(false)}
           onDragOver={(event) => {
             event.preventDefault()
-            setIsDraggingOver(true)
+            if (!disabled) setIsDraggingOver(true)
           }}
           onDrop={handleDrop}
           onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
+            if (!disabled && (event.key === 'Enter' || event.key === ' ')) {
               event.preventDefault()
               inputRef.current?.click()
             }
           }}
           role="button"
-          tabIndex={0}
+          tabIndex={disabled ? -1 : 0}
         >
           {previewUrl ? (
             <div className="file-drop-preview-wrap">
@@ -183,6 +189,7 @@ export function FileDropInput({
 
         {previewUrl ? (
           <IconButton
+            disabled={disabled}
             className="file-drop-remove"
             icon={<X size={12} strokeWidth={1.8} />}
             label={t('removeLabel')}
@@ -195,6 +202,7 @@ export function FileDropInput({
           named by the field's label for assistive technology that lists form fields. */}
       <input
         accept={accept}
+        disabled={disabled}
         aria-labelledby={`${inputId}-label`}
         className="sr-only"
         id={inputId}

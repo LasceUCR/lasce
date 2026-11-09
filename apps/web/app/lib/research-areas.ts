@@ -13,6 +13,7 @@ import {
   translationRows,
 } from '@/app/lib/i18n/content/resolve'
 import { findPendingReviews } from '@/app/lib/i18n/content/review'
+import { paginate, type PageWindow } from '@/app/lib/pagination'
 
 import {
   researchAreaContent,
@@ -91,6 +92,12 @@ const areaInclude = {
 
 type ResearchAreaRecord = Prisma.ResearchAreaGetPayload<{ include: typeof areaInclude }>
 
+// The unique tie-breaker keeps page boundaries stable even when creation times are identical.
+const areaOrder = [
+  { createdAt: 'desc' },
+  { id: 'desc' },
+] satisfies Prisma.ResearchAreaOrderByWithRelationInput[]
+
 /**
  * An area in `locale`, falling back per record to its base text: a complete area shows Spanish
  * when it has no row for `locale`, and an area saved before translations existed shows its base
@@ -129,10 +136,42 @@ export async function getResearchAreas(
 ): Promise<ResearchArea[]> {
   const records = await prisma.researchArea.findMany({
     include: areaInclude,
-    orderBy: { createdAt: 'desc' },
+    orderBy: areaOrder,
   })
 
   return records.map((record) => toResearchArea(record, locale, includeEditingData))
+}
+
+export interface ResearchAreasPage extends PageWindow {
+  areas: ResearchArea[]
+}
+
+/** One database page and its totals from the same snapshot, including during concurrent edits. */
+export async function getResearchAreasPage(
+  locale: Locale = defaultLocale,
+  { page = 1, includeEditingData = false }: { page?: number; includeEditingData?: boolean } = {},
+): Promise<ResearchAreasPage> {
+  return prisma.$transaction(
+    async (tx) => {
+      const totalItems = await tx.researchArea.count()
+      const window = paginate(totalItems, page)
+      const records =
+        totalItems === 0
+          ? []
+          : await tx.researchArea.findMany({
+              include: areaInclude,
+              orderBy: areaOrder,
+              skip: window.skip,
+              take: window.take,
+            })
+
+      return {
+        ...window,
+        areas: records.map((record) => toResearchArea(record, locale, includeEditingData)),
+      }
+    },
+    { isolationLevel: 'RepeatableRead' },
+  )
 }
 
 export async function getResearchAreaById(
