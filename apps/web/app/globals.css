@@ -3008,12 +3008,12 @@ a {
 }
 
 .news h2 {
-  margin-top: 40px;
+  margin-top: 28px;
   margin-bottom: 20px;
 }
 
 .news .search-filter-bar {
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 
 /* Focused by `NewsExplorer` when the page changes: keep it clear of the sticky header. */
