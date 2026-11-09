@@ -3,9 +3,9 @@ import { createTranslator } from 'next-intl'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
+import { Default as AcademicActivity } from '@/app/components/public/news/AcademicActivityCard.stories'
 import { Default } from '@/app/components/public/news/NewsExplorer.stories'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
-import { academicActivities } from '@/app/lib/academic-activities'
 import type { Locale } from '@/app/lib/i18n/config'
 import { getMessages } from '@/app/lib/i18n/messages'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
@@ -36,6 +36,7 @@ vi.mock('next/navigation', () => ({
 import NewsPage, { generateMetadata } from './page'
 
 const articles = Default.args!.news!
+const academicActivities = [AcademicActivity.args!.activity!]
 
 beforeEach(() => {
   vi.clearAllMocks()

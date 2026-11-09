@@ -120,7 +120,9 @@ test('allows an admin to create, view, edit, and delete a news article', async (
   try {
     await page.goto('/actividades-academicas')
     await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible()
-    const activitiesBefore = await page.getByRole('main').innerText()
+    const activitiesResponse = await context.request.get('/api/academic-activities')
+    expect(activitiesResponse.ok()).toBe(true)
+    const activitiesBefore: unknown = await activitiesResponse.json()
 
     await page.goto('/administracion')
     await enableEditMode(page)
@@ -219,7 +221,10 @@ test('allows an admin to create, view, edit, and delete a news article', async (
     )
 
     await page.goto('/actividades-academicas')
-    await expect(page.getByRole('main')).toHaveText(activitiesBefore, { useInnerText: true })
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible()
+    const activitiesAfter = await context.request.get('/api/academic-activities')
+    expect(activitiesAfter.ok()).toBe(true)
+    expect(await activitiesAfter.json()).toEqual(activitiesBefore)
   } finally {
     // Clean up created news in case test failed before deleting
     await fixture.prisma.news.deleteMany({

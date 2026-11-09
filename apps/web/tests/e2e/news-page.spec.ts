@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { getAcademicActivities } from '@/app/lib/academic-activities'
+import type { AcademicActivity } from '@/app/lib/academic-activities'
 import en from '@/messages/en.json' with { type: 'json' }
 import es from '@/messages/es.json' with { type: 'json' }
 
@@ -16,7 +16,10 @@ test.describe('News identity and content separation', () => {
         { name: 'lasce_locale', value: locale, url: 'http://localhost:3000' },
       ])
       const messages = { es, en }[locale]
-      const activities = getAcademicActivities(messages.academicActivities.items)
+      const response = await context.request.get('/api/academic-activities')
+      expect(response.ok()).toBe(true)
+      const { activities } = (await response.json()) as { activities: AcademicActivity[] }
+      expect(activities.length).toBeGreaterThan(0)
 
       await page.goto('/noticias')
       await expectNewsIdentity(page, locale)
@@ -46,10 +49,12 @@ test.describe('News identity and content separation', () => {
         await expect(card).toContainText(activity.date)
         if (activity.location) await expect(card).toContainText(activity.location)
         await expect(card).toContainText(activity.description.replaceAll('\n\n', ' '))
-        const image = card.getByRole('img', { name: activity.imageAlt })
+        const image = card.getByRole('img', { name: activity.photoAlt })
         await expect(image).toBeVisible()
         const src = new URL((await image.getAttribute('src'))!, page.url())
-        expect(src.searchParams.get('url') ?? src.pathname).toBe(activity.imageUrl)
+        expect(new URL(src.searchParams.get('url') ?? src.href, page.url()).href).toBe(
+          new URL(activity.photoUrl, page.url()).href,
+        )
       }
     })
   }

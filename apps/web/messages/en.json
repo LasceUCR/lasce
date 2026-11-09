@@ -357,7 +357,7 @@
       "items": {
         "release": {
           "title": "The Sun releases energy",
-          "description": "Flares produce intense increases in radiation and are associated with the origin of coronal mass ejections (CMEs), which are large structures of plasma and magnetic field. Some of these events accelerate particles to high energies."
+          "description": "Solar flares are among the most energetic phenomena on the Sun. They involve the rapid release of magnetic energy, particle acceleration, and enhanced electromagnetic radiation. Flares are often associated with coronal mass ejections (CMEs), large-scale eruptions of plasma and magnetic field that can reach Earth and trigger geomagnetic storms."
         },
         "propagation": {
           "title": "The disturbance propagates",
@@ -383,15 +383,15 @@
       "items": {
         "solarActivity": {
           "title": "Solar activity",
-          "description": "The Sun is not still. Sunspots, flares and coronal mass ejections release energy, particles and magnetic fields into space."
+          "description": "As part of solar astrophysics, we study the Sun as a dynamic star, including active regions, solar flares, coronal mass ejections, and other phenomena that release energy and particles into space and disturb the interplanetary magnetic field."
         },
         "solarWind": {
           "title": "Solar wind",
-          "description": "It is a continuous stream of plasma leaving the solar corona. Its speed, density and magnetic field change according to what happens on the Sun."
+          "description": "The solar wind is a continuous flow of charged particles in a plasma state that travels outward from the Sun through interplanetary space."
         },
         "magnetosphere": {
           "title": "Magnetosphere",
-          "description": "The Earth's magnetic field deflects most of the solar wind. When that stream intensifies, the magnetosphere is compressed and can be disturbed."
+          "description": "Earth’s magnetosphere is the region surrounding the planet where its magnetic field is dominant and interacts with the solar wind. When the solar wind intensifies, it can compress and disturb the magnetosphere."
         },
         "ionosphere": {
           "title": "Ionosphere",
@@ -403,7 +403,7 @@
         },
         "particles": {
           "title": "Particle radiation",
-          "description": "The Sun can also send protons and other energetic particles. That stream is different from the everyday solar wind and can affect satellites and polar flights."
+          "description": "Solar activity can also accelerate particles to high energies. These solar energetic particles (SEPs) can affect satellites and increase radiation exposure on high-altitude and polar flights."
         }
       },
       "flow": {
@@ -574,16 +574,54 @@
       "title": "Academic activities",
       "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE."
     },
-    "items": {
-      "machineLearningWorkshop": {
-        "category": "Workshop",
-        "date": "16-20 February 2026",
-        "p1": "As part of the LASCE project, the Workshop on Machine Learning Applied to Space Weather and Global Navigation Satellite Systems (GNSS) was held from 16 to 20 February 2026 in San José, Costa Rica. For five days the activity brought together students, early-career researchers and specialists to strengthen their skills in the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather.",
-        "p2": "The programme combined lectures, discussion sessions and computational practice devoted to ionospheric processes, the effects of space weather on GNSS systems, scientific computing and data analysis with machine learning tools. This approach made it possible to combine the physical understanding of solar and terrestrial phenomena with modern methods of processing, modelling and prediction, while also promoting the use of open data and reproducible procedures.",
-        "p3": "The workshop had 52 in-person participants from 17 countries; 37.2% were women and 70% came from developing countries. It was organised with the participation of the Space Research Center of the University of Costa Rica, the United Nations Office for Outer Space Affairs, the International Committee on GNSS, COSPAR, INGV and SCOSTEP, together with contributions from the National University of Tucumán and the Abdus Salam International Centre for Theoretical Physics.",
-        "p4": "This activity strengthened the international profile of LASCE, widened its networks of scientific collaboration and contributed to building regional capabilities for researching, monitoring and predicting the effects of space weather on the ionosphere and on technological systems. It also created a space for identifying new scientific challenges, opportunities for cooperation and future initiatives that combine space weather physics with advanced data analysis tools.",
-        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop"
-      }
+    "created": "Activity added successfully.",
+    "updated": "Activity updated successfully.",
+    "deleted": "Activity deleted successfully.",
+    "errors": {
+      "saveUnknown": "The activity could not be saved. Try again.",
+      "deleteUnknown": "The activity could not be deleted. Try again."
+    },
+    "editor": {
+      "addCard": "Add activity",
+      "editTitle": "Edit academic activity",
+      "editLabel": "Edit",
+      "deleteLabel": "Delete",
+      "languageTabs": "Content language",
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title, the category, the description or the alt text, check it as well.",
+      "legacyNoTranslation": "This activity has no English version yet. To change the title, the category, the description or the alt text you must complete both languages; the other fields can be edited without translating it.",
+      "titleField": "Title ({language})",
+      "categoryField": "Category ({language})",
+      "categoryPlaceholder": "Workshop, talk, course, conference...",
+      "locationField": "Location",
+      "startDateField": "Start date",
+      "endDateField": "End date",
+      "descriptionField": "Description ({language})",
+      "photoField": "Image",
+      "photoHelperText": "Illustrative image of the activity, in JPG, PNG, WebP or GIF format.",
+      "photoAltField": "Image alternative text ({language})",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "uploadingImage": "Uploading image..."
+    },
+    "validation": {
+      "startDate": "The start date is required.",
+      "endDate": "The end date must be on or after the start date.",
+      "location": "The location is required.",
+      "photo": "The image is required.",
+      "uploadFailed": "The image could not be uploaded. Try again."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all the data entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
+    "deleteDialog": {
+      "title": "Delete academic activity",
+      "message": "This action cannot be undone and will remove the activity from the public catalog.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
     }
   },
   "publications": {
@@ -975,7 +1013,7 @@
     },
     "overview": {
       "title": "What is ROSAC?",
-      "p1": "The Santa Cruz Radio Observatory (ROSAC) is a University of Costa Rica project located at the Santa Cruz Campus, Guanacaste. Its development centers on adapting an 11-meter parabolic antenna for astronomical use, through a new mount, motion and pointing systems, receivers, electronics, and control software.",
+      "p1": "The Santa Cruz Radio Observatory (ROSAC) is a project developed by the University of Costa Rica located at the Santa Cruz Campus, Guanacaste. Its development centers on adapting an 11-meter parabolic antenna for astronomical use, through a new mount, motion and pointing systems, receivers, electronics, and control software.",
       "p2": "Its purpose is to develop national capabilities to observe the Sun and other celestial sources at radio frequencies. The project connects astrophysics research with physics, electronics, engineering, telecommunications, automatic control, and software development."
     },
     "characteristics": {
@@ -1041,7 +1079,7 @@
     },
     "construction": {
       "title": "ROSAC construction",
-      "intro": "The development of the Santa Cruz Radio Observatory has involved various stages of study, preparation, assembly, and infrastructure adaptation. This walkthrough presents some of the work carried out during that process.",
+      "intro": "The development of the Santa Cruz Radio Observatory has involved several stages of study, preparation, assembly, and infrastructure adaptation. This walkthrough presents some of the work carried out during that process.",
       "carousel": {
         "ariaLabel": "ROSAC construction process",
         "groupNoun": "Stage",
@@ -1116,12 +1154,12 @@
     },
     "radioObservation": {
       "title": "Why observe in radio?",
-      "p1": "Radio emissions allow tracking accelerated electrons and structures moving through the solar corona and interplanetary medium. These observations complement visible light, ultraviolet, and X-ray images, helping reconstruct the evolution of solar events."
+      "p1": "Radio emissions enable us to trace accelerated electrons and follow the propagation of structures through the solar corona and interplanetary medium. These observations complement visible light, ultraviolet, and X-ray images, helping reconstruct the evolution of solar events."
     },
     "relationship": {
       "title": "ROSAC and LASCE",
       "p1": "LASCE integrates data, models, and analysis methods to study solar activity and its relationship with the Earth's environment. ROSAC provides national infrastructure to observe the Sun at radio frequencies and strengthen those research capabilities.",
-      "p2": "LASCE turns observations into knowledge; ROSAC generates and strengthens an essential part of those observations. Together they connect basic science, technological development, training, and applications of national interest."
+      "p2": "LASCE turns observations into knowledge; ROSAC generates and strengthens an essential part of those observations. Together they connect basic science, technological development, training, and applications of national and international interest."
     },
     "instruments": {
       "title": "Scientific instruments",
@@ -2216,6 +2254,9 @@
         "contact_channel_create": "Contact channel added: {name}",
         "contact_channel_update": "Contact channel updated: {name}",
         "contact_channel_delete": "Contact channel deleted: {name}",
+        "academic_activity_create": "Academic activity added: {name}",
+        "academic_activity_update": "Academic activity updated: {name}",
+        "academic_activity_delete": "Academic activity deleted: {name}",
         "nosotros_activity_create": "Nosotros activity added: {name}",
         "nosotros_activity_update": "Nosotros activity updated: {name}",
         "nosotros_activity_delete": "Nosotros activity deleted: {name}",
@@ -2302,6 +2343,22 @@
     }
   },
   "account": {
+    "meta": {
+      "title": "My account | LASCE",
+      "description": "Your profile on the portal of the Laboratorio de Astrofísica Solar y Clima Espacial of the University of Costa Rica."
+    },
+    "page": {
+      "title": "My account",
+      "lead": "Your profile on the portal and your session controls."
+    },
+    "profile": {
+      "fullName": "Name",
+      "email": "Email address",
+      "institution": "Institution",
+      "country": "Country",
+      "role": "Role",
+      "memberSince": "Member since"
+    },
     "signIn": "Sign in",
     "myAccount": "My account",
     "administration": "Administration",
@@ -2313,6 +2370,7 @@
       "ASSISTANT": "Assistant",
       "ADMIN": "Administrator"
     },
+    "noRole": "No role assigned",
     "signOutDialog": {
       "title": "Sign out?",
       "body": "Your session in this browser will end and you will have to sign in again.",
