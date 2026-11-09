@@ -182,7 +182,7 @@ inventory taken when the static pages were migrated.
 | `/actividades-academicas`                | `academicActivities`                            | `lib/academic-activities.ts`, `AcademicActivitiesPage.tsx`                                                     |
 | `/galeria/**`                            | `gallery`                                       | `gallery/*`, `lib/gallery.ts`, `(public)/galeria/**`                                                           |
 | `/publicaciones`                         | `publications`                                  | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                                                          |
-| `/noticias`                              | `news`, `academicActivities`                    | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
+| `/noticias`                              | `news`                                          | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
 | `/radioastronomia`                       | `rosac`                                         | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`                                        |
 | `/datos`                                 | `scientificData`                                | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts`                                  |
 | `/administracion/permisos`               | `administration.permissions`, `access`          | `RolePermissions{Page,Editor}.tsx`, `lib/access-messages.ts`                                                   |
@@ -223,8 +223,9 @@ validation and toasts (`editor`, `discardDialog`, `deleteDialog`, `validation`, 
 content in `news.news_record_translations`. Dates are formatted in the visitor's language by
 `getNewsPage()`; an item without an English version is shown in its base text, and a search runs
 on the text shown, in the visitor's language (see [`pagination.md`](pagination.md)). The page
-controls' own text is in `common.pagination`. The academic
-activities section above the news uses `academicActivities`. Each card links out to the original
+controls' own text is in `common.pagination`. The hero contains only "Noticias" / "News", without
+a kicker or lead; `news.page.metaTitle` and `metaDescription` describe news. Academic activities
+appear only on `/actividades-academicas`, using `academicActivities`. Each news card links out to the original
 article, which is the item's detail view: there is no news page of its own to translate.
 
 `/nosotros` is translated, database content included: the fixed copy, the editor labels and

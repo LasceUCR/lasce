@@ -1,40 +1,34 @@
 # Academic activities
 
-How academic activities are presented: a teaser section on `/noticias` and their own dedicated
-list at `/actividades-academicas`, both rendering the same card. There is no separate detail page
+Academic activities are presented exclusively in their dedicated list at `/actividades-academicas`.
+They are not included in `/noticias` or its management controls. There is no separate detail page
 — the full write-up lives in the card itself, behind a "Leer más" toggle. Academic activities
 represent workshops, seminars, and conferences organized or co-organized by LASCE.
 
 ## The shape
 
 ```
-/noticias                                         NewsPage                  h1 "Noticias"
-  └─ AcademicActivitiesSection                    section.news-academic…    h2 "Actividades académicas"
-       └─ ul.news-list › li                       one card per row
-            └─ AcademicActivityCard               article, named by its h3
-                 ├─ MediaFrame                    photograph, cover
-                 └─ content                       category badge, h3 title, date/location,
-                                                  full description, clamped via TruncatedText
-
 /actividades-academicas                           AcademicActivitiesPage    article.topic-page
   ├─ TopicHero                                    kicker "Portal público LASCE"
-  ├─ .academic-activities-list › AcademicActivityCard   same card the `/noticias` teaser uses
+  ├─ .academic-activities-list › AcademicActivityCard   one card per activity
+  │    └─ photograph, category, h3 title, date/location, full description via TruncatedText
   └─ .topic-page-footer                           TopicBackLink "Volver al inicio"
 ```
 
-Both the `/noticias` teaser and the dedicated `/actividades-academicas` list render the same
-`AcademicActivityCard` — there is no detail route for either surface to link to.
 `/actividades-academicas` is also reachable from the main nav, inside the `Divulgación` dropdown
 next to Noticias and Galería (`PublicHeader.tsx`, `nav.academicActivities`).
 
-| Piece               | File                                                       | Covered by                            |
-| ------------------- | ---------------------------------------------------------- | ------------------------------------- |
-| Data and helpers    | `app/lib/academic-activities.ts`                           | `app/lib/academic-activities.test.ts` |
-| Section on news     | `app/components/public/news/AcademicActivitiesSection.tsx` | `AcademicActivitiesSection.test.tsx`  |
-| Activity card       | `app/components/public/news/AcademicActivityCard.tsx`      | `AcademicActivityCard.test.tsx`       |
-| Dedicated list page | `app/components/public/news/AcademicActivitiesPage.tsx`    | `AcademicActivitiesPage.test.tsx`     |
-| List route          | `app/(public)/actividades-academicas/page.tsx`             | `tests/e2e/public-portal.spec.ts`     |
-| Sitemap & SEO       | `app/lib/site.ts`                                          | `tests/e2e/accessibility-seo.spec.ts` |
+News is read and managed through `news.news_records` and `/api/news`; academic activities use
+the content below. Removing the former news teaser changes no records, translations, images or
+activity descriptions and requires no database migration.
+
+| Piece               | File                                                    | Covered by                            |
+| ------------------- | ------------------------------------------------------- | ------------------------------------- |
+| Data and helpers    | `app/lib/academic-activities.ts`                        | `app/lib/academic-activities.test.ts` |
+| Activity card       | `app/components/public/news/AcademicActivityCard.tsx`   | `AcademicActivityCard.test.tsx`       |
+| Dedicated list page | `app/components/public/news/AcademicActivitiesPage.tsx` | `AcademicActivitiesPage.test.tsx`     |
+| List route          | `app/(public)/actividades-academicas/page.tsx`          | `tests/e2e/public-portal.spec.ts`     |
+| Sitemap & SEO       | `app/lib/site.ts`                                       | `tests/e2e/accessibility-seo.spec.ts` |
 
 ## Data model
 
@@ -77,14 +71,13 @@ Reuses the `.news-card` layout to ensure visual consistency with standard news e
 The `/actividades-academicas` screen, following the same standard every other top-level topic page
 uses: `TopicHero` (kicker "Portal público LASCE", title and lead from the
 `academicActivities.listPage` message namespace) followed directly by one `AcademicActivityCard`
-per activity — no second, duplicate section heading the way `/noticias`' teaser has one. An empty
+per activity, without a second, duplicate section heading. An empty
 list shows `academicActivities.section.empty` instead. `TopicBackLink` returns to `/`.
 
 ## Skeleton loading states
 
-While academic activities are being retrieved on an uncached visit (#410), both the dedicated list
-at `/actividades-academicas` (`AcademicActivitiesPage`) and the teaser on `/noticias`
-(`AcademicActivitiesSection`) display skeleton placeholders shaped like the activity cards,
+While academic activities are being retrieved on an uncached visit (#410), the dedicated list
+at `/actividades-academicas` (`AcademicActivitiesPage`) displays skeleton placeholders shaped like the activity cards,
 preventing empty areas or noticeable layout shifts:
 
 - **Placeholders**: `AcademicActivityCardSkeleton` follows the `.news-card` metrics (280px photo
@@ -104,3 +97,4 @@ preventing empty areas or noticeable layout shifts:
 
 `/actividades-academicas` is listed in `publicPaths` (`app/lib/site.ts`), ensuring it is included
 in `sitemap.xml` and audited by Playwright's automated accessibility and SEO checks.
+The sitemap does not advertise the obsolete `/noticias/actividades/*` detail URLs.
