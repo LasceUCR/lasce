@@ -121,9 +121,9 @@ export interface TeamMember {
   description?: string
   /** The lang of role and description, e.g. 'es' or 'en'. */
   contentLang?: string
-  /** The stored base role before UI localization, used to initialize single-language edit forms. */
+  /** Base role before `localizeResearchers` overlays the catalogue translation. */
   storedRole?: string
-  /** The stored base description before UI localization, used to initialize single-language edit forms. */
+  /** Base description before `localizeResearchers` overlays the catalogue translation. */
   storedDescription?: string | null
   /**
    * Both languages and the version, only for someone who can edit. Absent for visitors, so the

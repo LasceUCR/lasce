@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import { getLocale } from 'next-intl/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
+import { internalError, invalidBody, ok, readJson } from '@/app/lib/cms/http'
 import { resolveLocale } from '@/app/lib/i18n/locale'
+import { getMessages } from '@/app/lib/i18n/messages'
 import { getNosotrosResearcherCreateSchema } from '@/app/lib/nosotros-researcher-schema'
 import { createResearcher, getResearchers } from '@/app/lib/rosac'
 
@@ -23,31 +25,21 @@ export async function POST(request: Request): Promise<NextResponse> {
   const guard = await requireApiPermission('create_components')
   if (!guard.ok) return guard.response
 
-  let body: unknown
+  const locale = resolveLocale(await getLocale())
+  const messages = getMessages(locale)
+  const errors = (messages.researchers as { errors?: Record<string, string> }).errors ?? {}
+
+  const json = await readJson(request, errors.invalidJson)
+  if (!json.ok) return json.response
+
+  const parsed = getNosotrosResearcherCreateSchema(locale).safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error, errors.invalidBody)
+
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: 'El cuerpo de la solicitud no es JSON válido.' },
-      { status: 400 },
-    )
+    const researcher = await createResearcher(parsed.data, guard.user.id)
+
+    return ok({ researcher }, 201)
+  } catch (error) {
+    return internalError(errors.saveError ?? 'No se pudo guardar el investigador.', error)
   }
-
-  const parsed = getNosotrosResearcherCreateSchema(resolveLocale(await getLocale())).safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'Faltan campos obligatorios o no son válidos.',
-        issues: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    )
-  }
-
-  const researcher = await createResearcher(parsed.data, guard.user.id)
-
-  return NextResponse.json(
-    { researcher },
-    { status: 201, headers: { 'Cache-Control': 'no-store' } },
-  )
 }
