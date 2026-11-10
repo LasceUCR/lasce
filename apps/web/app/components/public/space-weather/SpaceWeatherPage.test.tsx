@@ -32,6 +32,20 @@ describe('SpaceWeatherPage', () => {
     expect(screen.queryByRole('heading', { name: /El trabajo de LASCE/ })).not.toBeInTheDocument()
   })
 
+  test('numbers every section in order, with no gaps or repeats', () => {
+    const { container } = render(<SpaceWeatherPage content={spaceWeatherContent} />)
+
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent),
+    ).toEqual([
+      '1. ¿Qué es el clima espacial?',
+      '2. Del Sol a la Tierra',
+      '3. ¿Qué compone el clima espacial?',
+      '4. ¿Por qué estudiarlo desde Costa Rica?',
+    ])
+    expect(container.querySelector('article')).toHaveClass('topic-page', 'topic-page-reading')
+  })
+
   test('explains the solar chain and links back to the work areas', () => {
     render(<SpaceWeatherPage content={spaceWeatherContent} />)
 
