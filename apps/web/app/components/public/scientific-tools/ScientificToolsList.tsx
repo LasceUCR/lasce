@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -10,6 +10,7 @@ export interface ScientificToolItem {
   title: string
   description: string
   href: string
+  icon: LucideIcon
 }
 
 export interface ScientificToolsListProps {
@@ -28,32 +29,26 @@ export function ScientificToolsList({ tools }: ScientificToolsListProps) {
   }
 
   return (
-    <>
-      <CardGrid columns={1}>
-        {tools.map(({ title, description, href }) => (
-          <InfoCard
-            key={title}
-            title={title}
-            description={description}
-            icon={
-              <Image src="/images/tools/scientific-pattern.webp" alt="" width={160} height={96} />
-            }
-            headingLevel={2}
-            layout="horizontal"
-            action={
-              <Button
-                href={href}
-                icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                {t('access', { title })}
-              </Button>
-            }
-          />
-        ))}
-      </CardGrid>
-      <p className="topic-intro">{t('externalNotice')}</p>
-    </>
+    <CardGrid columns={1}>
+      {tools.map(({ title, description, href, icon: Icon }) => (
+        <InfoCard
+          key={title}
+          title={title}
+          description={description}
+          icon={<Icon aria-hidden="true" size={48} strokeWidth={1.6} />}
+          layout="horizontal"
+          action={
+            <Button
+              href={href}
+              icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {t('access', { title })}
+            </Button>
+          }
+        />
+      ))}
+    </CardGrid>
   )
 }
