@@ -778,6 +778,30 @@ Constraints: `UNIQUE (researcher_id, locale)`. Researchers created before this t
 no row and are shown as they are, with an unknown content language. See
 [translate-database-content.md](translate-database-content.md).
 
+### `researcher_translations`
+
+The `role` and `description` of a `researchers` row (a ROSAC profile on `/radioastronomia`) in a
+language other than Spanish, one row per researcher and locale. The Prisma model is
+`ResearcherTranslation`. Spanish stays on `researchers`, so a profile with no row here still
+renders, in its base text. The photo, `name`, `institution` and `email` are shared and stay on
+the base row. The base row's `modified_at` is the version an editor saves against. `description`
+is optional and all-or-none across languages.
+
+| Column          | Prisma type | Postgres type    | Constraints                                               |
+| --------------- | ----------- | ---------------- | --------------------------------------------------------- |
+| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                   |
+| `researcher_id` | `String`    | `uuid`           | FK → `researchers.id`, `ON DELETE CASCADE`, not null      |
+| `locale`        | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es` |
+| `role`          | `String`    | `text`           | not null                                                  |
+| `description`   | `String?`   | `text`           | nullable                                                  |
+| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                    |
+
+Constraints: `UNIQUE (researcher_id, locale)`. The original roster's English was copied from
+`rosac.team.people` into this table. A profile that still has no row here is shown in its base
+text, and the English page can still fall back to that catalogue. See
+[translate-database-content.md](translate-database-content.md).
+
 ## `public` schema (space weather)
 
 ### `space_weather_sections` and `space_weather_section_translations`
