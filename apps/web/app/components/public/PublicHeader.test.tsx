@@ -43,6 +43,74 @@ describe('PublicHeader', () => {
     expect(disclosure.open).toBe(false)
   })
 
+  test('closes the mobile menu with Escape and returns focus to its toggle', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+    const toggle = screen.getByLabelText('Abrir navegación')
+    const menu = toggle.closest('details')!
+
+    await user.click(toggle)
+    expect(menu.open).toBe(true)
+
+    // Escape works from inside the menu, not only from the toggle.
+    within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+      .getByRole('link', { name: 'Datos' })
+      .focus()
+    await user.keyboard('{Escape}')
+
+    expect(menu.open).toBe(false)
+    expect(toggle).toHaveFocus()
+    await waitFor(() => expect(toggle).toHaveAccessibleName('Abrir navegación'))
+  })
+
+  test('ignores Escape while the mobile menu is closed', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+    const toggle = screen.getByLabelText('Abrir navegación')
+
+    await user.keyboard('{Escape}')
+
+    expect(toggle.closest('details')!.open).toBe(false)
+    expect(toggle).not.toHaveFocus()
+  })
+
+  test.each([
+    { locale: 'es' as const, open: 'Abrir navegación', close: 'Cerrar navegación' },
+    { locale: 'en' as const, open: 'Open navigation', close: 'Close navigation' },
+  ])(
+    'shows the menu icon and "$open" while closed, and an X and "$close" while open ($locale)',
+    async ({ locale, open, close }) => {
+      const user = userEvent.setup()
+      renderHeader({ locale })
+      const toggle = screen.getByLabelText(open)
+
+      expect(toggle.querySelector('svg')).toHaveClass('lucide-menu')
+
+      await user.click(toggle)
+      await waitFor(() => expect(toggle).toHaveAccessibleName(close))
+      expect(toggle.querySelector('svg')).toHaveClass('lucide-x')
+
+      await user.click(toggle)
+      await waitFor(() => expect(toggle).toHaveAccessibleName(open))
+      expect(toggle.querySelector('svg')).toHaveClass('lucide-menu')
+    },
+  )
+
+  test('keeps the backdrop out of the tab order and the accessibility tree', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(screen.getByLabelText('Abrir navegación'))
+
+    const backdrop = await waitFor(() => {
+      const element = document.querySelector('.mobile-menu-backdrop')
+      expect(element).not.toBeNull()
+      return element!
+    })
+    expect(backdrop).toHaveAttribute('aria-hidden', 'true')
+    expect(backdrop).toHaveAttribute('tabindex', '-1')
+  })
+
   test('hides Administración when nobody is signed in', () => {
     renderHeader()
 
@@ -97,12 +165,17 @@ describe('PublicHeader', () => {
     ).toHaveAttribute('href', '/administracion')
   })
 
-  test('identifies UCR, CINESPA and LASCE in the header brand', () => {
+  test('identifies UCR, CINESPA and LASCE in the header brand, each once', () => {
     renderHeader()
 
-    expect(screen.getByAltText('Universidad de Costa Rica')).toBeInTheDocument()
+    // The shield names the university; the signature repeats it as lettering and stays silent,
+    // so the reduced mobile lockup (shield + LASCE) and the full one both announce it once.
+    expect(screen.getAllByAltText('Universidad de Costa Rica')).toHaveLength(1)
+    expect(document.querySelector('.ucr-signature-logo')).toHaveAttribute('alt', '')
     expect(screen.getByAltText('Centro de Investigaciones Espaciales')).toBeInTheDocument()
-    expect(screen.getByAltText('Laboratorio de Ciencias Espaciales')).toBeInTheDocument()
+    expect(
+      screen.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial'),
+    ).toBeInTheDocument()
   })
 
   test.each([

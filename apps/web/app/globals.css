@@ -87,11 +87,6 @@ body:has(.not-found) {
   background: var(--space-black);
 }
 
-/* Body copy on the public site. Headings, navigation and buttons stay start-aligned. */
-.public-shell-content p {
-  text-align: justify;
-}
-
 a {
   color: inherit;
   text-decoration: none;
@@ -804,6 +799,7 @@ a {
 }
 
 .hero-live-trigger {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -826,6 +822,19 @@ a {
 
 .hero-live-trigger::marker {
   content: '';
+}
+
+/* Touch targets: the badge and its close button keep their compact look, and an invisible
+   pseudo-element extends each one's hit area to at least 44x44px (WCAG 2.5.5). */
+.hero-live-trigger::after,
+.hero-live-close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
 }
 
 .hero-live-trigger:hover {
@@ -872,7 +881,8 @@ a {
   right: 0;
   width: max-content;
   max-width: 260px;
-  padding: 14px 28px 12px 14px;
+  /* Room on the right for the close button's 44px hit area, so it never covers the text. */
+  padding: 14px 40px 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -3193,8 +3203,8 @@ a {
   }
 
   .mobile-menu summary {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     display: grid;
     place-items: center;
     color: var(--ink);
@@ -3557,8 +3567,17 @@ a {
     justify-content: space-between;
   }
 
+  /* 44px touch targets on mobile. The text keeps its size; the link box provides the area. */
+  .footer-links a,
+  .footer-institutions a {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .footer-links a {
-    padding-block: 6px;
     font-size: 13px;
   }
 
@@ -3584,8 +3603,26 @@ a {
 }
 
 .topic-page {
+  /* A comfortable line length for running text, about 65-80 characters per line. */
+  --reading-measure: 68ch;
+
   background: var(--page);
   color: var(--ink);
+}
+
+/* Reading pages (/fisica-solar, /clima-espacial): one centred column of the same 65rem as the
+   /datos header, instead of the 1332px used by pages built around galleries and grids. The
+   running text inside stays capped at --reading-measure (see below). */
+.topic-page-reading .topic-hero,
+.topic-page-reading .page-width {
+  width: min(100% - 64px, 65rem);
+}
+
+@media (max-width: 760px) {
+  .topic-page-reading .topic-hero,
+  .topic-page-reading .page-width {
+    width: min(100% - 32px, 65rem);
+  }
 }
 
 .content-flag {
@@ -3637,6 +3674,13 @@ a {
 
 .topic-hero-copy-only {
   grid-template-columns: 1fr;
+}
+
+/* On a reading page, a text-only hero followed by a section: its bottom padding plus the
+   section's top padding left a larger gap than the one between two sections. This makes the
+   two gaps match. */
+.topic-page-reading .topic-hero-copy-only:has(+ .topic-section) {
+  padding-bottom: 8px;
 }
 
 .topic-hero-with-mark {
@@ -4143,6 +4187,15 @@ a {
   padding-bottom: 48px;
 }
 
+/* Running text on a reading page stays at --reading-measure (about 65-80 characters per line):
+   the hero lead, section intros and paragraphs (including the featured card's) and the concept
+   flow's caption. Other topic pages keep their own widths. */
+.topic-page-reading .topic-hero .topic-lead,
+.topic-page-reading .topic-section .topic-intro,
+.topic-page-reading .concept-flow > p:not(.concept-flow-title) {
+  max-width: var(--reading-measure);
+}
+
 .topic-page-footer {
   padding: 8px 0 48px;
 }
@@ -4381,37 +4434,37 @@ a {
     height: 36px;
   }
 
-  /* Brought back at a small size: it disappears once the visitor scrolls, same as the
-     760px tier, but is no longer hidden from the start. */
-  .brand .compdes-logo {
-    width: 22px;
-    height: 24px;
-    flex-basis: 22px;
+  /* Reduced lockup: below 430px the UCR signature's lettering is illegible, so the header shows
+     only the UCR shield and LASCE, each at its own proportions (width follows height). The
+     signature, CINESPA and the divider between them are display: none, which also keeps them
+     out of the accessibility tree. The shield stays when the visitor scrolls: it is the
+     university's mark in this lockup. */
+  .brand {
+    gap: 8px;
   }
 
+  .brand .ucr-signature-logo,
+  .brand .cinespa-logo,
+  .brand .brand-divider-cinespa {
+    display: none;
+  }
+
+  .brand .compdes-logo,
   .site-header.is-scrolled .brand .compdes-logo {
-    width: 0;
-    flex-basis: 0;
-    opacity: 0;
-  }
-
-  .brand .ucr-signature-logo {
-    width: 56px;
-    height: 23px;
-  }
-
-  .brand .cinespa-logo {
-    width: 73px;
-    height: 31px;
+    width: auto;
+    height: 40px;
+    flex: 0 0 auto;
+    opacity: 1;
+    transform: none;
   }
 
   .brand .lasce-logo {
-    width: 65px;
-    height: 23px;
+    width: auto;
+    height: 30px;
   }
 
   .brand-divider {
-    height: 24px;
+    height: 30px;
   }
 
   .hero .hero-institution {
@@ -5352,7 +5405,6 @@ a.gallery-tile:focus-visible {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.7;
-  text-align: justify;
 }
 
 .team-gallery-controls {
