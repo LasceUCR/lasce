@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import type { CountryOption } from '@/app/lib/auth/countries'
@@ -54,6 +54,8 @@ export function RegistrationForm({
     action,
     initialState ?? initialRegistrationState,
   )
+  const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
   const successRef = useRef<HTMLHeadingElement>(null)
   const toast = useToast()
@@ -166,16 +168,20 @@ export function RegistrationForm({
           hint={registrationFormCopy.passwordHint}
           label={REGISTRATION_LABELS.password}
           name="password"
+          onChange={(event) => setPassword(event.target.value)}
           required
           type="password"
+          value={password}
         />
         <FormField
           autoComplete="new-password"
           error={state.fieldErrors.passwordConfirmation}
           label={REGISTRATION_LABELS.passwordConfirmation}
           name="passwordConfirmation"
+          onChange={(event) => setPasswordConfirmation(event.target.value)}
           required
           type="password"
+          value={passwordConfirmation}
         />
 
         <div className="form-actions">

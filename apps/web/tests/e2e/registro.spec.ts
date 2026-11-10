@@ -217,8 +217,8 @@ test('rejects invalid formats and keeps the values that were fine', async ({ pag
   await expect(field(page, 'institution')).toHaveValue(validValues.institution)
   await expect(field(page, 'countryCode')).toHaveValue('CR')
   await expect(field(page, 'email')).toHaveValue('no-es-un-correo')
-  await expect(field(page, 'password')).toHaveValue('')
-  await expect(field(page, 'passwordConfirmation')).toHaveValue('')
+  await expect(field(page, 'password')).toHaveValue('1234567')
+  await expect(field(page, 'passwordConfirmation')).toHaveValue('otra cosa')
 })
 
 test('does not create a second account for an email that is already registered', async ({

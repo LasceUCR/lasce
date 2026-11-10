@@ -57,7 +57,9 @@ The Server Action returns one flat state object:
 ```
 
 `values` echoes the four non-secret fields so the visitor does not retype them; passwords are never
-returned. `fieldErrors` carries the first message per failed field, displayed inline via `FormField`
+returned in the response payload. The client component manages password input state locally so
+typed values are preserved (displaying the standard masked characters) across submission errors
+instead of being cleared. `fieldErrors` carries the first message per failed field, displayed inline via `FormField`
 (with focus moved to the first invalid field). `formError` is reserved for unexpected service errors,
 which are displayed through a platform toast (`useToast()`).
 

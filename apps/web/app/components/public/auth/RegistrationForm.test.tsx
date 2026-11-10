@@ -112,6 +112,8 @@ describe('RegistrationForm', () => {
       registrationMessages.emailTaken,
     )
     expect(control(REGISTRATION_LABELS.email)).toHaveFocus()
+    expect(control(REGISTRATION_LABELS.password)).toHaveValue('una contraseña')
+    expect(control(REGISTRATION_LABELS.passwordConfirmation)).toHaveValue('una contraseña')
   })
 
   test('disables the button and announces the pending state while the action runs', async () => {
