@@ -2,7 +2,12 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createRef } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import {
+  COLLABORATION_ACRONYM_MAX_LENGTH,
+  COLLABORATION_NAME_MAX_LENGTH,
+} from '@/app/lib/collaboration-schema'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { collaborationContent } from '@/app/lib/research-collaborations'
 import { CollaborationForm, type CollaborationFormHandle } from './CollaborationForm'
 import { Create, Edit, Legacy } from './CollaborationForm.stories'
 
@@ -104,5 +109,31 @@ describe('CollaborationForm', () => {
     expect(onCancel).toHaveBeenCalledOnce()
     view.rerender(<CollaborationForm busy onSave={() => {}} onCancel={onCancel} />)
     expect(screen.getByRole('button', { name: 'Guardando...' })).toBeDisabled()
+  })
+  test('stops each text field at its limit instead of reporting it, like the initiative form', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    renderWithIntl(<CollaborationForm {...Create.args} onSave={onSave} onCancel={() => {}} />)
+    const countryLimit = collaborationContent.specs.country.maxLength
+    const fields = [
+      [screen.getByLabelText(/Nombre de la organización/), COLLABORATION_NAME_MAX_LENGTH],
+      [screen.getByLabelText('Siglas (opcional)'), COLLABORATION_ACRONYM_MAX_LENGTH],
+      [screen.getByLabelText('País (Español)', { exact: false }), countryLimit],
+    ] as const
+    for (const [field, limit] of fields) {
+      expect(field).toHaveAttribute('maxlength', String(limit))
+      await user.click(field)
+      await user.paste('a'.repeat(limit + 10))
+      expect(field).toHaveValue('a'.repeat(limit))
+    }
+    await user.click(screen.getByRole('tab', { name: /English/ }))
+    const english = screen.getByLabelText('País (English)', { exact: false })
+    expect(english).toHaveAttribute('maxlength', String(countryLimit))
+    await user.click(english)
+    await user.paste('b'.repeat(countryLimit + 10))
+    expect(english).toHaveValue('b'.repeat(countryLimit))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(screen.queryByText(/caracteres/)).not.toBeInTheDocument()
+    expect(onSave).toHaveBeenCalledOnce()
   })
 })
