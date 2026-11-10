@@ -80,7 +80,7 @@ for (const [locale, messages] of Object.entries({ es, en })) {
       await expect(section).not.toHaveClass(/topic-page-footer/)
       await expect(section.getByRole('heading', { level: 2, name: copy.list.title })).toBeVisible()
 
-      const icons: string[] = []
+      const images: string[] = []
       for (const [title, description] of [
         ['SWAAT', copy.tools.swaat],
         ['SWAPRO', copy.tools.swapro],
@@ -92,8 +92,12 @@ for (const [locale, messages] of Object.entries({ es, en })) {
         await expect(link).toHaveAttribute('target', '_blank')
         await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
         await expect(link.locator('svg')).toBeVisible()
-        await expect(card.locator('.info-card-icon svg')).toBeVisible()
-        icons.push(await card.locator('.info-card-icon svg').innerHTML())
+        const image = card.locator('img')
+        await expect(image).toBeVisible()
+        await expect
+          .poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth))
+          .toBeGreaterThan(0)
+        images.push((await image.getAttribute('src')) ?? '')
 
         for (const element of [
           card,
@@ -111,7 +115,7 @@ for (const [locale, messages] of Object.entries({ es, en })) {
           expect(dimensions.scrollHeight).toBeLessThanOrEqual(dimensions.height + 1)
         }
       }
-      expect(icons[0]).not.toBe(icons[1])
+      expect(images[0]).not.toBe(images[1])
       await expect(main.getByText(/Los enlaces se abren|The links open in a new tab/)).toHaveCount(
         0,
       )

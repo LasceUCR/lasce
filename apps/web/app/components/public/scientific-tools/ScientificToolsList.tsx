@@ -1,5 +1,5 @@
+import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -10,7 +10,7 @@ export interface ScientificToolItem {
   title: string
   description: string
   href: string
-  icon: LucideIcon
+  imageSrc: string
 }
 
 export interface ScientificToolsListProps {
@@ -30,12 +30,12 @@ export function ScientificToolsList({ tools }: ScientificToolsListProps) {
 
   return (
     <CardGrid columns={1}>
-      {tools.map(({ title, description, href, icon: Icon }) => (
+      {tools.map(({ title, description, href, imageSrc }) => (
         <InfoCard
           key={title}
           title={title}
           description={description}
-          icon={<Icon aria-hidden="true" size={48} strokeWidth={1.6} />}
+          icon={<Image src={imageSrc} alt="" fill sizes="(max-width: 760px) 100vw, 280px" />}
           layout="horizontal"
           action={
             <Button
