@@ -17,6 +17,7 @@ export interface CollaborationDraft {
   acronym: string
   scope: ResearchCollaboration['scope']
   websiteUrl: string
+  logoPath: string
   content: ContentDraft<'country'>
 }
 
@@ -26,6 +27,7 @@ export function collaborationDraft(record?: ResearchCollaboration): Collaboratio
     acronym: record?.acronym ?? '',
     scope: record?.scope ?? 'national',
     websiteUrl: record?.websiteUrl ?? '',
+    logoPath: record?.logoPath ?? '',
     content: record?.editing
       ? draftFromStored(collaborationContent, record.editing.content)
       : emptyContentDraft(collaborationContent),
@@ -47,7 +49,7 @@ export function validateCollaborationDraft(
     locale,
   )
   const schemas = collaborationFieldSchemas(messages)
-  for (const field of ['name', 'acronym', 'scope', 'websiteUrl'] as const) {
+  for (const field of ['name', 'acronym', 'scope', 'websiteUrl', 'logoPath'] as const) {
     const result = schemas[field].safeParse(draft[field])
     if (!result.success) errors[field] = result.error.issues[0]!.message
   }
@@ -61,7 +63,7 @@ export function collaborationRequest(
   confirmed: ReviewConfirmation<'country'>[],
 ): Record<string, unknown> | null {
   const body: Record<string, unknown> = {}
-  for (const key of ['name', 'acronym', 'scope', 'websiteUrl'] as const) {
+  for (const key of ['name', 'acronym', 'scope', 'websiteUrl', 'logoPath'] as const) {
     if (!record || initial[key].trim() !== draft[key].trim()) body[key] = draft[key].trim()
   }
   if (hasContentChanges(collaborationContent, record?.editing?.content ?? null, draft.content)) {

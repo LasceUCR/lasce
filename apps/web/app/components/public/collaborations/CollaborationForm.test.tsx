@@ -4,7 +4,7 @@ import { createRef } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { CollaborationForm, type CollaborationFormHandle } from './CollaborationForm'
-import { Create, Edit, Legacy } from './CollaborationForm.stories'
+import { Create, Edit, Legacy, WithLogo } from './CollaborationForm.stories'
 
 describe('CollaborationForm', () => {
   test('requires name and country in both languages, retains input across tabs and submits optional-free content', async () => {
@@ -27,6 +27,7 @@ describe('CollaborationForm', () => {
       scope: 'national',
       acronym: '',
       websiteUrl: '',
+      logoPath: '',
       content: { es: { country: 'Alemania' }, en: { country: 'Germany' } },
     })
   })
@@ -104,5 +105,43 @@ describe('CollaborationForm', () => {
     expect(onCancel).toHaveBeenCalledOnce()
     view.rerender(<CollaborationForm busy onSave={() => {}} onCancel={onCancel} />)
     expect(screen.getByRole('button', { name: 'Guardando...' })).toBeDisabled()
+  })
+
+  test('uploads a new logo and submits it with the draft', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn()
+    const upload = vi.fn().mockResolvedValue('/api/collaborations/logos/new-logo.png')
+    renderWithIntl(
+      <CollaborationForm {...Edit.args} onUploadLogo={upload} onSave={save} onCancel={() => {}} />,
+    )
+    const file = new File(['logo'], 'logo.png', { type: 'image/png' })
+    await user.upload(document.querySelector('input[type="file"]') as HTMLInputElement, file)
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(upload).toHaveBeenCalledWith(file)
+    expect(save).toHaveBeenCalledWith({
+      logoPath: '/api/collaborations/logos/new-logo.png',
+      version: Edit.args!.collaboration!.editing!.version,
+    })
+  })
+
+  test('removes an existing logo without uploading a new file', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn()
+    const upload = vi.fn()
+    renderWithIntl(
+      <CollaborationForm
+        {...WithLogo.args}
+        onUploadLogo={upload}
+        onSave={save}
+        onCancel={() => {}}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Quitar imagen' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(upload).not.toHaveBeenCalled()
+    expect(save).toHaveBeenCalledWith({
+      logoPath: '',
+      version: Edit.args!.collaboration!.editing!.version,
+    })
   })
 })
