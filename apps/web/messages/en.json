@@ -1630,6 +1630,7 @@
       "institutionRequired": "Institution is required.",
       "invalidEmail": "One or more email addresses are invalid.",
       "maxEmails": "Maximum 2 contact email addresses.",
+      "invalidSrc": "The photo must be a site path or an already uploaded image.",
       "versionRequired": "The researcher version is required and must match what was loaded.",
       "confirmationsOnlyWithContent": "Confirmations only apply to a content update.",
       "noFieldsToUpdate": "The request does not include any fields to update."
@@ -1644,7 +1645,7 @@
       "deleteConfirm": "Delete",
       "deleteCancel": "Cancel",
       "photoLabel": "Photo",
-      "photoHelp": "Optional. Researcher portrait, in JPG or PNG format.",
+      "photoHelp": "Optional. Researcher portrait, in JPG, PNG, WebP or GIF format.",
       "roleLabel": "Role",
       "roleRequired": "Role is required.",
       "nameLabel": "Name",

@@ -1630,6 +1630,7 @@
       "institutionRequired": "La institución es obligatoria.",
       "invalidEmail": "Uno o más correos no son válidos.",
       "maxEmails": "Máximo 2 correos de contacto.",
+      "invalidSrc": "La foto debe ser una ruta del sitio o una imagen ya subida.",
       "versionRequired": "La versión del investigador es obligatoria y debe ser la que se cargó.",
       "confirmationsOnlyWithContent": "Las confirmaciones solo aplican a una actualización de contenido (content).",
       "noFieldsToUpdate": "La solicitud no incluye ningún campo para actualizar."
@@ -1644,7 +1645,7 @@
       "deleteConfirm": "Eliminar",
       "deleteCancel": "Cancelar",
       "photoLabel": "Foto",
-      "photoHelp": "Opcional. Retrato del investigador, en formato JPG o PNG.",
+      "photoHelp": "Opcional. Retrato del investigador, en formato JPG, PNG, WebP o GIF.",
       "roleLabel": "Rol",
       "roleRequired": "El rol es obligatorio.",
       "nameLabel": "Nombre",
