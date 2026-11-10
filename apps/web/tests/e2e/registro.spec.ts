@@ -173,9 +173,8 @@ test('refuses an empty submission and names every missing field', async ({ page 
 
   await submitButton(page).click()
 
-  const alert = formAlert(page)
-  await expect(alert).toHaveText(registrationMessages.reviewFields)
-  await expect(alert).toBeFocused()
+  await expect(formAlert(page)).toHaveCount(0)
+  await expect(field(page, 'fullName')).toBeFocused()
   for (const name of REGISTRATION_FIELDS) {
     await expect(field(page, name)).toHaveAttribute('aria-invalid', 'true')
     await expect(field(page, name)).toHaveAccessibleDescription(describedBy(requiredMessages[name]))
@@ -202,7 +201,8 @@ test('rejects invalid formats and keeps the values that were fine', async ({ pag
   })
   await submitButton(page).click()
 
-  await expect(formAlert(page)).toHaveText(registrationMessages.reviewFields)
+  await expect(formAlert(page)).toHaveCount(0)
+  await expect(field(page, 'email')).toBeFocused()
   await expect(field(page, 'email')).toHaveAccessibleDescription(
     describedBy(registrationMessages.emailInvalid),
   )
@@ -241,7 +241,8 @@ test('does not create a second account for an email that is already registered',
   await expect(field(page, 'email')).toHaveAccessibleDescription(
     describedBy(registrationMessages.emailTaken),
   )
-  await expect(formAlert(page)).toHaveText(registrationMessages.reviewFields)
+  await expect(field(page, 'email')).toBeFocused()
+  await expect(formAlert(page)).toHaveCount(0)
   await expect(page.getByRole('status')).toHaveCount(0)
 })
 

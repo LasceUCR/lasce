@@ -57,8 +57,9 @@ The Server Action returns one flat state object:
 ```
 
 `values` echoes the four non-secret fields so the visitor does not retype them; passwords are never
-returned. `fieldErrors` carries the first message per failed field and `formError` the summary
-shown in the `role="alert"` region, which receives focus after a failed submission.
+returned. `fieldErrors` carries the first message per failed field, displayed inline via `FormField`
+(with focus moved to the first invalid field). `formError` is reserved for unexpected service errors,
+which are displayed through a platform toast (`useToast()`).
 
 ## Passwords
 

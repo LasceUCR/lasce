@@ -1,7 +1,8 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
+import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { LOGIN_HREF } from '@/app/lib/auth/login'
 import {
   REGISTRATION_FIELDS,
@@ -11,6 +12,7 @@ import {
   registrationMessages,
   type RegistrationState,
 } from '@/app/lib/auth/registration'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { RegistrationForm, type RegistrationFormProps } from './RegistrationForm'
 import {
@@ -31,11 +33,15 @@ const duplicateEmailArgs = DuplicateEmail.args as RegistrationFormProps
 const failedArgs = Failed.args as RegistrationFormProps
 const successArgs = Success.args as RegistrationFormProps
 
+function renderForm(ui: React.ReactElement) {
+  return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
+}
+
 const control = (label: string) => screen.getByLabelText(label, { exact: true })
 
 describe('RegistrationForm', () => {
   test('renders the six fields in order, the required note and the submit button', () => {
-    render(<RegistrationForm {...defaultArgs} />)
+    renderForm(<RegistrationForm {...defaultArgs} />)
 
     const labels = REGISTRATION_FIELDS.map((field) => REGISTRATION_LABELS[field])
     const rendered = screen
@@ -53,11 +59,11 @@ describe('RegistrationForm', () => {
       'type',
       'submit',
     )
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(document.querySelector('.form-alert')).toBeNull()
   })
 
   test('shows the optional card heading', () => {
-    render(<RegistrationForm {...withHeadingArgs} />)
+    renderForm(<RegistrationForm {...withHeadingArgs} />)
 
     expect(
       screen.getByRole('heading', { level: 2, name: withHeadingArgs.heading?.title }),
@@ -76,10 +82,10 @@ describe('RegistrationForm', () => {
         countryCode: 'CR',
       },
       fieldErrors: { email: registrationMessages.emailTaken },
-      formError: registrationMessages.reviewFields,
+      formError: null,
     }
     const action = vi.fn().mockResolvedValue(result)
-    render(<RegistrationForm {...defaultArgs} action={action} />)
+    renderForm(<RegistrationForm {...defaultArgs} action={action} />)
 
     await user.type(control(REGISTRATION_LABELS.fullName), 'Ana Pérez')
     await user.type(control(REGISTRATION_LABELS.email), 'ana@ucr.ac.cr')
@@ -101,28 +107,37 @@ describe('RegistrationForm', () => {
       passwordConfirmation: 'una contraseña',
     })
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(registrationMessages.reviewFields)
+    expect(document.querySelector('.form-alert')).toBeNull()
     expect(control(REGISTRATION_LABELS.email)).toHaveAccessibleDescription(
       registrationMessages.emailTaken,
     )
+    expect(control(REGISTRATION_LABELS.email)).toHaveFocus()
   })
 
   test('disables the button and announces the pending state while the action runs', async () => {
     const user = userEvent.setup()
-    const action = vi.fn(() => new Promise<RegistrationState>(() => {}))
-    render(<RegistrationForm {...defaultArgs} action={action} />)
+    let resolveAction: (state: RegistrationState) => void = () => {}
+    const action = vi.fn(
+      () =>
+        new Promise<RegistrationState>((resolve) => {
+          resolveAction = resolve
+        }),
+    )
+    renderForm(<RegistrationForm {...defaultArgs} action={action} />)
 
     await user.click(screen.getByRole('button', { name: registrationFormCopy.submit }))
 
     const button = await screen.findByRole('button', { name: registrationFormCopy.submitting })
     expect(button).toBeDisabled()
     expect(button.closest('form')).toHaveAttribute('aria-busy', 'true')
+
+    resolveAction(initialRegistrationState)
   })
 
-  test('names every missing field and summarises the problem in an alert', () => {
-    render(<RegistrationForm {...missingFieldsArgs} />)
+  test('names every missing field and focuses the first invalid field without a top alert', () => {
+    renderForm(<RegistrationForm {...missingFieldsArgs} />)
 
-    expect(screen.getByRole('alert')).toHaveTextContent(registrationMessages.reviewFields)
+    expect(document.querySelector('.form-alert')).toBeNull()
     for (const field of REGISTRATION_FIELDS) {
       const input = control(REGISTRATION_LABELS[field])
       expect(input).toHaveAttribute('aria-invalid', 'true')
@@ -130,10 +145,11 @@ describe('RegistrationForm', () => {
         new RegExp(missingFieldsArgs.initialState?.fieldErrors[field] ?? '$never'),
       )
     }
+    expect(control(REGISTRATION_LABELS.fullName)).toHaveFocus()
   })
 
   test('refills the non-secret fields and leaves the passwords empty after an error', () => {
-    render(<RegistrationForm {...invalidFormatArgs} />)
+    renderForm(<RegistrationForm {...invalidFormatArgs} />)
     const values = invalidFormatArgs.initialState?.values
 
     expect(control(REGISTRATION_LABELS.fullName)).toHaveValue(values?.fullName)
@@ -148,28 +164,64 @@ describe('RegistrationForm', () => {
     expect(control(REGISTRATION_LABELS.passwordConfirmation)).toHaveAccessibleDescription(
       registrationMessages.confirmationMismatch,
     )
+    expect(control(REGISTRATION_LABELS.email)).toHaveFocus()
   })
 
   test('points a duplicate email at the email field', () => {
-    render(<RegistrationForm {...duplicateEmailArgs} />)
+    renderForm(<RegistrationForm {...duplicateEmailArgs} />)
 
     const email = control(REGISTRATION_LABELS.email)
     expect(email).toHaveAttribute('aria-invalid', 'true')
     expect(email).toHaveAccessibleDescription(registrationMessages.emailTaken)
     expect(control(REGISTRATION_LABELS.fullName)).not.toHaveAttribute('aria-invalid')
+    expect(email).toHaveFocus()
   })
 
-  test('shows an unexpected failure as the alert without marking any field', () => {
-    render(<RegistrationForm {...failedArgs} />)
+  test('shows an unexpected failure in a toast without marking any field', async () => {
+    renderForm(<RegistrationForm {...failedArgs} />)
 
-    expect(screen.getByRole('alert')).toHaveTextContent(registrationMessages.unexpected)
+    expect(document.querySelector('.form-alert')).toBeNull()
+    expect(await screen.findByText(registrationMessages.unexpected)).toBeInTheDocument()
     for (const field of REGISTRATION_FIELDS) {
       expect(control(REGISTRATION_LABELS[field])).not.toHaveAttribute('aria-invalid')
     }
   })
 
+  test('shows an error toast when registration fails with a service error', async () => {
+    const user = userEvent.setup()
+    const result: RegistrationState = {
+      status: 'error',
+      values: {
+        fullName: 'Ana Pérez',
+        email: 'ana@ucr.ac.cr',
+        institution: 'UCR',
+        countryCode: 'CR',
+      },
+      fieldErrors: {},
+      formError: registrationMessages.unexpected,
+    }
+    const action = vi.fn().mockResolvedValue(result)
+    renderForm(<RegistrationForm {...defaultArgs} action={action} />)
+
+    await user.type(control(REGISTRATION_LABELS.fullName), 'Ana Pérez')
+    await user.type(control(REGISTRATION_LABELS.email), 'ana@ucr.ac.cr')
+    await user.type(control(REGISTRATION_LABELS.institution), 'UCR')
+    await user.selectOptions(control(REGISTRATION_LABELS.countryCode), 'CR')
+    await user.type(control(REGISTRATION_LABELS.password), 'una contraseña')
+    await user.type(control(REGISTRATION_LABELS.passwordConfirmation), 'una contraseña')
+    await user.click(screen.getByRole('button', { name: registrationFormCopy.submit }))
+
+    await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
+    const [previousState, formData] = action.mock.calls[0] as [RegistrationState, FormData]
+    expect(previousState).toEqual(initialRegistrationState)
+    expect(formData.get('email')).toBe('ana@ucr.ac.cr')
+
+    expect(await screen.findByText(registrationMessages.unexpected)).toBeInTheDocument()
+    expect(document.querySelector('.form-alert')).toBeNull()
+  })
+
   test('replaces the form with the confirmation once the account exists', () => {
-    render(<RegistrationForm {...successArgs} />)
+    renderForm(<RegistrationForm {...successArgs} />)
 
     const status = screen.getByRole('status')
     expect(status).toHaveTextContent(registrationFormCopy.successTitle)
