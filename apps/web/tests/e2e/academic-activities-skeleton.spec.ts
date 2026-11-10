@@ -13,8 +13,10 @@ test.describe('Academic Activities loading & skeleton layout', () => {
       page.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
     ).toBeVisible()
 
-    // Loading region is not busy once activities are displayed
+    // The streamed fallback and the loaded list share this id until Next swaps the
+    // fallback out. Wait until only the settled region remains, and it is not busy.
     const loadingRegion = page.locator('#academic-activities-loading-region')
+    await expect(loadingRegion).toHaveCount(1)
     await expect(loadingRegion).toBeVisible()
     await expect(loadingRegion).not.toHaveAttribute('aria-busy')
 
