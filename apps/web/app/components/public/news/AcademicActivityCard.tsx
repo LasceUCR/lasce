@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 
 import { TruncatedText } from '@/app/components/public/TruncatedText'
 import type { AcademicActivity } from '@/app/lib/academic-activities'
+import { contentLangAttribute } from '@/app/lib/i18n/content/resolve'
 
 export interface AcademicActivityCardProps {
   activity: AcademicActivity
@@ -15,17 +16,16 @@ export interface AcademicActivityCardProps {
  */
 export function AcademicActivityCard({ activity }: AcademicActivityCardProps) {
   const t = useTranslations('academicActivities.card')
+  const contentLang = contentLangAttribute(activity.contentLocale)
 
   return (
     <article className="surface-card news-card academic-activity-card">
-      <div
-        className={`news-card-image${activity.imageAlt === '' ? ' news-card-image-decorative' : ''}`}
-      >
+      <div className="news-card-image">
         <Image
-          alt={activity.imageAlt}
+          alt={activity.photoAlt}
           fill
           sizes="(max-width: 768px) 100vw, 320px"
-          src={activity.imageUrl}
+          src={activity.photoUrl}
         />
       </div>
 
@@ -33,11 +33,13 @@ export function AcademicActivityCard({ activity }: AcademicActivityCardProps) {
         <div className="academic-activity-card-header">
           <span className="academic-activity-badge">{t('badge')}</span>
           {activity.category ? (
-            <span className="academic-activity-category">{activity.category}</span>
+            <span className="academic-activity-category" lang={contentLang}>
+              {activity.category}
+            </span>
           ) : null}
         </div>
 
-        <h3>{activity.title}</h3>
+        <h3 lang={contentLang}>{activity.title}</h3>
 
         <p className="news-meta">
           {activity.date}
@@ -45,7 +47,11 @@ export function AcademicActivityCard({ activity }: AcademicActivityCardProps) {
         </p>
 
         {activity.description ? (
-          <TruncatedText className="academic-activity-card-description" lines={3}>
+          <TruncatedText
+            className="academic-activity-card-description"
+            lang={contentLang}
+            lines={3}
+          >
             {activity.description}
           </TruncatedText>
         ) : null}

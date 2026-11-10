@@ -67,8 +67,58 @@ const validationMessages: Record<Locale, ResearcherValidationMessages> = {
   en: en.researchers.validation,
 }
 
+/**
+ * Origin of a portrait uploaded through the storage client: the same host `getPublicUrl` builds
+ * from `MINIO_ENDPOINT`. Read when a body is checked, not when this module loads, so the rule
+ * follows the process that is actually serving. `''` means no absolute address is trusted.
+ */
+function configuredUploadOrigin(): string {
+  const raw = process.env.MINIO_ENDPOINT || 'localhost'
+  const useSsl = process.env.MINIO_USE_SSL === 'true'
+
+  let absolute: string
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    absolute = raw
+  } else {
+    const [host, portPart] = raw.split(':')
+    const hostname = host || 'localhost'
+    const port = portPart || process.env.MINIO_PORT || '9000'
+    const scheme = useSsl ? 'https' : 'http'
+    const defaultPort = useSsl ? '443' : '80'
+    absolute = port === defaultPort ? `${scheme}://${hostname}` : `${scheme}://${hostname}:${port}`
+  }
+
+  try {
+    return new URL(absolute).origin
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * A photo `next/image` can render: nothing, a site path (`/images/...`, never a protocol-relative
+ * `//host`), or a file on the configured upload host. Anything else — another host, `javascript:`,
+ * a relative path — is rejected before it can be stored and break the page for every visitor.
+ */
+function isSiteOrUploadSrc(value: string): boolean {
+  if (value === '') return true
+  if (value.startsWith('/') && !value.startsWith('//')) return true
+
+  try {
+    const url = new URL(value)
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      !url.username &&
+      !url.password &&
+      url.origin === configuredUploadOrigin()
+    )
+  } catch {
+    return false
+  }
+}
+
 function createSharedSchemas(messages: ResearcherValidationMessages) {
-  const srcSchema = z.string().trim()
+  const srcSchema = z.string().trim().refine(isSiteOrUploadSrc, { message: messages.invalidSrc })
   const nameSchema = z.string().trim().min(1, messages.nameRequired)
   const institutionSchema = z.string().trim().min(1, messages.institutionRequired)
   const emailSchema = z

@@ -139,39 +139,14 @@ export function notifyAccountChanged(): void {
 }
 
 /**
- * The account menu, its mobile equivalent and the sign-out confirmation read their copy from the
- * `account` catalogue namespace (`useTranslations('account')`) instead of this module, so it
- * follows the site's language. `ROLE_LABELS` below stays Spanish-only: it also backs the `/cuenta`
- * page (still untranslated) and the audit summaries stored in Spanish. `/administracion/usuarios`
- * names the roles from `access.roles` instead (`roleName`).
+ * The account menu, its mobile equivalent, the sign-out confirmation and the `/cuenta` page
+ * read their copy from the `account` catalogue namespace (`useTranslations('account')` and
+ * `getTranslations('account')`) so they follow the site's language. `ROLE_LABELS` below stays
+ * Spanish-only: it backs the audit summaries stored in Spanish and serves as a Spanish fixture.
+ * `/administracion/usuarios` names the roles from `access.roles` instead (`roleName`).
  */
 export const ROLE_LABELS: Record<UserRole, string> = {
   VISITOR: 'Visitante',
   ASSISTANT: 'Asistente',
   ADMIN: 'Persona administradora',
 }
-
-export const cuentaMeta = {
-  title: 'Mi cuenta | LASCE',
-  description:
-    'Tu perfil en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-} as const
-
-export const cuentaIntro = {
-  title: 'Mi cuenta',
-  lead: 'Tu perfil en el portal y el control de tu sesión.',
-} as const
-
-export const accountSummaryCopy = {
-  fullName: 'Nombre',
-  email: 'Correo electrónico',
-  institution: 'Institución',
-  country: 'País',
-  role: 'Rol',
-  memberSince: 'Miembro desde',
-} as const
-
-export const cuentaBackLink = {
-  href: '/',
-  label: 'Volver al inicio',
-} as const

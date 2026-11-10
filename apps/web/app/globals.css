@@ -2952,12 +2952,32 @@ a {
   gap: 16px;
 }
 
-/* Only on the dedicated `/actividades-academicas` page, not the `/noticias` teaser — that one
-   already gets its own bottom spacing from `.academic-activities`'s 32px padding-bottom. Matches
-   `.publications`'s 56px before its own `TopicBackLink` footer: a list of cards reads better with
-   more room above the footer than a plain `TopicSection` of text gets. */
-.academic-activities-list-standalone {
+.academic-activities-explorer {
+  margin-top: 8px;
   padding-bottom: 56px;
+}
+
+.academic-activities-explorer .search-filter-bar {
+  margin: 0;
+}
+
+.academic-activities-summary {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Match the search bar's width and the news listing's left-aligned empty-state copy. */
+#academic-activities-loading-region .content-empty {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+/* Keep the teaser's spacing independent from the dedicated page's explorer. */
+.academic-activities-list-standalone {
+  padding-bottom: 0;
 }
 
 .academic-activity-card-header {
@@ -5555,10 +5575,13 @@ a.acknowledgments-card:focus-visible {
 
 /* --- Administración (/administracion) --- */
 
+/* `.public-shell` already keeps the footer at the bottom of the viewport; the
+   shell only fills the space left in the main column, so a short page shows the
+   footer at the bottom of the screen instead of below it. */
 .admin-shell {
+  flex: 1;
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
-  min-height: calc(100vh - var(--header-height));
 }
 
 .admin-sidebar {
@@ -5604,6 +5627,15 @@ a.acknowledgments-card:focus-visible {
 .admin-sidebar a.active {
   background: var(--blue-dark);
   color: var(--white);
+}
+
+/* The fixed sidebar reaches the bottom of the viewport, so on desktop the shared
+   footer starts to its right instead of running underneath it. Below 1120px the
+   sidebar becomes a sticky bar and the footer takes the full width again. */
+@media (min-width: 1121px) {
+  body:has(.admin-shell) .site-footer {
+    margin-left: 240px;
+  }
 }
 
 /* The narrow-screen toggle. Above 1120px the sidebar itself is the menu. */
