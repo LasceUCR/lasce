@@ -77,10 +77,18 @@ interface Confirmed {
  *
  * The capabilities are fetched again when the account cookie changes, when
  * `refreshKey` changes (the header passes the pathname, so a role or matrix
- * change shows on the next navigation) and when the tab becomes visible. When
- * the server says the session is gone, the stale cookie is removed and edit
- * mode is turned off; edit mode is also turned off when the account can no
- * longer edit, and on sign-out.
+ * change shows on the next navigation) and when the tab becomes visible.
+ *
+ * A confirmation only ever stands for the login it was given to, so it is
+ * discarded, and edit mode turned off where that matters, whenever:
+ * - a check fails (server error or network), other than an aborted request
+ *   that a newer one replaced;
+ * - the server says the session is gone (the stale cookie is removed too);
+ * - the account cookie changes or disappears, for instance after signing out
+ *   in another tab; a cookie that comes back, even with the same name, waits
+ *   for a fresh answer, because a display name does not identify a session;
+ * - the visitor signs out;
+ * - the server says the account can no longer edit (edit mode only).
  */
 export function useAccount(logoutAction: () => Promise<void>, refreshKey?: string): AccountState {
   const snapshot = useSyncExternalStore(subscribeAccount, readClientSnapshot, readServerSnapshot)
@@ -101,6 +109,19 @@ export function useAccount(logoutAction: () => Promise<void>, refreshKey?: strin
     if (setEditMode) setEditMode(false)
     else clearStoredEditMode()
   }
+
+  // Forget the previous login's confirmation whenever the cookie changes, and turn edit mode off
+  // when it disappears (signed out here or in another tab). Only on a real change: during
+  // hydration the snapshot goes from the server's `null` to the cookie, which is not a sign-out,
+  // and a navigation (`refreshKey`) keeps the cookie, so it must not hide the controls.
+  const previousSnapshot = useRef(snapshot)
+  useEffect(() => {
+    if (previousSnapshot.current === snapshot) return
+    const hadAccount = previousSnapshot.current !== null
+    previousSnapshot.current = snapshot
+    setConfirmed(null)
+    if (hadAccount && !snapshot) turnEditModeOff()
+  }, [snapshot])
 
   useEffect(() => {
     function onVisible() {
@@ -147,7 +168,12 @@ export function useAccount(logoutAction: () => Promise<void>, refreshKey?: strin
         if (!capabilities.canEdit) turnEditModeOff()
       })
       .catch(() => {
-        // Network or server error, or abort: offer nothing privileged and keep the greeting.
+        // Superseded by a newer request (navigation, cookie change, unmount): that one decides.
+        if (controller.signal.aborted) return
+        // Network or server error: keep the greeting, but a failed check confirms nothing, so
+        // withdraw anything an earlier answer offered.
+        setConfirmed(null)
+        turnEditModeOff()
       })
 
     return () => controller.abort()
@@ -156,6 +182,10 @@ export function useAccount(logoutAction: () => Promise<void>, refreshKey?: strin
 
   function signOut() {
     const previous = snapshot ? parseAccountCookieValue(snapshot) : null
+
+    // The confirmation belonged to the session being closed. If the cookie comes back (the
+    // action fails, or someone writes it by hand), the server has to confirm again.
+    setConfirmed(null)
 
     startTransition(async () => {
       turnEditModeOff()

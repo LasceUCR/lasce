@@ -120,13 +120,29 @@ answer arrives, and whenever it fails, `canAccessAdmin` and `canEdit` are `false
 privileged is shown on a guess. `parseSessionCapabilities` treats any malformed body as signed out,
 and only a literal `true` grants a capability.
 
+A confirmation only stands for the login it was given to. `useAccount` discards it, so the
+controls disappear until a new successful answer, when:
+
+- a later check fails (server error or network). Edit mode is turned off too; the greeting and the
+  cookie stay, because a failure is not a sign-out. A request aborted because a newer one replaced
+  it (navigation, cookie change, unmount) changes nothing: the newer one decides;
+- the account cookie changes or disappears (for instance, signed out in another tab). When it
+  disappears, edit mode is turned off in the provider and in `localStorage`;
+- the visitor signs out. If the `{ name }` cookie comes back afterwards, by the failed-action path
+  or by hand, the server has to confirm again: a display name does not identify a session.
+
+The snapshot moving from the server render's `null` to the cookie during hydration is not treated
+as a sign-out, and a navigation keeps the previous answer until the new one arrives, so the
+controls do not flicker.
+
 `AccountMenu` and `AccountLinks` take `canAccessAdmin` and `canEdit` as props; the `role` they also
 get only labels the account. `AccountLinks` renders "Ingresar", or the account menu (desktop) and
 plain links (mobile); registration is reached through the access page's own tab.
 
 Edit mode is a presentation preference kept in `localStorage` (`lasce:cms-edit-mode`). It is turned
-off when the account signs out, when the server answers `signedIn: false` (the stale account cookie
-is also removed) and when the server says the account cannot edit. It never unlocks anything on its
+off when the account signs out, when the account cookie disappears, when the server answers
+`signedIn: false` (the stale account cookie is also removed), when a check fails and when the
+server says the account cannot edit. It never unlocks anything on its
 own: every create, edit and delete control also needs the page's server-computed grant
 (`userHasPermission`), and every write repeats the check in its Route Handler or Server Action.
 
