@@ -408,12 +408,13 @@ test('gives the live badge, its close button and the footer links 44px touch tar
         const rect = element.getBoundingClientRect()
         const x = rect.left + rect.width / 2
         const y = rect.top + rect.height / 2
-        return [
+        const edges: Array<[number, number]> = [
           [x - 21, y],
           [x + 21, y],
           [x, y - 21],
           [x, y + 21],
-        ].every(([px, py]) => {
+        ]
+        return edges.every(([px, py]) => {
           const hit = document.elementFromPoint(px, py)
           return hit !== null && (hit === element || element.contains(hit))
         })
