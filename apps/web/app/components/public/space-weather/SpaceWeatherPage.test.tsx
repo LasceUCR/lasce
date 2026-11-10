@@ -102,7 +102,9 @@ describe('SpaceWeatherPage', () => {
   test('shows the stored Costa Rica card, one paragraph per block of text, in its language', () => {
     render(<SpaceWeatherPage content={spaceWeatherContent} costaRicaSection={bilingualSection} />)
 
-    const card = screen.getByRole('region', { name: bilingualSection.title })
+    // The card is the page's fourth section, so its heading (and the region it names) is numbered.
+    const name = `4. ${bilingualSection.title}`
+    const card = screen.getByRole('region', { name })
     for (const paragraph of bilingualSection.paragraphs) {
       expect(within(card).getByText(paragraph)).toBeInTheDocument()
     }
@@ -110,10 +112,7 @@ describe('SpaceWeatherPage', () => {
       'lang',
       'es',
     )
-    expect(within(card).getByRole('heading', { name: bilingualSection.title })).toHaveAttribute(
-      'lang',
-      'es',
-    )
+    expect(within(card).getByRole('heading', { name })).toHaveAttribute('lang', 'es')
   })
 
   test('falls back to the catalogue text when the card is not stored', () => {
