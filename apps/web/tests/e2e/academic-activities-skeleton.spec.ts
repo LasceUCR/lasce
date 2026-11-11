@@ -14,7 +14,7 @@ test.describe('Academic Activities loading & skeleton layout', () => {
     ).toBeVisible()
 
     // Loading region is not busy once activities are displayed
-    const loadingRegion = page.locator('#academic-activities-loading-region')
+    const loadingRegion = page.locator('#academic-activities-loading-region').last()
     await expect(loadingRegion).toBeVisible()
     await expect(loadingRegion).not.toHaveAttribute('aria-busy')
 
