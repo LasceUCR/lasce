@@ -1904,6 +1904,7 @@
       "minimum": "Mínimo",
       "maximum": "Máximo",
       "latest": "Último valor",
+      "flareClass": "Clase de fulguración {flareClass}",
       "chartCaptionObserved": "Observaciones de {provider}.",
       "chartCaptionSimulated": "Serie simulada para preparar la futura integración de ROSAC.",
       "tableToggle": "Ver valores de la gráfica ({count})",
@@ -1933,6 +1934,11 @@
       "description": "Serie de {count} mediciones entre {start} y {end} UTC. El valor mínimo es {minimum} y el máximo es {maximum} {unit}.",
       "empty": "No hay valores para graficar.",
       "caption": "{caption} Unidad: {unit}.",
+      "logScale": "El eje vertical usa escala logarítmica.",
+      "flareClasses": "Las letras A, B, C, M y X a la derecha marcan las clases de fulguración solar.",
+      "peakClass": "El máximo corresponde a una fulguración de clase {flareClass}.",
+      "tooltip": "{time} UTC: {value} {unit}",
+      "keyboardHint": "Use las flechas izquierda y derecha para recorrer los valores, Inicio y Fin para ir al primero y al último.",
       "low": "Baja",
       "high": "Alta",
       "spectrumDescription": "Mapa de intensidad por tiempo y frecuencia, desde {minFreq} hasta {maxFreq} {frequencyUnit} y desde {start} hasta {end} UTC. Los valores van de {minimum} a {maximum} {unit}.",
@@ -1965,7 +1971,7 @@
       "downloadEmpty": "No hay datos para descargar con los criterios seleccionados."
     },
     "origins": {
-      "sampled": "Se muestran {count} observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.",
+      "sampled": "La gráfica muestra {count} puntos: el valor más bajo y el más alto de cada tramo del intervalo, sin interpolar. El mínimo, el máximo y el último valor se calculan con todas las observaciones.",
       "full": "Sin muestreo: incluye todas las observaciones válidas del intervalo.",
       "exis": {
         "provider": "GOES",

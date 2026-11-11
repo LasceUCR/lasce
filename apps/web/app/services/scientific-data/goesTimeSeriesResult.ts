@@ -4,6 +4,7 @@ import {
   type ScientificDataPoint,
   type ScientificDataQuery,
   type TimeSeriesDataResult,
+  type TimeSeriesSummary,
 } from '@/app/lib/scientific-data'
 
 export interface GoesTimeSeriesOrigin extends Pick<
@@ -21,6 +22,8 @@ export function buildGoesTimeSeriesResult(
   query: ScientificDataQuery,
   points: ScientificDataPoint[],
   origin: GoesTimeSeriesOrigin,
+  /** Minimum, maximum and latest of every reading in the window, when the reader knows them. */
+  summary?: TimeSeriesSummary,
 ): TimeSeriesDataResult {
   const selection = findScientificProduct(query.source, query.product)
   if (query.source !== 'GOES' || !selection || selection.product.visualization !== 'time-series') {
@@ -47,5 +50,6 @@ export function buildGoesTimeSeriesResult(
       ...(origin.sampledPoints ? { sampledPoints: origin.sampledPoints } : {}),
       ...(origin.satellite ? { satellite: origin.satellite } : {}),
     },
+    ...(summary ? { summary } : {}),
   }
 }

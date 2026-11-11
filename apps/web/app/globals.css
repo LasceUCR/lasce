@@ -1595,19 +1595,26 @@ a {
   margin: 1.25rem auto 0;
 }
 
+/* The charts are laid out for their container's width (`useElementWidth`), so they never scroll
+   sideways and the vertical axis stays in view on a phone. */
 .data-chart {
   display: block;
   width: 100%;
-  min-width: 47.5rem;
   height: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--white);
+  touch-action: pan-y;
 }
 
 .data-chart-viewport {
   max-width: 100%;
-  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.data-chart-viewport:focus-visible {
+  outline: 2px solid var(--bright-teal-blue);
+  outline-offset: 2px;
 }
 
 .data-chart-figure figcaption {
@@ -1644,6 +1651,51 @@ a {
   fill: var(--white);
   stroke: var(--blue-dark);
   stroke-width: 1.5;
+}
+
+.data-chart-flare-class {
+  fill: var(--blue-dark);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.data-chart-peak-label {
+  fill: var(--blue-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.data-chart-tooltip {
+  pointer-events: none;
+}
+
+.data-chart-tooltip-guide {
+  stroke: var(--muted);
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+}
+
+.data-chart-tooltip-point {
+  fill: var(--bright-teal-blue);
+  stroke: var(--white);
+  stroke-width: 2;
+}
+
+.data-chart-tooltip-box {
+  fill: var(--white);
+  stroke: var(--border);
+  filter: drop-shadow(0 2px 4px rgb(2 48 71 / 0.15));
+}
+
+.data-chart-tooltip-text {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.data-chart-tooltip-value {
+  fill: var(--blue-dark);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .data-color-legend {
@@ -2325,6 +2377,13 @@ a {
   display: block;
   margin-top: 0.25rem;
   font-size: 1rem;
+}
+
+.data-summary .data-summary-note {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--blue-dark);
+  font-weight: 600;
 }
 
 .data-results .content-empty {

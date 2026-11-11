@@ -3,11 +3,10 @@
 import { useTranslations } from 'next-intl'
 import { useId } from 'react'
 
-import {
-  DYNAMIC_SPECTRUM_CHART as chart,
-  layoutDynamicSpectrum,
-} from '@/app/lib/charts/dynamicSpectrumLayout'
+import { layoutDynamicSpectrum } from '@/app/lib/charts/dynamicSpectrumLayout'
 import type { DynamicSpectrumCell } from '@/app/lib/scientific-data'
+
+import { useElementWidth } from './useElementWidth'
 
 export interface DynamicSpectrumChartProps {
   label: string
@@ -39,7 +38,8 @@ export function DynamicSpectrumChart({
   const t = useTranslations('scientificData.charts')
   const titleId = useId()
   const descriptionId = useId()
-  const layout = layoutDynamicSpectrum({ cells, frequencies, timestamps })
+  const { ref: viewportRef, width } = useElementWidth<HTMLDivElement>()
+  const layout = layoutDynamicSpectrum({ cells, frequencies, timestamps }, { width })
   if (!layout) {
     return (
       <p className="content-empty" role="status">
@@ -47,13 +47,22 @@ export function DynamicSpectrumChart({
       </p>
     )
   }
-  const { firstTimestamp, lastTimestamp, maximum, middleTimestamp, minimum, plotWidth, rects } =
-    layout
+  const {
+    firstTimestamp,
+    frame: chart,
+    lastTimestamp,
+    maximum,
+    middleTimestamp,
+    minimum,
+    plotWidth,
+    rects,
+  } = layout
 
   return (
     <figure className="data-chart-figure">
       <div
         className="data-chart-viewport"
+        ref={viewportRef}
         role="region"
         aria-label={t('areaLabel', { label })}
         tabIndex={0}
