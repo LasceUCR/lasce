@@ -64,6 +64,7 @@ export function CollaborationForm({
   const [draft, setDraft] = useState(initial)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const uploadedLogo = useRef<{ file: File; url: string } | null>(null)
+  const uploadPromise = useRef<Promise<string | null> | null>(null)
   const pending = useRef(false)
   const [saving, setSaving] = useState(false)
   const isBusy = busy || saving
@@ -72,6 +73,9 @@ export function CollaborationForm({
   const [attempted, setAttempted] = useState(false)
   const [focusRequest, setFocusRequest] = useState(0)
   const [discard, setDiscard] = useState(false)
+  const [enManuallyEdited, setEnManuallyEdited] = useState(() =>
+    Boolean(collaboration?.editing?.content?.en?.country),
+  )
   const stored = collaboration?.editing?.content ?? null
   const needed = reviewsNeeded(collaborationContent, stored, draft.content)
   const validate = () =>
@@ -93,7 +97,12 @@ export function CollaborationForm({
 
   function requestCancel() {
     if (isBusy) return
-    if (logoFile || JSON.stringify(initial) !== JSON.stringify(draft)) setDiscard(true)
+    if (
+      logoFile ||
+      draft.logoPath !== initial.logoPath ||
+      JSON.stringify(initial) !== JSON.stringify(draft)
+    )
+      setDiscard(true)
     else onCancel()
   }
   useImperativeHandle(ref, () => ({ requestCancel }))
@@ -118,7 +127,12 @@ export function CollaborationForm({
         setSaving(true)
         try {
           let nextDraft = draft
-          if (logoFile && onUploadLogo) {
+          if (uploadPromise.current) {
+            const url = await uploadPromise.current
+            if (url) {
+              nextDraft = { ...nextDraft, logoPath: url }
+            }
+          } else if (logoFile && !nextDraft.logoPath && onUploadLogo) {
             const url =
               uploadedLogo.current?.file === logoFile
                 ? uploadedLogo.current.url
@@ -183,21 +197,35 @@ export function CollaborationForm({
         >
           {(locale) => {
             const review = needed.find((value) => value.locale === locale)
+            const isBaseLocale = locale === defaultLocale
+            const hasBaseCountry = Boolean(draft.content[defaultLocale].country.trim())
             return (
               <>
                 {collaboration?.editing?.isLegacy ? <Notice>{t('editor.legacy')}</Notice> : null}
                 <FormField
                   id={`${formId}-${locale}-country`}
                   label={t('editor.country', { language: localeLabels[locale] })}
-                  required
+                  required={isBaseLocale || !hasBaseCountry}
                   lang={contentFieldLang(stored, locale)}
                   value={draft.content[locale].country}
                   error={errors[contentPath(locale, 'country')]}
                   onChange={(country) => {
-                    setDraft((value) => ({
-                      ...value,
-                      content: { ...value.content, [locale]: { country } },
-                    }))
+                    setDraft((value) => {
+                      const nextContent = {
+                        ...value.content,
+                        [locale]: { country },
+                      }
+                      if (!collaboration && isBaseLocale && !enManuallyEdited) {
+                        nextContent.en = { country }
+                      }
+                      return {
+                        ...value,
+                        content: nextContent,
+                      }
+                    })
+                    if (!isBaseLocale) {
+                      setEnManuallyEdited(true)
+                    }
                     setConfirmed([])
                   }}
                 />
@@ -226,12 +254,33 @@ export function CollaborationForm({
           helperText={t('editor.logoHelp')}
           accept={COLLABORATION_LOGO_ACCEPT}
           disabled={isBusy}
-          existingImageUrl={initial.logoPath || undefined}
+          existingImageUrl={draft.logoPath || initial.logoPath || undefined}
           errorMessage={errors.logoPath}
           onFileSelect={(file) => {
+            if (!file) {
+              setLogoFile(null)
+              uploadedLogo.current = null
+              uploadPromise.current = null
+              setDraft((value) => ({ ...value, logoPath: '' }))
+              return
+            }
             setLogoFile(file)
-            uploadedLogo.current = null
-            setDraft((value) => ({ ...value, logoPath: '' }))
+            if (onUploadLogo) {
+              const promise = onUploadLogo(file)
+              uploadPromise.current = promise
+              promise
+                .then((url) => {
+                  if (url) {
+                    uploadedLogo.current = { file, url }
+                    setDraft((value) => ({ ...value, logoPath: url }))
+                  }
+                })
+                .finally(() => {
+                  if (uploadPromise.current === promise) {
+                    uploadPromise.current = null
+                  }
+                })
+            }
           }}
         />
         <FormField

@@ -21,6 +21,21 @@ export interface CollaborationDraft {
   content: ContentDraft<'country'>
 }
 
+export function resolveCollaborationContentDraft(
+  record: ResearchCollaboration | undefined,
+  content: ContentDraft<'country'>,
+): ContentDraft<'country'> {
+  if (record?.editing?.isLegacy) {
+    return content
+  }
+  const esCountry = content.es?.country?.trim() ?? ''
+  const enCountry = content.en?.country?.trim() ?? ''
+  return {
+    es: { country: esCountry || enCountry },
+    en: { country: enCountry || esCountry },
+  }
+}
+
 export function collaborationDraft(record?: ResearchCollaboration): CollaborationDraft {
   return {
     name: record?.name ?? '',
@@ -41,10 +56,11 @@ export function validateCollaborationDraft(
   locale: Locale,
   messages: CollaborationFieldMessages,
 ): FormErrors {
+  const resolvedContent = resolveCollaborationContentDraft(record, draft.content)
   const errors = validateContent(
     collaborationContent,
     record?.editing?.content ?? null,
-    draft.content,
+    resolvedContent,
     confirmed,
     locale,
   )
@@ -66,8 +82,9 @@ export function collaborationRequest(
   for (const key of ['name', 'acronym', 'scope', 'websiteUrl', 'logoPath'] as const) {
     if (!record || initial[key].trim() !== draft[key].trim()) body[key] = draft[key].trim()
   }
-  if (hasContentChanges(collaborationContent, record?.editing?.content ?? null, draft.content)) {
-    body.content = toContentInput(collaborationContent, draft.content)
+  const resolvedContent = resolveCollaborationContentDraft(record, draft.content)
+  if (hasContentChanges(collaborationContent, record?.editing?.content ?? null, resolvedContent)) {
+    body.content = toContentInput(collaborationContent, resolvedContent)
     if (record) body.confirmedUnchanged = confirmed
   }
   if (!Object.keys(body).length) return null
