@@ -7132,7 +7132,7 @@ a.acknowledgments-card:focus-visible {
 
 .std-confirm-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
 }
 
