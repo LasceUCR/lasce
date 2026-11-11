@@ -5575,10 +5575,13 @@ a.acknowledgments-card:focus-visible {
 
 /* --- Administración (/administracion) --- */
 
+/* `.public-shell` already keeps the footer at the bottom of the viewport; the
+   shell only fills the space left in the main column, so a short page shows the
+   footer at the bottom of the screen instead of below it. */
 .admin-shell {
+  flex: 1;
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
-  min-height: calc(100vh - var(--header-height));
 }
 
 .admin-sidebar {
@@ -5624,6 +5627,15 @@ a.acknowledgments-card:focus-visible {
 .admin-sidebar a.active {
   background: var(--blue-dark);
   color: var(--white);
+}
+
+/* The fixed sidebar reaches the bottom of the viewport, so on desktop the shared
+   footer starts to its right instead of running underneath it. Below 1120px the
+   sidebar becomes a sticky bar and the footer takes the full width again. */
+@media (min-width: 1121px) {
+  body:has(.admin-shell) .site-footer {
+    margin-left: 240px;
+  }
 }
 
 /* The narrow-screen toggle. Above 1120px the sidebar itself is the menu. */
