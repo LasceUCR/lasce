@@ -7,12 +7,14 @@ import { HeroSolarObservation } from '@/app/components/public/HeroSolarObservati
 import { WorkAreasSection } from '@/app/components/public/WorkAreasSection'
 import type { WorkAreaItem } from '@/app/components/public/WorkAreasSection'
 import { EditableHomeHero } from '@/app/components/public/home/EditableHomeHero'
-import {
-  GeomagneticIndicators,
-  type IndicatorItem,
-} from '@/app/components/public/home/GeomagneticIndicators'
 import { userHasPermission } from '@/app/lib/auth/authorization'
-import { getHomeContent, indicatorCodes, indicatorTones, type HomeHeroData } from '@/app/lib/home'
+import { getHomeContent, type HomeHeroData } from '@/app/lib/home'
+// Geomagnetic indices lines.
+// import {
+//   GeomagneticIndicators,
+//   type IndicatorItem,
+// } from '@/app/components/public/home/GeomagneticIndicators'
+// import { indicatorCodes, indicatorTones } from '@/app/lib/home'
 import { resolveLocale } from '@/app/lib/i18n/locale'
 import { getHomeAreaCards, workAreasSectionId, type AreaCardDefinition } from '@/app/lib/work-areas'
 
@@ -53,20 +55,21 @@ export default async function HomePage() {
     lead: t('hero.lead'),
   }
 
-  const indicators: IndicatorItem[] =
-    content.indicators.length > 0
-      ? content.indicators.map(({ code, ...indicator }) => ({
-          ...indicator,
-          label: t(`indicators.${code}.label`),
-          tone: indicatorTones[code],
-        }))
-      : indicatorCodes.map((code) => ({
-          id: code,
-          label: t(`indicators.${code}.label`),
-          tone: indicatorTones[code],
-          value: t(`indicators.${code}.value`),
-          description: t(`indicators.${code}.description`),
-        }))
+  // Geomagnetic indices lines.
+  // const indicators: IndicatorItem[] =
+  //   content.indicators.length > 0
+  //     ? content.indicators.map(({ code, ...indicator }) => ({
+  //         ...indicator,
+  //         label: t(`indicators.${code}.label`),
+  //         tone: indicatorTones[code],
+  //       }))
+  //     : indicatorCodes.map((code) => ({
+  //         id: code,
+  //         label: t(`indicators.${code}.label`),
+  //         tone: indicatorTones[code],
+  //         value: t(`indicators.${code}.value`),
+  //         description: t(`indicators.${code}.description`),
+  //       }))
 
   return (
     <>
@@ -87,12 +90,14 @@ export default async function HomePage() {
       </section>
 
       <div className="home-content">
+        {/* Geomagnetic indices lines.
         <GeomagneticIndicators
           canEdit={canEdit}
           demoNotice={t('indicators.demoNotice')}
           indicators={indicators}
           title={t('indicators.title')}
         />
+        */}
 
         <WorkAreasSection
           id={workAreasSectionId}

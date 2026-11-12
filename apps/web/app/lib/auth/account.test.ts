@@ -59,13 +59,13 @@ describe('clearAccountCookie', () => {
     expect(readAccountName(document.cookie)).toBeNull()
   })
 
-  test('writeAccountCookie puts an encoded name and role back', () => {
-    writeAccountCookie({ name: 'Ana Pérez', role: 'ASSISTANT' })
+  test('writeAccountCookie puts the encoded name back, and nothing else', () => {
+    writeAccountCookie({ name: 'Ana Pérez' })
 
     expect(document.cookie).toContain(
-      `${ACCOUNT_COOKIE}=${encodeURIComponent(encodeAccountCookie({ name: 'Ana Pérez', role: 'ASSISTANT' }))}`,
+      `${ACCOUNT_COOKIE}=${encodeURIComponent(encodeAccountCookie({ name: 'Ana Pérez' }))}`,
     )
-    expect(readAccountCookie(document.cookie)).toEqual({ name: 'Ana Pérez', role: 'ASSISTANT' })
+    expect(readAccountCookie(document.cookie)).toEqual({ name: 'Ana Pérez' })
     expect(readAccountName(document.cookie)).toBe('Ana Pérez')
   })
 })
@@ -92,25 +92,24 @@ describe('ROLE_LABELS', () => {
 })
 
 describe('account cookie payload', () => {
-  test('round-trips a name and role', () => {
-    expect(
-      parseAccountCookieValue(encodeAccountCookie({ name: 'Ana Pérez', role: 'ADMIN' })),
-    ).toEqual({ name: 'Ana Pérez', role: 'ADMIN' })
+  test('round-trips the display name only (LASCE-SEC-001)', () => {
+    const encoded = encodeAccountCookie({ name: 'Ana Pérez' })
+
+    expect(JSON.parse(encoded)).toEqual({ name: 'Ana Pérez' })
+    expect(parseAccountCookieValue(encoded)).toEqual({ name: 'Ana Pérez' })
   })
 
-  test('treats a legacy name-only cookie as signed in without a role', () => {
-    expect(parseAccountCookieValue('Ana Pérez')).toEqual({ name: 'Ana Pérez', role: null })
-    expect(readAccountCookie(`${ACCOUNT_COOKIE}=Ana%20P%C3%A9rez`)).toEqual({
-      name: 'Ana Pérez',
-      role: null,
-    })
+  test('reads a legacy name-only cookie', () => {
+    expect(parseAccountCookieValue('Ana Pérez')).toEqual({ name: 'Ana Pérez' })
+    expect(readAccountCookie(`${ACCOUNT_COOKIE}=Ana%20P%C3%A9rez`)).toEqual({ name: 'Ana Pérez' })
   })
 
-  test('ignores an unknown role string', () => {
-    expect(parseAccountCookieValue(JSON.stringify({ name: 'Ana', role: 'OWNER' }))).toEqual({
-      name: 'Ana',
-      role: null,
-    })
+  test('drops a role left by an older login or forged by hand', () => {
+    for (const role of ['ADMIN', 'ASSISTANT', 'OWNER']) {
+      expect(parseAccountCookieValue(JSON.stringify({ name: 'Ana', role }))).toEqual({
+        name: 'Ana',
+      })
+    }
   })
 })
 

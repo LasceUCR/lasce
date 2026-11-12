@@ -112,7 +112,6 @@ its loading message stays for screen readers only, while the placeholder fills t
 | `/galeria/[slug]` and `/galeria/[slug]/[subalbum]` | `gallery/AlbumPageSkeleton.tsx`                           | Hero text, sub-album tiles (top-level album only) and the media grid      |
 | Every `/galeria` route's data fetch failing        | `gallery/GalleryErrorState.tsx` (via `galeria/error.tsx`) | A `Notice` and a "Reintentar" button                                      |
 | Academic activities on `/actividades-academicas`   | `news/AcademicActivitiesPage.tsx`                         | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
-| Academic activities teaser on `/noticias`          | `news/AcademicActivitiesSection.tsx`                      | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
 | `/publicaciones`                                   | `publications/PublicationsPageSkeleton.tsx`               | Static hero, listing heading and back link; the toolbar, cards and pager  |
 | A failed load of `/publicaciones`                  | `publications/PublicationsErrorState.tsx`                 | A `Notice` and a retry button, in the site's language                     |
 

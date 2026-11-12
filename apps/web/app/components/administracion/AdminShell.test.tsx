@@ -35,6 +35,17 @@ describe('AdminShell', () => {
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()
   })
 
+  test('wraps the panel in .admin-shell, the hook the footer offset relies on', () => {
+    const { container } = renderShell()
+
+    // `globals.css` moves the shared footer right of the fixed sidebar with
+    // `body:has(.admin-shell)`, so renaming this class would put it back under the sidebar.
+    const shell = container.querySelector('.admin-shell')
+    expect(shell).not.toBeNull()
+    expect(shell?.querySelector('.admin-sidebar')).not.toBeNull()
+    expect(shell?.querySelector('.admin-content')).toHaveTextContent('Contenido de la sección')
+  })
+
   test('shows every section when all grants are held', () => {
     renderShell()
 

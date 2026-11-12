@@ -60,8 +60,22 @@ Both layouts are one DOM, so each link exists once and the same rule (`isAdminIt
 the current section in the list and names it on the button.
 
 `--header-height` in `globals.css` is the measured height of `.site-header`: 82px, 75px at 1400px
-and below, 64px at 760px and below. The sidebar's `top` and the shell's `min-height` use it, so the
-sidebar starts exactly under the header at every width. Measure again if the header changes.
+and below, 64px at 760px and below. The sidebar's `top` uses it, so the sidebar starts exactly
+under the header at every width. Measure again if the header changes.
+
+## The shared footer (LASCE-ADM-001)
+
+The panel keeps the public `.site-footer`; it is not duplicated. Two rules in `globals.css` keep it
+clear of the panel:
+
+- `.admin-shell` is `flex: 1` inside `.public-shell-content` instead of having its own
+  `min-height`. `.public-shell` already makes the page at least one viewport tall, so a short
+  section (Descargas with no rows) shows the footer at the bottom of the screen, with no scroll and
+  no empty band, and a long one shows it after the content.
+- Above 1120px the fixed sidebar runs to the bottom of the viewport, so
+  `body:has(.admin-shell) .site-footer` gets `margin-left: 240px` and starts where the sidebar
+  ends. At 1120px and below the sidebar is the sticky bar and the footer keeps the full width.
+  Change both numbers together if the sidebar width changes.
 
 ## Covered by
 
@@ -72,6 +86,7 @@ sidebar starts exactly under the header at every width. Measure again if the hea
 | Menu filtered by `granted`                         | `app/components/administracion/AdminShell.tsx`   | `AdminShell.test.tsx`                                                 |
 | Toggle, Escape, outside pointer, close on navigate | `app/components/administracion/AdminSidebar.tsx` | `AdminSidebar.test.tsx`, `tests/e2e/administracion-mobile.spec.ts`    |
 | Breakpoint, sticky offset, no overflow             | `app/globals.css`                                | `tests/e2e/administracion-mobile.spec.ts` (390px, 320px, 1440px, axe) |
+| Footer clear of the sidebar, short and long pages  | `app/globals.css`, `AdminShell.tsx`              | `AdminShell.test.tsx`, `tests/e2e/administracion-footer.spec.ts`      |
 
 ## "Modo edición"
 
