@@ -5015,6 +5015,13 @@ a.gallery-tile:focus-visible {
 
 /* --- Research areas (/investigacion) --- */
 
+.research-areas-summary {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* One full-width card per row, the same list `/publicaciones` and `/noticias` use. The card
    repeats the `.news-card` metrics on purpose, so the three pages read as one family. It sits
    after `.surface-card` and `.media-frame` so these rules win on source order. */
@@ -5069,6 +5076,15 @@ a.gallery-tile:focus-visible {
   align-self: flex-end;
   margin-top: auto;
   padding-top: 12px;
+}
+
+/* Reserve the two 32px editor buttons and their 6px gap only while they sit beside the title.
+   On stacked cards the buttons sit over the image, leaving the full title width available. */
+@media (min-width: 701px) {
+  .research-area-list .editable .research-area-card h3 {
+    max-width: calc(100% - 70px);
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (max-width: 1120px) {
