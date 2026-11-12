@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { useId, useMemo, useRef, useState } from 'react'
+import { useId, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -19,11 +19,18 @@ export interface RosacAcknowledgmentFormValues {
   }
 }
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface RosacAcknowledgmentFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface RosacAcknowledgmentFormProps {
   /** Existing institution acknowledgment or null when creating a new one. */
   institution: RosacAcknowledgment | null
   onSave: (values: RosacAcknowledgmentFormValues) => void
   onCancel: () => void
+  ref?: Ref<RosacAcknowledgmentFormHandle>
 }
 
 export interface PredefinedAcknowledgmentLogo {
@@ -178,6 +185,7 @@ export function RosacAcknowledgmentForm({
   institution,
   onSave,
   onCancel,
+  ref,
 }: RosacAcknowledgmentFormProps) {
   const t = useTranslations('rosac.editor')
   const locale = useLocale()
@@ -253,13 +261,15 @@ export function RosacAcknowledgmentForm({
     logoRemoved ||
     activeLogoSrc !== (institution?.logo?.src ?? '')
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
     } else {
       onCancel()
     }
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   async function handleSaveClick() {
     setHasAttemptedSubmit(true)
@@ -438,7 +448,7 @@ export function RosacAcknowledgmentForm({
       />
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} type="button" variant="secondary">
+        <Button onClick={requestCancel} type="button" variant="secondary">
           {t('acknowledgments.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleSaveClick} type="button" variant="primary">
