@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => {
       create: vi.fn(),
       findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
       updateMany: vi.fn(),
       deleteMany: vi.fn(),
     },
@@ -32,6 +34,7 @@ const {
   createAcademicActivity,
   deleteAcademicActivity,
   getAcademicActivities,
+  getAcademicActivitiesPage,
   updateAcademicActivity,
 } = await import('./academic-activities')
 
@@ -91,6 +94,8 @@ const createInput = {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  tx.academicActivity.findMany.mockReset()
+  tx.academicActivity.count.mockReset()
   prisma.$transaction.mockImplementation((write: (client: typeof tx) => unknown) => write(tx))
   tx.academicActivity.create.mockResolvedValue(bilingualRow)
   tx.academicActivity.findUnique.mockResolvedValue({
@@ -115,7 +120,7 @@ describe('getAcademicActivities', () => {
     const activities = await getAcademicActivities()
 
     expect(prisma.academicActivity.findMany).toHaveBeenCalledWith({
-      orderBy: { startDate: 'desc' },
+      orderBy: [{ startDate: 'desc' }, { id: 'desc' }],
       include: expect.any(Object),
     })
     expect(activities).toMatchObject([
@@ -172,6 +177,81 @@ describe('getAcademicActivities', () => {
     expect(withEditing?.editing).toMatchObject({ isLegacy: false, version: VERSION })
     expect(withEditing?.editing?.content.en).not.toBeNull()
     expect(withoutEditing?.editing).toBeUndefined()
+  })
+})
+
+describe('getAcademicActivitiesPage', () => {
+  test('loads only the requested page with a stable order and editing data', async () => {
+    tx.academicActivity.count.mockResolvedValue(12)
+    tx.academicActivity.findMany.mockResolvedValue([bilingualRow])
+
+    const result = await getAcademicActivitiesPage('es', {
+      page: 2,
+      includeEditingData: true,
+    })
+
+    expect(tx.academicActivity.count).toHaveBeenCalledWith({ where: {} })
+    expect(tx.academicActivity.findMany).toHaveBeenCalledWith({
+      where: {},
+      orderBy: [{ startDate: 'desc' }, { id: 'desc' }],
+      skip: 10,
+      take: 10,
+      include: expect.any(Object),
+    })
+    expect(result).toMatchObject({
+      page: 2,
+      pageSize: 10,
+      totalItems: 12,
+      totalPages: 2,
+      query: '',
+      activities: [{ id: 'activity-1', editing: { version: VERSION } }],
+    })
+  })
+
+  test('searches translated content and falls back to base text only for legacy activities', async () => {
+    tx.academicActivity.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([])
+    tx.academicActivity.count.mockResolvedValue(0)
+
+    await getAcademicActivitiesPage('en', { query: '  Test  ' })
+
+    expect(tx.academicActivity.findMany).toHaveBeenNthCalledWith(1, {
+      select: { id: true, startDate: true, endDate: true },
+    })
+    const countArg = tx.academicActivity.count.mock.calls[0]?.[0]
+    expect(countArg?.where).toMatchObject({
+      OR: expect.arrayContaining([
+        {
+          translations: {
+            some: expect.objectContaining({ locale: 'en' }),
+          },
+        },
+        {
+          AND: expect.arrayContaining([{ translations: { none: { locale: 'en' } } }]),
+        },
+      ]),
+    })
+    expect(countArg?.where).not.toMatchObject({
+      OR: expect.arrayContaining([{ title: { contains: 'Test' } }]),
+    })
+  })
+
+  test('matches the localized date string shown on activity cards', async () => {
+    tx.academicActivity.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 'activity-1',
+          startDate: new Date('2026-02-16T00:00:00.000Z'),
+          endDate: new Date('2026-02-20T00:00:00.000Z'),
+        },
+      ])
+      .mockResolvedValueOnce([])
+    tx.academicActivity.count.mockResolvedValue(0)
+
+    await getAcademicActivitiesPage('en', { query: '16-20' })
+
+    expect(tx.academicActivity.count).toHaveBeenCalledWith({
+      where: { OR: expect.arrayContaining([{ id: { in: ['activity-1'] } }]) },
+    })
   })
 })
 

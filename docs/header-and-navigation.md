@@ -120,11 +120,13 @@ translateX(-50%)`), not right-anchored as it originally was.
 
 ## "Modo edición" in the account menu
 
-Assistants and administrators (`canEditContent(role)` in `app/lib/auth/account.ts`, which mirrors
-who holds `edit_components` by default) see a "Modo edición" switch (`EditModeSwitch.tsx`) in the
-desktop account dropdown, between "Mi cuenta" and "Cerrar sesión", and in the mobile menu's account
-section. Visitors and anonymous visitors do not. The role comes from the account cookie, so this is
-a visibility rule only: every edit is still authorized by its Server Action.
+Accounts whose role holds a content grant (`create_components`, `edit_components` or
+`delete_components`) see a "Modo edición" switch (`EditModeSwitch.tsx`) in the desktop account
+dropdown, between "Mi cuenta" and "Cerrar sesión", and in the mobile menu's account section.
+Visitors and anonymous visitors do not. The decision is `canEdit` from `GET /api/session`, computed
+on the server from the HttpOnly session and the current matrix, never from the browser-editable
+account cookie (LASCE-SEC-001, see [sessions.md](sessions.md#the-header)). It is still a
+visibility rule only: every edit is authorized by its Route Handler or Server Action.
 
 - It reads and writes the shared `EditModeProvider` (`useEditMode`), so the current page updates at
   once; the value is kept in `localStorage`, so it survives navigation and reload.

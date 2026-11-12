@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
@@ -12,11 +12,11 @@ import {
   ResearcherForm,
   type BilingualResearcherFormValues,
   type PersonProfile,
+  type ResearcherFormHandle,
   type ResearcherFormTranslation,
-  type ResearcherFormValues,
 } from './ResearcherForm'
 
-interface EditableResearcherCardBaseProps {
+export interface EditableResearcherCardProps {
   researcher: PersonProfile
   canEdit?: boolean
   canDelete?: boolean
@@ -25,23 +25,10 @@ interface EditableResearcherCardBaseProps {
   /** Label preceding the institution text. Defaults to the translated `researchers.institutionLabel`. */
   institutionLabel?: string
   onDelete: () => void
-}
-
-/** The single-language card (ROSAC). */
-export interface SingleLanguageEditableResearcherCardProps extends EditableResearcherCardBaseProps {
-  translation?: undefined
   /**
-   * Persists the edit and reports the outcome in a toast; resolves to whether it succeeded, so
-   * the modal closes only once the save is done and stays open, with the input, on failure.
+   * The researcher's text in both languages and its version. `/nosotros` and `/radioastronomia`
+   * both pass it, so the role and the description are edited in Spanish and English.
    */
-  onSave: (values: ResearcherFormValues) => Promise<boolean>
-}
-
-/**
- * The opt-in bilingual card (`/nosotros`): its form edits the role and the description per
- * language. `translation.editing` is the researcher's text in both languages and its version.
- */
-export interface BilingualEditableResearcherCardProps extends EditableResearcherCardBaseProps {
   translation: ResearcherFormTranslation
   /**
    * Persists the edit; resolves to whether it was saved. The caller reports a failure itself (a
@@ -49,9 +36,6 @@ export interface BilingualEditableResearcherCardProps extends EditableResearcher
    */
   onSave: (values: BilingualResearcherFormValues) => Promise<boolean>
 }
-
-export type EditableResearcherCardProps =
-  SingleLanguageEditableResearcherCardProps | BilingualEditableResearcherCardProps
 
 /**
  * The one piece that knows both about a person's profile and about "Modo
@@ -61,21 +45,20 @@ export type EditableResearcherCardProps =
  * presentational. Reused by both `/radioastronomia` (ROSAC) and `/nosotros`
  * — the `researcher` prop and `onSave`/`onDelete` callbacks are the only
  * seam to whichever content module owns the actual record.
- *
- * `/nosotros` passes `translation` to opt in to the bilingual form; ROSAC passes nothing and
- * keeps the single-language one.
  */
-export function EditableResearcherCard(props: EditableResearcherCardProps) {
-  const {
-    researcher,
-    canEdit = false,
-    canDelete = false,
-    contentLang,
-    institutionLabel,
-    onDelete,
-  } = props
+export function EditableResearcherCard({
+  researcher,
+  canEdit = false,
+  canDelete = false,
+  contentLang,
+  institutionLabel,
+  onDelete,
+  translation,
+  onSave,
+}: EditableResearcherCardProps) {
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
+  const form = useRef<ResearcherFormHandle>(null)
   const tResearchers = useTranslations('researchers')
   const resolvedInstitutionLabel = institutionLabel ?? tResearchers('institutionLabel')
 
@@ -97,35 +80,25 @@ export function EditableResearcherCard(props: EditableResearcherCardProps) {
   }
 
   function renderForm() {
-    if (props.translation) {
-      const { translation, onSave } = props
-      return (
-        <ResearcherForm
-          onCancel={closeEditor}
-          onSave={async (values) => {
-            if (await onSave(values)) closeEditor()
-          }}
-          researcher={researcher}
-          translation={translation}
-        />
-      )
-    }
-
-    const { onSave } = props
     return (
       <ResearcherForm
         onCancel={closeEditor}
         onSave={async (values) => {
           if (await onSave(values)) closeEditor()
         }}
+        ref={form}
         researcher={researcher}
+        translation={translation}
       />
     )
   }
 
   const editModal = (
     <Modal
-      onClose={closeEditor}
+      onClose={() => {
+        if (form.current) form.current.requestCancel()
+        else closeEditor()
+      }}
       open={isEditing}
       size="medium"
       title={tResearchers('editor.editTitle')}

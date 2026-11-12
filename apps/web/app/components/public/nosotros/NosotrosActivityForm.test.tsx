@@ -1,10 +1,15 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createRef } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
-import { NosotrosActivityForm, type NosotrosActivityFormProps } from './NosotrosActivityForm'
+import {
+  NosotrosActivityForm,
+  type NosotrosActivityFormHandle,
+  type NosotrosActivityFormProps,
+} from './NosotrosActivityForm'
 import { Create, Default, Legacy } from './NosotrosActivityForm.stories'
 
 const defaultArgs = Default.args as NosotrosActivityFormProps
@@ -105,6 +110,21 @@ describe('NosotrosActivityForm: cancelling', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same question when the modal requests closing', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    const ref = createRef<NosotrosActivityFormHandle>()
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onCancel={onCancel} ref={ref} />)
+
+    await user.type(field('Título (Español)'), ' editado')
+    act(() => ref.current?.requestCancel())
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   test('keeps the form open when discard is dismissed', async () => {

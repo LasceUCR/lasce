@@ -36,7 +36,7 @@ async function attachBrowserSession(
     },
     {
       name: 'lasce_account',
-      value: encodeAccountCookie({ name: user.fullName, role: user.role }),
+      value: encodeAccountCookie({ name: user.fullName }),
       url: 'http://localhost:3000',
       httpOnly: false,
       sameSite: 'Lax',

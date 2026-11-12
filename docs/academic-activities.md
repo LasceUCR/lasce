@@ -158,10 +158,15 @@ request.
 
 The `/actividades-academicas` screen, following the same standard every other top-level topic page
 uses: `TopicHero` (kicker "Portal público LASCE", title and lead from the
-`academicActivities.listPage` message namespace) followed by the create affordance (edit mode
-only) and one `EditableAcademicActivityCard` per activity, without a second, duplicate section
-heading. An empty list with no create grant shows `academicActivities.section.empty` instead.
-`TopicBackLink` returns to `/`.
+`academicActivities.listPage` message namespace), then a debounced search field, the result summary,
+the create affordance (edit mode only), and one `EditableAcademicActivityCard` per activity, without
+a second, duplicate section heading. The search accepts text from the displayed title, category,
+description, location, or the localized date range across the catalogue;
+the database query loads only the requested 10-item page and includes the English translation
+when English is selected. An empty search result shows `academicActivities.listPage.emptyQuery`;
+an empty catalogue shows `academicActivities.section.empty`. `?q=` and `?page=` are canonicalized
+to the trimmed query and an in-range page, and changing the query returns to page 1. Pagination
+links preserve the query and browser history. `TopicBackLink` returns to `/`.
 
 ## Permissions
 

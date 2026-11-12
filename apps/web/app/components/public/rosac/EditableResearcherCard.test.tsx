@@ -10,11 +10,7 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadResearcherImage: vi.fn(),
 }))
 
-import {
-  EditableResearcherCard,
-  type BilingualEditableResearcherCardProps,
-  type EditableResearcherCardProps,
-} from './EditableResearcherCard'
+import { EditableResearcherCard, type EditableResearcherCardProps } from './EditableResearcherCard'
 import {
   AssistantMode,
   BilingualEditMode,
@@ -25,7 +21,7 @@ import {
 const viewArgs = ViewMode.args as EditableResearcherCardProps
 const editArgs = EditModeOn.args as EditableResearcherCardProps
 const assistantArgs = AssistantMode.args as EditableResearcherCardProps
-const bilingualArgs = BilingualEditMode.args as BilingualEditableResearcherCardProps
+const bilingualArgs = BilingualEditMode.args as EditableResearcherCardProps
 
 function renderWithEditMode(editMode: boolean, props: EditableResearcherCardProps) {
   return renderWithIntl(
@@ -81,11 +77,32 @@ describe('EditableResearcherCard', () => {
     await user.click(screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }))
 
     expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue(editArgs.researcher.role)
+    expect(screen.getByRole('textbox', { name: /^Rol \(Español\)/ })).toHaveValue(
+      editArgs.researcher.role,
+    )
     // The card and its actions stay visible behind the modal.
     expect(
       screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }),
     ).toBeInTheDocument()
+  })
+
+  test('asks before discarding changes when Escape closes the modal', async () => {
+    const user = userEvent.setup()
+    renderWithEditMode(true, editArgs)
+
+    await user.click(screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }))
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await user.keyboard('{Escape}')
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+    expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue(
+      `${editArgs.researcher.name} editado`,
+    )
   })
 
   test('saves and closes the modal when the form save succeeds', async () => {
@@ -111,8 +128,8 @@ describe('EditableResearcherCard', () => {
     renderWithEditMode(true, { ...editArgs, onSave })
 
     await user.click(screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }))
-    await user.clear(screen.getByRole('textbox', { name: 'Rol' }))
-    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador asociado')
+    await user.clear(screen.getByRole('textbox', { name: 'Nombre' }))
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Nombre editado')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     await act(async () => {
       await failedSave
@@ -120,7 +137,7 @@ describe('EditableResearcherCard', () => {
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigador asociado')
+    expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue('Nombre editado')
   })
 
   test('confirms and calls onDelete when the delete action is confirmed', async () => {
@@ -137,7 +154,7 @@ describe('EditableResearcherCard', () => {
 })
 
 describe('EditableResearcherCard: bilingual mode', () => {
-  function renderBilingual(props: BilingualEditableResearcherCardProps) {
+  function renderBilingual(props: EditableResearcherCardProps) {
     return renderWithIntl(
       <ToastProvider>
         <EditModeContext.Provider value={{ editMode: true, setEditMode: () => {} }}>

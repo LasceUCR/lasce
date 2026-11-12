@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Crosshair,
   GraduationCap,
@@ -29,7 +29,13 @@ import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { useRequestFeedback } from '@/app/components/public/toast/useRequestFeedback'
-import type { RosacAcknowledgment, RosacCardIcon, RosacInfoContent } from '@/app/lib/rosac'
+import type { NosotrosResearcherUpdateBody } from '@/app/lib/nosotros-researcher-schema'
+import type {
+  RosacAcknowledgment,
+  RosacCardIcon,
+  RosacInfoContent,
+  TeamMember,
+} from '@/app/lib/rosac'
 import type { ConstructionStage } from '@/app/lib/rosac-construction'
 import type { RosacInstrumentCardContent } from '@/app/lib/rosac-instruments'
 
@@ -41,19 +47,37 @@ import { EditableAcknowledgmentCard } from './EditableAcknowledgmentCard'
 import { EditableResearcherCard } from './EditableResearcherCard'
 import { InstrumentCard } from './InstrumentCard'
 import { InstrumentsGallery } from './InstrumentsGallery'
-import { ResearcherForm, type ResearcherFormValues } from './ResearcherForm'
+import {
+  ResearcherForm,
+  type BilingualResearcherFormValues,
+  type ResearcherFormHandle,
+} from './ResearcherForm'
 import {
   RosacAcknowledgmentForm,
+  type RosacAcknowledgmentFormHandle,
   type RosacAcknowledgmentFormValues,
 } from './RosacAcknowledgmentForm'
-import { RosacActivityForm, type RosacActivityFormBody } from './RosacActivityForm'
+import {
+  RosacActivityForm,
+  type RosacActivityFormBody,
+  type RosacActivityFormHandle,
+} from './RosacActivityForm'
 import {
   RosacCharacteristicForm,
   type RosacCharacteristicFormBody,
+  type RosacCharacteristicFormHandle,
 } from './RosacCharacteristicForm'
-import { RosacInstrumentForm, type RosacInstrumentFormBody } from './RosacInstrumentForm'
+import {
+  RosacInstrumentForm,
+  type RosacInstrumentFormBody,
+  type RosacInstrumentFormHandle,
+} from './RosacInstrumentForm'
 import { RosacLocationMapLoader } from './RosacLocationMapLoader'
-import { RosacStageForm, type RosacStageFormBody } from './RosacStageForm'
+import {
+  RosacStageForm,
+  type RosacStageFormBody,
+  type RosacStageFormHandle,
+} from './RosacStageForm'
 import { TeamGallery } from './TeamGallery'
 
 const icons: Record<RosacCardIcon, LucideIcon> = {
@@ -66,6 +90,37 @@ const icons: Record<RosacCardIcon, LucideIcon> = {
   receiver: Radio,
   maintenance: Wrench,
   education: GraduationCap,
+}
+
+/** The addresses of a researcher as the form shows them, one comma separated string. */
+function emailText(email: TeamMember['email']): string {
+  if (!email) return ''
+  return typeof email === 'string' ? email : email.join(', ')
+}
+
+/**
+ * The update body for an edited researcher: the version, the shared fields that changed and,
+ * only when the role or the description changed, both languages with the reviews the editor
+ * confirmed. `null` when nothing changed.
+ */
+function researcherUpdateBody(
+  person: TeamMember,
+  version: string,
+  values: BilingualResearcherFormValues,
+): NosotrosResearcherUpdateBody | null {
+  const changes: Omit<NosotrosResearcherUpdateBody, 'version'> = {
+    ...(values.src === person.src ? {} : { src: values.src }),
+    ...(values.name.trim() === person.name ? {} : { name: values.name }),
+    ...(values.email === emailText(person.email) ? {} : { email: values.email }),
+    ...(values.institution.trim() === person.institution
+      ? {}
+      : { institution: values.institution }),
+    ...(values.content
+      ? { content: values.content, confirmedUnchanged: values.confirmedUnchanged }
+      : {}),
+  }
+
+  return Object.keys(changes).length === 0 ? null : { version, ...changes }
 }
 
 export interface RosacInfoPageProps {
@@ -112,6 +167,14 @@ export function RosacInfoPage({
   const tEditor = useTranslations('rosac.editor')
   const sendWithFeedback = useRequestFeedback()
   const toast = useToast()
+  // Open forms, so the modal's close and Escape ask before discarding their changes.
+  const characteristicForm = useRef<RosacCharacteristicFormHandle>(null)
+  const activityForm = useRef<RosacActivityFormHandle>(null)
+  const stageForm = useRef<RosacStageFormHandle>(null)
+  const instrumentForm = useRef<RosacInstrumentFormHandle>(null)
+  const createInstrumentForm = useRef<RosacInstrumentFormHandle>(null)
+  const createResearcherForm = useRef<ResearcherFormHandle>(null)
+  const createAcknowledgmentForm = useRef<RosacAcknowledgmentFormHandle>(null)
 
   // --- Section 1: Characteristics State (Edit only, fixed 4 cards) ---
   const [characteristics, setCharacteristics] = useState(content.characteristics.items)
@@ -571,13 +634,21 @@ export function RosacInfoPage({
 
   // --- Section 7: Researcher Handlers ---
   // Reports the outcome in a toast once the request is done, then refreshes the team.
-  async function handleSaveResearcher(id: string, values: ResearcherFormValues): Promise<boolean> {
+  async function handleSaveResearcher(
+    person: TeamMember,
+    values: BilingualResearcherFormValues,
+  ): Promise<boolean> {
+    if (!person.editing) return false
+    const body = researcherUpdateBody(person, person.editing.version, values)
+    // Nothing to save: close instead of sending an empty update.
+    if (!body) return true
+
     return sendWithFeedback(
-      `/api/researchers/${id}`,
+      `/api/researchers/${person.id}`,
       {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(body),
       },
       {
         success: tResearchers('updated'),
@@ -589,13 +660,21 @@ export function RosacInfoPage({
 
   // Reports the outcome in a toast once the request is done. On success the "Añadir" modal
   // closes and the page refreshes; on failure it stays open with what was typed.
-  async function handleCreateResearcher(values: ResearcherFormValues, close: () => void) {
+  async function handleCreateResearcher(values: BilingualResearcherFormValues, close: () => void) {
+    if (!values.content) return
+
     await sendWithFeedback(
       '/api/researchers',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          src: values.src,
+          name: values.name,
+          email: values.email,
+          institution: values.institution,
+          content: values.content,
+        }),
       },
       {
         success: tResearchers('created'),
@@ -884,12 +963,19 @@ export function RosacInfoPage({
             label={content.instruments.title}
             leadingSlide={
               editMode && canCreate ? (
-                <AddItemCard label={tEditor('instruments.addCard')}>
+                <AddItemCard
+                  label={tEditor('instruments.addCard')}
+                  onRequestClose={(close) => {
+                    if (createInstrumentForm.current) createInstrumentForm.current.requestCancel()
+                    else close()
+                  }}
+                >
                   {({ close }) => (
                     <RosacInstrumentForm
                       instrument={null}
                       onCancel={close}
                       onSave={(values) => handleCreateInstrument(values, close)}
+                      ref={createInstrumentForm}
                     />
                   )}
                 </AddItemCard>
@@ -967,18 +1053,31 @@ export function RosacInfoPage({
               contentLang={person.contentLang}
               institutionLabel={content.team.institutionLabel}
               onDelete={() => handleDeleteResearcher(person.id)}
-              onSave={(values) => handleSaveResearcher(person.id, values)}
+              onSave={(values: BilingualResearcherFormValues) =>
+                handleSaveResearcher(person, values)
+              }
               researcher={person}
+              translation={{ editing: person.editing ?? null }}
             />
           )}
           leadingSlide={
             editMode && canCreate ? (
-              <AddItemCard label={tResearchers('editor.addCard')}>
+              <AddItemCard
+                label={tResearchers('editor.addCard')}
+                onRequestClose={(close) => {
+                  if (createResearcherForm.current) createResearcherForm.current.requestCancel()
+                  else close()
+                }}
+              >
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
-                    onSave={(values) => handleCreateResearcher(values, close)}
+                    onSave={(values: BilingualResearcherFormValues) =>
+                      handleCreateResearcher(values, close)
+                    }
+                    ref={createResearcherForm}
                     researcher={null}
+                    translation={{ editing: null }}
                   />
                 )}
               </AddItemCard>
@@ -1038,12 +1137,20 @@ export function RosacInfoPage({
           )}
           leadingSlide={
             editMode && canCreate ? (
-              <AddItemCard label={tEditor('acknowledgments.addCard')}>
+              <AddItemCard
+                label={tEditor('acknowledgments.addCard')}
+                onRequestClose={(close) => {
+                  if (createAcknowledgmentForm.current) {
+                    createAcknowledgmentForm.current.requestCancel()
+                  } else close()
+                }}
+              >
                 {({ close }) => (
                   <RosacAcknowledgmentForm
                     institution={null}
                     onCancel={close}
                     onSave={(values) => handleCreateAcknowledgment(values, close)}
+                    ref={createAcknowledgmentForm}
                   />
                 )}
               </AddItemCard>
@@ -1057,7 +1164,10 @@ export function RosacInfoPage({
 
       {/* Edit modal for Section 1: Characteristics */}
       <Modal
-        onClose={closeCharacteristicEditor}
+        onClose={() => {
+          if (characteristicForm.current) characteristicForm.current.requestCancel()
+          else closeCharacteristicEditor()
+        }}
         open={editingCharacteristic !== undefined}
         title={
           editingCharacteristic
@@ -1070,13 +1180,17 @@ export function RosacInfoPage({
             characteristic={editingCharacteristic}
             onCancel={closeCharacteristicEditor}
             onSave={handleSaveCharacteristic}
+            ref={characteristicForm}
           />
         ) : null}
       </Modal>
 
       {/* Edit modal for Section 3: Activities */}
       <Modal
-        onClose={closeActivityEditor}
+        onClose={() => {
+          if (activityForm.current) activityForm.current.requestCancel()
+          else closeActivityEditor()
+        }}
         open={editingActivity !== undefined}
         title={
           editingActivity
@@ -1089,13 +1203,17 @@ export function RosacInfoPage({
             activity={editingActivity}
             onCancel={closeActivityEditor}
             onSave={handleSaveActivity}
+            ref={activityForm}
           />
         ) : null}
       </Modal>
 
       {/* Edit modal for Section 4: Construction stages */}
       <Modal
-        onClose={closeStageEditor}
+        onClose={() => {
+          if (stageForm.current) stageForm.current.requestCancel()
+          else closeStageEditor()
+        }}
         open={editingStage !== undefined}
         title={
           editingStage
@@ -1107,6 +1225,7 @@ export function RosacInfoPage({
           <RosacStageForm
             onCancel={closeStageEditor}
             onSave={handleSaveStage}
+            ref={stageForm}
             stage={editingStage}
           />
         ) : null}
@@ -1114,7 +1233,10 @@ export function RosacInfoPage({
 
       {/* Edit modal for Section 6: Instruments */}
       <Modal
-        onClose={closeInstrumentEditor}
+        onClose={() => {
+          if (instrumentForm.current) instrumentForm.current.requestCancel()
+          else closeInstrumentEditor()
+        }}
         open={editingInstrument !== undefined}
         size="large"
         title={
@@ -1128,6 +1250,7 @@ export function RosacInfoPage({
             instrument={editingInstrument}
             onCancel={closeInstrumentEditor}
             onSave={handleSaveInstrument}
+            ref={instrumentForm}
           />
         ) : null}
       </Modal>
