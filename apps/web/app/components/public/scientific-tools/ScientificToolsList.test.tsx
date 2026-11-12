@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import { getMessages } from '@/app/lib/i18n/messages'
@@ -16,15 +16,16 @@ describe('ScientificToolsList', () => {
     renderWithIntl(<ScientificToolsList {...defaultArgs} />)
 
     for (const tool of defaultArgs.tools) {
-      expect(screen.getByRole('heading', { level: 2, name: tool.title })).toBeInTheDocument()
-      expect(screen.getByText(tool.description)).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: `Acceder a ${tool.title}` })).toHaveAttribute(
-        'href',
-        tool.href,
-      )
+      const card = within(screen.getByRole('article', { name: tool.title }))
+      expect(card.getByRole('heading', { level: 3, name: tool.title })).toBeInTheDocument()
+      expect(card.getByText(tool.description)).toBeInTheDocument()
+      const link = card.getByRole('link', { name: `Acceder a ${tool.title}` })
+      expect(link).toHaveAttribute('href', tool.href)
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
     }
 
-    expect(screen.getByText(/Los enlaces se abren en una nueva pestaña/)).toBeInTheDocument()
+    expect(screen.queryByText(/Los enlaces se abren en una nueva pestaña/)).not.toBeInTheDocument()
   })
 
   test('shows an informational message when there are no scientific tools', () => {
@@ -41,12 +42,15 @@ describe('ScientificToolsList', () => {
     const tools = getScientificTools(getMessages('en').scientificTools)
     renderWithIntl(<ScientificToolsList tools={tools} />, { locale: 'en' })
 
-    expect(screen.getByRole('heading', { level: 2, name: 'SWAAT' })).toBeInTheDocument()
-    expect(screen.getByText(/Analyse solar events using GOES X-ray/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Open SWAPRO' })).toHaveAttribute(
-      'href',
-      'https://swapro.up.railway.app/',
-    )
-    expect(screen.getByText(/The links open in a new tab/)).toBeInTheDocument()
+    for (const tool of tools) {
+      const card = within(screen.getByRole('article', { name: tool.title }))
+      expect(card.getByRole('heading', { level: 3, name: tool.title })).toBeInTheDocument()
+      expect(card.getByText(tool.description)).toBeInTheDocument()
+      expect(card.getByRole('link', { name: `Open ${tool.title}` })).toHaveAttribute(
+        'href',
+        tool.href,
+      )
+    }
+    expect(screen.queryByText(/The links open in a new tab/)).not.toBeInTheDocument()
   })
 })
