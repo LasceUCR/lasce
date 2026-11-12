@@ -65,7 +65,7 @@ describe('GET /api/nosotros/activities', () => {
       id: '1',
       icon: 'sun',
       title: 'Fenómenos solares eruptivos',
-      description: "Analizamos fenómenos solares eruptivos, como 'flares'.",
+      description: 'Analizamos fenómenos solares eruptivos, como fulguraciones.',
       modifiedAt: '2026-01-01T00:00:00.000Z',
       contentLocale: 'es',
     },
