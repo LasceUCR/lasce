@@ -30,6 +30,7 @@ describe('collaboration input', () => {
     { websiteUrl: 'https://user:password@example.com' },
     { logoPath: 'javascript:alert(1)' },
     { logoPath: '/etc/passwd' },
+    { logoPath: 'https://example.com/logo.png' },
     { name: 'a'.repeat(301) },
     { acronym: 'a'.repeat(101) },
     { extra: true },

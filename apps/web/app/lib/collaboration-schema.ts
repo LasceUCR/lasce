@@ -33,7 +33,6 @@ export function collaborationFieldSchemas(messages: CollaborationFieldMessages) 
     logoPath: optionalText(
       z.union(
         [
-          url,
           z.string().regex(COLLABORATION_LOGO_PATH, messages.logoPath),
           z
             .string()
