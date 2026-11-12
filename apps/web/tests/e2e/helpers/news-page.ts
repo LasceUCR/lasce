@@ -6,14 +6,14 @@ const identity = {
   es: {
     title: 'Noticias',
     kicker: 'Portal público LASCE',
-    lead: 'Noticias sobre el trabajo del LASCE.',
+    lead: 'Noticias recientes',
     description:
       'Noticias del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
   },
   en: {
     title: 'News',
     kicker: 'LASCE public portal',
-    lead: 'News about LASCE’s work.',
+    lead: 'Recent news',
     description:
       'News from the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.',
   },

@@ -47,8 +47,8 @@ beforeEach(() => {
 
 describe('News page', () => {
   for (const [locale, title, kicker, lead] of [
-    ['es', 'Noticias', 'Portal público LASCE', 'Noticias sobre el trabajo del LASCE.'],
-    ['en', 'News', 'LASCE public portal', 'News about LASCE’s work.'],
+    ['es', 'Noticias', 'Portal público LASCE', 'Noticias recientes'],
+    ['en', 'News', 'LASCE public portal', 'Recent news'],
   ] as const) {
     test(`identifies the page and its metadata as ${title}`, async () => {
       mocks.locale = locale
@@ -63,7 +63,7 @@ describe('News page', () => {
 
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(new RegExp(`^${title}$`))
       expect(screen.getByText(kicker, { exact: true })).toBeInTheDocument()
-      expect(screen.getByText(lead, { exact: true })).toBeInTheDocument()
+      expect(screen.getByText(lead, { exact: true, selector: 'p' })).toBeInTheDocument()
       expect(screen.queryByText(/coverage|outreach|cobertura|divulgación/i)).not.toBeInTheDocument()
       for (const activity of academicActivities) {
         expect(screen.queryByRole('heading', { name: activity.title })).not.toBeInTheDocument()
