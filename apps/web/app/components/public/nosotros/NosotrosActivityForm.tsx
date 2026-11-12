@@ -6,9 +6,10 @@ import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
-import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
+import { FormField } from '@/app/components/public/FormField'
 import { useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
+import { Select } from '@/app/components/public/Select'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import { defaultLocale, isLocale, localeLabels, locales, type Locale } from '@/app/lib/i18n/config'
@@ -93,7 +94,7 @@ export function NosotrosActivityForm({
   // Everything the editor says follows the site's language; the tabs only pick the translation.
   const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
   const stored = editing?.content ?? null
-  const iconOptions: FormFieldOption[] = nosotrosCardIcons.map((value) => ({
+  const iconOptions = nosotrosCardIcons.map((value) => ({
     value,
     label: t(`icons.${value}`),
   }))
@@ -252,13 +253,16 @@ export function NosotrosActivityForm({
         )}
       </LanguageTabs>
 
-      <FormField
-        id={`${formId}-icon`}
-        label={t('icon')}
-        onChange={(value) => setIcon(value as NosotrosCardIcon)}
-        options={iconOptions}
-        value={icon}
-      />
+      <label className="cms-form-field" htmlFor={`${formId}-icon`}>
+        <span className="cms-form-field-label">{t('icon')}</span>
+        <Select
+          id={`${formId}-icon`}
+          label={t('icon')}
+          onChange={(value) => setIcon(value as NosotrosCardIcon)}
+          options={iconOptions}
+          value={icon}
+        />
+      </label>
 
       <div className="cms-form-actions">
         <Button onClick={handleCancelClick} variant="secondary">
