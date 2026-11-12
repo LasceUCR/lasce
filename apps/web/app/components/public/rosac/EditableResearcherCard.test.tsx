@@ -86,6 +86,25 @@ describe('EditableResearcherCard', () => {
     ).toBeInTheDocument()
   })
 
+  test('asks before discarding changes when Escape closes the modal', async () => {
+    const user = userEvent.setup()
+    renderWithEditMode(true, editArgs)
+
+    await user.click(screen.getByRole('button', { name: `Editar a ${editArgs.researcher.name}` }))
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    await user.keyboard('{Escape}')
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+    expect(screen.getByRole('dialog', { name: 'Editar investigador' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue(
+      `${editArgs.researcher.name} editado`,
+    )
+  })
+
   test('saves and closes the modal when the form save succeeds', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn().mockResolvedValue(true)

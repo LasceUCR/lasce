@@ -757,7 +757,7 @@ for (const activity of nosotrosActivities) {
 }
 
 /**
- * Initial data for `AcademicActivity` (`/actividades-academicas` and the `/noticias` teaser).
+ * Initial data for `AcademicActivity` on the dedicated `/actividades-academicas` page.
  * Same placeholder authorship as `nosotrosActivities` above: editorial content LASCE supplied
  * before this table's CMS form existed. Guarded like the ROSAC tables below: only seeded when
  * the table is empty, so re-running the seed never wipes an activity an admin created or edited

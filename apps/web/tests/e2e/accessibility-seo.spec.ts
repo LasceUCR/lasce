@@ -254,4 +254,6 @@ test('robots and sitemap expose only indexable public routes', async ({ request 
     expect(sitemap).toContain(`<loc>http://localhost:3000${path}</loc>`)
   }
   expect(sitemap).not.toContain('/api/')
+  expect(sitemap).toContain('/actividades-academicas</loc>')
+  expect(sitemap).not.toContain('/noticias/actividades/')
 })
