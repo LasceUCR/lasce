@@ -9,7 +9,7 @@ const bilingualActivity: NosotrosActivityEditingData = {
     es: {
       title: 'Fenómenos solares eruptivos',
       description:
-        "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
+        'Analizamos fenómenos solares eruptivos, como fulguraciones, eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.',
     },
     en: {
       title: 'Eruptive solar phenomena',

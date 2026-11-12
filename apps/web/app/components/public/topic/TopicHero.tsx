@@ -42,7 +42,7 @@ export type TopicHeroImage =
     }
 
 export interface TopicHeroProps {
-  kicker: string
+  kicker?: string
   title: string
   lead?: string
   notice?: string
@@ -81,7 +81,7 @@ export function TopicHero({
       {image?.presentation === 'banner' ? (
         <div className="topic-hero-mark-body">
           <div className="topic-hero-mark-heading">
-            <p className="topic-kicker">{kicker}</p>
+            {kicker ? <p className="topic-kicker">{kicker}</p> : null}
             <h1 lang={contentLang}>{title}</h1>
           </div>
           <div
@@ -126,7 +126,7 @@ export function TopicHero({
       ) : image?.presentation === 'mark' ? (
         <div className="topic-hero-mark-body">
           <div className="topic-hero-mark-heading">
-            <p className="topic-kicker">{kicker}</p>
+            {kicker ? <p className="topic-kicker">{kicker}</p> : null}
             <h1 lang={contentLang}>{title}</h1>
           </div>
           {image.photo ? (
@@ -161,7 +161,7 @@ export function TopicHero({
       ) : (
         <>
           <div className="topic-hero-copy">
-            <p className="topic-kicker">{kicker}</p>
+            {kicker ? <p className="topic-kicker">{kicker}</p> : null}
             <h1 lang={contentLang}>{title}</h1>
             {lead ? (
               <p className="topic-lead" lang={contentLang}>
