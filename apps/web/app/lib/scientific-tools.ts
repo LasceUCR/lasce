@@ -1,5 +1,3 @@
-import { ChartNoAxesCombined, Sun } from 'lucide-react'
-
 import es from '@/messages/es.json' with { type: 'json' }
 
 /** The `scientificTools` namespace of a message catalogue. */
@@ -17,13 +15,13 @@ export function getScientificTools(messages: ScientificToolsMessages) {
       title: 'SWAAT',
       description: messages.tools.swaat,
       href: SWAAT_URL,
-      icon: Sun,
+      imageSrc: '/images/tools/SWAAT-sun.webp',
     },
     {
       title: 'SWAPRO',
       description: messages.tools.swapro,
       href: 'https://swapro.up.railway.app/',
-      icon: ChartNoAxesCombined,
+      imageSrc: '/images/research/geomagnetismo-costa-rica.jpg',
     },
   ] as const
 }
