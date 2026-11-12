@@ -714,7 +714,7 @@ const nosotrosActivities: SeedNosotrosActivity[] = [
     icon: 'SUN',
     title: 'Fenómenos solares eruptivos',
     paragraph:
-      "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
+      'Analizamos fenómenos solares eruptivos, como fulguraciones, eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.',
   },
   {
     icon: 'WAVES',

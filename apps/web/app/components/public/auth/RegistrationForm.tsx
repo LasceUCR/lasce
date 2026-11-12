@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import type { CountryOption } from '@/app/lib/auth/countries'
 import { LOGIN_HREF } from '@/app/lib/auth/login'
 import {
@@ -53,15 +54,33 @@ export function RegistrationForm({
     action,
     initialState ?? initialRegistrationState,
   )
-  const alertRef = useRef<HTMLDivElement>(null)
+  const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
   const successRef = useRef<HTMLHeadingElement>(null)
+  const toast = useToast()
+  const lastToastIdRef = useRef<number | null>(null)
 
   // Move focus to the outcome of a submission so keyboard and screen-reader
-  // users land on the summary (or the confirmation) instead of a reset form.
+  // users land on the first invalid field (or the confirmation) instead of a reset form.
   useEffect(() => {
-    if (state.status === 'error') alertRef.current?.focus()
-    if (state.status === 'success') successRef.current?.focus()
-  }, [state])
+    if (state.status === 'error') {
+      if (lastToastIdRef.current !== null) {
+        toast.dismiss(lastToastIdRef.current)
+        lastToastIdRef.current = null
+      }
+      if (state.formError) {
+        lastToastIdRef.current = toast.show('error', state.formError)
+      }
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+    } else if (state.status === 'success') {
+      if (lastToastIdRef.current !== null) {
+        toast.dismiss(lastToastIdRef.current)
+        lastToastIdRef.current = null
+      }
+      successRef.current?.focus()
+    }
+  }, [state, toast])
 
   const headingBlock = heading ? (
     <div className="registration-heading">
@@ -96,14 +115,14 @@ export function RegistrationForm({
   return (
     <section className="registration-card" id={id}>
       {headingBlock}
-      <form action={formAction} aria-busy={isPending} className="registration-form" noValidate>
+      <form
+        action={formAction}
+        aria-busy={isPending}
+        className="registration-form"
+        noValidate
+        ref={formRef}
+      >
         <p className="form-required-note">{registrationFormCopy.requiredNote}</p>
-
-        {state.formError ? (
-          <div className="form-alert" ref={alertRef} role="alert" tabIndex={-1}>
-            {state.formError}
-          </div>
-        ) : null}
 
         <FormField
           autoComplete="name"
@@ -149,16 +168,20 @@ export function RegistrationForm({
           hint={registrationFormCopy.passwordHint}
           label={REGISTRATION_LABELS.password}
           name="password"
+          onChange={(event) => setPassword(event.target.value)}
           required
           type="password"
+          value={password}
         />
         <FormField
           autoComplete="new-password"
           error={state.fieldErrors.passwordConfirmation}
           label={REGISTRATION_LABELS.passwordConfirmation}
           name="passwordConfirmation"
+          onChange={(event) => setPasswordConfirmation(event.target.value)}
           required
           type="password"
+          value={passwordConfirmation}
         />
 
         <div className="form-actions">
