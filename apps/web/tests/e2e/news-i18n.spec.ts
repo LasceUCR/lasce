@@ -5,6 +5,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { createSignedInUser } from './helpers/admin-users'
 import { enableEditMode } from './helpers/edit-mode'
+import { expectNewsIdentity } from './helpers/news-page'
 
 // Wide enough for the desktop header, where the language menu lives above 1400px.
 test.use({ viewport: { width: 1600, height: 900 } })
@@ -108,6 +109,7 @@ test('shows each item in the language chosen in the header, on the same page and
   const fixtures = await createFixtures()
   try {
     await page.goto('/noticias')
+    await expectNewsIdentity(page, 'es')
 
     const spanishTitle = page.getByRole('heading', { name: fixtures.bilingual.title })
     await expect(spanishTitle).toHaveAttribute('lang', 'es')
@@ -120,6 +122,7 @@ test('shows each item in the language chosen in the header, on the same page and
     const spanishOrder = await shownDates(page)
 
     await switchLanguage(page, 'Español', 'English')
+    await expectNewsIdentity(page, 'en')
 
     const englishTitle = page.getByRole('heading', { name: `Bilingual news item ${fixtures.id}` })
     await expect(englishTitle).toHaveAttribute('lang', 'en')
@@ -142,9 +145,11 @@ test('shows each item in the language chosen in the header, on the same page and
     expect(await shownDates(page)).toEqual(spanishOrder)
 
     await page.reload()
+    await expectNewsIdentity(page, 'en')
     await expect(englishTitle).toBeVisible()
 
     await switchLanguage(page, 'English', 'Español')
+    await expectNewsIdentity(page, 'es')
     await expect(spanishTitle).toBeVisible()
   } finally {
     await fixtures.cleanup()
@@ -324,9 +329,7 @@ test('meets WCAG A and AA automated checks in English and in the bilingual edito
     await page.goto('/noticias')
     await switchLanguage(page, 'Español', 'English')
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-    await expect(
-      page.getByRole('heading', { level: 1, name: 'News and media coverage' }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'News', exact: true })).toBeVisible()
     await expect(page.getByRole('searchbox', { name: 'Search news' })).toBeVisible()
     await expect(page).toHaveTitle('News | LASCE')
     expect((await axe().analyze()).violations).toEqual([])

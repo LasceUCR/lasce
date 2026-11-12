@@ -939,10 +939,10 @@
   "news": {
     "page": {
       "metaTitle": "News | LASCE",
-      "metaDescription": "News and media coverage of the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
+      "metaDescription": "News from the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
       "kicker": "LASCE public portal",
-      "title": "News and media coverage",
-      "lead": "News, outreach and coverage of LASCE’s work.",
+      "title": "News",
+      "lead": "Recent news",
       "recent": "Recent news",
       "searchLabel": "Search news",
       "searchPlaceholder": "Search by title, author or keyword...",
