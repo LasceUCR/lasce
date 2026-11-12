@@ -1,6 +1,6 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ReactElement } from 'react'
+import { createRef, type ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
@@ -14,7 +14,11 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl, type RenderWithIntlOptions } from '@/app/lib/i18n/testing'
 
-import { ResearcherForm, type ResearcherFormProps } from './ResearcherForm'
+import {
+  ResearcherForm,
+  type ResearcherFormHandle,
+  type ResearcherFormProps,
+} from './ResearcherForm'
 import {
   AddNew,
   Bilingual,
@@ -422,6 +426,21 @@ describe('ResearcherForm', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same question when the modal requests closing', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    const ref = createRef<ResearcherFormHandle>()
+    render(<ResearcherForm {...editArgs} onCancel={onCancel} ref={ref} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    act(() => ref.current?.requestCancel())
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   test('keeps the form open when discard is dismissed', async () => {

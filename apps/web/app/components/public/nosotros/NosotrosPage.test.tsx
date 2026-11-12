@@ -768,6 +768,22 @@ describe('NosotrosPage', () => {
     expect(screen.queryByText('No tiene permisos.')).not.toBeInTheDocument()
   })
 
+  test('asks before Escape discards an activity edit', async () => {
+    const user = userEvent.setup()
+    renderPageInEditMode()
+    const [firstActivity] = defaultArgs.content.activities.items
+
+    await user.click(screen.getByRole('button', { name: `Editar ${firstActivity?.title}` }))
+    const editDialog = screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` })
+    await user.type(within(editDialog).getByRole('textbox', { name: /^Título \(Español\)/ }), ' x')
+    await user.keyboard('{Escape}')
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(editDialog).toBeInTheDocument()
+  })
+
   test('DELETEs the activity, refreshes the page and confirms it was deleted', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })

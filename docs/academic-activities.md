@@ -1,48 +1,40 @@
 # Academic activities
 
-How academic activities are presented and edited: a teaser section on `/noticias` and their own
-dedicated, CMS-editable list at `/actividades-academicas`, both rendering the same card. There is
-no separate detail page — the full write-up lives in the card itself, behind a "Leer más" toggle.
-Academic activities represent workshops, seminars, courses and conferences organized or
-co-organized by LASCE. Content lives in Postgres (`AcademicActivity`, schema `news`) and is edited
-behind "Modo edición" the same way as Nosotros activities or research areas — see
-[`add-a-cms-feature.md`](add-a-cms-feature.md) for the shared building blocks this reuses.
+Academic activities are presented and edited exclusively in their dedicated list at
+`/actividades-academicas`. They are not included in `/noticias` or its management controls.
+There is no separate detail page — the full write-up lives in the card itself, behind a
+"Leer más" toggle. Academic activities represent workshops, seminars, courses and conferences
+organized or co-organized by LASCE. Content lives in Postgres (`AcademicActivity`, schema
+`news`) and is edited behind "Modo edición" the same way as Nosotros activities or research
+areas — see [`add-a-cms-feature.md`](add-a-cms-feature.md) for the shared building blocks.
 
 ## The shape
 
 ```
-/noticias                                         NewsPage                  h1 "Noticias"
-  └─ AcademicActivitiesSection                    section.news-academic…    h2 "Actividades académicas"
-       └─ ul.news-list › li                       one card per row, read-only
-            └─ AcademicActivityCard               article, named by its h3
-                 ├─ MediaFrame                    photograph, cover
-                 └─ content                       category badge, h3 title, date/location,
-                                                  full description, clamped via TruncatedText
-
 /actividades-academicas                           AcademicActivitiesPage    article.topic-page
   ├─ TopicHero                                    kicker "Portal público LASCE"
   ├─ AddItemCard                                  "Agregar actividad", edit mode + create grant only
-  └─ .academic-activities-list
-       └─ EditableAcademicActivityCard            per activity: plain card, or wrapped in
-            ├─ AcademicActivityCard                 EditableWrapper + edit Modal when edit mode is
-            └─ EditableWrapper + Modal(              on and the account has edit or delete grants
-                 AcademicActivityForm)
+  ├─ .academic-activities-list
+  │    └─ EditableAcademicActivityCard             per activity: plain card, or wrapped in
+  │         ├─ AcademicActivityCard                 EditableWrapper + edit Modal when edit mode is
+  │         └─ EditableWrapper + Modal(              on and the account has edit or delete grants
+  │              AcademicActivityForm)
   └─ .topic-page-footer                           TopicBackLink "Volver al inicio"
 ```
 
-Both the `/noticias` teaser and the dedicated `/actividades-academicas` list render the same
-`AcademicActivityCard` — there is no detail route for either surface to link to. Only the
-dedicated list page carries the CMS affordances; the `/noticias` teaser
-(`AcademicActivitiesSection`) stays read-only, same as before.
 `/actividades-academicas` is also reachable from the main nav, inside the `Divulgación` dropdown
 next to Noticias and Galería (`PublicHeader.tsx`, `nav.academicActivities`).
+
+News is read and managed through `news.news_records` and `/api/news`; academic activities use
+`news.academic_activities` and `/api/academic-activities`. Removing the former news teaser changes
+no records, translations, images or activity descriptions and requires no additional migration.
+The CMS migrations establish the separate activity tables and their bilingual content.
 
 | Piece                   | File                                                          | Covered by                              |
 | ----------------------- | ------------------------------------------------------------- | --------------------------------------- |
 | Client-safe schema      | `app/lib/academic-activities-schema.ts`                       | `app/lib/academic-activities.test.ts`   |
 | Editing/form logic      | `app/lib/academic-activities-form.ts`                         | exercised through the form's tests      |
 | Data and CRUD           | `app/lib/academic-activities.ts`                              | `app/lib/academic-activities.test.ts`   |
-| Section on news         | `app/components/public/news/AcademicActivitiesSection.tsx`    | `AcademicActivitiesSection.test.tsx`    |
 | Activity card           | `app/components/public/news/AcademicActivityCard.tsx`         | `AcademicActivityCard.test.tsx`         |
 | Edit/delete affordances | `app/components/public/news/EditableAcademicActivityCard.tsx` | `EditableAcademicActivityCard.test.tsx` |
 | Create/edit form        | `app/components/public/news/AcademicActivityForm.tsx`         | `AcademicActivityForm.test.tsx`         |
@@ -167,10 +159,10 @@ request.
 The `/actividades-academicas` screen, following the same standard every other top-level topic page
 uses: `TopicHero` (kicker "Portal público LASCE", title and lead from the
 `academicActivities.listPage` message namespace), then a debounced search field, the result summary,
-the create affordance (edit mode only), and one `EditableAcademicActivityCard` per activity — no
-second, duplicate section heading the way `/noticias`' teaser has one. The search accepts text from
-the displayed title, category, description, location, or the localized date range;
-the database query searches only the requested 10-item page and includes the English translation
+the create affordance (edit mode only), and one `EditableAcademicActivityCard` per activity, without
+a second, duplicate section heading. The search accepts text from the displayed title, category,
+description, location, or the localized date range across the catalogue;
+the database query loads only the requested 10-item page and includes the English translation
 when English is selected. An empty search result shows `academicActivities.listPage.emptyQuery`;
 an empty catalogue shows `academicActivities.section.empty`. `?q=` and `?page=` are canonicalized
 to the trimmed query and an in-range page, and changing the query returns to page 1. Pagination
@@ -184,9 +176,8 @@ Nosotros, ResearchArea, Rosac, and this one) — there is no activity-specific p
 
 ## Skeleton loading states
 
-While academic activities are being retrieved on an uncached visit (#410), both the dedicated list
-at `/actividades-academicas` (`AcademicActivitiesPage`) and the teaser on `/noticias`
-(`AcademicActivitiesSection`) display skeleton placeholders shaped like the activity cards,
+While academic activities are being retrieved on an uncached visit (#410), the dedicated list
+at `/actividades-academicas` (`AcademicActivitiesPage`) displays skeleton placeholders shaped like the activity cards,
 preventing empty areas or noticeable layout shifts:
 
 - **Placeholders**: `AcademicActivityCardSkeleton` follows the `.news-card` metrics (280px photo
@@ -206,3 +197,4 @@ preventing empty areas or noticeable layout shifts:
 
 `/actividades-academicas` is listed in `publicPaths` (`app/lib/site.ts`), ensuring it is included
 in `sitemap.xml` and audited by Playwright's automated accessibility and SEO checks.
+The sitemap does not advertise the obsolete `/noticias/actividades/*` detail URLs.

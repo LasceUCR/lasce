@@ -2,7 +2,7 @@
 
 import { Image as ImageIcon, Loader2, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -40,10 +40,17 @@ import type { ConstructionImage, ConstructionStage } from '@/app/lib/rosac-const
 
 export type RosacStageFormBody = RosacStageInput
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface RosacStageFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface RosacStageFormProps {
   stage: ConstructionStage
   onSave: (body: RosacStageFormBody) => void | Promise<void>
   onCancel: () => void
+  ref?: Ref<RosacStageFormHandle>
 }
 
 interface EditableImageItem {
@@ -53,7 +60,7 @@ interface EditableImageItem {
   file?: File | null
 }
 
-export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps) {
+export function RosacStageForm({ stage, onSave, onCancel, ref }: RosacStageFormProps) {
   const t = useTranslations('rosac.editor')
   const siteLocale = useLocale()
   const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
@@ -218,13 +225,15 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
   }
 
   // Handlers for General Form
-  function handleCancelClick() {
+  function requestCancel() {
     if (isGeneralDirty) {
       setConfirmDiscardGeneral(true)
     } else {
       onCancel()
     }
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   async function handleConfirmClick() {
     setAttempted(true)
@@ -394,7 +403,7 @@ export function RosacStageForm({ stage, onSave, onCancel }: RosacStageFormProps)
       </div>
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">

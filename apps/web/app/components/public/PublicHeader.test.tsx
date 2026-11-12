@@ -1,8 +1,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { ACCOUNT_COOKIE, encodeAccountCookie, shortName } from '@/app/lib/auth/account'
+import { ACCOUNT_COOKIE, shortName } from '@/app/lib/auth/account'
+import type { SessionCapabilitiesResponse } from '@/app/lib/auth/capabilities'
 import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import type { Locale } from '@/app/lib/i18n/config'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
@@ -11,9 +12,28 @@ import { PublicHeader } from './PublicHeader'
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/' }))
 
-function setAccountCookie(name: string, role: 'VISITOR' | 'ASSISTANT' | 'ADMIN' | null) {
-  document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(encodeAccountCookie({ name, role }))}; Path=/`
+type Role = 'VISITOR' | 'ASSISTANT' | 'ADMIN'
+
+/**
+ * Signs `name` in as far as the header can tell: the readable account cookie,
+ * which may carry a forged `cookieRole`, plus what `GET /api/session` answers
+ * for the real session. Only the latter may decide what the header offers.
+ */
+function signIn(name: string, sessionRole: Role, cookieRole?: Role) {
+  const payload = cookieRole ? { name, role: cookieRole } : { name }
+  document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(JSON.stringify(payload))}; Path=/`
+  const privileged = sessionRole !== 'VISITOR'
+  const body: SessionCapabilitiesResponse = {
+    signedIn: true,
+    name,
+    role: sessionRole,
+    canAccessAdmin: privileged,
+    canEdit: privileged,
+  }
+  fetchMock.mockImplementation(async () => new Response(JSON.stringify(body)))
 }
+
+const fetchMock = vi.fn()
 
 function renderHeader({
   locale,
@@ -27,7 +47,17 @@ function renderHeader({
   )
 }
 
+beforeEach(() => {
+  fetchMock.mockReset()
+  fetchMock.mockImplementation(
+    async () =>
+      new Response(JSON.stringify({ signedIn: false } satisfies SessionCapabilitiesResponse)),
+  )
+  vi.stubGlobal('fetch', fetchMock)
+})
+
 afterEach(() => {
+  vi.unstubAllGlobals()
   document.cookie = `${ACCOUNT_COOKIE}=; Max-Age=0; Path=/`
 })
 
@@ -58,16 +88,34 @@ describe('PublicHeader', () => {
     ).toBeInTheDocument()
   })
 
-  test('hides Administración from a signed-in visitor', () => {
-    setAccountCookie('Ana Pérez Rojas', 'VISITOR')
+  test('hides Administración from a signed-in visitor', async () => {
+    signIn('Ana Pérez Rojas', 'VISITOR')
     renderHeader()
 
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
   })
 
+  test.each(['ADMIN', 'ASSISTANT'] as const)(
+    'ignores a forged %s role in the account cookie (LASCE-SEC-001)',
+    async (forged) => {
+      const user = userEvent.setup()
+      signIn('Ana Pérez Rojas', 'VISITOR', forged)
+      renderHeader()
+
+      const trigger = screen.getByText(shortName('Ana Pérez Rojas'), { selector: 'summary' })
+      await user.click(trigger)
+      const menu = within(trigger.closest('details') as HTMLElement)
+      // The server's answer arrives and says visitor.
+      expect(await menu.findByText('Visitante')).toBeInTheDocument()
+      expect(menu.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
+      expect(screen.queryByRole('switch', { name: 'Modo edición' })).not.toBeInTheDocument()
+    },
+  )
+
   test('shows Administración to an assistant and an administrator, only inside the account menu', async () => {
     const user = userEvent.setup()
-    setAccountCookie('Carlos Solís', 'ASSISTANT')
+    signIn('Carlos Solís', 'ASSISTANT')
     const { unmount } = renderHeader()
 
     expect(
@@ -79,19 +127,19 @@ describe('PublicHeader', () => {
     const assistantTrigger = screen.getByText(shortName('Carlos Solís'), { selector: 'summary' })
     await user.click(assistantTrigger)
     expect(
-      within(assistantTrigger.closest('details') as HTMLElement).getByRole('link', {
+      await within(assistantTrigger.closest('details') as HTMLElement).findByRole('link', {
         name: /^Administración$/,
       }),
     ).toHaveAttribute('href', '/administracion')
     unmount()
 
-    setAccountCookie('Ana Pérez Rojas', 'ADMIN')
+    signIn('Ana Pérez Rojas', 'ADMIN')
     renderHeader()
 
     const adminTrigger = screen.getByText(shortName('Ana Pérez Rojas'), { selector: 'summary' })
     await user.click(adminTrigger)
     expect(
-      within(adminTrigger.closest('details') as HTMLElement).getByRole('link', {
+      await within(adminTrigger.closest('details') as HTMLElement).findByRole('link', {
         name: /^Administración$/,
       }),
     ).toHaveAttribute('href', '/administracion')

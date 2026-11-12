@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -91,10 +91,17 @@ function getInitialConsultationState(instrument: RosacInstrumentCardContent | nu
 
 export type RosacInstrumentFormBody = RosacInstrumentInput
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface RosacInstrumentFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface RosacInstrumentFormProps {
   instrument: RosacInstrumentCardContent | null
   onSave: (body: RosacInstrumentFormBody) => void | Promise<void>
   onCancel: () => void
+  ref?: Ref<RosacInstrumentFormHandle>
 }
 
 export const DEFAULT_INSTRUMENT_IMAGE = {
@@ -102,7 +109,12 @@ export const DEFAULT_INSTRUMENT_IMAGE = {
   alt: 'Imagen ilustrativa del instrumento ROSAC',
 }
 
-export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstrumentFormProps) {
+export function RosacInstrumentForm({
+  instrument,
+  onSave,
+  onCancel,
+  ref,
+}: RosacInstrumentFormProps) {
   const t = useTranslations('rosac.editor')
   const tRosacProducts = useTranslations('rosac.instruments.products')
   const siteLocale = useLocale()
@@ -218,13 +230,15 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
     ? contentChanged || isConsultationDirty || isImageDirty
     : hasTypedText || isImageDirty || isConsultationDirty
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function setContent(locale: Locale, field: RosacInstrumentField, value: string) {
     setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
@@ -462,7 +476,7 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
       </div>
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">

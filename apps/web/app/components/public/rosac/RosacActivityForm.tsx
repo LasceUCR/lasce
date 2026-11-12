@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -39,13 +39,20 @@ import type { RosacActivityInput, RosacActivityItem } from '@/app/lib/rosac'
 
 export type RosacActivityFormBody = RosacActivityInput
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface RosacActivityFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface RosacActivityFormProps {
   activity: RosacActivityItem
   onSave: (body: RosacActivityFormBody) => void
   onCancel: () => void
+  ref?: Ref<RosacActivityFormHandle>
 }
 
-export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityFormProps) {
+export function RosacActivityForm({ activity, onSave, onCancel, ref }: RosacActivityFormProps) {
   const t = useTranslations('rosac.editor')
   const siteLocale = useLocale()
   const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
@@ -90,13 +97,15 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
   const contentChanged = hasContentChanges(rosacActivityContent, stored, draft)
   const isDirty = iconChanged || contentChanged
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function setContent(locale: Locale, field: RosacActivityField, value: string) {
     setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
@@ -206,7 +215,7 @@ export function RosacActivityForm({ activity, onSave, onCancel }: RosacActivityF
       />
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('cancel')}
         </Button>
         <Button onClick={handleConfirmClick} variant="primary">
