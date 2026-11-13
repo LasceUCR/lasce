@@ -151,7 +151,7 @@ test('keeps what was typed and the stored text when the input is invalid', async
 
     await page.reload()
     await expect(
-      card(page).getByRole('heading', { name: '¿Por qué estudiarlo desde Costa Rica?' }),
+      card(page).getByRole('heading', { name: '4. ¿Por qué estudiarlo desde Costa Rica?' }),
     ).toBeVisible()
   } finally {
     await account.cleanup()
