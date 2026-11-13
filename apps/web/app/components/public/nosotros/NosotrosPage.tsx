@@ -13,6 +13,7 @@ import { EditableResearcherCard } from '@/app/components/public/rosac/EditableRe
 import {
   ResearcherForm,
   type BilingualResearcherFormValues,
+  type ResearcherFormHandle,
 } from '@/app/components/public/rosac/ResearcherForm'
 import { TeamGallery } from '@/app/components/public/rosac/TeamGallery'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
@@ -31,7 +32,11 @@ import type {
   NosotrosResearcherUpdateBody,
 } from '@/app/lib/nosotros'
 
-import { NosotrosActivityForm, type NosotrosActivityFormBody } from './NosotrosActivityForm'
+import {
+  NosotrosActivityForm,
+  type NosotrosActivityFormBody,
+  type NosotrosActivityFormHandle,
+} from './NosotrosActivityForm'
 
 const icons: Record<NosotrosCardIcon, LucideIcon> = {
   sun: Sun,
@@ -102,6 +107,9 @@ export function NosotrosPage({
   // A second click while a save is in flight would send the same version again and come back as
   // a false conflict.
   const saving = useRef(false)
+  const activityForm = useRef<NosotrosActivityFormHandle>(null)
+  const createActivityForm = useRef<NosotrosActivityFormHandle>(null)
+  const createResearcherForm = useRef<ResearcherFormHandle>(null)
 
   const editingActivity = content.activities.items.find((item) => item.id === editingActivityId)
   const editingData = editingActivity?.editing ?? null
@@ -262,13 +270,21 @@ export function NosotrosPage({
 
         <CardGrid columns={3} equalHeight>
           {editMode && canCreate ? (
-            <AddItemCard label={t('add')} size="large">
+            <AddItemCard
+              label={t('add')}
+              onRequestClose={(close) => {
+                if (createActivityForm.current) createActivityForm.current.requestCancel()
+                else close()
+              }}
+              size="large"
+            >
               {({ close }) => (
                 <NosotrosActivityForm
                   editing={null}
                   icon={blankIcon}
                   onCancel={close}
                   onSave={(body) => handleCreateActivity(body, close)}
+                  ref={createActivityForm}
                   requireConfirmation={false}
                 />
               )}
@@ -345,13 +361,20 @@ export function NosotrosPage({
           )}
           leadingSlide={
             editMode && canCreate ? (
-              <AddItemCard label={tNosotrosResearchers('add')}>
+              <AddItemCard
+                label={tNosotrosResearchers('add')}
+                onRequestClose={(close) => {
+                  if (createResearcherForm.current) createResearcherForm.current.requestCancel()
+                  else close()
+                }}
+              >
                 {({ close }) => (
                   <ResearcherForm
                     onCancel={close}
                     onSave={(values: BilingualResearcherFormValues) =>
                       handleCreateResearcher(values, close)
                     }
+                    ref={createResearcherForm}
                     researcher={null}
                     translation={{ editing: null }}
                   />
@@ -387,7 +410,10 @@ export function NosotrosPage({
       </div>
 
       <Modal
-        onClose={closeEditor}
+        onClose={() => {
+          if (activityForm.current) activityForm.current.requestCancel()
+          else closeEditor()
+        }}
         open={editingActivity !== undefined && editingData !== null}
         size="large"
         title={
@@ -400,6 +426,7 @@ export function NosotrosPage({
             icon={editingActivity.icon}
             onCancel={closeEditor}
             onSave={handleSaveActivity}
+            ref={activityForm}
           />
         ) : null}
       </Modal>

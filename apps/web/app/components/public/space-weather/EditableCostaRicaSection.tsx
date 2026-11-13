@@ -28,6 +28,8 @@ export interface EditableCostaRicaSectionProps {
   section: SpaceWeatherSection
   /** True for someone who may edit it. The section must then carry its `editing` data. */
   canEdit?: boolean
+  /** The section's number on its page ("2" shows as "2. …"), so the page numbers every section in order. */
+  index?: string
 }
 
 /**
@@ -39,6 +41,7 @@ export interface EditableCostaRicaSectionProps {
 export function EditableCostaRicaSection({
   section,
   canEdit = false,
+  index,
 }: EditableCostaRicaSectionProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
@@ -52,7 +55,7 @@ export function EditableCostaRicaSection({
   // Taken when the editor opens, so a refresh behind it cannot change what it saves against.
   const [initial, setInitial] = useState<SpaceWeatherSectionFormInitial | null>(null)
 
-  const content = <CostaRicaSectionView section={section} />
+  const content = <CostaRicaSectionView index={index} section={section} />
 
   const { editing } = section
   if (!editMode || !canEdit || !editing) return content

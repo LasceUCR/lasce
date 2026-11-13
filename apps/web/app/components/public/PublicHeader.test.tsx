@@ -1,8 +1,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { ACCOUNT_COOKIE, encodeAccountCookie, shortName } from '@/app/lib/auth/account'
+import { ACCOUNT_COOKIE, shortName } from '@/app/lib/auth/account'
+import type { SessionCapabilitiesResponse } from '@/app/lib/auth/capabilities'
 import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
 import type { Locale } from '@/app/lib/i18n/config'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
@@ -11,9 +12,28 @@ import { PublicHeader } from './PublicHeader'
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/' }))
 
-function setAccountCookie(name: string, role: 'VISITOR' | 'ASSISTANT' | 'ADMIN' | null) {
-  document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(encodeAccountCookie({ name, role }))}; Path=/`
+type Role = 'VISITOR' | 'ASSISTANT' | 'ADMIN'
+
+/**
+ * Signs `name` in as far as the header can tell: the readable account cookie,
+ * which may carry a forged `cookieRole`, plus what `GET /api/session` answers
+ * for the real session. Only the latter may decide what the header offers.
+ */
+function signIn(name: string, sessionRole: Role, cookieRole?: Role) {
+  const payload = cookieRole ? { name, role: cookieRole } : { name }
+  document.cookie = `${ACCOUNT_COOKIE}=${encodeURIComponent(JSON.stringify(payload))}; Path=/`
+  const privileged = sessionRole !== 'VISITOR'
+  const body: SessionCapabilitiesResponse = {
+    signedIn: true,
+    name,
+    role: sessionRole,
+    canAccessAdmin: privileged,
+    canEdit: privileged,
+  }
+  fetchMock.mockImplementation(async () => new Response(JSON.stringify(body)))
 }
+
+const fetchMock = vi.fn()
 
 function renderHeader({
   locale,
@@ -27,7 +47,17 @@ function renderHeader({
   )
 }
 
+beforeEach(() => {
+  fetchMock.mockReset()
+  fetchMock.mockImplementation(
+    async () =>
+      new Response(JSON.stringify({ signedIn: false } satisfies SessionCapabilitiesResponse)),
+  )
+  vi.stubGlobal('fetch', fetchMock)
+})
+
 afterEach(() => {
+  vi.unstubAllGlobals()
   document.cookie = `${ACCOUNT_COOKIE}=; Max-Age=0; Path=/`
 })
 
@@ -41,6 +71,74 @@ describe('PublicHeader', () => {
     expect(disclosure.open).toBe(true)
     fireEvent.touchStart(document.body)
     expect(disclosure.open).toBe(false)
+  })
+
+  test('closes the mobile menu with Escape and returns focus to its toggle', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+    const toggle = screen.getByLabelText('Abrir navegación')
+    const menu = toggle.closest('details')!
+
+    await user.click(toggle)
+    expect(menu.open).toBe(true)
+
+    // Escape works from inside the menu, not only from the toggle.
+    within(screen.getByRole('navigation', { name: 'Navegación móvil' }))
+      .getByRole('link', { name: 'Datos' })
+      .focus()
+    await user.keyboard('{Escape}')
+
+    expect(menu.open).toBe(false)
+    expect(toggle).toHaveFocus()
+    await waitFor(() => expect(toggle).toHaveAccessibleName('Abrir navegación'))
+  })
+
+  test('ignores Escape while the mobile menu is closed', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+    const toggle = screen.getByLabelText('Abrir navegación')
+
+    await user.keyboard('{Escape}')
+
+    expect(toggle.closest('details')!.open).toBe(false)
+    expect(toggle).not.toHaveFocus()
+  })
+
+  test.each([
+    { locale: 'es' as const, open: 'Abrir navegación', close: 'Cerrar navegación' },
+    { locale: 'en' as const, open: 'Open navigation', close: 'Close navigation' },
+  ])(
+    'shows the menu icon and "$open" while closed, and an X and "$close" while open ($locale)',
+    async ({ locale, open, close }) => {
+      const user = userEvent.setup()
+      renderHeader({ locale })
+      const toggle = screen.getByLabelText(open)
+
+      expect(toggle.querySelector('svg')).toHaveClass('lucide-menu')
+
+      await user.click(toggle)
+      await waitFor(() => expect(toggle).toHaveAccessibleName(close))
+      expect(toggle.querySelector('svg')).toHaveClass('lucide-x')
+
+      await user.click(toggle)
+      await waitFor(() => expect(toggle).toHaveAccessibleName(open))
+      expect(toggle.querySelector('svg')).toHaveClass('lucide-menu')
+    },
+  )
+
+  test('keeps the backdrop out of the tab order and the accessibility tree', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+
+    await user.click(screen.getByLabelText('Abrir navegación'))
+
+    const backdrop = await waitFor(() => {
+      const element = document.querySelector('.mobile-menu-backdrop')
+      expect(element).not.toBeNull()
+      return element!
+    })
+    expect(backdrop).toHaveAttribute('aria-hidden', 'true')
+    expect(backdrop).toHaveAttribute('tabindex', '-1')
   })
 
   test('hides Administración when nobody is signed in', () => {
@@ -58,16 +156,34 @@ describe('PublicHeader', () => {
     ).toBeInTheDocument()
   })
 
-  test('hides Administración from a signed-in visitor', () => {
-    setAccountCookie('Ana Pérez Rojas', 'VISITOR')
+  test('hides Administración from a signed-in visitor', async () => {
+    signIn('Ana Pérez Rojas', 'VISITOR')
     renderHeader()
 
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
     expect(screen.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
   })
 
+  test.each(['ADMIN', 'ASSISTANT'] as const)(
+    'ignores a forged %s role in the account cookie (LASCE-SEC-001)',
+    async (forged) => {
+      const user = userEvent.setup()
+      signIn('Ana Pérez Rojas', 'VISITOR', forged)
+      renderHeader()
+
+      const trigger = screen.getByText(shortName('Ana Pérez Rojas'), { selector: 'summary' })
+      await user.click(trigger)
+      const menu = within(trigger.closest('details') as HTMLElement)
+      // The server's answer arrives and says visitor.
+      expect(await menu.findByText('Visitante')).toBeInTheDocument()
+      expect(menu.queryByRole('link', { name: /^Administración$/ })).not.toBeInTheDocument()
+      expect(screen.queryByRole('switch', { name: 'Modo edición' })).not.toBeInTheDocument()
+    },
+  )
+
   test('shows Administración to an assistant and an administrator, only inside the account menu', async () => {
     const user = userEvent.setup()
-    setAccountCookie('Carlos Solís', 'ASSISTANT')
+    signIn('Carlos Solís', 'ASSISTANT')
     const { unmount } = renderHeader()
 
     expect(
@@ -79,30 +195,35 @@ describe('PublicHeader', () => {
     const assistantTrigger = screen.getByText(shortName('Carlos Solís'), { selector: 'summary' })
     await user.click(assistantTrigger)
     expect(
-      within(assistantTrigger.closest('details') as HTMLElement).getByRole('link', {
+      await within(assistantTrigger.closest('details') as HTMLElement).findByRole('link', {
         name: /^Administración$/,
       }),
     ).toHaveAttribute('href', '/administracion')
     unmount()
 
-    setAccountCookie('Ana Pérez Rojas', 'ADMIN')
+    signIn('Ana Pérez Rojas', 'ADMIN')
     renderHeader()
 
     const adminTrigger = screen.getByText(shortName('Ana Pérez Rojas'), { selector: 'summary' })
     await user.click(adminTrigger)
     expect(
-      within(adminTrigger.closest('details') as HTMLElement).getByRole('link', {
+      await within(adminTrigger.closest('details') as HTMLElement).findByRole('link', {
         name: /^Administración$/,
       }),
     ).toHaveAttribute('href', '/administracion')
   })
 
-  test('identifies UCR, CINESPA and LASCE in the header brand', () => {
+  test('identifies UCR, CINESPA and LASCE in the header brand, each once', () => {
     renderHeader()
 
-    expect(screen.getByAltText('Universidad de Costa Rica')).toBeInTheDocument()
+    // The shield names the university; the signature repeats it as lettering and stays silent,
+    // so the reduced mobile lockup (shield + LASCE) and the full one both announce it once.
+    expect(screen.getAllByAltText('Universidad de Costa Rica')).toHaveLength(1)
+    expect(document.querySelector('.ucr-signature-logo')).toHaveAttribute('alt', '')
     expect(screen.getByAltText('Centro de Investigaciones Espaciales')).toBeInTheDocument()
-    expect(screen.getByAltText('Laboratorio de Ciencias Espaciales')).toBeInTheDocument()
+    expect(
+      screen.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial'),
+    ).toBeInTheDocument()
   })
 
   test.each([
