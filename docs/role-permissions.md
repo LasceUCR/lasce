@@ -36,21 +36,22 @@ configurable without letting an administrator lock themselves out.
 
 ## The pieces
 
-| Piece                                         | File                                                                            |
-| --------------------------------------------- | ------------------------------------------------------------------------------- |
-| Permission catalogue and Spanish copy         | `apps/web/app/lib/auth/permissions.ts`                                          |
-| Role and permission names, by identifier      | `access.*` in `apps/web/messages/*.json`, `apps/web/app/lib/access-messages.ts` |
-| Session-aware checks (`requirePermission`, …) | `apps/web/app/lib/auth/authorization.ts`                                        |
-| Matrix read/write                             | `apps/web/app/lib/role-permissions.ts`                                          |
-| Save action                                   | `apps/web/app/(public)/administracion/permission-actions.ts`                    |
-| Management UI                                 | `apps/web/app/components/administracion/RolePermissions{Page,Editor}.tsx`       |
-| Access-denied copy                            | `apps/web/app/components/administracion/AccessDenied.tsx`                       |
-| Admin menu catalogue and visibility rule      | `apps/web/app/lib/admin-sections.ts`                                            |
-| JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                    |
-| Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)       |
-| Download history                              | `/administracion/descargas` (`view_download_history`)                           |
-| `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)                 |
-| Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md)   |
+| Piece                                         | File                                                                                      |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Permission catalogue and Spanish copy         | `apps/web/app/lib/auth/permissions.ts`                                                    |
+| Role and permission names, by identifier      | `access.*` in `apps/web/messages/*.json`, `apps/web/app/lib/access-messages.ts`           |
+| Session-aware checks (`requirePermission`, …) | `apps/web/app/lib/auth/authorization.ts`                                                  |
+| Matrix read/write                             | `apps/web/app/lib/role-permissions.ts`                                                    |
+| Save action                                   | `apps/web/app/(public)/administracion/permission-actions.ts`                              |
+| Management UI                                 | `apps/web/app/components/administracion/RolePermissions{Page,Editor}.tsx`                 |
+| Access-denied copy                            | `apps/web/app/components/administracion/AccessDenied.tsx`                                 |
+| Admin menu catalogue and visibility rule      | `apps/web/app/lib/admin-sections.ts`                                                      |
+| JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                              |
+| Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)                 |
+| Scientific tools                              | `/herramientas-cientificas` (`create_components`, `edit_components`, `delete_components`) |
+| Download history                              | `/administracion/descargas` (`view_download_history`)                                     |
+| `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)                           |
+| Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md)             |
 
 The administration panel admits only `ASSISTANT` and `ADMIN` (the `administracion` layout turns
 visitors away), and its menu offers only the sections whose grant the account holds, read from

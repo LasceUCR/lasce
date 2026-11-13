@@ -59,6 +59,7 @@ working through Claude Code.
 | How does the ROSAC location map work?                | [`docs/rosac-location.md`](docs/rosac-location.md)                         |
 | How is the research areas page built?                | [`docs/research.md`](docs/research.md)                                     |
 | How is the collaborations page built?                | [`docs/collaborations.md`](docs/collaborations.md)                         |
+| How are the scientific tools managed?                | [`docs/scientific-tools.md`](docs/scientific-tools.md)                     |
 | How does a visitor see LASCE contact information?    | [`docs/contact.md`](docs/contact.md)                                       |
 | How does a visitor register an account?              | [`docs/registration.md`](docs/registration.md)                             |
 | How do users sign in, and how is a page protected?   | [`docs/sessions.md`](docs/sessions.md)                                     |
