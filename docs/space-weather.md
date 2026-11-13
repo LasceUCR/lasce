@@ -52,6 +52,8 @@ controls.
 `resolveLocale(await getLocale())`, checks `edit_components` on the server, and calls
 `getSpaceWeatherSection(locale, { includeEditingData })` from `app/lib/space-weather-section.ts`.
 Every language and the version to save against (`editing`) are sent only to an editor.
+`generateMetadata()` declares `alternates: { canonical: '/clima-espacial' }`, the same as every
+other public topic page.
 
 `SpaceWeatherPage` renders the plain `CostaRicaSectionView` for anyone who cannot edit, so a
 visitor gets no editor code at all, and `EditableCostaRicaSection` for an editor. The view keeps
@@ -79,6 +81,11 @@ envelope of `app/lib/cms/http.ts` (`invalid-json`, `invalid-body`, `review-requi
 - The write runs in one transaction against the `updated_at` the editor loaded and moves it
   forward. A stale save gets a 409 and changes nothing; the error toast shows the reason and the
   form stays open with what was typed.
+- `title` and `body` carry no native `maxLength` attribute, so typing past 160 or 5000 characters
+  is never silently blocked: `CostaRicaSectionForm` clips the value itself and shows the field's
+  own "too long" message (`contentCopy[uiLocale].tooLong`, the same generator `validateContent`
+  uses on submit), plus a live "N of M characters remaining" hint
+  (`spaceWeather.editor.remainingCharacters`) under both fields, in every language.
 
 The editor (`app/components/public/space-weather/`) is `EditableCostaRicaSection` +
 `CostaRicaSectionForm`, built like `EditableHomeHero` + `HomeHeroForm`: `LanguageTabs`,
