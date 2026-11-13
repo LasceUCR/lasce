@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, test } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
@@ -21,9 +22,44 @@ describe('AuditTrailPage', () => {
     const rows = screen.getAllByRole('row').slice(1)
     expect(rows).toHaveLength(2)
     expect(rows[0]).toHaveTextContent('Ana Rodríguez')
-    expect(rows[0]).toHaveTextContent('news.create')
+    expect(within(rows[0]!).getAllByRole('cell')[2]).toHaveTextContent(/^Noticia agregada$/)
+    expect(rows[0]).not.toHaveTextContent('news.create')
     expect(rows[0]).toHaveTextContent('Noticia agregada: Aurora sobre Costa Rica')
     expect(screen.getByText('23 eventos')).toBeInTheDocument()
+  })
+
+  test('shows readable action and item type names in the filters', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(<AuditTrailPage {...withEvents} />)
+
+    await user.click(screen.getByRole('combobox', { name: 'Tipo de elemento' }))
+    expect(screen.getByRole('option', { name: 'Noticia' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'news' })).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+
+    await user.click(screen.getByRole('combobox', { name: 'Acción' }))
+    expect(screen.getByRole('option', { name: 'Noticia agregada' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Rol de cuenta cambiado' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'news.create' })).not.toBeInTheDocument()
+  })
+
+  test('submits the stored code, not the label, when filtering', async () => {
+    const user = userEvent.setup()
+    const { container } = renderWithIntl(<AuditTrailPage {...withEvents} />)
+
+    await user.click(screen.getByRole('combobox', { name: 'Acción' }))
+    await user.click(screen.getByRole('option', { name: 'Noticia agregada' }))
+
+    expect(container.querySelector('input[name="action"]')).toHaveValue('news.create')
+  })
+
+  test('falls back to readable words for an action it has no label for', () => {
+    const item = { ...withEvents.trail.items[0]!, action: 'new_thing.archive' }
+    renderWithIntl(
+      <AuditTrailPage {...withEvents} trail={{ ...withEvents.trail, items: [item] }} />,
+    )
+
+    expect(screen.getAllByRole('row')[1]).toHaveTextContent('New thing archive')
   })
 
   test('names the actor of a deleted account', () => {
@@ -86,6 +122,9 @@ describe('AuditTrailPage', () => {
     expect(screen.getByRole('form', { name: 'Audit trail filters' })).toBeInTheDocument()
     expect(screen.getByText('23 events')).toBeInTheDocument()
     expect(screen.getAllByRole('row')[2]).toHaveTextContent('Deleted account')
+    expect(within(screen.getAllByRole('row')[1]!).getAllByRole('cell')[2]).toHaveTextContent(
+      /^News article added$/,
+    )
   })
 })
 

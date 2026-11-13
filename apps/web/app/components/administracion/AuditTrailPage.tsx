@@ -4,6 +4,7 @@ import { Pagination } from '@/app/components/public/Pagination'
 import type { AuditTrailPage as AuditTrailData } from '@/app/lib/audit-trail'
 
 import { AuditFilters } from './AuditFilters'
+import { useAuditLabels } from './useAuditLabels'
 import { useAuditSummary } from './useAuditSummary'
 import tableStyles from './UsersRolesTable.module.css'
 
@@ -46,6 +47,7 @@ export function AuditTrailPage({ title, description, pathname, trail }: AuditTra
   const t = useTranslations('administration.audit')
   const format = useFormatter()
   const summarize = useAuditSummary()
+  const labels = useAuditLabels()
   const { filters, options, items } = trail
   const filtered = Object.values(filters).some((value) => value !== '')
 
@@ -104,7 +106,7 @@ export function AuditTrailPage({ title, description, pathname, trail }: AuditTra
                       </td>
                       <td data-label={t('table.actor')}>{actorLabel(item)}</td>
                       <td data-label={t('table.action')}>
-                        <code className="audit-action">{item.action}</code>
+                        <span className="audit-action">{labels.action(item.action)}</span>
                       </td>
                       <td data-label={t('table.summary')}>{summarize(item)}</td>
                     </tr>

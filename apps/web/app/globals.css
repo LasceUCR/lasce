@@ -2254,6 +2254,17 @@ a {
   gap: 1rem;
 }
 
+.data-time-notes {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+#scientific-results-title {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
 .data-field input[type='date'],
 .data-field input[type='time'] {
   /* Avoid iOS native controls adding padding outside a percentage width.
@@ -2446,6 +2457,11 @@ a {
 
   .data-time-fields {
     margin-bottom: 0.5rem;
+  }
+
+  /* The notes follow the time fields, ahead of the button. */
+  .data-query-submit {
+    order: 1;
   }
 
   .data-query-form,
@@ -7650,7 +7666,6 @@ a.acknowledgments-card:focus-visible {
 
 .audit-action {
   font-size: 13px;
-  white-space: nowrap;
 }
 
 .audit-date {

@@ -5,16 +5,15 @@ import {
   type ImageSequenceDataResult,
   type ScientificDataQuery,
 } from '@/app/lib/scientific-data'
+import { getQueryWindow } from '@/app/lib/scientific-data-time'
 
 import { ScientificDataUpstreamError } from './errors'
 
 const MAX_SUVI_IMAGES = 8
 
 function queryBounds(query: ScientificDataQuery) {
-  return {
-    start: new Date(`${query.date}T${query.startTime}:00Z`),
-    end: new Date(`${query.date}T${query.endTime}:59.999Z`),
-  }
+  const window = getQueryWindow(query)
+  return { start: new Date(window.start), end: new Date(window.end) }
 }
 
 function selectEvenly<T>(items: T[], maximum: number): T[] {
