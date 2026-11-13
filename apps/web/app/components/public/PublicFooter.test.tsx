@@ -105,7 +105,7 @@ describe('PublicFooter', () => {
   })
 
   test('links to the development team page', () => {
-    render(<PublicFooter {...defaultArgs} />)
+    renderFooter()
 
     expect(screen.getByRole('link', { name: 'Equipo de desarrollo' })).toHaveAttribute(
       'href',
