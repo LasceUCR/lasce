@@ -4,6 +4,8 @@ import type { SolarPhysicsSection } from '@/app/lib/solar-physics-section-schema
 
 export interface LasceSectionViewProps {
   section: SolarPhysicsSection
+  /** The section's number on its page ("2" shows as "2. …"), so the page numbers every section in order. */
+  index?: string
 }
 
 /**
@@ -11,11 +13,12 @@ export interface LasceSectionViewProps {
  * paragraph per blank-line-separated block of the stored text, each marked with the language it
  * is actually in (`''` for a legacy section whose language is unknown).
  */
-export function LasceSectionView({ section }: LasceSectionViewProps) {
+export function LasceSectionView({ section, index }: LasceSectionViewProps) {
   return (
     <TopicSection
       featured
       className="topic-section-end"
+      index={index}
       title={section.title}
       titleId="solar-lasce-title"
     >

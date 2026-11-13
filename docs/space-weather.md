@@ -18,6 +18,20 @@ with `edit_components`. It cannot be added or deleted from the CMS.
 Everything else on the page stays fixed copy in `apps/web/messages/` (`spaceWeather` namespace),
 built by `app/lib/space-weather.ts`.
 
+## Layout
+
+`/clima-espacial` and `/fisica-solar` are reading pages (#507): the article carries
+`topic-page-reading`, which centres the hero and sections in a 65rem column, the same width as the
+`/datos` header. Running text (`.topic-lead`, `.topic-intro`, the concept-flow caption) is capped
+at `--reading-measure` (68ch), about 65–80 characters per line, and left-aligned like every
+paragraph on the public site.
+
+Every section is numbered in visual order through `TopicSection`'s `index`: 1. ¿Qué es el clima
+espacial?, 2. Del Sol a la Tierra, 3. ¿Qué compone el clima espacial?, 4. ¿Por qué estudiarlo
+desde Costa Rica? The Costa Rica card takes its number as a prop
+(`CostaRicaSectionView`/`EditableCostaRicaSection`), as the LASCE section of `/fisica-solar`
+does (2.).
+
 ## Storage
 
 Two tables in the `public` schema, described in
