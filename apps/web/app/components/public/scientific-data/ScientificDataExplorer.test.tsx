@@ -160,7 +160,8 @@ describe('ScientificDataExplorer', () => {
     await user.type(endTime, '08:00')
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
 
-    const timeFields = screen.getByRole('group', { name: 'Rango horario (UTC)' })
+    // The notes sit below the fields and the button, in the form, and are linked by aria-describedby.
+    const timeFields = screen.getByLabelText('Hora de inicio (UTC)').closest('form')!
     const alert = within(timeFields).getByRole('alert')
     expect(alert).toHaveTextContent('La hora de inicio y la de fin no pueden ser iguales.')
     for (const input of [
@@ -203,7 +204,8 @@ describe('ScientificDataExplorer', () => {
   test('states the UTC difference next to the time fields', () => {
     renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
 
-    const timeFields = screen.getByRole('group', { name: 'Rango horario (UTC)' })
+    // The notes sit below the fields and the button, in the form, and are linked by aria-describedby.
+    const timeFields = screen.getByLabelText('Hora de inicio (UTC)').closest('form')!
     expect(within(timeFields).getByText(/Costa Rica está 6 horas atrás \(UTC−6\)/)).toBeVisible()
     expect(
       screen.getByLabelText('Hora de inicio (UTC)').getAttribute('aria-describedby'),

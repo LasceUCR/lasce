@@ -2449,6 +2449,11 @@ a {
     margin-bottom: 0.5rem;
   }
 
+  /* The notes follow the time fields, ahead of the button. */
+  .data-query-submit {
+    order: 1;
+  }
+
   .data-query-form,
   .data-results {
     padding: 1rem;

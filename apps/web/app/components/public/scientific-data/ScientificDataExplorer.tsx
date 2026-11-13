@@ -167,6 +167,7 @@ export function ScientificDataExplorer({
   /** A problem with the start or end time, shown next to the time fields. */
   const [timeError, setTimeError] = useState<string | null>(null)
   const resultsHeading = useRef<HTMLHeadingElement>(null)
+  const pendingResultsFocus = useRef(false)
   const activeRequest = useRef<AbortController | null>(null)
   const [progress, setProgress] = useState(0)
   /** The asynchronous job that produced `result`, so a download can reuse it instead of re-queuing. */
@@ -174,6 +175,20 @@ export function ScientificDataExplorer({
   const [pendingDownload, setPendingDownload] = useState<DownloadFormat | null>(null)
   const [downloadMessage, setDownloadMessage] = useState<ResourceDownloadMessage | null>(null)
   useEffect(() => () => activeRequest.current?.abort(), [])
+
+  // Bring the results into view, which on a phone is what shows that the query ran, and move
+  // focus to their heading. This waits for the commit that renders the heading and lifts the
+  // loading region's inert state: a frame callback scheduled from the request can run before it.
+  // Motion is skipped for visitors who ask for less of it.
+  useEffect(() => {
+    if (requestState !== 'success' || !result || !pendingResultsFocus.current) return
+    const heading = resultsHeading.current
+    if (!heading) return
+    pendingResultsFocus.current = false
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    heading.focus({ preventScroll: true })
+    heading.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
+  }, [requestState, result])
   const controlsDisabled = !hydrated
 
   const selectedSource = sources.find((source) => source.code === query.source)!
@@ -384,20 +399,7 @@ export function ScientificDataExplorer({
         setResult(parsed.data)
         setResultJobId(jobId)
         setRequestState('success')
-        if (focusResults) {
-          // Bring the results into view, which on a phone is what shows that the query ran, and
-          // move focus to their heading. Motion is skipped for visitors who ask for less of it.
-          requestAnimationFrame(() => {
-            const heading = resultsHeading.current
-            if (controller.signal.aborted || !heading) return
-            const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-            heading.focus({ preventScroll: true })
-            heading.scrollIntoView?.({
-              behavior: reduceMotion ? 'auto' : 'smooth',
-              block: 'start',
-            })
-          })
-        }
+        if (focusResults) pendingResultsFocus.current = true
       } catch {
         if (controller.signal.aborted) return
         setResult(null)
@@ -599,17 +601,6 @@ export function ScientificDataExplorer({
               value={query.endTime}
             />
           </div>
-          <div className="data-time-notes">
-            <p className="data-field-hint" id="scientific-time-hint">
-              {t('timeZoneHint')}
-              {rangeCrossesMidnight ? <> {t('crossesMidnightHint')}</> : null}
-            </p>
-            {timeError ? (
-              <p className="form-field-error" id="scientific-time-error" role="alert">
-                {timeError}
-              </p>
-            ) : null}
-          </div>
         </div>
 
         <div className="data-query-submit">
@@ -620,6 +611,18 @@ export function ScientificDataExplorer({
           >
             {requestState === 'loading' ? t('submitLoading') : t('submit')}
           </Button>
+        </div>
+
+        <div className="data-time-notes">
+          <p className="data-field-hint" id="scientific-time-hint">
+            {t('timeZoneHint')}
+            {rangeCrossesMidnight ? <> {t('crossesMidnightHint')}</> : null}
+          </p>
+          {timeError ? (
+            <p className="form-field-error" id="scientific-time-error" role="alert">
+              {timeError}
+            </p>
+          ) : null}
         </div>
       </form>
 

@@ -565,7 +565,6 @@ test('rejects equal start and end times beside the time fields without calling t
   await page.getByRole('button', { name: 'Consultar datos' }).click()
 
   const alert = page
-    .getByRole('group', { name: 'Rango horario (UTC)' })
     .getByRole('alert')
     .filter({ hasText: 'La hora de inicio y la de fin no pueden ser iguales.' })
   await expect(alert).toBeVisible()
