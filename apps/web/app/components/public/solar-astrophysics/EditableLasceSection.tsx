@@ -30,6 +30,8 @@ export interface EditableLasceSectionProps {
   section: SolarPhysicsSection
   /** True for someone who may edit it. The section must then carry its `editing` data. */
   canEdit?: boolean
+  /** The section's number on its page ("2" shows as "2. …"), so the page numbers every section in order. */
+  index?: string
 }
 
 /**
@@ -38,7 +40,11 @@ export interface EditableLasceSectionProps {
  * gets an Edit button that opens a bilingual form in a modal. The outcome of a save is reported
  * with a toast; problems with a field stay under that field.
  */
-export function EditableLasceSection({ section, canEdit = false }: EditableLasceSectionProps) {
+export function EditableLasceSection({
+  section,
+  canEdit = false,
+  index,
+}: EditableLasceSectionProps) {
   const router = useRouter()
   const { editMode } = useEditMode()
   const t = useTranslations('solarPhysics')
@@ -97,7 +103,7 @@ export function EditableLasceSection({ section, canEdit = false }: EditableLasce
     router.refresh()
   }
 
-  const content = <LasceSectionView section={section} />
+  const content = <LasceSectionView index={index} section={section} />
 
   if (!editMode || !canEdit || !section.editing) return content
 

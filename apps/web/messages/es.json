@@ -430,6 +430,7 @@
       "titleField": "Título ({language})",
       "bodyField": "Texto ({language})",
       "bodyHint": "Separe los párrafos con una línea en blanco.",
+      "remainingCharacters": "Quedan {remaining} de {max} caracteres.",
       "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o el texto, revíselo también.",
       "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el título o el texto debe completar ambos idiomas.",
       "cancel": "Cancelar",
@@ -1294,7 +1295,7 @@
         },
         "prysmian": {
           "title": "Donación Prysmian",
-          "description": "La organización ROSAC recibió una donación de equipo por parte de la empresa Prysmian, como parte de su compromiso con el fortalecimiento de las iniciativas y actividades desarrolladas por la organización. Esta contribución representa un valioso apoyo para ROSAC y para el desarrollo de sus labores.",
+          "description": "Prysmian Group donó cerca de 3 km de cables de energía y telecomunicaciones, por un valor de $36.000, para el desarrollo del radio telescopio de ROSAC, el único de su tipo en Centroamérica. La fibra óptica de 96 fibras permitirá trasladar los datos del Sol en tiempo real a los servidores, mientras que los cables de energía alimentarán los receptores y equipos. Además, la empresa brindará asesoría para su correcta instalación y puesta en marcha.",
           "imageAlt": "Representante de Prysmian conversando con un miembro del equipo de ROSAC frente a la antena del observatorio"
         }
       },
@@ -2356,6 +2357,94 @@
     },
     "accessDenied": {
       "title": "Acceso denegado"
+    }
+  },
+  "auth": {
+    "meta": {
+      "title": "Acceso al portal | LASCE",
+      "description": "Inicia sesión o crea una cuenta en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica."
+    },
+    "page": {
+      "title": "Acceso al portal",
+      "lead": "Inicia sesión o crea una cuenta para descargar productos científicos y revisar tu actividad.",
+      "backLink": "Volver al inicio"
+    },
+    "tabs": {
+      "label": "Acceso",
+      "login": "Iniciar sesión",
+      "register": "Crear cuenta"
+    },
+    "login": {
+      "heading": {
+        "title": "Iniciar sesión",
+        "description": "Accede para descargar productos científicos y revisar tu actividad."
+      },
+      "labels": {
+        "email": "Correo electrónico",
+        "password": "Contraseña"
+      },
+      "placeholders": {
+        "email": "correo@ejemplo.com"
+      },
+      "submit": "Ingresar",
+      "submitting": "Ingresando...",
+      "noAccountPrompt": "¿No tienes cuenta?",
+      "noAccountLink": "Crear cuenta",
+      "footnote": "La descarga queda asociada a tu cuenta para fines de trazabilidad y uso científico.",
+      "validation": {
+        "emailRequired": "Ingresa tu correo electrónico.",
+        "emailInvalid": "Ingresa un correo electrónico válido.",
+        "passwordRequired": "Ingresa tu contraseña.",
+        "reviewFields": "Revisa los campos marcados para continuar.",
+        "invalidCredentials": "Correo o contraseña incorrectos.",
+        "unexpected": "No pudimos iniciar sesión. Inténtalo de nuevo en unos minutos.",
+        "authRequired": "Debes iniciar sesión para continuar."
+      }
+    },
+    "registration": {
+      "heading": {
+        "title": "Crear cuenta",
+        "lead": "Se aceptan correos personales o institucionales."
+      },
+      "labels": {
+        "fullName": "Nombre completo",
+        "email": "Correo electrónico",
+        "institution": "Institución",
+        "countryCode": "País",
+        "password": "Contraseña",
+        "passwordConfirmation": "Repetir contraseña"
+      },
+      "placeholders": {
+        "fullName": "Nombre y apellidos",
+        "email": "correo@ejemplo.com",
+        "institution": "Universidad / Centro de investigación",
+        "countryCode": "Selecciona un país"
+      },
+      "requiredNote": "Todos los campos son obligatorios.",
+      "passwordHint": "Mínimo 8 caracteres.",
+      "submit": "Crear cuenta",
+      "submitting": "Creando cuenta...",
+      "successTitle": "Cuenta creada",
+      "successBody": "Tu cuenta quedó registrada. Ya puedes iniciar sesión.",
+      "successLink": "Iniciar sesión",
+      "validation": {
+        "fullNameRequired": "Ingresa tu nombre completo.",
+        "fullNameTooLong": "El nombre no puede superar los 120 caracteres.",
+        "emailRequired": "Ingresa tu correo electrónico.",
+        "emailInvalid": "Ingresa un correo electrónico válido.",
+        "emailTooLong": "El correo electrónico no puede superar los 254 caracteres.",
+        "emailTaken": "Ya existe una cuenta con este correo electrónico.",
+        "institutionRequired": "Ingresa tu institución.",
+        "institutionTooLong": "La institución no puede superar los 160 caracteres.",
+        "countryRequired": "Selecciona tu país.",
+        "passwordRequired": "Ingresa una contraseña.",
+        "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+        "passwordTooLong": "La contraseña no puede superar los 128 caracteres.",
+        "confirmationRequired": "Repite tu contraseña.",
+        "confirmationMismatch": "Las contraseñas no coinciden.",
+        "reviewFields": "Revisa los campos marcados para continuar.",
+        "unexpected": "No pudimos crear tu cuenta. Inténtalo de nuevo en unos minutos."
+      }
     }
   },
   "account": {

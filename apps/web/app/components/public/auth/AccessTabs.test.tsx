@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test } from 'vitest'
 
 import { accessTabsCopy } from '@/app/lib/auth/login'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AccessTabs, type AccessTabsProps } from './AccessTabs'
 import { Login, Register } from './AccessTabs.stories'
@@ -18,7 +19,7 @@ afterEach(() => {
 
 describe('AccessTabs', () => {
   test('opens the requested tab and hides the other card', () => {
-    render(<AccessTabs {...registerArgs} />)
+    renderWithIntl(<AccessTabs {...registerArgs} />)
 
     expect(screen.getByRole('tablist', { name: accessTabsCopy.label })).toBeInTheDocument()
     expect(tab(accessTabsCopy.tabs.register)).toHaveAttribute('aria-selected', 'true')
@@ -28,7 +29,7 @@ describe('AccessTabs', () => {
   })
 
   test('labels each panel with its tab', () => {
-    render(<AccessTabs {...loginArgs} />)
+    renderWithIntl(<AccessTabs {...loginArgs} />)
 
     const panel = screen.getByRole('tabpanel', { name: accessTabsCopy.tabs.login })
     expect(panel).toContainElement(screen.getByText('Tarjeta de inicio de sesión'))
@@ -37,7 +38,7 @@ describe('AccessTabs', () => {
 
   test('switches on click and writes the choice to the query string', async () => {
     const user = userEvent.setup()
-    render(<AccessTabs {...loginArgs} />)
+    renderWithIntl(<AccessTabs {...loginArgs} />)
 
     await user.click(tab(accessTabsCopy.tabs.register))
 
@@ -49,7 +50,7 @@ describe('AccessTabs', () => {
 
   test('moves between tabs with the arrow keys, Home and End', async () => {
     const user = userEvent.setup()
-    render(<AccessTabs {...loginArgs} />)
+    renderWithIntl(<AccessTabs {...loginArgs} />)
 
     tab(accessTabsCopy.tabs.login).focus()
     await user.keyboard('{ArrowRight}')
@@ -68,7 +69,7 @@ describe('AccessTabs', () => {
   })
 
   test('keeps the unselected tab out of the Tab order', () => {
-    render(<AccessTabs {...loginArgs} />)
+    renderWithIntl(<AccessTabs {...loginArgs} />)
 
     expect(tab(accessTabsCopy.tabs.login)).toHaveAttribute('tabindex', '0')
     expect(tab(accessTabsCopy.tabs.register)).toHaveAttribute('tabindex', '-1')

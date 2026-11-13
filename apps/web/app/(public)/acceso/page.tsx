@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 import { AccessTabs } from '@/app/components/public/auth/AccessTabs'
 import { LoginForm } from '@/app/components/public/auth/LoginForm'
@@ -14,13 +15,7 @@ import {
   NEXT_FIELD,
   accessTabHref,
   REGISTRATION_CARD_ID,
-  accesoBackLink,
-  accesoIntro,
-  accesoMeta,
   accessTabFromParam,
-  loginCardHeading,
-  loginMessages,
-  registrationCardHeading,
 } from '@/app/lib/auth/login'
 import { getSessionUser } from '@/app/lib/auth/session'
 import {
@@ -31,9 +26,10 @@ import {
 
 import { loginUser, registerUser } from './actions'
 
-export const metadata: Metadata = {
-  title: accesoMeta.title,
-  description: accesoMeta.description,
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('auth.meta')
+
+  return { title: t('title'), description: t('description') }
 }
 
 /**
@@ -59,8 +55,16 @@ interface AccesoPageProps {
  * value is validated to a path on this site.
  */
 export default async function AccesoPage({ searchParams }: AccesoPageProps) {
-  const params = await searchParams
-  const requestHeaders = await headers()
+  const [params, requestHeaders, locale, t, tLogin, tLoginHeading, tRegistrationHeading] =
+    await Promise.all([
+      searchParams,
+      headers(),
+      getLocale(),
+      getTranslations('auth.page'),
+      getTranslations('auth.login.validation'),
+      getTranslations('auth.login.heading'),
+      getTranslations('auth.registration.heading'),
+    ])
   const returnTo =
     params[NEXT_FIELD] !== undefined
       ? safeReturnPath(params[NEXT_FIELD])
@@ -78,8 +82,8 @@ export default async function AccesoPage({ searchParams }: AccesoPageProps) {
       <SpaceBackdrop />
 
       <header className="page-intro page-width">
-        <h1>{accesoIntro.title}</h1>
-        <p>{accesoIntro.lead}</p>
+        <h1>{t('title')}</h1>
+        <p>{t('lead')}</p>
       </header>
 
       <section className="registration-layout page-width">
@@ -88,10 +92,10 @@ export default async function AccesoPage({ searchParams }: AccesoPageProps) {
           login={
             <LoginForm
               action={loginUser}
-              heading={loginCardHeading}
+              heading={{ title: tLoginHeading('title'), description: tLoginHeading('description') }}
               id={LOGIN_CARD_ID}
               next={returnTo}
-              notice={params.reason === 'auth' ? loginMessages.authRequired : undefined}
+              notice={params.reason === 'auth' ? tLogin('authRequired') : undefined}
               registerHref={accessTabHref(
                 'register',
                 returnTo === DEFAULT_RETURN_PATH ? undefined : returnTo,
@@ -101,8 +105,11 @@ export default async function AccesoPage({ searchParams }: AccesoPageProps) {
           register={
             <RegistrationForm
               action={registerUser}
-              countries={listCountries()}
-              heading={registrationCardHeading}
+              countries={listCountries(locale)}
+              heading={{
+                title: tRegistrationHeading('title'),
+                description: tRegistrationHeading('lead'),
+              }}
               id={REGISTRATION_CARD_ID}
             />
           }
@@ -110,7 +117,7 @@ export default async function AccesoPage({ searchParams }: AccesoPageProps) {
       </section>
 
       <div className="topic-page-footer page-width">
-        <TopicBackLink href={accesoBackLink.href} label={accesoBackLink.label} />
+        <TopicBackLink href="/" label={t('backLink')} />
       </div>
     </article>
   )
