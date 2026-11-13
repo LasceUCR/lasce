@@ -166,6 +166,38 @@ visibility rule only: every edit is authorized by its Route Handler or Server Ac
   (`account.editMode`: "Modo edición" / "Edit mode").
 - In e2e, `enableEditMode(page)` in `tests/e2e/helpers/edit-mode.ts` opens the menu and flips it.
 
+## Navigation feedback (#475)
+
+Visitors reported that header and home page links "did nothing" on the first click. Nothing was
+intercepting the click. Almost every public page is `force-dynamic`, and for a dynamic route
+**without** a `loading.tsx`, Next 16 does not prefetch the page and keeps the current one on screen
+until the server render finishes (see "Dynamic routes without `loading.tsx`" in
+`node_modules/next/dist/docs/01-app/01-getting-started/04-linking-and-navigating.md`). A slow
+render therefore looked like a dead link. Two pieces fix it:
+
+- **`app/(public)/loading.tsx`** is a group-level boundary built on `PageSkeleton` (see
+  [`skeletons.md`](skeletons.md)). It applies to every public page that has no `loading.tsx` of its
+  own. Navigation now happens at once: the header stays, the skeleton shows, and the page streams in
+  behind it. Next can also prefetch the boundary ahead of the click. `app/(public)/error.tsx`
+  (`PageErrorState`) catches a page that throws, so a failed navigation ends on an error with a
+  retry instead of a frozen page.
+- **`NavigationProgress`** lives in the header's cyan strip (`.site-header::before`, sized by
+  `--header-stripe-height`). On a click, the strip turns dark blue and the cyan fills back over it
+  from the left. A finished bar looks exactly like the resting strip, so it ends without a flash.
+  It is mounted once in `app/layout.tsx`. A capture-phase `click` listener on `document` starts
+  it, so every link counts, not only the header's. It finishes when `usePathname()` or
+  `useSearchParams()` change, and it gives up after 15 s if the URL never changes. It ignores what
+  the browser handles itself:
+  - modified or non-left clicks
+  - `target="_blank"` and `download`
+  - other origins
+  - `#hash` links
+  - links to the current URL
+
+  A second click restarts the wait. The bar is `aria-hidden`, because the destination's
+  `loading.tsx` already announces the load through `LoadingRegion`. Under
+  `prefers-reduced-motion` the strip stays dark blue while the page loads, with no movement.
+
 ## Covered by
 
 | Piece                            | File                                                               | Covered by                                           |
@@ -175,3 +207,5 @@ visibility rule only: every edit is authorized by its Route Handler or Server Ac
 | Header layout + mobile accordion | `app/components/public/PublicHeader.tsx`                           | `PublicHeader.test.tsx`                              |
 | Account menu and its edit switch | `app/components/public/auth/AccountMenu.tsx`, `EditModeSwitch.tsx` | `AccountMenu.test.tsx`, `AccountLinks.test.tsx`      |
 | Responsive rules for both        | `app/globals.css`                                                  | `tests/e2e/responsive-controls.spec.ts`, plus manual |
+| Page-load bar                    | `app/components/public/NavigationProgress.tsx`                     | `NavigationProgress.test.tsx`                        |
+| Public loading / error boundary  | `app/(public)/loading.tsx`, `app/(public)/error.tsx`               | `PageSkeleton.test.tsx`, `PageErrorState.test.tsx`   |

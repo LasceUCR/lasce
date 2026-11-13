@@ -20,6 +20,7 @@ a `Skeleton` of its own until it arrives — see "Where it is used" below.
 | `AcademicActivityCardSkeleton`   | One activity card: 280px photo column on desktop, 200px banner on mobile   |
 | `AcademicActivitiesListSkeleton` | Multiple activity card placeholders inside `.academic-activities-list`     |
 | `LoadingRegion`                  | The area that loads: placeholders while loading, then what loaded          |
+| `PageSkeleton`                   | A whole public page: `.topic-hero` heading, lead and a grid of cards       |
 
 `Skeleton` takes `tone="dark"` on dark surfaces, such as the frames of solar images.
 
@@ -80,6 +81,16 @@ the loading/loaded swap. A thrown `getGalleryAlbums` is caught the same native w
 instead (`GalleryErrorState.tsx`). `/publicaciones` does the same for `getPublicationsPage`
 (`PublicationsPageSkeleton.tsx`, `PublicationsErrorState.tsx`).
 
+### The fallback for every other public page
+
+`app/(public)/loading.tsx` renders `PageSkeleton` for any public page that has no `loading.tsx`
+of its own (#475). Without a boundary, a click on a `force-dynamic` page left the previous page on
+screen until the server finished, which read as a dead link
+([`header-and-navigation.md`](header-and-navigation.md#navigation-feedback-475)). The generic
+shape is a stopgap, not a target. When a page's layout is far from a heading over cards, give it
+its own `loading.tsx` with a skeleton shaped like it, as `/contacto`, `/galeria` and
+`/publicaciones` have.
+
 ## Accessibility
 
 `LoadingRegion` does what the acceptance criteria ask, so each view does not have to:
@@ -114,6 +125,8 @@ its loading message stays for screen readers only, while the placeholder fills t
 | Academic activities on `/actividades-academicas`   | `news/AcademicActivitiesPage.tsx`                         | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
 | `/publicaciones`                                   | `publications/PublicationsPageSkeleton.tsx`               | Static hero, listing heading and back link; the toolbar, cards and pager  |
 | A failed load of `/publicaciones`                  | `publications/PublicationsErrorState.tsx`                 | A `Notice` and a retry button, in the site's language                     |
+| Every other public page while it renders           | `skeleton/PageSkeleton.tsx` (via `(public)/loading.tsx`)  | Heading, lead and three cards in `LoadingRegion`                          |
+| Every other public page failing to render          | `PageErrorState.tsx` (via `(public)/error.tsx`)           | A `Notice`, a retry button and a link home                                |
 
 ## Tests
 
