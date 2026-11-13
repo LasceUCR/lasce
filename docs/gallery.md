@@ -110,7 +110,9 @@ is kept as it is, with a notice, until the editor chooses a new period.
 - `POST /api/gallery/albums` and `POST /api/gallery/albums/{albumId}` (sub-album) require
   `create_components` and accept `slug`, `content` (`title` and `description` in both `es` and
   `en`), and optional `yearsLabel` and `coverObjectKey`. They return `201`, `404`/`400` for a missing
-  or non-top-level parent, and `409` for a duplicate slug.
+  or non-top-level parent. A slug that is already taken is not an error for a create: the album or
+  sub-album is stored under the slug with a unique suffix, so two of them can share a title. `409`
+  is returned only if that retry collides too.
 - `PATCH /api/gallery/albums/{albumId}` requires `edit_components` and accepts the `version` the
   editor loaded plus one or more of `content`, `slug`, `yearsLabel` and `coverObjectKey`. A field
   changed in one language only must be confirmed through `confirmedUnchanged` (otherwise `409`

@@ -6,29 +6,34 @@ import {
   type ScientificDataQuery,
   type TimeSeriesDataResult,
 } from '@/app/lib/scientific-data'
+import { getQueryMinuteRange } from '@/app/lib/scientific-data-time'
 
 const SERIES_INTERVAL_MINUTES = 15
 const SPECTRUM_INTERVAL_MINUTES = 10
 const SPECTRUM_FREQUENCIES = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
-function timeToMinutes(time: string) {
-  const [hours, minutes] = time.split(':').map(Number)
-  return hours! * 60 + minutes!
-}
+const MINUTES_PER_DAY = 24 * 60
 
 function formatTime(minutesSinceMidnight: number) {
-  const hours = Math.floor(minutesSinceMidnight / 60)
-  const minutes = minutesSinceMidnight % 60
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+  const minutes = minutesSinceMidnight % MINUTES_PER_DAY
+  const hours = Math.floor(minutes / 60)
+  return `${String(hours).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 }
 
+function nextDay(date: string) {
+  const result = new Date(`${date}T00:00:00Z`)
+  result.setUTCDate(result.getUTCDate() + 1)
+  return result.toISOString().slice(0, 10)
+}
+
+/** A range that crosses midnight continues on the next UTC day. */
 function createTimestamps(query: ScientificDataQuery, intervalMinutes: number) {
   const timestamps: string[] = []
-  const start = timeToMinutes(query.startTime)
-  const end = timeToMinutes(query.endTime)
+  const { start, end } = getQueryMinuteRange(query)
 
   for (let minute = start; minute <= end; minute += intervalMinutes) {
-    timestamps.push(`${query.date}T${formatTime(minute)}:00Z`)
+    const date = minute >= MINUTES_PER_DAY ? nextDay(query.date) : query.date
+    timestamps.push(`${date}T${formatTime(minute)}:00Z`)
   }
 
   return timestamps

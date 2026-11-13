@@ -41,7 +41,8 @@
     "institutionsLabel": "Instituciones",
     "navigationLabel": "Enlaces del pie de página",
     "contact": "Contacto",
-    "rightsReserved": "Todos los derechos reservados."
+    "rightsReserved": "Todos los derechos reservados.",
+    "team": "Equipo de desarrollo"
   },
   "languageSwitcher": {
     "label": "Idioma"
@@ -1927,7 +1928,14 @@
       "dynamicSpectrumTableCaption": "Intensidad simulada por hora y frecuencia",
       "columnFrequency": "Frecuencia (MHz)",
       "columnIntensity": "Intensidad relativa",
-      "downloadStarted": "La descarga de {filename} comenzó. El enlace vence en 30 minutos."
+      "downloadStarted": "La descarga de {filename} comenzó. El enlace vence en 30 minutos.",
+      "timeZoneHint": "Horas en UTC. Costa Rica está 6 horas atrás (UTC−6): 12:00 UTC son las 06:00 en Costa Rica.",
+      "crossesMidnightHint": "La hora de fin es anterior a la de inicio: el rango termina al día siguiente (UTC).",
+      "dateLatestHint": "Último día con datos: {date}.",
+      "localIntervalResultLabel": "Hora de Costa Rica (UTC−6)",
+      "localDayBefore": "{time} (día anterior)",
+      "localDayAfter": "{time} (día siguiente)",
+      "crossesMidnightResult": "(termina al día siguiente)"
     },
     "downloads": {
       "title": "Descargas",
@@ -1956,7 +1964,7 @@
       "invalidDate": "Seleccione una fecha válida con el formato AAAA-MM-DD.",
       "invalidStartTime": "Seleccione una hora de inicio válida con el formato HH:mm.",
       "invalidEndTime": "Seleccione una hora de fin válida con el formato HH:mm.",
-      "startBeforeEnd": "La hora de inicio debe ser anterior a la hora de fin.",
+      "sameStartEnd": "La hora de inicio y la de fin no pueden ser iguales.",
       "productUnavailable": "El producto seleccionado todavía no está disponible para esta fuente.",
       "invalidParameterForProduct": "Seleccione un canal o parámetro válido para el producto.",
       "default": "Revise los criterios."
@@ -1973,7 +1981,8 @@
       "downloadInvalid": "La solicitud de descarga no es válida.",
       "downloadUnsupported": "Este producto no ofrece descargas en el formato solicitado.",
       "downloadPending": "La consulta todavía se está procesando. Espere a que termine e intente la descarga nuevamente.",
-      "downloadEmpty": "No hay datos para descargar con los criterios seleccionados."
+      "downloadEmpty": "No hay datos para descargar con los criterios seleccionados.",
+      "dateNotPublished": "Esa fecha todavía no tiene datos publicados. Seleccione el {date} o una fecha anterior."
     },
     "origins": {
       "sampled": "Se muestran {count} observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.",
@@ -2304,6 +2313,79 @@
         "role_permissions_update": "Permisos actualizados para el rol {role}",
         "user_role_change": "Rol de {name} cambiado de {previous} a {next}"
       }
+    },
+    "auditLabels": {
+      "actions": {
+        "news_create": "Noticia agregada",
+        "news_update": "Noticia actualizada",
+        "news_delete": "Noticia eliminada",
+        "publication_create": "Publicación agregada",
+        "publication_update": "Publicación actualizada",
+        "publication_delete": "Publicación eliminada",
+        "research_area_create": "Área de investigación agregada",
+        "research_area_update": "Área de investigación actualizada",
+        "research_area_delete": "Área de investigación eliminada",
+        "collaboration_create": "Colaboración agregada",
+        "collaboration_update": "Colaboración actualizada",
+        "collaboration_delete": "Colaboración eliminada",
+        "contact_channel_create": "Canal de contacto agregado",
+        "contact_channel_update": "Canal de contacto actualizado",
+        "contact_channel_delete": "Canal de contacto eliminado",
+        "academic_activity_create": "Actividad académica agregada",
+        "academic_activity_update": "Actividad académica actualizada",
+        "academic_activity_delete": "Actividad académica eliminada",
+        "nosotros_activity_create": "Actividad de Nosotros agregada",
+        "nosotros_activity_update": "Actividad de Nosotros actualizada",
+        "nosotros_activity_delete": "Actividad de Nosotros eliminada",
+        "nosotros_researcher_create": "Investigador de Nosotros agregado",
+        "nosotros_researcher_update": "Investigador de Nosotros actualizado",
+        "nosotros_researcher_delete": "Investigador de Nosotros eliminado",
+        "rosac_researcher_create": "Investigador ROSAC agregado",
+        "rosac_researcher_update": "Investigador ROSAC actualizado",
+        "rosac_researcher_delete": "Investigador ROSAC eliminado",
+        "gallery_album_create": "Álbum de galería agregado",
+        "gallery_album_update": "Álbum de galería actualizado",
+        "gallery_album_delete": "Álbum de galería eliminado",
+        "gallery_sub_album_create": "Subálbum de galería agregado",
+        "gallery_sub_album_update": "Subálbum de galería actualizado",
+        "gallery_sub_album_delete": "Subálbum de galería eliminado",
+        "gallery_media_create": "Archivo de galería agregado",
+        "gallery_media_update": "Archivo de galería actualizado",
+        "gallery_media_delete": "Archivo de galería eliminado",
+        "home_hero_update": "Banner de inicio actualizado",
+        "geomagnetic_index_update": "Índice geomagnético actualizado",
+        "space_weather_section_update": "Tarjeta de clima espacial actualizada",
+        "solar_physics_section_update": "Sección de física solar actualizada",
+        "geomagnetic_index_reorder": "Orden de los índices geomagnéticos actualizado",
+        "role_permissions_update": "Permisos de rol actualizados",
+        "user_role_change": "Rol de cuenta cambiado",
+        "user_login": "Inicio de sesión",
+        "schedule_register": "Programación de tareas registrada",
+        "legacy_event": "Evento anterior"
+      },
+      "entities": {
+        "news": "Noticia",
+        "publication": "Publicación",
+        "research_area": "Área de investigación",
+        "collaboration": "Colaboración",
+        "contact_channel": "Canal de contacto",
+        "academic_activity": "Actividad académica",
+        "nosotros_activity": "Actividad de Nosotros",
+        "nosotros_researcher": "Investigador de Nosotros",
+        "rosac_researcher": "Investigador ROSAC",
+        "gallery_album": "Álbum de galería",
+        "gallery_sub_album": "Subálbum de galería",
+        "gallery_media": "Archivo de galería",
+        "home_hero": "Banner de inicio",
+        "geomagnetic_index": "Índice geomagnético",
+        "space_weather_section": "Tarjeta de clima espacial",
+        "solar_physics_section": "Sección de física solar",
+        "role": "Rol",
+        "role_permissions": "Permisos de rol",
+        "user": "Cuenta",
+        "schedule": "Programación de tareas"
+      },
+      "unknown": "Otro"
     }
   },
   "access": {
@@ -2315,17 +2397,17 @@
     "permissions": {
       "create_components": {
         "label": "Crear componentes",
-        "description": "Crear componentes del portal cuando esa función esté disponible.",
+        "description": "Agregar contenido editable del portal desde el Modo edición.",
         "denied": "No tienes autorización para crear componentes."
       },
       "edit_components": {
         "label": "Editar componentes",
-        "description": "Editar componentes del portal cuando esa función esté disponible.",
+        "description": "Modificar el contenido editable del portal desde el Modo edición.",
         "denied": "No tienes autorización para editar componentes."
       },
       "delete_components": {
         "label": "Eliminar componentes",
-        "description": "Eliminar componentes del portal cuando esa función esté disponible.",
+        "description": "Eliminar contenido editable del portal desde el Modo edición.",
         "denied": "No tienes autorización para eliminar componentes."
       },
       "download_resources": {
@@ -2485,6 +2567,47 @@
       "body": "Tu sesión en este navegador terminará y tendrás que volver a ingresar.",
       "confirm": "Cerrar sesión",
       "cancel": "Cancelar"
+    }
+  },
+  "team": {
+    "meta": {
+      "title": "Equipo de desarrollo | LASCE",
+      "description": "Conozca al equipo estudiantil que desarrolló el portal de LASCE y el contexto del proyecto: origen, motivación y objetivos."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Equipo de desarrollo",
+      "lead": "El portal de LASCE fue construido por estudiantes de Ingeniería de Software de la Universidad de Costa Rica, como proyecto del curso Práctica Supervisada."
+    },
+    "team": {
+      "title": "Quiénes lo desarrollaron",
+      "intro": "Nueve estudiantes trabajaron en equipo, con la metodología ágil Scrum, para diseñar, construir, probar y entregar el portal.",
+      "emailLabel": "Correo electrónico",
+      "memberLabel": "Integrante del equipo de desarrollo"
+    },
+    "background": {
+      "title": "Contexto del proyecto",
+      "origin": {
+        "title": "Origen y motivación",
+        "body": "El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE) necesitaba un sitio propio donde dar a conocer su investigación y compartir sus datos con la comunidad científica y con el público. El proyecto nació como la necesidad informática de una organización real, que es lo que el curso Práctica Supervisada (CI-0156) de la Escuela de Ciencias de la Computación e Informática pide al estudiantado."
+      },
+      "objectives": {
+        "title": "Objetivos",
+        "intro": "El portal busca:",
+        "item1": "Presentar a LASCE, sus áreas de trabajo, su investigación y sus colaboraciones de forma clara.",
+        "item2": "Poner a disposición de cualquier persona información y datos científicos del laboratorio.",
+        "item3": "Permitir que el propio laboratorio mantenga su contenido actualizado.",
+        "item4": "Servir como ejercicio de desarrollo de software de calidad para el equipo estudiantil."
+      },
+      "process": {
+        "title": "Proceso de desarrollo",
+        "body": "El trabajo se organizó en iteraciones con Scrum. En cada una el equipo analizó las necesidades de LASCE, planificó las historias de usuario, construyó y probó el software, y presentó una versión del producto al laboratorio para recibir sus comentarios."
+      }
+    },
+    "acknowledgments": {
+      "title": "Agradecimientos",
+      "body": "Agradecemos al personal investigador de LASCE y del Centro de Investigaciones Espaciales (CINESPA) por su tiempo y su confianza, y al profesor Luis Gustavo Esquivel Quirós, docente del curso, por su guía durante el proyecto.",
+      "notice": "Este proyecto se desarrolló en el curso Práctica Supervisada de la Escuela de Ciencias de la Computación e Informática, Universidad de Costa Rica."
     }
   },
   "initiatives": {

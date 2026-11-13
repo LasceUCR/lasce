@@ -6,8 +6,7 @@ import type { UserRole } from '@lasce/db'
  * call `requirePermission` without touching login, sessions or unrelated admin
  * screens. The mapping itself is stored in `auth.role_permissions`.
  *
- * Component create/edit/delete will gate content-management screens that do not
- * exist yet. `download_resources` covers laboratory resources: downloading them,
+ * Component create/edit/delete gate the editable content of the public pages in Modo edición. `download_resources` covers laboratory resources: downloading them,
  * including chart images and non-GOES data from `/datos`.
  * `download_goes_resources` additionally unlocks GOES data exports there
  * (`app/lib/downloads/policy.ts`).
@@ -39,9 +38,9 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
 }
 
 export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
-  create_components: 'Crear componentes del portal cuando esa función esté disponible.',
-  edit_components: 'Editar componentes del portal cuando esa función esté disponible.',
-  delete_components: 'Eliminar componentes del portal cuando esa función esté disponible.',
+  create_components: 'Agregar contenido editable del portal desde el Modo edición.',
+  edit_components: 'Modificar el contenido editable del portal desde el Modo edición.',
+  delete_components: 'Eliminar contenido editable del portal desde el Modo edición.',
   download_resources: 'Descargar recursos del laboratorio desde la página de datos.',
   download_goes_resources: 'Descargar datos de los satélites GOES.',
   manage_users: 'Consultar cuentas y asignar o retirar roles.',

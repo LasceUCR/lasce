@@ -6,6 +6,7 @@ import {
   type ScientificDataset,
   type TimeSeriesDataResult,
 } from '@/app/lib/scientific-data'
+import { getQueryWindow } from '@/app/lib/scientific-data-time'
 
 import { buildGoesTimeSeriesResult } from './goesTimeSeriesResult'
 import { queryInfluxSql } from './influxSql'
@@ -102,8 +103,7 @@ export function createGoesReadings(options: GoesReadingsOptions) {
     return {
       product: query.product,
       channel: query.parameter,
-      start: `${query.date}T${query.startTime}:00Z`,
-      end: `${query.date}T${query.endTime}:59.999Z`,
+      ...getQueryWindow(query),
     }
   }
 
