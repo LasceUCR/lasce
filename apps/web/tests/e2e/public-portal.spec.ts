@@ -335,11 +335,15 @@ test('shows the UCR, CINESPA and LASCE brand without overflow on a phone', async
   await page.goto('/')
 
   const header = page.locator('.site-header')
-  await expect(header.getByAltText('Universidad de Costa Rica')).toBeVisible()
-  await expect(header.getByAltText('Logotipo de la Universidad de Costa Rica')).toBeVisible()
-  await expect(header.getByAltText('Centro de Investigaciones Espaciales')).toBeVisible()
+  await expect(header.getByAltText('Universidad de Costa Rica', { exact: true })).toBeVisible()
   await expect(
-    header.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial'),
+    header.getByAltText('Logotipo de la Universidad de Costa Rica', { exact: true }),
+  ).toBeVisible()
+  await expect(
+    header.getByAltText('Centro de Investigaciones Espaciales', { exact: true }),
+  ).toBeVisible()
+  await expect(
+    header.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial', { exact: true }),
   ).toBeVisible()
 
   const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
