@@ -15,12 +15,11 @@ const flowStepHrefs: Partial<Record<(typeof flowStepIds)[number], string>> = {
   terrestrial: '/clima-espacial',
   analysis: '/datos',
 } as const
-const nextStepIds = ['solarToday', 'xrayData', 'spaceWeather', 'publications', 'tools'] as const
+const nextStepIds = ['solarToday', 'spaceWeather', 'publications', 'tools'] as const
 const nextStepHrefs = {
   solarToday: '/datos#solar-today-title',
-  xrayData: '/datos#scientific-query-title',
   spaceWeather: '/clima-espacial',
-  publications: '/publicaciones?q=solar&group=LASCE',
+  publications: '/publicaciones?group=LASCE',
   tools: '/herramientas-cientificas',
 } as const
 

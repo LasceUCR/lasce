@@ -65,14 +65,14 @@ describe('SolarAstrophysicsPage', () => {
       '/datos#solar-today-title',
     )
     expect(
-      within(nextSteps).getByRole('link', { name: 'Consultar datos de rayos X' }),
-    ).toHaveAttribute('href', '/datos#scientific-query-title')
+      within(nextSteps).queryByRole('link', { name: 'Consultar datos de rayos X' }),
+    ).not.toBeInTheDocument()
     expect(
       within(nextSteps).getByRole('link', { name: 'Seguir la cadena: clima espacial' }),
     ).toHaveAttribute('href', '/clima-espacial')
     expect(
       within(nextSteps).getByRole('link', { name: 'Consultar publicaciones de LASCE' }),
-    ).toHaveAttribute('href', '/publicaciones?q=solar&group=LASCE')
+    ).toHaveAttribute('href', '/publicaciones?group=LASCE')
     expect(
       within(nextSteps).getByRole('link', { name: 'Explorar herramientas científicas' }),
     ).toHaveAttribute('href', '/herramientas-cientificas')
@@ -108,13 +108,12 @@ describe('SolarAstrophysicsPage', () => {
       'href',
       '/datos#solar-today-title',
     )
-    expect(within(nextSteps).getByRole('link', { name: 'Query X-ray data' })).toHaveAttribute(
-      'href',
-      '/datos#scientific-query-title',
-    )
+    expect(
+      within(nextSteps).queryByRole('link', { name: 'Query X-ray data' }),
+    ).not.toBeInTheDocument()
     expect(
       within(nextSteps).getByRole('link', { name: 'Browse LASCE publications' }),
-    ).toHaveAttribute('href', '/publicaciones?q=solar&group=LASCE')
+    ).toHaveAttribute('href', '/publicaciones?group=LASCE')
     expect(screen.queryByRole('link', { name: 'Back to the work areas' })).not.toBeInTheDocument()
   })
 })
