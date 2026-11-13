@@ -126,6 +126,9 @@ or entity type, add its label to `administration.auditLabels` in `es.json` and `
 
 `getRecentActivity()` reads the newest `RECENT_ACTIVITY_LIMIT` (5) events, and
 `(public)/administracion/page.tsx` passes them to `RecentActivityPanel`, which shows each event's
-summary, how long ago it happened and who did it. With no events it says "Aún no hay actividad
-registrada.". The list area keeps the height of five rows (`.admin-activity-body` in
-`globals.css`), so the card does not change size with fewer events or none; change both together.
+summary, how long ago it happened and who did it. For accounts holding the `view_audit_log`
+permission, the card header shows a "Ver todo" / "View all" link to `/administracion/auditoria`, and
+each event's summary links directly to the audit trail (filtered to its entity or action). With no
+events it says "Aún no hay actividad registrada.". The list area keeps the height of five rows
+(`.admin-activity-body` in `globals.css`), so the card does not change size with fewer events or none;
+change both together.

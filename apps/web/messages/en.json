@@ -2116,6 +2116,7 @@
     },
     "activity": {
       "title": "Recent activity",
+      "viewAll": "View all",
       "empty": "No activity has been recorded yet.",
       "actors": {
         "system": "System",
