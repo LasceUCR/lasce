@@ -447,16 +447,16 @@
     "hero": {
       "kicker": "LASCE resources",
       "title": "Scientific tools",
-      "intro": "Access tools for analysing solar activity and studying space weather."
+      "intro": "LASCE tools for analysing solar activity and studying space weather."
     },
     "tools": {
-      "swaat": "Analyse solar events using GOES X-ray and RSTN microwave observations. View and compare their evolution over time with static and interactive charts.",
-      "swapro": "Query and view solar events in specific time intervals to support the study of solar activity and space weather."
+      "swaat": "Analysis of solar events using GOES X-ray and RSTN microwave observations. Supports visualisation and comparison of their evolution over time with static and interactive charts.",
+      "swapro": "Querying and visualisation of solar events within specific time intervals to support the study of solar activity and space weather."
     },
     "list": {
+      "title": "Available tools",
       "empty": "No scientific tools are available at the moment.",
-      "access": "Open {title}",
-      "externalNotice": "The links open in a new tab and take you to external sites."
+      "access": "Open {title}"
     }
   },
   "collaborations": {
@@ -939,10 +939,10 @@
   "news": {
     "page": {
       "metaTitle": "News | LASCE",
-      "metaDescription": "News and media coverage of the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
+      "metaDescription": "News from the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
       "kicker": "LASCE public portal",
-      "title": "News and media coverage",
-      "lead": "News, outreach and coverage of LASCE’s work.",
+      "title": "News",
+      "lead": "Recent news",
       "recent": "Recent news",
       "searchLabel": "Search news",
       "searchPlaceholder": "Search by title, author or keyword...",
@@ -1536,7 +1536,7 @@
     "loading": "Loading research areas…",
     "empty": "No research areas are available.",
     "paginationLabel": "Research area pages",
-    "results": "Showing {from}–{to} of {total} research areas.",
+    "results": "Showing {from}–{to} of {total}.",
     "page": {
       "metaTitle": "Research | LASCE",
       "metaDescription": "Research areas of the Solar Astrophysics and Space Weather Laboratory of the Universidad de Costa Rica.",

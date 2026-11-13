@@ -85,7 +85,7 @@ function activityRow(overrides: Partial<Record<string, unknown>> = {}) {
     id: 'activity-1',
     icon: 'SUN',
     title: 'Fenómenos solares eruptivos',
-    paragraph: "Analizamos fenómenos solares eruptivos, como 'flares'.",
+    paragraph: 'Analizamos fenómenos solares eruptivos, como fulguraciones.',
     createdAt: new Date('2025-12-01T00:00:00.000Z'),
     modifiedAt: new Date(VERSION),
     translations: [],
@@ -106,7 +106,7 @@ const bilingualRow = activityRow({
 const bilingualContent = {
   es: {
     title: 'Fenómenos solares eruptivos',
-    description: "Analizamos fenómenos solares eruptivos, como 'flares'.",
+    description: 'Analizamos fenómenos solares eruptivos, como fulguraciones.',
   },
   en: { title: 'Eruptive solar phenomena', description: 'We analyze eruptive solar phenomena.' },
 }
@@ -140,7 +140,7 @@ beforeEach(() => {
   tx.nosotrosActivity.create.mockResolvedValue(bilingualRow)
   tx.nosotrosActivity.findUnique.mockResolvedValue({
     title: 'Fenómenos solares eruptivos',
-    paragraph: "Analizamos fenómenos solares eruptivos, como 'flares'.",
+    paragraph: 'Analizamos fenómenos solares eruptivos, como fulguraciones.',
     modifiedAt: new Date(VERSION),
     translations: bilingualRow.translations,
   })
@@ -168,7 +168,7 @@ describe('getNosotrosActivities', () => {
         id: 'activity-1',
         icon: 'sun',
         title: 'Fenómenos solares eruptivos',
-        description: "Analizamos fenómenos solares eruptivos, como 'flares'.",
+        description: 'Analizamos fenómenos solares eruptivos, como fulguraciones.',
         modifiedAt: VERSION,
         contentLocale: 'es',
       },

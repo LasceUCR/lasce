@@ -57,8 +57,9 @@ visitors away), and its menu offers only the sections whose grant the account ho
 `auth.role_permissions` on each request ([admin-navigation.md](admin-navigation.md)). Hiding a
 link is still not an authorization check: every section page and every write action repeats the
 permission lookup, and the role is read from the database each request (same as user
-administration). The public header's Administración tab follows the same role rule from the
-account cookie; that is a convenience, the layout is the check.
+administration). The public header's Administración link follows the same rule, computed on the
+server by `GET /api/session` from the session, never from the account cookie (LASCE-SEC-001); it
+is a convenience, the layout is the check.
 
 ## Languages
 

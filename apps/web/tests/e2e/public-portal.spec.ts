@@ -642,14 +642,14 @@ for (const { locale, title, description, backLink, homeHeading } of [
   })
 }
 
-test('displays academic activities in the news section, with the description in the card', async ({
+test('displays academic activities in their dedicated section, with the description in the card', async ({
   page,
 }) => {
-  const response = await page.goto('/noticias')
+  const response = await page.goto('/actividades-academicas')
 
   expect(response?.status()).toBe(200)
   await expect(
-    page.getByRole('heading', { level: 2, name: 'Actividades académicas' }),
+    page.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
   ).toBeVisible()
 
   await expect(

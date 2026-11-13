@@ -531,6 +531,21 @@ describe('RosacInfoPage', () => {
     expect(within(section).getByRole('heading', { name: 'Antena Actualizada' })).toBeInTheDocument()
   })
 
+  test('asks before Escape discards a characteristic edit', async () => {
+    const user = userEvent.setup()
+    renderEditMode()
+    const section = screen.getByRole('region', { name: '1. Características principales' })
+    const [firstEditBtn] = within(section).getAllByRole('button', { name: /^Editar / })
+    await user.click(firstEditBtn as HTMLElement)
+
+    const dialog = screen.getByRole('dialog', { name: 'Editar "Antena de 11 metros"' })
+    await user.type(within(dialog).getByRole('textbox', { name: 'Título (Español)' }), ' x')
+    await user.keyboard('{Escape}')
+
+    expect(screen.getByRole('dialog', { name: '¿Descartar cambios?' })).toBeInTheDocument()
+    expect(dialog).toBeInTheDocument()
+  })
+
   test('offers editing but strictly NO add or delete on scientific activities (Section 3)', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
@@ -12,6 +12,7 @@ import {
   ResearcherForm,
   type BilingualResearcherFormValues,
   type PersonProfile,
+  type ResearcherFormHandle,
   type ResearcherFormTranslation,
 } from './ResearcherForm'
 
@@ -57,6 +58,7 @@ export function EditableResearcherCard({
 }: EditableResearcherCardProps) {
   const { editMode } = useEditMode()
   const [isEditing, setIsEditing] = useState(false)
+  const form = useRef<ResearcherFormHandle>(null)
   const tResearchers = useTranslations('researchers')
   const resolvedInstitutionLabel = institutionLabel ?? tResearchers('institutionLabel')
 
@@ -84,6 +86,7 @@ export function EditableResearcherCard({
         onSave={async (values) => {
           if (await onSave(values)) closeEditor()
         }}
+        ref={form}
         researcher={researcher}
         translation={translation}
       />
@@ -92,7 +95,10 @@ export function EditableResearcherCard({
 
   const editModal = (
     <Modal
-      onClose={closeEditor}
+      onClose={() => {
+        if (form.current) form.current.requestCancel()
+        else closeEditor()
+      }}
       open={isEditing}
       size="medium"
       title={tResearchers('editor.editTitle')}

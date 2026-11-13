@@ -1,7 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
-import { useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useId, useImperativeHandle, useRef, useState, type KeyboardEvent, type Ref } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -61,10 +61,17 @@ export interface BilingualResearcherFormValues {
   confirmedUnchanged: ReviewConfirmation<NosotrosResearcherField>[]
 }
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface ResearcherFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 interface ResearcherFormBaseProps {
   /** `null` starts a blank form for a new researcher. */
   researcher: PersonProfile | null
   onCancel: () => void
+  ref?: Ref<ResearcherFormHandle>
 }
 
 /** The researcher's text in both languages, and the version a save is checked against. */
@@ -109,7 +116,7 @@ function parseEmails(email: PersonProfile['email']): string[] {
 }
 
 export function ResearcherForm(props: ResearcherFormProps) {
-  const { researcher, onCancel, translation } = props
+  const { researcher, onCancel, translation, ref } = props
   const t = useTranslations('researchers')
   const contentRef = useRef<ResearcherContentHandle>(null)
   const [name, setName] = useState(researcher?.name ?? '')
@@ -174,13 +181,15 @@ export function ResearcherForm(props: ResearcherFormProps) {
     return [...emails, trimmed]
   }
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty()) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function handleConfirmDiscard() {
     setConfirmDiscardOpen(false)
@@ -394,7 +403,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
       <ResearcherContentFields editing={translation.editing} ref={contentRef} />
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('editor.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">

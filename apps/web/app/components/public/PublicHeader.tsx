@@ -93,7 +93,11 @@ export function PublicHeader({ logoutAction, setLocaleAction }: PublicHeaderProp
   const locale = useLocale()
   const [isChangingLocale, startLocaleChange] = useTransition()
   const pathname = usePathname()
-  const { account, role, isSigningOut, signOut } = useAccount(logoutAction)
+  // The pathname refreshes the server-confirmed capabilities on every navigation.
+  const { account, role, canAccessAdmin, canEdit, isSigningOut, signOut } = useAccount(
+    logoutAction,
+    pathname,
+  )
   const mobileMenu = useRef<HTMLDetailsElement>(null)
   const mobileMenuToggle = useRef<HTMLElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -266,6 +270,8 @@ export function PublicHeader({ logoutAction, setLocaleAction }: PublicHeaderProp
         />
         <AccountLinks
           account={account}
+          canAccessAdmin={canAccessAdmin}
+          canEdit={canEdit}
           isSigningOut={isSigningOut}
           onSignOut={signOut}
           pathname={pathname}
@@ -366,6 +372,8 @@ export function PublicHeader({ logoutAction, setLocaleAction }: PublicHeaderProp
           <div className="mobile-account-section">
             <AccountLinks
               account={account}
+              canAccessAdmin={canAccessAdmin}
+              canEdit={canEdit}
               isSigningOut={isSigningOut}
               onNavigate={closeMobileMenu}
               onSignOut={signOut}
