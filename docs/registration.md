@@ -10,10 +10,10 @@ are LASCE-SEC-008-073 and the ADM tickets that follow.
 /registro (Server Component)
   └─ RegistrationForm (client)  ──submit──▶  registerUser (Server Action)
        useActionState                          ├─ readRegistrationInput   FormData → six strings
-                                               ├─ validateRegistration    zod, Spanish messages
+                                               ├─ validateRegistration    zod, messages in the visitor's language
                                                ├─ hashPassword            scrypt
                                                └─ createUser              prisma.user.create
-                                                    └─ P2002 → DuplicateEmailError → "Ya existe..."
+                                                    └─ P2002 → DuplicateEmailError → "Ya existe.../An account..."
 ```
 
 | Piece                    | File                                        | Covered by                                |
@@ -28,12 +28,16 @@ are LASCE-SEC-008-073 and the ADM tickets that follow.
 | Table                    | `auth.users`, see `database-definition.md`  | Prisma migration, worker model test       |
 
 The page is static. Nothing reads the database at render time; the country list is computed on
-the server with `Intl.DisplayNames` and passed to the client as props, so the browser never has to
-produce a Spanish country name itself.
+the server with `Intl.DisplayNames`, in the visitor's language, and passed to the client as props,
+so the browser never has to produce a country name itself. See
+[internationalization.md](internationalization.md#translated) for how `auth.registration` and
+`listCountries(locale)` carry this into English.
 
 ## Fields and rules
 
-All six fields are required, in this order, with these labels:
+All six fields are required, in this order, with these Spanish (source-language) labels; each
+also has an English translation in `auth.registration.labels`
+(see [internationalization.md](internationalization.md#translated)):
 
 | Field                  | Label              | Rule                                                        |
 | ---------------------- | ------------------ | ----------------------------------------------------------- |
@@ -44,9 +48,11 @@ All six fields are required, in this order, with these labels:
 | `password`             | Contraseña         | 8 to 128 characters, not trimmed                            |
 | `passwordConfirmation` | Repetir contraseña | equal to `password`; reported only when it is not empty     |
 
-Every rule and every message lives in `registration.ts`. The form sets `noValidate`, so the
+Every rule lives in `registration.ts`; its default messages are Spanish, and `getRegistrationSchema`
+builds the same schema in the visitor's own language from the Server Action (see
+[internationalization.md](internationalization.md#translated)). The form sets `noValidate`, so the
 browser never shows its own (locale-dependent) validation bubbles: what the visitor sees is always
-the server's message, and it is the same with JavaScript disabled.
+the server's message, in their language, and it is the same with JavaScript disabled.
 
 The Server Action returns one flat state object:
 
@@ -85,8 +91,10 @@ in the schema before it reaches the database, which is what makes the constraint
 
 A duplicate is detected from the database's unique violation (Prisma code `P2002`), never from a
 prior `SELECT`, so two simultaneous registrations cannot both succeed. The visitor sees
-"Ya existe una cuenta con este correo electrónico." on the email field. This discloses that an
-address is registered, which the acceptance criteria require; rate limiting is a follow-up.
+`auth.registration.validation.emailTaken` on the email field, in their own language
+("Ya existe una cuenta con este correo electrónico." / "An account with this email address already
+exists."). This discloses that an address is registered, which the acceptance criteria require;
+rate limiting is a follow-up.
 
 ## Roles
 

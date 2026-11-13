@@ -38,17 +38,40 @@ describe('CostaRicaSectionForm', () => {
     )
   })
 
-  test('limits the title and text to what the API accepts', () => {
+  test('limits the title and text to what the API accepts, with a clear message when the limit is reached', async () => {
+    const { user } = renderForm()
+    const title = screen.getByRole('textbox', { name: 'Título (Español)' })
+    const body = screen.getByRole('textbox', { name: 'Texto (Español)' })
+
+    await user.click(title)
+    await user.clear(title)
+    await user.paste('a'.repeat(160))
+    await user.type(title, 'b')
+
+    expect(title).toHaveValue('a'.repeat(160))
+    expect(screen.getByText('El título en español no puede superar 160 caracteres.')).toBeVisible()
+
+    await user.type(title, '{Backspace}')
+    expect(
+      screen.queryByText('El título en español no puede superar 160 caracteres.'),
+    ).not.toBeInTheDocument()
+
+    await user.click(body)
+    await user.clear(body)
+    await user.paste('a'.repeat(5000))
+    await user.type(body, 'b')
+
+    expect(body).toHaveValue('a'.repeat(5000))
+    expect(screen.getByText('El texto en español no puede superar 5000 caracteres.')).toBeVisible()
+  })
+
+  test('shows how many characters remain as the title and text are typed', () => {
     renderForm()
 
-    expect(screen.getByRole('textbox', { name: 'Título (Español)' })).toHaveAttribute(
-      'maxlength',
-      '160',
-    )
-    expect(screen.getByRole('textbox', { name: 'Texto (Español)' })).toHaveAttribute(
-      'maxlength',
-      '5000',
-    )
+    const remainingTitle = 160 - bilingual.initial.draft.es.title.length
+    const remainingBody = 5000 - bilingual.initial.draft.es.body.length
+    expect(screen.getByText(`Quedan ${remainingTitle} de 160 caracteres.`)).toBeVisible()
+    expect(screen.getByText(`Quedan ${remainingBody} de 5000 caracteres.`)).toBeVisible()
   })
 
   test('opens without errors and with "Confirmar" enabled', () => {
