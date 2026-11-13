@@ -24,6 +24,7 @@ import {
   withConfirmation,
   type FormErrors,
 } from '@/app/lib/i18n/content/form'
+import { contentCopy } from '@/app/lib/i18n/content/messages'
 import { confirmationLabel, reviewMessage } from '@/app/lib/i18n/content/review'
 import {
   sectionHasChanges,
@@ -87,6 +88,8 @@ export function CostaRicaSectionForm({
   const [tab, setTab] = useState<Locale>(defaultLocale)
   const [focusRequest, setFocusRequest] = useState(0)
   const [discardOpen, setDiscardOpen] = useState(false)
+  // Keyed `${locale}-${field}`: true right after typing tried to go past the field's maxLength.
+  const [overLimit, setOverLimit] = useState<Partial<Record<string, boolean>>>({})
 
   useEffect(() => {
     if (focusRequest === 0) return
@@ -109,9 +112,31 @@ export function CostaRicaSectionForm({
   const errors: FormErrors = attempted ? validate() : {}
 
   function change(locale: Locale, field: SpaceWeatherSectionField, value: string) {
-    setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
+    const maxLength = content.specs[field].maxLength
+    const key = `${locale}-${field}`
+    const over = maxLength !== undefined && value.length > maxLength
+    setOverLimit((current) => ({ ...current, [key]: over }))
+    const stored = over ? value.slice(0, maxLength) : value
+    setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: stored } }))
     // Changing a field in any language invalidates its confirmations.
     setConfirmed((current) => resetConfirmations(current, field))
+  }
+
+  /** The "limit reached" message while typing just tried to go past the field's maxLength. */
+  function overLimitError(locale: Locale, field: SpaceWeatherSectionField): string | undefined {
+    const maxLength = content.specs[field].maxLength
+    if (!overLimit[`${locale}-${field}`] || maxLength === undefined) return undefined
+    return contentCopy[uiLocale].tooLong(content.specs[field], locale, maxLength)
+  }
+
+  /** How many characters a field has left, read alongside the field as its live hint. */
+  function remainingHint(locale: Locale, field: SpaceWeatherSectionField): string | null {
+    const maxLength = content.specs[field].maxLength
+    if (maxLength === undefined) return null
+    return t('editor.remainingCharacters', {
+      remaining: maxLength - draft[locale][field].length,
+      max: maxLength,
+    })
   }
 
   function handleSave() {
@@ -165,29 +190,29 @@ export function CostaRicaSectionForm({
             ) : null}
 
             <FormField
-              error={errors[contentPath(locale, 'title')]}
+              error={overLimitError(locale, 'title') ?? errors[contentPath(locale, 'title')]}
               id={`${formId}-${locale}-title`}
               label={t('editor.titleField', { language: localeLabels[locale] })}
               lang={contentFieldLang(initial.stored, locale)}
-              maxLength={content.specs.title.maxLength}
               onChange={(value) => change(locale, 'title', value)}
               required
               value={draft[locale].title}
             />
+            <p className="form-field-hint">{remainingHint(locale, 'title')}</p>
             {reviewControl(locale, 'title')}
 
             <FormField
-              error={errors[contentPath(locale, 'body')]}
+              error={overLimitError(locale, 'body') ?? errors[contentPath(locale, 'body')]}
               id={`${formId}-${locale}-body`}
               label={t('editor.bodyField', { language: localeLabels[locale] })}
               lang={contentFieldLang(initial.stored, locale)}
-              maxLength={content.specs.body.maxLength}
               multiline
               onChange={(value) => change(locale, 'body', value)}
               required
               value={draft[locale].body}
             />
             <p className="form-field-hint">{t('editor.bodyHint')}</p>
+            <p className="form-field-hint">{remainingHint(locale, 'body')}</p>
             {reviewControl(locale, 'body')}
           </>
         )}

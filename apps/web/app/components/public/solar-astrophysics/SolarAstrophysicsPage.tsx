@@ -44,14 +44,14 @@ export function SolarAstrophysicsPage({
   const canEdit = canEditLasce && lasceSection?.editing !== undefined
   const lasce = lasceSection ? (
     canEdit ? (
-      <EditableLasceSection canEdit section={lasceSection} />
+      <EditableLasceSection canEdit index="2" section={lasceSection} />
     ) : (
-      <LasceSectionView section={lasceSection} />
+      <LasceSectionView index="2" section={lasceSection} />
     )
   ) : null
 
   return (
-    <article className="topic-page">
+    <article className="topic-page topic-page-reading">
       <TopicHero kicker={hero.kicker} lead={hero.introduction} title={hero.title} />
 
       <div className="topic-section page-width solar-observation-section">

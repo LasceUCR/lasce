@@ -42,7 +42,7 @@ describe('SolarAstrophysicsPage', () => {
     render(<SolarAstrophysicsPage {...defaultArgs} />)
 
     expect(
-      screen.getByRole('heading', { name: 'El trabajo de LASCE en Física Solar' }),
+      screen.getByRole('heading', { name: '2. El trabajo de LASCE en Física Solar' }),
     ).toBeInTheDocument()
     expect(screen.getByText(/Desde la Universidad de Costa Rica, LASCE busca/)).toBeInTheDocument()
     expect(
@@ -82,12 +82,26 @@ describe('SolarAstrophysicsPage', () => {
     )
   })
 
+  test('numbers every section in order, with no gaps or repeats', () => {
+    render(<SolarAstrophysicsPage {...defaultArgs} />)
+
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent),
+    ).toEqual(['1. ¿Qué estudia la Física Solar?', '2. El trabajo de LASCE en Física Solar'])
+  })
+
+  test('lays the page out as a centred reading column', () => {
+    const { container } = render(<SolarAstrophysicsPage {...defaultArgs} />)
+
+    expect(container.querySelector('article')).toHaveClass('topic-page', 'topic-page-reading')
+  })
+
   test('leaves the LASCE section out when the database has none', () => {
     render(<SolarAstrophysicsPage {...(WithoutLasceSection.args as SolarAstrophysicsPageProps)} />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Física Solar' })).toBeInTheDocument()
     expect(
-      screen.queryByRole('heading', { name: 'El trabajo de LASCE en Física Solar' }),
+      screen.queryByRole('heading', { name: /El trabajo de LASCE en Física Solar/ }),
     ).not.toBeInTheDocument()
   })
 
