@@ -47,6 +47,17 @@ describe('queryExisReadings', () => {
     expect(sql).not.toContain('0.1-0.8nm')
   })
 
+  test('reads across midnight up to the next day when the end is before the start', async () => {
+    mocks.queryInfluxSql.mockResolvedValue([])
+
+    await queryExisReadings({ ...query, date: '2026-09-30', startTime: '23:00', endTime: '01:00' })
+
+    expect(mocks.queryInfluxSql.mock.calls[0]![1]).toMatchObject({
+      start: '2026-09-30T23:00:00Z',
+      end: '2026-10-01T01:00:59.999Z',
+    })
+  })
+
   test('excludes withdrawn readings before numbering and sampling', async () => {
     mocks.queryInfluxSql.mockResolvedValue([])
 

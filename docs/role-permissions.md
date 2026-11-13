@@ -4,7 +4,7 @@ Administrators configure what each existing role may do. The roles themselves st
 `UserRole` enum (`visitor`, `assistant`, `admin`); this document is the mapping from those
 roles to a catalogue of permissions, and the checks that read it.
 
-Component create/edit/delete will gate portal components when those editors exist.
+Component create/edit/delete gate the editable content of the public pages in Modo edición.
 Laboratory **resources** are a separate concern: downloading them (`download_resources`).
 
 ## Defaults
