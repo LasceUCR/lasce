@@ -4,15 +4,16 @@ import { rosacInstrumentsContent } from './rosac-instruments'
 import { rosacInstruments, scientificDataQuerySchema } from './scientific-data'
 import { getInitialScientificQuery } from './scientific-data-navigation'
 
-const date = '2026-10-01'
+const today = '2026-10-01'
+const availability = { today }
 
 describe('scientific data navigation', () => {
-  test('keeps the existing GOES query when opening the data page normally', () => {
-    expect(getInitialScientificQuery({}, date)).toEqual({
+  test('opens the GOES query on the latest day EXIS has published, not on today', () => {
+    expect(getInitialScientificQuery({}, availability)).toEqual({
       source: 'GOES',
       product: 'SFXR',
       parameter: '0.1-0.8nm',
-      date,
+      date: '2026-09-30',
       startTime: '00:00',
       endTime: '23:59',
     })
@@ -23,7 +24,7 @@ describe('scientific data navigation', () => {
     expect(rosacInstruments).toHaveLength(2)
     for (const card of rosacInstrumentsContent.items.slice(0, 2)) {
       const url = new URL(card.consultation!.href!, 'https://lasce.test')
-      const query = getInitialScientificQuery(Object.fromEntries(url.searchParams), date)
+      const query = getInitialScientificQuery(Object.fromEntries(url.searchParams), availability)
       const instrument = rosacInstruments.find((item) => item.code === card.id)!
       expect(card.consultation!.notice).toContain(instrument.products[0]!.name)
       expect(query).toMatchObject({
@@ -39,8 +40,12 @@ describe('scientific data navigation', () => {
     })
   })
 
+  test('keeps today as the date of a ROSAC simulation', () => {
+    expect(getInitialScientificQuery({ source: 'ROSAC' }, availability).date).toBe(today)
+  })
+
   test('selects the first simulation for the general ROSAC consultation link', () => {
-    expect(getInitialScientificQuery({ source: 'ROSAC' }, date)).toMatchObject({
+    expect(getInitialScientificQuery({ source: 'ROSAC' }, availability)).toMatchObject({
       source: 'ROSAC',
       product: 'ROSAC-I1',
     })
@@ -55,6 +60,8 @@ describe('scientific data navigation', () => {
     { source: ['ROSAC', 'GOES'], instrument: 'ROSAC-I1' },
     { source: 'ROSAC', instrument: ['ROSAC-I1', 'ROSAC-I2'] },
   ])('safely ignores invalid or ambiguous links: %j', (params) => {
-    expect(getInitialScientificQuery(params, date)).toEqual(getInitialScientificQuery({}, date))
+    expect(getInitialScientificQuery(params, availability)).toEqual(
+      getInitialScientificQuery({}, availability),
+    )
   })
 })

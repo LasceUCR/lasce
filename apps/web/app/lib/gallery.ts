@@ -2214,30 +2214,43 @@ export async function createTopLevelGalleryAlbum(
   )
 }
 
-/** Creates a sub-album under a top-level album, in every language at once. */
+/**
+ * Creates a sub-album under a top-level album, in every language at once. As with a top-level
+ * album, when the slug is taken the sub-album is created under the slug with a unique suffix, so
+ * two sub-albums can share a title; only a second collision is reported.
+ */
 export async function createGallerySubAlbum(
   parentAlbumId: string,
   input: SubAlbumCreateInput,
   actor: AuditActor,
 ): Promise<{ ok: true; album: GallerySubAlbum } | GallerySubAlbumCreateFailure> {
-  return writeAlbum<GallerySubAlbumCreateFailure>(async (tx) => {
-    const parent = await tx.galleryAlbum.findUnique({
-      where: { id: parentAlbumId },
-      select: { id: true, parentAlbumId: true },
-    })
-
-    if (!parent) {
-      throw new WriteAbort<GallerySubAlbumCreateFailure>({ ok: false, reason: 'parent-not-found' })
-    }
-    if (parent.parentAlbumId !== null) {
-      throw new WriteAbort<GallerySubAlbumCreateFailure>({
-        ok: false,
-        reason: 'parent-not-top-level',
+  const create = (slugInput: SubAlbumCreateInput) =>
+    writeAlbum<GallerySubAlbumCreateFailure>(async (tx) => {
+      const parent = await tx.galleryAlbum.findUnique({
+        where: { id: parentAlbumId },
+        select: { id: true, parentAlbumId: true },
       })
-    }
 
-    return createAlbumRecord(tx, input, parent.id, actor)
-  }, duplicateSlugFailure)
+      if (!parent) {
+        throw new WriteAbort<GallerySubAlbumCreateFailure>({
+          ok: false,
+          reason: 'parent-not-found',
+        })
+      }
+      if (parent.parentAlbumId !== null) {
+        throw new WriteAbort<GallerySubAlbumCreateFailure>({
+          ok: false,
+          reason: 'parent-not-top-level',
+        })
+      }
+
+      return createAlbumRecord(tx, slugInput, parent.id, actor)
+    }, duplicateSlugFailure)
+
+  const first = await create(input)
+  if (first.ok || first.reason !== 'duplicate-slug') return first
+
+  return create({ ...input, slug: `${input.slug}-${randomUUID()}` })
 }
 
 /**
