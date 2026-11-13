@@ -86,7 +86,10 @@ describe('SolarAstrophysicsPage', () => {
     render(<SolarAstrophysicsPage {...defaultArgs} />)
 
     expect(
-      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent),
+      screen
+        .getAllByRole('heading', { level: 2 })
+        .filter((heading) => heading.querySelector('.topic-section-index'))
+        .map((heading) => heading.textContent),
     ).toEqual(['1. ¿Qué estudia la Física Solar?', '2. El trabajo de LASCE en Física Solar'])
   })
 
