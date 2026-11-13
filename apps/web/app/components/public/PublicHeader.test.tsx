@@ -145,15 +145,31 @@ describe('PublicHeader', () => {
     ).toHaveAttribute('href', '/administracion')
   })
 
-  test('identifies UCR, CINESPA and LASCE in the header brand', () => {
-    renderHeader()
+  test.each([
+    {
+      locale: 'es',
+      altTexts: [
+        'Logotipo de la Universidad de Costa Rica',
+        'Universidad de Costa Rica',
+        'Centro de Investigaciones Espaciales',
+        'Laboratorio de Astrofísica Solar y Clima Espacial',
+      ],
+    },
+    {
+      locale: 'en',
+      altTexts: [
+        'Logo of Universidad de Costa Rica',
+        'Universidad de Costa Rica',
+        'Centro de Investigaciones Espaciales',
+        'Laboratorio de Astrofísica Solar y Clima Espacial',
+      ],
+    },
+  ])('identifies UCR, CINESPA and LASCE in the $locale header brand', ({ locale, altTexts }) => {
+    renderHeader({ locale })
 
-    expect(screen.getByAltText('Universidad de Costa Rica')).toBeInTheDocument()
-    expect(screen.getByAltText('Logotipo de la Universidad de Costa Rica')).toBeInTheDocument()
-    expect(screen.getByAltText('Centro de Investigaciones Espaciales')).toBeInTheDocument()
-    expect(
-      screen.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial'),
-    ).toBeInTheDocument()
+    for (const altText of altTexts) {
+      expect(screen.getByAltText(altText)).toBeInTheDocument()
+    }
   })
 
   test.each([

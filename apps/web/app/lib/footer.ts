@@ -8,8 +8,8 @@ import es from '@/messages/es.json' with { type: 'json' }
  * stay here. Edit either place, not `PublicFooter.tsx`.
  *
  * The institution links and the copyright wording were confirmed for LASCE-PUB-012. The LASCE
- * full name follows the approved "Nosotros" copy in `app/lib/nosotros.ts`; `app/layout.tsx`
- * metadata still expands it as "Laboratorio de Ciencias Espaciales" and is out of scope here.
+ * full name follows the approved "Nosotros" copy in `app/lib/nosotros.ts`, as does the public
+ * metadata description.
  */
 export interface FooterInstitution {
   /** Visible text, for example `CINESPA`. */

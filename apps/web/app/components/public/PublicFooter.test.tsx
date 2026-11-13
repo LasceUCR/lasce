@@ -1,22 +1,27 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import { PublicFooter, type PublicFooterProps } from './PublicFooter'
 import { Default } from './PublicFooter.stories'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 // The story is the fixture: reusing its args keeps the documented state and the
 // asserted one from drifting.
 const defaultArgs = Default.args as PublicFooterProps
 
+function renderFooter(props: PublicFooterProps = defaultArgs, locale?: 'es' | 'en') {
+  return renderWithIntl(<PublicFooter {...props} />, { locale })
+}
+
 describe('PublicFooter', () => {
   test('is the page contentinfo landmark', () => {
-    render(<PublicFooter {...defaultArgs} />)
+    renderFooter()
 
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
   })
 
   test('shows the copyright notice for the year it was given', () => {
-    render(<PublicFooter {...defaultArgs} />)
+    renderFooter()
 
     const footer = within(screen.getByRole('contentinfo'))
     const { holder, notice } = defaultArgs.content.copyright
@@ -25,7 +30,7 @@ describe('PublicFooter', () => {
   })
 
   test('names the university, CINESPA and LASCE beside the logo', () => {
-    render(<PublicFooter {...defaultArgs} />)
+    renderFooter()
 
     const { institutions, institutionsLabel } = defaultArgs.content
     const list = within(screen.getByRole('list', { name: institutionsLabel }))
@@ -51,7 +56,7 @@ describe('PublicFooter', () => {
   })
 
   test('shows the campus location', () => {
-    render(<PublicFooter {...defaultArgs} />)
+    renderFooter()
 
     const footer = within(screen.getByRole('contentinfo'))
 
@@ -59,7 +64,7 @@ describe('PublicFooter', () => {
   })
 
   test('links the ISWI logo to its official site', () => {
-    render(<PublicFooter {...defaultArgs} />)
+    renderFooter()
 
     const { navigationLabel, partnerLogo } = defaultArgs.content
     const link = screen.getByRole('link', { name: partnerLogo.name })
@@ -78,7 +83,7 @@ describe('PublicFooter', () => {
   })
 
   test('keeps the legal information outside the footer navigation', () => {
-    render(<PublicFooter {...defaultArgs} />)
+    renderFooter()
 
     const { links, navigationLabel } = defaultArgs.content
     const navigation = within(screen.getByRole('navigation', { name: navigationLabel }))
@@ -89,7 +94,7 @@ describe('PublicFooter', () => {
   })
 
   test('links to the contact page and opens Instagram in a new tab', () => {
-    render(<PublicFooter {...defaultArgs} />)
+    renderFooter()
 
     expect(screen.getByRole('link', { name: 'Contacto' })).toHaveAttribute('href', '/contacto')
 
@@ -100,10 +105,16 @@ describe('PublicFooter', () => {
   })
 
   test('defaults to the current year when none is given', () => {
-    render(<PublicFooter content={defaultArgs.content} />)
+    renderFooter({ content: defaultArgs.content })
 
     const footer = within(screen.getByRole('contentinfo'))
 
     expect(footer.getByText(new RegExp(`© ${new Date().getFullYear()} `))).toBeInTheDocument()
+  })
+
+  test('keeps the official UCR name in the English light logo alternative text', () => {
+    renderFooter(defaultArgs, 'en')
+
+    expect(screen.getByAltText('Universidad de Costa Rica')).toBeInTheDocument()
   })
 })
