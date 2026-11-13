@@ -247,3 +247,27 @@ test('follows the permission matrix, not only the role', async ({ page, context 
     await fixture.cleanup()
   }
 })
+
+test('links recent activity to the audit trail for accounts with view_audit_log', async ({
+  page,
+  context,
+}) => {
+  const assistant = await createSignedInUser(context, 'ASSISTANT')
+  try {
+    await page.goto('/administracion')
+    await expect(page.getByRole('link', { name: 'Ver todo' })).toHaveCount(0)
+  } finally {
+    await assistant.cleanup()
+  }
+
+  await context.clearCookies()
+  const admin = await createSignedInUser(context, 'ADMIN')
+  try {
+    await page.goto('/administracion')
+    const viewAll = page.getByRole('link', { name: 'Ver todo' })
+    await expect(viewAll).toBeVisible()
+    await expect(viewAll).toHaveAttribute('href', '/administracion/auditoria')
+  } finally {
+    await admin.cleanup()
+  }
+})

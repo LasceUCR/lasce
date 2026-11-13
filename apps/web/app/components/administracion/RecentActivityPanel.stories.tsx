@@ -29,6 +29,7 @@ export const Empty: Story = {
 export const WithActivity: Story = {
   args: {
     now,
+    canViewAuditLog: false,
     items: [
       {
         id: 'b5b0c6a4-1f39-4c1c-9a0e-6f1b2d3c4e01',
@@ -36,6 +37,7 @@ export const WithActivity: Story = {
         summary: 'Publicación agregada: Solar flares in 2026',
         metadata: null,
         actorType: 'user',
+        entityType: 'publication',
         actorName: 'Ana Rodríguez',
         occurredAt: minutesAgo(12),
       },
@@ -45,6 +47,7 @@ export const WithActivity: Story = {
         summary: 'Pipeline SUVI finalizado correctamente',
         metadata: null,
         actorType: 'worker',
+        entityType: null,
         actorName: null,
         occurredAt: minutesAgo(60),
       },
@@ -54,6 +57,7 @@ export const WithActivity: Story = {
         summary: 'Rol actualizado: asistente',
         metadata: null,
         actorType: 'user',
+        entityType: 'user',
         actorName: null,
         occurredAt: minutesAgo(3 * 60),
       },
@@ -63,9 +67,17 @@ export const WithActivity: Story = {
         summary: 'Tareas programadas registradas',
         metadata: null,
         actorType: 'system',
+        entityType: null,
         actorName: null,
         occurredAt: minutesAgo(2 * 24 * 60),
       },
     ],
+  },
+}
+
+export const WithAuditAccess: Story = {
+  args: {
+    ...WithActivity.args,
+    canViewAuditLog: true,
   },
 }

@@ -2069,6 +2069,7 @@
     },
     "activity": {
       "title": "Actividad reciente",
+      "viewAll": "Ver todo",
       "empty": "Aún no hay actividad registrada.",
       "actors": {
         "system": "Sistema",
