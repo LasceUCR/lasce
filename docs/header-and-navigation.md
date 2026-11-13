@@ -181,6 +181,13 @@ render therefore looked like a dead link. Two pieces fix it:
   behind it. Next can also prefetch the boundary ahead of the click. `app/(public)/error.tsx`
   (`PageErrorState`) catches a page that throws, so a failed navigation ends on an error with a
   retry instead of a frozen page.
+
+  Inside that boundary the response streams, so its `200` status is sent before the page renders.
+  A page that calls `notFound()` therefore answers `200` with the not-found content. For that
+  reason the catch-all for unknown addresses lives outside the group, in
+  `app/(not-found)/[...rest]`, whose layout reuses the public shell, so an unknown address still
+  answers `404`. Do not move it back under `(public)`.
+
 - **`NavigationProgress`** lives in the header's cyan strip (`.site-header::before`, sized by
   `--header-stripe-height`). On a click, the strip turns dark blue and the cyan fills back over it
   from the left. A finished bar looks exactly like the resting strip, so it ends without a flash.
