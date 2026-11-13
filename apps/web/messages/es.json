@@ -277,6 +277,18 @@
       "title": "Física Solar",
       "introduction": "La actividad solar no termina en el Sol. Sus campos magnéticos, su radiación y el flujo de partículas que libera se extienden por el Sistema Solar y pueden modificar el entorno espacial de la Tierra."
     },
+    "observation": {
+      "alt": "Imagen del Sol observada por GOES SUVI en la banda ultravioleta de 195 Å",
+      "loading": "Cargando la imagen solar más reciente…",
+      "unavailable": "La imagen solar más reciente no está disponible en este momento.",
+      "observedLabel": "Observada el",
+      "source": "Fuente: NOAA/GOES SUVI · 195 Å",
+      "dataLink": {
+        "title": "Explore más imágenes solares",
+        "description": "Esta imagen muestra el Sol en luz ultravioleta extrema. Para acceder a más imágenes e información, visite la página de Datos con el botón de abajo.",
+        "label": "Ir a Datos"
+      }
+    },
     "overview": {
       "title": "¿Qué estudia la Física Solar?",
       "intro": "Esta área busca comprender los procesos físicos que originan la actividad del Sol y explicar cómo esas variaciones se conectan con el medio interplanetario y el entorno terrestre.",
@@ -307,6 +319,12 @@
           "terrestrial": "Entorno terrestre",
           "analysis": "Análisis LASCE"
         }
+      }
+    },
+    "nextSteps": {
+      "title": "Siga explorando",
+      "links": {
+        "spaceWeather": "Conocer el clima espacial"
       }
     },
     "editor": {

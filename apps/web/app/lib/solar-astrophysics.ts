@@ -11,14 +11,30 @@ export const solarOverviewItemIds = ['activity', 'magneticField', 'sunEarth', 'a
 export type SolarOverviewItemId = (typeof solarOverviewItemIds)[number]
 
 const flowStepIds = ['sun', 'disturbance', 'terrestrial', 'analysis'] as const
+const nextStepIds = ['spaceWeather'] as const
+const nextStepHrefs = {
+  spaceWeather: '/clima-espacial',
+} as const
 
 export interface SolarAstrophysicsContent {
   hero: { kicker: string; title: string; introduction: string }
+  observation: {
+    alt: string
+    loading: string
+    unavailable: string
+    observedLabel: string
+    source: string
+    dataLink: { title: string; description: string; label: string; href: string }
+  }
   overview: {
     title: string
     intro: string
     items: readonly { id: SolarOverviewItemId; title: string; description: string }[]
     flow: { title: string; steps: readonly string[]; caption: string }
+  }
+  nextSteps: {
+    title: string
+    links: readonly { id: (typeof nextStepIds)[number]; href: string; label: string }[]
   }
   backLink: { href: string; label: string }
 }
@@ -35,6 +51,10 @@ export function getSolarAstrophysicsContent({
 
   return {
     hero,
+    observation: {
+      ...solarPhysics.observation,
+      dataLink: { ...solarPhysics.observation.dataLink, href: '/datos' },
+    },
     overview: {
       title: overview.title,
       intro: overview.intro,
@@ -44,6 +64,14 @@ export function getSolarAstrophysicsContent({
         steps: flowStepIds.map((id) => overview.flow.steps[id]),
         caption: overview.flow.caption,
       },
+    },
+    nextSteps: {
+      title: solarPhysics.nextSteps.title,
+      links: nextStepIds.map((id) => ({
+        id,
+        href: nextStepHrefs[id],
+        label: solarPhysics.nextSteps.links[id],
+      })),
     },
     backLink: { href: '/#areas-de-trabajo', label: common.backToWorkAreas },
   }

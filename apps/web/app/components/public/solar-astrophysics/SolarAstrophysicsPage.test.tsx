@@ -1,11 +1,15 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { getMessages } from '@/app/lib/i18n/messages'
 import { getSolarAstrophysicsContent } from '@/app/lib/solar-astrophysics'
 
 import { SolarAstrophysicsPage, type SolarAstrophysicsPageProps } from './SolarAstrophysicsPage'
 import { Default, WithoutLasceSection } from './SolarAstrophysicsPage.stories'
+
+vi.mock('./useLatestSuviObservation', () => ({
+  useLatestSuviObservation: () => ({ status: 'unavailable' }),
+}))
 
 const defaultArgs = Default.args as SolarAstrophysicsPageProps
 
@@ -38,6 +42,23 @@ describe('SolarAstrophysicsPage', () => {
     )
   })
 
+  test('offers a nearby path to solar imagery and a link to space weather', () => {
+    render(<SolarAstrophysicsPage {...defaultArgs} />)
+
+    expect(screen.queryByRole('heading', { name: 'El Sol ahora' })).not.toBeInTheDocument()
+    expect(
+      screen.getByText(/Esta imagen muestra la corona solar en ultravioleta extremo/),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ir a Datos' })).toHaveAttribute('href', '/datos')
+    expect(screen.getByRole('link', { name: 'Conocer el clima espacial' })).toHaveAttribute(
+      'href',
+      '/clima-espacial',
+    )
+    expect(screen.getByRole('complementary')).toContainElement(
+      screen.getByRole('link', { name: 'Ir a Datos' }),
+    )
+  })
+
   test('leaves the LASCE section out when the database has none', () => {
     render(<SolarAstrophysicsPage {...(WithoutLasceSection.args as SolarAstrophysicsPageProps)} />)
 
@@ -54,6 +75,11 @@ describe('SolarAstrophysicsPage', () => {
       screen.getByRole('heading', { level: 1, name: 'Solar astrophysics' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 3, name: 'Magnetic field' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'The Sun now' })).not.toBeInTheDocument()
+    expect(
+      screen.getByText(/This image shows the solar corona in extreme ultraviolet light/),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to Data' })).toHaveAttribute('href', '/datos')
     expect(screen.getByRole('link', { name: 'Back to the work areas' })).toHaveAttribute(
       'href',
       '/#areas-de-trabajo',
