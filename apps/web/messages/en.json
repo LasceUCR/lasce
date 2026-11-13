@@ -5,6 +5,7 @@
   },
   "shell": {
     "skipToContent": "Skip to main content",
+    "pageLoading": "Loading the page…",
     "pageError": {
       "message": "This page could not be loaded. Please try again.",
       "retry": "Try again",

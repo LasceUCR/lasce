@@ -1,5 +1,7 @@
-import { act, fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+
+import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { NavigationProgress } from './NavigationProgress'
 import meta, { Loading } from './NavigationProgress.stories'
@@ -12,15 +14,15 @@ vi.mock('next/navigation', () => ({
 }))
 
 /**
- * The bar is decorative and hidden from assistive technology, so it has no role or text to find
- * it by. Its state is the one thing it exposes, on `data-state`.
+ * The strip is hidden from assistive technology, so it has no role or text to find it by. Its
+ * state is exposed on `data-state`; what a screen reader hears is the separate status message.
  */
 function barState(container: HTMLElement) {
   return container.querySelector('[data-state]')?.getAttribute('data-state')
 }
 
 function renderWithLinks() {
-  return render(
+  return renderWithIntl(
     <>
       <NavigationProgress {...meta.args} />
       <a href="/nosotros">Nosotros</a>
@@ -148,7 +150,7 @@ describe('NavigationProgress', () => {
   })
 
   test('a second click restarts the wait instead of finishing early', () => {
-    const { container, getByText } = render(
+    const { container, getByText } = renderWithIntl(
       <>
         <NavigationProgress timeoutMs={8_000} />
         <a href="/nosotros">Nosotros</a>
@@ -165,7 +167,7 @@ describe('NavigationProgress', () => {
   })
 
   test('gives up when the navigation never lands', () => {
-    const { container, getByText } = render(
+    const { container, getByText } = renderWithIntl(
       <>
         <NavigationProgress timeoutMs={1_000} />
         <a href="/nosotros">Nosotros</a>
@@ -179,8 +181,42 @@ describe('NavigationProgress', () => {
   })
 
   test('can start in the loading state, for the story', () => {
-    const { container } = render(<NavigationProgress {...meta.args} {...Loading.args} />)
+    const { container } = renderWithIntl(<NavigationProgress {...meta.args} {...Loading.args} />)
 
     expect(barState(container)).toBe('loading')
+  })
+
+  test('announces the page load to screen readers while the bar runs', () => {
+    const { getByText } = renderWithLinks()
+
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+
+    fireEvent.click(getByText('Nosotros'))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando la página…')
+  })
+
+  test('announces the page load in English once English is chosen', () => {
+    const { getByText } = renderWithIntl(
+      <>
+        <NavigationProgress {...meta.args} />
+        <a href="/nosotros">Nosotros</a>
+      </>,
+      { locale: 'en' },
+    )
+
+    fireEvent.click(getByText('Nosotros'))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading the page…')
+  })
+
+  test('clears the announcement once the new page is in place', () => {
+    const { getByText, rerender } = renderWithLinks()
+
+    fireEvent.click(getByText('Nosotros'))
+    navigateTo('/nosotros')
+    rerender(<NavigationProgress {...meta.args} />)
+
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 })

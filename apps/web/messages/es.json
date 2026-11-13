@@ -5,6 +5,7 @@
   },
   "shell": {
     "skipToContent": "Saltar al contenido principal",
+    "pageLoading": "Cargando la página…",
     "pageError": {
       "message": "No se pudo cargar esta página. Inténtelo de nuevo.",
       "retry": "Reintentar",

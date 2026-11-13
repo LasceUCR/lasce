@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
 
 import styles from './NavigationProgress.module.css'
@@ -57,13 +58,16 @@ export function startsNavigation(event: MouseEvent, anchor: HTMLAnchorElement): 
  * the header, the home page buttons, cards, pagination. It finishes when `usePathname` or
  * `useSearchParams` change. A second click while it runs restarts it instead of stacking a bar.
  *
- * It is decorative: hidden from assistive technology, because the destination's `loading.tsx`
- * already announces the loading state through `LoadingRegion`.
+ * The strip itself is hidden from assistive technology. Most public pages have no `loading.tsx`,
+ * so nothing else says a page is loading: a visually hidden status message announces it instead
+ * while the bar runs. The live region is always in the DOM, because a screen reader only reads
+ * text that changes inside a region it already knows about.
  */
 export function NavigationProgress({
   timeoutMs = 15_000,
   initialState = 'idle',
 }: NavigationProgressProps) {
+  const t = useTranslations('shell')
   const pathname = usePathname()
   const search = useSearchParams().toString()
   const [state, setState] = useState<NavigationProgressState>(initialState)
@@ -120,8 +124,13 @@ export function NavigationProgress({
   )
 
   return (
-    <div aria-hidden="true" className={styles.track} data-state={state}>
-      <div className={styles.bar} key={run} />
-    </div>
+    <>
+      <div aria-hidden="true" className={styles.track} data-state={state}>
+        <div className={styles.bar} key={run} />
+      </div>
+      <span className="sr-only" role="status">
+        {state === 'loading' ? t('pageLoading') : ''}
+      </span>
+    </>
   )
 }

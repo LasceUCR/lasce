@@ -173,20 +173,7 @@ intercepting the click. Almost every public page is `force-dynamic`, and for a d
 **without** a `loading.tsx`, Next 16 does not prefetch the page and keeps the current one on screen
 until the server render finishes (see "Dynamic routes without `loading.tsx`" in
 `node_modules/next/dist/docs/01-app/01-getting-started/04-linking-and-navigating.md`). A slow
-render therefore looked like a dead link. Two pieces fix it:
-
-- **`app/(public)/loading.tsx`** is a group-level boundary built on `PageSkeleton` (see
-  [`skeletons.md`](skeletons.md)). It applies to every public page that has no `loading.tsx` of its
-  own. Navigation now happens at once: the header stays, the skeleton shows, and the page streams in
-  behind it. Next can also prefetch the boundary ahead of the click. `app/(public)/error.tsx`
-  (`PageErrorState`) catches a page that throws, so a failed navigation ends on an error with a
-  retry instead of a frozen page.
-
-  Inside that boundary the response streams, so its `200` status is sent before the page renders.
-  A page that calls `notFound()` therefore answers `200` with the not-found content. For that
-  reason the catch-all for unknown addresses lives outside the group, in
-  `app/(not-found)/[...rest]`, whose layout reuses the public shell, so an unknown address still
-  answers `404`. Do not move it back under `(public)`.
+render therefore looked like a dead link. The fix is a load bar, so the click is answered at once:
 
 - **`NavigationProgress`** lives in the header's cyan strip (`.site-header::before`, sized by
   `--header-stripe-height`). On a click, the strip turns dark blue and the cyan fills back over it
@@ -201,9 +188,25 @@ render therefore looked like a dead link. Two pieces fix it:
   - `#hash` links
   - links to the current URL
 
-  A second click restarts the wait. The bar is `aria-hidden`, because the destination's
-  `loading.tsx` already announces the load through `LoadingRegion`. Under
+  A second click restarts the wait. The strip is `aria-hidden`. Next to it, a visually hidden
+  `role="status"` message ("Cargando la página…" / "Loading the page…", `shell.pageLoading`)
+  announces the load to screen readers while the bar runs, and empties when the page lands. Under
   `prefers-reduced-motion` the strip stays dark blue while the page loads, with no movement.
+
+- **`app/(public)/error.tsx`** (`PageErrorState`) catches a page that throws, so a failed
+  navigation ends on an error with a retry instead of a frozen page.
+
+There is deliberately **no group-level `app/(public)/loading.tsx`**. One was tried and removed:
+
+- A single generic skeleton did not match the shape of most pages.
+- Inside a loading boundary the response streams, so its `200` status is sent before the page
+  renders. Any page that calls `notFound()`, the `[...rest]` catch-all included, then answers
+  `200` instead of `404`.
+
+The old page therefore stays on screen until the new one is rendered, with the bar running. A page
+that needs a skeleton gets its own `loading.tsx`, shaped like it, as `/contacto`, `/galeria` and
+`/publicaciones` have. Before adding one, make sure the route never calls `notFound()`, or accept
+that a missing item will answer `200`.
 
 ## Covered by
 
@@ -215,4 +218,4 @@ render therefore looked like a dead link. Two pieces fix it:
 | Account menu and its edit switch | `app/components/public/auth/AccountMenu.tsx`, `EditModeSwitch.tsx` | `AccountMenu.test.tsx`, `AccountLinks.test.tsx`      |
 | Responsive rules for both        | `app/globals.css`                                                  | `tests/e2e/responsive-controls.spec.ts`, plus manual |
 | Page-load bar                    | `app/components/public/NavigationProgress.tsx`                     | `NavigationProgress.test.tsx`                        |
-| Public loading / error boundary  | `app/(public)/loading.tsx`, `app/(public)/error.tsx`               | `PageSkeleton.test.tsx`, `PageErrorState.test.tsx`   |
+| Public error boundary            | `app/(public)/error.tsx`                                           | `PageErrorState.test.tsx`                            |
