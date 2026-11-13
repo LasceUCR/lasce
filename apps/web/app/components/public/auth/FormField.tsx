@@ -77,7 +77,9 @@ export function FormField({
           defaultValue={defaultValue}
           value={value}
         >
-          <option value="">{placeholder ?? 'Selecciona una opción'}</option>
+          {/* This presentational component has no catalogue of its own, so the empty option's
+              text is whatever the caller passes; every current caller always passes one. */}
+          <option value="">{placeholder ?? ''}</option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}

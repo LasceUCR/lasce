@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronDown, Menu } from 'lucide-react'
+import { ChevronDown, Menu, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useLocale, useTranslations, type Messages } from 'next-intl'
 import { useEffect, useRef, useState, useTransition } from 'react'
@@ -99,6 +99,7 @@ export function PublicHeader({ logoutAction, setLocaleAction }: PublicHeaderProp
     pathname,
   )
   const mobileMenu = useRef<HTMLDetailsElement>(null)
+  const mobileMenuToggle = useRef<HTMLElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -201,6 +202,17 @@ export function PublicHeader({ logoutAction, setLocaleAction }: PublicHeaderProp
       closeMobileMenu()
     }
 
+    // Escape closes the open menu from anywhere inside it and returns focus to the toggle, so a
+    // keyboard user is not left on a link that is about to disappear.
+    function closeMenuOnEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape' || !mobileMenu.current?.open) return
+
+      event.preventDefault()
+      closeMobileMenu()
+      mobileMenuToggle.current?.focus()
+    }
+
+    document.addEventListener('keydown', closeMenuOnEscape)
     document.addEventListener('pointerdown', closeMenuOnOutsidePointer, true)
     document.addEventListener('touchstart', closeMenuOnOutsidePointer, {
       capture: true,
@@ -208,6 +220,7 @@ export function PublicHeader({ logoutAction, setLocaleAction }: PublicHeaderProp
     })
 
     return () => {
+      document.removeEventListener('keydown', closeMenuOnEscape)
       document.removeEventListener('pointerdown', closeMenuOnOutsidePointer, true)
       document.removeEventListener('touchstart', closeMenuOnOutsidePointer, true)
     }
@@ -268,17 +281,28 @@ export function PublicHeader({ logoutAction, setLocaleAction }: PublicHeaderProp
       </div>
 
       {isMobileMenuOpen ? (
+        // A pointer-only affordance: keyboard and screen reader users close the menu with its
+        // own toggle or with Escape, so the backdrop stays out of the tab order and the tree. It
+        // has no label either, so "Cerrar navegación" names one control only: the toggle.
         <button
-          aria-label={t('closeMenu')}
+          aria-hidden="true"
           className="mobile-menu-backdrop"
           onClick={closeMobileMenu}
+          tabIndex={-1}
           type="button"
         />
       ) : null}
 
       <details className="mobile-menu" onToggle={updateMobileMenuState} ref={mobileMenu}>
-        <summary aria-label={t('openMenu')}>
-          <Menu aria-hidden="true" size={25} strokeWidth={1.8} />
+        <summary
+          aria-label={isMobileMenuOpen ? t('closeMenu') : t('openMenu')}
+          ref={mobileMenuToggle}
+        >
+          {isMobileMenuOpen ? (
+            <X aria-hidden="true" size={25} strokeWidth={1.8} />
+          ) : (
+            <Menu aria-hidden="true" size={25} strokeWidth={1.8} />
+          )}
         </summary>
         <nav aria-label={t('mobileLabel')}>
           {navigation.map((entry) => {

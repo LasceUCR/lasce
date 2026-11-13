@@ -17,6 +17,10 @@ import {
   validateCollaborationDraft,
 } from '@/app/lib/collaboration-form'
 import { COLLABORATION_LOGO_ACCEPT } from '@/app/lib/collaboration-logo'
+import {
+  COLLABORATION_ACRONYM_MAX_LENGTH,
+  COLLABORATION_NAME_MAX_LENGTH,
+} from '@/app/lib/collaboration-schema'
 import { defaultLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
 import { resolveLocale } from '@/app/lib/i18n/locale'
 import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
@@ -160,6 +164,7 @@ export function CollaborationForm({
           id={`${formId}-name`}
           label={t('editor.name')}
           required
+          maxLength={COLLABORATION_NAME_MAX_LENGTH}
           value={draft.name}
           error={errors.name}
           onChange={(name) => setDraft((value) => ({ ...value, name }))}
@@ -168,6 +173,7 @@ export function CollaborationForm({
           <FormField
             id={`${formId}-acronym`}
             label={t('editor.acronym')}
+            maxLength={COLLABORATION_ACRONYM_MAX_LENGTH}
             value={draft.acronym}
             error={errors.acronym}
             onChange={(acronym) => setDraft((value) => ({ ...value, acronym }))}
@@ -206,6 +212,7 @@ export function CollaborationForm({
                   id={`${formId}-${locale}-country`}
                   label={t('editor.country', { language: localeLabels[locale] })}
                   required={isBaseLocale || !hasBaseCountry}
+                  maxLength={collaborationContent.specs.country.maxLength}
                   lang={contentFieldLang(stored, locale)}
                   value={draft.content[locale].country}
                   error={errors[contentPath(locale, 'country')]}

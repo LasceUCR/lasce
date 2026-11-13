@@ -7,6 +7,11 @@ import { collaborationContent } from './research-collaborations'
 
 export type CollaborationFieldMessages = typeof es.collaborations.validation
 
+/** The longest organization name the editor accepts and the API stores. */
+export const COLLABORATION_NAME_MAX_LENGTH = 300
+/** The longest acronym the editor accepts and the API stores. */
+export const COLLABORATION_ACRONYM_MAX_LENGTH = 100
+
 export function collaborationFieldSchemas(messages: CollaborationFieldMessages) {
   const optionalText = (schema: z.ZodType<string, string>) =>
     z
@@ -26,9 +31,13 @@ export function collaborationFieldSchemas(messages: CollaborationFieldMessages) 
       }
     }, messages.url)
   return {
-    name: z.string({ error: messages.name }).trim().min(1, messages.name).max(300, messages.name),
+    name: z
+      .string({ error: messages.name })
+      .trim()
+      .min(1, messages.name)
+      .max(COLLABORATION_NAME_MAX_LENGTH, messages.name),
     scope: z.enum(['national', 'international'], { error: messages.scope }),
-    acronym: optionalText(z.string().max(100, messages.acronym)),
+    acronym: optionalText(z.string().max(COLLABORATION_ACRONYM_MAX_LENGTH, messages.acronym)),
     websiteUrl: optionalText(url),
     logoPath: optionalText(
       z.union(

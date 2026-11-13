@@ -183,6 +183,13 @@ before discarding; a failed request leaves its values intact and reports the rea
 The editor labels, validation and feedback follow the site's language. Countries are entered
 in Spanish and English; official organization names and acronyms are shared.
 
+Text fields stop accepting input at their limit, the same way as the initiative form: the
+organization name at 300 characters (`COLLABORATION_NAME_MAX_LENGTH`), the acronym at 100
+(`COLLABORATION_ACRONYM_MAX_LENGTH`) and each country at 150
+(`collaborationContent.specs.country.maxLength`). The form reads these limits from the same
+constants as `collaboration-schema.ts`, so `maxlength` and the server validation cannot drift
+apart; the validation messages remain for requests that bypass the form.
+
 ### Logo upload flow and limits
 
 The organization form includes a logo field backed by `FileDropInput`:
