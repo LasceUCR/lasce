@@ -116,6 +116,23 @@ calls the service without one gets Spanish.
   - The font is the bundled `app/services/downloads/fonts/Geist-Regular.ttf`, because the
     container image has no system fonts. `next.config.ts` traces it into the standalone output.
 
+## Dates and times in the query
+
+The `/datos` query form (`ScientificDataExplorer.tsx`) works in UTC.
+
+- **Default and limit of the date.** A GOES query opens on the latest day that already has data
+  for its instrument, and later days cannot be picked. NOAA publishes EXIS, MAG, EHIS, SGPS and
+  MPS-HI about a day late, so their latest day is yesterday; SUVI images reach today.
+  The lag is `PUBLICATION_LAG_DAYS` in `app/lib/scientific-data-availability.ts`.
+- **Ranges across midnight.** An end time before the start time ends on the next day, so 23:00–01:00
+  is two hours. Equal times are rejected, and a range never reaches 24 hours. The window is built
+  in one place, `getQueryWindow()` in `app/lib/scientific-data-time.ts`, which the data sources use.
+- **Costa Rica time.** The form says that Costa Rica is UTC−6, and the results show the interval
+  in Costa Rica time beside the UTC one.
+- **Errors and results.** A problem with the times is shown next to the time fields and announced;
+  after a query the page scrolls to the results (not animated for `prefers-reduced-motion`) and
+  focuses their heading.
+
 ## Storage
 
 - The bucket is `MINIO_DOWNLOADS_BUCKET` (default `lasce-downloads`). It is a separate bucket on
