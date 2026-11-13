@@ -322,9 +322,13 @@
       }
     },
     "nextSteps": {
-      "title": "Keep exploring",
+      "title": "Next steps",
       "links": {
-        "spaceWeather": "Learn about space weather"
+        "solarToday": "View the Sun today",
+        "xrayData": "Query X-ray data",
+        "spaceWeather": "Follow the chain: space weather",
+        "publications": "Browse LASCE publications",
+        "tools": "Explore scientific tools"
       }
     },
     "editor": {

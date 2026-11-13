@@ -4,7 +4,6 @@ import { Button } from '@/app/components/public/Button'
 import { CardGrid } from '@/app/components/public/topic/CardGrid'
 import { ConceptFlow } from '@/app/components/public/topic/ConceptFlow'
 import { InfoCard } from '@/app/components/public/topic/InfoCard'
-import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
 import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { SolarAstrophysicsContent, SolarOverviewItemId } from '@/app/lib/solar-astrophysics'
@@ -38,7 +37,7 @@ export function SolarAstrophysicsPage({
   lasceSection = null,
   canEditLasce = false,
 }: SolarAstrophysicsPageProps) {
-  const { hero, observation, overview, nextSteps, backLink } = content
+  const { hero, observation, overview, nextSteps } = content
 
   // Visitors get the plain section; the client-side editor is loaded only for someone who can
   // edit it and was sent the editing data.
@@ -82,13 +81,14 @@ export function SolarAstrophysicsPage({
         <ConceptFlow
           caption={overview.flow.caption}
           steps={overview.flow.steps}
+          stepLinks={overview.flow.stepLinks}
           title={overview.flow.title}
         />
       </TopicSection>
 
       {lasce}
 
-      <TopicSection title={nextSteps.title}>
+      <TopicSection className="topic-section-end" title={nextSteps.title}>
         <nav aria-label={nextSteps.title} className="solar-next-steps">
           {nextSteps.links.map((link) => (
             <Button
@@ -102,10 +102,6 @@ export function SolarAstrophysicsPage({
           ))}
         </nav>
       </TopicSection>
-
-      <div className="topic-page-footer page-width">
-        <TopicBackLink href={backLink.href} label={backLink.label} />
-      </div>
     </article>
   )
 }

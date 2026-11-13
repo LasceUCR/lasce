@@ -322,9 +322,13 @@
       }
     },
     "nextSteps": {
-      "title": "Siga explorando",
+      "title": "Próximos pasos",
       "links": {
-        "spaceWeather": "Conocer el clima espacial"
+        "solarToday": "Ver el Sol de hoy",
+        "xrayData": "Consultar datos de rayos X",
+        "spaceWeather": "Seguir la cadena: clima espacial",
+        "publications": "Consultar publicaciones de LASCE",
+        "tools": "Explorar herramientas científicas"
       }
     },
     "editor": {

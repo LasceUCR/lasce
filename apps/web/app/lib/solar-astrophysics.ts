@@ -11,9 +11,17 @@ export const solarOverviewItemIds = ['activity', 'magneticField', 'sunEarth', 'a
 export type SolarOverviewItemId = (typeof solarOverviewItemIds)[number]
 
 const flowStepIds = ['sun', 'disturbance', 'terrestrial', 'analysis'] as const
-const nextStepIds = ['spaceWeather'] as const
+const flowStepHrefs: Partial<Record<(typeof flowStepIds)[number], string>> = {
+  terrestrial: '/clima-espacial',
+  analysis: '/datos',
+} as const
+const nextStepIds = ['solarToday', 'xrayData', 'spaceWeather', 'publications', 'tools'] as const
 const nextStepHrefs = {
+  solarToday: '/datos#solar-today-title',
+  xrayData: '/datos#scientific-query-title',
   spaceWeather: '/clima-espacial',
+  publications: '/publicaciones?q=solar&group=LASCE',
+  tools: '/herramientas-cientificas',
 } as const
 
 export interface SolarAstrophysicsContent {
@@ -30,22 +38,25 @@ export interface SolarAstrophysicsContent {
     title: string
     intro: string
     items: readonly { id: SolarOverviewItemId; title: string; description: string }[]
-    flow: { title: string; steps: readonly string[]; caption: string }
+    flow: {
+      title: string
+      steps: readonly string[]
+      stepLinks: readonly (string | null)[]
+      caption: string
+    }
   }
   nextSteps: {
     title: string
     links: readonly { id: (typeof nextStepIds)[number]; href: string; label: string }[]
   }
-  backLink: { href: string; label: string }
 }
 
 /** The parts of a message catalogue the page reads. */
-export type SolarAstrophysicsMessages = Pick<typeof es, 'solarPhysics' | 'common'>
+export type SolarAstrophysicsMessages = Pick<typeof es, 'solarPhysics'>
 
 /** The page in the language of `messages`. The route passes the request's catalogue. */
 export function getSolarAstrophysicsContent({
   solarPhysics,
-  common,
 }: SolarAstrophysicsMessages): SolarAstrophysicsContent {
   const { hero, overview } = solarPhysics
 
@@ -62,6 +73,7 @@ export function getSolarAstrophysicsContent({
       flow: {
         title: overview.flow.title,
         steps: flowStepIds.map((id) => overview.flow.steps[id]),
+        stepLinks: flowStepIds.map((id) => flowStepHrefs[id] ?? null),
         caption: overview.flow.caption,
       },
     },
@@ -73,7 +85,6 @@ export function getSolarAstrophysicsContent({
         label: solarPhysics.nextSteps.links[id],
       })),
     },
-    backLink: { href: '/#areas-de-trabajo', label: common.backToWorkAreas },
   }
 }
 

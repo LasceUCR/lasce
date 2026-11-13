@@ -4085,12 +4085,27 @@ a {
   font-weight: 700;
 }
 
-.concept-flow-steps span {
+.concept-flow-steps a {
   padding: 8px 14px;
   border-radius: 999px;
   background: var(--white);
   color: var(--navy-deep);
   font-size: 14px;
+}
+
+.concept-flow-steps a {
+  text-decoration: none;
+}
+
+.concept-flow-steps a:hover,
+.concept-flow-steps a:focus-visible {
+  background: #e8f6fc;
+  text-decoration: underline;
+}
+
+.concept-flow-steps a:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 2px;
 }
 
 .concept-flow-arrow {
