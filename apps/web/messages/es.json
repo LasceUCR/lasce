@@ -41,7 +41,8 @@
     "institutionsLabel": "Instituciones",
     "navigationLabel": "Enlaces del pie de página",
     "contact": "Contacto",
-    "rightsReserved": "Todos los derechos reservados."
+    "rightsReserved": "Todos los derechos reservados.",
+    "team": "Equipo de desarrollo"
   },
   "languageSwitcher": {
     "label": "Idioma"
@@ -2525,6 +2526,47 @@
       "body": "Tu sesión en este navegador terminará y tendrás que volver a ingresar.",
       "confirm": "Cerrar sesión",
       "cancel": "Cancelar"
+    }
+  },
+  "team": {
+    "meta": {
+      "title": "Equipo de desarrollo | LASCE",
+      "description": "Conozca al equipo estudiantil que desarrolló el portal de LASCE y el contexto del proyecto: origen, motivación y objetivos."
+    },
+    "hero": {
+      "kicker": "Portal público LASCE",
+      "title": "Equipo de desarrollo",
+      "lead": "El portal de LASCE fue construido por estudiantes de Ingeniería de Software de la Universidad de Costa Rica, como proyecto del curso Práctica Supervisada."
+    },
+    "team": {
+      "title": "Quiénes lo desarrollaron",
+      "intro": "Nueve estudiantes trabajaron en equipo, con la metodología ágil Scrum, para diseñar, construir, probar y entregar el portal.",
+      "emailLabel": "Correo electrónico",
+      "memberLabel": "Integrante del equipo de desarrollo"
+    },
+    "background": {
+      "title": "Contexto del proyecto",
+      "origin": {
+        "title": "Origen y motivación",
+        "body": "El Laboratorio de Astrofísica Solar y Clima Espacial (LASCE) necesitaba un sitio propio donde dar a conocer su investigación y compartir sus datos con la comunidad científica y con el público. El proyecto nació como la necesidad informática de una organización real, que es lo que el curso Práctica Supervisada (CI-0156) de la Escuela de Ciencias de la Computación e Informática pide al estudiantado."
+      },
+      "objectives": {
+        "title": "Objetivos",
+        "intro": "El portal busca:",
+        "item1": "Presentar a LASCE, sus áreas de trabajo, su investigación y sus colaboraciones de forma clara.",
+        "item2": "Poner a disposición de cualquier persona información y datos científicos del laboratorio.",
+        "item3": "Permitir que el propio laboratorio mantenga su contenido actualizado.",
+        "item4": "Servir como ejercicio de desarrollo de software de calidad para el equipo estudiantil."
+      },
+      "process": {
+        "title": "Proceso de desarrollo",
+        "body": "El trabajo se organizó en iteraciones con Scrum. En cada una el equipo analizó las necesidades de LASCE, planificó las historias de usuario, construyó y probó el software, y presentó una versión del producto al laboratorio para recibir sus comentarios."
+      }
+    },
+    "acknowledgments": {
+      "title": "Agradecimientos",
+      "body": "Agradecemos al personal investigador de LASCE y del Centro de Investigaciones Espaciales (CINESPA) por su tiempo y su confianza, y al profesor Luis Gustavo Esquivel Quirós, docente del curso, por su guía durante el proyecto.",
+      "notice": "Este proyecto se desarrolló en el curso Práctica Supervisada de la Escuela de Ciencias de la Computación e Informática, Universidad de Costa Rica."
     }
   },
   "initiatives": {

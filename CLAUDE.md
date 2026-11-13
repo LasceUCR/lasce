@@ -61,6 +61,7 @@ working through Claude Code.
 | How is the collaborations page built?                | [`docs/collaborations.md`](docs/collaborations.md)                         |
 | How are the scientific tools managed?                | [`docs/scientific-tools.md`](docs/scientific-tools.md)                     |
 | How does a visitor see LASCE contact information?    | [`docs/contact.md`](docs/contact.md)                                       |
+| Who built the portal, and where is that credited?    | [`docs/development-team.md`](docs/development-team.md)                     |
 | How does a visitor register an account?              | [`docs/registration.md`](docs/registration.md)                             |
 | How do users sign in, and how is a page protected?   | [`docs/sessions.md`](docs/sessions.md)                                     |
 | How do I get an account to sign in locally?          | [`docs/user-administration.md`](docs/user-administration.md)               |

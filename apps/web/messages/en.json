@@ -41,7 +41,8 @@
     "institutionsLabel": "Institutions",
     "navigationLabel": "Footer links",
     "contact": "Contact",
-    "rightsReserved": "All rights reserved."
+    "rightsReserved": "All rights reserved.",
+    "team": "Development team"
   },
   "languageSwitcher": {
     "label": "Language"
@@ -2525,6 +2526,47 @@
       "body": "Your session in this browser will end and you will have to sign in again.",
       "confirm": "Sign out",
       "cancel": "Cancel"
+    }
+  },
+  "team": {
+    "meta": {
+      "title": "Development team | LASCE",
+      "description": "Meet the student team that built the LASCE portal, and the project background: origins, motivation and objectives."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "Development team",
+      "lead": "The LASCE portal was built by Software Engineering students at the University of Costa Rica as a project of the Supervised Practice course."
+    },
+    "team": {
+      "title": "Who built it",
+      "intro": "Nine students worked together, using the Scrum agile methodology, to design, build, test and deliver the portal.",
+      "emailLabel": "Email",
+      "memberLabel": "Development team member"
+    },
+    "background": {
+      "title": "Project background",
+      "origin": {
+        "title": "Origins and motivation",
+        "body": "The Solar Astrophysics and Space Weather Laboratory (LASCE) needed a site of its own to present its research and share its data with the scientific community and the public. The project began as the information needs of a real organization, which is what the Supervised Practice course (CI-0156) of the School of Computer Science and Informatics asks of its students."
+      },
+      "objectives": {
+        "title": "Objectives",
+        "intro": "The portal aims to:",
+        "item1": "Present LASCE, its work areas, its research and its collaborations clearly.",
+        "item2": "Make the laboratory's information and scientific data available to anyone.",
+        "item3": "Let the laboratory keep its own content up to date.",
+        "item4": "Serve as a quality software development exercise for the student team."
+      },
+      "process": {
+        "title": "Development process",
+        "body": "The work was organized in Scrum iterations. In each one the team analyzed LASCE's needs, planned user stories, built and tested the software, and presented a version of the product to the laboratory to gather its feedback."
+      }
+    },
+    "acknowledgments": {
+      "title": "Acknowledgments",
+      "body": "We thank the researchers of LASCE and the Space Research Center (CINESPA) for their time and trust, and Professor Luis Gustavo Esquivel Quirós, the course instructor, for his guidance throughout the project.",
+      "notice": "This project was developed in the Supervised Practice course of the School of Computer Science and Informatics, University of Costa Rica."
     }
   },
   "initiatives": {
