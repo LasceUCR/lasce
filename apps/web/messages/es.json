@@ -424,6 +424,7 @@
       "titleField": "Título ({language})",
       "bodyField": "Texto ({language})",
       "bodyHint": "Separe los párrafos con una línea en blanco.",
+      "remainingCharacters": "Quedan {remaining} de {max} caracteres.",
       "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título o el texto, revíselo también.",
       "legacyNoTranslation": "Esta sección aún no tiene versión en inglés. Para cambiar el título o el texto debe completar ambos idiomas.",
       "cancel": "Cancelar",
