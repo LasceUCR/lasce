@@ -71,7 +71,6 @@ export function getFooterContent(t: (key: FooterMessageKey) => string): PublicFo
       {
         label: 'LASCE',
         name: 'Laboratorio de Astrofísica Solar y Clima Espacial',
-        href: 'https://lasce.ucr.ac.cr/',
       },
     ],
     institutionsLabel: t('institutionsLabel'),
