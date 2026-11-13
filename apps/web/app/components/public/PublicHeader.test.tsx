@@ -149,8 +149,11 @@ describe('PublicHeader', () => {
     renderHeader()
 
     expect(screen.getByAltText('Universidad de Costa Rica')).toBeInTheDocument()
+    expect(screen.getByAltText('Logotipo de la Universidad de Costa Rica')).toBeInTheDocument()
     expect(screen.getByAltText('Centro de Investigaciones Espaciales')).toBeInTheDocument()
-    expect(screen.getByAltText('Laboratorio de Ciencias Espaciales')).toBeInTheDocument()
+    expect(
+      screen.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial'),
+    ).toBeInTheDocument()
   })
 
   test.each([
