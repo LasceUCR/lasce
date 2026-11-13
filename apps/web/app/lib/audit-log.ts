@@ -94,6 +94,8 @@ export interface ActivityItem {
   /** The event's metadata, which lets the summary be rendered in the site's language. */
   metadata: Prisma.JsonValue | null
   actorType: AuditActorType
+  /** What was acted on, e.g. "publication". Null when there is no single target. */
+  entityType?: string | null
   /** The account's name; null for the system and the worker, or once the account is deleted. */
   actorName: string | null
   /** ISO 8601. */
@@ -102,6 +104,18 @@ export interface ActivityItem {
 
 export function isActorType(value: string): value is AuditActorType {
   return (AUDIT_ACTOR_TYPES as readonly string[]).includes(value)
+}
+
+/** The URL in `/administracion/auditoria` filtered to this item's entity or action. */
+export function auditItemHref(item: { entityType?: string | null; action?: string }): string {
+  const pathname = '/administracion/auditoria'
+  if (item.entityType) {
+    return `${pathname}?entity=${encodeURIComponent(item.entityType)}`
+  }
+  if (item.action) {
+    return `${pathname}?action=${encodeURIComponent(item.action)}`
+  }
+  return pathname
 }
 
 /** The newest events first. */
@@ -115,6 +129,7 @@ export async function getRecentActivity(limit = RECENT_ACTIVITY_LIMIT): Promise<
       summary: true,
       metadata: true,
       actorType: true,
+      entityType: true,
       createdAt: true,
       actor: { select: { fullName: true } },
     },
@@ -125,6 +140,7 @@ export async function getRecentActivity(limit = RECENT_ACTIVITY_LIMIT): Promise<
     action: row.action,
     summary: row.summary,
     metadata: row.metadata,
+    entityType: row.entityType,
     // The CHECK constraint keeps other values out; `system` covers a row written around it.
     actorType: isActorType(row.actorType) ? row.actorType : 'system',
     actorName: row.actor?.fullName ?? null,

@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { ResumenPage } from '@/app/components/administracion/ResumenPage'
 import { getRecentActivity } from '@/app/lib/audit-log'
+import { userHasPermission } from '@/app/lib/auth/authorization'
 import { requireUser } from '@/app/lib/auth/session'
 import { getContentSummary } from '@/app/lib/content-summary'
 
@@ -17,7 +18,18 @@ export const dynamic = 'force-dynamic'
 export default async function AdministracionPage() {
   await requireUser('/administracion')
 
-  const [summary, activity] = await Promise.all([getContentSummary(), getRecentActivity()])
+  const [summary, activity, canViewAuditLog] = await Promise.all([
+    getContentSummary(),
+    getRecentActivity(),
+    userHasPermission('view_audit_log'),
+  ])
 
-  return <ResumenPage activity={activity} now={new Date()} summary={summary} />
+  return (
+    <ResumenPage
+      activity={activity}
+      canViewAuditLog={canViewAuditLog}
+      now={new Date()}
+      summary={summary}
+    />
+  )
 }
