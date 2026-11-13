@@ -212,7 +212,7 @@ test('displays solar astrophysics information without authentication', async ({ 
   await expect(page.getByRole('heading', { name: 'Actividad solar' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Relación Sol-Tierra' })).toBeVisible()
   await expect(
-    page.getByRole('heading', { name: 'El trabajo de LASCE en Física Solar' }),
+    page.getByRole('heading', { name: '2. El trabajo de LASCE en Física Solar' }),
   ).toBeVisible()
   await expect(page.getByText(/Laboratorio de Astrofísica Solar y Clima Espacial/)).toBeVisible()
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
@@ -330,17 +330,108 @@ test('navigates with the mobile menu and closes it afterwards', async ({ page })
   ).toHaveAttribute('aria-current', 'page')
 })
 
-test('shows the UCR, CINESPA and LASCE brand without overflow on a phone', async ({ page }) => {
+test('shows the reduced UCR shield and LASCE lockup on phones, without overflow', async ({
+  page,
+}) => {
+  await page.goto('/')
+  const header = page.locator('.site-header')
+
+  for (const width of [320, 375, 390]) {
+    await page.setViewportSize({ width, height: 844 })
+
+    // The shield carries the university's name; LASCE keeps its logo. Both stay legible.
+    const shield = header.getByAltText('Universidad de Costa Rica', { exact: true })
+    const lasce = header.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial')
+    await expect(shield).toBeVisible()
+    await expect(lasce).toBeVisible()
+    expect((await shield.boundingBox())!.height).toBeGreaterThanOrEqual(36)
+    expect((await lasce.boundingBox())!.height).toBeGreaterThanOrEqual(28)
+
+    // The signature's small lettering and CINESPA are display: none, so out of the tree too.
+    await expect(header.locator('.ucr-signature-logo')).toBeHidden()
+    await expect(header.getByAltText('Centro de Investigaciones Espaciales')).toBeHidden()
+
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true)
+  }
+})
+
+test('keeps the full UCR, CINESPA and LASCE lockup on wider screens', async ({ page }) => {
+  await page.goto('/')
+  const header = page.locator('.site-header')
+
+  for (const width of [768, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await expect(header.getByAltText('Universidad de Costa Rica', { exact: true })).toBeVisible()
+    await expect(header.locator('.ucr-signature-logo')).toBeVisible()
+    await expect(header.getByAltText('Centro de Investigaciones Espaciales')).toBeVisible()
+    await expect(
+      header.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial'),
+    ).toBeVisible()
+  }
+})
+
+test('closes the mobile menu with Escape and returns focus to its toggle', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/contacto')
+
+  const menu = page.locator('.mobile-menu')
+  await page.getByLabel('Abrir navegación', { exact: true }).click()
+  await expect(menu).toHaveAttribute('open', '')
+  const toggle = page.getByLabel('Cerrar navegación', { exact: true })
+  await expect(toggle).toBeVisible()
+
+  await page
+    .getByRole('navigation', { name: 'Navegación móvil' })
+    .getByRole('link', { name: 'Datos', exact: true })
+    .focus()
+  await page.keyboard.press('Escape')
+
+  await expect(menu).not.toHaveAttribute('open', '')
+  await expect(page.getByLabel('Abrir navegación', { exact: true })).toBeFocused()
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
+})
+
+test('gives the live badge, its close button and the footer links 44px touch targets on phones', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 812 })
   await page.goto('/')
 
-  const header = page.locator('.site-header')
-  await expect(header.getByAltText('Universidad de Costa Rica')).toBeVisible()
-  await expect(header.getByAltText('Centro de Investigaciones Espaciales')).toBeVisible()
-  await expect(header.getByAltText('Laboratorio de Ciencias Espaciales')).toBeVisible()
+  // Whether every point of a 44x44 square centred on the element still hits it.
+  async function hitArea(selector: string) {
+    return page
+      .locator(selector)
+      .first()
+      .evaluate((element) => {
+        const rect = element.getBoundingClientRect()
+        const x = rect.left + rect.width / 2
+        const y = rect.top + rect.height / 2
+        const edges: Array<[number, number]> = [
+          [x - 21, y],
+          [x + 21, y],
+          [x, y - 21],
+          [x, y + 21],
+        ]
+        return edges.every(([px, py]) => {
+          const hit = document.elementFromPoint(px, py)
+          return hit !== null && (hit === element || element.contains(hit))
+        })
+      })
+  }
 
-  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
-  expect(fits).toBe(true)
+  await page.locator('.hero-live-trigger').click()
+  await expect(page.locator('.hero-live-close')).toBeVisible()
+  expect(await hitArea('.hero-live-trigger')).toBe(true)
+  expect(await hitArea('.hero-live-close')).toBe(true)
+
+  for (const link of await page.locator('.footer-links a, .footer-institutions a').all()) {
+    await link.scrollIntoViewIfNeeded()
+    const box = (await link.boundingBox())!
+    expect(box.width).toBeGreaterThanOrEqual(44)
+    expect(box.height).toBeGreaterThanOrEqual(44)
+  }
 })
 
 test('keeps the brand clear of the desktop navigation', async ({ page }) => {
@@ -551,14 +642,14 @@ for (const { locale, title, description, backLink, homeHeading } of [
   })
 }
 
-test('displays academic activities in the news section, with the description in the card', async ({
+test('displays academic activities in their dedicated section, with the description in the card', async ({
   page,
 }) => {
-  const response = await page.goto('/noticias')
+  const response = await page.goto('/actividades-academicas')
 
   expect(response?.status()).toBe(200)
   await expect(
-    page.getByRole('heading', { level: 2, name: 'Actividades académicas' }),
+    page.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
   ).toBeVisible()
 
   await expect(
