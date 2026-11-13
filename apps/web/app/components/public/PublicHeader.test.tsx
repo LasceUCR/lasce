@@ -14,6 +14,27 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/' }))
 
 type Role = 'VISITOR' | 'ASSISTANT' | 'ADMIN'
 
+const brandAltTexts: { locale: Locale; altTexts: string[] }[] = [
+  {
+    locale: 'es',
+    altTexts: [
+      'Logotipo de la Universidad de Costa Rica',
+      'Universidad de Costa Rica',
+      'Centro de Investigaciones Espaciales',
+      'Laboratorio de Astrofísica Solar y Clima Espacial',
+    ],
+  },
+  {
+    locale: 'en',
+    altTexts: [
+      'Logo of Universidad de Costa Rica',
+      'Universidad de Costa Rica',
+      'Centro de Investigaciones Espaciales',
+      'Laboratorio de Astrofísica Solar y Clima Espacial',
+    ],
+  },
+]
+
 /**
  * Signs `name` in as far as the header can tell: the readable account cookie,
  * which may carry a forged `cookieRole`, plus what `GET /api/session` answers
@@ -145,32 +166,16 @@ describe('PublicHeader', () => {
     ).toHaveAttribute('href', '/administracion')
   })
 
-  test.each([
-    {
-      locale: 'es',
-      altTexts: [
-        'Logotipo de la Universidad de Costa Rica',
-        'Universidad de Costa Rica',
-        'Centro de Investigaciones Espaciales',
-        'Laboratorio de Astrofísica Solar y Clima Espacial',
-      ],
-    },
-    {
-      locale: 'en',
-      altTexts: [
-        'Logo of Universidad de Costa Rica',
-        'Universidad de Costa Rica',
-        'Centro de Investigaciones Espaciales',
-        'Laboratorio de Astrofísica Solar y Clima Espacial',
-      ],
-    },
-  ])('identifies UCR, CINESPA and LASCE in the $locale header brand', ({ locale, altTexts }) => {
-    renderHeader({ locale })
+  test.each(brandAltTexts)(
+    'identifies UCR, CINESPA and LASCE in the $locale header brand',
+    ({ locale, altTexts }) => {
+      renderHeader({ locale })
 
-    for (const altText of altTexts) {
-      expect(screen.getByAltText(altText)).toBeInTheDocument()
-    }
-  })
+      for (const altText of altTexts) {
+        expect(screen.getByAltText(altText)).toBeInTheDocument()
+      }
+    },
+  )
 
   test.each([
     {
