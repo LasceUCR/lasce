@@ -1,3 +1,5 @@
+import type { AssetUploadValidation } from '../const/storageConfig'
+
 /**
  * Contract for an asset storage backend.
  *
@@ -13,7 +15,7 @@ export interface IAssetStorage {
    * equivalent) before touching the backend, so an invalid request never
    * reaches it.
    */
-  createUpload(file: File, bucket?: string): Promise<string>
+  createUpload(file: File, bucket?: string, validation?: AssetUploadValidation): Promise<string>
 
   /**
    * Deletes an asset. Must be idempotent — deleting an already-missing key is
@@ -40,5 +42,5 @@ export interface IAssetStorage {
   ensureBucket(bucket: string): Promise<void>
 
   /** Verify the integrity of an asset. */
-  verifyAsset(file: File): void
+  verifyAsset(file: File, validation?: AssetUploadValidation): void
 }

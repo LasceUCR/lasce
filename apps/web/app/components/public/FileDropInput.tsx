@@ -8,8 +8,8 @@ import { IconButton } from './IconButton'
 
 const DEFAULT_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif'
 
-/** Mirrors MINIO service's 25 MiB cap so an oversize file is refused before it is sent. */
-const MAX_FILE_BYTES = 25 * 1024 * 1024
+/** Mirrors the default storage limit so oversize files are refused before they are sent. */
+const DEFAULT_MAX_FILE_BYTES = 25 * 1024 * 1024
 
 function isAccepted(file: File, accept: string): boolean {
   const allowed = accept.split(',').map((entry) => entry.trim().toLowerCase())
@@ -27,6 +27,7 @@ function isAccepted(file: File, accept: string): boolean {
 export interface FileDropInputProps {
   label: string
   accept?: string
+  maxFileSizeBytes?: number
   existingImageUrl?: string
   onFileSelect: (file: File | null) => void
   helperText?: string
@@ -41,6 +42,7 @@ export interface FileDropInputProps {
 export function FileDropInput({
   label,
   accept = DEFAULT_ACCEPT,
+  maxFileSizeBytes = DEFAULT_MAX_FILE_BYTES,
   existingImageUrl,
   onFileSelect,
   helperText,
@@ -79,7 +81,7 @@ export function FileDropInput({
       if (inputRef.current) inputRef.current.value = ''
       return
     }
-    if (file && file.size > MAX_FILE_BYTES) {
+    if (file && file.size > maxFileSizeBytes) {
       setRejection(resolvedRejectionSize)
       if (inputRef.current) inputRef.current.value = ''
       return

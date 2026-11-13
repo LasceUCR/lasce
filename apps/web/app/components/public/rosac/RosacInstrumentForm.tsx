@@ -15,6 +15,7 @@ import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadInstrumentImage } from '@/app/(public)/radioastronomia/actions'
 import { defaultLocale, isLocale, localeLabels, locales, type Locale } from '@/app/lib/i18n/config'
 import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
+import { ROSAC_IMAGE_ACCEPT, ROSAC_IMAGE_MAX_BYTES } from '@/app/lib/rosac-upload'
 import {
   confirmationsStillNeeded,
   contentFieldLang,
@@ -116,6 +117,7 @@ export function RosacInstrumentForm({
   ref,
 }: RosacInstrumentFormProps) {
   const t = useTranslations('rosac.editor')
+  const tFileDrop = useTranslations('fileDrop')
   const tRosacProducts = useTranslations('rosac.instruments.products')
   const siteLocale = useLocale()
   const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
@@ -395,10 +397,12 @@ export function RosacInstrumentForm({
       </LanguageTabs>
 
       <FileDropInput
+        accept={ROSAC_IMAGE_ACCEPT}
         errorMessage={imageError}
         existingImageUrl={!imageRemoved && imageSrc ? imageSrc : undefined}
         helperText={t('instruments.imageHelp')}
         label={t('instruments.imageLabel')}
+        maxFileSizeBytes={ROSAC_IMAGE_MAX_BYTES}
         onFileSelect={(file) => {
           setImageFile(file)
           if (!file) {
@@ -407,6 +411,8 @@ export function RosacInstrumentForm({
             setImageRemoved(false)
           }
         }}
+        rejectionFormatMessage={tFileDrop('rosacRejectionFormat')}
+        rejectionSizeMessage={tFileDrop('rosacRejectionSize')}
         required
       />
 

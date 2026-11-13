@@ -201,7 +201,7 @@ describe('RosacAcknowledgmentForm', () => {
       'Instituto Tecnológico',
     )
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['logo'], 'logo.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['logo'], 'logo.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
 
     expect(await screen.findByText('El logo es demasiado grande.')).toBeInTheDocument()
@@ -221,7 +221,7 @@ describe('RosacAcknowledgmentForm', () => {
       'Instituto Tecnológico',
     )
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['logo'], 'logo.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['logo'], 'logo.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
 
     expect(

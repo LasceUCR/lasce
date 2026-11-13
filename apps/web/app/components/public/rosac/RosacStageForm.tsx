@@ -17,6 +17,7 @@ import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadConstructionStageImage } from '@/app/(public)/radioastronomia/actions'
 import { defaultLocale, isLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
 import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
+import { ROSAC_IMAGE_ACCEPT, ROSAC_IMAGE_MAX_BYTES } from '@/app/lib/rosac-upload'
 import {
   confirmationsStillNeeded,
   contentFieldLang,
@@ -62,6 +63,7 @@ interface EditableImageItem {
 
 export function RosacStageForm({ stage, onSave, onCancel, ref }: RosacStageFormProps) {
   const t = useTranslations('rosac.editor')
+  const tFileDrop = useTranslations('fileDrop')
   const siteLocale = useLocale()
   const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
   const stored = stage.editing?.content ?? {
@@ -528,13 +530,17 @@ export function RosacStageForm({ stage, onSave, onCancel, ref }: RosacStageFormP
       >
         <div className="cms-form">
           <FileDropInput
+            accept={ROSAC_IMAGE_ACCEPT}
             errorMessage={addPhotoError}
             helperText={t('stages.addModal.fileHelp')}
             label={t('stages.addModal.fileLabel')}
+            maxFileSizeBytes={ROSAC_IMAGE_MAX_BYTES}
             onFileSelect={(file) => {
               setAddPhotoFile(file)
               if (file) setAddPhotoError(null)
             }}
+            rejectionFormatMessage={tFileDrop('rosacRejectionFormat')}
+            rejectionSizeMessage={tFileDrop('rosacRejectionSize')}
             required
           />
 

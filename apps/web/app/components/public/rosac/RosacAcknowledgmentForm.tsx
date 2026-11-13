@@ -9,6 +9,7 @@ import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDi
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadAcknowledgmentLogo } from '@/app/(public)/radioastronomia/actions'
 import type { RosacAcknowledgment } from '@/app/lib/rosac'
+import { ROSAC_IMAGE_ACCEPT, ROSAC_IMAGE_MAX_BYTES } from '@/app/lib/rosac-upload'
 
 export interface RosacAcknowledgmentFormValues {
   name: string
@@ -188,6 +189,7 @@ export function RosacAcknowledgmentForm({
   ref,
 }: RosacAcknowledgmentFormProps) {
   const t = useTranslations('rosac.editor')
+  const tFileDrop = useTranslations('fileDrop')
   const locale = useLocale()
   const formId = useId()
   const [name, setName] = useState(institution?.name ?? '')
@@ -391,10 +393,12 @@ export function RosacAcknowledgmentForm({
 
       {isCustomMode ? (
         <FileDropInput
+          accept={ROSAC_IMAGE_ACCEPT}
           errorMessage={logoError}
           existingImageUrl={!logoRemoved && customSrc ? customSrc : undefined}
           helperText={t('acknowledgments.logoFileHelp')}
           label={t('acknowledgments.logoFileLabel')}
+          maxFileSizeBytes={ROSAC_IMAGE_MAX_BYTES}
           onFileSelect={(file) => {
             setLogoFile(file)
             if (!file) {
@@ -403,6 +407,8 @@ export function RosacAcknowledgmentForm({
               setLogoRemoved(false)
             }
           }}
+          rejectionFormatMessage={tFileDrop('rosacRejectionFormat')}
+          rejectionSizeMessage={tFileDrop('rosacRejectionSize')}
           required
         />
       ) : activeLogoSrc ? (

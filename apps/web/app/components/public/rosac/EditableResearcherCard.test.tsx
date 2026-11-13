@@ -8,6 +8,7 @@ import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadResearcherImage: vi.fn(),
+  uploadRosacResearcherImage: vi.fn(),
 }))
 
 import { EditableResearcherCard, type EditableResearcherCardProps } from './EditableResearcherCard'

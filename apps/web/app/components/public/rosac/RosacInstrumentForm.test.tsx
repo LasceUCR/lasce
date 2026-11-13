@@ -258,7 +258,7 @@ describe('RosacInstrumentForm', () => {
     renderForm({ ...editArgs, onSave })
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['imagen'], 'nueva.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
@@ -274,7 +274,7 @@ describe('RosacInstrumentForm', () => {
     renderForm({ ...editArgs, onSave })
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['imagen'], 'nueva.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(

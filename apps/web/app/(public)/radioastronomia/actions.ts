@@ -1,20 +1,23 @@
 'use server'
 
 import { userHasPermission } from '@/app/lib/auth/authorization'
+import { ROSAC_IMAGE_UPLOAD_VALIDATION } from '@/app/lib/rosac-upload'
 import { assetStorage } from '@/app/services/container'
 import { InvalidFileSizeError, InvalidFileTypeError } from '@/app/services/storage'
+
+function getImageValidationError(error: unknown): string | null {
+  if (error instanceof InvalidFileSizeError) return 'El archivo no debe superar 10 MB.'
+  if (error instanceof InvalidFileTypeError)
+    return 'Solo se permiten archivos JPG, PNG, WebP, AVIF o SVG.'
+  return null
+}
 
 export type UploadResearcherImageResult =
   { ok: true; imageUrl: string } | { ok: false; error: string }
 
-/**
- * Uploads a researcher's portrait to the configured bucket and returns its
- * permanent public URL. Requires either `create_components` or
- * `edit_components`, since `ResearcherForm` calls this for both a new
- * profile and an edit.
- */
-export async function uploadResearcherImage(
+async function uploadResearcherImageWithValidation(
   formData: FormData,
+  validation?: typeof ROSAC_IMAGE_UPLOAD_VALIDATION,
 ): Promise<UploadResearcherImageResult> {
   const [canCreate, canEdit] = await Promise.all([
     userHasPermission('create_components'),
@@ -30,14 +33,35 @@ export async function uploadResearcherImage(
   }
 
   try {
-    const objectKey = await assetStorage.createUpload(file)
+    const objectKey = await assetStorage.createUpload(file, undefined, validation)
     return { ok: true, imageUrl: assetStorage.getPublicUrl(objectKey) }
   } catch (error) {
-    if (error instanceof InvalidFileSizeError || error instanceof InvalidFileTypeError) {
+    if (validation) {
+      const validationError = getImageValidationError(error)
+      if (validationError) return { ok: false, error: validationError }
+    } else if (error instanceof InvalidFileSizeError || error instanceof InvalidFileTypeError) {
       return { ok: false, error: error.message }
     }
     throw error
   }
+}
+
+/**
+ * Uploads a researcher's portrait to the configured bucket and returns its
+ * permanent public URL. Requires either `create_components` or
+ * `edit_components`, since `ResearcherForm` calls this for both a new
+ * profile and an edit.
+ */
+export async function uploadResearcherImage(
+  formData: FormData,
+): Promise<UploadResearcherImageResult> {
+  return uploadResearcherImageWithValidation(formData)
+}
+
+export async function uploadRosacResearcherImage(
+  formData: FormData,
+): Promise<UploadResearcherImageResult> {
+  return uploadResearcherImageWithValidation(formData, ROSAC_IMAGE_UPLOAD_VALIDATION)
 }
 
 export type UploadConstructionStageImageResult =
@@ -60,12 +84,15 @@ export async function uploadConstructionStageImage(
   }
 
   try {
-    const objectKey = await assetStorage.createUpload(file)
+    const objectKey = await assetStorage.createUpload(
+      file,
+      undefined,
+      ROSAC_IMAGE_UPLOAD_VALIDATION,
+    )
     return { ok: true, imageUrl: assetStorage.getPublicUrl(objectKey) }
   } catch (error) {
-    if (error instanceof InvalidFileSizeError || error instanceof InvalidFileTypeError) {
-      return { ok: false, error: error.message }
-    }
+    const validationError = getImageValidationError(error)
+    if (validationError) return { ok: false, error: validationError }
     throw error
   }
 }
@@ -90,12 +117,15 @@ export async function uploadInstrumentImage(
   }
 
   try {
-    const objectKey = await assetStorage.createUpload(file)
+    const objectKey = await assetStorage.createUpload(
+      file,
+      undefined,
+      ROSAC_IMAGE_UPLOAD_VALIDATION,
+    )
     return { ok: true, imageUrl: assetStorage.getPublicUrl(objectKey) }
   } catch (error) {
-    if (error instanceof InvalidFileSizeError || error instanceof InvalidFileTypeError) {
-      return { ok: false, error: error.message }
-    }
+    const validationError = getImageValidationError(error)
+    if (validationError) return { ok: false, error: validationError }
     throw error
   }
 }
@@ -120,12 +150,15 @@ export async function uploadAcknowledgmentLogo(
   }
 
   try {
-    const objectKey = await assetStorage.createUpload(file)
+    const objectKey = await assetStorage.createUpload(
+      file,
+      undefined,
+      ROSAC_IMAGE_UPLOAD_VALIDATION,
+    )
     return { ok: true, imageUrl: assetStorage.getPublicUrl(objectKey) }
   } catch (error) {
-    if (error instanceof InvalidFileSizeError || error instanceof InvalidFileTypeError) {
-      return { ok: false, error: error.message }
-    }
+    const validationError = getImageValidationError(error)
+    if (validationError) return { ok: false, error: validationError }
     throw error
   }
 }
