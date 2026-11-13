@@ -10,7 +10,11 @@ import { getSpaceWeatherSection } from '@/app/lib/space-weather-section'
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('spaceWeather.meta')
 
-  return { title: t('title'), description: t('description') }
+  return {
+    title: t('title'),
+    description: t('description'),
+    alternates: { canonical: '/clima-espacial' },
+  }
 }
 
 // The Costa Rica card is read from the database, and the editor's controls depend on the session.

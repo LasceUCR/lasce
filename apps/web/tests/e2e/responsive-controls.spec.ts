@@ -99,7 +99,8 @@ test.describe('responsive native controls', () => {
       // A trial click runs the checks a real tap needs (visible, stable, receives the pointer)
       // without leaving the page. Following the links is covered by public-portal.spec.ts.
       await lastLink.click({ trial: true })
-      await page.getByLabel('Abrir navegación').click()
+      // While open, the toggle is labelled for what it does next.
+      await page.getByLabel('Cerrar navegación').click()
       await expect(navigation).toBeHidden()
       await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
       await page.goto('/contacto')
