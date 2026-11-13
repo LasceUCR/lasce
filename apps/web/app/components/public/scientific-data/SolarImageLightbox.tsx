@@ -7,8 +7,13 @@ import { useId } from 'react'
 import { Lightbox } from '../Lightbox'
 import type { ScientificImage } from '@/app/lib/scientific-data'
 
+/** A solar image with the alternative text the page wrote for it. */
+export interface DescribedSolarImage extends ScientificImage {
+  alt: string
+}
+
 export interface SolarImageLightboxProps {
-  image: ScientificImage
+  image: DescribedSolarImage
   /** One-based place of `image` in the sequence, ready to display. */
   position: number
   /** Images the arrows page through. */

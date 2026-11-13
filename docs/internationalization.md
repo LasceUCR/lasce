@@ -182,18 +182,22 @@ inventory taken when the static pages were migrated.
 | `/actividades-academicas`                | `academicActivities`                            | `lib/academic-activities.ts`, `AcademicActivitiesPage.tsx`                                                     |
 | `/galeria/**`                            | `gallery`                                       | `gallery/*`, `lib/gallery.ts`, `(public)/galeria/**`                                                           |
 | `/publicaciones`                         | `publications`                                  | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                                                          |
-| `/noticias`                              | `news`, `academicActivities`                    | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
+| `/noticias`                              | `news`                                          | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
 | `/radioastronomia`                       | `rosac`                                         | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`                                        |
 | `/datos`                                 | `scientificData`                                | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts`                                  |
+| `/cuenta`                                | `account`, `common`                             | `(public)/cuenta/page.tsx`, `AccountSummary.tsx`, `SignOutButton.tsx`                                          |
 | `/administracion/permisos`               | `administration.permissions`, `access`          | `RolePermissions{Page,Editor}.tsx`, `lib/access-messages.ts`                                                   |
+| `/administracion/usuarios`               | `administration.users`, `access`                | `Users*.tsx`, `UserRole*.tsx`, `UserDetailsDialog.tsx`, `lib/user-administration.ts`                           |
 
 The top menu's user dropdown (`AccountLinks.tsx`, `AccountMenu.tsx`, its mobile equivalent, and
-the shared `SignOutButton.tsx` confirmation dialog) reads its copy from the `account` namespace:
-sign-in/out labels, "Mi cuenta", "Administración", and the `roles` map keyed by `UserRole`. This
-is fixed UI chrome with no per-user content, so it is static catalogue copy, the same choice as
-`nav`/`footer`/`shell`, not database content like `/` or `/clima-espacial` below. `ROLE_LABELS` in
-`lib/auth/account.ts` stays Spanish-only: it also backs the `/administracion/usuarios` role list
-and the `/cuenta` page, both still untranslated.
+the shared `SignOutButton.tsx` confirmation dialog) and the `/cuenta` page (`(public)/cuenta/page.tsx`,
+`AccountSummary.tsx`) read their copy from the `account` namespace: page intro and metadata, profile
+field labels, sign-in/out labels, "Mi cuenta", "Administración", and the `roles` map keyed by
+`UserRole`. This is fixed UI chrome with no per-user content, so it is static catalogue copy, the
+same choice as `nav`/`footer`/`shell`, not database content like `/` or `/clima-espacial` below.
+`ROLE_LABELS` in `lib/auth/account.ts` stays Spanish-only: it backs the audit summaries stored in
+Spanish and serves as a Spanish fixture for tests. `/administracion/usuarios` names the roles from
+`access.roles` through `roleName`, like Permisos.
 
 On `/`, the hero banner's title and subtitle and the geomagnetic indices' descriptions are
 database content, edited in both languages in "Modo edición" ([`home-page.md`](home-page.md)).
@@ -222,21 +226,23 @@ validation and toasts (`editor`, `discardDialog`, `deleteDialog`, `validation`, 
 content in `news.news_record_translations`. Dates are formatted in the visitor's language by
 `getNewsPage()`; an item without an English version is shown in its base text, and a search runs
 on the text shown, in the visitor's language (see [`pagination.md`](pagination.md)). The page
-controls' own text is in `common.pagination`. The academic
-activities section above the news uses `academicActivities`. Each card links out to the original
+controls' own text is in `common.pagination`. The hero uses "Noticias" / "News", the standard
+portal kicker and a short news introduction, without coverage or outreach wording. Its copy and
+metadata are in `news.page`. Academic activities
+appear only on `/actividades-academicas`, using `academicActivities`. Each news card links out to the original
 article, which is the item's detail view: there is no news page of its own to translate.
 
 `/nosotros` is translated, database content included: the fixed copy, the editor labels and
-dialogs of the activity cards (`nosotros.activities.form`) and the researcher messages and the
-labels of the bilingual part of the researcher editor (`nosotros.researchers`, `form`), with the
-researcher create, edit and delete feedback in the shared `researchers.*` namespace. The
-activity cards and the role and description of the researcher profiles are bilingual. The rest of
-the researcher editor (photo, name, contact, institution and its dialogs) comes from the
-components shared with ROSAC (`ResearcherForm`, `EditableResearcherCard`, `TeamGallery`), which
-still show Spanish; they turn the bilingual part on only when `/nosotros` passes `translation`.
-The API's own error messages are still Spanish. ROSAC researchers temporarily take their English
-translations from the message catalogue (`en.json` under `rosac.team.people` via
-`localizeResearchers`) until a dedicated translation table is introduced.
+dialogs of the activity cards (`nosotros.activities.form`), the researcher messages and labels of
+the bilingual part of the researcher editor (`nosotros.researchers`, `form`), and the researcher
+card, gallery controls and editor interface in the shared `researchers.*` namespace (`ResearcherForm`,
+`EditableResearcherCard`, `TeamGallery`). The activity cards and the role and description of the
+researcher profiles are bilingual, backed by `nosotros_researcher_translations`. The shared researcher
+editor components, cards and the researcher API error messages follow the site's selected language.
+ROSAC researchers keep Spanish `role` and `description` on `researchers` and every other language
+in `researcher_translations`. `ResearcherForm` edits both languages. The original roster's English
+was copied from `en.json` (`rosac.team.people`) into that table. A profile that still has no
+English row falls back to the catalogue, via `localizeResearchers`, until an editor saves one.
 
 `/datos` has no database content; everything is `lib/scientific-data.ts` and the
 `scientific-data/*` components. `getScientificSources(messages)` follows the "content built on the
@@ -246,17 +252,25 @@ kinds and availability stay in the lib module, and only their copy is looked up 
 query form's own validation (`scientificData.validation`) is a schema factory,
 `getScientificDataQuerySchema(messages)`, called with `useTranslations` on the client and
 `getTranslations` in the `/api/scientific-data` route handler and the `requestResourceDownload`
-Server Action — the first case of either in this codebase. The download-eligibility chain under
-`services/downloads/` has no request context to translate from and is still Spanish, same as the
-rest of the "Not tied to one page" list below.
+Server Action — the first case of either in this codebase.
+
+A query result is built on the server, which has no catalogue of its own, so it carries codes, not
+copy: `origin.dataset` and `origin.resolution` instead of a provider and a notice, and no image alt
+text. `app/lib/scientific-data-copy.ts` turns it into the visitor's language:
+`localizeResultNames(result, sources)` takes the instrument, product and channel names from the
+catalogue, and `describeOrigin(origin, t)` reads `scientificData.origins`. The page uses them with
+`useTranslations`; the downloaded files use them through the `ExportCopy` that
+`requestResourceDownload` builds (see [`downloads.md`](downloads.md#exporters-exporters)), and
+the same action words the download refusals, which the service returns as bare reasons. SUVI image
+alt text is `scientificData.images.alt`, written by `SuviImageSequence`.
 
 ### Still to do
 
-| Route                | Copy lives in                                                      | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                                                                                              |
-| -------------------- | ------------------------------------------------------------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/acceso`, `/cuenta` | `lib/auth/login.ts`, `registration.ts`, `account.ts`               | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's own account links moved to the `account` namespace (see the Translated table above); `ROLE_LABELS`, `accountSummaryCopy` and the rest of this page's body copy are still Spanish-only |
-| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Permisos is done (see [`role-permissions.md`](role-permissions.md#languages)); role and permission names are in `access.*` for the other sections to reuse. The user-role flow still has hand-written plurals and `Intl.ListFormat('es')`. About 35 strings are demonstration data                                                                   |
-| `(public)/[section]` | inline in the page                                                 | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                                                                                         |
+| Route                | Copy lives in                                                      | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/acceso`            | `lib/auth/login.ts`, `registration.ts`                             | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's own account links and the `/cuenta` page moved to the `account` namespace (see the Translated table above)            |
+| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Permisos (see [`role-permissions.md`](role-permissions.md#languages)) and Usuarios (see [`user-administration.md`](user-administration.md#languages)) are done; role and permission names are in `access.*` for the other sections to reuse. About 35 strings are demonstration data |
+| `(public)/[section]` | inline in the page                                                 | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                         |
 
 ### Not tied to one page
 
@@ -264,9 +278,8 @@ rest of the "Not tied to one page" list below.
    (`lib/nosotros.ts`, `lib/auth/login.ts`, ...) become factories that take `t`.
    Server Actions and route handlers under `app/api/` call `getTranslations`; the cookie is
    available in both.
-2. **Formatting.** Four `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
-   (`cuenta/page.tsx`, `lib/auth/countries.ts`,
-   `services/downloads/exporters/png.ts`, `UserRoleChangeDialog.tsx`). Replace them with
+2. **Formatting.** Three `Intl.*` calls and one `localeCompare` hardcode `'es-CR'` or `'es'`
+   (`cuenta/page.tsx`, `lib/auth/countries.ts`, `UserRoleChangeDialog.tsx`). Replace them with
    next-intl's `useFormatter` / `getFormatter`, which follow the request's locale and time zone —
    `scientific-data/` (`ScientificDataExplorer.tsx`, `SolarToday.tsx`, `ScientificDataChart.tsx`)
    already does.
@@ -323,11 +336,13 @@ the editor's language tabs, transactions, optimistic concurrency and the API's e
   (`GeomagneticIndex`, description only), the contact cards on `/contacto` (`ContactChannel`:
   `title` and `description`; the icon, link and position are shared), research areas
   (`ResearchArea`), and the space weather page's sections (`SpaceWeatherSection`: `title` and
-  `body`). The same pattern is meant for `News`, `Researcher` (ROSAC), `GalleryAlbum` and
-  `GalleryMedia`, each with its own translation table holding only its translatable columns
-  (`title`, `abstract`, `description`, `paragraph`, `role`, `altText`, `yearsLabel`). As noted
-  above, ROSAC researchers temporarily take their English text from `en.json`
-  (`rosac.team.people`) until their translation table is created.
+  `body`), and `Researcher` (the ROSAC roster on `/radioastronomia`: `role` and an optional
+  `description` in `researcher_translations`; the name, institution, addresses and photo are
+  shared). The original roster's English was copied from the catalogue into that table. The same
+  pattern is meant for `News`, `GalleryAlbum` and `GalleryMedia`, each with its own translation
+  table holding only its translatable columns (`title`, `abstract`, `description`, `paragraph`,
+  `role`, `altText`, `yearsLabel`). A ROSAC researcher that still has no English row shows the
+  catalogue text until it is saved.
 - **Tables:** [`database-definition.md`](database-definition.md).
 
 The editor's language tabs only choose which translation is being edited; the header selector

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getLocale } from 'next-intl/server'
 
 import { requireApiPermission } from '@/app/lib/auth/apiGuard'
 import {
@@ -12,9 +13,11 @@ import {
   readJson,
   reviewRequired,
 } from '@/app/lib/cms/http'
+import { resolveLocale } from '@/app/lib/i18n/locale'
+import { getMessages } from '@/app/lib/i18n/messages'
 import {
   deleteNosotrosResearcher,
-  nosotrosResearcherUpdateSchema,
+  getNosotrosResearcherUpdateSchema,
   updateNosotrosResearcher,
 } from '@/app/lib/nosotros'
 
@@ -41,14 +44,18 @@ export async function PATCH(
   const guard = await requireApiPermission('edit_components')
   if (!guard.ok) return guard.response
 
-  const { id } = await params
-  if (!isUuid(id)) return invalidId(INVALID_ID_MESSAGE)
+  const locale = resolveLocale(await getLocale())
+  const messages = getMessages(locale)
+  const errors = (messages.researchers as { errors?: Record<string, string> })?.errors ?? {}
 
-  const json = await readJson(request)
+  const { id } = await params
+  if (!isUuid(id)) return invalidId(errors.invalidId ?? INVALID_ID_MESSAGE)
+
+  const json = await readJson(request, errors.invalidJson)
   if (!json.ok) return json.response
 
-  const parsed = nosotrosResearcherUpdateSchema.safeParse(json.body)
-  if (!parsed.success) return invalidBody(parsed.error)
+  const parsed = getNosotrosResearcherUpdateSchema(locale).safeParse(json.body)
+  if (!parsed.success) return invalidBody(parsed.error, errors.invalidBody)
 
   try {
     const result = await updateNosotrosResearcher(id, parsed.data, guard.user.id)
@@ -56,16 +63,17 @@ export async function PATCH(
 
     switch (result.reason) {
       case 'not-found':
-        return notFound(RESEARCHER_GONE_MESSAGE)
+        return notFound(errors.notFound ?? RESEARCHER_GONE_MESSAGE)
       case 'conflict':
         return conflict(
-          'El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.',
+          errors.conflict ??
+            'El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.',
         )
       case 'review-required':
         return reviewRequired(result.pending)
     }
   } catch (error) {
-    return internalError('No se pudieron guardar los cambios.', error)
+    return internalError(errors.updateError ?? 'No se pudieron guardar los cambios.', error)
   }
 }
 
@@ -76,13 +84,19 @@ export async function DELETE(
   const guard = await requireApiPermission('delete_components')
   if (!guard.ok) return guard.response
 
+  const locale = resolveLocale(await getLocale())
+  const messages = getMessages(locale)
+  const errors = (messages.researchers as { errors?: Record<string, string> })?.errors ?? {}
+
   const { id } = await params
-  if (!isUuid(id)) return invalidId(INVALID_ID_MESSAGE)
+  if (!isUuid(id)) return invalidId(errors.invalidId ?? INVALID_ID_MESSAGE)
 
   try {
-    if (!(await deleteNosotrosResearcher(id, guard.user))) return notFound(RESEARCHER_GONE_MESSAGE)
+    if (!(await deleteNosotrosResearcher(id, guard.user))) {
+      return notFound(errors.notFound ?? RESEARCHER_GONE_MESSAGE)
+    }
   } catch (error) {
-    return internalError('No se pudo eliminar el investigador.', error)
+    return internalError(errors.deleteError ?? 'No se pudo eliminar el investigador.', error)
   }
 
   return new NextResponse(null, { status: 204 })

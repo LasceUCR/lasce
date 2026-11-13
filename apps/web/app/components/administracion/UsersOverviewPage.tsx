@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { SearchBar } from '@/app/components/public/SearchBar'
@@ -31,6 +32,7 @@ export function UsersOverviewPage({
   onSaveRoles,
   currentUserId,
 }: UsersOverviewPageProps) {
+  const t = useTranslations('administration.users')
   const searchRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
@@ -48,27 +50,17 @@ export function UsersOverviewPage({
       </div>
 
       <section className="surface-card admin-panel" aria-labelledby="users-overview-title">
-        <h2 id="users-overview-title">Usuarios y roles</h2>
-        {isDemo && (
-          <p className={styles.notice}>
-            Datos de prueba: los usuarios y roles mostrados son ficticios.
-          </p>
-        )}
+        <h2 id="users-overview-title">{t('panelTitle')}</h2>
+        {isDemo && <p className={styles.notice}>{t('demoNotice')}</p>}
         <p id="users-overview-help" className={styles.help}>
-          {onSaveRoles
-            ? 'Cada usuario puede tener un solo rol. Selecciona otro para cambiarlo o pulsa el rol actual para retirarlo. Se pedirá confirmación antes de aplicar el cambio.'
-            : 'Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.'}
+          {onSaveRoles ? t('helpEditable') : t('helpReadOnly')}
         </p>
-        {isDemo && onSaveRoles && (
-          <p className={styles.help}>
-            Los cambios son de prueba y se pierden al recargar la página.
-          </p>
-        )}
-        {roles.length === 0 && <p>No hay roles disponibles para mostrar.</p>}
+        {isDemo && onSaveRoles && <p className={styles.help}>{t('demoChanges')}</p>}
+        {roles.length === 0 && <p>{t('noRoles')}</p>}
         <div ref={searchRef} className={styles.searchControls}>
           <SearchBar
-            label="Buscar usuarios"
-            placeholder="Buscar por nombre o correo electrónico..."
+            label={t('search.label')}
+            placeholder={t('search.placeholder')}
             query={query}
             onQueryChange={setQuery}
           />
@@ -82,19 +74,19 @@ export function UsersOverviewPage({
                 searchRef.current?.querySelector('input')?.focus()
               }}
             >
-              Limpiar búsqueda
+              {t('search.clear')}
             </Button>
           )}
         </div>
         <p className={query.trim() ? 'content-empty' : 'sr-only'} role="status" aria-atomic="true">
           {users.length > 0 && query.trim() !== ''
             ? filteredUsers.length === 0
-              ? `No se encontraron usuarios para “${query.trim()}”.`
-              : `${filteredUsers.length} ${filteredUsers.length === 1 ? 'usuario encontrado' : 'usuarios encontrados'}.`
+              ? t('noResults', { query: query.trim() })
+              : t('results', { count: filteredUsers.length })
             : ''}
         </p>
         {users.length === 0 ? (
-          <p className="content-empty">No hay usuarios para mostrar.</p>
+          <p className="content-empty">{t('empty')}</p>
         ) : (
           <UsersRolesTable
             currentUserId={currentUserId}

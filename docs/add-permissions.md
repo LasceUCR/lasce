@@ -32,16 +32,17 @@ the reader, not a check: each section page still calls `requirePermission`. See
 
 Reuse the existing names when they already match:
 
-| Grant                     | Typical UI                                      |
-| ------------------------- | ----------------------------------------------- |
-| `edit_components`         | Pencil, inline editor, Guardar                  |
-| `delete_components`       | Trash                                           |
-| `create_components`       | Añadir / Crear                                  |
-| `download_resources`      | `/administracion/descargas`, `/datos` downloads |
-| `download_goes_resources` | GOES data (CSV) downloads on `/datos`           |
-| `manage_users`            | `/administracion/usuarios`                      |
-| `manage_permissions`      | `/administracion/permisos`                      |
-| `view_audit_log`          | `/administracion/auditoria`                     |
+| Grant                     | Typical UI                            |
+| ------------------------- | ------------------------------------- |
+| `edit_components`         | Pencil, inline editor, Guardar        |
+| `delete_components`       | Trash                                 |
+| `create_components`       | Añadir / Crear                        |
+| `download_resources`      | `/datos` downloads                    |
+| `download_goes_resources` | GOES data (CSV) downloads on `/datos` |
+| `manage_users`            | `/administracion/usuarios`            |
+| `manage_permissions`      | `/administracion/permisos`            |
+| `view_audit_log`          | `/administracion/auditoria`           |
+| `view_download_history`   | `/administracion/descargas`           |
 
 Assistant defaults include `edit_components` only. Admin defaults include create, edit and
 delete. A visitor has none of those three, so they see the public page with no tools.
@@ -110,8 +111,8 @@ import { PERMISSION_DENIED } from '@/app/lib/auth/permissions'
 export const dynamic = 'force-dynamic'
 
 export default async function DescargasPage() {
-  const { allowed } = await requirePermission('download_resources', '/administracion/descargas')
-  if (!allowed) return <AccessDenied message={PERMISSION_DENIED.download_resources} />
+  const { allowed } = await requirePermission('view_download_history', '/administracion/descargas')
+  if (!allowed) return <AccessDenied message={PERMISSION_DENIED.view_download_history} />
   // ...
 }
 ```

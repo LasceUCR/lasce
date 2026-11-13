@@ -83,6 +83,10 @@ body {
   line-height: 1.45;
 }
 
+body:has(.not-found) {
+  background: var(--space-black);
+}
+
 /* Body copy on the public site. Headings, navigation and buttons stay start-aligned. */
 .public-shell-content p {
   text-align: justify;
@@ -139,6 +143,10 @@ a {
   place-items: center;
   background: #000918;
   color: var(--white);
+}
+
+.not-found {
+  flex: 1;
 }
 
 .public-route-content {
@@ -507,6 +515,15 @@ a {
 .account-menu-panel button.account-menu-signout:disabled {
   cursor: progress;
   opacity: 0.6;
+}
+
+.account-menu-edit-mode {
+  padding: 8px 14px;
+}
+
+.account-menu-edit-mode .toggle {
+  width: 100%;
+  justify-content: space-between;
 }
 
 .login-link {
@@ -2935,12 +2952,33 @@ a {
   gap: 16px;
 }
 
-/* Only on the dedicated `/actividades-academicas` page, not the `/noticias` teaser — that one
-   already gets its own bottom spacing from `.academic-activities`'s 32px padding-bottom. Matches
-   `.publications`'s 56px before its own `TopicBackLink` footer: a list of cards reads better with
-   more room above the footer than a plain `TopicSection` of text gets. */
-.academic-activities-list-standalone {
+/* Match the publications listing's 56px spacing before the TopicBackLink footer. */
+.academic-activities-explorer {
+  margin-top: 8px;
   padding-bottom: 56px;
+}
+
+.academic-activities-explorer .search-filter-bar {
+  margin: 0;
+}
+
+.academic-activities-summary {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Match the search bar's width and the news listing's left-aligned empty-state copy. */
+#academic-activities-loading-region .content-empty {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+
+/* The explorer owns the spacing below the list and pagination. */
+.academic-activities-list-standalone {
+  padding-bottom: 0;
 }
 
 .academic-activity-card-header {
@@ -2992,12 +3030,12 @@ a {
 }
 
 .news h2 {
-  margin-top: 40px;
+  margin-top: 28px;
   margin-bottom: 20px;
 }
 
 .news .search-filter-bar {
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 
 /* Focused by `NewsExplorer` when the page changes: keep it clear of the sticky header. */
@@ -3291,6 +3329,29 @@ a {
   .mobile-menu nav button:disabled {
     cursor: progress;
     opacity: 0.6;
+  }
+
+  /* The "Modo edición" switch is a button too, but must keep its own track look. */
+  .mobile-edit-mode {
+    padding: 10px 12px;
+  }
+
+  .mobile-edit-mode .toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mobile-menu nav .mobile-edit-mode button.toggle-track {
+    width: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--white);
+  }
+
+  .mobile-menu nav .mobile-edit-mode button.toggle-track.toggle-track-on {
+    border-color: var(--blue);
+    background: var(--blue);
   }
 
   .indicator-grid {
@@ -3935,17 +3996,23 @@ a {
 
 .info-card-horizontal {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 28px;
+  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  gap: 0;
   min-height: 190px;
-  padding: 32px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 10px;
 }
 
 .info-card-horizontal .info-card-icon {
-  width: 160px;
-  height: 96px;
+  position: relative;
+  grid-row: 1 / span 2;
+  width: 100%;
+  height: 100%;
+  min-height: 190px;
   margin: 0;
+  border-radius: 0;
   overflow: hidden;
   background: var(--page);
 }
@@ -3957,25 +4024,31 @@ a {
   object-fit: cover;
 }
 
+.info-card-horizontal .info-card-content {
+  padding: 20px 22px 0;
+}
+
 .info-card-horizontal h2,
 .info-card-horizontal h3 {
-  font-size: 26px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.35;
 }
 
 .info-card-horizontal p {
-  max-width: 78ch;
-  font-size: 16px;
-  line-height: 1.65;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .info-card-horizontal .info-card-action {
-  width: 216px;
-  margin: 0;
+  grid-column: 2;
+  justify-self: end;
+  margin: 12px 22px 20px;
 }
 
 .info-card-horizontal .button {
-  width: 100%;
-  min-height: 48px;
+  min-height: 44px;
   white-space: nowrap;
 }
 
@@ -4142,16 +4215,6 @@ a {
   }
 }
 
-@media (max-width: 1000px) {
-  .info-card-horizontal {
-    grid-template-columns: 160px minmax(0, 1fr);
-  }
-
-  .info-card-horizontal .info-card-action {
-    grid-column: 2;
-  }
-}
-
 @media (max-width: 760px) {
   .content-flag {
     width: min(100% - 32px, 1332px);
@@ -4231,13 +4294,22 @@ a {
 
   .info-card-horizontal {
     grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-    padding: 24px;
+    grid-template-rows: auto;
+  }
+
+  .info-card-horizontal .info-card-icon {
+    grid-row: auto;
+    height: 200px;
+  }
+
+  .info-card-horizontal .info-card-content {
+    padding: 16px 18px 0;
   }
 
   .info-card-horizontal .info-card-action {
     grid-column: auto;
-    width: 100%;
+    justify-self: stretch;
+    margin: 12px 18px 16px;
   }
 
   .info-card-horizontal .button {
@@ -4943,6 +5015,13 @@ a.gallery-tile:focus-visible {
 
 /* --- Research areas (/investigacion) --- */
 
+.research-areas-summary {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* One full-width card per row, the same list `/publicaciones` and `/noticias` use. The card
    repeats the `.news-card` metrics on purpose, so the three pages read as one family. It sits
    after `.surface-card` and `.media-frame` so these rules win on source order. */
@@ -4997,6 +5076,15 @@ a.gallery-tile:focus-visible {
   align-self: flex-end;
   margin-top: auto;
   padding-top: 12px;
+}
+
+/* Reserve the two 32px editor buttons and their 6px gap only while they sit beside the title.
+   On stacked cards the buttons sit over the image, leaving the full title width available. */
+@media (min-width: 701px) {
+  .research-area-list .editable .research-area-card h3 {
+    max-width: calc(100% - 70px);
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (max-width: 1120px) {
@@ -5515,10 +5603,13 @@ a.acknowledgments-card:focus-visible {
 
 /* --- Administración (/administracion) --- */
 
+/* `.public-shell` already keeps the footer at the bottom of the viewport; the
+   shell only fills the space left in the main column, so a short page shows the
+   footer at the bottom of the screen instead of below it. */
 .admin-shell {
+  flex: 1;
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
-  min-height: calc(100vh - var(--header-height));
 }
 
 .admin-sidebar {
@@ -5564,6 +5655,15 @@ a.acknowledgments-card:focus-visible {
 .admin-sidebar a.active {
   background: var(--blue-dark);
   color: var(--white);
+}
+
+/* The fixed sidebar reaches the bottom of the viewport, so on desktop the shared
+   footer starts to its right instead of running underneath it. Below 1120px the
+   sidebar becomes a sticky bar and the footer takes the full width again. */
+@media (min-width: 1121px) {
+  body:has(.admin-shell) .site-footer {
+    margin-left: 240px;
+  }
 }
 
 /* The narrow-screen toggle. Above 1120px the sidebar itself is the menu. */
@@ -6975,11 +7075,17 @@ a.acknowledgments-card:focus-visible {
     .news-article-form-actions,
     .nosotros-activity-form-actions,
     .confirm-dialog-actions,
-    .mgmt-form-actions
+    .mgmt-form-actions,
+    .cms-stage-photo-actions
   )
   .button {
   height: 44px;
   line-height: 1;
+}
+
+.cms-stage-photo-actions .button {
+  width: 100%;
+  white-space: nowrap;
 }
 
 @media (max-width: 760px) {

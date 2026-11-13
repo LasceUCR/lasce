@@ -2,10 +2,10 @@
 
 The archive at ``BASE_URL`` is a tree of plain Apache directory listings, one
 tree per spacecraft and product. SUVI (:mod:`app.clients.suvi`), EXIS
-(:mod:`app.clients.exis`), MAG (:mod:`app.clients.mag`) and EHIS
-(:mod:`app.clients.ehis`) differ in how their files are named and how often
+(:mod:`app.clients.exis`), MAG (:mod:`app.clients.mag`) and SEISS
+(:mod:`app.clients.seiss`) differ in how their files are named and how often
 they appear, but not in how a listing is read or a file is fetched, so that
-part lives here once. EXIS, MAG and EHIS are all daily products filed by
+part lives here once. EXIS, MAG and SEISS are all daily products filed by
 month, so their month walk lives here too.
 """
 

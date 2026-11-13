@@ -6,6 +6,12 @@
   "shell": {
     "skipToContent": "Saltar al contenido principal"
   },
+  "notFound": {
+    "metaTitle": "Página no encontrada | LASCE",
+    "title": "Página no encontrada",
+    "description": "La dirección ingresada no corresponde a una página disponible. Verifique la dirección o vuelva al inicio.",
+    "kicker": "Error 404"
+  },
   "nav": {
     "goHome": "Ir al inicio",
     "mainLabel": "Navegación principal",
@@ -352,7 +358,7 @@
       "items": {
         "release": {
           "title": "El Sol libera energía",
-          "description": "Las fulguraciones producen incrementos intensos de radiación y se asocian al origen de las eyecciones de masa coronal (CMEs, por sus siglas en inglés), las cuales son grandes estructuras de plasma y campo magnético. Algunos de estos eventos aceleran partículas a altas energías."
+          "description": "Las fulguraciones o llamaradas solares se encuentran entre los fenómenos más energéticos del Sol. Implican una liberación rápida de energía magnética, la aceleración de partículas y un aumento de la radiación electromagnética. Con frecuencia, están asociadas con eyecciones de masa coronal (CME), erupciones a gran escala de plasma y campo magnético que pueden alcanzar la Tierra y desencadenar tormentas geomagnéticas."
         },
         "propagation": {
           "title": "La perturbación se propaga",
@@ -378,15 +384,15 @@
       "items": {
         "solarActivity": {
           "title": "Actividad solar",
-          "description": "El Sol no está quieto. Las manchas, las fulguraciones y las eyecciones de masa coronal liberan energía, partículas y campos magnéticos al espacio."
+          "description": "Como parte de la astrofísica solar, estudiamos el Sol como una estrella dinámica, incluidas las regiones activas, las llamaradas solares, las eyecciones de masa coronal y otros fenómenos que liberan energía y partículas al espacio y perturban el campo magnético interplanetario."
         },
         "solarWind": {
           "title": "Viento solar",
-          "description": "Es un flujo continuo de plasma que sale de la corona solar. Su velocidad, densidad y campo magnético cambian según lo que ocurra en el Sol."
+          "description": "El viento solar es un flujo continuo de partículas cargadas en estado de plasma que se desplaza desde el Sol hacia el exterior a través del espacio interplanetario."
         },
         "magnetosphere": {
           "title": "Magnetosfera",
-          "description": "El campo magnético terrestre desvía la mayor parte del viento solar. Cuando ese flujo se intensifica, la magnetosfera se comprime y puede perturbarse."
+          "description": "La magnetosfera terrestre es la región que rodea nuestro planeta, donde domina el campo magnético de la Tierra y se produce la interacción con el viento solar. Cuando el viento solar se intensifica, puede comprimir y perturbar la magnetosfera."
         },
         "ionosphere": {
           "title": "Ionosfera",
@@ -398,7 +404,7 @@
         },
         "particles": {
           "title": "Radiación de partículas",
-          "description": "El Sol también puede enviar protones y otras partículas energéticas. Ese flujo es distinto del viento solar cotidiano y puede afectar satélites y vuelos polares."
+          "description": "La actividad solar también puede acelerar partículas hasta alcanzar energías muy altas. Estas partículas energéticas solares (SEP, por sus siglas en inglés) pueden afectar los satélites y aumentar la exposición a la radiación en vuelos de gran altitud y sobre regiones polares."
         }
       },
       "flow": {
@@ -442,16 +448,16 @@
     "hero": {
       "kicker": "Recursos de LASCE",
       "title": "Herramientas científicas",
-      "intro": "Accede a herramientas para el análisis de la actividad solar y el estudio del clima espacial."
+      "intro": "Herramientas del LASCE para el análisis de la actividad solar y el estudio del clima espacial."
     },
     "tools": {
-      "swaat": "Analiza eventos solares mediante observaciones de rayos X de GOES y microondas de RSTN. Visualiza y compara su evolución temporal con gráficas estáticas e interactivas.",
-      "swapro": "Consulta y visualiza eventos solares en intervalos de tiempo específicos para apoyar el estudio de la actividad solar y el clima espacial."
+      "swaat": "Análisis de eventos solares mediante observaciones de rayos X de GOES y microondas de RSTN. Permite visualizar y comparar su evolución temporal con gráficas estáticas e interactivas.",
+      "swapro": "Consulta y visualización de eventos solares en intervalos de tiempo específicos para apoyar el estudio de la actividad solar y el clima espacial."
     },
     "list": {
+      "title": "Herramientas disponibles",
       "empty": "No hay herramientas científicas disponibles en este momento.",
-      "access": "Acceder a {title}",
-      "externalNotice": "Los enlaces se abren en una nueva pestaña y te llevan a sitios externos."
+      "access": "Acceder a {title}"
     }
   },
   "collaborations": {
@@ -473,7 +479,8 @@
       "national": "Nacional",
       "international": "Internacional",
       "acronym": "Siglas:",
-      "website": "Sitio web oficial"
+      "websiteLabel": "Sitio web oficial de {name} (abre en una pestaña nueva)",
+      "logoAlt": "Logotipo de {name}"
     },
     "countries": {
       "cr": "Costa Rica",
@@ -554,7 +561,9 @@
     "section": {
       "title": "Actividades académicas",
       "description": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
-      "empty": "No hay actividades académicas disponibles en este momento."
+      "empty": "No hay actividades académicas disponibles en este momento.",
+      "loading": "Cargando actividades académicas…",
+      "error": "No fue posible cargar las actividades académicas. Inténtelo de nuevo más tarde."
     },
     "card": {
       "badge": "Actividad académica"
@@ -564,18 +573,65 @@
       "metaDescription": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
       "kicker": "Portal público LASCE",
       "title": "Actividades académicas",
-      "lead": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE."
+      "lead": "Talleres, cursos, charlas y actividades científicas y formativas organizadas o vinculadas al LASCE.",
+      "searchLabel": "Buscar actividades académicas",
+      "searchPlaceholder": "Buscar por título, categoría, fecha o palabra clave...",
+      "paginationLabel": "Páginas de actividades académicas",
+      "results": "{count, plural, one {Se encontró # actividad académica.} other {Se encontraron # actividades académicas.}}",
+      "range": "Mostrando {from}–{to} de {total}.",
+      "rangeOne": "Mostrando la actividad {position} de {total}.",
+      "emptyQuery": "No se encontraron actividades académicas para “{query}”.",
+      "loadError": "No se pudieron cargar las actividades académicas. Inténtelo de nuevo.",
+      "retry": "Reintentar"
     },
-    "items": {
-      "machineLearningWorkshop": {
-        "category": "Taller",
-        "date": "16-20 febrero, 2026",
-        "p1": "En el marco del proyecto LASCE se realizó, del 16 al 20 de febrero de 2026 en San José, Costa Rica, el Taller sobre Aprendizaje Automático Aplicado al Clima Espacial y a los Sistemas Globales de Navegación por Satélite (GNSS). La actividad reunió durante cinco días a estudiantes, jóvenes investigadores y especialistas para fortalecer sus capacidades en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial.",
-        "p2": "El programa combinó conferencias, sesiones de discusión y prácticas computacionales dedicadas a los procesos ionosféricos, los efectos del clima espacial sobre los sistemas GNSS, la computación científica y el análisis de datos mediante herramientas de aprendizaje automático. Este enfoque permitió integrar la comprensión física de los fenómenos solares y terrestres con métodos modernos de procesamiento, modelado y predicción, promoviendo además el uso de datos abiertos y procedimientos reproducibles.",
-        "p3": "El taller contó con 52 participantes presenciales procedentes de 17 países; el 37,2 % fueron mujeres y el 70 % provenía de países en desarrollo. Fue organizado con la participación del Centro de Investigaciones Espaciales de la Universidad de Costa Rica, la Oficina de las Naciones Unidas para Asuntos del Espacio Ultraterrestre, el Comité Internacional sobre los GNSS, COSPAR, INGV y SCOSTEP, junto con contribuciones de la Universidad Nacional de Tucumán y el Centro Internacional de Física Teórica Abdus Salam.",
-        "p4": "Esta actividad fortaleció la proyección internacional del LASCE, amplió las redes de colaboración científica y contribuyó a la formación de capacidades regionales para investigar, monitorear y predecir los efectos del clima espacial sobre la ionosfera y los sistemas tecnológicos. Asimismo, generó un espacio para identificar nuevos desafíos científicos, oportunidades de cooperación y futuras iniciativas que integren la física del clima espacial con herramientas avanzadas de análisis de datos.",
-        "imageAlt": "Comité y participantes junto al cartel oficial del taller de Machine Learning y clima espacial"
-      }
+    "created": "Actividad agregada correctamente.",
+    "updated": "Actividad actualizada correctamente.",
+    "deleted": "Actividad eliminada correctamente.",
+    "errors": {
+      "saveUnknown": "No se pudo guardar la actividad. Inténtelo de nuevo.",
+      "deleteUnknown": "No se pudo eliminar la actividad. Inténtelo de nuevo."
+    },
+    "editor": {
+      "addCard": "Agregar actividad",
+      "editTitle": "Editar actividad académica",
+      "editLabel": "Editar",
+      "deleteLabel": "Eliminar",
+      "languageTabs": "Idioma del contenido",
+      "legacyBaseText": "Este texto se registró antes de que existieran las versiones por idioma y podría no estar en español. Si cambia el título, la categoría, la descripción o el texto alternativo, revíselo también.",
+      "legacyNoTranslation": "Esta actividad aún no tiene versión en inglés. Para cambiar el título, la categoría, la descripción o el texto alternativo debe completar ambos idiomas; los demás campos se pueden editar sin traducirla.",
+      "titleField": "Título ({language})",
+      "categoryField": "Categoría ({language})",
+      "categoryPlaceholder": "Taller, charla, curso, conferencia...",
+      "locationField": "Ubicación",
+      "startDateField": "Fecha de inicio",
+      "endDateField": "Fecha de finalización",
+      "descriptionField": "Descripción ({language})",
+      "photoField": "Imagen",
+      "photoHelperText": "Imagen ilustrativa de la actividad, en formato JPG, PNG, WebP o GIF.",
+      "photoAltField": "Texto alternativo de la imagen ({language})",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando...",
+      "uploadingImage": "Subiendo imagen..."
+    },
+    "validation": {
+      "startDate": "La fecha de inicio es obligatoria.",
+      "endDate": "La fecha de finalización debe ser igual o posterior a la fecha de inicio.",
+      "location": "La ubicación es obligatoria.",
+      "photo": "La imagen es obligatoria.",
+      "uploadFailed": "No se pudo subir la imagen. Inténtelo de nuevo."
+    },
+    "discardDialog": {
+      "title": "Descartar cambios no guardados",
+      "message": "Si descarta ahora, se perderán todos los datos ingresados que no hayan sido guardados.",
+      "keepEditing": "Seguir editando",
+      "discard": "Descartar"
+    },
+    "deleteDialog": {
+      "title": "Eliminar actividad académica",
+      "message": "Esta acción no se puede deshacer y borrará la actividad del catálogo público.",
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
     }
   },
   "publications": {
@@ -884,10 +940,10 @@
   "news": {
     "page": {
       "metaTitle": "Noticias | LASCE",
-      "metaDescription": "Noticias y cobertura mediática del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
+      "metaDescription": "Noticias del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
       "kicker": "Portal público LASCE",
-      "title": "Noticias y cobertura mediática",
-      "lead": "Noticias, divulgación y cobertura sobre el trabajo del LASCE.",
+      "title": "Noticias",
+      "lead": "Noticias recientes",
       "recent": "Noticias recientes",
       "searchLabel": "Buscar noticias",
       "searchPlaceholder": "Buscar por título, autor o palabra clave...",
@@ -1478,6 +1534,10 @@
     }
   },
   "researchAreas": {
+    "loading": "Cargando áreas de investigación…",
+    "empty": "No hay áreas de investigación disponibles.",
+    "paginationLabel": "Páginas de áreas de investigación",
+    "results": "Mostrando {from}–{to} de {total}.",
     "page": {
       "metaTitle": "Investigación | LASCE",
       "metaDescription": "Áreas de investigación del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.",
@@ -1539,12 +1599,42 @@
   },
   "researchers": {
     "institutionLabel": "Institución",
+    "viewDescription": "Ver descripción de {name}",
+    "viewInstitution": "Ver institución de {name}",
+    "returnToCard": "Volver a la ficha de {name}",
+    "descriptionRegion": "Descripción de {name}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "editModalTitle": "Editar investigador",
+    "editLabel": "Editar a {name}",
+    "deleteLabel": "Eliminar a {name}",
+    "deleteConfirmTitle": "Eliminar investigador",
+    "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
+    "deleteConfirm": "Eliminar",
     "created": "Investigador agregado correctamente.",
     "updated": "Investigador actualizado correctamente.",
     "deleted": "Investigador eliminado correctamente.",
     "errors": {
       "unknown": "No se pudo guardar el investigador. Inténtelo de nuevo.",
-      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo."
+      "deleteUnknown": "No se pudo eliminar el investigador. Inténtelo de nuevo.",
+      "invalidId": "El identificador del investigador no es válido.",
+      "notFound": "Este investigador ya no existe. Es posible que otra persona lo haya eliminado; recargue la página.",
+      "conflict": "El investigador cambió desde que lo abrió. Recárguelo y vuelva a aplicar sus cambios.",
+      "saveError": "No se pudo guardar el investigador.",
+      "updateError": "No se pudieron guardar los cambios.",
+      "deleteError": "No se pudo eliminar el investigador.",
+      "invalidBody": "Faltan campos obligatorios o no son válidos.",
+      "invalidJson": "El cuerpo de la solicitud no es JSON válido."
+    },
+    "validation": {
+      "nameRequired": "El nombre es obligatorio.",
+      "institutionRequired": "La institución es obligatoria.",
+      "invalidEmail": "Uno o más correos no son válidos.",
+      "maxEmails": "Máximo 2 correos de contacto.",
+      "invalidSrc": "La foto debe ser una ruta del sitio o una imagen ya subida.",
+      "versionRequired": "La versión del investigador es obligatoria y debe ser la que se cargó.",
+      "confirmationsOnlyWithContent": "Las confirmaciones solo aplican a una actualización de contenido (content).",
+      "noFieldsToUpdate": "La solicitud no incluye ningún campo para actualizar."
     },
     "editor": {
       "addCard": "Añadir investigador",
@@ -1554,8 +1644,9 @@
       "deleteConfirmTitle": "Eliminar investigador",
       "deleteConfirmMessage": "¿Desea eliminar a \"{name}\"? Esta acción no se puede deshacer.",
       "deleteConfirm": "Eliminar",
+      "deleteCancel": "Cancelar",
       "photoLabel": "Foto",
-      "photoHelp": "Opcional. Retrato del investigador, en formato JPG o PNG.",
+      "photoHelp": "Opcional. Retrato del investigador, en formato JPG, PNG, WebP o GIF.",
       "roleLabel": "Rol",
       "roleRequired": "El rol es obligatorio.",
       "nameLabel": "Nombre",
@@ -1564,11 +1655,16 @@
       "institutionRequired": "La institución es obligatoria.",
       "descriptionLabel": "Descripción",
       "contactLabel": "Contacto",
+      "contactCount": "{count, plural, =0 {Sin correos} one {# correo} other {# correos}}",
+      "contactListLabel": "Correos de contacto",
+      "emailPlaceholder": "Escribir un correo...",
+      "emailPlaceholderAnother": "Escribir otro correo...",
+      "emailRequired": "El correo es obligatorio.",
       "addContact": "Añadir contacto",
       "deleteContact": "Eliminar {address}",
       "addContactTitle": "Añadir contacto",
       "emailLabel": "Correo electrónico",
-      "add": "Añadir",
+      "add": "Agregar",
       "cancel": "Cancelar",
       "save": "Confirmar",
       "uploading": "Subiendo imagen...",
@@ -1589,7 +1685,7 @@
       "title": "Permisos de consulta y descarga",
       "goesConsultation": "Puede consultar los datos de GOES ({instrument}) sin una cuenta. La disponibilidad depende del producto y la fecha; la consulta histórica puede tardar varios minutos.",
       "rosacConsultation": "Puede consultar los datos de ROSAC ({instrument}) sin una cuenta. ROSAC es una previsión de integración: sus instrumentos y datos reales aún no están definidos; todos los resultados son simulados.",
-      "pendingProducts": "EHIS y MPSL están pendientes de integración.",
+      "pendingProducts": "MPSL está pendiente de integración.",
       "rosacDownloads": "Todos los datos de ROSAC ({instrument}) están disponibles para descargar en CSV, junto con la gráfica en PNG.",
       "goesChartOnly": "Para GOES ({instrument}), solo está disponible la descarga de la gráfica en PNG con los permisos de una cuenta básica.",
       "goesDataDownloads": "Sus permisos permiten descargar los datos de GOES ({instrument}) en CSV y la gráfica en PNG.",
@@ -1653,11 +1749,11 @@
           },
           "mpsh": {
             "name": "Electrones y protones magnetosféricos: energía media y alta",
-            "availabilityNote": "Seleccione el telescopio y la banda del archivo nivel 1b. Cada telescopio conserva su dirección de observación."
+            "availabilityNote": "Seleccione el telescopio y la banda. NOAA publica cada día promedios de 1 minuto (nivel 2) con aproximadamente un día de retraso; cada telescopio conserva su dirección de observación."
           },
           "sgps": {
             "name": "Protones solares y galácticos",
-            "availabilityNote": "Seleccione la unidad SGPS−X o SGPS+X. El archivo nivel 1b incluye canales diferenciales y el integral > 500 MeV."
+            "availabilityNote": "Seleccione la unidad SGPS−X o SGPS+X y el canal. NOAA publica cada día promedios de 1 minuto (nivel 2) de los canales diferenciales y del integral > 500 MeV, con aproximadamente un día de retraso."
           }
         }
       },
@@ -1762,7 +1858,8 @@
     "images": {
       "sequenceLabel": "Secuencia de imágenes solares",
       "loading": "Cargando imagen solar…",
-      "unavailable": "Esta imagen solar no está disponible. Consulte otra banda o intente nuevamente."
+      "unavailable": "Esta imagen solar no está disponible. Consulte otra banda o intente nuevamente.",
+      "alt": "{product} observada por {observer} a las {time} UTC"
     },
     "instrumentSelect": {
       "placeholder": "Seleccione una opción",
@@ -1825,7 +1922,11 @@
     "downloads": {
       "title": "Descargas",
       "signInPrompt": "Inicie sesión para descargar la gráfica",
-      "preparing": "Preparando descarga…"
+      "preparing": "Preparando descarga…",
+      "formats": {
+        "png": "Descargar gráfica (PNG)",
+        "csv": "Descargar datos (CSV)"
+      }
     },
     "charts": {
       "areaLabel": "Área de gráfica: {label}",
@@ -1858,7 +1959,68 @@
       "requestFailedGoes": "No fue posible consultar la fuente GOES en este momento. Inténtelo nuevamente más tarde.",
       "requestFailedOther": "No fue posible consultar los datos. Inténtelo nuevamente.",
       "downloadFailed": "No fue posible preparar la descarga. Inténtelo nuevamente más tarde.",
-      "downloadUnauthenticated": "Inicie sesión para descargar recursos."
+      "downloadUnauthenticated": "Inicie sesión para descargar recursos.",
+      "downloadInvalid": "La solicitud de descarga no es válida.",
+      "downloadUnsupported": "Este producto no ofrece descargas en el formato solicitado.",
+      "downloadPending": "La consulta todavía se está procesando. Espere a que termine e intente la descarga nuevamente.",
+      "downloadEmpty": "No hay datos para descargar con los criterios seleccionados."
+    },
+    "origins": {
+      "sampled": "Se muestran {count} observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.",
+      "full": "Sin muestreo: incluye todas las observaciones válidas del intervalo.",
+      "exis": {
+        "provider": "GOES",
+        "notice": "Lecturas EXIS de nivel 1b. Cada día se publica con aproximadamente un día de retraso. Se excluyen valores de relleno, negativos y observaciones marcadas con calidad degradada o inválida."
+      },
+      "mag": {
+        "provider": "GOES",
+        "notice": "Promedios de 1 minuto del magnetómetro (nivel 2). Cada día se publica con aproximadamente un día de retraso. Se excluyen valores de relleno y observaciones marcadas con calidad degradada o inválida."
+      },
+      "ehis": {
+        "provider": "GOES",
+        "notice": "Flujos diferenciales de 5 minutos del sensor EHIS (nivel 1b). Cada día se publica con aproximadamente un día de retraso. Se excluyen valores de relleno y observaciones marcadas como inválidas; se conservan las marcadas como degradadas, que en periodos tranquilos son casi todas por el bajo número de conteos."
+      },
+      "sgps": {
+        "provider": "GOES",
+        "notice": "Promedios de 1 minuto del sensor SGPS (nivel 2). Cada día se publica con aproximadamente un día de retraso. Se excluyen valores de relleno y promedios sin muestras válidas; se conservan los que incluyen muestras marcadas por los controles de calidad del instrumento."
+      },
+      "mpsh": {
+        "provider": "GOES",
+        "notice": "Promedios de 1 minuto del sensor MPS-HI (nivel 2). Cada día se publica con aproximadamente un día de retraso. Se excluyen valores de relleno y promedios sin muestras válidas; se conservan los que incluyen muestras marcadas por los controles de calidad del instrumento."
+      },
+      "suvi": {
+        "provider": "GOES",
+        "notice": "Representaciones ilustrativas de imágenes SUVI de nivel 1b. Se excluyen las imágenes marcadas por contaminación o eclipse."
+      },
+      "goesArchive": {
+        "provider": "GOES",
+        "notice": "Observaciones históricas de nivel 1b. Se excluyen valores de relleno y observaciones marcadas con calidad degradada o inválida."
+      },
+      "rosac": {
+        "provider": "Prototipo ROSAC — UCR",
+        "notice": "Datos simulados para preparar la integración de ROSAC. Los nombres, canales y valores reales se definirán con el equipo científico."
+      }
+    },
+    "files": {
+      "source": "Fuente",
+      "instrument": "Instrumento",
+      "product": "Producto",
+      "channel": "Canal",
+      "unit": "Unidad",
+      "satellite": "Satélite",
+      "date": "Fecha",
+      "interval": "Intervalo (UTC)",
+      "dataKind": "Tipo de datos",
+      "observed": "observados",
+      "simulated": "simulados",
+      "provider": "Proveedor",
+      "notice": "Nota",
+      "generatedAt": "Generado (UTC)",
+      "generatedBy": "Generado por",
+      "footer": "Fuente: {provider}. Unidad: {unit}.",
+      "footerSimulated": "Fuente: {provider} (datos simulados). Unidad: {unit}.",
+      "low": "Baja",
+      "high": "Alta"
     }
   },
   "administration": {
@@ -1870,7 +2032,6 @@
         "descargas": "Descargas",
         "usuarios": "Usuarios",
         "permisos": "Permisos",
-        "infraestructura": "Infraestructura",
         "auditoria": "Auditoría"
       }
     },
@@ -1953,6 +2114,103 @@
         "reload": "Recargar página"
       }
     },
+    "downloads": {
+      "metaTitle": "Descargas | Administración | LASCE",
+      "title": "Descargas",
+      "description": "Historial y control de descargas de datos del laboratorio.",
+      "filters": {
+        "label": "Filtros del historial de descargas",
+        "from": "Desde",
+        "to": "Hasta",
+        "source": "Fuente",
+        "instrument": "Instrumento",
+        "format": "Formato",
+        "user": "Persona",
+        "allSources": "Todas las fuentes",
+        "allInstruments": "Todos los instrumentos",
+        "allFormats": "Todos los formatos",
+        "allUsers": "Todas las personas",
+        "apply": "Filtrar",
+        "clear": "Limpiar filtros"
+      },
+      "table": {
+        "label": "Historial de descargas",
+        "date": "Fecha y hora (UTC)",
+        "user": "Persona",
+        "source": "Fuente",
+        "instrument": "Instrumento",
+        "product": "Producto",
+        "format": "Formato",
+        "range": "Rango consultado"
+      },
+      "empty": "Aún no hay descargas registradas.",
+      "emptyFiltered": "Ninguna descarga coincide con los filtros.",
+      "results": "{count, plural, one {# descarga} other {# descargas}}",
+      "pageSummary": "Página {page} de {total}",
+      "paginationLabel": "Páginas del historial de descargas",
+      "deletedUser": "Cuenta eliminada",
+      "noRange": "—"
+    },
+    "users": {
+      "metaTitle": "Usuarios | Administración | LASCE",
+      "title": "Usuarios",
+      "description": "Consulta los usuarios registrados y sus roles actuales.",
+      "panelTitle": "Usuarios y roles",
+      "demoNotice": "Datos de prueba: los usuarios y roles mostrados son ficticios.",
+      "demoChanges": "Los cambios son de prueba y se pierden al recargar la página.",
+      "helpEditable": "Cada usuario puede tener un solo rol. Selecciona otro para cambiarlo o pulsa el rol actual para retirarlo. Se pedirá confirmación antes de aplicar el cambio.",
+      "helpReadOnly": "Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.",
+      "noRoles": "No hay roles disponibles para mostrar.",
+      "empty": "No hay usuarios para mostrar.",
+      "search": {
+        "label": "Buscar usuarios",
+        "placeholder": "Buscar por nombre o correo electrónico...",
+        "clear": "Limpiar búsqueda"
+      },
+      "results": "{count, plural, one {# usuario encontrado.} other {# usuarios encontrados.}}",
+      "noResults": "No se encontraron usuarios para “{query}”.",
+      "table": {
+        "region": "Tabla de usuarios y roles",
+        "label": "Usuarios y roles",
+        "name": "Nombre",
+        "email": "Correo electrónico"
+      },
+      "checkbox": "{role}: {name} ({email})",
+      "updated": "Rol actualizado para {name}: {role}.",
+      "removed": "Rol retirado de {name}.",
+      "details": {
+        "title": "Información del usuario",
+        "close": "Cerrar",
+        "fullName": "Nombre completo",
+        "email": "Correo electrónico",
+        "institution": "Institución",
+        "country": "País",
+        "institutionMissing": "No registrada",
+        "countryMissing": "No registrado"
+      },
+      "dialog": {
+        "changeTitle": "Confirmar cambio de rol",
+        "removeTitle": "Confirmar retiro de rol",
+        "assignQuestion": "¿Quieres asignar el rol <strong>{role}</strong> a <strong>{name}</strong>?",
+        "removeQuestion": "¿Quieres retirar el rol de <strong>{name}</strong>?",
+        "currentRole": "Rol actual: {roles}",
+        "noRole": "Sin rol",
+        "ownRole": "Estás modificando tu propio rol. Al dejar de ser administrador perderás el acceso a esta pantalla.",
+        "leftWithoutRole": "El usuario quedará sin un rol asignado.",
+        "replaces": "El nuevo rol reemplazará al actual. El usuario no conservará ambos roles.",
+        "confirmChange": "Sí, cambiar rol",
+        "confirmRemove": "Sí, retirar rol",
+        "cancel": "No, cancelar",
+        "savingStatus": "Guardando cambio de rol…",
+        "savingButton": "Guardando…",
+        "reload": "Recargar página"
+      },
+      "errors": {
+        "conflict": "La información de este usuario cambió. Recarga la página para ver sus roles actuales antes de volver a intentarlo.",
+        "unauthorized": "Tu sesión terminó o ya no tienes autorización para cambiar roles. Recarga la página para comprobar tu acceso.",
+        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo."
+      }
+    },
     "audit": {
       "metaTitle": "Auditoría | Administración | LASCE",
       "title": "Auditoría",
@@ -2007,6 +2265,9 @@
         "contact_channel_create": "Canal de contacto agregado: {name}",
         "contact_channel_update": "Canal de contacto actualizado: {name}",
         "contact_channel_delete": "Canal de contacto eliminado: {name}",
+        "academic_activity_create": "Actividad académica agregada: {name}",
+        "academic_activity_update": "Actividad académica actualizada: {name}",
+        "academic_activity_delete": "Actividad académica eliminada: {name}",
         "nosotros_activity_create": "Actividad de Nosotros agregada: {name}",
         "nosotros_activity_update": "Actividad de Nosotros actualizada: {name}",
         "nosotros_activity_delete": "Actividad de Nosotros eliminada: {name}",
@@ -2059,7 +2320,7 @@
       },
       "download_resources": {
         "label": "Descargar recursos",
-        "description": "Descargar recursos del laboratorio y consultar el historial de descargas.",
+        "description": "Descargar recursos del laboratorio desde la página de datos.",
         "denied": "No tienes autorización para acceder a las descargas."
       },
       "download_goes_resources": {
@@ -2081,6 +2342,11 @@
         "label": "Consultar la auditoría",
         "description": "Consultar el registro de acciones administrativas del portal.",
         "denied": "No tienes autorización para consultar la auditoría."
+      },
+      "view_download_history": {
+        "label": "Consultar el historial de descargas",
+        "description": "Consultar quién descargó qué recursos del laboratorio y cuándo.",
+        "denied": "No tienes autorización para consultar el historial de descargas."
       }
     },
     "accessDenied": {
@@ -2088,9 +2354,26 @@
     }
   },
   "account": {
+    "meta": {
+      "title": "Mi cuenta | LASCE",
+      "description": "Tu perfil en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica."
+    },
+    "page": {
+      "title": "Mi cuenta",
+      "lead": "Tu perfil en el portal y el control de tu sesión."
+    },
+    "profile": {
+      "fullName": "Nombre",
+      "email": "Correo electrónico",
+      "institution": "Institución",
+      "country": "País",
+      "role": "Rol",
+      "memberSince": "Miembro desde"
+    },
     "signIn": "Ingresar",
     "myAccount": "Mi cuenta",
     "administration": "Administración",
+    "editMode": "Modo edición",
     "signOut": "Cerrar sesión",
     "signingOut": "Cerrando sesión...",
     "roles": {
@@ -2098,6 +2381,7 @@
       "ASSISTANT": "Asistente",
       "ADMIN": "Persona administradora"
     },
+    "noRole": "Sin rol asignado",
     "signOutDialog": {
       "title": "¿Cerrar sesión?",
       "body": "Tu sesión en este navegador terminará y tendrás que volver a ingresar.",
@@ -2145,5 +2429,59 @@
       "body": "Agradecemos al personal investigador de LASCE y del Centro de Investigaciones Espaciales (CINESPA) por su tiempo y su confianza, y al profesor Luis Gustavo Esquivel Quirós, docente del curso, por su guía durante el proyecto.",
       "notice": "Este proyecto se desarrolló en el curso Práctica Supervisada de la Escuela de Ciencias de la Computación e Informática, Universidad de Costa Rica."
     }
+  },
+  "initiatives": {
+    "editor": {
+      "add": "Añadir iniciativa",
+      "edit": "Editar iniciativa",
+      "editNamed": "Editar iniciativa {title}",
+      "deleteNamed": "Eliminar iniciativa {title}",
+      "title": "Título ({language})",
+      "description": "Descripción ({language})",
+      "languages": "Traducciones de la iniciativa",
+      "logo": "Logo (opcional)",
+      "logoHelp": "Seleccione o arrastre una imagen PNG, JPG, WebP o GIF de hasta 25 MiB.",
+      "websiteUrl": "Sitio web oficial (opcional)",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando…",
+      "legacy": "Esta iniciativa conserva su texto original. Complete ambos idiomas cuando modifique el título o la descripción."
+    },
+    "validation": {
+      "websiteUrl": "Ingrese una URL http o https válida, sin credenciales.",
+      "logoUrl": "Seleccione una imagen válida para el logo."
+    },
+    "upload": {
+      "uploaded": "Logo cargado correctamente.",
+      "failed": "No se pudo subir el logo. Inténtelo de nuevo.",
+      "missing": "Seleccione una imagen para el logo.",
+      "tooLarge": "La imagen no debe superar los 25 MiB.",
+      "invalidType": "Seleccione una imagen PNG, JPG, WebP o GIF válida."
+    },
+    "feedback": {
+      "created": "Iniciativa agregada correctamente.",
+      "updated": "Iniciativa actualizada correctamente.",
+      "deleted": "Iniciativa eliminada correctamente.",
+      "failed": "No se pudo guardar la iniciativa. Inténtelo de nuevo.",
+      "forbidden": "No tiene permisos para realizar esta acción. Inicie sesión con una cuenta autorizada.",
+      "notFound": "La iniciativa ya no existe. Vuelva a cargar la página.",
+      "conflict": "La iniciativa cambió. Vuelva a abrir el formulario para cargar la versión actual.",
+      "review": "Revise las traducciones pendientes antes de guardar.",
+      "fields": "Revise los campos marcados."
+    },
+    "delete": {
+      "title": "Eliminar iniciativa",
+      "message": "¿Desea eliminar esta iniciativa? Esta acción no se puede deshacer.",
+      "confirm": "Eliminar"
+    },
+    "discard": {
+      "title": "Descartar cambios no guardados",
+      "message": "Los cambios que ha realizado se perderán.",
+      "keepEditing": "Seguir editando",
+      "confirm": "Descartar"
+    },
+    "empty": "No hay iniciativas disponibles.",
+    "officialSite": "Sitio web oficial",
+    "logoAlt": "Logo de {title}"
   }
 }

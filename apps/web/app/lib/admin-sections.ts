@@ -21,7 +21,7 @@ export const adminSections = [
     slug: 'descargas',
     title: 'Descargas',
     description: 'Historial y control de descargas de datos del laboratorio.',
-    permission: 'download_resources',
+    permission: 'view_download_history',
   },
   {
     slug: 'usuarios',
@@ -40,11 +40,6 @@ export const adminSections = [
     title: 'Auditoría',
     description: 'Consulta quién hizo cada cambio administrativo en el portal y cuándo.',
     permission: 'view_audit_log',
-  },
-  {
-    slug: 'infraestructura',
-    title: 'Infraestructura',
-    description: 'Estado de los servicios, procesos e instrumentos del laboratorio.',
   },
 ] as const satisfies readonly AdminSection[]
 

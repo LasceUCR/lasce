@@ -11,7 +11,7 @@ stored in a private MinIO bucket, handed back as a **30-minute presigned link**,
 | ------------------- | -------------------- | ------------------------------------------------ |
 | GOES / EXIS         | `download_resources` | `download_resources` + `download_goes_resources` |
 | GOES / MAG          | `download_resources` | `download_resources` + `download_goes_resources` |
-| GOES / SEISS        | `download_resources` | not offered yet (needs a full-resolution path)   |
+| GOES / SEISS        | `download_resources` | `download_resources` + `download_goes_resources` |
 | GOES / SUVI         | not offered          | not offered                                      |
 | ROSAC / any         | `download_resources` | `download_resources`                             |
 
@@ -39,9 +39,10 @@ ScientificDataExplorer ── requestResourceDownload (Server Action, app/(publi
                               1. getSessionUser()       → none: `unauthenticated`
                               2. getPermissionsForRole  → the role's grants, read on this request
                               3. validateResourceDownload (app/services/downloads/downloadAccess.ts)
-                                   invalid      the query or format does not parse, or a future GOES date
-                                   unsupported  the product offers no such format (SUVI, SEISS CSV, …)
-                                   forbidden    a required grant is missing; the message names it
+                                   invalid      the query or format does not parse
+                                   futureDate   a GOES date after today
+                                   unsupported  the product offers no such format (SUVI, …)
+                                   forbidden    a required grant is missing, named in `permission`
 ```
 
 - An expired session is the same as no session: `getSessionUser()` returns `null`, so the user
@@ -49,8 +50,12 @@ ScientificDataExplorer ── requestResourceDownload (Server Action, app/(publi
 - Grants are read from `auth.role_permissions` on every attempt, never cached in the session, so
   a permission revoked a moment ago is already refused.
 - "Not signed in" and "not permitted" are told apart: the first sends the user to `/acceso`, the
-  second shows the denial message from `PERMISSION_DENIED`, for example _No tienes autorización
-  para descargar recursos GOES._
+  second shows the permission's denial message, `access.permissions.<permission>.denied`, for
+  example _No tienes autorización para descargar recursos GOES._
+- The service returns only a reason (`invalid`, `futureDate`, `unsupported`, `forbidden`, and
+  `pending` or `empty` from the download itself). The Server Action words it in the visitor's
+  language from `scientificData.errors`, because it is the one place with the request's locale.
+- The button labels are `scientificData.downloads.formats.<format>`.
 
 ## How a download is produced
 
@@ -74,24 +79,34 @@ again on every attempt, so retrying a failed download never skips a permission c
 ### Where the data comes from (`loaders.ts`)
 
 - **PNG** uses the same result the page shows (`scientificDataSources.query`). For EXIS and MAG
-  that result is sampled to 360 points. For SEISS it is the worker's `query-goes-archive` job:
-  the page passes along the `jobId` that answered its query, so the download reuses the finished
-  job instead of queueing a new one. While a job is still running, the action answers `pending`.
-  SEISS EHIS is the exception: its chart reads InfluxDB synchronously
-  ([`ehis-pipeline.md`](ehis-pipeline.md)), so its PNG never waits on a job. It still has no CSV,
-  because the download policy is per instrument and the rest of SEISS has no full-resolution path.
+  that result is sampled to 360 points, and so is SEISS, whose products (EHIS, SGPS, MPSH) all
+  read InfluxDB synchronously ([`seiss-pipeline.md`](seiss-pipeline.md)). The action still
+  forwards the `jobId` that answered the page's query and answers `pending` if a backend is still
+  working; no `/datos` product is served by an asynchronous job any more.
 - **EXIS CSV** reads InfluxDB **without sampling** (`queryExisReadingsFull`), keeping only the
   latest satellite in the window, as the chart does. A full SFXR day is about 86 000 rows, around
   3 MB.
 - **MAG CSV** does the same over `mag_field` (`queryMagReadingsFull`): at most 1 440 one-minute
   readings a day.
+- **SEISS CSV** reads the product's own measurement (`ehis_flux`, `sgps_flux`, `mpsh_flux`)
+  without sampling (`query{Ehis,Sgps,Mpsh}ReadingsFull`), dispatched on the product: at most
+  1 440 one-minute readings a day (288 for EHIS).
 - **ROSAC CSV** uses the simulated result, which is already complete.
 
 ### Exporters (`exporters/`)
 
+Every exporter writes in the language the download was asked in. `requestResourceDownload` builds
+an `ExportCopy` (`exporters/copy.ts`) from the request's locale and catalogue and passes it through
+`createResourceDownload` to `Exporter.export(result, copy)`. It carries the catalogue (for the
+instrument, product and channel names), `scientificData.origins` (provider and notice),
+`scientificData.files` (the labels around the data) and the axis number format. Anything that
+calls the service without one gets Spanish.
+
 - **`csv.ts`** follows RFC 4180: CRLF line endings, a UTF-8 BOM, and `#` metadata lines first
   (source, instrument, product, channel, unit, satellite, UTC range, provider, notice, generation
-  time). Columns are `timestamp_utc,value`, or `timestamp_utc,frequency_mhz,value` for a spectrum.
+  time). Columns are `timestamp_utc,value`, or `timestamp_utc,frequency_mhz,value` for a spectrum:
+  the metadata is translated, the column names are not, so a script reading the file works in
+  either language.
 - **`png.ts`** builds a standalone SVG from the layouts in `app/lib/charts/`, then rasterizes it at
   2× with `@resvg/resvg-js`. The on-screen `ScientificDataChart` and `DynamicSpectrumChart` use the
   same layouts, so the image matches the screen. Its header and footer carry the source,
@@ -130,13 +145,33 @@ download:
 
 The object expires after a day. The row stays.
 
+### The history page
+
+`/administracion/descargas` (grant `view_download_history`, held by administrators by default;
+**not** `download_resources`, which every role holds) lists these rows, newest first. It is
+read-only: no re-download, no delete, no CSV export.
+
+- `getDownloadHistoryPage` (`app/lib/download-history.ts`) checks the grant itself, counts the
+  matching rows, and reads **10** (`DOWNLOAD_HISTORY_PAGE_SIZE`) with `skip`/`take`, ordered by
+  `createdAt desc, id desc` so pages never overlap. `object_key` and `expires_at` are never
+  selected, so no key or link reaches the client.
+- The page is `?page=N`, brought to the nearest real page by `paginate`; a non-number means page 1.
+- Filters are query parameters of a plain GET form, so applying them restarts at page 1 and the
+  URL can be shared: `from`, `to` (inclusive UTC days), `source`, `instrument`, `format`, `user`.
+  A value outside the catalogue (an unknown source, a malformed date or id) is ignored, never an
+  error. `source`/`instrument` are checked against `scientific-data.ts`, `format` against
+  `DOWNLOAD_FORMATS`.
+- Times are shown in UTC, like `/datos`. A row whose account was deleted reads "Cuenta eliminada".
+- The two indexes on the table, `(user_id, created_at)` and `(source, instrument, created_at)`,
+  serve the user and the source/instrument filters.
+
 ## Adding an instrument or a format
 
-**An instrument** (say SEISS data):
+**An instrument** (say SUVI data):
 
-1. Add a reader that returns a `ScientificDataResult`. For SEISS, this means a full-resolution
-   path through the worker first, because `query-goes-archive` samples to 360 points. MAG did
-   this with a pipeline into InfluxDB ([`mag-pipeline.md`](mag-pipeline.md)).
+1. Add a reader that returns a `ScientificDataResult` at full resolution. MAG and SEISS did this
+   with a pipeline into InfluxDB ([`mag-pipeline.md`](mag-pipeline.md),
+   [`seiss-pipeline.md`](seiss-pipeline.md)).
 2. Add its formats to `DOWNLOAD_POLICIES` (`app/lib/downloads/policy.ts`).
 3. Add the loader to `DOWNLOAD_LOADERS` (`app/services/downloads/loaders.ts`).
    `loaders.test.ts` fails while a policy entry has no loader.
@@ -157,15 +192,17 @@ table, like `RolePermission.permission`.
 
 ## Tests
 
-| What                 | Where                                                                 |
-| -------------------- | --------------------------------------------------------------------- |
-| Policy table         | `apps/web/app/lib/downloads/policy.test.ts`                           |
-| Access validation    | `apps/web/tests/unit/services/downloads/downloadAccess.test.ts`       |
-| Chart layouts        | `apps/web/app/lib/charts/charts.test.ts`                              |
-| Exporters, storage   | `apps/web/tests/unit/services/downloads/`                             |
-| Server Action        | `apps/web/app/(public)/datos/actions.test.ts`                         |
-| Buttons and explorer | `ResourceDownloadActions.test.tsx`, `ScientificDataExplorer.test.tsx` |
-| End to end (gating)  | `apps/web/tests/e2e/scientific-data.spec.ts`, `describe('downloads')` |
+| What                 | Where                                                                    |
+| -------------------- | ------------------------------------------------------------------------ |
+| Policy table         | `apps/web/app/lib/downloads/policy.test.ts`                              |
+| Access validation    | `apps/web/tests/unit/services/downloads/downloadAccess.test.ts`          |
+| Chart layouts        | `apps/web/app/lib/charts/charts.test.ts`                                 |
+| Exporters, storage   | `apps/web/tests/unit/services/downloads/`                                |
+| Server Action        | `apps/web/app/(public)/datos/actions.test.ts`                            |
+| Buttons and explorer | `ResourceDownloadActions.test.tsx`, `ScientificDataExplorer.test.tsx`    |
+| End to end (gating)  | `apps/web/tests/e2e/scientific-data.spec.ts`, `describe('downloads')`    |
+| History query        | `apps/web/app/lib/download-history.test.ts`                              |
+| History page         | `DownloadHistoryPage.test.tsx`; e2e `tests/e2e/download-history.spec.ts` |
 
 CI's e2e job has no MinIO, so the Playwright suite checks who gets which button and the sign-in
 redirect, not the file itself. The unit tests cover generation; check a real download locally

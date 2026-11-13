@@ -45,7 +45,7 @@ async function findFrames(channel: string, start: Date, end: Date) {
       orderBy: { observedAt: 'asc' },
     })
   } catch {
-    throw new ScientificDataUpstreamError('No fue posible consultar el archivo de imágenes SUVI.')
+    throw new ScientificDataUpstreamError('The SUVI image catalogue could not be read.')
   }
 }
 
@@ -74,18 +74,13 @@ export async function querySuviFrames(
   // Never mix spacecraft in one sequence: keep the one that observed most recently.
   const satellite = frames.at(-1)?.satellite
   const satelliteId = satellite ? satelliteNumber(satellite) : null
-  const observer = satelliteId ? `GOES-${satelliteId}` : 'GOES'
   const images = selectEvenly(
     frames.filter((frame) => frame.satellite === satellite),
     MAX_SUVI_IMAGES,
-  ).map(({ id, observedAt }) => {
-    const timestamp = observedAt.toISOString().replace(/\.\d{3}Z$/, 'Z')
-    return {
-      timestamp,
-      imageUrl: `/api/suvi/frames/${id}`,
-      alt: `${selection.product.name} observada por ${observer} a las ${timestamp.slice(11, 16)} UTC`,
-    }
-  })
+  ).map(({ id, observedAt }) => ({
+    timestamp: observedAt.toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    imageUrl: `/api/suvi/frames/${id}`,
+  }))
 
   return {
     query,
@@ -94,9 +89,8 @@ export async function querySuviFrames(
     parameter,
     origin: {
       kind: 'observed',
-      provider: 'CITIC-UCR — archivo SUVI de NOAA',
-      notice:
-        'Representaciones ilustrativas de imágenes SUVI nivel 1b catalogadas por CITIC-UCR. Se excluyen las imágenes marcadas por contaminación o eclipse.',
+      dataset: 'suvi',
+      resolution: 'sampled',
       ...(satelliteId ? { satellite: satelliteId } : {}),
     },
     visualization: 'image-sequence',

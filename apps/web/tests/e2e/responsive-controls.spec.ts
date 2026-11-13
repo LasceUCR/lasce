@@ -1,6 +1,7 @@
 import { expect, test, type Locator } from '@playwright/test'
 
 import { createSignedInUser } from './helpers/admin-users'
+import { enableEditMode } from './helpers/edit-mode'
 
 async function box(locator: Locator) {
   await expect(locator).toBeVisible()
@@ -112,7 +113,7 @@ test.describe('responsive native controls', () => {
     const fixture = await createSignedInUser(context, 'ADMIN')
     try {
       await page.goto('/administracion')
-      await page.getByRole('switch', { name: 'Modo edición' }).click()
+      await enableEditMode(page)
       await page.goto('/noticias')
       await page.getByRole('button', { name: 'Agregar noticia' }).click()
       const dialog = page.getByRole('dialog', { name: 'Agregar noticia' })

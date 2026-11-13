@@ -1,7 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
-import { useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useId, useImperativeHandle, useRef, useState, type KeyboardEvent, type Ref } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -38,27 +38,11 @@ export interface PersonProfile {
   email?: string | readonly string[]
   institution: string
   description?: string
-  /** The stored base role before UI localization, used to initialize single-language edit forms. */
-  storedRole?: string
-  /** The stored base description before UI localization, used to initialize single-language edit forms. */
-  storedDescription?: string | null
-}
-
-export interface ResearcherFormValues {
-  role: string
-  name: string
-  /** `''` means no public address — same as an untouched row. */
-  email: string
-  institution: string
-  description: string
-  /** The photo's permanent URL — already uploaded by the time `onSave` runs. `''` means no
-   * photo: the photo is optional, and the card shows a default portrait instead. */
-  src: string
 }
 
 /**
- * What `onSave` receives in the bilingual mode (`translation`): the shared fields, and the role
- * and description of both languages in `content` instead of `role` and `description`.
+ * What `onSave` receives: the shared fields, and the role and description of both languages in
+ * `content` instead of `role` and `description`.
  */
 export interface BilingualResearcherFormValues {
   name: string
@@ -77,13 +61,20 @@ export interface BilingualResearcherFormValues {
   confirmedUnchanged: ReviewConfirmation<NosotrosResearcherField>[]
 }
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface ResearcherFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 interface ResearcherFormBaseProps {
   /** `null` starts a blank form for a new researcher. */
   researcher: PersonProfile | null
   onCancel: () => void
+  ref?: Ref<ResearcherFormHandle>
 }
 
-/** What turns the bilingual mode on. */
+/** The researcher's text in both languages, and the version a save is checked against. */
 export interface ResearcherFormTranslation {
   /**
    * `editing` of the researcher being edited: its text in both languages and the version to save
@@ -92,26 +83,17 @@ export interface ResearcherFormTranslation {
   editing: NosotrosResearcherEditingData | null
 }
 
-/** The single-language form (ROSAC): one role and one description. */
-export interface SingleLanguageResearcherFormProps extends ResearcherFormBaseProps {
-  translation?: undefined
-  onSave: (values: ResearcherFormValues) => void
-}
-
 /**
- * The opt-in bilingual form (`/nosotros`): the role and the description sit in one tab per
- * language. It needs the site's language, so it is the only mode that reads the message
- * catalogue.
+ * The role and the description sit in one tab per language. `/nosotros` and `/radioastronomia`
+ * both pass `translation`.
  */
-export interface BilingualResearcherFormProps extends ResearcherFormBaseProps {
+export interface ResearcherFormProps extends ResearcherFormBaseProps {
   translation: ResearcherFormTranslation
   onSave: (values: BilingualResearcherFormValues) => void
 }
 
-export type ResearcherFormProps = SingleLanguageResearcherFormProps | BilingualResearcherFormProps
-
-/** Messages match `researcherInputSchema` / `nosotrosResearcherInputSchema`
- * so a rejection reads the same whether it's caught here or by the server. */
+/** Messages match the researcher create and update schemas, so a rejection reads the same
+ * whether it's caught here or by the server. */
 function requireNonEmpty(message: string) {
   return (value: string) => {
     if (value.trim() === '') throw new Error(message)
@@ -134,24 +116,15 @@ function parseEmails(email: PersonProfile['email']): string[] {
 }
 
 export function ResearcherForm(props: ResearcherFormProps) {
-  const { researcher, onCancel } = props
+  const { researcher, onCancel, translation, ref } = props
   const t = useTranslations('researchers')
-  const bilingual = props.translation !== undefined
   const contentRef = useRef<ResearcherContentHandle>(null)
-  const initialRole =
-    researcher?.storedRole !== undefined ? (researcher.storedRole ?? '') : (researcher?.role ?? '')
-  const initialDescription =
-    researcher?.storedDescription !== undefined
-      ? (researcher.storedDescription ?? '')
-      : (researcher?.description ?? '')
-  const [role, setRole] = useState(initialRole)
   const [name, setName] = useState(researcher?.name ?? '')
   const emailFieldId = useId()
   const [emails, setEmails] = useState(parseEmails(researcher?.email))
   const [newEmail, setNewEmail] = useState('')
   const [newEmailError, setNewEmailError] = useState<string | null>(null)
   const [institution, setInstitution] = useState(researcher?.institution ?? '')
-  const [description, setDescription] = useState(initialDescription)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoRemoved, setPhotoRemoved] = useState(false)
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
@@ -163,7 +136,6 @@ export function ResearcherForm(props: ResearcherFormProps) {
   // the same way `useRequestFeedback` handles the save request.
   const uploadErrorToast = useRef<number | null>(null)
 
-  const roleError = hasAttemptedSubmit && role.trim() === '' ? t('editor.roleRequired') : null
   const nameError = hasAttemptedSubmit && name.trim() === '' ? t('editor.nameRequired') : null
   const institutionError =
     hasAttemptedSubmit && institution.trim() === '' ? t('editor.institutionRequired') : null
@@ -172,17 +144,13 @@ export function ResearcherForm(props: ResearcherFormProps) {
   const emailsChanged =
     emails.length !== initialEmails.length ||
     emails.some((address, index) => address !== initialEmails[index])
-  // In the bilingual mode the role and the description are tracked by the content fields, which
-  // are only asked from an event handler.
+  // The role and the description are tracked by the content fields, which are only asked from an
+  // event handler.
   function isDirty() {
-    const textChanged = bilingual
-      ? (contentRef.current?.isDirty() ?? false)
-      : role !== initialRole || description !== initialDescription
-
     return (
       name !== (researcher?.name ?? '') ||
       institution !== (researcher?.institution ?? '') ||
-      textChanged ||
+      (contentRef.current?.isDirty() ?? false) ||
       emailsChanged ||
       newEmail.trim() !== '' ||
       photoFile !== null ||
@@ -190,13 +158,38 @@ export function ResearcherForm(props: ResearcherFormProps) {
     )
   }
 
-  function handleCancelClick() {
+  /**
+   * The addresses to save. An empty box adds nothing. A box that still holds text is kept when
+   * the address is valid, and blocks the save when it is not, so a typed address is never
+   * dropped on the way out.
+   */
+  function emailsToSave(): string[] | null {
+    const trimmed = newEmail.trim()
+    if (trimmed === '') return emails
+    if (emails.length >= MAX_EMAILS) {
+      setNewEmailError(t('editor.maxEmails'))
+      return null
+    }
+    if (!isValidEmail(trimmed)) {
+      setNewEmailError(t('editor.invalidEmail'))
+      return null
+    }
+    if (emails.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
+      setNewEmailError(t('editor.duplicateEmail'))
+      return null
+    }
+    return [...emails, trimmed]
+  }
+
+  function requestCancel() {
     if (isDirty()) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function handleConfirmDiscard() {
     setConfirmDiscardOpen(false)
@@ -207,28 +200,27 @@ export function ResearcherForm(props: ResearcherFormProps) {
   // as each field becomes valid — same as the news article form.
   function handleConfirmClick() {
     setHasAttemptedSubmit(true)
-    const roleMissing = !bilingual && role.trim() === ''
-    const sharedValid = !roleMissing && name.trim() !== '' && institution.trim() !== ''
+    const addresses = emailsToSave()
+    const sharedValid = name.trim() !== '' && institution.trim() !== ''
     // The tabs open the language that has an error; they only take the focus when nothing shared
     // above them is wrong.
-    const contentValid = bilingual
-      ? (contentRef.current?.validate({ focus: sharedValid }) ?? true)
-      : true
-    if (!sharedValid || !contentValid) {
-      if (roleMissing) {
-        document.getElementById('researcher-role')?.focus()
-      } else if (name.trim() === '') {
+    const contentValid =
+      contentRef.current?.validate({ focus: sharedValid && addresses !== null }) ?? false
+    if (addresses === null || !sharedValid || !contentValid) {
+      if (name.trim() === '') {
         document.getElementById('researcher-name')?.focus()
       } else if (institution.trim() === '') {
         document.getElementById('researcher-institution')?.focus()
+      } else if (addresses === null) {
+        document.getElementById('researcher-email')?.focus()
       }
       return
     }
 
-    void handleConfirm()
+    void handleConfirm(addresses)
   }
 
-  async function handleConfirm() {
+  async function handleConfirm(addresses: string[]) {
     if (uploadErrorToast.current !== null) {
       toast.dismiss(uploadErrorToast.current)
       uploadErrorToast.current = null
@@ -236,6 +228,12 @@ export function ResearcherForm(props: ResearcherFormProps) {
 
     // An untouched photo is kept as is; a removed one is saved as `''`, which means no photo.
     let src = photoRemoved ? '' : (researcher?.src ?? '')
+    if (newEmail.trim() !== '') {
+      setEmails(addresses)
+      setNewEmail('')
+      setNewEmailError(null)
+    }
+
     if (photoFile) {
       setIsUploading(true)
 
@@ -258,23 +256,18 @@ export function ResearcherForm(props: ResearcherFormProps) {
       src = result.imageUrl
     }
 
-    if (props.translation) {
-      const { content, confirmedUnchanged } = contentRef.current?.result() ?? {
-        content: null,
-        confirmedUnchanged: [],
-      }
-      props.onSave({
-        name,
-        email: emails.join(', '),
-        institution,
-        src,
-        content,
-        confirmedUnchanged,
-      })
-      return
+    const { content, confirmedUnchanged } = contentRef.current?.result() ?? {
+      content: null,
+      confirmedUnchanged: [],
     }
-
-    props.onSave({ role, name, email: emails.join(', '), institution, description, src })
+    props.onSave({
+      name,
+      email: addresses.join(', '),
+      institution,
+      src,
+      content,
+      confirmedUnchanged,
+    })
   }
 
   function addEmail() {
@@ -284,7 +277,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
       return
     }
     if (trimmed === '') {
-      setNewEmailError('El correo es obligatorio.')
+      setNewEmailError(t('editor.emailRequired'))
       return
     }
     if (!isValidEmail(trimmed)) {
@@ -323,18 +316,6 @@ export function ResearcherForm(props: ResearcherFormProps) {
         }}
       />
 
-      {bilingual ? null : (
-        <FormField
-          errorMessage={roleError}
-          id="researcher-role"
-          label={t('editor.roleLabel')}
-          onChange={setRole}
-          required
-          validate={requireNonEmpty(t('editor.roleRequired'))}
-          value={role}
-        />
-      )}
-
       <FormField
         errorMessage={nameError}
         id="researcher-name"
@@ -355,11 +336,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
             {t('editor.contactLabel')}
           </span>
           <span aria-live="polite" className="publication-authors-count">
-            {emails.length === 0
-              ? 'Sin correos'
-              : emails.length === 1
-                ? '1 correo'
-                : `${emails.length} correos`}
+            {t('editor.contactCount', { count: emails.length })}
           </span>
         </div>
         <div
@@ -368,7 +345,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
           }
         >
           {emails.length > 0 ? (
-            <ul aria-label="Correos de contacto" className="publication-authors-list">
+            <ul aria-label={t('editor.contactListLabel')} className="publication-authors-list">
               {emails.map((address) => (
                 <li className="email-chip" key={address}>
                   {address}
@@ -387,17 +364,22 @@ export function ResearcherForm(props: ResearcherFormProps) {
               aria-describedby={newEmailError ? emailFieldId : undefined}
               aria-invalid={newEmailError ? true : undefined}
               aria-label={t('editor.emailLabel')}
+              id="researcher-email"
               onChange={(event) => {
                 setNewEmail(event.target.value)
                 setNewEmailError(null)
               }}
               onKeyDown={handleEmailKeyDown}
-              placeholder={emails.length > 0 ? 'Escribir otro correo...' : 'Escribir un correo...'}
+              placeholder={
+                emails.length > 0
+                  ? t('editor.emailPlaceholderAnother')
+                  : t('editor.emailPlaceholder')
+              }
               type="email"
               value={newEmail}
             />
             <Button className="publication-authors-add" onClick={addEmail} variant="secondary">
-              Agregar
+              {t('editor.add')}
             </Button>
           </div>
         </div>
@@ -418,20 +400,10 @@ export function ResearcherForm(props: ResearcherFormProps) {
         value={institution}
       />
 
-      {props.translation ? (
-        <ResearcherContentFields editing={props.translation.editing} ref={contentRef} />
-      ) : (
-        <FormField
-          id="researcher-description"
-          label={t('editor.descriptionLabel')}
-          multiline
-          onChange={setDescription}
-          value={description}
-        />
-      )}
+      <ResearcherContentFields editing={translation.editing} ref={contentRef} />
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('editor.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">

@@ -714,7 +714,7 @@ const nosotrosActivities: SeedNosotrosActivity[] = [
     icon: 'SUN',
     title: 'Fenómenos solares eruptivos',
     paragraph:
-      "Analizamos fenómenos solares eruptivos, como 'flares', eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.",
+      'Analizamos fenómenos solares eruptivos, como fulguraciones, eyecciones de masa coronal (CMEs, por sus siglas en inglés) y emisiones solares de radio.',
   },
   {
     icon: 'WAVES',
@@ -757,6 +757,52 @@ for (const activity of nosotrosActivities) {
 }
 
 /**
+ * Initial data for `AcademicActivity` on the dedicated `/actividades-academicas` page.
+ * Same placeholder authorship as `nosotrosActivities` above: editorial content LASCE supplied
+ * before this table's CMS form existed. Guarded like the ROSAC tables below: only seeded when
+ * the table is empty, so re-running the seed never wipes an activity an admin created or edited
+ * through the CMS.
+ */
+if ((await prisma.academicActivity.count()) === 0) {
+  const machineLearningWorkshop = await prisma.academicActivity.create({
+    data: {
+      title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+      category: 'Taller',
+      startDate: new Date('2026-02-16'),
+      endDate: new Date('2026-02-20'),
+      location: 'San José, Costa Rica',
+      description: [
+        'En el marco del proyecto LASCE se realizó, del 16 al 20 de febrero de 2026 en San José, Costa Rica, el Taller sobre Aprendizaje Automático Aplicado al Clima Espacial y a los Sistemas Globales de Navegación por Satélite (GNSS). La actividad reunió durante cinco días a estudiantes, jóvenes investigadores y especialistas para fortalecer sus capacidades en el estudio de la relación Sol-Tierra, el análisis de datos científicos y la aplicación de técnicas de inteligencia artificial y aprendizaje automático al clima espacial.',
+        'El programa combinó conferencias, sesiones de discusión y prácticas computacionales dedicadas a los procesos ionosféricos, los efectos del clima espacial sobre los sistemas GNSS, la computación científica y el análisis de datos mediante herramientas de aprendizaje automático. Este enfoque permitió integrar la comprensión física de los fenómenos solares y terrestres con métodos modernos de procesamiento, modelado y predicción, promoviendo además el uso de datos abiertos y procedimientos reproducibles.',
+        'El taller contó con 52 participantes presenciales procedentes de 17 países; el 37,2 % fueron mujeres y el 70 % provenía de países en desarrollo. Fue organizado con la participación del Centro de Investigaciones Espaciales de la Universidad de Costa Rica, la Oficina de las Naciones Unidas para Asuntos del Espacio Ultraterrestre, el Comité Internacional sobre los GNSS, COSPAR, INGV y SCOSTEP, junto con contribuciones de la Universidad Nacional de Tucumán y el Centro Internacional de Física Teórica Abdus Salam.',
+        'Esta actividad fortaleció la proyección internacional del LASCE, amplió las redes de colaboración científica y contribuyó a la formación de capacidades regionales para investigar, monitorear y predecir los efectos del clima espacial sobre la ionosfera y los sistemas tecnológicos. Asimismo, generó un espacio para identificar nuevos desafíos científicos, oportunidades de cooperación y futuras iniciativas que integren la física del clima espacial con herramientas avanzadas de análisis de datos.',
+      ].join('\n\n'),
+      photoUrl: '/images/galeria/workshop-ml-2026/1.jpg',
+      photoAlt:
+        'Comité y participantes junto al cartel oficial del taller de Machine Learning y clima espacial',
+      modifiedBy: seedContentAuthor.id,
+    },
+  })
+
+  await prisma.academicActivityTranslation.create({
+    data: {
+      academicActivityId: machineLearningWorkshop.id,
+      locale: 'en',
+      title: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+      category: 'Workshop',
+      description: [
+        'As part of the LASCE project, the Workshop on Machine Learning Applied to Space Weather and Global Navigation Satellite Systems (GNSS) was held from 16 to 20 February 2026 in San José, Costa Rica. For five days the activity brought together students, early-career researchers and specialists to strengthen their skills in the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather.',
+        'The programme combined lectures, discussion sessions and computational practice devoted to ionospheric processes, the effects of space weather on GNSS systems, scientific computing and data analysis with machine learning tools. This approach made it possible to combine the physical understanding of solar and terrestrial phenomena with modern methods of processing, modelling and prediction, while also promoting the use of open data and reproducible procedures.',
+        'The workshop had 52 in-person participants from 17 countries; 37.2% were women and 70% came from developing countries. It was organised with the participation of the Space Research Center of the University of Costa Rica, the United Nations Office for Outer Space Affairs, the International Committee on GNSS, COSPAR, INGV and SCOSTEP, together with contributions from the National University of Tucumán and the Abdus Salam International Centre for Theoretical Physics.',
+        'This activity strengthened the international profile of LASCE, widened its networks of scientific collaboration and contributed to building regional capabilities for researching, monitoring and predicting the effects of space weather on the ionosphere and on technological systems. It also created a space for identifying new scientific challenges, opportunities for cooperation and future initiatives that combine space weather physics with advanced data analysis tools.',
+      ].join('\n\n'),
+      photoAlt:
+        'Committee and participants beside the official poster of the Machine Learning and space weather workshop',
+    },
+  })
+}
+
+/**
  * Initial data for the ROSAC researcher profiles ("Investigadores" on
  * /radioastronomia). This is the editorial content LASCE supplied before the
  * CMS existed, same as `nosotrosActivities` above — authored by the same
@@ -764,11 +810,15 @@ for (const activity of nosotrosActivities) {
  */
 type SeedResearcher = {
   photoUrl: string
-  role: string
   name: string
   email?: string[]
   institution: string
-  description: string
+  role: string
+  description?: string
+  en: {
+    role: string
+    description?: string
+  }
 }
 
 const researchers: SeedResearcher[] = [
@@ -780,6 +830,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     description:
       'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
+    en: {
+      role: 'Principal Investigator',
+      description:
+        'Responsible for strategic planning of the resources needed for proper assembly and installation of the radio telescope, as well as lead in the management and analysis of data obtained through this instrument.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/MiguelVelazquez.jpg',
@@ -788,6 +843,10 @@ const researchers: SeedResearcher[] = [
     email: ['miguel.velazquez@ucr.ac.cr'],
     institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica, México',
     description: 'Encargado del desarrollo de la instrumentación en ROSAC.',
+    en: {
+      role: 'Researcher',
+      description: 'In charge of instrumentation development at ROSAC.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/DavidGale.jpg',
@@ -797,6 +856,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Instituto Nacional de Astrofísica, Óptica y Electrónica (INAOE), Puebla, México',
     description:
       'Instalación y alineación de los reflectores del telescopio. Sistemas mecánicos, pruebas de movimiento, protección contra descargas eléctricas. Apoyo en general.',
+    en: {
+      role: 'Researcher',
+      description:
+        'Installation and alignment of telescope reflectors. Mechanical systems, motion testing, lightning protection. General support.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/OscarNunez.jpg',
@@ -805,6 +869,10 @@ const researchers: SeedResearcher[] = [
     email: ['oscar.nunezmata@ucr.ac.cr'],
     institution: 'Escuela de Ingeniería Eléctrica, UCR',
     description: 'Encargado del sistema eléctrico y soporte técnico en los motorreductores.',
+    en: {
+      role: 'Researcher',
+      description: 'In charge of the electrical system and technical support for gear motors.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/FedericoRuiz.png',
@@ -814,6 +882,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Instituto de Investigaciones en Ingeniería (INII), UCR',
     description:
       'Encargado de la implementación y puesta en operación de los sensores y actuadores, así como del desarrollo del controlador y de los sistemas de software asociados al radiotelescopio ROSAC.',
+    en: {
+      role: 'Researcher',
+      description:
+        'In charge of the implementation and commissioning of sensors and actuators, as well as the development of the controller and software systems associated with the ROSAC radio telescope.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/GustavoLara.jpg',
@@ -823,6 +896,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Escuela de Ingeniería Topográfica, UCR',
     description:
       'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+    en: {
+      role: 'Researcher',
+      description:
+        'In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/AndresFallas.jpg',
@@ -832,6 +910,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Escuela de Ingeniería Topográfica, UCR',
     description:
       'Encargado del control técnico y geodésico, ejecutando desde la nivelación de la base, la calibración angular, el monitoreo de deformaciones de la parábola y el diseño de la red de control. Provee los datos paramétricos para la configuración y el funcionamiento del software de control y seguimiento del radiotelescopio.',
+    en: {
+      role: 'Researcher',
+      description:
+        'In charge of technical and geodetic control, performing base leveling, angular calibration, dish deformation monitoring, and control network design. Provides parametric data for the configuration and operation of the radio telescope control and tracking software.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/WagnerMejias.jpg',
@@ -841,6 +924,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Escuela de Ingeniería Mecánica, UCR',
     description:
       'Instalación mecánica de la estructura, mantenimiento preventivo y correctivo, adaptaciones y mejoras en la estructura en general.',
+    en: {
+      role: 'Researcher',
+      description:
+        'Mechanical installation of the structure, preventive and corrective maintenance, adaptations and improvements to the general structure.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/EduardoIbarra.jpg',
@@ -849,6 +937,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Investigador en ingeniería de microondas en Quantum Motion Technologies, Londres',
     description:
       'Colaborador en el desarrollo y pruebas de la etapa de recepción en el rango de 100 MHz a 1.1 GHz, el análisis de sensibilidad del receptor, el diseño del radiotelescopio y en las labores de instalación eléctrica y control del sistema de guiado de la antena.',
+    en: {
+      role: 'External collaborator',
+      description:
+        'Collaborator in the development and testing of the reception stage in the 100 MHz to 1.1 GHz range, receiver sensitivity analysis, radio telescope design, and electrical installation and antenna guidance system control tasks.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/AndresCorrales.jpg',
@@ -857,6 +950,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Hewlett Packard Enterprise, Costa Rica',
     description:
       'Diseñador, desarrollador y mantenedor del software de control del radiotelescopio y software de usuario final.',
+    en: {
+      role: 'External collaborator',
+      description:
+        'Designer, developer, and maintainer of the radio telescope control software and end-user software.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/AndresGamboa.jpg',
@@ -865,6 +963,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Cirtec Medical Enterprise',
     description:
       'Apoyo en tareas de mantenimiento del radiotelescopio, así como en labores electromecánicas relacionadas con el montaje de instrumentos.',
+    en: {
+      role: 'External collaborator',
+      description:
+        'Support in radio telescope maintenance tasks, as well as electromechanical work related to instrument assembly.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/JelmutRojas.jpg',
@@ -872,6 +975,10 @@ const researchers: SeedResearcher[] = [
     role: 'Colaborador externo',
     institution: 'INDI CR',
     description: 'Apoyo en tareas de nivelación de la estructura.',
+    en: {
+      role: 'External collaborator',
+      description: 'Support in structure leveling tasks.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/BarnaldBocker-2.jpg',
@@ -880,6 +987,11 @@ const researchers: SeedResearcher[] = [
     institution: 'Estudiante de la Escuela de Física, UCR',
     description:
       'Apoyo en el desarrollo y mantenimiento del software de control del ROSAC y protocolos de comunicación.',
+    en: {
+      role: 'Assistant',
+      description:
+        'Support in the development and maintenance of ROSAC control software and communication protocols.',
+    },
   },
   {
     photoUrl: '/images/ROSAC/team/FabianChaverri.jpg',
@@ -888,14 +1000,31 @@ const researchers: SeedResearcher[] = [
     institution: 'Centro de Investigaciones Espaciales (CINESPA), UCR',
     description:
       'Futuro estudiante de doctorado con tesis en instrumentación astronómica ligada al proyecto.',
+    en: {
+      role: 'Prospective doctoral student',
+      description:
+        'Prospective doctoral student with a thesis in astronomical instrumentation linked to the project.',
+    },
   },
 ]
 
 await prisma.researcher.deleteMany()
 
-for (const researcher of researchers) {
+for (const { en, ...researcher } of researchers) {
   await prisma.researcher.create({
-    data: { ...researcher, modifiedBy: seedContentAuthor.id },
+    data: {
+      ...researcher,
+      modifiedBy: seedContentAuthor.id,
+      translations: {
+        create: [
+          {
+            locale: 'en',
+            role: en.role,
+            description: en.description ?? null,
+          },
+        ],
+      },
+    },
   })
 }
 
@@ -906,11 +1035,15 @@ for (const researcher of researchers) {
  */
 type SeedNosotrosResearcher = {
   photoUrl: string
-  role: string
   name: string
   email?: string[]
   institution: string
+  role: string
   description?: string
+  en: {
+    role: string
+    description?: string
+  }
 }
 
 const nosotrosResearchers: SeedNosotrosResearcher[] = [
@@ -922,6 +1055,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Centro de Investigaciones Espaciales, CINESPA',
     description:
       'Además de desempeñarse como investigadora principal, orienta la definición de las líneas de investigación, coordina la integración entre astrofísica solar, radioastronomía, clima espacial, análisis de datos e inteligencia artificial; y vincula el trabajo científico con el desarrollo de infraestructura y capacidades de observación propias, particularmente mediante el radiotelescopio ROSAC. Su experiencia en el estudio conjunto de flares, emisiones de rayos X, eyecciones de masa coronal y predicción de tiempos de llegada de ICMEs a la Tierra, proporciona la base científica para impulsar herramientas de monitoreo y pronóstico adaptadas a Costa Rica. Asimismo, promueve la colaboración interdisciplinaria e internacional, la formación de estudiantes y jóvenes investigadores, y la transferencia del conocimiento científico hacia aplicaciones que permitan comprender y anticipar los efectos de la actividad solar sobre el entorno terrestre y los sistemas tecnológicos.',
+    en: {
+      role: 'Principal investigator',
+      description:
+        'Besides serving as principal investigator, she guides the definition of the research lines and coordinates the integration of solar astrophysics, radio astronomy, space weather, data analysis and artificial intelligence; she also links the scientific work to the development of infrastructure and our own observation capabilities, particularly through the ROSAC radio telescope. Her experience in the joint study of flares, X-ray emissions, coronal mass ejections and the prediction of ICME arrival times at Earth provides the scientific basis to drive monitoring and forecasting tools adapted to Costa Rica. She also promotes interdisciplinary and international collaboration, the training of students and young researchers, and the transfer of scientific knowledge into applications that help understand and anticipate the effects of solar activity on the terrestrial environment and technological systems.',
+    },
   },
   {
     photoUrl: '/images/Researchers/AllanBerrocal.jpg',
@@ -931,6 +1069,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
     description:
       'Diseño, desarrollo e implementación de la plataforma informática del LASCE. Las tareas puntuales abarcan la captura de datos masivos de diferentes fuentes con información sobre el clima solar, el almacenamiento de los datos procesados y de interés para el proyecto en sistemas de bases de datos adecuadas para el dominio, y finalmente la habilitación de una interfaz de consulta mediante servicios web. Adicionalmente apoyar en los objetivos de análisis de datos sobre el clima solar junto a investigadores(as) especialistas en la materia como astrofísicos(as) solares.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        "Design, development and implementation of LASCE's computing platform. The specific tasks cover capturing massive data from different sources with space weather information, storing the processed data of interest to the project in database systems suited to the domain, and finally providing a query interface through web services. He also supports the data analysis objectives on space weather alongside specialist researchers such as solar astrophysicists.",
+    },
   },
   {
     photoUrl: '/images/Researchers/LuisEsquivel.jpeg',
@@ -938,6 +1081,9 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     role: 'Investigador colaborador',
     email: ['luis.esquivel@ucr.ac.cr'],
     institution: 'Escuela de Ciencias de la Computación e Informática, UCR',
+    en: {
+      role: 'Collaborating researcher',
+    },
   },
   {
     photoUrl: '/images/Researchers/IvanniaCalvo.png',
@@ -947,6 +1093,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Centro de Investigaciones Espaciales',
     description:
       'Soporte Técnico/Computacional y encargada del Observatorio Astronómico de San José (OAS)',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        'Technical and computing support, and in charge of the San José Astronomical Observatory (OAS).',
+    },
   },
   {
     photoUrl: '/images/Researchers/FelipeMeza.jpg',
@@ -957,6 +1108,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
       'Escuela de Ingeniería Mecatrónica, TEC; Laboratorio de Inteligencia Artificial para las Ciencias Naturales (LIANA), TEC; Centro de Investigaciones Espaciales, UCR',
     description:
       'Desarrollo de modelos inteligentes para el análisis, interpretación y predicción de señales asociadas a fenómenos de clima espacial, integrando inteligencia artificial, procesamiento de señales y radioastronomía solar.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        'Development of intelligent models for the analysis, interpretation and prediction of signals associated with space weather phenomena, integrating artificial intelligence, signal processing and solar radio astronomy.',
+    },
   },
   {
     photoUrl: '/images/Researchers/AlonsoVega.jpeg',
@@ -966,6 +1122,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Escuela de Ingeniería Topográfica, UCR',
     description:
       'Procesamiento y análisis de datos GNSS provenientes de estaciones de operación continua colocalizadas el radiotelescopio ROSAC, así como de estaciones de la red SIRGAS-CON, con el propósito de caracterizar las variaciones del contenido electrónico de la ionosfera y su posible relación con la actividad solar.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        'Processing and analysis of GNSS data from continuously operating stations co-located with the ROSAC radio telescope, as well as stations of the SIRGAS-CON network, to characterize variations in the ionospheric electron content and their possible relation to solar activity.',
+    },
   },
   {
     photoUrl: '/images/Researchers/MolinaMariaGraciela.jpg',
@@ -976,6 +1137,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
       'Facultad de Ciencias Exactas y Tecnología (FACET, UNT), Argentina; Istituto Nazionale di Geofisica e Vulcanologia (INGV), Italia',
     description:
       'Su contribución se centra en el análisis y modelado de grandes volúmenes de datos mediante aprendizaje automático, series temporales y computación de alto desempeño, con especial énfasis en el monitoreo y la predicción del estado de la ionosfera ante diferentes condiciones solares y geomagnéticas. Asimismo, aporta su experiencia en instrumentación ionosférica y en el desarrollo de software para la detección automática de señales de radares geofísicos, fortaleciendo la integración entre observaciones, procesamiento avanzado de datos y herramientas predictivas dentro del laboratorio.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        'Her contribution focuses on the analysis and modeling of large volumes of data through machine learning, time series and high-performance computing, with special emphasis on monitoring and predicting the state of the ionosphere under different solar and geomagnetic conditions. She also contributes her experience in ionospheric instrumentation and in developing software for the automatic detection of signals from geophysical radars, strengthening the integration of observations, advanced data processing and predictive tools within the laboratory.',
+    },
   },
   {
     photoUrl: '/images/Researchers/YencaMigoya.jpg',
@@ -986,6 +1152,11 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
       'Science, Technology and Innovation Unit, The Abdus Salam International Centre for Theoretical Physics (ICTP), Italia',
     description:
       'Su contribución comprende el desarrollo e implementación de modelos físicos y computacionales, incluyendo técnicas de aprendizaje automático para analizar, interpretar, predecir y clasificar fenómenos espaciales. Asimismo, participa en el procesamiento y estudio de datos observacionales y simulaciones, fortaleciendo la capacidad del laboratorio para transformar grandes volúmenes de información en conocimiento científico. Su experiencia contribuye además a la consolidación del LASCE como un espacio de investigación interdisciplinaria y cooperación científica con proyección latinoamericana.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        "Her contribution includes the development and implementation of physical and computational models, including machine learning techniques, to analyze, interpret, predict and classify space phenomena. She also takes part in processing and studying observational data and simulations, strengthening the laboratory's capacity to turn large volumes of information into scientific knowledge. Her experience also contributes to consolidating LASCE as a space for interdisciplinary research and scientific cooperation with a Latin American reach.",
+    },
   },
   {
     photoUrl: '/images/Researchers/JohanaCamacho.jpeg',
@@ -995,14 +1166,31 @@ const nosotrosResearchers: SeedNosotrosResearcher[] = [
     institution: 'Instituto Costarricense de Electricidad; Universidad de Costa Rica',
     description:
       'Es geofísica de exploración del Instituto Costarricense de Electricidad (ICE), donde cuenta con más de 17 años de experiencia en la aplicación de métodos geofísicos para la caracterización del subsuelo y el desarrollo de proyectos de investigación aplicada. Asimismo, posee 8 años de experiencia como docente universitaria en la Escuela de Física de la Universidad de Costa Rica, impartiendo laboratorios de Física General. Actualmente es estudiante de doctorado e investigadora del Laboratorio de Clima Espacial (LASCE), donde desarrolla investigaciones relacionadas con geomagnetismo, ionósfera y clima espacial, utilizando registros de campo magnético terrestre en tiempo real. Su trabajo se enfoca en el análisis de la interacción entre la actividad geomagnética y la ionósfera, así como en sus aplicaciones para el estudio del clima espacial en Costa Rica. A lo largo de su trayectoria profesional ha participado en numerosos estudios e informes de investigación geofísica aplicados a infraestructura, exploración del subsuelo, energía e ingeniería, mediante el uso de técnicas como radar de penetración terrestre (GPR), tomografía de resistividad eléctrica y otros métodos geofísicos. Sus principales áreas de interés incluyen la geofísica aplicada, el geomagnetismo, el clima espacial y la formación de nuevas generaciones de científicos e Ingenieros.',
+    en: {
+      role: 'Collaborating researcher',
+      description:
+        "She is an exploration geophysicist at the Costa Rican Electricity Institute (ICE), with more than 17 years of experience applying geophysical methods to characterize the subsurface and to develop applied research projects. She also has 8 years of experience as a university lecturer at the School of Physics of the University of Costa Rica, teaching General Physics laboratories. She is currently a doctoral student and researcher at the Space Weather Laboratory (LASCE), where she carries out research on geomagnetism, the ionosphere and space weather using real-time records of the Earth's magnetic field. Her work focuses on analyzing the interaction between geomagnetic activity and the ionosphere, and on its applications to the study of space weather in Costa Rica. Throughout her career she has taken part in numerous geophysical research studies and reports applied to infrastructure, subsurface exploration, energy and engineering, using techniques such as ground-penetrating radar (GPR), electrical resistivity tomography and other geophysical methods. Her main areas of interest include applied geophysics, geomagnetism, space weather and the training of new generations of scientists and engineers.",
+    },
   },
 ]
 
 await prisma.nosotrosResearcher.deleteMany()
 
-for (const researcher of nosotrosResearchers) {
+for (const { en, ...researcher } of nosotrosResearchers) {
   await prisma.nosotrosResearcher.create({
-    data: { ...researcher, modifiedBy: seedContentAuthor.id },
+    data: {
+      ...researcher,
+      modifiedBy: seedContentAuthor.id,
+      translations: {
+        create: [
+          {
+            locale: 'en',
+            role: en.role,
+            description: en.description ?? null,
+          },
+        ],
+      },
+    },
   })
 }
 

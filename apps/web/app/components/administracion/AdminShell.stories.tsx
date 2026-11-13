@@ -20,7 +20,7 @@ export default meta
 
 type Story = StoryObj<typeof AdminShell>
 
-/** Every grant held: all five sections in the menu. */
+/** Every grant held: all four sections in the menu. */
 export const Default: Story = {
   args: {
     children: <p>Contenido de la sección</p>,
@@ -32,7 +32,7 @@ export const Default: Story = {
 export const PartialGrants: Story = {
   args: {
     ...Default.args,
-    granted: ['edit_components', 'download_resources'],
+    granted: ['edit_components', 'view_download_history'],
   },
 }
 

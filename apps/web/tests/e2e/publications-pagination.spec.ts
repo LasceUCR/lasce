@@ -4,6 +4,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
 import { createSignedInUser } from './helpers/admin-users'
+import { enableEditMode } from './helpers/edit-mode'
 
 // The publications listing is searched, filtered by research group and paginated on the server,
 // 10 items per page, the same way `/noticias` is. Every test creates its own 23 items, tagged so
@@ -354,7 +355,7 @@ test('refreshes the results and the totals after a publication is added or delet
   const added = `Publicación agregada ${fixtures.tag}`
   try {
     await page.goto('/administracion')
-    await page.getByRole('switch', { name: 'Modo edición' }).click()
+    await enableEditMode(page)
 
     await page.goto(search(fixtures.tag, 2))
     await page.getByRole('button', { name: 'Agregar publicación' }).click()

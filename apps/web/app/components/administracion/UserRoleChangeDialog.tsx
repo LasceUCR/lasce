@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useFormatter, useTranslations } from 'next-intl'
 import { Button } from '@/app/components/public/Button'
 import { ToastOutlet } from '@/app/components/public/toast/ToastOutlet'
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
@@ -9,8 +10,8 @@ import styles from './UserRoleChangeDialog.module.css'
 
 /**
  * The text of the permissions confirmation, already in the site's language. Built by
- * `RolePermissionsEditor` from `administration.permissions.dialog`; without it the dialog keeps
- * its Spanish text, which the user-role flow of `/administracion/usuarios` still uses.
+ * `RolePermissionsEditor` from `administration.permissions.dialog`; without it the permissions
+ * mode keeps its Spanish text. The user-role mode reads `administration.users.dialog` itself.
  */
 export interface PermissionsDialogCopy {
   title: string
@@ -58,6 +59,9 @@ export function UserRoleChangeDialog({
   onClose,
   isCurrentUser = false,
 }: UserRoleChangeDialogProps) {
+  const t = useTranslations('administration.users.dialog')
+  const errors = useTranslations('administration.users.errors')
+  const format = useFormatter()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const cancelRef = useRef<HTMLDivElement>(null)
   const savingRef = useRef(false)
@@ -77,15 +81,15 @@ export function UserRoleChangeDialog({
           'No pudimos confirmar el cambio. Recarga la página para comprobar los permisos actuales antes de volver a intentarlo.',
       }
     : {
-        title: role ? 'Confirmar cambio de rol' : 'Confirmar retiro de rol',
-        confirm: role ? 'Sí, cambiar rol' : 'Sí, retirar rol',
-        saving: 'Guardando cambio de rol…',
-        unknownError:
-          'No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo.',
+        title: role ? t('changeTitle') : t('removeTitle'),
+        confirm: role ? t('confirmChange') : t('confirmRemove'),
+        saving: t('savingStatus'),
+        unknownError: errors('unknown'),
       }
-  const cancelLabel = permissionsCopy?.cancel ?? 'No, cancelar'
-  const savingButtonLabel = permissionsCopy?.savingButton ?? 'Guardando…'
-  const reloadLabel = permissionsCopy?.reload ?? 'Recargar página'
+  const cancelLabel = permissionsCopy?.cancel ?? (permissionsMode ? 'No, cancelar' : t('cancel'))
+  const savingButtonLabel =
+    permissionsCopy?.savingButton ?? (permissionsMode ? 'Guardando…' : t('savingButton'))
+  const reloadLabel = permissionsCopy?.reload ?? (permissionsMode ? 'Recargar página' : t('reload'))
 
   useEffect(() => {
     if (error && !onError) errorRef.current?.focus()
@@ -146,36 +150,38 @@ export function UserRoleChangeDialog({
     body = (
       <>
         <p id={descriptionId}>
-          {role ? (
-            <>
-              ¿Quieres asignar el rol <strong>{role.name}</strong> a <strong>{user?.name}</strong>?
-            </>
-          ) : (
-            <>
-              ¿Quieres retirar el rol de <strong>{user?.name}</strong>?
-            </>
-          )}
+          {role
+            ? t.rich('assignQuestion', {
+                role: role.name,
+                name: user?.name ?? '',
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })
+            : t.rich('removeQuestion', {
+                name: user?.name ?? '',
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
         </p>
         <p className={styles.current}>
-          Rol actual: {currentRoles.map((entry) => entry.name).join(', ') || 'Sin rol'}
+          {t('currentRole', {
+            roles:
+              currentRoles.length > 0
+                ? format.list(
+                    currentRoles.map((entry) => entry.name),
+                    { type: 'conjunction' },
+                  )
+                : t('noRole'),
+          })}
         </p>
-        {isCurrentUser && (
-          <p className={styles.summary}>
-            Estás modificando tu propio rol. Al dejar de ser administrador perderás el acceso a esta
-            pantalla.
-          </p>
-        )}
+        {isCurrentUser && <p className={styles.summary}>{t('ownRole')}</p>}
         {role?.description ? (
           <div className={styles.summary}>
             <h3>{role.name}</h3>
             <p>{role.description}</p>
           </div>
         ) : !role ? (
-          <p>El usuario quedará sin un rol asignado.</p>
+          <p>{t('leftWithoutRole')}</p>
         ) : null}
-        {role && currentRoles.length > 0 && (
-          <p>El nuevo rol reemplazará al actual. El usuario no conservará ambos roles.</p>
-        )}
+        {role && currentRoles.length > 0 && <p>{t('replaces')}</p>}
       </>
     )
   }

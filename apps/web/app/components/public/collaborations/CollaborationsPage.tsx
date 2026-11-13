@@ -1,8 +1,6 @@
+import { useTranslations } from 'next-intl'
 import { CollaborationsManager } from './CollaborationsManager'
-import Image from 'next/image'
-import { ExternalLink } from 'lucide-react'
 
-import { Button } from '@/app/components/public/Button'
 import { ResearchCollaborationsSection } from '@/app/components/public/research/ResearchCollaborationsSection'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { TopicHero } from '@/app/components/public/topic/TopicHero'
@@ -10,7 +8,8 @@ import { TopicSection } from '@/app/components/public/topic/TopicSection'
 import type { CollaborationsContent } from '@/app/lib/collaborations'
 import type { ResearchCollaboration } from '@/app/lib/research-collaborations'
 
-import { InitiativeDescription } from './InitiativeDescription'
+import { InitiativeCard } from './InitiativeCard'
+import { InitiativesManager } from './InitiativesManager'
 
 export interface CollaborationsPageProps {
   content: CollaborationsContent
@@ -43,39 +42,20 @@ export function CollaborationsPage({
         titleId="collaborations-initiatives-title"
         wide
       >
-        {content.initiatives.items.map((item) => (
-          <div
-            className={
-              item.logo ? 'topic-initiative topic-initiative-with-logo' : 'topic-initiative'
-            }
-            key={item.id}
-          >
-            {item.logo ? (
-              <Image
-                alt={item.logo.alt}
-                className="topic-initiative-logo"
-                height={item.logo.height}
-                src={item.logo.src}
-                width={item.logo.width}
-              />
-            ) : null}
-            <div className="topic-initiative-copy">
-              <h3>{item.title}</h3>
-              <InitiativeDescription paragraphs={item.paragraphs} />
-              {item.href && item.linkLabel ? (
-                <Button
-                  href={item.href}
-                  icon={<ExternalLink aria-hidden="true" size={18} strokeWidth={1.8} />}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  variant="brand"
-                >
-                  {item.linkLabel}
-                </Button>
-              ) : null}
-            </div>
-          </div>
-        ))}
+        {canCreate || canEdit || canDelete ? (
+          <InitiativesManager
+            initiatives={content.initiatives.items}
+            canCreate={canCreate}
+            canEdit={canEdit}
+            canDelete={canDelete}
+          />
+        ) : content.initiatives.items.length ? (
+          content.initiatives.items.map((initiative) => (
+            <InitiativeCard key={initiative.id} initiative={initiative} />
+          ))
+        ) : (
+          <InitiativesEmptyState />
+        )}
       </TopicSection>
 
       <div className="topic-page-footer page-width">
@@ -101,4 +81,9 @@ function CollaborationsContentSection({
   ) : (
     <ResearchCollaborationsSection collaborations={collaborations} />
   )
+}
+
+function InitiativesEmptyState() {
+  const t = useTranslations('initiatives')
+  return <p className="content-empty">{t('empty')}</p>
 }

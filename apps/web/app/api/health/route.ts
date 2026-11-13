@@ -52,7 +52,7 @@ export async function GET(): Promise<NextResponse> {
   if (!healthy) {
     // A platform healthcheck only ever sees the status code, so without this a
     // failing deployment reports "503" and nothing about which dependency is
-    // down. Put the reason where `railway logs` will show it.
+    // down. Put the reason where the container log will show it.
     console.error(
       'health check degraded:',
       Object.entries(checks)

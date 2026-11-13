@@ -19,12 +19,11 @@ function imagesResult(query: Record<string, string>, count: number) {
     instrument: { code: 'SUVI', name: 'Solar Ultraviolet Imager' },
     product: { code: query.product, name: `Imagen solar ${query.product}` },
     parameter: { code: 'image', label: 'Imagen', unit: '' },
-    origin: { kind: 'observed', provider: 'GOES', notice: 'Fuente: GOES.' },
+    origin: { kind: 'observed', dataset: 'suvi', resolution: 'sampled' },
     visualization: 'image-sequence',
     images: Array.from({ length: count }, (_, index) => ({
       timestamp: `${query.date}T${String(index).padStart(2, '0')}:00:00Z`,
       imageUrl: '/images/decorative/goes-suvi-195-fallback.png',
-      alt: `Imagen solar de prueba ${index}`,
     })),
   }
 }
@@ -35,7 +34,7 @@ function seriesResult(query: Record<string, string>) {
     instrument: { code: 'EXIS', name: 'EXIS' },
     product: { code: query.product, name: 'Flujo solar: rayos X' },
     parameter: { code: query.parameter, label: 'Banda larga', unit: 'W/m²' },
-    origin: { kind: 'observed', provider: 'GOES', notice: 'Fuente: GOES.' },
+    origin: { kind: 'observed', dataset: 'goesArchive', resolution: 'sampled' },
     visualization: 'time-series',
     points: [
       { timestamp: `${query.date}T08:00:00Z`, value: 0.0000064 },

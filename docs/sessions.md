@@ -15,7 +15,8 @@ covered in [registration.md](registration.md).
 | Login rules, messages, state                                                 | `apps/web/app/lib/auth/login.ts`                                                                                  | Vitest, colocated                       |
 | Tokens, cookie flags, return paths                                           | `apps/web/app/lib/auth/session-token.ts`                                                                          | Vitest, colocated, no mocks             |
 | Session store                                                                | `apps/web/app/lib/auth/session.ts`                                                                                | Vitest, `@lasce/db` and `next/*` mocked |
-| Account cookie (name, role) and account copy                                 | `apps/web/app/lib/auth/account.ts`                                                                                | Vitest, colocated                       |
+| Account cookie (display name only) and account copy                          | `apps/web/app/lib/auth/account.ts`                                                                                | Vitest, colocated                       |
+| Header capabilities (`GET /api/session`)                                     | `apps/web/app/api/session/route.ts`, `apps/web/app/lib/auth/capabilities.ts`                                      | Vitest, colocated; Playwright           |
 | Tab selector, login card, account links, sign-out dialog, hook, account card | `apps/web/app/components/public/auth/{AccessTabs,LoginForm,AccountLinks,SignOutButton,useAccount,AccountSummary}` | Vitest, stories as fixtures             |
 | Table                                                                        | `auth.sessions`, see `database-definition.md`                                                                     | Prisma migration, worker model test     |
 
@@ -31,15 +32,18 @@ other public page stays static; `getSessionUser` must never be called from the s
 | Cookie          | Holds                            | Flags                                                                 | Read by                       |
 | --------------- | -------------------------------- | --------------------------------------------------------------------- | ----------------------------- |
 | `lasce_session` | random 32-byte token (base64url) | `HttpOnly`, `SameSite=Lax`, `Secure` in production, `Path=/`, 30 days | the server (`getSessionUser`) |
-| `lasce_account` | JSON `{ name, role }`            | same, minus `HttpOnly`                                                | the header, on the client     |
+| `lasce_account` | JSON `{ name }`                  | same, minus `HttpOnly`                                                | the header, on the client     |
 
 Both are set by `createSession` and removed by `deleteCurrentSession`, and only there: Next only
 allows cookie writes inside Server Actions and Route Handlers. `Secure` is enforced by the browser
-against the page origin, so it holds behind Railway's TLS termination and still works on
+against the page origin, so it holds behind the reverse proxy's TLS termination (Coolify's Traefik) and still works on
 `http://localhost`, which browsers treat as a secure context. Next URL-encodes cookie values, so the
-JSON is stored raw and decoded once on the client. A cookie that still holds only the display name
-(from a session opened before this payload existed) still greets; its role is unknown, so the
-Administración tab stays hidden until the next login.
+JSON is stored raw and decoded once on the client. Older cookies (a bare display name, or
+`{ name, role }` from before LASCE-SEC-001) still greet; any `role` in them is ignored.
+
+`lasce_account` is readable and editable by anyone at the browser, so it is display-only: it must
+never carry or decide a role, a permission, access to Administración or the edit mode
+(LASCE-SEC-001). Those come from the HttpOnly session, as described in [The header](#the-header).
 
 ## Login
 
@@ -95,22 +99,59 @@ checks that `/cuenta` still redirects.
 
 ## The header
 
-`useAccount` reads `lasce_account` through `useSyncExternalStore`: the server and the hydration
-pass render the signed-out links, then React re-renders with the client value. The header
-re-renders on every navigation, so the cookie set by a login redirect is picked up without wiring.
-Signing out clears the client cookie first (so the menu flips even when the redirect lands on the
-current page), runs the action, and puts the cookie back if the action fails. `AccountLinks`
-renders "Ingresar", or "Hola, <nombre>" (to `/cuenta`) and "Cerrar sesión", in the desktop header
-and in the mobile menu; registration is reached through the access page's own tab. The
-Administración item is included only when the cookie role is `ASSISTANT` or `ADMIN`. The
-`administracion` layout applies the same rule from the session (`canSeeAdminNavigation`): anonymous
-visitors are sent to login and signed-in visitors see Acceso denegado
-([admin-navigation.md](admin-navigation.md)).
+`useAccount` reads `lasce_account` through `useSyncExternalStore` for the display name only: the
+server and the hydration pass render the signed-out links, then React re-renders with the client
+value, so the greeting appears at once and the public pages stay static.
 
-Known lag: another open tab keeps showing the signed-in menu until it navigates. Its protected
-pages still redirect correctly, because the server checks the session row, not the cookie. The
-role in `lasce_account` can also lag if an administrator changes it during the session; the next
-login refreshes it.
+Everything privileged comes from `GET /api/session` (LASCE-SEC-001). The handler reads the
+HttpOnly session with `getSessionUser()` and the current matrix with `getPermissionsForRole()`, and
+answers `{ signedIn: false }` or `{ signedIn: true, name, role, canAccessAdmin, canEdit }` with
+`Cache-Control: no-store`:
+
+- `canAccessAdmin` uses `canSeeAdminNavigation(role)`, the same rule as the `administracion`
+  layout, so the link is never offered to an account the panel would turn away.
+- `canEdit` is true when the role holds `create_components`, `edit_components` or
+  `delete_components` right now (`CONTENT_EDIT_PERMISSIONS` in `capabilities.ts`).
+
+`useAccount` asks it whenever the account cookie changes, on every navigation (the header passes
+the pathname as `refreshKey`) and when the tab becomes visible again, so a role or matrix change
+shows without a new login. Anonymous visitors (no account cookie) make no request. Until the
+answer arrives, and whenever it fails, `canAccessAdmin` and `canEdit` are `false`: nothing
+privileged is shown on a guess. `parseSessionCapabilities` treats any malformed body as signed out,
+and only a literal `true` grants a capability.
+
+A confirmation only stands for the login it was given to. `useAccount` discards it, so the
+controls disappear until a new successful answer, when:
+
+- a later check fails (server error or network). Edit mode is turned off too; the greeting and the
+  cookie stay, because a failure is not a sign-out. A request aborted because a newer one replaced
+  it (navigation, cookie change, unmount) changes nothing: the newer one decides;
+- the account cookie changes or disappears (for instance, signed out in another tab). When it
+  disappears, edit mode is turned off in the provider and in `localStorage`;
+- the visitor signs out. If the `{ name }` cookie comes back afterwards, by the failed-action path
+  or by hand, the server has to confirm again: a display name does not identify a session.
+
+The snapshot moving from the server render's `null` to the cookie during hydration is not treated
+as a sign-out, and a navigation keeps the previous answer until the new one arrives, so the
+controls do not flicker.
+
+`AccountMenu` and `AccountLinks` take `canAccessAdmin` and `canEdit` as props; the `role` they also
+get only labels the account. `AccountLinks` renders "Ingresar", or the account menu (desktop) and
+plain links (mobile); registration is reached through the access page's own tab.
+
+Edit mode is a presentation preference kept in `localStorage` (`lasce:cms-edit-mode`). It is turned
+off when the account signs out, when the account cookie disappears, when the server answers
+`signedIn: false` (the stale account cookie is also removed), when a check fails and when the
+server says the account cannot edit. It never unlocks anything on its
+own: every create, edit and delete control also needs the page's server-computed grant
+(`userHasPermission`), and every write repeats the check in its Route Handler or Server Action.
+
+Signing out turns edit mode off, clears the client cookie first (so the menu flips even when the
+redirect lands on the current page), runs the action, and puts the name back if the action fails.
+
+Known lag: another open tab keeps showing the signed-in menu until it navigates or becomes visible.
+Its protected pages still redirect correctly, because the server checks the session row, not the
+cookie.
 
 ## Protecting a page
 
@@ -148,5 +189,5 @@ correctness; the admin panel gate (#83) may add one for a faster redirect.
 
 - No rate limiting or lockout on login; the placeholder hash only evens out the KDF time.
 - No "log out everywhere", no sliding renewal, no cleanup of expired rows.
-- The display-name cookie can lag in other tabs (see above).
+- The display-name cookie can lag in other tabs (see above); it never grants anything.
 - The registration card's success link reloads the page on the login tab rather than prefilling it.

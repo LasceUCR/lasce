@@ -4,32 +4,28 @@ import type { UserRole } from '@lasce/db'
  * The signed-in account as the browser sees it, plus the copy of the account
  * menu and the `/cuenta` page. Client-safe: no `node:*`, no database, no zod.
  *
- * `lasce_account` is a second, non-HttpOnly cookie. It carries the display
- * name and role as JSON so the header can greet the visitor and show the
- * Administración tab without turning every public page dynamic. The HttpOnly
- * `lasce_session` cookie is what actually authenticates. Both are set and
- * cleared together by `app/lib/auth/session.ts`.
+ * `lasce_account` is a second, non-HttpOnly cookie. It carries only the
+ * display name, as JSON, so the header can greet the visitor at once without
+ * turning every public page dynamic. The browser can read and edit it, so it
+ * must never decide anything privileged (LASCE-SEC-001): the role, the
+ * Administración link and the "Modo edición" switch come from `GET
+ * /api/session`, which reads the HttpOnly `lasce_session` cookie. Both cookies
+ * are set and cleared together by `app/lib/auth/session.ts`.
  */
 export const ACCOUNT_COOKIE = 'lasce_account'
 
 export interface AccountCookie {
   name: string
-  role: UserRole | null
-}
-
-function isAccountRole(value: unknown): value is UserRole {
-  return value === 'VISITOR' || value === 'ASSISTANT' || value === 'ADMIN'
 }
 
 /** Serialises the account cookie. Next URL-encodes this string when it sets it. */
 export function encodeAccountCookie(account: AccountCookie): string {
-  return JSON.stringify({ name: account.name, role: account.role })
+  return JSON.stringify({ name: account.name })
 }
 
 /**
- * Parses a decoded account-cookie payload. A pre-role cookie that only stored
- * the display name still greets; its role is unknown, so the admin tab stays
- * hidden until the next login.
+ * Parses a decoded account-cookie payload into the display name. A `role` left
+ * by an older login, or added by hand, is ignored: nothing reads it any more.
  */
 export function parseAccountCookieValue(decoded: string): AccountCookie | null {
   const trimmed = decoded.trim()
@@ -44,15 +40,12 @@ export function parseAccountCookieValue(decoded: string): AccountCookie | null {
     ) {
       const name = parsed.name.trim()
       if (!name) return null
-      return {
-        name,
-        role: 'role' in parsed && isAccountRole(parsed.role) ? parsed.role : null,
-      }
+      return { name }
     }
   } catch {
     // Legacy cookies were the display name, not JSON.
   }
-  return { name: trimmed, role: null }
+  return { name: trimmed }
 }
 
 function decodedAccountCookieValue(cookieHeader: string): string | null {
@@ -89,8 +82,10 @@ export function readAccountName(cookieHeader: string): string | null {
 
 /**
  * Assistants and administrators may enter the administration panel; visitors
- * may not. The header tab and the `administracion` layout share this rule, so
- * the tab is never shown to someone the panel would turn away.
+ * may not. Server-side only in practice: the `administracion` layout and
+ * `GET /api/session` (which drives the header link) share this rule, always
+ * with the role from the session, so the link is never shown to someone the
+ * panel would turn away.
  */
 export function canSeeAdminNavigation(role: UserRole | null | undefined): boolean {
   return role === 'ASSISTANT' || role === 'ADMIN'
@@ -144,38 +139,14 @@ export function notifyAccountChanged(): void {
 }
 
 /**
- * The account menu, its mobile equivalent and the sign-out confirmation read their copy from the
- * `account` catalogue namespace (`useTranslations('account')`) instead of this module, so it
- * follows the site's language. `ROLE_LABELS` below stays Spanish-only: it also backs the
- * `/administracion/usuarios` role list and the `/cuenta` page, both still untranslated.
+ * The account menu, its mobile equivalent, the sign-out confirmation and the `/cuenta` page
+ * read their copy from the `account` catalogue namespace (`useTranslations('account')` and
+ * `getTranslations('account')`) so they follow the site's language. `ROLE_LABELS` below stays
+ * Spanish-only: it backs the audit summaries stored in Spanish and serves as a Spanish fixture.
+ * `/administracion/usuarios` names the roles from `access.roles` instead (`roleName`).
  */
 export const ROLE_LABELS: Record<UserRole, string> = {
   VISITOR: 'Visitante',
   ASSISTANT: 'Asistente',
   ADMIN: 'Persona administradora',
 }
-
-export const cuentaMeta = {
-  title: 'Mi cuenta | LASCE',
-  description:
-    'Tu perfil en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
-} as const
-
-export const cuentaIntro = {
-  title: 'Mi cuenta',
-  lead: 'Tu perfil en el portal y el control de tu sesión.',
-} as const
-
-export const accountSummaryCopy = {
-  fullName: 'Nombre',
-  email: 'Correo electrónico',
-  institution: 'Institución',
-  country: 'País',
-  role: 'Rol',
-  memberSince: 'Miembro desde',
-} as const
-
-export const cuentaBackLink = {
-  href: '/',
-  label: 'Volver al inicio',
-} as const

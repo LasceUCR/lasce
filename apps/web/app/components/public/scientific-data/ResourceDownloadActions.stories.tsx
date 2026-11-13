@@ -8,13 +8,11 @@ type Story = StoryObj<typeof ResourceDownloadActions>
 
 const png = {
   format: 'png',
-  label: 'Descargar gráfica (PNG)',
   kind: 'graphic',
   allowed: true,
 } as const
 const csv = {
   format: 'csv',
-  label: 'Descargar datos (CSV)',
   kind: 'data',
   allowed: true,
 } as const

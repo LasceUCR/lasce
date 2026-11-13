@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 import { createSignedInUser } from './helpers/admin-users'
+import { enableEditMode } from './helpers/edit-mode'
 
 // Runs against the seeded news (`pnpm db:seed`, which CI runs before this suite).
 
@@ -117,9 +118,21 @@ test('allows an admin to create, view, edit, and delete a news article', async (
   const uniqueUrl = `https://e2e.example.com/noticia-${Date.now()}`
 
   try {
+    await page.goto('/actividades-academicas')
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible()
+    const activitiesResponse = await context.request.get('/api/academic-activities')
+    expect(activitiesResponse.ok()).toBe(true)
+    const activitiesBefore: unknown = await activitiesResponse.json()
+
     await page.goto('/administracion')
-    await page.getByRole('switch', { name: 'Modo edición' }).click()
+    await enableEditMode(page)
     await page.goto('/noticias')
+    await expect(page.getByRole('heading', { name: 'Actividades académicas' })).toHaveCount(0)
+    await expect(
+      page.getByRole('heading', {
+        name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+      }),
+    ).toHaveCount(0)
 
     // 1. Validation test on creation
     await page.getByRole('button', { name: 'Agregar noticia' }).click()
@@ -206,6 +219,12 @@ test('allows an admin to create, view, edit, and delete a news article', async (
     await expect(newsList(page).getByRole('article').filter({ hasText: updatedTitle })).toHaveCount(
       0,
     )
+
+    await page.goto('/actividades-academicas')
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible()
+    const activitiesAfter = await context.request.get('/api/academic-activities')
+    expect(activitiesAfter.ok()).toBe(true)
+    expect(await activitiesAfter.json()).toEqual(activitiesBefore)
   } finally {
     // Clean up created news in case test failed before deleting
     await fixture.prisma.news.deleteMany({

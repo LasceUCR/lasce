@@ -1,6 +1,6 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ReactElement } from 'react'
+import { createRef, type ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
@@ -16,7 +16,7 @@ import { renderWithIntl, type RenderWithIntlOptions } from '@/app/lib/i18n/testi
 
 import {
   ResearcherForm,
-  type BilingualResearcherFormProps,
+  type ResearcherFormHandle,
   type ResearcherFormProps,
 } from './ResearcherForm'
 import {
@@ -31,9 +31,9 @@ import {
 const editArgs = EditExisting.args as ResearcherFormProps
 const editWithoutPhotoArgs = EditWithoutPhoto.args as ResearcherFormProps
 const addArgs = AddNew.args as ResearcherFormProps
-const bilingualArgs = Bilingual.args as BilingualResearcherFormProps
-const bilingualCreateArgs = BilingualCreate.args as BilingualResearcherFormProps
-const bilingualLegacyArgs = BilingualLegacy.args as BilingualResearcherFormProps
+const bilingualArgs = Bilingual.args as ResearcherFormProps
+const bilingualCreateArgs = BilingualCreate.args as ResearcherFormProps
+const bilingualLegacyArgs = BilingualLegacy.args as ResearcherFormProps
 
 /** The form reports a failed upload with a toast, so it renders inside the app's providers. */
 function render(ui: ReactElement, options?: RenderWithIntlOptions) {
@@ -49,62 +49,20 @@ describe('ResearcherForm', () => {
     render(<ResearcherForm {...editArgs} />)
 
     const researcher = editArgs.researcher!
-    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue(researcher.role)
+    expect(screen.getByRole('textbox', { name: /^Rol \(Español\)/ })).toHaveValue(researcher.role)
     expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue(researcher.name)
     expect(screen.getByText(researcher.email as string)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: `Eliminar ${researcher.email}` })).toBeInTheDocument()
     expect(screen.getByRole('textbox', { name: 'Institución' })).toHaveValue(researcher.institution)
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(researcher.description)
-  })
-
-  test('starts pre-filled with storedRole and storedDescription instead of localized ones', () => {
-    const localizedResearcher = {
-      ...editArgs.researcher!,
-      role: 'Principal Investigator',
-      description: 'Responsible for strategic planning...',
-      storedRole: 'Investigadora principal',
-      storedDescription: 'Responsable de la planificación estratégica...',
-    }
-    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
-
-    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue(
-      'Responsable de la planificación estratégica...',
+    expect(screen.getByRole('textbox', { name: /^Descripción \(Español\)/ })).toHaveValue(
+      researcher.description,
     )
-  })
-
-  test('starts with an empty description when storedDescription is null, without falling back to localized description', () => {
-    const localizedResearcher = {
-      ...editArgs.researcher!,
-      role: 'Principal Investigator',
-      description: 'Responsible for strategic planning...',
-      storedRole: 'Investigadora principal',
-      storedDescription: null,
-    }
-    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
-
-    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue('')
-  })
-
-  test('starts with an empty description when storedDescription is empty string, without falling back to localized description', () => {
-    const localizedResearcher = {
-      ...editArgs.researcher!,
-      role: 'Principal Investigator',
-      description: 'Responsible for strategic planning...',
-      storedRole: 'Investigadora principal',
-      storedDescription: '',
-    }
-    render(<ResearcherForm {...editArgs} researcher={localizedResearcher} />)
-
-    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('Investigadora principal')
-    expect(screen.getByRole('textbox', { name: 'Descripción' })).toHaveValue('')
   })
 
   test('starts blank for a new researcher', () => {
     render(<ResearcherForm {...addArgs} />)
 
-    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue('')
+    expect(screen.getByRole('textbox', { name: /^Rol \(Español\)/ })).toHaveValue('')
     expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveValue('')
     expect(screen.queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Agregar' })).toBeEnabled()
@@ -132,7 +90,7 @@ describe('ResearcherForm', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(screen.queryByText('La foto es obligatoria.')).not.toBeInTheDocument()
-    expect(screen.getByText('El rol es obligatorio.')).toBeInTheDocument()
+    expect(screen.getByText('El rol en español es obligatorio.')).toBeInTheDocument()
     expect(screen.getByText('El nombre es obligatorio.')).toBeInTheDocument()
     expect(screen.getByText('La institución es obligatoria.')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -217,6 +175,32 @@ describe('ResearcherForm', () => {
     expect(screen.queryByRole('listitem', { name: /not-an-email/ })).not.toBeInTheDocument()
   })
 
+  test('does not save while Contacto holds an invalid address', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...editArgs} onSave={onSave} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Correo electrónico' }), 'correo-invalido')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(screen.getByText('El correo no es válido.')).toBeInTheDocument()
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  test('saves an address that was typed but not added yet', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    render(<ResearcherForm {...editArgs} onSave={onSave} />)
+    const researcher = editArgs.researcher!
+
+    await user.type(screen.getByRole('textbox', { name: 'Correo electrónico' }), 'nuevo@ucr.ac.cr')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ email: `${researcher.email}, nuevo@ucr.ac.cr` }),
+    )
+  })
+
   test('rejects an address that was already added', async () => {
     const user = userEvent.setup()
     render(<ResearcherForm {...editArgs} />)
@@ -263,7 +247,9 @@ describe('ResearcherForm', () => {
     const onSave = vi.fn()
     render(<ResearcherForm {...addArgs} onSave={onSave} />)
 
-    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(screen.getByRole('textbox', { name: /^Rol \(Español\)/ }), 'Investigador')
+    await user.click(screen.getByRole('tab', { name: /^English/ }))
+    await user.type(screen.getByRole('textbox', { name: /^Rol \(English\)/ }), 'Researcher')
     await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
     await user.type(screen.getByRole('textbox', { name: 'Institución' }), 'UCR')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
@@ -278,13 +264,13 @@ describe('ResearcherForm', () => {
     const onSave = vi.fn()
     render(<ResearcherForm {...editWithoutPhotoArgs} onSave={onSave} />)
 
-    await user.clear(screen.getByRole('textbox', { name: 'Rol' }))
-    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador asociado')
+    await user.clear(screen.getByRole('textbox', { name: 'Nombre' }))
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Persona sin foto')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ role: 'Investigador asociado', src: '' }),
+      expect.objectContaining({ name: 'Persona sin foto', src: '' }),
     )
   })
 
@@ -307,18 +293,18 @@ describe('ResearcherForm', () => {
     const onSave = vi.fn()
     render(<ResearcherForm {...editArgs} onSave={onSave} />)
 
-    await user.clear(screen.getByRole('textbox', { name: 'Rol' }))
-    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador asociado')
+    await user.clear(screen.getByRole('textbox', { name: 'Nombre' }))
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Nuevo nombre')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(mocks.uploadResearcherImage).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith({
-      role: 'Investigador asociado',
-      name: editArgs.researcher!.name,
+      name: 'Nuevo nombre',
       email: editArgs.researcher!.email,
       institution: editArgs.researcher!.institution,
-      description: editArgs.researcher!.description,
       src: editArgs.researcher!.src,
+      content: null,
+      confirmedUnchanged: [],
     })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
@@ -328,7 +314,9 @@ describe('ResearcherForm', () => {
     const onSave = vi.fn()
     render(<ResearcherForm {...addArgs} onSave={onSave} />)
 
-    await user.type(screen.getByRole('textbox', { name: 'Rol' }), 'Investigador')
+    await user.type(screen.getByRole('textbox', { name: /^Rol \(Español\)/ }), 'Investigador')
+    await user.click(screen.getByRole('tab', { name: /^English/ }))
+    await user.type(screen.getByRole('textbox', { name: /^Rol \(English\)/ }), 'Researcher')
     await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
     await user.type(screen.getByRole('textbox', { name: 'Institución' }), 'UCR')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
@@ -386,7 +374,9 @@ describe('ResearcherForm', () => {
     expect(onSave).not.toHaveBeenCalled()
     // A toast, not a custom message inside the form, and the input stays for a retry.
     expect(document.querySelector('.cms-form .form-alert')).toBeNull()
-    expect(screen.getByRole('textbox', { name: 'Rol' })).toHaveValue(editArgs.researcher!.role)
+    expect(screen.getByRole('textbox', { name: /^Rol \(Español\)/ })).toHaveValue(
+      editArgs.researcher!.role,
+    )
   })
 
   test('replaces the previous upload error instead of stacking it when retrying', async () => {
@@ -436,6 +426,21 @@ describe('ResearcherForm', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same question when the modal requests closing', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    const ref = createRef<ResearcherFormHandle>()
+    render(<ResearcherForm {...editArgs} onCancel={onCancel} ref={ref} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    act(() => ref.current?.requestCancel())
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   test('keeps the form open when discard is dismissed', async () => {
@@ -662,12 +667,57 @@ describe('ResearcherForm: bilingual mode', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  test('renders form labels, actions, dialogs and errors in English when English is selected', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    render(<ResearcherForm {...bilingualCreateArgs} onCancel={onCancel} />, { locale: 'en' })
+
+    expect(screen.getByText('Photo')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument()
+    expect(screen.getByText('Contact')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Institution' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+
+    const emailInput = screen.getByRole('textbox', { name: 'Email address' })
+    expect(emailInput).toBeInTheDocument()
+    expect(emailInput).toHaveAttribute('placeholder', 'Type an email...')
+    expect(screen.getByText('No emails')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument()
+
+    // Test empty email validation in English
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Email is required.')
+
+    // Test add contact and validation in English
+    await user.type(emailInput, 'ada@example.com')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByText('ada@example.com')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Contact emails' })).toBeInTheDocument()
+    expect(screen.getByText('1 email')).toBeInTheDocument()
+    expect(emailInput).toHaveAttribute('placeholder', 'Type another email...')
+    expect(screen.getByRole('button', { name: 'Delete ada@example.com' })).toBeInTheDocument()
+
+    await user.type(emailInput, 'not-an-email')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('The email is not valid.')
+
+    // Test discard dialog in English
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Ada Lovelace')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    const discardDialog = screen.getByRole('dialog', { name: 'Discard unsaved changes' })
+    expect(discardDialog).toBeInTheDocument()
+    expect(within(discardDialog).getByRole('button', { name: 'Keep editing' })).toBeInTheDocument()
+    await user.click(within(discardDialog).getByRole('button', { name: 'Discard' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
   test('renders photo file drop area fully in English under en locale', () => {
     render(<ResearcherForm {...editArgs} />, { locale: 'en' })
 
     expect(screen.getByText('Photo')).toBeInTheDocument()
     expect(
-      screen.getByText('Optional. Researcher portrait, in JPG or PNG format.'),
+      screen.getByText('Optional. Researcher portrait, in JPG, PNG, WebP or GIF format.'),
     ).toBeInTheDocument()
     expect(
       screen.getByText('Drag an image here or click to select from your device'),

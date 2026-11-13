@@ -132,6 +132,20 @@ describe('validation issues', () => {
       },
     })
   })
+
+  test('invalid-body accepts a custom error message', async () => {
+    const result = schema.safeParse({})
+
+    expect(
+      await read(invalidBody(result.error!, 'Required fields are missing or invalid.')),
+    ).toMatchObject({
+      status: 400,
+      body: {
+        error: 'Required fields are missing or invalid.',
+        code: 'invalid-body',
+      },
+    })
+  })
 })
 
 describe('readJson', () => {
@@ -158,6 +172,18 @@ describe('readJson', () => {
       })
     },
   )
+
+  test('answers invalid-json with a custom message when provided', async () => {
+    const result = await readJson(post('{invalid'), 'The request body is not valid JSON.')
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(await read(result.response)).toEqual({
+      status: 400,
+      cache: 'no-store',
+      body: { error: 'The request body is not valid JSON.', code: 'invalid-json' },
+    })
+  })
 })
 
 describe('isUuid', () => {

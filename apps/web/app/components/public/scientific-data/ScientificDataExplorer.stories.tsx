@@ -26,8 +26,8 @@ const resultFixture: TimeSeriesDataResult = {
   parameter: { code: '0.1-0.8nm', label: 'Banda larga (0,1–0,8 nm)', unit: 'W/m²' },
   origin: {
     kind: 'observed',
-    provider: 'GOES',
-    notice: 'Fuente: GOES. Observaciones históricas de nivel 1b.',
+    dataset: 'goesArchive',
+    resolution: 'sampled',
     satellite: 18,
   },
   visualization: 'time-series',
@@ -59,8 +59,8 @@ const rosacSpectrumFixture: DynamicSpectrumDataResult = {
   },
   origin: {
     kind: 'simulated',
-    provider: 'Prototipo ROSAC — UCR',
-    notice: 'Datos simulados para preparar la integración de ROSAC.',
+    dataset: 'rosac',
+    resolution: 'sampled',
   },
   visualization: 'dynamic-spectrum',
   frequencyUnit: 'MHz',
@@ -88,17 +88,13 @@ const suviFixture: ImageSequenceDataResult = {
   instrument: { code: 'SUVI', name: 'Generador de imágenes solares ultravioleta' },
   product: { code: 'Fe171', name: 'Imágenes solares: 171 Å (Fe171)' },
   parameter: { code: 'image', label: 'Imagen calibrada', unit: 'imagen' },
-  origin: {
-    kind: 'simulated',
-    provider: 'Muestra local de Storybook',
-    notice: 'Imagen de demostración del componente; esta historia no consulta el archivo SUVI.',
-  },
+  // A local image: this story does not query the SUVI archive.
+  origin: { kind: 'observed', dataset: 'suvi', resolution: 'sampled', satellite: 19 },
   visualization: 'image-sequence',
   images: [
     {
       timestamp: '2026-09-10T08:30:00Z',
       imageUrl: '/images/decorative/Solar-Flare.png',
-      alt: 'Imagen solar de demostración del componente',
     },
   ],
 }

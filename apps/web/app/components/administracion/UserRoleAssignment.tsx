@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
 import { RoleAssignmentError } from '@/app/lib/user-overview'
 import type { RoleChangeResult } from '@/app/lib/user-administration'
@@ -28,27 +29,19 @@ export function UserRoleAssignment({
 }: UserRoleAssignmentProps) {
   const [users, setUsers] = useState(initialUsers)
   const router = useRouter()
+  const t = useTranslations('administration.users.errors')
 
   async function save(userId: string, roleIds: string[]) {
     const previousRoleIds = users.find((user) => user.id === userId)?.roleIds ?? []
     const result = await saveAction({ userId, roleIds, previousRoleIds })
     if (!result.ok) {
       if (result.reason === 'conflict') {
-        throw new RoleAssignmentError(
-          'La información de este usuario cambió. Recarga la página para ver sus roles actuales antes de volver a intentarlo.',
-          true,
-        )
+        throw new RoleAssignmentError(t('conflict'), true)
       }
       if (result.reason === 'unauthorized') {
-        throw new RoleAssignmentError(
-          'Tu sesión terminó o ya no tienes autorización para cambiar roles. Recarga la página para comprobar tu acceso.',
-          true,
-        )
+        throw new RoleAssignmentError(t('unauthorized'), true)
       }
-      throw new RoleAssignmentError(
-        'No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo.',
-        true,
-      )
+      throw new RoleAssignmentError(t('unknown'), true)
     }
     setUsers((current) =>
       current.map((user) => (user.id === userId ? { ...user, roleIds: result.roleIds } : user)),

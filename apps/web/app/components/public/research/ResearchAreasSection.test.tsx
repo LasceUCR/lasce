@@ -2,9 +2,10 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import type { Locale } from '@/app/lib/i18n/config'
 
 import { ResearchAreasSection, type ResearchAreasSectionProps } from './ResearchAreasSection'
-import { Default, EditMode, Empty } from './ResearchAreasSection.stories'
+import { Default, EditMode, Empty, SecondPage, LastPage } from './ResearchAreasSection.stories'
 import { EditModeContext } from '@/app/components/public/cms/EditModeProvider'
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 
@@ -53,13 +54,14 @@ const editedArea = editArgs.areas[0]
 
 if (!firstArea || !editedArea) throw new Error('The research areas stories must contain areas.')
 
-function renderSection(props: ResearchAreasSectionProps, editMode = false) {
+function renderSection(props: ResearchAreasSectionProps, editMode = false, locale: Locale = 'es') {
   return renderWithIntl(
     <ToastProvider>
       <EditModeContext.Provider value={{ editMode, setEditMode: vi.fn() }}>
         <ResearchAreasSection {...props} />
       </EditModeContext.Provider>
     </ToastProvider>,
+    { locale },
   )
 }
 
@@ -79,6 +81,62 @@ afterEach(() => {
 })
 
 describe('ResearchAreasSection', () => {
+  test('shows translated totals and links for the server page without slicing its items', () => {
+    renderSection(SecondPage.args as ResearchAreasSectionProps)
+    expect(screen.getAllByRole('article')).toHaveLength(10)
+    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 11–20 de 23.')
+    const nav = screen.getByRole('navigation', { name: 'Páginas de áreas de investigación' })
+    expect(within(nav).getByRole('link', { name: 'Página 2' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(within(nav).getByRole('link', { name: 'Siguiente' })).toHaveAttribute(
+      'href',
+      '/investigacion?page=3',
+    )
+    expect(within(nav).getByRole('link', { name: 'Anterior' })).toHaveAttribute(
+      'href',
+      '/investigacion',
+    )
+  })
+
+  test('shows the remaining items and no next link on the last page', () => {
+    renderSection(LastPage.args as ResearchAreasSectionProps)
+    expect(screen.getAllByRole('article')).toHaveLength(3)
+    expect(screen.getByRole('status')).toHaveTextContent('Mostrando 21–23 de 23.')
+    expect(screen.queryByRole('link', { name: 'Siguiente' })).not.toBeInTheDocument()
+  })
+
+  test('announces an empty collection without a page indicator', () => {
+    renderSection(emptyArgs)
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No hay áreas de investigación disponibles.',
+    )
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+  })
+
+  test.each([1, 7, 10])('omits the summary when all %i areas fit on one page', (totalItems) => {
+    renderSection({
+      ...defaultArgs,
+      areas: Array.from({ length: totalItems }, (_, index) => ({
+        ...firstArea,
+        id: `area-${index}`,
+      })),
+      totalItems,
+      totalPages: 1,
+    })
+
+    expect(screen.getAllByRole('article')).toHaveLength(totalItems)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+  })
+
+  test('shows the generic count in English for multiple pages', () => {
+    renderSection(SecondPage.args as ResearchAreasSectionProps, false, 'en')
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^Showing 11–20 of 23\.$/)
+  })
+
   test('lists one item per research area it is given', () => {
     renderSection(defaultArgs)
 

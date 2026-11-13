@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
+import { EditModeProvider } from '@/app/components/public/cms/EditModeProvider'
+
 import { AccountMenu } from './AccountMenu'
 
 const meta: Meta<typeof AccountMenu> = {
@@ -8,9 +10,11 @@ const meta: Meta<typeof AccountMenu> = {
   // The header actions cell gives the trigger its context and the panel its anchor.
   decorators: [
     (Story) => (
-      <div className="header-actions">
-        <Story />
-      </div>
+      <EditModeProvider>
+        <div className="header-actions">
+          <Story />
+        </div>
+      </EditModeProvider>
     ),
   ],
 }
@@ -23,6 +27,8 @@ export const Visitor: Story = {
   args: {
     account: 'Prueba',
     role: 'VISITOR',
+    canAccessAdmin: false,
+    canEdit: false,
     pathname: '/',
     isSigningOut: false,
     onSignOut: () => {},
@@ -34,7 +40,7 @@ export const Open: Story = {
 }
 
 export const Administrator: Story = {
-  args: { ...Visitor.args, role: 'ADMIN', defaultOpen: true },
+  args: { ...Visitor.args, role: 'ADMIN', canAccessAdmin: true, canEdit: true, defaultOpen: true },
 }
 
 export const SigningOut: Story = {

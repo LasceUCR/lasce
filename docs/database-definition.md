@@ -519,18 +519,20 @@ fields `value`, `valid`), not here. Differences:
 - `version` looks like `"2-0-4"`, and `point_count` like
   `{"EPN-x": 1440, "EPN-y": 1440, "EPN-z": 1440, "total": 1440}`.
 
-### `ehis_files`
+### `seiss_files`
 
-One daily SEISS EHIS L1b heavy ion file (`seis-l1b-ehis`, one UTC day) ingested by the worker's
-`ehis-pipeline` job (`apps/worker/app/services/ehis_readings.py`) — see
-[`ehis-pipeline.md`](ehis-pipeline.md). Same columns, constraints and upsert key as `exis_files`;
-the readings are in the InfluxDB measurement `ehis_flux` (tags `satellite`, `product`, `channel`;
-fields `value`, `valid`), not here. Differences:
+One daily SEISS file (one product, one UTC day) ingested by the worker's `seiss-pipeline` job
+(`apps/worker/app/services/seiss/readings.py`) — see [`seiss-pipeline.md`](seiss-pipeline.md).
+Same columns, constraints and upsert key as `exis_files`; the readings are in the product's
+InfluxDB measurement (`ehis_flux`, `sgps_flux`, `mpsh_flux`; tags `satellite`, `product`, `channel`; fields
+`value`, `valid`), not here. It was `ehis_files` until SGPS joined it. Differences:
 
-- `satellite` comes from the NetCDF `platform_ID` attribute (`"G19"`).
-- `product` is always `"EHIS"`.
-- `version` looks like `"0-0-2"`, and `point_count` has one entry per channel, 25 in all, like
-  `{"H:E1": 288, …, "ClNi:E5": 0}`.
+- `satellite` is `"G19"`, from the NetCDF `platform_ID` attribute (EHIS) or the upper-cased
+  `platform` attribute (SGPS, MPSH).
+- `product` is `"EHIS"`, `"SGPS"` or `"MPSH"`.
+- `version` looks like `"0-0-2"` (EHIS) or `"3-0-3"` (SGPS), and `point_count` has one entry per
+  channel: 25 for EHIS, like `{"H:E1": 288, …, "ClNi:E5": 0}`, and 28 for SGPS, like
+  `{"minus:P1": 1438, …, "plus:P11": 1438}`.
 
 ## `public` schema (downloads)
 
@@ -774,6 +776,30 @@ language, or filled in every language.
 
 Constraints: `UNIQUE (researcher_id, locale)`. Researchers created before this table existed have
 no row and are shown as they are, with an unknown content language. See
+[translate-database-content.md](translate-database-content.md).
+
+### `researcher_translations`
+
+The `role` and `description` of a `researchers` row (a ROSAC profile on `/radioastronomia`) in a
+language other than Spanish, one row per researcher and locale. The Prisma model is
+`ResearcherTranslation`. Spanish stays on `researchers`, so a profile with no row here still
+renders, in its base text. The photo, `name`, `institution` and `email` are shared and stay on
+the base row. The base row's `modified_at` is the version an editor saves against. `description`
+is optional and all-or-none across languages.
+
+| Column          | Prisma type | Postgres type    | Constraints                                               |
+| --------------- | ----------- | ---------------- | --------------------------------------------------------- |
+| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                   |
+| `researcher_id` | `String`    | `uuid`           | FK → `researchers.id`, `ON DELETE CASCADE`, not null      |
+| `locale`        | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es` |
+| `role`          | `String`    | `text`           | not null                                                  |
+| `description`   | `String?`   | `text`           | nullable                                                  |
+| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                    |
+
+Constraints: `UNIQUE (researcher_id, locale)`. The original roster's English was copied from
+`rosac.team.people` into this table. A profile that still has no row here is shown in its base
+text, and the English page can still fall back to that catalogue. See
 [translate-database-content.md](translate-database-content.md).
 
 ## `public` schema (space weather)

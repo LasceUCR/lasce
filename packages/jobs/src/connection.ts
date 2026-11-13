@@ -16,10 +16,10 @@ export function getRedisConnection(): IORedis {
   const connection = new IORedis(serverEnv().REDIS_URL, {
     maxRetriesPerRequest: null,
     enableReadyCheck: true,
-    // ioredis resolves IPv4 only by default, but Railway's private network is
-    // IPv6 only, so `redis.railway.internal` would never resolve and every
-    // health check would report Redis unreachable. 0 lets DNS return either
-    // family, which keeps localhost working in development.
+    // ioredis resolves IPv4 only by default, so a Redis host published only
+    // over IPv6 would never resolve and every health check would report Redis
+    // unreachable. 0 lets DNS return either family, which keeps localhost and
+    // the IPv4 Compose network in production working alike.
     family: 0,
   })
 

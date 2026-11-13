@@ -35,7 +35,7 @@ describe('CollaborationsManager', () => {
     renderManager({ canCreate: false, canEdit: false, canDelete: false })
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Institute' })).toBeVisible()
-    expect(screen.getByRole('link', { name: 'Sitio web oficial' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Institute' })).toHaveAttribute(
       'rel',
       'noopener noreferrer',
     )

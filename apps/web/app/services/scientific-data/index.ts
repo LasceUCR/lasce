@@ -2,10 +2,12 @@ import { queryCiticScientificData } from './citicScientificDataSource'
 import { queryEhisReadings } from './ehisReadingsDataSource'
 import { queryExisReadings } from './exisReadingsDataSource'
 import { queryMagReadings } from './magReadingsDataSource'
+import { queryMpshReadings } from './mpshReadingsDataSource'
 import { createInstrumentRoutedDataSource } from './instrumentRoutedDataSource'
 import { queryMockScientificData } from './mockScientificDataSource'
 import type { ScientificDataProvider } from './scientificDataSource'
 import { ScientificDataSourceManager } from './scientificDataSourceManager'
+import { querySgpsReadings } from './sgpsReadingsDataSource'
 import { querySuviFrames } from './suviFrameDataSource'
 
 /*
@@ -30,6 +32,14 @@ const ehisReadings: ScientificDataProvider = {
   query: ({ query }) => queryEhisReadings(query),
 }
 
+const sgpsReadings: ScientificDataProvider = {
+  query: ({ query }) => querySgpsReadings(query),
+}
+
+const mpshReadings: ScientificDataProvider = {
+  query: ({ query }) => queryMpshReadings(query),
+}
+
 const citicArchive: ScientificDataProvider = {
   query: ({ query, jobId }) => queryCiticScientificData(query, jobId),
 }
@@ -47,8 +57,10 @@ export const scientificDataSources = new ScientificDataSourceManager([
       MAG: magReadings,
       SEISS: citicArchive,
     },
-    // SEISS EHIS is ingested daily by the worker; the other SEISS products stay on CITIC.
-    { EHIS: ehisReadings },
+    // Every available SEISS product is ingested daily by the worker's seiss-pipeline. The CITIC
+    // instrument provider is no longer reached from /datos (MPSL is not offered); retiring it and
+    // the `query-goes-archive` job is a follow-up.
+    { EHIS: ehisReadings, SGPS: sgpsReadings, MPSH: mpshReadings },
   ),
   createInstrumentRoutedDataSource('ROSAC', {
     'ROSAC-I1': rosacSimulation,

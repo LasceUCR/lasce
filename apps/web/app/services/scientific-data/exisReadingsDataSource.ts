@@ -8,11 +8,7 @@ const exisReadings = createGoesReadings({
   measurement: 'exis_irradiance',
   products: ['SFEU', 'SFXR'],
   unsupportedMessage: 'The EXIS readings only accept SFEU and SFXR',
-  provider: 'CITIC-UCR — lecturas EXIS nivel 1b de NOAA',
-  notice:
-    'Lecturas EXIS nivel 1b ingeridas diariamente por CITIC-UCR; NOAA publica cada día con aproximadamente un día de retraso. Se excluyen valores de relleno, negativos y observaciones marcadas con calidad degradada o inválida.',
-  fullNotice:
-    'Lecturas EXIS nivel 1b ingeridas diariamente por CITIC-UCR, sin muestreo: incluye todas las observaciones válidas del intervalo.',
+  dataset: 'exis',
 })
 
 export const queryExisReadings = exisReadings.query

@@ -77,14 +77,14 @@ Three entry points, one code path:
 1. **The UI** — a Server Action in `apps/web/app/actions.ts`.
 2. **HTTP** — `POST /api/jobs/[name]/trigger`, guarded by `CRON_SECRET`. This is what an external
    cron (Vercel Cron, GitHub Actions, a Kubernetes CronJob) calls.
-3. **BullMQ's scheduler** — the repeatable entries written by `pnpm jobs:register`.
+3. **BullMQ's scheduler** — the repeatable entries written by `syncSchedules()`, either through
+   `pnpm jobs:register` or `POST /api/jobs/schedules` (what a deploy calls).
 
 All three end up in `enqueue()` from `@lasce/jobs`, which validates against the contract before
 anything reaches Redis. The worker cannot tell them apart, and does not need to.
 
-The scheduling mechanism was left deliberately swappable because the deployment target is not
-settled yet: schedules are _declared_ in `packages/jobs/src/schedules.ts` regardless, and only the
-mechanism that reads that list changes.
+The scheduling mechanism was left deliberately swappable: schedules are _declared_ in
+`packages/jobs/src/schedules.ts` regardless, and only the mechanism that reads that list changes.
 
 ## Request path of a job
 

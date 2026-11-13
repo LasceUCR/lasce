@@ -1,7 +1,7 @@
 # Adding a CMS-editable feature
 
 "CMS" here means letting an `ADMIN` account edit a piece of public content in place, behind the
-"Modo edición" toggle in `/administracion` (for now, at least), instead of hand-editing hardcoded content in the
+"Modo edición" switch in the account menu of the top bar, instead of hand-editing hardcoded content in the
 repository. The building blocks already exist and are shared by every feature that uses this
 pattern. Adding a new one is mostly wiring, not new UI.
 

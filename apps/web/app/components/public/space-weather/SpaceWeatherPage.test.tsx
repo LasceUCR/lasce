@@ -36,7 +36,22 @@ describe('SpaceWeatherPage', () => {
     render(<SpaceWeatherPage content={spaceWeatherContent} />)
 
     expect(screen.getByRole('heading', { name: '1. El Sol libera energía' })).toBeInTheDocument()
+    expect(
+      screen.getByText(/Las fulguraciones o llamaradas solares se encuentran entre los fenómenos/),
+    ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Actividad solar' })).toBeInTheDocument()
+    expect(
+      screen.getByText(/Como parte de la astrofísica solar, estudiamos el Sol como una estrella/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/El viento solar es un flujo continuo de partículas cargadas/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/La magnetosfera terrestre es la región que rodea nuestro planeta/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Estas partículas energéticas solares \(SEP, por sus siglas en inglés\)/),
+    ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: spaceWeatherBackLink.label })).toHaveAttribute(
       'href',
       spaceWeatherBackLink.href,
@@ -48,6 +63,21 @@ describe('SpaceWeatherPage', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Space weather' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '1. The Sun releases energy' })).toBeInTheDocument()
+    expect(
+      screen.getByText(/Solar flares are among the most energetic phenomena on the Sun/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/As part of solar astrophysics, we study the Sun as a dynamic star/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/The solar wind is a continuous flow of charged particles/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Earth’s magnetosphere is the region surrounding the planet/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/These solar energetic particles \(SEPs\) can affect satellites/),
+    ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Geomagnetic storms' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Back to the work areas' })).toHaveAttribute(
       'href',

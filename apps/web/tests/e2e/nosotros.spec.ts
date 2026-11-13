@@ -183,3 +183,60 @@ for (const viewport of viewports) {
     expect(fits).toBe(true)
   })
 }
+
+test('displays researcher content in English when site language switches to English', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  await page.goto('/nosotros')
+
+  // Switch to English via header
+  await page.getByRole('banner').getByLabel('Idioma: Español').click()
+  await page.getByRole('banner').getByRole('button', { name: 'English' }).click()
+
+  // Verify URL did not change
+  await expect(page).toHaveURL(/\/nosotros$/)
+
+  const researchers = page.getByRole('region', { name: 'LASCE researchers' })
+  await expect(researchers).toContainText('Click a card to see more information.')
+  const track = researchers.getByRole('list', { name: 'LASCE researchers' })
+  await expect(track.getByRole('listitem')).toHaveCount(9)
+
+  await expect(researchers.getByRole('button', { name: 'Previous' })).toBeVisible()
+  await expect(researchers.getByRole('button', { name: 'Next' })).toBeVisible()
+
+  // Check English roles and affiliations
+  await expect(researchers.getByText('Principal investigator', { exact: true })).toBeVisible()
+  await expect(
+    researchers.getByText('Institution: Centro de Investigaciones Espaciales, CINESPA').first(),
+  ).toBeVisible()
+
+  // Open flip card in English
+  const flipBtn = researchers.getByRole('button', {
+    name: 'View description of Dra. Carolina Salas Matamoros',
+  })
+  await expect(flipBtn).toBeVisible()
+  await flipBtn.click()
+
+  // Description in English
+  await expect(
+    researchers.getByText(
+      /coordinates the integration (of|between) solar astrophysics, radio astronomy, space weather/,
+    ),
+  ).toBeVisible()
+
+  // Back button in English
+  await expect(
+    researchers.getByRole('button', {
+      name: "Return to Dra. Carolina Salas Matamoros's card",
+    }),
+  ).toBeVisible()
+
+  // Switch back to Spanish
+  await page.getByRole('banner').getByLabel('Language: English').click()
+  await page.getByRole('banner').getByRole('button', { name: 'Español' }).click()
+
+  await expect(page).toHaveURL(/\/nosotros$/)
+  await expect(page.getByRole('region', { name: 'Investigadores LASCE' })).toBeVisible()
+  await expect(page.getByText('Investigadora principal', { exact: true })).toBeVisible()
+})

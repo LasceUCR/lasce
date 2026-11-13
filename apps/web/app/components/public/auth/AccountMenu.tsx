@@ -8,14 +8,23 @@ import type { UserRole } from '@lasce/db'
 
 import { isActivePath } from '@/app/components/public/NavGroup'
 import { useDisclosure } from '@/app/components/public/useDisclosure'
-import { canSeeAdminNavigation, shortName } from '@/app/lib/auth/account'
+import { shortName } from '@/app/lib/auth/account'
 
+import { EditModeSwitch } from './EditModeSwitch'
 import { SignOutButton } from './SignOutButton'
 
 export interface AccountMenuProps {
   /** Display name of the signed-in account. */
   account: string
+  /** Role confirmed by the server, shown under the name; `null` until it answers. */
   role: UserRole | null
+  /**
+   * Offer "Administración". Computed on the server from the session
+   * (`useAccount` → `GET /api/session`), never from the role or a cookie here.
+   */
+  canAccessAdmin: boolean
+  /** Offer the "Modo edición" switch. Server-computed the same way. */
+  canEdit: boolean
   pathname: string
   isSigningOut: boolean
   onSignOut: () => void
@@ -32,7 +41,8 @@ export interface AccountMenuProps {
  * so this is a plain nav-group visually and structurally, not a second
  * dropdown style: same box, same vertical origin, same caret. The panel
  * opens on an informational name/role block (not a link), then
- * "Administración" (only when the role can see it) and "Mi cuenta", then
+ * "Administración" (only when the server says the account may enter) and "Mi cuenta", the "Modo
+ * edición" switch (only when the server says it holds a content grant), then
  * "Cerrar sesión" with the same icon and neutral color the mobile menu gives
  * it (not red — this isn't a destructive-looking control, just the last
  * item), which keeps its own confirmation dialog via `SignOutButton`.
@@ -40,6 +50,8 @@ export interface AccountMenuProps {
 export function AccountMenu({
   account,
   role,
+  canAccessAdmin,
+  canEdit,
   pathname,
   isSigningOut,
   onSignOut,
@@ -56,7 +68,8 @@ export function AccountMenu({
     handleKeyDown,
     handleBlur,
   } = useDisclosure()
-  const showAdmin = canSeeAdminNavigation(role)
+  const showAdmin = canAccessAdmin
+  const showEditMode = canEdit
   const roleLabel = role ? t(`roles.${role}`) : null
 
   return (
@@ -98,6 +111,12 @@ export function AccountMenu({
         >
           {t('myAccount')}
         </Link>
+        {showEditMode ? (
+          <>
+            <hr aria-hidden="true" className="account-menu-divider" />
+            <EditModeSwitch className="account-menu-edit-mode" id="account-menu-edit-mode" />
+          </>
+        ) : null}
         <hr aria-hidden="true" className="account-menu-divider" />
         <SignOutButton
           className="account-menu-signout"

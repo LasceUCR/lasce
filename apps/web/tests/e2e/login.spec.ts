@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect as baseExpect, test, type Page } from '@playwright/test'
 
-import { cuentaIntro } from '@/app/lib/auth/account'
+import es from '@/messages/es.json' with { type: 'json' }
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
@@ -240,7 +240,7 @@ test('shows the profile on the account page once signed in', async ({ page }) =>
   await page.goto('/cuenta')
 
   await expect(page).toHaveURL(/\/cuenta$/)
-  await expect(page.getByRole('heading', { level: 1, name: cuentaIntro.title })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
   const main = page.getByRole('main')
   await expect(main.getByText(account.fullName)).toBeVisible()
   await expect(main.getByText(account.email)).toBeVisible()
@@ -260,6 +260,80 @@ test('shows the profile on the account page once signed in', async ({ page }) =>
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   await expect(menu.getByRole('link', { name: 'Mi cuenta' })).toHaveAttribute('href', '/cuenta')
   await expect(menu.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
+})
+
+test('switches language on the account page while preserving user info and session', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  await signIn(page)
+  await page.goto('/cuenta')
+
+  await expect(page).toHaveURL(/\/cuenta$/)
+  await expect(page).toHaveTitle(es.account.meta.title)
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
+
+  let main = page.getByRole('main')
+  await expect(main.getByText(account.fullName)).toBeVisible()
+  await expect(main.getByText('Visitante')).toBeVisible()
+  await expect(main.getByText('Nombre', { exact: true })).toBeVisible()
+  await expect(main.getByText('Rol', { exact: true })).toBeVisible()
+
+  // Switch to English using the header language menu
+  await page.getByRole('banner').getByLabel('Idioma: Español').click()
+  await page.getByRole('banner').getByRole('button', { name: 'English' }).click()
+
+  // The route does not change and session is preserved
+  await expect(page).toHaveURL(/\/cuenta$/)
+  await expect(page).toHaveTitle('My account | LASCE')
+  await expect(page.getByRole('heading', { level: 1, name: 'My account' })).toBeVisible()
+  await expect(
+    page.getByText('Your profile on the portal and your session controls.'),
+  ).toBeVisible()
+
+  main = page.getByRole('main')
+  // User personal account data remains unchanged
+  await expect(main.getByText(account.fullName)).toBeVisible()
+  await expect(main.getByText(account.email)).toBeVisible()
+  await expect(main.getByText(account.institution)).toBeVisible()
+  await expect(main.getByText('Costa Rica', { exact: true })).toBeVisible()
+  await expect(main.getByText('Visitor', { exact: true })).toBeVisible()
+
+  // Profile labels in English
+  await expect(main.getByText('Name', { exact: true })).toBeVisible()
+  await expect(main.getByText('Email address', { exact: true })).toBeVisible()
+  await expect(main.getByText('Institution', { exact: true })).toBeVisible()
+  await expect(main.getByText('Country', { exact: true })).toBeVisible()
+  await expect(main.getByText('Role', { exact: true })).toBeVisible()
+  await expect(main.getByText('Member since', { exact: true })).toBeVisible()
+
+  // Back link in English
+  await expect(page.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
+
+  // Confirmation dialog in English
+  const signOutBtn = main.getByRole('button', { name: 'Sign out' })
+  await expect(signOutBtn).toBeVisible()
+  await signOutBtn.click()
+
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', { level: 2, name: 'Sign out?' })).toBeVisible()
+  await expect(
+    dialog.getByText('Your session in this browser will end and you will have to sign in again.'),
+  ).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Sign out' })).toBeVisible()
+
+  // Close the dialog and switch back to Spanish
+  await dialog.getByRole('button', { name: 'Cancel' }).click()
+  await expect(dialog).not.toBeVisible()
+
+  await page.getByRole('banner').getByLabel('Language: English').click()
+  await page.getByRole('banner').getByRole('button', { name: 'Español' }).click()
+
+  await expect(page).toHaveURL(/\/cuenta$/)
+  await expect(page).toHaveTitle(es.account.meta.title)
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
+  await expect(page.getByRole('main').getByText('Visitante')).toBeVisible()
 })
 
 test('returns to a safe path after login and ignores an off-site one', async ({ page }) => {

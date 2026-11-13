@@ -21,6 +21,7 @@ export const PERMISSIONS = [
   'manage_users',
   'manage_permissions',
   'view_audit_log',
+  'view_download_history',
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
@@ -34,17 +35,19 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   manage_users: 'Administrar usuarios',
   manage_permissions: 'Configurar permisos',
   view_audit_log: 'Consultar la auditoría',
+  view_download_history: 'Consultar el historial de descargas',
 }
 
 export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   create_components: 'Crear componentes del portal cuando esa función esté disponible.',
   edit_components: 'Editar componentes del portal cuando esa función esté disponible.',
   delete_components: 'Eliminar componentes del portal cuando esa función esté disponible.',
-  download_resources: 'Descargar recursos del laboratorio y consultar el historial de descargas.',
+  download_resources: 'Descargar recursos del laboratorio desde la página de datos.',
   download_goes_resources: 'Descargar datos de los satélites GOES.',
   manage_users: 'Consultar cuentas y asignar o retirar roles.',
   manage_permissions: 'Ver y cambiar los permisos asociados a cada rol.',
   view_audit_log: 'Consultar el registro de acciones administrativas del portal.',
+  view_download_history: 'Consultar quién descargó qué recursos del laboratorio y cuándo.',
 }
 
 export const PERMISSION_DENIED: Record<Permission, string> = {
@@ -56,6 +59,7 @@ export const PERMISSION_DENIED: Record<Permission, string> = {
   manage_users: 'No tienes autorización para administrar usuarios.',
   manage_permissions: 'No tienes autorización para configurar los permisos de los roles.',
   view_audit_log: 'No tienes autorización para consultar la auditoría.',
+  view_download_history: 'No tienes autorización para consultar el historial de descargas.',
 }
 
 /** Seeded by the role-permissions migration; administrators can change it later. */
@@ -71,6 +75,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> =
     'manage_users',
     'manage_permissions',
     'view_audit_log',
+    'view_download_history',
   ],
 }
 

@@ -24,8 +24,8 @@ panel and then builds the menu:
 2. `canSeeAdminNavigation(role)`, the same rule that hides the header tab, turns a signed-in
    visitor away with Acceso denegado. Only assistants and administrators continue.
 3. `getPermissionsForRole()` (memoised per request) gives the held grants, passed to `AdminShell`
-   as `granted`. `visibleAdminMenu(granted)` keeps the entries without a grant (Resumen,
-   Infraestructura) and those whose grant is held.
+   as `granted`. `visibleAdminMenu(granted)` keeps the entries without a grant (just Resumen today)
+   and those whose grant is held.
 
 With the default matrix:
 
@@ -33,11 +33,11 @@ With the default matrix:
 | ------------- | ------------------------------------------------------ |
 | Anonymous     | Redirect to `/acceso?next=/administracion&reason=auth` |
 | Visitante     | Acceso denegado, no menu                               |
-| Asistente     | Resumen, Descargas, Infraestructura                    |
-| Administrador | all six                                                |
+| Asistente     | Resumen                                                |
+| Administrador | all five                                               |
 
-A visitor holds `download_resources` by default, but the panel gate comes first, so that grant
-does not open `/administracion/descargas` for them. Changing the matrix on
+Descargas is unlocked by `view_download_history`, which only administrators hold by default.
+`download_resources` (held by every role) does not open it. Changing the matrix on
 `/administracion/permisos` changes the menu on the next request; no new login is needed. Hiding a
 link is not authorization: every section page still calls `requirePermission`, as
 [add-permissions.md](add-permissions.md) describes.
@@ -60,8 +60,22 @@ Both layouts are one DOM, so each link exists once and the same rule (`isAdminIt
 the current section in the list and names it on the button.
 
 `--header-height` in `globals.css` is the measured height of `.site-header`: 82px, 75px at 1400px
-and below, 64px at 760px and below. The sidebar's `top` and the shell's `min-height` use it, so the
-sidebar starts exactly under the header at every width. Measure again if the header changes.
+and below, 64px at 760px and below. The sidebar's `top` uses it, so the sidebar starts exactly
+under the header at every width. Measure again if the header changes.
+
+## The shared footer (LASCE-ADM-001)
+
+The panel keeps the public `.site-footer`; it is not duplicated. Two rules in `globals.css` keep it
+clear of the panel:
+
+- `.admin-shell` is `flex: 1` inside `.public-shell-content` instead of having its own
+  `min-height`. `.public-shell` already makes the page at least one viewport tall, so a short
+  section (Descargas with no rows) shows the footer at the bottom of the screen, with no scroll and
+  no empty band, and a long one shows it after the content.
+- Above 1120px the fixed sidebar runs to the bottom of the viewport, so
+  `body:has(.admin-shell) .site-footer` gets `margin-left: 240px` and starts where the sidebar
+  ends. At 1120px and below the sidebar is the sticky bar and the footer keeps the full width.
+  Change both numbers together if the sidebar width changes.
 
 ## Covered by
 
@@ -72,3 +86,10 @@ sidebar starts exactly under the header at every width. Measure again if the hea
 | Menu filtered by `granted`                         | `app/components/administracion/AdminShell.tsx`   | `AdminShell.test.tsx`                                                 |
 | Toggle, Escape, outside pointer, close on navigate | `app/components/administracion/AdminSidebar.tsx` | `AdminSidebar.test.tsx`, `tests/e2e/administracion-mobile.spec.ts`    |
 | Breakpoint, sticky offset, no overflow             | `app/globals.css`                                | `tests/e2e/administracion-mobile.spec.ts` (390px, 320px, 1440px, axe) |
+| Footer clear of the sidebar, short and long pages  | `app/globals.css`, `AdminShell.tsx`              | `AdminShell.test.tsx`, `tests/e2e/administracion-footer.spec.ts`      |
+
+## "Modo edición"
+
+The "Modo edición" switch is not in the panel: it lives in the signed-in account menu of the top
+bar (and in the mobile menu), so it can be changed from any page. See
+[header-and-navigation.md](header-and-navigation.md#modo-edición-in-the-account-menu).

@@ -191,6 +191,15 @@ behaviour rather than desired behaviour. Fix them before putting a caller in fro
    cannot be told apart from other assets by key. Removing them is a manual clean-up, and a
    scripted one would need `delete` to be safe first (gap 3).
 
+## Initiative logos
+
+The initiatives editor reuses `FileDropInput`, but its upload and image-serving routes use
+`app/services/initiatives/logoStorage.ts`. This helper avoids the shared service's unresolved
+bucket, key and public-endpoint issues: it uses `MINIO_BUCKET` for both reads and writes, UUID
+filenames under `assets/initiatives/`, and a same-origin image route without changing bucket
+policies. PostgreSQL persists that image route in `research.initiatives.logo_url`; image bytes
+live in MinIO. See [initiatives.md](initiatives.md) for its limits and permissions.
+
 ## Testing
 
 Unit tests live in `apps/web/tests/unit/services/storage/MinioAssetStorage.test.ts` — 15 tests
