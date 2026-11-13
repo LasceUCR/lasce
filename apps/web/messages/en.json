@@ -375,7 +375,7 @@
     },
     "costaRica": {
       "title": "Why study it from Costa Rica?",
-      "p1": "The response of the ionosphere and the performance of technological systems can depend on geographic and geomagnetic location. Having observations and analyses made from Costa Rica makes it possible to characterise the regional environment better, to contribute data to global networks and to build local scientific capabilities. For a country that depends more and more on satellite navigation, telecommunications and digital infrastructure, understanding space weather is an investment in knowledge."
+      "p1": "The response of the ionosphere and the performance of technological systems can depend on geographic and geomagnetic location. Having observations and analyses made from Costa Rica makes it possible to characterize the regional environment better, to contribute data to global networks and to build local scientific capabilities. For a country that depends more and more on satellite navigation, telecommunications and digital infrastructure, understanding space weather is an investment in knowledge."
     },
     "components": {
       "title": "What makes up space weather?",
@@ -424,6 +424,7 @@
       "titleField": "Title ({language})",
       "bodyField": "Text ({language})",
       "bodyHint": "Separate paragraphs with a blank line.",
+      "remainingCharacters": "{remaining} of {max} characters remaining.",
       "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change the title or the text, review it too.",
       "legacyNoTranslation": "This section has no English version yet. To change the title or the text, fill in both languages.",
       "cancel": "Cancel",
@@ -1288,7 +1289,7 @@
         },
         "prysmian": {
           "title": "Prysmian donation",
-          "description": "The ROSAC organization received an equipment donation from Prysmian, as part of its commitment to strengthening the initiatives and activities carried out by the organization. This contribution represents valuable support for ROSAC and the development of its work.",
+          "description": "Prysmian Group donated nearly 3 km of power and telecommunications cables, valued at $36,000, for the development of the ROSAC radio telescope, the only one of its kind in Central America. The 96-fiber optical cable will carry the Sun’s data to servers in real time, while the power cables will supply the receivers and equipment. The company will also provide guidance for proper installation and commissioning.",
           "imageAlt": "Prysmian representative talking with a ROSAC team member in front of the observatory antenna"
         }
       },
@@ -2423,6 +2424,94 @@
     },
     "accessDenied": {
       "title": "Access denied"
+    }
+  },
+  "auth": {
+    "meta": {
+      "title": "Portal access | LASCE",
+      "description": "Sign in or create an account on the portal of the Space Weather Laboratory of the University of Costa Rica."
+    },
+    "page": {
+      "title": "Portal access",
+      "lead": "Sign in or create an account to download scientific products and review your activity.",
+      "backLink": "Back to home"
+    },
+    "tabs": {
+      "label": "Access",
+      "login": "Sign in",
+      "register": "Create account"
+    },
+    "login": {
+      "heading": {
+        "title": "Sign in",
+        "description": "Sign in to download scientific products and review your activity."
+      },
+      "labels": {
+        "email": "Email address",
+        "password": "Password"
+      },
+      "placeholders": {
+        "email": "email@example.com"
+      },
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccountPrompt": "Don't have an account?",
+      "noAccountLink": "Create account",
+      "footnote": "The download is associated with your account for traceability and scientific use.",
+      "validation": {
+        "emailRequired": "Enter your email address.",
+        "emailInvalid": "Enter a valid email address.",
+        "passwordRequired": "Enter your password.",
+        "reviewFields": "Review the marked fields to continue.",
+        "invalidCredentials": "Incorrect email or password.",
+        "unexpected": "We could not sign you in. Try again in a few minutes.",
+        "authRequired": "You must sign in to continue."
+      }
+    },
+    "registration": {
+      "heading": {
+        "title": "Create account",
+        "lead": "Personal and institutional emails are accepted."
+      },
+      "labels": {
+        "fullName": "Full name",
+        "email": "Email address",
+        "institution": "Institution",
+        "countryCode": "Country",
+        "password": "Password",
+        "passwordConfirmation": "Repeat password"
+      },
+      "placeholders": {
+        "fullName": "First and last name",
+        "email": "email@example.com",
+        "institution": "University / Research center",
+        "countryCode": "Select a country"
+      },
+      "requiredNote": "All fields are required.",
+      "passwordHint": "At least 8 characters.",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "successTitle": "Account created",
+      "successBody": "Your account was registered. You can now sign in.",
+      "successLink": "Sign in",
+      "validation": {
+        "fullNameRequired": "Enter your full name.",
+        "fullNameTooLong": "The name cannot exceed 120 characters.",
+        "emailRequired": "Enter your email address.",
+        "emailInvalid": "Enter a valid email address.",
+        "emailTooLong": "The email address cannot exceed 254 characters.",
+        "emailTaken": "An account with this email address already exists.",
+        "institutionRequired": "Enter your institution.",
+        "institutionTooLong": "The institution cannot exceed 160 characters.",
+        "countryRequired": "Select your country.",
+        "passwordRequired": "Enter a password.",
+        "passwordTooShort": "The password must be at least 8 characters long.",
+        "passwordTooLong": "The password cannot exceed 128 characters.",
+        "confirmationRequired": "Repeat your password.",
+        "confirmationMismatch": "The passwords do not match.",
+        "reviewFields": "Review the marked fields to continue.",
+        "unexpected": "We could not create your account. Try again in a few minutes."
+      }
     }
   },
   "account": {
