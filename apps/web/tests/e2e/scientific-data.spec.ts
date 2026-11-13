@@ -291,8 +291,8 @@ test('opens on the latest day with data, so the default query is not empty', asy
 
   const date = page.getByLabel('Fecha', { exact: true })
   // EXIS publishes with a delay, so the form does not open on today.
-  await expect(date).toHaveValue(utcDateDaysAgo(2))
-  await expect(date).toHaveAttribute('max', utcDateDaysAgo(2))
+  await expect(date).toHaveValue(utcDateDaysAgo(1))
+  await expect(date).toHaveAttribute('max', utcDateDaysAgo(1))
 
   await page.getByRole('button', { name: 'Consultar datos' }).click()
   await expect(page.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })).toBeVisible()
@@ -305,7 +305,7 @@ test('limits EXIS dates to the latest published day and lets SUVI reach today', 
   await page.goto('/datos')
   await selectHistoricalXrays(page)
   const date = page.getByLabel('Fecha', { exact: true })
-  await expect(date).toHaveAttribute('max', utcDateDaysAgo(2))
+  await expect(date).toHaveAttribute('max', utcDateDaysAgo(1))
   await expect(date).not.toHaveAttribute('min')
   await date.fill('2025-01-05')
   const product = page.getByRole('combobox', { name: 'Instrumento y producto' })

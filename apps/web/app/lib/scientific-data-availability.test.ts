@@ -22,9 +22,9 @@ describe('scientific data availability', () => {
     expect(getGoesAvailability(new Date('2026-10-01T00:30:12Z'))).toEqual({ today: '2026-10-01' })
   })
   test.each(['EXIS', 'MAG', 'EHIS', 'SGPS', 'MPS-HI'])(
-    'puts the latest day of %s two days before today, as NOAA publishes with a delay',
+    'puts the latest day of %s one day before today, as NOAA publishes with a delay',
     (instrument) => {
-      expect(getLatestAvailableDate(instrument, availability)).toBe('2026-09-12')
+      expect(getLatestAvailableDate(instrument, availability)).toBe('2026-09-13')
     },
   )
 
@@ -33,7 +33,7 @@ describe('scientific data availability', () => {
   })
 
   test('crosses a month boundary when counting back', () => {
-    expect(getLatestAvailableDate('EXIS', { today: '2026-10-01' })).toBe('2026-09-29')
+    expect(getLatestAvailableDate('EXIS', { today: '2026-10-01' })).toBe('2026-09-30')
   })
 
   test.each([

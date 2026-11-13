@@ -252,14 +252,14 @@ describe('ScientificDataExplorer', () => {
     const user = userEvent.setup()
     renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
 
-    // EXIS publishes with a delay, so its latest day is two days before today (2026-09-12).
+    // EXIS publishes with a delay, so its latest day is the day before today (2026-09-11).
     expect(screen.getByLabelText('Fecha')).toHaveAttribute('max', '2026-09-10')
     expect(screen.getByText('Último día con datos: 10 de septiembre de 2026.')).toBeInTheDocument()
 
     await user.click(screen.getByRole('combobox', { name: 'Instrumento y producto' }))
     await user.click(screen.getByRole('treeitem', { name: /^SUVI/ }))
     await user.click(screen.getByRole('treeitem', { name: /171 Å/ }))
-    expect(screen.getByLabelText('Fecha')).toHaveAttribute('max', '2026-09-12')
+    expect(screen.getByLabelText('Fecha')).toHaveAttribute('max', '2026-09-11')
 
     await user.click(screen.getByRole('combobox', { name: 'Fuente de datos' }))
     await user.click(screen.getByRole('option', { name: /ROSAC/ }))
@@ -276,7 +276,7 @@ describe('ScientificDataExplorer', () => {
           source: 'ROSAC',
           product: 'ROSAC-I1',
           parameter: 'simulated-intensity',
-          date: '2026-09-12',
+          date: '2026-09-11',
         }}
       />,
     )

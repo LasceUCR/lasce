@@ -122,7 +122,7 @@ The `/datos` query form (`ScientificDataExplorer.tsx`) works in UTC.
 
 - **Default and limit of the date.** A GOES query opens on the latest day that already has data
   for its instrument, and later days cannot be picked. NOAA publishes EXIS, MAG, EHIS, SGPS and
-  MPS-HI about a day late, so their latest day is two days before today; SUVI images reach today.
+  MPS-HI about a day late, so their latest day is yesterday; SUVI images reach today.
   The lag is `PUBLICATION_LAG_DAYS` in `app/lib/scientific-data-availability.ts`.
 - **Ranges across midnight.** An end time before the start time ends on the next day, so 23:00–01:00
   is two hours. Equal times are rejected, and a range never reaches 24 hours. The window is built

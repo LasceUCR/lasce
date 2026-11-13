@@ -13,7 +13,7 @@ describe('scientific data navigation', () => {
       source: 'GOES',
       product: 'SFXR',
       parameter: '0.1-0.8nm',
-      date: '2026-09-29',
+      date: '2026-09-30',
       startTime: '00:00',
       endTime: '23:59',
     })
