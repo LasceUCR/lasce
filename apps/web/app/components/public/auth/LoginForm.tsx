@@ -1,14 +1,12 @@
 'use client'
 
 import { useActionState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 
 import {
-  LOGIN_LABELS,
-  LOGIN_PLACEHOLDERS,
   NEXT_FIELD,
   REGISTRATION_HREF,
   initialLoginState,
-  loginFormCopy,
   type LoginAction,
   type LoginState,
 } from '@/app/lib/auth/login'
@@ -53,6 +51,7 @@ export function LoginForm({
   id,
   initialState,
 }: LoginFormProps) {
+  const t = useTranslations('auth.login')
   const [state, formAction, isPending] = useActionState(action, initialState ?? initialLoginState)
   const alertRef = useRef<HTMLDivElement>(null)
 
@@ -90,16 +89,16 @@ export function LoginForm({
           autoComplete="email"
           defaultValue={state.values.email}
           error={state.fieldErrors.email}
-          label={LOGIN_LABELS.email}
+          label={t('labels.email')}
           name="email"
-          placeholder={LOGIN_PLACEHOLDERS.email}
+          placeholder={t('placeholders.email')}
           required
           type="email"
         />
         <FormField
           autoComplete="current-password"
           error={state.fieldErrors.password}
-          label={LOGIN_LABELS.password}
+          label={t('labels.password')}
           name="password"
           required
           type="password"
@@ -108,7 +107,7 @@ export function LoginForm({
 
         <div className="form-actions">
           <Button className="button-block" disabled={isPending} type="submit" variant="brand">
-            {isPending ? loginFormCopy.submitting : loginFormCopy.submit}
+            {isPending ? t('submitting') : t('submit')}
           </Button>
         </div>
       </form>
@@ -116,9 +115,9 @@ export function LoginForm({
       {/* A plain anchor rather than a Link: the tab selector keeps its selection across
           client-side navigations, so the registration tab only opens on a fresh load. */}
       <p className="login-alt">
-        {loginFormCopy.noAccountPrompt} <a href={registerHref}>{loginFormCopy.noAccountLink}</a>
+        {t('noAccountPrompt')} <a href={registerHref}>{t('noAccountLink')}</a>
       </p>
-      <p className="login-footnote">{loginFormCopy.footnote}</p>
+      <p className="login-footnote">{t('footnote')}</p>
     </section>
   )
 }
