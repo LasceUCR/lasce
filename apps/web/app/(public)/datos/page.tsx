@@ -9,7 +9,10 @@ import { getSessionUser } from '@/app/lib/auth/session'
 import { loginRedirectPath } from '@/app/lib/auth/session-token'
 import { getScientificSources } from '@/app/lib/scientific-data'
 import { getGoesAvailability } from '@/app/lib/scientific-data-availability'
-import { getInitialScientificQuery } from '@/app/lib/scientific-data-navigation'
+import {
+  getInitialScientificQuery,
+  getRequestedScientificQuery,
+} from '@/app/lib/scientific-data-navigation'
 
 import { requestResourceDownload } from './actions'
 
@@ -31,7 +34,10 @@ interface ScientificDataRouteProps {
 export default async function ScientificDataRoute({ searchParams }: ScientificDataRouteProps) {
   const today = new Date()
   const maxDate = today.toISOString().slice(0, 10)
-  const initialQuery = getInitialScientificQuery(await searchParams, maxDate)
+  const params = await searchParams
+  // A complete query in the URL (left by the sign-in redirect) is restored and run again.
+  const requestedQuery = getRequestedScientificQuery(params, maxDate)
+  const initialQuery = requestedQuery ?? getInitialScientificQuery(params, maxDate)
   // The page stays public: an anonymous visitor gets an empty grant set, not a redirect.
   // Grants only decide which download buttons are enabled; the Server Action checks again.
   const user = await getSessionUser()
@@ -59,6 +65,7 @@ export default async function ScientificDataRoute({ searchParams }: ScientificDa
         key={`${initialQuery.source}:${initialQuery.product}`}
         goesAvailability={getGoesAvailability(today)}
         initialQuery={initialQuery}
+        consultOnLoad={requestedQuery !== null}
         sources={sources}
         signedIn={user !== null}
         downloadGrants={grants}
