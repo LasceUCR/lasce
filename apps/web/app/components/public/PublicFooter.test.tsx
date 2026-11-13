@@ -99,6 +99,15 @@ describe('PublicFooter', () => {
     expect(instagram.getAttribute('rel')).toContain('noreferrer')
   })
 
+  test('links to the development team page', () => {
+    render(<PublicFooter {...defaultArgs} />)
+
+    expect(screen.getByRole('link', { name: 'Equipo de desarrollo' })).toHaveAttribute(
+      'href',
+      '/equipo-de-desarrollo',
+    )
+  })
+
   test('defaults to the current year when none is given', () => {
     render(<PublicFooter content={defaultArgs.content} />)
 

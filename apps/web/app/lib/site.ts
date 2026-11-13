@@ -13,6 +13,7 @@ export const publicPaths = [
   '/galeria',
   '/noticias',
   '/contacto',
+  '/equipo-de-desarrollo',
   '/acceso',
   '/actividades-academicas',
   ...workAreaSlugs.map((slug) => workAreaPath(slug)),
