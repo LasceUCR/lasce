@@ -1916,7 +1916,14 @@
       "dynamicSpectrumTableCaption": "Simulated intensity by hour and frequency",
       "columnFrequency": "Frequency (MHz)",
       "columnIntensity": "Relative intensity",
-      "downloadStarted": "The download of {filename} has started. The link expires in 30 minutes."
+      "downloadStarted": "The download of {filename} has started. The link expires in 30 minutes.",
+      "timeZoneHint": "Times are in UTC. Costa Rica is 6 hours behind (UTC−6): 12:00 UTC is 06:00 in Costa Rica.",
+      "crossesMidnightHint": "The end time is earlier than the start time: the range ends on the next day (UTC).",
+      "dateLatestHint": "Latest day with data: {date}.",
+      "localIntervalResultLabel": "Costa Rica time (UTC−6)",
+      "localDayBefore": "{time} (previous day)",
+      "localDayAfter": "{time} (next day)",
+      "crossesMidnightResult": "(ends the next day)"
     },
     "downloads": {
       "title": "Downloads",
@@ -1945,7 +1952,7 @@
       "invalidDate": "Select a valid date in YYYY-MM-DD format.",
       "invalidStartTime": "Select a valid start time in HH:mm format.",
       "invalidEndTime": "Select a valid end time in HH:mm format.",
-      "startBeforeEnd": "The start time must be before the end time.",
+      "sameStartEnd": "The start time and the end time cannot be the same.",
       "productUnavailable": "The selected product is not yet available for this source.",
       "invalidParameterForProduct": "Select a valid channel or parameter for the product.",
       "default": "Check the criteria."
@@ -1962,7 +1969,8 @@
       "downloadInvalid": "The download request is not valid.",
       "downloadUnsupported": "This product does not offer downloads in the requested format.",
       "downloadPending": "The query is still being processed. Wait for it to finish and try the download again.",
-      "downloadEmpty": "There is no data to download for the selected criteria."
+      "downloadEmpty": "There is no data to download for the selected criteria.",
+      "dateNotPublished": "That date does not have published data yet. Choose {date} or an earlier date."
     },
     "origins": {
       "sampled": "{count} observations evenly spread across the interval are shown; no values were interpolated.",

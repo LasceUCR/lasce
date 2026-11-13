@@ -1916,7 +1916,14 @@
       "dynamicSpectrumTableCaption": "Intensidad simulada por hora y frecuencia",
       "columnFrequency": "Frecuencia (MHz)",
       "columnIntensity": "Intensidad relativa",
-      "downloadStarted": "La descarga de {filename} comenzó. El enlace vence en 30 minutos."
+      "downloadStarted": "La descarga de {filename} comenzó. El enlace vence en 30 minutos.",
+      "timeZoneHint": "Horas en UTC. Costa Rica está 6 horas atrás (UTC−6): 12:00 UTC son las 06:00 en Costa Rica.",
+      "crossesMidnightHint": "La hora de fin es anterior a la de inicio: el rango termina al día siguiente (UTC).",
+      "dateLatestHint": "Último día con datos: {date}.",
+      "localIntervalResultLabel": "Hora de Costa Rica (UTC−6)",
+      "localDayBefore": "{time} (día anterior)",
+      "localDayAfter": "{time} (día siguiente)",
+      "crossesMidnightResult": "(termina al día siguiente)"
     },
     "downloads": {
       "title": "Descargas",
@@ -1945,7 +1952,7 @@
       "invalidDate": "Seleccione una fecha válida con el formato AAAA-MM-DD.",
       "invalidStartTime": "Seleccione una hora de inicio válida con el formato HH:mm.",
       "invalidEndTime": "Seleccione una hora de fin válida con el formato HH:mm.",
-      "startBeforeEnd": "La hora de inicio debe ser anterior a la hora de fin.",
+      "sameStartEnd": "La hora de inicio y la de fin no pueden ser iguales.",
       "productUnavailable": "El producto seleccionado todavía no está disponible para esta fuente.",
       "invalidParameterForProduct": "Seleccione un canal o parámetro válido para el producto.",
       "default": "Revise los criterios."
@@ -1962,7 +1969,8 @@
       "downloadInvalid": "La solicitud de descarga no es válida.",
       "downloadUnsupported": "Este producto no ofrece descargas en el formato solicitado.",
       "downloadPending": "La consulta todavía se está procesando. Espere a que termine e intente la descarga nuevamente.",
-      "downloadEmpty": "No hay datos para descargar con los criterios seleccionados."
+      "downloadEmpty": "No hay datos para descargar con los criterios seleccionados.",
+      "dateNotPublished": "Esa fecha todavía no tiene datos publicados. Seleccione el {date} o una fecha anterior."
     },
     "origins": {
       "sampled": "Se muestran {count} observaciones distribuidas uniformemente en el intervalo; no se interpolaron valores.",
