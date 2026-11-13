@@ -18,6 +18,20 @@ with `edit_components`. It cannot be added or deleted from the CMS.
 Everything else on the page stays fixed copy in `apps/web/messages/` (`spaceWeather` namespace),
 built by `app/lib/space-weather.ts`.
 
+## Layout
+
+`/clima-espacial` and `/fisica-solar` are reading pages (#507): the article carries
+`topic-page-reading`, which centres the hero and sections in a 65rem column, the same width as the
+`/datos` header. Running text (`.topic-lead`, `.topic-intro`, the concept-flow caption) is capped
+at `--reading-measure` (68ch), about 65–80 characters per line, and left-aligned like every
+paragraph on the public site.
+
+Every section is numbered in visual order through `TopicSection`'s `index`: 1. ¿Qué es el clima
+espacial?, 2. Del Sol a la Tierra, 3. ¿Qué compone el clima espacial?, 4. ¿Por qué estudiarlo
+desde Costa Rica? The Costa Rica card takes its number as a prop
+(`CostaRicaSectionView`/`EditableCostaRicaSection`), as the LASCE section of `/fisica-solar`
+does (2.).
+
 ## Storage
 
 Two tables in the `public` schema, described in
@@ -38,6 +52,8 @@ controls.
 `resolveLocale(await getLocale())`, checks `edit_components` on the server, and calls
 `getSpaceWeatherSection(locale, { includeEditingData })` from `app/lib/space-weather-section.ts`.
 Every language and the version to save against (`editing`) are sent only to an editor.
+`generateMetadata()` declares `alternates: { canonical: '/clima-espacial' }`, the same as every
+other public topic page.
 
 `SpaceWeatherPage` renders the plain `CostaRicaSectionView` for anyone who cannot edit, so a
 visitor gets no editor code at all, and `EditableCostaRicaSection` for an editor. The view keeps
@@ -65,6 +81,11 @@ envelope of `app/lib/cms/http.ts` (`invalid-json`, `invalid-body`, `review-requi
 - The write runs in one transaction against the `updated_at` the editor loaded and moves it
   forward. A stale save gets a 409 and changes nothing; the error toast shows the reason and the
   form stays open with what was typed.
+- `title` and `body` carry no native `maxLength` attribute, so typing past 160 or 5000 characters
+  is never silently blocked: `CostaRicaSectionForm` clips the value itself and shows the field's
+  own "too long" message (`contentCopy[uiLocale].tooLong`, the same generator `validateContent`
+  uses on submit), plus a live "N of M characters remaining" hint
+  (`spaceWeather.editor.remainingCharacters`) under both fields, in every language.
 
 The editor (`app/components/public/space-weather/`) is `EditableCostaRicaSection` +
 `CostaRicaSectionForm`, built like `EditableHomeHero` + `HomeHeroForm`: `LanguageTabs`,
