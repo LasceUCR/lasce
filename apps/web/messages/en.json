@@ -2377,17 +2377,17 @@
     "permissions": {
       "create_components": {
         "label": "Create components",
-        "description": "Create portal components when that feature is available.",
+        "description": "Add editable portal content from Edit mode.",
         "denied": "You are not authorized to create components."
       },
       "edit_components": {
         "label": "Edit components",
-        "description": "Edit portal components when that feature is available.",
+        "description": "Edit editable portal content from Edit mode.",
         "denied": "You are not authorized to edit components."
       },
       "delete_components": {
         "label": "Delete components",
-        "description": "Delete portal components when that feature is available.",
+        "description": "Delete editable portal content from Edit mode.",
         "denied": "You are not authorized to delete components."
       },
       "download_resources": {

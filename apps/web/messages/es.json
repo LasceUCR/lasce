@@ -2377,17 +2377,17 @@
     "permissions": {
       "create_components": {
         "label": "Crear componentes",
-        "description": "Crear componentes del portal cuando esa función esté disponible.",
+        "description": "Agregar contenido editable del portal desde el Modo edición.",
         "denied": "No tienes autorización para crear componentes."
       },
       "edit_components": {
         "label": "Editar componentes",
-        "description": "Editar componentes del portal cuando esa función esté disponible.",
+        "description": "Modificar el contenido editable del portal desde el Modo edición.",
         "denied": "No tienes autorización para editar componentes."
       },
       "delete_components": {
         "label": "Eliminar componentes",
-        "description": "Eliminar componentes del portal cuando esa función esté disponible.",
+        "description": "Eliminar contenido editable del portal desde el Modo edición.",
         "denied": "No tienes autorización para eliminar componentes."
       },
       "download_resources": {
