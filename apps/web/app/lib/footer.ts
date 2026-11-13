@@ -85,6 +85,7 @@ export function getFooterContent(t: (key: FooterMessageKey) => string): PublicFo
     navigationLabel: t('navigationLabel'),
     links: [
       { label: t('contact'), href: '/contacto' },
+      { label: t('team'), href: '/equipo-de-desarrollo' },
       { label: 'Instagram', href: INSTAGRAM_URL, external: true },
     ],
     copyright: { holder: 'Universidad de Costa Rica', notice: t('rightsReserved') },
