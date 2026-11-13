@@ -88,7 +88,7 @@ export async function registerUser(
       status: 'error',
       values,
       fieldErrors: validation.fieldErrors,
-      formError: registrationMessages.reviewFields,
+      formError: null,
     }
   }
 
@@ -105,7 +105,7 @@ export async function registerUser(
         status: 'error',
         values: { ...values, email },
         fieldErrors: { email: registrationMessages.emailTaken },
-        formError: registrationMessages.reviewFields,
+        formError: null,
       }
     }
 

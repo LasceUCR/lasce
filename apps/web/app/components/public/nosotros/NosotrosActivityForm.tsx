@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -44,6 +44,12 @@ import {
 /** The request body the form builds: a create body, or an update with only what changed. */
 export type NosotrosActivityFormBody = NosotrosActivityCreateInput | NosotrosActivityUpdateInput
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface NosotrosActivityFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface NosotrosActivityFormProps {
   /**
    * `editing` of the card being edited: its text in both languages and the version to save
@@ -63,6 +69,7 @@ export interface NosotrosActivityFormProps {
   /** Overrides the confirmation dialog's copy. */
   confirmTitle?: string
   confirmMessage?: string
+  ref?: Ref<NosotrosActivityFormHandle>
 }
 
 /**
@@ -88,6 +95,7 @@ export function NosotrosActivityForm({
   requireConfirmation = true,
   confirmTitle,
   confirmMessage,
+  ref,
 }: NosotrosActivityFormProps) {
   const t = useTranslations('nosotros.activities.form')
   const siteLocale = useLocale()
@@ -134,13 +142,15 @@ export function NosotrosActivityForm({
   // Creating starts from nothing, so only typed text or a different icon counts as unsaved.
   const isDirty = iconChanged || (editing ? contentChanged : hasTypedText)
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function handleConfirmDiscard() {
     setConfirmDiscardOpen(false)
@@ -265,7 +275,7 @@ export function NosotrosActivityForm({
       </label>
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('cancel')}
         </Button>
         <Button onClick={handleConfirmClick} variant="primary">
