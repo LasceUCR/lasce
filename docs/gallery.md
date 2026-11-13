@@ -77,6 +77,14 @@ failure) for the whole subtree, since the nested routes define no `error.tsx` of
 reuse the shared `Skeleton` primitive from `docs/skeletons.md`, not a gallery-specific one: see
 that doc for why the gallery's placeholders cannot use `LoadingRegion` the way `/datos` does.
 
+`loading.tsx` and `error.tsx` are themselves Server/Client Components, so each reads the
+visitor's language with `getTranslations`/`useTranslations` (`gallery.hero`, `gallery.common`,
+`gallery.albumPage`, and the top-level `common` namespace for the index page's back link) and
+passes every string into `GalleryPageSkeleton` / `AlbumPageSkeleton` / `GalleryErrorState` as
+props. Those three components stay presentational — no hook of their own — so the "Cargando…"
+status, the kicker and the error message always match the `lasce_locale` cookie instead of
+always showing Spanish while the real, already-localized page is still loading.
+
 ## Album translations
 
 The Prisma schema includes `GalleryAlbumTranslation` (`gallery.gallery_album_translations`) for
