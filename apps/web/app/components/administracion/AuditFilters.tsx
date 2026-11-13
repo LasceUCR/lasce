@@ -8,6 +8,8 @@ import { Button } from '@/app/components/public/Button'
 import { Select } from '@/app/components/public/Select'
 import type { AuditTrailPage as AuditTrailData } from '@/app/lib/audit-trail'
 
+import { useAuditLabels } from './useAuditLabels'
+
 export interface AuditFiltersProps {
   /** The route the form submits to, e.g. `/administracion/auditoria`. */
   pathname: string
@@ -22,6 +24,7 @@ export interface AuditFiltersProps {
  */
 export function AuditFilters({ pathname, filters, options, filtered }: AuditFiltersProps) {
   const t = useTranslations('administration.audit')
+  const labels = useAuditLabels()
   const [actor, setActor] = useState(filters.actor)
   const [entityType, setEntityType] = useState(filters.entityType)
   const [action, setAction] = useState(filters.action)
@@ -81,7 +84,7 @@ export function AuditFilters({ pathname, filters, options, filtered }: AuditFilt
           onChange={setEntityType}
           options={[
             { value: '', label: t('filters.allEntityTypes') },
-            ...options.entityTypes.map((item) => ({ value: item, label: item })),
+            ...options.entityTypes.map((item) => ({ value: item, label: labels.entity(item) })),
           ]}
         />
         <input type="hidden" name="entity" value={entityType} />
@@ -95,7 +98,7 @@ export function AuditFilters({ pathname, filters, options, filtered }: AuditFilt
           onChange={setAction}
           options={[
             { value: '', label: t('filters.allActions') },
-            ...options.actions.map((item) => ({ value: item, label: item })),
+            ...options.actions.map((item) => ({ value: item, label: labels.action(item) })),
           ]}
         />
         <input type="hidden" name="action" value={action} />
