@@ -4,7 +4,12 @@
     "description": "Space Sciences Laboratory of the University of Costa Rica: solar observation, radio astronomy, instrumentation and space weather."
   },
   "shell": {
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "pageError": {
+      "message": "This page could not be loaded. Please try again.",
+      "retry": "Try again",
+      "home": "Back to home"
+    }
   },
   "notFound": {
     "metaTitle": "Page not found | LASCE",
