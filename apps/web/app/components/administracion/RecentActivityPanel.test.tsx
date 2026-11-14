@@ -4,10 +4,15 @@ import { describe, expect, test } from 'vitest'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { RecentActivityPanel } from './RecentActivityPanel'
-import { Empty, WithActivity } from './RecentActivityPanel.stories'
+import { Empty, WithActivity, WithAuditAccess } from './RecentActivityPanel.stories'
 
 const empty = { items: Empty.args!.items!, now: Empty.args!.now! }
 const withActivity = { items: WithActivity.args!.items!, now: WithActivity.args!.now! }
+const withAuditAccess = {
+  items: WithAuditAccess.args!.items!,
+  now: WithAuditAccess.args!.now!,
+  canViewAuditLog: WithAuditAccess.args!.canViewAuditLog!,
+}
 
 describe('RecentActivityPanel', () => {
   test('says there is no activity yet instead of an empty list', () => {
@@ -55,5 +60,43 @@ describe('RecentActivityPanel', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: 'Recent activity' })).toBeInTheDocument()
     expect(screen.getByText('No activity has been recorded yet.')).toBeInTheDocument()
+  })
+
+  test('does not show "Ver todo" and entries are not clickable without view_audit_log permission', () => {
+    renderWithIntl(<RecentActivityPanel {...withActivity} canViewAuditLog={false} />)
+
+    expect(screen.queryByRole('link', { name: 'Ver todo' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Publicación agregada: Solar flares in 2026' }),
+    ).not.toBeInTheDocument()
+  })
+
+  test('shows "Ver todo" link to /administracion/auditoria when canViewAuditLog is true', () => {
+    renderWithIntl(<RecentActivityPanel {...withAuditAccess} />)
+
+    const viewAllLink = screen.getByRole('link', { name: 'Ver todo' })
+    expect(viewAllLink).toBeInTheDocument()
+    expect(viewAllLink).toHaveAttribute('href', '/administracion/auditoria')
+  })
+
+  test('makes entries clickable links to the audit trail when canViewAuditLog is true', () => {
+    renderWithIntl(<RecentActivityPanel {...withAuditAccess} />)
+
+    const rows = screen.getAllByRole('listitem')
+    expect(
+      within(rows[0]!).getByRole('link', { name: 'Publicación agregada: Solar flares in 2026' }),
+    ).toHaveAttribute('href', '/administracion/auditoria?entity=publication')
+
+    expect(
+      within(rows[1]!).getByRole('link', { name: 'Pipeline SUVI finalizado correctamente' }),
+    ).toHaveAttribute('href', '/administracion/auditoria?action=pipeline.complete')
+  })
+
+  test('shows "View all" in English when canViewAuditLog is true', () => {
+    renderWithIntl(<RecentActivityPanel {...withAuditAccess} />, { locale: 'en' })
+
+    const viewAllLink = screen.getByRole('link', { name: 'View all' })
+    expect(viewAllLink).toBeInTheDocument()
+    expect(viewAllLink).toHaveAttribute('href', '/administracion/auditoria')
   })
 })

@@ -5,6 +5,7 @@ vi.mock('@lasce/db', () => ({ prisma: { auditEvent: { create, findMany } } }))
 
 import {
   RECENT_ACTIVITY_LIMIT,
+  auditItemHref,
   changedFieldNames,
   getRecentActivity,
   recordAuditEvent,
@@ -102,6 +103,7 @@ describe('getRecentActivity', () => {
         action: 'publication.create',
         summary: 'Publicación agregada',
         actorType: 'user',
+        entityType: 'publication',
         createdAt: new Date('2026-10-16T17:48:00.000Z'),
         actor: { fullName: 'Ana Rodríguez' },
       },
@@ -110,6 +112,7 @@ describe('getRecentActivity', () => {
         action: 'user.role_change',
         summary: 'Rol actualizado',
         actorType: 'user',
+        entityType: null,
         createdAt: new Date('2026-10-16T15:00:00.000Z'),
         actor: null,
       },
@@ -118,6 +121,7 @@ describe('getRecentActivity', () => {
         action: 'legacy.event',
         summary: 'Evento',
         actorType: 'robot',
+        entityType: null,
         createdAt: new Date('2026-10-14T18:00:00.000Z'),
         actor: null,
       },
@@ -129,6 +133,7 @@ describe('getRecentActivity', () => {
         action: 'publication.create',
         summary: 'Publicación agregada',
         actorType: 'user',
+        entityType: 'publication',
         actorName: 'Ana Rodríguez',
         occurredAt: '2026-10-16T17:48:00.000Z',
       },
@@ -137,6 +142,7 @@ describe('getRecentActivity', () => {
         action: 'user.role_change',
         summary: 'Rol actualizado',
         actorType: 'user',
+        entityType: null,
         actorName: null,
         occurredAt: '2026-10-16T15:00:00.000Z',
       },
@@ -145,11 +151,30 @@ describe('getRecentActivity', () => {
         action: 'legacy.event',
         summary: 'Evento',
         actorType: 'system',
+        entityType: null,
         actorName: null,
         occurredAt: '2026-10-14T18:00:00.000Z',
       },
     ])
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 3 }))
+  })
+})
+
+describe('auditItemHref', () => {
+  test('links to the entity filter when entityType is present', () => {
+    expect(auditItemHref({ entityType: 'publication', action: 'publication.create' })).toBe(
+      '/administracion/auditoria?entity=publication',
+    )
+  })
+
+  test('falls back to action filter when entityType is absent', () => {
+    expect(auditItemHref({ action: 'pipeline.complete' })).toBe(
+      '/administracion/auditoria?action=pipeline.complete',
+    )
+  })
+
+  test('returns base pathname when neither entityType nor action is given', () => {
+    expect(auditItemHref({})).toBe('/administracion/auditoria')
   })
 })
 

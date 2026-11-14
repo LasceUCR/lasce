@@ -41,6 +41,7 @@ export function CollaborationCard({
       fill
       sizes="(max-width: 360px) 70vw, 240px"
       src={logoPath}
+      unoptimized
     />
   ) : null
 

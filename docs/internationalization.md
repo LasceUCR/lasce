@@ -112,7 +112,10 @@ export const contactContent = getContactContent(es) // Spanish, for stories and 
 constant keeps stories, lib tests and fixtures working without a provider. `app/lib/footer.ts`
 is an older variant of the same idea that takes a translator function instead of a slice.
 
-A page's `metadata` export becomes `generateMetadata()` reading `<namespace>.meta`.
+A page's `metadata` export becomes `generateMetadata()` reading `<namespace>.meta`. The root
+layout also uses the localized `metadata` catalogue for the site's title, description, and social
+preview text; its Open Graph and Twitter cards share the default solar image in
+`apps/web/public/images/tools/SWAAT-sun.webp`.
 
 **Client Component** (`app/components/public/PublicHeader.tsx`):
 
@@ -168,26 +171,27 @@ inventory taken when the static pages were migrated.
 
 ### Translated
 
-| Route                                    | Namespace                                       | Copy built in                                                                                                  |
-| ---------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata`, `account` | `PublicHeader.tsx`, `lib/footer.ts`, `auth/AccountLinks.tsx`, `auth/AccountMenu.tsx`, `auth/SignOutButton.tsx` |
-| `/`                                      | `home`, `workAreas`                             | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`                                                        |
-| `/contacto`                              | `contact`                                       | `lib/contact.ts`, `ContactChannelSection.tsx`                                                                  |
-| `/nosotros`                              | `nosotros`                                      | `lib/nosotros.ts`, `NosotrosPage.tsx`, `NosotrosActivityForm.tsx`                                              |
-| `/fisica-solar`                          | `solarPhysics`                                  | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`                                                        |
-| `/clima-espacial`                        | `spaceWeather`                                  | `lib/space-weather.ts`, `lib/space-weather-section.ts`                                                         |
-| `/herramientas-cientificas`              | `scientificTools`                               | `lib/scientific-tools.ts`                                                                                      |
-| `/colaboraciones-e-iniciativas`          | `collaborations`                                | `lib/collaborations.ts`, `lib/research-collaborations.ts`                                                      |
-| `/investigacion/**`                      | `researchAreas`                                 | `(public)/investigacion/**`, `research/*`                                                                      |
-| `/actividades-academicas`                | `academicActivities`                            | `lib/academic-activities.ts`, `AcademicActivitiesPage.tsx`                                                     |
-| `/galeria/**`                            | `gallery`                                       | `gallery/*`, `lib/gallery.ts`, `(public)/galeria/**`                                                           |
-| `/publicaciones`                         | `publications`                                  | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                                                          |
-| `/noticias`                              | `news`, `academicActivities`                    | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                         |
-| `/radioastronomia`                       | `rosac`                                         | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`                                        |
-| `/datos`                                 | `scientificData`                                | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts`                                  |
-| `/cuenta`                                | `account`, `common`                             | `(public)/cuenta/page.tsx`, `AccountSummary.tsx`, `SignOutButton.tsx`                                          |
-| `/administracion/permisos`               | `administration.permissions`, `access`          | `RolePermissions{Page,Editor}.tsx`, `lib/access-messages.ts`                                                   |
-| `/administracion/usuarios`               | `administration.users`, `access`                | `Users*.tsx`, `UserRole*.tsx`, `UserDetailsDialog.tsx`, `lib/user-administration.ts`                           |
+| Route                                    | Namespace                                       | Copy built in                                                                                                                       |
+| ---------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Header, footer, skip link, root metadata | `nav`, `footer`, `shell`, `metadata`, `account` | `PublicHeader.tsx`, `lib/footer.ts`, `auth/AccountLinks.tsx`, `auth/AccountMenu.tsx`, `auth/SignOutButton.tsx`                      |
+| `/`                                      | `home`, `workAreas`                             | `(public)/page.tsx`, `lib/work-areas.ts`, `lib/home.ts`                                                                             |
+| `/contacto`                              | `contact`                                       | `lib/contact.ts`, `ContactChannelSection.tsx`                                                                                       |
+| `/nosotros`                              | `nosotros`                                      | `lib/nosotros.ts`, `NosotrosPage.tsx`, `NosotrosActivityForm.tsx`                                                                   |
+| `/fisica-solar`                          | `solarPhysics`                                  | `lib/solar-astrophysics.ts`, `EditableLasceSection.tsx`                                                                             |
+| `/clima-espacial`                        | `spaceWeather`                                  | `lib/space-weather.ts`, `lib/space-weather-section.ts`                                                                              |
+| `/herramientas-cientificas`              | `scientificTools`                               | `lib/scientific-tools.ts`                                                                                                           |
+| `/colaboraciones-e-iniciativas`          | `collaborations`                                | `lib/collaborations.ts`, `lib/research-collaborations.ts`                                                                           |
+| `/investigacion/**`                      | `researchAreas`                                 | `(public)/investigacion/**`, `research/*`                                                                                           |
+| `/actividades-academicas`                | `academicActivities`                            | `lib/academic-activities.ts`, `AcademicActivitiesPage.tsx`                                                                          |
+| `/galeria/**`                            | `gallery`                                       | `gallery/*`, `lib/gallery.ts`, `(public)/galeria/**`                                                                                |
+| `/publicaciones`                         | `publications`                                  | `PublicationsExplorer.tsx`, `lib/publication-form.ts`                                                                               |
+| `/noticias`                              | `news`                                          | `NewsExplorer.tsx`, `lib/news-form.ts`                                                                                              |
+| `/radioastronomia`                       | `rosac`                                         | `lib/rosac.ts`, `lib/rosac-construction.ts`, `lib/rosac-instruments.ts`                                                             |
+| `/datos`                                 | `scientificData`                                | `lib/scientific-data.ts`, `scientific-data/*`, `api/scientific-data/route.ts`                                                       |
+| `/cuenta`                                | `account`, `common`                             | `(public)/cuenta/page.tsx`, `AccountSummary.tsx`, `SignOutButton.tsx`                                                               |
+| `/administracion/permisos`               | `administration.permissions`, `access`          | `RolePermissions{Page,Editor}.tsx`, `lib/access-messages.ts`                                                                        |
+| `/administracion/usuarios`               | `administration.users`, `access`                | `Users*.tsx`, `UserRole*.tsx`, `UserDetailsDialog.tsx`, `lib/user-administration.ts`                                                |
+| `/acceso`                                | `auth`                                          | `lib/auth/login.ts`, `lib/auth/registration.ts`, `lib/auth/countries.ts`, `AccessTabs.tsx`, `LoginForm.tsx`, `RegistrationForm.tsx` |
 
 The top menu's user dropdown (`AccountLinks.tsx`, `AccountMenu.tsx`, its mobile equivalent, and
 the shared `SignOutButton.tsx` confirmation dialog) and the `/cuenta` page (`(public)/cuenta/page.tsx`,
@@ -226,8 +230,10 @@ validation and toasts (`editor`, `discardDialog`, `deleteDialog`, `validation`, 
 content in `news.news_record_translations`. Dates are formatted in the visitor's language by
 `getNewsPage()`; an item without an English version is shown in its base text, and a search runs
 on the text shown, in the visitor's language (see [`pagination.md`](pagination.md)). The page
-controls' own text is in `common.pagination`. The academic
-activities section above the news uses `academicActivities`. Each card links out to the original
+controls' own text is in `common.pagination`. The hero uses "Noticias" / "News", the standard
+portal kicker and a short news introduction, without coverage or outreach wording. Its copy and
+metadata are in `news.page`. Academic activities
+appear only on `/actividades-academicas`, using `academicActivities`. Each news card links out to the original
 article, which is the item's detail view: there is no news page of its own to translate.
 
 `/nosotros` is translated, database content included: the fixed copy, the editor labels and
@@ -262,13 +268,28 @@ catalogue, and `describeOrigin(origin, t)` reads `scientificData.origins`. The p
 the same action words the download refusals, which the service returns as bare reasons. SUVI image
 alt text is `scientificData.images.alt`, written by `SuviImageSequence`.
 
+`/acceso` is translated in the `auth` namespace: the page intro and metadata (`auth.meta`,
+`auth.page`), the tab selector (`auth.tabs`, read by `AccessTabs.tsx` with `useTranslations`), and
+the login and registration cards (`auth.login`, `auth.registration`), each read directly by
+`LoginForm.tsx`/`RegistrationForm.tsx` for their own fixed text (labels, placeholders, button
+copy), while the card heading shown beside the other card is built server-side in `page.tsx` and
+passed down as a prop. `lib/auth/login.ts` and `lib/auth/registration.ts` re-export the Spanish
+text as `loginMessages`/`LOGIN_LABELS`/... and `registrationMessages`/`REGISTRATION_LABELS`/...,
+the default for request-less call sites (`login.test.ts`, `registration.test.ts`, the Playwright
+specs, which run with no cookie and so see Spanish). Their validation follows the same schema
+factory pattern `getScientificDataQuerySchema` established for `/datos`: `getLoginSchema(messages)`
+and `getRegistrationSchema(messages)`, called from `(public)/acceso/actions.ts` with
+`getTranslations('auth.login.validation')`/`getTranslations('auth.registration.validation')`, and
+exported as `loginSchema`/`registrationSchema` (the Spanish default) for everything else.
+`lib/auth/countries.ts`'s `listCountries(locale)` caches one sorted, ICU-named list per locale, so
+the registration country `<select>` reads in the visitor's language too.
+
 ### Still to do
 
-| Route                | Copy lives in                                                      | Approx. size                       | What makes it harder than a static page                                                                                                                                                                                                                                              |
-| -------------------- | ------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/acceso`            | `lib/auth/login.ts`, `registration.ts`                             | 70 strings, 23 validation messages | `login.spec.ts` and `registro.spec.ts` import the copy objects. Client components import them too. Country names use `Intl.DisplayNames(['es'])`. The header's own account links and the `/cuenta` page moved to the `account` namespace (see the Translated table above)            |
-| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components       | Permisos (see [`role-permissions.md`](role-permissions.md#languages)) and Usuarios (see [`user-administration.md`](user-administration.md#languages)) are done; role and permission names are in `access.*` for the other sections to reuse. About 35 strings are demonstration data |
-| `(public)/[section]` | inline in the page                                                 | 3 strings                          | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                         |
+| Route                | Copy lives in                                                      | Approx. size                 | What makes it harder than a static page                                                                                                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/administracion/**` | `lib/admin-sections.ts`, `auth/permissions.ts`, `administracion/*` | 30 in lib, 118 in components | Permisos (see [`role-permissions.md`](role-permissions.md#languages)) and Usuarios (see [`user-administration.md`](user-administration.md#languages)) are done; role and permission names are in `access.*` for the other sections to reuse. About 35 strings are demonstration data |
+| `(public)/[section]` | inline in the page                                                 | 3 strings                    | Unreachable: all three work-area slugs are excluded and `dynamicParams = false`, so every URL returns 404. Decide whether to delete it before translating it                                                                                                                         |
 
 ### Not tied to one page
 

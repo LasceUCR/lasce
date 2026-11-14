@@ -1,7 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
-import { useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useId, useImperativeHandle, useRef, useState, type KeyboardEvent, type Ref } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -10,11 +10,13 @@ import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { IconButton } from '@/app/components/public/IconButton'
 import {
+  uploadRosacResearcherImage,
   uploadResearcherImage,
   type UploadResearcherImageResult,
 } from '@/app/(public)/radioastronomia/actions'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
+import { ROSAC_IMAGE_ACCEPT, ROSAC_IMAGE_MAX_BYTES } from '@/app/lib/rosac-upload'
 import type {
   NosotrosResearcherContentInput,
   NosotrosResearcherEditingData,
@@ -61,10 +63,17 @@ export interface BilingualResearcherFormValues {
   confirmedUnchanged: ReviewConfirmation<NosotrosResearcherField>[]
 }
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface ResearcherFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 interface ResearcherFormBaseProps {
   /** `null` starts a blank form for a new researcher. */
   researcher: PersonProfile | null
   onCancel: () => void
+  ref?: Ref<ResearcherFormHandle>
 }
 
 /** The researcher's text in both languages, and the version a save is checked against. */
@@ -83,6 +92,7 @@ export interface ResearcherFormTranslation {
 export interface ResearcherFormProps extends ResearcherFormBaseProps {
   translation: ResearcherFormTranslation
   onSave: (values: BilingualResearcherFormValues) => void
+  uploadPolicy?: 'standard' | 'rosac'
 }
 
 /** Messages match the researcher create and update schemas, so a rejection reads the same
@@ -109,8 +119,9 @@ function parseEmails(email: PersonProfile['email']): string[] {
 }
 
 export function ResearcherForm(props: ResearcherFormProps) {
-  const { researcher, onCancel, translation } = props
+  const { researcher, onCancel, translation, ref, uploadPolicy = 'standard' } = props
   const t = useTranslations('researchers')
+  const tFileDrop = useTranslations('fileDrop')
   const contentRef = useRef<ResearcherContentHandle>(null)
   const [name, setName] = useState(researcher?.name ?? '')
   const emailFieldId = useId()
@@ -174,13 +185,15 @@ export function ResearcherForm(props: ResearcherFormProps) {
     return [...emails, trimmed]
   }
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty()) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function handleConfirmDiscard() {
     setConfirmDiscardOpen(false)
@@ -232,7 +245,9 @@ export function ResearcherForm(props: ResearcherFormProps) {
       try {
         const formData = new FormData()
         formData.set('file', photoFile)
-        result = await uploadResearcherImage(formData)
+        const uploadImage =
+          uploadPolicy === 'rosac' ? uploadRosacResearcherImage : uploadResearcherImage
+        result = await uploadImage(formData)
       } catch {
         setIsUploading(false)
         uploadErrorToast.current = toast.show('error', t('editor.uploadError'))
@@ -298,13 +313,21 @@ export function ResearcherForm(props: ResearcherFormProps) {
   return (
     <div className="cms-form">
       <FileDropInput
+        accept={uploadPolicy === 'rosac' ? ROSAC_IMAGE_ACCEPT : undefined}
         existingImageUrl={researcher?.src || undefined}
-        helperText={t('editor.photoHelp')}
+        helperText={uploadPolicy === 'rosac' ? t('editor.rosacPhotoHelp') : t('editor.photoHelp')}
         label={t('editor.photoLabel')}
+        maxFileSizeBytes={uploadPolicy === 'rosac' ? ROSAC_IMAGE_MAX_BYTES : undefined}
         onFileSelect={(file) => {
           setPhotoFile(file)
           setPhotoRemoved(file === null)
         }}
+        rejectionFormatMessage={
+          uploadPolicy === 'rosac' ? tFileDrop('rosacRejectionFormat') : undefined
+        }
+        rejectionSizeMessage={
+          uploadPolicy === 'rosac' ? tFileDrop('rosacRejectionSize') : undefined
+        }
       />
 
       <FormField
@@ -394,7 +417,7 @@ export function ResearcherForm(props: ResearcherFormProps) {
       <ResearcherContentFields editing={translation.editing} ref={contentRef} />
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('editor.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">

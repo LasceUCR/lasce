@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -15,6 +15,7 @@ import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadInstrumentImage } from '@/app/(public)/radioastronomia/actions'
 import { defaultLocale, isLocale, localeLabels, locales, type Locale } from '@/app/lib/i18n/config'
 import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
+import { ROSAC_IMAGE_ACCEPT, ROSAC_IMAGE_MAX_BYTES } from '@/app/lib/rosac-upload'
 import {
   confirmationsStillNeeded,
   contentFieldLang,
@@ -91,10 +92,17 @@ function getInitialConsultationState(instrument: RosacInstrumentCardContent | nu
 
 export type RosacInstrumentFormBody = RosacInstrumentInput
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface RosacInstrumentFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface RosacInstrumentFormProps {
   instrument: RosacInstrumentCardContent | null
   onSave: (body: RosacInstrumentFormBody) => void | Promise<void>
   onCancel: () => void
+  ref?: Ref<RosacInstrumentFormHandle>
 }
 
 export const DEFAULT_INSTRUMENT_IMAGE = {
@@ -102,8 +110,14 @@ export const DEFAULT_INSTRUMENT_IMAGE = {
   alt: 'Imagen ilustrativa del instrumento ROSAC',
 }
 
-export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstrumentFormProps) {
+export function RosacInstrumentForm({
+  instrument,
+  onSave,
+  onCancel,
+  ref,
+}: RosacInstrumentFormProps) {
   const t = useTranslations('rosac.editor')
+  const tFileDrop = useTranslations('fileDrop')
   const tRosacProducts = useTranslations('rosac.instruments.products')
   const siteLocale = useLocale()
   const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
@@ -218,13 +232,15 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
     ? contentChanged || isConsultationDirty || isImageDirty
     : hasTypedText || isImageDirty || isConsultationDirty
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function setContent(locale: Locale, field: RosacInstrumentField, value: string) {
     setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
@@ -381,10 +397,12 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
       </LanguageTabs>
 
       <FileDropInput
+        accept={ROSAC_IMAGE_ACCEPT}
         errorMessage={imageError}
         existingImageUrl={!imageRemoved && imageSrc ? imageSrc : undefined}
         helperText={t('instruments.imageHelp')}
         label={t('instruments.imageLabel')}
+        maxFileSizeBytes={ROSAC_IMAGE_MAX_BYTES}
         onFileSelect={(file) => {
           setImageFile(file)
           if (!file) {
@@ -393,6 +411,8 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
             setImageRemoved(false)
           }
         }}
+        rejectionFormatMessage={tFileDrop('rosacRejectionFormat')}
+        rejectionSizeMessage={tFileDrop('rosacRejectionSize')}
         required
       />
 
@@ -462,7 +482,7 @@ export function RosacInstrumentForm({ instrument, onSave, onCancel }: RosacInstr
       </div>
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleConfirmClick} variant="primary">

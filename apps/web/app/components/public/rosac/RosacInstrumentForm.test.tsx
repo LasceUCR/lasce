@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react'
-import { screen, within } from '@testing-library/react'
+import { createRef, type ReactElement } from 'react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -13,7 +13,11 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
-import { RosacInstrumentForm, type RosacInstrumentFormProps } from './RosacInstrumentForm'
+import {
+  RosacInstrumentForm,
+  type RosacInstrumentFormHandle,
+  type RosacInstrumentFormProps,
+} from './RosacInstrumentForm'
 import { AddNew, EditExisting } from './RosacInstrumentForm.stories'
 
 const editArgs = EditExisting.args as RosacInstrumentFormProps
@@ -83,6 +87,19 @@ describe('RosacInstrumentForm', () => {
 
     await user.click(within(discardDialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same question when the modal requests closing', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    const ref = createRef<RosacInstrumentFormHandle>()
+    renderForm({ ...addArgs, onCancel, ref })
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre (Español)' }), 'Radiómetro')
+    act(() => ref.current?.requestCancel())
+
+    expect(screen.getByRole('dialog', { name: '¿Descartar cambios?' })).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   test('shows validation errors when required fields are missing', async () => {
@@ -241,7 +258,7 @@ describe('RosacInstrumentForm', () => {
     renderForm({ ...editArgs, onSave })
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['imagen'], 'nueva.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(await screen.findByText('La imagen es demasiado grande.')).toBeInTheDocument()
@@ -257,7 +274,7 @@ describe('RosacInstrumentForm', () => {
     renderForm({ ...editArgs, onSave })
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['imagen'], 'nueva.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(

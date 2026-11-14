@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react'
-import { screen, within } from '@testing-library/react'
+import { createRef, type ReactElement } from 'react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -13,7 +13,11 @@ vi.mock('@/app/(public)/radioastronomia/actions', () => ({
 
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
-import { RosacStageForm, type RosacStageFormProps } from './RosacStageForm'
+import {
+  RosacStageForm,
+  type RosacStageFormHandle,
+  type RosacStageFormProps,
+} from './RosacStageForm'
 
 function render(ui: ReactElement, options?: Parameters<typeof renderWithIntl>[1]) {
   return renderWithIntl(<ToastProvider>{ui}</ToastProvider>, options)
@@ -105,6 +109,19 @@ describe('RosacStageForm', () => {
 
     await user.click(within(discardDialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same question when the modal requests closing', async () => {
+    const ref = createRef<RosacStageFormHandle>()
+    const { onCancel, user } = renderForm({ ref })
+
+    const titleInput = screen.getByRole('textbox', { name: 'Título (Español)' })
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Nuevo Título')
+    act(() => ref.current?.requestCancel())
+
+    expect(screen.getByRole('dialog', { name: '¿Descartar cambios?' })).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   test('shows validation errors when title is cleared on submit', async () => {
@@ -248,7 +265,7 @@ describe('RosacStageForm', () => {
     expect(addDialog).toBeInTheDocument()
 
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    const file = new File(['dummy'], 'photo.jpg', { type: 'image/jpeg' })
+    const file = new File(['dummy'], 'photo.avif', { type: 'image/avif' })
     await user.upload(fileInput, file)
 
     const altInput = within(addDialog).getByRole('textbox', {
@@ -287,7 +304,7 @@ describe('RosacStageForm', () => {
     await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
     const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['dummy'], 'large.jpg', { type: 'image/jpeg' }))
+    await user.upload(fileInput, new File(['dummy'], 'large.avif', { type: 'image/avif' }))
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
@@ -303,7 +320,7 @@ describe('RosacStageForm', () => {
     await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
     const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['dummy'], 'throw.jpg', { type: 'image/jpeg' }))
+    await user.upload(fileInput, new File(['dummy'], 'throw.avif', { type: 'image/avif' }))
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))

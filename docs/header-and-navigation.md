@@ -5,9 +5,14 @@ Institutional branding and the responsive top bar/menu for the public site (issu
 
 ## Institutional identity (`Brand.tsx`)
 
-The public header renders the full institutional lockup, in order: the COMPDES seal, the UCR
-wordmark, a divider, the CINESPA logo, a divider, and the LASCE logo (`apps/web/app/components/
-public/Brand.tsx`). `Brand` also has a `light` variant (UCR seal only) used where a single mark is
+The public header renders the full institutional lockup, in order: the UCR shield
+(`compdes-ucr.png`), the UCR signature (the "Universidad de Costa Rica" lettering), a divider, the
+CINESPA logo, a divider, and the LASCE logo (`apps/web/app/components/public/Brand.tsx`).
+
+Alt text: the shield is "Universidad de Costa Rica"; the signature only repeats that name as
+lettering, so its alt is empty and the university is announced once, at every width. CINESPA is
+"Centro de Investigaciones Espaciales" and LASCE is "Laboratorio de Astrofísica Solar y Clima
+Espacial". `Brand` also has a `light` variant (UCR seal only) used where a single mark is
 enough; the footer currently renders that variant, and giving the footer the full lockup is tracked
 in a separate PBI owned by another teammate, not this one.
 
@@ -17,18 +22,21 @@ at request time by Next.js's built-in image optimization (no `unoptimized` overr
 `next.config.ts`). Swapping in re-compressed originals later needs no code change, only new files
 at the same paths.
 
-### Small screens (`max-width: 430px`)
+### Small screens (`max-width: 430px`): the reduced lockup
 
-Below 430px the header used to hide the COMPDES/UCR seal entirely and kept the other marks at a
-size that read as an afterthought. The tier in `globals.css` now:
+At 320–430px the full lockup shrank the UCR signature's lettering to about 56×23px, which is not
+legible (#503). The tier in `globals.css` switches to a reduced lockup: **the UCR shield and the
+LASCE logo**, with the divider between them.
 
-- Shows the seal (`.brand .compdes-logo`) again, fading it out only once the header is in its
-  scrolled/compact state (`.site-header.is-scrolled .brand .compdes-logo`), mirroring the existing
-  760px-tier behavior instead of introducing a new pattern.
-- Sizes the CINESPA mark larger than before (94×31 vs. the old 83×27) since it's the institute name
-  most visitors need to recognize.
-- Re-budgets the whole brand row (gaps, divider height, each logo's box) so nothing overflows the
-  375px viewport, the narrowest phone width this repo verifies against.
+- The signature, CINESPA and the divider between them are `display: none`, so they are also out of
+  the accessibility tree (nothing hidden is announced).
+- The shield is 40px high and LASCE 30px high; both use `width: auto`, so each keeps its own
+  proportions.
+- The shield stays when the header is in its scrolled state: in this lockup it is the university's
+  mark. (Between 431px and 760px it still fades out on scroll, as before.)
+- Nothing overflows at 320px. Wider screens keep the full lockup.
+- Covered by `tests/e2e/public-portal.spec.ts` (reduced lockup at 320/375/390px, full lockup at
+  768/1440px) and `PublicHeader.test.tsx` (each name announced once).
 
 ## Menu organization (`PublicHeader.tsx`, `NavGroup.tsx`)
 
@@ -115,16 +123,38 @@ translateX(-50%)`), not right-anchored as it originally was.
 - The menu closes on a `pointerdown` or `touchstart` anywhere outside the `<details>`, listened to
   in the capture phase. The listener reads `details.open` directly instead of React state, because
   the native `toggle` event is asynchronous and iOS can deliver the outside touch before it.
-- Covered by `PublicHeader.test.tsx` (touch outside) and `tests/e2e/responsive-controls.spec.ts`
-  (outside tap after scrolling the panel, last option in landscape).
+- Escape closes the open menu from anywhere inside it and returns focus to the toggle.
+- The toggle is a 44×44px `<summary>` that shows a menu icon labelled `nav.openMenu` ("Abrir
+  navegación" / "Open navigation") while closed, and an X labelled `nav.closeMenu` ("Cerrar
+  navegación" / "Close navigation") while open.
+- The transparent backdrop behind the panel is a pointer-only affordance: `aria-hidden`,
+  `tabIndex={-1}` and no label, so keyboard and screen reader users close the menu with the toggle
+  or Escape, and "Cerrar navegación" names a single control.
+- Covered by `PublicHeader.test.tsx` (touch outside, Escape, toggle icon and name in both
+  languages), `tests/e2e/responsive-controls.spec.ts` (outside tap after scrolling the panel, last
+  option in landscape) and `tests/e2e/public-portal.spec.ts` (Escape in a real browser).
+
+## Touch targets on phones
+
+Small controls keep their look but get a hit area of at least 44×44px (#503):
+
+- The home hero's "EN VIVO" badge (`.hero-live-trigger`) and its close button (`.hero-live-close`)
+  extend their hit area with an invisible `::after`, so the pill and the "×" keep their size. The
+  panel leaves 40px on the right so the close button's area never covers the text.
+- At 760px and below, the footer links (`.footer-links a`) and the institution links
+  (`.footer-institutions a`) are `inline-flex` boxes of at least 44×44px; the text keeps its size.
+- Covered by `tests/e2e/public-portal.spec.ts`, which checks the badge and close button with
+  `elementFromPoint` and the footer links' boxes at 375px.
 
 ## "Modo edición" in the account menu
 
-Assistants and administrators (`canEditContent(role)` in `app/lib/auth/account.ts`, which mirrors
-who holds `edit_components` by default) see a "Modo edición" switch (`EditModeSwitch.tsx`) in the
-desktop account dropdown, between "Mi cuenta" and "Cerrar sesión", and in the mobile menu's account
-section. Visitors and anonymous visitors do not. The role comes from the account cookie, so this is
-a visibility rule only: every edit is still authorized by its Server Action.
+Accounts whose role holds a content grant (`create_components`, `edit_components` or
+`delete_components`) see a "Modo edición" switch (`EditModeSwitch.tsx`) in the desktop account
+dropdown, between "Mi cuenta" and "Cerrar sesión", and in the mobile menu's account section.
+Visitors and anonymous visitors do not. The decision is `canEdit` from `GET /api/session`, computed
+on the server from the HttpOnly session and the current matrix, never from the browser-editable
+account cookie (LASCE-SEC-001, see [sessions.md](sessions.md#the-header)). It is still a
+visibility rule only: every edit is authorized by its Route Handler or Server Action.
 
 - It reads and writes the shared `EditModeProvider` (`useEditMode`), so the current page updates at
   once; the value is kept in `localStorage`, so it survives navigation and reload.
@@ -136,12 +166,59 @@ a visibility rule only: every edit is still authorized by its Server Action.
   (`account.editMode`: "Modo edición" / "Edit mode").
 - In e2e, `enableEditMode(page)` in `tests/e2e/helpers/edit-mode.ts` opens the menu and flips it.
 
+## Navigation feedback (#475)
+
+Visitors reported that header and home page links "did nothing" on the first click. Nothing was
+intercepting the click. Almost every public page is `force-dynamic`, and for a dynamic route
+**without** a `loading.tsx`, Next 16 does not prefetch the page and keeps the current one on screen
+until the server render finishes (see "Dynamic routes without `loading.tsx`" in
+`node_modules/next/dist/docs/01-app/01-getting-started/04-linking-and-navigating.md`). A slow
+render therefore looked like a dead link. The fix is a load bar, so the click is answered at once:
+
+- **`NavigationProgress`** lives in the header's cyan strip (`.site-header::before`, sized by
+  `--header-stripe-height`). On a click, the strip turns dark blue and the cyan fills back over it
+  from the left. A finished bar looks exactly like the resting strip, so it ends without a flash.
+  It is mounted once in `app/layout.tsx`. A capture-phase `click` listener on `document` starts
+  it, so every link counts, not only the header's. It finishes when `usePathname()` or
+  `useSearchParams()` change, and it gives up after 15 s if the URL never changes. It ignores what
+  the browser handles itself:
+  - modified or non-left clicks
+  - `target="_blank"` and `download`
+  - other origins
+  - `#hash` links
+  - links to the current URL
+
+  A second click restarts the wait. The strip is `aria-hidden`. Next to it, a visually hidden
+  message ("Cargando la página…" / "Loading the page…", `shell.pageLoading`) announces the load to
+  screen readers while the bar runs, and empties when the page lands. It is an
+  `aria-live="polite"` region, **not** `role="status"`: the bar is on every page, and a page's own
+  status (a form's success, a gallery's loading text) must stay the only `role="status"` there, or
+  `getByRole('status')` in the e2e suite finds two. Under `prefers-reduced-motion` the strip stays
+  dark blue while the page loads, with no movement.
+
+- **`app/(public)/error.tsx`** (`PageErrorState`) catches a page that throws, so a failed
+  navigation ends on an error with a retry instead of a frozen page.
+
+There is deliberately **no group-level `app/(public)/loading.tsx`**. One was tried and removed:
+
+- A single generic skeleton did not match the shape of most pages.
+- Inside a loading boundary the response streams, so its `200` status is sent before the page
+  renders. Any page that calls `notFound()`, the `[...rest]` catch-all included, then answers
+  `200` instead of `404`.
+
+The old page therefore stays on screen until the new one is rendered, with the bar running. A page
+that needs a skeleton gets its own `loading.tsx`, shaped like it, as `/contacto`, `/galeria` and
+`/publicaciones` have. Before adding one, make sure the route never calls `notFound()`, or accept
+that a missing item will answer `200`.
+
 ## Covered by
 
 | Piece                            | File                                                               | Covered by                                           |
 | -------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------- |
-| Institutional lockup             | `app/components/public/Brand.tsx`                                  | (no dedicated unit test yet)                         |
+| Institutional lockup             | `app/components/public/Brand.tsx`                                  | `PublicHeader.test.tsx`, `public-portal.spec.ts`     |
 | Desktop group disclosure         | `app/components/public/NavGroup.tsx`                               | `NavGroup.test.tsx`                                  |
 | Header layout + mobile accordion | `app/components/public/PublicHeader.tsx`                           | `PublicHeader.test.tsx`                              |
 | Account menu and its edit switch | `app/components/public/auth/AccountMenu.tsx`, `EditModeSwitch.tsx` | `AccountMenu.test.tsx`, `AccountLinks.test.tsx`      |
 | Responsive rules for both        | `app/globals.css`                                                  | `tests/e2e/responsive-controls.spec.ts`, plus manual |
+| Page-load bar                    | `app/components/public/NavigationProgress.tsx`                     | `NavigationProgress.test.tsx`                        |
+| Public error boundary            | `app/(public)/error.tsx`                                           | `PageErrorState.test.tsx`                            |

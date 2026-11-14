@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
-import { TopicHero } from './TopicHero'
+import { TopicHero, type TopicHeroProps } from './TopicHero'
+import { TitleOnly } from './TopicHero.stories'
 
 const hero = {
   kicker: 'Área de trabajo LASCE',
@@ -14,6 +15,14 @@ const hero = {
 }
 
 describe('TopicHero', () => {
+  test('shows only the primary heading when no supporting copy is supplied', () => {
+    const args = TitleOnly.args as TopicHeroProps
+    render(<TopicHero {...args} />)
+
+    expect(screen.getByRole('heading', { level: 1, name: args.title })).toBeInTheDocument()
+    expect(screen.queryByRole('paragraph')).not.toBeInTheDocument()
+  })
+
   test('renders the heading, kicker, lead and image', () => {
     render(<TopicHero {...hero} />)
 

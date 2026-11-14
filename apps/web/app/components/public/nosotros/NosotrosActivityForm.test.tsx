@@ -1,10 +1,15 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createRef } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
-import { NosotrosActivityForm, type NosotrosActivityFormProps } from './NosotrosActivityForm'
+import {
+  NosotrosActivityForm,
+  type NosotrosActivityFormHandle,
+  type NosotrosActivityFormProps,
+} from './NosotrosActivityForm'
 import { Create, Default, Legacy } from './NosotrosActivityForm.stories'
 
 const defaultArgs = Default.args as NosotrosActivityFormProps
@@ -29,12 +34,17 @@ async function replace(user: User, name: string, value: string) {
   if (value) await user.type(input, value)
 }
 
+async function chooseIcon(user: User, name: string) {
+  await user.click(screen.getByRole('combobox', { name: 'Ícono' }))
+  await user.click(screen.getByRole('option', { name }))
+}
+
 describe('NosotrosActivityForm: tabs and pre-filled values', () => {
   test('opens on the Spanish tab with the stored Spanish text', () => {
     renderWithIntl(<NosotrosActivityForm {...defaultArgs} />)
 
     expect(tab(/^Español/)).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('combobox', { name: 'Ícono' })).toHaveValue('sun')
+    expect(screen.getByRole('combobox', { name: 'Ícono' })).toHaveTextContent('Sol')
     expect(field('Título (Español)')).toHaveValue('Fenómenos solares eruptivos')
     expect(field('Descripción (Español)')).toHaveValue(defaultArgs.editing?.content.es.description)
     expect(screen.queryByRole('textbox', { name: /^Título \(English\)/ })).not.toBeInTheDocument()
@@ -107,6 +117,21 @@ describe('NosotrosActivityForm: cancelling', () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
+  test('asks the same question when the modal requests closing', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    const ref = createRef<NosotrosActivityFormHandle>()
+    renderWithIntl(<NosotrosActivityForm {...defaultArgs} onCancel={onCancel} ref={ref} />)
+
+    await user.type(field('Título (Español)'), ' editado')
+    act(() => ref.current?.requestCancel())
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
+  })
+
   test('keeps the form open when discard is dismissed', async () => {
     const user = userEvent.setup()
     const onCancel = vi.fn()
@@ -149,7 +174,7 @@ describe('NosotrosActivityForm: creating', () => {
     await user.click(tab(/^English/))
     await user.type(field('Título (English)'), 'New activity')
     await user.type(field('Descripción (English)'), 'Test text')
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Ícono' }), 'waves')
+    await chooseIcon(user, 'Ondas')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).toHaveBeenCalledWith({
@@ -180,7 +205,7 @@ describe('NosotrosActivityForm: editing', () => {
     const onSave = vi.fn()
     renderWithIntl(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Ícono' }), 'waves')
+    await chooseIcon(user, 'Ondas')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     expect(onSave).not.toHaveBeenCalled()
@@ -192,7 +217,7 @@ describe('NosotrosActivityForm: editing', () => {
     const onSave = vi.fn()
     renderWithIntl(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Ícono' }), 'waves')
+    await chooseIcon(user, 'Ondas')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
     const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
@@ -207,7 +232,7 @@ describe('NosotrosActivityForm: editing', () => {
     const onSave = vi.fn()
     renderWithIntl(<NosotrosActivityForm {...defaultArgs} onSave={onSave} />)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Ícono' }), 'waves')
+    await chooseIcon(user, 'Ondas')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
@@ -302,7 +327,7 @@ describe('NosotrosActivityForm: legacy card', () => {
     const onSave = vi.fn()
     renderWithIntl(<NosotrosActivityForm {...legacyArgs} onSave={onSave} />)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Ícono' }), 'code')
+    await chooseIcon(user, 'Código')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     const dialog = screen.getByRole('dialog', { name: 'Guardar cambios' })
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))

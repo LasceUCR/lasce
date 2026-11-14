@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { useId, useMemo, useRef, useState } from 'react'
+import { useId, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
@@ -9,6 +9,7 @@ import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDi
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import { uploadAcknowledgmentLogo } from '@/app/(public)/radioastronomia/actions'
 import type { RosacAcknowledgment } from '@/app/lib/rosac'
+import { ROSAC_IMAGE_ACCEPT, ROSAC_IMAGE_MAX_BYTES } from '@/app/lib/rosac-upload'
 
 export interface RosacAcknowledgmentFormValues {
   name: string
@@ -19,11 +20,18 @@ export interface RosacAcknowledgmentFormValues {
   }
 }
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface RosacAcknowledgmentFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface RosacAcknowledgmentFormProps {
   /** Existing institution acknowledgment or null when creating a new one. */
   institution: RosacAcknowledgment | null
   onSave: (values: RosacAcknowledgmentFormValues) => void
   onCancel: () => void
+  ref?: Ref<RosacAcknowledgmentFormHandle>
 }
 
 export interface PredefinedAcknowledgmentLogo {
@@ -178,8 +186,10 @@ export function RosacAcknowledgmentForm({
   institution,
   onSave,
   onCancel,
+  ref,
 }: RosacAcknowledgmentFormProps) {
   const t = useTranslations('rosac.editor')
+  const tFileDrop = useTranslations('fileDrop')
   const locale = useLocale()
   const formId = useId()
   const [name, setName] = useState(institution?.name ?? '')
@@ -253,13 +263,15 @@ export function RosacAcknowledgmentForm({
     logoRemoved ||
     activeLogoSrc !== (institution?.logo?.src ?? '')
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
     } else {
       onCancel()
     }
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   async function handleSaveClick() {
     setHasAttemptedSubmit(true)
@@ -381,10 +393,12 @@ export function RosacAcknowledgmentForm({
 
       {isCustomMode ? (
         <FileDropInput
+          accept={ROSAC_IMAGE_ACCEPT}
           errorMessage={logoError}
           existingImageUrl={!logoRemoved && customSrc ? customSrc : undefined}
           helperText={t('acknowledgments.logoFileHelp')}
           label={t('acknowledgments.logoFileLabel')}
+          maxFileSizeBytes={ROSAC_IMAGE_MAX_BYTES}
           onFileSelect={(file) => {
             setLogoFile(file)
             if (!file) {
@@ -393,6 +407,8 @@ export function RosacAcknowledgmentForm({
               setLogoRemoved(false)
             }
           }}
+          rejectionFormatMessage={tFileDrop('rosacRejectionFormat')}
+          rejectionSizeMessage={tFileDrop('rosacRejectionSize')}
           required
         />
       ) : activeLogoSrc ? (
@@ -438,7 +454,7 @@ export function RosacAcknowledgmentForm({
       />
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} type="button" variant="secondary">
+        <Button onClick={requestCancel} type="button" variant="secondary">
           {t('acknowledgments.cancel')}
         </Button>
         <Button disabled={isUploading} onClick={handleSaveClick} type="button" variant="primary">

@@ -80,6 +80,14 @@ the loading/loaded swap. A thrown `getGalleryAlbums` is caught the same native w
 instead (`GalleryErrorState.tsx`). `/publicaciones` does the same for `getPublicationsPage`
 (`PublicationsPageSkeleton.tsx`, `PublicationsErrorState.tsx`).
 
+### Every other public page
+
+There is no group-level `app/(public)/loading.tsx`. A public page without its own `loading.tsx`
+keeps the previous page on screen while it renders, and the header's load bar shows that the click
+was taken ([`header-and-navigation.md`](header-and-navigation.md#navigation-feedback-475)). Give a
+page its own `loading.tsx`, with a skeleton shaped like it, when that wait is long enough to notice.
+A route that calls `notFound()` answers `200` instead of `404` once it has a loading boundary.
+
 ## Accessibility
 
 `LoadingRegion` does what the acceptance criteria ask, so each view does not have to:
@@ -112,9 +120,9 @@ its loading message stays for screen readers only, while the placeholder fills t
 | `/galeria/[slug]` and `/galeria/[slug]/[subalbum]` | `gallery/AlbumPageSkeleton.tsx`                           | Hero text, sub-album tiles (top-level album only) and the media grid      |
 | Every `/galeria` route's data fetch failing        | `gallery/GalleryErrorState.tsx` (via `galeria/error.tsx`) | A `Notice` and a "Reintentar" button                                      |
 | Academic activities on `/actividades-academicas`   | `news/AcademicActivitiesPage.tsx`                         | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
-| Academic activities teaser on `/noticias`          | `news/AcademicActivitiesSection.tsx`                      | `AcademicActivitiesListSkeleton` in `LoadingRegion`                       |
 | `/publicaciones`                                   | `publications/PublicationsPageSkeleton.tsx`               | Static hero, listing heading and back link; the toolbar, cards and pager  |
 | A failed load of `/publicaciones`                  | `publications/PublicationsErrorState.tsx`                 | A `Notice` and a retry button, in the site's language                     |
+| Every other public page failing to render          | `PageErrorState.tsx` (via `(public)/error.tsx`)           | A `Notice`, a retry button and a link home                                |
 
 ## Tests
 

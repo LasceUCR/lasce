@@ -600,7 +600,7 @@ export type ScientificDataValidationMessages = Pick<
   | 'invalidDate'
   | 'invalidStartTime'
   | 'invalidEndTime'
-  | 'startBeforeEnd'
+  | 'sameStartEnd'
   | 'productUnavailable'
   | 'invalidParameterForProduct'
 >
@@ -621,14 +621,15 @@ export function getScientificDataQuerySchema(messages: ScientificDataValidationM
       endTime: z.string().regex(timePattern, messages.invalidEndTime),
     })
     .superRefine((query, context) => {
+      // An end before the start is a range across midnight, which ends on the next day.
       if (
         timePattern.test(query.startTime) &&
         timePattern.test(query.endTime) &&
-        query.startTime >= query.endTime
+        query.startTime === query.endTime
       ) {
         context.addIssue({
           code: 'custom',
-          message: messages.startBeforeEnd,
+          message: messages.sameStartEnd,
           path: ['endTime'],
         })
       }

@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { ConfirmDialog } from '@/app/components/public/ConfirmDialog'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
-import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
+import { FormField } from '@/app/components/public/FormField'
 import { useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
+import { Select } from '@/app/components/public/Select'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
 import { TranslationReview } from '@/app/components/public/cms/TranslationReview'
 import { defaultLocale, isLocale, localeLabels, locales, type Locale } from '@/app/lib/i18n/config'
@@ -43,6 +44,12 @@ import {
 /** The request body the form builds: a create body, or an update with only what changed. */
 export type NosotrosActivityFormBody = NosotrosActivityCreateInput | NosotrosActivityUpdateInput
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface NosotrosActivityFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface NosotrosActivityFormProps {
   /**
    * `editing` of the card being edited: its text in both languages and the version to save
@@ -62,6 +69,7 @@ export interface NosotrosActivityFormProps {
   /** Overrides the confirmation dialog's copy. */
   confirmTitle?: string
   confirmMessage?: string
+  ref?: Ref<NosotrosActivityFormHandle>
 }
 
 /**
@@ -87,13 +95,14 @@ export function NosotrosActivityForm({
   requireConfirmation = true,
   confirmTitle,
   confirmMessage,
+  ref,
 }: NosotrosActivityFormProps) {
   const t = useTranslations('nosotros.activities.form')
   const siteLocale = useLocale()
   // Everything the editor says follows the site's language; the tabs only pick the translation.
   const uiLocale: Locale = isLocale(siteLocale) ? siteLocale : defaultLocale
   const stored = editing?.content ?? null
-  const iconOptions: FormFieldOption[] = nosotrosCardIcons.map((value) => ({
+  const iconOptions = nosotrosCardIcons.map((value) => ({
     value,
     label: t(`icons.${value}`),
   }))
@@ -133,13 +142,15 @@ export function NosotrosActivityForm({
   // Creating starts from nothing, so only typed text or a different icon counts as unsaved.
   const isDirty = iconChanged || (editing ? contentChanged : hasTypedText)
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function handleConfirmDiscard() {
     setConfirmDiscardOpen(false)
@@ -252,16 +263,19 @@ export function NosotrosActivityForm({
         )}
       </LanguageTabs>
 
-      <FormField
-        id={`${formId}-icon`}
-        label={t('icon')}
-        onChange={(value) => setIcon(value as NosotrosCardIcon)}
-        options={iconOptions}
-        value={icon}
-      />
+      <label className="cms-form-field" htmlFor={`${formId}-icon`}>
+        <span className="cms-form-field-label">{t('icon')}</span>
+        <Select
+          id={`${formId}-icon`}
+          label={t('icon')}
+          onChange={(value) => setIcon(value as NosotrosCardIcon)}
+          options={iconOptions}
+          value={icon}
+        />
+      </label>
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('cancel')}
         </Button>
         <Button onClick={handleConfirmClick} variant="primary">

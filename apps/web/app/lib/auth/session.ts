@@ -67,7 +67,7 @@ export async function createSession(user: {
   // JSON payload: Next URL-encodes cookie values itself, and the client decodes once.
   store.set(
     ACCOUNT_COOKIE,
-    encodeAccountCookie({ name: user.fullName, role: user.role }),
+    encodeAccountCookie({ name: user.fullName }),
     accountCookieOptions(expiresAt),
   )
 }

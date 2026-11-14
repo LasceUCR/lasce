@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import es from '@/messages/es.json' with { type: 'json' }
+
 import { PASSWORD_MAX_LENGTH, registroIntro } from './registration'
 
 /**
@@ -7,6 +9,13 @@ import { PASSWORD_MAX_LENGTH, registroIntro } from './registration'
  * and the state the form and its Server Action exchange. Mirrors
  * `registration.ts` and, like it, is imported by the client-side form, so it
  * must stay free of `node:*` and database imports.
+ *
+ * The copy itself lives in the `auth.login` namespace of the message catalogues
+ * (see `docs/internationalization.md`); this module re-exports the Spanish text
+ * as the default for request-less call sites (tests, stories, the fallback
+ * schema below). A request builds its own schema from the visitor's language
+ * with `getLoginSchema`, the same factory pattern as
+ * `getScientificDataQuerySchema` in `lib/scientific-data.ts`.
  */
 
 export const LOGIN_FIELDS = ['email', 'password'] as const
@@ -21,38 +30,43 @@ export type LoginInput = Record<LoginFieldName, string> & { next: string }
 
 export type LoginFieldErrors = Partial<Record<LoginFieldName, string>>
 
-export const loginMessages = {
-  emailRequired: 'Ingresa tu correo electrónico.',
-  emailInvalid: 'Ingresa un correo electrónico válido.',
-  passwordRequired: 'Ingresa tu contraseña.',
-  reviewFields: 'Revisa los campos marcados para continuar.',
-  /** Deliberately the same for a wrong password and an unknown address. */
-  invalidCredentials: 'Correo o contraseña incorrectos.',
-  unexpected: 'No pudimos iniciar sesión. Inténtalo de nuevo en unos minutos.',
-  /** Shown on /login when a protected page sent the visitor here. */
-  authRequired: 'Debes iniciar sesión para continuar.',
-} as const
+/** Deliberately the same message for a wrong password and an unknown address. */
+export const loginMessages = es.auth.login.validation
 
-export const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .max(254, { error: loginMessages.emailInvalid })
-    .pipe(
-      z.email({
-        error: (issue) =>
-          issue.input === '' ? loginMessages.emailRequired : loginMessages.emailInvalid,
-      }),
-    ),
-  // Not trimmed: a leading or trailing space is a legitimate character. No
-  // minimum either; a short password is simply wrong, and registration already
-  // enforces the length rules.
-  password: z
-    .string()
-    .min(1, { error: loginMessages.passwordRequired })
-    .max(PASSWORD_MAX_LENGTH, { error: loginMessages.invalidCredentials }),
-})
+/** The parts of a message catalogue `getLoginSchema` reads. */
+export type LoginValidationMessages = Pick<
+  typeof es.auth.login.validation,
+  'emailRequired' | 'emailInvalid' | 'passwordRequired' | 'invalidCredentials'
+>
+
+/**
+ * Builds the login schema with its validation messages in `messages`' language. The Server
+ * Action builds one from the request's translations; `loginSchema` below is the Spanish
+ * default other, request-less call sites use.
+ */
+export function getLoginSchema(messages: LoginValidationMessages) {
+  return z.object({
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .max(254, { error: messages.emailInvalid })
+      .pipe(
+        z.email({
+          error: (issue) => (issue.input === '' ? messages.emailRequired : messages.emailInvalid),
+        }),
+      ),
+    // Not trimmed: a leading or trailing space is a legitimate character. No
+    // minimum either; a short password is simply wrong, and registration already
+    // enforces the length rules.
+    password: z
+      .string()
+      .min(1, { error: messages.passwordRequired })
+      .max(PASSWORD_MAX_LENGTH, { error: messages.invalidCredentials }),
+  })
+}
+
+export const loginSchema = getLoginSchema(loginMessages)
 
 export type LoginData = z.infer<typeof loginSchema>
 
@@ -68,8 +82,15 @@ export function readLoginInput(formData: FormData): LoginInput {
 export type LoginValidation =
   { ok: true; data: LoginData } | { ok: false; fieldErrors: LoginFieldErrors }
 
-export function validateLogin(input: LoginInput): LoginValidation {
-  const result = loginSchema.safeParse({ email: input.email, password: input.password })
+/**
+ * Validates login input against `schema`, the Spanish default unless the caller built one
+ * from the visitor's own language with `getLoginSchema`.
+ */
+export function validateLogin(
+  input: LoginInput,
+  schema: ReturnType<typeof getLoginSchema> = loginSchema,
+): LoginValidation {
+  const result = schema.safeParse({ email: input.email, password: input.password })
   if (result.success) {
     return { ok: true, data: result.data }
   }
@@ -107,21 +128,17 @@ export const initialLoginState: LoginState = {
 /** Signature of the Server Action, in the shape React's `useActionState` expects. */
 export type LoginAction = (state: LoginState, formData: FormData) => Promise<LoginState>
 
-export const LOGIN_LABELS: Record<LoginFieldName, string> = {
-  email: 'Correo electrónico',
-  password: 'Contraseña',
-}
+export const LOGIN_LABELS: Record<LoginFieldName, string> = es.auth.login.labels
 
-export const LOGIN_PLACEHOLDERS: Partial<Record<LoginFieldName, string>> = {
-  email: 'correo@ejemplo.com',
-}
+export const LOGIN_PLACEHOLDERS: Partial<Record<LoginFieldName, string>> =
+  es.auth.login.placeholders
 
 export const loginFormCopy = {
-  submit: 'Ingresar',
-  submitting: 'Ingresando...',
-  noAccountPrompt: '¿No tienes cuenta?',
-  noAccountLink: 'Crear cuenta',
-  footnote: 'La descarga queda asociada a tu cuenta para fines de trazabilidad y uso científico.',
+  submit: es.auth.login.submit,
+  submitting: es.auth.login.submitting,
+  noAccountPrompt: es.auth.login.noAccountPrompt,
+  noAccountLink: es.auth.login.noAccountLink,
+  footnote: es.auth.login.footnote,
 } as const
 
 /** The one page that signs visitors in and up: `/acceso`. */
@@ -157,20 +174,19 @@ export const REGISTRATION_HREF = accessTabHref('register')
 export const LOGIN_HREF = accessTabHref('login')
 
 export const accesoMeta = {
-  title: 'Acceso al portal | LASCE',
-  description:
-    'Inicia sesión o crea una cuenta en el portal del Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica.',
+  title: es.auth.meta.title,
+  description: es.auth.meta.description,
 } as const
 
 export const accesoIntro = {
-  title: 'Acceso al portal',
-  lead: 'Inicia sesión o crea una cuenta para descargar productos científicos y revisar tu actividad.',
+  title: es.auth.page.title,
+  lead: es.auth.page.lead,
 } as const
 
 /** Heading of the login card. */
 export const loginCardHeading = {
-  title: 'Iniciar sesión',
-  description: 'Accede para descargar productos científicos y revisar tu actividad.',
+  title: es.auth.login.heading.title,
+  description: es.auth.login.heading.description,
 } as const
 
 /** Heading of the registration card, beside the login card. */
@@ -180,11 +196,11 @@ export const registrationCardHeading = {
 } as const
 
 export const accessTabsCopy = {
-  label: 'Acceso',
-  tabs: { login: 'Iniciar sesión', register: 'Crear cuenta' } as Record<AccessTab, string>,
+  label: es.auth.tabs.label,
+  tabs: { login: es.auth.tabs.login, register: es.auth.tabs.register } as Record<AccessTab, string>,
 } as const
 
 export const accesoBackLink = {
   href: '/',
-  label: 'Volver al inicio',
+  label: es.auth.page.backLink,
 } as const

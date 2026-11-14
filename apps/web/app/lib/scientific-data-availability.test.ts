@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'vitest'
 import type { ScientificDataQuery } from './scientific-data'
-import { getAvailabilityMessage, getGoesAvailability } from './scientific-data-availability'
+import {
+  getAvailabilityMessage,
+  getGoesAvailability,
+  getLatestAvailableDate,
+} from './scientific-data-availability'
 
 const availability = getGoesAvailability(new Date('2026-09-14T12:30:00Z'))
 const dateNotFutureMessage = 'Seleccione una fecha que no sea posterior a hoy.'
@@ -17,6 +21,21 @@ describe('scientific data availability', () => {
   test('uses the current UTC date as the latest GOES day', () => {
     expect(getGoesAvailability(new Date('2026-10-01T00:30:12Z'))).toEqual({ today: '2026-10-01' })
   })
+  test.each(['EXIS', 'MAG', 'EHIS', 'SGPS', 'MPS-HI'])(
+    'puts the latest day of %s one day before today, as NOAA publishes with a delay',
+    (instrument) => {
+      expect(getLatestAvailableDate(instrument, availability)).toBe('2026-09-13')
+    },
+  )
+
+  test('lets SUVI images reach today', () => {
+    expect(getLatestAvailableDate('SUVI', availability)).toBe('2026-09-14')
+  })
+
+  test('crosses a month boundary when counting back', () => {
+    expect(getLatestAvailableDate('EXIS', { today: '2026-10-01' })).toBe('2026-09-30')
+  })
+
   test.each([
     { product: 'Fe171' as const, parameter: 'image' },
     { product: 'SFXR' as const, parameter: '0.1-0.8nm' },

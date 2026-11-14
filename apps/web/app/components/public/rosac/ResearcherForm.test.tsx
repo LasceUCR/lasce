@@ -1,20 +1,26 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ReactElement } from 'react'
+import { createRef, type ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   uploadResearcherImage: vi.fn(),
+  uploadRosacResearcherImage: vi.fn(),
 }))
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadResearcherImage: mocks.uploadResearcherImage,
+  uploadRosacResearcherImage: mocks.uploadRosacResearcherImage,
 }))
 
 import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl, type RenderWithIntlOptions } from '@/app/lib/i18n/testing'
 
-import { ResearcherForm, type ResearcherFormProps } from './ResearcherForm'
+import {
+  ResearcherForm,
+  type ResearcherFormHandle,
+  type ResearcherFormProps,
+} from './ResearcherForm'
 import {
   AddNew,
   Bilingual,
@@ -65,6 +71,20 @@ describe('ResearcherForm', () => {
     expect(screen.getByRole('textbox', { name: 'Correo electrónico' })).toHaveValue('')
     // "Confirmar" stays clickable even blank — missing fields are only reported once pressed.
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeEnabled()
+  })
+
+  test('shows the supported photo formats and the 10 MB limit', () => {
+    render(<ResearcherForm {...addArgs} uploadPolicy="rosac" />)
+
+    expect(document.querySelector('input[type="file"]')).toHaveAttribute(
+      'accept',
+      'image/avif,image/svg+xml,image/jpeg,image/png,image/webp',
+    )
+    expect(
+      screen.getByText(
+        'Opcional. Retrato del investigador en formato JPG, PNG, WebP, AVIF o SVG (máx. 10 MB).',
+      ),
+    ).toBeInTheDocument()
   })
 
   test('calls onCancel directly, without asking for confirmation', async () => {
@@ -335,21 +355,21 @@ describe('ResearcherForm', () => {
   test('uploads a freshly dropped photo and saves with the returned public URL', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
-    mocks.uploadResearcherImage.mockResolvedValue({
+    mocks.uploadRosacResearcherImage.mockResolvedValue({
       ok: true,
-      imageUrl: 'https://s3.example/lasce/123_nueva.png',
+      imageUrl: 'https://s3.example/lasce/123_nueva.avif',
     })
-    render(<ResearcherForm {...editArgs} onSave={onSave} />)
+    render(<ResearcherForm {...editArgs} onSave={onSave} uploadPolicy="rosac" />)
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'nueva.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['imagen'], 'nueva.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
 
-    expect(mocks.uploadResearcherImage).toHaveBeenCalledTimes(1)
-    const formData = mocks.uploadResearcherImage.mock.calls[0]![0] as FormData
-    expect((formData.get('file') as File).name).toBe('nueva.png')
+    expect(mocks.uploadRosacResearcherImage).toHaveBeenCalledTimes(1)
+    const formData = mocks.uploadRosacResearcherImage.mock.calls[0]![0] as FormData
+    expect((formData.get('file') as File).name).toBe('nueva.avif')
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ src: 'https://s3.example/lasce/123_nueva.png' }),
+      expect.objectContaining({ src: 'https://s3.example/lasce/123_nueva.avif' }),
     )
   })
 
@@ -422,6 +442,21 @@ describe('ResearcherForm', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same question when the modal requests closing', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    const ref = createRef<ResearcherFormHandle>()
+    render(<ResearcherForm {...editArgs} onCancel={onCancel} ref={ref} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), ' editado')
+    act(() => ref.current?.requestCancel())
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   test('keeps the form open when discard is dismissed', async () => {
