@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import es from '@/messages/es.json' with { type: 'json' }
 import { versionSchema } from '@/app/lib/cms/version'
+import { COLLABORATION_LOGO_PATH } from './collaboration-logo'
 import { collaborationContent } from './research-collaborations'
 
 export type CollaborationFieldMessages = typeof es.collaborations.validation
@@ -38,6 +39,20 @@ export function collaborationFieldSchemas(messages: CollaborationFieldMessages) 
     scope: z.enum(['national', 'international'], { error: messages.scope }),
     acronym: optionalText(z.string().max(COLLABORATION_ACRONYM_MAX_LENGTH, messages.acronym)),
     websiteUrl: optionalText(url),
+    logoPath: optionalText(
+      z.union(
+        [
+          z.string().regex(COLLABORATION_LOGO_PATH, messages.logoPath),
+          z
+            .string()
+            .regex(
+              /^\/brand\/(?:collaborations\/)?[a-zA-Z0-9_.-]+\.(?:png|jpe?g|webp|svg)$/i,
+              messages.logoPath,
+            ),
+        ],
+        { error: messages.logoPath },
+      ),
+    ),
   }
 }
 
@@ -47,6 +62,7 @@ export const collaborationCreateSchema = z.strictObject({
   ...fields,
   acronym: fields.acronym.optional().transform((value) => value ?? null),
   websiteUrl: fields.websiteUrl.optional().transform((value) => value ?? null),
+  logoPath: fields.logoPath.optional().transform((value) => value ?? null),
   content: collaborationContent.schema,
 })
 

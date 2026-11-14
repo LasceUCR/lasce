@@ -4,6 +4,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { getScientificSources } from '@/app/lib/scientific-data'
+import { scientificDataHref } from '@/app/lib/scientific-data-navigation'
 import en from '@/messages/en.json' with { type: 'json' }
 
 import { ScientificDataExplorer, type ScientificDataExplorerProps } from './ScientificDataExplorer'
@@ -136,6 +137,29 @@ describe('ScientificDataExplorer', () => {
     expect(within(results).getByText('08:00–09:00 UTC')).toBeInTheDocument()
     expect(within(results).getByText(/Observaciones históricas/)).toBeInTheDocument()
     expect(within(results).queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  test('runs a restored query on load so its graph is ready to download', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => resultFixture })
+    vi.stubGlobal('fetch', fetchMock)
+    renderWithIntl(
+      <ScientificDataExplorer {...signedOutDownloadArgs} initialResult={undefined} consultOnLoad />,
+    )
+
+    const results = await screen.findByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(within(results).getByRole('img', { name: /Gráfica de Flujo solar/ })).toBeInTheDocument()
+    expect(
+      within(results).getByRole('button', { name: 'Inicie sesión para descargar la gráfica' }),
+    ).toBeInTheDocument()
+  })
+
+  test('waits for the visitor to consult when nothing was restored', () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   test('renders a ROSAC dynamic spectrum with an accessible values table', () => {
@@ -581,7 +605,9 @@ describe('ScientificDataExplorer', () => {
     )
 
     expect(requestDownload).not.toHaveBeenCalled()
-    expect(navigate).toHaveBeenCalledWith('/acceso?next=%2Fdatos&reason=auth')
+    expect(navigate).toHaveBeenCalledWith(
+      `/acceso?${new URLSearchParams({ next: scientificDataHref(resultFixture.query), reason: 'auth' })}`,
+    )
   })
 
   test('sends a visitor whose session expired to sign in', async () => {
@@ -590,7 +616,7 @@ describe('ScientificDataExplorer', () => {
     renderWithIntl(
       <ScientificDataExplorer
         {...visitorDownloadArgs}
-        loginHref="/acceso"
+        loginHref="/acceso?next=%2Fdatos&reason=auth"
         navigate={navigate}
         requestDownload={vi.fn().mockResolvedValue({
           ok: false,
@@ -602,7 +628,9 @@ describe('ScientificDataExplorer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' }))
 
-    expect(navigate).toHaveBeenCalledWith('/acceso')
+    expect(navigate).toHaveBeenCalledWith(
+      `/acceso?${new URLSearchParams({ next: scientificDataHref(resultFixture.query), reason: 'auth' })}`,
+    )
   })
 
   test('shows why a download was refused and lets the visitor try again', async () => {
