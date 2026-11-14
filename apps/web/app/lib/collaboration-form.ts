@@ -17,7 +17,23 @@ export interface CollaborationDraft {
   acronym: string
   scope: ResearchCollaboration['scope']
   websiteUrl: string
+  logoPath: string
   content: ContentDraft<'country'>
+}
+
+export function resolveCollaborationContentDraft(
+  record: ResearchCollaboration | undefined,
+  content: ContentDraft<'country'>,
+): ContentDraft<'country'> {
+  if (record?.editing?.isLegacy) {
+    return content
+  }
+  const esCountry = content.es?.country?.trim() ?? ''
+  const enCountry = content.en?.country?.trim() ?? ''
+  return {
+    es: { country: esCountry || enCountry },
+    en: { country: enCountry || esCountry },
+  }
 }
 
 export function collaborationDraft(record?: ResearchCollaboration): CollaborationDraft {
@@ -26,6 +42,7 @@ export function collaborationDraft(record?: ResearchCollaboration): Collaboratio
     acronym: record?.acronym ?? '',
     scope: record?.scope ?? 'national',
     websiteUrl: record?.websiteUrl ?? '',
+    logoPath: record?.logoPath ?? '',
     content: record?.editing
       ? draftFromStored(collaborationContent, record.editing.content)
       : emptyContentDraft(collaborationContent),
@@ -39,15 +56,16 @@ export function validateCollaborationDraft(
   locale: Locale,
   messages: CollaborationFieldMessages,
 ): FormErrors {
+  const resolvedContent = resolveCollaborationContentDraft(record, draft.content)
   const errors = validateContent(
     collaborationContent,
     record?.editing?.content ?? null,
-    draft.content,
+    resolvedContent,
     confirmed,
     locale,
   )
   const schemas = collaborationFieldSchemas(messages)
-  for (const field of ['name', 'acronym', 'scope', 'websiteUrl'] as const) {
+  for (const field of ['name', 'acronym', 'scope', 'websiteUrl', 'logoPath'] as const) {
     const result = schemas[field].safeParse(draft[field])
     if (!result.success) errors[field] = result.error.issues[0]!.message
   }
@@ -61,11 +79,12 @@ export function collaborationRequest(
   confirmed: ReviewConfirmation<'country'>[],
 ): Record<string, unknown> | null {
   const body: Record<string, unknown> = {}
-  for (const key of ['name', 'acronym', 'scope', 'websiteUrl'] as const) {
+  for (const key of ['name', 'acronym', 'scope', 'websiteUrl', 'logoPath'] as const) {
     if (!record || initial[key].trim() !== draft[key].trim()) body[key] = draft[key].trim()
   }
-  if (hasContentChanges(collaborationContent, record?.editing?.content ?? null, draft.content)) {
-    body.content = toContentInput(collaborationContent, draft.content)
+  const resolvedContent = resolveCollaborationContentDraft(record, draft.content)
+  if (hasContentChanges(collaborationContent, record?.editing?.content ?? null, resolvedContent)) {
+    body.content = toContentInput(collaborationContent, resolvedContent)
     if (record) body.confirmedUnchanged = confirmed
   }
   if (!Object.keys(body).length) return null
