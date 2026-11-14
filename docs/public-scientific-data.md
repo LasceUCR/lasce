@@ -144,6 +144,21 @@ its label and input stay aligned with Hora de inicio instead of stretching with 
 
 On 2026-09-13 the reader was checked against real G18 L1b samples dated 2025-01-05 for all five enabled historical products. Synthetic NetCDF fixtures exercise detector selection, fill values, quality flags, sensor dimensions, time bounds, and compressed archives without depending on the remote service.
 
+### Sampling and summary
+
+A GOES time series read from InfluxDB (EXIS, MAG, SEISS, through `goesReadingsDataSource.ts`)
+draws at most 360 points. A window with more readings is cut into 179 stretches by row number,
+and each stretch keeps its lowest and its highest reading, plus the first and the last reading
+of the window (`keepExtremes` in `extremeSampling.ts`; the query applies the same rule so only the
+kept rows cross the wire). Nothing is averaged or interpolated, and a flare's peak can no longer
+fall between two kept rows. The result's `summary` (minimum, maximum and latest value) is
+computed in the same query from **every** valid reading of the satellite, so the cards beside
+the chart never depend on the reduction; a source without a `summary` falls back to its points
+(`summarizeTimeSeries`). `origin.sampledPoints` is the number of points actually drawn, and the
+`scientificData.origins.sampled` notice says what is drawn and what is computed from all data.
+The CSV export is never reduced. `extremeSampling.test.ts` and `exisReadingsDataSource.test.ts`
+cover a synthetic flare between evenly spaced rows.
+
 ### ROSAC
 
 ROSAC is a forward-compatible source entry, not a claim about the final instrument configuration.

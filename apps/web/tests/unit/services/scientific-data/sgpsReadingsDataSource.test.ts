@@ -78,8 +78,10 @@ describe('querySgpsReadings', () => {
 
     const result = await querySgpsReadings(query)
 
-    expect(result.points).toHaveLength(360)
-    expect(result.origin.sampledPoints).toBe(360)
+    expect(result.points.length).toBeLessThanOrEqual(360)
+    expect(result.points[0]!.value).toBe(0)
+    expect(result.points.at(-1)!.value).toBe(360)
+    expect(result.origin.sampledPoints).toBe(result.points.length)
   })
 
   test('returns an empty series for a day that was never ingested', async () => {

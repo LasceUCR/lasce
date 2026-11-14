@@ -32,12 +32,15 @@ import {
   getDefaultQueryForSource,
   getScientificDataQuerySchema,
   scientificDataResultSchema,
+  summarizeTimeSeries,
   type ScientificDataQuery,
   type ScientificDataResult,
   type ScientificProductCode,
   type ScientificSource,
   type ScientificSourceCode,
 } from '@/app/lib/scientific-data'
+import { timeSeriesStyle } from '@/app/lib/charts/timeSeriesLayout'
+import { flareClass } from '@/app/lib/charts/flareClass'
 import { describeOrigin, localizeResultNames } from '@/app/lib/scientific-data-copy'
 import { withQueryReturn } from '@/app/lib/scientific-data-navigation'
 
@@ -418,15 +421,19 @@ export function ScientificDataExplorer({
     [tErrors],
   )
 
+  // From every reading in the window when the source provides it, not just the points drawn.
+  const summary = result?.visualization === 'time-series' ? summarizeTimeSeries(result) : null
+  const chartStyle =
+    result?.visualization === 'time-series'
+      ? timeSeriesStyle(result.product.code, result.parameter.code)
+      : null
+  // The class of the real maximum, from every reading, not only the points drawn.
+  const peakClass = chartStyle?.flareClasses && summary ? flareClass(summary.maximum) : null
+
   useEffect(() => {
     if (consultOnLoad) void requestData(initialQuery, true)
   }, [consultOnLoad, initialQuery, requestData])
 
-  const seriesValues =
-    result?.visualization === 'time-series' ? result.points.map((point) => point.value) : []
-  const minimum = seriesValues.length > 0 ? Math.min(...seriesValues) : null
-  const maximum = seriesValues.length > 0 ? Math.max(...seriesValues) : null
-  const latest = seriesValues.at(-1) ?? null
   const hasResults =
     result?.visualization === 'time-series'
       ? result.points.length > 0
@@ -732,19 +739,26 @@ export function ScientificDataExplorer({
                 </div>
               ) : null}
 
-              {result.visualization === 'time-series' && result.points.length > 0 ? (
+              {result.visualization === 'time-series' && result.points.length > 0 && summary ? (
                 <>
                   <div className="data-summary" aria-label={t('summaryLabel')}>
-                    {[
-                      [t('minimum'), minimum],
-                      [t('maximum'), maximum],
-                      [t('latest'), latest],
-                    ].map(([label, value]) => (
+                    {(
+                      [
+                        [t('minimum'), summary.minimum, null],
+                        [
+                          t('maximum'),
+                          summary.maximum,
+                          peakClass ? t('flareClass', { flareClass: peakClass.label }) : null,
+                        ],
+                        [t('latest'), summary.latest, null],
+                      ] as const
+                    ).map(([label, value, note]) => (
                       <div key={label}>
                         <span>{label}</span>
                         <strong>
-                          {formatValue(value as number)} <small>{result.parameter.unit}</small>
+                          {formatValue(value)} <small>{result.parameter.unit}</small>
                         </strong>
+                        {note ? <span className="data-summary-note">{note}</span> : null}
                       </div>
                     ))}
                   </div>
@@ -758,6 +772,7 @@ export function ScientificDataExplorer({
                     label={result.product.name}
                     points={result.points}
                     unit={result.parameter.unit}
+                    chartStyle={chartStyle ?? undefined}
                   />
 
                   <DataTable

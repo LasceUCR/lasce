@@ -163,7 +163,10 @@ dropped by the quality flags. That is expected, not a decoder fault.
   ([`public-scientific-data.md`](public-scientific-data.md)). The worker itself does not render
   anything.
 - **Downsampling.** SFXR is stored at its native 1 s cadence (about 160 000 points per day). The
-  web samples inside the InfluxDB query (at most 360 points per satellite), not here.
+  web reduces inside the InfluxDB query (at most 360 points per satellite), not here: the lowest
+  and the highest reading of each of 179 stretches, so a flare's peak is always drawn, and the
+  minimum, maximum and latest value come from every reading
+  ([`public-scientific-data.md`](public-scientific-data.md#sampling-and-summary)).
 - **Near real time.** The data is about a day old by design, because that is when NOAA publishes
   it.
 

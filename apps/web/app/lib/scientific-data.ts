@@ -101,7 +101,10 @@ export interface ScientificDataOrigin {
   dataset: ScientificDataset
   /** `sampled` for what the chart draws, `full` for an export with every reading. */
   resolution: 'sampled' | 'full'
-  /** Set when the readings were thinned to this many evenly spread observations. */
+  /**
+   * Set when the readings were thinned to at most this many points, keeping the lowest and the
+   * highest reading of each stretch of the window (see `keepExtremes`).
+   */
   sampledPoints?: number
   satellite?: number
 }
@@ -114,9 +117,42 @@ interface ScientificDataResultBase {
   origin: ScientificDataOrigin
 }
 
+/**
+ * The lowest, highest and latest value of every reading in the window. A sampled series carries it
+ * so the summary never depends on which readings the chart happens to draw.
+ */
+export interface TimeSeriesSummary {
+  minimum: number
+  maximum: number
+  latest: number
+}
+
 export interface TimeSeriesDataResult extends ScientificDataResultBase {
   visualization: 'time-series'
   points: ScientificDataPoint[]
+  /** Computed from every reading in the window; absent when only the points are known. */
+  summary?: TimeSeriesSummary
+}
+
+/**
+ * The summary shown beside a time series: the one computed from every reading when the source
+ * provides it, otherwise the points themselves. `null` for an empty series.
+ */
+export function summarizeTimeSeries(result: TimeSeriesDataResult): TimeSeriesSummary | null {
+  if (result.summary) return result.summary
+  return summarizeValues(result.points.map((point) => point.value))
+}
+
+/** Minimum, maximum and last of `values` in one pass (no spread, so any length is safe). */
+export function summarizeValues(values: readonly number[]): TimeSeriesSummary | null {
+  if (!values.length) return null
+  let minimum = values[0]!
+  let maximum = values[0]!
+  for (const value of values) {
+    if (value < minimum) minimum = value
+    if (value > maximum) maximum = value
+  }
+  return { minimum, maximum, latest: values.at(-1)! }
 }
 
 /** One solar image. Its alternative text is written by the page, in the visitor's language. */
@@ -650,6 +686,13 @@ export const scientificDataResultSchema: z.ZodType<ScientificDataResult> = z.dis
     scientificResultBaseSchema.extend({
       visualization: z.literal('time-series'),
       points: z.array(z.object({ timestamp: z.string(), value: z.number().finite() })),
+      summary: z
+        .object({
+          minimum: z.number().finite(),
+          maximum: z.number().finite(),
+          latest: z.number().finite(),
+        })
+        .optional(),
     }),
     scientificResultBaseSchema.extend({
       visualization: z.literal('image-sequence'),

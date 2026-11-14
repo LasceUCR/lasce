@@ -22,8 +22,28 @@ const query: ScientificDataQuery = {
   endTime: '09:00',
 }
 
-function reading(time: string, value: number, n: number, satellite = 'G19') {
-  return { time, value, satellite, n }
+function reading(
+  time: string,
+  value: number,
+  n: number,
+  satellite = 'G19',
+  stats = { minimum: value, maximum: value },
+) {
+  return { time, value, satellite, n, ...stats }
+}
+
+/** One synthetic day at one reading a minute: a quiet floor with a short flare between rows. */
+function dayWithFlare() {
+  const total = 1_440
+  const values = Array.from({ length: total }, (_, minute) =>
+    minute >= 600 && minute <= 602 ? [2e-6, 3.35e-5, 2e-6][minute - 600]! : 1e-7 + minute * 1e-11,
+  )
+  return values.map((value, minute) =>
+    reading(new Date(Date.UTC(2026, 8, 27, 0, minute)).toISOString(), value, total, 'G19', {
+      minimum: Math.min(...values),
+      maximum: Math.max(...values),
+    }),
+  )
 }
 
 afterEach(() => {
@@ -65,7 +85,52 @@ describe('queryExisReadings', () => {
 
     const [sql] = mocks.queryInfluxSql.mock.calls[0]!
     expect(sql).toContain('valid = true')
-    expect(sql.indexOf('valid = true')).toBeLessThan(sql.indexOf(') WHERE (rn - 1)'))
+    expect(sql.indexOf('valid = true')).toBeLessThan(sql.indexOf(') WHERE n <= 360'))
+  })
+
+  test('keeps the lowest and highest reading of each stretch and summarizes every reading', async () => {
+    mocks.queryInfluxSql.mockResolvedValue([])
+
+    await queryExisReadings(query)
+
+    const [sql] = mocks.queryInfluxSql.mock.calls[0]!
+    expect(sql).toContain('(rn - 1) * 179 / n')
+    expect(sql).toContain('ORDER BY value ASC, time')
+    expect(sql).toContain('ORDER BY value DESC, time')
+    expect(sql).toContain('MIN(value) OVER (PARTITION BY satellite) AS minimum')
+    expect(sql).toContain('MAX(value) OVER (PARTITION BY satellite) AS maximum')
+    expect(sql).toContain('WHERE n <= 360 OR rn = 1 OR rn = n OR low = 1 OR high = 1')
+  })
+
+  test('draws a flare that falls between evenly spaced rows and reports its real peak', async () => {
+    mocks.queryInfluxSql.mockResolvedValue(dayWithFlare())
+
+    const result = await queryExisReadings(query)
+    const evenStride = Math.ceil(1_439 / 359)
+
+    // The former evenly spaced sample (every 5th row) skipped minute 601, where the peak is.
+    expect(601 % evenStride).not.toBe(0)
+    expect(result.points.length).toBeLessThanOrEqual(360)
+    expect(result.points.map(({ value }) => value)).toContain(3.35e-5)
+    expect(result.points[0]!.timestamp).toBe('2026-09-27T00:00:00.000Z')
+    expect(result.points.at(-1)!.timestamp).toBe('2026-09-27T23:59:00.000Z')
+    expect(result.summary).toEqual({
+      minimum: 1e-7,
+      maximum: 3.35e-5,
+      latest: 1e-7 + 1_439 * 1e-11,
+    })
+    expect(result.origin.sampledPoints).toBe(result.points.length)
+  })
+
+  test('takes the summary from every reading even when the peak is not among the points', async () => {
+    mocks.queryInfluxSql.mockResolvedValue([
+      reading('2026-09-27T08:00:00', 1e-7, 2, 'G19', { minimum: 5e-8, maximum: 4e-5 }),
+      reading('2026-09-27T08:30:00', 2e-7, 2, 'G19', { minimum: 5e-8, maximum: 4e-5 }),
+    ])
+
+    const result = await queryExisReadings(query)
+
+    expect(result.summary).toEqual({ minimum: 5e-8, maximum: 4e-5, latest: 2e-7 })
   })
 
   test('returns the readings as an observed GOES series with explicit UTC timestamps', async () => {
@@ -111,10 +176,10 @@ describe('queryExisReadings', () => {
 
     const result = await queryExisReadings(query)
 
-    expect(result.points).toHaveLength(360)
+    expect(result.points.length).toBeLessThanOrEqual(360)
     expect(result.points[0]!.value).toBe(0)
     expect(result.points.at(-1)!.value).toBe(360)
-    expect(result.origin.sampledPoints).toBe(360)
+    expect(result.origin.sampledPoints).toBe(result.points.length)
   })
 
   test('returns an empty series without a satellite for a day that was never ingested', async () => {
@@ -165,6 +230,7 @@ describe('queryExisReadingsFull', () => {
 
     expect(result.points).toHaveLength(400)
     expect(result.points.some((point) => point.value === -1)).toBe(false)
+    expect(result.summary).toEqual({ minimum: 0, maximum: 399, latest: 399 })
     expect(result.origin).toMatchObject({ kind: 'observed', satellite: 19 })
     expect(result.origin.resolution).toBe('full')
   })
