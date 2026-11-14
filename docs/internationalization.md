@@ -112,7 +112,10 @@ export const contactContent = getContactContent(es) // Spanish, for stories and 
 constant keeps stories, lib tests and fixtures working without a provider. `app/lib/footer.ts`
 is an older variant of the same idea that takes a translator function instead of a slice.
 
-A page's `metadata` export becomes `generateMetadata()` reading `<namespace>.meta`.
+A page's `metadata` export becomes `generateMetadata()` reading `<namespace>.meta`. The root
+layout also uses the localized `metadata` catalogue for the site's title, description, and social
+preview text; its Open Graph and Twitter cards share the default solar image in
+`apps/web/public/images/tools/SWAAT-sun.webp`.
 
 **Client Component** (`app/components/public/PublicHeader.tsx`):
 

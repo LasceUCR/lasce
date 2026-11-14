@@ -14,6 +14,25 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/' }))
 
 type Role = 'VISITOR' | 'ASSISTANT' | 'ADMIN'
 
+const brandAltTexts: { locale: Locale; altTexts: string[] }[] = [
+  {
+    locale: 'es',
+    altTexts: [
+      'Universidad de Costa Rica',
+      'Centro de Investigaciones Espaciales',
+      'Laboratorio de Astrofísica Solar y Clima Espacial',
+    ],
+  },
+  {
+    locale: 'en',
+    altTexts: [
+      'Universidad de Costa Rica',
+      'Centro de Investigaciones Espaciales',
+      'Laboratorio de Astrofísica Solar y Clima Espacial',
+    ],
+  },
+]
+
 /**
  * Signs `name` in as far as the header can tell: the readable account cookie,
  * which may carry a forged `cookieRole`, plus what `GET /api/session` answers
@@ -213,18 +232,18 @@ describe('PublicHeader', () => {
     ).toHaveAttribute('href', '/administracion')
   })
 
-  test('identifies UCR, CINESPA and LASCE in the header brand, each once', () => {
-    renderHeader()
+  test.each(brandAltTexts)(
+    'identifies UCR, CINESPA and LASCE once in the $locale header brand',
+    ({ locale, altTexts }) => {
+      renderHeader({ locale })
 
-    // The shield names the university; the signature repeats it as lettering and stays silent,
-    // so the reduced mobile lockup (shield + LASCE) and the full one both announce it once.
-    expect(screen.getAllByAltText('Universidad de Costa Rica')).toHaveLength(1)
-    expect(document.querySelector('.ucr-signature-logo')).toHaveAttribute('alt', '')
-    expect(screen.getByAltText('Centro de Investigaciones Espaciales')).toBeInTheDocument()
-    expect(
-      screen.getByAltText('Laboratorio de Astrofísica Solar y Clima Espacial'),
-    ).toBeInTheDocument()
-  })
+      for (const altText of altTexts) {
+        expect(screen.getByAltText(altText)).toBeInTheDocument()
+      }
+      expect(screen.getAllByAltText('Universidad de Costa Rica')).toHaveLength(1)
+      expect(document.querySelector('.ucr-signature-logo')).toHaveAttribute('alt', '')
+    },
+  )
 
   test.each([
     {

@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 type BrandProps = {
   light?: boolean
@@ -16,15 +17,12 @@ type BrandProps = {
  * repeats that name as lettering and has an empty alt, so the name is never announced twice.
  */
 export function Brand({ light = false }: BrandProps) {
+  const t = useTranslations('brand')
+
   if (light) {
     return (
       <div className="brand brand-light">
-        <Image
-          src="/brand/logo-UCR-claro.png"
-          alt="Universidad de Costa Rica"
-          width={109}
-          height={58}
-        />
+        <Image src="/brand/logo-UCR-claro.png" alt={t('ucr')} width={109} height={58} />
       </div>
     )
   }
@@ -34,7 +32,7 @@ export function Brand({ light = false }: BrandProps) {
       <Image
         className="compdes-logo"
         src="/brand/compdes-ucr.png"
-        alt="Universidad de Costa Rica"
+        alt={t('ucr')}
         width={576}
         height={600}
         priority
@@ -51,7 +49,7 @@ export function Brand({ light = false }: BrandProps) {
       <Image
         className="cinespa-logo"
         src="/brand/logo-cinespa.png"
-        alt="Centro de Investigaciones Espaciales"
+        alt={t('cinespa')}
         width={1378}
         height={511}
         priority
@@ -60,7 +58,7 @@ export function Brand({ light = false }: BrandProps) {
       <Image
         className="lasce-logo"
         src="/brand/lasce_original.png"
-        alt="Laboratorio de Astrofísica Solar y Clima Espacial"
+        alt={t('lasce')}
         width={1672}
         height={480}
         priority

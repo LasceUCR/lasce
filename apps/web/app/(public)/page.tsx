@@ -93,7 +93,6 @@ export default async function HomePage() {
         {/* Geomagnetic indices lines.
         <GeomagneticIndicators
           canEdit={canEdit}
-          demoNotice={t('indicators.demoNotice')}
           indicators={indicators}
           title={t('indicators.title')}
         />
