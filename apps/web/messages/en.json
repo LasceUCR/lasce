@@ -286,6 +286,18 @@
       "title": "Solar astrophysics",
       "introduction": "Solar activity does not end at the Sun. Its magnetic fields, its radiation and the stream of particles it releases extend across the Solar System and can change the space environment of the Earth."
     },
+    "observation": {
+      "alt": "Image of the Sun observed by GOES SUVI in the 195 Å ultraviolet band",
+      "loading": "Loading the latest solar image…",
+      "unavailable": "The latest solar image is not available right now.",
+      "observedLabel": "Observed on",
+      "source": "Source: NOAA/GOES SUVI · 195 Å",
+      "dataLink": {
+        "title": "Explore more solar images",
+        "description": "This image shows the sun in extreme ultraviolet light. To access more photos and information, go to the data page from the button below.",
+        "label": "Go to Data"
+      }
+    },
     "overview": {
       "title": "What does solar astrophysics study?",
       "intro": "This area seeks to understand the physical processes behind the Sun's activity and to explain how those variations connect with the interplanetary medium and the Earth's environment.",
@@ -316,6 +328,15 @@
           "terrestrial": "Earth's environment",
           "analysis": "LASCE analysis"
         }
+      }
+    },
+    "nextSteps": {
+      "title": "Next steps",
+      "links": {
+        "solarToday": "View the Sun today",
+        "spaceWeather": "Follow the chain: space weather",
+        "publications": "Browse LASCE publications",
+        "tools": "Explore scientific tools"
       }
     },
     "editor": {
