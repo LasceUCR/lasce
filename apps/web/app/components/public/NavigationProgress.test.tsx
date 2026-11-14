@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
@@ -19,6 +19,16 @@ vi.mock('next/navigation', () => ({
  */
 function barState(container: HTMLElement) {
   return container.querySelector('[data-state]')?.getAttribute('data-state')
+}
+
+/**
+ * The polite live region the bar announces through. It has no role on purpose (a page's own
+ * `role="status"` must stay the only one), so it is found by the attribute that makes it live.
+ */
+function announcement() {
+  const region = document.querySelector('[aria-live="polite"][data-navigation-status]')
+  if (!(region instanceof HTMLElement)) throw new Error('The navigation announcement is missing')
+  return region
 }
 
 function renderWithLinks() {
@@ -186,14 +196,20 @@ describe('NavigationProgress', () => {
     expect(barState(container)).toBe('loading')
   })
 
+  test('does not add a status role that would compete with the page status', () => {
+    const { queryByRole } = renderWithLinks()
+
+    expect(queryByRole('status')).not.toBeInTheDocument()
+  })
+
   test('announces the page load to screen readers while the bar runs', () => {
     const { getByText } = renderWithLinks()
 
-    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+    expect(announcement()).toBeEmptyDOMElement()
 
     fireEvent.click(getByText('Nosotros'))
 
-    expect(screen.getByRole('status')).toHaveTextContent('Cargando la página…')
+    expect(announcement()).toHaveTextContent('Cargando la página…')
   })
 
   test('announces the page load in English once English is chosen', () => {
@@ -207,7 +223,7 @@ describe('NavigationProgress', () => {
 
     fireEvent.click(getByText('Nosotros'))
 
-    expect(screen.getByRole('status')).toHaveTextContent('Loading the page…')
+    expect(announcement()).toHaveTextContent('Loading the page…')
   })
 
   test('clears the announcement once the new page is in place', () => {
@@ -217,6 +233,6 @@ describe('NavigationProgress', () => {
     navigateTo('/nosotros')
     rerender(<NavigationProgress {...meta.args} />)
 
-    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+    expect(announcement()).toBeEmptyDOMElement()
   })
 })

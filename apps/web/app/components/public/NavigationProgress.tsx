@@ -60,7 +60,8 @@ export function startsNavigation(event: MouseEvent, anchor: HTMLAnchorElement): 
  *
  * The strip itself is hidden from assistive technology. Most public pages have no `loading.tsx`,
  * so nothing else says a page is loading: a visually hidden status message announces it instead
- * while the bar runs. The live region is always in the DOM, because a screen reader only reads
+ * while the bar runs, through a polite live region rather than `role="status"`, so a page keeps a
+ * single status of its own. The live region is always in the DOM, because a screen reader only reads
  * text that changes inside a region it already knows about.
  */
 export function NavigationProgress({
@@ -128,7 +129,10 @@ export function NavigationProgress({
       <div aria-hidden="true" className={styles.track} data-state={state}>
         <div className={styles.bar} key={run} />
       </div>
-      <span className="sr-only" role="status">
+      {/* `aria-live` rather than `role="status"`: a screen reader announces it the same way, but
+          it does not add a second status to every page, which a page's own status message (a
+          form's success, a gallery's loading text) is expected to be the only one of. */}
+      <span aria-atomic="true" aria-live="polite" className="sr-only" data-navigation-status="">
         {state === 'loading' ? t('pageLoading') : ''}
       </span>
     </>

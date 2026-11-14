@@ -189,9 +189,12 @@ render therefore looked like a dead link. The fix is a load bar, so the click is
   - links to the current URL
 
   A second click restarts the wait. The strip is `aria-hidden`. Next to it, a visually hidden
-  `role="status"` message ("Cargando la página…" / "Loading the page…", `shell.pageLoading`)
-  announces the load to screen readers while the bar runs, and empties when the page lands. Under
-  `prefers-reduced-motion` the strip stays dark blue while the page loads, with no movement.
+  message ("Cargando la página…" / "Loading the page…", `shell.pageLoading`) announces the load to
+  screen readers while the bar runs, and empties when the page lands. It is an
+  `aria-live="polite"` region, **not** `role="status"`: the bar is on every page, and a page's own
+  status (a form's success, a gallery's loading text) must stay the only `role="status"` there, or
+  `getByRole('status')` in the e2e suite finds two. Under `prefers-reduced-motion` the strip stays
+  dark blue while the page loads, with no movement.
 
 - **`app/(public)/error.tsx`** (`PageErrorState`) catches a page that throws, so a failed
   navigation ends on an error with a retry instead of a frozen page.
