@@ -832,7 +832,11 @@
       "subalbumsTitle": "Subalbums",
       "backToGallery": "Back to gallery",
       "backToAlbum": "Back to {album}",
-      "gallery": "LASCE Gallery"
+      "gallery": "LASCE Gallery",
+      "loading": "Loading gallery…",
+      "loadingAlbum": "Loading album…",
+      "loadError": "Could not load the gallery. Please try again.",
+      "retry": "Retry"
     },
     "albumPage": {
       "albumFiles": "{count, plural, one {# file in this album} other {# files in this album}}",

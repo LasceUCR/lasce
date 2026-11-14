@@ -832,7 +832,11 @@
       "subalbumsTitle": "Subálbumes",
       "backToGallery": "Volver a la galería",
       "backToAlbum": "Volver a {album}",
-      "gallery": "Galería LASCE"
+      "gallery": "Galería LASCE",
+      "loading": "Cargando galería…",
+      "loadingAlbum": "Cargando álbum…",
+      "loadError": "No se pudo cargar la galería. Inténtelo de nuevo.",
+      "retry": "Reintentar"
     },
     "albumPage": {
       "albumFiles": "{count, plural, one {# archivo en este álbum} other {# archivos en este álbum}}",
