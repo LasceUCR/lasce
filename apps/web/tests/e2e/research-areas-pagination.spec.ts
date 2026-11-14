@@ -184,6 +184,13 @@ test('refreshes totals after creation and preserves valid pages after deletion',
     })
     expect(response.status()).toBe(201)
     await page.reload()
+    await expect(
+      page
+        .getByRole('list', { name: /^(Áreas de investigación|Research areas)$/ })
+        .getByRole('listitem')
+        .first()
+        .getByRole('button', { name: /^Eliminar / }),
+    ).toBeVisible()
     await expect(page).toHaveURL(new RegExp(`page=${lastPage}$`))
     await expect(cards(page)).toHaveCount(2)
     await expect(
@@ -192,8 +199,12 @@ test('refreshes totals after creation and preserves valid pages after deletion',
       }),
     ).toBeVisible()
     for (let remaining = 2; remaining > 0; remaining -= 1) {
-      const title = await cards(page).first().getByRole('heading').innerText()
-      await page.getByRole('button', { name: `Eliminar ${title}`, exact: true }).click()
+      const firstCard = page
+        .getByRole('list', { name: /^(Áreas de investigación|Research areas)$/ })
+        .getByRole('listitem')
+        .first()
+      const title = await firstCard.getByRole('heading').innerText()
+      await firstCard.getByRole('button', { name: /^Eliminar / }).click()
       await page
         .getByRole('dialog', { name: 'Eliminar área de investigación' })
         .getByRole('button', { name: 'Eliminar', exact: true })
