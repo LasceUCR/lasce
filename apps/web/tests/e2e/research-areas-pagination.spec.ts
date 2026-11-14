@@ -184,7 +184,13 @@ test('refreshes totals after creation and preserves valid pages after deletion',
     })
     expect(response.status()).toBe(201)
     await page.reload()
-    await enableEditMode(page)
+    await expect(
+      page
+        .getByRole('list', { name: /^(Áreas de investigación|Research areas)$/ })
+        .getByRole('listitem')
+        .first()
+        .getByRole('button', { name: /^Eliminar / }),
+    ).toBeVisible()
     await expect(page).toHaveURL(new RegExp(`page=${lastPage}$`))
     await expect(cards(page)).toHaveCount(2)
     await expect(
