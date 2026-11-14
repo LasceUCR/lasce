@@ -296,19 +296,19 @@
       "items": {
         "activity": {
           "title": "Actividad solar",
-          "description": "Analiza fenómenos eruptivos como fulguraciones, eyecciones de masa coronal y emisiones solares de radio."
+          "description": "Analiza fenómenos eruptivos como fulguraciones y eyecciones de masa coronal, su evolución y la aceleración de partículas que producen, incluidas las emisiones solares de radio asociadas y su propagación hacia el medio interplanetario."
         },
         "magneticField": {
           "title": "Campo magnético",
-          "description": "Estudia cómo los campos magnéticos almacenan energía, estructuran la atmósfera solar y participan en eventos eruptivos."
+          "description": "Estudia cómo los campos magnéticos almacenan energía en la atmósfera solar y la liberan mediante procesos como la reconexión magnética, el mecanismo detrás de las fulguraciones y las eyecciones de masa coronal, así como su formación y evolución en las regiones activas del Sol."
         },
         "sunEarth": {
           "title": "Relación Sol-Tierra",
-          "description": "Relaciona perturbaciones solares con el viento solar, el campo magnético interplanetario y la ionosfera."
+          "description": "Relaciona las perturbaciones solares con el viento solar, el campo magnético interplanetario y la ionosfera, con modelos para estimar la velocidad, la trayectoria y el tiempo de llegada de las eyecciones de masa coronal, y analiza la respuesta geomagnética regional, con índices calculados para Costa Rica, y sus efectos sobre la navegación satelital y las comunicaciones."
         },
         "analysis": {
           "title": "Análisis científico",
-          "description": "Integra observaciones, datos de satélites, estaciones terrestres y herramientas computacionales de procesamiento."
+          "description": "Integra observaciones, datos de satélites y estaciones terrestres mediante herramientas computacionales e inteligencia artificial que identifican eventos solares y procesan grandes volúmenes de datos, e incluye el desarrollo de plataformas e infraestructura informática para capturar, almacenar y consultar esa información."
         }
       },
       "flow": {
