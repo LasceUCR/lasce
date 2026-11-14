@@ -1,8 +1,61 @@
+import { existsSync } from 'node:fs'
+import path from 'node:path'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
 import es from '../../messages/es.json' with { type: 'json' }
 import en from '../../messages/en.json' with { type: 'json' }
+
+const envPath = path.resolve(process.cwd(), '../../.env')
+if (existsSync(envPath)) process.loadEnvFile(envPath)
+
+// The tools are database content with no seed, so this spec brings its own SWAAT and SWAPRO.
+// Fixed ids make the setup idempotent; the file runs serially so one setup serves every test.
+const fixtures = [
+  {
+    id: '38300000-0000-4000-8000-000000000001',
+    name: 'SWAAT',
+    accessUrl: 'https://swaat.up.railway.app/',
+    imageUrl: '/images/tools/SWAAT-sun.webp',
+    description: {
+      es: 'Análisis de eventos solares mediante observaciones de rayos X de GOES y microondas de RSTN. Permite visualizar y comparar su evolución temporal con gráficas estáticas e interactivas.',
+      en: 'Analysis of solar events using GOES X-ray and RSTN microwave observations. Supports visualisation and comparison of their evolution over time with static and interactive charts.',
+    },
+  },
+  {
+    id: '38300000-0000-4000-8000-000000000002',
+    name: 'SWAPRO',
+    accessUrl: 'https://swapro.up.railway.app/',
+    imageUrl: '/images/research/geomagnetismo-costa-rica.jpg',
+    description: {
+      es: 'Consulta y visualización de eventos solares en intervalos de tiempo específicos para apoyar el estudio de la actividad solar y el clima espacial.',
+      en: 'Querying and visualisation of solar events within specific time intervals to support the study of solar activity and space weather.',
+    },
+  },
+] as const
+
+test.describe.configure({ mode: 'serial' })
+
+test.beforeAll(async () => {
+  const { prisma } = await import('@lasce/db')
+  for (const { id, name, accessUrl, imageUrl, description } of fixtures) {
+    await prisma.scientificTool.upsert({
+      where: { id },
+      create: { id, name, accessUrl, imageUrl, description: description.es },
+      update: { name, accessUrl, imageUrl, description: description.es },
+    })
+    await prisma.scientificToolTranslation.upsert({
+      where: { scientificToolId_locale: { scientificToolId: id, locale: 'en' } },
+      create: { scientificToolId: id, locale: 'en', description: description.en },
+      update: { description: description.en },
+    })
+  }
+})
+
+test.afterAll(async () => {
+  const { prisma } = await import('@lasce/db')
+  await prisma.scientificTool.deleteMany({ where: { id: { in: fixtures.map(({ id }) => id) } } })
+})
 
 for (const width of [1440, 1280, 768, 390]) {
   test(`opens the scientific tools from navigation without overflow at ${width}px`, async ({
@@ -27,10 +80,7 @@ for (const width of [1440, 1280, 768, 390]) {
       page.getByRole('heading', { level: 1, name: 'Herramientas científicas' }),
     ).toBeVisible()
 
-    for (const [title, href] of [
-      ['SWAAT', 'https://swaat.up.railway.app/'],
-      ['SWAPRO', 'https://swapro.up.railway.app/'],
-    ] as const) {
+    for (const { name: title, accessUrl: href } of fixtures) {
       const card = page.getByRole('article', { name: title, exact: true })
       await expect(card.getByRole('heading', { level: 3, name: title })).toBeVisible()
       const link = card.getByRole('link', { name: `Acceder a ${title}` })
@@ -81,10 +131,9 @@ for (const [locale, messages] of Object.entries({ es, en })) {
       await expect(section.getByRole('heading', { level: 2, name: copy.list.title })).toBeVisible()
 
       const images: string[] = []
-      for (const [title, description] of [
-        ['SWAAT', copy.tools.swaat],
-        ['SWAPRO', copy.tools.swapro],
-      ] as const) {
+      for (const fixture of fixtures) {
+        const title = fixture.name
+        const description = fixture.description[locale as 'es' | 'en']
         const card = section.getByRole('article', { name: title })
         await expect(card.getByRole('heading', { level: 3, name: title })).toBeVisible()
         await expect(card.getByText(description, { exact: true })).toBeVisible()

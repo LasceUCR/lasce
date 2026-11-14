@@ -279,6 +279,40 @@ model InitiativeTranslation {
   @@schema("research")
 }
 
+/// External tools on /herramientas-cientificas (SWAAT, SWAPRO, ...), managed in Modo edición.
+/// The name is a product name and is shared by every language; `description` is Spanish.
+model ScientificTool {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(100)
+  description String
+  accessUrl   String   @map("access_url")
+  imageUrl    String?  @map("image_url")
+  position    Int      @unique @default(autoincrement())
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations ScientificToolTranslation[]
+
+  @@map("scientific_tools")
+  @@schema("public")
+}
+
+/// Spanish text stays on ScientificTool; other languages use the shared content resolver.
+model ScientificToolTranslation {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scientificToolId String   @map("scientific_tool_id") @db.Uuid
+  locale           String   @db.VarChar(5)
+  description      String
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  scientificTool ScientificTool @relation(fields: [scientificToolId], references: [id], onDelete: Cascade)
+
+  @@unique([scientificToolId, locale])
+  @@map("scientific_tool_translations")
+  @@schema("public")
+}
+
 /// Many-to-many join between `Research` and `ResearchAuthor`. Keeps `position`
 /// so a record's citation order (first author, second author, ...) can be
 /// reproduced on the public page instead of coming back in arbitrary order.

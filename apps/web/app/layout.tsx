@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getTranslations } from 'next-intl/server'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 
 import './globals.css'
 import { siteUrl } from './lib/site'
+import { NavigationProgress } from './components/public/NavigationProgress'
 import { EditModeProvider } from './components/public/cms/EditModeProvider'
 import { ToastProvider } from './components/public/toast/ToastProvider'
 
@@ -35,6 +36,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body>
         <NextIntlClientProvider>
+          {/* `useSearchParams` needs a Suspense boundary, or a static page would bail out of
+              prerendering whole. The bar is empty until a click, so it has no fallback. */}
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
           <ToastProvider>
             <EditModeProvider>{children}</EditModeProvider>
           </ToastProvider>
