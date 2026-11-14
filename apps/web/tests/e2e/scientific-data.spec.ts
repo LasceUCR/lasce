@@ -319,6 +319,9 @@ test('limits EXIS dates to the latest published day and lets SUVI reach today', 
   await expect(page.getByLabel('Hora de fin')).not.toHaveAttribute('max')
 })
 
+const RESTORED_QUERY_PATH =
+  '/datos?source=GOES&product=SFXR&parameter=0.1-0.8nm&date=2025-01-05&startTime=08%3A00&endTime=09%3A00'
+
 async function mockObservedXrays(page: Page, points = true, pending = false) {
   await page.route('**/api/scientific-data?**', async (route) => {
     const parameters = new URL(route.request().url()).searchParams
@@ -432,7 +435,22 @@ test('queries and visualizes historical GOES data publicly', async ({ page }) =>
   await expect(results.getByRole('link')).toHaveCount(0)
   await expect(results.getByRole('button', { name: /CSV/ })).toHaveCount(0)
   await results.getByRole('button', { name: 'Inicie sesión para descargar la gráfica' }).click()
-  await expect(page).toHaveURL(/\/acceso\?next=%2Fdatos&reason=auth$/)
+  await expect(page).toHaveURL(
+    `/acceso?${new URLSearchParams({ next: RESTORED_QUERY_PATH, reason: 'auth' })}`,
+  )
+})
+
+test('restores a query returned from sign-in and shows its graph', async ({ page }) => {
+  await mockObservedXrays(page, true, true)
+  await page.goto(RESTORED_QUERY_PATH)
+
+  await expect(page.getByLabel('Fecha', { exact: true })).toHaveValue('2025-01-05')
+  const results = page.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+  await expect(results.getByRole('img', { name: /Gráfica de Flujo solar/ })).toBeVisible()
+  await expect(results.getByText('08:00–09:00 UTC')).toBeVisible()
+  await expect(
+    results.getByRole('button', { name: 'Inicie sesión para descargar la gráfica' }),
+  ).toBeVisible()
 })
 
 test.describe('downloads', () => {
