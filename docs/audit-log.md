@@ -21,6 +21,7 @@ nothing either. The summaries are written in Spanish when the event happens.
 | `publication.create` `.update` `.delete`                                    | `publications.ts`                                 | `fields` on update                            |
 | `research_area.create` `.update` `.delete`                                  | `research-areas.ts`                               | `fields` on update                            |
 | `collaboration.create` `.update` `.delete`                                  | `collaboration-writes.ts`                         | `fields` on update                            |
+| `scientific_tool.create` `.update` `.delete`                                | `scientific-tool-writes.ts`                       | `fields` on update                            |
 | `contact_channel.create` `.update` `.delete`                                | `contact-channels.ts`                             | `fields` on update                            |
 | `academic_activity.create` `.update` `.delete`                              | `academic-activities.ts`                          | `fields` on update                            |
 | `nosotros_activity.*`, `nosotros_researcher.*` (`create` `update` `delete`) | `nosotros.ts`                                     | `fields` on update                            |
