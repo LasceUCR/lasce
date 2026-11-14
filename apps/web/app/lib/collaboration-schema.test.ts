@@ -15,6 +15,7 @@ describe('collaboration input', () => {
       name: 'Institute',
       acronym: null,
       websiteUrl: null,
+      logoPath: null,
     })
   })
   test.each([
@@ -27,6 +28,9 @@ describe('collaboration input', () => {
     { websiteUrl: 'not a url' },
     { websiteUrl: 'https://example.com:invalid' },
     { websiteUrl: 'https://user:password@example.com' },
+    { logoPath: 'javascript:alert(1)' },
+    { logoPath: '/etc/passwd' },
+    { logoPath: 'https://example.com/logo.png' },
     { name: 'a'.repeat(301) },
     { acronym: 'a'.repeat(101) },
     { extra: true },
@@ -38,12 +42,19 @@ describe('collaboration input', () => {
       collaborationCreateSchema.parse({
         ...body,
         websiteUrl: 'https://example.com',
+        logoPath: '/brand/collaborations/tec.png',
       }),
-    ).toMatchObject({ websiteUrl: 'https://example.com' })
-    expect(collaborationUpdateSchema.parse({ version, websiteUrl: null, acronym: '  ' })).toEqual({
+    ).toMatchObject({
+      websiteUrl: 'https://example.com',
+      logoPath: '/brand/collaborations/tec.png',
+    })
+    expect(
+      collaborationUpdateSchema.parse({ version, websiteUrl: null, acronym: '  ', logoPath: null }),
+    ).toEqual({
       version,
       websiteUrl: null,
       acronym: null,
+      logoPath: null,
     })
   })
   test('preserves omitted fields in shared-only edits and requires a version and a change', () => {
