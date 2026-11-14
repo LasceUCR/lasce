@@ -284,19 +284,19 @@
       "items": {
         "activity": {
           "title": "Solar activity",
-          "description": "It analyses eruptive phenomena such as flares, coronal mass ejections and solar radio emissions."
+          "description": "It analyses eruptive phenomena such as flares and coronal mass ejections, their evolution and the particle acceleration they produce, including the associated solar radio emissions and their propagation into the interplanetary medium."
         },
         "magneticField": {
           "title": "Magnetic field",
-          "description": "It studies how magnetic fields store energy, structure the solar atmosphere and take part in eruptive events."
+          "description": "It studies how magnetic fields store energy in the solar atmosphere and release it through processes such as magnetic reconnection, the mechanism behind flares and coronal mass ejections, as well as how these structures form and evolve within the Sun's active regions."
         },
         "sunEarth": {
           "title": "Sun-Earth relationship",
-          "description": "It relates solar disturbances to the solar wind, the interplanetary magnetic field and the ionosphere."
+          "description": "It relates solar disturbances to the solar wind, the interplanetary magnetic field and the ionosphere, with models that estimate the speed, trajectory and arrival time of coronal mass ejections, and analyses the regional geomagnetic response, with indices calculated for Costa Rica, and its effects on satellite navigation and communications."
         },
         "analysis": {
           "title": "Scientific analysis",
-          "description": "It brings together observations, satellite data, ground stations and computational processing tools."
+          "description": "It brings together observations, satellite data and ground stations through computational tools and artificial intelligence that identify solar events and process large volumes of data, and includes developing platforms and computing infrastructure to capture, store and query that information."
         }
       },
       "flow": {
