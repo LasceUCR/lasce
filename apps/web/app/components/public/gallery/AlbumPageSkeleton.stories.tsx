@@ -2,7 +2,15 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { AlbumPageSkeleton } from './AlbumPageSkeleton'
 
-const meta: Meta<typeof AlbumPageSkeleton> = { component: AlbumPageSkeleton }
+const meta: Meta<typeof AlbumPageSkeleton> = {
+  component: AlbumPageSkeleton,
+  args: {
+    kicker: 'Galería LASCE',
+    label: 'Cargando álbum…',
+    subalbumsTitle: 'Subálbumes',
+    mediaTitle: 'Fotografías y video de este álbum',
+  },
+}
 export default meta
 
 type Story = StoryObj<typeof AlbumPageSkeleton>

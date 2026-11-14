@@ -825,6 +825,33 @@ nothing is created or deleted from the CMS. See [`space-weather.md`](space-weath
 `ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `body`, timestamps. Unique on
 `(section_id, locale)`.
 
+## `public` schema (scientific tools)
+
+### `scientific_tools` and `scientific_tool_translations`
+
+The external tools on `/herramientas-cientificas` (SWAAT, SWAPRO, ...), managed in Modo edición.
+`name` is a product name shared by every language; the Spanish `description` lives on the base row
+and every other language is a translation row. `access_url` is an `https` address opened in a new
+tab. `image_url` is the application path of an uploaded image (`/api/scientific-tools/images/…`)
+or null. New rows take the next `position`, so they are shown last. The migration
+`20261113180000_add_scientific_tools` creates the tables empty: there is no seed, and the page
+shows its empty state until an editor adds a tool. See [`scientific-tools.md`](scientific-tools.md).
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `name`        | `String`    | `varchar(100)`   | not null; shared                       |
+| `description` | `String`    | `text`           | not null; Spanish                      |
+| `access_url`  | `String`    | `text`           | not null; `https` only (app-validated) |
+| `image_url`   | `String?`   | `text`           | nullable                               |
+| `position`    | `Int`       | `serial`         | not null, unique                       |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`scientific_tool_translations`: `id`, `scientific_tool_id` (FK → `scientific_tools.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `description`, timestamps. Unique on
+`(scientific_tool_id, locale)`. The worker does not read these tables and has no model for them.
+
 ## `public` schema (ROSAC)
 
 ### `rosac_characteristics` and `rosac_characteristic_translations`
@@ -977,6 +1004,11 @@ writer (nothing calls it yet) and `getRecentActivity()` its only reader, for the
 `public.contact_channel_translations` for `/contacto`. Spanish text is the base row; English is
 upserted on save. An update writes only while `updated_at` still equals the version the editor
 loaded.
+
+`apps/web/app/lib/scientific-tool-records.ts` reads `public.scientific_tools` with its
+translations for `/herramientas-cientificas`, and `scientific-tool-writes.ts` creates, updates
+(only while `updated_at` still equals the loaded version) and deletes them in one transaction with
+their audit event.
 
 `apps/web/app/lib/space-weather-section.ts` reads and writes `public.space_weather_sections` and
 `public.space_weather_section_translations` for `/clima-espacial`: `getSpaceWeatherSection()` reads

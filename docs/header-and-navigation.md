@@ -166,6 +166,51 @@ visibility rule only: every edit is authorized by its Route Handler or Server Ac
   (`account.editMode`: "Modo edición" / "Edit mode").
 - In e2e, `enableEditMode(page)` in `tests/e2e/helpers/edit-mode.ts` opens the menu and flips it.
 
+## Navigation feedback (#475)
+
+Visitors reported that header and home page links "did nothing" on the first click. Nothing was
+intercepting the click. Almost every public page is `force-dynamic`, and for a dynamic route
+**without** a `loading.tsx`, Next 16 does not prefetch the page and keeps the current one on screen
+until the server render finishes (see "Dynamic routes without `loading.tsx`" in
+`node_modules/next/dist/docs/01-app/01-getting-started/04-linking-and-navigating.md`). A slow
+render therefore looked like a dead link. The fix is a load bar, so the click is answered at once:
+
+- **`NavigationProgress`** lives in the header's cyan strip (`.site-header::before`, sized by
+  `--header-stripe-height`). On a click, the strip turns dark blue and the cyan fills back over it
+  from the left. A finished bar looks exactly like the resting strip, so it ends without a flash.
+  It is mounted once in `app/layout.tsx`. A capture-phase `click` listener on `document` starts
+  it, so every link counts, not only the header's. It finishes when `usePathname()` or
+  `useSearchParams()` change, and it gives up after 15 s if the URL never changes. It ignores what
+  the browser handles itself:
+  - modified or non-left clicks
+  - `target="_blank"` and `download`
+  - other origins
+  - `#hash` links
+  - links to the current URL
+
+  A second click restarts the wait. The strip is `aria-hidden`. Next to it, a visually hidden
+  message ("Cargando la página…" / "Loading the page…", `shell.pageLoading`) announces the load to
+  screen readers while the bar runs, and empties when the page lands. It is an
+  `aria-live="polite"` region, **not** `role="status"`: the bar is on every page, and a page's own
+  status (a form's success, a gallery's loading text) must stay the only `role="status"` there, or
+  `getByRole('status')` in the e2e suite finds two. Under `prefers-reduced-motion` the strip stays
+  dark blue while the page loads, with no movement.
+
+- **`app/(public)/error.tsx`** (`PageErrorState`) catches a page that throws, so a failed
+  navigation ends on an error with a retry instead of a frozen page.
+
+There is deliberately **no group-level `app/(public)/loading.tsx`**. One was tried and removed:
+
+- A single generic skeleton did not match the shape of most pages.
+- Inside a loading boundary the response streams, so its `200` status is sent before the page
+  renders. Any page that calls `notFound()`, the `[...rest]` catch-all included, then answers
+  `200` instead of `404`.
+
+The old page therefore stays on screen until the new one is rendered, with the bar running. A page
+that needs a skeleton gets its own `loading.tsx`, shaped like it, as `/contacto`, `/galeria` and
+`/publicaciones` have. Before adding one, make sure the route never calls `notFound()`, or accept
+that a missing item will answer `200`.
+
 ## Covered by
 
 | Piece                            | File                                                               | Covered by                                           |
@@ -175,3 +220,5 @@ visibility rule only: every edit is authorized by its Route Handler or Server Ac
 | Header layout + mobile accordion | `app/components/public/PublicHeader.tsx`                           | `PublicHeader.test.tsx`                              |
 | Account menu and its edit switch | `app/components/public/auth/AccountMenu.tsx`, `EditModeSwitch.tsx` | `AccountMenu.test.tsx`, `AccountLinks.test.tsx`      |
 | Responsive rules for both        | `app/globals.css`                                                  | `tests/e2e/responsive-controls.spec.ts`, plus manual |
+| Page-load bar                    | `app/components/public/NavigationProgress.tsx`                     | `NavigationProgress.test.tsx`                        |
+| Public error boundary            | `app/(public)/error.tsx`                                           | `PageErrorState.test.tsx`                            |
