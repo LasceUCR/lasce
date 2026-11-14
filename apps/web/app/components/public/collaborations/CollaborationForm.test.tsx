@@ -9,10 +9,10 @@ import {
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { collaborationContent } from '@/app/lib/research-collaborations'
 import { CollaborationForm, type CollaborationFormHandle } from './CollaborationForm'
-import { Create, Edit, Legacy } from './CollaborationForm.stories'
+import { Create, Edit, Legacy, WithLogo } from './CollaborationForm.stories'
 
 describe('CollaborationForm', () => {
-  test('requires name and country in both languages, retains input across tabs and submits optional-free content', async () => {
+  test('submits with country in Spanish, automatically providing fallback for English without requiring both', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
     renderWithIntl(<CollaborationForm {...Create.args} onSave={onSave} onCancel={() => {}} />)
@@ -20,18 +20,35 @@ describe('CollaborationForm', () => {
     expect(onSave).not.toHaveBeenCalled()
     expect(screen.getByLabelText(/Nombre de la organización/)).toHaveFocus()
     await user.type(screen.getByLabelText(/Nombre de la organización/), 'New partner')
-    await user.type(screen.getByLabelText('País (Español)', { exact: false }), 'Alemania')
-    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
-    expect(screen.getByRole('tab', { name: /English/ })).toHaveAttribute('aria-selected', 'true')
-    await user.type(screen.getByLabelText('País (English)', { exact: false }), 'Germany')
-    await user.click(screen.getByRole('tab', { name: /Español/ }))
-    expect(screen.getByLabelText('País (Español)', { exact: false })).toHaveValue('Alemania')
+    await user.type(screen.getByLabelText('País (Español)', { exact: false }), 'Costa Rica')
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
     expect(onSave).toHaveBeenCalledWith({
       name: 'New partner',
       scope: 'national',
       acronym: '',
       websiteUrl: '',
+      logoPath: '',
+      content: { es: { country: 'Costa Rica' }, en: { country: 'Costa Rica' } },
+    })
+  })
+
+  test('allows overriding country in English with a custom translation', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+    renderWithIntl(<CollaborationForm {...Create.args} onSave={onSave} onCancel={() => {}} />)
+    await user.type(screen.getByLabelText(/Nombre de la organización/), 'New partner')
+    await user.type(screen.getByLabelText('País (Español)', { exact: false }), 'Alemania')
+    await user.click(screen.getByRole('tab', { name: /English/ }))
+    expect(screen.getByLabelText('País (English)', { exact: false })).toHaveValue('Alemania')
+    await user.clear(screen.getByLabelText('País (English)', { exact: false }))
+    await user.type(screen.getByLabelText('País (English)', { exact: false }), 'Germany')
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(onSave).toHaveBeenCalledWith({
+      name: 'New partner',
+      scope: 'national',
+      acronym: '',
+      websiteUrl: '',
+      logoPath: '',
       content: { es: { country: 'Alemania' }, en: { country: 'Germany' } },
     })
   })
@@ -110,6 +127,45 @@ describe('CollaborationForm', () => {
     view.rerender(<CollaborationForm busy onSave={() => {}} onCancel={onCancel} />)
     expect(screen.getByRole('button', { name: 'Guardando...' })).toBeDisabled()
   })
+  test('uploads a new logo and submits it with the draft', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn()
+    const logoUrl = '/api/collaborations/logos/00000000-0000-4000-8000-000000000001.png'
+    const upload = vi.fn().mockResolvedValue(logoUrl)
+    renderWithIntl(
+      <CollaborationForm {...Edit.args} onUploadLogo={upload} onSave={save} onCancel={() => {}} />,
+    )
+    const file = new File(['logo'], 'logo.png', { type: 'image/png' })
+    await user.upload(document.querySelector('input[type="file"]') as HTMLInputElement, file)
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(upload).toHaveBeenCalledWith(file)
+    expect(save).toHaveBeenCalledWith({
+      logoPath: logoUrl,
+      version: Edit.args!.collaboration!.editing!.version,
+    })
+  })
+
+  test('removes an existing logo without uploading a new file', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn()
+    const upload = vi.fn()
+    renderWithIntl(
+      <CollaborationForm
+        {...WithLogo.args}
+        onUploadLogo={upload}
+        onSave={save}
+        onCancel={() => {}}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Quitar imagen' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(upload).not.toHaveBeenCalled()
+    expect(save).toHaveBeenCalledWith({
+      logoPath: '',
+      version: Edit.args!.collaboration!.editing!.version,
+    })
+  })
+
   test('stops each text field at its limit instead of reporting it, like the initiative form', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn()
@@ -129,7 +185,7 @@ describe('CollaborationForm', () => {
     await user.click(screen.getByRole('tab', { name: /English/ }))
     const english = screen.getByLabelText('País (English)', { exact: false })
     expect(english).toHaveAttribute('maxlength', String(countryLimit))
-    await user.click(english)
+    await user.clear(english)
     await user.paste('b'.repeat(countryLimit + 10))
     expect(english).toHaveValue('b'.repeat(countryLimit))
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
