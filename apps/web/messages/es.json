@@ -4,7 +4,13 @@
     "description": "Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica: observación solar, radioastronomía, instrumentación y clima espacial."
   },
   "shell": {
-    "skipToContent": "Saltar al contenido principal"
+    "skipToContent": "Saltar al contenido principal",
+    "pageLoading": "Cargando la página…",
+    "pageError": {
+      "message": "No se pudo cargar esta página. Inténtelo de nuevo.",
+      "retry": "Reintentar",
+      "home": "Volver al inicio"
+    }
   },
   "notFound": {
     "metaTitle": "Página no encontrada | LASCE",
