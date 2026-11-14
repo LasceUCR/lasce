@@ -5,6 +5,7 @@
  * deep imports into `implementations/`, `interfaces/`, `const/` or `errors/`.
  */
 export type { IAssetStorage } from './interfaces/IAssetStorage'
+export type { AssetUploadValidation } from './const/storageConfig'
 export * from './const/storageConfig'
 export { MinioAssetStorage } from './implementations/MinioAsssetStorage'
 export { default as InvalidFileSizeError } from './errors/InvalidFileSizeError'

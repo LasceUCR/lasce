@@ -265,7 +265,7 @@ describe('RosacStageForm', () => {
     expect(addDialog).toBeInTheDocument()
 
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    const file = new File(['dummy'], 'photo.jpg', { type: 'image/jpeg' })
+    const file = new File(['dummy'], 'photo.avif', { type: 'image/avif' })
     await user.upload(fileInput, file)
 
     const altInput = within(addDialog).getByRole('textbox', {
@@ -304,7 +304,7 @@ describe('RosacStageForm', () => {
     await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
     const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['dummy'], 'large.jpg', { type: 'image/jpeg' }))
+    await user.upload(fileInput, new File(['dummy'], 'large.avif', { type: 'image/avif' }))
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))
@@ -320,7 +320,7 @@ describe('RosacStageForm', () => {
     await user.click(screen.getByRole('button', { name: 'Añadir fotografía' }))
     const addDialog = screen.getByRole('dialog', { name: 'Añadir fotografía' })
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['dummy'], 'throw.jpg', { type: 'image/jpeg' }))
+    await user.upload(fileInput, new File(['dummy'], 'throw.avif', { type: 'image/avif' }))
     await user.click(within(addDialog).getByRole('button', { name: 'Añadir fotografía' }))
 
     await user.click(screen.getByRole('button', { name: 'Confirmar' }))

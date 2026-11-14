@@ -89,6 +89,7 @@ export function EditableResearcherCard({
         ref={form}
         researcher={researcher}
         translation={translation}
+        uploadPolicy="rosac"
       />
     )
   }

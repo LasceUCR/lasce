@@ -14,6 +14,7 @@ vi.mock('@lasce/db', () => ({ prisma: {} }))
 const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   uploadResearcherImage: vi.fn(),
+  uploadRosacResearcherImage: vi.fn(),
   uploadInstrumentImage: vi.fn(),
   uploadAcknowledgmentLogo: vi.fn(),
 }))
@@ -26,6 +27,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/app/(public)/radioastronomia/actions', () => ({
   uploadResearcherImage: mocks.uploadResearcherImage,
+  uploadRosacResearcherImage: mocks.uploadRosacResearcherImage,
   uploadInstrumentImage: mocks.uploadInstrumentImage,
   uploadAcknowledgmentLogo: mocks.uploadAcknowledgmentLogo,
 }))
@@ -372,9 +374,9 @@ describe('RosacInfoPage', () => {
   test('POSTs a new researcher and refreshes the page once creation succeeds', async () => {
     const user = userEvent.setup()
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ researcher: {} }) })
-    mocks.uploadResearcherImage.mockResolvedValue({
+    mocks.uploadRosacResearcherImage.mockResolvedValue({
       ok: true,
-      imageUrl: 'https://s3.example/lasce/foto.png',
+      imageUrl: 'https://s3.example/lasce/foto.avif',
     })
     // jsdom has no `URL.createObjectURL`; `FileDropInput` calls it for its own local preview.
     URL.createObjectURL = vi.fn(() => 'blob:mock-url')
@@ -400,19 +402,19 @@ describe('RosacInfoPage', () => {
     await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'Persona Nueva')
     await user.type(within(dialog).getByRole('textbox', { name: 'Institución' }), 'UCR')
     const fileInput = dialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'foto.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['imagen'], 'foto.avif', { type: 'image/avif' }))
 
     await user.click(within(dialog).getByRole('button', { name: 'Confirmar' }))
 
     // Creating saves straight away: no second confirmation dialog.
     expect(screen.queryByRole('dialog', { name: 'Agregar investigador' })).not.toBeInTheDocument()
 
-    expect(mocks.uploadResearcherImage).toHaveBeenCalledTimes(1)
+    expect(mocks.uploadRosacResearcherImage).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/researchers',
       expect.objectContaining({
         method: 'POST',
-        body: expect.stringContaining('https://s3.example/lasce/foto.png'),
+        body: expect.stringContaining('https://s3.example/lasce/foto.avif'),
       }),
     )
     expect(mocks.refresh).toHaveBeenCalledTimes(1)
@@ -646,7 +648,7 @@ describe('RosacInfoPage', () => {
       'Wave measurement.',
     )
     const fileInput = addDialog.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['imagen'], 'instrumento.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['imagen'], 'instrumento.avif', { type: 'image/avif' }))
     await user.click(within(addDialog).getByRole('button', { name: 'Confirmar' }))
 
     expect(within(section).getByRole('heading', { name: 'Polarímetro' })).toBeInTheDocument()

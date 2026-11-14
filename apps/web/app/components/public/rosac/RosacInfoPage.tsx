@@ -1078,6 +1078,7 @@ export function RosacInfoPage({
                     ref={createResearcherForm}
                     researcher={null}
                     translation={{ editing: null }}
+                    uploadPolicy="rosac"
                   />
                 )}
               </AddItemCard>
